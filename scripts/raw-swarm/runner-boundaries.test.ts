@@ -55,6 +55,14 @@ const deterministicCapabilityGuard = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-capability-guard.cjs",
 );
+const deterministicRunnerModule = resolve(
+  repoRoot,
+  "scripts/raw-swarm/deterministic-runner.cjs",
+);
+const deterministicCleanupModule = resolve(
+  repoRoot,
+  "scripts/raw-swarm/deterministic-cleanup.cjs",
+);
 const deterministicNetworkBoundarySource = resolve(
   repoRoot,
   "scripts/raw-swarm/deterministic-network-boundary.c",
@@ -62,10 +70,17 @@ const deterministicNetworkBoundarySource = resolve(
 const deterministicNetworkBoundaryBuild = mkdtempSync(
   resolve(tmpdir(), "dnd-network-boundary-test-"),
 );
-function cleanupDeterministicNetworkBoundaryBuild(): void {
-  rmSync(deterministicNetworkBoundaryBuild, { recursive: true, force: true });
-}
-installDeterministicCleanup(cleanupDeterministicNetworkBoundaryBuild);
+const cleanupDeterministicNetworkBoundaryBuild = installDeterministicCleanup({
+  cleanup: () =>
+    rmSync(deterministicNetworkBoundaryBuild, {
+      recursive: true,
+      force: true,
+    }),
+  onSignal: ({ cleanup, exitStatus }) => {
+    cleanup();
+    process.exit(exitStatus);
+  },
+});
 const deterministicNetworkBoundary = resolve(
   deterministicNetworkBoundaryBuild,
   "deterministic-network-boundary",
@@ -128,7 +143,6 @@ if (modelLaneLockProbe.status !== 1) {
 afterAll(() => {
   closeSync(modelLaneLockFd);
   rmSync(modelLaneLockDirectory, { recursive: true, force: true });
-  process.removeListener("exit", cleanupDeterministicNetworkBoundaryBuild);
   cleanupDeterministicNetworkBoundaryBuild();
 });
 const modelEntryPointTestEnvironment: NodeJS.ProcessEnv = {
@@ -384,7 +398,7 @@ describe("RAW swarm runner boundaries", () => {
         process.execPath,
         [
           "-e",
-          `const { writeFileSync } = require("node:fs"); const { installDeterministicCleanup } = require(${JSON.stringify(cleanup)}); installDeterministicCleanup(() => writeFileSync(${JSON.stringify(marker)}, "cleaned")); process.kill(process.pid, ${JSON.stringify(signal)}); setTimeout(() => {}, 1000);`,
+          `const { writeFileSync } = require("node:fs"); const { installDeterministicCleanup } = require(${JSON.stringify(cleanup)}); installDeterministicCleanup({ cleanup: () => writeFileSync(${JSON.stringify(marker)}, "cleaned"), onSignal: ({ cleanup, exitStatus }) => { cleanup(); process.exit(exitStatus); } }); process.kill(process.pid, ${JSON.stringify(signal)}); setTimeout(() => {}, 1000);`,
         ],
         { stdio: "ignore" },
       );
@@ -396,6 +410,59 @@ describe("RAW swarm runner boundaries", () => {
       }
     },
   );
+
+  test("deterministic runner settles a blocking child group before cleanup", async () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-signal-"));
+    const buildDirectory = resolve(fixtureRoot, "build");
+    const childPidPath = resolve(fixtureRoot, "child.pid");
+    const helperPath = resolve(fixtureRoot, "runner-helper.cjs");
+    mkdirSync(buildDirectory);
+    writeFileSync(
+      helperPath,
+      `const { rmSync, writeFileSync } = require("node:fs"); const { createDeterministicRunner } = require(${JSON.stringify(deterministicRunnerModule)}); const { installDeterministicCleanup } = require(${JSON.stringify(deterministicCleanupModule)}); const runner = createDeterministicRunner({ boundary: ${JSON.stringify(deterministicNetworkBoundary)}, buildDirectory: ${JSON.stringify(buildDirectory)}, environment: { ...process.env, NODE_OPTIONS: "", RAW_SWARM_EXECUTION_LANE: "deterministic" } }); installDeterministicCleanup({ cleanup: () => rmSync(${JSON.stringify(buildDirectory)}, { recursive: true, force: true }), onSignal: async ({ cleanup, exitStatus, signal }) => { try { await runner.terminateActive(signal); } catch (error) { process.stderr.write(String(error)); } finally { cleanup(); } process.exit(exitStatus); } }); void runner.run(process.execPath, ["-e", ${JSON.stringify(`const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(childPidPath)}, String(process.pid)); process.on("SIGTERM", () => {}); setInterval(() => {}, 1000);`)}]).then((result) => { process.exitCode = result.status ?? 1; }).catch((error) => { process.stderr.write(String(error)); process.exitCode = 1; });`,
+    );
+    const helper = spawn(process.execPath, [helperPath], {
+      env: { ...process.env, NODE_OPTIONS: "" },
+      stdio: ["ignore", "ignore", "pipe"],
+    });
+    const helperErrors: Buffer[] = [];
+    helper.stderr?.on("data", (chunk: Buffer) => helperErrors.push(chunk));
+    let childPid: number | undefined;
+    try {
+      try {
+        await waitForFile(childPidPath);
+      } catch (error) {
+        throw new Error(
+          `${error instanceof Error ? error.message : String(error)} ${Buffer.concat(helperErrors).toString("utf8")}`,
+        );
+      }
+      childPid = Number(readFileSync(childPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(childPid)).toBe(true);
+      expect(processIsLive(childPid)).toBe(true);
+      const result = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          helper.once("error", rejectResult);
+          helper.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(new Error(`Runner helper stopped with ${signal}.`));
+            } else {
+              resolveResult(status ?? 1);
+            }
+          });
+          helper.kill("SIGTERM");
+        },
+      );
+      expect(result).toBe(143);
+      await waitForProcessExit(childPid);
+      expect(existsSync(buildDirectory)).toBe(false);
+    } finally {
+      if (helper.exitCode === null) helper.kill("SIGKILL");
+      if (childPid !== undefined && processIsLive(childPid)) {
+        process.kill(childPid, "SIGKILL");
+      }
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
 
   test("trusted boundary compilation ignores hostile PATH and CC", () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-hostile-cc-"));
@@ -587,6 +654,22 @@ describe("RAW swarm runner boundaries", () => {
     expect(checked.stderr).toContain("standard descriptor 0");
   });
 
+  test("Linux kernel boundary rejects an inherited non-tty character descriptor", () => {
+    const launcher = compileKernelBoundaryProbe(
+      "non-tty-character-standard-stdio-launcher",
+      `#include <fcntl.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 2) return 64; int fd = open("/dev/zero", O_RDONLY); if (fd < 0) return 1; if (fd != 0 && dup2(fd, 0) < 0) return 2; if (fd != 0) close(fd); execv(argv[1], &argv[1]); return 127; }\n`,
+    );
+    const checked = spawnSync(
+      launcher,
+      [deterministicNetworkBoundary, "/bin/true"],
+      {
+        encoding: "utf8",
+      },
+    );
+    expect(checked.status).toBe(78);
+    expect(checked.stderr).toContain("standard descriptor 0");
+  });
+
   test("Linux kernel boundary blocks Unix proxy connection and descriptor transfer", () => {
     const probe = compileKernelBoundaryProbe(
       "unix-proxy-probe",
@@ -638,6 +721,9 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("S_ISREG");
     expect(source).toContain("S_ISCHR");
     expect(source).toContain("S_ISFIFO");
+    expect(source).toContain("isatty");
+    expect(source).toContain('stat("/dev/null"');
+    expect(source).toContain("st_rdev");
   });
 
   test("kernel boundary remains after an ESM dynamic import", () => {

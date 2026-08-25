@@ -66,12 +66,13 @@ JavaScript environment variables.
 
 The filter allows only `AF_UNIX` socket and socket-pair creation, closes every
 inherited descriptor above standard error, and allows only regular files,
-character devices, and FIFOs on standard descriptors. It rejects inherited
-sockets, anon-inodes, and unknown descriptor types, denies connection,
-network-send, and descriptor-transfer syscalls (including `SCM_RIGHTS` paths),
-and denies all `io_uring` setup/submission syscalls. Its syscall-ABI check kills
-a process using an unexpected architecture instead of silently weakening the
-filter. The JavaScript guard remains defense in depth
+FIFOs, terminal character devices, and the exact `/dev/null` device identity
+on standard descriptors. It rejects inherited sockets, anon-inodes, non-tty
+character devices such as `/dev/zero`, and unknown descriptor types, denies
+connection, network-send, and descriptor-transfer syscalls (including
+`SCM_RIGHTS` paths), and denies all `io_uring` setup/submission syscalls. Its
+syscall-ABI check kills a process using an unexpected architecture instead of
+silently weakening the filter. The JavaScript guard remains defense in depth
 for static/runtime capability inventory, browser globals, and known executable
 names; it is not the security boundary and does not trust module-origin or
 fixture-marker claims. A basename cannot prove a coding-agent identity: known
@@ -82,8 +83,11 @@ alias reached by admitted source still inherits the kernel communication
 denial. This is a deterministic-lane contract, not a hostile-root or
 untrusted-toolchain claim.
 
-The runner and its boundary tests remove temporary helper directories on normal
-exit and on `SIGTERM`, `SIGINT`, or `SIGHUP`. `SIGKILL` cannot be handled, so an
+The runner starts each deterministic command asynchronously in its own Linux
+process group, captures and flushes its output, and forwards `SIGTERM`,
+`SIGINT`, or `SIGHUP` to that owned group. It waits for bounded settlement,
+escalates to `SIGKILL` when required, reaps the child, and only then removes
+temporary helper directories. `SIGKILL` cannot be handled by the runner, so an
 operator must remove any leftover temporary directory after an externally
 forced kill.
 

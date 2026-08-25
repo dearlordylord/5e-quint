@@ -560,7 +560,7 @@ function runLaneHygiene() {
   assert.match(deterministicRunner, /deterministic-capability-guard\.cjs/);
   assert.match(deterministicRunner, /deterministic-network-boundary\.c/);
   assert.match(deterministicRunner, /deterministic-toolchain\.cjs/);
-  assert.match(deterministicRunner, /stdio: \["ignore", stdoutFd, stderrFd\]/);
+  assert.match(deterministicRunner, /deterministic-runner\.cjs/);
   assert.match(deterministicRunner, /NODE_OPTIONS: deterministicNodeOptions/);
   assert.doesNotMatch(
     deterministicRunner,
@@ -599,6 +599,19 @@ function runLaneHygiene() {
     deterministicToolchain,
     /spawnSync\(\s*["'`]cc["'`]/,
     "Deterministic boundary compilation must not resolve cc through PATH.",
+  );
+  const deterministicProcessRunner = readFileSync(
+    join(root, "scripts/raw-swarm/deterministic-runner.cjs"),
+    "utf8",
+  );
+  assert.match(
+    deterministicProcessRunner,
+    /stdio: \["ignore", stdoutFd, stderrFd\]/,
+  );
+  assert.doesNotMatch(
+    deterministicProcessRunner,
+    /spawnSync/,
+    "Deterministic child lifecycle must use asynchronous process-group supervision.",
   );
   const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
   const commonBlockerPath = join(blockerDirectory, "forbidden-command");

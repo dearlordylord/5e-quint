@@ -176,11 +176,26 @@ static int close_inherited_descriptors(void) {
 }
 
 static int validate_standard_descriptors(void) {
+  struct stat null_device;
+  if (stat("/dev/null", &null_device) != 0) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary could not inspect "
+            "/dev/null: %s\n",
+            strerror(errno));
+    return 1;
+  }
+  if (!S_ISCHR(null_device.st_mode)) {
+    fprintf(stderr,
+            "Raw Swarm deterministic network boundary found an unexpected "
+            "/dev/null file type.\n");
+    return 1;
+  }
   for (int descriptor = 0; descriptor <= 2; descriptor += 1) {
     struct stat metadata;
     if (fstat(descriptor, &metadata) == 0) {
-      if (S_ISREG(metadata.st_mode) || S_ISCHR(metadata.st_mode) ||
-          S_ISFIFO(metadata.st_mode)) {
+      if (S_ISREG(metadata.st_mode) || S_ISFIFO(metadata.st_mode) ||
+          (S_ISCHR(metadata.st_mode) &&
+           (isatty(descriptor) || metadata.st_rdev == null_device.st_rdev))) {
         continue;
       }
       fprintf(stderr,

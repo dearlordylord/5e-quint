@@ -4,8 +4,9 @@ const SIGNAL_EXIT_STATUS = Object.freeze({
   SIGTERM: 143,
 });
 
-function installDeterministicCleanup(cleanup) {
+function installDeterministicCleanup({ cleanup, onSignal }) {
   let cleaned = false;
+  let signalHandled = false;
   const runCleanup = () => {
     if (cleaned) return;
     cleaned = true;
@@ -14,13 +15,28 @@ function installDeterministicCleanup(cleanup) {
   process.once("exit", runCleanup);
   for (const [signal, exitStatus] of Object.entries(SIGNAL_EXIT_STATUS)) {
     process.once(signal, () => {
+      if (signalHandled) return;
+      signalHandled = true;
       try {
+        Promise.resolve(
+          onSignal({ cleanup: runCleanup, exitStatus, signal }),
+        ).catch((error) => {
+          process.stderr.write(
+            `Deterministic cleanup failed during ${signal}: ${error instanceof Error ? error.message : String(error)}\n`,
+          );
+          runCleanup();
+          process.exit(1);
+        });
+      } catch (error) {
+        process.stderr.write(
+          `Deterministic cleanup failed during ${signal}: ${error instanceof Error ? error.message : String(error)}\n`,
+        );
         runCleanup();
-      } finally {
-        process.exit(exitStatus);
+        process.exit(1);
       }
     });
   }
+  return runCleanup;
 }
 
 module.exports = { installDeterministicCleanup };

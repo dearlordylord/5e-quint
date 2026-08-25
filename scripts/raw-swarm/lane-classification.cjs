@@ -141,9 +141,9 @@ const CODING_AGENT_EXECUTABLES = Object.freeze([
   "windsurf",
 ]);
 
-// This catalog is the single capability vocabulary shared by the static
-// source checker and the CommonJS guard. Keep both bare and node: forms because
-// Node exposes the same built-in through either specifier.
+// This is the static-source-checker capability catalog. Keep both bare and
+// node: forms because Node exposes the same built-in through either specifier;
+// the CommonJS guard owns its runtime enforcement vocabulary separately.
 const NETWORK_NODE_BUILTIN_MODULES = Object.freeze([
   "http",
   "https",

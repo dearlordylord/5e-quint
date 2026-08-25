@@ -1,15 +1,9 @@
-const { spawnSync } = require("node:child_process");
-const {
-  closeSync,
-  mkdtempSync,
-  openSync,
-  readFileSync,
-  rmSync,
-} = require("node:fs");
+const { mkdtempSync, rmSync } = require("node:fs");
 const { delimiter, join, resolve } = require("node:path");
 const { tmpdir } = require("node:os");
 const { installDeterministicCleanup } = require("./deterministic-cleanup.cjs");
 const { compileTrustedCSource } = require("./deterministic-toolchain.cjs");
+const { createDeterministicRunner } = require("./deterministic-runner.cjs");
 
 const {
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
@@ -25,91 +19,125 @@ const deterministicNetworkBoundarySource = resolve(
   "deterministic-network-boundary.c",
 );
 
-function compileDeterministicNetworkBoundary() {
-  if (process.platform !== "linux") {
-    process.stderr.write(
-      "Raw Swarm deterministic verification requires Linux seccomp; refusing to run without the kernel boundary.\n",
-    );
-    process.exit(78);
-  }
-  const buildDirectory = mkdtempSync(
-    resolve(tmpdir(), "dnd-raw-swarm-seccomp-"),
-  );
+function compileDeterministicNetworkBoundary(buildDirectory) {
   const binaryPath = join(buildDirectory, "deterministic-network-boundary");
-  installDeterministicCleanup(() => {
-    rmSync(buildDirectory, { recursive: true, force: true });
-  });
   const compilation = compileTrustedCSource(
     deterministicNetworkBoundarySource,
     binaryPath,
   );
   if (!compilation.ok) {
-    process.stderr.write(
-      `Raw Swarm deterministic verification could not compile its Linux seccomp boundary; refusing to weaken the lane. ${compilation.message}\n`,
+    throw new Error(
+      `Raw Swarm deterministic verification could not compile its Linux seccomp boundary; refusing to weaken the lane. ${compilation.message}`,
     );
-    process.exit(78);
   }
   return binaryPath;
 }
 
-if (process.env.DND_RESOURCE_LOCK_KIND !== "broad") {
-  process.stderr.write(
-    "Raw Swarm deterministic verification requires the broad resource lock.\n",
-  );
-  process.exit(70);
-}
-
-const deterministicEnvironment = {
-  ...process.env,
-  PATH: `${resolve(__dirname, "deterministic-bin")}${delimiter}${process.env.PATH ?? ""}`,
-  RAW_SWARM_EXECUTION_LANE: "deterministic",
-  NODE_OPTIONS: deterministicNodeOptions,
-};
-const deterministicNetworkBoundary = compileDeterministicNetworkBoundary();
-
-function run(command, args) {
-  const buildDirectory = resolve(deterministicNetworkBoundary, "..");
-  const stdoutPath = join(buildDirectory, `${command}.stdout`);
-  const stderrPath = join(buildDirectory, `${command}.stderr`);
-  const stdoutFd = openSync(stdoutPath, "w");
-  const stderrFd = openSync(stderrPath, "w");
-  const result = (() => {
-    try {
-      return spawnSync(deterministicNetworkBoundary, [command, ...args], {
-        env: deterministicEnvironment,
-        stdio: ["ignore", stdoutFd, stderrFd],
-      });
-    } finally {
-      closeSync(stdoutFd);
-      closeSync(stderrFd);
-    }
-  })();
-  process.stdout.write(readFileSync(stdoutPath));
-  process.stderr.write(readFileSync(stderrPath));
-  if (result.error !== undefined) throw result.error;
-  if (result.signal !== null) {
+async function main() {
+  if (process.platform !== "linux") {
     process.stderr.write(
-      `Raw Swarm deterministic verification stopped by ${result.signal}.\n`,
+      "Raw Swarm deterministic verification requires Linux seccomp; refusing to run without the kernel boundary.\n",
     );
-    process.exit(1);
+    process.exitCode = 78;
+    return;
   }
-  if (result.status !== 0) process.exit(result.status ?? 1);
+  if (process.env.DND_RESOURCE_LOCK_KIND !== "broad") {
+    process.stderr.write(
+      "Raw Swarm deterministic verification requires the broad resource lock.\n",
+    );
+    process.exitCode = 70;
+    return;
+  }
+
+  const buildDirectory = mkdtempSync(
+    resolve(tmpdir(), "dnd-raw-swarm-seccomp-"),
+  );
+  let runner;
+  const cleanup = installDeterministicCleanup({
+    cleanup: () => rmSync(buildDirectory, { recursive: true, force: true }),
+    onSignal: async ({ cleanup: runCleanup, exitStatus, signal }) => {
+      try {
+        await runner?.terminateActive(signal);
+      } catch (error) {
+        process.stderr.write(
+          `Raw Swarm deterministic verification could not settle its child process group: ${error instanceof Error ? error.message : String(error)}\n`,
+        );
+      } finally {
+        runCleanup();
+      }
+      process.exit(exitStatus);
+    },
+  });
+
+  try {
+    let deterministicNetworkBoundary;
+    try {
+      deterministicNetworkBoundary =
+        compileDeterministicNetworkBoundary(buildDirectory);
+    } catch (error) {
+      process.stderr.write(
+        `${error instanceof Error ? error.message : String(error)}\n`,
+      );
+      process.exitCode = 78;
+      return;
+    }
+    const deterministicEnvironment = {
+      ...process.env,
+      PATH: `${resolve(__dirname, "deterministic-bin")}${delimiter}${process.env.PATH ?? ""}`,
+      RAW_SWARM_EXECUTION_LANE: "deterministic",
+      NODE_OPTIONS: deterministicNodeOptions,
+    };
+    runner = createDeterministicRunner({
+      boundary: deterministicNetworkBoundary,
+      buildDirectory,
+      environment: deterministicEnvironment,
+    });
+
+    for (const [command, args] of [
+      [
+        "pnpm",
+        ["exec", "tsc", "-p", "scripts/raw-swarm/sdk-player/tsconfig.json"],
+      ],
+      [
+        "mise",
+        [
+          "exec",
+          "--",
+          "pnpm",
+          "exec",
+          resolve(__dirname, "../../node_modules/.bin/vitest"),
+          "run",
+          ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+          "--pool=threads",
+          "--maxWorkers=1",
+        ],
+      ],
+    ]) {
+      const result = await runner.run(command, args);
+      if (result.signal !== null) {
+        process.stderr.write(
+          `Raw Swarm deterministic verification stopped by ${result.signal}.\n`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      if (result.status !== 0) {
+        process.exitCode = result.status ?? 1;
+        return;
+      }
+    }
+  } finally {
+    cleanup();
+  }
 }
 
-run("pnpm", [
-  "exec",
-  "tsc",
-  "-p",
-  "scripts/raw-swarm/sdk-player/tsconfig.json",
-]);
-run("mise", [
-  "exec",
-  "--",
-  "pnpm",
-  "exec",
-  resolve(__dirname, "../../node_modules/.bin/vitest"),
-  "run",
-  ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
-  "--pool=threads",
-  "--maxWorkers=1",
-]);
+if (require.main === module) {
+  main().catch((error) => {
+    process.stderr.write(
+      `Raw Swarm deterministic verification failed: ${error instanceof Error ? error.message : String(error)}\n`,
+    );
+    process.exitCode = 1;
+  });
+}
+
+module.exports = { main };
