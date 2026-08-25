@@ -12,7 +12,11 @@ import { afterEach, describe, expect, test } from "vitest";
 
 import {
   acceptancePlaySessionId,
+  attackRollFill,
+  attackSubjectFromActs,
+  attackTargetFill,
   createBaselineCharacterSession,
+  rolledDiceFill,
 } from "../test-support/mcp-acceptance-scenarios.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { createDndMcpHttpServer } from "./public-http-server.ts";
@@ -568,6 +572,174 @@ describe("recoverable Play Session protocol", () => {
       recoveredRepository.close();
     }
   }, 90_000);
+
+  test("recovers an active Act through Runtime Holes and atomic closeout", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "dnd-battle-act-"));
+    temporaryDirectories.push(directory);
+    const databasePath = join(directory, "play-sessions.sqlite");
+    const initialRepository = openRepository(databasePath);
+    const initialServer = createDndMcpHttpServer({
+      playSessionRepository: initialRepository,
+    });
+    const initialClient = await connectHttpClient(await listen(initialServer));
+    const playSessionId = await acceptancePlaySessionId(initialClient);
+    const baseline = await createBaselineCharacterSession(initialClient);
+    await callStructuredTool(initialClient, {
+      name: "start_battle",
+      arguments: battleEntryArguments(
+        playSessionId,
+        baseline.characterId,
+        "direct",
+      ),
+    });
+    const discovered = await callStructuredTool(initialClient, {
+      name: "discover_battle_acts",
+      arguments: { playSessionId },
+    });
+    const subject = attackSubjectFromActs(
+      operationResult(discovered),
+      "fighter-direct-entry",
+      "Longsword",
+    );
+    await callStructuredTool(initialClient, {
+      name: "fill_battle_hole",
+      arguments: {
+        playSessionId,
+        subject,
+        fill: attackTargetFill(subject, "goblin-direct-entry"),
+      },
+    });
+    await initialClient.close();
+    await close(initialServer);
+    initialRepository.close();
+
+    const resolutionRepository = openRepository(databasePath);
+    const resolutionServer = createDndMcpHttpServer({
+      playSessionRepository: resolutionRepository,
+    });
+    const resolutionEndpoint = await listen(resolutionServer);
+    const firstResolutionClient = await connectHttpClient(resolutionEndpoint);
+    const secondResolutionClient = await connectHttpClient(resolutionEndpoint);
+    const fillAttackRoll = (client: Client) =>
+      client.callTool({
+        name: "fill_battle_hole",
+        arguments: {
+          playSessionId,
+          subject,
+          fill: attackRollFill(16, 14),
+        },
+      });
+    const competingAttackRolls = await Promise.all([
+      fillAttackRoll(firstResolutionClient),
+      fillAttackRoll(secondResolutionClient),
+    ]);
+    const attackRollResults = competingAttackRolls.map((result) => {
+      if (!isJsonObject(result.structuredContent)) {
+        throw new Error("Expected a typed concurrent Battle fill result.");
+      }
+      return objectField(operationResult(result.structuredContent), "result");
+    });
+    expect(attackRollResults.map((result) => result.tag).sort()).toEqual([
+      "invalid",
+      "needsHoles",
+    ]);
+    expect(
+      attackRollResults.find((result) => result.tag === "invalid"),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "invalidFill",
+    });
+
+    const rolled = await callStructuredTool(firstResolutionClient, {
+      name: "roll_dice",
+      arguments: {
+        playSessionId,
+        groups: [{ dice: 1, dieSize: 8 }],
+      },
+    });
+    const rolledGroups = arrayField(operationResult(rolled), "groups");
+    const rolledGroup = rolledGroups[0];
+    if (!isJsonObject(rolledGroup)) {
+      throw new Error("Expected the server-correlated damage roll.");
+    }
+    const damageResults = arrayField(rolledGroup, "results");
+    const resolved = await callStructuredTool(firstResolutionClient, {
+      name: "fill_battle_hole",
+      arguments: {
+        playSessionId,
+        subject,
+        fill: rolledDiceFill("battle:attack:damage-result:1d8+3-slashing", [
+          damageResults.map(numberValue),
+        ]),
+      },
+    });
+    expect(operationResult(resolved)).toMatchObject({
+      result: { tag: "resolved" },
+    });
+    await Promise.all([
+      firstResolutionClient.close(),
+      secondResolutionClient.close(),
+    ]);
+    await close(resolutionServer);
+    resolutionRepository.close();
+
+    const closeoutRepository = openRepository(databasePath);
+    const closeoutServer = createDndMcpHttpServer({
+      playSessionRepository: closeoutRepository,
+    });
+    const closeoutClient = await connectHttpClient(
+      await listen(closeoutServer),
+    );
+    const recoveredBattle = await callStructuredTool(closeoutClient, {
+      name: "read_battle_state",
+      arguments: { playSessionId },
+    });
+    const snapshot = objectField(operationResult(recoveredBattle), "snapshot");
+    const goblin = arrayField(snapshot, "combatants").find(
+      (combatant) =>
+        isJsonObject(combatant) &&
+        combatant.combatantId === "goblin-direct-entry",
+    );
+    if (!isJsonObject(goblin)) {
+      throw new Error("Expected the recovered Goblin Warrior combatant.");
+    }
+    expect(goblin.hp).toBeLessThan(7);
+    const ended = await callStructuredTool(closeoutClient, {
+      name: "end_battle",
+      arguments: { playSessionId },
+    });
+    expect(operationResult(ended)).toMatchObject({
+      endedBattleId: "battle:recoverable-direct-entry",
+      session: { battleState: { tag: "none" } },
+    });
+    await closeoutClient.close();
+    await close(closeoutServer);
+    closeoutRepository.close();
+
+    const finalRepository = openRepository(databasePath);
+    const finalServer = createDndMcpHttpServer({
+      playSessionRepository: finalRepository,
+    });
+    const finalClient = await connectHttpClient(await listen(finalServer));
+    try {
+      const listed = await callStructuredTool(finalClient, {
+        name: "list_characters",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(listed)).toMatchObject({
+        characters: [
+          { characterId: baseline.characterId, status: "available" },
+        ],
+      });
+      expect(listed).toMatchObject({
+        projection: { battleState: { tag: "none" } },
+      });
+    } finally {
+      await finalClient.close();
+      await close(finalServer);
+      finalRepository.close();
+    }
+  }, 90_000);
 });
 
 function battleEntryArguments(
@@ -600,6 +772,11 @@ function battleEntryArguments(
       },
     ],
   };
+}
+
+function numberValue(value: unknown): number {
+  if (typeof value !== "number") throw new Error("Expected a rolled number.");
+  return value;
 }
 
 async function listen(

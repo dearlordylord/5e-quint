@@ -75,8 +75,16 @@ recovers as the same active Battle, and an initial-Initiative setup recovers as
 the same setup before one atomic finalization makes it the sole active Battle.
 Concurrent finalization returns one accepted transition and one typed
 already-finalized result; it never reconstructs both lifecycle owners. Active
-Battle Acts, Runtime Holes, dice continuity, and closeout remain the next
-recovery slice.
+Battle recovery continues the same Character + Goblin Warrior workflow across
+the target, attack-roll, and damage Runtime Holes: the target fill is retained
+before replacement, competing attack-roll fills settle as one `needsHoles` and
+one typed `invalidFill`, the server-correlated damage roll resolves after
+replacement, and another replacement reconstructs the damaged combatant before
+atomic closeout. A final replacement reconstructs the complete available
+Character Session roster with no active Battle. The serialized random seed and
+retained command prefix also have a bounded property test over arbitrary valid
+dice-group sequences: two independently reconstructed owners produce identical
+raw faces for every prefix without a parallel dice cursor.
 Authentication, guest grants, retention, and deletion remain the later
 public-boundary increment defined by ADR 0007.
 

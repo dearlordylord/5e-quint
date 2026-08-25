@@ -56,7 +56,7 @@ const StoredPlaySessionRowSchema = Schema.Struct({
   operations_json: Schema.String,
 });
 
-type PlaySessionRandomSeed = typeof RandomSeedSchema.Type;
+export type PlaySessionRandomSeed = typeof RandomSeedSchema.Type;
 type RecoverablePlaySessionRecord = {
   readonly playSessionId: PlaySessionId;
   readonly formatVersion: typeof RECOVERABLE_PLAY_SESSION_FORMAT_VERSION;
@@ -109,6 +109,9 @@ export function openSqlitePlaySessionRepository(
     return Either.left(unreadableRepositoryIssue(cause));
   }
 }
+
+export const decodePlaySessionRandomSeed =
+  Schema.decodeUnknownEither(RandomSeedSchema);
 
 function createSqlitePlaySessionRepository(
   databasePath: string,
@@ -388,9 +391,7 @@ function publishCurrentProjection(
 }
 
 function generatedPlaySessionRandomSeed(): PlaySessionRandomSeed {
-  const decoded = Schema.decodeUnknownEither(RandomSeedSchema)(
-    randomBytes(32).toString("hex"),
-  );
+  const decoded = decodePlaySessionRandomSeed(randomBytes(32).toString("hex"));
   if (Either.isLeft(decoded)) {
     throw new Error("Generated Play Session random seed was invalid.");
   }

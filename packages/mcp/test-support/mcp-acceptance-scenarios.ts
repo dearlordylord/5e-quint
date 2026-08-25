@@ -30,7 +30,7 @@ import { loadoutHoleId, unitHoleId } from "./creation-hole-ids.ts";
 import { battleToolWireArgs } from "./battle-tool-wire-args.ts";
 import { requireJsonSchema } from "./json-schema.ts";
 
-type JsonObject = Record<string, unknown>;
+export type JsonObject = Record<string, unknown>;
 
 const CatalogUnitListProtocolSchema = Schema.Struct({
   unitsByKind: Schema.Record({
@@ -3988,7 +3988,7 @@ function returnedDraftRevision(payload: JsonObject) {
   return revision;
 }
 
-function attackSubjectFromActs(
+export function attackSubjectFromActs(
   payload: JsonObject,
   actorId: string,
   attackName: string,
@@ -4040,7 +4040,7 @@ function actionSubjectFromActs(
   return act.subject;
 }
 
-function attackTargetFill(subject: JsonObject, value: string) {
+export function attackTargetFill(subject: JsonObject, value: string) {
   assert.equal(typeof subject.actorId, "string");
   assert.equal(typeof subject.procedureRef, "string");
   const selection = {
@@ -4143,7 +4143,11 @@ function sourceProcedureRefFromSubject(subject: JsonObject): string {
   return parseString(subject.procedureRef, "battle subject procedureRef");
 }
 
-function attackRollFill(total: number, naturalD20: number, rollMode?: string) {
+export function attackRollFill(
+  total: number,
+  naturalD20: number,
+  rollMode?: string,
+) {
   return battleAttackRollFill(
     "battle:attack:roll",
     total,
@@ -4195,7 +4199,7 @@ async function fillAttackSequencePart(
   });
 }
 
-function rolledDiceFill(
+export function rolledDiceFill(
   holeId: string,
   groups: readonly (readonly number[])[],
 ) {
