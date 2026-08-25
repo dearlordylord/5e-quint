@@ -29,6 +29,7 @@ const QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/sdk-player/scenario-character-runtime.test.ts",
   "scripts/raw-swarm/sdk-player/scenario-setup-authoring.test.ts",
   "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts",
+  "scripts/raw-swarm/sdk-player/scenario-spatial-decisions.test.ts",
   "scripts/raw-swarm/sdk-player/sdk-audit.test.ts",
   "scripts/raw-swarm/sdk-player/sdk-replay-input.test.ts",
   "scripts/raw-swarm/sdk-player/sdk-review-packet.test.ts",
