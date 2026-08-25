@@ -2362,6 +2362,40 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("scans supported siblings alongside a supported-extension directory index", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(
+        rawSwarmOutputDirectory,
+        "transitive-extension-directory-collision-",
+      ),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const extensionDirectory = resolve(fixtureRoot, "dir.js");
+    const harmlessIndexPath = resolve(extensionDirectory, "index.ts");
+    const forbiddenSiblingPath = resolve(fixtureRoot, "dir.js.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(extensionDirectory, { recursive: true });
+    writeFileSync(testPath, 'import "./dir.js";\n');
+    writeFileSync(harmlessIndexPath, "export const harmless = true;\n");
+    writeFileSync(
+      forbiddenSiblingPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSiblingPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("fails precisely when a source candidate cannot be inspected", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-unreadable-candidate-"),

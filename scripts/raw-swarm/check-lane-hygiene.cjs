@@ -255,14 +255,10 @@ function sourcePathsForCandidate(candidate, visited = new Set()) {
   }
   const candidates =
     observation.kind === "directory"
-      ? hasSupportedSourceExtension(candidate)
-        ? sourceResolutionSuffixes.map((extension) =>
-            join(candidate, `index${extension}`),
-          )
-        : sourceResolutionSuffixes.flatMap((extension) => [
-            `${candidate}${extension}`,
-            join(candidate, `index${extension}`),
-          ])
+      ? sourceResolutionSuffixes.flatMap((extension) => [
+          `${candidate}${extension}`,
+          join(candidate, `index${extension}`),
+        ])
       : sourceResolutionSuffixes.flatMap((extension) => [
           `${candidate}${extension}`,
           join(candidate, `index${extension}`),
