@@ -32,6 +32,10 @@ import {
 import { evaluateScenarioCharacters } from "./scenario-character-runtime.ts";
 import { evaluateScenarioSetup } from "./scenario-setup-runtime.ts";
 import { parseSdkTranscript } from "./sdk-transcript.ts";
+import {
+  CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS,
+  CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS,
+} from "../lane-classification.cjs";
 
 const CONSUMER_SCENARIO_ID = "ready-mixed-consumer";
 const SUPERVISOR_HANDOFF_STARTED_AT = "2026-08-21T08:00:00.000Z";
@@ -127,7 +131,7 @@ describe("SDK player consumer distribution", () => {
         [
           "exec",
           "tsx",
-          "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+          CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS.cli,
           destination,
           trustedDestination,
           scenarioPath,
@@ -188,7 +192,7 @@ describe("SDK player consumer distribution", () => {
         entryPoints: [
           resolve(
             repoRoot,
-            "scripts/raw-swarm/sdk-player/scenario-character-client.ts",
+            CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.scenarioCharacterClient,
           ),
         ],
         outfile: join(destination, "character-client.mjs"),
@@ -1066,7 +1070,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           [
             "exec",
             "tsx",
-            "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+            CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS.cli,
             destination,
             trustedDestination,
             resolve(
@@ -1208,7 +1212,7 @@ export const continueBattle: PlayerContinuation = (context) => {
           [
             "exec",
             "tsx",
-            "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+            CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS.cli,
             destination,
             trustedDestination,
             resolve(

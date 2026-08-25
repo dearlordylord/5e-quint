@@ -16,6 +16,8 @@ const {
 } = require("node:path");
 
 const {
+  CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS,
+  CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS,
   CODING_AGENT_EXECUTABLES,
   DETERMINISTIC_BLOCKED_EXECUTABLES,
   DETERMINISTIC_NETWORK_GLOBALS,
@@ -535,19 +537,52 @@ function targetsFromPackageManifest(manifest) {
   return [...new Set(targets)];
 }
 
+function sourcePathsFromPackageManifest(
+  packageDirectory,
+  manifest,
+  subpath,
+  visited,
+) {
+  const targets =
+    subpath === "."
+      ? targetsFromPackageManifest(manifest)
+      : Object.hasOwn(manifest, "exports")
+        ? targetsFromPackageExports(manifest.exports, subpath).filter(
+            validPackageRelativeTarget,
+          )
+        : [subpath].filter(validPackageRelativeTarget);
+  const sourcePaths = targets.flatMap((target) =>
+    sourcePathsForPackageEntryTarget(packageDirectory, target, visited),
+  );
+  if (subpath !== ".") return [...new Set(sourcePaths)];
+  return [
+    ...new Set([
+      ...sourcePaths,
+      ...sourcePathsFromCandidateGroups(
+        sourceCandidateGroupsForObservation(packageDirectory, {
+          kind: "directory",
+        }),
+        visited,
+      ),
+    ]),
+  ];
+}
+
 function sourcePathsFromPackageDirectory(directory, visited) {
   const manifestPath = join(directory, "package.json");
   const manifest = readPackageManifest(manifestPath);
-  if (manifest === undefined) return [];
+  if (manifest === undefined) return { kind: "not-a-package" };
   const canonicalManifestPath = canonicalPathForOwnership(manifestPath);
   const packageDirectory = dirname(canonicalManifestPath);
-  return [
-    ...new Set(
-      targetsFromPackageManifest(manifest).flatMap((target) =>
-        sourcePathsForPackageEntryTarget(packageDirectory, target, visited),
-      ),
+  return {
+    kind: "resolved",
+    paths: sourcePathsFromPackageManifest(
+      packageDirectory,
+      manifest,
+      ".",
+      visited,
     ),
-  ];
+  };
 }
 
 function sourcePathsForPackageEntryTarget(packageDirectory, target, visited) {
@@ -620,15 +655,12 @@ function sourcePathsFromPackageImports(sourcePath, specifier, visited) {
 
 function sourcePathsFromDirectoryCandidate(directory, visited) {
   const observation = { kind: "directory" };
-  return [
-    ...new Set([
-      ...sourcePathsFromPackageDirectory(directory, visited),
-      ...sourcePathsFromCandidateGroups(
-        sourceCandidateGroupsForObservation(directory, observation),
-        visited,
-      ),
-    ]),
-  ];
+  const packageResolution = sourcePathsFromPackageDirectory(directory, visited);
+  if (packageResolution.kind === "resolved") return packageResolution.paths;
+  return sourcePathsFromCandidateGroups(
+    sourceCandidateGroupsForObservation(directory, observation),
+    visited,
+  );
 }
 
 function sourcePathsForCandidate(candidate, visited = new Set()) {
@@ -691,6 +723,12 @@ function workspacePackageRecords() {
   for (const packageJsonPath of filesBelow(packagesDirectory).filter(
     (path) => basename(path) === "package.json",
   )) {
+    const canonicalManifestPath = canonicalPathForOwnership(packageJsonPath);
+    if (!lexicallyRepositoryOwnedPath(canonicalManifestPath)) {
+      throw new Error(
+        `Workspace package manifest ${packageJsonPath} resolves outside the repository or into node_modules`,
+      );
+    }
     const packageJson = readPackageManifest(packageJsonPath);
     if (
       packageJson === undefined ||
@@ -700,8 +738,8 @@ function workspacePackageRecords() {
       continue;
     }
     records.set(packageJson.name, {
-      root: dirname(packageJsonPath),
-      exports: packageJson.exports,
+      root: dirname(canonicalManifestPath),
+      manifest: packageJson,
     });
   }
   return records;
@@ -717,15 +755,14 @@ function workspacePackageImportPaths(specifier, visited) {
     }
     const suffix = specifier.slice(packageName.length);
     const subpath = suffix.length === 0 ? "." : `.${suffix}`;
-    const targets = targetsFromPackageExports(record.exports, subpath);
-    if (targets.length === 0 && subpath === ".") {
-      targets.push("./src/index.ts");
-    }
-    for (const target of targets) {
-      sourcePaths.push(
-        ...sourcePathsForTarget(resolve(record.root, target), visited),
-      );
-    }
+    sourcePaths.push(
+      ...sourcePathsFromPackageManifest(
+        record.root,
+        record.manifest,
+        subpath,
+        visited,
+      ),
+    );
   }
   return [...new Set(sourcePaths)];
 }
@@ -813,6 +850,50 @@ const TRACKED_SCENARIO_SOURCE_ROOTS = Object.freeze([
   "scripts/raw-swarm/sdk-player/scenarios",
   "scripts/raw-swarm/sdk-player/test-fixtures",
 ]);
+function sourcePathsFromConsumerDistributionRuntimeEntries(sourcePath) {
+  if (
+    !Object.values(CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS)
+      .map((entryPath) => resolve(root, entryPath))
+      .includes(sourcePath)
+  ) {
+    return [];
+  }
+  return [
+    ...Object.values(CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS),
+    ...Object.values(CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS),
+  ].map((relativePath) =>
+    repositoryOwnedSourceFile(relativePath, "Consumer distribution entry"),
+  );
+}
+
+function assertConsumerDistributionGeneratedSubmissionBoundary() {
+  // Generated attempt.ts files are not repository-owned static sources. The
+  // generated supervisor is executed under the deterministic guard instead;
+  // this assertion keeps that runtime boundary explicit and fail-closed.
+  const supervisorSource = readFileSync(
+    join(root, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.supervisor),
+    "utf8",
+  );
+  const capabilityGuardSource = readFileSync(
+    join(root, "scripts/raw-swarm/deterministic-capability-guard.cjs"),
+    "utf8",
+  );
+  assert.match(
+    supervisorSource,
+    /pathToFileURL\(submissionPath\)/u,
+    "The generated supervisor must keep its runtime-supplied submission boundary explicit.",
+  );
+  assert.match(
+    capabilityGuardSource,
+    /function deterministicEnvironment[\s\S]{0,400}NODE_OPTIONS:\s*DETERMINISTIC_NODE_OPTIONS/u,
+    "Generated supervisor submissions must inherit the deterministic capability guard.",
+  );
+  assert.match(
+    capabilityGuardSource,
+    /function deterministicChildValues[\s\S]{0,400}deterministicEnvironment/u,
+    "Generated supervisor submissions must inherit the deterministic capability guard.",
+  );
+}
 
 function trackedScenarioModulePaths() {
   return TRACKED_SCENARIO_SOURCE_ROOTS.flatMap((relativeDirectory) => {
@@ -856,6 +937,9 @@ function sourcePathsForQualityTest(testPath) {
       continue;
     }
     pending.push(...sourcePathsFromScenarioRuntimeModules(sourcePath));
+    pending.push(
+      ...sourcePathsFromConsumerDistributionRuntimeEntries(sourcePath),
+    );
     const source = readFileSync(sourcePath, "utf8");
     for (const rawSpecifier of importSpecifiers(source)) {
       const specifier = stripViteImportPostfix(rawSpecifier);
@@ -866,6 +950,24 @@ function sourcePathsForQualityTest(testPath) {
     }
   }
   return paths;
+}
+
+function repositoryOwnedSourceFile(pathArgument, sourceKind) {
+  const sourcePath = resolve(root, pathArgument);
+  if (!sourceCandidateOwnership(sourcePath)) {
+    throw new Error(
+      `${sourceKind} path ${pathArgument} is outside the repository or enters node_modules`,
+    );
+  }
+  const canonicalSourcePath = canonicalPathForOwnership(sourcePath);
+  const observation = sourceCandidateObservation(canonicalSourcePath);
+  if (observation.kind === "failure") throw new Error(observation.message);
+  if (observation.kind !== "file") {
+    throw new Error(
+      `${sourceKind} does not exist as a regular file: ${pathArgument}`,
+    );
+  }
+  return canonicalSourcePath;
 }
 
 function assertSourceCapabilities(sourcePath) {
@@ -879,24 +981,14 @@ function assertSourceCapabilities(sourcePath) {
 }
 
 function runSourceCheck(sourcePathArgument) {
-  const sourcePath = resolve(root, sourcePathArgument);
-  assert.equal(
-    existsSync(sourcePath),
-    true,
-    `Source does not exist: ${sourcePathArgument}`,
-  );
+  const sourcePath = repositoryOwnedSourceFile(sourcePathArgument, "Source");
   assertSourceCapabilities(sourcePath);
   process.stdout.write(`Deterministic source passed: ${sourcePathArgument}\n`);
 }
 
 function runTestSourceCheck(testPathArgument) {
-  const testPath = resolve(root, testPathArgument);
-  assert.equal(
-    existsSync(testPath),
-    true,
-    `Test source does not exist: ${testPathArgument}`,
-  );
-  for (const sourcePath of sourcePathsForQualityTest(testPathArgument)) {
+  const testPath = repositoryOwnedSourceFile(testPathArgument, "Test");
+  for (const sourcePath of sourcePathsForQualityTest(testPath)) {
     const relativeSourcePath = relative(root, sourcePath);
     if (
       MODEL_BACKED_SOURCE_FILES.includes(relativeSourcePath) ||
@@ -909,6 +1001,13 @@ function runTestSourceCheck(testPathArgument) {
   process.stdout.write(
     `Deterministic source tree passed: ${testPathArgument}\n`,
   );
+}
+
+function runTestSourceListing(testPathArgument) {
+  const testPath = repositoryOwnedSourceFile(testPathArgument, "Test");
+  for (const sourcePath of sourcePathsForQualityTest(testPath)) {
+    process.stdout.write(`${relative(root, sourcePath)}\n`);
+  }
 }
 
 function runLaneHygiene() {
@@ -941,7 +1040,11 @@ function runLaneHygiene() {
     "A Raw Swarm test cannot be both quality-owned and excluded from quality.",
   );
   for (const testPath of discoveredTests) {
-    for (const sourcePath of sourcePathsForQualityTest(testPath)) {
+    const ownedTestPath = repositoryOwnedSourceFile(
+      testPath,
+      "Discovered test",
+    );
+    for (const sourcePath of sourcePathsForQualityTest(ownedTestPath)) {
       const relativeSourcePath = relative(root, sourcePath);
       if (
         MODEL_BACKED_SOURCE_FILES.includes(relativeSourcePath) ||
@@ -972,6 +1075,7 @@ function runLaneHygiene() {
       `Deterministic transitive-scan boundary points to a missing file: ${sourcePath}`,
     );
   }
+  assertConsumerDistributionGeneratedSubmissionBoundary();
 
   const scripts = packageJson.scripts;
   assert.equal(
@@ -1161,6 +1265,8 @@ if (require.main === module) {
     runSourceCheck(process.argv[3]);
   } else if (process.argv[2] === "--test") {
     runTestSourceCheck(process.argv[3]);
+  } else if (process.argv[2] === "--list-test-sources") {
+    runTestSourceListing(process.argv[3]);
   } else {
     runLaneHygiene();
   }

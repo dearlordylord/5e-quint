@@ -24,6 +24,21 @@ const SUPPORTED_VITEST_TEST_FILE_SUFFIXES = Object.freeze(
   ),
 );
 
+// Consumer distribution is compiled from these repository-owned child
+// entrypoints at runtime. The builder and deterministic capability scanner
+// share this named inventory so an esbuild entry cannot become an invisible
+// quality-path dependency.
+const CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS = Object.freeze({
+  supervisor: "scripts/raw-swarm/sdk-player/supervisor-cli.ts",
+  playerClient: "scripts/raw-swarm/sdk-player/player-client.ts",
+  scenarioCharacterClient:
+    "scripts/raw-swarm/sdk-player/scenario-character-client.ts",
+});
+const CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS = Object.freeze({
+  cli: "scripts/raw-swarm/sdk-player/consumer-distribution-cli.ts",
+  builder: "scripts/raw-swarm/sdk-player/consumer-distribution.ts",
+});
+
 function isSupportedVitestTestFilename(path) {
   return SUPPORTED_VITEST_TEST_FILE_SUFFIXES.some((suffix) =>
     path.endsWith(suffix),
@@ -211,6 +226,8 @@ const DETERMINISTIC_BLOCKED_EXECUTABLES = Object.freeze(
   ].sort(),
 );
 module.exports = {
+  CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS,
+  CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS,
   SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
   SUPPORTED_VITEST_TEST_FILE_SUFFIXES,
   isSupportedVitestTestFilename,

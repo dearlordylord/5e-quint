@@ -25,6 +25,8 @@ import { SdkPlayerTranscriptHeaderSchema } from "./sdk-player/sdk-transcript.ts"
 import { compileTrustedCSource } from "./deterministic-toolchain.cjs";
 import { installDeterministicCleanup } from "./deterministic-cleanup.cjs";
 import {
+  CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS,
+  CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS,
   SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
   SUPPORTED_VITEST_TEST_FILE_SUFFIXES,
 } from "./lane-classification.cjs";
@@ -1853,6 +1855,43 @@ describe("RAW swarm runner boundaries", () => {
     }
   });
 
+  test("rejects direct and symlinked --test paths outside the repository", () => {
+    const outsideRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-lane-test-outside-"),
+    );
+    const outsideTestPath = resolve(outsideRoot, "outside.test.ts");
+    const linkedTestPath = resolve(
+      rawSwarmOutputDirectory,
+      "outside-test-link.test.ts",
+    );
+    writeFileSync(outsideTestPath, "export const harmless = true;\n");
+    symlinkSync(outsideTestPath, linkedTestPath, "file");
+    try {
+      const directChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", outsideTestPath],
+        { encoding: "utf8" },
+      );
+      expect(directChecked.status).not.toBe(0);
+      expect(`${directChecked.stdout}${directChecked.stderr}`).toContain(
+        "outside the repository",
+      );
+
+      const symlinkChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, linkedTestPath)],
+        { encoding: "utf8" },
+      );
+      expect(symlinkChecked.status).not.toBe(0);
+      expect(`${symlinkChecked.stdout}${symlinkChecked.stderr}`).toContain(
+        "resolves outside the repository",
+      );
+    } finally {
+      rmSync(linkedTestPath, { force: true });
+      rmSync(outsideRoot, { recursive: true, force: true });
+    }
+  });
+
   test.each([
     ["fork custom network executable", "fork", "curl", "execPath"],
     ["fork custom coding-agent executable", "fork", "codex", "execPath"],
@@ -1979,6 +2018,136 @@ describe("RAW swarm runner boundaries", () => {
       rmSync(fixtureRoot, { recursive: true, force: true });
       rmSync(packageDirectory, { recursive: true, force: true });
       rmSync(tsconfigAliasEntryPath, { force: true });
+    }
+  }, 30_000);
+
+  test("follows a workspace package manifest entry field", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "lane-workspace-package-entry-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-workspace-package-entry-${fixtureName}`,
+    );
+    const packageName = `@dnd/raw-swarm-workspace-package-entry-${fixtureName}`;
+    const exportsPackageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-workspace-package-exports-${fixtureName}`,
+    );
+    const exportsPackageName = `@dnd/raw-swarm-workspace-package-exports-${fixtureName}`;
+    const packageEntryPath = resolve(packageDirectory, "src", "runtime.ts");
+    const deepEntryPath = resolve(packageDirectory, "src", "deep.ts");
+    const exportsDeepEntryPath = resolve(
+      exportsPackageDirectory,
+      "src",
+      "deep.ts",
+    );
+    const entryPath = resolve(fixtureRoot, "package-entry.ts");
+    const deepTestPath = resolve(fixtureRoot, "package-deep-entry.ts");
+    const exportsEntryPath = resolve(fixtureRoot, "exports-entry.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(resolve(packageDirectory, "src"), { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        { name: packageName, private: true, main: "./src/runtime.ts" },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(
+      packageEntryPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    writeFileSync(
+      deepEntryPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    mkdirSync(resolve(exportsPackageDirectory, "src"), { recursive: true });
+    writeFileSync(
+      resolve(exportsPackageDirectory, "package.json"),
+      `${JSON.stringify(
+        {
+          name: exportsPackageName,
+          private: true,
+          exports: { ".": "./src/runtime.ts" },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(
+      resolve(exportsPackageDirectory, "src", "runtime.ts"),
+      "export const runtime = true;\n",
+    );
+    writeFileSync(
+      exportsDeepEntryPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    writeFileSync(entryPath, `import ${JSON.stringify(packageName)};\n`);
+    writeFileSync(
+      deepTestPath,
+      `import ${JSON.stringify(`${packageName}/src/deep`)};\n`,
+    );
+    writeFileSync(
+      exportsEntryPath,
+      `import ${JSON.stringify(`${exportsPackageName}/src/deep`)};\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      const output = `${checked.stdout}${checked.stderr}`;
+      expect(output).toContain(relative(repoRoot, packageEntryPath));
+
+      const deepChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, deepTestPath)],
+        { encoding: "utf8" },
+      );
+      expect(deepChecked.status).not.toBe(0);
+      expect(`${deepChecked.stdout}${deepChecked.stderr}`).toContain(
+        relative(repoRoot, deepEntryPath),
+      );
+
+      const exportsChecked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, exportsEntryPath)],
+        { encoding: "utf8" },
+      );
+      expect(exportsChecked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+      rmSync(exportsPackageDirectory, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("inventories dynamically built consumer-distribution child entries", () => {
+    const consumerDistributionTest = relative(
+      repoRoot,
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+      ),
+    );
+    const checked = spawnSync(
+      process.execPath,
+      [laneHygieneChecker, "--list-test-sources", consumerDistributionTest],
+      { encoding: "utf8" },
+    );
+    expect(checked.status).toBe(0);
+    for (const relativeEntryPath of [
+      ...Object.values(CONSUMER_DISTRIBUTION_RUNTIME_ENTRYPOINTS),
+      ...Object.values(CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS),
+    ]) {
+      expect(checked.stdout).toContain(relativeEntryPath);
     }
   }, 30_000);
 
