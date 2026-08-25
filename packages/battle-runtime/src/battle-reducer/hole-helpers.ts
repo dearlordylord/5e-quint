@@ -111,6 +111,7 @@ import {
 } from "./statblock-attacks.ts";
 import { activeSpellWeaponDamageRiders } from "./damage-helpers.ts";
 import { combatantEffectiveSize } from "./druid-wild-shape.ts";
+import { supportedStatBlockAttackHitConditionRiders } from "../statblock-attack-hit-condition-support.ts";
 import {
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_ID,
   THAUMATURGY_BOOMING_VOICE_INFLUENCE_ABILITY_CHECK_HOLE_INSTANCE,
@@ -753,15 +754,21 @@ export function ordinaryObjectAttackOptionIsSupported(
     Match.when({ kind: "unarmedStrike" }, () => false),
     Match.when(
       { kind: "statBlockAttack" },
-      (option) =>
-        option.traitAttackRollModes === undefined &&
-        option.attack.onHit.every(
-          (effect) =>
-            effect.kind === "damage" ||
-            effect.kind === "conditional_bonus_damage",
-        ),
+      statBlockAttackSupportsOrdinaryObjectTarget,
     ),
     Match.exhaustive,
+  );
+}
+
+function statBlockAttackSupportsOrdinaryObjectTarget(
+  attack: Extract<
+    BoundSupportedAttackActionOption,
+    { readonly kind: "statBlockAttack" }
+  >,
+): boolean {
+  return (
+    attack.traitAttackRollModes === undefined &&
+    supportedStatBlockAttackHitConditionRiders(attack.attack).length === 0
   );
 }
 
