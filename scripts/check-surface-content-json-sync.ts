@@ -197,18 +197,195 @@ function surfacePublicationRecordKind(
     : "unknown";
 }
 
+type DhallToken = {
+  readonly tag: "word" | "string" | "symbol";
+  readonly value: string;
+  readonly depth: number;
+};
+
 function sourceRecordKind(sourcePath: string): SurfacePublicationRecordKind {
   try {
-    const contents = readFileSync(sourcePath, "utf8");
-    const kind = /\bkind\s*=\s*"([^"]+)"/.exec(contents)?.[1];
-    return kind === undefined
-      ? "unknown"
-      : kind === "statBlock"
-        ? "statBlock"
-        : "other";
+    return parseDhallRecordKind(readFileSync(sourcePath, "utf8"));
   } catch {
     return "unknown";
   }
+}
+
+function parseDhallRecordKind(contents: string): SurfacePublicationRecordKind {
+  const tokens = tokenizeDhall(contents);
+  const resultIndex = lastTopLevelTokenIndex(tokens, "in");
+  if (resultIndex === undefined) return "unknown";
+  const result = tokens[resultIndex + 1];
+  if (result === undefined) return "unknown";
+  if (result.value === "{" || result.value === "[") {
+    return recordKindFromResult(tokens, resultIndex + 1);
+  }
+  if (result.tag !== "word") return "unknown";
+  const bindingIndex = topLevelBindingObjectIndex(tokens, result.value);
+  return bindingIndex === undefined
+    ? "unknown"
+    : recordKindAtObject(tokens, bindingIndex);
+}
+
+function tokenizeDhall(contents: string): readonly DhallToken[] {
+  const tokens: DhallToken[] = [];
+  let index = 0;
+  let depth = 0;
+  while (index < contents.length) {
+    const character = contents[index];
+    if (character === undefined) break;
+    if (/\s/.test(character)) {
+      index += 1;
+      continue;
+    }
+    if (character === "-" && contents[index + 1] === "-") {
+      index = contents.indexOf("\n", index + 2);
+      if (index < 0) break;
+      continue;
+    }
+    if (character === '"') {
+      const end = dhallStringEnd(contents, index);
+      tokens.push({
+        tag: "string",
+        value: contents.slice(index + 1, Math.max(index + 1, end - 1)),
+        depth,
+      });
+      index = end;
+      continue;
+    }
+    if ("{[()]}".includes(character)) {
+      const tokenDepth = "]]})".includes(character)
+        ? Math.max(depth - 1, 0)
+        : depth;
+      tokens.push({ tag: "symbol", value: character, depth: tokenDepth });
+      depth = "]]})".includes(character) ? Math.max(depth - 1, 0) : depth + 1;
+      index += 1;
+      continue;
+    }
+    if (/[A-Za-z_]/.test(character)) {
+      const end = readDhallWordEnd(contents, index);
+      tokens.push({
+        tag: "word",
+        value: contents.slice(index, end),
+        depth,
+      });
+      index = end;
+      continue;
+    }
+    tokens.push({ tag: "symbol", value: character, depth });
+    index += 1;
+  }
+  return tokens;
+}
+
+function dhallStringEnd(contents: string, start: number): number {
+  let index = start + 1;
+  while (index < contents.length) {
+    if (contents[index] === "\\") {
+      index += 2;
+      continue;
+    }
+    if (contents[index] === '"') return index + 1;
+    index += 1;
+  }
+  return contents.length;
+}
+
+function readDhallWordEnd(contents: string, start: number): number {
+  let index = start + 1;
+  while (
+    index < contents.length &&
+    /[A-Za-z0-9_'-]/.test(contents[index] ?? "")
+  ) {
+    index += 1;
+  }
+  return index;
+}
+
+function lastTopLevelTokenIndex(
+  tokens: readonly DhallToken[],
+  value: string,
+): number | undefined {
+  let match: number | undefined;
+  tokens.forEach((token, index) => {
+    if (token.tag === "word" && token.depth === 0 && token.value === value) {
+      match = index;
+    }
+  });
+  return match;
+}
+
+function recordKindFromResult(
+  tokens: readonly DhallToken[],
+  resultIndex: number,
+): SurfacePublicationRecordKind {
+  const result = tokens[resultIndex];
+  if (result?.value === "{") return recordKindAtObject(tokens, resultIndex);
+  if (result?.value !== "[") return "unknown";
+  const objectIndex = tokens.findIndex(
+    (token, index) =>
+      index > resultIndex &&
+      token.value === "{" &&
+      token.depth === (result?.depth ?? 0) + 1,
+  );
+  return objectIndex < 0 ? "unknown" : recordKindAtObject(tokens, objectIndex);
+}
+
+function topLevelBindingObjectIndex(
+  tokens: readonly DhallToken[],
+  bindingName: string,
+): number | undefined {
+  for (let index = 0; index < tokens.length - 1; index += 1) {
+    const token = tokens[index];
+    const name = tokens[index + 1];
+    if (
+      token?.tag !== "word" ||
+      token.depth !== 0 ||
+      token.value !== "let" ||
+      name?.tag !== "word" ||
+      name.value !== bindingName
+    ) {
+      continue;
+    }
+    for (
+      let candidateIndex = index + 2;
+      candidateIndex < tokens.length;
+      candidateIndex += 1
+    ) {
+      const candidate = tokens[candidateIndex];
+      if (candidate?.depth !== 0) continue;
+      if (candidate.value === "let" || candidate.value === "in") break;
+      if (candidate.value !== "=") continue;
+      return tokens[candidateIndex + 1]?.value === "{"
+        ? candidateIndex + 1
+        : undefined;
+    }
+  }
+  return undefined;
+}
+
+function recordKindAtObject(
+  tokens: readonly DhallToken[],
+  objectIndex: number,
+): SurfacePublicationRecordKind {
+  const object = tokens[objectIndex];
+  if (object?.value !== "{") return "unknown";
+  const fieldDepth = object.depth + 1;
+  for (let index = objectIndex + 1; index < tokens.length - 2; index += 1) {
+    const field = tokens[index];
+    if (field?.value === "}" && field.depth === object.depth) break;
+    if (
+      field?.tag === "word" &&
+      field.depth === fieldDepth &&
+      field.value === "kind" &&
+      tokens[index + 1]?.value === "="
+    ) {
+      const value = tokens[index + 2];
+      if (value?.tag !== "string") return "unknown";
+      return value.value === "statBlock" ? "statBlock" : "other";
+    }
+  }
+  return "unknown";
 }
 
 const MAX_DECODE_DIAGNOSTIC_CHARS = 4000;

@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "../packages/shared/src/game-facts.ts";
@@ -39,7 +41,7 @@ function completeSourceFiles(
       (sourcePath) =>
         sourceFileByPath.get(sourcePath) ?? {
           sourcePath,
-          contents: `# Synthetic source\n\n## Synthetic ${sourcePath}\n\n**AC** 10\n**CR** 1\n`,
+          contents: `# Synthetic source\n\n## Synthetic ${sourcePath}\n\n**AC** 10\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** A synthetic action.\n`,
         },
     ),
     ...sourceFiles.filter(
@@ -146,6 +148,10 @@ describe("SRD Stat Block source parity operation", () => {
 **AC** 12
 **CR** 1
 
+### Actions
+
+**Synthetic Action.** Alpha acts.
+
 ---
 
 ## Beta
@@ -154,6 +160,10 @@ describe("SRD Stat Block source parity operation", () => {
 
 **AC** 10
 **CR** 1
+
+### Actions
+
+**Synthetic Action.** Beta acts.
 
 ---
 `,
@@ -169,6 +179,10 @@ describe("SRD Stat Block source parity operation", () => {
 **AC** 11
 **CR** 1
 
+### Actions
+
+**Synthetic Action.** Beta acts.
+
 ---
 `,
         },
@@ -177,12 +191,12 @@ describe("SRD Stat Block source parity operation", () => {
         parityRecord({
           id: statBlockId("stat_block_alpha"),
           name: "Alpha",
-          provenance: { kind: "srd-5.2.1", section: "Animals.md:3-9" },
+          provenance: { kind: "srd-5.2.1", section: "Animals.md:3-12" },
         }),
         parityRecord({
           id: statBlockId("stat_block_alpha"),
           name: "Alpha",
-          provenance: { kind: "srd-5.2.1", section: "Animals.md:3-9" },
+          provenance: { kind: "srd-5.2.1", section: "Animals.md:3-12" },
         }),
         parityRecord({
           id: statBlockId("stat_block_extra"),
@@ -260,15 +274,18 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: completeSourceFiles([
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
+          contents:
+            "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** Alpha acts.\n",
         },
         {
           sourcePath: ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
-          contents: "# Spells\n\n## Inline Creature\n\n**AC** 10\n**CR** 1\n",
+          contents:
+            "# Spells\n\n## Inline Creature\n\n**AC** 10\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** Inline creature acts.\n",
         },
         {
           sourcePath: ".references/srd-5.2.1/Magic-Items/Items-A-H.md",
-          contents: "# Items\n\n## Inline Object\n\n**AC** 15\n**CR** 1\n",
+          contents:
+            "# Items\n\n## Inline Object\n\n**AC** 15\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** Inline object acts.\n",
         },
       ]),
       installedStatBlocks: [],
@@ -310,12 +327,47 @@ describe("SRD Stat Block source parity operation", () => {
     });
   });
 
+  test("does not classify an installed record as extra when its source path is unreadable", () => {
+    const report = readSrdStatBlockParity({
+      repoRoot: process.cwd(),
+      readSource: (absolutePath) => {
+        if (absolutePath.endsWith("Animals.md")) {
+          throw new Error("synthetic unreadable source");
+        }
+        return readFileSync(absolutePath, "utf8");
+      },
+      installedStatBlocks: [
+        parityRecord({
+          id: statBlockId("stat_block_weasel"),
+          name: "Weasel",
+          provenance: {
+            kind: "srd-5.2.1",
+            section: "Animals.md:1-2",
+          },
+        }),
+      ],
+      generatedPeerObservations: [],
+    });
+
+    expect(report.issues).toContainEqual({
+      kind: "unreadable-source",
+      sourcePath: ".references/srd-5.2.1/Animals.md",
+      message: "synthetic unreadable source",
+    });
+    expect(
+      report.issues.filter(
+        (issue) => issue.kind === "extra" && issue.name === "Weasel",
+      ),
+    ).toEqual([]);
+  });
+
   test("does not claim the full corpus when a source path is omitted", () => {
     const report = deriveSrdStatBlockParity({
       sourceFiles: [
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
+          contents:
+            "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** Alpha acts.\n",
         },
       ],
       sourceReadIssues: [],
@@ -352,7 +404,8 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: completeSourceFiles([
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
+          contents:
+            "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** Alpha acts.\n",
         },
       ]),
       installedStatBlocks: [
@@ -384,7 +437,8 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: completeSourceFiles([
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
+          contents:
+            "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** Alpha acts.\n",
         },
       ]),
       sourceReadIssues: [],
@@ -438,6 +492,37 @@ describe("SRD Stat Block source parity operation", () => {
     );
   });
 
+  test("does not claim a complete occurrence when AC and CR are the truncated body", () => {
+    const report = deriveSrdStatBlockParity({
+      sourceFiles: completeSourceFiles([
+        {
+          sourcePath: ".references/srd-5.2.1/Animals.md",
+          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
+        },
+      ]),
+      installedStatBlocks: [],
+      sourceReadIssues: [],
+      generatedPeerObservations: [],
+    });
+
+    expect(
+      report.discovery.identities.filter(
+        (identity) => identity.name === "Alpha",
+      ),
+    ).toEqual([]);
+    expect(report.sourceCoverage.tag).toBe("incomplete");
+    if (report.sourceCoverage.tag === "incomplete") {
+      expect(report.sourceCoverage.incompletePaths).toContain(
+        ".references/srd-5.2.1/Animals.md",
+      );
+    }
+    expect(report.issues).toContainEqual({
+      kind: "incomplete-source",
+      sourcePath: ".references/srd-5.2.1/Animals.md",
+      message: expect.stringContaining("complete standalone stat block"),
+    });
+  });
+
   test.each([
     {
       name: "empty modifier capture",
@@ -459,7 +544,7 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: [
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: `# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| ${cell} | 12 (+1) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |\n`,
+          contents: `# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| ${cell} | 12 (+1) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |\n\n### Actions\n\n**Synthetic Action.** Alpha acts.\n`,
         },
       ],
       sourceReadIssues: [],
@@ -490,6 +575,10 @@ describe("SRD Stat Block source parity operation", () => {
 | STR | DEX | CON | INT | WIS | CHA |
 |-----|-----|-----|-----|-----|-----|
 | 10 (+0) | 12 (+1) | 10 (+0) |
+
+### Actions
+
+**Synthetic Action.** Alpha acts.
 `,
         },
       ],

@@ -195,6 +195,14 @@ export type ReadSrdStatBlockParityOptions = {
 const ABILITY_NAMES = ["STR", "DEX", "CON", "INT", "WIS", "CHA"] as const;
 const abilityNameSet = new Set<string>(ABILITY_NAMES);
 const sourcePathSet = new Set<string>(SRD_STAT_BLOCK_SOURCE_PATHS);
+const STAT_BLOCK_SECTION_NAMES = [
+  "Traits",
+  "Actions",
+  "Bonus Actions",
+  "Reactions",
+  "Legendary Actions",
+] as const;
+const statBlockSectionNameSet = new Set<string>(STAT_BLOCK_SECTION_NAMES);
 
 type Heading = {
   readonly level: number;
@@ -260,6 +268,7 @@ export function deriveSrdStatBlockParity(
   const installedCatalog = deriveInstalledCatalogIssues(
     input.installedStatBlocks,
     sourceIdentities,
+    sourceCoverage.tag,
   );
   const issues = [
     ...sourceReadIssues.map((sourceReadIssue) => ({
@@ -369,6 +378,7 @@ function deriveDivergentSourceIssues(
 function deriveInstalledCatalogIssues(
   installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[],
   sourceIdentities: ReadonlyMap<string, SrdStatBlockSourceIdentity>,
+  sourceIdentityCoverage: SrdStatBlockSourceCoverage["tag"],
 ): {
   readonly installedNames: ReadonlySet<string>;
   readonly issues: readonly SrdStatBlockParityIssue[];
@@ -384,7 +394,9 @@ function deriveInstalledCatalogIssues(
     installedNames.add(normalizeIdentity(statBlock.name));
     issues.push(
       ...deriveProvenanceIssues(statBlock, sourceIdentities),
-      ...deriveExtraIssue(statBlock, sourceIdentities),
+      ...(sourceIdentityCoverage === "complete"
+        ? deriveExtraIssue(statBlock, sourceIdentities)
+        : []),
     );
   }
 
@@ -572,7 +584,7 @@ type AbilityCellNormalization =
   | { readonly tag: "malformed"; readonly message: string };
 
 function parseHeading(line: string, lineIndex: number): readonly Heading[] {
-  const match = /^(#{2,3})\s+(.+?)\s*$/.exec(line);
+  const match = /^(#{2,4})\s+(.+?)\s*$/.exec(line);
   return match === null
     ? []
     : [
@@ -604,6 +616,23 @@ function parseStatBlockHeading(
             kind: "incomplete-source",
             sourcePath: sourceFile.sourcePath,
             message: `Stat block heading "${heading.name}" has no Challenge Rating line before the source boundary.`,
+          },
+        ],
+      },
+    ];
+  }
+
+  if (
+    !hasCompleteStatBlockBody(lines, headings, heading, nextEntityHeadingIndex)
+  ) {
+    return [
+      {
+        tag: "invalid",
+        issues: [
+          {
+            kind: "incomplete-source",
+            sourcePath: sourceFile.sourcePath,
+            message: `Stat block heading "${heading.name}" has no complete standalone stat block body before the source boundary.`,
           },
         ],
       },
@@ -663,9 +692,32 @@ function nextEntityHeadingLineIndex(
     headings.find(
       (candidate) =>
         candidate.lineIndex > heading.lineIndex &&
-        candidate.level <= heading.level,
+        candidate.level <= heading.level &&
+        !statBlockSectionNameSet.has(candidate.name),
     )?.lineIndex ?? Number.POSITIVE_INFINITY
   );
+}
+
+function hasCompleteStatBlockBody(
+  lines: readonly string[],
+  headings: readonly Heading[],
+  heading: Heading,
+  nextEntityHeadingIndex: number,
+): boolean {
+  const sectionHeadings = headings.filter(
+    (candidate) =>
+      candidate.lineIndex > heading.lineIndex &&
+      candidate.lineIndex < nextEntityHeadingIndex &&
+      statBlockSectionNameSet.has(candidate.name),
+  );
+  const lastSection = sectionHeadings[sectionHeadings.length - 1];
+  if (lastSection === undefined) return false;
+  return lines
+    .slice(lastSection.lineIndex + 1, nextEntityHeadingIndex)
+    .some((line) => {
+      const trimmed = line.trim();
+      return trimmed !== "" && trimmed !== "---" && !/^#{2,4}\s+/.test(trimmed);
+    });
 }
 
 function hasArmorClassLine(lines: readonly string[]): boolean {
@@ -750,7 +802,7 @@ function normalizeSourceBlock(
       continue;
     }
     flushTable();
-    if (trimmed === "" || trimmed === "---" || /^#{2,3}\s+/.test(trimmed)) {
+    if (trimmed === "" || trimmed === "---" || /^#{2,4}\s+/.test(trimmed)) {
       continue;
     }
     const expanded = trimmed.split(/\s*\|\s*/);

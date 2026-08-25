@@ -193,7 +193,7 @@ describe("Surface content publication checker", () => {
         writeFileSync(
           join(contentDir, source),
           source.includes("decode") || source.includes("read")
-            ? 'kind = "statBlock"'
+            ? 'in { kind = "statBlock" }'
             : "fixture",
         );
       }
@@ -430,7 +430,10 @@ describe("Surface content publication checker", () => {
     );
 
     try {
-      writeFileSync(join(contentDir, "creature.dhall"), 'kind = "statBlock"');
+      writeFileSync(
+        join(contentDir, "creature.dhall"),
+        `let nested = { kind = "fixed" }\nin { kind = "statBlock" }`,
+      );
       const result = runSurfacePublicationCheck({
         repoRoot: contentDir,
         contentDir,
