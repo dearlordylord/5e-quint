@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+  "title": "Synthetic disengage crossing 001",
+  "purpose": "Explore supported Disengage, movement, Opportunity Attack suppression, and target-priority changes during a three-combatant crossing in an open arena.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-disengage-crossing-001.md",
+    "byteLength": 1272,
+    "sha256": "46d14b8921ba3ec8bb218eb39ca771abacd8beb8635032162e9cbd8e9925d8d5"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-disengage-crossing-001.md.scenario-review.json",
+    "byteLength": 17832,
+    "sha256": "2d30c8ec3fca7dbbcec9d23c07381c3aec92395744a89a78640b5bf47a368362"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-disengage-crossing-001.md.stage-facts.json",
+    "byteLength": 720,
+    "sha256": "af47d894aa1803de71af2fc54905a0b09927b5fe2855bc89afbdd808336ca125"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "prone-target-roll-mode-distance-probe",
+    "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+    "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+    "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}
