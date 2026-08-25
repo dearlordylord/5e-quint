@@ -8,6 +8,7 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
@@ -52,8 +53,28 @@ import {
 } from "./transcript.ts";
 
 describe("Raw Swarm model invocation telemetry", () => {
-  const deterministicCodexFixtureMarker =
-    "# dnd.raw-swarm.deterministic-fixture:codex";
+  const laneClassification: unknown = createRequire(import.meta.url)(
+    "./lane-classification.cjs",
+  );
+  const deterministicCodexFixtureMarker = (() => {
+    if (laneClassification === null || typeof laneClassification !== "object") {
+      throw new Error("The deterministic fixture catalog is not an object.");
+    }
+    const identities = Reflect.get(
+      laneClassification,
+      "DETERMINISTIC_FIXTURE_IDENTITIES",
+    );
+    if (identities === null || typeof identities !== "object") {
+      throw new Error(
+        "The deterministic fixture identities are not an object.",
+      );
+    }
+    const marker = Reflect.get(identities, "codex");
+    if (typeof marker !== "string") {
+      throw new Error("The deterministic codex fixture marker is missing.");
+    }
+    return `# ${marker}`;
+  })();
 
   function writeDeterministicCodexFixture(path: string, source: string): void {
     const [firstLine, ...remainingLines] = source.split("\n");

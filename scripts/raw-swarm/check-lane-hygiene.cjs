@@ -48,8 +48,10 @@ const codingAgentAlternation =
   CODING_AGENT_EXECUTABLES.map(escapeRegExp).join("|");
 const networkCliAlternation =
   NETWORK_CLI_EXECUTABLES.map(escapeRegExp).join("|");
+const blockedExecutableAlternation =
+  DETERMINISTIC_BLOCKED_EXECUTABLES.map(escapeRegExp).join("|");
 const childProcessCallAlternation =
-  "(?:spawn|spawnSync|exec|execSync|execFile|execFileSync)";
+  "(?:spawn|spawnSync|exec|execSync|execFile|execFileSync|fork)";
 const networkModuleAlternation =
   DETERMINISTIC_NETWORK_MODULES.map(escapeRegExp).join("|");
 const networkApiAlternation = [
@@ -108,6 +110,13 @@ const forbiddenCapabilityPatterns = Object.freeze([
     ),
   },
   {
+    kind: "blocked-custom-executable",
+    pattern: new RegExp(
+      `\\bfork\\s*\\([\\s\\S]{0,320}\\bexecPath\\s*:\\s*["'\`]([^"'\`\\n]*?(?:${blockedExecutableAlternation})[^"'\`\\n]*)["'\`]`,
+      "gi",
+    ),
+  },
+  {
     kind: "coding-agent-indirection",
     pattern: new RegExp(
       String.raw`\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*["'\`][^"'\`\n]*?(?:${codingAgentAlternation})(?=[/\\\s"'\`])[^"'\`\n]*["'\`]\s*;?[\s\S]{0,320}?\b${childProcessCallAlternation}\s*\(\s*\1\b`,
@@ -125,6 +134,13 @@ const forbiddenCapabilityPatterns = Object.freeze([
     kind: "network-cli-shell-command",
     pattern: new RegExp(
       `\\b${childProcessCallAlternation}\\s*\\([^\\n]{0,320}\\b(?:${networkCliAlternation})\\b`,
+      "gi",
+    ),
+  },
+  {
+    kind: "blocked-executable-shell-option",
+    pattern: new RegExp(
+      `\\b(?:spawn|spawnSync|execFile|execFileSync)\\s*\\([\\s\\S]{0,320}\\bshell\\s*:\\s*["'\`]([^"'\`\\n]*?(?:${blockedExecutableAlternation})[^"'\`\\n]*)["'\`]`,
       "gi",
     ),
   },
@@ -161,12 +177,6 @@ function importSpecifiers(source) {
     pattern.lastIndex = 0;
     return [...source.matchAll(pattern)].map((match) => match[1]);
   });
-}
-
-function relativeImportSpecifiers(source) {
-  return importSpecifiers(source).filter((specifier) =>
-    specifier.startsWith("."),
-  );
 }
 
 const sourceExtensions = ["", ".ts", ".tsx", ".js", ".mjs", ".cjs"];
@@ -606,6 +616,5 @@ if (require.main === module) {
 
 module.exports = {
   deterministicCapabilityViolations,
-  relativeImportSpecifiers,
   sourcePathsForQualityTest,
 };

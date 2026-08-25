@@ -57,6 +57,11 @@ guarded Node runner, then gives every verification phase the exact guard
 option. This keeps package-manager, compiler, test-runner, and descendant Node
 processes on the same process-level boundary.
 
+That boundary also re-injects the guard into Node workers and forks, rejects
+shell or environment attempts to remove it, and carries deterministic
+capability provenance through data and outside-origin module trampolines.
+Dependencies under `node_modules` remain their own capability boundary.
+
 This is a process-level repository boundary, not OS-level network isolation.
 The contract covers Node and browser network capabilities plus known
 model/network executables in the guarded deterministic process tree; arbitrary

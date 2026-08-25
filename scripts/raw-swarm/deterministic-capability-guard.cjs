@@ -6,8 +6,8 @@ const {
 } = require("node:fs");
 const { basename, delimiter, resolve, sep } = require("node:path");
 const Module = require("node:module");
-const { register } = Module;
-const { pathToFileURL } = require("node:url");
+const { register, syncBuiltinESMExports } = Module;
+const { fileURLToPath, pathToFileURL } = require("node:url");
 
 const {
   CODING_AGENT_EXECUTABLES,
@@ -35,6 +35,9 @@ const TEST_FIXTURE_DIRECTORY = resolve(require("node:os").tmpdir());
 const REPOSITORY_ROOT = resolve(__dirname, "../..");
 const DETERMINISTIC_GUARD_PATH = resolve(__filename);
 const DETERMINISTIC_NODE_OPTIONS = `--require=${DETERMINISTIC_GUARD_PATH}`;
+const DETERMINISTIC_EXEC_ARGV = [DETERMINISTIC_NODE_OPTIONS];
+const ownedModulePaths = new Set();
+const ownedRequireContext = { active: false };
 
 register(
   pathToFileURL(resolve(__dirname, "deterministic-capability-loader.mjs")),
@@ -53,20 +56,64 @@ function blockedCapability(kind, value) {
   );
 }
 
+function canonicalPath(filename) {
+  try {
+    return realpathSync(filename);
+  } catch {
+    return resolve(filename);
+  }
+}
+
+function isNodeModulesPath(path) {
+  return path.split(sep).includes("node_modules");
+}
+
+function repositoryOwnedPath(path) {
+  const canonical = canonicalPath(path);
+  return (
+    !isNodeModulesPath(canonical) &&
+    (canonical.startsWith(`${REPOSITORY_ROOT}${sep}`) ||
+      canonical.startsWith(`${TEST_FIXTURE_DIRECTORY}${sep}`) ||
+      ownedModulePaths.has(canonical))
+  );
+}
+
 function repositoryOwnedModule(parent) {
   const filename = parent?.filename;
   if (typeof filename !== "string") return true;
-  let path;
-  try {
-    path = realpathSync(filename);
-  } catch {
-    path = resolve(filename);
+  return repositoryOwnedPath(filename);
+}
+
+function callerIsNodeModule() {
+  const caller = String(new Error().stack ?? "")
+    .split("\n")
+    .slice(2)
+    .find(
+      (line) =>
+        !line.includes("deterministic-capability-guard.cjs") &&
+        !line.includes("node:internal"),
+    );
+  return caller?.replaceAll("\\", "/").includes("/node_modules/") ?? false;
+}
+
+function rememberOwnedModule(request, parent) {
+  const parentOwned =
+    repositoryOwnedModule(parent) || ownedRequireContext.active;
+  if (!parentOwned || typeof request !== "string") return;
+  const target = (() => {
+    try {
+      return Module._resolveFilename(request, parent, false);
+    } catch {
+      return undefined;
+    }
+  })();
+  if (
+    typeof target === "string" &&
+    target.startsWith(sep) &&
+    !isNodeModulesPath(canonicalPath(target))
+  ) {
+    ownedModulePaths.add(canonicalPath(target));
   }
-  return (
-    !path.includes(`${sep}node_modules${sep}`) &&
-    (path.startsWith(`${REPOSITORY_ROOT}${sep}`) ||
-      path.startsWith(`${TEST_FIXTURE_DIRECTORY}${sep}`))
-  );
 }
 
 function normalizeExecutable(value) {
@@ -142,36 +189,102 @@ function childOptionsIndex(values) {
   );
 }
 
-function optionsEnvironment(values) {
+function childOptions(values) {
   const index = childOptionsIndex(values);
-  const options = index === -1 ? undefined : values[index];
+  return index === -1 ? undefined : values[index];
+}
+
+function optionsEnvironment(values) {
+  const options = childOptions(values);
   return options?.env ?? process.env;
+}
+
+function guardExecutable(command, environment, kind) {
+  const executable = normalizeExecutable(command);
+  const resolved = executablePath(command, environment);
+  if (NETWORK_CLI_EXECUTABLES.includes(executable)) {
+    throw blockedCapability("network CLI", command);
+  }
+  if (
+    CODING_AGENT_EXECUTABLES.includes(executable) &&
+    !isCanonicalFixtureExecutable(resolved, executable)
+  ) {
+    throw blockedCapability(kind, command);
+  }
+}
+
+function guardShellOption(values, environment) {
+  const shell = childOptions(values)?.shell;
+  if (typeof shell !== "string") return;
+  guardExecutable(shell, environment, "coding-agent capability");
+  const shellTokens = blockedTokens(shell);
+  if (NETWORK_CLI_EXECUTABLES.some((name) => shellTokens.has(name))) {
+    throw blockedCapability("network CLI", shell);
+  }
+}
+
+function guardPropagationRemoval(command, values) {
+  const text = shellText([
+    command,
+    ...values,
+    childOptions(values)?.shell,
+    childOptions(values)?.execPath,
+  ]);
+  const tokens = text.split(/\s+/u).filter((token) => token.length > 0);
+  const removesNodeOptions = tokens.some((token, index) => {
+    const executable = normalizeExecutable(token);
+    if (executable !== "env") return false;
+    return tokens.slice(index + 1).some((candidate, offset, remaining) => {
+      const normalized = candidate.replace(/^['"`]+|['"`]+$/g, "");
+      if (
+        normalized === "NODE_OPTIONS=" ||
+        normalized.startsWith('NODE_OPTIONS=""') ||
+        normalized.startsWith("NODE_OPTIONS=''")
+      ) {
+        return true;
+      }
+      if (normalized === "-u" || normalized === "--unset") {
+        const next = remaining[offset + 1]?.replace(/^['"`]+|['"`]+$/g, "");
+        return next === "NODE_OPTIONS";
+      }
+      if (normalized === "-uNODE_OPTIONS") return true;
+      return normalized === "--unset=NODE_OPTIONS";
+    });
+  });
+  if (removesNodeOptions) {
+    throw blockedCapability("guard propagation", text);
+  }
 }
 
 function guardChildProcess(method, command, values) {
   const environment = optionsEnvironment(values);
   const executable = normalizeExecutable(command);
   const resolved = executablePath(command, environment);
-  if (method !== "fork" && NETWORK_CLI_EXECUTABLES.includes(executable)) {
-    throw blockedCapability("network CLI", command);
-  }
-  if (method !== "fork" && CODING_AGENT_EXECUTABLES.includes(executable)) {
-    if (!isCanonicalFixtureExecutable(resolved, executable)) {
-      throw blockedCapability("coding-agent capability", command);
+  if (method === "fork") {
+    const customExecutable = childOptions(values)?.execPath;
+    if (customExecutable !== undefined) {
+      guardExecutable(
+        customExecutable,
+        environment,
+        "child-process capability",
+      );
     }
+  } else {
+    guardExecutable(command, environment, "coding-agent capability");
   }
-  const shellCommand = shellText([command, ...values]);
+  guardShellOption(values, environment);
+  guardPropagationRemoval(command, values);
+  const shellCommand = shellText([
+    command,
+    ...values,
+    childOptions(values)?.shell,
+    childOptions(values)?.execPath,
+  ]);
   const tokens = blockedTokens(shellCommand);
-  if (
-    method !== "fork" &&
-    NETWORK_CLI_EXECUTABLES.some((name) => tokens.has(name))
-  ) {
+  if (NETWORK_CLI_EXECUTABLES.some((name) => tokens.has(name))) {
     throw blockedCapability("network CLI", shellCommand);
   }
-  if (
-    method !== "fork" &&
-    CODING_AGENT_EXECUTABLES.some((name) => tokens.has(name))
-  ) {
+  if (CODING_AGENT_EXECUTABLES.some((name) => tokens.has(name))) {
     const agentTokens = CODING_AGENT_EXECUTABLES.filter((name) =>
       tokens.has(name),
     );
@@ -180,6 +293,14 @@ function guardChildProcess(method, command, values) {
         (name) =>
           !(
             name === executable && isCanonicalFixtureExecutable(resolved, name)
+          ) &&
+          !(
+            method === "fork" &&
+            name === normalizeExecutable(childOptions(values)?.execPath) &&
+            isCanonicalFixtureExecutable(
+              executablePath(childOptions(values)?.execPath, environment),
+              name,
+            )
           ) &&
           !isCanonicalFixtureExecutable(
             executablePath(name, environment),
@@ -192,43 +313,102 @@ function guardChildProcess(method, command, values) {
   }
 }
 
-function deterministicChildValues(method, values) {
-  const environment = {
-    ...optionsEnvironment(values),
+function deterministicEnvironment(environment) {
+  return {
+    ...environment,
     RAW_SWARM_EXECUTION_LANE: "deterministic",
     NODE_OPTIONS: DETERMINISTIC_NODE_OPTIONS,
   };
-  const optionsIndex = childOptionsIndex(values);
-  if (optionsIndex !== -1) {
-    return values.map((value, index) =>
-      index === optionsIndex ? { ...value, env: environment } : value,
-    );
-  }
-  let insertionIndex = values.length;
+}
+
+function callbackInsertionIndex(method, values) {
   if (
     (method === "exec" || method === "execSync") &&
     typeof values.at(-1) === "function"
   ) {
-    insertionIndex = values.length - 1;
-  } else if (method === "execFile") {
+    return values.length - 1;
+  }
+  if (method === "execFile") {
     const callbackIndex = values.findIndex(
       (value) => typeof value === "function",
     );
-    if (callbackIndex !== -1) insertionIndex = callbackIndex;
+    if (callbackIndex !== -1) return callbackIndex;
   }
+  return values.length;
+}
+
+function deterministicChildValues(method, values) {
+  const environment = deterministicEnvironment(optionsEnvironment(values));
+  const optionsIndex = childOptionsIndex(values);
+  if (optionsIndex !== -1) {
+    return values.map((value, index) =>
+      index === optionsIndex
+        ? {
+            ...value,
+            env: environment,
+            ...(method === "fork"
+              ? { execArgv: [...DETERMINISTIC_EXEC_ARGV] }
+              : {}),
+          }
+        : value,
+    );
+  }
+  const insertionIndex = callbackInsertionIndex(method, values);
   return [
     ...values.slice(0, insertionIndex),
-    { env: environment },
+    {
+      env: environment,
+      ...(method === "fork" ? { execArgv: [...DETERMINISTIC_EXEC_ARGV] } : {}),
+    },
     ...values.slice(insertionIndex),
   ];
 }
 
 const originalModuleLoad = Module._load;
 Module._load = function deterministicModuleLoad(request, parent, isMain) {
-  if (NETWORK_MODULES.has(request) && repositoryOwnedModule(parent)) {
+  if (
+    NETWORK_MODULES.has(request) &&
+    (repositoryOwnedModule(parent) || ownedRequireContext.active)
+  ) {
     throw blockedCapability("network capability", request);
   }
+  rememberOwnedModule(request, parent);
   return originalModuleLoad.call(this, request, parent, isMain);
+};
+
+const originalCreateRequire = Module.createRequire;
+Module.createRequire = function deterministicCreateRequire(filename) {
+  const createdRequire = originalCreateRequire.call(this, filename);
+  const origin = (() => {
+    try {
+      return typeof filename === "string" && filename.startsWith("file:")
+        ? fileURLToPath(filename)
+        : filename instanceof URL
+          ? fileURLToPath(filename)
+          : String(filename);
+    } catch {
+      return String(filename);
+    }
+  })();
+  const originIsNodeModule = origin.includes(`${sep}node_modules${sep}`);
+  const originIsOwned = !originIsNodeModule && !callerIsNodeModule();
+  if (!originIsOwned) return createdRequire;
+  const deterministicRequire = function guardedCreatedRequire(
+    request,
+    ...values
+  ) {
+    const previous = ownedRequireContext.active;
+    ownedRequireContext.active = true;
+    try {
+      return createdRequire(request, ...values);
+    } finally {
+      ownedRequireContext.active = previous;
+    }
+  };
+  deterministicRequire.resolve = createdRequire.resolve;
+  deterministicRequire.cache = createdRequire.cache;
+  deterministicRequire.extensions = createdRequire.extensions;
+  return deterministicRequire;
 };
 
 if (typeof process.getBuiltinModule === "function") {
@@ -262,6 +442,24 @@ for (const method of [
     );
   };
 }
+
+const workerThreads = originalModuleLoad("node:worker_threads", module, false);
+const OriginalWorker = workerThreads.Worker;
+if (typeof OriginalWorker === "function") {
+  class DeterministicWorker extends OriginalWorker {
+    constructor(filename, options) {
+      const sourceOptions =
+        options !== null && typeof options === "object" ? options : {};
+      super(filename, {
+        ...sourceOptions,
+        env: deterministicEnvironment(sourceOptions.env ?? process.env),
+        execArgv: [...DETERMINISTIC_EXEC_ARGV],
+      });
+    }
+  }
+  workerThreads.Worker = DeterministicWorker;
+}
+syncBuiltinESMExports();
 
 function blockedNetworkGlobal(name) {
   return blockedCapability("network capability", name);
