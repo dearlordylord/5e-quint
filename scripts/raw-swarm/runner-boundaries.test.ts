@@ -36,6 +36,10 @@ const modelLaneCapability = resolve(
   repoRoot,
   "scripts/raw-swarm/model-lane-capability.cjs",
 );
+const modelBackedRunner = resolve(
+  repoRoot,
+  "scripts/raw-swarm/run-model-backed.mjs",
+);
 const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repoRoot,
   encoding: "utf8",
@@ -547,10 +551,10 @@ describe("RAW swarm runner boundaries", () => {
     const fakeGit = resolve(commandRoot, "git");
     writeFileSync(
       fakeGit,
-      `#!/bin/sh
+      String.raw`#!/bin/sh
 set -eu
 case "$*" in
-  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
+  *--git-common-dir*) printf '%s\n' '${commonRoot}' ;;
   *) exit 1 ;;
 esac
 `,
@@ -571,6 +575,59 @@ esac
       );
       expect(result.status).toBe(0);
       expect(`${result.stdout}${result.stderr}`).toContain("acquired lane");
+    } finally {
+      rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(commonRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
+  test("public wrapper preserves the lane capability through the model runner", () => {
+    const commandRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-runner-command-"),
+    );
+    const commonRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-model-runner-common-"),
+    );
+    const fakeGit = resolve(commandRoot, "git");
+    const fakeCodex = resolve(commandRoot, "codex");
+    writeFileSync(
+      fakeGit,
+      String.raw`#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\n' '${commonRoot}' ;;
+  *status*) exit 0 ;;
+  *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
+  *) exit 1 ;;
+esac
+`,
+    );
+    writeFileSync(fakeCodex, "#!/bin/sh\nexit 0\n");
+    chmodSync(fakeGit, 0o755);
+    chmodSync(fakeCodex, 0o755);
+    try {
+      const result = spawnSync(
+        modelLaneLock,
+        ["trial", process.execPath, modelBackedRunner, "trial", "freeplay"],
+        {
+          cwd: repoRoot,
+          env: {
+            ...modelLaneTestEnvironment(
+              commandRoot,
+              new Date(Date.now() + 60_000).toISOString(),
+            ),
+            RAW_SWARM_EXPECTED_GIT_SHA: currentGitSha,
+          },
+          encoding: "utf8",
+        },
+      );
+      expect(result.status).not.toBe(0);
+      expect(`${result.stdout}${result.stderr}`).toContain(
+        "Usage: run-freeplay.ts",
+      );
+      expect(`${result.stdout}${result.stderr}`).not.toContain(
+        "must be launched through the public model wrapper",
+      );
     } finally {
       rmSync(commandRoot, { recursive: true, force: true });
       rmSync(commonRoot, { recursive: true, force: true });
@@ -1308,11 +1365,8 @@ esac
     );
     try {
       expect(result.status).toBe(1);
-      const telemetryCommand = readFileSync(pnpmCapturePath, "utf8")
-        .split("\n")
-        .find((line) => line.includes("model-telemetry-cli.ts"));
-      expect(telemetryCommand).toContain(" run ");
-      expect(telemetryCommand).not.toContain("--shell-status");
+      const pnpmCommands = readFileSync(pnpmCapturePath, "utf8");
+      expect(pnpmCommands).not.toContain("model-telemetry-cli.ts");
       const ledger = JSON.parse(readFileSync(ledgerPath, "utf8")) as {
         readonly exit: { readonly tag: string; readonly status?: number };
         readonly result: { readonly tag: string };

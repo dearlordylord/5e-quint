@@ -14,10 +14,23 @@ function fail(message) {
   process.exit(64);
 }
 
+function inheritedModelStdio() {
+  const laneFd = Number(process.env.DND_RAW_SWARM_MODEL_LANE_FD);
+  if (!Number.isSafeInteger(laneFd) || laneFd < 3) {
+    fail("Raw Swarm model operations require an inherited model-lane lock.");
+  }
+  const stdio = Array.from({ length: laneFd + 1 }, () => "ignore");
+  stdio[0] = "inherit";
+  stdio[1] = "inherit";
+  stdio[2] = "inherit";
+  stdio[laneFd] = laneFd;
+  return stdio;
+}
+
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {
     env: options.env ?? process.env,
-    stdio: options.stdio ?? "inherit",
+    stdio: options.stdio ?? inheritedModelStdio(),
   });
   if (result.error !== undefined) throw result.error;
   if (result.signal !== null) {
@@ -119,10 +132,10 @@ if (operationName === "post-play-review") {
   environment.RAW_REVIEW_IMPLEMENTATION_GIT_SHA = expectedGitSha;
 }
 
-let executable = operation.command.endsWith(".sh") ? operation.command : "pnpm";
+let executable = operation.command.endsWith(".sh") ? operation.command : "node";
 let args = operation.command.endsWith(".sh")
   ? commandArguments
-  : ["exec", "tsx", operation.command, ...commandArguments];
+  : ["--import", "tsx", operation.command, ...commandArguments];
 if (operation.writesCatalogue) {
   const commonDirectory = spawnSync(
     "git",

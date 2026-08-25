@@ -189,7 +189,7 @@ case "${RAW_REVIEW_CONTEXT_PROFILE:-}" in
 esac
 
 set +e
-pnpm exec tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
+node --import tsx "$RAW_REVIEW_ROOT/scripts/raw-swarm/model-telemetry-cli.ts" \
   run \
   --root "$RAW_REVIEW_ROOT" \
   --input "$RAW_REVIEW_REQUEST" \
