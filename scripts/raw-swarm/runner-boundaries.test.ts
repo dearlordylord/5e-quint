@@ -2270,6 +2270,40 @@ describe("RAW swarm runner boundaries", () => {
     }
   }, 30_000);
 
+  test("scans extensionless siblings alongside a bare directory index", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(
+        rawSwarmOutputDirectory,
+        "transitive-directory-sibling-collision-",
+      ),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const directoryPath = resolve(fixtureRoot, "fixture");
+    const harmlessIndexPath = resolve(directoryPath, "index.ts");
+    const forbiddenSiblingPath = resolve(fixtureRoot, "fixture.ts");
+    const forbiddenModule = ["node:", "http"].join("");
+    mkdirSync(directoryPath, { recursive: true });
+    writeFileSync(testPath, 'import "./fixture";\n');
+    writeFileSync(harmlessIndexPath, "export const harmless = true;\n");
+    writeFileSync(
+      forbiddenSiblingPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSiblingPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
+
   test("scans a dotted directory index for extensionless imports", () => {
     const fixtureRoot = mkdtempSync(
       resolve(rawSwarmOutputDirectory, "transitive-dotted-directory-"),
