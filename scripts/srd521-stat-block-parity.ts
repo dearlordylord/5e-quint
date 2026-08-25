@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { StatBlockRecord } from "../packages/surface/src/surface/types.ts";
+import type { SrdStatBlockGeneratedPeerObservation } from "./surface-publication-peer-observations.ts";
 
 export const SRD_STAT_BLOCK_SOURCE_PATHS = [
   ".references/srd-5.2.1/Animals.md",
@@ -57,12 +58,18 @@ export type SrdStatBlockSourceNormalization =
   | { readonly tag: "ok"; readonly value: string }
   | { readonly tag: "malformed"; readonly message: string };
 
-export type SrdStatBlockSourceIssue = {
-  readonly kind: "malformed-source";
-  readonly sourcePath: string;
-  readonly heading: string;
-  readonly message: string;
-};
+export type SrdStatBlockSourceIssue =
+  | {
+      readonly kind: "malformed-source";
+      readonly sourcePath: string;
+      readonly heading: string;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "incomplete-source";
+      readonly sourcePath: string;
+      readonly message: string;
+    };
 
 export type SrdStatBlockSourceIdentity = {
   readonly name: string;
@@ -75,31 +82,7 @@ export type SrdStatBlockSourceDiscovery = {
   readonly issues: readonly SrdStatBlockSourceIssue[];
 };
 
-export type SrdStatBlockGeneratedPeerObservation =
-  | {
-      readonly tag: "present";
-      readonly sourcePath: string;
-      readonly peerPath: string;
-    }
-  | {
-      readonly tag: "missing";
-      readonly sourcePath: string;
-      readonly peerPath: string;
-    }
-  | {
-      readonly tag: "orphaned";
-      readonly peerPath: string;
-    }
-  | {
-      readonly tag: "out-of-sync";
-      readonly sourcePath: string;
-      readonly peerPath: string;
-    }
-  | {
-      readonly tag: "unreadable";
-      readonly path: string;
-      readonly message: string;
-    };
+export type { SrdStatBlockGeneratedPeerObservation } from "./surface-publication-peer-observations.ts";
 
 export type SrdStatBlockParityIssue =
   | {
@@ -127,7 +110,10 @@ export type SrdStatBlockParityIssue =
       readonly reason: "kind";
       readonly name: string;
       readonly statBlockId: StatBlockRecord["id"];
-      readonly actualKind: StatBlockRecord["provenance"]["kind"];
+      readonly actualKind: Exclude<
+        StatBlockRecord["provenance"]["kind"],
+        "srd-5.2.1"
+      >;
     }
   | {
       readonly kind: "provenance";
@@ -139,6 +125,11 @@ export type SrdStatBlockParityIssue =
     }
   | {
       readonly kind: "unreadable-source";
+      readonly sourcePath: string;
+      readonly message: string;
+    }
+  | {
+      readonly kind: "missing-source";
       readonly sourcePath: string;
       readonly message: string;
     }
@@ -167,6 +158,7 @@ export type SrdStatBlockSourceCoverage =
       readonly availablePaths: readonly SrdStatBlockSourcePath[];
       readonly missingPaths: readonly SrdStatBlockSourcePath[];
       readonly unreadablePaths: readonly SrdStatBlockSourcePath[];
+      readonly incompletePaths: readonly SrdStatBlockSourcePath[];
     };
 
 export function srdStatBlockSourceOccurrenceCount(
@@ -257,6 +249,7 @@ export function deriveSrdStatBlockParity(
   const sourceCoverage = deriveSourceCoverage(
     input.sourceFiles,
     sourceReadIssues,
+    discovery,
   );
   const sourceIdentities = new Map(
     discovery.identities.map((identity) => [
@@ -292,6 +285,7 @@ export function deriveSrdStatBlockParity(
 function deriveSourceCoverage(
   sourceFiles: readonly SrdStatBlockSourceFile[],
   sourceReadIssues: readonly SrdStatBlockSourceReadIssue[],
+  discovery: SrdStatBlockSourceDiscovery,
 ): SrdStatBlockSourceCoverage {
   const sourceFilePaths = new Set(
     sourceFiles.map((sourceFile) => sourceFile.sourcePath),
@@ -310,13 +304,25 @@ function deriveSourceCoverage(
   const unreadablePaths = SRD_STAT_BLOCK_SOURCE_PATHS.filter((sourcePath) =>
     unreadablePathSet.has(sourcePath),
   );
-  return missingPaths.length === 0 && unreadablePaths.length === 0
+  const incompletePathSet = new Set(
+    discovery.issues.map((issue) => issue.sourcePath),
+  );
+  const incompletePaths = SRD_STAT_BLOCK_SOURCE_PATHS.filter(
+    (sourcePath) =>
+      sourceFilePaths.has(sourcePath) &&
+      !unreadablePathSet.has(sourcePath) &&
+      incompletePathSet.has(sourcePath),
+  );
+  return missingPaths.length === 0 &&
+    unreadablePaths.length === 0 &&
+    incompletePaths.length === 0
     ? { tag: "complete", paths: SRD_STAT_BLOCK_SOURCE_PATHS }
     : {
         tag: "incomplete",
         availablePaths,
         missingPaths,
         unreadablePaths,
+        incompletePaths,
       };
 }
 
@@ -326,7 +332,7 @@ function deriveMissingSourcePathIssues(
   return sourceCoverage.tag === "complete"
     ? []
     : sourceCoverage.missingPaths.map((sourcePath) => ({
-        kind: "unreadable-source" as const,
+        kind: "missing-source" as const,
         sourcePath,
         message: "Source path was not supplied to the standalone SRD corpus.",
       }));
@@ -524,20 +530,38 @@ function parseSourceFile(sourceFile: SrdStatBlockSourceFile): ParsedSourceFile {
   const parsedStatBlocks = headings.flatMap((heading) =>
     parseStatBlockHeading(sourceFile, lines, headings, heading),
   );
+  const occurrences = parsedStatBlocks.flatMap((parsedStatBlock) =>
+    parsedStatBlock.tag === "found" ? [parsedStatBlock.occurrence] : [],
+  );
+  const parsedIssues = parsedStatBlocks.flatMap(
+    (parsedStatBlock) => parsedStatBlock.issues,
+  );
   return {
-    occurrences: parsedStatBlocks.map(
-      (parsedStatBlock) => parsedStatBlock.occurrence,
-    ),
-    issues: parsedStatBlocks.flatMap(
-      (parsedStatBlock) => parsedStatBlock.issues,
-    ),
+    occurrences,
+    issues:
+      occurrences.length === 0 && parsedIssues.length === 0
+        ? [
+            {
+              kind: "incomplete-source",
+              sourcePath: sourceFile.sourcePath,
+              message:
+                "Source file contains no complete standalone stat block anchor.",
+            },
+          ]
+        : parsedIssues,
   };
 }
 
-type ParsedStatBlock = {
-  readonly occurrence: SrdStatBlockSourceOccurrence;
-  readonly issues: readonly SrdStatBlockSourceIssue[];
-};
+type ParsedStatBlock =
+  | {
+      readonly tag: "found";
+      readonly occurrence: SrdStatBlockSourceOccurrence;
+      readonly issues: readonly SrdStatBlockSourceIssue[];
+    }
+  | {
+      readonly tag: "invalid";
+      readonly issues: readonly SrdStatBlockSourceIssue[];
+    };
 
 type TableNormalization =
   | { readonly tag: "ok"; readonly value: readonly string[] }
@@ -571,6 +595,20 @@ function parseStatBlockHeading(
   const bodyEnd = Math.min(firstFollowingHeadingIndex, nextEntityHeadingIndex);
   const bodyBeforeChildHeading = lines.slice(heading.lineIndex + 1, bodyEnd);
   if (!hasArmorClassLine(bodyBeforeChildHeading)) return [];
+  if (!hasChallengeRatingLine(bodyBeforeChildHeading)) {
+    return [
+      {
+        tag: "invalid",
+        issues: [
+          {
+            kind: "incomplete-source",
+            sourcePath: sourceFile.sourcePath,
+            message: `Stat block heading "${heading.name}" has no Challenge Rating line before the source boundary.`,
+          },
+        ],
+      },
+    ];
+  }
 
   const anchorRange = statBlockAnchorRange(
     lines,
@@ -590,6 +628,7 @@ function parseStatBlockHeading(
   );
   return [
     {
+      tag: "found",
       occurrence: { name: heading.name, anchor, normalization },
       issues:
         normalization.tag === "malformed"
@@ -631,6 +670,10 @@ function nextEntityHeadingLineIndex(
 
 function hasArmorClassLine(lines: readonly string[]): boolean {
   return lines.some((line) => /^\s*\*\*AC\*\*/.test(line));
+}
+
+function hasChallengeRatingLine(lines: readonly string[]): boolean {
+  return lines.some((line) => /^\s*\*\*CR\*\*/.test(line));
 }
 
 type StatBlockAnchorRange = {
@@ -1190,24 +1233,59 @@ function normalizeAbilitySaveCell(
   name: string,
   cell: string,
 ): AbilityCellNormalization | undefined {
-  const match = /^(.*?)\s*\(([^)]+)\)\s+Save\s+(.+)$/.exec(cell);
-  return match === null
-    ? undefined
-    : {
-        tag: "ok",
-        value: `ability:${name}|value:${match[1]?.trim() ?? ""}|modifier:${match[2] ?? ""}|save:${match[3] ?? ""}`,
-      };
+  const match = /^(.*?)\s*\(([^)]*)\)\s+Save\s*(.*)$/.exec(cell);
+  if (match === null) return undefined;
+  return normalizeAbilityCaptures(name, {
+    value: match[1] ?? "",
+    modifier: match[2] ?? "",
+    save: match[3] ?? "",
+  });
 }
 
 function normalizeAbilityModifierCell(
   name: string,
   cell: string,
 ): AbilityCellNormalization | undefined {
-  const match = /^(.*?)\s*\(([^)]+)\)$/.exec(cell);
-  return match === null
-    ? undefined
+  const emptyValueMatch = /^\(\)\s*\(([^)]*)\)$/.exec(cell);
+  if (emptyValueMatch !== null) {
+    return normalizeAbilityCaptures(name, {
+      value: "",
+      modifier: emptyValueMatch[1] ?? "",
+    });
+  }
+  const match = /^(.*?)\s*\(([^)]*)\)$/.exec(cell);
+  if (match === null) return undefined;
+  return normalizeAbilityCaptures(name, {
+    value: match[1] ?? "",
+    modifier: match[2] ?? "",
+  });
+}
+
+function normalizeAbilityCaptures(
+  name: string,
+  captures: Readonly<{
+    readonly value: string;
+    readonly modifier: string;
+    readonly save?: string;
+  }>,
+): AbilityCellNormalization {
+  const emptyCaptures = Object.entries(captures)
+    .filter(([, value]) => value.trim() === "")
+    .map(([capture]) => capture);
+  if (emptyCaptures.length > 0) {
+    return {
+      tag: "malformed",
+      message: `Ability ${name} has an empty ${emptyCaptures.join(" and ")} capture.`,
+    };
+  }
+  const save = captures.save;
+  return save === undefined
+    ? {
+        tag: "ok",
+        value: `ability:${name}|value:${captures.value.trim()}|modifier:${captures.modifier.trim()}`,
+      }
     : {
         tag: "ok",
-        value: `ability:${name}|value:${match[1]?.trim() ?? ""}|modifier:${match[2] ?? ""}`,
+        value: `ability:${name}|value:${captures.value.trim()}|modifier:${captures.modifier.trim()}|save:${save.trim()}`,
       };
 }

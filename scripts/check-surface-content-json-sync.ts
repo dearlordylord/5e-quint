@@ -26,9 +26,13 @@ import {
 } from "./srd-surface-publication-artifacts.ts";
 import {
   readSrdStatBlockParity,
-  type SrdStatBlockGeneratedPeerObservation,
   type SrdStatBlockParityReport,
 } from "./srd521-stat-block-parity.ts";
+import {
+  projectSrdStatBlockPeerObservation,
+  type SurfacePublicationPeerObservation,
+  type SurfacePublicationRecordKind,
+} from "./surface-publication-peer-observations.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 export type PublicationIssue =
@@ -92,7 +96,7 @@ export type PublicationCheckResult = {
   readonly sourceCount: number;
   readonly peerCount: number;
   /** Every generated peer state observed by this content-sync owner. */
-  readonly generatedPeerObservations: readonly SrdStatBlockGeneratedPeerObservation[];
+  readonly generatedPeerObservations: readonly SurfacePublicationPeerObservation[];
 };
 
 export function checkDhallJsonCompilerVersion(
@@ -150,17 +154,60 @@ function readJson(
   filePath: string,
 ):
   | { readonly tag: "ok"; readonly value: JsonDocument }
+  | { readonly tag: "unreadable"; readonly message: string }
   | { readonly tag: "invalid"; readonly message: string } {
+  let contents: string;
   try {
+    contents = readFileSync(filePath, "utf8");
+  } catch (error) {
     return {
-      tag: "ok",
-      value: JSON.parse(readFileSync(filePath, "utf8")),
+      tag: "unreadable",
+      message: error instanceof Error ? error.message : String(error),
     };
+  }
+  try {
+    return { tag: "ok", value: JSON.parse(contents) };
   } catch (error) {
     return {
       tag: "invalid",
       message: error instanceof Error ? error.message : String(error),
     };
+  }
+}
+
+function surfacePublicationRecordKind(
+  value: unknown,
+): SurfacePublicationRecordKind {
+  const values = Array.isArray(value) ? value : [value];
+  if (values.length === 0) return "unknown";
+  const kinds = values.map((entry) => {
+    if (
+      typeof entry !== "object" ||
+      entry === null ||
+      Array.isArray(entry) ||
+      !("kind" in entry)
+    ) {
+      return "unknown" as const;
+    }
+    return entry.kind === "statBlock" ? ("statBlock" as const) : "other";
+  });
+  const first = kinds[0];
+  return first !== undefined && kinds.every((kind) => kind === first)
+    ? first
+    : "unknown";
+}
+
+function sourceRecordKind(sourcePath: string): SurfacePublicationRecordKind {
+  try {
+    const contents = readFileSync(sourcePath, "utf8");
+    const kind = /\bkind\s*=\s*"([^"]+)"/.exec(contents)?.[1];
+    return kind === undefined
+      ? "unknown"
+      : kind === "statBlock"
+        ? "statBlock"
+        : "other";
+  } catch {
+    return "unknown";
   }
 }
 
@@ -244,37 +291,71 @@ function decodeDocument(value: unknown): readonly string[] {
   return errors;
 }
 
-function addDecodeIssues(
+type JsonInspection =
+  | {
+      readonly tag: "ok";
+      readonly value: JsonDocument;
+      readonly recordKind: SurfacePublicationRecordKind;
+    }
+  | {
+      readonly tag: "failed";
+      readonly reason: "decode" | "read";
+      readonly recordKind: SurfacePublicationRecordKind;
+      readonly message: string;
+    };
+
+function inspectJsonFile(
   issues: PublicationIssue[],
+  filePath: string,
   displayFile: string,
-  value: unknown,
   context: string,
-): void {
-  for (const message of decodeDocument(value)) {
+  fallbackRecordKind: SurfacePublicationRecordKind,
+): JsonInspection {
+  const parsed = readJson(filePath);
+  if (parsed.tag === "unreadable") {
+    const message = `${context}: file could not be read: ${parsed.message}`;
+    issues.push({
+      kind: "decode-failed",
+      file: displayFile,
+      message,
+    });
+    return {
+      tag: "failed",
+      reason: "read",
+      recordKind: fallbackRecordKind,
+      message,
+    };
+  }
+  if (parsed.tag === "invalid") {
+    const message = `${context}: invalid JSON: ${parsed.message}`;
+    issues.push({ kind: "decode-failed", file: displayFile, message });
+    return {
+      tag: "failed",
+      reason: "decode",
+      recordKind: fallbackRecordKind,
+      message,
+    };
+  }
+  const recordKind = surfacePublicationRecordKind(parsed.value);
+  const decodeMessages = decodeDocument(parsed.value);
+  for (const message of decodeMessages) {
     issues.push({
       kind: "decode-failed",
       file: displayFile,
       message: `${context}: ${message}`,
     });
   }
-}
-
-function checkJsonFile(
-  issues: PublicationIssue[],
-  filePath: string,
-  displayFile: string,
-  context: string,
-): void {
-  const parsed = readJson(filePath);
-  if (parsed.tag === "invalid") {
-    issues.push({
-      kind: "decode-failed",
-      file: displayFile,
-      message: `${context}: invalid JSON: ${parsed.message}`,
-    });
-    return;
+  if (decodeMessages.length > 0) {
+    return {
+      tag: "failed",
+      reason: "decode",
+      recordKind: recordKind === "unknown" ? fallbackRecordKind : recordKind,
+      message: decodeMessages
+        .map((message) => `${context}: ${message}`)
+        .join("\n"),
+    };
   }
-  addDecodeIssues(issues, displayFile, parsed.value, context);
+  return { tag: "ok", value: parsed.value, recordKind };
 }
 
 type PeerBytesResult =
@@ -290,17 +371,6 @@ function readPeerBytes(filePath: string): PeerBytesResult {
       message: error instanceof Error ? error.message : String(error),
     };
   }
-}
-
-function decodeIssueMessages(
-  issues: readonly PublicationIssue[],
-  startIndex: number,
-): readonly string[] {
-  return issues
-    .slice(startIndex)
-    .flatMap((issue) =>
-      issue.kind === "decode-failed" ? [issue.message] : [],
-    );
 }
 
 type PublicationArtifactReadResult =
@@ -401,7 +471,7 @@ export function runPublicationCheck(
     sources.map((source) => source.replace(/\.dhall$/, ".json")),
   );
   const issues: PublicationIssue[] = [];
-  const generatedPeerObservations: SrdStatBlockGeneratedPeerObservation[] = [];
+  const generatedPeerObservations: SurfacePublicationPeerObservation[] = [];
   const temporaryDirectory = mkdtempSync(join(tmpdir(), "surface-json-sync-"));
 
   try {
@@ -413,6 +483,7 @@ export function runPublicationCheck(
       const displaySource = repoPath(repoRoot, sourcePath);
       const displayPeer = repoPath(repoRoot, peerPath);
       const peerExists = peers.includes(peer);
+      const sourceKind = sourceRecordKind(sourcePath);
       let peerIsHealthy = peerExists;
 
       if (!peerExists) {
@@ -423,12 +494,14 @@ export function runPublicationCheck(
         });
         generatedPeerObservations.push({
           tag: "missing",
+          recordKind: sourceKind,
           sourcePath: displaySource,
           peerPath: displayPeer,
         });
       }
 
       const compileError = compile(sourcePath, generatedPath);
+      let generatedInspection: JsonInspection | undefined;
       if (compileError !== undefined) {
         peerIsHealthy = false;
         issues.push({
@@ -437,45 +510,84 @@ export function runPublicationCheck(
           message: compileError,
         });
         generatedPeerObservations.push({
-          tag: "unreadable",
-          path: displaySource,
+          tag: "source-failed",
+          reason: "compile",
+          recordKind: sourceKind,
+          sourcePath: displaySource,
+          peerPath: displayPeer,
           message: `Dhall compilation failed: ${compileError}`,
         });
       } else {
-        const generatedIssueStart = issues.length;
-        checkJsonFile(
+        generatedInspection = inspectJsonFile(
           issues,
           generatedPath,
           displayPeer,
           `generated from ${displaySource}`,
+          sourceKind,
         );
-        const generatedDecodeMessages = decodeIssueMessages(
-          issues,
-          generatedIssueStart,
-        );
-        if (generatedDecodeMessages.length > 0) {
+        if (generatedInspection.tag === "failed") {
           peerIsHealthy = false;
           generatedPeerObservations.push({
-            tag: "unreadable",
-            path: displayPeer,
-            message: generatedDecodeMessages.join("\n"),
+            tag: "generated-peer-failed",
+            reason: generatedInspection.reason,
+            recordKind: generatedInspection.recordKind,
+            sourcePath: displaySource,
+            peerPath: displayPeer,
+            message: generatedInspection.message,
           });
         }
-        if (peerExists) {
+      }
+
+      let committedInspection: JsonInspection | undefined;
+      if (peerExists) {
+        const generatedKind =
+          generatedInspection?.recordKind === undefined ||
+          generatedInspection.recordKind === "unknown"
+            ? sourceKind
+            : generatedInspection.recordKind;
+        committedInspection = inspectJsonFile(
+          issues,
+          peerPath,
+          displayPeer,
+          `committed peer for ${displaySource}`,
+          generatedKind,
+        );
+        if (committedInspection.tag === "failed") {
+          peerIsHealthy = false;
+          generatedPeerObservations.push({
+            tag: "committed-peer-failed",
+            reason: committedInspection.reason,
+            recordKind: committedInspection.recordKind,
+            sourcePath: displaySource,
+            peerPath: displayPeer,
+            message: committedInspection.message,
+          });
+        }
+
+        if (
+          generatedInspection?.tag === "ok" &&
+          committedInspection.tag === "ok"
+        ) {
           const generated = readPeerBytes(generatedPath);
           const committed = readPeerBytes(peerPath);
           if (generated.tag === "unreadable") {
             peerIsHealthy = false;
             generatedPeerObservations.push({
-              tag: "unreadable",
-              path: displayPeer,
+              tag: "generated-peer-failed",
+              reason: "read",
+              recordKind: generatedInspection.recordKind,
+              sourcePath: displaySource,
+              peerPath: displayPeer,
               message: `Generated peer could not be read: ${generated.message}`,
             });
           } else if (committed.tag === "unreadable") {
             peerIsHealthy = false;
             generatedPeerObservations.push({
-              tag: "unreadable",
-              path: displayPeer,
+              tag: "committed-peer-failed",
+              reason: "read",
+              recordKind: committedInspection.recordKind,
+              sourcePath: displaySource,
+              peerPath: displayPeer,
               message: `Committed peer could not be read: ${committed.message}`,
             });
           } else if (!generated.bytes.equals(committed.bytes)) {
@@ -487,6 +599,7 @@ export function runPublicationCheck(
             });
             generatedPeerObservations.push({
               tag: "out-of-sync",
+              recordKind: generatedInspection.recordKind,
               sourcePath: displaySource,
               peerPath: displayPeer,
             });
@@ -494,31 +607,15 @@ export function runPublicationCheck(
         }
       }
 
-      if (peerExists) {
-        const committedIssueStart = issues.length;
-        checkJsonFile(
-          issues,
-          peerPath,
-          displayPeer,
-          `committed peer for ${displaySource}`,
-        );
-        const committedDecodeMessages = decodeIssueMessages(
-          issues,
-          committedIssueStart,
-        );
-        if (committedDecodeMessages.length > 0) {
-          peerIsHealthy = false;
-          generatedPeerObservations.push({
-            tag: "unreadable",
-            path: displayPeer,
-            message: committedDecodeMessages.join("\n"),
-          });
-        }
-      }
-
       if (peerIsHealthy) {
         generatedPeerObservations.push({
           tag: "present",
+          recordKind:
+            committedInspection?.tag === "ok"
+              ? committedInspection.recordKind
+              : generatedInspection?.tag === "ok"
+                ? generatedInspection.recordKind
+                : sourceKind,
           sourcePath: displaySource,
           peerPath: displayPeer,
         });
@@ -533,18 +630,26 @@ export function runPublicationCheck(
         kind: "orphaned-json",
         peer: displayPeer,
       });
+      const peerInspection = inspectJsonFile(
+        issues,
+        peerPath,
+        displayPeer,
+        "orphaned JSON",
+        "unknown",
+      );
+      const recordKind = peerInspection.recordKind;
       generatedPeerObservations.push({
         tag: "orphaned",
+        recordKind,
         peerPath: displayPeer,
       });
-      const decodeIssueStart = issues.length;
-      checkJsonFile(issues, peerPath, displayPeer, "orphaned JSON");
-      const decodeMessages = decodeIssueMessages(issues, decodeIssueStart);
-      if (decodeMessages.length > 0) {
+      if (peerInspection.tag === "failed") {
         generatedPeerObservations.push({
-          tag: "unreadable",
-          path: displayPeer,
-          message: decodeMessages.join("\n"),
+          tag: "orphaned-peer-failed",
+          reason: peerInspection.reason,
+          recordKind: peerInspection.recordKind,
+          peerPath: displayPeer,
+          message: peerInspection.message,
         });
       }
     }
@@ -574,22 +679,6 @@ export type SurfacePublicationCheckResult = PublicationCheckResult & {
   readonly statBlockParity: SrdStatBlockParityReport;
 };
 
-function isStatBlockPeerObservation(
-  observation: SrdStatBlockGeneratedPeerObservation,
-): boolean {
-  const paths =
-    observation.tag === "orphaned" || observation.tag === "unreadable"
-      ? [
-          observation.tag === "orphaned"
-            ? observation.peerPath
-            : observation.path,
-        ]
-      : [observation.sourcePath, observation.peerPath];
-  return paths.some((path) =>
-    /(?:^|\/)stat_block_[^/]+\.(?:dhall|json)$/.test(path),
-  );
-}
-
 export function runSurfacePublicationCheck(
   options: PublicationCheckOptions,
 ): SurfacePublicationCheckResult {
@@ -597,8 +686,11 @@ export function runSurfacePublicationCheck(
   const statBlockParity = readSrdStatBlockParity({
     repoRoot: options.repoRoot,
     installedStatBlocks: srdSurface.statBlocks,
-    generatedPeerObservations: publication.generatedPeerObservations.filter(
-      isStatBlockPeerObservation,
+    generatedPeerObservations: publication.generatedPeerObservations.flatMap(
+      (observation) => {
+        const projected = projectSrdStatBlockPeerObservation(observation);
+        return projected === undefined ? [] : [projected];
+      },
     ),
   });
   return { ...publication, statBlockParity };

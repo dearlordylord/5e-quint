@@ -28,6 +28,13 @@ const validRecord = readFileSync(
   join(process.cwd(), "packages/surface/content/bless.json"),
   "utf8",
 );
+const validStatBlockRecord = readFileSync(
+  join(
+    process.cwd(),
+    "packages/surface/content/stat_block_goblin_warrior.json",
+  ),
+  "utf8",
+);
 const require = createRequire(import.meta.url);
 // This integration check deliberately builds the real local RAW index through
 // CJS; its measured cold path is just over Vitest's 5 s default.
@@ -178,14 +185,36 @@ describe("Surface content publication checker", () => {
         "drift.dhall",
         "compile.dhall",
         "decode.dhall",
+        "generated-decode.dhall",
+        "committed-decode.dhall",
+        "generated-read.dhall",
+        "committed-read.dhall",
       ]) {
-        writeFileSync(join(contentDir, source), "fixture");
+        writeFileSync(
+          join(contentDir, source),
+          source.includes("decode") || source.includes("read")
+            ? 'kind = "statBlock"'
+            : "fixture",
+        );
       }
       writeFileSync(
         join(contentDir, "drift.json"),
         JSON.stringify(JSON.parse(validRecord)),
       );
       writeFileSync(join(contentDir, "decode.json"), "{}");
+      writeFileSync(
+        join(contentDir, "generated-decode.json"),
+        validStatBlockRecord,
+      );
+      writeFileSync(join(contentDir, "committed-decode.json"), "{}");
+      writeFileSync(
+        join(contentDir, "generated-read.json"),
+        validStatBlockRecord,
+      );
+      writeFileSync(
+        join(contentDir, "committed-read.json"),
+        validStatBlockRecord,
+      );
       writeFileSync(join(contentDir, "orphan.json"), "{}");
 
       const result = runPublicationCheck({
@@ -195,10 +224,25 @@ describe("Surface content publication checker", () => {
           if (sourcePath.endsWith("compile.dhall")) {
             return "synthetic compile failure";
           }
-          writeFileSync(
-            outputPath,
-            sourcePath.endsWith("decode.dhall") ? "{}" : validRecord,
-          );
+          if (sourcePath.endsWith("generated-decode.dhall")) {
+            writeFileSync(outputPath, "{}");
+          } else if (sourcePath.endsWith("generated-read.dhall")) {
+            writeFileSync(outputPath, validStatBlockRecord);
+            rmSync(outputPath, { force: true });
+          } else {
+            const compiledRecord =
+              sourcePath.endsWith("decode.dhall") &&
+              !sourcePath.endsWith("committed-decode.dhall")
+                ? "{}"
+                : sourcePath.endsWith("committed-decode.dhall") ||
+                    sourcePath.endsWith("committed-read.dhall")
+                  ? validStatBlockRecord
+                  : validRecord;
+            writeFileSync(outputPath, compiledRecord);
+          }
+          if (sourcePath.endsWith("committed-read.dhall")) {
+            rmSync(join(contentDir, "committed-read.json"), { force: true });
+          }
           return undefined;
         },
       });
@@ -222,20 +266,61 @@ describe("Surface content publication checker", () => {
         expect.arrayContaining([
           {
             tag: "missing",
+            recordKind: "unknown",
             sourcePath: "missing.dhall",
             peerPath: "missing.json",
           },
           {
             tag: "out-of-sync",
+            recordKind: "other",
             sourcePath: "drift.dhall",
             peerPath: "drift.json",
           },
           {
-            tag: "unreadable",
-            path: "compile.dhall",
+            tag: "source-failed",
+            reason: "compile",
+            recordKind: "unknown",
+            sourcePath: "compile.dhall",
+            peerPath: "compile.json",
             message: "Dhall compilation failed: synthetic compile failure",
           },
-          { tag: "orphaned", peerPath: "orphan.json" },
+          { tag: "orphaned", recordKind: "unknown", peerPath: "orphan.json" },
+        ]),
+      );
+      expect(result.generatedPeerObservations).toEqual(
+        expect.arrayContaining([
+          {
+            tag: "generated-peer-failed",
+            reason: "decode",
+            recordKind: "statBlock",
+            sourcePath: "generated-decode.dhall",
+            peerPath: "generated-decode.json",
+            message: expect.any(String),
+          },
+          {
+            tag: "committed-peer-failed",
+            reason: "decode",
+            recordKind: "statBlock",
+            sourcePath: "committed-decode.dhall",
+            peerPath: "committed-decode.json",
+            message: expect.any(String),
+          },
+          {
+            tag: "generated-peer-failed",
+            reason: "read",
+            recordKind: "statBlock",
+            sourcePath: "generated-read.dhall",
+            peerPath: "generated-read.json",
+            message: expect.any(String),
+          },
+          {
+            tag: "committed-peer-failed",
+            reason: "read",
+            recordKind: "statBlock",
+            sourcePath: "committed-read.dhall",
+            peerPath: "committed-read.json",
+            message: expect.any(String),
+          },
         ]),
       );
     } finally {
@@ -334,6 +419,42 @@ describe("Surface content publication checker", () => {
           (issue) => issue.kind === "missing",
         ),
       ).toHaveLength(309);
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
+  it("projects stat-block peers by decoded/source kind rather than filename", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-stat-block-peer-projection-test-"),
+    );
+
+    try {
+      writeFileSync(join(contentDir, "creature.dhall"), 'kind = "statBlock"');
+      const result = runSurfacePublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: (_sourcePath, outputPath) => {
+          writeFileSync(outputPath, validStatBlockRecord);
+          return undefined;
+        },
+      });
+
+      expect(result.generatedPeerObservations).toContainEqual({
+        tag: "missing",
+        recordKind: "statBlock",
+        sourcePath: "creature.dhall",
+        peerPath: "creature.json",
+      });
+      expect(result.statBlockParity.issues).toContainEqual({
+        kind: "generated-peer",
+        evidence: {
+          tag: "missing",
+          recordKind: "statBlock",
+          sourcePath: "creature.dhall",
+          peerPath: "creature.json",
+        },
+      });
     } finally {
       rmSync(contentDir, { force: true, recursive: true });
     }

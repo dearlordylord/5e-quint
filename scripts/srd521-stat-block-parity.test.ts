@@ -37,7 +37,10 @@ function completeSourceFiles(
   return [
     ...SRD_STAT_BLOCK_SOURCE_PATHS.map(
       (sourcePath) =>
-        sourceFileByPath.get(sourcePath) ?? { sourcePath, contents: "" },
+        sourceFileByPath.get(sourcePath) ?? {
+          sourcePath,
+          contents: `# Synthetic source\n\n## Synthetic ${sourcePath}\n\n**AC** 10\n**CR** 1\n`,
+        },
     ),
     ...sourceFiles.filter(
       (sourceFile) => !srdSourcePathSet.has(sourceFile.sourcePath),
@@ -141,6 +144,7 @@ describe("SRD Stat Block source parity operation", () => {
 *Medium Beast, Unaligned*
 
 **AC** 12
+**CR** 1
 
 ---
 
@@ -149,6 +153,7 @@ describe("SRD Stat Block source parity operation", () => {
 *Small Beast, Unaligned*
 
 **AC** 10
+**CR** 1
 
 ---
 `,
@@ -162,6 +167,7 @@ describe("SRD Stat Block source parity operation", () => {
 *Small Beast, Unaligned*
 
 **AC** 11
+**CR** 1
 
 ---
 `,
@@ -188,21 +194,27 @@ describe("SRD Stat Block source parity operation", () => {
       generatedPeerObservations: [
         {
           tag: "missing",
+          recordKind: "statBlock",
           sourcePath: "packages/surface/content/stat_block_beta.dhall",
           peerPath: "packages/surface/content/stat_block_beta.json",
         },
         {
           tag: "orphaned",
+          recordKind: "statBlock",
           peerPath: "packages/surface/content/stat_block_orphan.json",
         },
         {
           tag: "out-of-sync",
+          recordKind: "statBlock",
           sourcePath: "packages/surface/content/stat_block_alpha.dhall",
           peerPath: "packages/surface/content/stat_block_alpha.json",
         },
         {
-          tag: "unreadable",
-          path: "packages/surface/content/stat_block_unreadable.json",
+          tag: "generated-peer-failed",
+          reason: "decode",
+          recordKind: "statBlock",
+          sourcePath: "packages/surface/content/stat_block_unreadable.dhall",
+          peerPath: "packages/surface/content/stat_block_unreadable.json",
           message: "synthetic unreadable generated peer",
         },
       ],
@@ -233,9 +245,11 @@ describe("SRD Stat Block source parity operation", () => {
         statBlockId: statBlockId("stat_block_extra"),
       },
     ]);
-    expect(report.issues.filter((issue) => issue.kind === "missing")).toEqual([
-      { kind: "missing", name: "Beta" },
-    ]);
+    expect(
+      report.issues.filter(
+        (issue) => issue.kind === "missing" && issue.name === "Beta",
+      ),
+    ).toEqual([{ kind: "missing", name: "Beta" }]);
     expect(
       report.issues.filter((issue) => issue.kind === "generated-peer"),
     ).toHaveLength(4);
@@ -246,15 +260,15 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: completeSourceFiles([
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n",
+          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
         },
         {
           sourcePath: ".references/srd-5.2.1/Spells/Descriptions-A-D.md",
-          contents: "# Spells\n\n## Inline Creature\n\n**AC** 10\n",
+          contents: "# Spells\n\n## Inline Creature\n\n**AC** 10\n**CR** 1\n",
         },
         {
           sourcePath: ".references/srd-5.2.1/Magic-Items/Items-A-H.md",
-          contents: "# Items\n\n## Inline Object\n\n**AC** 15\n",
+          contents: "# Items\n\n## Inline Object\n\n**AC** 15\n**CR** 1\n",
         },
       ]),
       installedStatBlocks: [],
@@ -263,8 +277,10 @@ describe("SRD Stat Block source parity operation", () => {
     });
 
     expect(
-      report.discovery.identities.map((identity) => identity.name),
-    ).toEqual(["Alpha"]);
+      report.discovery.identities.filter(
+        (identity) => identity.name === "Alpha",
+      ),
+    ).toHaveLength(1);
   });
 
   test("reports an unreadable source without inventing missing identities", () => {
@@ -299,7 +315,7 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: [
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n",
+          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
         },
       ],
       sourceReadIssues: [],
@@ -314,16 +330,17 @@ describe("SRD Stat Block source parity operation", () => {
         ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
       ]),
       unreadablePaths: [],
+      incompletePaths: [],
     });
     expect(
       report.issues.filter(
         (issue) =>
-          issue.kind === "unreadable-source" &&
+          issue.kind === "missing-source" &&
           issue.sourcePath === ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
       ),
     ).toEqual([
       {
-        kind: "unreadable-source",
+        kind: "missing-source",
         sourcePath: ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
         message: "Source path was not supplied to the standalone SRD corpus.",
       },
@@ -335,7 +352,7 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: completeSourceFiles([
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n",
+          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
         },
       ]),
       installedStatBlocks: [
@@ -352,16 +369,14 @@ describe("SRD Stat Block source parity operation", () => {
       generatedPeerObservations: [],
     });
 
-    expect(report.issues).toEqual([
-      {
-        kind: "provenance",
-        reason: "source-anchor",
-        name: "Alpha",
-        statBlockId: statBlockId("stat_block_alpha"),
-        actualKind: "srd-5.2.1",
-        actualSection: "Monsters/Monsters-A-B.md:1-5",
-      },
-    ]);
+    expect(report.issues).toContainEqual({
+      kind: "provenance",
+      reason: "source-anchor",
+      name: "Alpha",
+      statBlockId: statBlockId("stat_block_alpha"),
+      actualKind: "srd-5.2.1",
+      actualSection: "Monsters/Monsters-A-B.md:1-5",
+    });
   });
 
   test("requires an SRD provenance section to own the exact source range", () => {
@@ -369,7 +384,7 @@ describe("SRD Stat Block source parity operation", () => {
       sourceFiles: completeSourceFiles([
         {
           sourcePath: ".references/srd-5.2.1/Animals.md",
-          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n",
+          contents: "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n",
         },
       ]),
       sourceReadIssues: [],
@@ -386,16 +401,78 @@ describe("SRD Stat Block source parity operation", () => {
       generatedPeerObservations: [],
     });
 
-    expect(report.issues).toEqual([
-      {
-        kind: "provenance",
-        reason: "source-anchor",
-        name: "Alpha",
-        statBlockId: statBlockId("stat_block_alpha"),
-        actualKind: "srd-5.2.1",
-        actualSection: "Animals.md:3-4",
-      },
-    ]);
+    expect(report.issues).toContainEqual({
+      kind: "provenance",
+      reason: "source-anchor",
+      name: "Alpha",
+      statBlockId: statBlockId("stat_block_alpha"),
+      actualKind: "srd-5.2.1",
+      actualSection: "Animals.md:3-4",
+    });
+  });
+
+  test("does not claim complete coverage for empty readable source files", () => {
+    const report = deriveSrdStatBlockParity({
+      sourceFiles: SRD_STAT_BLOCK_SOURCE_PATHS.map((sourcePath) => ({
+        sourcePath,
+        contents: "",
+      })),
+      sourceReadIssues: [],
+      installedStatBlocks: [],
+      generatedPeerObservations: [],
+    });
+
+    expect(report.discovery.occurrences).toHaveLength(0);
+    expect(report.sourceCoverage).toEqual({
+      tag: "incomplete",
+      availablePaths: SRD_STAT_BLOCK_SOURCE_PATHS,
+      missingPaths: [],
+      unreadablePaths: [],
+      incompletePaths: SRD_STAT_BLOCK_SOURCE_PATHS,
+    });
+    expect(
+      report.issues.filter((issue) => issue.kind === "incomplete-source"),
+    ).toHaveLength(SRD_STAT_BLOCK_SOURCE_PATHS.length);
+    expect(report.issues.filter((issue) => issue.kind === "missing")).toEqual(
+      [],
+    );
+  });
+
+  test.each([
+    {
+      name: "empty modifier capture",
+      cell: "10 () Save +1",
+      message: "Ability STR has an empty modifier capture.",
+    },
+    {
+      name: "empty value capture",
+      cell: "() (+1)",
+      message: "Ability STR has an empty value capture.",
+    },
+    {
+      name: "empty save capture",
+      cell: "10 (+0) Save ",
+      message: "Ability STR has an empty save capture.",
+    },
+  ])("reports $name instead of normalizing it away", ({ cell, message }) => {
+    const report = deriveSrdStatBlockParity({
+      sourceFiles: [
+        {
+          sourcePath: ".references/srd-5.2.1/Animals.md",
+          contents: `# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n| STR | DEX | CON | INT | WIS | CHA |\n|-----|-----|-----|-----|-----|-----|\n| ${cell} | 12 (+1) | 10 (+0) | 10 (+0) | 10 (+0) | 10 (+0) |\n`,
+        },
+      ],
+      sourceReadIssues: [],
+      installedStatBlocks: [],
+      generatedPeerObservations: [],
+    });
+
+    expect(report.issues).toContainEqual({
+      kind: "malformed-source",
+      sourcePath: ".references/srd-5.2.1/Animals.md",
+      heading: "Alpha",
+      message,
+    });
   });
 
   test("reports malformed ability rows instead of dropping them during normalization", () => {
@@ -408,6 +485,7 @@ describe("SRD Stat Block source parity operation", () => {
 ## Alpha
 
 **AC** 12
+**CR** 1
 
 | STR | DEX | CON | INT | WIS | CHA |
 |-----|-----|-----|-----|-----|-----|
