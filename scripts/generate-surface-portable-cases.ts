@@ -121,41 +121,116 @@ function valuesAtPath(root: unknown, path: string): readonly unknown[] {
   return values;
 }
 
-function firstStringAtRole(
-  publication: JsonObject,
-  role: PortableDependencyRole,
-): string | undefined {
-  const family = role.sourceKind === "unit" ? "units" : "statBlocks";
-  return records(publication, family)
-    .flatMap((record) => valuesAtPath(record, role.path))
-    .find((candidate): candidate is string => typeof candidate === "string");
-}
-
 function dependencyFailureInput(
   publication: JsonObject,
   contract: readonly PortableDependencyRole[],
 ): JsonObject {
-  const missingTargetIds = {
-    unit: new Set<string>(),
-    statBlock: new Set<string>(),
+  const sourceIndices = {
+    units: new Set<number>(),
+    statBlocks: new Set<number>(),
   };
   for (const role of contract) {
-    const targetId = firstStringAtRole(publication, role);
-    if (targetId === undefined) {
+    const family = role.sourceKind === "unit" ? "units" : "statBlocks";
+    let foundValue = false;
+    records(publication, family).forEach((record, index) => {
+      if (
+        valuesAtPath(record, role.path).some(
+          (value) => typeof value === "string",
+        )
+      ) {
+        foundValue = true;
+        sourceIndices[family].add(index);
+      }
+    });
+    if (!foundValue) {
       throw new Error(`Dependency contract path is absent: ${role.path}`);
     }
-    missingTargetIds[role.targetKind].add(targetId);
   }
+
+  const selectedRecords = {
+    units: records(publication, "units").filter((_, index) =>
+      sourceIndices.units.has(index),
+    ),
+    statBlocks: records(publication, "statBlocks").filter((_, index) =>
+      sourceIndices.statBlocks.has(index),
+    ),
+  };
+  const targetIds = {
+    units: new Set<string>(),
+    statBlocks: new Set<string>(),
+  };
+  for (const role of contract) {
+    const sourceFamily = role.sourceKind === "unit" ? "units" : "statBlocks";
+    const targetFamily = role.targetKind === "unit" ? "units" : "statBlocks";
+    for (const record of selectedRecords[sourceFamily]) {
+      for (const value of valuesAtPath(record, role.path)) {
+        if (typeof value === "string") targetIds[targetFamily].add(value);
+      }
+    }
+  }
+
+  const sourceRecords = (family: "units" | "statBlocks") => {
+    const allRecords = records(publication, family);
+    const selected = selectedRecords[family];
+    if (selected.length > 0) return selected;
+    const first = allRecords.find(
+      (record) => !targetIds[family].has(String(record.id)),
+    );
+    const fallback = first ?? allRecords[0];
+    if (fallback === undefined) {
+      throw new Error(`Publication ${family} must be non-empty`);
+    }
+    return [fallback];
+  };
 
   return {
     ...publication,
-    units: records(publication, "units").filter(
-      (record) => !missingTargetIds.unit.has(String(record.id)),
-    ),
-    statBlocks: records(publication, "statBlocks").filter(
-      (record) => !missingTargetIds.statBlock.has(String(record.id)),
-    ),
+    units: sourceRecords("units"),
+    statBlocks: sourceRecords("statBlocks"),
   };
+}
+
+function dependencyRoleFailureInput(
+  publication: JsonObject,
+  role: PortableDependencyRole,
+): JsonObject {
+  const sourceFamily = role.sourceKind === "unit" ? "units" : "statBlocks";
+  const targetFamily = role.targetKind === "unit" ? "units" : "statBlocks";
+  const sourceRecord = records(publication, sourceFamily).find((record) =>
+    valuesAtPath(record, role.path).some((value) => typeof value === "string"),
+  );
+  if (sourceRecord === undefined) {
+    throw new Error(`Dependency contract path is absent: ${role.path}`);
+  }
+  const targetIds = new Set(
+    valuesAtPath(sourceRecord, role.path).filter(
+      (value): value is string => typeof value === "string",
+    ),
+  );
+  const targetRecords = records(publication, targetFamily).filter(
+    (record) =>
+      !targetIds.has(String(record.id)) ||
+      (sourceFamily === targetFamily && record === sourceRecord),
+  );
+  const otherFamily = sourceFamily === "units" ? "statBlocks" : "units";
+  const otherFamilyFirst = records(publication, otherFamily)[0];
+  if (otherFamilyFirst === undefined || targetRecords.length === 0) {
+    throw new Error(
+      "Dependency role fixture requires non-empty record families",
+    );
+  }
+  return sourceFamily === "units"
+    ? {
+        ...publication,
+        units: [sourceRecord],
+        statBlocks:
+          targetFamily === "statBlocks" ? targetRecords : [otherFamilyFirst],
+      }
+    : {
+        ...publication,
+        units: targetFamily === "units" ? targetRecords : [otherFamilyFirst],
+        statBlocks: [sourceRecord],
+      };
 }
 
 function expectedOutcome(
@@ -367,6 +442,14 @@ function buildDocument(repositoryRoot: string): PortableCaseDocument {
     makeCase(oracle, contract, "all canonical dependency fields are checked", {
       input: dependencyFailure,
     }),
+    ...contract.map((role) =>
+      makeCase(
+        oracle,
+        contract,
+        `canonical dependency role: ${role.sourceKind}.${role.path}`,
+        { input: dependencyRoleFailureInput(publication, role) },
+      ),
+    ),
   ];
 
   return { version: 1, dependencyContract: contract, cases };

@@ -17,12 +17,25 @@ type AjvConstructor = new (options: {
   readonly code: { readonly optimize: number };
 }) => { compile(schema: unknown): ValidateFunction };
 
+function isAjvModule(
+  value: unknown,
+): value is { readonly default: AjvConstructor } {
+  return (
+    (typeof value === "object" || typeof value === "function") &&
+    value !== null &&
+    "default" in value &&
+    typeof value.default === "function"
+  );
+}
+
 const packageRequire = createRequire(
   new URL("../packages/surface/package.json", import.meta.url),
 );
-const Ajv2020 = (
-  packageRequire("ajv/dist/2020.js") as { readonly default: AjvConstructor }
-).default;
+const loadedAjvModule: unknown = packageRequire("ajv/dist/2020.js");
+if (!isAjvModule(loadedAjvModule)) {
+  throw new Error("Ajv 2020 module did not expose a constructor");
+}
+const Ajv2020 = loadedAjvModule.default;
 
 export const PORTABLE_CASE_ISSUE_CODES = [
   "json",

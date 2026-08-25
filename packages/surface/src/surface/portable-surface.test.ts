@@ -413,6 +413,70 @@ describe("portable SRD Surface boundary", () => {
     );
   });
 
+  test("the canonical dependency failure fixture proves every declared role", () => {
+    const allDependenciesCase = caseDocument.cases.find(
+      (portableCase) =>
+        portableCase.name === "all canonical dependency fields are checked",
+    );
+    if (
+      allDependenciesCase === undefined ||
+      allDependenciesCase.expected.production.tag !== "rejected" ||
+      allDependenciesCase.expected.independent.tag !== "rejected"
+    ) {
+      throw new Error("Portable cases lost the canonical dependency fixture");
+    }
+
+    const roleKey = (
+      sourceKind: string,
+      path: string,
+      targetKind: string,
+      relation: string,
+    ) => `${sourceKind}\u0000${path}\u0000${targetKind}\u0000${relation}`;
+    const expectedRoleKeys = new Set(
+      dependencyContractDocument.roles.map((role) =>
+        roleKey(role.sourceKind, role.path, role.targetKind, role.relation),
+      ),
+    );
+    const roleCases = caseDocument.cases.filter((portableCase) =>
+      portableCase.name.startsWith("canonical dependency role:"),
+    );
+    expect(roleCases).toHaveLength(dependencyContractDocument.roles.length);
+    const issueRoleKeys = (issues: readonly PortableCaseIssue[]) =>
+      new Set(
+        issues.flatMap((issue) => {
+          if (issue.code !== "dangling-authored-dependency") return [];
+          const match = /^\$\.(units|statBlocks)\[\d+\]\.(.*)$/.exec(
+            issue.path,
+          );
+          if (match === null) return [];
+          const sourceKind = match[1] === "units" ? "unit" : "statBlock";
+          return [
+            roleKey(
+              sourceKind,
+              match[2].replace(/\[\d+\]/g, "[]"),
+              issue.targetKind,
+              issue.relation,
+            ),
+          ];
+        }),
+      );
+
+    for (const lane of ["production", "independent"] as const) {
+      const allDependencyOutcome = allDependenciesCase.expected[lane];
+      if (allDependencyOutcome.tag !== "rejected") {
+        throw new Error("Canonical dependency fixture must be rejected");
+      }
+      const issues = [
+        allDependencyOutcome.issues,
+        ...roleCases.flatMap((portableCase) => {
+          const outcome = portableCase.expected[lane];
+          return outcome.tag === "rejected" ? [outcome.issues] : [];
+        }),
+      ].flat();
+      expect(issueRoleKeys(issues)).toEqual(expectedRoleKeys);
+    }
+  });
+
   test.each(caseDocument.cases)(
     "$name — production boundary",
     (portableCase) => {
