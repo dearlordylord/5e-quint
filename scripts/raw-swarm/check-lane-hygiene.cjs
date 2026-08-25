@@ -445,6 +445,14 @@ function runLaneHygiene() {
     discoveredTests,
     "Every Raw Swarm test must be classified as quality-owned or an explicitly retained prototype exclusion. Live model work belongs behind a public model command, not in a test file.",
   );
+  assert.deepEqual(
+    Object.keys(RAW_SWARM_TESTS_OUTSIDE_QUALITY).sort(),
+    [
+      "scripts/raw-swarm/battle-slice-tools.test.ts",
+      "scripts/raw-swarm/transcript.property.test.ts",
+    ],
+    "Only the two established Raw Swarm prototype tests may remain outside quality.",
+  );
   assert.equal(
     QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.some((testPath) =>
       Object.hasOwn(RAW_SWARM_TESTS_OUTSIDE_QUALITY, testPath),
@@ -551,6 +559,7 @@ function runLaneHygiene() {
   );
   assert.match(deterministicRunner, /deterministic-capability-guard\.cjs/);
   assert.match(deterministicRunner, /deterministic-network-boundary\.c/);
+  assert.match(deterministicRunner, /deterministic-toolchain\.cjs/);
   assert.match(deterministicRunner, /NODE_OPTIONS: deterministicNodeOptions/);
   assert.doesNotMatch(
     deterministicRunner,
@@ -570,6 +579,25 @@ function runLaneHygiene() {
     ),
     true,
     "Deterministic lane is missing its Linux seccomp boundary source.",
+  );
+  const deterministicToolchain = readFileSync(
+    join(root, "scripts/raw-swarm/deterministic-toolchain.cjs"),
+    "utf8",
+  );
+  assert.match(
+    deterministicToolchain,
+    /TRUSTED_C_COMPILER_PATH = "\/usr\/bin\/cc"/,
+  );
+  assert.match(deterministicToolchain, /PATH: "\/usr\/bin:\/bin"/);
+  assert.doesNotMatch(
+    deterministicToolchain,
+    /process\.env/,
+    "Deterministic boundary compilation must not inherit compiler environment variables.",
+  );
+  assert.doesNotMatch(
+    deterministicToolchain,
+    /spawnSync\(\s*["'`]cc["'`]/,
+    "Deterministic boundary compilation must not resolve cc through PATH.",
   );
   const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
   const commonBlockerPath = join(blockerDirectory, "forbidden-command");

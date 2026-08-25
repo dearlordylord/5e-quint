@@ -53,20 +53,31 @@ tests inject controlled Node fixtures through the spawn seam; no stamped or
 forgeable coding-agent executable is admitted.
 
 The deterministic body removes inherited `NODE_OPTIONS`, compiles the
-repository-owned `deterministic-network-boundary.c` helper with the host C
-compiler, and refuses to continue if Linux seccomp cannot be installed. The
-helper installs the filter before `pnpm`, `mise`, the compiler, or the test
-runner starts; the Linux kernel then inherits it across workers, forks, shells,
-`env -i`, and custom launchers, independently of JavaScript environment
-variables.
+repository-owned `deterministic-network-boundary.c` helper with the validated
+`/usr/bin/cc` system compiler, and refuses to continue if that compiler or
+Linux seccomp is unavailable. Compiler lookup ignores `PATH`, `CC`, and
+compiler-option environment variables and uses a small sanitized environment.
+This bootstrap happens before the kernel filter; the compiler is therefore a
+trusted host-toolchain prerequisite, not something this lane claims to isolate
+with its own filter. The helper installs the filter before `pnpm`, `mise`, or
+the test runner starts; the Linux kernel then inherits it across
+workers, forks, shells, `env -i`, and custom launchers, independently of
+JavaScript environment variables.
 
-The filter denies `AF_INET` and `AF_INET6` socket and socket-pair creation,
-denies all `io_uring` setup/submission syscalls, and preserves `AF_UNIX`. Its
+The filter allows only `AF_UNIX` socket and socket-pair creation, closes every
+inherited descriptor above standard error, rejects non-Unix standard sockets,
+denies connection, network-send, and descriptor-transfer syscalls (including
+`SCM_RIGHTS` paths), and denies all `io_uring` setup/submission syscalls. Its
 syscall-ABI check kills a process using an unexpected architecture instead of
 silently weakening the filter. The JavaScript guard remains defense in depth
 for static/runtime capability inventory, browser globals, and known executable
 names; it is not the security boundary and does not trust module-origin or
-fixture-marker claims.
+fixture-marker claims. A basename cannot prove a coding-agent identity: known
+names are categorically rejected, while an aliased executable is admitted only
+when it is part of the exact repository source inventory and still runs inside
+the kernel-denied route. That route blocks external communication even for an
+alias; this is a deterministic-lane contract, not a hostile-root or
+untrusted-toolchain claim.
 
 The deterministic command is Linux-only and fails explicitly on unsupported
 platforms or toolchains. A process started outside the helper is not covered;

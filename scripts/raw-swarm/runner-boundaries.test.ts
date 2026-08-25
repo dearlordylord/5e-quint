@@ -20,6 +20,7 @@ import { ExecutionStartRecordSchema } from "./evidence-manifests.ts";
 import { repoRoot } from "./transcript.ts";
 import { PLAYER_CONTINUATION_PROTOCOL_REMINDER } from "./sdk-player/continuation-contract.ts";
 import { SdkPlayerTranscriptHeaderSchema } from "./sdk-player/sdk-transcript.ts";
+import { compileTrustedCSource } from "./deterministic-toolchain.cjs";
 
 const recorder = resolve(repoRoot, "scripts/raw-swarm/mcp-recording-shim.ts");
 const launcher = resolve(repoRoot, "scripts/raw-swarm/run-freeplay.ts");
@@ -60,31 +61,22 @@ const deterministicNetworkBoundarySource = resolve(
 const deterministicNetworkBoundaryBuild = mkdtempSync(
   resolve(tmpdir(), "dnd-network-boundary-test-"),
 );
+function cleanupDeterministicNetworkBoundaryBuild(): void {
+  rmSync(deterministicNetworkBoundaryBuild, { recursive: true, force: true });
+}
+process.once("exit", cleanupDeterministicNetworkBoundaryBuild);
 const deterministicNetworkBoundary = resolve(
   deterministicNetworkBoundaryBuild,
   "deterministic-network-boundary",
 );
-const deterministicNetworkBoundaryCompilation = spawnSync(
-  "cc",
-  [
-    "-std=c11",
-    "-O2",
-    "-Wall",
-    "-Wextra",
-    "-Werror",
-    deterministicNetworkBoundarySource,
-    "-o",
-    deterministicNetworkBoundary,
-  ],
-  { encoding: "utf8" },
+const deterministicNetworkBoundaryCompilation = compileTrustedCSource(
+  deterministicNetworkBoundarySource,
+  deterministicNetworkBoundary,
 );
-if (
-  deterministicNetworkBoundaryCompilation.error !== undefined ||
-  deterministicNetworkBoundaryCompilation.status !== 0
-) {
-  rmSync(deterministicNetworkBoundaryBuild, { recursive: true, force: true });
+if (!deterministicNetworkBoundaryCompilation.ok) {
+  cleanupDeterministicNetworkBoundaryBuild();
   throw new Error(
-    `The Linux deterministic network boundary could not be compiled: ${deterministicNetworkBoundaryCompilation.stderr ?? deterministicNetworkBoundaryCompilation.error?.message ?? "unknown compiler failure"}`,
+    `The Linux deterministic network boundary could not be compiled: ${deterministicNetworkBoundaryCompilation.message}`,
   );
 }
 const rawSwarmOutputDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
@@ -135,7 +127,8 @@ if (modelLaneLockProbe.status !== 1) {
 afterAll(() => {
   closeSync(modelLaneLockFd);
   rmSync(modelLaneLockDirectory, { recursive: true, force: true });
-  rmSync(deterministicNetworkBoundaryBuild, { recursive: true, force: true });
+  process.removeListener("exit", cleanupDeterministicNetworkBoundaryBuild);
+  cleanupDeterministicNetworkBoundaryBuild();
 });
 const modelEntryPointTestEnvironment: NodeJS.ProcessEnv = {
   ...process.env,
@@ -329,6 +322,25 @@ function runKernelBoundaryFixture(source: string) {
   }
 }
 
+function compileKernelBoundaryProbe(name: string, source: string): string {
+  const sourcePath = resolve(deterministicNetworkBoundaryBuild, `${name}.c`);
+  const binaryPath = resolve(deterministicNetworkBoundaryBuild, name);
+  writeFileSync(sourcePath, source);
+  const compilation = compileTrustedCSource(sourcePath, binaryPath);
+  if (!compilation.ok) {
+    throw new Error(
+      `The kernel boundary probe could not be compiled: ${compilation.message}`,
+    );
+  }
+  return binaryPath;
+}
+
+function runKernelBoundaryProbe(binaryPath: string) {
+  return spawnSync("env", ["-i", deterministicNetworkBoundary, binaryPath], {
+    encoding: "utf8",
+  });
+}
+
 function modelLaneTestEnvironment(
   commandRoot: string,
   deadline: string,
@@ -353,6 +365,46 @@ function modelLaneTestEnvironment(
 }
 
 describe("RAW swarm runner boundaries", () => {
+  test("trusted boundary compilation ignores hostile PATH and CC", () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-hostile-cc-"));
+    const fakeCompiler = resolve(fixtureRoot, "cc");
+    const marker = resolve(fixtureRoot, "used");
+    const sourcePath = resolve(fixtureRoot, "probe.c");
+    const binaryPath = resolve(fixtureRoot, "probe");
+    writeFileSync(
+      fakeCompiler,
+      `#!/bin/sh\nprintf '%s' used > ${JSON.stringify(marker)}\nexit 99\n`,
+    );
+    chmodSync(fakeCompiler, 0o755);
+    writeFileSync(sourcePath, "int main(void) { return 0; }\n");
+    const toolchain = resolve(
+      repoRoot,
+      "scripts/raw-swarm/deterministic-toolchain.cjs",
+    );
+    const checked = spawnSync(
+      process.execPath,
+      [
+        "-e",
+        `const { compileTrustedCSource } = require(${JSON.stringify(toolchain)}); const result = compileTrustedCSource(${JSON.stringify(sourcePath)}, ${JSON.stringify(binaryPath)}); process.exit(result.ok ? 0 : 1);`,
+      ],
+      {
+        env: {
+          ...process.env,
+          PATH: fixtureRoot,
+          CC: fakeCompiler,
+        },
+        encoding: "utf8",
+      },
+    );
+    try {
+      expect(checked.status).toBe(0);
+      expect(existsSync(marker)).toBe(false);
+      expect(existsSync(binaryPath)).toBe(true);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
   test("rejects network and alternate coding-agent capabilities in deterministic source", () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-capability-"));
     const sourcePath = resolve(fixtureRoot, "forbidden.ts");
@@ -433,6 +485,15 @@ describe("RAW swarm runner boundaries", () => {
     },
   );
 
+  test("Linux kernel boundary denies AF_NETLINK and generic non-Unix families", () => {
+    const probe = compileKernelBoundaryProbe(
+      "socket-family-probe",
+      `#include <errno.h>\n#include <sys/socket.h>\n#include <unistd.h>\nstatic int denied(int domain) { errno = 0; int fd = socket(domain, SOCK_DGRAM, 0); if (fd >= 0) { close(fd); return 1; } return errno == EPERM ? 0 : 2; }\nint main(void) { if (denied(AF_NETLINK) != 0) return 1; if (denied(AF_PACKET) != 0) return 2; if (denied(AF_UNSPEC) != 0) return 3; return 0; }\n`,
+    );
+    const checked = runKernelBoundaryProbe(probe);
+    expect(checked.status).toBe(0);
+  });
+
   test("Linux kernel boundary preserves AF_UNIX sockets", () => {
     const netModule = ["node", "net"].join(":");
     const createServer = ["create", "Server"].join("");
@@ -443,6 +504,30 @@ describe("RAW swarm runner boundaries", () => {
     const checked = runKernelBoundaryFixture(
       `const server = require(${JSON.stringify(netModule)})[${JSON.stringify(createServer)}]();\nserver.once("error", () => process.exit(2));\nserver.listen(${JSON.stringify(socketPath)}, () => server.close(() => { require("node:fs").rmSync(${JSON.stringify(socketPath)}, { force: true }); process.exit(0); }));\nsetTimeout(() => process.exit(1), 500);\n`,
     );
+    expect(checked.status).toBe(0);
+  });
+
+  test("Linux kernel boundary closes inherited network descriptors before exec", () => {
+    const launcher = compileKernelBoundaryProbe(
+      "preopened-network-launcher",
+      `#define _GNU_SOURCE\n#include <sys/socket.h>\n#include <unistd.h>\nint main(int argc, char **argv) { if (argc < 2) return 64; int fd = socket(AF_INET, SOCK_DGRAM, 0); if (fd < 0) return 1; if (fd != 3 && dup2(fd, 3) < 0) return 2; if (fd != 3) close(fd); execv(argv[1], &argv[1]); return 127; }\n`,
+    );
+    const probe = compileKernelBoundaryProbe(
+      "preopened-network-check",
+      `#include <errno.h>\n#include <sys/socket.h>\nint main(void) { struct sockaddr_storage address; socklen_t length = sizeof(address); errno = 0; return getsockname(3, (struct sockaddr *)&address, &length) == -1 && (errno == EBADF || errno == ENOTSOCK) ? 0 : 1; }\n`,
+    );
+    const checked = spawnSync(launcher, [deterministicNetworkBoundary, probe], {
+      encoding: "utf8",
+    });
+    expect(checked.status).toBe(0);
+  });
+
+  test("Linux kernel boundary blocks Unix proxy connection and descriptor transfer", () => {
+    const probe = compileKernelBoundaryProbe(
+      "unix-proxy-probe",
+      `#define _GNU_SOURCE\n#include <errno.h>\n#include <fcntl.h>\n#include <string.h>\n#include <sys/socket.h>\n#include <sys/syscall.h>\n#include <sys/un.h>\n#include <unistd.h>\n#ifndef SYS_sendmmsg\n#error "sendmmsg is required for the Unix proxy probe"\n#endif\n#ifndef SYS_recvmmsg\n#error "recvmmsg is required for the Unix proxy probe"\n#endif\nstatic int denied(int result) { return result == -1 && errno == EPERM ? 0 : 1; }\nint main(void) { int pair[2]; if (socketpair(AF_UNIX, SOCK_STREAM, 0, pair) != 0) return 1; int proxy = socket(AF_UNIX, SOCK_STREAM, 0); if (proxy < 0) return 2; struct sockaddr_un address = { .sun_family = AF_UNIX }; memcpy(address.sun_path, "dnd-proxy", 10); if (denied(connect(proxy, (struct sockaddr *)&address, sizeof(address))) != 0) return 3; char byte = 'x'; struct iovec iov = { .iov_base = &byte, .iov_len = 1 }; char control[CMSG_SPACE(sizeof(int))] = { 0 }; struct msghdr message = { .msg_iov = &iov, .msg_iovlen = 1, .msg_control = control, .msg_controllen = sizeof(control) }; struct cmsghdr *header = CMSG_FIRSTHDR(&message); header->cmsg_level = SOL_SOCKET; header->cmsg_type = SCM_RIGHTS; header->cmsg_len = CMSG_LEN(sizeof(int)); memcpy(CMSG_DATA(header), &pair[1], sizeof(pair[1])); errno = 0; if (denied(sendmsg(pair[0], &message, 0)) != 0) return 4; errno = 0; if (denied(recvmsg(pair[1], &message, 0)) != 0) return 5; errno = 0; if (denied(sendto(pair[0], &byte, 1, 0, 0, 0)) != 0) return 6; errno = 0; if (syscall(SYS_sendmmsg, pair[0], 0, 0, 0) != -1 || errno != EPERM) return 7; errno = 0; if (syscall(SYS_recvmmsg, pair[1], 0, 0, 0, 0) != -1 || errno != EPERM) return 8; return 0; }\n`,
+    );
+    const checked = runKernelBoundaryProbe(probe);
     expect(checked.status).toBe(0);
   });
 
@@ -481,10 +566,27 @@ describe("RAW swarm runner boundaries", () => {
     expect(checked.status).toBe(0);
   });
 
+  test("Linux x86_64 boundary kills an x32 syscall ABI attempt", () => {
+    const source = readFileSync(deterministicNetworkBoundarySource, "utf8");
+    expect(source).toContain("DND_X32_SYSCALL_BIT");
+    expect(source).toContain("BPF_JSET");
+    if (process.arch !== "x64") return;
+    const probe = compileKernelBoundaryProbe(
+      "x32-syscall-probe",
+      `#define _GNU_SOURCE\n#include <sys/syscall.h>\n#include <unistd.h>\n#define DND_X32_SYSCALL_BIT 0x40000000U\nint main(void) { syscall(DND_X32_SYSCALL_BIT | SYS_getpid); return 1; }\n`,
+    );
+    const checked = runKernelBoundaryProbe(probe);
+    expect(checked.status).toBeNull();
+    expect(checked.signal).toBe("SIGSYS");
+  });
+
   test("kernel source kills an unexpected syscall architecture instead of weakening", () => {
     const source = readFileSync(deterministicNetworkBoundarySource, "utf8");
     expect(source).toContain("DND_AUDIT_ARCH");
     expect(source).toContain("SECCOMP_RET_KILL_PROCESS");
+    expect(source).toContain("DND_X32_SYSCALL_BIT");
+    expect(source).toContain("SYS_close_range");
+    expect(source).toContain("SYS_pidfd_getfd");
   });
 
   test("kernel boundary remains after an ESM dynamic import", () => {
@@ -632,6 +734,34 @@ describe("RAW swarm runner boundaries", () => {
     expect(checked.status).toBe(0);
   });
 
+  test("kernel route denies network from an aliased coding-agent executable", () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-agent-alias-"));
+    const aliasPath = resolve(fixtureRoot, "assistant-alias");
+    const dgramModule = ["node", "dgram"].join(":");
+    const createSocket = ["create", "Socket"].join("");
+    const networkAttempt = `const socket = require(${JSON.stringify(dgramModule)})[${JSON.stringify(createSocket)}]("udp4"); socket.once("error", (error) => process.exit(error.code === "EPERM" ? 0 : 2)); socket.bind(0, "127.0.0.1"); setTimeout(() => process.exit(1), 500);`;
+    writeFileSync(
+      aliasPath,
+      `#!/bin/sh\nexec ${JSON.stringify(process.execPath)} -e ${JSON.stringify(networkAttempt)}\n`,
+    );
+    chmodSync(aliasPath, 0o755);
+    try {
+      const checked = spawnSync(
+        "env",
+        [
+          "-i",
+          `PATH=${fixtureRoot}:/usr/bin:/bin`,
+          deterministicNetworkBoundary,
+          aliasPath,
+        ],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
   test("kernel boundary ignores forged Module._load parents and fake node_modules origins", () => {
     const dgramModule = ["node", "dgram"].join(":");
     const createSocket = ["create", "Socket"].join("");
@@ -679,7 +809,7 @@ describe("RAW swarm runner boundaries", () => {
     expect(checked.status).toBe(0);
   });
 
-  test("rejects an unstamped coding-agent executable under the temporary root", () => {
+  test("rejects a known coding-agent executable under an arbitrary temporary root", () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-agent-"));
     const agentPath = resolve(fixtureRoot, "codex");
     writeFileSync(agentPath, "#!/bin/sh\nexit 0\n");

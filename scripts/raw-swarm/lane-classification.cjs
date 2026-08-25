@@ -142,8 +142,8 @@ const CODING_AGENT_EXECUTABLES = Object.freeze([
 ]);
 
 // This catalog is the single capability vocabulary shared by the static
-// source checker, the CommonJS guard, and the ESM loader. Keep both bare and
-// node: forms because Node exposes the same built-in through either specifier.
+// source checker and the CommonJS guard. Keep both bare and node: forms because
+// Node exposes the same built-in through either specifier.
 const NETWORK_NODE_BUILTIN_MODULES = Object.freeze([
   "http",
   "https",

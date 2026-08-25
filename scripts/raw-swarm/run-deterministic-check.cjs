@@ -2,6 +2,7 @@ const { spawnSync } = require("node:child_process");
 const { mkdtempSync, rmSync } = require("node:fs");
 const { delimiter, join, resolve } = require("node:path");
 const { tmpdir } = require("node:os");
+const { compileTrustedCSource } = require("./deterministic-toolchain.cjs");
 
 const {
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
@@ -31,23 +32,13 @@ function compileDeterministicNetworkBoundary() {
   process.once("exit", () => {
     rmSync(buildDirectory, { recursive: true, force: true });
   });
-  const compilation = spawnSync(
-    "cc",
-    [
-      "-std=c11",
-      "-O2",
-      "-Wall",
-      "-Wextra",
-      "-Werror",
-      deterministicNetworkBoundarySource,
-      "-o",
-      binaryPath,
-    ],
-    { stdio: "inherit" },
+  const compilation = compileTrustedCSource(
+    deterministicNetworkBoundarySource,
+    binaryPath,
   );
-  if (compilation.error !== undefined || compilation.status !== 0) {
+  if (!compilation.ok) {
     process.stderr.write(
-      "Raw Swarm deterministic verification could not compile its Linux seccomp boundary; refusing to weaken the lane.\n",
+      `Raw Swarm deterministic verification could not compile its Linux seccomp boundary; refusing to weaken the lane. ${compilation.message}\n`,
     );
     process.exit(78);
   }
