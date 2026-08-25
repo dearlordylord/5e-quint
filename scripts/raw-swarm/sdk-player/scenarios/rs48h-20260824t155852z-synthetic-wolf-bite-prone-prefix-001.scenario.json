@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+  "title": "Synthetic Wolf Bite Prone prefix 001",
+  "purpose": "Minimize issue #336 by exercising one canonical Wolf Bite whose accepted attack roll is followed by its own on-hit Prone rider and remaining damage continuation.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001.md",
+    "byteLength": 1270,
+    "sha256": "0911f1730798633397fc2c600fe7e82b65de62d3a78a4093eab37df9e76b7a30"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001.md.scenario-review.json",
+    "byteLength": 13149,
+    "sha256": "0aedbc3de6dfb8bab60d83397cd7e902679a19492dda5068e801c4cc3b52eee3"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001.md.stage-facts.json",
+    "byteLength": 692,
+    "sha256": "e61cdb36ac09186aaed17ea9db1ba800738fbbcb8423d0e5530938457cfa6441"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "prone-target-roll-mode-distance-probe",
+    "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+    "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+    "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+    "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}
