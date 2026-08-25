@@ -1,0 +1,110 @@
+{
+  "scenarioId": "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+  "scenarioSha256": "9c941aa981140bfb61f39116cc9f406ed66c2a9d61b836d8d3b9ac18fc42b0c7",
+  "gitSha": "6c7d0fea047c06bf50559ee6849e88c40abc468a",
+  "admitReviewedUnsupported": false,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The SRD supports the supplied stat-block actions, combat rounds and turns, movement, attack targeting, cover, reach, damage, and Opportunity Attack reactions. ASSUMPTIONS.md A2 supports End Turn as a timing boundary and A4 supports the three-round model; the supplied exact geometry leaves no unresolved Table Decision."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The selected identities are supplied canonical SRD identities, and the scenario exposes no PHB+ identity, source crosswalk, protected prose, or private authoring relationship."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The setup is mechanically meaningful: all four combatants have concrete strategy-bearing objectives with target, distance, recent-attack, route, or obstruction conditions. Delegated attacks, targets, routes, and surfaced reactions fit the preference while geometry retains spatial ownership; statBlocksOnly and geometryAssisted align with the configured purpose, and the complete comparison supplies a meaningfullyDistinct conclusion supported by non-spatial differentiators."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "meaningfullyDistinct",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "lantern-intercept-pairwise-control",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "prone-target-roll-mode-distance-probe",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "lantern-intercept-pairwise-control",
+        "reason": "Both use geometry-assisted obstruction, adaptive target choices, surfaced attacks or interrupts, and End Turn; the Candidate expands this into four combatants with recent-attack redirection and a side-constrained pillar route."
+      },
+      {
+        "scenarioId": "two-goblins-pursue-skeleton",
+        "reason": "Both explore obstruction-based pursuit and route or line changes; the Candidate instead uses geometry-owned pillars and a reciprocal four-combatant priority graph rather than a Skeleton escape through Table-owned portcullis Cover."
+      },
+      {
+        "scenarioId": "four-way-crank-control-cycle",
+        "reason": "Both use four stat-block combatants with changing pairwise objectives, but that Scenario is a stationary one-turn Shove/Grapple control cycle, while the Candidate makes movement, attacks, routes, pillars, and reactions central."
+      },
+      {
+        "scenarioId": "open-grid-wolf-skeleton-pursuit",
+        "reason": "Both include Wolf/Skeleton pursuit and turn completion, but the Candidate adds two combatants, obstacle-mediated line and route decisions, and state-triggered target redirection."
+      },
+      {
+        "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+        "reason": "Both include a Riding Horse and Wolf in pursuit, but that Scenario isolates one first-Bite circumstance D20 Test; the Candidate uses ordinary Horse combat inside a four-way geometry and priority interaction."
+      }
+    ],
+    "materialDifferentiators": [
+      "The four stat-block combatants form four hostile and two noncooperative pairings, with each combatant following a distinct distance- or recent-attack-triggered target-priority rule; no admitted Scenario combines this full interaction graph with movement-based geometry.",
+      "The two full-height pillars materially govern passage, collision, line blocking, endpoint protection, and a specified side-of-pillar pursuit route, rather than supplying a fixed Table-authored reach answer, a single Table-owned Cover ruling, or an unobstructed grid.",
+      "The three-round sequence repeatedly combines player-selected legal routes, attacks, target changes, surfaced movement reactions or interrupts, and End Turn completion; it is not a fixed Shove/Grapple or Prone branch, a single modified D20 Test, a mounted-object transfer, or a timed objective defense."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "lantern-intercept-pairwise-control",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "prone-target-roll-mode-distance-probe",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate explores a three-round, four-stat-block geometry-assisted battle with asymmetric hostility, recent-attack and distance-based redirection, pillar-screened endpoints, a side-constrained pursuit route, and surfaced movement reactions or interrupts. This differs from four-way-crank-control-cycle's stationary Shove/Grapple contest; goblin-warrior-skeleton-tracer's minimal open two-creature tracer; lantern-intercept-pairwise-control's three-creature Hawk traversal; mounted-dispatch-through-flooded-orchard's mounted cylinder dispatch; open-grid-wolf-skeleton-pursuit's open two-creature endpoint pursuit; orc-fighter-rogue-close-interception's Character Sheet prism defense; prone-target-roll-mode-distance-probe's initial-Prone roll-mode probe; sand-band-four-skeleton-skirmish's Character Sheet difficult-terrain skirmish; synthetic-beacon-eight-round-defense's timed beacon defense; table-authored-shove-then-grapple's branch-specific control; table-authored-three-shove-cycle's fixed Shove cycle; table-d20-circumstance-advantage-probe-repair-retry's single circumstance-modified D20 Test; and two-goblins-pursue-skeleton's portcullis escape pursuit. All 13 supplied authored sources were verified against their byte-length and SHA-256 bindings and read in full.",
+            "materiallyRelevantMechanics": "The Candidate uses stat-block setup, legal movement and routes, surfaced attacks and typed targets, distance and reach, line and cover, pillar collision and non-entry, route-side evaluation, recent-attack state, rolls, damage, movement reactions or interrupts, and End Turn. Lantern-intercept-pairwise-control shares geometry and adaptive target triage; two-goblins-pursue-skeleton shares obstruction and pursuit but uses Table-owned Three-Quarters Cover; four-way-crank-control-cycle shares changing multi-creature objectives but fixes Shove/Grapple acts without movement; open-grid-wolf-skeleton-pursuit shares pursuit, melee, and movement-triggered reactions but has no obstacles. Goblin-warrior-skeleton-tracer supplies only the basic two-stat-block battle path. Mounted-dispatch-through-flooded-orchard adds mounting, object transfer, elevation, Difficult Terrain, and obscurity; orc-fighter-rogue-close-interception, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense add Character Sheets and object or terrain objectives; prone-target-roll-mode-distance-probe and table-d20-circumstance-advantage-probe-repair-retry isolate different roll-mode or circumstance boundaries; the two table-authored Shove scenarios fix nonmovement control branches.",
+            "encounterComposition": "The Candidate contains exactly four canonical stat-block combatants—Goblin Warrior, Skeleton, Wolf, and Riding Horse—with four hostile pairings and two noncooperative pairings. Four-way-crank-control-cycle is the nearest count match but uses two Goblin Warriors, a Skeleton, and a Wolf around a crank. Lantern-intercept-pairwise-control and two-goblins-pursue-skeleton have three combatants; goblin-warrior-skeleton-tracer and open-grid-wolf-skeleton-pursuit have two; mounted-dispatch-through-flooded-orchard has a mounted carrier, mount, pursuers, and a dispatch object; orc-fighter-rogue-close-interception has Character Sheets, Wolves, a Goblin, and a prism; sand-band-four-skeleton-skirmish has two adventurers and four Skeletons; synthetic-beacon-eight-round-defense has four Character Sheets, four Goblin Warriors, two Wolves, and a beacon; prone-target-roll-mode-distance-probe has two Goblins and a Wolf; table-authored-shove-then-grapple has two combatants; table-authored-three-shove-cycle has three; and table-d20-circumstance-advantage-probe-repair-retry has the Horse/Wolf pair. None matches the Candidate's four-role interaction graph.",
+            "interactionSequence": "Across three rounds, each active player chooses among surfaced attacks, targets, and legal routes. The Goblin Warrior protects its Wolf-facing line, the Skeleton protects against the Goblin Warrior while advancing on the Horse, the Wolf selects a southern-pillar side and can redirect to the Goblin Warrior, and the Horse can redirect from the Wolf to the Skeleton. Recent attacks, start-of-turn distances, post-movement attackability, and pillar geometry can change the priority before a surfaced movement reaction or interrupt is resolved; every turn ends through End Turn. This differs from the fixed one-turn crank sequence, the open two-creature tracer, the Hawk out-and-back traversal, mounted cylinder and dismount branches, the fixed Wolf/Skeleton lane pursuit, the Character Sheet prism and beacon sequences, the sand skirmish, the forced Prone attacks, the fixed Shove/Grapple and three-Shove sequences, the single first-Bite circumstance test, and the portcullis escape sequence.",
+            "tacticalQuestion": "Can the public player operations execute a bounded four-way battle in which each actor preserves a different objective while selecting legal routes and attacks around pillars, uses recent attacks and distances to reprioritize, and resolves any objective-supported movement reaction or interrupt at the point of movement? Four-way-crank-control-cycle asks which creature to control with Shove or Grapple; lantern-intercept-pairwise-control asks whether a Hawk completes a traversal or responds to threats around pillars; open-grid-wolf-skeleton-pursuit asks whether a Wolf reaches an endpoint; two-goblins-pursue-skeleton asks whether an escaping Skeleton is contained through Table-owned Cover. The remaining admitted Scenarios focus on tracing, mounted object dispatch, Character Sheet or objective defense, difficult terrain, isolated Prone or D20 support probes, or fixed control-act branches.",
+            "sdkSupportBoundary": "The Candidate is framed as an ordinary available-only stat-block and geometry-assisted public-player scenario using surfaced setup, attacks, targets, movement, rolls, damage, reactions or interrupts, and End Turn. It does not require Character Sheets, mounted carrying, object transfer, elevation, Difficult Terrain, initial Prone, or a per-test circumstance Advantage/Disadvantage override. This aligns in intent with the supportedOnly/supported projections for four-way-crank-control-cycle, lantern-intercept-pairwise-control, open-grid-wolf-skeleton-pursuit, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton; mounted-dispatch-through-flooded-orchard, prone-target-roll-mode-distance-probe, and table-d20-circumstance-advantage-probe-repair-retry explicitly probe unsupported boundaries. Orc-fighter-rogue-close-interception requires Character Sheets, while sand-band-four-skeleton-skirmish and synthetic-beacon-eight-round-defense are Character Sheet scenarios with not-assessed support projections; goblin-warrior-skeleton-tracer is also not assessed and establishes only the basic battle shape.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The exact 60-by-40-foot courtyard, floor and upper boundary, four floor placements, two full-height pillar footprints, line blocking, collision, route length, side-of-pillar condition, reach, and cover are central to the Candidate's objectives and legal choices. This is geometry-derived rather than the fixed Table-authored reach fingerprints of four-way-crank-control-cycle, table-authored-shove-then-grapple, and table-authored-three-shove-cycle, and differs from the Table-owned portcullis Cover in two-goblins-pursue-skeleton. The open-air height is supporting geometry for pillar extent but is not itself a separate flying or elevation mechanic; all combatants remain floor-bound."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Goblin Warrior, Skeleton, Wolf, and Riding Horse all appear in the supplied canonical availability list, satisfying the availableOnly intent without implying any broader product obligation."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The current projection explicitly supports canonical stat-block setup, scenario composition with one spatial source, surfaced attacks and typed targets, rolls, damage, movement, interrupts, and End Turn. The scenario requires no Character Sheets, mounted transfer, object transfer, elevation mechanic, Difficult Terrain, initial Prone state, or per-test circumstance override."
+  }
+}
