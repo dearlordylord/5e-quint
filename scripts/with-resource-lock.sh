@@ -11,6 +11,8 @@ usage() {
 (( $# >= 2 )) || usage
 lock_kind="$1"
 shift
+script_directory=$(cd -- "$(dirname -- "$0")" && pwd)
+source "$script_directory/process-supervision.sh"
 
 case "$lock_kind" in
   broad)
@@ -27,57 +29,11 @@ if [[ -n "${DND_RESOURCE_LOCK_KIND:-}" ]]; then
   exit 70
 fi
 
-command_pid=""
 pending_signal_status=0
-cleanup_in_progress=false
 owner_pid="${DND_RESOURCE_LOCK_OWNER_PID:-}"
 owner_start_time="${DND_RESOURCE_LOCK_OWNER_START_TIME:-}"
 
-if [[ ! "$owner_pid" =~ ^[0-9]+$ ]] || (( owner_pid <= 1 )) ||
-  [[ ! "$owner_start_time" =~ ^[0-9]+$ ]]; then
-  echo "[$event_name] canceled: missing parent owner identity" >&2
-  exit 125
-fi
-
-owner_is_alive() {
-  local current_parent owner_stat owner_rest
-  local -a owner_fields
-  current_parent="$(awk '/^PPid:/ { print $2 }' "/proc/$$/status" 2>/dev/null || true)"
-  [[ "$current_parent" == "$owner_pid" ]] || return 1
-  [[ -r "/proc/$owner_pid/stat" ]] || return 1
-  owner_stat="$(<"/proc/$owner_pid/stat")"
-  owner_rest="${owner_stat##*) }"
-  read -r -a owner_fields <<<"$owner_rest"
-  (( ${#owner_fields[@]} > 19 )) || return 1
-  [[ "${owner_fields[0]}" != Z && "${owner_fields[0]}" != X ]] || return 1
-  [[ "${owner_fields[19]}" == "$owner_start_time" ]]
-}
-
-abort_for_lost_owner() {
-  echo "[$event_name] canceled: original parent $owner_pid exited" >&2
-  exit 125
-}
-
-group_exists() {
-  [[ -n "$command_pid" ]] && kill -0 -- "-$command_pid" 2>/dev/null
-}
-
-terminate_group() {
-  group_exists || return 0
-  kill -TERM -- "-$command_pid" 2>/dev/null || true
-  for _ in {1..100}; do
-    group_exists || return 0
-    sleep 0.02
-  done
-  echo "[$event_name] EMERGENCY: process group $command_pid ignored SIGTERM; sending SIGKILL" >&2
-  kill -KILL -- "-$command_pid" 2>/dev/null || true
-  for _ in {1..100}; do
-    group_exists || return 137
-    sleep 0.02
-  done
-  echo "[$event_name] process group $command_pid survived SIGKILL" >&2
-  return 137
-}
+supervision_require_owner "$event_name" || exit $?
 
 handle_signal() {
   local status="$1"
@@ -85,11 +41,10 @@ handle_signal() {
     pending_signal_status="$status"
   fi
   status="$pending_signal_status"
-  [[ "$cleanup_in_progress" == false ]] || return 0
-  if [[ -n "$command_pid" ]]; then
-    cleanup_in_progress=true
+  [[ "$supervision_cleanup_in_progress" == false ]] || return 0
+  if [[ -n "$supervision_command_pid" || -n "$supervision_marker" ]]; then
     set +e
-    terminate_group
+    supervision_cleanup_command
     local cleanup_status=$?
     set -e
     (( cleanup_status == 137 )) && exit 137
@@ -117,11 +72,17 @@ exec {retired_mbt_lock_fd}>"$git_common_dir/ralph-mbt.lock"
 acquire_lock() {
   local lock_fd="$1"
   while ! flock --exclusive --nonblock "$lock_fd"; do
-    owner_is_alive || abort_for_lost_owner
+    supervision_owner_is_alive || {
+      echo "[$event_name] canceled: original parent $owner_pid exited" >&2
+      exit 125
+    }
     (( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
     sleep 0.1
   done
-  owner_is_alive || abort_for_lost_owner
+  supervision_owner_is_alive || {
+    echo "[$event_name] canceled: original parent $owner_pid exited" >&2
+    exit 125
+  }
 }
 
 echo "[$event_name] waiting: ${1##*/}" >&2
@@ -135,35 +96,9 @@ echo "[$event_name] acquired: ${1##*/}" >&2
 export DND_RESOURCE_LOCK_KIND="$lock_kind"
 
 (( pending_signal_status == 0 )) || exit "$pending_signal_status"
-setsid -- "$@" &
-command_pid=$!
-(( pending_signal_status == 0 )) || handle_signal "$pending_signal_status"
-
-while [[ -r "/proc/$command_pid/stat" ]]; do
-  command_state="$(ps -o stat= -p "$command_pid" 2>/dev/null || true)"
-  [[ -z "$command_state" || "$command_state" == Z* ]] && break
-  if ! owner_is_alive; then
-    cleanup_in_progress=true
-    set +e
-    terminate_group
-    cleanup_status=$?
-    set -e
-    (( cleanup_status == 137 )) && exit 137
-    abort_for_lost_owner
-  fi
-  sleep 0.1
-done
-
 set +e
-wait "$command_pid"
+supervision_run_command "$event_name" none "$@"
 status=$?
 set -e
-
-cleanup_in_progress=true
-set +e
-terminate_group
-cleanup_status=$?
-set -e
-(( cleanup_status == 137 )) && exit 137
 trap - HUP INT TERM
 exit "$status"

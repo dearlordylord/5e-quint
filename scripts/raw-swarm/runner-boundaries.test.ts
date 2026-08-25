@@ -719,10 +719,11 @@ esac
     }
   }, 15_000);
 
-  test("caps model execution by the earlier campaign deadline", () => {
+  test("settles a detached model child before lane reacquisition at the campaign deadline", async () => {
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-git-"));
     const commonRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-lane-common-"));
     const fakeGit = resolve(commandRoot, "git");
+    const childPidPath = resolve(commandRoot, "detached-child.pid");
     writeFileSync(
       fakeGit,
       `#!/bin/sh
@@ -734,25 +735,89 @@ esac
 `,
     );
     chmodSync(fakeGit, 0o755);
-    try {
-      const startedAt = Date.now();
-      const result = spawnSync(modelLaneLock, ["campaign", "sleep", "5"], {
+    const detachedChildSource = [
+      'const fs = require("node:fs");',
+      "fs.writeFileSync(process.env.RAW_SWARM_CHILD_PID, String(process.pid));",
+      'process.on("SIGTERM", () => {});',
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    const commandSource = [
+      'const { spawn } = require("node:child_process");',
+      `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, stdio: "ignore" });`,
+      "detached.unref();",
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    const wrapper = spawn(
+      modelLaneLock,
+      ["campaign", process.execPath, "-e", commandSource],
+      {
         cwd: repoRoot,
-        env: modelLaneTestEnvironment(
-          commandRoot,
-          new Date(Date.now() + 1_200).toISOString(),
-        ),
-        encoding: "utf8",
-      });
-      expect(result.status).toBe(124);
-      expect(Date.now() - startedAt).toBeLessThan(4_000);
+        env: {
+          ...modelLaneTestEnvironment(
+            commandRoot,
+            new Date(Date.now() + 1_200).toISOString(),
+          ),
+          RAW_SWARM_CHILD_PID: childPidPath,
+        },
+        stdio: "ignore",
+      },
+    );
+    try {
+      await waitForFile(childPidPath);
+      const childPid = Number(readFileSync(childPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(childPid)).toBe(true);
+      expect(processIsLive(childPid)).toBe(true);
+
+      const result = await new Promise<number>(
+        (resolveResult, rejectResult) => {
+          wrapper?.once("error", rejectResult);
+          wrapper?.once("close", (status, signal) => {
+            if (signal !== null) {
+              rejectResult(new Error(`Wrapper stopped with ${signal}.`));
+              return;
+            }
+            resolveResult(status ?? 1);
+          });
+        },
+      );
+      expect(result).toBe(137);
+      await waitForProcessExit(childPid);
+
+      const reacquired = spawnSync(
+        modelLaneLock,
+        ["campaign", process.execPath, modelLaneCapability, "--assert"],
+        {
+          cwd: repoRoot,
+          env: modelLaneTestEnvironment(
+            commandRoot,
+            new Date(Date.now() + 1_500).toISOString(),
+          ),
+          encoding: "utf8",
+        },
+      );
+      expect(reacquired.status).toBe(0);
+      expect(`${reacquired.stdout}${reacquired.stderr}`).toContain(
+        "acquired lane",
+      );
     } finally {
+      if (wrapper.exitCode === null) {
+        wrapper.kill("SIGKILL");
+      }
+      const childPidForCleanup = existsSync(childPidPath)
+        ? Number(readFileSync(childPidPath, "utf8").trim())
+        : undefined;
+      if (
+        childPidForCleanup !== undefined &&
+        processIsLive(childPidForCleanup)
+      ) {
+        process.kill(childPidForCleanup, "SIGKILL");
+      }
       rmSync(commandRoot, { recursive: true, force: true });
       rmSync(commonRoot, { recursive: true, force: true });
     }
-  }, 15_000);
+  }, 20_000);
 
-  test("terminates an owned model group when its recorded owner dies", async () => {
+  test("terminates a detached model child before lane reacquisition when its owner dies", async () => {
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-owner-git-"));
     const commonRoot = mkdtempSync(
       resolve(tmpdir(), "dnd-model-owner-common-"),
@@ -760,7 +825,7 @@ esac
     const fakeGit = resolve(commandRoot, "git");
     const ownerScript = resolve(commandRoot, "owner.sh");
     const wrapperPidPath = resolve(commandRoot, "wrapper.pid");
-    const childPidPath = resolve(commandRoot, "child.pid");
+    const childPidPath = resolve(commandRoot, "detached-child.pid");
     const firstDeadline = new Date(Date.now() + 3_000).toISOString();
     let owner: ReturnType<typeof spawn> | undefined;
     let wrapperPid: number | undefined;
@@ -792,9 +857,16 @@ wait "$wrapper_pid"
     chmodSync(fakeGit, 0o755);
     chmodSync(ownerScript, 0o755);
     try {
-      const childSource = [
+      const detachedChildSource = [
         'const fs = require("node:fs");',
         "fs.writeFileSync(process.env.RAW_SWARM_CHILD_PID, String(process.pid));",
+        'process.on("SIGTERM", () => {});',
+        "setInterval(() => {}, 1000);",
+      ].join(" ");
+      const childSource = [
+        'const { spawn } = require("node:child_process");',
+        `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, stdio: "ignore" });`,
+        "detached.unref();",
         "setInterval(() => {}, 1000);",
       ].join(" ");
       owner = spawn(ownerScript, [process.execPath, "-e", childSource], {
@@ -845,6 +917,96 @@ wait "$wrapper_pid"
       }
       if (childPid !== undefined && processIsLive(childPid)) {
         process.kill(childPid, "SIGKILL");
+      }
+      rmSync(commandRoot, { recursive: true, force: true });
+      rmSync(commonRoot, { recursive: true, force: true });
+    }
+  }, 15_000);
+
+  test("settles a detached model child before lane reacquisition on wrapper TERM", async () => {
+    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-term-git-"));
+    const commonRoot = mkdtempSync(resolve(tmpdir(), "dnd-model-term-common-"));
+    const fakeGit = resolve(commandRoot, "git");
+    const childPidPath = resolve(commandRoot, "detached-child.pid");
+    writeFileSync(
+      fakeGit,
+      `#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '${commonRoot}' ;;
+      *) exit 1 ;;
+esac
+`,
+    );
+    chmodSync(fakeGit, 0o755);
+    const detachedChildSource = [
+      'const fs = require("node:fs");',
+      "fs.writeFileSync(process.env.RAW_SWARM_CHILD_PID, String(process.pid));",
+      'process.on("SIGTERM", () => {});',
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    const commandSource = [
+      'const { spawn } = require("node:child_process");',
+      `const detached = spawn(process.execPath, ["-e", ${JSON.stringify(detachedChildSource)}], { detached: true, stdio: "ignore" });`,
+      "detached.unref();",
+      "setInterval(() => {}, 1000);",
+    ].join(" ");
+    const wrapper = spawn(
+      modelLaneLock,
+      ["campaign", process.execPath, "-e", commandSource],
+      {
+        cwd: repoRoot,
+        env: {
+          ...modelLaneTestEnvironment(
+            commandRoot,
+            new Date(Date.now() + 60_000).toISOString(),
+          ),
+          RAW_SWARM_CHILD_PID: childPidPath,
+        },
+        stdio: "ignore",
+      },
+    );
+    try {
+      await waitForFile(childPidPath);
+      const childPid = Number(readFileSync(childPidPath, "utf8").trim());
+      expect(Number.isSafeInteger(childPid)).toBe(true);
+      expect(processIsLive(childPid)).toBe(true);
+
+      expect(wrapper.kill("SIGTERM")).toBe(true);
+      await new Promise<void>((resolveClosed, rejectClosed) => {
+        wrapper.once("error", rejectClosed);
+        wrapper.once("close", () => resolveClosed());
+      });
+      await waitForProcessExit(childPid);
+
+      const reacquired = spawnSync(
+        modelLaneLock,
+        ["campaign", process.execPath, modelLaneCapability, "--assert"],
+        {
+          cwd: repoRoot,
+          env: modelLaneTestEnvironment(
+            commandRoot,
+            new Date(Date.now() + 1_500).toISOString(),
+          ),
+          encoding: "utf8",
+        },
+      );
+      expect(reacquired.status).toBe(0);
+      expect(`${reacquired.stdout}${reacquired.stderr}`).toContain(
+        "acquired lane",
+      );
+    } finally {
+      if (wrapper.exitCode === null) {
+        wrapper.kill("SIGKILL");
+      }
+      const childPidForCleanup = existsSync(childPidPath)
+        ? Number(readFileSync(childPidPath, "utf8").trim())
+        : undefined;
+      if (
+        childPidForCleanup !== undefined &&
+        processIsLive(childPidForCleanup)
+      ) {
+        process.kill(childPidForCleanup, "SIGKILL");
       }
       rmSync(commandRoot, { recursive: true, force: true });
       rmSync(commonRoot, { recursive: true, force: true });
