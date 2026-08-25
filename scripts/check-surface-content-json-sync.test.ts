@@ -911,7 +911,7 @@ in statBlock`,
     {
       name: "a list concatenation",
       file: "list-concat",
-      source: '[{ kind = "statBlock" }] // [{ kind = "other" }]',
+      source: '[{ kind = "statBlock" }] # [{ kind = "other" }]',
     },
   ])("does not infer a family from $name", ({ file, source }) => {
     const contentDir = mkdtempSync(
