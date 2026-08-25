@@ -53,16 +53,21 @@ const forbiddenCapabilityPatterns = Object.freeze([
   {
     kind: "network-module",
     pattern:
-      /(?:\bfrom\s*|\bimport\s*\(|\brequire\s*\()\s*["'`](?:undici|(?:node:)?(?:http|https|net|tls|dns))["'`]/g,
+      /(?:\bfrom\s*|\bimport\s*\(|\brequire\s*\()\s*["'`](?:undici|(?:node:)?(?:http|https|http2|net|tls|dns)(?:\/promises)?|node:undici)["'`]/g,
   },
   {
     kind: "network-api",
     pattern:
-      /\b(?:undici|http|https|net|tls|dns)\s*\.\s*(?:request|get|fetch|createConnection|connect|lookup|resolve|createServer)\s*\(/g,
+      /\b(?:undici|http|https|http2|net|tls|dns)\s*\.\s*(?:request|get|fetch|createConnection|connect|lookup|resolve|createServer)\s*\(/g,
   },
   {
     kind: "global-fetch",
     pattern: /(?:\bglobalThis\s*\.\s*fetch|\bfetch)\s*\(/g,
+  },
+  {
+    kind: "browser-network-global",
+    pattern:
+      /\b(?:new\s+)?(?:WebSocket|XMLHttpRequest|WebTransport|EventSource)\s*(?:\(|\[)|\b(?:globalThis|window)\s*(?:\.\s*(?:WebSocket|XMLHttpRequest|WebTransport|EventSource)|\[\s*["'`](?:WebSocket|XMLHttpRequest|WebTransport|EventSource)["'`]\s*\])/g,
   },
   {
     kind: "coding-agent-executable",
@@ -75,6 +80,13 @@ const forbiddenCapabilityPatterns = Object.freeze([
     kind: "coding-agent-shell-command",
     pattern: new RegExp(
       `\\b(?:exec|execSync)\\s*\\(\\s*["'\`][^"'\`\\n]*\\b(?:${codingAgentAlternation})\\b`,
+      "gi",
+    ),
+  },
+  {
+    kind: "coding-agent-indirection",
+    pattern: new RegExp(
+      String.raw`\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*["'\`][^"'\`\n]*?(?:${codingAgentAlternation})(?=[/\\\s"'\`])[^"'\`\n]*["'\`]\s*;?[\s\S]{0,320}?\b${childProcessCallAlternation}\s*\(\s*\1\b`,
       "gi",
     ),
   },
@@ -502,6 +514,21 @@ function runLaneHygiene() {
   assert.match(
     deterministicRunner,
     /RAW_SWARM_EXECUTION_LANE: "deterministic"/,
+  );
+  assert.match(deterministicRunner, /deterministic-capability-guard\.cjs/);
+  assert.equal(
+    existsSync(
+      join(root, "scripts/raw-swarm/deterministic-capability-guard.cjs"),
+    ),
+    true,
+    "Deterministic lane is missing its Node capability guard.",
+  );
+  assert.equal(
+    existsSync(
+      join(root, "scripts/raw-swarm/deterministic-capability-loader.mjs"),
+    ),
+    true,
+    "Deterministic lane is missing its ESM capability guard.",
   );
   const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
   const commonBlockerPath = join(blockerDirectory, "forbidden-command");

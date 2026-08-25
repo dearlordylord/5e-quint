@@ -9,11 +9,11 @@ membership into a RAW-coverage or player-correctness claim.
 Raw Swarm has three operational lanes. Choose the lane before running a
 command; a successful command in one lane is not evidence for another lane.
 
-| Lane                                  | Purpose                                                                                                                                                                                          | Public command                                     |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------- |
-| Deterministic repository verification | Unit, property, schema, protocol, projection, replay, report, and boundary tests. It uses no model, API, coding-agent, or network execution.                                                     | `pnpm check:raw-swarm-deterministic`               |
-| Bounded manual trial                  | One explicitly selected model-backed authoring, player, review, or benchmark operation.                                                                                                          | `pnpm raw-swarm:model:trial -- <operation> ...`    |
-| Durable campaign                      | One operation within an operator-owned, deadline-bound campaign such as #332. The campaign protocol still owns unique identities, serialized catalogue/index writes, replay, review, and export. | `pnpm raw-swarm:model:campaign -- <operation> ...` |
+| Lane                                  | Purpose                                                                                                                                                                                                                                                     | Public command                                     |
+| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Deterministic repository verification | Unit, property, schema, protocol, projection, replay, report, and boundary tests. Reachable repository-owned Node sources run under a capability guard; no live model, provider API, coding-agent, or network capability is admitted through that boundary. | `pnpm check:raw-swarm-deterministic`               |
+| Bounded manual trial                  | One explicitly selected model-backed authoring, player, review, or benchmark operation.                                                                                                                                                                     | `pnpm raw-swarm:model:trial -- <operation> ...`    |
+| Durable campaign                      | One operation within an operator-owned, deadline-bound campaign such as #332. The campaign protocol still owns unique identities, serialized catalogue/index writes, replay, review, and export.                                                            | `pnpm raw-swarm:model:campaign -- <operation> ...` |
 
 Both model commands require a clean worktree and
 `RAW_SWARM_EXPECTED_GIT_SHA` equal to its full current revision. The campaign
@@ -43,11 +43,20 @@ catalogue rendering, replay, report, assembly, and comparison commands remain
 direct commands because they do not call a model.
 
 The quality gate runs `check:raw-swarm-lane-hygiene` before the deterministic
-check. The hygiene check preserves the established 35-test quality inventory,
+check. The hygiene check preserves the classified quality-owned test inventory,
 classifies the two pre-existing MCP prototype tests in a closed exclusion list,
 and rejects any new unclassified test or quality command that reaches a public
-model lane. A test of model telemetry uses a fake local executable; it remains
-deterministic and does not authenticate or contact a provider.
+model lane. The deterministic runner statically inventories reachable
+repository-owned sources, preloads a Node/ESM capability guard, and prepends
+failing shims for known coding-agent and network CLI names. A test of model
+telemetry uses a fake local executable; it remains deterministic and does not
+authenticate or contact a provider.
+
+This is a process-level repository boundary, not OS-level network isolation.
+The contract covers Node and browser network capabilities plus known
+model/network executables in the guarded deterministic process tree; arbitrary
+native binaries outside that boundary are outside this process-level guarantee
+and cannot be used as deterministic evidence dependencies.
 
 ## Vocabulary
 

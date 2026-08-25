@@ -226,11 +226,7 @@ describe("SDK player invocation lifecycle", () => {
     const output = resolve(root, "output");
     for (const directory of [scratch, trusted, codexHome, output])
       mkdirSync(directory);
-    let retentionError: unknown;
-    let retentionSettled!: () => void;
-    const retentionComplete = new Promise<void>((resolve) => {
-      retentionSettled = resolve;
-    });
+    const retentionComplete = Promise.withResolvers<unknown>();
     try {
       const finalization = await finalizeSdkPlayerExecution({
         supervisorProcess: undefined,
@@ -245,14 +241,13 @@ describe("SDK player invocation lifecycle", () => {
           await new Promise((resolve) => setTimeout(resolve, 25));
           try {
             writeFileSync(resolve(trusted, "retained-after-delay"), "retained");
+            retentionComplete.resolve(undefined);
           } catch (error: unknown) {
-            retentionError = error;
-          } finally {
-            retentionSettled();
+            retentionComplete.resolve(error);
           }
         },
       });
-      await retentionComplete;
+      const retentionError = await retentionComplete.promise;
       expect(finalization).toMatchObject({ tag: "reaped" });
       expect(retentionError).toBeUndefined();
       expect(existsSync(trusted)).toBe(false);

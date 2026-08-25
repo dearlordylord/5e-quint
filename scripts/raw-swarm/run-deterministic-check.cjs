@@ -5,6 +5,17 @@ const {
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
 } = require("./lane-classification.cjs");
 
+const deterministicCapabilityGuard = resolve(
+  __dirname,
+  "deterministic-capability-guard.cjs",
+);
+const deterministicNodeOptions = [
+  process.env.NODE_OPTIONS,
+  `--require=${deterministicCapabilityGuard}`,
+]
+  .filter(Boolean)
+  .join(" ");
+
 if (process.env.DND_RESOURCE_LOCK_KIND !== "broad") {
   process.stderr.write(
     "Raw Swarm deterministic verification requires the broad resource lock.\n",
@@ -44,7 +55,9 @@ run("mise", [
   "--",
   "pnpm",
   "exec",
-  "vitest",
+  "env",
+  `NODE_OPTIONS=${deterministicNodeOptions}`,
+  resolve(__dirname, "../../node_modules/.bin/vitest"),
   "run",
   ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   "--pool=threads",

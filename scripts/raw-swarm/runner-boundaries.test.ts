@@ -49,6 +49,10 @@ const laneHygieneChecker = resolve(
   repoRoot,
   "scripts/raw-swarm/check-lane-hygiene.cjs",
 );
+const deterministicCapabilityGuard = resolve(
+  repoRoot,
+  "scripts/raw-swarm/deterministic-capability-guard.cjs",
+);
 const rawSwarmOutputDirectory = resolve(repoRoot, "scripts/raw-swarm/out");
 mkdirSync(rawSwarmOutputDirectory, { recursive: true });
 const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
@@ -249,6 +253,29 @@ async function waitForProcessExit(
   }
 }
 
+function runCapabilityGuardFixture(source: string) {
+  const fixtureRoot = mkdtempSync(
+    resolve(tmpdir(), "dnd-deterministic-capability-"),
+  );
+  const sourcePath = resolve(fixtureRoot, "fixture.cjs");
+  writeFileSync(sourcePath, source);
+  try {
+    return spawnSync(
+      process.execPath,
+      ["--require", deterministicCapabilityGuard, sourcePath],
+      {
+        env: {
+          ...process.env,
+          RAW_SWARM_EXECUTION_LANE: "deterministic",
+        },
+        encoding: "utf8",
+      },
+    );
+  } finally {
+    rmSync(fixtureRoot, { recursive: true, force: true });
+  }
+}
+
 function modelLaneTestEnvironment(
   commandRoot: string,
   deadline: string,
@@ -277,15 +304,21 @@ describe("RAW swarm runner boundaries", () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-capability-"));
     const sourcePath = resolve(fixtureRoot, "forbidden.ts");
     const networkModule = ["node", "http"].join(":");
+    const http2Module = ["node", "http2"].join(":");
     const undiciModule = ["un", "dici"].join("");
     const globalFetch = ["globalThis", "fetch"].join(".");
+    const websocketGlobal = ["Web", "Socket"].join("");
     const agentExecutable = ["co", "dex"].join("");
     writeFileSync(
       sourcePath,
       [
         `import ${JSON.stringify(networkModule)};`,
+        `require(${JSON.stringify(http2Module)});`,
         `void ${undiciModule}.request("https://example.invalid");`,
         `void ${globalFetch}("https://example.invalid");`,
+        `new ${websocketGlobal}("wss://example.invalid");`,
+        `const agent = ${JSON.stringify(`/opt/tools/${agentExecutable}`)};`,
+        `spawn(agent);`,
         `spawn(${JSON.stringify(agentExecutable)});`,
       ].join("\n"),
     );
@@ -302,6 +335,107 @@ describe("RAW swarm runner boundaries", () => {
     } finally {
       rmSync(fixtureRoot, { recursive: true, force: true });
     }
+  });
+
+  test("runtime capability guard rejects indirect http2 loading", () => {
+    const networkModule = ["node", "http2"].join(":");
+    const checked = runCapabilityGuardFixture(
+      [
+        `const moduleName = ${JSON.stringify(networkModule)};`,
+        "require(moduleName);",
+      ].join("\n"),
+    );
+    expect(checked.status).not.toBe(0);
+    expect(`${checked.stdout}${checked.stderr}`).toContain(
+      "network capability",
+    );
+  });
+
+  test("runtime capability guard rejects indirect ESM http2 loading", () => {
+    const networkModule = ["node", "http2"].join(":");
+    const checked = runCapabilityGuardFixture(
+      [
+        `const moduleName = ${JSON.stringify(networkModule)};`,
+        "import(moduleName).then(() => process.exit(0), (error) => { throw error; });",
+      ].join("\n"),
+    );
+    expect(checked.status).not.toBe(0);
+    expect(`${checked.stdout}${checked.stderr}`).toContain(
+      "network capability",
+    );
+  });
+
+  test("rejects newly surfaced network and dynamic agent forms in deterministic source", () => {
+    const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-lane-capability-"));
+    const sourcePath = resolve(fixtureRoot, "new-forbidden.ts");
+    const networkModule = ["node", "http2"].join(":");
+    const websocketGlobal = ["Web", "Socket"].join("");
+    const agentExecutable = ["co", "dex"].join("");
+    writeFileSync(
+      sourcePath,
+      [
+        `require(${JSON.stringify(networkModule)});`,
+        `new ${websocketGlobal}("wss://example.invalid");`,
+        `const agent = ${JSON.stringify(`/opt/tools/${agentExecutable}`)};`,
+        "spawn(agent);",
+      ].join("\n"),
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--source", sourcePath],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        "forbidden capabilities",
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("runtime capability guard rejects indirect WebSocket access", () => {
+    const websocketGlobal = ["Web", "Socket"].join("");
+    const checked = runCapabilityGuardFixture(
+      [
+        `const globalName = ${JSON.stringify(websocketGlobal)};`,
+        "void globalThis[globalName];",
+      ].join("\n"),
+    );
+    expect(checked.status).not.toBe(0);
+    expect(`${checked.stdout}${checked.stderr}`).toContain(
+      "network capability",
+    );
+  });
+
+  test("runtime capability guard rejects an indirect absolute coding agent", () => {
+    const agentPath = ["/opt/tools/", ["co", "dex"].join("")].join("");
+    const checked = runCapabilityGuardFixture(
+      [
+        'const { spawnSync } = require("node:child_process");',
+        `const agent = ${JSON.stringify(agentPath)};`,
+        'const result = spawnSync(agent, [], { stdio: "ignore" });',
+        'if (result.error?.code === "ENOENT") process.exit(0);',
+      ].join("\n"),
+    );
+    expect(checked.status).not.toBe(0);
+    expect(`${checked.stdout}${checked.stderr}`).toContain(
+      "coding-agent capability",
+    );
+  });
+
+  test("runtime capability guard rejects an indirect shell network command", () => {
+    const networkCli = ["cu", "rl"].join("");
+    const checked = runCapabilityGuardFixture(
+      [
+        'const { spawnSync } = require("node:child_process");',
+        `const command = ${JSON.stringify(networkCli)};`,
+        'spawnSync("sh", ["-c", `printf \'%s\' ${command}`]);',
+      ].join("\n"),
+    );
+    expect(checked.status).not.toBe(0);
+    expect(`${checked.stdout}${checked.stderr}`).toContain("network CLI");
   });
 
   test("allows deterministic child-process boundary sources", () => {
