@@ -47,6 +47,29 @@ name must be the verified publisher identity, not the development placeholder.
 Their response Content Security Policy permits no script, style, image, font,
 frame, form, or network source.
 
+## Current Dokku staging host
+
+The current public staging service is a separate Dokku application named
+`dnd-oracle` at <https://dnd-oracle.apps.loskutoff.com>. It uses the same
+canonical Node container boundary through `operations/public-mcp/Dockerfile`;
+Dokku is a deployment adapter, not an application dependency. The application
+stores SQLite state in the persistent `/var/lib/dnd-oracle` mount on the host.
+
+Deploy the checked-out `master` release from the repository root with:
+
+```sh
+pnpm deploy:mcp:dokku-staging
+```
+
+The command creates the local `dokku-oracle` remote when absent, updates the
+release build argument, pushes `HEAD` to the dedicated Dokku application, and
+requires the live HTTPS health, release, publisher pages, and complete guest
+newcomer journey to pass. It ignores untracked files but refuses uncommitted
+tracked changes or a branch other than `master`. The operator needs an SSH key
+accepted by `dokku@49.13.172.86` and a trusted host key. The metrics bearer
+token and any future publication credentials remain server configuration and
+must not be copied into Git.
+
 ## Rollback
 
 `deploy.sh` atomically promotes one release-history file only after the
