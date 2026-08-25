@@ -1,0 +1,117 @@
+{
+  "version": 1,
+  "roles": [
+    {
+      "sourceKind": "unit",
+      "path": "featureGrants[].unitId",
+      "fieldName": "unitId",
+      "targetKind": "unit",
+      "relation": "unit-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.creature.normalForms[].statBlockId",
+      "fieldName": "statBlockId",
+      "targetKind": "statBlock",
+      "relation": "stat-block-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.grants[].spellId",
+      "fieldName": "spellId",
+      "targetKind": "unit",
+      "relation": "spell-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.healing.amount.martialArtsUnitId",
+      "fieldName": "martialArtsUnitId",
+      "targetKind": "unit",
+      "relation": "resource-link"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.modifiers[].zeroDamageRedirect.spends.resourceUnitId",
+      "fieldName": "resourceUnitId",
+      "targetKind": "unit",
+      "relation": "resource-link"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.options[].mechanics.grants[].spellId",
+      "fieldName": "spellId",
+      "targetKind": "unit",
+      "relation": "spell-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.recovery.resourceUnitId",
+      "fieldName": "resourceUnitId",
+      "targetKind": "unit",
+      "relation": "resource-link"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.resource.resourceUnitId",
+      "fieldName": "resourceUnitId",
+      "targetKind": "unit",
+      "relation": "resource-link"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.sourceUnitId",
+      "fieldName": "sourceUnitId",
+      "targetKind": "unit",
+      "relation": "unit-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.spellId",
+      "fieldName": "spellId",
+      "targetKind": "unit",
+      "relation": "spell-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.spendOptions[].resourceUnitId",
+      "fieldName": "resourceUnitId",
+      "targetKind": "unit",
+      "relation": "resource-link"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.spends.resourceUnitId",
+      "fieldName": "resourceUnitId",
+      "targetKind": "unit",
+      "relation": "resource-link"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.trigger.prerequisiteUnitId",
+      "fieldName": "prerequisiteUnitId",
+      "targetKind": "unit",
+      "relation": "unit-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "mechanics.trigger.sourceUnitId",
+      "fieldName": "sourceUnitId",
+      "targetKind": "unit",
+      "relation": "unit-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "originFeatId",
+      "fieldName": "originFeatId",
+      "targetKind": "unit",
+      "relation": "origin-feat-reference"
+    },
+    {
+      "sourceKind": "unit",
+      "path": "startingEquipment[].items[].unitId",
+      "fieldName": "unitId",
+      "targetKind": "unit",
+      "relation": "item-reference"
+    }
+  ]
+}
