@@ -656,8 +656,3 @@ if (require.main === module) {
     runLaneHygiene();
   }
 }
-
-module.exports = {
-  deterministicCapabilityViolations,
-  sourcePathsForQualityTest,
-};

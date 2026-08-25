@@ -72,7 +72,13 @@ character devices such as `/dev/zero`, and unknown descriptor types, denies
 connection, network-send, and descriptor-transfer syscalls (including
 `SCM_RIGHTS` paths), and denies all `io_uring` setup/submission syscalls. Its
 syscall-ABI check kills a process using an unexpected architecture instead of
-silently weakening the filter. The JavaScript guard remains defense in depth
+silently weakening the filter. Before installing it, the helper fails closed
+unless `/proc/self/status` proves that the host has no effective
+`CAP_NET_ADMIN`, `CAP_NET_RAW`, or `CAP_SYS_ADMIN`, and `/dev/net/tun` is not
+accessible. The filter additionally denies session/process-group and namespace
+escape syscalls (`setsid`, `setpgid`, `setns`, namespace-bearing `clone`, and
+`clone3`) plus `TUNSETIFF`; these checks complement, rather than replace, the
+trusted-host prerequisite. The JavaScript guard remains defense in depth
 for static/runtime capability inventory, browser globals, and known executable
 names; it is not the security boundary and does not trust module-origin or
 fixture-marker claims. A basename cannot prove a coding-agent identity: known
