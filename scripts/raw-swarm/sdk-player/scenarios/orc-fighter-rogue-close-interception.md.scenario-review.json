@@ -21,6 +21,6 @@
   "sdkCapabilityIntent": "probeUnsupportedCapability",
   "sdkCapabilityReview": {
     "classification": "explicitUnsupportedProbe",
-    "evidence": "The surrounding Character Sheet authoring, stat-block setup, creature-target attacks, movement, damage, and object state are documented. The required Wolf Bite against the synthetic prism is the deliberate unsupported branch for issue #283 ordinary-object targeting: it cannot be treated as a creature target, and the SRD Bite's Prone rider applies only to a Large or smaller creature. The scenario therefore probes, rather than claims support for, this object-target execution boundary."
+    "evidence": "The surrounding Character Sheet authoring, stat-block setup, creature-target attacks, movement, damage, and object state are documented. The required Wolf Bite against the synthetic prism is the deliberate unsupported branch for issue #283 ordinary-object targeting: it cannot be treated as a creature target, and the SRD Bite's Prone rider applies only to a Medium or smaller creature. The scenario therefore probes, rather than claims support for, this object-target execution boundary."
   }
 }
