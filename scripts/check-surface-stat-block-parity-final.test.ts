@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import {
   evaluateSurfaceStatBlockParityFinal,
   runSurfaceStatBlockParityFinal,
+  surfaceStatBlockParityFinalOptions,
   type SurfaceStatBlockParityFinalGateResult,
 } from "./check-surface-stat-block-parity-final.ts";
 import {
@@ -65,6 +66,17 @@ function rejectedResult(
 }
 
 describe("Surface stat-block parity final gate", () => {
+  it("passes the complete publication artifact set to the operation", () => {
+    const options = surfaceStatBlockParityFinalOptions("/synthetic/repository");
+
+    expect(options.publicationDir).toBe(
+      "/synthetic/repository/packages/surface/publication",
+    );
+    expect(options.portableCasesPath).toBe(
+      "/synthetic/repository/packages/surface/portable-cases/srd-surface-cases.json",
+    );
+  });
+
   it("accepts a clean publication and complete parity report", () => {
     const check = cleanPublicationCheck();
 
@@ -176,9 +188,8 @@ describe("Surface stat-block parity final gate", () => {
 
   it("rejects publication failure even when parity is otherwise clean", () => {
     const publicationIssue: PublicationIssue = {
-      kind: "compile-failed",
-      source: "synthetic.dhall",
-      message: "synthetic compile failure",
+      kind: "missing-publication-artifact",
+      file: "packages/surface/portable-cases/srd-surface-cases.json",
     };
     const result = rejectedResult(
       evaluateSurfaceStatBlockParityFinal(

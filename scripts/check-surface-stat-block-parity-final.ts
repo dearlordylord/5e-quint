@@ -57,6 +57,27 @@ export function runSurfaceStatBlockParityFinal(
   );
 }
 
+/**
+ * Keep the final gate's publication inputs aligned with the ordinary
+ * publication command. The portable case artifact is part of publication
+ * evidence, even though it is not part of the stat-block parity report.
+ */
+export function surfaceStatBlockParityFinalOptions(
+  repoRoot: string,
+): PublicationCheckOptions & { readonly portableCasesPath: string } {
+  const contentDir = join(repoRoot, "packages", "surface", "content");
+  return {
+    repoRoot,
+    contentDir,
+    publicationDir: join(repoRoot, "packages", "surface", "publication"),
+    portableCasesPath: join(
+      repoRoot,
+      "packages/surface/portable-cases/srd-surface-cases.json",
+    ),
+    compile: compileDhallToJson,
+  };
+}
+
 type ParityIssueCount = {
   readonly kind: SrdStatBlockParityIssue["kind"];
   readonly count: number;
@@ -121,7 +142,6 @@ function reportRejectedGate(
 
 function main(): void {
   const repoRoot = process.cwd();
-  const contentDir = join(repoRoot, "packages", "surface", "content");
   const compiler = spawnSync("dhall-to-json", ["--version"], {
     encoding: "utf8",
     stdio: ["ignore", "pipe", "pipe"],
@@ -140,12 +160,9 @@ function main(): void {
     return;
   }
 
-  const result = runSurfaceStatBlockParityFinal({
-    repoRoot,
-    contentDir,
-    publicationDir: join(repoRoot, "packages", "surface", "publication"),
-    compile: compileDhallToJson,
-  });
+  const result = runSurfaceStatBlockParityFinal(
+    surfaceStatBlockParityFinalOptions(repoRoot),
+  );
   if (result.tag === "rejected") {
     reportRejectedGate(result);
     process.exitCode = 1;
