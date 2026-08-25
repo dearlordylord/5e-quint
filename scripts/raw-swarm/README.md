@@ -105,10 +105,15 @@ wrappers start the same supervisor in
 `--supervise-only` mode, so model/API/coding-agent network access remains
 available. Both modes compile the repository-owned supervisor with the
 validated `/usr/bin/cc` system compiler and fail explicitly if the Linux
-toolchain or `/proc` ownership boundary is unavailable. The JavaScript and
-shell wrappers only start one supervisor at a time with inherited standard
-streams, pass its exact PID as the named owner argument, and wait for its
-close; no environment marker is used as an ownership boundary.
+toolchain or `/proc` ownership boundary is unavailable. Before forking the
+command, the supervisor preflights the monotonic clock and the complete
+parent-lineage inventory. After launch, a process that vanishes while being
+observed is treated as settled, but unreadable, malformed, or otherwise
+unprovable ownership evidence is a failure: the supervisor keeps the owner
+alive and retries rather than releasing a lock. The JavaScript and shell
+wrappers only start one supervisor at a time with inherited standard streams,
+pass its exact PID as the named owner argument, and wait for its close; no
+environment marker is used as an ownership boundary.
 On normal leader exit, a surviving descendant causes bounded `SIGTERM` then
 `SIGKILL` cleanup and a non-clean phase status. If the supervisor cannot prove
 that `SIGKILL` settled the tree, it retains ownership and retries rather than

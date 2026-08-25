@@ -1,8 +1,9 @@
 const assert = require("node:assert/strict");
-const { existsSync, readdirSync, readFileSync } = require("node:fs");
+const { existsSync, readdirSync, readFileSync, statSync } = require("node:fs");
 const {
   basename,
   dirname,
+  extname,
   join,
   relative,
   resolve,
@@ -186,13 +187,32 @@ const sourceResolutionSuffixes = Object.freeze([
   ...SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
 ]);
 
+function isRegularFile(path) {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
+}
+
+function extensionlessInternalImportCandidates(sourcePath, specifier) {
+  const candidate = resolve(dirname(sourcePath), specifier);
+  const candidates = [
+    candidate,
+    ...sourceResolutionSuffixes.flatMap((extension) => [
+      `${candidate}${extension}`,
+      join(candidate, `index${extension}`),
+    ]),
+  ];
+  return candidates.filter(isRegularFile);
+}
+
 function resolveInternalImport(sourcePath, specifier) {
   const candidate = resolve(dirname(sourcePath), specifier);
-  const candidates = sourceResolutionSuffixes.flatMap((extension) => [
-    `${candidate}${extension}`,
-    join(candidate, `index${extension}`),
-  ]);
-  return candidates.find((path) => existsSync(path)) ?? undefined;
+  if (extname(candidate) !== "") {
+    return isRegularFile(candidate) ? [candidate] : [];
+  }
+  return extensionlessInternalImportCandidates(sourcePath, specifier);
 }
 
 function repositoryOwnedPath(path) {
@@ -383,10 +403,12 @@ function sourcePathsForQualityTest(testPath) {
     }
     const source = readFileSync(sourcePath, "utf8");
     for (const specifier of importSpecifiers(source)) {
-      const importedPath = specifier.startsWith(".")
+      const importedPaths = specifier.startsWith(".")
         ? resolveInternalImport(sourcePath, specifier)
-        : workspaceImportPath(sourcePath, specifier);
-      if (importedPath !== undefined) pending.push(importedPath);
+        : [workspaceImportPath(sourcePath, specifier)].filter(
+            (path) => path !== undefined,
+          );
+      pending.push(...importedPaths);
     }
   }
   return paths;

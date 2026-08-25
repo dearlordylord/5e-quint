@@ -356,6 +356,22 @@ function compileKernelBoundaryProbe(name: string, source: string): string {
   return binaryPath;
 }
 
+function compileProcessSupervisorTestHook(name: string): string {
+  const sourcePath = resolve(processSupervisorBuild, `${name}.c`);
+  const binaryPath = resolve(processSupervisorBuild, name);
+  writeFileSync(
+    sourcePath,
+    `#define DND_SUPERVISOR_TEST_HOOKS\n${readFileSync(processSupervisorSource, "utf8")}`,
+  );
+  const compilation = compileTrustedCSource(sourcePath, binaryPath);
+  if (!compilation.ok) {
+    throw new Error(
+      `The process-supervisor failure-injection fixture could not be compiled: ${compilation.message}`,
+    );
+  }
+  return binaryPath;
+}
+
 function runKernelBoundaryProbe(binaryPath: string) {
   return spawnSync(
     "env",
@@ -985,6 +1001,106 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("process_is_descendant");
     expect(source).not.toContain("DND_PROCESS_SUPERVISION_MARKER");
   });
+
+  test.each([
+    ["inventory", "DND_SUPERVISOR_TEST_INVENTORY_FAILURES"],
+    ["proof", "DND_SUPERVISOR_TEST_PROOF_FAILURES"],
+    ["clock", "DND_SUPERVISOR_TEST_CLOCK_FAILURES"],
+  ])(
+    "retains the native owner after a post-launch %s observation failure",
+    async (failureKind, failureVariable) => {
+      const fixtureRoot = mkdtempSync(
+        resolve(tmpdir(), `dnd-supervisor-${failureKind}-failure-`),
+      );
+      const launchedPath = resolve(fixtureRoot, "launched");
+      const testSupervisor = compileProcessSupervisorTestHook(
+        `process-supervisor-${failureKind}-failure`,
+      );
+      const leaderSource = `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(launchedPath)}, "launched");`;
+      const helper = spawn(
+        testSupervisor,
+        [
+          "--owner-pid",
+          String(process.pid),
+          process.execPath,
+          "-e",
+          leaderSource,
+        ],
+        {
+          env: {
+            ...process.env,
+            NODE_OPTIONS: "",
+            [failureVariable]: "always",
+          },
+          stdio: "ignore",
+        },
+      );
+      try {
+        await waitForFile(launchedPath);
+        await new Promise((resolveWait) => setTimeout(resolveWait, 500));
+        expect(processIsLive(helper.pid ?? -1)).toBe(true);
+      } finally {
+        if (helper.exitCode === null) {
+          helper.kill("SIGKILL");
+          await new Promise<void>((resolveClosed) => {
+            helper.once("close", () => resolveClosed());
+          });
+        }
+        rmSync(fixtureRoot, { recursive: true, force: true });
+      }
+    },
+    15_000,
+  );
+
+  test("rejects an ownership preflight failure before launching the command", async () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-supervisor-preflight-failure-"),
+    );
+    const launchedPath = resolve(fixtureRoot, "launched");
+    const testSupervisor = compileProcessSupervisorTestHook(
+      "process-supervisor-preflight-failure",
+    );
+    const commandSource = `const { writeFileSync } = require("node:fs"); writeFileSync(${JSON.stringify(launchedPath)}, "launched");`;
+    const helper = spawn(
+      testSupervisor,
+      [
+        "--owner-pid",
+        String(process.pid),
+        process.execPath,
+        "-e",
+        commandSource,
+      ],
+      {
+        env: {
+          ...process.env,
+          NODE_OPTIONS: "",
+          DND_SUPERVISOR_TEST_PREFLIGHT_FAILURES: "always",
+        },
+        stdio: "ignore",
+      },
+    );
+    try {
+      const result = await new Promise<{
+        status: number | null;
+        signal: NodeJS.Signals | null;
+      }>((resolveResult, rejectResult) => {
+        helper.once("error", rejectResult);
+        helper.once("close", (status, signal) =>
+          resolveResult({ status, signal }),
+        );
+      });
+      expect(result).toEqual({ status: 78, signal: null });
+      expect(existsSync(launchedPath)).toBe(false);
+    } finally {
+      if (helper.exitCode === null) {
+        helper.kill("SIGKILL");
+        await new Promise<void>((resolveClosed) => {
+          helper.once("close", () => resolveClosed());
+        });
+      }
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 10_000);
 
   test("native supervisor parent-death signal terminates its command", async () => {
     const fixtureRoot = mkdtempSync(resolve(tmpdir(), "dnd-parent-death-"));
@@ -1915,6 +2031,35 @@ describe("RAW swarm runner boundaries", () => {
     },
     30_000,
   );
+
+  test("scans every extensionless sibling instead of choosing one by order", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "transitive-sibling-collision-"),
+    );
+    const testPath = resolve(fixtureRoot, "fixture.test.ts");
+    const harmlessSiblingPath = resolve(fixtureRoot, "fixture.ts");
+    const forbiddenSiblingPath = resolve(fixtureRoot, "fixture.js");
+    const forbiddenModule = ["node:", "http"].join("");
+    writeFileSync(testPath, 'import "./fixture";\n');
+    writeFileSync(harmlessSiblingPath, "export const harmless = true;\n");
+    writeFileSync(
+      forbiddenSiblingPath,
+      `require(${JSON.stringify(forbiddenModule)});\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        relative(repoRoot, forbiddenSiblingPath),
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  }, 30_000);
 
   test.each([
     ["missing value", ["--transcript", "--scenario", "example"]],

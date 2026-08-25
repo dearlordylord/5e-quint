@@ -175,6 +175,54 @@ static const uint32_t dnd_clone_namespace_flags =
 static bool dnd_install_network_filter = true;
 static bool dnd_cleanup_escalated = false;
 
+#ifdef DND_SUPERVISOR_TEST_HOOKS
+/* These hooks exist only in a test-recompiled helper; production builds have
+ * no failure-injection environment interface. */
+static bool dnd_test_command_launched = false;
+static int dnd_test_inventory_failures_remaining = 0;
+static int dnd_test_proof_failures_remaining = 0;
+static int dnd_test_clock_failures_remaining = 0;
+static bool dnd_test_inventory_failure_forever = false;
+static bool dnd_test_proof_failure_forever = false;
+static bool dnd_test_clock_failure_forever = false;
+static bool dnd_test_preflight_failure_forever = false;
+
+static int read_test_failure_count(const char *name) {
+  const char *value = getenv(name);
+  if (value == NULL || *value == '\0') return 0;
+  char *end = NULL;
+  errno = 0;
+  const long parsed = strtol(value, &end, 10);
+  if (errno != 0 || end == value || *end != '\0' || parsed < 0 ||
+      parsed > INT_MAX) {
+    return 0;
+  }
+  return (int)parsed;
+}
+
+static bool test_failure_is_forever(const char *name) {
+  const char *value = getenv(name);
+  return value != NULL && strcmp(value, "always") == 0;
+}
+
+static void configure_test_failure_injection(void) {
+  dnd_test_inventory_failures_remaining =
+      read_test_failure_count("DND_SUPERVISOR_TEST_INVENTORY_FAILURES");
+  dnd_test_proof_failures_remaining =
+      read_test_failure_count("DND_SUPERVISOR_TEST_PROOF_FAILURES");
+  dnd_test_clock_failures_remaining =
+      read_test_failure_count("DND_SUPERVISOR_TEST_CLOCK_FAILURES");
+  dnd_test_inventory_failure_forever = test_failure_is_forever(
+      "DND_SUPERVISOR_TEST_INVENTORY_FAILURES");
+  dnd_test_proof_failure_forever =
+      test_failure_is_forever("DND_SUPERVISOR_TEST_PROOF_FAILURES");
+  dnd_test_clock_failure_forever =
+      test_failure_is_forever("DND_SUPERVISOR_TEST_CLOCK_FAILURES");
+  dnd_test_preflight_failure_forever =
+      test_failure_is_forever("DND_SUPERVISOR_TEST_PREFLIGHT_FAILURES");
+}
+#endif
+
 /*
  * The architecture check is deliberately a kill action: a filter written for
  * one syscall ABI must never silently run against another ABI. On x86_64 the
@@ -540,6 +588,16 @@ static int configure_parent_death_signal(pid_t expected_parent) {
 }
 
 static long long monotonic_milliseconds(void) {
+#ifdef DND_SUPERVISOR_TEST_HOOKS
+  if (dnd_test_command_launched &&
+      (dnd_test_clock_failure_forever ||
+       dnd_test_clock_failures_remaining > 0)) {
+    if (dnd_test_clock_failures_remaining > 0)
+      dnd_test_clock_failures_remaining -= 1;
+    errno = EIO;
+    return -1;
+  }
+#endif
   struct timespec now;
   if (clock_gettime(CLOCK_MONOTONIC, &now) != 0) return -1;
   return (long long)now.tv_sec * 1000LL + now.tv_nsec / 1000000LL;
@@ -593,43 +651,102 @@ static int sleep_supervisor_poll(void) {
  */
 #define DND_MAX_PARENT_CHAIN_DEPTH 4096
 
+enum dnd_process_observation {
+  DND_PROCESS_NOT_DESCENDANT = 0,
+  DND_PROCESS_DESCENDANT = 1,
+  DND_PROCESS_VANISHED = 2,
+  DND_PROCESS_PROOF_FAILURE = -1,
+};
+
+static bool process_vanished(pid_t process_id) {
+  errno = 0;
+  if (kill(process_id, 0) == 0) return false;
+  return errno == ESRCH;
+}
+
 static int read_process_parent(pid_t process_id, pid_t *parent_id) {
+#ifdef DND_SUPERVISOR_TEST_HOOKS
+  if (dnd_test_command_launched &&
+      (dnd_test_proof_failure_forever || dnd_test_proof_failures_remaining > 0)) {
+    if (dnd_test_proof_failures_remaining > 0)
+      dnd_test_proof_failures_remaining -= 1;
+    return DND_PROCESS_PROOF_FAILURE;
+  }
+#endif
   char stat_path[64];
   if (snprintf(stat_path, sizeof(stat_path), "/proc/%ld/stat",
                (long)process_id) >= (int)sizeof(stat_path)) {
-    return 1;
+    return DND_PROCESS_PROOF_FAILURE;
   }
+  errno = 0;
   FILE *stat = fopen(stat_path, "r");
-  if (stat == NULL) return 1;
+  if (stat == NULL) {
+    return (errno == ENOENT || errno == ESRCH) ? DND_PROCESS_VANISHED
+                                               : DND_PROCESS_PROOF_FAILURE;
+  }
   char line[4096];
   const int read = fgets(line, sizeof(line), stat) != NULL;
+  const int read_error = errno;
+  const int stream_error = ferror(stat);
   const int close_status = fclose(stat);
-  if (!read || close_status != 0) return 1;
+  if (!read) {
+    if ((read_error == ENOENT || read_error == ESRCH) ||
+        (!stream_error && process_vanished(process_id))) {
+      return DND_PROCESS_VANISHED;
+    }
+    return DND_PROCESS_PROOF_FAILURE;
+  }
+  if (close_status != 0) return DND_PROCESS_PROOF_FAILURE;
   char *closing_parenthesis = strrchr(line, ')');
-  if (closing_parenthesis == NULL) return 1;
+  if (closing_parenthesis == NULL) {
+    return process_vanished(process_id) ? DND_PROCESS_VANISHED
+                                        : DND_PROCESS_PROOF_FAILURE;
+  }
   long parsed_parent = 0;
   if (sscanf(closing_parenthesis + 1, " %*c %ld", &parsed_parent) != 1 ||
-      parsed_parent <= 0 || parsed_parent > INT_MAX) {
-    return 1;
+      parsed_parent < 0 || parsed_parent > INT_MAX) {
+    return process_vanished(process_id) ? DND_PROCESS_VANISHED
+                                        : DND_PROCESS_PROOF_FAILURE;
   }
   *parent_id = (pid_t)parsed_parent;
   return 0;
 }
 
-static bool process_is_descendant(pid_t process_id, pid_t supervisor_id) {
+static int process_is_descendant(pid_t process_id, pid_t supervisor_id) {
   pid_t current = process_id;
   for (int depth = 0; depth < DND_MAX_PARENT_CHAIN_DEPTH; depth += 1) {
-    if (current == supervisor_id) return process_id != supervisor_id;
+    if (current == supervisor_id)
+      return process_id == supervisor_id ? DND_PROCESS_NOT_DESCENDANT
+                                          : DND_PROCESS_DESCENDANT;
     pid_t parent_id = 0;
-    if (read_process_parent(current, &parent_id) != 0) return false;
-    if (parent_id == current || parent_id <= 1) return false;
+    const int read_status = read_process_parent(current, &parent_id);
+    if (read_status == DND_PROCESS_VANISHED) return DND_PROCESS_VANISHED;
+    if (read_status != 0) return DND_PROCESS_PROOF_FAILURE;
+    /* A process whose parent is outside this PID namespace is reported with
+     * PPid 0. It is a valid root relation, but cannot be below this positive
+     * supervisor PID. */
+    if (parent_id == current || parent_id == 0)
+      return DND_PROCESS_NOT_DESCENDANT;
     current = parent_id;
   }
-  return false;
+  return DND_PROCESS_PROOF_FAILURE;
 }
 
 static int collect_owned_descendants(pid_t supervisor_id, pid_t **process_ids,
                                      size_t *process_count) {
+#ifdef DND_SUPERVISOR_TEST_HOOKS
+  if ((!dnd_test_command_launched && dnd_test_preflight_failure_forever) ||
+      (dnd_test_command_launched &&
+       (dnd_test_inventory_failure_forever ||
+        dnd_test_inventory_failures_remaining > 0))) {
+    if (dnd_test_inventory_failures_remaining > 0)
+      dnd_test_inventory_failures_remaining -= 1;
+    fprintf(stderr,
+            "Raw Swarm process supervisor test injected an ownership "
+            "inventory failure.\n");
+    return 1;
+  }
+#endif
   DIR *proc = opendir("/proc");
   if (proc == NULL) {
     fprintf(stderr,
@@ -640,8 +757,12 @@ static int collect_owned_descendants(pid_t supervisor_id, pid_t **process_ids,
   }
   pid_t *owned = NULL;
   size_t count = 0;
+  bool proof_failure = false;
   struct dirent *entry = NULL;
-  while ((entry = readdir(proc)) != NULL) {
+  for (;;) {
+    errno = 0;
+    entry = readdir(proc);
+    if (entry == NULL) break;
     char *end = NULL;
     errno = 0;
     const long parsed_pid = strtol(entry->d_name, &end, 10);
@@ -650,7 +771,15 @@ static int collect_owned_descendants(pid_t supervisor_id, pid_t **process_ids,
       continue;
     }
     const pid_t process_id = (pid_t)parsed_pid;
-    if (!process_is_descendant(process_id, supervisor_id)) continue;
+    const int relationship =
+        process_is_descendant(process_id, supervisor_id);
+    if (relationship == DND_PROCESS_VANISHED ||
+        relationship == DND_PROCESS_NOT_DESCENDANT)
+      continue;
+    if (relationship == DND_PROCESS_PROOF_FAILURE) {
+      proof_failure = true;
+      continue;
+    }
     pid_t *expanded = realloc(owned, (count + 1) * sizeof(*expanded));
     if (expanded == NULL) {
       free(owned);
@@ -664,13 +793,17 @@ static int collect_owned_descendants(pid_t supervisor_id, pid_t **process_ids,
     owned[count] = process_id;
     count += 1;
   }
+  const int read_directory_error = errno;
   const int close_status = closedir(proc);
-  if (close_status != 0) {
+  if (read_directory_error != 0 || close_status != 0 || proof_failure) {
     free(owned);
     fprintf(stderr,
-            "Raw Swarm process supervisor could not finish its /proc "
-            "descendant inventory: %s\n",
-            strerror(errno));
+            "Raw Swarm process supervisor could not prove its /proc "
+            "descendant inventory (%s).\n",
+            proof_failure ? "an ownership record was unreadable or invalid"
+                          : strerror(read_directory_error != 0
+                                         ? read_directory_error
+                                         : errno));
     return 1;
   }
   *process_ids = owned;
@@ -686,6 +819,36 @@ static int owned_descendants_exist(pid_t supervisor_id) {
   free(process_ids);
   if (collected != 0) return -1;
   return process_count == 0 ? 0 : 1;
+}
+
+static int validate_ownership_authority(pid_t supervisor_id) {
+  if (monotonic_milliseconds() < 0) {
+    fprintf(stderr,
+            "Raw Swarm native process supervisor could not establish its "
+            "monotonic ownership clock before launching the command.\n");
+    return 1;
+  }
+  pid_t parent_id = 0;
+  if (read_process_parent(supervisor_id, &parent_id) != 0) {
+    fprintf(stderr,
+            "Raw Swarm native process supervisor could not establish its "
+            "/proc parent-lineage ownership authority before launching the "
+            "command.\n");
+    return 1;
+  }
+  pid_t *process_ids = NULL;
+  size_t process_count = 0;
+  const int inventory = collect_owned_descendants(
+      supervisor_id, &process_ids, &process_count);
+  free(process_ids);
+  if (inventory != 0) {
+    fprintf(stderr,
+            "Raw Swarm native process supervisor could not establish its "
+            "/proc descendant inventory authority before launching the "
+            "command.\n");
+    return 1;
+  }
+  return 0;
 }
 
 /* Returns 0 when no owned children remain, 1 while children remain, 2 on a
@@ -766,8 +929,19 @@ static int terminate_owned_tree(pid_t supervisor_id, pid_t leader_pid,
                                 int initial_signal, int *observed_signal) {
   if (observed_signal != NULL) *observed_signal = 0;
   dnd_cleanup_escalated = false;
-  if (signal_owned_descendants(supervisor_id, initial_signal) != 0)
-    return 1;
+  bool warning_emitted = false;
+  for (;;) {
+    if (signal_owned_descendants(supervisor_id, initial_signal) == 0) break;
+    if (!warning_emitted) {
+      fprintf(stderr,
+              "Raw Swarm process supervisor could not prove ownership "
+              "while sending %s; retaining ownership and retrying.\n",
+              strsignal(initial_signal));
+      warning_emitted = true;
+    }
+    (void)sleep_supervisor_poll();
+  }
+
   int interrupted_signal = 0;
   int settlement = wait_for_owned_tree_empty(supervisor_id, leader_pid,
                                              leader_reaped, leader_status,
@@ -801,6 +975,7 @@ static int terminate_owned_tree(pid_t supervisor_id, pid_t leader_pid,
     /* A nonzero settlement result means ownership could not be proved empty.
      * Keep the supervisor alive and retry rather than releasing a lock while
      * an unkillable or temporarily unobservable descendant may survive. */
+    (void)sleep_supervisor_poll();
   }
 }
 
@@ -830,6 +1005,7 @@ static int supervise_command(char **command_argv) {
   if (setup_signal != 0) return 128 + setup_signal;
 
   const pid_t supervisor_pid = getpid();
+  if (validate_ownership_authority(supervisor_pid) != 0) return 78;
   const pid_t leader_pid = fork();
   if (leader_pid < 0) {
     fprintf(stderr,
@@ -850,6 +1026,10 @@ static int supervise_command(char **command_argv) {
             command_argv[0], strerror(errno));
     _exit(127);
   }
+
+#ifdef DND_SUPERVISOR_TEST_HOOKS
+  dnd_test_command_launched = true;
+#endif
 
   bool leader_reaped = false;
   int leader_status = 0;
@@ -956,13 +1136,20 @@ static int supervise_command(char **command_argv) {
     return status_for_reaped_leader(leader_status);
   }
   int cleanup_signal = 0;
-  if (settlement < 0 ||
+  const int cleanup_failure =
       terminate_owned_tree(supervisor_pid, leader_pid, &leader_reaped,
-                           &leader_status, SIGTERM, &cleanup_signal) != 0) {
+                           &leader_status, SIGTERM, &cleanup_signal);
+  if (cleanup_failure != 0) {
     fprintf(stderr,
             "Raw Swarm native process supervisor could not settle the "
             "owned process tree after the leader exited.\n");
     return 1;
+  }
+  if (settlement < 0) {
+    fprintf(stderr,
+            "Raw Swarm native process supervisor retained ownership until "
+            "cleanup proved the tree settled after an earlier observation "
+            "failure.\n");
   }
   if (dnd_cleanup_escalated && !dnd_install_network_filter) return 137;
   if (cleanup_signal != 0) return 128 + cleanup_signal;
@@ -981,6 +1168,9 @@ int main(int argc, char **argv) {
   }
   pid_t owner_pid = 0;
   if (parse_owner_pid(argv[2], &owner_pid) != 0) return 64;
+#ifdef DND_SUPERVISOR_TEST_HOOKS
+  configure_test_failure_injection();
+#endif
   if (install_supervisor_signal_handlers() != 0 ||
       unblock_supervisor_signals() != 0) {
     return 78;
