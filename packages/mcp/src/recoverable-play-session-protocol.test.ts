@@ -443,7 +443,164 @@ describe("recoverable Play Session protocol", () => {
       recoveredRepository.close();
     }
   });
+
+  test("recovers direct and initial-setup Battle entry with one atomic setup finalization", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "dnd-battle-entry-"));
+    temporaryDirectories.push(directory);
+    const databasePath = join(directory, "play-sessions.sqlite");
+    const initialRepository = openRepository(databasePath);
+    const initialServer = createDndMcpHttpServer({
+      playSessionRepository: initialRepository,
+    });
+    const endpoint = await listen(initialServer);
+    const directClient = await connectHttpClient(endpoint);
+    const setupClient = await connectHttpClient(endpoint);
+    const directPlaySessionId = await acceptancePlaySessionId(directClient);
+    const setupPlaySessionId = await acceptancePlaySessionId(setupClient);
+    const directCharacter = await createBaselineCharacterSession(directClient);
+    const setupCharacter = await createBaselineCharacterSession(setupClient);
+    await callStructuredTool(directClient, {
+      name: "start_battle",
+      arguments: battleEntryArguments(
+        directPlaySessionId,
+        directCharacter.characterId,
+        "direct",
+      ),
+    });
+    await callStructuredTool(setupClient, {
+      name: "start_battle",
+      arguments: battleEntryArguments(
+        setupPlaySessionId,
+        setupCharacter.characterId,
+        "initialSetup",
+      ),
+    });
+    await Promise.all([directClient.close(), setupClient.close()]);
+    await close(initialServer);
+    initialRepository.close();
+
+    const recoveredRepository = openRepository(databasePath);
+    const recoveredServer = createDndMcpHttpServer({
+      playSessionRepository: recoveredRepository,
+    });
+    const recoveredEndpoint = await listen(recoveredServer);
+    const directReadClient = await connectHttpClient(recoveredEndpoint);
+    const firstSetupClient = await connectHttpClient(recoveredEndpoint);
+    const secondSetupClient = await connectHttpClient(recoveredEndpoint);
+    try {
+      const directBattle = await callStructuredTool(directReadClient, {
+        name: "read_battle_state",
+        arguments: { playSessionId: directPlaySessionId },
+      });
+      expect(operationResult(directBattle)).toMatchObject({
+        battleState: {
+          tag: "activeBattle",
+          battleId: "battle:recoverable-direct-entry",
+        },
+        snapshot: { battleId: "battle:recoverable-direct-entry" },
+      });
+
+      const recoveredSetup = await callStructuredTool(firstSetupClient, {
+        name: "read_battle_state",
+        arguments: { playSessionId: setupPlaySessionId },
+      });
+      expect(operationResult(recoveredSetup)).toMatchObject({
+        battleState: {
+          tag: "initialInitiativeSetup",
+          battleId: "battle:recoverable-initial-setup-entry",
+        },
+        snapshot: null,
+      });
+
+      const finalize = (client: Client) =>
+        client.callTool({
+          name: "battle_lifecycle",
+          arguments: {
+            playSessionId: setupPlaySessionId,
+            operation: { kind: "finalizeInitialInitiativeSetup" },
+          },
+        });
+      const finalized = await Promise.all([
+        finalize(firstSetupClient),
+        finalize(secondSetupClient),
+      ]);
+      expect(
+        finalized.filter((result) => result.isError !== true),
+      ).toHaveLength(1);
+      expect(
+        finalized.filter((result) => result.isError === true),
+      ).toHaveLength(1);
+      const rejectedFinalization = finalized.find(
+        (result) => result.isError === true,
+      );
+      if (!isJsonObject(rejectedFinalization?.structuredContent)) {
+        throw new Error("Expected a typed concurrent setup rejection.");
+      }
+      expect(rejectedFinalization.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: {
+              code: "INITIAL_INITIATIVE_SETUP_ALREADY_FINALIZED",
+            },
+          },
+        },
+        projection: { battleState: { tag: "activeBattle" } },
+      });
+
+      const activeSetupBattle = await callStructuredTool(firstSetupClient, {
+        name: "read_battle_state",
+        arguments: { playSessionId: setupPlaySessionId },
+      });
+      expect(operationResult(activeSetupBattle)).toMatchObject({
+        battleState: {
+          tag: "activeBattle",
+          battleId: "battle:recoverable-initial-setup-entry",
+        },
+        snapshot: { battleId: "battle:recoverable-initial-setup-entry" },
+      });
+    } finally {
+      await Promise.all([
+        directReadClient.close(),
+        firstSetupClient.close(),
+        secondSetupClient.close(),
+      ]);
+      await close(recoveredServer);
+      recoveredRepository.close();
+    }
+  }, 90_000);
 });
+
+function battleEntryArguments(
+  playSessionId: string,
+  characterId: string,
+  initiativeMode: "direct" | "initialSetup",
+): Record<string, unknown> {
+  const suffix =
+    initiativeMode === "direct" ? "direct-entry" : "initial-setup-entry";
+  return {
+    playSessionId,
+    battleId: `battle:recoverable-${suffix}`,
+    initiativeMode,
+    companionAdmissions: [],
+    initialCombatants: [
+      {
+        kind: "characterSession",
+        characterId,
+        combatantId: `fighter-${suffix}`,
+        initiative: 18,
+        ammunitionStocks: [],
+      },
+      {
+        kind: "statBlock",
+        statBlockId: "stat_block_goblin_warrior",
+        combatantId: `goblin-${suffix}`,
+        initiative: 7,
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+        admissionSource: { kind: "encounterParticipant" },
+      },
+    ],
+  };
+}
 
 async function listen(
   server: ReturnType<typeof createDndMcpHttpServer>,

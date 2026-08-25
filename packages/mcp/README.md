@@ -69,8 +69,14 @@ SQLite connection, lists and inspects the reconstructed sheet, advances its
 Fighter class level, replaces those owners again, and observes the updated
 canonical build. Derived Hit Points, Hit Dice, labels, and other sheet projections are
 recomputed from the retained commands, installed Units, and runtime owners;
-they are not session-record fields. Battle recovery still requires its later
-acceptance slices before it is claimed as public recovery coverage.
+they are not session-record fields. The Battle entry witness covers both
+supported entry paths: a direct-Initiative Battle
+recovers as the same active Battle, and an initial-Initiative setup recovers as
+the same setup before one atomic finalization makes it the sole active Battle.
+Concurrent finalization returns one accepted transition and one typed
+already-finalized result; it never reconstructs both lifecycle owners. Active
+Battle Acts, Runtime Holes, dice continuity, and closeout remain the next
+recovery slice.
 Authentication, guest grants, retention, and deletion remain the later
 public-boundary increment defined by ADR 0007.
 
