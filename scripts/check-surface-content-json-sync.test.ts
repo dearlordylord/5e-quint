@@ -782,6 +782,80 @@ in statBlock`,
     }
   });
 
+  it("resolves aliased list entries when deriving the source family", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-aliased-list-family-test-"),
+    );
+
+    try {
+      writeFileSync(
+        join(contentDir, "aliased-list-stat-block.dhall"),
+        [
+          'let entry = { kind = "statBlock" }',
+          "let entries = [entry]",
+          "in entries",
+        ].join("\n"),
+      );
+      writeFileSync(
+        join(contentDir, "aliased-list-stat-block.json"),
+        validRecord,
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: () => "synthetic compile failure",
+      });
+
+      expect(result.issues).toContainEqual({
+        kind: "peer-family-mismatch",
+        source: "aliased-list-stat-block.dhall",
+        peer: "aliased-list-stat-block.json",
+        expectedRecordKind: "statBlock",
+        actualRecordKind: "other",
+      });
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
+  it("does not infer a family from a mixed source list", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-mixed-list-family-test-"),
+    );
+
+    try {
+      writeFileSync(
+        join(contentDir, "mixed-list-stat-block.dhall"),
+        [
+          'let statBlock = { kind = "statBlock" }',
+          'let other = { kind = "other" }',
+          'in [{ kind = "statBlock" }, other]',
+        ].join("\n"),
+      );
+      writeFileSync(
+        join(contentDir, "mixed-list-stat-block.json"),
+        validRecord,
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: () => "synthetic compile failure",
+      });
+
+      expect(result.issues).not.toContainEqual(
+        expect.objectContaining({
+          kind: "peer-family-mismatch",
+          source: "mixed-list-stat-block.dhall",
+          peer: "mixed-list-stat-block.json",
+        }),
+      );
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
   it("keeps known peer family ownership when source text is unresolved", () => {
     const contentDir = mkdtempSync(
       join(tmpdir(), "surface-unresolved-peer-family-test-"),

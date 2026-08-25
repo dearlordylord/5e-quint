@@ -333,17 +333,51 @@ function lastTopLevelTokenIndex(
 function recordKindFromResult(
   tokens: readonly DhallToken[],
   resultIndex: number,
+  limitIndex = tokens.length,
+  scope: ReadonlyMap<string, DhallBinding> = new Map(),
+  aliasStack: ReadonlySet<number> = new Set(),
 ): SurfacePublicationRecordKind {
   const result = tokens[resultIndex];
   if (result?.value === "{") return recordKindAtObject(tokens, resultIndex);
   if (result?.value !== "[") return "unknown";
-  const objectIndex = tokens.findIndex(
-    (token, index) =>
-      index > resultIndex &&
-      token.value === "{" &&
-      token.depth === (result?.depth ?? 0) + 1,
-  );
-  return objectIndex < 0 ? "unknown" : recordKindAtObject(tokens, objectIndex);
+  const endIndex = delimitedExpressionEndIndex(tokens, resultIndex, limitIndex);
+  if (endIndex === undefined) return "unknown";
+
+  const elementKinds: SurfacePublicationRecordKind[] = [];
+  const closingIndex = endIndex - 1;
+  let elementIndex = resultIndex + 1;
+  while (elementIndex < closingIndex) {
+    const token = tokens[elementIndex];
+    if (token?.tag === "symbol" && token.value === ",") {
+      elementIndex += 1;
+      continue;
+    }
+    const element = resolveDhallExpression(
+      tokens,
+      elementIndex,
+      closingIndex,
+      scope,
+      aliasStack,
+    );
+    if (element === undefined || element.endIndex <= elementIndex) {
+      return "unknown";
+    }
+    elementKinds.push(element.kind);
+    elementIndex = element.endIndex;
+    const separator = tokens[elementIndex];
+    if (separator?.tag === "symbol" && separator.value === ",") {
+      elementIndex += 1;
+      continue;
+    }
+    if (elementIndex !== closingIndex) return "unknown";
+  }
+
+  const firstKind = elementKinds[0];
+  return firstKind !== undefined &&
+    firstKind !== "unknown" &&
+    elementKinds.every((kind) => kind === firstKind)
+    ? firstKind
+    : "unknown";
 }
 
 type DhallExpressionResolution = {
@@ -393,7 +427,16 @@ function resolveDhallExpression(
     );
     return endIndex === undefined
       ? undefined
-      : { kind: recordKindFromResult(tokens, startIndex), endIndex };
+      : {
+          kind: recordKindFromResult(
+            tokens,
+            startIndex,
+            endIndex,
+            scope,
+            aliasStack,
+          ),
+          endIndex,
+        };
   }
   if (start.value === "(") {
     const endIndex = delimitedExpressionEndIndex(
@@ -417,7 +460,7 @@ function resolveDhallExpression(
       binding === undefined
         ? "unknown"
         : resolveDhallBinding(tokens, binding, aliasStack),
-    endIndex: nextDhallBoundaryIndex(tokens, startIndex, limitIndex),
+    endIndex: startIndex + 1,
   };
 }
 
@@ -528,25 +571,6 @@ function delimitedExpressionEndIndex(
     }
   }
   return undefined;
-}
-
-function nextDhallBoundaryIndex(
-  tokens: readonly DhallToken[],
-  startIndex: number,
-  resultIndex: number,
-): number {
-  const depth = tokens[startIndex]?.depth ?? 0;
-  for (let index = startIndex + 1; index < resultIndex; index += 1) {
-    const token = tokens[index];
-    if (
-      token?.depth === depth &&
-      token.tag === "word" &&
-      (token.value === "let" || token.value === "in")
-    ) {
-      return index;
-    }
-  }
-  return resultIndex;
 }
 
 function recordKindAtObject(
