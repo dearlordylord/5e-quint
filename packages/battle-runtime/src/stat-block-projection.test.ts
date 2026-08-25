@@ -7,7 +7,6 @@ import {
   battleCreatureInitFromStatBlock,
   battleId,
   combatantId,
-  discoverBattleActCandidates,
   discoverBattleActsWithStatBlockProjectionIssues,
   initiativeScore,
   statBlockProjectionIssues,
@@ -42,7 +41,7 @@ function startedStatBlock(source: ReturnType<typeof statBlockRecord>) {
 }
 
 function mechanicalActs(session: ReturnType<typeof startedStatBlock>) {
-  return discoverBattleActCandidates(session.state).map(
+  return discoverBattleActsWithStatBlockProjectionIssues(session).acts.map(
     ({ subject, initialHoles }) => ({ subject, initialHoles }),
   );
 }
