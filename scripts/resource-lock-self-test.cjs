@@ -32,7 +32,10 @@ const retiredLockNames = [
   "ralph-broad-workspace-check.lock",
   "ralph-mbt.lock",
 ];
-const waitTimeoutMs = 20_000;
+// Fixture wrappers compile the native supervisor before writing their probe
+// markers. Parallel workspace checks can delay that startup without changing
+// the lock protocol, so the self-test uses a generous diagnostic wait budget.
+const selfTestWaitTimeoutMs = 60_000;
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
@@ -52,7 +55,7 @@ function waitFor(predicate, description) {
         resolve();
         return;
       }
-      if (Date.now() - startedAt >= waitTimeoutMs) {
+      if (Date.now() - startedAt >= selfTestWaitTimeoutMs) {
         reject(new Error(`Timed out waiting for ${description}.`));
         return;
       }
@@ -71,7 +74,7 @@ function waitForResult(resultProvider, description) {
         resolve(result);
         return;
       }
-      if (Date.now() - startedAt >= waitTimeoutMs) {
+      if (Date.now() - startedAt >= selfTestWaitTimeoutMs) {
         reject(new Error(`Timed out waiting for ${description}.`));
         return;
       }
@@ -125,7 +128,7 @@ function waitForExit(child, description) {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(new Error(`Timed out waiting for ${description} to exit.`));
-    }, waitTimeoutMs);
+    }, selfTestWaitTimeoutMs);
     child.once("exit", (code) => {
       clearTimeout(timeout);
       resolve(code);
