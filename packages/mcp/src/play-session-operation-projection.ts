@@ -239,7 +239,10 @@ type NoHoleOperationName =
   | typeof characterToolNames.queryCharacterSession
   | typeof diceToolNames.rollDice
   | typeof playSessionToolNames.create
-  | typeof playSessionToolNames.read;
+  | typeof playSessionToolNames.read
+  | typeof playSessionToolNames.save
+  | typeof playSessionToolNames.listSaved
+  | typeof playSessionToolNames.deleteSaved;
 
 const NO_HOLE_OPERATION_NAMES = [
   battleToolNames.selectStatBlock,
@@ -250,6 +253,9 @@ const NO_HOLE_OPERATION_NAMES = [
   diceToolNames.rollDice,
   playSessionToolNames.create,
   playSessionToolNames.read,
+  playSessionToolNames.save,
+  playSessionToolNames.listSaved,
+  playSessionToolNames.deleteSaved,
 ] as const satisfies readonly NoHoleOperationName[];
 
 function isNoHoleOperationName(

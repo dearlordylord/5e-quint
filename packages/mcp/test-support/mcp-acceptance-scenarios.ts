@@ -18,6 +18,7 @@ import { unitId, type Skill } from "@dnd/shared/game-facts";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { characterIdFromDraftId } from "../src/session-store.ts";
+import { decodeGuestAccessGrant } from "../src/play-session-access.ts";
 import { CONTENT_TOOL_NAMES } from "../src/content-tools.ts";
 import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
 
@@ -77,7 +78,15 @@ const statelessToolNames = new Set([
   "create_play_session",
   ...CONTENT_TOOL_NAMES,
 ]);
-const playSessionIdByClient = new WeakMap<Client, Promise<string>>();
+type AcceptancePlaySessionAccess = {
+  readonly playSessionId: string;
+  readonly guestAccessGrant: string;
+};
+const playSessionAccessByClient = new WeakMap<
+  Client,
+  Promise<AcceptancePlaySessionAccess>
+>();
+const guestAccessGrantByPlaySessionId = new Map<string, string>();
 
 const levelFourWizardProgressionOptionId =
   "12:class_wizard|12:class_wizard|12:class_wizard|12:class_wizard:level_4:fixed_hp_gain";
@@ -512,6 +521,13 @@ export async function verifyToolContract(client: Client) {
       playSessionId: "play-session:00000000-0000-4000-8000-000000000000",
       operation: { name: "start_battle", result: operationResult },
       projection: operationResult.session,
+      tenure: {
+        tag: "guest",
+        persistence: "temporary",
+        inactiveExpiresAt: "2026-09-01T00:00:00.000Z",
+        pressureCleanupEligibleAt: "2026-08-26T00:00:00.000Z",
+        save: { tag: "available" },
+      },
       unresolvedInputs: [],
       nextOperations:
         battleState.tag === "initialInitiativeSetup"
@@ -3810,7 +3826,7 @@ async function fillBaseCharacter(
 }
 
 async function callTool(client: Client, name: string, args: JsonObject) {
-  const routedArgs = await playSessionRoutedArgs(client, name, args);
+  const routedArgs = await acceptancePlaySessionRoutedArgs(client, name, args);
   const result = await client.callTool({
     name,
     arguments: battleToolWireArgs(name, routedArgs),
@@ -3827,7 +3843,7 @@ async function callTool(client: Client, name: string, args: JsonObject) {
 }
 
 async function expectToolError(client: Client, name: string, args: JsonObject) {
-  const routedArgs = await playSessionRoutedArgs(client, name, args);
+  const routedArgs = await acceptancePlaySessionRoutedArgs(client, name, args);
   const result = await client.callTool({
     name,
     arguments: battleToolWireArgs(name, routedArgs),
@@ -3836,20 +3852,41 @@ async function expectToolError(client: Client, name: string, args: JsonObject) {
   return operationPayload(parseToolPayload(result, name), name);
 }
 
-async function playSessionRoutedArgs(
+export async function acceptancePlaySessionRoutedArgs(
   client: Client,
   name: string,
   args: JsonObject,
 ): Promise<JsonObject> {
   if (statelessToolNames.has(name)) return args;
-  return { ...args, playSessionId: await playSessionId(client) };
+  if (typeof args.playSessionId === "string") {
+    const retainedGrant = guestAccessGrantByPlaySessionId.get(
+      args.playSessionId,
+    );
+    if (retainedGrant !== undefined) {
+      return { ...args, guestAccessGrant: retainedGrant };
+    }
+  }
+  const access = await playSessionAccess(client);
+  return {
+    ...args,
+    guestAccessGrant: access.guestAccessGrant,
+    ...(args.playSessionId === undefined
+      ? { playSessionId: access.playSessionId }
+      : {}),
+  };
 }
 
 function playSessionId(client: Client): Promise<string> {
-  const retained = playSessionIdByClient.get(client);
+  return playSessionAccess(client).then(({ playSessionId }) => playSessionId);
+}
+
+function playSessionAccess(
+  client: Client,
+): Promise<AcceptancePlaySessionAccess> {
+  const retained = playSessionAccessByClient.get(client);
   if (retained !== undefined) return retained;
   const created = createPlaySession(client);
-  playSessionIdByClient.set(client, created);
+  playSessionAccessByClient.set(client, created);
   return created;
 }
 
@@ -3857,7 +3894,27 @@ export function acceptancePlaySessionId(client: Client): Promise<string> {
   return playSessionId(client);
 }
 
-async function createPlaySession(client: Client): Promise<string> {
+export async function acceptancePlaySessionCaller(client: Client) {
+  const access = await playSessionAccess(client);
+  const decoded = decodeGuestAccessGrant(access.guestAccessGrant);
+  if (Either.isLeft(decoded)) throw new Error(decoded.left);
+  return { tag: "guest" as const, guestAccessGrant: decoded.right };
+}
+
+export function retainAcceptancePlaySessionAccess(
+  client: Client,
+  access: AcceptancePlaySessionAccess,
+): void {
+  playSessionAccessByClient.set(client, Promise.resolve(access));
+  guestAccessGrantByPlaySessionId.set(
+    access.playSessionId,
+    access.guestAccessGrant,
+  );
+}
+
+async function createPlaySession(
+  client: Client,
+): Promise<AcceptancePlaySessionAccess> {
   const result = await client.callTool({
     name: "create_play_session",
     arguments: {},
@@ -3871,7 +3928,17 @@ async function createPlaySession(client: Client): Promise<string> {
   if (typeof playSessionId !== "string") {
     throw new Error("create_play_session did not return a string handle");
   }
-  return playSessionId;
+  const operation = payload.operation;
+  if (!isJsonObject(operation) || !isJsonObject(operation.result)) {
+    throw new Error("create_play_session omitted its operation result");
+  }
+  const access = operation.result.access;
+  if (!isJsonObject(access) || typeof access.guestAccessGrant !== "string") {
+    throw new Error("create_play_session omitted its guest access grant");
+  }
+  const retained = { playSessionId, guestAccessGrant: access.guestAccessGrant };
+  retainAcceptancePlaySessionAccess(client, retained);
+  return retained;
 }
 
 function operationPayload(payload: unknown, name: string): JsonObject {
@@ -3905,12 +3972,26 @@ function parseToolPayload(result: unknown, name: string) {
   const textPayload = JSON.parse((first as { readonly text: string }).text);
   if (structuredContent !== undefined) {
     assert.deepEqual(
-      structuredContent,
+      redactGuestAccessGrants(structuredContent),
       textPayload,
-      `${name} structuredContent must match text JSON`,
+      `${name} structuredContent must match text JSON after secret redaction`,
     );
+    return structuredContent;
   }
   return textPayload;
+}
+
+function redactGuestAccessGrants(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(redactGuestAccessGrants);
+  if (!isJsonObject(value)) return value;
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nested]) => [
+      key,
+      key === "guestAccessGrant"
+        ? "[REDACTED]"
+        : redactGuestAccessGrants(nested),
+    ]),
+  );
 }
 
 function choiceFillFromReturnedHole(

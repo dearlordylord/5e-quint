@@ -216,16 +216,27 @@ describe("structured MCP bulk dice roller", () => {
         throw new Error("create_play_session returned no Play Session id.");
       }
       const playSessionId = created.structuredContent.playSessionId;
+      const guestAccessGrant = creationGuestAccessGrant(
+        created.structuredContent,
+      );
       const valid = await client.callTool({
         name: "roll_dice",
-        arguments: { playSessionId, groups: [{ dice: 2, dieSize: 6 }] },
+        arguments: {
+          playSessionId,
+          guestAccessGrant,
+          groups: [{ dice: 2, dieSize: 6 }],
+        },
       });
       expect(valid.isError, JSON.stringify(valid)).not.toBe(true);
       expect(validateOutput(valid.structuredContent).valid).toBe(true);
 
       const missingCorrelation = await client.callTool({
         name: "roll_dice",
-        arguments: { playSessionId, groups: [{ dice: 1, dieSize: 4 }] },
+        arguments: {
+          playSessionId,
+          guestAccessGrant,
+          groups: [{ dice: 1, dieSize: 4 }],
+        },
       });
       expect(missingCorrelation.isError).not.toBe(true);
 
@@ -233,6 +244,7 @@ describe("structured MCP bulk dice roller", () => {
         name: "roll_dice",
         arguments: {
           playSessionId,
+          guestAccessGrant,
           groups: [{ dice: 1, dieSize: 4 }],
           correlationId: "00000000-0000-4000-8000-000000000000",
         },
@@ -249,7 +261,7 @@ describe("structured MCP bulk dice roller", () => {
       ]) {
         const invalid = await client.callTool({
           name: "roll_dice",
-          arguments: { playSessionId, groups },
+          arguments: { playSessionId, guestAccessGrant, groups },
         });
         expect(invalid.isError).toBe(true);
       }
@@ -258,6 +270,7 @@ describe("structured MCP bulk dice roller", () => {
         name: "roll_dice",
         arguments: {
           playSessionId,
+          guestAccessGrant,
           groups: [
             ...Array.from(
               { length: MAX_TOTAL_DICE / MAX_DICE_PER_GROUP },
@@ -277,6 +290,7 @@ describe("structured MCP bulk dice roller", () => {
         name: "roll_dice",
         arguments: {
           playSessionId,
+          guestAccessGrant,
           groups: Array.from({ length: MAX_DICE_GROUPS_PER_CALL + 1 }, () => ({
             dice: 1,
             dieSize: 1,
@@ -289,6 +303,23 @@ describe("structured MCP bulk dice roller", () => {
     }
   }, 30_000);
 });
+
+function creationGuestAccessGrant(
+  creation: Readonly<Record<string, unknown>>,
+): string {
+  if (!isJsonObject(creation.operation)) {
+    throw new Error("create_play_session omitted its operation.");
+  }
+  const result = creation.operation.result;
+  if (!isJsonObject(result) || !isJsonObject(result.access)) {
+    throw new Error("create_play_session omitted its access result.");
+  }
+  const grant = result.access.guestAccessGrant;
+  if (typeof grant !== "string") {
+    throw new Error("create_play_session omitted its guest access grant.");
+  }
+  return grant;
+}
 
 function isJsonObject(
   value: unknown,

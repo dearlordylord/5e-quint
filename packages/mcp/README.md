@@ -27,27 +27,34 @@ character drafts, finalized Character Builds, durable post-battle character
 state, selected Stat Block identity, durable battle state, and transient battle
 fills, plus its own Admin Mirror publication.
 
-The protocol host keeps those mutable facts in isolated live-application **Play
-Sessions**; they are not durable across process restart. `create_play_session` returns a branded `playSessionId`,
-`read_play_session` resumes a live session, and every character or battle tool
-requires the handle. Calls for one handle are serialized; different handles
-have independent stores and queues while sharing the application services'
-installed catalogs and support profile. The protocol host retains only those
-immutable application services, never a mutable anonymous session. A valid
-handle not present in the live
-process returns the single typed `playSessionUnavailable` result with guidance
-to create and rebuild a new session. It intentionally does not infer whether
-the handle expired, was evicted, came from another process, or was otherwise
-lost.
+The protocol host keeps those mutable facts in isolated **Play Sessions**.
+`create_play_session` returns a branded `playSessionId`; an anonymous creation
+also returns its opaque guest access grant. The agent carries both values for
+every stateful operation without asking the user to manage credentials. An
+authenticated creation is saved by default. Calls for one handle are
+serialized; different handles have independent stores and queues while sharing
+the installed catalogs and support profile.
 
-This paragraph describes the current developer-mode implementation. The
-accepted public product boundary is owned by
-[ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md):
-signed-out journeys are temporary Guest Play Sessions, saving atomically makes
-the same session a single-principal Saved Play Session, and both use one
-canonical recoverable representation. Public persistence work must replace this
-in-memory registry directly rather than retain it beside a hosting-specific
-store.
+The provider-neutral public boundary is owned by
+[ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md).
+The HTTP composition stores one canonical recoverable representation in
+SQLite. Guest sessions expire after seven inactive days and may be removed
+oldest-first under capacity pressure only after 24 inactive hours. Saving via
+`save_play_session` atomically replaces guest-capability ownership with one
+OAuth principal; the stale grant no longer authorizes the session. Saved
+sessions expire after 90 inactive days, can be explicitly listed and resumed,
+and can be permanently deleted. Absence always returns the same typed
+`playSessionUnavailable` result, without a tombstone that guesses why the
+session is gone.
+
+Every result keeps the compact guest-or-saved tenure status discoverable. The
+longer temporary-session guidance is emitted when a guest session is created.
+When OAuth is available, `save_play_session` joins the relevant next operations
+after character finalization or Battle closeout. Ordinary operations do not
+repeat that guidance. When a user expresses an intention to return, the agent
+can offer the same standard save operation if the projected availability says
+it is available; authentication is needed only if the user accepts that offer.
+OAuth-free hosts instead project that saving is unavailable.
 
 The public HTTP composition has the first recoverable slice of that boundary.
 Its SQLite record contains one format version, the Play Session's random-stream
@@ -60,6 +67,14 @@ record, applies the operation, and commits its input only if the expected
 storage revision still owns the record; a conflict reloads and retries against
 the new canonical history. Admin Mirror publication is disabled during replay
 and recreated from the committed current projection.
+
+Databases created before the ownership boundary contain recoverable commands
+but no principal or guest capability that can authorize them safely. On first
+open, that five-column table is atomically renamed to
+`retired_unowned_play_sessions_v1`; a new owned-session table is created and the
+old handles become uniformly unavailable. The retired rows remain local for an
+operator-controlled disposition instead of being assigned an invented owner or
+silently deleted.
 
 The first public acceptance witness creates a Guest Play Session, creates and
 mutates one Character Draft, replaces the HTTP server and SQLite connection,
@@ -85,8 +100,13 @@ Character Session roster with no active Battle. The serialized random seed and
 retained command prefix also have a bounded property test over arbitrary valid
 dice-group sequences: two independently reconstructed owners produce identical
 raw faces for every prefix without a parallel dice cursor.
-Authentication, guest grants, retention, and deletion remain the later
-public-boundary increment defined by ADR 0007.
+The boundary stores only a digest of a guest grant, compares presented grants
+in constant time, and never returns another user's session through list,
+resume, save, or delete. The default limits are 1,000 retained guest sessions,
+20 saved sessions per principal, 10,000 retained commands per session, and 120
+stateful requests per minute per capability or principal. Limit failures are
+typed and rate failures include a retry delay. HTTP bodies over 1 MiB are
+rejected before MCP parsing.
 
 Run the provider-neutral Node HTTP entrypoint with an explicit database path:
 
@@ -98,6 +118,28 @@ DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
 `DND_MCP_HOST` defaults to `0.0.0.0` and `PORT` defaults to `8787`. Stdio
 development continues to use `pnpm --filter @dnd/mcp dev`; Secure MCP Tunnel
 continues to launch that stdio entrypoint rather than the public database.
+Guest play and stateless catalog discovery need no OAuth configuration. To
+enable saved-session creation, save, list, resume, and delete, set the complete
+provider-neutral OAuth configuration; a partial configuration fails startup:
+
+```sh
+DND_OAUTH_RESOURCE_URL=https://oracle.example.test/mcp \
+DND_OAUTH_AUTHORIZATION_SERVER=https://identity.example.test \
+DND_OAUTH_ISSUER=https://identity.example.test \
+DND_OAUTH_AUDIENCE=dnd-oracle \
+DND_OAUTH_JWKS_URL=https://identity.example.test/.well-known/jwks.json \
+DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
+  pnpm --filter @dnd/mcp serve:http
+```
+
+The server publishes OAuth protected-resource metadata at
+`/.well-known/oauth-protected-resource`. It verifies token signature, issuer,
+audience, expiry, subject, and the `play-sessions` scope on every bearer
+request. The OAuth provider and hosting provider are not application owners and
+can be replaced without changing the session model.
+When OAuth is not configured, the server advertises anonymous security only and
+omits the save/list/delete tools instead of offering capabilities that cannot
+run.
 The executable parity test starts both real transports, compares the server
 instructions and complete advertised tool contracts, compares representative
 static and stateful results, and runs the complete newcomer journey through
@@ -109,6 +151,11 @@ without changing the application or transport composition:
 DND_MCP_STAGING_URL=https://staging.example.test/mcp \
   pnpm --filter @dnd/mcp verify:staging
 ```
+
+The provider-neutral OCI image, isolated staging/production Compose boundary,
+deploy/rollback automation, redacted observability contract, budget dimensions,
+and incident procedures live in the
+[public MCP operations runbook](../../operations/public-mcp/README.md).
 
 Stateful protocol results use one contextual envelope derived from the
 operation result and canonical session snapshot. It reports the typed operation

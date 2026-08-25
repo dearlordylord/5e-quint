@@ -13,6 +13,9 @@ export function battleToolWireArgs(name: string, args: unknown): unknown {
       ...(args.playSessionId === undefined
         ? {}
         : { playSessionId: args.playSessionId }),
+      ...(args.guestAccessGrant === undefined
+        ? {}
+        : { guestAccessGrant: args.guestAccessGrant }),
       subject: args.subject,
       fill: args.fill,
     };
@@ -22,6 +25,9 @@ export function battleToolWireArgs(name: string, args: unknown): unknown {
       ...(args.playSessionId === undefined
         ? {}
         : { playSessionId: args.playSessionId }),
+      ...(args.guestAccessGrant === undefined
+        ? {}
+        : { guestAccessGrant: args.guestAccessGrant }),
       subject: args.subject,
       ...(args.reactionSpellTargetFacts === undefined
         ? {}

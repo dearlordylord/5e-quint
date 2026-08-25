@@ -12,6 +12,8 @@ import { afterEach, describe, expect, test } from "vitest";
 
 import {
   acceptancePlaySessionId,
+  acceptancePlaySessionRoutedArgs,
+  retainAcceptancePlaySessionAccess,
   attackRollFill,
   attackSubjectFromActs,
   attackTargetFill,
@@ -288,7 +290,7 @@ describe("recoverable Play Session protocol", () => {
     const playSessionId = stringField(created, "playSessionId");
     repository.close();
     try {
-      const failed = await connection.client.callTool({
+      const failed = await callToolWithAccess(connection.client, {
         name: "read_play_session",
         arguments: { playSessionId },
       });
@@ -429,7 +431,7 @@ describe("recoverable Play Session protocol", () => {
     const recoveredRepository = openRepository(databasePath);
     const recoveredConnection = await connectClient(recoveredRepository);
     try {
-      const failed = await recoveredConnection.client.callTool({
+      const failed = await callToolWithAccess(recoveredConnection.client, {
         name: "read_play_session",
         arguments: { playSessionId },
       });
@@ -517,7 +519,7 @@ describe("recoverable Play Session protocol", () => {
       });
 
       const finalize = (client: Client) =>
-        client.callTool({
+        callToolWithAccess(client, {
           name: "battle_lifecycle",
           arguments: {
             playSessionId: setupPlaySessionId,
@@ -621,7 +623,7 @@ describe("recoverable Play Session protocol", () => {
     const firstResolutionClient = await connectHttpClient(resolutionEndpoint);
     const secondResolutionClient = await connectHttpClient(resolutionEndpoint);
     const fillAttackRoll = (client: Client) =>
-      client.callTool({
+      callToolWithAccess(client, {
         name: "fill_battle_hole",
         arguments: {
           playSessionId,
@@ -663,7 +665,7 @@ describe("recoverable Play Session protocol", () => {
       throw new Error("Expected the server-correlated damage roll.");
     }
     const damageResults = arrayField(rolledGroup, "results");
-    const resolved = await callStructuredTool(firstResolutionClient, {
+    const damageFilled = await callStructuredTool(firstResolutionClient, {
       name: "fill_battle_hole",
       arguments: {
         playSessionId,
@@ -673,6 +675,32 @@ describe("recoverable Play Session protocol", () => {
         ]),
       },
     });
+    const damageResult = objectField(operationResult(damageFilled), "result");
+    if (damageResult.tag === "needsHoles") {
+      expect(arrayField(damageResult, "holes")).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "attackDamageDisposition",
+            holeId: "battle:attack:damage-disposition",
+          }),
+        ]),
+      );
+    }
+    const resolved =
+      damageResult.tag === "needsHoles"
+        ? await callStructuredTool(firstResolutionClient, {
+            name: "fill_battle_hole",
+            arguments: {
+              playSessionId,
+              subject,
+              fill: {
+                kind: "attackDamageDisposition",
+                holeId: "battle:attack:damage-disposition",
+                value: { kind: "ordinaryDamage" },
+              },
+            },
+          })
+        : damageFilled;
     expect(operationResult(resolved)).toMatchObject({
       result: { tag: "resolved" },
     });
@@ -841,12 +869,45 @@ async function callStructuredTool(
     readonly arguments: Record<string, unknown>;
   },
 ): Promise<Readonly<Record<string, unknown>>> {
-  const result = await client.callTool(input);
+  const result = await client.callTool({
+    ...input,
+    arguments: await acceptancePlaySessionRoutedArgs(
+      client,
+      input.name,
+      input.arguments,
+    ),
+  });
   expect(result.isError).not.toBe(true);
   if (!isJsonObject(result.structuredContent)) {
     throw new Error(`${input.name} did not return an object payload.`);
   }
+  if (input.name === "create_play_session") {
+    const operation = objectField(result.structuredContent, "operation");
+    const creation = objectField(operation, "result");
+    const access = objectField(creation, "access");
+    retainAcceptancePlaySessionAccess(client, {
+      playSessionId: stringField(result.structuredContent, "playSessionId"),
+      guestAccessGrant: stringField(access, "guestAccessGrant"),
+    });
+  }
   return result.structuredContent;
+}
+
+async function callToolWithAccess(
+  client: Client,
+  input: {
+    readonly name: string;
+    readonly arguments: Record<string, unknown>;
+  },
+) {
+  return client.callTool({
+    ...input,
+    arguments: await acceptancePlaySessionRoutedArgs(
+      client,
+      input.name,
+      input.arguments,
+    ),
+  });
 }
 
 function operationResult(

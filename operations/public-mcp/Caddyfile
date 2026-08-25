@@ -1,0 +1,8 @@
+__DND_MCP_DOMAIN__ {
+  encode zstd gzip
+  reverse_proxy 127.0.0.1:__DND_MCP_LOOPBACK_PORT__
+  log {
+    output stdout
+    format json
+  }
+}

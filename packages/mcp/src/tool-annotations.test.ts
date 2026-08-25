@@ -15,6 +15,11 @@ const expectedAnnotations = {
   create_play_session:
     NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   read_play_session: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  save_play_session:
+    NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  list_saved_play_sessions: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  delete_saved_play_session:
+    DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   describe_mcp_workflow: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   list_stat_blocks: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   list_catalog_units: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
@@ -44,6 +49,9 @@ const expectedAnnotationByName = new Map(Object.entries(expectedAnnotations));
 const expectedTitles = {
   create_play_session: "Create Play Session",
   read_play_session: "Read Play Session",
+  save_play_session: "Save Play Session",
+  list_saved_play_sessions: "List Saved Play Sessions",
+  delete_saved_play_session: "Delete Saved Play Session",
   describe_mcp_workflow: "Describe MCP Workflow",
   list_stat_blocks: "List Stat Blocks",
   list_catalog_units: "List Catalog Units",
@@ -85,7 +93,12 @@ describe("MCP tool annotations", () => {
 
       const listedTools = (await client.listTools()).tools;
       expect(listedTools.map((tool) => tool.name)).toEqual(
-        Object.keys(expectedAnnotations),
+        Object.keys(expectedAnnotations).filter(
+          (name) =>
+            name !== "save_play_session" &&
+            name !== "list_saved_play_sessions" &&
+            name !== "delete_saved_play_session",
+        ),
       );
       expect(new Set(listedTools.map((tool) => tool.title)).size).toBe(
         listedTools.length,

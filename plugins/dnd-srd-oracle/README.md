@@ -37,16 +37,17 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 3. Open **Plugins**, choose **+**, enter the user-facing name and description,
    select the connection method, and create the connection. For a public
    endpoint, enter the full `/mcp` URL; for a tunnel, select **Tunnel** and
-   choose or enter its `tunnel_id`. For this private developer-mode 5.5e SRD Oracle
-   evaluation, choose **No authentication** in the MCP/app authentication
-   setting: do not configure OAuth or a user-facing API key. This no-auth
-   choice is scoped to this private evaluation and is not a public
-   multi-user deployment configuration. The provider-neutral public target is
-   owned by
+   choose or enter its `tunnel_id`. For the local tunnel, choose **No
+   authentication**: guest journeys remain fully functional, and the server
+   reports that saving is unavailable because that stdio process has no OAuth
+   verifier. It does not advertise the saved-session tools. Do not configure a
+   user-facing API key.
+   A public endpoint may instead expose standard MCP OAuth for saved-session
+   tools while keeping catalog discovery and guest play anonymous. The
+   provider-neutral contract is owned by
    [ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md):
    guest play remains available without sign-in, while saving and recovery use
-   standard MCP OAuth. Do not apply that target to installed evidence until the
-   public persistence and authorization increments are executable.
+   standard MCP OAuth.
 4. Review the discovered tool names, descriptions, schemas, and annotations.
    Resolve transport, initialization, schema, or authentication errors before
    evaluating selection.

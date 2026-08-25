@@ -1,0 +1,8 @@
+[Unit]
+Description=DND Oracle monthly budget measurement (__DND_MCP_ENVIRONMENT__)
+After=docker.service network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=__DND_MCP_OPERATIONS_DIRECTORY__/__DND_MCP_ENVIRONMENT__/current
+ExecStart=__DND_MCP_OPERATIONS_DIRECTORY__/__DND_MCP_ENVIRONMENT__/current/budget-monitor.sh __DND_MCP_OPERATIONS_DIRECTORY__/__DND_MCP_ENVIRONMENT__/current/environment.env
