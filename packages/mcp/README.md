@@ -40,6 +40,16 @@ to create and rebuild a new session. It intentionally does not infer whether
 the handle expired, was evicted, came from another process, or was otherwise
 lost.
 
+This paragraph describes the current developer-mode implementation. The
+accepted public product boundary is owned by
+[ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md):
+signed-out journeys are temporary Guest Play Sessions, saving atomically makes
+the same session a single-principal Saved Play Session, and both use one
+canonical recoverable representation. Public persistence work must replace this
+in-memory registry directly rather than retain it beside a hosting-specific
+store. Until that work lands, tools and tests must continue to report only the
+process-lifetime facts the executable server can prove.
+
 Stateful protocol results use one contextual envelope derived from the
 operation result and canonical session snapshot. It reports the typed operation
 result, current projection, unresolved inputs, relevant next operations, and

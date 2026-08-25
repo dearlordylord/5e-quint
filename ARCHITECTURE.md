@@ -370,13 +370,24 @@ registry to compensate for a missing runtime or Surface shape.
 
 ## MCP Composition
 
-`@dnd/mcp` is the tool-facing composition package and the sole owner of live
-Play Session routing. The protocol host creates isolated process-lifetime
-session stores behind branded handles, serializes calls per handle, and shares
-one immutable application-services value across sessions. Only registry-owned
-Play Session roots contain mutable stores and Admin Mirror publications; the
-protocol host retains no anonymous session root. Plugin Skills orchestrate these
-operations but own no application or rules state.
+`@dnd/mcp` is the tool-facing composition package and the sole owner of Play
+Session routing. The current developer-mode protocol host creates isolated
+process-lifetime session stores behind branded handles, serializes calls per
+handle, and shares one immutable application-services value across sessions.
+Only registry-owned Play Session roots contain mutable stores and Admin Mirror
+publications; the protocol host retains no anonymous session root. Plugin Skills
+orchestrate these operations but own no application or rules state.
+
+The accepted public tenure and ownership boundary is defined by
+[ADR 0007](docs/adr/0007-public-play-session-tenure-and-ownership.md). Public
+Play Sessions begin as Guest Play Sessions with an access grant distinct from
+their correlation identity, so the complete experience remains available
+without sign-in. Saving atomically changes the same canonical session into a
+single-principal Saved Play Session through standard MCP OAuth. Hosting
+transports and persistence integrations implement that boundary without
+becoming alternate session owners. Until the public persistence increments
+land, the process-lifetime behavior above remains the truth of the executable
+developer-mode server.
 
 The MCP runtime path composes:
 

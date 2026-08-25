@@ -40,7 +40,12 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
    evaluation, choose **No authentication** in the MCP/app authentication
    setting: do not configure OAuth or a user-facing API key. This no-auth
    choice is scoped to this private evaluation and is not a public
-   multi-user deployment configuration.
+   multi-user deployment configuration. The provider-neutral public target is
+   owned by
+   [ADR 0007](../../docs/adr/0007-public-play-session-tenure-and-ownership.md):
+   guest play remains available without sign-in, while saving and recovery use
+   standard MCP OAuth. Do not apply that target to installed evidence until the
+   public persistence and authorization increments are executable.
 4. Review the discovered tool names, descriptions, schemas, and annotations.
    Resolve transport, initialization, schema, or authentication errors before
    evaluating selection.
