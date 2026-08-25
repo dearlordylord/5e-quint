@@ -5763,10 +5763,6 @@ export const StandaloneStatBlockSchema = Schema.Struct({
   passivePerception: NonNegativeIntegerSchema,
   gear: optionalExact(nonEmpty(StatBlockGearEntrySchema)),
   communication: StatBlockCommunicationSchema,
-  actions: CreatureStatBlockProjectionFields.actions,
-  bonusActions: CreatureStatBlockProjectionFields.bonusActions,
-  reactions: CreatureStatBlockProjectionFields.reactions,
-  legendaryActions: CreatureStatBlockProjectionFields.legendaryActions,
   traits: CreatureStatBlockProjectionFields.traits,
 });
 
