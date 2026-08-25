@@ -3,7 +3,9 @@
     "check-surface-content-json-sync.ts",
     "check-surface-content-json-sync.test.ts",
     "generate-surface-publication.ts",
-    "srd-surface-publication-artifacts.ts"
+    "srd-surface-publication-artifacts.ts",
+    "srd521-stat-block-parity.ts",
+    "srd521-stat-block-parity.test.ts"
   ],
   "compilerOptions": {
     "target": "ES2022",
