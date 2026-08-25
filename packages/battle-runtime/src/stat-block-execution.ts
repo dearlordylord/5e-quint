@@ -133,6 +133,34 @@ type AdmittedStatBlock = {
   readonly occurrences: AdmittedStatBlockOccurrences;
 };
 
+type UnsupportedStatBlockActionProjectionShape = Extract<
+  StatBlockActionProjectionShape,
+  "save" | "support" | "special"
+>;
+
+type UnsupportedActionProjectionSource =
+  | {
+      readonly shape: Extract<
+        UnsupportedStatBlockActionProjectionShape,
+        "save"
+      >;
+      readonly occurrences: CreatureActions["saves"];
+    }
+  | {
+      readonly shape: Extract<
+        UnsupportedStatBlockActionProjectionShape,
+        "support"
+      >;
+      readonly occurrences: CreatureActions["supports"];
+    }
+  | {
+      readonly shape: Extract<
+        UnsupportedStatBlockActionProjectionShape,
+        "special"
+      >;
+      readonly occurrences: CreatureActions["specials"];
+    };
+
 export function statBlockExecutionAdmissionCohort<
   TStatBlock extends BattleStatBlockExecutionSource,
 >(
@@ -350,48 +378,114 @@ function appendActionProjectionIssues(
   admitted: AdmittedStatBlockOccurrences,
 ): void {
   if (actions === undefined) return;
-  for (const attack of actions.attacks ?? []) {
-    if (
-      !admitted.attacks.some(
-        (occurrence) =>
-          occurrence.section === section && occurrence.source === attack,
-      )
-    ) {
-      issues.push(actionProjectionIssue(section, "attack"));
+  appendAttackProjectionIssues(issues, section, actions.attacks, admitted);
+  appendMultiattackProjectionIssues(
+    issues,
+    section,
+    actions.multiattacks,
+    admitted,
+  );
+  appendUnsupportedActionProjectionIssues(issues, section, {
+    shape: "save",
+    occurrences: actions.saves,
+  });
+  appendUnsupportedActionProjectionIssues(issues, section, {
+    shape: "support",
+    occurrences: actions.supports,
+  });
+  appendActionOptionProjectionIssues(
+    issues,
+    section,
+    actions.actionOptions,
+    admitted,
+  );
+  appendUnsupportedActionProjectionIssues(issues, section, {
+    shape: "special",
+    occurrences: actions.specials,
+  });
+}
+
+function appendAttackProjectionIssues(
+  issues: StatBlockProjectionIssue[],
+  section: StatBlockActionProjectionSection,
+  attacks: readonly CreatureNamedAttackRoll[] | undefined,
+  admitted: AdmittedStatBlockOccurrences,
+): void {
+  for (const attack of attacks ?? []) {
+    if (isAdmittedAttackInSection(admitted, section, attack)) continue;
+    issues.push(actionProjectionIssue(section, "attack"));
+  }
+}
+
+function isAdmittedAttackInSection(
+  admitted: AdmittedStatBlockOccurrences,
+  section: StatBlockActionProjectionSection,
+  attack: CreatureNamedAttackRoll,
+): boolean {
+  return admitted.attacks.some(
+    (occurrence) =>
+      occurrence.section === section && occurrence.source === attack,
+  );
+}
+
+function appendMultiattackProjectionIssues(
+  issues: StatBlockProjectionIssue[],
+  section: StatBlockActionProjectionSection,
+  multiattacks: readonly CreatureNamedMultiattack[] | undefined,
+  admitted: AdmittedStatBlockOccurrences,
+): void {
+  for (const multiattack of multiattacks ?? []) {
+    if (isAdmittedMultiattackInSection(admitted, section, multiattack)) {
+      continue;
     }
+    issues.push(actionProjectionIssue(section, "multiattack"));
   }
-  for (const multiattack of actions.multiattacks ?? []) {
-    if (
-      section !== "actions" ||
-      !admitted.multiattacks.some(
-        (occurrence) => occurrence.source === multiattack,
-      )
-    ) {
-      issues.push(actionProjectionIssue(section, "multiattack"));
+}
+
+function isAdmittedMultiattackInSection(
+  admitted: AdmittedStatBlockOccurrences,
+  section: StatBlockActionProjectionSection,
+  multiattack: CreatureNamedMultiattack,
+): boolean {
+  if (section !== "actions") return false;
+  return admitted.multiattacks.some(
+    (occurrence) => occurrence.source === multiattack,
+  );
+}
+
+function appendUnsupportedActionProjectionIssues(
+  issues: StatBlockProjectionIssue[],
+  section: StatBlockActionProjectionSection,
+  source: UnsupportedActionProjectionSource,
+): void {
+  source.occurrences?.forEach(() =>
+    issues.push(actionProjectionIssue(section, source.shape)),
+  );
+}
+
+function appendActionOptionProjectionIssues(
+  issues: StatBlockProjectionIssue[],
+  section: StatBlockActionProjectionSection,
+  actionOptions: readonly CreatureNamedActionOption[] | undefined,
+  admitted: AdmittedStatBlockOccurrences,
+): void {
+  for (const actionOption of actionOptions ?? []) {
+    if (isAdmittedActionOptionInSection(admitted, section, actionOption)) {
+      continue;
     }
+    issues.push(actionProjectionIssue(section, "actionOption"));
   }
-  for (const save of actions.saves ?? []) {
-    void save;
-    issues.push(actionProjectionIssue(section, "save"));
-  }
-  for (const support of actions.supports ?? []) {
-    void support;
-    issues.push(actionProjectionIssue(section, "support"));
-  }
-  for (const actionOption of actions.actionOptions ?? []) {
-    if (
-      section !== "bonusActions" ||
-      !admitted.bonusActions.some(
-        (occurrence) => occurrence.source === actionOption,
-      )
-    ) {
-      issues.push(actionProjectionIssue(section, "actionOption"));
-    }
-  }
-  for (const special of actions.specials ?? []) {
-    void special;
-    issues.push(actionProjectionIssue(section, "special"));
-  }
+}
+
+function isAdmittedActionOptionInSection(
+  admitted: AdmittedStatBlockOccurrences,
+  section: StatBlockActionProjectionSection,
+  actionOption: CreatureNamedActionOption,
+): boolean {
+  if (section !== "bonusActions") return false;
+  return admitted.bonusActions.some(
+    (occurrence) => occurrence.source === actionOption,
+  );
 }
 
 function actionProjectionIssue(
