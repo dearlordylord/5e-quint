@@ -481,6 +481,50 @@ export const continueBattle: PlayerContinuation = (context) => {
         ],
         supervisorOptions,
       );
+      const evidenceDirectory = join(trustedDestination, "evidence");
+      const evidenceBeforeRejectedInit = filesBelow(evidenceDirectory)
+        .map((path) => [path, readFileSync(path)] as const)
+        .sort(([left], [right]) => left.localeCompare(right));
+      const playerObservationBeforeRejectedInit = readFileSync(
+        join(destination, "OBSERVATION.json"),
+      );
+      let rejectedInit: unknown;
+      try {
+        execFileSync(
+          process.execPath,
+          [
+            supervisor,
+            "init",
+            "generated-battle-123",
+            "a".repeat(40),
+            "instructionalFallback",
+            SUPERVISOR_HANDOFF_STARTED_AT,
+            "b".repeat(64),
+            "c".repeat(64),
+            "d".repeat(64),
+          ],
+          supervisorOptions,
+        );
+      } catch (error) {
+        rejectedInit = error;
+      }
+      expect(rejectedInit).toBeInstanceOf(Error);
+      if (rejectedInit instanceof Error) {
+        expect("status" in rejectedInit ? rejectedInit.status : undefined).toBe(
+          1,
+        );
+        expect(
+          "stderr" in rejectedInit ? String(rejectedInit.stderr) : "",
+        ).toContain("Invalid scenario id");
+      }
+      expect(
+        filesBelow(evidenceDirectory)
+          .map((path) => [path, readFileSync(path)] as const)
+          .sort(([left], [right]) => left.localeCompare(right)),
+      ).toEqual(evidenceBeforeRejectedInit);
+      expect(readFileSync(join(destination, "OBSERVATION.json"))).toEqual(
+        playerObservationBeforeRejectedInit,
+      );
       const initialObservation: unknown = JSON.parse(
         readFileSync(
           join(trustedDestination, "evidence/initial-observation.json"),

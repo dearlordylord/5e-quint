@@ -1475,9 +1475,8 @@ async function main(args: readonly string[]): Promise<void> {
     if (Either.isLeft(startedAt)) {
       fail(`Invalid started-at authority: ${startedAt.left.message}`);
     }
-    const decodedScenarioId = Schema.decodeUnknownEither(ScenarioIdSchema)(
-      scenarioId,
-    );
+    const decodedScenarioId =
+      Schema.decodeUnknownEither(ScenarioIdSchema)(scenarioId);
     if (Either.isLeft(decodedScenarioId)) {
       fail(`Invalid scenario id: ${decodedScenarioId.left.message}`);
     }
