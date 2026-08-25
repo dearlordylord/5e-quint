@@ -25,8 +25,18 @@ import {
   playSessionToolDefinitions,
   statefulPlaySessionToolDefinition,
 } from "./play-session-tool-contract.ts";
-import { createPlaySessionRegistry } from "./play-session.ts";
-import type { PlaySessionIdFactory } from "./play-session.ts";
+import {
+  createPlaySessionRegistry,
+  generatedPlaySessionId,
+  type PlaySessionAccessFailure,
+  type PlaySessionIdFactory,
+  type PlaySessionRegistry,
+  type PlaySessionUnavailable,
+} from "./play-session.ts";
+import {
+  createRecoverablePlaySessionRegistry,
+  type PlaySessionRepository,
+} from "./recoverable-play-session.ts";
 import { isBattleToolName } from "./battle-tools.ts";
 import { isCharacterToolName } from "./character-tools.ts";
 import { isDiceToolName } from "./dice-tool-input.ts";
@@ -41,9 +51,29 @@ export type {
   ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
-export type McpProtocolServerOptions = {
+type CommonMcpProtocolServerOptions = {
   readonly playSessionIdFactory?: PlaySessionIdFactory;
-  readonly playSessionRandomFactory?: () => Random.Random;
+};
+
+type ProcessLifetimeMcpProtocolServerOptions =
+  CommonMcpProtocolServerOptions & {
+    readonly playSessionRandomFactory?: () => Random.Random;
+    readonly playSessionRepository?: undefined;
+  };
+
+type RecoverableMcpProtocolServerOptions = CommonMcpProtocolServerOptions & {
+  readonly playSessionRandomFactory?: never;
+  readonly playSessionRepository: PlaySessionRepository;
+};
+
+export type McpProtocolServerOptions =
+  | ProcessLifetimeMcpProtocolServerOptions
+  | RecoverableMcpProtocolServerOptions;
+
+type McpProtocolServerHost<AccessFailure extends PlaySessionAccessFailure> = {
+  readonly applicationServices: McpApplicationServices;
+  readonly playSessions: PlaySessionRegistry<AccessFailure>;
+  readonly server: Server;
 };
 
 export function buildAdvertisedToolDefinitions(
@@ -73,32 +103,28 @@ export function buildAdvertisedToolDefinitions(
 }
 
 export function createDndMcpProtocolServer(
+  applicationServices?: McpApplicationServices,
+  definitions?: readonly ProtocolToolDefinition[],
+  options?: ProcessLifetimeMcpProtocolServerOptions,
+): McpProtocolServerHost<PlaySessionUnavailable>;
+export function createDndMcpProtocolServer(
+  applicationServices: McpApplicationServices | undefined,
+  definitions: readonly ProtocolToolDefinition[] | undefined,
+  options: RecoverableMcpProtocolServerOptions,
+): McpProtocolServerHost<PlaySessionAccessFailure>;
+export function createDndMcpProtocolServer(
   applicationServices: McpApplicationServices = createMcpApplicationServices(),
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   options: McpProtocolServerOptions = {},
-) {
+): McpProtocolServerHost<PlaySessionAccessFailure> {
   const protocolDefinitions = buildAdvertisedToolDefinitions(definitions);
   const advertisedToolNames = new Set(
     protocolDefinitions.map((definition) => definition.name),
   );
-  const playSessions = createPlaySessionRegistry({
-    createRoot: (playSessionId) => {
-      const random = options.playSessionRandomFactory?.();
-      return random === undefined
-        ? createMcpPlaySessionRoot(
-            applicationServices,
-            adminMirrorSessionId(playSessionId),
-          )
-        : createMcpPlaySessionRoot(
-            applicationServices,
-            adminMirrorSessionId(playSessionId),
-            random,
-          );
-    },
-    ...(options.playSessionIdFactory === undefined
-      ? {}
-      : { playSessionIdFactory: options.playSessionIdFactory }),
-  });
+  const protocolDefinitionByName = new Map(
+    protocolDefinitions.map((definition) => [definition.name, definition]),
+  );
+  const playSessions = playSessionRegistry(applicationServices, options);
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
     {
@@ -123,9 +149,16 @@ export function createDndMcpProtocolServer(
         : handleReadPlaySession(playSessions, request.params.arguments);
     }
     if (isStatefulToolName(name)) {
+      const definition = protocolDefinitionByName.get(name);
+      if (definition === undefined) {
+        return errorContent(
+          `Tool is not advertised by this MCP server: ${name}`,
+        );
+      }
       return handlePlaySessionOperation({
         registry: playSessions,
         operationName: name,
+        recordOperation: definition.annotations.readOnlyHint !== true,
         args: request.params.arguments,
         handle: (root, args) => handleToolCall(root, name, args),
       });
@@ -138,6 +171,38 @@ export function createDndMcpProtocolServer(
   });
 
   return { applicationServices, playSessions, server };
+}
+
+function playSessionRegistry(
+  applicationServices: McpApplicationServices,
+  options: McpProtocolServerOptions,
+): PlaySessionRegistry<PlaySessionAccessFailure> {
+  if (options.playSessionRepository !== undefined) {
+    return createRecoverablePlaySessionRegistry({
+      applicationServices,
+      repository: options.playSessionRepository,
+      playSessionIdFactory:
+        options.playSessionIdFactory ?? generatedPlaySessionId,
+    });
+  }
+  return createPlaySessionRegistry({
+    createRoot: (playSessionId) => {
+      const random = options.playSessionRandomFactory?.();
+      return random === undefined
+        ? createMcpPlaySessionRoot(
+            applicationServices,
+            adminMirrorSessionId(playSessionId),
+          )
+        : createMcpPlaySessionRoot(
+            applicationServices,
+            adminMirrorSessionId(playSessionId),
+            random,
+          );
+    },
+    ...(options.playSessionIdFactory === undefined
+      ? {}
+      : { playSessionIdFactory: options.playSessionIdFactory }),
+  });
 }
 
 function isStatefulToolName(

@@ -47,8 +47,68 @@ signed-out journeys are temporary Guest Play Sessions, saving atomically makes
 the same session a single-principal Saved Play Session, and both use one
 canonical recoverable representation. Public persistence work must replace this
 in-memory registry directly rather than retain it beside a hosting-specific
-store. Until that work lands, tools and tests must continue to report only the
-process-lifetime facts the executable server can prove.
+store.
+
+The public HTTP composition has the first recoverable slice of that boundary.
+Its SQLite record contains one format version, the Play Session's random-stream
+seed, an optimistic storage revision, and the ordered non-read-only tool
+commands whose calls completed without an MCP error and are needed to
+reconstruct the application store. It does not store
+session summaries, Character Draft presentations, Admin Mirror projections, or
+other derived views. A routed operation reconstructs a candidate root from that
+record, applies the operation, and commits its input only if the expected
+storage revision still owns the record; a conflict reloads and retries against
+the new canonical history. Admin Mirror publication is disabled during replay
+and recreated from the committed current projection.
+
+The first public acceptance witness creates a Guest Play Session, creates and
+mutates one Character Draft, replaces the HTTP server and SQLite connection,
+and continues from revision 1 through `/mcp`. The next witness finalizes that
+recoverable workflow into a Character Session, replaces the HTTP server and
+SQLite connection, lists and inspects the reconstructed sheet, advances its
+Fighter class level, replaces those owners again, and observes the updated
+canonical build. Derived Hit Points, Hit Dice, labels, and other sheet projections are
+recomputed from the retained commands, installed Units, and runtime owners;
+they are not session-record fields. The Battle entry witness covers both
+supported entry paths: a direct-Initiative Battle
+recovers as the same active Battle, and an initial-Initiative setup recovers as
+the same setup before one atomic finalization makes it the sole active Battle.
+Concurrent finalization returns one accepted transition and one typed
+already-finalized result; it never reconstructs both lifecycle owners. Active
+Battle recovery continues the same Character + Goblin Warrior workflow across
+the target, attack-roll, and damage Runtime Holes: the target fill is retained
+before replacement, competing attack-roll fills settle as one `needsHoles` and
+one typed `invalidFill`, the server-correlated damage roll resolves after
+replacement, and another replacement reconstructs the damaged combatant before
+atomic closeout. A final replacement reconstructs the complete available
+Character Session roster with no active Battle. The serialized random seed and
+retained command prefix also have a bounded property test over arbitrary valid
+dice-group sequences: two independently reconstructed owners produce identical
+raw faces for every prefix without a parallel dice cursor.
+Authentication, guest grants, retention, and deletion remain the later
+public-boundary increment defined by ADR 0007.
+
+Run the provider-neutral Node HTTP entrypoint with an explicit database path:
+
+```sh
+DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
+  pnpm --filter @dnd/mcp serve:http
+```
+
+`DND_MCP_HOST` defaults to `0.0.0.0` and `PORT` defaults to `8787`. Stdio
+development continues to use `pnpm --filter @dnd/mcp dev`; Secure MCP Tunnel
+continues to launch that stdio entrypoint rather than the public database.
+The executable parity test starts both real transports, compares the server
+instructions and complete advertised tool contracts, compares representative
+static and stateful results, and runs the complete newcomer journey through
+HTTP. A live HTTPS staging smoke remains deployment evidence and is not
+substituted by this local test. Once a staging endpoint exists, run that smoke
+without changing the application or transport composition:
+
+```sh
+DND_MCP_STAGING_URL=https://staging.example.test/mcp \
+  pnpm --filter @dnd/mcp verify:staging
+```
 
 Stateful protocol results use one contextual envelope derived from the
 operation result and canonical session snapshot. It reports the typed operation
