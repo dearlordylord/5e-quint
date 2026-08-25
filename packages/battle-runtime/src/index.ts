@@ -96,6 +96,7 @@ export {
 } from "./character-execution-admission.ts";
 
 export type {
+  BattleStatBlockExecutionSource,
   StatBlockExecutionAdmission,
   StatBlockExecutionRestoreIssue,
   StatBlockExecutionRestoration,
@@ -105,6 +106,8 @@ export type {
   StatBlockProcedureBindingSnapshot,
   StatBlockResourcePoolState,
 } from "./stat-block-execution.ts";
+
+export { statBlockProjectionIssues } from "./stat-block-execution.ts";
 
 export {
   restoreStatBlockExecutionAdmission,
@@ -149,8 +152,11 @@ export {
   battleSelectedSpellInvocationForProcedure,
   battleSubjectPresentation,
   discoverBattleActs,
+  discoverBattleActsWithStatBlockProjectionIssues,
   presentBattleActs,
 } from "./battle-act-composition.ts";
+
+export type { BattleStatBlockActDiscovery } from "./battle-act-composition.ts";
 
 export {
   combatantCanSee,
@@ -291,6 +297,7 @@ export type { PactOfTheChainFamiliarAttackSubject } from "./find-familiar-pact-c
 
 export {
   battleCreaturePresentationDisplayName,
+  statBlockProjectionIssuesForActor,
   statBlockProcedurePresentations,
 } from "./stat-block-presentation.ts";
 
@@ -374,6 +381,12 @@ export type {
   StatBlockBattleInitInput,
   StatBlockInitialCondition,
 } from "./battle-init.ts";
+
+export type {
+  StatBlockActionProjectionSection,
+  StatBlockActionProjectionShape,
+  StatBlockProjectionIssue,
+} from "./stat-block-execution-state.ts";
 
 export {
   KNOCKED_OUT_UNCONSCIOUS,

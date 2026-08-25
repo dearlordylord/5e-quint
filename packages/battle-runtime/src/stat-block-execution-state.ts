@@ -37,6 +37,45 @@ export type BattleStatBlockExecutionSource = {
   readonly statBlock: StatBlockMechanics;
 };
 
+export type StatBlockActionProjectionSection =
+  | "actions"
+  | "bonusActions"
+  | "reactions"
+  | "legendaryActions";
+
+export type StatBlockActionProjectionShape =
+  | "attack"
+  | "multiattack"
+  | "save"
+  | "support"
+  | "actionOption"
+  | "special";
+
+/**
+ * A represented Stat Block shape that the generic battle projection leaves as
+ * text-only. The issue carries no authored label or record identity; callers
+ * at the presentation boundary may join those facts separately.
+ */
+export type StatBlockProjectionIssue =
+  | {
+      readonly tag: "statBlockProjectionIssue";
+      readonly source: {
+        readonly kind: "trait";
+        readonly nonExecutableReason:
+          | "textOnlyTrait"
+          | "unsupportedTraitEffect";
+      };
+    }
+  | {
+      readonly tag: "statBlockProjectionIssue";
+      readonly source: {
+        readonly kind: "action";
+        readonly section: StatBlockActionProjectionSection;
+        readonly shape: StatBlockActionProjectionShape;
+        readonly nonExecutableReason: "unsupportedActionShape";
+      };
+    };
+
 export type StatBlockAttackProcedure = {
   readonly kind: "attack";
   readonly section: Extract<

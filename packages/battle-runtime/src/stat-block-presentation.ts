@@ -20,9 +20,20 @@ import {
 import * as Either from "effect/Either";
 import { Match } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
+import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 
 export type StatBlockProcedurePresentation =
   BattleStatBlockProcedurePresentation;
+
+export function statBlockProjectionIssuesForActor(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  actorId: CombatantId,
+): readonly StatBlockProjectionIssue[] | null {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "statBlock") return null;
+  return context.statBlocks.get(actorId)?.projectionIssues ?? null;
+}
 
 export function battleCreaturePresentationDisplayName(
   state: BattleState,
