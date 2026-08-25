@@ -359,7 +359,11 @@ function recordKindFromResult(
       scope,
       aliasStack,
     );
-    if (element === undefined || element.endIndex <= elementIndex) {
+    if (
+      element === undefined ||
+      element.shape !== "record" ||
+      element.endIndex <= elementIndex
+    ) {
       return "unknown";
     }
     elementKinds.push(element.kind);
@@ -380,8 +384,14 @@ function recordKindFromResult(
     : "unknown";
 }
 
-type DhallExpressionResolution = {
+type DhallExpressionShape = "record" | "list" | "unknown";
+
+type DhallExpressionFacts = {
   readonly kind: SurfacePublicationRecordKind;
+  readonly shape: DhallExpressionShape;
+};
+
+type DhallExpressionResolution = DhallExpressionFacts & {
   readonly endIndex: number;
 };
 
@@ -417,7 +427,11 @@ function resolveDhallExpression(
     );
     return endIndex === undefined
       ? undefined
-      : { kind: recordKindAtObject(tokens, startIndex), endIndex };
+      : {
+          kind: recordKindAtObject(tokens, startIndex),
+          shape: "record",
+          endIndex,
+        };
   }
   if (start.value === "[") {
     const endIndex = delimitedExpressionEndIndex(
@@ -435,6 +449,7 @@ function resolveDhallExpression(
             scope,
             aliasStack,
           ),
+          shape: "list",
           endIndex,
         };
   }
@@ -452,14 +467,20 @@ function resolveDhallExpression(
       scope,
       aliasStack,
     );
-    return { kind: inner?.kind ?? "unknown", endIndex };
+    return {
+      kind: inner?.kind ?? "unknown",
+      shape: inner?.shape ?? "unknown",
+      endIndex,
+    };
   }
   const binding = start.tag === "word" ? scope.get(start.value) : undefined;
+  const resolvedBinding =
+    binding === undefined
+      ? undefined
+      : resolveDhallBinding(tokens, binding, aliasStack);
   return {
-    kind:
-      binding === undefined
-        ? "unknown"
-        : resolveDhallBinding(tokens, binding, aliasStack),
+    kind: resolvedBinding?.kind ?? "unknown",
+    shape: resolvedBinding?.shape ?? "unknown",
     endIndex: startIndex + 1,
   };
 }
@@ -517,18 +538,21 @@ function resolveDhallBinding(
   tokens: readonly DhallToken[],
   binding: DhallBinding,
   aliasStack: ReadonlySet<number>,
-): SurfacePublicationRecordKind {
-  if (aliasStack.has(binding.expressionStart)) return "unknown";
+): DhallExpressionFacts {
+  if (aliasStack.has(binding.expressionStart)) {
+    return { kind: "unknown", shape: "unknown" };
+  }
   const nextAliasStack = new Set(aliasStack).add(binding.expressionStart);
-  return (
-    resolveDhallExpression(
-      tokens,
-      binding.expressionStart,
-      binding.expressionEnd,
-      binding.scope,
-      nextAliasStack,
-    )?.kind ?? "unknown"
+  const resolution = resolveDhallExpression(
+    tokens,
+    binding.expressionStart,
+    binding.expressionEnd,
+    binding.scope,
+    nextAliasStack,
   );
+  return resolution === undefined
+    ? { kind: "unknown", shape: "unknown" }
+    : { kind: resolution.kind, shape: resolution.shape };
 }
 
 function isDhallLetToken(token: DhallToken | undefined): boolean {

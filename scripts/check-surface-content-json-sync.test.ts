@@ -856,6 +856,39 @@ in statBlock`,
     }
   });
 
+  it("does not flatten a nested list alias into a record family", () => {
+    const contentDir = mkdtempSync(
+      join(tmpdir(), "surface-nested-list-family-test-"),
+    );
+
+    try {
+      writeFileSync(
+        join(contentDir, "nested-list-stat-block.dhall"),
+        ['let entries = [{ kind = "statBlock" }]', "in [entries]"].join("\n"),
+      );
+      writeFileSync(
+        join(contentDir, "nested-list-stat-block.json"),
+        validRecord,
+      );
+
+      const result = runPublicationCheck({
+        repoRoot: contentDir,
+        contentDir,
+        compile: () => "synthetic compile failure",
+      });
+
+      expect(result.issues).not.toContainEqual(
+        expect.objectContaining({
+          kind: "peer-family-mismatch",
+          source: "nested-list-stat-block.dhall",
+          peer: "nested-list-stat-block.json",
+        }),
+      );
+    } finally {
+      rmSync(contentDir, { force: true, recursive: true });
+    }
+  });
+
   it("keeps known peer family ownership when source text is unresolved", () => {
     const contentDir = mkdtempSync(
       join(tmpdir(), "surface-unresolved-peer-family-test-"),
