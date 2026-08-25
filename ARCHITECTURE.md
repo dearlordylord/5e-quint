@@ -389,6 +389,16 @@ becoming alternate session owners. Until the public persistence increments
 land, the process-lifetime behavior above remains the truth of the executable
 developer-mode server.
 
+The first public host follows
+[ADR 0008](docs/adr/0008-public-mcp-runs-in-a-provider-neutral-node-container.md):
+the canonical MCP application runs as a Node 22 OCI container on a conventional
+Linux host behind HTTPS. The image is provider-neutral; the existing Hetzner
+machine is an initial deployment candidate, not an application dependency.
+Native Workers and Pages Functions remain possible future targets only if the
+complete application fits their startup and isolate-memory limits without
+splitting the catalog or session owner. Stdio and Secure MCP Tunnel remain the
+local development projections of the same application.
+
 The MCP runtime path composes:
 
 - `srdUnitCollection` through `buildUnitCatalog`;
@@ -492,22 +502,24 @@ The runtime path uses this dependency direction:
 
 ## Reference Authority
 
-| Document                                                              | Scope                                                               | Authority                                                                                                          |
-| --------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `.references/srd-5.2.1/`                                              | Rules text                                                          | Ground truth for modeled SRD rules                                                                                 |
-| `UBIQUITOUS_LANGUAGE.md`                                              | Canonical D&D domain terminology                                    | Naming authority for domain terms                                                                                  |
-| `ASSUMPTIONS.md`                                                      | Explicit modeling choices where SRD is underspecified               | Sole record of intentional RAW assumptions                                                                         |
-| `docs/adr/0001-forest-of-qnt-slices.md`                               | QNT verification shape                                              | Architectural decision authority for the QNT corpus structure                                                      |
-| `docs/adr/0002-character-creature-monster-ownership.md`               | Character/creature/monster domain ownership                         | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary           |
-| `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md`       | Monster Stat Block authoring and provenance                         | Architectural decision authority for Stat Blocks as authored data with explicit provenance                         |
-| `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md` | Light/obscurement/cover/sight boundary                              | Architectural decision authority for runtime source-facts plus table-supplied witnesses                            |
-| `docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md`   | Battle committed-state and continuation boundary                    | Architectural decision authority for atomic Act commits, deterministic continuation replay, and separate frontiers |
-| `packages/character-creation-runtime/VOCABULARY.md`                   | Character-creation runtime terms                                    | Character-creation package vocabulary                                                                              |
-| `plans/rules-kernel-coverage/`                                        | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics                                                                |
-| `plans/unit-profile-coverage/`                                        | Authored Surface Unit/profile support breadth                       | Coverage authority for authored-content support and the generated rules-kernel join view                           |
-| `plans/raw-coverage/`                                                 | Local SRD span classification and implementation traceability       | Coverage authority linking reviewed RAW spans to requirements, executable owners, and delivery claims              |
-| `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`                         | Battle-runtime QNT/TS connectivity map                              | Reference map for how battle-runtime QNT bridges into rule-core and connects to TypeScript via MBT                 |
-| Package READMEs                                                       | Package-owned APIs and local invariants                             | Local package contracts                                                                                            |
+| Document                                                                | Scope                                                               | Authority                                                                                                          |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `.references/srd-5.2.1/`                                                | Rules text                                                          | Ground truth for modeled SRD rules                                                                                 |
+| `UBIQUITOUS_LANGUAGE.md`                                                | Canonical D&D domain terminology                                    | Naming authority for domain terms                                                                                  |
+| `ASSUMPTIONS.md`                                                        | Explicit modeling choices where SRD is underspecified               | Sole record of intentional RAW assumptions                                                                         |
+| `docs/adr/0001-forest-of-qnt-slices.md`                                 | QNT verification shape                                              | Architectural decision authority for the QNT corpus structure                                                      |
+| `docs/adr/0002-character-creature-monster-ownership.md`                 | Character/creature/monster domain ownership                         | Architectural decision authority for the character→creature projection and Quint-owns-semantics boundary           |
+| `docs/adr/0003-monster-stat-blocks-authored-data-provenance.md`         | Monster Stat Block authoring and provenance                         | Architectural decision authority for Stat Blocks as authored data with explicit provenance                         |
+| `docs/adr/0004-light-obscurement-sight-source-facts-and-witnesses.md`   | Light/obscurement/cover/sight boundary                              | Architectural decision authority for runtime source-facts plus table-supplied witnesses                            |
+| `docs/adr/0006-battle-runtime-holes-do-not-expose-partial-state.md`     | Battle committed-state and continuation boundary                    | Architectural decision authority for atomic Act commits, deterministic continuation replay, and separate frontiers |
+| `docs/adr/0007-public-play-session-tenure-and-ownership.md`             | Public Play Session tenure, retention, and ownership                | Architectural decision authority for guest access and principal-owned saved sessions                               |
+| `docs/adr/0008-public-mcp-runs-in-a-provider-neutral-node-container.md` | Public MCP hosting model                                            | Architectural decision authority for the provider-neutral container host and development transports                |
+| `packages/character-creation-runtime/VOCABULARY.md`                     | Character-creation runtime terms                                    | Character-creation package vocabulary                                                                              |
+| `plans/rules-kernel-coverage/`                                          | Reducer semantic obligation coverage and generator-readiness ledger | Coverage authority for TS-current reducer semantics                                                                |
+| `plans/unit-profile-coverage/`                                          | Authored Surface Unit/profile support breadth                       | Coverage authority for authored-content support and the generated rules-kernel join view                           |
+| `plans/raw-coverage/`                                                   | Local SRD span classification and implementation traceability       | Coverage authority linking reviewed RAW spans to requirements, executable owners, and delivery claims              |
+| `plans/BATTLE_RUNTIME_QNT_TS_CONNECTIVITY.md`                           | Battle-runtime QNT/TS connectivity map                              | Reference map for how battle-runtime QNT bridges into rule-core and connects to TypeScript via MBT                 |
+| Package READMEs                                                         | Package-owned APIs and local invariants                             | Local package contracts                                                                                            |
 
 ## Choosing The Right Owner
 
