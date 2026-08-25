@@ -79,10 +79,12 @@ import {
   type SdkPlayerOperation,
 } from "./sdk-transcript.ts";
 import {
+  ScenarioIdSchema,
   StartedAtSchema,
   canonicalJson,
   sha256Canonical,
   sha256Text,
+  type ScenarioId,
 } from "../transcript.ts";
 import {
   PlayerExecutionStateSchema,
@@ -233,7 +235,7 @@ function verifyFrozenPrefix(): FrozenPrefix {
 }
 
 async function initialize(
-  scenarioId: string,
+  scenarioId: ScenarioId,
   gitSha: string,
   consumerIsolation: string,
   startedAt: Schema.Schema.Type<typeof StartedAtSchema>,
@@ -1473,8 +1475,14 @@ async function main(args: readonly string[]): Promise<void> {
     if (Either.isLeft(startedAt)) {
       fail(`Invalid started-at authority: ${startedAt.left.message}`);
     }
-    await initialize(
+    const decodedScenarioId = Schema.decodeUnknownEither(ScenarioIdSchema)(
       scenarioId,
+    );
+    if (Either.isLeft(decodedScenarioId)) {
+      fail(`Invalid scenario id: ${decodedScenarioId.left.message}`);
+    }
+    await initialize(
+      decodedScenarioId.right,
       gitSha,
       consumerIsolation,
       startedAt.right,

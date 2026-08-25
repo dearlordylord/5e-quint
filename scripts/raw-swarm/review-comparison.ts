@@ -11,11 +11,12 @@ import {
 import { reviewEvidenceCatalogForPacket } from "./review-output-validation.ts";
 import { readSdkAudit } from "./sdk-player/sdk-audit.ts";
 import { validateSdkReviewPacket } from "./sdk-player/sdk-review-packet.ts";
+import { ScenarioIdSchema } from "./raw-swarm-identities.ts";
 import { repoRoot } from "./transcript.ts";
 
 const ReviewComparisonSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
-  scenarioId: Schema.NonEmptyTrimmedString,
+  scenarioId: ScenarioIdSchema,
   transcriptSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
   mappings: Schema.Array(
     Schema.Struct({

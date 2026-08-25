@@ -149,5 +149,21 @@ describe("review comparison", () => {
         },
       }),
     ).toThrow("exact setup or call-sequence evidence");
+    expect(() =>
+      verifyReviewComparison({
+        baselineReviewPath: baseline,
+        candidateReviewPath: candidate,
+        comparison: {
+          ...comparison,
+          scenarioId: "generated-battle-123",
+        },
+        evidenceCatalog: {
+          sequences: new Set([3, 4]),
+          setupLineCount: 10,
+          charactersLineCount: 12,
+          hasTranscriptHeader: true,
+        },
+      }),
+    ).toThrow("Invalid review comparison");
   });
 });
