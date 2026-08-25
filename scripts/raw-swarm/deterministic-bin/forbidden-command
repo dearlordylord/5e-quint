@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+
+set -eu
+command_name=${0##*/}
+printf '%s\n' "${command_name} execution is forbidden in the deterministic Raw Swarm lane." >&2
+exit 78

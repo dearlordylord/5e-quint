@@ -327,6 +327,108 @@ describe("RAW swarm runner boundaries", () => {
     }
   });
 
+  test("rejects network CLI process and shell forms in deterministic source", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "lane-cli-"),
+    );
+    const sourcePath = resolve(fixtureRoot, "forbidden-cli.ts");
+    const curlExecutable = ["cu", "rl"].join("");
+    const wgetExecutable = ["w", "get"].join("");
+    const execFileSyncCall = ["execFileSync", "("].join("");
+    const spawnSyncCall = ["spawnSync", "("].join("");
+    const execSyncCall = ["execSync", "("].join("");
+    const spawnCall = ["spawn", "("].join("");
+    writeFileSync(
+      sourcePath,
+      [
+        `${execFileSyncCall}${JSON.stringify(curlExecutable)}, ["https://example.invalid"]);`,
+        `${spawnSyncCall}${JSON.stringify(wgetExecutable)}, ["https://example.invalid"]);`,
+        `${execSyncCall}${JSON.stringify(`${curlExecutable} https://example.invalid`)});`,
+        `${spawnCall}${JSON.stringify("sh")}, ["-c", ${JSON.stringify(`${wgetExecutable} https://example.invalid`)}]);`,
+      ].join("\n"),
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--source", sourcePath],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain(
+        "forbidden capabilities",
+      );
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  test("rejects forbidden capability reached through a workspace alias", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(rawSwarmOutputDirectory, "lane-alias-"),
+    );
+    const fixtureName = relative(rawSwarmOutputDirectory, fixtureRoot);
+    const packageDirectory = resolve(
+      repoRoot,
+      "packages",
+      `.raw-swarm-alias-${fixtureName}`,
+    );
+    const packageName = `@dnd/raw-swarm-alias-${fixtureName}`;
+    const packageSourceDirectory = resolve(packageDirectory, "src");
+    const entryPath = resolve(fixtureRoot, "alias-entry.ts");
+    const tsconfigAliasEntryPath = resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/.raw-swarm-alias-entry.ts",
+    );
+    const packageSourcePath = resolve(packageSourceDirectory, "index.ts");
+    const curlExecutable = ["cu", "rl"].join("");
+    const execFileSyncCall = ["execFileSync", "("].join("");
+    mkdirSync(packageSourceDirectory, { recursive: true });
+    writeFileSync(
+      resolve(packageDirectory, "package.json"),
+      `${JSON.stringify(
+        {
+          name: packageName,
+          private: true,
+          exports: { ".": "./src/index.ts" },
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    writeFileSync(entryPath, `import ${JSON.stringify(packageName)};\n`);
+    writeFileSync(
+      tsconfigAliasEntryPath,
+      'import type { ScenarioSetupSdk } from "@dnd/scenario-setup-sdk";\nvoid (undefined as unknown as ScenarioSetupSdk);\n',
+    );
+    writeFileSync(
+      packageSourcePath,
+      `const childProcessCall = ${JSON.stringify(execFileSyncCall)};\nconst networkCli = ${JSON.stringify(curlExecutable)};\nvoid childProcessCall;\nvoid networkCli;\n${execFileSyncCall}${JSON.stringify(curlExecutable)}, ["https://example.invalid"]);\n`,
+    );
+    try {
+      const checked = spawnSync(
+        process.execPath,
+        [laneHygieneChecker, "--test", relative(repoRoot, entryPath)],
+        { encoding: "utf8" },
+      );
+      expect(checked.status).not.toBe(0);
+      expect(`${checked.stdout}${checked.stderr}`).toContain("raw-swarm-alias");
+      const tsconfigAliasChecked = spawnSync(
+        process.execPath,
+        [
+          laneHygieneChecker,
+          "--test",
+          relative(repoRoot, tsconfigAliasEntryPath),
+        ],
+        { encoding: "utf8" },
+      );
+      expect(tsconfigAliasChecked.status).toBe(0);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+      rmSync(packageDirectory, { recursive: true, force: true });
+      rmSync(tsconfigAliasEntryPath, { force: true });
+    }
+  });
+
   test.each([
     ["missing value", ["--transcript", "--scenario", "example"]],
     [

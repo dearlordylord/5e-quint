@@ -1,4 +1,3 @@
 #!/usr/bin/env sh
 
-printf '%s\n' 'Claude execution is forbidden in the deterministic Raw Swarm lane.' >&2
-exit 78
+exec "$(dirname "$0")/forbidden-command" "$@"

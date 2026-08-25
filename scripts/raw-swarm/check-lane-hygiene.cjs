@@ -1,14 +1,23 @@
 const assert = require("node:assert/strict");
 const { existsSync, readdirSync, readFileSync } = require("node:fs");
-const { dirname, join, relative, resolve } = require("node:path");
+const {
+  basename,
+  dirname,
+  join,
+  relative,
+  resolve,
+  sep,
+} = require("node:path");
 
 const {
   CODING_AGENT_EXECUTABLES,
+  DETERMINISTIC_BLOCKED_EXECUTABLES,
   DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_ENTRYPOINTS,
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
   MODEL_BACKED_SOURCE_FILES,
+  NETWORK_CLI_EXECUTABLES,
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
 } = require("./lane-classification.cjs");
@@ -21,7 +30,11 @@ const packageJson = JSON.parse(
 function filesBelow(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const path = join(directory, entry.name);
-    return entry.isDirectory() ? filesBelow(path) : [path];
+    return entry.isDirectory() && entry.name !== "node_modules"
+      ? filesBelow(path)
+      : entry.isDirectory()
+        ? []
+        : [path];
   });
 }
 
@@ -31,6 +44,10 @@ function escapeRegExp(value) {
 
 const codingAgentAlternation =
   CODING_AGENT_EXECUTABLES.map(escapeRegExp).join("|");
+const networkCliAlternation =
+  NETWORK_CLI_EXECUTABLES.map(escapeRegExp).join("|");
+const childProcessCallAlternation =
+  "(?:spawn|spawnSync|exec|execSync|execFile|execFileSync)";
 
 const forbiddenCapabilityPatterns = Object.freeze([
   {
@@ -50,7 +67,7 @@ const forbiddenCapabilityPatterns = Object.freeze([
   {
     kind: "coding-agent-executable",
     pattern: new RegExp(
-      `\\b(?:spawn|spawnSync|exec|execSync|execFile|execFileSync)\\s*\\(\\s*["'\`]([^"'\`\\n]*?(?:${codingAgentAlternation})(?:[/\\\\]|["'\`]|\\s))`,
+      `\\b${childProcessCallAlternation}\\s*\\(\\s*["'\`]([^"'\`\\n]*?(?:${codingAgentAlternation})(?:[/\\\\]|["'\`]|\\s))`,
       "gi",
     ),
   },
@@ -61,16 +78,40 @@ const forbiddenCapabilityPatterns = Object.freeze([
       "gi",
     ),
   },
+  {
+    kind: "network-cli-executable",
+    pattern: new RegExp(
+      `\\b${childProcessCallAlternation}\\s*\\(\\s*["'\`]([^"'\`\\n]*?(?:${networkCliAlternation})(?:[/\\\\]|["'\`]|\\s))`,
+      "gi",
+    ),
+  },
+  {
+    kind: "network-cli-shell-command",
+    pattern: new RegExp(
+      `\\b${childProcessCallAlternation}\\s*\\([^\\n]{0,320}\\b(?:${networkCliAlternation})\\b`,
+      "gi",
+    ),
+  },
 ]);
 
 function deterministicCapabilityViolations(source) {
-  return forbiddenCapabilityPatterns.flatMap(({ kind, pattern }) => {
-    pattern.lastIndex = 0;
-    return [...source.matchAll(pattern)].map((match) => ({
-      kind,
-      match: match[0].slice(0, 120),
-    }));
-  });
+  const violations = forbiddenCapabilityPatterns.flatMap(
+    ({ kind, pattern }) => {
+      pattern.lastIndex = 0;
+      return [...source.matchAll(pattern)].map((match) => ({
+        kind,
+        match: match[0].slice(0, 120),
+      }));
+    },
+  );
+  return violations.filter(
+    (violation, index) =>
+      violations.findIndex(
+        (candidate) =>
+          candidate.kind === violation.kind &&
+          candidate.match === violation.match,
+      ) === index,
+  );
 }
 
 const importPatterns = Object.freeze([
@@ -79,13 +120,17 @@ const importPatterns = Object.freeze([
   /\b(?:require|import)\s*\(\s*["']([^"']+)["']\s*\)/g,
 ]);
 
-function relativeImportSpecifiers(source) {
+function importSpecifiers(source) {
   return importPatterns.flatMap((pattern) => {
     pattern.lastIndex = 0;
-    return [...source.matchAll(pattern)]
-      .map((match) => match[1])
-      .filter((specifier) => specifier.startsWith("."));
+    return [...source.matchAll(pattern)].map((match) => match[1]);
   });
+}
+
+function relativeImportSpecifiers(source) {
+  return importSpecifiers(source).filter((specifier) =>
+    specifier.startsWith("."),
+  );
 }
 
 const sourceExtensions = ["", ".ts", ".tsx", ".js", ".mjs", ".cjs"];
@@ -97,6 +142,174 @@ function resolveInternalImport(sourcePath, specifier) {
     join(candidate, `index${extension}`),
   ]);
   return candidates.find((path) => existsSync(path)) ?? undefined;
+}
+
+function repositoryOwnedPath(path) {
+  const relativePath = relative(root, path);
+  return (
+    relativePath !== ".." &&
+    !relativePath.startsWith(`..${sep}`) &&
+    !relativePath.split(sep).includes("node_modules")
+  );
+}
+
+function readJsonFile(path) {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+function sourcePathForTarget(target) {
+  if (typeof target !== "string") return undefined;
+  const candidate = resolve(target);
+  if (!repositoryOwnedPath(candidate)) return undefined;
+  const extensions = ["", ...sourceExtensions];
+  for (const extension of extensions) {
+    const path = `${candidate}${extension}`;
+    if (existsSync(path)) return path;
+  }
+  for (const extension of extensions) {
+    const path = join(candidate, `index${extension}`);
+    if (existsSync(path)) return path;
+  }
+  return undefined;
+}
+
+function targetFromPackageExports(exportsValue, subpath) {
+  if (typeof exportsValue === "string") return exportsValue;
+  if (Array.isArray(exportsValue)) {
+    for (const candidate of exportsValue) {
+      const target = targetFromPackageExports(candidate, subpath);
+      if (target !== undefined) return target;
+    }
+    return undefined;
+  }
+  if (exportsValue === null || typeof exportsValue !== "object") {
+    return undefined;
+  }
+  if (Object.hasOwn(exportsValue, subpath)) {
+    return targetFromPackageExports(exportsValue[subpath], subpath);
+  }
+  for (const [key, value] of Object.entries(exportsValue)) {
+    if (key.endsWith("/*") && subpath.startsWith(key.slice(0, -1))) {
+      const target = targetFromPackageExports(value, subpath);
+      return target?.replaceAll("*", subpath.slice(key.length - 1));
+    }
+  }
+  for (const condition of ["types", "import", "default", "node"]) {
+    if (Object.hasOwn(exportsValue, condition)) {
+      const target = targetFromPackageExports(exportsValue[condition], subpath);
+      if (target !== undefined) return target;
+    }
+  }
+  return undefined;
+}
+
+function workspacePackageRecords() {
+  const packagesDirectory = join(root, "packages");
+  if (!existsSync(packagesDirectory)) return new Map();
+  const records = new Map();
+  for (const packageJsonPath of filesBelow(packagesDirectory).filter(
+    (path) => basename(path) === "package.json",
+  )) {
+    const packageJson = readJsonFile(packageJsonPath);
+    if (
+      packageJson === undefined ||
+      typeof packageJson.name !== "string" ||
+      !packageJson.name.startsWith("@dnd/")
+    ) {
+      continue;
+    }
+    records.set(packageJson.name, {
+      root: dirname(packageJsonPath),
+      exports: packageJson.exports,
+    });
+  }
+  return records;
+}
+
+const workspacePackages = workspacePackageRecords();
+
+function workspacePackageImportPath(specifier) {
+  for (const [packageName, record] of workspacePackages) {
+    if (specifier !== packageName && !specifier.startsWith(`${packageName}/`)) {
+      continue;
+    }
+    const suffix = specifier.slice(packageName.length);
+    const subpath = suffix.length === 0 ? "." : `.${suffix}`;
+    const target =
+      targetFromPackageExports(record.exports, subpath) ??
+      (subpath === "." ? "./src/index.ts" : undefined);
+    if (target === undefined) continue;
+    const sourcePath = sourcePathForTarget(resolve(record.root, target));
+    if (sourcePath !== undefined) return sourcePath;
+  }
+  return undefined;
+}
+
+function workspaceTsconfigPathMaps() {
+  const configPaths = [
+    resolve(root, "scripts/raw-swarm/sdk-player/tsconfig.json"),
+    ...filesBelow(join(root, "packages")).filter(
+      (path) => basename(path) === "tsconfig.json",
+    ),
+  ];
+  return configPaths.flatMap((configPath) => {
+    const config = readJsonFile(configPath);
+    const paths = config?.compilerOptions?.paths;
+    if (paths === null || typeof paths !== "object") return [];
+    return [
+      {
+        directory: dirname(configPath),
+        paths,
+      },
+    ];
+  });
+}
+
+const workspaceTsconfigMaps = workspaceTsconfigPathMaps();
+
+function pathIsInside(path, directory) {
+  const relativePath = relative(directory, path);
+  return (
+    relativePath === "" ||
+    (!relativePath.startsWith("..") && !relativePath.startsWith(sep))
+  );
+}
+
+function workspaceTsconfigImportPath(sourcePath, specifier) {
+  const config = workspaceTsconfigMaps
+    .filter(({ directory }) => pathIsInside(sourcePath, directory))
+    .sort((left, right) => right.directory.length - left.directory.length)[0];
+  if (config === undefined) return undefined;
+  for (const [alias, targets] of Object.entries(config.paths)) {
+    const aliasPrefix = alias.endsWith("/*") ? alias.slice(0, -1) : alias;
+    const matches = alias.endsWith("/*")
+      ? specifier.startsWith(aliasPrefix)
+      : specifier === alias;
+    if (!matches || !Array.isArray(targets)) continue;
+    const suffix = alias.endsWith("/*")
+      ? specifier.slice(aliasPrefix.length)
+      : "";
+    for (const target of targets) {
+      if (typeof target !== "string") continue;
+      const targetPath = target.replaceAll("*", suffix);
+      const sourceTarget = sourcePathForTarget(
+        resolve(config.directory, targetPath),
+      );
+      if (sourceTarget !== undefined) return sourceTarget;
+    }
+  }
+  return undefined;
+}
+
+function workspaceImportPath(sourcePath, specifier) {
+  return (
+    workspaceTsconfigImportPath(sourcePath, specifier) ??
+    workspacePackageImportPath(specifier)
+  );
 }
 
 function sourcePathsForQualityTest(testPath) {
@@ -119,8 +332,10 @@ function sourcePathsForQualityTest(testPath) {
       continue;
     }
     const source = readFileSync(sourcePath, "utf8");
-    for (const specifier of relativeImportSpecifiers(source)) {
-      const importedPath = resolveInternalImport(sourcePath, specifier);
+    for (const specifier of importSpecifiers(source)) {
+      const importedPath = specifier.startsWith(".")
+        ? resolveInternalImport(sourcePath, specifier)
+        : workspaceImportPath(sourcePath, specifier);
       if (importedPath !== undefined) pending.push(importedPath);
     }
   }
@@ -146,6 +361,28 @@ function runSourceCheck(sourcePathArgument) {
   );
   assertSourceCapabilities(sourcePath);
   process.stdout.write(`Deterministic source passed: ${sourcePathArgument}\n`);
+}
+
+function runTestSourceCheck(testPathArgument) {
+  const testPath = resolve(root, testPathArgument);
+  assert.equal(
+    existsSync(testPath),
+    true,
+    `Test source does not exist: ${testPathArgument}`,
+  );
+  for (const sourcePath of sourcePathsForQualityTest(testPathArgument)) {
+    const relativeSourcePath = relative(root, sourcePath);
+    if (
+      MODEL_BACKED_SOURCE_FILES.includes(relativeSourcePath) ||
+      DETERMINISTIC_TRANSITIVE_SCAN_BOUNDARIES.includes(relativeSourcePath)
+    ) {
+      continue;
+    }
+    assertSourceCapabilities(sourcePath);
+  }
+  process.stdout.write(
+    `Deterministic source tree passed: ${testPathArgument}\n`,
+  );
 }
 
 function runLaneHygiene() {
@@ -266,21 +503,25 @@ function runLaneHygiene() {
     deterministicRunner,
     /RAW_SWARM_EXECUTION_LANE: "deterministic"/,
   );
-  for (const executable of CODING_AGENT_EXECUTABLES) {
-    const blockerPath = join(
-      root,
-      "scripts/raw-swarm/deterministic-bin",
-      executable,
-    );
+  const blockerDirectory = join(root, "scripts/raw-swarm/deterministic-bin");
+  const commonBlockerPath = join(blockerDirectory, "forbidden-command");
+  assert.equal(
+    existsSync(commonBlockerPath),
+    true,
+    "Deterministic lane is missing its shared executable guard.",
+  );
+  assert.match(
+    readFileSync(commonBlockerPath, "utf8"),
+    /forbidden in the deterministic Raw Swarm lane/i,
+  );
+  for (const executable of DETERMINISTIC_BLOCKED_EXECUTABLES) {
+    const blockerPath = join(blockerDirectory, executable);
     assert.equal(
       existsSync(blockerPath),
       true,
       `Deterministic lane is missing the ${executable} executable guard.`,
     );
-    assert.match(
-      readFileSync(blockerPath, "utf8"),
-      /forbidden in the deterministic Raw Swarm lane/i,
-    );
+    assert.match(readFileSync(blockerPath, "utf8"), /forbidden-command/);
   }
   assert.match(
     readFileSync(join(root, "scripts/raw-swarm/run-model-backed.mjs"), "utf8"),
@@ -299,6 +540,8 @@ function runLaneHygiene() {
 if (require.main === module) {
   if (process.argv[2] === "--source") {
     runSourceCheck(process.argv[3]);
+  } else if (process.argv[2] === "--test") {
+    runTestSourceCheck(process.argv[3]);
   } else {
     runLaneHygiene();
   }
