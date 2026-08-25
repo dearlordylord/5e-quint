@@ -22,6 +22,7 @@ const {
   NETWORK_CLI_EXECUTABLES,
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
+  SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
   isSupportedVitestTestFilename,
 } = require("./lane-classification.cjs");
 
@@ -180,11 +181,14 @@ function importSpecifiers(source) {
   });
 }
 
-const sourceExtensions = ["", ".ts", ".tsx", ".js", ".mjs", ".cjs"];
+const sourceResolutionSuffixes = Object.freeze([
+  "",
+  ...SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
+]);
 
 function resolveInternalImport(sourcePath, specifier) {
   const candidate = resolve(dirname(sourcePath), specifier);
-  const candidates = sourceExtensions.flatMap((extension) => [
+  const candidates = sourceResolutionSuffixes.flatMap((extension) => [
     `${candidate}${extension}`,
     join(candidate, `index${extension}`),
   ]);
@@ -212,12 +216,11 @@ function sourcePathForTarget(target) {
   if (typeof target !== "string") return undefined;
   const candidate = resolve(target);
   if (!repositoryOwnedPath(candidate)) return undefined;
-  const extensions = ["", ...sourceExtensions];
-  for (const extension of extensions) {
+  for (const extension of sourceResolutionSuffixes) {
     const path = `${candidate}${extension}`;
     if (existsSync(path)) return path;
   }
-  for (const extension of extensions) {
+  for (const extension of sourceResolutionSuffixes) {
     const path = join(candidate, `index${extension}`);
     if (existsSync(path)) return path;
   }

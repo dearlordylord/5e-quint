@@ -16,7 +16,6 @@ supervision_command_reaped=false
 supervision_command_wait_status=0
 supervision_command_start_time=""
 supervision_helper_directory=""
-supervision_helper_path=""
 
 supervision_process_stat_fields() {
   local pid="$1" stat rest
@@ -113,8 +112,12 @@ supervision_remove_helper() {
   if [[ -n "$supervision_helper_directory" ]]; then
     rm -rf -- "$supervision_helper_directory"
     supervision_helper_directory=""
-    supervision_helper_path=""
   fi
+}
+
+supervision_helper_binary_path() {
+  [[ -n "$supervision_helper_directory" ]] || return 1
+  printf '%s/process-supervisor\n' "$supervision_helper_directory"
 }
 
 supervision_cleanup_command() {
@@ -148,11 +151,12 @@ supervision_compile_helper() {
       "$supervision_event_name" >&2
     return 78
   }
-  supervision_helper_path="$supervision_helper_directory/process-supervisor"
+  local helper_binary_path
+  helper_binary_path="$(supervision_helper_binary_path)"
   if ! env -i PATH=/usr/bin:/bin LC_ALL=C LANG=C /usr/bin/cc \
     -std=c11 -O2 -Wall -Wextra -Werror \
     "$script_directory/raw-swarm/process-supervisor.c" \
-    -o "$supervision_helper_path"; then
+    -o "$helper_binary_path"; then
     printf '[%s] could not compile the native process supervisor\n' \
       "$supervision_event_name" >&2
     supervision_remove_helper
@@ -173,7 +177,9 @@ supervision_start_command() {
   supervision_compile_helper "$script_directory" || return $?
   supervision_command_reaped=false
   supervision_command_wait_status=0
-  "$supervision_helper_path" --owner-pid "$$" --supervise-only "$@" &
+  local helper_binary_path
+  helper_binary_path="$(supervision_helper_binary_path)"
+  "$helper_binary_path" --owner-pid "$$" --supervise-only "$@" &
   supervision_command_pid=$!
   supervision_command_start_time="$(
     supervision_process_start_time "$supervision_command_pid" 2>/dev/null || true

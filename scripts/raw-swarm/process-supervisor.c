@@ -593,8 +593,7 @@ static int sleep_supervisor_poll(void) {
  */
 #define DND_MAX_PARENT_CHAIN_DEPTH 4096
 
-static int read_process_parent(pid_t process_id, pid_t *parent_id,
-                               char *process_state) {
+static int read_process_parent(pid_t process_id, pid_t *parent_id) {
   char stat_path[64];
   if (snprintf(stat_path, sizeof(stat_path), "/proc/%ld/stat",
                (long)process_id) >= (int)sizeof(stat_path)) {
@@ -608,15 +607,12 @@ static int read_process_parent(pid_t process_id, pid_t *parent_id,
   if (!read || close_status != 0) return 1;
   char *closing_parenthesis = strrchr(line, ')');
   if (closing_parenthesis == NULL) return 1;
-  char state = '\0';
   long parsed_parent = 0;
-  if (sscanf(closing_parenthesis + 1, " %c %ld", &state, &parsed_parent) !=
-          2 ||
+  if (sscanf(closing_parenthesis + 1, " %*c %ld", &parsed_parent) != 1 ||
       parsed_parent <= 0 || parsed_parent > INT_MAX) {
     return 1;
   }
   *parent_id = (pid_t)parsed_parent;
-  if (process_state != NULL) *process_state = state;
   return 0;
 }
 
@@ -625,7 +621,7 @@ static bool process_is_descendant(pid_t process_id, pid_t supervisor_id) {
   for (int depth = 0; depth < DND_MAX_PARENT_CHAIN_DEPTH; depth += 1) {
     if (current == supervisor_id) return process_id != supervisor_id;
     pid_t parent_id = 0;
-    if (read_process_parent(current, &parent_id, NULL) != 0) return false;
+    if (read_process_parent(current, &parent_id) != 0) return false;
     if (parent_id == current || parent_id <= 1) return false;
     current = parent_id;
   }
@@ -765,16 +761,12 @@ static int signal_owned_descendants(pid_t supervisor_id, int signal_number) {
   return failure;
 }
 
-static int signal_owned_tree(pid_t supervisor_id, int signal_number) {
-  return signal_owned_descendants(supervisor_id, signal_number);
-}
-
 static int terminate_owned_tree(pid_t supervisor_id, pid_t leader_pid,
                                 bool *leader_reaped, int *leader_status,
                                 int initial_signal, int *observed_signal) {
   if (observed_signal != NULL) *observed_signal = 0;
   dnd_cleanup_escalated = false;
-  if (signal_owned_tree(supervisor_id, initial_signal) != 0)
+  if (signal_owned_descendants(supervisor_id, initial_signal) != 0)
     return 1;
   int interrupted_signal = 0;
   int settlement = wait_for_owned_tree_empty(supervisor_id, leader_pid,
@@ -786,7 +778,7 @@ static int terminate_owned_tree(pid_t supervisor_id, pid_t leader_pid,
   dnd_cleanup_escalated = true;
   bool cleanup_warning_emitted = false;
   for (;;) {
-    if (signal_owned_tree(supervisor_id, SIGKILL) != 0 &&
+    if (signal_owned_descendants(supervisor_id, SIGKILL) != 0 &&
         !cleanup_warning_emitted) {
       fprintf(stderr,
               "Raw Swarm process supervisor could not prove that SIGKILL "
@@ -816,6 +808,13 @@ static int status_for_reaped_leader(int status) {
   if (WIFEXITED(status)) return WEXITSTATUS(status);
   if (WIFSIGNALED(status)) return 128 + WTERMSIG(status);
   return 1;
+}
+
+static int status_for_signal_cleanup(int requested_signal,
+                                     int observed_signal) {
+  if (dnd_cleanup_escalated && !dnd_install_network_filter) return 137;
+  return 128 +
+         (observed_signal == 0 ? requested_signal : observed_signal);
 }
 
 static int supervise_command(char **command_argv) {
@@ -918,9 +917,7 @@ static int supervise_command(char **command_argv) {
               strsignal(requested_signal));
       return 1;
     }
-    return dnd_cleanup_escalated && !dnd_install_network_filter
-               ? 137
-               : 128 + (cleanup_signal == 0 ? requested_signal : cleanup_signal);
+    return status_for_signal_cleanup(requested_signal, cleanup_signal);
   }
 
   int interrupted_signal = 0;
@@ -938,10 +935,7 @@ static int supervise_command(char **command_argv) {
               strsignal(interrupted_signal));
       return 1;
     }
-    return dnd_cleanup_escalated && !dnd_install_network_filter
-               ? 137
-               : 128 +
-                     (cleanup_signal == 0 ? interrupted_signal : cleanup_signal);
+    return status_for_signal_cleanup(interrupted_signal, cleanup_signal);
   }
   if (settlement == 0) {
     const int late_signal = take_pending_signal();
@@ -957,9 +951,7 @@ static int supervise_command(char **command_argv) {
                 strsignal(late_signal));
         return 1;
       }
-      return dnd_cleanup_escalated && !dnd_install_network_filter
-                 ? 137
-                 : 128 + (cleanup_signal == 0 ? late_signal : cleanup_signal);
+      return status_for_signal_cleanup(late_signal, cleanup_signal);
     }
     return status_for_reaped_leader(leader_status);
   }

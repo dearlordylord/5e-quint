@@ -22,7 +22,10 @@ import { PLAYER_CONTINUATION_PROTOCOL_REMINDER } from "./sdk-player/continuation
 import { SdkPlayerTranscriptHeaderSchema } from "./sdk-player/sdk-transcript.ts";
 import { compileTrustedCSource } from "./deterministic-toolchain.cjs";
 import { installDeterministicCleanup } from "./deterministic-cleanup.cjs";
-import { SUPPORTED_VITEST_TEST_FILE_SUFFIXES } from "./lane-classification.cjs";
+import {
+  SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
+  SUPPORTED_VITEST_TEST_FILE_SUFFIXES,
+} from "./lane-classification.cjs";
 
 const recorder = resolve(repoRoot, "scripts/raw-swarm/mcp-recording-shim.ts");
 const launcher = resolve(repoRoot, "scripts/raw-swarm/run-freeplay.ts");
@@ -971,6 +974,8 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("DND_SUPERVISOR_SETTLEMENT_TIMEOUT_MILLISECONDS");
     expect(source).toContain("signal_owned_descendants");
     expect(source).not.toContain("signal_owned_group");
+    expect(source).not.toContain("signal_owned_tree");
+    expect(source).toContain("status_for_signal_cleanup");
     expect(source).toContain("getppid()");
     expect(source).toContain("waitpid(-1, &status, WNOHANG)");
     expect(source).toContain("could not poll ");
@@ -1875,6 +1880,37 @@ describe("RAW swarm runner boundaries", () => {
         );
       } finally {
         rmSync(fixturePath, { force: true });
+      }
+    },
+    30_000,
+  );
+
+  test.each(SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS)(
+    "transitively scans an imported Vitest-supported source extension %s",
+    (extension) => {
+      const fixtureRoot = mkdtempSync(
+        resolve(rawSwarmOutputDirectory, "transitive-source-"),
+      );
+      const testPath = resolve(fixtureRoot, "fixture.test.ts");
+      const importedSourcePath = resolve(fixtureRoot, `fixture${extension}`);
+      const forbiddenModule = ["node:", "http"].join("");
+      writeFileSync(testPath, 'import "./fixture";\n');
+      writeFileSync(
+        importedSourcePath,
+        `require(${JSON.stringify(forbiddenModule)});\n`,
+      );
+      try {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--test", relative(repoRoot, testPath)],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain(
+          "forbidden capabilities",
+        );
+      } finally {
+        rmSync(fixtureRoot, { recursive: true, force: true });
       }
     },
     30_000,

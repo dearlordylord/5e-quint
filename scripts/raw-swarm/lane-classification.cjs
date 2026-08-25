@@ -1,32 +1,28 @@
-// This is the closed filename inventory used by Vitest's default include
-// glob: **/*.{test,spec}.?(c|m)[jt]s?(x).  Keep it explicit so lane hygiene
-// cannot silently omit a supported JavaScript or TypeScript test extension.
-const SUPPORTED_VITEST_TEST_FILE_SUFFIXES = Object.freeze([
-  ".test.cjs",
-  ".test.cjsx",
-  ".test.cts",
-  ".test.ctsx",
-  ".test.js",
-  ".test.jsx",
-  ".test.mjs",
-  ".test.mjsx",
-  ".test.mts",
-  ".test.mtsx",
-  ".test.ts",
-  ".test.tsx",
-  ".spec.cjs",
-  ".spec.cjsx",
-  ".spec.cts",
-  ".spec.ctsx",
-  ".spec.js",
-  ".spec.jsx",
-  ".spec.mjs",
-  ".spec.mjsx",
-  ".spec.mts",
-  ".spec.mtsx",
-  ".spec.ts",
-  ".spec.tsx",
+// This is the canonical source-extension inventory for Vitest's default
+// include glob: **/*.{test,spec}.?(c|m)[jt]s?(x). Test suffixes and the hygiene
+// checker's extensionless internal-import resolver both derive from it, so a
+// supported JavaScript or TypeScript form cannot be omitted by one path.
+const SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS = Object.freeze([
+  ".cjs",
+  ".cjsx",
+  ".cts",
+  ".ctsx",
+  ".js",
+  ".jsx",
+  ".mjs",
+  ".mjsx",
+  ".mts",
+  ".mtsx",
+  ".ts",
+  ".tsx",
 ]);
+const SUPPORTED_VITEST_TEST_FILE_SUFFIXES = Object.freeze(
+  [".test", ".spec"].flatMap((testKind) =>
+    SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS.map(
+      (extension) => `${testKind}${extension}`,
+    ),
+  ),
+);
 
 function isSupportedVitestTestFilename(path) {
   return SUPPORTED_VITEST_TEST_FILE_SUFFIXES.some((suffix) =>
@@ -215,6 +211,7 @@ const DETERMINISTIC_BLOCKED_EXECUTABLES = Object.freeze(
   ].sort(),
 );
 module.exports = {
+  SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
   SUPPORTED_VITEST_TEST_FILE_SUFFIXES,
   isSupportedVitestTestFilename,
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
