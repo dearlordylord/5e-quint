@@ -118,14 +118,24 @@ async function expectEquivalentEmptyPlaySession(
   ]);
   const httpPlaySessionId = playSessionId(httpCreated.structuredContent);
   const stdioPlaySessionId = playSessionId(stdioCreated.structuredContent);
+  const httpGuestAccessGrant = guestAccessGrant(httpCreated.structuredContent);
+  const stdioGuestAccessGrant = guestAccessGrant(
+    stdioCreated.structuredContent,
+  );
   const [httpListed, stdioListed] = await Promise.all([
     httpClient.callTool({
       name: "list_characters",
-      arguments: { playSessionId: httpPlaySessionId },
+      arguments: {
+        playSessionId: httpPlaySessionId,
+        guestAccessGrant: httpGuestAccessGrant,
+      },
     }),
     stdioClient.callTool({
       name: "list_characters",
-      arguments: { playSessionId: stdioPlaySessionId },
+      arguments: {
+        playSessionId: stdioPlaySessionId,
+        guestAccessGrant: stdioGuestAccessGrant,
+      },
     }),
   ]);
   expect(normalizePlaySessionId(httpListed, httpPlaySessionId)).toEqual(
@@ -139,12 +149,29 @@ function playSessionId(input: unknown): string {
   )(input).playSessionId;
 }
 
+function guestAccessGrant(input: unknown): string {
+  return Schema.decodeUnknownSync(
+    Schema.Struct({
+      operation: Schema.Struct({
+        result: Schema.Struct({
+          access: Schema.Struct({ guestAccessGrant: Schema.String }),
+        }),
+      }),
+    }),
+  )(input).operation.result.access.guestAccessGrant;
+}
+
 function normalizePlaySessionId(
   input: unknown,
   playSessionId: string,
 ): unknown {
   if (typeof input === "string") {
-    return input.replaceAll(playSessionId, "<play-session-id>");
+    return input
+      .replaceAll(playSessionId, "<play-session-id>")
+      .replace(
+        /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z/gu,
+        "<server-time>",
+      );
   }
   if (Array.isArray(input)) {
     return input.map((item) => normalizePlaySessionId(item, playSessionId));

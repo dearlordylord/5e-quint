@@ -2051,6 +2051,9 @@ describe("MCP server route", () => {
     expect(advertisedDefinitions.map((tool) => tool.name)).toEqual([
       "create_play_session",
       "read_play_session",
+      "save_play_session",
+      "list_saved_play_sessions",
+      "delete_saved_play_session",
       ...toolDefinitions.map((tool) => tool.name),
     ]);
     expect(

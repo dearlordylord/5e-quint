@@ -7,6 +7,20 @@ import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
 import type { McpSessionSnapshot } from "./session-store.ts";
+import {
+  generatedGuestAccessGrant,
+  currentEpochMilliseconds,
+  guestAccessGrantDigest,
+  guestAccessGrantMatchesDigest,
+  playSessionIsExpired,
+  projectPlaySessionTenure,
+  type GuestAccessGrant,
+  type EpochMilliseconds,
+  type PlaySessionCaller,
+  type PlaySessionTenureProjection,
+  type PrincipalId,
+  type StoredPlaySessionTenure,
+} from "./play-session-access.ts";
 
 export const PLAY_SESSION_RESTORATION_GUIDANCE =
   "Create a new Play Session, then rebuild the desired state from model-visible or user-provided facts. The unavailable handle cannot be restored.";
@@ -18,7 +32,7 @@ export const PlaySessionIdSchema = Schema.String.pipe(
   Schema.brand("PlaySessionId"),
 ).annotations({
   description:
-    "Process-lifetime Play Session handle returned by create_play_session.",
+    "Play Session handle returned by create_play_session; use it together with the returned guest access grant unless authenticated.",
 });
 
 export type PlaySessionId = typeof PlaySessionIdSchema.Type;
@@ -39,14 +53,33 @@ export const PLAY_SESSION_UNAVAILABLE: PlaySessionUnavailable = {
   },
 };
 
-export type PlaySessionCreation = {
+type PlaySessionCreationBase = {
   readonly playSessionId: PlaySessionId;
   readonly projection: McpSessionSnapshot;
 };
 
+export type PlaySessionCreation = PlaySessionCreationBase &
+  (
+    | {
+        readonly tenure: Extract<PlaySessionTenureProjection, { tag: "guest" }>;
+        readonly access: {
+          readonly tag: "guest";
+          readonly guestAccessGrant: GuestAccessGrant;
+        };
+      }
+    | {
+        readonly tenure: Extract<PlaySessionTenureProjection, { tag: "saved" }>;
+        readonly access: { readonly tag: "authenticated" };
+      }
+  );
+
 export type PlaySessionCreationFailure = {
   readonly tag: "playSessionCreationFailed";
-  readonly reason: "playSessionIdCollision" | "storageUnavailable";
+  readonly reason:
+    | "playSessionIdCollision"
+    | "storageUnavailable"
+    | "savedSessionQuotaExceeded"
+    | "guestCapacityExceeded";
   readonly message: string;
 };
 
@@ -60,9 +93,36 @@ export type PlaySessionStorageFailure = {
   readonly message: string;
 };
 
+export type PlaySessionLimitFailure = {
+  readonly tag: "playSessionLimitFailure";
+  readonly message: string;
+} & (
+  | {
+      readonly reason: "requestRateExceeded";
+      readonly retryAfterSeconds: number;
+    }
+  | {
+      readonly reason:
+        | "retainedCommandQuotaExceeded"
+        | "savedSessionQuotaExceeded"
+        | "guestCapacityExceeded";
+    }
+);
+
 export type PlaySessionAccessFailure =
   | PlaySessionUnavailable
-  | PlaySessionStorageFailure;
+  | PlaySessionStorageFailure
+  | PlaySessionLimitFailure;
+
+export type PlaySessionRunResult<A> = {
+  readonly value: A;
+  readonly tenure: PlaySessionTenureProjection;
+};
+
+export type SavedPlaySessionSummary = {
+  readonly playSessionId: PlaySessionId;
+  readonly tenure: Extract<PlaySessionTenureProjection, { tag: "saved" }>;
+};
 
 export type PlaySessionCommand = {
   readonly name: CharacterToolName | BattleToolName | DiceToolName;
@@ -72,23 +132,42 @@ export type PlaySessionCommand = {
 export type PlaySessionCommandRetention<A> = {
   readonly command: PlaySessionCommand;
   readonly retain: (result: A) => boolean;
+  readonly succeeded?: (result: A) => boolean;
 };
 
 export type PlaySessionRegistry<
   AccessFailure extends PlaySessionAccessFailure = PlaySessionUnavailable,
 > = {
-  create(): Either.Either<PlaySessionCreation, PlaySessionCreationFailure>;
+  create(
+    caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
+  ): Either.Either<PlaySessionCreation, PlaySessionCreationFailure>;
   run<A>(
     playSessionId: PlaySessionId,
+    caller: Exclude<PlaySessionCaller, { tag: "anonymous" }>,
     operation: (root: McpPlaySessionRoot) => A | Promise<A>,
     commandRetention?: PlaySessionCommandRetention<A>,
-  ): Promise<Either.Either<A, AccessFailure>>;
+  ): Promise<Either.Either<PlaySessionRunResult<A>, AccessFailure>>;
+  save(
+    playSessionId: PlaySessionId,
+    guestAccessGrant: GuestAccessGrant,
+    principalId: PrincipalId,
+  ): Promise<Either.Either<PlaySessionTenureProjection, AccessFailure>>;
+  listSaved(
+    principalId: PrincipalId,
+  ): Either.Either<readonly SavedPlaySessionSummary[], AccessFailure>;
+  deleteSaved(
+    playSessionId: PlaySessionId,
+    principalId: PrincipalId,
+  ): Promise<
+    Either.Either<{ readonly tag: "playSessionDeleted" }, AccessFailure>
+  >;
 };
 
 export type PlaySessionIdFactory = () => PlaySessionId;
 
 type LivePlaySession = {
   readonly root: McpPlaySessionRoot;
+  tenure: StoredPlaySessionTenure;
   tail: Promise<void>;
 };
 
@@ -97,39 +176,172 @@ const MAX_PLAY_SESSION_ID_ATTEMPTS = 16;
 export function createPlaySessionRegistry(input: {
   readonly createRoot: (playSessionId: PlaySessionId) => McpPlaySessionRoot;
   readonly playSessionIdFactory?: PlaySessionIdFactory;
+  readonly now?: () => EpochMilliseconds;
 }): PlaySessionRegistry {
   const liveSessions = new Map<PlaySessionId, LivePlaySession>();
   const playSessionIdFactory =
     input.playSessionIdFactory ?? generatedPlaySessionId;
+  const now = input.now ?? currentEpochMilliseconds;
 
   return {
-    create() {
+    create(caller) {
       return Either.map(
         availablePlaySessionId(playSessionIdFactory, liveSessions),
         (playSessionId) => {
           const root = input.createRoot(playSessionId);
-          liveSessions.set(playSessionId, { root, tail: Promise.resolve() });
+          if (caller.tag === "anonymous") {
+            const guestAccessGrant = generatedGuestAccessGrant();
+            const tenure = {
+              tag: "guest",
+              guestAccessGrantDigest: guestAccessGrantDigest(guestAccessGrant),
+              lastActivityAtMs: now(),
+            } as const;
+            liveSessions.set(playSessionId, {
+              root,
+              tenure,
+              tail: Promise.resolve(),
+            });
+            return {
+              playSessionId,
+              projection: root.sessionStore.snapshot(),
+              tenure: projectPlaySessionTenure(tenure),
+              access: { tag: "guest", guestAccessGrant },
+            };
+          }
+          const tenure = {
+            tag: "saved",
+            principalId: caller.principalId,
+            lastActivityAtMs: now(),
+          } as const;
+          liveSessions.set(playSessionId, {
+            root,
+            tenure,
+            tail: Promise.resolve(),
+          });
           return {
             playSessionId,
             projection: root.sessionStore.snapshot(),
+            tenure: projectPlaySessionTenure(tenure),
+            access: { tag: "authenticated" },
           };
         },
       );
     },
-    async run(playSessionId, operation) {
+    async run(playSessionId, caller, operation, commandRetention) {
       const session = liveSessions.get(playSessionId);
-      if (session === undefined) {
-        return Either.left(PLAY_SESSION_UNAVAILABLE);
-      }
-
-      const result = session.tail.then(() => operation(session.root));
+      if (session === undefined) return Either.left(PLAY_SESSION_UNAVAILABLE);
+      const result = session.tail.then(async () => {
+        const expired = playSessionIsExpired(session.tenure, now());
+        if (expired || !callerAuthorizes(caller, session.tenure)) {
+          if (expired) liveSessions.delete(playSessionId);
+          return Either.left(PLAY_SESSION_UNAVAILABLE);
+        }
+        const value = await operation(session.root);
+        const succeeded = commandRetention?.succeeded?.(value) ?? true;
+        if (!succeeded) {
+          return Either.right({
+            value,
+            tenure: projectPlaySessionTenure(session.tenure),
+          });
+        }
+        session.tenure = {
+          ...session.tenure,
+          lastActivityAtMs: now(),
+        };
+        return Either.right({
+          value,
+          tenure: projectPlaySessionTenure(session.tenure),
+        });
+      });
       session.tail = result.then(
         () => undefined,
         () => undefined,
       );
-      return Either.right(await result);
+      return result;
+    },
+    async save(playSessionId, guestAccessGrant, principalId) {
+      const session = liveSessions.get(playSessionId);
+      if (session === undefined) return Either.left(PLAY_SESSION_UNAVAILABLE);
+      const result = session.tail.then(() => {
+        const expired = playSessionIsExpired(session.tenure, now());
+        if (
+          expired ||
+          !callerAuthorizes({ tag: "guest", guestAccessGrant }, session.tenure)
+        ) {
+          if (expired) liveSessions.delete(playSessionId);
+          return Either.left(PLAY_SESSION_UNAVAILABLE);
+        }
+        session.tenure = {
+          tag: "saved",
+          principalId,
+          lastActivityAtMs: now(),
+        };
+        return Either.right(projectPlaySessionTenure(session.tenure));
+      });
+      session.tail = result.then(
+        () => undefined,
+        () => undefined,
+      );
+      return result;
+    },
+    listSaved(principalId) {
+      for (const [playSessionId, session] of liveSessions) {
+        if (playSessionIsExpired(session.tenure, now())) {
+          liveSessions.delete(playSessionId);
+        }
+      }
+      return Either.right(
+        Array.from(liveSessions.entries()).flatMap(
+          ([playSessionId, session]) =>
+            session.tenure.tag === "saved" &&
+            session.tenure.principalId === principalId
+              ? [
+                  {
+                    playSessionId,
+                    tenure: projectPlaySessionTenure(session.tenure),
+                  },
+                ]
+              : [],
+        ),
+      );
+    },
+    async deleteSaved(playSessionId, principalId) {
+      const session = liveSessions.get(playSessionId);
+      if (session === undefined) return Either.left(PLAY_SESSION_UNAVAILABLE);
+      const result = session.tail.then(() => {
+        const expired = playSessionIsExpired(session.tenure, now());
+        if (
+          liveSessions.get(playSessionId) !== session ||
+          session.tenure.tag !== "saved" ||
+          expired ||
+          session.tenure.principalId !== principalId
+        ) {
+          if (expired) liveSessions.delete(playSessionId);
+          return Either.left(PLAY_SESSION_UNAVAILABLE);
+        }
+        liveSessions.delete(playSessionId);
+        return Either.right({ tag: "playSessionDeleted" } as const);
+      });
+      session.tail = result.then(
+        () => undefined,
+        () => undefined,
+      );
+      return result;
     },
   };
+}
+
+function callerAuthorizes(
+  caller: Exclude<PlaySessionCaller, { tag: "anonymous" }>,
+  tenure: StoredPlaySessionTenure,
+): boolean {
+  return caller.tag === "guest"
+    ? tenure.tag === "guest" &&
+        guestAccessGrantMatchesDigest(
+          caller.guestAccessGrant,
+          tenure.guestAccessGrantDigest,
+        )
+    : tenure.tag === "saved" && caller.principalId === tenure.principalId;
 }
 
 function availablePlaySessionId(

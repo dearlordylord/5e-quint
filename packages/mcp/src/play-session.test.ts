@@ -18,6 +18,11 @@ import {
   type PlaySessionCreation,
   type PlaySessionRegistry,
 } from "./play-session.ts";
+import {
+  GUEST_INACTIVITY_RETENTION_MS,
+  decodeEpochMilliseconds,
+  decodePrincipalId,
+} from "./play-session-access.ts";
 
 describe("Play Session operation scheduling", () => {
   test("serializes calls within one session without coupling another session", async () => {
@@ -29,8 +34,8 @@ describe("Play Session operation scheduling", () => {
           adminMirrorSessionId(playSessionId),
         ),
     });
-    const first = createdPlaySession(registry).playSessionId;
-    const second = createdPlaySession(registry).playSessionId;
+    const first = createdGuestPlaySession(registry);
+    const second = createdGuestPlaySession(registry);
     const events: string[] = [];
     let releaseFirst: (() => void) | undefined;
     const firstMayFinish = new Promise<void>((resolve) => {
@@ -41,19 +46,27 @@ describe("Play Session operation scheduling", () => {
       reportFirstStarted = resolve;
     });
 
-    const firstCall = registry.run(first, async () => {
-      events.push("first:start");
-      reportFirstStarted?.();
-      await firstMayFinish;
-      events.push("first:end");
-    });
+    const firstCall = registry.run(
+      first.playSessionId,
+      first.caller,
+      async () => {
+        events.push("first:start");
+        reportFirstStarted?.();
+        await firstMayFinish;
+        events.push("first:end");
+      },
+    );
     await firstStarted;
-    const queuedCall = registry.run(first, () => {
+    const queuedCall = registry.run(first.playSessionId, first.caller, () => {
       events.push("first:queued");
     });
-    const independentCall = registry.run(second, () => {
-      events.push("second:complete");
-    });
+    const independentCall = registry.run(
+      second.playSessionId,
+      second.caller,
+      () => {
+        events.push("second:complete");
+      },
+    );
 
     const independentResult = await independentCall;
     expect(Either.isRight(independentResult)).toBe(true);
@@ -101,8 +114,8 @@ describe("Play Session operation scheduling", () => {
       },
     });
 
-    const first = createdPlaySession(registry).playSessionId;
-    const second = createdPlaySession(registry).playSessionId;
+    const first = createdGuestPlaySession(registry).playSessionId;
+    const second = createdGuestPlaySession(registry).playSessionId;
     const [firstPublication, secondPublication] = roots.map(
       (root) => root.adminMirrorPublication,
     );
@@ -142,8 +155,8 @@ describe("Play Session operation scheduling", () => {
       playSessionIdFactory: () => decoded.right,
     });
 
-    expect(Either.isRight(registry.create())).toBe(true);
-    const collision = registry.create();
+    expect(Either.isRight(registry.create({ tag: "anonymous" }))).toBe(true);
+    const collision = registry.create({ tag: "anonymous" });
 
     expect(Either.isLeft(collision)).toBe(true);
     if (Either.isRight(collision)) return;
@@ -152,12 +165,103 @@ describe("Play Session operation scheduling", () => {
       reason: "playSessionIdCollision",
     });
   });
+
+  test("rechecks guest ownership behind a queued save", async () => {
+    const registry = createPlaySessionRegistry({
+      createRoot: (playSessionId) =>
+        createMcpPlaySessionRoot(
+          undefined,
+          adminMirrorSessionId(playSessionId),
+        ),
+    });
+    const guest = createdGuestPlaySession(registry);
+    let release: (() => void) | undefined;
+    const blocked = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let started: (() => void) | undefined;
+    const operationStarted = new Promise<void>((resolve) => {
+      started = resolve;
+    });
+    const first = registry.run(guest.playSessionId, guest.caller, async () => {
+      started?.();
+      await blocked;
+    });
+    await operationStarted;
+    const owner = decodePrincipalId("principal:queued-save");
+    if (Either.isLeft(owner)) throw new Error(owner.left);
+    const saved = registry.save(
+      guest.playSessionId,
+      guest.caller.guestAccessGrant,
+      owner.right,
+    );
+    const stale = registry.run(
+      guest.playSessionId,
+      guest.caller,
+      () => "stale",
+    );
+    release?.();
+    await first;
+    expect(await saved).toMatchObject({ _tag: "Right" });
+    expect(await stale).toMatchObject({
+      _tag: "Left",
+      left: { tag: "playSessionUnavailable" },
+    });
+  });
+
+  test("does not refresh inactivity after an unsuccessful operation", async () => {
+    let nowMs = 0;
+    const registry = createPlaySessionRegistry({
+      createRoot: (playSessionId) =>
+        createMcpPlaySessionRoot(
+          undefined,
+          adminMirrorSessionId(playSessionId),
+        ),
+      now: () => testEpochMilliseconds(nowMs),
+    });
+    const guest = createdGuestPlaySession(registry);
+    nowMs = GUEST_INACTIVITY_RETENTION_MS - 1;
+    expect(
+      await registry.run(guest.playSessionId, guest.caller, () => "failed", {
+        command: { name: "roll_dice", args: {} },
+        retain: () => false,
+        succeeded: () => false,
+      }),
+    ).toMatchObject({ _tag: "Right" });
+    nowMs = GUEST_INACTIVITY_RETENTION_MS;
+    expect(
+      await registry.run(guest.playSessionId, guest.caller, () => "expired"),
+    ).toMatchObject({
+      _tag: "Left",
+      left: { tag: "playSessionUnavailable" },
+    });
+  });
 });
 
 function createdPlaySession(
   registry: PlaySessionRegistry,
 ): PlaySessionCreation {
-  const created = registry.create();
+  const created = registry.create({ tag: "anonymous" });
   if (Either.isLeft(created)) throw new Error(created.left.message);
   return created.right;
+}
+
+function createdGuestPlaySession(registry: PlaySessionRegistry) {
+  const creation = createdPlaySession(registry);
+  if (creation.access.tag !== "guest") {
+    throw new Error("Expected a Guest Play Session.");
+  }
+  return {
+    playSessionId: creation.playSessionId,
+    caller: {
+      tag: "guest" as const,
+      guestAccessGrant: creation.access.guestAccessGrant,
+    },
+  };
+}
+
+function testEpochMilliseconds(input: number) {
+  const decoded = decodeEpochMilliseconds(input);
+  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
+  return decoded.right;
 }

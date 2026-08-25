@@ -68,6 +68,6 @@ retaining a second tombstone store merely to guess whether deletion, expiry,
 pressure cleanup, or another loss caused the absence.
 
 This supersedes the public-product consequences of the process-lifetime decision
-recorded in GitHub issue #304. Process-lifetime in-memory storage remains the
-current developer-mode implementation until the public persistence increments
-land; it is not the accepted public ownership or retention contract.
+recorded in GitHub issue #304. The recoverable HTTP composition implements this
+boundary; the stdio composition remains a convenient process-local development
+path and does not redefine public ownership or retention.

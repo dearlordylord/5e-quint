@@ -186,9 +186,10 @@ async function exerciseLocalMcp(
     arguments: {},
   });
   const playSessionId = playSessionIdFrom(created.structuredContent);
+  const guestAccessGrant = guestAccessGrantFrom(created.structuredContent);
   const characters = await client.callTool({
     name: "list_characters",
-    arguments: { playSessionId },
+    arguments: { playSessionId, guestAccessGrant },
   });
   expect(characters.isError).not.toBe(true);
   expect(characters.structuredContent).toMatchObject({
@@ -344,4 +345,16 @@ function playSessionIdFrom(value: unknown): string {
     Schema.Struct({ playSessionId: Schema.String }),
   )(value);
   return decoded.playSessionId;
+}
+
+function guestAccessGrantFrom(value: unknown): string {
+  return Schema.decodeUnknownSync(
+    Schema.Struct({
+      operation: Schema.Struct({
+        result: Schema.Struct({
+          access: Schema.Struct({ guestAccessGrant: Schema.String }),
+        }),
+      }),
+    }),
+  )(value).operation.result.access.guestAccessGrant;
 }

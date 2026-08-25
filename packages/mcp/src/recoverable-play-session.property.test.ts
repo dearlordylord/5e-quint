@@ -11,6 +11,7 @@ import {
 } from "./recoverable-play-session.ts";
 import { decodePlaySessionId, type PlaySessionId } from "./play-session.ts";
 import { handleToolCall } from "./server.ts";
+import type { GuestAccessGrant } from "./play-session-access.ts";
 
 const diceGroup = fc.record({
   dice: fc.integer({ min: 1, max: 4 }),
@@ -52,18 +53,28 @@ describe("recoverable Play Session properties", () => {
               playSessionIdFactory: () => playSessionId,
               randomSeedFactory: () => seed.right,
             });
-            expect(Either.isRight(first.create())).toBe(true);
-            expect(Either.isRight(second.create())).toBe(true);
+            const firstCreation = first.create({ tag: "anonymous" });
+            const secondCreation = second.create({ tag: "anonymous" });
+            if (
+              Either.isLeft(firstCreation) ||
+              firstCreation.right.access.tag !== "guest" ||
+              Either.isLeft(secondCreation) ||
+              secondCreation.right.access.tag !== "guest"
+            ) {
+              throw new Error("The property requires two Guest Play Sessions.");
+            }
 
             for (const request of requests) {
               const firstGroups = await rollRecoverably(
                 first,
                 playSessionId,
+                firstCreation.right.access.guestAccessGrant,
                 request,
               );
               const secondGroups = await rollRecoverably(
                 second,
                 playSessionId,
+                secondCreation.right.access.guestAccessGrant,
                 request,
               );
               expect(firstGroups).toEqual(secondGroups);
@@ -99,10 +110,12 @@ describe("recoverable Play Session properties", () => {
 async function rollRecoverably(
   registry: ReturnType<typeof createRecoverablePlaySessionRegistry>,
   playSessionId: PlaySessionId,
+  guestAccessGrant: GuestAccessGrant,
   request: Readonly<Record<string, unknown>>,
 ): Promise<unknown> {
   const result = await registry.run(
     playSessionId,
+    { tag: "guest", guestAccessGrant },
     (root) => handleToolCall(root, "roll_dice", request),
     {
       command: { name: "roll_dice", args: request },
@@ -116,10 +129,10 @@ async function rollRecoverably(
         : "The property Play Session unexpectedly became unavailable.",
     );
   }
-  if (!("structuredContent" in result.right)) {
+  if (!("structuredContent" in result.right.value)) {
     throw new Error("Recoverable dice operation omitted structured content.");
   }
-  return result.right.structuredContent.groups;
+  return result.right.value.structuredContent.groups;
 }
 
 function openRepository(): PlaySessionRepository {

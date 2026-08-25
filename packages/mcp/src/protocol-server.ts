@@ -3,7 +3,7 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { Random } from "effect";
+import { Match, Random } from "effect";
 
 import {
   createMcpApplicationServices,
@@ -17,12 +17,18 @@ import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
 import { errorContent } from "./tool-content.ts";
 import {
   handleCreatePlaySession,
+  handleDeleteSavedPlaySession,
+  handleListSavedPlaySessions,
   handlePlaySessionOperation,
   handleReadPlaySession,
+  handleSavePlaySession,
+  GUEST_ONLY_REQUEST_IDENTITY,
+  type PlaySessionRequestIdentity,
 } from "./play-session-protocol.ts";
 import {
   isPlaySessionToolName,
   playSessionToolDefinitions,
+  playSessionToolNames,
   statefulPlaySessionToolDefinition,
 } from "./play-session-tool-contract.ts";
 import {
@@ -45,6 +51,10 @@ import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
 import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
+import {
+  NO_AUTH_SECURITY_SCHEMES,
+  OPTIONAL_PLAY_SESSION_SECURITY_SCHEMES,
+} from "./tool-definition-contract.ts";
 
 export type {
   McpToolAnnotations,
@@ -53,6 +63,7 @@ export type {
 
 type CommonMcpProtocolServerOptions = {
   readonly playSessionIdFactory?: PlaySessionIdFactory;
+  readonly requestIdentity?: PlaySessionRequestIdentity;
 };
 
 type ProcessLifetimeMcpProtocolServerOptions =
@@ -78,9 +89,18 @@ type McpProtocolServerHost<AccessFailure extends PlaySessionAccessFailure> = {
 
 export function buildAdvertisedToolDefinitions(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
+  authenticationAvailable = true,
 ): readonly ProtocolToolDefinition[] {
   return [
-    ...playSessionToolDefinitions,
+    ...playSessionToolDefinitions.filter((definition) => {
+      const protocolDefinition: ProtocolToolDefinition = definition;
+      return (
+        authenticationAvailable ||
+        !protocolDefinition.securitySchemes?.some(
+          (scheme) => scheme.type === "oauth2",
+        )
+      );
+    }),
     ...definitions.map((definition) => {
       const advertisedDefinition =
         definition.outputSchema === undefined
@@ -99,7 +119,21 @@ export function buildAdvertisedToolDefinitions(
           )
         : advertisedDefinition;
     }),
-  ];
+  ].map((definition) => {
+    const source: ProtocolToolDefinition = definition;
+    const securitySchemes =
+      source.securitySchemes ??
+      (isPlaySessionToolName(source.name) || isStatefulToolName(source.name)
+        ? authenticationAvailable
+          ? OPTIONAL_PLAY_SESSION_SECURITY_SCHEMES
+          : NO_AUTH_SECURITY_SCHEMES
+        : NO_AUTH_SECURITY_SCHEMES);
+    return {
+      ...source,
+      securitySchemes,
+      _meta: { ...source._meta, securitySchemes },
+    };
+  });
 }
 
 export function createDndMcpProtocolServer(
@@ -117,7 +151,14 @@ export function createDndMcpProtocolServer(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   options: McpProtocolServerOptions = {},
 ): McpProtocolServerHost<PlaySessionAccessFailure> {
-  const protocolDefinitions = buildAdvertisedToolDefinitions(definitions);
+  const authenticationAvailable =
+    options.requestIdentity?.tag === "authenticated" ||
+    (options.requestIdentity?.tag === "anonymous" &&
+      options.requestIdentity.savedPlaySessions.tag === "oauth");
+  const protocolDefinitions = buildAdvertisedToolDefinitions(
+    definitions,
+    authenticationAvailable,
+  );
   const advertisedToolNames = new Set(
     protocolDefinitions.map((definition) => definition.name),
   );
@@ -125,6 +166,8 @@ export function createDndMcpProtocolServer(
     protocolDefinitions.map((definition) => [definition.name, definition]),
   );
   const playSessions = playSessionRegistry(applicationServices, options);
+  const requestIdentity =
+    options.requestIdentity ?? GUEST_ONLY_REQUEST_IDENTITY;
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
     {
@@ -144,9 +187,44 @@ export function createDndMcpProtocolServer(
       return errorContent(`Tool is not advertised by this MCP server: ${name}`);
     }
     if (isPlaySessionToolName(name)) {
-      return name === "create_play_session"
-        ? handleCreatePlaySession(playSessions, request.params.arguments)
-        : handleReadPlaySession(playSessions, request.params.arguments);
+      return Match.value(name).pipe(
+        Match.when(playSessionToolNames.create, () =>
+          handleCreatePlaySession(
+            playSessions,
+            request.params.arguments,
+            requestIdentity,
+          ),
+        ),
+        Match.when(playSessionToolNames.read, () =>
+          handleReadPlaySession(
+            playSessions,
+            request.params.arguments,
+            requestIdentity,
+          ),
+        ),
+        Match.when(playSessionToolNames.save, () =>
+          handleSavePlaySession(
+            playSessions,
+            request.params.arguments,
+            requestIdentity,
+          ),
+        ),
+        Match.when(playSessionToolNames.listSaved, () =>
+          handleListSavedPlaySessions(
+            playSessions,
+            request.params.arguments,
+            requestIdentity,
+          ),
+        ),
+        Match.when(playSessionToolNames.deleteSaved, () =>
+          handleDeleteSavedPlaySession(
+            playSessions,
+            request.params.arguments,
+            requestIdentity,
+          ),
+        ),
+        Match.exhaustive,
+      );
     }
     if (isStatefulToolName(name)) {
       const definition = protocolDefinitionByName.get(name);
@@ -160,6 +238,7 @@ export function createDndMcpProtocolServer(
         operationName: name,
         recordOperation: definition.annotations.readOnlyHint !== true,
         args: request.params.arguments,
+        identity: requestIdentity,
         handle: (root, args) => handleToolCall(root, name, args),
       });
     }

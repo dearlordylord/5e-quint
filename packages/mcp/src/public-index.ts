@@ -1,6 +1,7 @@
 import { Either, Schema } from "effect";
 
 import { createDndMcpHttpServer } from "./public-http-server.ts";
+import { createPublicMcpOAuthFromEnvironment } from "./public-oauth.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 
 const PublicMcpConfigurationSchema = Schema.Struct({
@@ -14,10 +15,16 @@ const configuration = Schema.decodeUnknownEither(PublicMcpConfigurationSchema)({
   hostname: process.env.DND_MCP_HOST ?? "0.0.0.0",
   port: process.env.PORT ?? "8787",
 });
+const oauth = createPublicMcpOAuthFromEnvironment(process.env);
 
 if (Either.isLeft(configuration)) {
   process.stderr.write(
     `Invalid public MCP configuration: ${configuration.left.message}\n`,
+  );
+  process.exitCode = 1;
+} else if (Either.isLeft(oauth)) {
+  process.stderr.write(
+    `Invalid public MCP configuration: ${oauth.left.message}\n`,
   );
   process.exitCode = 1;
 } else {
@@ -34,6 +41,7 @@ if (Either.isLeft(configuration)) {
       playSessionRepository: repository.right,
       hostname: configuration.right.hostname,
       port: configuration.right.port,
+      ...(oauth.right === undefined ? {} : { oauth: oauth.right }),
     });
     const endpoint = await server.listen();
     if (Either.isLeft(endpoint)) {

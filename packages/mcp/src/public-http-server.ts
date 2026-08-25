@@ -13,6 +13,10 @@ import {
 } from "./composition-root.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import type { PlaySessionRepository } from "./recoverable-play-session.ts";
+import type { PublicMcpOAuth } from "./public-oauth.ts";
+import type { PlaySessionRequestIdentity } from "./play-session-protocol.ts";
+
+export const PUBLIC_MCP_MAX_REQUEST_BYTES = 1_048_576;
 
 export type DndMcpHttpServer = {
   listen(): Promise<Either.Either<URL, DndMcpHttpServerIssue>>;
@@ -30,6 +34,7 @@ export function createDndMcpHttpServer(input: {
   readonly applicationServices?: McpApplicationServices;
   readonly hostname?: string;
   readonly port?: number;
+  readonly oauth?: PublicMcpOAuth;
 }): DndMcpHttpServer {
   const applicationServices =
     input.applicationServices ?? createMcpApplicationServices();
@@ -42,6 +47,7 @@ export function createDndMcpHttpServer(input: {
       hostname,
       applicationServices,
       playSessionRepository: input.playSessionRepository,
+      ...(input.oauth === undefined ? {} : { oauth: input.oauth }),
     }).catch(() => {
       if (outgoing.headersSent) {
         outgoing.destroy();
@@ -114,26 +120,63 @@ async function handleNodeRequest(input: {
   readonly hostname: string;
   readonly applicationServices: McpApplicationServices;
   readonly playSessionRepository: PlaySessionRepository;
+  readonly oauth?: PublicMcpOAuth;
 }): Promise<void> {
-  const request = await webRequest(input.incoming, input.hostname);
-  if (new URL(request.url).pathname !== "/mcp") {
+  const pathname = new URL(
+    input.incoming.url ?? "/",
+    `http://${input.hostname}`,
+  ).pathname;
+  if (
+    pathname === "/.well-known/oauth-protected-resource" &&
+    input.incoming.method === "GET" &&
+    input.oauth !== undefined
+  ) {
+    await writeResponse(
+      input.outgoing,
+      Response.json(input.oauth.protectedResourceMetadata),
+    );
+    return;
+  }
+  if (pathname !== "/mcp") {
     await writeResponse(
       input.outgoing,
       new Response("Not found", { status: 404 }),
     );
     return;
   }
+  const request = await webRequest(input.incoming, input.hostname);
+  if (Either.isLeft(request)) {
+    await writeResponse(
+      input.outgoing,
+      new Response("Request body is too large", { status: 413 }),
+    );
+    return;
+  }
+  const identity = await requestIdentity(request.right, input.oauth);
+  if (Either.isLeft(identity)) {
+    await writeResponse(
+      input.outgoing,
+      new Response("Unauthorized", {
+        status: 401,
+        headers: { "WWW-Authenticate": identity.left.challenge },
+      }),
+    );
+    return;
+  }
   const host = createDndMcpProtocolServer(
     input.applicationServices,
     undefined,
-    { playSessionRepository: input.playSessionRepository },
+    {
+      playSessionRepository: input.playSessionRepository,
+      requestIdentity: identity.right,
+    },
   );
   const transport = new WebStandardStreamableHTTPServerTransport({
     enableJsonResponse: true,
   });
   try {
     await host.server.connect(transport);
-    const response = await transport.handleRequest(request);
+    const response = await transport.handleRequest(request.right);
     await writeResponse(input.outgoing, response);
   } finally {
     await host.server.close();
@@ -143,8 +186,9 @@ async function handleNodeRequest(input: {
 async function webRequest(
   incoming: IncomingMessage,
   hostname: string,
-): Promise<Request> {
+): Promise<Either.Either<Request, { readonly tag: "requestTooLarge" }>> {
   const body = await requestBody(incoming);
+  if (Either.isLeft(body)) return Either.left(body.left);
   const headers = new Headers();
   for (const [name, value] of Object.entries(incoming.headers)) {
     if (Array.isArray(value)) {
@@ -153,22 +197,72 @@ async function webRequest(
       headers.set(name, value);
     }
   }
-  return new Request(
-    new URL(incoming.url ?? "/", `http://${hostname}`).toString(),
-    {
+  return Either.right(
+    new Request(new URL(incoming.url ?? "/", `http://${hostname}`).toString(), {
       headers,
       ...(incoming.method === undefined ? {} : { method: incoming.method }),
-      ...(body.byteLength === 0 ? {} : { body }),
-    },
+      ...(body.right.byteLength === 0 ? {} : { body: body.right }),
+    }),
   );
 }
 
-async function requestBody(incoming: IncomingMessage): Promise<Uint8Array> {
+async function requestBody(
+  incoming: IncomingMessage,
+): Promise<Either.Either<Uint8Array, { readonly tag: "requestTooLarge" }>> {
   const chunks: Buffer[] = [];
+  let byteLength = 0;
   for await (const chunk of incoming) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    byteLength += buffer.byteLength;
+    if (byteLength > PUBLIC_MCP_MAX_REQUEST_BYTES) {
+      return Either.left({ tag: "requestTooLarge" });
+    }
+    chunks.push(buffer);
   }
-  return Buffer.concat(chunks);
+  return Either.right(Buffer.concat(chunks));
+}
+
+async function requestIdentity(
+  request: Request,
+  oauth: PublicMcpOAuth | undefined,
+): Promise<
+  Either.Either<PlaySessionRequestIdentity, { readonly challenge: string }>
+> {
+  const authorization = request.headers.get("authorization");
+  if (authorization === null) {
+    return Either.right({
+      tag: "anonymous",
+      savedPlaySessions:
+        oauth === undefined
+          ? { tag: "unavailable" }
+          : {
+              tag: "oauth",
+              resourceMetadataUrl: oauth.resourceMetadataUrl.toString(),
+            },
+    });
+  }
+  const match = /^Bearer ([^\s]+)$/u.exec(authorization);
+  if (oauth === undefined || match?.[1] === undefined) {
+    return Either.left({ challenge: oauthChallenge(oauth, "invalid_token") });
+  }
+  const verified = await oauth.verifyAccessToken(match[1]);
+  return Either.isRight(verified)
+    ? Either.right({ tag: "authenticated", principalId: verified.right })
+    : Either.left({ challenge: oauthChallenge(oauth, "invalid_token") });
+}
+
+function oauthChallenge(
+  oauth: PublicMcpOAuth | undefined,
+  error: "invalid_token",
+): string {
+  const parameters = [
+    ...(oauth === undefined
+      ? []
+      : [`resource_metadata="${oauth.resourceMetadataUrl.toString()}"`]),
+    `error="${error}"`,
+    'error_description="The OAuth access token is invalid"',
+  ];
+  return `Bearer ${parameters.join(", ")}`;
 }
 
 async function writeResponse(

@@ -27,6 +27,8 @@ import {
 
 import {
   acceptancePlaySessionId,
+  acceptancePlaySessionRoutedArgs,
+  retainAcceptancePlaySessionAccess,
   verifyAgentConversationScenarios,
   verifyBaselineVertical,
   verifyLevelFiveWizardFireballBattleHandoff,
@@ -38,11 +40,14 @@ import {
   verifyWidthVertical,
   verifyWizardIceKnifeBattleHandoff,
 } from "../test-support/mcp-acceptance-scenarios.ts";
+import { decodeGuestAccessGrant } from "./play-session-access.ts";
 import { requireJsonSchema } from "../test-support/json-schema.ts";
 import { CHARACTER_SESSION_QUERY_KIND_VALUES } from "./character-session-query-tool-input.ts";
 import { createMcpApplicationServices } from "./composition-root.ts";
 import { availableCharacterSession } from "./session-store.ts";
 import { adminProjection } from "./admin-mirror.ts";
+
+const guestAccessGrantByPlaySessionId = new Map<string, string>();
 import { contentToolDefinitions } from "./content-tools.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { characterIdFromDraftId } from "./session-store.ts";
@@ -81,7 +86,7 @@ describe("MCP protocol server", () => {
       expect((await client.listTools()).tools.map((tool) => tool.name)).toEqual(
         ["create_play_session", "read_play_session", "describe_mcp_workflow"],
       );
-      const hiddenCall = await client.callTool({
+      const hiddenCall = await callRawTool(client, {
         name: "create_character_draft",
         arguments: {},
       });
@@ -209,7 +214,7 @@ describe("MCP protocol server", () => {
       });
       expect(started.projection).not.toHaveProperty("activeBattle");
 
-      const endBeforeFinalize = await client.callTool({
+      const endBeforeFinalize = await callRawTool(client, {
         name: "end_battle",
         arguments: { playSessionId: modeSession },
       });
@@ -243,7 +248,7 @@ describe("MCP protocol server", () => {
       });
       expect(finalized.projection).not.toHaveProperty("initialInitiativeSetup");
 
-      const activeLifecycle = await client.callTool({
+      const activeLifecycle = await callRawTool(client, {
         name: "battle_lifecycle",
         arguments: {
           playSessionId: modeSession,
@@ -313,7 +318,7 @@ describe("MCP protocol server", () => {
         ],
       });
 
-      const invalidWitness = await client.callTool({
+      const invalidWitness = await callRawTool(client, {
         name: "battle_lifecycle",
         arguments: {
           playSessionId: swapSession,
@@ -373,7 +378,7 @@ describe("MCP protocol server", () => {
         battleState: { tag: "initialInitiativeSetup" },
       });
 
-      const repeatedSwap = await client.callTool({
+      const repeatedSwap = await callRawTool(client, {
         name: "battle_lifecycle",
         arguments: {
           playSessionId: swapSession,
@@ -416,7 +421,7 @@ describe("MCP protocol server", () => {
       });
 
       const noBattleSession = await createPlaySession(client);
-      const noBattleLifecycle = await client.callTool({
+      const noBattleLifecycle = await callRawTool(client, {
         name: "battle_lifecycle",
         arguments: {
           playSessionId: noBattleSession,
@@ -530,7 +535,7 @@ describe("MCP protocol server", () => {
         });
         expect(resumedFirst.nextOperations).not.toContain("finalize_character");
 
-        const malformedRead = await client.callTool({
+        const malformedRead = await callRawTool(client, {
           name: "read_play_session",
           arguments: { playSessionId: first, bogus: true },
         });
@@ -591,7 +596,7 @@ describe("MCP protocol server", () => {
           }).valid,
         ).toBe(false);
 
-        const absentResult = await client.callTool({
+        const absentResult = await callRawTool(client, {
           name: "list_characters",
           arguments: {
             playSessionId: "play-session:00000000-0000-4000-8000-000000000000",
@@ -739,7 +744,7 @@ describe("MCP protocol server", () => {
         ajvJsonSchema(applyOperationTool.outputSchema),
       );
 
-      const accepted = await client.callTool({
+      const accepted = await callRawTool(client, {
         name: "apply_character_session_operation",
         arguments: {
           playSessionId,
@@ -754,7 +759,7 @@ describe("MCP protocol server", () => {
           },
         },
       });
-      expect(accepted.isError).not.toBe(true);
+      expect(accepted.isError, JSON.stringify(accepted)).not.toBe(true);
       expect(accepted.structuredContent).toBeDefined();
       if (!isJsonObject(accepted.structuredContent)) {
         throw new Error("Accepted operation omitted structured content.");
@@ -780,7 +785,7 @@ describe("MCP protocol server", () => {
         ]),
       );
 
-      const rejected = await client.callTool({
+      const rejected = await callRawTool(client, {
         name: "apply_character_session_operation",
         arguments: {
           playSessionId,
@@ -835,34 +840,46 @@ describe("MCP protocol server", () => {
     try {
       await host.server.connect(serverTransport);
       await client.connect(clientTransport);
-      const playSessionId = await acceptancePlaySessionId(client);
+      const playSessionId = await createPlaySession(client);
       const secondPlaySessionId = await createPlaySession(client);
+      const retainedGrant = guestAccessGrantByPlaySessionId.get(playSessionId);
+      if (retainedGrant === undefined) {
+        throw new Error("Expected retained Guest Play Session access.");
+      }
+      retainAcceptancePlaySessionAccess(client, {
+        playSessionId,
+        guestAccessGrant: retainedGrant,
+      });
       const decoded = decodePlaySessionId(playSessionId);
       if (decoded._tag === "Left") throw new Error(decoded.left);
-      await host.playSessions.run(decoded.right, (root) => {
-        const monk = availableCharacterSession({
-          characterId: characterId("character:resource-monk"),
-          build: armorClassBuild({
-            startingClass: "class_monk",
-            advancements: ["class_monk"],
-          }),
-          currentHp: Hp(1),
-          tempHp: Hp(0),
-          hitPointMaximumReduction: Hp(0),
-          conditions: [],
-          companion: { tag: "none" },
-          resourceExpenditures: [
-            {
-              tag: "useCountResource",
-              unitId: MONK_MONKS_FOCUS_UNIT_ID,
-              expended: resourceCount(2),
-            },
-          ],
-          unitLibrary: root.unitLibrary,
-        });
-        if (Either.isLeft(monk)) throw new Error(monk.left.message);
-        root.sessionStore.characters.set(monk.right);
-      });
+      await host.playSessions.run(
+        decoded.right,
+        guestCaller(playSessionId),
+        (root) => {
+          const monk = availableCharacterSession({
+            characterId: characterId("character:resource-monk"),
+            build: armorClassBuild({
+              startingClass: "class_monk",
+              advancements: ["class_monk"],
+            }),
+            currentHp: Hp(1),
+            tempHp: Hp(0),
+            hitPointMaximumReduction: Hp(0),
+            conditions: [],
+            companion: { tag: "none" },
+            resourceExpenditures: [
+              {
+                tag: "useCountResource",
+                unitId: MONK_MONKS_FOCUS_UNIT_ID,
+                expended: resourceCount(2),
+              },
+            ],
+            unitLibrary: root.unitLibrary,
+          });
+          if (Either.isLeft(monk)) throw new Error(monk.left.message);
+          root.sessionStore.characters.set(monk.right);
+        },
+      );
       const operationTool = (await client.listTools()).tools.find(
         (tool) => tool.name === "apply_character_session_operation",
       );
@@ -872,7 +889,7 @@ describe("MCP protocol server", () => {
       const validateOutput = new AjvJsonSchemaValidator().getValidator(
         ajvJsonSchema(operationTool.outputSchema),
       );
-      const rawDiceRaw = await client.callTool({
+      const rawDiceRaw = await callRawTool(client, {
         name: "roll_dice",
         arguments: {
           playSessionId,
@@ -933,7 +950,7 @@ describe("MCP protocol server", () => {
       expect(operationResult(isolated).characters).toEqual([]);
 
       for (let spend = 0; spend < 3; spend += 1) {
-        const result = await client.callTool({
+        const result = await callRawTool(client, {
           name: "apply_character_session_operation",
           arguments: {
             playSessionId,
@@ -962,7 +979,7 @@ describe("MCP protocol server", () => {
             },
           });
         } else {
-          expect(result.isError).not.toBe(true);
+          expect(result.isError, JSON.stringify(result)).not.toBe(true);
         }
       }
     } finally {
@@ -1690,7 +1707,7 @@ describe("MCP protocol server", () => {
             },
           },
         });
-        const pendingTurn = await client.callTool({
+        const pendingTurn = await callRawTool(client, {
           name: "end_turn",
           arguments: { playSessionId, actorId: "row-shield-goblin" },
         });
@@ -1905,27 +1922,31 @@ describe("MCP protocol server", () => {
       const playSessionId = await createPlaySession(client);
       const decoded = decodePlaySessionId(playSessionId);
       if (Either.isLeft(decoded)) throw new Error(decoded.left);
-      const installed = await playSessions.run(decoded.right, (root) => {
-        for (const id of [firstCharacterId, secondCharacterId]) {
-          const session = availableCharacterSession({
-            characterId: id,
-            build: armorClassBuild({
-              startingClass: "class_fighter",
-              armor: "armor_chain_mail",
-              shield: true,
-              weapon: "weapon_longsword",
-            }),
-            currentHp: Hp(10),
-            tempHp: Hp(0),
-            hitPointMaximumReduction: Hp(0),
-            conditions: [],
-            companion: { tag: "none" },
-            unitLibrary: root.unitLibrary,
-          });
-          if (Either.isLeft(session)) throw new Error(session.left.message);
-          root.sessionStore.characters.set(session.right);
-        }
-      });
+      const installed = await playSessions.run(
+        decoded.right,
+        guestCaller(playSessionId),
+        (root) => {
+          for (const id of [firstCharacterId, secondCharacterId]) {
+            const session = availableCharacterSession({
+              characterId: id,
+              build: armorClassBuild({
+                startingClass: "class_fighter",
+                armor: "armor_chain_mail",
+                shield: true,
+                weapon: "weapon_longsword",
+              }),
+              currentHp: Hp(10),
+              tempHp: Hp(0),
+              hitPointMaximumReduction: Hp(0),
+              conditions: [],
+              companion: { tag: "none" },
+              unitLibrary: root.unitLibrary,
+            });
+            if (Either.isLeft(session)) throw new Error(session.left.message);
+            root.sessionStore.characters.set(session.right);
+          }
+        },
+      );
       if (Either.isLeft(installed))
         throw new Error(installed.left.restoration.guidance);
       const started = await callStructuredTool(client, {
@@ -1975,7 +1996,7 @@ describe("MCP protocol server", () => {
           currentActorId: "protocol-first",
         },
       });
-      const rejectedStart = await client.callTool({
+      const rejectedStart = await callRawTool(client, {
         name: "start_battle",
         arguments: {
           playSessionId,
@@ -2074,7 +2095,7 @@ describe("MCP protocol server", () => {
           }),
         ]),
       );
-      const rejectedEnd = await client.callTool({
+      const rejectedEnd = await callRawTool(client, {
         name: "end_battle",
         arguments: { playSessionId },
       });
@@ -2105,27 +2126,31 @@ describe("MCP protocol server", () => {
       const playSessionId = await createPlaySession(client);
       const decoded = decodePlaySessionId(playSessionId);
       if (Either.isLeft(decoded)) throw new Error(decoded.left);
-      const installed = await host.playSessions.run(decoded.right, (root) => {
-        for (const character of [firstCharacterId, secondCharacterId]) {
-          const session = availableCharacterSession({
-            characterId: character,
-            build: armorClassBuild({
-              startingClass: "class_fighter",
-              armor: "armor_chain_mail",
-              shield: true,
-              weapon: "weapon_longsword",
-            }),
-            currentHp: Hp(10),
-            tempHp: Hp(0),
-            hitPointMaximumReduction: Hp(0),
-            conditions: [],
-            companion: { tag: "none" },
-            unitLibrary: root.unitLibrary,
-          });
-          if (Either.isLeft(session)) throw new Error(session.left.message);
-          root.sessionStore.characters.set(session.right);
-        }
-      });
+      const installed = await host.playSessions.run(
+        decoded.right,
+        guestCaller(playSessionId),
+        (root) => {
+          for (const character of [firstCharacterId, secondCharacterId]) {
+            const session = availableCharacterSession({
+              characterId: character,
+              build: armorClassBuild({
+                startingClass: "class_fighter",
+                armor: "armor_chain_mail",
+                shield: true,
+                weapon: "weapon_longsword",
+              }),
+              currentHp: Hp(10),
+              tempHp: Hp(0),
+              hitPointMaximumReduction: Hp(0),
+              conditions: [],
+              companion: { tag: "none" },
+              unitLibrary: root.unitLibrary,
+            });
+            if (Either.isLeft(session)) throw new Error(session.left.message);
+            root.sessionStore.characters.set(session.right);
+          }
+        },
+      );
       if (Either.isLeft(installed))
         throw new Error(installed.left.restoration.guidance);
 
@@ -2262,7 +2287,7 @@ describe("MCP protocol server", () => {
       expect(JSON.stringify(occupied)).toContain('"tag":"inBattle"');
       expect(occupied.nextOperations).toContain("battle_lifecycle");
 
-      const conflict = await client.callTool({
+      const conflict = await callRawTool(client, {
         name: "battle_lifecycle",
         arguments: {
           playSessionId,
@@ -2296,6 +2321,7 @@ describe("MCP protocol server", () => {
 
       const adjustedBattle = await host.playSessions.run(
         decoded.right,
+        guestCaller(playSessionId),
         (root) => {
           const battle = root.sessionStore.battleSession;
           if (battle === null) {
@@ -2380,7 +2406,7 @@ describe("MCP protocol server", () => {
           combatantId: "lifecycle-goblin",
         },
       });
-      const rejectedLastRemoval = await client.callTool({
+      const rejectedLastRemoval = await callRawTool(client, {
         name: "battle_lifecycle",
         arguments: {
           playSessionId,
@@ -2437,37 +2463,45 @@ describe("MCP protocol server", () => {
         arguments: { playSessionId },
       });
       const captureDeepProjection = () =>
-        host.playSessions.run(decoded.right, (root) => {
-          const projection = adminProjection(root);
-          if (Either.isLeft(projection)) {
-            throw new Error(
-              `Expected a complete Play Session projection: ${projection.left}`,
-            );
-          }
-          return structuredClone({
-            projection: projection.right,
-            sessionSnapshot: root.sessionStore.snapshot(),
-            drafts: Array.from(root.sessionStore.drafts.entries()),
-            characterSessions: Array.from(
-              root.sessionStore.characters.entries(),
-            ),
-            battleState: root.sessionStore.battleState,
-            battleSession: root.sessionStore.battleSession,
-            transientBattleFills: root.sessionStore.pendingBattleFills,
-          });
-        });
+        host.playSessions.run(
+          decoded.right,
+          guestCaller(playSessionId),
+          (root) => {
+            const projection = adminProjection(root);
+            if (Either.isLeft(projection)) {
+              throw new Error(
+                `Expected a complete Play Session projection: ${projection.left}`,
+              );
+            }
+            return structuredClone({
+              projection: projection.right,
+              sessionSnapshot: root.sessionStore.snapshot(),
+              drafts: Array.from(root.sessionStore.drafts.entries()),
+              characterSessions: Array.from(
+                root.sessionStore.characters.entries(),
+              ),
+              battleState: root.sessionStore.battleState,
+              battleSession: root.sessionStore.battleSession,
+              transientBattleFills: root.sessionStore.pendingBattleFills,
+            });
+          },
+        );
       const deepBeforeFailure = await captureDeepProjection();
       if (Either.isLeft(deepBeforeFailure)) {
         throw new Error(deepBeforeFailure.left.restoration.guidance);
       }
-      await host.playSessions.run(decoded.right, (root) => {
-        root.sessionStore.characters.setAll = () =>
-          Either.left({
-            tag: "unknownCharacterSession",
-            characterId: characterId("character:injected"),
-          });
-      });
-      const rejected = await client.callTool({
+      await host.playSessions.run(
+        decoded.right,
+        guestCaller(playSessionId),
+        (root) => {
+          root.sessionStore.characters.setAll = () =>
+            Either.left({
+              tag: "unknownCharacterSession",
+              characterId: characterId("character:injected"),
+            });
+        },
+      );
+      const rejected = await callRawTool(client, {
         name: "battle_lifecycle",
         arguments: {
           playSessionId,
@@ -2496,7 +2530,9 @@ describe("MCP protocol server", () => {
       if (Either.isLeft(deepAfterFailure)) {
         throw new Error(deepAfterFailure.left.restoration.guidance);
       }
-      expect(deepAfterFailure.right).toEqual(deepBeforeFailure.right);
+      expect(deepAfterFailure.right.value).toEqual(
+        deepBeforeFailure.right.value,
+      );
       const battleAfterFailure = await callStructuredTool(client, {
         name: "read_battle_state",
         arguments: { playSessionId },
@@ -2528,7 +2564,7 @@ describe("MCP protocol server", () => {
       await server.connect(serverTransport);
       await client.connect(clientTransport);
 
-      const result = await client.callTool({
+      const result = await callRawTool(client, {
         name: "list_characters",
         arguments: { playSessionId: absentHandle },
       });
@@ -2548,6 +2584,7 @@ describe("MCP protocol server", () => {
           },
         },
         projection: null,
+        tenure: null,
         unresolvedInputs: [],
         nextOperations: ["create_play_session"],
         restoration: {
@@ -2921,14 +2958,18 @@ describe("MCP protocol server", () => {
         name: "inspect_character_session",
         arguments: { playSessionId, characterId: "character:rest-source" },
       });
-      await host.playSessions.run(decoded.right, (root) => {
-        root.sessionStore.characters.setAll = () =>
-          Either.left({
-            tag: "unknownCharacterSession",
-            characterId: characterId("character:injected"),
-          });
-      });
-      const rejected = await client.callTool({
+      await host.playSessions.run(
+        decoded.right,
+        guestCaller(playSessionId),
+        (root) => {
+          root.sessionStore.characters.setAll = () =>
+            Either.left({
+              tag: "unknownCharacterSession",
+              characterId: characterId("character:injected"),
+            });
+        },
+      );
+      const rejected = await callRawTool(client, {
         name: "apply_character_session_operation",
         arguments: {
           playSessionId,
@@ -2970,7 +3011,7 @@ describe("MCP protocol server", () => {
         name: "inspect_character_session",
         arguments: { playSessionId, characterId: "character:rest-target" },
       });
-      expect(sourceAfter).toEqual(sourceBefore);
+      expect(withoutTenure(sourceAfter)).toEqual(withoutTenure(sourceBefore));
       expect(sourceAfter).toMatchObject({
         operation: {
           result: {
@@ -3002,7 +3043,7 @@ describe("MCP protocol server", () => {
       await server.connect(serverTransport);
       await client.connect(clientTransport);
       const playSessionId = await createPlaySession(client);
-      const rejected = await client.callTool({
+      const rejected = await callRawTool(client, {
         name: "apply_character_session_operation",
         arguments: {
           playSessionId,
@@ -3106,22 +3147,26 @@ async function installHealingSessions(
 ) {
   const decoded = decodePlaySessionId(playSessionId);
   if (decoded._tag === "Left") throw new Error(decoded.left);
-  const result = await host.playSessions.run(decoded.right, (root) => {
-    for (const fixture of [fixtures.source, fixtures.target]) {
-      const session = availableCharacterSession({
-        characterId: characterId(fixture.characterId),
-        build: fixture.build,
-        currentHp: fixture.currentHp,
-        tempHp: Hp(0),
-        hitPointMaximumReduction: Hp(0),
-        conditions: [],
-        companion: { tag: "none" },
-        unitLibrary: root.unitLibrary,
-      });
-      if (Either.isLeft(session)) throw new Error(session.left.message);
-      root.sessionStore.characters.set(session.right);
-    }
-  });
+  const result = await host.playSessions.run(
+    decoded.right,
+    guestCaller(playSessionId),
+    (root) => {
+      for (const fixture of [fixtures.source, fixtures.target]) {
+        const session = availableCharacterSession({
+          characterId: characterId(fixture.characterId),
+          build: fixture.build,
+          currentHp: fixture.currentHp,
+          tempHp: Hp(0),
+          hitPointMaximumReduction: Hp(0),
+          conditions: [],
+          companion: { tag: "none" },
+          unitLibrary: root.unitLibrary,
+        });
+        if (Either.isLeft(session)) throw new Error(session.left.message);
+        root.sessionStore.characters.set(session.right);
+      }
+    },
+  );
   if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
 }
 
@@ -3131,43 +3176,47 @@ async function installFontOfMagicSession(
 ) {
   const decoded = decodePlaySessionId(playSessionId);
   if (decoded._tag === "Left") throw new Error(decoded.left);
-  const result = await host.playSessions.run(decoded.right, (root) => {
-    const sorcerer = availableCharacterSession({
-      characterId: characterId("character:font-sorcerer"),
-      build: {
-        ...armorClassBuild({
-          startingClass: "class_sorcerer",
-          advancements: ["class_sorcerer", "class_sorcerer"],
-        }),
-        spellcasting: {
-          sources: [
-            {
-              sourceUnitId: unitId("class_sorcerer"),
-              spellcastingAbility: "cha" as const,
-              cantrips: [],
-              spellbook: [],
-              preparedSpells: [],
-              spellcastingFocuses: ["arcane_focus"] as const,
-            },
-          ],
-          slotPools: {
-            spellcasting: {
-              kind: "spellcasting" as const,
-              slots: [{ spellLevel: 1, count: 3 }],
+  const result = await host.playSessions.run(
+    decoded.right,
+    guestCaller(playSessionId),
+    (root) => {
+      const sorcerer = availableCharacterSession({
+        characterId: characterId("character:font-sorcerer"),
+        build: {
+          ...armorClassBuild({
+            startingClass: "class_sorcerer",
+            advancements: ["class_sorcerer", "class_sorcerer"],
+          }),
+          spellcasting: {
+            sources: [
+              {
+                sourceUnitId: unitId("class_sorcerer"),
+                spellcastingAbility: "cha" as const,
+                cantrips: [],
+                spellbook: [],
+                preparedSpells: [],
+                spellcastingFocuses: ["arcane_focus"] as const,
+              },
+            ],
+            slotPools: {
+              spellcasting: {
+                kind: "spellcasting" as const,
+                slots: [{ spellLevel: 1, count: 3 }],
+              },
             },
           },
         },
-      },
-      currentHp: Hp(1),
-      tempHp: Hp(0),
-      hitPointMaximumReduction: Hp(0),
-      conditions: [],
-      companion: { tag: "none" },
-      unitLibrary: root.unitLibrary,
-    });
-    if (Either.isLeft(sorcerer)) throw new Error(sorcerer.left.message);
-    root.sessionStore.characters.set(sorcerer.right);
-  });
+        currentHp: Hp(1),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary: root.unitLibrary,
+      });
+      if (Either.isLeft(sorcerer)) throw new Error(sorcerer.left.message);
+      root.sessionStore.characters.set(sorcerer.right);
+    },
+  );
   if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
 }
 
@@ -3177,139 +3226,143 @@ async function installCharacterRowCoverageSessions(
 ) {
   const decoded = decodePlaySessionId(playSessionId);
   if (decoded._tag === "Left") throw new Error(decoded.left);
-  const result = await host.playSessions.run(decoded.right, (root) => {
-    const wizardBase = wizardBuild({ wizardAdvancements: 0 });
-    const companionWizardBuild = {
-      ...wizardBase,
-      spellcasting: {
-        ...wizardBase.spellcasting!,
-        sources: [
-          {
-            ...wizardBase.spellcasting!.sources[0]!,
-            spellbook: [unitId("find_familiar")],
-            preparedSpells: [unitId("find_familiar")],
-          },
-        ] as const,
-      },
-    };
-    const ritualWizardBuild = {
-      ...wizardBase,
-      spellcasting: {
-        ...wizardBase.spellcasting!,
-        sources: [
-          {
-            ...wizardBase.spellcasting!.sources[0]!,
-            spellbook: [unitId("detect_magic")],
-            preparedSpells: [unitId("detect_magic")],
-          },
-        ] as const,
-      },
-    };
-    const shieldWizardBuild = {
-      ...wizardBase,
-      spellcasting: {
-        ...wizardBase.spellcasting!,
-        sources: [
-          {
-            ...wizardBase.spellcasting!.sources[0]!,
-            spellbook: [unitId("shield")],
-            preparedSpells: [unitId("shield")],
-          },
-        ] as const,
-      },
-    };
-    const stableFighterBuild = armorClassBuild({
-      startingClass: "class_fighter",
-    });
-    const sessions = [
-      {
-        characterId: "character:row-druid",
-        build: druidCircleLandBuild({ druidLevel: 2 }),
-        druidWildShapeKnownFormStatBlockIds: [
-          statBlockId("stat_block_rat"),
-          statBlockId("stat_block_riding_horse"),
-          statBlockId("stat_block_spider"),
-          statBlockId("stat_block_wolf"),
-        ],
-        currentHp: Hp(10),
-      },
-      {
-        characterId: "character:row-companion-wizard",
-        build: companionWizardBuild,
-        currentHp: Hp(7),
-      },
-      {
-        characterId: "character:row-ritual-wizard",
-        build: ritualWizardBuild,
-        currentHp: Hp(7),
-      },
-      {
-        characterId: "character:row-shield-wizard",
-        build: shieldWizardBuild,
-        currentHp: Hp(7),
-      },
-      {
-        characterId: "character:row-rest-fighter",
-        build: armorClassBuild({ startingClass: "class_fighter" }),
-        currentHp: Hp(10),
-      },
-      {
-        characterId: "character:row-interrupted-rest-fighter",
-        build: armorClassBuild({ startingClass: "class_fighter" }),
-        currentHp: Hp(10),
-      },
-      {
-        characterId: "character:row-calendar-fighter",
-        build: armorClassBuild({ startingClass: "class_fighter" }),
-        currentHp: Hp(10),
-      },
-      {
-        characterId: "character:row-stable-fighter",
-        build: stableFighterBuild,
-        currentHp: Hp(0),
-        zeroHpLifecycle: {
-          tag: "stable" as const,
-          recovery: {
-            kind: "regains1HpAfter1d4Hours" as const,
-            elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+  const result = await host.playSessions.run(
+    decoded.right,
+    guestCaller(playSessionId),
+    (root) => {
+      const wizardBase = wizardBuild({ wizardAdvancements: 0 });
+      const companionWizardBuild = {
+        ...wizardBase,
+        spellcasting: {
+          ...wizardBase.spellcasting!,
+          sources: [
+            {
+              ...wizardBase.spellcasting!.sources[0]!,
+              spellbook: [unitId("find_familiar")],
+              preparedSpells: [unitId("find_familiar")],
+            },
+          ] as const,
+        },
+      };
+      const ritualWizardBuild = {
+        ...wizardBase,
+        spellcasting: {
+          ...wizardBase.spellcasting!,
+          sources: [
+            {
+              ...wizardBase.spellcasting!.sources[0]!,
+              spellbook: [unitId("detect_magic")],
+              preparedSpells: [unitId("detect_magic")],
+            },
+          ] as const,
+        },
+      };
+      const shieldWizardBuild = {
+        ...wizardBase,
+        spellcasting: {
+          ...wizardBase.spellcasting!,
+          sources: [
+            {
+              ...wizardBase.spellcasting!.sources[0]!,
+              spellbook: [unitId("shield")],
+              preparedSpells: [unitId("shield")],
+            },
+          ] as const,
+        },
+      };
+      const stableFighterBuild = armorClassBuild({
+        startingClass: "class_fighter",
+      });
+      const sessions = [
+        {
+          characterId: "character:row-druid",
+          build: druidCircleLandBuild({ druidLevel: 2 }),
+          druidWildShapeKnownFormStatBlockIds: [
+            statBlockId("stat_block_rat"),
+            statBlockId("stat_block_riding_horse"),
+            statBlockId("stat_block_spider"),
+            statBlockId("stat_block_wolf"),
+          ],
+          currentHp: Hp(10),
+        },
+        {
+          characterId: "character:row-companion-wizard",
+          build: companionWizardBuild,
+          currentHp: Hp(7),
+        },
+        {
+          characterId: "character:row-ritual-wizard",
+          build: ritualWizardBuild,
+          currentHp: Hp(7),
+        },
+        {
+          characterId: "character:row-shield-wizard",
+          build: shieldWizardBuild,
+          currentHp: Hp(7),
+        },
+        {
+          characterId: "character:row-rest-fighter",
+          build: armorClassBuild({ startingClass: "class_fighter" }),
+          currentHp: Hp(10),
+        },
+        {
+          characterId: "character:row-interrupted-rest-fighter",
+          build: armorClassBuild({ startingClass: "class_fighter" }),
+          currentHp: Hp(10),
+        },
+        {
+          characterId: "character:row-calendar-fighter",
+          build: armorClassBuild({ startingClass: "class_fighter" }),
+          currentHp: Hp(10),
+        },
+        {
+          characterId: "character:row-stable-fighter",
+          build: stableFighterBuild,
+          currentHp: Hp(0),
+          zeroHpLifecycle: {
+            tag: "stable" as const,
+            recovery: {
+              kind: "regains1HpAfter1d4Hours" as const,
+              elapsedBeforeRecoveryRoll: elapsedTimeTicks(0),
+            },
           },
         },
-      },
-      {
-        characterId: "character:row-healing-cleric",
-        build: prayerOfHealingClericBuild(),
-        currentHp: Hp(10),
-      },
-      {
-        characterId: "character:row-healing-target",
-        build: armorClassBuild({ startingClass: "class_fighter" }),
-        currentHp: Hp(1),
-      },
-    ];
-    for (const input of sessions) {
-      const session = availableCharacterSession({
-        characterId: characterId(input.characterId),
-        build: input.build,
-        currentHp: input.currentHp,
-        tempHp: Hp(0),
-        hitPointMaximumReduction: Hp(0),
-        conditions: [],
-        companion: { tag: "none" },
-        unitLibrary: root.unitLibrary,
-        ...(input.druidWildShapeKnownFormStatBlockIds === undefined
-          ? {}
-          : {
-              druidWildShapeKnownFormStatBlockIds:
-                input.druidWildShapeKnownFormStatBlockIds,
-            }),
-        ...(input.zeroHpLifecycle === undefined
-          ? {}
-          : { zeroHpLifecycle: input.zeroHpLifecycle }),
-      });
-      if (Either.isLeft(session)) throw new Error(session.left.message);
-      root.sessionStore.characters.set(session.right);
-    }
-  });
+        {
+          characterId: "character:row-healing-cleric",
+          build: prayerOfHealingClericBuild(),
+          currentHp: Hp(10),
+        },
+        {
+          characterId: "character:row-healing-target",
+          build: armorClassBuild({ startingClass: "class_fighter" }),
+          currentHp: Hp(1),
+        },
+      ];
+      for (const input of sessions) {
+        const session = availableCharacterSession({
+          characterId: characterId(input.characterId),
+          build: input.build,
+          currentHp: input.currentHp,
+          tempHp: Hp(0),
+          hitPointMaximumReduction: Hp(0),
+          conditions: [],
+          companion: { tag: "none" },
+          unitLibrary: root.unitLibrary,
+          ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+            ? {}
+            : {
+                druidWildShapeKnownFormStatBlockIds:
+                  input.druidWildShapeKnownFormStatBlockIds,
+              }),
+          ...(input.zeroHpLifecycle === undefined
+            ? {}
+            : { zeroHpLifecycle: input.zeroHpLifecycle }),
+        });
+        if (Either.isLeft(session)) throw new Error(session.left.message);
+        root.sessionStore.characters.set(session.right);
+      }
+    },
+  );
   if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
 }
 
@@ -3342,58 +3395,62 @@ async function installDerivedQueryCoverageSessions(
       },
     ],
   };
-  const result = await host.playSessions.run(decoded.right, (root) => {
-    const sessions = [
-      {
-        characterId: "character:row-derived-barbarian",
-        build: armorClassBuild({
-          startingClass: "class_barbarian",
-          advancements: ["class_barbarian", "class_barbarian"],
-        }),
-      },
-      {
-        characterId: "character:row-derived-bard",
-        build: bardJackOfAllTradesBuild({ totalLevel: 2 }),
-      },
-      {
-        characterId: "character:row-derived-rogue",
-        build: derivedRogueBuild,
-      },
-      {
-        characterId: "character:row-derived-armor",
-        build: armorClassBuild({
-          startingClass: "class_barbarian",
-          advancements: ["class_monk"],
-        }),
-      },
-      {
-        characterId: "character:row-derived-cleric",
-        build: derivedSpellAccessBuild,
-      },
-      {
-        characterId: "character:row-derived-mastery",
-        build: weaponMasteryBuild({
-          startingClass: "class_paladin",
-          featureUnitId: "paladin_weapon_mastery",
-          selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
-        }),
-      },
-    ];
-    for (const input of sessions) {
-      const session = availableCharacterSession({
-        characterId: characterId(input.characterId),
-        build: input.build,
-        currentHp: Hp(1),
-        tempHp: Hp(0),
-        hitPointMaximumReduction: Hp(0),
-        conditions: [],
-        companion: { tag: "none" },
-        unitLibrary: root.unitLibrary,
-      });
-      if (Either.isLeft(session)) throw new Error(session.left.message);
-      root.sessionStore.characters.set(session.right);
-    }
-  });
+  const result = await host.playSessions.run(
+    decoded.right,
+    guestCaller(playSessionId),
+    (root) => {
+      const sessions = [
+        {
+          characterId: "character:row-derived-barbarian",
+          build: armorClassBuild({
+            startingClass: "class_barbarian",
+            advancements: ["class_barbarian", "class_barbarian"],
+          }),
+        },
+        {
+          characterId: "character:row-derived-bard",
+          build: bardJackOfAllTradesBuild({ totalLevel: 2 }),
+        },
+        {
+          characterId: "character:row-derived-rogue",
+          build: derivedRogueBuild,
+        },
+        {
+          characterId: "character:row-derived-armor",
+          build: armorClassBuild({
+            startingClass: "class_barbarian",
+            advancements: ["class_monk"],
+          }),
+        },
+        {
+          characterId: "character:row-derived-cleric",
+          build: derivedSpellAccessBuild,
+        },
+        {
+          characterId: "character:row-derived-mastery",
+          build: weaponMasteryBuild({
+            startingClass: "class_paladin",
+            featureUnitId: "paladin_weapon_mastery",
+            selectedWeaponUnitIds: ["weapon_longsword", "weapon_dagger"],
+          }),
+        },
+      ];
+      for (const input of sessions) {
+        const session = availableCharacterSession({
+          characterId: characterId(input.characterId),
+          build: input.build,
+          currentHp: Hp(1),
+          tempHp: Hp(0),
+          hitPointMaximumReduction: Hp(0),
+          conditions: [],
+          companion: { tag: "none" },
+          unitLibrary: root.unitLibrary,
+        });
+        if (Either.isLeft(session)) throw new Error(session.left.message);
+        root.sessionStore.characters.set(session.right);
+      }
+    },
+  );
   if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
 }
 
@@ -3407,20 +3464,24 @@ async function installInitiativeSession(
 ) {
   const decoded = decodePlaySessionId(playSessionId);
   if (Either.isLeft(decoded)) throw new Error(decoded.left);
-  const result = await host.playSessions.run(decoded.right, (root) => {
-    const session = availableCharacterSession({
-      characterId: characterId(input.characterId),
-      build: input.build,
-      currentHp: Hp(1),
-      tempHp: Hp(0),
-      hitPointMaximumReduction: Hp(0),
-      conditions: [],
-      companion: { tag: "none" },
-      unitLibrary: root.unitLibrary,
-    });
-    if (Either.isLeft(session)) throw new Error(session.left.message);
-    root.sessionStore.characters.set(session.right);
-  });
+  const result = await host.playSessions.run(
+    decoded.right,
+    guestCaller(playSessionId),
+    (root) => {
+      const session = availableCharacterSession({
+        characterId: characterId(input.characterId),
+        build: input.build,
+        currentHp: Hp(1),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        conditions: [],
+        companion: { tag: "none" },
+        unitLibrary: root.unitLibrary,
+      });
+      if (Either.isLeft(session)) throw new Error(session.left.message);
+      root.sessionStore.characters.set(session.right);
+    },
+  );
   if (Either.isLeft(result)) throw new Error("Expected a live Play Session.");
 }
 
@@ -3445,7 +3506,28 @@ async function createPlaySession(client: Client): Promise<string> {
   if (typeof created.playSessionId !== "string") {
     throw new Error("create_play_session did not return a string handle.");
   }
+  if (!isJsonObject(created.operation)) {
+    throw new Error("create_play_session omitted its operation.");
+  }
+  const result = created.operation.result;
+  if (!isJsonObject(result) || !isJsonObject(result.access)) {
+    throw new Error("create_play_session omitted its access result.");
+  }
+  const grant = result.access.guestAccessGrant;
+  if (typeof grant !== "string") {
+    throw new Error("create_play_session omitted its guest access grant.");
+  }
+  guestAccessGrantByPlaySessionId.set(created.playSessionId, grant);
   return created.playSessionId;
+}
+
+function guestCaller(playSessionId: string) {
+  const grant = guestAccessGrantByPlaySessionId.get(playSessionId);
+  const decoded = decodeGuestAccessGrant(grant);
+  if (Either.isLeft(decoded)) {
+    throw new Error("Expected the retained Guest Play Session access grant.");
+  }
+  return { tag: "guest" as const, guestAccessGrant: decoded.right };
 }
 
 async function callStructuredTool(
@@ -3455,7 +3537,7 @@ async function callStructuredTool(
     readonly arguments: Record<string, unknown>;
   },
 ): Promise<Readonly<Record<string, unknown>>> {
-  const result = await client.callTool(input);
+  const result = await callRawTool(client, input);
   expect(result.isError).not.toBe(true);
   expect(result.structuredContent).toBeDefined();
   if (!isJsonObject(result.structuredContent)) {
@@ -3464,10 +3546,44 @@ async function callStructuredTool(
   return result.structuredContent;
 }
 
+async function callRawTool(
+  client: Client,
+  input: {
+    readonly name: string;
+    readonly arguments: Record<string, unknown>;
+  },
+) {
+  const playSessionId = input.arguments.playSessionId;
+  const guestAccessGrant =
+    typeof playSessionId === "string"
+      ? guestAccessGrantByPlaySessionId.get(playSessionId)
+      : undefined;
+  const argumentsWithAccess =
+    guestAccessGrant === undefined
+      ? await acceptancePlaySessionRoutedArgs(
+          client,
+          input.name,
+          input.arguments,
+        )
+      : { ...input.arguments, guestAccessGrant };
+  return client.callTool({
+    ...input,
+    arguments: argumentsWithAccess,
+  });
+}
+
 function isJsonObject(
   value: unknown,
 ): value is Readonly<Record<string, unknown>> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function withoutTenure(
+  value: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, unknown>> {
+  return Object.fromEntries(
+    Object.entries(value).filter(([key]) => key !== "tenure"),
+  );
 }
 
 function ajvJsonSchema(schema: unknown): JsonSchemaType {

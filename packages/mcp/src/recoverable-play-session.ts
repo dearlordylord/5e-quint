@@ -1,246 +1,67 @@
-import { randomBytes } from "node:crypto";
-import { DatabaseSync } from "node:sqlite";
-
-import { Either, Random, Schema } from "effect";
+import { Either } from "effect";
 
 import {
   disabledAdminMirrorPublication,
-  publishAdminProjectionBestEffort,
   type AdminMirrorPublication,
 } from "./admin-mirror.ts";
-import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
-import {
-  createMcpPlaySessionRoot,
-  type McpApplicationServices,
-  type McpPlaySessionRoot,
-} from "./composition-root.ts";
-import { BATTLE_TOOL_NAMES } from "./battle-tool-input.ts";
-import { CHARACTER_TOOL_NAMES } from "./character-tool-input.ts";
-import { DICE_TOOL_NAMES } from "./dice-tool-input.ts";
+import type { McpApplicationServices } from "./composition-root.ts";
 import {
   PLAY_SESSION_UNAVAILABLE,
   type PlaySessionAccessFailure,
-  type PlaySessionCommand,
   type PlaySessionCreation,
-  type PlaySessionCreationFailure,
   type PlaySessionId,
   type PlaySessionIdFactory,
   type PlaySessionRegistry,
 } from "./play-session.ts";
-import { handleToolCall } from "./server.ts";
+import {
+  DEFAULT_MAX_GUEST_PLAY_SESSIONS,
+  DEFAULT_MAX_RETAINED_COMMANDS_PER_PLAY_SESSION,
+  DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
+  DEFAULT_PLAY_SESSION_REQUESTS_PER_MINUTE,
+  currentEpochMilliseconds,
+  playSessionIsExpired,
+  projectPlaySessionTenure,
+  type EpochMilliseconds,
+} from "./play-session-access.ts";
+import {
+  RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
+  type PlaySessionRandomSeed,
+  type PlaySessionRepository,
+  type RecoverablePlaySessionRecord,
+} from "./play-session-repository.ts";
+import {
+  accessFailure,
+  admitRequest,
+  callerAuthorizes,
+  concurrentWriteFailure,
+  creationFailure,
+  deleteSavedRecord,
+  generatedPlaySessionRandomSeed,
+  initialTenure,
+  publishCurrentProjection,
+  rootFromRecord,
+  savedTenure,
+} from "./recoverable-play-session-support.ts";
 
-const RECOVERABLE_PLAY_SESSION_FORMAT_VERSION = 1 as const;
+export { openSqlitePlaySessionRepository } from "./sqlite-play-session-repository.ts";
+export type {
+  PlaySessionRepository,
+  PlaySessionRepositoryIssue,
+} from "./play-session-repository.ts";
+export { decodePlaySessionRandomSeed } from "./play-session-repository.ts";
+
 const MAX_PLAY_SESSION_ID_ATTEMPTS = 16;
 const MAX_CONCURRENT_COMMIT_ATTEMPTS = 16;
-
-const RecoverableOperationNameSchema = Schema.Literal(
-  ...CHARACTER_TOOL_NAMES,
-  ...BATTLE_TOOL_NAMES,
-  ...DICE_TOOL_NAMES,
-);
-const RecoverablePlaySessionOperationSchema = Schema.Struct({
-  name: RecoverableOperationNameSchema,
-  args: Schema.Record({ key: Schema.String, value: Schema.Unknown }),
-});
-const RecoverablePlaySessionOperationsSchema = Schema.Array(
-  RecoverablePlaySessionOperationSchema,
-);
-const RandomSeedSchema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/u),
-  Schema.brand("PlaySessionRandomSeed"),
-);
-const StoredPlaySessionRowSchema = Schema.Struct({
-  format_version: Schema.Literal(RECOVERABLE_PLAY_SESSION_FORMAT_VERSION),
-  random_seed: RandomSeedSchema,
-  revision: Schema.NonNegativeInt,
-  operations_json: Schema.String,
-});
-
-export type PlaySessionRandomSeed = typeof RandomSeedSchema.Type;
-type RecoverablePlaySessionRecord = {
-  readonly playSessionId: PlaySessionId;
-  readonly formatVersion: typeof RECOVERABLE_PLAY_SESSION_FORMAT_VERSION;
-  readonly randomSeed: PlaySessionRandomSeed;
-  readonly revision: number;
-  readonly operations: readonly PlaySessionCommand[];
-};
-
-export type PlaySessionRepositoryIssue = {
-  readonly tag: "playSessionRepositoryIssue";
-  readonly reason: "unreadable" | "invalidStoredRecord" | "closed";
-  readonly message: string;
-};
-type PlaySessionRepositoryCreateResult =
-  | { readonly tag: "created" }
-  | { readonly tag: "playSessionIdCollision" };
-type PlaySessionRepositoryLoadResult =
-  | { readonly tag: "found"; readonly record: RecoverablePlaySessionRecord }
-  | { readonly tag: "absent" };
-type PlaySessionRepositoryAppendResult =
-  | { readonly tag: "committed" }
-  | { readonly tag: "revisionConflict" };
-
-export type PlaySessionRepository = {
-  create(
-    record: RecoverablePlaySessionRecord,
-  ): Either.Either<
-    PlaySessionRepositoryCreateResult,
-    PlaySessionRepositoryIssue
-  >;
-  load(
-    playSessionId: PlaySessionId,
-  ): Either.Either<PlaySessionRepositoryLoadResult, PlaySessionRepositoryIssue>;
-  append(
-    record: RecoverablePlaySessionRecord,
-    operation: PlaySessionCommand,
-  ): Either.Either<
-    PlaySessionRepositoryAppendResult,
-    PlaySessionRepositoryIssue
-  >;
-  close(): void;
-};
-
-export function openSqlitePlaySessionRepository(
-  databasePath: string,
-): Either.Either<PlaySessionRepository, PlaySessionRepositoryIssue> {
-  try {
-    return Either.right(createSqlitePlaySessionRepository(databasePath));
-  } catch (cause) {
-    return Either.left(unreadableRepositoryIssue(cause));
-  }
-}
-
-export const decodePlaySessionRandomSeed =
-  Schema.decodeUnknownEither(RandomSeedSchema);
-
-function createSqlitePlaySessionRepository(
-  databasePath: string,
-): PlaySessionRepository {
-  const database = new DatabaseSync(databasePath);
-  database.exec("PRAGMA journal_mode = WAL");
-  database.exec("PRAGMA busy_timeout = 5000");
-  database.exec(`
-    CREATE TABLE IF NOT EXISTS play_sessions (
-      play_session_id TEXT PRIMARY KEY,
-      format_version INTEGER NOT NULL,
-      random_seed TEXT NOT NULL,
-      revision INTEGER NOT NULL,
-      operations_json TEXT NOT NULL
-    ) STRICT
-  `);
-  const insert = database.prepare(`
-    INSERT OR IGNORE INTO play_sessions (
-      play_session_id,
-      format_version,
-      random_seed,
-      revision,
-      operations_json
-    ) VALUES (?, ?, ?, ?, ?)
-  `);
-  const select = database.prepare(`
-    SELECT format_version, random_seed, revision, operations_json
-    FROM play_sessions
-    WHERE play_session_id = ?
-  `);
-  const append = database.prepare(`
-    UPDATE play_sessions
-    SET revision = revision + 1, operations_json = ?
-    WHERE play_session_id = ? AND revision = ?
-  `);
-  let closed = false;
-
-  return {
-    create(record) {
-      if (closed) return Either.left(closedRepositoryIssue());
-      try {
-        const result = insert.run(
-          record.playSessionId,
-          record.formatVersion,
-          record.randomSeed,
-          record.revision,
-          JSON.stringify(record.operations),
-        );
-        return Either.right(
-          result.changes === 1
-            ? { tag: "created" }
-            : { tag: "playSessionIdCollision" },
-        );
-      } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
-      }
-    },
-    load(playSessionId) {
-      if (closed) return Either.left(closedRepositoryIssue());
-      try {
-        const row = select.get(playSessionId);
-        if (row === undefined) return Either.right({ tag: "absent" });
-        const decodedRow = Schema.decodeUnknownEither(
-          StoredPlaySessionRowSchema,
-        )(row);
-        if (Either.isLeft(decodedRow)) {
-          return Either.left({
-            tag: "playSessionRepositoryIssue",
-            reason: "invalidStoredRecord",
-            message: decodedRow.left.message,
-          });
-        }
-        const parsedOperations: unknown = JSON.parse(
-          decodedRow.right.operations_json,
-        );
-        const decodedOperations = Schema.decodeUnknownEither(
-          RecoverablePlaySessionOperationsSchema,
-        )(parsedOperations);
-        if (Either.isLeft(decodedOperations)) {
-          return Either.left({
-            tag: "playSessionRepositoryIssue",
-            reason: "invalidStoredRecord",
-            message: decodedOperations.left.message,
-          });
-        }
-        return Either.right({
-          tag: "found",
-          record: {
-            playSessionId,
-            formatVersion: decodedRow.right.format_version,
-            randomSeed: decodedRow.right.random_seed,
-            revision: decodedRow.right.revision,
-            operations: decodedOperations.right,
-          },
-        });
-      } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
-      }
-    },
-    append(record, operation) {
-      if (closed) return Either.left(closedRepositoryIssue());
-      try {
-        const result = append.run(
-          JSON.stringify([...record.operations, operation]),
-          record.playSessionId,
-          record.revision,
-        );
-        return Either.right(
-          result.changes === 1
-            ? { tag: "committed" }
-            : { tag: "revisionConflict" },
-        );
-      } catch (cause) {
-        return Either.left(unreadableRepositoryIssue(cause));
-      }
-    },
-    close() {
-      if (closed) return;
-      closed = true;
-      database.close();
-    },
-  };
-}
 
 export function createRecoverablePlaySessionRegistry(input: {
   readonly applicationServices: McpApplicationServices;
   readonly repository: PlaySessionRepository;
   readonly playSessionIdFactory: PlaySessionIdFactory;
   readonly randomSeedFactory?: () => PlaySessionRandomSeed;
+  readonly now?: () => EpochMilliseconds;
+  readonly maximumGuestSessions?: number;
+  readonly maximumRetainedCommandsPerSession?: number;
+  readonly maximumRequestsPerMinute?: number;
 }): PlaySessionRegistry<PlaySessionAccessFailure> {
   const operationTails = new Map<PlaySessionId, Promise<void>>();
   const publications = new Map<PlaySessionId, AdminMirrorPublication>();
@@ -248,9 +69,31 @@ export function createRecoverablePlaySessionRegistry(input: {
     ...input.applicationServices,
     createAdminMirrorPublication: disabledAdminMirrorPublication,
   };
+  const now = input.now ?? currentEpochMilliseconds;
+  const maximumGuestSessions =
+    input.maximumGuestSessions ?? DEFAULT_MAX_GUEST_PLAY_SESSIONS;
+  const maximumRetainedCommandsPerSession =
+    input.maximumRetainedCommandsPerSession ??
+    DEFAULT_MAX_RETAINED_COMMANDS_PER_PLAY_SESSION;
+  const maximumRequestsPerMinute =
+    input.maximumRequestsPerMinute ?? DEFAULT_PLAY_SESSION_REQUESTS_PER_MINUTE;
 
   return {
-    create() {
+    create(caller) {
+      const creationTime = now();
+      const prunedExpired = input.repository.pruneExpired(creationTime);
+      if (Either.isLeft(prunedExpired)) {
+        return Either.left(creationFailure(prunedExpired.left));
+      }
+      if (caller.tag === "anonymous") {
+        const pruned = input.repository.pruneGuestPressure(
+          creationTime,
+          maximumGuestSessions - 1,
+        );
+        if (Either.isLeft(pruned)) {
+          return Either.left(creationFailure(pruned.left));
+        }
+      }
       for (
         let attempt = 0;
         attempt < MAX_PLAY_SESSION_ID_ATTEMPTS;
@@ -259,26 +102,59 @@ export function createRecoverablePlaySessionRegistry(input: {
         const playSessionId = input.playSessionIdFactory();
         const randomSeed =
           input.randomSeedFactory?.() ?? generatedPlaySessionRandomSeed();
+        const creationTenure = initialTenure(caller, creationTime);
+        const tenure = creationTenure.tenure;
         const record: RecoverablePlaySessionRecord = {
           playSessionId,
           formatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
           randomSeed,
           revision: 0,
           operations: [],
+          tenure,
         };
-        const created = input.repository.create(record);
+        const created = input.repository.create(record, {
+          maximumGuestSessions,
+          maximumSavedSessionsPerPrincipal:
+            DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
+        });
         if (Either.isLeft(created)) {
           return Either.left(creationFailure(created.left));
         }
         if (created.right.tag === "playSessionIdCollision") continue;
+        if (created.right.tag === "playSessionLimitExceeded") {
+          return Either.left({
+            tag: "playSessionCreationFailed",
+            reason:
+              caller.tag === "anonymous"
+                ? "guestCapacityExceeded"
+                : "savedSessionQuotaExceeded",
+            message: "The Play Session creation limit has been reached.",
+          });
+        }
         const root = rootFromRecord(replayServices, record);
         if (Either.isLeft(root)) {
           return Either.left(creationFailure(root.left));
         }
-        return Either.right({
+        const base = {
           playSessionId,
           projection: root.right.sessionStore.snapshot(),
-        } satisfies PlaySessionCreation);
+        };
+        const creation: PlaySessionCreation =
+          creationTenure.tag === "saved"
+            ? {
+                ...base,
+                tenure: projectPlaySessionTenure(creationTenure.tenure),
+                access: { tag: "authenticated" },
+              }
+            : {
+                ...base,
+                tenure: projectPlaySessionTenure(creationTenure.tenure),
+                access: {
+                  tag: "guest",
+                  guestAccessGrant: creationTenure.guestAccessGrant,
+                },
+              };
+        return Either.right(creation);
       }
       return Either.left({
         tag: "playSessionCreationFailed",
@@ -286,9 +162,10 @@ export function createRecoverablePlaySessionRegistry(input: {
         message: `Unable to allocate a unique Play Session handle after ${MAX_PLAY_SESSION_ID_ATTEMPTS} attempts.`,
       });
     },
-    async run(playSessionId, operation, commandRetention) {
+    async run(playSessionId, caller, operation, commandRetention) {
       const prior = operationTails.get(playSessionId) ?? Promise.resolve();
       const result = prior.then(async () => {
+        let requestRateAdmitted = false;
         for (
           let attempt = 0;
           attempt < MAX_CONCURRENT_COMMIT_ATTEMPTS;
@@ -301,6 +178,30 @@ export function createRecoverablePlaySessionRegistry(input: {
           if (loaded.right.tag === "absent") {
             return Either.left(PLAY_SESSION_UNAVAILABLE);
           }
+          if (playSessionIsExpired(loaded.right.record.tenure, now())) {
+            const deleted = input.repository.delete(
+              playSessionId,
+              loaded.right.record.revision,
+            );
+            if (Either.isLeft(deleted)) {
+              return Either.left(accessFailure(deleted.left));
+            }
+            if (!deleted.right) continue;
+            return Either.left(PLAY_SESSION_UNAVAILABLE);
+          }
+          if (!callerAuthorizes(caller, loaded.right.record.tenure)) {
+            return Either.left(PLAY_SESSION_UNAVAILABLE);
+          }
+          if (!requestRateAdmitted) {
+            const admitted = admitRequest(
+              input.repository,
+              loaded.right.record.tenure,
+              now(),
+              maximumRequestsPerMinute,
+            );
+            if (Either.isLeft(admitted)) return Either.left(admitted.left);
+            requestRateAdmitted = true;
+          }
           const reconstructed = rootFromRecord(
             replayServices,
             loaded.right.record,
@@ -309,16 +210,38 @@ export function createRecoverablePlaySessionRegistry(input: {
             return Either.left(accessFailure(reconstructed.left));
           }
           const operationResult = await operation(reconstructed.right);
-          if (
-            commandRetention === undefined ||
-            !commandRetention.retain(operationResult)
-          ) {
-            return Either.right(operationResult);
+          const succeeded =
+            commandRetention?.succeeded?.(operationResult) ?? true;
+          const retainCommand =
+            commandRetention?.retain(operationResult) ?? false;
+          if (!succeeded) {
+            return Either.right({
+              value: operationResult,
+              tenure: projectPlaySessionTenure(loaded.right.record.tenure),
+            });
           }
-          const committed = input.repository.append(
-            loaded.right.record,
-            commandRetention.command,
-          );
+          if (
+            retainCommand &&
+            loaded.right.record.operations.length >=
+              maximumRetainedCommandsPerSession
+          ) {
+            return Either.left({
+              tag: "playSessionLimitFailure",
+              reason: "retainedCommandQuotaExceeded",
+              message:
+                "This Play Session has reached its retained operation limit.",
+            } satisfies PlaySessionAccessFailure);
+          }
+          const tenure = {
+            ...loaded.right.record.tenure,
+            lastActivityAtMs: now(),
+          };
+          const committed = input.repository.commit(loaded.right.record, {
+            tenure,
+            ...(retainCommand && commandRetention !== undefined
+              ? { operation: commandRetention.command }
+              : {}),
+          });
           if (Either.isLeft(committed)) {
             return Either.left(accessFailure(committed.left));
           }
@@ -329,7 +252,10 @@ export function createRecoverablePlaySessionRegistry(input: {
             playSessionId,
             reconstructed.right,
           );
-          return Either.right(operationResult);
+          return Either.right({
+            value: operationResult,
+            tenure: projectPlaySessionTenure(tenure),
+          });
         }
         return Either.left({
           tag: "playSessionStorageFailure",
@@ -347,89 +273,125 @@ export function createRecoverablePlaySessionRegistry(input: {
       );
       return result;
     },
-  };
-}
-
-function rootFromRecord(
-  applicationServices: McpApplicationServices,
-  record: RecoverablePlaySessionRecord,
-): Either.Either<McpPlaySessionRoot, PlaySessionRepositoryIssue> {
-  const root = createMcpPlaySessionRoot(
-    applicationServices,
-    adminMirrorSessionId(record.playSessionId),
-    Random.make(record.randomSeed),
-  );
-  for (const operation of record.operations) {
-    const replayed = handleToolCall(root, operation.name, operation.args);
-    if ("isError" in replayed && replayed.isError === true) {
-      return Either.left({
-        tag: "playSessionRepositoryIssue",
-        reason: "invalidStoredRecord",
-        message: `Stored Play Session operation ${operation.name} no longer reconstructs successfully.`,
+    async save(playSessionId, guestAccessGrant, principalId) {
+      const prior = operationTails.get(playSessionId) ?? Promise.resolve();
+      const result = prior.then(async () => {
+        const prunedExpired = input.repository.pruneExpired(now());
+        if (Either.isLeft(prunedExpired)) {
+          return Either.left(accessFailure(prunedExpired.left));
+        }
+        const principalTenure = savedTenure(principalId, now());
+        const admitted = admitRequest(
+          input.repository,
+          principalTenure,
+          now(),
+          maximumRequestsPerMinute,
+        );
+        if (Either.isLeft(admitted)) return Either.left(admitted.left);
+        for (
+          let attempt = 0;
+          attempt < MAX_CONCURRENT_COMMIT_ATTEMPTS;
+          attempt += 1
+        ) {
+          const loaded = input.repository.load(playSessionId);
+          if (Either.isLeft(loaded)) {
+            return Either.left(accessFailure(loaded.left));
+          }
+          if (
+            loaded.right.tag === "absent" ||
+            playSessionIsExpired(loaded.right.record.tenure, now()) ||
+            !callerAuthorizes(
+              { tag: "guest", guestAccessGrant },
+              loaded.right.record.tenure,
+            )
+          ) {
+            return Either.left(PLAY_SESSION_UNAVAILABLE);
+          }
+          const tenure = savedTenure(principalId, now());
+          const committed = input.repository.save(
+            loaded.right.record,
+            tenure,
+            DEFAULT_MAX_SAVED_PLAY_SESSIONS_PER_PRINCIPAL,
+          );
+          if (Either.isLeft(committed)) {
+            return Either.left(accessFailure(committed.left));
+          }
+          if (committed.right.tag === "savedSessionQuotaExceeded") {
+            return Either.left({
+              tag: "playSessionLimitFailure",
+              reason: "savedSessionQuotaExceeded",
+              message: "This account has reached its saved Play Session limit.",
+            } satisfies PlaySessionAccessFailure);
+          }
+          if (committed.right.tag === "revisionConflict") continue;
+          return Either.right(projectPlaySessionTenure(tenure));
+        }
+        return Either.left(concurrentWriteFailure());
       });
-    }
-  }
-  return Either.right(root);
-}
-
-function publishCurrentProjection(
-  applicationServices: McpApplicationServices,
-  publications: Map<PlaySessionId, AdminMirrorPublication>,
-  playSessionId: PlaySessionId,
-  root: McpPlaySessionRoot,
-): void {
-  const publication =
-    publications.get(playSessionId) ??
-    applicationServices.createAdminMirrorPublication(
-      adminMirrorSessionId(playSessionId),
-    );
-  publications.set(playSessionId, publication);
-  publishAdminProjectionBestEffort({
-    ...root,
-    adminMirrorPublication: publication,
-  });
-}
-
-function generatedPlaySessionRandomSeed(): PlaySessionRandomSeed {
-  const decoded = decodePlaySessionRandomSeed(randomBytes(32).toString("hex"));
-  if (Either.isLeft(decoded)) {
-    throw new Error("Generated Play Session random seed was invalid.");
-  }
-  return decoded.right;
-}
-
-function creationFailure(
-  issue: PlaySessionRepositoryIssue,
-): PlaySessionCreationFailure {
-  return {
-    tag: "playSessionCreationFailed",
-    reason: "storageUnavailable",
-    message: issue.message,
-  };
-}
-
-function accessFailure(
-  issue: PlaySessionRepositoryIssue,
-): PlaySessionAccessFailure {
-  return {
-    tag: "playSessionStorageFailure",
-    reason: issue.reason,
-    message: issue.message,
-  };
-}
-
-function closedRepositoryIssue(): PlaySessionRepositoryIssue {
-  return {
-    tag: "playSessionRepositoryIssue",
-    reason: "closed",
-    message: "The Play Session repository is closed.",
-  };
-}
-
-function unreadableRepositoryIssue(cause: unknown): PlaySessionRepositoryIssue {
-  return {
-    tag: "playSessionRepositoryIssue",
-    reason: "unreadable",
-    message: cause instanceof Error ? cause.message : String(cause),
+      operationTails.set(
+        playSessionId,
+        result.then(
+          () => undefined,
+          () => undefined,
+        ),
+      );
+      return result;
+    },
+    listSaved(principalId) {
+      const admitted = admitRequest(
+        input.repository,
+        savedTenure(principalId, now()),
+        now(),
+        maximumRequestsPerMinute,
+      );
+      if (Either.isLeft(admitted)) return Either.left(admitted.left);
+      const prunedExpired = input.repository.pruneExpired(now());
+      if (Either.isLeft(prunedExpired)) {
+        return Either.left(accessFailure(prunedExpired.left));
+      }
+      const listed = input.repository.listSaved(principalId);
+      if (Either.isLeft(listed)) {
+        return Either.left(accessFailure(listed.left));
+      }
+      return Either.right(
+        listed.right.flatMap((record) => {
+          if (
+            record.tenure.tag !== "saved" ||
+            playSessionIsExpired(record.tenure, now())
+          ) {
+            return [];
+          }
+          const tenure = projectPlaySessionTenure(record.tenure);
+          return tenure.tag === "saved"
+            ? [{ playSessionId: record.playSessionId, tenure }]
+            : [];
+        }),
+      );
+    },
+    async deleteSaved(playSessionId, principalId) {
+      const prior = operationTails.get(playSessionId) ?? Promise.resolve();
+      const result = prior.then(() => {
+        const admitted = admitRequest(
+          input.repository,
+          savedTenure(principalId, now()),
+          now(),
+          maximumRequestsPerMinute,
+        );
+        if (Either.isLeft(admitted)) return Either.left(admitted.left);
+        const prunedExpired = input.repository.pruneExpired(now());
+        if (Either.isLeft(prunedExpired)) {
+          return Either.left(accessFailure(prunedExpired.left));
+        }
+        return deleteSavedRecord(input.repository, playSessionId, principalId);
+      });
+      operationTails.set(
+        playSessionId,
+        result.then(
+          () => undefined,
+          () => undefined,
+        ),
+      );
+      return result;
+    },
   };
 }

@@ -50,7 +50,7 @@ describe("Play Session operation projection", () => {
       playSessionIdFactory: () => decoded.right,
     });
 
-    expect(Either.isRight(registry.create())).toBe(true);
+    expect(Either.isRight(registry.create({ tag: "anonymous" }))).toBe(true);
     const publicFailure = handleCreatePlaySession(registry, undefined);
 
     expect(publicFailure.isError).toBe(true);
