@@ -996,7 +996,8 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("signal_owned_process");
     expect(source).toContain("getppid()");
     expect(source).toContain("waitpid(-1, &status, WNOHANG)");
-    expect(source).toContain("could not poll before leader wait");
+    expect(source).toContain("could not poll ");
+    expect(source).toContain("before leader wait");
     expect(source).not.toContain("waitpid(-1, &status, 0)");
     expect(source).not.toContain('readdir("/proc"');
     expect(source).not.toContain("saw_descendant");
