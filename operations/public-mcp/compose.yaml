@@ -7,6 +7,7 @@ services:
       - /tmp:size=64m,mode=1777
     environment:
       DND_MCP_ENVIRONMENT: ${DND_MCP_ENVIRONMENT:?set staging or production}
+      DND_MCP_PUBLISHER_NAME: ${DND_MCP_PUBLISHER_NAME:?set the exact publisher identity}
       DND_MCP_HOST: 0.0.0.0
       PORT: 8787
       DND_PLAY_SESSION_DATABASE_PATH: /var/lib/dnd-oracle/play-sessions.sqlite

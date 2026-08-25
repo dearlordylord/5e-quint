@@ -17,7 +17,12 @@ import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-reposito
 import type { PublicMcpOAuth } from "./public-oauth.ts";
 import type { PlaySessionRequestIdentity } from "./play-session-protocol.ts";
 import {
+  isPublicPublisherSitePath,
+  publicPublisherSiteResponse,
+} from "./public-publisher-site.ts";
+import {
   authorizedForMetrics,
+  DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
   observePublicMcpRequest,
   PUBLIC_MCP_SERVICE_NAME,
   publicMcpMetrics,
@@ -66,6 +71,7 @@ export function createDndMcpHttpServer(input: {
       operations: input.operations ?? {
         environment: "development",
         release: "development",
+        publisherName: DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
       },
     }).catch(() => {
       if (outgoing.headersSent) {
@@ -167,6 +173,17 @@ async function handleNodeRequest(input: {
       ...(diagnostic === undefined ? {} : { diagnostic }),
     });
   try {
+    const publisherSiteResponse = publicPublisherSiteResponse(
+      pathname,
+      input.incoming.method,
+      input.operations.publisherName,
+    );
+    if (publisherSiteResponse !== undefined) {
+      status = publisherSiteResponse.status;
+      outcome = status < 400 ? "accepted" : "rejected";
+      await writeResponse(input.outgoing, publisherSiteResponse);
+      return;
+    }
     if (pathname === "/health" && input.incoming.method === "GET") {
       status = 200;
       outcome = "accepted";
@@ -185,6 +202,7 @@ async function handleNodeRequest(input: {
           service: PUBLIC_MCP_SERVICE_NAME,
           environment: input.operations.environment,
           release: input.operations.release,
+          publisher: input.operations.publisherName,
           storageFormatVersion: RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
         }),
       );
@@ -300,6 +318,7 @@ async function handleNodeRequest(input: {
 }
 
 function publicRouteLabel(pathname: string): string {
+  if (isPublicPublisherSitePath(pathname)) return "publisher-site";
   if (pathname === "/mcp") return "/mcp";
   if (pathname === "/health") return "/health";
   if (pathname === "/version") return "/version";

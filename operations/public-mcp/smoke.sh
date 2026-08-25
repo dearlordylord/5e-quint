@@ -15,7 +15,10 @@ expected_release="${2:-$DND_MCP_RELEASE}"
 origin="https://$DND_MCP_DOMAIN"
 
 curl --fail --silent --show-error "$origin/health" | jq -e '.status == "ok"' >/dev/null
-curl --fail --silent --show-error "$origin/version" | jq -e --arg release "$expected_release" '.release == $release' >/dev/null
+curl --fail --silent --show-error "$origin/version" | jq -e --arg release "$expected_release" --arg publisher "$DND_MCP_PUBLISHER_NAME" '.release == $release and .publisher == $publisher' >/dev/null
+for publisher_path in / /support /privacy /terms; do
+  curl --fail --silent --show-error "$origin$publisher_path" >/dev/null
+done
 if [[ -n "${DND_OPENAI_APPS_CHALLENGE:-}" ]]; then
   [[ "$(curl --fail --silent --show-error "$origin/.well-known/openai-apps-challenge")" == "$DND_OPENAI_APPS_CHALLENGE" ]]
 fi

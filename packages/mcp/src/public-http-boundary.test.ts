@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodePrincipalId } from "./play-session-access.ts";
@@ -10,9 +10,71 @@ import {
   PUBLIC_MCP_MAX_REQUEST_BYTES,
 } from "./public-http-server.ts";
 import type { PublicMcpOAuth } from "./public-oauth.ts";
+import { PublicMcpPublisherNameSchema } from "./public-service-operations.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 
 describe("public HTTP boundary", () => {
+  test("serves publisher pages with public policy and locked-down headers", async () => {
+    const repository = openRepository();
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+      operations: {
+        environment: "development",
+        release: "development",
+        publisherName: publisherName("Verified & Publisher"),
+      },
+    });
+    const endpoint = await listen(server);
+    try {
+      for (const path of ["/", "/support", "/privacy", "/terms"]) {
+        const response = await fetch(new URL(path, endpoint));
+        expect(response.status, path).toBe(200);
+        expect(response.headers.get("content-type"), path).toContain(
+          "text/html",
+        );
+        expect(response.headers.get("content-security-policy"), path).toBe(
+          "default-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'",
+        );
+        expect(response.headers.get("x-content-type-options"), path).toBe(
+          "nosniff",
+        );
+        expect(await response.text(), path).toContain(
+          "Published by Verified &amp; Publisher.",
+        );
+      }
+
+      const privacy = await (await fetch(new URL("/privacy", endpoint))).text();
+      expect(privacy).toContain("7 inactive days");
+      expect(privacy).toContain("never before 24 inactive hours");
+      expect(privacy).toContain("90 inactive days");
+      expect(privacy).toContain("permanently delete");
+      expect(privacy).toContain("one account");
+      expect(privacy).toContain(
+        "Operational telemetry is bounded and redacted",
+      );
+
+      const terms = await (await fetch(new URL("/terms", endpoint))).text();
+      expect(terms).toContain("redistributable SRD corpus");
+      expect(terms).toContain(
+        "does not provide or execute closed-license PHB+ content",
+      );
+
+      const head = await fetch(new URL("/support", endpoint), {
+        method: "HEAD",
+      });
+      expect(head.status).toBe(200);
+      expect(await head.text()).toBe("");
+      const rejected = await fetch(new URL("/privacy", endpoint), {
+        method: "POST",
+      });
+      expect(rejected.status).toBe(405);
+      expect(rejected.headers.get("allow")).toBe("GET, HEAD");
+    } finally {
+      await close(server);
+      repository.close();
+    }
+  });
+
   test("serves health, release, exact domain challenge, and protected metrics", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({
@@ -20,6 +82,7 @@ describe("public HTTP boundary", () => {
       operations: {
         environment: "staging",
         release: "git:0123456789abcdef",
+        publisherName: publisherName("Verified Publisher"),
         openAiAppsChallenge: "openai-domain-verification-token",
         metricsBearerToken: "metrics-secret",
       },
@@ -36,6 +99,7 @@ describe("public HTTP boundary", () => {
         service: "dnd-srd-oracle",
         environment: "staging",
         release: "git:0123456789abcdef",
+        publisher: "Verified Publisher",
         storageFormatVersion: 2,
       });
       const challenge = await fetch(
@@ -131,6 +195,10 @@ describe("public HTTP boundary", () => {
     }
   });
 });
+
+function publisherName(value: string) {
+  return Schema.decodeUnknownSync(PublicMcpPublisherNameSchema)(value);
+}
 
 function fakeOAuth(): PublicMcpOAuth {
   const principal = decodePrincipalId("principal:http-test");

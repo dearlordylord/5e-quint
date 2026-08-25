@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" role="img" aria-labelledby="title">
+  <title id="title">5.5e SRD Oracle</title>
+  <rect width="640" height="160" rx="24" fill="#111827"/>
+  <path fill="#818cf8" d="m80 18 55 32v61l-55 32-55-32V50z"/>
+  <path fill="none" stroke="#fff" stroke-width="7" stroke-linejoin="round" d="m80 31 41 24-15 44-52 1-15-45zm-41 24 41 29 41-29M80 84v43"/>
+  <text x="165" y="78" fill="#f8fafc" font-family="system-ui,sans-serif" font-size="42" font-weight="700">5.5e SRD Oracle</text>
+  <text x="167" y="119" fill="#cbd5e1" font-family="system-ui,sans-serif" font-size="24">Characters and rules-backed battles</text>
+</svg>

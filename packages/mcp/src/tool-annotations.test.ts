@@ -1,7 +1,9 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { decodePrincipalId } from "./play-session-access.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import {
   DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
@@ -15,8 +17,7 @@ const expectedAnnotations = {
   create_play_session:
     NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   read_play_session: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  save_play_session:
-    NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  save_play_session: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   list_saved_play_sessions: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   delete_saved_play_session:
     DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
@@ -113,5 +114,45 @@ describe("MCP tool annotations", () => {
     } finally {
       await Promise.allSettled([client.close(), server.close()]);
     }
-  });
+  }, 30_000);
+
+  test("OAuth-enabled discovery classifies every public tool", async () => {
+    const principalId = decodePrincipalId("principal:annotations-test");
+    if (Either.isLeft(principalId)) throw new Error(principalId.left);
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    const { server } = createDndMcpProtocolServer(undefined, undefined, {
+      requestIdentity: {
+        tag: "authenticated",
+        principalId: principalId.right,
+      },
+    });
+    const client = new Client({
+      name: "authenticated-tool-annotations-test",
+      version: "0.1.0",
+    });
+
+    try {
+      await server.connect(serverTransport);
+      await client.connect(clientTransport);
+      const listedTools = (await client.listTools()).tools;
+      expect(listedTools.map((tool) => tool.name)).toEqual(
+        Object.keys(expectedAnnotations),
+      );
+      for (const tool of listedTools) {
+        expect(tool.title, tool.name).toBe(expectedTitleByName.get(tool.name));
+        expect(tool.annotations, tool.name).toEqual(
+          expectedAnnotationByName.get(tool.name),
+        );
+        expect(tool.annotations).toEqual({
+          readOnlyHint: expect.any(Boolean),
+          destructiveHint: expect.any(Boolean),
+          idempotentHint: expect.any(Boolean),
+          openWorldHint: false,
+        });
+      }
+    } finally {
+      await Promise.allSettled([client.close(), server.close()]);
+    }
+  }, 30_000);
 });

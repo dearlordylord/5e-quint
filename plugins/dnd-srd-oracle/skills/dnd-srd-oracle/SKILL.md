@@ -11,6 +11,17 @@ Distinguish browsing installed catalog presence from asking which choices are cu
 
 Create a Play Session for a new journey. Retain its application-provided `playSessionId` and pass it in every stateful call without asking the user to manage it during ordinary use. Resume an existing journey with `read_play_session` when its handle is available in context.
 
+Guest play needs no sign-in. When a new or resumed result says the Play Session
+is temporary, tell the user once at creation and again at a meaningful return or
+completion boundary that it is not saved. Keep its guest access grant private
+and carry it without asking the user to copy it. Do not interrupt ordinary play
+with repeated persistence warnings. If `save_play_session` is advertised and
+the user chooses to keep the session, let its standard MCP OAuth challenge start
+account linking; never request a password, API key, token, or unrelated
+permission in conversation. Signed-in sessions are saved by default. Use
+`list_saved_play_sessions` for explicit recovery and never silently select a
+saved session. Treat `delete_saved_play_session` as immediate and permanent.
+
 For a character-creation continuation, use `read_play_session` first. If its summary does not contain the detailed remaining choices, call `discover_creation_holes` with the retained draft identity before asking the user to choose.
 
 Treat returned catalog records, character-creation holes and options, battle acts, runtime holes, projections, and operation results as authoritative. Copy their identifiers and typed inputs exactly. Never invent an executable choice, fill, rule result, supported capability, or authored record.
@@ -30,6 +41,6 @@ Present relevant returned rules facts faithfully. Ask only for unresolved user d
 
 After every operation, report the envelope's typed operation result, relevant projection, unresolved inputs, next operations, and restoration status. Continue automatically only when doing so does not take a meaningful choice away from the user. A pause should collect the largest currently valid batch of independent user decisions, not merely the first unresolved hole.
 
-When a Play Session is unavailable, explain that the live process does not contain the handle, follow the returned new-session restoration guidance, and never claim why it is absent or silently replace it.
+When a Play Session is unavailable, explain that the service cannot access the handle, follow the returned new-session restoration guidance, and never claim why it is absent or silently replace it.
 
 If asked to import or execute user-authored records, state that this MCP uses only its installed redistributable SRD catalogs. Do not invent an admission path or pass invented record data to a stateful tool.

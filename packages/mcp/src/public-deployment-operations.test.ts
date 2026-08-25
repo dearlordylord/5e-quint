@@ -243,10 +243,23 @@ describe("public MCP deployment operations", () => {
       expect(
         runVerification(environmentFile, binaryDirectory, commandLog).status,
       ).toBe(0);
+      writeFileSync(
+        environmentFile,
+        readFileSync(environmentFile, "utf8").replace(
+          "DND_MCP_PUBLISHER_NAME='Synthetic Publisher'",
+          "DND_MCP_PUBLISHER_NAME=' Synthetic Publisher '",
+        ),
+      );
+      expect(
+        runVerification(environmentFile, binaryDirectory, commandLog),
+      ).toMatchObject({
+        status: 65,
+        stderr: expect.stringContaining("surrounding whitespace"),
+      });
     } finally {
       rmSync(temporaryDirectory, { recursive: true, force: true });
     }
-  });
+  }, 30_000);
 
   test("rejects invalid budget policy and identifies the alert recipient", () => {
     const temporaryDirectory = mkdtempSync(
@@ -350,6 +363,7 @@ function writeEnvironment(
       "COMPOSE_PROJECT_NAME=dnd-oracle-staging",
       "DND_MCP_ENVIRONMENT=staging",
       "DND_MCP_DOMAIN=staging.oracle.invalid",
+      "DND_MCP_PUBLISHER_NAME='Synthetic Publisher'",
       "DND_MCP_LOOPBACK_PORT=18787",
       `DND_MCP_CADDY_CONFIG_DIRECTORY=${caddyDirectory}`,
       `DND_MCP_OPERATIONS_DIRECTORY=${operationsInstallDirectory}`,

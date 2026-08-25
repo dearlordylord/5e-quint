@@ -71,6 +71,26 @@ export const CompleteWorkflowEvaluationCaseSchema = Schema.Struct({
   expectedActivation: Schema.Literal("activate"),
 });
 
+const SubmissionReviewEvaluationCaseBase = {
+  id: Schema.NonEmptyTrimmedString,
+  prompt: Schema.NonEmptyTrimmedString,
+  fixture: Schema.NonEmptyTrimmedString,
+  expectedBehavior: Schema.NonEmptyTrimmedString,
+  expectedResultShape: Schema.NonEmptyTrimmedString,
+};
+
+export const SubmissionReviewEvaluationCaseSchema = Schema.Union(
+  Schema.Struct({
+    ...SubmissionReviewEvaluationCaseBase,
+    kind: Schema.Literal("positive"),
+  }),
+  Schema.Struct({
+    ...SubmissionReviewEvaluationCaseBase,
+    kind: Schema.Literal("negative"),
+    rejectionRationale: Schema.NonEmptyTrimmedString,
+  }),
+);
+
 export const EvaluationInventorySchema = Schema.Struct({
   officialGuidance: Schema.Literal(
     "https://developers.openai.com/plugins/deploy/connect-chatgpt",
@@ -108,6 +128,7 @@ export const EvaluationInventorySchema = Schema.Struct({
   mcpToolSelection: Schema.Array(McpEvaluationCaseSchema),
   skillActivation: Schema.Array(SkillEvaluationCaseSchema),
   completeWorkflow: Schema.NonEmptyArray(CompleteWorkflowEvaluationCaseSchema),
+  submissionReview: Schema.NonEmptyArray(SubmissionReviewEvaluationCaseSchema),
 });
 
 export type EvaluationInventory = typeof EvaluationInventorySchema.Type;

@@ -1,5 +1,7 @@
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
+import { Schema } from "effect";
+
 import { PLAY_SESSION_NEXT_OPERATION_NAMES } from "./play-session-tool-names.ts";
 
 export const PUBLIC_MCP_SERVICE_NAME = "dnd-srd-oracle";
@@ -12,9 +14,18 @@ export const PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS = [
 export type PublicMcpDeploymentEnvironment =
   (typeof PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS)[number];
 
+export const PublicMcpPublisherNameSchema = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("PublicMcpPublisherName"),
+);
+export type PublicMcpPublisherName = typeof PublicMcpPublisherNameSchema.Type;
+export const DEFAULT_PUBLIC_MCP_PUBLISHER_NAME = Schema.decodeUnknownSync(
+  PublicMcpPublisherNameSchema,
+)("5e Quint developers");
+
 export type PublicMcpServiceOperations = {
   readonly environment: PublicMcpDeploymentEnvironment;
   readonly release: string;
+  readonly publisherName: PublicMcpPublisherName;
   readonly openAiAppsChallenge?: string;
   readonly metricsBearerToken?: string;
 };

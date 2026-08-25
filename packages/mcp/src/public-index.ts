@@ -5,6 +5,8 @@ import { createPublicMcpOAuthFromEnvironment } from "./public-oauth.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import {
   PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS,
+  DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
+  PublicMcpPublisherNameSchema,
   PUBLIC_MCP_SERVICE_NAME,
   writePublicMcpInitializationFailure,
 } from "./public-service-operations.ts";
@@ -15,6 +17,7 @@ const PublicMcpConfigurationSchema = Schema.Struct({
   port: Schema.NumberFromString.pipe(Schema.int(), Schema.between(1, 65_535)),
   environment: Schema.Literal(...PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS),
   release: Schema.NonEmptyTrimmedString,
+  publisherName: PublicMcpPublisherNameSchema,
 });
 
 const configuration = Schema.decodeUnknownEither(PublicMcpConfigurationSchema)({
@@ -23,6 +26,8 @@ const configuration = Schema.decodeUnknownEither(PublicMcpConfigurationSchema)({
   port: process.env.PORT ?? "8787",
   environment: process.env.DND_MCP_ENVIRONMENT ?? "development",
   release: process.env.DND_MCP_RELEASE ?? "development",
+  publisherName:
+    process.env.DND_MCP_PUBLISHER_NAME ?? DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
 });
 const oauth = createPublicMcpOAuthFromEnvironment(process.env);
 const openAiAppsChallenge = optionalEnvironmentValue(
@@ -54,6 +59,7 @@ if (Either.isLeft(configuration)) {
       operations: {
         environment: configuration.right.environment,
         release: configuration.right.release,
+        publisherName: configuration.right.publisherName,
         ...(openAiAppsChallenge === undefined ? {} : { openAiAppsChallenge }),
         ...(metricsBearerToken === undefined ? {} : { metricsBearerToken }),
       },
