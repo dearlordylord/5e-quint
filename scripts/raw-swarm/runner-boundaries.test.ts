@@ -1855,6 +1855,26 @@ describe("RAW swarm runner boundaries", () => {
     }
   });
 
+  test("fails safely for absent or non-file standalone sources", () => {
+    const fixtureRoot = mkdtempSync(
+      resolve(tmpdir(), "dnd-lane-source-shape-"),
+    );
+    const absentPath = resolve(fixtureRoot, "absent.ts");
+    try {
+      for (const sourcePath of [fixtureRoot, absentPath]) {
+        const checked = spawnSync(
+          process.execPath,
+          [laneHygieneChecker, "--source", sourcePath],
+          { encoding: "utf8" },
+        );
+        expect(checked.status).not.toBe(0);
+        expect(`${checked.stdout}${checked.stderr}`).toContain("regular file");
+      }
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
   test("rejects direct and symlinked --test paths outside the repository", () => {
     const outsideRoot = mkdtempSync(
       resolve(tmpdir(), "dnd-lane-test-outside-"),

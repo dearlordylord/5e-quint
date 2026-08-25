@@ -970,6 +970,17 @@ function repositoryOwnedSourceFile(pathArgument, sourceKind) {
   return canonicalSourcePath;
 }
 
+function standaloneSourceFile(pathArgument) {
+  const sourcePath = resolve(root, pathArgument);
+  const canonicalSourcePath = canonicalPathForOwnership(sourcePath);
+  const observation = sourceCandidateObservation(canonicalSourcePath);
+  if (observation.kind === "failure") throw new Error(observation.message);
+  if (observation.kind !== "file") {
+    throw new Error(`Source does not exist as a regular file: ${pathArgument}`);
+  }
+  return canonicalSourcePath;
+}
+
 function assertSourceCapabilities(sourcePath) {
   const source = readFileSync(sourcePath, "utf8");
   const violations = deterministicCapabilityViolations(source);
@@ -981,7 +992,7 @@ function assertSourceCapabilities(sourcePath) {
 }
 
 function runSourceCheck(sourcePathArgument) {
-  const sourcePath = repositoryOwnedSourceFile(sourcePathArgument, "Source");
+  const sourcePath = standaloneSourceFile(sourcePathArgument);
   assertSourceCapabilities(sourcePath);
   process.stdout.write(`Deterministic source passed: ${sourcePathArgument}\n`);
 }
