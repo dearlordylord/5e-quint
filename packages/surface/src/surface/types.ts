@@ -648,6 +648,15 @@ export type CreatureTrait = Schema.Schema.Type<
 export type CreatureStatBlock = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureStatBlockSchema
 >;
+export type StatBlockCreatureProjection = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureStatBlockProjectionSchema
+>;
+export type StandaloneStatBlock = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockSchema
+>;
+export type StandaloneStatBlockValue = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockValueSchema
+>;
 export type MonsterStatBlock = Schema.Schema.Type<
   typeof SurfaceSchema.MonsterStatBlockSchema
 >;
