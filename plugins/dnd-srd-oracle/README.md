@@ -30,9 +30,10 @@ mode. Follow the current [OpenAI plugin connection guide](https://developers.ope
 1. In ChatGPT, open **Settings → Security and login** and enable **Developer
    mode**.
 2. Start the MCP server through a public HTTPS endpoint with a streamable HTTP
-   `/mcp` route, or use the Secure MCP Tunnel procedure below. The current
-   repository server exposes stdio only, so do not enter its local stdio
-   command as a public URL.
+   `/mcp` route, or use the Secure MCP Tunnel procedure below. The public Node
+   entrypoint is documented in
+   [`packages/mcp/README.md`](../../packages/mcp/README.md); do not enter the
+   local stdio command as a public URL.
 3. Open **Plugins**, choose **+**, enter the user-facing name and description,
    select the connection method, and create the connection. For a public
    endpoint, enter the full `/mcp` URL; for a tunnel, select **Tunnel** and

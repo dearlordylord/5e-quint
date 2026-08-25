@@ -98,6 +98,17 @@ DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
 `DND_MCP_HOST` defaults to `0.0.0.0` and `PORT` defaults to `8787`. Stdio
 development continues to use `pnpm --filter @dnd/mcp dev`; Secure MCP Tunnel
 continues to launch that stdio entrypoint rather than the public database.
+The executable parity test starts both real transports, compares the server
+instructions and complete advertised tool contracts, compares representative
+static and stateful results, and runs the complete newcomer journey through
+HTTP. A live HTTPS staging smoke remains deployment evidence and is not
+substituted by this local test. Once a staging endpoint exists, run that smoke
+without changing the application or transport composition:
+
+```sh
+DND_MCP_STAGING_URL=https://staging.example.test/mcp \
+  pnpm --filter @dnd/mcp verify:staging
+```
 
 Stateful protocol results use one contextual envelope derived from the
 operation result and canonical session snapshot. It reports the typed operation
