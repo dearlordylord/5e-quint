@@ -65,6 +65,18 @@ consume Surface through typed authored-record boundaries, then derive their own
 execution state at package boundaries. Surface records remain
 provenance-bearing authored content, not a projected executable IR.
 
+The portable publication boundary is `surface/portable-surface`. Its
+`decodePortableSrdSurface` entrypoint accepts the JSON publication aggregate,
+validates every member, rejects duplicate authored identities and missing
+authored dependencies, and returns either the complete published Surface or a
+non-empty issue list. A rejected aggregate never exposes a partial Surface.
+The language-neutral cases in
+`portable-cases/srd-surface-case-index.json` are applied to the checked-in
+publication artifact and are also checked by an independent Draft 2020-12
+validator.
+This boundary changes no D&D rules; it only validates the already-authored
+publication contract.
+
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
 

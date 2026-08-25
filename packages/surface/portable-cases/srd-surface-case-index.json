@@ -1,0 +1,144 @@
+{
+  "version": 1,
+  "baseArtifact": "../publication/srd-surface.json",
+  "cases": [
+    {
+      "name": "valid published aggregate",
+      "operations": [],
+      "expected": {
+        "tag": "accepted",
+        "productionIssueCodes": [],
+        "independentIssueCodes": []
+      }
+    },
+    {
+      "name": "unknown field",
+      "operations": [
+        {
+          "op": "add",
+          "path": "/units/0/unknownField",
+          "value": true
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["schema"],
+        "independentIssueCodes": ["schema"]
+      }
+    },
+    {
+      "name": "non-SRD provenance",
+      "operations": [
+        {
+          "op": "replace",
+          "path": "/statBlocks/0/provenance/kind",
+          "value": "synthetic-test"
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["schema"],
+        "independentIssueCodes": ["schema"]
+      }
+    },
+    {
+      "name": "refinement violation",
+      "operations": [
+        {
+          "op": "replace",
+          "path": "/statBlocks/0/challengeRating",
+          "value": 99
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["schema"],
+        "independentIssueCodes": ["schema"]
+      }
+    },
+    {
+      "name": "empty collections",
+      "operations": [
+        {
+          "op": "replace",
+          "path": "/units",
+          "value": []
+        },
+        {
+          "op": "replace",
+          "path": "/statBlocks",
+          "value": []
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["shape", "shape"],
+        "independentIssueCodes": ["schema"]
+      }
+    },
+    {
+      "name": "duplicate identity within one family",
+      "operations": [
+        {
+          "op": "copy",
+          "from": "/units/0",
+          "path": "/units/1"
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["duplicate-authored-identity"],
+        "independentIssueCodes": ["duplicate-authored-identity"]
+      }
+    },
+    {
+      "name": "duplicate identity across record families",
+      "operations": [
+        {
+          "op": "copy",
+          "from": "/units/0/id",
+          "path": "/statBlocks/20/id"
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["duplicate-authored-identity"],
+        "independentIssueCodes": ["duplicate-authored-identity"]
+      }
+    },
+    {
+      "name": "dangling authored dependency",
+      "operations": [
+        {
+          "op": "remove",
+          "path": "/statBlocks/0"
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["dangling-authored-dependency"],
+        "independentIssueCodes": ["dangling-authored-dependency"]
+      }
+    },
+    {
+      "name": "independent record failures accumulate",
+      "operations": [
+        {
+          "op": "add",
+          "path": "/units/0/unknownUnitField",
+          "value": true
+        },
+        {
+          "op": "add",
+          "path": "/statBlocks/0/unknownStatBlockField",
+          "value": true
+        }
+      ],
+      "expected": {
+        "tag": "rejected",
+        "productionIssueCodes": ["schema", "schema"],
+        "independentIssueCodes": ["schema"]
+      }
+    }
+  ]
+}
