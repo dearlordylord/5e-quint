@@ -56,6 +56,19 @@ const modelLaneLockPath = resolve(
   modelLaneLockDirectory,
   "raw-swarm-model-lane-1.lock",
 );
+const modelLaneGit = resolve(modelLaneLockDirectory, "git");
+const realGit = execFileSync("which", ["git"], { encoding: "utf8" }).trim();
+writeFileSync(
+  modelLaneGit,
+  `#!/bin/sh
+set -eu
+case "$*" in
+  *--git-common-dir*) printf '%s\\n' '${modelLaneLockDirectory}' ;;
+  *) exec '${realGit}' "$@" ;;
+esac
+`,
+);
+chmodSync(modelLaneGit, 0o755);
 const modelLaneLockFd = openSync(modelLaneLockPath, "a+");
 const modelLaneLockAcquisition = spawnSync(
   "flock",
@@ -81,6 +94,7 @@ afterAll(() => {
 });
 const modelEntryPointTestEnvironment: NodeJS.ProcessEnv = {
   ...process.env,
+  PATH: `${modelLaneLockDirectory}:${process.env.PATH ?? ""}`,
   RAW_SWARM_EXPECTED_GIT_SHA: currentGitSha,
   DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${currentGitSha}`,
   DND_RAW_SWARM_MODEL_LANE: "1",
@@ -96,6 +110,10 @@ function guardedModelEnvironment(
 ): NodeJS.ProcessEnv {
   return {
     ...env,
+    PATH:
+      env.PATH === process.env.PATH
+        ? `${modelLaneLockDirectory}:${env.PATH ?? ""}`
+        : env.PATH,
     RAW_SWARM_EXPECTED_GIT_SHA: currentGitSha,
     DND_RAW_SWARM_MODEL_ENTRYPOINT_GUARD: `v1:${currentGitSha}`,
     DND_RAW_SWARM_MODEL_LANE: "1",
@@ -1110,6 +1128,7 @@ esac
       String.raw`#!/bin/sh
 set -eu
 case "$*" in
+  *--git-common-dir*) printf '%s\n' '${modelLaneLockDirectory}' ;;
   *show-toplevel*) printf '%s\n' '${repoRoot}' ;;
   *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
   *status*) exit 0 ;;
@@ -1205,6 +1224,7 @@ esac
       String.raw`#!/bin/sh
 set -eu
 case "$*" in
+  *--git-common-dir*) printf '%s\n' '${modelLaneLockDirectory}' ;;
   *status*) exit 0 ;;
   *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
   *) exit 0 ;;
@@ -1263,6 +1283,7 @@ esac
       String.raw`#!/bin/sh
 set -eu
 case "$*" in
+  *--git-common-dir*) printf '%s\n' '${modelLaneLockDirectory}' ;;
   *show-toplevel*) printf '%s\n' '${repoRoot}' ;;
   *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
   *) exit 0 ;;
@@ -1410,6 +1431,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
         "#!/bin/sh",
         "set -eu",
         'case "$*" in',
+        `  *--git-common-dir*) printf '%s\\n' '${modelLaneLockDirectory}' ;;`,
         `  *show-toplevel*) printf '%s\\n' '${repoRoot}' ;;`,
         `  *rev-parse\\ HEAD*) printf '%s\\n' '${currentGitSha}' ;;`,
         "  *) exit 0 ;;",
@@ -1547,6 +1569,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
       String.raw`#!/bin/sh
 set -eu
 case "$*" in
+  *--git-common-dir*) printf '%s\n' '${modelLaneLockDirectory}' ;;
   *show-toplevel*) printf '%s\n' '${repoRoot}' ;;
   *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
   *) exit 0 ;;
@@ -1637,6 +1660,7 @@ esac
       String.raw`#!/bin/sh
 set -eu
 case "$*" in
+  *--git-common-dir*) printf '%s\n' '${modelLaneLockDirectory}' ;;
   *show-toplevel*) printf '%s\n' '${repoRoot}' ;;
   *rev-parse\ HEAD*) printf '%s\n' '${currentGitSha}' ;;
   *) exit 0 ;;

@@ -22,6 +22,7 @@ const wrapperNames = [
   "with-broad-workspace-lock.sh",
   "with-mbt-lock.sh",
 ];
+const fixtureScriptNames = [...wrapperNames, "process-supervision.sh"];
 const retiredLockNames = [
   "ralph-heavy-verification.lock",
   "ralph-broad-workspace-check.lock",
@@ -71,6 +72,15 @@ function waitForExit(child, description) {
 }
 
 function guardedSpawn(root, wrapperName, probeArgs) {
+  return guardedCommandSpawn(
+    root,
+    wrapperName,
+    "scripts/lock-probe.sh",
+    probeArgs,
+  );
+}
+
+function guardedCommandSpawn(root, wrapperName, command, args, env) {
   return spawn(
     "bash",
     [
@@ -78,11 +88,36 @@ function guardedSpawn(root, wrapperName, probeArgs) {
       '. scripts/resource-lock-owner.sh && with_resource_lock_owner "$@"',
       "resource-lock-self-test",
       `scripts/${wrapperName}`,
-      "scripts/lock-probe.sh",
-      ...probeArgs,
+      command,
+      ...args,
     ],
-    { cwd: root, stdio: ["ignore", "ignore", "pipe"] },
+    {
+      cwd: root,
+      env: env === undefined ? process.env : { ...process.env, ...env },
+      stdio: ["ignore", "ignore", "pipe"],
+    },
   );
+}
+
+function processIdentity(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return undefined;
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    const fields = stat.slice(stat.lastIndexOf(") ") + 2).split(" ");
+    if (fields[0] === "Z" || fields[0] === "X") return undefined;
+    return { pid, startTime: fields[19] };
+  } catch {
+    return undefined;
+  }
+}
+
+function processIdentityIsLive(identity) {
+  return processIdentity(identity.pid)?.startTime === identity.startTime;
+}
+
+function signalProcessIdentity(identity, signal) {
+  if (!processIdentityIsLive(identity)) return;
+  process.kill(identity.pid, signal);
 }
 
 function logLines(logPath) {
@@ -117,6 +152,10 @@ async function runSelfTest() {
     path.join(repositoryRoot, "scripts", "with-resource-lock.sh"),
     "utf8",
   );
+  assert.ok(
+    guardSource.includes('source "$script_directory/process-supervision.sh"'),
+    "the resource guard sources the shared process-supervision helper",
+  );
   const lockNames = ["dnd-heavy-verification.lock", ...retiredLockNames];
   let previousPosition = -1;
   for (const lockName of lockNames) {
@@ -130,10 +169,10 @@ async function runSelfTest() {
   const linked = path.join(temporaryRoot, "linked");
   mkdirSync(path.join(root, "scripts"), { recursive: true });
   try {
-    for (const wrapperName of wrapperNames) {
-      const destination = path.join(root, "scripts", wrapperName);
+    for (const scriptName of fixtureScriptNames) {
+      const destination = path.join(root, "scripts", scriptName);
       copyFileSync(
-        path.join(repositoryRoot, "scripts", wrapperName),
+        path.join(repositoryRoot, "scripts", scriptName),
         destination,
       );
       chmodSync(destination, 0o755);
@@ -155,6 +194,30 @@ async function runSelfTest() {
       ].join("\n"),
     );
     chmodSync(probePath, 0o755);
+    const detachedProbePath = path.join(root, "scripts", "detached-probe.cjs");
+    writeFileSync(
+      detachedProbePath,
+      [
+        "#!/usr/bin/env node",
+        'const { spawn } = require("node:child_process");',
+        'const { writeFileSync } = require("node:fs");',
+        'if (process.argv[2] === "child") {',
+        "  writeFileSync(process.env.DETACHED_PID_PATH, String(process.pid));",
+        '  process.on("SIGTERM", () => {});',
+        "  setInterval(() => {}, 1_000);",
+        "} else {",
+        '  const child = spawn(process.execPath, [__filename, "child"], {',
+        "    detached: true,",
+        "    env: process.env,",
+        '    stdio: "ignore",',
+        "  });",
+        "  child.unref();",
+        "  setInterval(() => {}, 1_000);",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    chmodSync(detachedProbePath, 0o755);
 
     run("git", ["init", "-b", "master"], root);
     run("git", ["config", "user.email", "resource-lock@example.invalid"], root);
@@ -167,7 +230,11 @@ async function runSelfTest() {
       root,
     );
     mkdirSync(path.join(linked, "scripts"), { recursive: true });
-    for (const scriptName of [...wrapperNames, "lock-probe.sh"]) {
+    for (const scriptName of [
+      ...fixtureScriptNames,
+      "lock-probe.sh",
+      "detached-probe.cjs",
+    ]) {
       const destination = path.join(linked, "scripts", scriptName);
       copyFileSync(path.join(root, "scripts", scriptName), destination);
       chmodSync(destination, 0o755);
@@ -227,6 +294,45 @@ async function runSelfTest() {
         logPath,
       ]);
       await assertSerialized(holder, contender, logPath);
+    }
+
+    const detachedPidPath = path.join(temporaryRoot, "detached-child.pid");
+    const supervised = guardedCommandSpawn(
+      root,
+      "with-broad-workspace-lock.sh",
+      process.execPath,
+      ["scripts/detached-probe.cjs"],
+      { DETACHED_PID_PATH: detachedPidPath },
+    );
+    let detachedIdentity;
+    try {
+      await waitFor(() => {
+        if (!existsSync(detachedPidPath)) return false;
+        detachedIdentity = processIdentity(
+          Number(readFileSync(detachedPidPath, "utf8").trim()),
+        );
+        return detachedIdentity !== undefined;
+      }, "the detached supervised child");
+      assert.ok(detachedIdentity, "the detached child has a live identity");
+
+      supervised.kill("SIGTERM");
+      await waitFor(
+        () => !processIdentityIsLive(detachedIdentity),
+        "the detached child to be terminated by shared supervision",
+      );
+
+      const reacquiredLog = path.join(temporaryRoot, "reacquired.log");
+      const reacquired = guardedSpawn(linked, "with-mbt-lock.sh", [
+        "contender",
+        reacquiredLog,
+      ]);
+      assert.equal(await waitForExit(reacquired, "the reacquirer"), 0);
+      assert.deepEqual(logLines(reacquiredLog), ["contender-start"]);
+    } finally {
+      if (supervised.exitCode === null) supervised.kill("SIGKILL");
+      if (detachedIdentity !== undefined) {
+        signalProcessIdentity(detachedIdentity, "SIGKILL");
+      }
     }
   } finally {
     if (existsSync(linked)) {
