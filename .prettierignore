@@ -2,6 +2,10 @@
 packages/surface/content/*.json
 packages/surface/publication/*.json
 
+# Effect 3 migration oracle bytes are emitted by their canonicalizer; the
+# verifier owns their exact formatting and source-order arrays.
+docs/migrations/effect-4/effect3-behavioral-oracle.json
+
 # Local coverage-report scratch directories contain generated reporter assets.
 **/coverage_tmp*/**
 
