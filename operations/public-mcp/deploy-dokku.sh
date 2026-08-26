@@ -115,6 +115,7 @@ minimum_available_swap_kib=$((1024 * 1024))
 }
 
 workflow="public-mcp-image.yml"
+artifact_name="dnd-oracle-image"
 gh workflow run "$workflow" --ref master -f "release=$release"
 run_id=""
 for ((attempt = 1; attempt <= 30; attempt += 1)); do
@@ -137,7 +138,7 @@ gh run watch "$run_id" --exit-status
 
 artifact_directory="$(mktemp -d)"
 trap 'rm -rf "$artifact_directory"' EXIT
-gh run download "$run_id" --dir "$artifact_directory"
+gh run download "$run_id" --name "$artifact_name" --dir "$artifact_directory"
 mapfile -t image_archives < <(
   find "$artifact_directory" -type f -name '*.tar' -print
 )

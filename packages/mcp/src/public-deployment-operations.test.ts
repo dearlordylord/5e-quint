@@ -44,6 +44,7 @@ describe("public MCP deployment operations", () => {
     expect(dockerfile).toContain("deploy --prod --legacy /srv/deploy");
     expect(dockerfile).toContain("COPY --from=builder");
     expect(deployDokku).toContain("public-mcp-image.yml");
+    expect(deployDokku).toContain('artifact_name="dnd-oracle-image"');
     expect(deployDokku).toContain("--checks-disabled-list");
     expect(deployDokku).toContain("minimum_available_memory_kib");
     expect(deployDokku).toContain("minimum_available_swap_kib");
@@ -52,6 +53,7 @@ describe("public MCP deployment operations", () => {
     expect(memorySafety).toContain("fallocate -l 2G");
     expect(memorySafety).toContain('checks:disable "$app" web');
     expect(imageWorkflow).toContain("Build deployable image off-host");
+    expect(imageWorkflow).toContain("name: dnd-oracle-image");
     expect(imageWorkflow).toContain("docker image save");
   });
 
