@@ -71,6 +71,11 @@ import {
   type WildShapeLoadoutObjectRef,
 } from "./wild-shape-equipment.ts";
 import {
+  STAT_BLOCK_ACTION_PROJECTION_SECTIONS,
+  STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS,
+  STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS,
+} from "../stat-block-presentation-contract.ts";
+import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BattleSubjectSchema,
   battleSubjectBoundExecutionReferences,
@@ -158,7 +163,6 @@ import {
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
 import {
-  ATTACK_PRESENTATION_JOIN_ISSUE_REASONS,
   type BattleFill,
   type BattleHole,
   type BattleMovementFillValue,
@@ -6228,14 +6232,48 @@ export const BattleSpellPresentationSchema = Schema.Struct({
   invocation: SpellInvocationRefSchema,
 });
 
+const StatBlockProcedurePresentationJoinIssueSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("statBlockProcedurePresentationJoinIssue"),
+    reason: Schema.Literal("missingPresentation"),
+    section: Schema.Literal(...STAT_BLOCK_ACTION_PROJECTION_SECTIONS),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
+    executionKind: Schema.Literal(...STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("statBlockProcedurePresentationJoinIssue"),
+    reason: Schema.Literal("presentationKindMismatch"),
+    section: Schema.Literal(...STAT_BLOCK_ACTION_PROJECTION_SECTIONS),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
+    executionKind: Schema.Literal(...STAT_BLOCK_EXECUTABLE_PROCEDURE_KINDS),
+    presentationKind: Schema.Literal(
+      ...STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS,
+    ),
+  }),
+);
+
 export const BattleActPresentationSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("intrinsic") }),
   Schema.Struct({
     kind: Schema.Literal("presentationIssue"),
-    issue: Schema.Struct({
-      tag: Schema.Literal("attackPresentationJoinIssue"),
-      reason: Schema.Literal(...ATTACK_PRESENTATION_JOIN_ISSUE_REASONS),
-    }),
+    issue: Schema.Union(
+      Schema.Struct({
+        tag: Schema.Literal("attackPresentationJoinIssue"),
+        reason: Schema.Literal(
+          "characterContextMissing",
+          "weaponPresentationMissing",
+          "statBlockAdmissionMissing",
+          "statBlockPresentationMissing",
+        ),
+      }),
+      Schema.Struct({
+        tag: Schema.Literal("attackPresentationJoinIssue"),
+        reason: Schema.Literal("statBlockProcedurePresentationJoin"),
+        issues: Schema.NonEmptyArray(
+          StatBlockProcedurePresentationJoinIssueSchema,
+        ),
+      }),
+    ),
   }),
   Schema.Struct({
     kind: Schema.Literal("attack"),

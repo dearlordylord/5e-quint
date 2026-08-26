@@ -351,6 +351,30 @@ function intrinsicSubjectPresentation(
     }
     return undefined;
   }
+  if (
+    (subject.tag === "action" && subject.action === "multiattack") ||
+    (subject.tag === "bonusAction" &&
+      subject.action === "statBlockActionOption")
+  ) {
+    const actor = state.combatants.get(subject.actorId);
+    if (actor?.origin.kind === "statBlock") {
+      const presentations = statBlockProcedurePresentationsForActor(
+        state,
+        context,
+        subject.actorId,
+      );
+      if (presentations !== null && Either.isLeft(presentations)) {
+        return {
+          kind: "presentationIssue",
+          issue: {
+            tag: "attackPresentationJoinIssue",
+            reason: "statBlockProcedurePresentationJoin",
+            issues: presentations.left,
+          },
+        };
+      }
+    }
+  }
   return { kind: "intrinsic" };
 }
 
@@ -410,11 +434,17 @@ function intrinsicActPresentationText(
   ) {
     const actor = state.combatants.get(subject.actorId);
     if (actor?.origin.kind === "statBlock") {
-      const presentation = statBlockProcedurePresentationsForActor(
+      const presentations = statBlockProcedurePresentationsForActor(
         state,
         context,
         subject.actorId,
-      )?.find((candidate) => candidate.procedureRef === subject.procedureRef);
+      );
+      const presentation =
+        presentations === null || Either.isLeft(presentations)
+          ? undefined
+          : presentations.right.find(
+              (candidate) => candidate.procedureRef === subject.procedureRef,
+            );
       if (presentation !== undefined && presentation.kind !== "attack") {
         return {
           label: presentation.label,

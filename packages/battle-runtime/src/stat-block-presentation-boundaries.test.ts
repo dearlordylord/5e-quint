@@ -5,7 +5,11 @@ import {
   characterWeaponPresentationSource,
   emptyBattleRuntimeContext,
 } from "./battle-runtime-context.ts";
-import { battleRuntimeContextForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
+import { battleSubjectPresentation } from "./battle-act-composition.ts";
 import {
   battleId,
   characterSeed,
@@ -13,6 +17,7 @@ import {
   fighterId,
   goblinAttackSubject,
   goblinId,
+  monsterMultiattackStatBlock,
   startBattleSessionRight,
   statBlockCreatureInit,
   statBlockRecord,
@@ -124,15 +129,58 @@ describe("battle presentation joins", () => {
           goblinId,
           {
             ...source,
-            orderedProcedures: [
-              {
-                ...firstProcedure,
-                procedureOrdinal: firstProcedure.procedureOrdinal + 100,
-              },
-            ],
+            orderedProcedures: source.orderedProcedures.map((procedure) =>
+              procedure === firstProcedure
+                ? {
+                    ...procedure,
+                    procedureOrdinal: procedure.procedureOrdinal + 100,
+                  }
+                : procedure,
+            ),
           },
         ],
       ]),
+    );
+    const firstExecutionProcedure =
+      actor.origin.execution.procedureBindings.find(
+        (binding) =>
+          binding.procedure.kind !== "unarmedStrike" &&
+          binding.procedure.section === firstProcedure.section &&
+          binding.procedure.procedureOrdinal ===
+            firstProcedure.procedureOrdinal,
+      );
+    if (firstExecutionProcedure?.procedure.kind !== "attack") {
+      throw new Error("Expected the first Goblin procedure to be an attack.");
+    }
+    const missingJoinIssues = [
+      {
+        tag: "statBlockProcedurePresentationJoinIssue" as const,
+        reason: "missingPresentation" as const,
+        section: firstExecutionProcedure.procedure.section,
+        procedureOrdinal: firstExecutionProcedure.procedure.procedureOrdinal,
+        executionKind: "attack" as const,
+      },
+    ];
+    expect(
+      statBlockProcedurePresentationsForActor(
+        session.state,
+        contextWithMissingProcedure,
+        goblinId,
+      ),
+    ).toEqual(Either.left(missingJoinIssues));
+    expect(
+      attackActionOptionPresentationName(
+        session.state,
+        contextWithMissingProcedure,
+        goblinId,
+        attack,
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockProcedurePresentationJoin",
+        issues: missingJoinIssues,
+      }),
     );
     expect(
       statBlockProjectionIssuesForActor(
@@ -151,6 +199,146 @@ describe("battle presentation joins", () => {
         },
       },
     ]);
+
+    const contextWithMismatchedProcedure = battleRuntimeContextForTest(
+      session.context.characters,
+      new Map([
+        [
+          goblinId,
+          {
+            ...source,
+            orderedProcedures: source.orderedProcedures.map((procedure) =>
+              procedure === firstProcedure
+                ? {
+                    section: procedure.section,
+                    procedureOrdinal: procedure.procedureOrdinal,
+                    name: "Synthetic text-only presentation",
+                    description: "Synthetic text-only presentation.",
+                    kind: "textOnly" as const,
+                    reason: "required_table_adjudication" as const,
+                    resourceRefs: procedure.resourceRefs,
+                  }
+                : procedure,
+            ),
+          },
+        ],
+      ]),
+    );
+    const mismatchedJoinIssues = [
+      {
+        tag: "statBlockProcedurePresentationJoinIssue" as const,
+        reason: "presentationKindMismatch" as const,
+        section: firstExecutionProcedure.procedure.section,
+        procedureOrdinal: firstExecutionProcedure.procedure.procedureOrdinal,
+        executionKind: "attack" as const,
+        presentationKind: "textOnly" as const,
+      },
+    ];
+    expect(
+      statBlockProcedurePresentationsForActor(
+        session.state,
+        contextWithMismatchedProcedure,
+        goblinId,
+      ),
+    ).toEqual(Either.left(mismatchedJoinIssues));
+    expect(
+      attackActionOptionPresentationName(
+        session.state,
+        contextWithMismatchedProcedure,
+        goblinId,
+        attack,
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockProcedurePresentationJoin",
+        issues: mismatchedJoinIssues,
+      }),
+    );
+  });
+
+  test("surfaces a typed join issue for a non-attack Stat Block subject", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("stat-block-presentation-multiattack-join"),
+      combatants: [
+        statBlockCreatureInit({
+          statBlock: monsterMultiattackStatBlock(),
+          initiative: 10,
+        }),
+      ],
+    });
+    const actor = session.state.combatants.get(goblinId);
+    if (actor?.origin.kind !== "statBlock") {
+      throw new Error("Expected Multiattack Stat Block actor.");
+    }
+    const multiattackBinding = actor.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "multiattack",
+    );
+    if (multiattackBinding?.procedure.kind !== "multiattack") {
+      throw new Error("Expected admitted Multiattack procedure.");
+    }
+    const source = session.context.statBlocks.get(goblinId);
+    if (source === undefined) {
+      throw new Error("Expected Multiattack presentation source.");
+    }
+    const multiattackPresentation = source.orderedProcedures.find(
+      (procedure) => procedure.kind === "multiattack",
+    );
+    if (multiattackPresentation === undefined) {
+      throw new Error("Expected Multiattack presentation.");
+    }
+    const contextWithMismatchedMultiattack = battleRuntimeContextForTest(
+      session.context.characters,
+      new Map([
+        [
+          goblinId,
+          {
+            ...source,
+            orderedProcedures: source.orderedProcedures.map((procedure) =>
+              procedure === multiattackPresentation
+                ? {
+                    section: procedure.section,
+                    procedureOrdinal: procedure.procedureOrdinal,
+                    name: "Synthetic text-only Multiattack",
+                    description: "Synthetic text-only Multiattack.",
+                    kind: "textOnly" as const,
+                    reason: "required_table_adjudication" as const,
+                    resourceRefs: procedure.resourceRefs,
+                  }
+                : procedure,
+            ),
+          },
+        ],
+      ]),
+    );
+    const mismatchedSession = battleRuntimeSessionForTest({
+      state: session.state,
+      context: contextWithMismatchedMultiattack,
+    });
+    expect(
+      battleSubjectPresentation(mismatchedSession, {
+        tag: "action",
+        actorId: goblinId,
+        action: "multiattack",
+        procedureRef: multiattackBinding.procedureRef,
+      }),
+    ).toEqual({
+      kind: "presentationIssue",
+      issue: {
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockProcedurePresentationJoin",
+        issues: [
+          {
+            tag: "statBlockProcedurePresentationJoinIssue",
+            reason: "presentationKindMismatch",
+            section: "actions",
+            procedureOrdinal: multiattackBinding.procedure.procedureOrdinal,
+            executionKind: "multiattack",
+            presentationKind: "textOnly",
+          },
+        ],
+      },
+    });
   });
 
   test("reports a missing authored weapon source separately from character context", () => {

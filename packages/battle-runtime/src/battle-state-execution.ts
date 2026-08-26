@@ -230,6 +230,7 @@ import type {
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution-state.ts";
+import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
 import type { UnitId } from "@dnd/shared/game-facts";
 import {
   type BattleInterruptTrigger,
@@ -4263,13 +4264,23 @@ export const ATTACK_PRESENTATION_JOIN_ISSUE_REASONS = [
   "weaponPresentationMissing",
   "statBlockAdmissionMissing",
   "statBlockPresentationMissing",
+  "statBlockProcedurePresentationJoin",
 ] as const;
 export type AttackPresentationJoinIssueReason =
   (typeof ATTACK_PRESENTATION_JOIN_ISSUE_REASONS)[number];
-export type AttackPresentationJoinIssue = {
-  readonly tag: "attackPresentationJoinIssue";
-  readonly reason: AttackPresentationJoinIssueReason;
-};
+export type AttackPresentationJoinIssue =
+  | {
+      readonly tag: "attackPresentationJoinIssue";
+      readonly reason: Exclude<
+        AttackPresentationJoinIssueReason,
+        "statBlockProcedurePresentationJoin"
+      >;
+    }
+  | {
+      readonly tag: "attackPresentationJoinIssue";
+      readonly reason: "statBlockProcedurePresentationJoin";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockProcedurePresentationJoinIssue>;
+    };
 
 export type BattleActPresentation =
   | { readonly kind: "intrinsic" }

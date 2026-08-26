@@ -27,7 +27,10 @@ import * as Option from "effect/Option";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
-import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import {
+  statBlockProcedurePresentations,
+  type StatBlockProcedurePresentation,
+} from "./stat-block-presentation.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
 import { resolveAdmittedFindFamiliarReappearanceSubject } from "./battle-reducer/find-familiar-procedures.ts";
@@ -473,7 +476,7 @@ function registerStatBlockPresentationsForTest(
 export function statBlockProcedurePresentationsForStateForTest(
   state: BattleState,
   actorId: CombatantId,
-): ReturnType<typeof statBlockProcedurePresentations> {
+): readonly StatBlockProcedurePresentation[] {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "statBlock") {
     throw new Error("Expected a Stat Block test actor.");
@@ -484,10 +487,12 @@ export function statBlockProcedurePresentationsForStateForTest(
   if (presentations === undefined) {
     throw new Error("Expected registered Stat Block test presentation.");
   }
-  return statBlockProcedurePresentations({
-    execution: actor.origin.execution,
-    presentation: presentations,
-  });
+  return Either.getOrThrow(
+    statBlockProcedurePresentations({
+      execution: actor.origin.execution,
+      presentation: presentations,
+    }),
+  );
 }
 
 export function battleRuntimeContextForStateForTest(

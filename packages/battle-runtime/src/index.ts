@@ -391,6 +391,13 @@ export type {
 
 export type {
   StatBlockActionProjectionSection,
+  StatBlockAuthoredProcedurePresentationKind,
+  StatBlockExecutableProcedureKind,
+  StatBlockProcedurePresentationJoinIssue,
+  StatBlockProcedurePresentationKind,
+} from "./stat-block-presentation-contract.ts";
+
+export type {
   StatBlockActionProjectionShape,
   StatBlockProjectionIssue,
 } from "./stat-block-execution-state.ts";

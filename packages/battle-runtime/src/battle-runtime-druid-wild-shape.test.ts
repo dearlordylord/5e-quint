@@ -4174,8 +4174,9 @@ function wildShapeStatBlockAttackProcedureRef(
       druidId,
     );
     if (presentations === null) return null;
+    if (Either.isLeft(presentations)) return null;
     return (
-      presentations.find(
+      presentations.right.find(
         (presentation) =>
           presentation.kind === "attack" && presentation.name === attackName,
       )?.procedureRef ?? null
@@ -4187,10 +4188,12 @@ function wildShapeStatBlockAttackProcedureRef(
     ),
   ).presentation;
   return (
-    statBlockProcedurePresentations({
-      execution: active.admission.execution,
-      presentation,
-    }).find(
+    Either.getOrThrow(
+      statBlockProcedurePresentations({
+        execution: active.admission.execution,
+        presentation,
+      }),
+    ).find(
       (presentation) =>
         presentation.kind === "attack" && presentation.name === attackName,
     )?.procedureRef ?? null

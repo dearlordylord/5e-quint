@@ -1130,14 +1130,16 @@ function pactScratchSubject(
   if (familiar?.origin.kind !== "statBlock") {
     throw new Error("Expected the committed familiar Stat Block admission.");
   }
-  const procedureRef = statBlockProcedurePresentations({
-    presentation: Either.getOrThrow(
-      projectAuthoredStatBlock(
-        statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
-      ),
-    ).presentation,
-    execution: familiar.origin.execution,
-  }).find(
+  const procedureRef = Either.getOrThrow(
+    statBlockProcedurePresentations({
+      presentation: Either.getOrThrow(
+        projectAuthoredStatBlock(
+          statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+        ),
+      ).presentation,
+      execution: familiar.origin.execution,
+    }),
+  ).find(
     (presentation) =>
       presentation.kind === "attack" && presentation.name === "Scratch",
   )?.procedureRef;

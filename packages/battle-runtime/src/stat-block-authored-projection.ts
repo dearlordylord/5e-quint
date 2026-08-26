@@ -28,8 +28,8 @@ import {
   type BattleStatBlockRuntimeResource,
   type BattleStatBlockRuntimeSpeed,
   type BattleStatBlockRuntimeSense,
-  type StatBlockActionProjectionSection,
 } from "./stat-block-execution-state.ts";
+import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =

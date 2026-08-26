@@ -19,6 +19,7 @@ import type { StatBlockTextOnlyReason } from "@dnd/surface/surface/types";
 import type { StatBlockCommunication } from "@dnd/surface/surface/types";
 import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
+import type { StatBlockAuthoredProcedurePresentationKind } from "./stat-block-presentation-contract.ts";
 import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
@@ -87,13 +88,7 @@ type BattleStatBlockProcedurePresentationBase = {
 
 export type BattleStatBlockAuthoredProcedurePresentation =
   | (BattleStatBlockProcedurePresentationBase & {
-      readonly kind:
-        | "attack"
-        | "multiattack"
-        | "bonusActionOption"
-        | "save"
-        | "support"
-        | "spellcasting";
+      readonly kind: StatBlockAuthoredProcedurePresentationKind;
       readonly description?: string;
     })
   | (BattleStatBlockProcedurePresentationBase & {

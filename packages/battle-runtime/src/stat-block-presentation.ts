@@ -15,11 +15,14 @@ import type { CombatantId } from "./identity.ts";
 import * as Either from "effect/Either";
 import { Match } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 import type {
   StatBlockExecutionState,
   StatBlockActionProjectionShape,
+  StatBlockProcedure,
 } from "./stat-block-execution-state.ts";
+import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
 
 export type StatBlockProcedurePresentation =
   import("./battle-runtime-context.ts").BattleStatBlockProcedurePresentation;
@@ -29,6 +32,16 @@ export type StatBlockPresentationAdmission = {
   /** Missing authored context is a valid boundary state with no labels to join. */
   readonly presentation?: BattleStatBlockPresentationSource;
 };
+
+type ExecutableStatBlockProcedure = Exclude<
+  StatBlockProcedure,
+  { readonly kind: "unarmedStrike" }
+>;
+
+export type StatBlockProcedurePresentationResult = Either.Either<
+  readonly StatBlockProcedurePresentation[],
+  ReadonlyNonEmptyArray<StatBlockProcedurePresentationJoinIssue>
+>;
 
 function procedurePresentationKey(section: string, ordinal: number): string {
   return `${section}:${ordinal}`;
@@ -144,50 +157,134 @@ export function battleCreaturePresentationDisplayName(
 
 export function statBlockProcedurePresentations(
   admission: StatBlockPresentationAdmission,
-): readonly StatBlockProcedurePresentation[] {
-  if (admission.presentation === undefined) return [];
+): StatBlockProcedurePresentationResult {
+  if (admission.presentation === undefined) return Either.right([]);
   const labels = new Map(
     admission.presentation.orderedProcedures.map((entry) => [
       procedurePresentationKey(entry.section, entry.procedureOrdinal),
       entry,
     ]),
   );
-  const labelFor = (section: string, ordinal: number): string =>
-    labels.get(procedurePresentationKey(section, ordinal))?.name ??
-    "Unsupported Stat Block procedure";
-  return admission.execution.procedureBindings.flatMap(
-    (binding): readonly StatBlockProcedurePresentation[] =>
-      Match.value(binding.procedure).pipe(
-        Match.when({ kind: "unarmedStrike" }, () => [
-          {
-            procedureRef: binding.procedureRef,
-            kind: "attack" as const,
-            name: UNARMED_STRIKE_NAME,
-          },
-        ]),
-        Match.when({ kind: "attack" }, (procedure) => [
-          {
-            procedureRef: binding.procedureRef,
-            kind: "attack" as const,
-            name: labelFor(procedure.section, procedure.procedureOrdinal),
-          },
-        ]),
-        Match.when({ kind: "multiattack" }, (procedure) => [
-          {
-            procedureRef: binding.procedureRef,
-            kind: "multiattack" as const,
-            label: labelFor("actions", procedure.procedureOrdinal),
-          },
-        ]),
-        Match.when({ kind: "bonusActionOption" }, (procedure) => [
-          {
-            procedureRef: binding.procedureRef,
-            kind: "bonusActionOption" as const,
-            label: labelFor("bonusActions", procedure.procedureOrdinal),
-          },
-        ]),
-        Match.exhaustive,
+  const issues: StatBlockProcedurePresentationJoinIssue[] = [];
+  const presentations: StatBlockProcedurePresentation[] = [];
+  for (const binding of admission.execution.procedureBindings) {
+    const joined = statBlockProcedurePresentationForBinding(binding, labels);
+    if (Either.isLeft(joined)) {
+      issues.push(joined.left);
+    } else {
+      presentations.push(joined.right);
+    }
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? Either.right(presentations)
+    : Either.left([firstIssue, ...remainingIssues]);
+}
+
+function statBlockProcedurePresentationForBinding(
+  binding: StatBlockExecutionState["procedureBindings"][number],
+  labels: ReadonlyMap<
+    string,
+    BattleStatBlockPresentationSource["orderedProcedures"][number]
+  >,
+): Either.Either<
+  StatBlockProcedurePresentation,
+  StatBlockProcedurePresentationJoinIssue
+> {
+  return Match.value(binding.procedure).pipe(
+    Match.when({ kind: "unarmedStrike" }, () =>
+      Either.right({
+        procedureRef: binding.procedureRef,
+        kind: "attack" as const,
+        name: UNARMED_STRIKE_NAME,
+      }),
+    ),
+    Match.when({ kind: "attack" }, (procedure) =>
+      joinedExecutableStatBlockProcedurePresentation(
+        binding.procedureRef,
+        procedure,
+        labels,
       ),
+    ),
+    Match.when({ kind: "multiattack" }, (procedure) =>
+      joinedExecutableStatBlockProcedurePresentation(
+        binding.procedureRef,
+        procedure,
+        labels,
+      ),
+    ),
+    Match.when({ kind: "bonusActionOption" }, (procedure) =>
+      joinedExecutableStatBlockProcedurePresentation(
+        binding.procedureRef,
+        procedure,
+        labels,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function joinedExecutableStatBlockProcedurePresentation(
+  procedureRef: StatBlockExecutionState["procedureBindings"][number]["procedureRef"],
+  procedure: ExecutableStatBlockProcedure,
+  labels: ReadonlyMap<
+    string,
+    BattleStatBlockPresentationSource["orderedProcedures"][number]
+  >,
+): Either.Either<
+  StatBlockProcedurePresentation,
+  StatBlockProcedurePresentationJoinIssue
+> {
+  const entry = labels.get(
+    procedurePresentationKey(procedure.section, procedure.procedureOrdinal),
+  );
+  if (entry === undefined) {
+    return Either.left({
+      tag: "statBlockProcedurePresentationJoinIssue",
+      reason: "missingPresentation",
+      section: procedure.section,
+      procedureOrdinal: procedure.procedureOrdinal,
+      executionKind: procedure.kind,
+    });
+  }
+  const expectedKind = Match.value(procedure).pipe(
+    Match.when({ kind: "attack" }, () => "attack" as const),
+    Match.when({ kind: "multiattack" }, () => "multiattack" as const),
+    Match.when(
+      { kind: "bonusActionOption" },
+      () => "bonusActionOption" as const,
+    ),
+    Match.exhaustive,
+  );
+  if (entry.kind !== expectedKind) {
+    return Either.left({
+      tag: "statBlockProcedurePresentationJoinIssue",
+      reason: "presentationKindMismatch",
+      section: procedure.section,
+      procedureOrdinal: procedure.procedureOrdinal,
+      executionKind: procedure.kind,
+      presentationKind: entry.kind,
+    });
+  }
+  return Match.value(procedure).pipe(
+    Match.when({ kind: "attack" }, () =>
+      Either.right({ procedureRef, kind: "attack" as const, name: entry.name }),
+    ),
+    Match.when({ kind: "multiattack" }, () =>
+      Either.right({
+        procedureRef,
+        kind: "multiattack" as const,
+        label: entry.name,
+      }),
+    ),
+    Match.when({ kind: "bonusActionOption" }, () =>
+      Either.right({
+        procedureRef,
+        kind: "bonusActionOption" as const,
+        label: entry.name,
+      }),
+    ),
+    Match.exhaustive,
   );
 }
 
@@ -255,7 +352,14 @@ export function attackActionOptionPresentationName(
       reason: "statBlockAdmissionMissing",
     });
   }
-  const presentation = presentations.find(
+  if (Either.isLeft(presentations)) {
+    return Either.left({
+      tag: "attackPresentationJoinIssue",
+      reason: "statBlockProcedurePresentationJoin",
+      issues: presentations.left,
+    });
+  }
+  const presentation = presentations.right.find(
     (candidate) =>
       candidate.kind === "attack" &&
       candidate.procedureRef === attack.procedureRef,
@@ -284,7 +388,7 @@ export function statBlockProcedurePresentationsForActor(
   state: BattleState,
   context: BattleRuntimeContext,
   actorId: CombatantId,
-): readonly StatBlockProcedurePresentation[] | null {
+): StatBlockProcedurePresentationResult | null {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind === "statBlock") {
     const presentation = context.statBlocks.get(actorId);

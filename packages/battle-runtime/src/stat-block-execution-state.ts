@@ -45,6 +45,7 @@ import type {
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
+import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 
 export type BattleStatBlockExecutionSource = {
   readonly id: StatBlockId;
@@ -160,12 +161,6 @@ export type BattleStatBlockRuntimeProcedure =
       readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
       readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
     };
-
-export type StatBlockActionProjectionSection =
-  | "actions"
-  | "bonusActions"
-  | "reactions"
-  | "legendaryActions";
 
 export type StatBlockActionProjectionShape =
   | "attack"
