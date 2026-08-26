@@ -34,7 +34,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (invalidCreature !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCreature.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        invalidCreature.left,
+      ),
       observation: {
         scenarioId: "two-goblins-pursue-skeleton",
         status: "invalid-canonical-combatant",

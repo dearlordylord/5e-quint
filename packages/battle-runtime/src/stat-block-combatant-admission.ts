@@ -34,10 +34,15 @@ export type BattleStatBlockCombatantSource = {
 const BattleStatBlockCombatantSource =
   Brand.nominal<BattleStatBlockCombatantSource>();
 
+type StatBlockCombatantAdmissionIssue = Extract<
+  BattleStateInitLeafIssue,
+  { readonly tag: "battleStateInitIssue" }
+>;
+
 export function statBlockInitialConditionImmunityIssue(
   source: BattleStatBlockCombatantSource,
   conditions: readonly Condition[],
-): BattleStateInitLeafIssue | null {
+): StatBlockCombatantAdmissionIssue | null {
   const immuneInitialCondition = conditions.find((condition) =>
     source.statBlock.immunities?.conditions?.includes(condition),
   );
@@ -130,7 +135,10 @@ export function admitBattleStatBlockCombatantSource(input: {
 
 export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSource,
-): Either.Either<BattleStatBlockCombatantSource, BattleStateInitLeafIssue> {
+): Either.Either<
+  BattleStatBlockCombatantSource,
+  StatBlockCombatantAdmissionIssue
+> {
   if (statBlock.statBlock.ac.kind !== "literal") {
     return issue("Battle runtime requires literal Stat Block Armor Class.");
   }
@@ -163,6 +171,6 @@ export function battleStatBlockCombatantSource(
 
 function issue(
   message: string,
-): Either.Either<never, BattleStateInitLeafIssue> {
+): Either.Either<never, StatBlockCombatantAdmissionIssue> {
   return Either.left({ tag: "battleStateInitIssue", message });
 }

@@ -5,13 +5,12 @@ import {
   type CharacterBuild,
 } from "@dnd/character-creation-runtime";
 import {
-  battleCreatureInitFromStatBlock,
+  battleCreatureInitFromAuthoredStatBlock,
   battleAmmunitionStock,
   battleId,
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  projectAuthoredStatBlock,
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
@@ -35,31 +34,6 @@ import {
 } from "./session-store.ts";
 import type { StatBlockBattleRosterCombatant } from "./battle-roster-session-types.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
-
-type AuthoredStatBlockBattleInitInput = Omit<
-  Parameters<typeof battleCreatureInitFromStatBlock>[0],
-  "statBlock" | "presentation"
-> & {
-  readonly statBlock: StatBlockRecord;
-  readonly presentation?: Parameters<
-    typeof battleCreatureInitFromStatBlock
-  >[0]["presentation"];
-};
-
-function battleCreatureInitFromAuthoredStatBlock(
-  input: AuthoredStatBlockBattleInitInput,
-) {
-  return Either.flatMap(
-    projectAuthoredStatBlock(input.statBlock),
-    ({ runtime, presentation }) =>
-      battleCreatureInitFromStatBlock({
-        ...input,
-        statBlock: runtime,
-        presentation: input.presentation ?? presentation,
-      }),
-  );
-}
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 const unitCatalogResult = buildUnitCatalog({

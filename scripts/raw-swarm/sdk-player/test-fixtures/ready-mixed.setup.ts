@@ -45,7 +45,7 @@ export const setupScenario: ScenarioSetup = ({
   if (sdk.isLeft(monster)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(monster.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(monster.left),
       observation: { phase: "stat-block" },
     };
   }

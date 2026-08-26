@@ -234,6 +234,11 @@ function battleRuntimeContextForState(
   context: BattleRuntimeContext,
   state: import("./battle-state-execution.ts").BattleState,
 ): BattleRuntimeContext {
+  const rosterStillOwnsContext = [
+    ...context.characters.keys(),
+    ...context.statBlocks.keys(),
+  ].every((combatantId) => state.combatants.has(combatantId));
+  if (rosterStillOwnsContext) return context;
   const characters = new Map(
     [...context.characters].filter(([combatantId]) =>
       state.combatants.has(combatantId),

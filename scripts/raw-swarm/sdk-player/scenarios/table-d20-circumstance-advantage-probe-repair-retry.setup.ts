@@ -17,7 +17,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(ridingHorse)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(ridingHorse.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        ridingHorse.left,
+      ),
       observation: { stage: "riding-horse-battle-initialization" },
     };
   }
@@ -32,7 +34,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (sdk.isLeft(wolf)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(wolf.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(wolf.left),
       observation: { stage: "wolf-battle-initialization" },
     };
   }

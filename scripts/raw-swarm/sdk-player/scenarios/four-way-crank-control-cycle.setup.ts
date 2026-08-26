@@ -80,7 +80,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (invalidCombatant !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        invalidCombatant.left,
+      ),
       observation: {
         scenarioId: "four-way-crank-control-cycle",
         status: "stat-block-initialization-obstructed",

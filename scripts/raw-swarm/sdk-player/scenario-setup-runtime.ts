@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import {
-  battleCreatureInitFromStatBlock,
+  authoredStatBlockBattleInitIssueMessage,
+  battleCreatureInitFromAuthoredStatBlock,
   battleAmmunitionStock,
   battleId,
   battleObjectId,
@@ -105,8 +106,10 @@ function setupContext(
             statBlocks: validCatalog.listStatBlocks(),
             unitCatalog,
             sdk: {
+              authoredStatBlockBattleInitIssueMessage,
               battleAmmunitionStock,
-              battleCreatureInitFromStatBlock,
+              battleCreatureInitFromStatBlock:
+                battleCreatureInitFromAuthoredStatBlock,
               battleId,
               battleObjectId,
               battleStateInitIssueMessage,

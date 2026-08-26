@@ -2,8 +2,7 @@ import {
   battlePresentedSnapshot,
   battleAdmittedSpellPresentations,
   discoverBattleActs,
-  battleCreatureInitFromStatBlock,
-  projectAuthoredStatBlock,
+  battleCreatureInitFromAuthoredStatBlock,
   startBattle,
   battleStateInitIssueMessage,
   type BattleStatBlockProjectionFailure,
@@ -292,22 +291,12 @@ export function projectBattleCombatant(input: {
           }),
         );
       }
-      const projection = projectAuthoredStatBlock(statBlock.value);
-      if (Either.isLeft(projection)) {
-        return Either.left(
-          statBlockProjectionFailureContent(
-            encounterCombatant.statBlockId,
-            projection.left,
-          ),
-        );
-      }
-      const creatureInit = battleCreatureInitFromStatBlock({
+      const creatureInit = battleCreatureInitFromAuthoredStatBlock({
         combatantId: statBlockCombatant.combatantId,
-        statBlock: projection.right.runtime,
+        statBlock: statBlock.value,
         initiative: statBlockCombatant.initiative,
         ammunitionStocks: statBlockCombatant.ammunitionStocks,
         conditions: [],
-        presentation: projection.right.presentation,
         ...(encounterCombatant.currentHp === undefined
           ? {}
           : { currentHp: encounterCombatant.currentHp }),
@@ -317,9 +306,20 @@ export function projectBattleCombatant(input: {
       });
       if (Either.isLeft(creatureInit)) {
         return Either.left(
-          errorContent(battleStateInitIssueMessage(creatureInit.left), {
-            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-          }),
+          Match.value(creatureInit.left).pipe(
+            Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
+              statBlockProjectionFailureContent(
+                encounterCombatant.statBlockId,
+                failure,
+              ),
+            ),
+            Match.when({ tag: "battleStateInitIssue" }, (issue) =>
+              errorContent(battleStateInitIssueMessage(issue), {
+                code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+              }),
+            ),
+            Match.exhaustive,
+          ),
         );
       }
       if (creatureInit.right.creatureInit.kind !== "statBlock") {

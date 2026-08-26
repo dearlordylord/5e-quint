@@ -369,6 +369,8 @@ export type {
 } from "./battle-action-options.ts";
 
 export type {
+  AuthoredStatBlockBattleInitInput,
+  AuthoredStatBlockBattleInitIssue,
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
   BattleCreatureInit,
@@ -383,6 +385,7 @@ export type {
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleCreatureInit,
   StatBlockBattleInitInput,
+  StatBlockBattleInitIssue,
   StatBlockInitialCondition,
 } from "./battle-init.ts";
 
@@ -393,6 +396,7 @@ export type {
 } from "./stat-block-execution-state.ts";
 
 export {
+  authoredStatBlockBattleInitIssueMessage,
   KNOCKED_OUT_UNCONSCIOUS,
   STAT_BLOCK_INITIAL_CONDITIONS,
   battleAvailableDruidWildShapeKnownForms,
@@ -610,7 +614,11 @@ export type {
   BattleReducerRouteOwnerGroup,
   BattleReducerRouteSubjectFamily,
 } from "./battle-reducer/reducer-route-protocol.ts";
-export { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+export {
+  battleCreatureInitFromAuthoredStatBlock,
+  battleCreatureInitFromStatBlock,
+  projectAuthoredStatBlockBattleInitInput,
+} from "./battle-init.ts";
 export { battleAmmunitionStock } from "./battle-ammunition.ts";
 export type {
   BattleAmmunitionKind,

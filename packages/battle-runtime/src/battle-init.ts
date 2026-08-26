@@ -16,7 +16,7 @@ import type {
   StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Either, Match } from "effect";
 import type {
   AttackDamageAbilityModifierChoice,
   CharacterUnarmedStrikeActionOption,
@@ -39,7 +39,10 @@ import type {
 } from "./unit-feature-support.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import {
+  projectAuthoredStatBlock,
+  type BattleStatBlockProjectionFailure,
+} from "./stat-block-authored-projection.ts";
 import type {
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormProjection,
@@ -329,6 +332,25 @@ export type StatBlockBattleInitInput = {
   readonly presentation?: BattleStatBlockPresentationSource;
 };
 
+export type AuthoredStatBlockBattleInitInput = Omit<
+  StatBlockBattleInitInput,
+  "statBlock" | "presentation"
+> & {
+  readonly statBlock: StatBlockRecord;
+};
+
+export type AuthoredStatBlockBattleInitIssue =
+  | StatBlockBattleInitIssue
+  | {
+      readonly tag: "statBlockProjectionFailure";
+      readonly failure: BattleStatBlockProjectionFailure;
+    };
+
+export type StatBlockBattleInitIssue = Extract<
+  BattleStateInitIssue,
+  { readonly tag: "battleStateInitIssue" }
+>;
+
 export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
 export type StatBlockInitialCondition =
   (typeof STAT_BLOCK_INITIAL_CONDITIONS)[number];
@@ -356,7 +378,7 @@ export type BattleCreatureInit = {
 
 export function battleCreatureInitFromStatBlock(
   input: StatBlockBattleInitInput,
-): Either.Either<BattleCreatureInit, BattleStateInitIssue> {
+): Either.Either<BattleCreatureInit, StatBlockBattleInitIssue> {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Either.isLeft(source)) return Either.left(source.left);
   const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
@@ -383,5 +405,75 @@ export function battleCreatureInitFromStatBlock(
         : { presentation: input.presentation }),
     },
   });
+}
+
+/** Admit an authored catalog record through projection and battle init once. */
+export function battleCreatureInitFromAuthoredStatBlock(
+  input: AuthoredStatBlockBattleInitInput,
+): Either.Either<BattleCreatureInit, AuthoredStatBlockBattleInitIssue> {
+  const projected = projectAuthoredStatBlockBattleInitInput(input);
+  if (Either.isLeft(projected)) {
+    return Either.left({
+      tag: "statBlockProjectionFailure",
+      failure: projected.left,
+    });
+  }
+  return battleCreatureInitFromStatBlock(projected.right);
+}
+
+export function projectAuthoredStatBlockBattleInitInput(
+  input: AuthoredStatBlockBattleInitInput,
+): Either.Either<StatBlockBattleInitInput, BattleStatBlockProjectionFailure> {
+  const projected = projectAuthoredStatBlock(input.statBlock);
+  if (Either.isLeft(projected)) return Either.left(projected.left);
+  return Either.right({
+    ...input,
+    statBlock: projected.right.runtime,
+    presentation: projected.right.presentation,
+  });
+}
+
+export function authoredStatBlockBattleInitIssueMessage(
+  issue: AuthoredStatBlockBattleInitIssue,
+): string {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) => {
+      const location =
+        failure.section === undefined
+          ? ""
+          : ` in ${failure.section} procedure ${String(failure.procedureOrdinal ?? "unknown")}`;
+      return `Stat Block authored projection failed${location}: ${statBlockProjectionFailureMessage(failure)}.`;
+    }),
+    Match.exhaustive,
+  );
+}
+
+function statBlockProjectionFailureMessage(
+  failure: BattleStatBlockProjectionFailure,
+): string {
+  return Match.value(failure.reason).pipe(
+    Match.when(
+      "nonLiteralSize",
+      () => "battle initialization requires a concrete Size",
+    ),
+    Match.when(
+      "nonLiteralArmorClass",
+      () => "battle initialization requires literal Armor Class",
+    ),
+    Match.when(
+      "nonLiteralHitPoints",
+      () => "battle initialization requires literal maximum Hit Points",
+    ),
+    Match.when(
+      "nonLiteralSpeed",
+      () => "battle initialization requires unconditional literal Speeds",
+    ),
+    Match.when(
+      "unsupportedProcedureBinding",
+      () => "the procedure binding is not supported by battle execution",
+    ),
+    Match.exhaustive,
+  );
 }
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

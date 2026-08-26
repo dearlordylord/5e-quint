@@ -92,6 +92,7 @@ describe("battle runtime: setup and discovery", () => {
 
     expect(battleRuntimeSessionFollows(session, session)).toBe(true);
     expect(battleRuntimeSessionFollows(successor, session)).toBe(true);
+    expect(successor.context).toBe(session.context);
     expect(battleRuntimeSessionFollows(session, successor)).toBe(false);
     expect(battleRuntimeSessionFollows(laterSuccessor, session)).toBe(false);
     expect(battleRuntimeSessionFollows(unrelated, session)).toBe(false);

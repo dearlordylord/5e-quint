@@ -13,6 +13,7 @@ import type {
 
 import {
   battleAmmunitionStock,
+  battleCreatureInitFromAuthoredStatBlock,
   battleCreatureInitFromStatBlock,
   battleExecutionScopeOrdinal,
   battleId,
@@ -95,6 +96,54 @@ function firstProjectionIssue(
 }
 
 describe("generic Stat Block projection", () => {
+  test("admits authored mechanics and presentation as one operation", () => {
+    const source = statBlockRecord();
+    const initialized = battleCreatureInitFromAuthoredStatBlock({
+      combatantId: combatantId("authored-stat-block"),
+      statBlock: source,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      conditions: [],
+    });
+
+    expect(Either.isRight(initialized)).toBe(true);
+    if (Either.isLeft(initialized)) return;
+    expect(initialized.right.displayName).toBe(source.name);
+    expect(initialized.right.creatureInit.kind).toBe("statBlock");
+    if (initialized.right.creatureInit.kind !== "statBlock") return;
+    expect(initialized.right.creatureInit.source.procedures).not.toHaveLength(
+      0,
+    );
+    expect(initialized.right.creatureInit.presentation?.displayName).toBe(
+      source.name,
+    );
+  });
+
+  test("keeps authored projection failure distinct from battle init failure", () => {
+    const source = statBlockRecord();
+    const initialized = battleCreatureInitFromAuthoredStatBlock({
+      combatantId: combatantId("nonliteral-authored-stat-block"),
+      statBlock: {
+        ...source,
+        statBlock: {
+          ...source.statBlock,
+          size: { kind: "alternatives", options: ["small", "medium"] },
+        },
+      },
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      conditions: [],
+    });
+
+    expect(initialized).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "statBlockProjectionFailure",
+        failure: { reason: "nonLiteralSize" },
+      },
+    });
+  });
+
   test("does not synthesize presentation when initialization omits authored context", () => {
     const projected = projectAuthoredStatBlock(statBlockRecord());
     expect(Either.isRight(projected)).toBe(true);

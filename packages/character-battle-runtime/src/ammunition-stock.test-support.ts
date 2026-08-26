@@ -1,7 +1,8 @@
 import {
   battleAmmunitionStock,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
-  projectAuthoredStatBlock,
+  battleCreatureInitFromAuthoredStatBlock as parseBattleCreatureInitFromAuthoredStatBlock,
+  projectAuthoredStatBlockBattleInitInput,
+  type AuthoredStatBlockBattleInitInput,
   type BattleAmmunitionStock,
   type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
@@ -9,24 +10,15 @@ import type { AmmunitionKind } from "@dnd/shared/game-facts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { Either } from "effect";
 
-export type AuthoredStatBlockBattleInitInput = Omit<
-  StatBlockBattleInitInput,
-  "statBlock" | "presentation"
-> & {
-  readonly statBlock: StatBlockRecord;
-};
+export type { AuthoredStatBlockBattleInitInput } from "@dnd/battle-runtime";
 
 export function authoredStatBlockBattleInput(
   input: AuthoredStatBlockBattleInitInput,
 ): StatBlockBattleInitInput {
   const projected = Either.getOrThrow(
-    projectAuthoredStatBlock(input.statBlock),
+    projectAuthoredStatBlockBattleInitInput(input),
   );
-  return {
-    ...input,
-    statBlock: projected.runtime,
-    presentation: projected.presentation,
-  };
+  return projected;
 }
 
 export function battleCreatureInitFromAuthoredStatBlock(
@@ -36,13 +28,11 @@ export function battleCreatureInitFromAuthoredStatBlock(
   >,
 ) {
   return Either.getOrThrow(
-    parseBattleCreatureInitFromStatBlock(
-      authoredStatBlockBattleInput({
-        ...input,
-        ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-        conditions: [],
-      }),
-    ),
+    parseBattleCreatureInitFromAuthoredStatBlock({
+      ...input,
+      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+      conditions: [],
+    }),
   );
 }
 
