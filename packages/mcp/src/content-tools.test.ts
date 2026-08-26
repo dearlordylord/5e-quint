@@ -184,6 +184,10 @@ describe("MCP installed SRD catalog tools", () => {
         ...base,
         id: statBlockId("stat_block_synthetic_spellcasting_summary"),
         name: "Synthetic Spellcasting Creature",
+        provenance: {
+          kind: "synthetic-test",
+          section: "mcp-spellcasting-summary",
+        },
         statBlock: {
           ...base.statBlock,
           actions: [
@@ -198,7 +202,15 @@ describe("MCP installed SRD catalog tools", () => {
                   {
                     kind: "limited",
                     resourceRefs: { kind: "some", ordinals: [1] },
-                    spells: [{ spellId: "magic_missile" }],
+                    spells: [
+                      {
+                        spellId: "magic_missile",
+                        count: 2,
+                        castAtLevel: 3,
+                        restriction: "Only when the target is visible.",
+                      },
+                      { spellId: "shield" },
+                    ],
                   },
                 ],
               },
@@ -229,10 +241,46 @@ describe("MCP installed SRD catalog tools", () => {
             {
               kind: "limited",
               resourceRefs: { kind: "some", ordinals: [1] },
+              spells: [
+                {
+                  spellId: "magic_missile",
+                  count: 2,
+                  castAtLevel: 3,
+                  restriction: "Only when the target is visible.",
+                },
+                { spellId: "shield" },
+              ],
             },
           ],
         },
       ]),
     );
+
+    const spellcastingProcedure = summary.orderedProcedures.find(
+      (procedure) =>
+        procedure.kind === "executable" &&
+        procedure.procedureKind === "spellcasting",
+    );
+    if (
+      spellcastingProcedure?.kind !== "executable" ||
+      spellcastingProcedure.procedureKind !== "spellcasting"
+    ) {
+      throw new Error("Expected spellcasting procedure summary.");
+    }
+    const [spellcastingGroup] = spellcastingProcedure.spellcastingGroups ?? [];
+    if (spellcastingGroup === undefined) {
+      throw new Error("Expected spellcasting group summary.");
+    }
+    const [completeSpell, minimalSpell] = spellcastingGroup.spells;
+    expect(completeSpell).toEqual({
+      spellId: "magic_missile",
+      count: 2,
+      castAtLevel: 3,
+      restriction: "Only when the target is visible.",
+    });
+    expect(minimalSpell).toEqual({ spellId: "shield" });
+    expect(minimalSpell).not.toHaveProperty("count");
+    expect(minimalSpell).not.toHaveProperty("castAtLevel");
+    expect(minimalSpell).not.toHaveProperty("restriction");
   });
 });

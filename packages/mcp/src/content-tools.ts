@@ -2,6 +2,7 @@ import { Either, Match, Schema } from "effect";
 import {
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceRefsSchema,
+  StatBlockSpellReferenceSchema,
   StatBlockTextOnlyReasonSchema,
 } from "@dnd/surface/surface/schema";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
@@ -74,6 +75,7 @@ const StatBlockProcedureKindOutputSchema = Schema.Literal(
 const StatBlockSpellcastingGroupSummarySchema = Schema.Struct({
   kind: Schema.Literal("at_will", "limited"),
   resourceRefs: StatBlockProcedureResourceRefsSchema,
+  spells: Schema.NonEmptyArray(StatBlockSpellReferenceSchema),
 });
 const StatBlockExecutableProcedureSummarySchema = Schema.Struct({
   section: StatBlockProcedureSectionOutputSchema,
@@ -485,6 +487,7 @@ function procedureSummary(
           spellcastingGroups: procedure.groups.map((group) => ({
             kind: group.kind,
             resourceRefs: group.resourceRefs,
+            spells: group.spells,
           })),
         }
       : {}),
