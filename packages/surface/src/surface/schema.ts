@@ -1,4 +1,4 @@
-import { Either, JSONSchema, ParseResult, Schema } from "effect";
+import { Result, Schema, SchemaIssue } from "effect";
 import { StatBlockId } from "@dnd/shared/game-facts";
 import * as SchemaAST from "effect/SchemaAST";
 
@@ -489,7 +489,7 @@ export const SRD_CHALLENGE_RATINGS = [
   17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
 ] as const;
 
-export const ChallengeRatingSchema = Schema.Literal(...SRD_CHALLENGE_RATINGS);
+export const ChallengeRatingSchema = Schema.Literals(SRD_CHALLENGE_RATINGS);
 
 export const StatBlockRecordSchema = Schema.Struct({
   id: surfaceSchemaRole(StatBlockId, {
@@ -497,29 +497,29 @@ export const StatBlockRecordSchema = Schema.Struct({
     kind: "id",
   }),
   kind: Schema.Literal("statBlock"),
-  name: surfaceSchemaRole(Schema.NonEmptyTrimmedString, {
+  name: surfaceSchemaRole(Schema.Trimmed.check(Schema.isNonEmpty()), {
     category: "identity",
     kind: "name",
   }),
   provenance: ProvenanceSchema,
   challengeRating: ChallengeRatingSchema,
   statBlock: MonsterStatBlockSchema,
-}).annotations({ identifier: "StatBlockRecord" });
+}).pipe(Schema.annotate({ identifier: "StatBlockRecord" }));
 
 export const SrdProvenanceSchema = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1"),
   section: ProvenanceSchema.fields.section,
-}).annotations({ identifier: "SrdProvenance" });
+}).pipe(Schema.annotate({ identifier: "SrdProvenance" }));
 
 export type SrdProvenance = Schema.Schema.Type<typeof SrdProvenanceSchema>;
 
 export const RulesExcerptSchema = surfaceSchemaRole(
-  Schema.NonEmptyTrimmedString,
+  Schema.Trimmed.check(Schema.isNonEmpty()),
   {
     category: "prose",
     evidence: "exact",
   },
-).annotations({ identifier: "RulesExcerpt" });
+).pipe(Schema.annotate({ identifier: "RulesExcerpt" }));
 
 const recordVariantAsts = (ast: SchemaAST.AST): ReadonlyArray<SchemaAST.AST> =>
   ast._tag === "Union" ? ast.types.flatMap(recordVariantAsts) : [ast];
@@ -692,31 +692,40 @@ const specializeSrdRecordSchema = <
   A extends { readonly provenance: unknown },
   I extends { readonly provenance: unknown },
 >(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, unknown, unknown>,
   identifier: string,
-): Schema.Schema<SrdRecord<A>, SrdRecord<I>, never> => {
+): Schema.Codec<SrdRecord<A>, SrdRecord<I>, unknown, unknown> => {
   const provenance = Schema.Struct({ provenance: SrdProvenanceSchema });
 
-  return Schema.make<SrdRecord<A>, SrdRecord<I>, never>(
-    specializeRecordSchemaAst(schema, provenance, identifier),
-  ).annotations({ identifier });
+  return Schema.make<
+    Schema.Codec<SrdRecord<A>, SrdRecord<I>, unknown, unknown>
+  >(specializeRecordSchemaAst(schema, provenance, identifier)).pipe(
+    Schema.annotate({ identifier }),
+  );
 };
 
 const specializePublishedSrdRecordSchema = <
   A extends { readonly provenance: unknown },
   I extends { readonly provenance: unknown },
 >(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, unknown, unknown>,
   identifier: string,
-): Schema.Schema<PublishedSrdRecord<A>, PublishedSrdRecord<I>, never> => {
+): Schema.Codec<
+  PublishedSrdRecord<A>,
+  PublishedSrdRecord<I>,
+  unknown,
+  unknown
+> => {
   const publicationFields = Schema.Struct({
     provenance: SrdProvenanceSchema,
     rulesExcerpt: RulesExcerptSchema,
   });
 
-  return Schema.make<PublishedSrdRecord<A>, PublishedSrdRecord<I>, never>(
-    specializeRecordSchemaAst(schema, publicationFields, identifier),
-  ).annotations({ identifier });
+  return Schema.make<
+    Schema.Codec<PublishedSrdRecord<A>, PublishedSrdRecord<I>, unknown, unknown>
+  >(specializeRecordSchemaAst(schema, publicationFields, identifier)).pipe(
+    Schema.annotate({ identifier }),
+  );
 };
 
 export const SrdUnitRecordSchema = specializeSrdRecordSchema(
@@ -740,22 +749,21 @@ export const PublishedSrdStatBlockRecordSchema =
     "PublishedSrdStatBlockRecord",
   );
 
-const nonEmptyPublicationArray = <S extends Schema.Schema.AnyNoContext>(
-  item: S,
-) => Schema.Tuple([item], item);
+const nonEmptyPublicationArray = <S extends Schema.Constraint>(item: S) =>
+  Schema.NonEmptyArray(item);
 
-const SrdUnitPublicationSchema = Schema.suspend(
-  () => SrdUnitRecordSchema,
-).annotations({ identifier: "SrdUnitPublication" });
+const SrdUnitPublicationSchema = Schema.suspend(() => SrdUnitRecordSchema).pipe(
+  Schema.annotate({ identifier: "SrdUnitPublication" }),
+);
 const SrdStatBlockPublicationSchema = Schema.suspend(
   () => SrdStatBlockRecordSchema,
-).annotations({ identifier: "SrdStatBlockPublication" });
+).pipe(Schema.annotate({ identifier: "SrdStatBlockPublication" }));
 const PublishedSrdUnitPublicationSchema = Schema.suspend(
   () => PublishedSrdUnitRecordSchema,
-).annotations({ identifier: "PublishedSrdUnitPublication" });
+).pipe(Schema.annotate({ identifier: "PublishedSrdUnitPublication" }));
 const PublishedSrdStatBlockPublicationSchema = Schema.suspend(
   () => PublishedSrdStatBlockRecordSchema,
-).annotations({ identifier: "PublishedSrdStatBlockPublication" });
+).pipe(Schema.annotate({ identifier: "PublishedSrdStatBlockPublication" }));
 
 export const SrdSurfaceSchema = Schema.Struct({
   kind: Schema.Literal("srd-5.2.1-surface-catalog"),
@@ -777,10 +785,9 @@ export const PublishedSrdSurfaceSchema = Schema.Struct({
   ),
 });
 
-export const SrdSurfaceJsonSchema = JSONSchema.make(
-  Schema.encodedSchema(PublishedSrdSurfaceSchema),
-  { target: "jsonSchema2020-12" },
-);
+export const SrdSurfaceJsonSchema = Schema.toJsonSchemaDocument(
+  Schema.toEncoded(PublishedSrdSurfaceSchema),
+).schema;
 
 export type SrdSurface = Schema.Schema.Type<typeof SrdSurfaceSchema>;
 export type PublishedSrdSurface = Schema.Schema.Type<
@@ -792,14 +799,17 @@ const STRICT_DECODE_OPTIONS = { onExcessProperty: "error" } as const;
 export function decodeUnitRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof UnitRecordSchema> {
-  return Schema.decodeUnknownSync(UnitRecordSchema, STRICT_DECODE_OPTIONS)(raw);
+  return Schema.decodeUnknownSync(
+    Schema.toType(UnitRecordSchema),
+    STRICT_DECODE_OPTIONS,
+  )(raw);
 }
 
 export function decodeStatBlockRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof StatBlockRecordSchema> {
   return Schema.decodeUnknownSync(
-    StatBlockRecordSchema,
+    Schema.toType(StatBlockRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -808,19 +818,19 @@ export function decodeMonsterStatBlockSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof MonsterStatBlockSchema> {
   return Schema.decodeUnknownSync(
-    MonsterStatBlockSchema,
+    Schema.toType(MonsterStatBlockSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
 
 export function decodeStatBlockRecordEither(
   raw: unknown,
-): Either.Either<
+): Result.Result<
   Schema.Schema.Type<typeof StatBlockRecordSchema>,
-  ParseResult.ParseError
+  Schema.SchemaError
 > {
-  return Schema.decodeUnknownEither(
-    StatBlockRecordSchema,
+  return Schema.decodeUnknownResult(
+    Schema.toType(StatBlockRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -829,7 +839,7 @@ export function decodeSpellRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof SpellRecordSchema> {
   return Schema.decodeUnknownSync(
-    SpellRecordSchema,
+    Schema.toType(SpellRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -838,7 +848,7 @@ export function decodeClassFeatureRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ClassFeatureRecordSchema> {
   return Schema.decodeUnknownSync(
-    ClassFeatureRecordSchema,
+    Schema.toType(ClassFeatureRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -847,7 +857,7 @@ export function decodeClassRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ClassRecordSchema> {
   return Schema.decodeUnknownSync(
-    ClassRecordSchema,
+    Schema.toType(ClassRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -856,7 +866,7 @@ export function decodeSubclassRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof SubclassRecordSchema> {
   return Schema.decodeUnknownSync(
-    SubclassRecordSchema,
+    Schema.toType(SubclassRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -865,7 +875,7 @@ export function decodeBackgroundRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof BackgroundRecordSchema> {
   return Schema.decodeUnknownSync(
-    BackgroundRecordSchema,
+    Schema.toType(BackgroundRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -874,7 +884,7 @@ export function decodeSpeciesRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof SpeciesRecordSchema> {
   return Schema.decodeUnknownSync(
-    SpeciesRecordSchema,
+    Schema.toType(SpeciesRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -883,7 +893,7 @@ export function decodeMasteryRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof MasteryRecordSchema> {
   return Schema.decodeUnknownSync(
-    MasteryRecordSchema,
+    Schema.toType(MasteryRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -891,14 +901,17 @@ export function decodeMasteryRecordSync(
 export function decodeFeatRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof FeatRecordSchema> {
-  return Schema.decodeUnknownSync(FeatRecordSchema, STRICT_DECODE_OPTIONS)(raw);
+  return Schema.decodeUnknownSync(
+    Schema.toType(FeatRecordSchema),
+    STRICT_DECODE_OPTIONS,
+  )(raw);
 }
 
 export function decodeSpeciesTraitRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof SpeciesTraitRecordSchema> {
   return Schema.decodeUnknownSync(
-    SpeciesTraitRecordSchema,
+    Schema.toType(SpeciesTraitRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -907,7 +920,7 @@ export function decodeMagicItemRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof MagicItemRecordSchema> {
   return Schema.decodeUnknownSync(
-    MagicItemRecordSchema,
+    Schema.toType(MagicItemRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -916,7 +929,7 @@ export function decodeArmorRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ArmorRecordSchema> {
   return Schema.decodeUnknownSync(
-    ArmorRecordSchema,
+    Schema.toType(ArmorRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -925,7 +938,7 @@ export function decodeArmorTemplateRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ArmorTemplateRecordSchema> {
   return Schema.decodeUnknownSync(
-    ArmorTemplateRecordSchema,
+    Schema.toType(ArmorTemplateRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -934,7 +947,7 @@ export function decodeShieldRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ShieldRecordSchema> {
   return Schema.decodeUnknownSync(
-    ShieldRecordSchema,
+    Schema.toType(ShieldRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -943,7 +956,7 @@ export function decodeShieldTemplateRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof ShieldTemplateRecordSchema> {
   return Schema.decodeUnknownSync(
-    ShieldTemplateRecordSchema,
+    Schema.toType(ShieldTemplateRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -952,7 +965,7 @@ export function decodeWeaponRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof WeaponRecordSchema> {
   return Schema.decodeUnknownSync(
-    WeaponRecordSchema,
+    Schema.toType(WeaponRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
@@ -961,38 +974,39 @@ export function decodeWeaponTemplateRecordSync(
   raw: unknown,
 ): Schema.Schema.Type<typeof WeaponTemplateRecordSchema> {
   return Schema.decodeUnknownSync(
-    WeaponTemplateRecordSchema,
+    Schema.toType(WeaponTemplateRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
 
 export function decodeUnitRecordEither(
   raw: unknown,
-): Either.Either<
+): Result.Result<
   Schema.Schema.Type<typeof UnitRecordSchema>,
-  ParseResult.ParseError
+  Schema.SchemaError
 > {
-  return Schema.decodeUnknownEither(
-    UnitRecordSchema,
+  return Schema.decodeUnknownResult(
+    Schema.toType(UnitRecordSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
 
 export function decodeSrdSurfaceSync(raw: unknown): SrdSurface {
-  return Schema.decodeUnknownSync(SrdSurfaceSchema, STRICT_DECODE_OPTIONS)(raw);
-}
-
-export function decodeSrdSurfaceEither(
-  raw: unknown,
-): Either.Either<SrdSurface, ParseResult.ParseError> {
-  return Schema.decodeUnknownEither(
-    SrdSurfaceSchema,
+  return Schema.decodeUnknownSync(
+    Schema.toType(SrdSurfaceSchema),
     STRICT_DECODE_OPTIONS,
   )(raw);
 }
 
-export function formatSurfaceDecodeError(
-  error: ParseResult.ParseError,
-): string {
-  return ParseResult.TreeFormatter.formatErrorSync(error);
+export function decodeSrdSurfaceEither(
+  raw: unknown,
+): Result.Result<SrdSurface, Schema.SchemaError> {
+  return Schema.decodeUnknownResult(
+    Schema.toType(SrdSurfaceSchema),
+    STRICT_DECODE_OPTIONS,
+  )(raw);
+}
+
+export function formatSurfaceDecodeError(error: Schema.SchemaError): string {
+  return SchemaIssue.makeFormatterDefault()(error.issue);
 }
