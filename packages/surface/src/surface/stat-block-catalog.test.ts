@@ -186,7 +186,7 @@ const srdFieldCorrespondence = {
   },
   stat_block_weasel: {
     name: "Weasel",
-    source: "Animals.md:2563-2587",
+    source: "Animals.md:2563-2583",
     alignment: "unaligned",
     ac: 13,
     hp: 1,
@@ -226,7 +226,7 @@ const srdFieldCorrespondence = {
   },
   stat_block_pseudodragon: {
     name: "Pseudodragon",
-    source: "Monsters/Monsters-P-S.md:292-323",
+    source: "Monsters/Monsters-P-S.md:292-319",
     alignment: { order: "neutral", morality: "good" },
     ac: 14,
     hp: 10,
@@ -276,7 +276,7 @@ const srdFieldCorrespondence = {
   },
   stat_block_riding_horse: {
     name: "Riding Horse",
-    source: "Animals.md:2089-2128",
+    source: "Animals.md:2089-2108",
     alignment: "unaligned",
     ac: 11,
     hp: 13,

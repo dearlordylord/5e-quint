@@ -37,6 +37,7 @@ import {
   CreatureAttackRollMechanicsSchema,
   CreatureRechargeMinimumRollSchema,
   DiceExprSchema,
+  StatBlockProcedureOrdinalSchema,
   UnitRecordSchema,
 } from "@dnd/surface/surface/schema";
 import {
@@ -117,6 +118,7 @@ import {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
+import { UNARMED_STRIKE_PROCEDURE_ORDINAL } from "../stat-block-execution-state.ts";
 import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
 import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
@@ -5512,18 +5514,21 @@ const StatBlockResourcePoolStateSchema = Schema.Union(
   Schema.Struct({
     resourcePoolRef: BattleResourcePoolExecutionRef,
     kind: Schema.Literal("daily"),
+    ownership: Schema.Literal("shared", "each"),
     usesMax: ResourceCount,
     usesRemaining: ResourceCount,
   }),
   Schema.Struct({
     resourcePoolRef: BattleResourcePoolExecutionRef,
     kind: Schema.Literal("recharge"),
+    ownership: Schema.Literal("shared", "each"),
     minimumRoll: CreatureRechargeMinimumRollSchema,
     available: Schema.Boolean,
   }),
   Schema.Struct({
     resourcePoolRef: BattleResourcePoolExecutionRef,
     kind: Schema.Literal("recharge_after_rest"),
+    ownership: Schema.Literal("shared", "each"),
     available: Schema.Boolean,
   }),
   Schema.Struct({
@@ -5537,7 +5542,7 @@ const StatBlockResourcePoolStateSchema = Schema.Union(
 const StatBlockAttackProcedureSchema = Schema.Struct({
   kind: Schema.Literal("attack"),
   section: Schema.Literal("actions", "legendaryActions"),
-  procedureOrdinal: Schema.Number.pipe(Schema.int()),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
   attack: CreatureAttackRollMechanicsSchema.pipe(
     Schema.filter(creatureAttackRollMechanicsAreSupported, {
       message: () => "Unsupported Stat Block attack procedure mechanics.",
@@ -5554,18 +5559,55 @@ const StatBlockAttackProcedureSchema = Schema.Struct({
   ),
 });
 
+const StatBlockUnarmedStrikeProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("unarmedStrike"),
+  procedureOrdinal: Schema.Literal(UNARMED_STRIKE_PROCEDURE_ORDINAL),
+  section: Schema.Literal("actions"),
+  attack: CreatureAttackRollMechanicsSchema.pipe(
+    Schema.filter(creatureAttackRollMechanicsAreSupported, {
+      message: () => "Unsupported Stat Block Unarmed Strike mechanics.",
+    }),
+  ),
+});
+
+const StatBlockUnsupportedMultiattackDispatchSchema = Schema.Struct({
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  count: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
+  target: Schema.Union(
+    Schema.Struct({ kind: Schema.Literal("attack") }),
+    Schema.Struct({
+      kind: Schema.Literal("unsupported"),
+      reason: Schema.Literal("nonExecutableTarget"),
+    }),
+  ),
+});
+
+const StatBlockUnsupportedProcedureSchema = Schema.Struct({
+  kind: Schema.Literal("unsupported"),
+  section: Schema.Literal("actions"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  reason: Schema.Literal("unsupportedMultiattackDispatch"),
+  dispatches: Schema.NonEmptyArray(
+    StatBlockUnsupportedMultiattackDispatchSchema,
+  ),
+});
+
 const StatBlockProcedureSchema = Schema.Union(
   StatBlockAttackProcedureSchema,
+  StatBlockUnarmedStrikeProcedureSchema,
+  StatBlockUnsupportedProcedureSchema,
   Schema.Struct({
     kind: Schema.Literal("multiattack"),
-    procedureOrdinal: Schema.Number.pipe(Schema.int()),
+    section: Schema.Literal("actions"),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
     dispatchProcedureRefs: Schema.NonEmptyArray(
       BattleStatBlockProcedureExecutionRef,
     ),
   }),
   Schema.Struct({
     kind: Schema.Literal("bonusActionOption"),
-    procedureOrdinal: Schema.Number.pipe(Schema.int()),
+    section: Schema.Literal("bonusActions"),
+    procedureOrdinal: StatBlockProcedureOrdinalSchema,
     standardActions: Schema.NonEmptyArray(
       Schema.Literal(...SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
     ),
@@ -5600,6 +5642,9 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
 }): boolean {
   const procedureRefs = snapshot.procedureBindings.map(
     (binding) => binding.procedureRef,
+  );
+  const procedureOrdinalKeys = snapshot.procedureBindings.map((binding) =>
+    runtimeProcedureOrdinalKey(binding.procedure),
   );
 
   const actionAttackRefs = new Set(
@@ -5659,15 +5704,10 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
       battleResourcePoolExecutionRefBelongsToScope(ref, snapshot.scopeRef),
     ) &&
     new Set(procedureRefs).size === procedureRefs.length &&
+    new Set(procedureOrdinalKeys).size === procedureOrdinalKeys.length &&
     resourcePoolRefSet.size === resourcePoolRefs.length &&
-    snapshot.resourcePools.every(
-      (pool) =>
-        ((pool.kind !== "daily" && pool.kind !== "legendaryActions") ||
-          (Number(pool.usesMax) >= 1 &&
-            Number(pool.usesRemaining) >= 0 &&
-            Number(pool.usesRemaining) <= Number(pool.usesMax))) &&
-        (pool.kind === "legendaryActions" ||
-          bindingCountByPoolRef.get(pool.resourcePoolRef) === 1),
+    snapshot.resourcePools.every((pool) =>
+      resourcePoolStateGraphIsValid(pool, bindingCountByPoolRef),
     ) &&
     snapshot.procedureBindings.every((binding) => {
       const pools = binding.resourcePoolRefs.flatMap((ref) => {
@@ -5679,13 +5719,16 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
       ).length;
       const limitedUsePoolCount = pools.length - legendaryPoolCount;
       const procedurePoolShapeIsValid =
-        binding.procedure.kind === "multiattack"
+        binding.procedure.kind === "unarmedStrike" ||
+        binding.procedure.kind === "unsupported"
           ? pools.length === 0
-          : binding.procedure.kind === "bonusActionOption" ||
-              (binding.procedure.kind === "attack" &&
-                binding.procedure.section === "actions")
-            ? pools.length <= 1 && legendaryPoolCount === 0
-            : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
+          : binding.procedure.kind === "multiattack"
+            ? legendaryPoolCount === 0
+            : binding.procedure.kind === "bonusActionOption" ||
+                (binding.procedure.kind === "attack" &&
+                  binding.procedure.section === "actions")
+              ? legendaryPoolCount === 0
+              : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
       const legendaryPoolOwnershipIsValid =
         binding.procedure.kind !== "attack" ||
         binding.procedure.section !== "legendaryActions" ||
@@ -5714,6 +5757,38 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
       ? legendaryPools.length === 0
       : legendaryPools.length === 1)
   );
+}
+
+function runtimeProcedureOrdinalKey(
+  procedure: Schema.Schema.Type<typeof StatBlockProcedureSchema>,
+): string {
+  const section =
+    procedure.kind === "attack"
+      ? procedure.section
+      : procedure.kind === "unarmedStrike"
+        ? procedure.section
+        : procedure.kind === "unsupported"
+          ? procedure.section
+          : procedure.kind === "bonusActionOption"
+            ? "bonusActions"
+            : "actions";
+  return `${section}:${procedure.procedureOrdinal}`;
+}
+
+function resourcePoolStateGraphIsValid(
+  pool: Schema.Schema.Type<typeof StatBlockResourcePoolStateSchema>,
+  bindingCountByPoolRef: ReadonlyMap<BattleResourcePoolExecutionRef, number>,
+): boolean {
+  const count = bindingCountByPoolRef.get(pool.resourcePoolRef) ?? 0;
+  const usageBoundsAreValid =
+    pool.kind !== "daily" && pool.kind !== "legendaryActions"
+      ? true
+      : Number(pool.usesMax) >= 1 &&
+        Number(pool.usesRemaining) >= 0 &&
+        Number(pool.usesRemaining) <= Number(pool.usesMax);
+  if (!usageBoundsAreValid) return false;
+  if (pool.kind === "legendaryActions") return true;
+  return pool.ownership === "shared" ? count >= 1 : count === 1;
 }
 
 function multiattackDispatchesRespectLimitedUse(
@@ -7121,7 +7196,8 @@ function serializedAttackProcedureRefIsBound(
   return combatant.origin.execution.procedureBindings.some(
     (binding) =>
       binding.procedureRef === procedureRef &&
-      binding.procedure.kind === "attack",
+      (binding.procedure.kind === "attack" ||
+        binding.procedure.kind === "unarmedStrike"),
   );
 }
 
@@ -7341,7 +7417,13 @@ function serializedStatBlockProcedureKind(
   combatants: readonly EncodedBattleCreatureSnapshot[],
   combatantId: CombatantId,
   procedureRef: BattleProcedureExecutionRef,
-): "attack" | "multiattack" | "bonusActionOption" | undefined {
+):
+  | "attack"
+  | "unarmedStrike"
+  | "unsupported"
+  | "multiattack"
+  | "bonusActionOption"
+  | undefined {
   const combatant = combatants.find(
     (candidate) => candidate.combatantId === combatantId,
   );

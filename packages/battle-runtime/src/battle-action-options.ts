@@ -123,11 +123,16 @@ type SupportedStatBlockBaseDamageEffect = Extract<
   CreatureAttackRollMechanics["onHit"][number],
   { readonly kind: "damage" }
 > & {
-  readonly amount: {
-    readonly kind: "fixed";
-    readonly expr: DiceExpr;
-    readonly static?: number;
-  };
+  readonly amount:
+    | {
+        readonly kind: "fixed";
+        readonly expr: DiceExpr;
+        readonly static?: number;
+      }
+    | {
+        readonly kind: "fixed";
+        readonly static: number;
+      };
   readonly damageType: DamageType;
 };
 
@@ -136,11 +141,16 @@ type SupportedStatBlockAdvantageBonusDamageEffect = Extract<
   { readonly kind: "conditional_bonus_damage" }
 > & {
   readonly when: { readonly kind: "attack_roll_had_advantage" };
-  readonly amount: {
-    readonly kind: "fixed";
-    readonly expr: DiceExpr;
-    readonly static?: number;
-  };
+  readonly amount:
+    | {
+        readonly kind: "fixed";
+        readonly expr: DiceExpr;
+        readonly static?: number;
+      }
+    | {
+        readonly kind: "fixed";
+        readonly static: number;
+      };
   readonly damageType: DamageType;
 };
 
@@ -428,11 +438,17 @@ export function attackExecutionSelectionIdentitiesEqual(
   );
 }
 
-export type StatBlockAttackDamageComponent = {
-  readonly expr: DiceExpr;
-  readonly static?: number;
-  readonly damageType: DamageType;
-};
+export type StatBlockAttackDamageComponent =
+  | {
+      readonly expr: DiceExpr;
+      readonly static?: number;
+      readonly damageType: DamageType;
+    }
+  | {
+      /** A printed fixed amount with no authored dice expression. */
+      readonly static: number;
+      readonly damageType: DamageType;
+    };
 
 export type StatBlockAttackDamage = {
   readonly baseComponents: ReadonlyNonEmptyArray<StatBlockAttackDamageComponent>;

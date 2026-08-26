@@ -47,11 +47,11 @@ function statBlockProjectionIssues(
   execution: StatBlockExecutionState | undefined,
 ): readonly StatBlockProjectionIssue[] {
   if (execution === undefined) return [];
-  const admitted = new Set(
-    execution.procedureBindings.map((binding) => {
-      const procedure = binding.procedure;
-      return `${procedure.kind}:${procedure.procedureOrdinal}`;
-    }),
+  const admitted = new Map(
+    execution.procedureBindings.map((binding) => [
+      `${binding.procedure.section}:${binding.procedure.procedureOrdinal}`,
+      binding.procedure,
+    ]),
   );
   type ActionIssue = Extract<
     StatBlockProjectionIssue,
@@ -72,9 +72,31 @@ function statBlockProjectionIssues(
           },
         ];
       }
-      const expectedKind =
-        entry.kind === "bonusActionOption" ? "bonusActionOption" : entry.kind;
-      if (admitted.has(`${expectedKind}:${entry.procedureOrdinal}`)) return [];
+      const admittedProcedure = admitted.get(
+        `${entry.section}:${entry.procedureOrdinal}`,
+      );
+      if (admittedProcedure?.kind === "unsupported") {
+        return [
+          {
+            tag: "statBlockProjectionIssue" as const,
+            source: {
+              kind: "action" as const,
+              section: entry.section,
+              shape: projectionShape(entry.kind),
+              nonExecutableReason: "unsupportedActionShape" as const,
+            },
+          },
+        ];
+      }
+      if (
+        admittedProcedure !== undefined &&
+        admittedProcedure.kind ===
+          (entry.kind === "bonusActionOption"
+            ? "bonusActionOption"
+            : entry.kind)
+      ) {
+        return [];
+      }
       return [
         {
           tag: "statBlockProjectionIssue" as const,
@@ -138,7 +160,7 @@ export function statBlockProcedurePresentations(
     "Unsupported Stat Block procedure";
   return admission.execution.procedureBindings.flatMap(
     (binding): readonly StatBlockProcedurePresentation[] => {
-      if (binding.procedure.procedureOrdinal === -1) {
+      if (binding.procedure.kind === "unarmedStrike") {
         return [
           {
             procedureRef: binding.procedureRef,
@@ -167,6 +189,22 @@ export function statBlockProcedurePresentations(
             label: labelFor("actions", binding.procedure.procedureOrdinal),
           },
         ];
+      }
+      if (binding.procedure.kind === "unsupported") {
+        return [
+          {
+            procedureRef: binding.procedureRef,
+            kind: "unsupported" as const,
+            label: labelFor(
+              binding.procedure.section,
+              binding.procedure.procedureOrdinal,
+            ),
+            reason: binding.procedure.reason,
+          },
+        ];
+      }
+      if (binding.procedure.kind !== "bonusActionOption") {
+        return [];
       }
       return [
         {
@@ -284,10 +322,16 @@ export function statBlockProcedurePresentationsForActor(
         });
   }
   const activeForm = activeDruidWildShape(actor);
-  return activeForm === null
+  if (activeForm === null) return null;
+  const presentation = context.characters
+    .get(actorId)
+    ?.druidWildShapeFormPresentations?.get(
+      activeForm.admission.execution.scopeRef,
+    );
+  return presentation === undefined
     ? null
     : statBlockProcedurePresentations({
         execution: activeForm.admission.execution,
-        presentation: activeForm.admission.statBlock.presentation,
+        presentation,
       });
 }

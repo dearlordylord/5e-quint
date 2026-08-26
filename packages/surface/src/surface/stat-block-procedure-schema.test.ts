@@ -6,6 +6,7 @@ import {
   CreatureStatBlockProjectionSchema,
   StandaloneStatBlockSchema,
   StatBlockProcedureEntrySchema,
+  StatBlockProcedureSectionSchema,
 } from "./schema.ts";
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
@@ -220,7 +221,8 @@ describe("standalone Stat Block procedure sections", () => {
             procedure: {
               ...syntheticStandaloneStatBlock.actions[0].procedure,
               dispatches: [
-                { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
+                { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
+                { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
               ],
             },
           },
@@ -230,6 +232,26 @@ describe("standalone Stat Block procedure sections", () => {
         ],
       }),
     ).toThrow();
+
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        actions: [
+          {
+            ...syntheticStandaloneStatBlock.actions[0],
+            procedure: {
+              ...syntheticStandaloneStatBlock.actions[0].procedure,
+              dispatches: [
+                { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
+              ],
+            },
+          },
+          syntheticStandaloneStatBlock.actions[1],
+          syntheticStandaloneStatBlock.actions[2],
+          syntheticStandaloneStatBlock.actions[3],
+        ],
+      }).actions?.[0],
+    ).toMatchObject({ procedure: { dispatches: [{ procedureOrdinal: 3 }] } });
 
     expect(() =>
       decode(StandaloneStatBlockSchema, {
@@ -278,6 +300,50 @@ describe("standalone Stat Block procedure sections", () => {
         resources: syntheticStandaloneStatBlock.resources.slice(0, 1),
       }),
     ).toThrow();
+  });
+
+  test("retains Multiattack references to save, spellcasting, and text-only entries", () => {
+    const saveEntry = {
+      kind: "executable",
+      procedureOrdinal: 3,
+      procedure: {
+        kind: "save",
+        name: "Synthetic Save",
+        ability: "dex",
+        dc: { kind: "fixed", dc: 14 },
+        onFail: {
+          kind: "damage",
+          damageType: "force",
+          amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 } },
+        },
+        onSuccess: { kind: "half_damage" },
+        target: { kind: "one_creature_in_range", rangeFeet: 30 },
+      },
+      resourceRefs: { kind: "none" },
+    } as const;
+    const entries = [
+      {
+        ...syntheticStandaloneStatBlock.actions[0],
+        procedure: {
+          ...syntheticStandaloneStatBlock.actions[0].procedure,
+          dispatches: [
+            { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
+            { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
+            { procedureOrdinal: 4, count: { kind: "literal", value: 1 } },
+            { procedureOrdinal: 5, count: { kind: "literal", value: 1 } },
+          ],
+        },
+      },
+      syntheticStandaloneStatBlock.actions[1],
+      saveEntry,
+      syntheticStandaloneStatBlock.actions[3],
+      syntheticStandaloneStatBlock.actions[2],
+    ].map((entry, index) => ({
+      ...entry,
+      procedureOrdinal: index === 4 ? 5 : entry.procedureOrdinal,
+    }));
+
+    expect(decode(StatBlockProcedureSectionSchema, entries)).toEqual(entries);
   });
 
   test("requires a precise reason for every text-only entry", () => {

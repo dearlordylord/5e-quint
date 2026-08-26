@@ -92,6 +92,7 @@ import {
   weaponTargetConstraint,
   weaponDamageComponent,
 } from "./battle-reducer/statblock-attacks.ts";
+import { fixedAttackDamageByTypeEntries } from "./battle-reducer/damage-helpers.ts";
 import {
   applyWeaponMasterySapOnHit,
   applyWeaponMasterySlowAfterDamage,
@@ -185,6 +186,76 @@ describe("battle runtime: attack rolls and damage", () => {
       damageType: "slashing",
     });
     expect(weaponDamageComponent(scimitar, false)).toBeNull();
+  });
+
+  test("mixed expression and static annotations still require a damage roll", () => {
+    const state = goblinTurnBattle();
+    const goblin = state.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Goblin Warrior actor.");
+    }
+    const rolledAttack = statBlockAttackActionOptions(
+      goblin.origin.execution,
+    ).find((option) => option.damageNotation === "rolled");
+    if (rolledAttack === undefined) {
+      throw new Error("Expected a rolled Stat Block attack.");
+    }
+    const mixedAttack = {
+      ...rolledAttack,
+      attack: {
+        ...rolledAttack.attack,
+        onHit: rolledAttack.attack.onHit.map((effect) =>
+          effect.kind === "damage"
+            ? {
+                ...effect,
+                amount: { ...effect.amount, static: 3 },
+              }
+            : effect,
+        ),
+      },
+    };
+    expect(mixedAttack.kind).toBe("statBlockAttack");
+    expect(
+      fixedAttackDamageByTypeEntries(state, goblin, mixedAttack, {
+        total: 14,
+        naturalD20: DieRollResult(10),
+      }),
+    ).toBeNull();
+  });
+
+  test("mixed rolled and static-only components still require a damage roll", () => {
+    const state = goblinTurnBattle();
+    const goblin = state.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Goblin Warrior actor.");
+    }
+    const rolledAttack = statBlockAttackActionOptions(
+      goblin.origin.execution,
+    ).find((option) => option.damageNotation === "rolled");
+    if (rolledAttack === undefined) {
+      throw new Error("Expected a rolled Stat Block attack.");
+    }
+    const mixedAttack = {
+      ...rolledAttack,
+      attack: {
+        ...rolledAttack.attack,
+        onHit: [
+          rolledAttack.attack.onHit[0]!,
+          {
+            kind: "damage" as const,
+            damageType: "fire" as const,
+            amount: { kind: "fixed" as const, static: 4 },
+          },
+          ...rolledAttack.attack.onHit.slice(1),
+        ],
+      },
+    };
+    expect(
+      fixedAttackDamageByTypeEntries(state, goblin, mixedAttack, {
+        total: 14,
+        naturalD20: DieRollResult(10),
+      }),
+    ).toBeNull();
   });
 
   test("Stat Block damage expressions retain marked riders and thrown ranges", () => {

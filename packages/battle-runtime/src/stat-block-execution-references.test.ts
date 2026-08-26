@@ -599,6 +599,7 @@ describe("Stat Block execution references", () => {
     expect(admission.execution.resourcePools).toContainEqual({
       resourcePoolRef: binding.resourcePoolRefs[0],
       kind: "recharge_after_rest",
+      ownership: "each",
       available: true,
     });
 
@@ -609,6 +610,7 @@ describe("Stat Block execution references", () => {
     expect(spentExecution.resourcePools).toContainEqual({
       resourcePoolRef: binding.resourcePoolRefs[0],
       kind: "recharge_after_rest",
+      ownership: "each",
       available: false,
     });
     const restored = restoreStatBlockExecutionAdmission(
@@ -2338,6 +2340,7 @@ describe("Stat Block execution references", () => {
                 ? {
                     resourcePoolRef: pool.resourcePoolRef,
                     kind: "recharge_after_rest" as const,
+                    ownership: pool.ownership,
                     available: pool.available,
                   }
                 : pool,

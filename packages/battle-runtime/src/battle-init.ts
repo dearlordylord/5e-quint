@@ -59,7 +59,10 @@ import {
   type BattleStatBlockCombatantSource,
 } from "./stat-block-combatant-admission.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
-import { runtimeStatBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
+import {
+  runtimeStatBlockActionSurfaceIsSupported,
+  statBlockTraitsAreSupported,
+} from "./statblock-action-support.ts";
 import {
   wildShapeKnownFormEligibilityIssue,
   type WildShapeKnownFormEligibilityIssueCode,
@@ -166,6 +169,9 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
         message:
           WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES[eligibilityIssue.code],
       });
+    }
+    if (!statBlockTraitsAreSupported(form.statBlock.traits)) {
+      continue;
     }
     const projected = battleDruidWildShapeFormProjectionStatBlock(form);
     if (Either.isLeft(projected)) return Either.left(projected.left);

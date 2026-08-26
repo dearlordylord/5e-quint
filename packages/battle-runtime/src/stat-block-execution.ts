@@ -28,6 +28,7 @@ import {
   admittedStatBlockExecutionState,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
+  type BattleStatBlockRuntimeMultiattackDispatch,
   type BattleStatBlockRuntimeResource,
   type StatBlockExecutionState,
   type StatBlockExecutionAdmission,
@@ -35,6 +36,7 @@ import {
   type StatBlockProcedureBinding,
   type StatBlockProcedureBindingSnapshot,
   type StatBlockResourcePoolState,
+  UNARMED_STRIKE_PROCEDURE_ORDINAL,
 } from "./stat-block-execution-state.ts";
 export * from "./stat-block-execution-state.ts";
 
@@ -60,14 +62,13 @@ type ExecutionScopeAllocator = {
   scopeOrdinal: BattleExecutionScopeOrdinal;
 };
 
-const UNARMED_STRIKE_PROCEDURE_ORDINAL = -1;
-
 type AllocatedStatBlockExecution = {
   readonly execution: StatBlockExecutionState;
   readonly procedureRefs: ReadonlyMap<
     | AdmittedAttackOccurrence
     | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
+    | AdmittedUnsupportedOccurrence
     | AdmittedBonusActionOccurrence,
     BattleStatBlockProcedureExecutionRef
   >;
@@ -75,7 +76,10 @@ type AllocatedStatBlockExecution = {
 
 export type AdmittedAttackOccurrence = {
   readonly kind: "attack";
-  readonly procedureOrdinal: number;
+  readonly procedureOrdinal: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "attack" }
+  >["procedureOrdinal"];
   readonly section: Extract<
     BattleStatBlockRuntimeProcedure,
     { readonly kind: "attack" }
@@ -101,13 +105,28 @@ export type AdmittedUnarmedStrikeOccurrence = {
 
 export type AdmittedMultiattackOccurrence = {
   readonly kind: "multiattack";
-  readonly procedureOrdinal: number;
+  readonly procedureOrdinal: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "multiattack" }
+  >["procedureOrdinal"];
   readonly resourceRefs: readonly number[];
   readonly dispatches: ReadonlyNonEmptyArray<{
     readonly attack: AdmittedAttackOccurrence;
-    readonly procedureOrdinal: number;
+    readonly procedureOrdinal: Extract<
+      BattleStatBlockRuntimeProcedure,
+      { readonly kind: "multiattack" }
+    >["dispatches"][number]["procedureOrdinal"];
     readonly count: PositiveInteger;
   }>;
+};
+
+export type AdmittedUnsupportedOccurrence = {
+  readonly kind: "unsupported";
+  readonly procedureOrdinal: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "multiattack" }
+  >["procedureOrdinal"];
+  readonly dispatches: ReadonlyNonEmptyArray<BattleStatBlockRuntimeMultiattackDispatch>;
 };
 
 type AdmittedMultiattackDispatch =
@@ -115,7 +134,10 @@ type AdmittedMultiattackDispatch =
 
 export type AdmittedBonusActionOccurrence = {
   readonly kind: "bonusActionOption";
-  readonly procedureOrdinal: number;
+  readonly procedureOrdinal: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "bonusActionOption" }
+  >["procedureOrdinal"];
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
   readonly resourceRefs: readonly number[];
 };
@@ -125,6 +147,7 @@ export type AdmittedStatBlockOccurrences = {
   readonly attacks: readonly AdmittedAttackOccurrence[];
   readonly unarmedStrike: AdmittedUnarmedStrikeOccurrence;
   readonly multiattacks: readonly AdmittedMultiattackOccurrence[];
+  readonly unsupported: readonly AdmittedUnsupportedOccurrence[];
   readonly bonusActions: readonly AdmittedBonusActionOccurrence[];
   readonly resources: readonly BattleStatBlockRuntimeResource[];
 };
@@ -224,13 +247,21 @@ function admitStatBlock(
   }
   const actionAttacks = attacks.filter(({ section }) => section === "actions");
   const multiattacks: AdmittedMultiattackOccurrence[] = [];
+  const unsupported: AdmittedUnsupportedOccurrence[] = [];
   for (const multiattack of statBlock.procedures) {
     if (multiattack.kind !== "multiattack") continue;
     const dispatches = admittedMultiattackDispatches(
       multiattack,
       actionAttacks,
     );
-    if (dispatches === null) continue;
+    if (dispatches === null) {
+      unsupported.push({
+        kind: "unsupported",
+        procedureOrdinal: multiattack.procedureOrdinal,
+        dispatches: multiattack.dispatches,
+      });
+      continue;
+    }
     const occurrence: AdmittedMultiattackOccurrence = {
       kind: "multiattack",
       procedureOrdinal: multiattack.procedureOrdinal,
@@ -263,6 +294,7 @@ function admitStatBlock(
       attacks,
       unarmedStrike: admittedUnarmedStrike(statBlock),
       multiattacks,
+      unsupported,
       bonusActions,
       resources: statBlock.resources ?? [],
     },
@@ -355,6 +387,7 @@ function admittedMultiattackDispatch(
   actionAttacks: readonly AdmittedAttackOccurrence[],
 ): AdmittedMultiattackDispatch | null {
   if (!Number.isInteger(dispatch.count) || dispatch.count < 1) return null;
+  if (dispatch.target.kind !== "attack") return null;
   const count = PositiveInteger(dispatch.count);
   const candidate = actionAttacks.find(
     (attack) => attack.procedureOrdinal === dispatch.procedureOrdinal,
@@ -377,6 +410,7 @@ function allocateStatBlockExecution(
     | AdmittedAttackOccurrence
     | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
+    | AdmittedUnsupportedOccurrence
     | AdmittedBonusActionOccurrence,
     BattleStatBlockProcedureExecutionRef
   >();
@@ -438,7 +472,7 @@ function allocateStatBlockExecution(
   procedureBindings.push({
     procedureRef: unarmedStrikeProcedureRef,
     procedure: {
-      kind: "attack",
+      kind: "unarmedStrike",
       procedureOrdinal: UNARMED_STRIKE_PROCEDURE_ORDINAL,
       section: "actions",
       attack: admitted.unarmedStrike.attack,
@@ -468,10 +502,27 @@ function allocateStatBlockExecution(
       procedureRef,
       procedure: {
         kind: "multiattack",
+        section: "actions",
         procedureOrdinal: multiattack.procedureOrdinal,
         dispatchProcedureRefs,
       },
       resourcePoolRefs,
+    });
+  }
+
+  for (const unsupported of admitted.unsupported) {
+    const procedureRef = allocateProcedureRef(allocator);
+    procedureRefs.set(unsupported, procedureRef);
+    procedureBindings.push({
+      procedureRef,
+      procedure: {
+        kind: "unsupported",
+        section: "actions",
+        procedureOrdinal: unsupported.procedureOrdinal,
+        reason: "unsupportedMultiattackDispatch",
+        dispatches: unsupported.dispatches,
+      },
+      resourcePoolRefs: [],
     });
   }
 
@@ -489,6 +540,7 @@ function allocateStatBlockExecution(
       procedureRef,
       procedure: {
         kind: "bonusActionOption",
+        section: "bonusActions",
         procedureOrdinal: option.procedureOrdinal,
         standardActions: option.standardActions,
       },
@@ -847,11 +899,16 @@ function resourcePoolStructuresMatch(
   return Match.value(actual).pipe(
     Match.discriminatorsExhaustive("kind")({
       daily: (pool) =>
-        expected.kind === "daily" && pool.usesMax === expected.usesMax,
+        expected.kind === "daily" &&
+        pool.ownership === expected.ownership &&
+        pool.usesMax === expected.usesMax,
       recharge: (pool) =>
         expected.kind === "recharge" &&
+        pool.ownership === expected.ownership &&
         pool.minimumRoll === expected.minimumRoll,
-      recharge_after_rest: () => expected.kind === "recharge_after_rest",
+      recharge_after_rest: (pool) =>
+        expected.kind === "recharge_after_rest" &&
+        pool.ownership === expected.ownership,
       legendaryActions: (pool) =>
         expected.kind === "legendaryActions" &&
         pool.usesMax === expected.usesMax,
@@ -908,6 +965,7 @@ function resourcePoolFromDeclaration(
     return {
       resourcePoolRef,
       kind: "daily",
+      ownership: declaration.ownership,
       usesMax: uses,
       usesRemaining: uses,
     };
@@ -916,6 +974,7 @@ function resourcePoolFromDeclaration(
     return {
       resourcePoolRef,
       kind: "recharge",
+      ownership: declaration.ownership,
       minimumRoll: declaration.limit.minimumRoll,
       available: true,
     };
@@ -923,6 +982,7 @@ function resourcePoolFromDeclaration(
   return {
     resourcePoolRef,
     kind: "recharge_after_rest",
+    ownership: declaration.ownership,
     available: true,
   };
 }

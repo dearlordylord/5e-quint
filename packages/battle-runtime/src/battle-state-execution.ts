@@ -224,7 +224,7 @@ import type {
   CharacterBattleLoadoutRef,
   HeldWeaponLoadoutSlot,
 } from "./character-creature-execution-facts.ts";
-import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-execution.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
 import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-state.ts";
 import type {
@@ -4047,7 +4047,7 @@ type BattleCreatureStateCommon = {
         readonly classLevels: CharacterBattleClassLevels;
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
         readonly d20Statistics: CharacterBattleD20Statistics;
-        readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];
+        readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly unarmoredArmorClassBases: CharacterBattleUnarmoredArmorClassBases;
@@ -4307,7 +4307,7 @@ export type BattleActPresentation =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
       readonly unitId: string;
-      readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+      readonly formStatBlockId: BattleDruidWildShapeKnownFormRuntime["id"];
     };
 
 export type BattleActDiscoveryCandidate = BattleActExecution<BattleSubject>;

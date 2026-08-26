@@ -21,7 +21,7 @@ import {
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { projectAuthoredStatBlockWithCreatureType } from "./stat-block-authored-projection.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 const AdmittedFindFamiliarReappearance =
@@ -69,20 +69,17 @@ export function admitFindFamiliarReappearance(input: {
   if (Either.isLeft(resolvedForm)) {
     return issue(input.state, resolvedForm.left);
   }
-  const projected = projectAuthoredStatBlock(resolvedForm.right.statBlock);
+  const projected = projectAuthoredStatBlockWithCreatureType(
+    resolvedForm.right.statBlock,
+    resolvedForm.right.creatureTypeOverride,
+  );
   if (Either.isLeft(projected)) {
     return issue(
       input.state,
       `Find Familiar form projection failed: ${projected.left.reason}.`,
     );
   }
-  const statBlock: BattleStatBlockExecutionSource = {
-    ...projected.right.runtime,
-    statBlock: {
-      ...projected.right.runtime.statBlock,
-      creatureType: resolvedForm.right.creatureTypeOverride,
-    },
-  };
+  const statBlock: BattleStatBlockExecutionSource = projected.right.runtime;
   const allocation = input.state.executionScopeCursors.get(
     familiar.reappearanceCombatantId,
   );

@@ -6,6 +6,7 @@ import type {
   CreatureNamedMultiattack,
   CreatureNamedSaveGate,
   CreatureNamedSupport,
+  AreaDirectEffectAtom,
   CreatureStatBlock,
   SpawnedCreaturePayload,
   SpawnedCreatureStatBlock,
@@ -14,6 +15,7 @@ import type {
 import type { TraceEdge, TraceNode } from "./tracer-model.ts";
 import {
   describeAreaShapeFixed,
+  describeDamageTypeRef,
   describeDc,
   describeRange,
 } from "./tracer-rule-labels.ts";
@@ -199,8 +201,8 @@ function traceCreatureAttackWindow(
   ids: IdGen,
 ): void {
   const effectEntries: {
-    readonly effect: CreatureNamedAttackRoll["onHit"][number];
     readonly effectId: string;
+    readonly scalingEffect: Parameters<typeof traceEffectAtomScaling>[0] | null;
   }[] = [];
   for (const effect of effects) {
     if (effect.kind === "apply_condition_if_target_size_at_most") {
@@ -211,12 +213,92 @@ function traceCreatureAttackWindow(
         atomKind: "apply_condition_if_target_size_at_most",
         label: `apply_condition_if_target_size_at_most\n${effect.condition}\ntarget size <= ${effect.maxCreatureSize}`,
       });
-      effectEntries.push({ effect, effectId });
+      effectEntries.push({ effectId, scalingEffect: null });
       continue;
     }
+
+    if (effect.kind === "damage") {
+      if (effect.amount.kind === "fixed" && !("expr" in effect.amount)) {
+        const effectId = ids("dmg");
+        const whenTag =
+          effect.timing === undefined ? "" : ` (deferred: ${effect.timing})`;
+        nodes.push({
+          id: effectId,
+          category: "effect",
+          atomKind: effect.kind,
+          label: `damage${whenTag}: ${effect.amount.static} ${describeDamageTypeRef(effect.damageType)}`,
+        });
+        effectEntries.push({ effectId, scalingEffect: null });
+        continue;
+      }
+      const traceable: AreaDirectEffectAtom =
+        effect.amount.kind === "fixed"
+          ? effect.timing === undefined
+            ? {
+                kind: effect.kind,
+                damageType: effect.damageType,
+                amount: { kind: "fixed", expr: effect.amount.expr },
+              }
+            : {
+                kind: effect.kind,
+                damageType: effect.damageType,
+                amount: { kind: "fixed", expr: effect.amount.expr },
+                timing: effect.timing,
+              }
+          : effect.timing === undefined
+            ? {
+                kind: effect.kind,
+                damageType: effect.damageType,
+                amount: effect.amount,
+              }
+            : {
+                kind: effect.kind,
+                damageType: effect.damageType,
+                amount: effect.amount,
+                timing: effect.timing,
+              };
+      const effectId = traceEffectAtom(traceable, nodes, ids, edges);
+      if (effectId !== null) {
+        effectEntries.push({ effectId, scalingEffect: traceable });
+      }
+      continue;
+    }
+
+    if (effect.kind === "conditional_bonus_damage") {
+      if (effect.amount.kind === "fixed" && !("expr" in effect.amount)) {
+        const effectId = ids("dmg");
+        const when =
+          effect.when.kind === "target_creature_type"
+            ? `target type: ${effect.when.types.join("/")}`
+            : effect.when.kind;
+        nodes.push({
+          id: effectId,
+          category: "effect",
+          atomKind: effect.kind,
+          label: `conditional_bonus_damage\n${when}\n${effect.amount.static} ${describeDamageTypeRef(effect.damageType)}`,
+        });
+        effectEntries.push({ effectId, scalingEffect: null });
+        continue;
+      }
+      const traceable: AreaDirectEffectAtom = {
+        kind: effect.kind,
+        when: effect.when,
+        damageType: effect.damageType,
+        amount:
+          effect.amount.kind === "fixed"
+            ? { kind: "fixed", expr: effect.amount.expr }
+            : effect.amount,
+      };
+      const effectId = traceEffectAtom(traceable, nodes, ids, edges);
+      if (effectId !== null) {
+        effectEntries.push({ effectId, scalingEffect: traceable });
+      }
+      continue;
+    }
+
     const effectId = traceEffectAtom(effect, nodes, ids, edges);
     if (effectId !== null) {
-      effectEntries.push({ effect, effectId });
+      effectEntries.push({ effectId, scalingEffect: effect });
     }
   }
   if (effectEntries.length === 0) return;
@@ -229,11 +311,18 @@ function traceCreatureAttackWindow(
     label: windowAtom,
   });
   edges.push({ from: attackRollId, to: windowId, relation: "opens_window" });
-  for (const { effect, effectId } of effectEntries) {
+  for (const { effectId, scalingEffect } of effectEntries) {
     edges.push({ from: windowId, to: effectId, relation: "grants" });
     edges.push({ from: effectId, to: attId, relation: "attaches_to" });
-    if (effect.kind !== "apply_condition_if_target_size_at_most") {
-      traceEffectAtomScaling(effect, effectId, slotId, nodes, edges, ids);
+    if (scalingEffect !== null) {
+      traceEffectAtomScaling(
+        scalingEffect,
+        effectId,
+        slotId,
+        nodes,
+        edges,
+        ids,
+      );
     }
   }
 }

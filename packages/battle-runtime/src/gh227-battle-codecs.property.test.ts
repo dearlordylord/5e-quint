@@ -24,6 +24,7 @@ import {
   goblinId,
   movementFill,
   monsterResourceStatBlock,
+  monsterResourceStatBlockWithSharedResource,
   projectedStatBlockRuntimeSource,
   requireHole,
   resolveBattleSubject,
@@ -133,6 +134,27 @@ function encodedStatBlockSnapshots() {
   );
 }
 
+function encodedSharedResourceStatBlockSnapshot() {
+  const admission = statBlockExecutionAdmissionCohort(
+    battleId("gh227-codec-shared-resource-stat-block"),
+    combatantId("gh227-codec-shared-resource-stat-block"),
+    [
+      projectedStatBlockRuntimeSource(
+        monsterResourceStatBlockWithSharedResource(),
+      ),
+    ],
+    battleExecutionScopeOrdinal(0),
+  ).admissions[0];
+  if (admission === undefined) {
+    throw new Error(
+      "Expected a reachable shared-resource Stat Block admission.",
+    );
+  }
+  return Schema.encodeSync(StatBlockExecutionSnapshotSchema)(
+    admission.execution,
+  );
+}
+
 describe("GH-227 battle codec properties", () => {
   test.each(encodedSnapshots())(
     "reachable snapshot %# preserves its decoded graph under encode/decode",
@@ -160,6 +182,14 @@ describe("GH-227 battle codec properties", () => {
 
   test("a reachable Stat Block execution graph round-trips", () => {
     const encoded = encodedStatBlockSnapshots();
+    expect(encoded.procedureBindings).toContainEqual(
+      expect.objectContaining({
+        procedure: expect.objectContaining({
+          kind: "unarmedStrike",
+          procedureOrdinal: -1,
+        }),
+      }),
+    );
     const decoded = Schema.decodeUnknownEither(
       StatBlockExecutionSnapshotSchema,
     )(encoded);
@@ -168,6 +198,90 @@ describe("GH-227 battle codec properties", () => {
     expect(
       Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.right),
     ).toEqual(encoded);
+  });
+
+  test("a shared Stat Block resource pool referenced by multiple bindings round-trips", () => {
+    const encoded = encodedSharedResourceStatBlockSnapshot();
+    const sharedRefs = encoded.procedureBindings
+      .filter((binding) => binding.resourcePoolRefs.length > 0)
+      .flatMap((binding) => binding.resourcePoolRefs);
+    expect(new Set(sharedRefs).size).toBeLessThan(sharedRefs.length);
+    const decoded = Schema.decodeUnknownEither(
+      StatBlockExecutionSnapshotSchema,
+    )(encoded);
+    expect(Either.isRight(decoded)).toBe(true);
+    if (Either.isLeft(decoded)) return;
+    expect(
+      Schema.encodeSync(StatBlockExecutionSnapshotSchema)(decoded.right),
+    ).toEqual(encoded);
+  });
+
+  test.each([0, -2])(
+    "rejects runtime Stat Block procedure ordinal %s",
+    (procedureOrdinal) => {
+      const encoded = encodedStatBlockSnapshots();
+      const malformed = replaceFirstRecordInArray(
+        encoded,
+        "procedureBindings",
+        (binding) => ({
+          ...binding,
+          procedure: { ...binding.procedure, procedureOrdinal },
+        }),
+      );
+      expect(
+        Either.isLeft(
+          Schema.decodeUnknownEither(StatBlockExecutionSnapshotSchema)(
+            malformed,
+          ),
+        ),
+      ).toBe(true);
+    },
+  );
+
+  test("rejects the unarmed sentinel on an authored attack binding", () => {
+    const encoded = encodedStatBlockSnapshots();
+    const malformed = replaceFirstRecordInArray(
+      encoded,
+      "procedureBindings",
+      (binding) => ({
+        ...binding,
+        procedure: {
+          ...binding.procedure,
+          kind: "attack",
+          procedureOrdinal: -1,
+        },
+      }),
+    );
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(StatBlockExecutionSnapshotSchema)(malformed),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects duplicate runtime Stat Block procedure ordinals", () => {
+    const encoded = encodedStatBlockSnapshots();
+    const first = encoded.procedureBindings[0];
+    if (first === undefined) throw new Error("Expected a procedure binding.");
+    const malformed = {
+      ...encoded,
+      procedureBindings: encoded.procedureBindings.map((binding, index) =>
+        index === 1
+          ? {
+              ...binding,
+              procedure: {
+                ...binding.procedure,
+                procedureOrdinal: first.procedure.procedureOrdinal,
+              },
+            }
+          : binding,
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(StatBlockExecutionSnapshotSchema)(malformed),
+      ),
+    ).toBe(true);
   });
 
   test("generated missing Stat Block pool edges are rejected", () => {

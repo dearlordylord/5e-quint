@@ -112,7 +112,6 @@ export function admitBattleStatBlockCombatantSource(input: {
           initiativeModifier: statBlock.statBlock.initiativeModifier,
           initiativeScore: statBlock.statBlock.initiativeScore,
           passivePerception: statBlock.statBlock.passivePerception,
-          communication: statBlock.statBlock.communication,
         },
         execution: allocation.execution,
       },

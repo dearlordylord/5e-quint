@@ -32,7 +32,7 @@ import {
   withFindFamiliarCombatant,
 } from "./find-familiar-lifecycle-execution.ts";
 import {
-  projectAuthoredStatBlock,
+  projectAuthoredStatBlockWithCreatureType,
   type AuthoredStatBlockProjection,
 } from "./stat-block-authored-projection.ts";
 import { findFamiliarDisappearedAtZeroHitPointsState } from "./companion-state.ts";
@@ -424,10 +424,7 @@ export function castResolvedFindFamiliar(
     familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
-    statBlock: familiarRuntimeWithCreatureTypeOverride(
-      projected.right,
-      resolvedForm.creatureTypeOverride,
-    ),
+    statBlock: projected.right.runtime,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: reactionAvailable.right,
     ...(preservedHitPoints === null
@@ -898,25 +895,15 @@ function hitPointsForAdoptedFamiliarForm(input: {
 function projectFamiliarStatBlock(
   form: FindFamiliarResolvedForm,
 ): Either.Either<AuthoredStatBlockProjection, string> {
-  const projected = projectAuthoredStatBlock(form.statBlock);
+  const projected = projectAuthoredStatBlockWithCreatureType(
+    form.statBlock,
+    form.creatureTypeOverride,
+  );
   return Either.isLeft(projected)
     ? Either.left(
         `Find Familiar form projection failed: ${projected.left.reason}.`,
       )
     : Either.right(projected.right);
-}
-
-function familiarRuntimeWithCreatureTypeOverride(
-  projected: AuthoredStatBlockProjection,
-  creatureTypeOverride: FindFamiliarCreatureTypeOverride,
-): BattleStatBlockExecutionSource {
-  return {
-    ...projected.runtime,
-    statBlock: {
-      ...projected.runtime.statBlock,
-      creatureType: creatureTypeOverride,
-    },
-  };
 }
 
 function resolveStoredFindFamiliarForm(input: {

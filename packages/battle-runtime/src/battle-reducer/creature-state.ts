@@ -45,6 +45,7 @@ import {
   type BattleId,
   type BattleExecutionScopeOrdinal,
   type BattleObjectId,
+  type BattleStatBlockExecutionScopeRef,
   type CombatantId,
   type InitiativeScore,
 } from "../identity.ts";
@@ -80,6 +81,7 @@ import type {
   CharacterBattleRuntimeContext,
 } from "../battle-runtime-context.ts";
 import type { CharacterBattleClassLevels } from "../character-class-level.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-execution.ts";
 import { characterExecutionFromUnits } from "../character-execution-admission.ts";
 import {
   parseSupportedUnitFeatureProfile,
@@ -337,12 +339,27 @@ export function battleCreatureStateAdmissionFromInit(
       unarmedStrike: creatureInit.unarmedStrike,
       ...optionalProperty("offHandAttack", initOffHandAttack),
     });
+    const wildShapeForms = creatureInit.druidWildShapeAvailableForms;
+    const wildShapeRuntimeForms: readonly BattleDruidWildShapeKnownFormRuntime[] =
+      (wildShapeForms ?? []).map(
+        ({ presentation: _presentation, ...form }) => form,
+      );
     const executionCohort = statBlockExecutionAdmissionCohort(
       battleId,
       input.combatantId,
-      creatureInit.druidWildShapeAvailableForms ?? [],
+      wildShapeRuntimeForms,
       attackExecution.nextScopeOrdinal,
     );
+    const wildShapePresentations = new Map<
+      BattleStatBlockExecutionScopeRef,
+      BattleStatBlockPresentationSource
+    >();
+    for (const [index, admission] of executionCohort.admissions.entries()) {
+      const presentation = wildShapeForms?.[index]?.presentation;
+      if (presentation !== undefined) {
+        wildShapePresentations.set(admission.execution.scopeRef, presentation);
+      }
+    }
     const parsedClassLevels = parseCharacterBattleClassLevels(
       creatureInit.classLevels,
     );
@@ -520,6 +537,9 @@ export function battleCreatureStateAdmissionFromInit(
         spellPresentationSources: [],
         unitProcedureOwnership: execution.right.unitProcedureOwnership,
         unitPresentationSources: creatureInit.characterUnitRefs,
+        ...(wildShapeForms === undefined
+          ? {}
+          : { druidWildShapeFormPresentations: wildShapePresentations }),
       },
     };
   }

@@ -1085,7 +1085,7 @@
     "name": "Weasel",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2563-2587"
+      "section": "Animals.md:2563-2583"
     },
     "statBlock": {
       "abilityScores": {
@@ -1502,7 +1502,7 @@
     "name": "Pseudodragon",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Monsters/Monsters-P-S.md:292-323"
+      "section": "Monsters/Monsters-P-S.md:292-319"
     },
     "statBlock": {
       "abilityScores": {

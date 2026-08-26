@@ -20,6 +20,7 @@ import type {
 } from "./battle-runtime-context.ts";
 import type {
   BattleStatBlockExecutionSource,
+  BattleStatBlockRuntimeMultiattackDispatch,
   BattleStatBlockRuntimeProcedure,
   BattleStatBlockRuntimeResource,
   BattleStatBlockRuntimeSpeed,
@@ -83,7 +84,6 @@ export function projectAuthoredStatBlock(
       initiativeModifier: source.initiative.modifier,
       initiativeScore: source.initiative.score,
       passivePerception: source.passivePerception,
-      communication: source.communication,
       ...(source.savingThrowModifiers === undefined
         ? {}
         : { savingThrowModifiers: source.savingThrowModifiers }),
@@ -120,10 +120,42 @@ export function projectAuthoredStatBlock(
   });
 }
 
+export function projectAuthoredStatBlockWithCreatureType(
+  record: StatBlockRecord,
+  creatureType: BattleStatBlockExecutionSource["statBlock"]["creatureType"],
+): Either.Either<
+  AuthoredStatBlockProjection,
+  BattleStatBlockProjectionFailure
+> {
+  const projected = projectAuthoredStatBlock(record);
+  if (Either.isLeft(projected)) return projected;
+  return Either.right({
+    runtime: {
+      ...projected.right.runtime,
+      statBlock: {
+        ...projected.right.runtime.statBlock,
+        creatureType,
+      },
+    },
+    presentation: projected.right.presentation,
+  });
+}
+
 function runtimeProcedureBindings(
   source: StandaloneStatBlock,
 ): readonly BattleStatBlockRuntimeProcedure[] {
   const bindings: BattleStatBlockRuntimeProcedure[] = [];
+  const supportedActionAttackOrdinals = new Set(
+    (source.actions ?? []).flatMap((entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      creatureAttackRollMechanicsAreSupported(
+        authoredAttackMechanics(entry.procedure),
+      )
+        ? [entry.procedureOrdinal]
+        : [],
+    ),
+  );
   const sections: readonly [
     StatBlockActionProjectionSection,
     readonly StatBlockProcedureEntry[] | undefined,
@@ -158,17 +190,24 @@ function runtimeProcedureBindings(
         continue;
       }
       if (procedure.kind === "multiattack" && section === "actions") {
-        // Dispatches are checked against admitted action attacks after all
-        // entries are projected. This is ordinal-only and duplicate-name safe.
+        // Dispatches retain their authored ordinal/count; the target support
+        // fact is typed so admission can preserve an unsupported routine.
         bindings.push({
           kind: "multiattack",
           section,
           procedureOrdinal: entry.procedureOrdinal,
           dispatches: nonEmptyRuntimeValues(
-            procedure.dispatches.map((dispatch) => ({
-              procedureOrdinal: dispatch.procedureOrdinal,
-              count: dispatch.count.value,
-            })),
+            procedure.dispatches.map(
+              (dispatch): BattleStatBlockRuntimeMultiattackDispatch => ({
+                procedureOrdinal: dispatch.procedureOrdinal,
+                count: dispatch.count.value,
+                target: supportedActionAttackOrdinals.has(
+                  dispatch.procedureOrdinal,
+                )
+                  ? { kind: "attack" }
+                  : { kind: "unsupported", reason: "nonExecutableTarget" },
+              }),
+            ),
           ),
           resourceRefs,
         });
@@ -189,25 +228,7 @@ function runtimeProcedureBindings(
     }
   }
 
-  const admittedActions = new Set(
-    bindings
-      .filter(
-        (
-          binding,
-        ): binding is Extract<
-          BattleStatBlockRuntimeProcedure,
-          { readonly kind: "attack" }
-        > => binding.kind === "attack" && binding.section === "actions",
-      )
-      .map((binding) => binding.procedureOrdinal),
-  );
-  return bindings.filter(
-    (binding) =>
-      binding.kind !== "multiattack" ||
-      binding.dispatches.every((dispatch) =>
-        admittedActions.has(dispatch.procedureOrdinal),
-      ),
-  );
+  return bindings;
 }
 
 function presentationProjection(
@@ -215,6 +236,7 @@ function presentationProjection(
 ): BattleStatBlockPresentationSource {
   return {
     displayName: record.name,
+    communication: record.statBlock.communication,
     orderedProcedures: authoredProcedurePresentations(record.statBlock),
   };
 }

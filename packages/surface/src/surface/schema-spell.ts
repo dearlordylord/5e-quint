@@ -5539,14 +5539,19 @@ const hasKnownMultiattackDispatches = (
     if (entry.kind !== "executable" || entry.procedure.kind !== "multiattack") {
       return true;
     }
-    return entry.procedure.dispatches.every((dispatch) => {
-      const target = entriesByOrdinal.get(dispatch.procedureOrdinal);
-      return (
-        dispatch.procedureOrdinal !== entry.procedureOrdinal &&
-        target?.kind === "executable" &&
-        target.procedure.kind === "attack_roll"
-      );
-    });
+    const dispatches = entry.procedure.dispatches;
+    return (
+      hasStrictlyIncreasingProcedureOrdinals(dispatches) &&
+      new Set(dispatches.map((dispatch) => dispatch.procedureOrdinal)).size ===
+        dispatches.length &&
+      dispatches.every((dispatch) => {
+        const target = entriesByOrdinal.get(dispatch.procedureOrdinal);
+        return (
+          dispatch.procedureOrdinal !== entry.procedureOrdinal &&
+          target !== undefined
+        );
+      })
+    );
   });
 };
 

@@ -52,7 +52,8 @@ export function statBlockAttackProcedureSection(
       : activeDruidWildShape(actor)?.admission.execution;
   if (execution === undefined) return null;
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  return binding?.procedure.kind === "attack"
+  return binding?.procedure.kind === "attack" ||
+    binding?.procedure.kind === "unarmedStrike"
     ? binding.procedure.section
     : null;
 }

@@ -1164,7 +1164,7 @@
   , id = "stat_block_weasel"
   , kind = "statBlock"
   , name = "Weasel"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2563-2587" }
+  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2563-2583" }
   , statBlock =
     { abilityScores = { cha = 3, con = 8, dex = 16, int = 2, str = 3, wis = 12 }
     , ac.value = { kind = "literal", value = 13 }
@@ -1624,7 +1624,7 @@
   , kind = "statBlock"
   , name = "Pseudodragon"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:292-323" }
+    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:292-319" }
   , statBlock =
     { abilityScores =
       { cha = 10, con = 13, dex = 15, int = 10, str = 6, wis = 12 }

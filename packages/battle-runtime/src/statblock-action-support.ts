@@ -15,6 +15,7 @@ export {
   creatureAttackRollMechanicsAreSupported,
   creatureNamedAttackRollIsSupported,
   statBlockActionSurfaceIsSupported,
+  statBlockTraitsAreSupported,
   supportedStatBlockTraitAttackRollModes,
 } from "./statblock-action-execution-support.ts";
 

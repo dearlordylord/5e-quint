@@ -18,7 +18,7 @@ export function statBlockActionSurfaceIsSupported(
 ): boolean {
   return (
     creatureActionSectionIsSupported(statBlock.actions) &&
-    creatureTraitsAreSupported(statBlock.traits) &&
+    statBlockTraitsAreSupported(statBlock.traits) &&
     statBlock.bonusActions === undefined &&
     statBlock.reactions === undefined &&
     statBlock.legendaryActions === undefined
@@ -48,8 +48,8 @@ export function creatureNamedAttackRollIsSupported(
   );
 }
 
-function creatureTraitsAreSupported(
-  traits: CreatureStatBlock["traits"],
+export function statBlockTraitsAreSupported(
+  traits: CreatureStatBlock["traits"] | StandaloneStatBlock["traits"],
 ): boolean {
   return (
     traits === undefined ||

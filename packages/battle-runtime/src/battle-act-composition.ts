@@ -575,7 +575,11 @@ function characterProcedurePresentationJoin(
     if (form === undefined || unit === undefined) {
       return undefined;
     }
-    const label = `${battleUnitPresentationName(unit)}: ${form.statBlock.presentation.displayName}`;
+    const formPresentation = context.characters
+      .get(actor.combatantId)
+      ?.druidWildShapeFormPresentations?.get(form.execution.scopeRef);
+    if (formPresentation === undefined) return undefined;
+    const label = `${battleUnitPresentationName(unit)}: ${formPresentation.displayName}`;
     return {
       label,
       summary: `Use ${label}.`,

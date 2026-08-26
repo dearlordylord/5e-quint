@@ -16,11 +16,11 @@ import type {
   CreatureSkillModifier,
   SixAbilityScores,
   StatBlockLiteralValue,
-  StatBlockCommunication,
   StatBlockTextOnlyReason,
   CreatureResistanceList,
   CreatureVulnerabilityList,
   StatBlockId,
+  StatBlockProcedureOrdinal,
 } from "@dnd/surface/surface/types";
 import type { Size } from "@dnd/shared/types";
 import type {
@@ -53,6 +53,9 @@ export type BattleStatBlockExecutionSource = {
   readonly legendaryActionUses?: number;
 };
 
+/** The sole negative procedure ordinal is reserved for the runtime Unarmed Strike. */
+export const UNARMED_STRIKE_PROCEDURE_ORDINAL = -1 as const;
+
 export type BattleStatBlockRuntimeResource = {
   readonly ordinal: number;
   readonly ownership: "shared" | "each";
@@ -60,6 +63,17 @@ export type BattleStatBlockRuntimeResource = {
     | { readonly kind: "daily"; readonly uses: number }
     | { readonly kind: "recharge"; readonly minimumRoll: number }
     | { readonly kind: "recharge_after_rest" };
+};
+
+export type BattleStatBlockRuntimeMultiattackDispatch = {
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
+  readonly count: number;
+  readonly target:
+    | { readonly kind: "attack" }
+    | {
+        readonly kind: "unsupported";
+        readonly reason: "nonExecutableTarget";
+      };
 };
 
 export type BattleStatBlockRuntimeFacts = {
@@ -72,7 +86,6 @@ export type BattleStatBlockRuntimeFacts = {
   readonly initiativeModifier: number;
   readonly initiativeScore: number;
   readonly passivePerception: number;
-  readonly communication: StatBlockCommunication;
   readonly savingThrowModifiers?: readonly CreatureSavingThrowModifier[];
   readonly skillModifiers?: readonly CreatureSkillModifier[];
   readonly saveProficiencies?: readonly Ability[];
@@ -101,7 +114,7 @@ export type BattleStatBlockRuntimeProcedure =
         StatBlockAttackSection,
         "actions" | "legendaryActions"
       >;
-      readonly procedureOrdinal: number;
+      readonly procedureOrdinal: StatBlockProcedureOrdinal;
       readonly attack: SupportedCreatureAttackRollMechanics;
       readonly resourceRefs: readonly number[];
       readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
@@ -109,17 +122,14 @@ export type BattleStatBlockRuntimeProcedure =
   | {
       readonly kind: "multiattack";
       readonly section: "actions";
-      readonly procedureOrdinal: number;
-      readonly dispatches: ReadonlyNonEmptyArray<{
-        readonly procedureOrdinal: number;
-        readonly count: number;
-      }>;
+      readonly procedureOrdinal: StatBlockProcedureOrdinal;
+      readonly dispatches: ReadonlyNonEmptyArray<BattleStatBlockRuntimeMultiattackDispatch>;
       readonly resourceRefs: readonly number[];
     }
   | {
       readonly kind: "bonusActionOption";
       readonly section: "bonusActions";
-      readonly procedureOrdinal: number;
+      readonly procedureOrdinal: StatBlockProcedureOrdinal;
       readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
       readonly resourceRefs: readonly number[];
     };
@@ -167,7 +177,7 @@ export type StatBlockProjectionIssue =
 
 export type StatBlockAttackProcedure = {
   readonly kind: "attack";
-  readonly procedureOrdinal: number;
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly section: Extract<
     StatBlockAttackSection,
     "actions" | "legendaryActions"
@@ -176,22 +186,42 @@ export type StatBlockAttackProcedure = {
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
+/** Runtime-injected Unarmed Strike; authored procedure ordinals remain positive. */
+export type StatBlockUnarmedStrikeProcedure = {
+  readonly kind: "unarmedStrike";
+  readonly procedureOrdinal: typeof UNARMED_STRIKE_PROCEDURE_ORDINAL;
+  readonly section: "actions";
+  readonly attack: SupportedCreatureAttackRollMechanics;
+};
+
 export type StatBlockMultiattackProcedure = {
   readonly kind: "multiattack";
-  readonly procedureOrdinal: number;
+  readonly section: "actions";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly dispatchProcedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
+};
+
+export type StatBlockUnsupportedProcedure = {
+  readonly kind: "unsupported";
+  readonly section: "actions";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
+  readonly reason: "unsupportedMultiattackDispatch";
+  readonly dispatches: ReadonlyNonEmptyArray<BattleStatBlockRuntimeMultiattackDispatch>;
 };
 
 export type StatBlockBonusActionOptionProcedure = {
   readonly kind: "bonusActionOption";
-  readonly procedureOrdinal: number;
+  readonly section: "bonusActions";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
 };
 
 export type StatBlockProcedure =
   | StatBlockAttackProcedure
+  | StatBlockUnarmedStrikeProcedure
   | StatBlockMultiattackProcedure
-  | StatBlockBonusActionOptionProcedure;
+  | StatBlockBonusActionOptionProcedure
+  | StatBlockUnsupportedProcedure;
 
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,
@@ -209,12 +239,14 @@ export type StatBlockResourcePoolState =
   | {
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       readonly kind: "daily";
+      readonly ownership: "shared" | "each";
       readonly usesMax: ResourceCount;
       readonly usesRemaining: ResourceCount;
     }
   | {
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       readonly kind: "recharge";
+      readonly ownership: "shared" | "each";
       readonly minimumRoll: Extract<
         CreatureLimitedUse,
         { readonly kind: "recharge" }
@@ -224,6 +256,7 @@ export type StatBlockResourcePoolState =
   | {
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       readonly kind: "recharge_after_rest";
+      readonly ownership: "shared" | "each";
       readonly available: boolean;
     }
   | {
@@ -268,17 +301,23 @@ export function statBlockAttackActionOptions(
   execution: StatBlockExecutionState,
 ): readonly StatBlockAttackActionOption[] {
   return execution.procedureBindings.flatMap((binding) => {
-    if (binding.procedure.kind !== "attack") return [];
+    if (
+      binding.procedure.kind !== "attack" &&
+      binding.procedure.kind !== "unarmedStrike"
+    ) {
+      return [];
+    }
     const attack = binding.procedure.attack;
     const damage = supportedStatBlockAttackDamage(attack);
+    const traitAttackRollModes =
+      binding.procedure.kind === "attack"
+        ? binding.procedure.traitAttackRollModes
+        : undefined;
     const base = {
       kind: "statBlockAttack" as const,
       procedureRef: binding.procedureRef,
       attack,
-      ...optionalProperty(
-        "traitAttackRollModes",
-        binding.procedure.traitAttackRollModes,
-      ),
+      ...optionalProperty("traitAttackRollModes", traitAttackRollModes),
     };
     return [
       ...(statBlockAttackDamageRequiresRoll(damage)

@@ -45,3 +45,11 @@ export type BattleDruidWildShapeKnownForm =
   BattleDruidWildShapeKnownFormProjection & {
     readonly [battleDruidWildShapeKnownFormBrand]: true;
   };
+
+/** Source-free form retained by durable battle execution state. */
+export type BattleDruidWildShapeKnownFormRuntime = Omit<
+  BattleDruidWildShapeKnownFormProjection,
+  "presentation"
+> & {
+  readonly [battleDruidWildShapeKnownFormBrand]: true;
+};

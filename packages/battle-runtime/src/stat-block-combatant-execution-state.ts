@@ -6,7 +6,6 @@ import type {
   SixAbilityScores,
   CreatureSavingThrowModifier,
   CreatureSkillModifier,
-  StatBlockCommunication,
 } from "@dnd/surface/surface/types";
 import type { SurfaceCondition } from "@dnd/shared/game-facts";
 import type { Brand } from "effect";
@@ -40,7 +39,6 @@ export type BattleStatBlockCombatantMechanics = {
   readonly initiativeModifier: number;
   readonly initiativeScore: number;
   readonly passivePerception: number;
-  readonly communication: StatBlockCommunication;
 };
 
 /** Durable Stat Block battle projection retained after admission is consumed. */

@@ -2,7 +2,7 @@
   , id = "stat_block_riding_horse"
   , kind = "statBlock"
   , name = "Riding Horse"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2089-2128" }
+  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2089-2108" }
   , statBlock =
     { abilityScores =
       { cha = 7, con = 12, dex = 13, int = 2, str = 16, wis = 11 }

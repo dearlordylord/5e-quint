@@ -52,12 +52,12 @@ export type BattleCreaturePerceptionCommunicationProjection = {
 
 export function combatantPerceptionCommunicationProjection(
   combatant: BattleCreatureState,
-  _context: BattleRuntimeContext,
+  context: BattleRuntimeContext,
 ): BattleCreaturePerceptionCommunicationProjection {
   return {
     specialSenses: combatantSpecialSenses(combatant),
     passivePerception: combatantPassivePerception(combatant),
-    communication: combatantCommunicationProjection(combatant),
+    communication: combatantCommunicationProjection(combatant, context),
   };
 }
 
@@ -85,6 +85,7 @@ function combatantSpecialSenses(
 
 function combatantCommunicationProjection(
   combatant: BattleCreatureState,
+  context: BattleRuntimeContext,
 ): BattleCreatureCommunicationProjection {
   if (combatant.origin.kind === "character") {
     return {
@@ -99,14 +100,17 @@ function combatantCommunicationProjection(
   return {
     kind: "statBlockCommunicationText",
     languages: statBlockCommunicationText(
-      combatant.origin.mechanics.communication,
+      context.statBlocks.get(combatant.combatantId)?.communication,
     ),
   };
 }
 
 function statBlockCommunicationText(
-  communication: StatBlockCommunication,
+  communication: StatBlockCommunication | undefined,
 ): BattleStatBlockCommunicationText {
+  if (communication === undefined) {
+    return { kind: "absentStatBlockLanguages" };
+  }
   if (
     communication.kind !== "spoken_and_understood" &&
     communication.kind !== "understood_but_cannot_speak"

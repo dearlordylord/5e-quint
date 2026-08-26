@@ -9,12 +9,14 @@ import type {
 } from "./character-execution-admission.ts";
 import type {
   BattleProcedureExecutionRef,
+  BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "./identity.ts";
 import type { WeaponId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type { StatBlockTextOnlyReason } from "@dnd/surface/surface/types";
+import type { StatBlockCommunication } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import type {
   FindFamiliarFormSelection,
@@ -46,6 +48,11 @@ export type CharacterBattleRuntimeContext = {
   readonly unitProcedureOwnership: readonly CharacterUnitProcedureOwnership[];
   readonly unitPresentationSources: readonly BattleUnitRef[];
   readonly retainedCompanionSelection?: RetainedCompanionBattleSelection;
+  /** Authored Wild Shape presentation joined only at the presentation boundary. */
+  readonly druidWildShapeFormPresentations?: ReadonlyMap<
+    BattleStatBlockExecutionScopeRef,
+    BattleStatBlockPresentationSource
+  >;
 };
 
 export type CharacterWeaponPresentationSourceIssue = {
@@ -64,6 +71,12 @@ export type BattleStatBlockProcedurePresentation =
       readonly procedureRef: BattleStatBlockProcedureExecutionRef;
       readonly kind: "multiattack" | "bonusActionOption";
       readonly label: string;
+    }
+  | {
+      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly kind: "unsupported";
+      readonly label: string;
+      readonly reason: "unsupportedMultiattackDispatch";
     };
 
 type BattleStatBlockProcedurePresentationBase = {
@@ -96,6 +109,8 @@ export type BattleStatBlockAuthoredProcedurePresentation =
 
 export type BattleStatBlockPresentationSource = {
   readonly displayName: string;
+  /** Authored communication is presentation data; absence is explicit. */
+  readonly communication?: StatBlockCommunication;
   readonly orderedProcedures: readonly BattleStatBlockAuthoredProcedurePresentation[];
 };
 
