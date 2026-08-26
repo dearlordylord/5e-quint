@@ -92,6 +92,7 @@ import {
 } from "../../../packages/tactical-space/src/index.ts";
 import { Either, Match } from "effect";
 import { sha256Canonical } from "../transcript.ts";
+import type { PlayerBattleFill } from "./continuation-contract.ts";
 import {
   scenarioTableSpatialFingerprint,
   scenarioSpatialDecisionEntityReferences,
@@ -432,6 +433,32 @@ export function projectGeometryTargetHoles(input: {
     return input.holes;
   }
   return input.holes.map((hole) => {
+    if (hole.kind === "helpAttackEnemyDecision") {
+      return {
+        ...hole,
+        choices: hole.choices.filter((targetEnemyId) => {
+          const question: Extract<
+            ScenarioSpatialDecisionQuestion,
+            { readonly kind: "helpAttackTarget" }
+          > = {
+            kind: "helpAttackTarget",
+            helperId: hole.helperId,
+            targetEnemyId,
+          };
+          const relation = scenarioRelationForSpatialQuestion(
+            input.session,
+            question,
+          );
+          return (
+            relation.tag === "relation" &&
+            scenarioTableSpatialFactDistanceWithinLimit(
+              question,
+              relation.relation.distanceFeet,
+            )
+          );
+        }),
+      };
+    }
     if (hole.kind !== "targetChoice") {
       return hole;
     }
@@ -479,8 +506,8 @@ export function projectGeometryTargetHoles(input: {
 export function scenarioBattleFills(
   session: ScenarioSession,
   subject: BattleSubject,
-  fills: readonly BattleFill[],
-): readonly BattleFill[] {
+  fills: readonly PlayerBattleFill[],
+): readonly PlayerBattleFill[] {
   if (
     subject.tag !== "action" ||
     subject.action !== "ready" ||
@@ -2498,7 +2525,7 @@ function scenarioTableSpatialFactQuestionForSubject(
 export function scenarioTableSpatialFactFills(input: {
   readonly session: ScenarioSession;
   readonly subject: BattleSubject;
-  readonly fills: readonly BattleFill[];
+  readonly fills: readonly PlayerBattleFill[];
 }): Either.Either<
   readonly BattleFill[],
   ScenarioTableSpatialFactProjectionIssue
@@ -2510,16 +2537,18 @@ export function scenarioTableSpatialFactFills(input: {
       subject: input.subject,
       fills: projectedFills,
     });
-    if (frontier.tag !== "needsHoles") {
-      projectedFills.push(fill);
-      continue;
-    }
-
-    if (
-      fill.kind === "helpAttackEnemyDecision" &&
-      input.subject.tag === "action" &&
-      input.subject.action === "helpAttack"
-    ) {
+    if (fill.kind === "helpAttackEnemyDecision") {
+      if (
+        frontier.tag !== "needsHoles" ||
+        input.subject.tag !== "action" ||
+        input.subject.action !== "helpAttack"
+      ) {
+        return Either.left({
+          tag: "table-spatial-fact-projection",
+          message:
+            "The Help enemy choice does not match the pending Help attack target question.",
+        });
+      }
       const targetQuestion: Extract<
         ScenarioSpatialDecisionQuestion,
         { readonly kind: "helpAttackTarget" }
@@ -2549,12 +2578,17 @@ export function scenarioTableSpatialFactFills(input: {
           message: `The helpAttackTarget spatial witness is outside the supported ${HELP_ATTACK_TARGET_ADJACENCY_FEET}-foot adjacency boundary.`,
         });
       }
-      // The helper's adjacency is a Table-owned fact.  The player may choose
-      // the ordinary target, but cannot override the distance witness.
       projectedFills.push({
-        ...fill,
+        kind: "helpAttackEnemyDecision",
+        holeId: fill.holeId,
+        targetEnemyId: fill.targetEnemyId,
         targetWithinFiveFeetOfHelper: true,
       });
+      continue;
+    }
+
+    if (frontier.tag !== "needsHoles") {
+      projectedFills.push(fill);
       continue;
     }
 

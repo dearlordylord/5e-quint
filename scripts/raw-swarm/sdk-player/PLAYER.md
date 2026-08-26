@@ -93,6 +93,18 @@ const targetFill = {
 };
 ```
 
+The Help attack enemy fill follows the same ownership boundary. Choose the
+surfaced enemy and submit only that choice; the ScenarioSession supplies the
+five-foot adjacency witness from its geometry-derived or Table-authored source:
+
+```ts
+const helpEnemyFill = {
+  kind: "helpAttackEnemyDecision" as const,
+  holeId: helpEnemyHole.holeId,
+  targetEnemyId,
+};
+```
+
 The reducer validates the supervisor-projected witness against the selected
 procedure and supported target constraint. Its Cover vocabulary is the battle
 reducer's `none | half | threeQuarters | total` vocabulary. For an ordinary Move,

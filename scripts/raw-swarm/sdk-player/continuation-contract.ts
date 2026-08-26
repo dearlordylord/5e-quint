@@ -13,6 +13,13 @@ import type { ScenarioSessionUpdateIssue } from "./scenario-session.ts";
 import type { ScenarioRelationResult } from "./scenario-session.ts";
 import type { CoordinateInput } from "../../../packages/tactical-space/src/index.ts";
 
+export type PlayerBattleFill =
+  | Exclude<BattleFill, { readonly kind: "helpAttackEnemyDecision" }>
+  | Omit<
+      Extract<BattleFill, { readonly kind: "helpAttackEnemyDecision" }>,
+      "targetWithinFiveFeetOfHelper"
+    >;
+
 /**
  * Minimal call-shape reference shared by the generated attempt and controller
  * prompt. Keep it beside the public contract so those two delivery surfaces
@@ -92,7 +99,7 @@ export type PlayerSdk = {
   readonly resolveBattleRuntimeSubject: (input: {
     readonly session: ScenarioSession;
     readonly subject: BattleSubject;
-    readonly fills: readonly BattleFill[];
+    readonly fills: readonly PlayerBattleFill[];
   }) => ScenarioTableD20TestResolutionResult;
   readonly resolveBattleRuntimeInterrupt: (input: {
     readonly session: ScenarioSession;

@@ -180,6 +180,162 @@ describe("scenario setup public-SDK boundary", () => {
     });
   });
 
+  test("projects the Help adjacency witness outside the player fill for geometry and Table sources", async () => {
+    const setup = await evaluateScenarioSetup(
+      resolve(
+        repoRoot,
+        "scripts/raw-swarm/sdk-player/scenarios/table-authored-three-shove-cycle.setup.ts",
+      ),
+      [],
+    );
+    expect(setup.tag).toBe("ready");
+    if (
+      setup.tag !== "ready" ||
+      setup.session.battlefield.spatial.kind !== "tableAuthored"
+    ) {
+      return;
+    }
+
+    const helperId = combatantId("wolf");
+    const allyId = combatantId("skeleton");
+    const enemyId = combatantId("goblin-warrior");
+    const distanceFeet = scenarioDistanceFeet(5);
+    expect(Either.isRight(distanceFeet)).toBe(true);
+    if (Either.isLeft(distanceFeet)) return;
+    const helpDecision = tableAuthoredSpatialDecision({
+      decisionId: "wolf-helps-against-goblin",
+      question: {
+        kind: "helpAttackTarget",
+        helperId,
+        targetEnemyId: enemyId,
+      },
+      answer: {
+        direction: "east",
+        distanceFeet: distanceFeet.right,
+        attackerCanSeeTarget: true,
+        cover: "none",
+        traversal: "open",
+      },
+    });
+    expect(Either.isRight(helpDecision)).toBe(true);
+    if (Either.isLeft(helpDecision)) return;
+
+    const battlefield = setup.session.battlefield;
+    const sessionForSpatialSource = (
+      spatial: ScenarioSpatialSetupInput,
+    ): ScenarioSession | undefined => {
+      const session = createScenarioSession({
+        battle: setup.session.battle,
+        spatial,
+        ambientIllumination: battlefield.ambientIllumination,
+        statBlockDamageNotation: battlefield.statBlockDamageNotation,
+        environment: battlefield.environment,
+        initialRangedAttackEnemyRelationships:
+          battlefield.initialRangedAttackEnemyRelationships,
+        movementAllyRelationships: battlefield.movementAllyRelationships,
+        opportunityAttackEnemyRelationships:
+          battlefield.opportunityAttackEnemyRelationships,
+        objects: battlefield.objects,
+      });
+      expect(Either.isRight(session)).toBe(true);
+      return Either.isRight(session) ? session.right : undefined;
+    };
+    const tableSession = sessionForSpatialSource({
+      kind: "tableAuthored",
+      spatialDecisions: [
+        ...setup.session.battlefield.spatial.tableAuthoredDecisions.map(
+          ({ decision }) => decision,
+        ),
+        helpDecision.right,
+      ],
+    });
+    const geometrySession = sessionForSpatialSource({
+      kind: "geometryDerived",
+      arena: {
+        cells: [
+          { x: 0, y: 0, terrain: "ordinary" },
+          { x: 1, y: 0, terrain: "ordinary" },
+          { x: 2, y: 0, terrain: "ordinary" },
+        ],
+        boundaries: [],
+      },
+      placements: [
+        { tokenId: helperId, coordinate: { x: 0, y: 0 } },
+        { tokenId: enemyId, coordinate: { x: 1, y: 0 } },
+        { tokenId: allyId, coordinate: { x: 2, y: 0 } },
+      ],
+      spatialDecisions: [],
+    });
+    expect(tableSession).toBeDefined();
+    expect(geometrySession).toBeDefined();
+
+    for (const session of [geometrySession, tableSession]) {
+      if (session === undefined) continue;
+      const helpAct = scenarioBattleActs(session).find(
+        ({ subject }) =>
+          subject.tag === "action" &&
+          subject.action === "helpAttack" &&
+          subject.actorId === helperId,
+      );
+      expect(helpAct).toBeDefined();
+      if (helpAct === undefined) continue;
+      const allyHole = helpAct.initialHoles.find(
+        (hole) => hole.kind === "helpAttackAllyDecision",
+      );
+      expect(allyHole?.kind).toBe("helpAttackAllyDecision");
+      if (allyHole?.kind !== "helpAttackAllyDecision") continue;
+      const allyFill = {
+        kind: "helpAttackAllyDecision" as const,
+        holeId: allyHole.holeId,
+        allyId,
+      };
+      const enemyFrontier = resolveBattleRuntimeSubject({
+        session: session.battle,
+        subject: helpAct.subject,
+        fills: [allyFill],
+      });
+      expect(enemyFrontier.tag).toBe("needsHoles");
+      if (enemyFrontier.tag !== "needsHoles") continue;
+      const enemyHole = enemyFrontier.holes.find(
+        (hole) => hole.kind === "helpAttackEnemyDecision",
+      );
+      expect(enemyHole?.kind).toBe("helpAttackEnemyDecision");
+      if (enemyHole?.kind !== "helpAttackEnemyDecision") continue;
+
+      const projected = scenarioTableSpatialFactFills({
+        session,
+        subject: helpAct.subject,
+        fills: [
+          allyFill,
+          {
+            kind: "helpAttackEnemyDecision",
+            holeId: enemyHole.holeId,
+            targetEnemyId: enemyId,
+          },
+        ],
+      });
+      expect(projected).toMatchObject({
+        _tag: "Right",
+        right: [
+          allyFill,
+          {
+            kind: "helpAttackEnemyDecision",
+            targetEnemyId: enemyId,
+            targetWithinFiveFeetOfHelper: true,
+          },
+        ],
+      });
+      if (Either.isLeft(projected)) continue;
+      expect(
+        resolveBattleRuntimeSubject({
+          session: session.battle,
+          subject: helpAct.subject,
+          fills: projected.right,
+        }).tag,
+      ).toBe("resolved");
+    }
+  });
+
   test("decodes canonical nested procedure refs and rejects malformed refs", () => {
     const canonicalProcedureRef = battleAttackProcedureExecutionRef(
       battleAttackExecutionScopeRef(

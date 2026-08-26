@@ -11,6 +11,7 @@ import { Either, Match, Schema } from "effect";
 import type {
   EndBattleRuntimeTurnInput,
   JsonValue,
+  PlayerBattleFill,
 } from "./continuation-contract.ts";
 import { sdkCallInputJsonValue } from "./json-value.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
@@ -36,7 +37,7 @@ export type SdkCallInput =
       readonly operation: "resolveBattleRuntimeSubject";
       readonly input: {
         readonly subject: BattleSubject;
-        readonly fills: readonly BattleFill[];
+        readonly fills: readonly PlayerBattleFill[];
       };
     }
   | {
@@ -95,9 +96,32 @@ const InitialRelationInputSchema = Schema.Struct({
   sourceId: Schema.NonEmptyTrimmedString,
   targetId: Schema.NonEmptyTrimmedString,
 });
+const PlayerHelpAttackEnemyDecisionFillSchema = Schema.Struct({
+  kind: Schema.Literal("helpAttackEnemyDecision"),
+  holeId: Schema.NonEmptyTrimmedString.pipe(Schema.brand("HoleId")),
+  targetEnemyId: CombatantId,
+});
+const NonPlayerHelpBattleFillSchema = BattleFillSchema.pipe(
+  Schema.filter(
+    (
+      fill,
+    ): fill is Exclude<
+      BattleFill,
+      { readonly kind: "helpAttackEnemyDecision" }
+    > => fill.kind !== "helpAttackEnemyDecision",
+    {
+      description:
+        "The Raw Swarm player chooses the Help enemy without supplying the ScenarioSession-owned adjacency witness.",
+    },
+  ),
+);
+const PlayerBattleFillSchema = Schema.Union(
+  PlayerHelpAttackEnemyDecisionFillSchema,
+  NonPlayerHelpBattleFillSchema,
+);
 const ResolveInputSchema = Schema.Struct({
   subject: BattleSubjectSchema,
-  fills: Schema.Array(BattleFillSchema),
+  fills: Schema.Array(PlayerBattleFillSchema),
 });
 const ScenarioMovementInputSchema = Schema.Union(
   Schema.Struct({
