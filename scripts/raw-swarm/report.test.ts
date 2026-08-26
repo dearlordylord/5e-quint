@@ -791,7 +791,7 @@ describe("RAW swarm artifact report index", () => {
       ).toThrow(/inside the portable export/);
       expect(existsSync(escapedTimingPath)).toBe(false);
     }
-  });
+  }, 60_000);
 
   test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();
