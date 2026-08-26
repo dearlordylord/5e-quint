@@ -2236,35 +2236,23 @@ describe("battle runtime: Stat Block actions", () => {
     );
   });
 
-  test("Stat Block Multiattack remains gated when a dispatch has no positive literal count", () => {
-    const goblinTurn = requireResolved(
-      endTurn({
-        state: startBattleRight({
-          battleId: battleId("battle-monster-multiattack-zero-count"),
-          combatants: [
-            characterSeed({ initiative: 20 }),
-            statBlockCreatureInit({
-              initiative: 10,
-              statBlock: monsterMultiattackStatBlock({
-                scimitarCount: 0,
-              }),
-            }),
-          ],
-        }),
-        actorId: fighterId,
-      }),
-    ).state;
-    const subject = unavailableMultiattackSubject(goblinTurn);
+  test("Stat Block Multiattack projection rejects a dispatch without a positive literal count", () => {
+    const projected = projectAuthoredStatBlock(
+      monsterMultiattackStatBlock({ scimitarCount: 0 }),
+    );
 
-    expect(
-      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
-    ).not.toContainEqual(subject);
-    expect(
-      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
-    ).toMatchObject({
-      tag: "invalid",
-      reason: "unsupportedActOption",
-    });
+    expect(projected).toEqual(
+      Either.left({
+        tag: "battleStatBlockProjectionFailure",
+        reason: "unsupportedProcedureBinding",
+        issues: [
+          {
+            section: "actions",
+            procedureOrdinal: authoredProcedureOrdinal(3),
+          },
+        ],
+      }),
+    );
   });
 
   test("Stat Block action bindings preserve shared resource identity by ordinal", () => {

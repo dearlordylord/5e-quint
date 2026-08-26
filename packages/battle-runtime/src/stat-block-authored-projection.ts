@@ -337,6 +337,15 @@ function runtimeMultiattackBinding(
       procedureBindingIssue("actions", entry.procedureOrdinal),
     );
   }
+  if (
+    !procedure.dispatches.every(
+      ({ count }) => Number.isInteger(count.value) && count.value >= 1,
+    )
+  ) {
+    return Either.left(
+      procedureBindingIssue("actions", entry.procedureOrdinal),
+    );
+  }
   return Either.right([
     {
       kind: "multiattack",

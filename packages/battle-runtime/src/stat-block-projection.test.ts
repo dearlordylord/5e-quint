@@ -329,6 +329,25 @@ describe("generic Stat Block projection", () => {
     });
   });
 
+  test("rejects an authored Multiattack with a non-positive dispatch count", () => {
+    const projected = projectAuthoredStatBlock(
+      monsterMultiattackStatBlock({ scimitarCount: 0 }),
+    );
+
+    expect(projected).toEqual(
+      Either.left({
+        tag: "battleStatBlockProjectionFailure",
+        reason: "unsupportedProcedureBinding",
+        issues: [
+          {
+            section: "actions",
+            procedureOrdinal: authoredOrdinal(3),
+          },
+        ],
+      }),
+    );
+  });
+
   test("renamed equivalent mechanics project to the same creature facts and Acts", () => {
     const source = statBlockRecord();
     const renamed = {
