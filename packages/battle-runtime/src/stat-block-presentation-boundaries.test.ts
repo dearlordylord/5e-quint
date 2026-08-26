@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import {
   characterWeaponPresentationSource,
   emptyBattleRuntimeContext,
+  type BattleStatBlockAuthoredProcedurePresentation,
 } from "./battle-runtime-context.ts";
 import {
   battleRuntimeContextForTest,
@@ -12,7 +13,9 @@ import {
 import { battleSubjectPresentation } from "./battle-act-composition.ts";
 import {
   battleId,
+  authoredProcedureOrdinal,
   characterSeed,
+  combatantId,
   fighterAttackSubject,
   fighterId,
   goblinAttackSubject,
@@ -29,6 +32,7 @@ import {
   attackActionOptionPresentationName,
   battleCreaturePresentationDisplayName,
   statBlockProjectionIssuesForActor,
+  statBlockProcedurePresentations,
   statBlockProcedurePresentationsForActor,
 } from "./stat-block-presentation.ts";
 
@@ -84,6 +88,109 @@ describe("battle presentation joins", () => {
         fighterId,
       ),
     ).toBeNull();
+    expect(
+      statBlockProjectionIssuesForActor(
+        session.state,
+        emptyBattleRuntimeContext(),
+        fighterId,
+      ),
+    ).toBeNull();
+    expect(
+      statBlockProjectionIssuesForActor(
+        session.state,
+        emptyBattleRuntimeContext(),
+        goblinId,
+      ),
+    ).toBeNull();
+    expect(
+      battleCreaturePresentationDisplayName(
+        session.state,
+        session.context,
+        combatantId("missing-combatant"),
+      ),
+    ).toBeNull();
+  });
+
+  test("returns empty procedure presentations when presentation is absent", () => {
+    const session = presentationSession();
+    const actor = session.state.combatants.get(goblinId);
+    if (actor?.origin.kind !== "statBlock") {
+      throw new Error("Expected Goblin Stat Block actor.");
+    }
+
+    expect(
+      statBlockProcedurePresentations({
+        execution: actor.origin.execution,
+      }),
+    ).toEqual(Either.right([]));
+  });
+
+  test("maps unmatched presentation shapes to projection issues", () => {
+    const session = presentationSession();
+    const source = session.context.statBlocks.get(goblinId);
+    if (source === undefined) {
+      throw new Error("Expected Goblin presentation source.");
+    }
+    const template = source.orderedProcedures[0];
+    if (template === undefined) {
+      throw new Error("Expected Goblin presentation procedure.");
+    }
+    const unmatchedProjectionCases = [
+      { kind: "multiattack", shape: "multiattack" },
+      { kind: "bonusActionOption", shape: "actionOption" },
+      { kind: "save", shape: "save" },
+      { kind: "support", shape: "support" },
+      { kind: "spellcasting", shape: "special" },
+    ] as const;
+    const unmatchedPresentationCases = unmatchedProjectionCases.map(
+      ({ kind, shape }, index) => ({
+        shape,
+        presentation: {
+          section: template.section,
+          procedureOrdinal: authoredProcedureOrdinal(
+            template.procedureOrdinal + 100 + index,
+          ),
+          name: `Synthetic ${kind} presentation`,
+          kind,
+          resourceRefs: template.resourceRefs,
+        } satisfies BattleStatBlockAuthoredProcedurePresentation,
+      }),
+    );
+    const contextWithUnmatchedPresentations = battleRuntimeContextForTest(
+      session.context.characters,
+      new Map([
+        [
+          goblinId,
+          {
+            ...source,
+            orderedProcedures: [
+              ...source.orderedProcedures,
+              ...unmatchedPresentationCases.map(
+                ({ presentation }) => presentation,
+              ),
+            ],
+          },
+        ],
+      ]),
+    );
+
+    expect(
+      statBlockProjectionIssuesForActor(
+        session.state,
+        contextWithUnmatchedPresentations,
+        goblinId,
+      ),
+    ).toEqual(
+      unmatchedPresentationCases.map(({ shape, presentation }) => ({
+        tag: "statBlockProjectionIssue",
+        source: {
+          kind: "action",
+          section: presentation.section,
+          shape,
+          nonExecutableReason: "unsupportedActionShape",
+        },
+      })),
+    );
   });
 
   test("reports a typed issue when a procedure presentation misses its binding", () => {
