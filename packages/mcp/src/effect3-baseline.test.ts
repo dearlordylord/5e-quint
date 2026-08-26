@@ -71,22 +71,70 @@ describe("Effect 3 migration baseline", () => {
     );
   });
 
-  test("the checked certificate is byte-for-byte reproducible", () => {
+  test("the checked certificate is byte-for-byte reproducible", async () => {
     const certificatePath = fileURLToPath(
       new URL(`../../../${EFFECT3_BASELINE_PATH}`, import.meta.url),
     );
     const expected = readFileSync(certificatePath, "utf8");
-    const actual = renderEffect3Baseline(captureEffect3Baseline());
+    const actual = renderEffect3Baseline(await captureEffect3Baseline());
     expect(actual).toBe(expected);
 
     const baseline: unknown = JSON.parse(expected);
     const mcp = record(recordField(baseline, "mcp"));
     const registeredOrder = array(recordField(mcp, "registeredOrder"));
-    const advertisedOrder = array(recordField(mcp, "advertisedOrder"));
     expect(registeredOrder).toHaveLength(27);
-    expect(advertisedOrder).toEqual(registeredOrder);
+    const protocolEntrypoints = record(recordField(mcp, "protocolEntrypoints"));
+    const defaultStdio = record(
+      recordField(protocolEntrypoints, "defaultStdio"),
+    );
+    const defaultStdioTools = array(recordField(defaultStdio, "toolsList"));
+    const defaultStdioOrder = array(recordField(defaultStdio, "toolOrder"));
+    expect(defaultStdioTools).toHaveLength(24);
+    expect(defaultStdioOrder).toHaveLength(24);
+    const httpWithoutOAuth = record(
+      recordField(protocolEntrypoints, "httpWithoutOAuth"),
+    );
+    expect(array(recordField(httpWithoutOAuth, "toolOrder"))).toEqual(
+      defaultStdioOrder,
+    );
     expect(
-      Object.keys(record(recordField(mcp, "modelFacingOutputSchemas"))),
+      Object.keys(record(recordField(defaultStdio, "securitySchemesByTool"))),
+    ).toHaveLength(24);
+    expect(recordField(defaultStdio, "securitySchemeOrder")).toEqual(
+      defaultStdioOrder,
+    );
+    expect(
+      Object.keys(
+        record(recordField(httpWithoutOAuth, "securitySchemesByTool")),
+      ),
+    ).toHaveLength(24);
+    expect(recordField(httpWithoutOAuth, "securitySchemeOrder")).toEqual(
+      defaultStdioOrder,
+    );
+    expect(recordField(httpWithoutOAuth, "parityWithDefaultStdio")).toBe(true);
+    expect(
+      Object.keys(
+        record(recordField(defaultStdio, "representativeCallResponses")),
+      ),
+    ).toEqual(["describeMcpWorkflow", "listCatalogUnits"]);
+    expect(
+      Object.keys(
+        record(recordField(httpWithoutOAuth, "representativeCallResponses")),
+      ),
+    ).toEqual(["describeMcpWorkflow", "listCatalogUnits"]);
+    const authenticatedProjection = record(
+      recordField(mcp, "authenticatedProjection"),
+    );
+    const advertisedOrder = array(
+      recordField(authenticatedProjection, "advertisedOrder"),
+    );
+    expect(advertisedOrder).toHaveLength(27);
+    expect(
+      Object.keys(
+        record(
+          recordField(authenticatedProjection, "modelFacingOutputSchemas"),
+        ),
+      ),
     ).toHaveLength(27);
     const persistence = record(recordField(baseline, "persistence"));
     expect(Object.keys(record(recordField(persistence, "fixtures")))).toEqual([
@@ -125,9 +173,9 @@ describe("Effect 3 migration baseline", () => {
     );
     const rawSwarm = record(recordField(baseline, "rawSwarm"));
     expect(array(recordField(rawSwarm, "artifacts"))).toHaveLength(76);
-  }, 60_000);
+  }, 180_000);
 
-  test("ignores dirty generated Raw Swarm output", () => {
+  test("ignores dirty generated Raw Swarm output", async () => {
     const certificatePath = fileURLToPath(
       new URL(`../../../${EFFECT3_BASELINE_PATH}`, import.meta.url),
     );
@@ -142,12 +190,12 @@ describe("Effect 3 migration baseline", () => {
     mkdirSync(generatedRoot, { recursive: true });
     try {
       writeFileSync(dirtyArtifact, '{"generated":true}\n', "utf8");
-      expect(renderEffect3Baseline(captureEffect3Baseline())).toBe(
+      expect(renderEffect3Baseline(await captureEffect3Baseline())).toBe(
         readFileSync(certificatePath, "utf8"),
       );
     } finally {
       rmSync(dirtyArtifact, { force: true });
       if (!generatedRootExisted) rmSync(generatedRoot, { recursive: true });
     }
-  }, 60_000);
+  }, 180_000);
 });

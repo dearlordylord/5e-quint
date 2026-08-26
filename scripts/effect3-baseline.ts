@@ -1,19 +1,26 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn, type ChildProcess } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
 import { constants } from "node:fs";
 import {
   closeSync,
   fsyncSync,
   lstatSync,
+  mkdtempSync,
   openSync,
   readFileSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
+import { createServer as createTcpServer } from "node:net";
 import { dirname, extname, join, posix, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Either } from "effect";
 import {
   abilityScoreAssignment,
@@ -502,7 +509,328 @@ function captureReducerFixtures(): Readonly<Record<string, unknown>> {
   };
 }
 
-export function captureEffect3Baseline(): Readonly<Record<string, unknown>> {
+const REPRESENTATIVE_MCP_CALLS = [
+  { key: "describeMcpWorkflow", name: "describe_mcp_workflow" },
+  { key: "listCatalogUnits", name: "list_catalog_units" },
+] as const;
+
+type McpClientCapture = {
+  readonly tools: readonly unknown[];
+  readonly calls: Readonly<Record<string, unknown>>;
+};
+
+type McpEntrypointCapture = {
+  readonly defaultStdio: McpClientCapture;
+  readonly httpWithoutOAuth: McpClientCapture;
+};
+
+async function captureMcpClient(client: Client): Promise<McpClientCapture> {
+  const listed = await client.listTools();
+  const calls: Record<string, unknown> = {};
+  for (const representativeCall of REPRESENTATIVE_MCP_CALLS) {
+    calls[representativeCall.key] = await client.callTool({
+      name: representativeCall.name,
+      arguments: {},
+    });
+  }
+  return { tools: listed.tools, calls };
+}
+
+async function captureDefaultStdioMcp(): Promise<McpClientCapture> {
+  const client = new Client({
+    name: "effect3-baseline-stdio",
+    version: "0.1.0",
+  });
+  const transport = new StdioClientTransport({
+    command: process.execPath,
+    args: ["--import", "tsx", "packages/mcp/src/index.ts"],
+    cwd: REPOSITORY_ROOT,
+    stderr: "pipe",
+  });
+  transport.stderr?.on("data", () => undefined);
+  try {
+    // The SDK transport class supplies the protocol Transport contract at runtime;
+    // its declaration is narrower than Client.connect's shared transport type.
+    await client.connect(transport as Transport);
+    return await captureMcpClient(client);
+  } finally {
+    await Promise.allSettled([client.close(), transport.close()]);
+  }
+}
+
+async function reserveHttpPort(): Promise<number> {
+  const server = createTcpServer();
+  return new Promise((resolvePort, reject) => {
+    server.once("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      if (address === null || typeof address === "string") {
+        server.close();
+        reject(new Error("Could not reserve a local HTTP port."));
+        return;
+      }
+      server.close((error) => {
+        if (error !== undefined) {
+          reject(error);
+          return;
+        }
+        resolvePort(address.port);
+      });
+    });
+  });
+}
+
+async function waitForHttpHealth(
+  healthUrl: URL,
+  child: ChildProcess,
+  stderr: () => string,
+): Promise<void> {
+  const deadline = Date.now() + 120_000;
+  let childFailure: Error | undefined;
+  const recordExit = (code: number | null, signal: NodeJS.Signals | null) => {
+    childFailure = new Error(
+      `Shipped HTTP MCP entrypoint exited before health readiness: ${
+        signal ?? code ?? "unknown"
+      }${stderr() === "" ? "" : `; stderr: ${stderr()}`}`,
+    );
+  };
+  const recordError = (error: Error) => {
+    childFailure = new Error(
+      `Shipped HTTP MCP entrypoint failed to start: ${error.message}${
+        stderr() === "" ? "" : `; stderr: ${stderr()}`
+      }`,
+    );
+  };
+  child.once("exit", recordExit);
+  child.once("error", recordError);
+  try {
+    while (Date.now() < deadline) {
+      if (childFailure !== undefined) throw childFailure;
+      if (child.exitCode !== null || child.signalCode !== null) {
+        recordExit(child.exitCode, child.signalCode);
+        throw childFailure;
+      }
+      try {
+        const response = await fetch(healthUrl, {
+          signal: AbortSignal.timeout(2_000),
+        });
+        if (response.status === 200) return;
+        await response.body?.cancel();
+      } catch {
+        // The shipped entrypoint may still be loading its schemas.
+      }
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, 50));
+    }
+    throw new Error(
+      `Shipped HTTP MCP entrypoint did not become healthy within 120 seconds.${
+        stderr() === "" ? "" : ` stderr: ${stderr()}`
+      }`,
+    );
+  } finally {
+    child.off("exit", recordExit);
+    child.off("error", recordError);
+  }
+}
+
+async function stopChildProcess(child: ChildProcess): Promise<void> {
+  if (child.exitCode !== null) return;
+  await new Promise<void>((resolveStop) => {
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(forceKillTimer);
+      resolveStop();
+    };
+    const forceKillTimer = setTimeout(() => {
+      child.kill("SIGKILL");
+      finish();
+    }, 5_000);
+    child.once("exit", finish);
+    child.kill("SIGTERM");
+  });
+}
+
+async function captureHttpWithoutOAuthMcp(): Promise<McpClientCapture> {
+  const directory = mkdtempSync(join(tmpdir(), "dnd-effect3-baseline-http-"));
+  const port = await reserveHttpPort();
+  const environment = { ...process.env };
+  delete environment.DND_OAUTH_RESOURCE_URL;
+  delete environment.DND_OAUTH_AUTHORIZATION_SERVER;
+  delete environment.DND_OAUTH_ISSUER;
+  delete environment.DND_OAUTH_JWKS_URL;
+  const child = spawn(
+    process.execPath,
+    ["--import", "tsx", "packages/mcp/src/public-index.ts"],
+    {
+      cwd: REPOSITORY_ROOT,
+      env: {
+        ...environment,
+        DND_MCP_HOST: "127.0.0.1",
+        PORT: String(port),
+        DND_MCP_ENVIRONMENT: "development",
+        DND_MCP_RELEASE: "effect3-baseline",
+        DND_MCP_PUBLISHER_NAME: "Effect 3 baseline",
+        DND_PLAY_SESSION_DATABASE_PATH: join(directory, "sessions.sqlite"),
+      },
+      stdio: ["ignore", "ignore", "pipe"],
+    },
+  );
+  let childStderr = "";
+  child.stderr?.setEncoding("utf8");
+  child.stderr?.on("data", (chunk: string) => {
+    childStderr = `${childStderr}${chunk}`.slice(-8_192);
+  });
+  const client = new Client({
+    name: "effect3-baseline-http",
+    version: "0.1.0",
+  });
+  let transport: StreamableHTTPClientTransport | undefined;
+  try {
+    const endpoint = new URL(`http://127.0.0.1:${port}/mcp`);
+    await waitForHttpHealth(new URL("/health", endpoint), child, () =>
+      childStderr.trim(),
+    );
+    transport = new StreamableHTTPClientTransport(endpoint, {
+      requestInit: {
+        headers: { connection: "close" },
+        signal: AbortSignal.timeout(30_000),
+      },
+    });
+    // The SDK transport class supplies the protocol Transport contract at runtime;
+    // its declaration is narrower than Client.connect's shared transport type.
+    await client.connect(transport as Transport);
+    return await captureMcpClient(client);
+  } finally {
+    await Promise.allSettled([
+      client.close(),
+      ...(transport === undefined ? [] : [transport.close()]),
+    ]);
+    await stopChildProcess(child);
+    rmSync(directory, { recursive: true, force: true });
+  }
+}
+
+let mcpEntrypointCapture: Promise<McpEntrypointCapture> | undefined;
+
+async function captureMcpEntrypoints(): Promise<McpEntrypointCapture> {
+  if (mcpEntrypointCapture !== undefined) return mcpEntrypointCapture;
+  mcpEntrypointCapture = (async () => {
+    const defaultStdio = await captureDefaultStdioMcp();
+    const httpWithoutOAuth = await captureHttpWithoutOAuthMcp();
+    if (
+      canonicalBaselineJson(defaultStdio.tools) !==
+      canonicalBaselineJson(httpWithoutOAuth.tools)
+    ) {
+      throw new Error(
+        "Default stdio and HTTP-without-OAuth tools/list responses differ.",
+      );
+    }
+    for (const representativeCall of REPRESENTATIVE_MCP_CALLS) {
+      if (
+        canonicalBaselineJson(defaultStdio.calls[representativeCall.key]) !==
+        canonicalBaselineJson(httpWithoutOAuth.calls[representativeCall.key])
+      ) {
+        throw new Error(
+          `Default stdio and HTTP-without-OAuth ${representativeCall.name} responses differ.`,
+        );
+      }
+    }
+    return { defaultStdio, httpWithoutOAuth };
+  })();
+  return mcpEntrypointCapture;
+}
+
+function mcpToolNames(tools: readonly unknown[]): readonly string[] {
+  return tools.map((tool, index) => {
+    if (typeof tool !== "object" || tool === null || Array.isArray(tool)) {
+      throw new Error(`MCP tools/list entry ${index} is not an object.`);
+    }
+    const name = Reflect.get(tool, "name");
+    if (typeof name !== "string") {
+      throw new Error(`MCP tools/list entry ${index} has no tool name.`);
+    }
+    return name;
+  });
+}
+
+function mcpToolSecuritySchemes(
+  tools: readonly unknown[],
+): Readonly<Record<string, unknown>> {
+  return Object.fromEntries(
+    tools.map((tool, index) => {
+      if (typeof tool !== "object" || tool === null || Array.isArray(tool)) {
+        throw new Error(`MCP tools/list entry ${index} is not an object.`);
+      }
+      const name = Reflect.get(tool, "name");
+      const securitySchemes =
+        Reflect.get(tool, "securitySchemes") ??
+        (typeof Reflect.get(tool, "_meta") === "object" &&
+        Reflect.get(tool, "_meta") !== null
+          ? Reflect.get(Reflect.get(tool, "_meta"), "securitySchemes")
+          : undefined);
+      if (typeof name !== "string" || !Array.isArray(securitySchemes)) {
+        throw new Error(
+          `MCP tools/list entry ${index} has no security declaration.`,
+        );
+      }
+      return [name, securitySchemes] as const;
+    }),
+  );
+}
+
+function mcpCallResponseHashes(
+  calls: Readonly<Record<string, unknown>>,
+): Readonly<Record<string, string>> {
+  return Object.fromEntries(
+    Object.entries(calls).map(([key, value]) => [
+      key,
+      sha256(canonicalBaselineJson(value)),
+    ]),
+  );
+}
+
+function mcpEntrypointEvidence(
+  capture: McpEntrypointCapture,
+): Readonly<Record<string, unknown>> {
+  const httpToolsSha256 = sha256(
+    canonicalBaselineJson(capture.httpWithoutOAuth.tools),
+  );
+  const httpCallResponseSha256 = mcpCallResponseHashes(
+    capture.httpWithoutOAuth.calls,
+  );
+  const defaultToolOrder = mcpToolNames(capture.defaultStdio.tools);
+  const defaultSecuritySchemes = mcpToolSecuritySchemes(
+    capture.defaultStdio.tools,
+  );
+  const httpToolOrder = mcpToolNames(capture.httpWithoutOAuth.tools);
+  const httpSecuritySchemes = mcpToolSecuritySchemes(
+    capture.httpWithoutOAuth.tools,
+  );
+  return {
+    defaultStdio: {
+      toolsList: capture.defaultStdio.tools,
+      toolOrder: defaultToolOrder,
+      securitySchemeOrder: defaultToolOrder,
+      securitySchemesByTool: defaultSecuritySchemes,
+      representativeCallResponses: capture.defaultStdio.calls,
+    },
+    httpWithoutOAuth: {
+      toolsListSha256: httpToolsSha256,
+      toolOrder: httpToolOrder,
+      securitySchemeOrder: httpToolOrder,
+      securitySchemesByTool: httpSecuritySchemes,
+      representativeCallResponses: capture.httpWithoutOAuth.calls,
+      representativeCallResponseSha256: httpCallResponseSha256,
+      parityWithDefaultStdio: true,
+    },
+  };
+}
+
+export async function captureEffect3Baseline(): Promise<
+  Readonly<Record<string, unknown>>
+> {
+  const mcpEntrypoints = await captureMcpEntrypoints();
   const registeredDefinitions: readonly ProtocolToolDefinition[] = [
     ...playSessionToolDefinitions,
     ...toolDefinitions,
@@ -515,6 +843,17 @@ export function captureEffect3Baseline(): Readonly<Record<string, unknown>> {
         ? []
         : [[definition.name, definition.outputSchema] as const],
     ),
+  );
+  const protocolEntrypointEvidence = mcpEntrypointEvidence(mcpEntrypoints);
+  const surfacePublication = artifactManifest(
+    SURFACE_PUBLICATION_ROOT,
+    () => true,
+  );
+  const surfaceContent = artifactManifest(SURFACE_CONTENT_ROOT, () => true);
+  const persistedSessionFixtures = capturePersistedSessionFixtures();
+  const reducerFixtures = captureReducerFixtures();
+  const rawSwarmArtifacts = artifactManifest(RAW_SWARM_ROOT, (path) =>
+    RAW_SWARM_ARTIFACT_EXTENSIONS.has(extname(path)),
   );
 
   return {
@@ -529,23 +868,26 @@ export function captureEffect3Baseline(): Readonly<Record<string, unknown>> {
     mcp: {
       registeredOrder: registeredDefinitions.map(({ name }) => name),
       registered: snapshotDefinitions(registeredDefinitions),
-      advertisedOrder: advertisedDefinitions.map(({ name }) => name),
-      advertised: snapshotDefinitions(advertisedDefinitions),
-      modelFacingOutputSchemas: modelFacingSchemas,
+      protocolEntrypoints: protocolEntrypointEvidence,
+      authenticatedProjection: {
+        rationale:
+          "OAuth-enabled schema projection is retained as a separately named comparison only; default stdio and HTTP-without-OAuth use the 24-tool projection above.",
+        advertisedOrder: advertisedDefinitions.map(({ name }) => name),
+        advertised: snapshotDefinitions(advertisedDefinitions),
+        modelFacingOutputSchemas: modelFacingSchemas,
+      },
     },
     surface: {
-      publication: artifactManifest(SURFACE_PUBLICATION_ROOT, () => true),
-      content: artifactManifest(SURFACE_CONTENT_ROOT, () => true),
+      publication: surfacePublication,
+      content: surfaceContent,
     },
     persistence: {
       formatVersion: 2,
-      fixtures: capturePersistedSessionFixtures(),
+      fixtures: persistedSessionFixtures,
     },
-    reducers: captureReducerFixtures(),
+    reducers: reducerFixtures,
     rawSwarm: {
-      artifacts: artifactManifest(RAW_SWARM_ROOT, (path) =>
-        RAW_SWARM_ARTIFACT_EXTENSIONS.has(extname(path)),
-      ),
+      artifacts: rawSwarmArtifacts,
     },
   };
 }
@@ -634,7 +976,7 @@ function writeCertificateReplacement(path: string, content: string): void {
   }
 }
 
-function capture(replaceReviewedBaseline: boolean): void {
+async function capture(replaceReviewedBaseline: boolean): Promise<void> {
   const relativePath = repositoryPathFor(EFFECT3_BASELINE_PATH);
   const path = baselinePath();
   const target = certificateTarget(relativePath);
@@ -643,7 +985,7 @@ function capture(replaceReviewedBaseline: boolean): void {
       `Refusing to replace ${EFFECT3_BASELINE_PATH}. Pass ${EFFECT3_BASELINE_REPLACEMENT_FLAG} only for an explicitly reviewed baseline replacement.`,
     );
   }
-  const content = renderEffect3Baseline(captureEffect3Baseline());
+  const content = renderEffect3Baseline(await captureEffect3Baseline());
   if (target === "missing") {
     writeCertificateExclusively(path, content);
   } else {
@@ -654,7 +996,7 @@ function capture(replaceReviewedBaseline: boolean): void {
   );
 }
 
-function verify(): void {
+async function verify(): Promise<void> {
   const relativePath = repositoryPathFor(EFFECT3_BASELINE_PATH);
   if (certificateTarget(relativePath) === "missing") {
     throw new Error(`Missing Effect 3 baseline: ${EFFECT3_BASELINE_PATH}`);
@@ -663,7 +1005,7 @@ function verify(): void {
     readRegularRepositoryFile(relativePath),
   );
   JSON.parse(expected);
-  const actual = renderEffect3Baseline(captureEffect3Baseline());
+  const actual = renderEffect3Baseline(await captureEffect3Baseline());
   if (actual !== expected) {
     throw new Error(
       `Effect 3 baseline differs from ${EFFECT3_BASELINE_PATH}. Review the migration delta before replacing it.`,
@@ -674,14 +1016,14 @@ function verify(): void {
   );
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const command = process.argv[2];
   if (command === "capture") {
-    capture(process.argv.includes(EFFECT3_BASELINE_REPLACEMENT_FLAG));
+    await capture(process.argv.includes(EFFECT3_BASELINE_REPLACEMENT_FLAG));
     return;
   }
   if (command === "verify") {
-    verify();
+    await verify();
     return;
   }
   throw new Error(
@@ -693,5 +1035,8 @@ if (
   process.argv[1] !== undefined &&
   resolve(process.argv[1]) === resolve(fileURLToPath(import.meta.url))
 ) {
-  main();
+  main().catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
 }
