@@ -1,0 +1,109 @@
+{
+  "scenarioId": "rs48h-20260824t155852z-synthetic-dodge-defense-lifetime-retry-002",
+  "scenarioSha256": "d61058e7cc2650b40e9ddcf96d977267a7e30887c1f330afb858acef3a837703",
+  "gitSha": "48e99d1114189f283319e01570e31da8e30f338a",
+  "admitReviewedUnsupported": false,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The local SRD supports Dodge until the start of the next turn, the supplied turn-boundary assumption supports End Turn, Bright Light supports sight, default melee reach is 5 feet, and Goblin Warrior’s Shortbow is 80/320 feet. The 15-foot setup is legal, printed HP values 13 and 10 use the permitted fixed monster-HP branch, and no Table Decision is missing."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The Candidate uses permitted canonical SRD identities and standard rules terminology, with no PHB+ identity, crosswalk, or protected expressive material."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The two combatants have serious strategy-bearing objectives; typed stat-block-only and geometry-assisted facts match the purpose; all supplied coordinates, distance, range, counts, HP, and boundaries reconcile. The retained 21-entry comparison names a non-spatial Dodge turn-boundary differentiator from its closest overlap."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "purposefulOverlap",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "lantern-intercept-pairwise-control",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "prone-target-roll-mode-distance-probe",
+      "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+      "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+      "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+      "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+      "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+      "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+      "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+      "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "goblin-warrior-skeleton-tracer",
+        "reason": "It is the only admitted record with the same two canonical stat blocks and a direct open-setting battle path. The Candidate purposefully narrows that overlap to a Skeleton-first Dodge, End Turn, and one Goblin Warrior Shortbow attack across the turn boundary."
+      }
+    ],
+    "materialDifferentiators": [
+      "The Candidate isolates whether Dodge persists across the Skeleton's turn boundary and affects the ensuing normal-range Shortbow attack, with no competing Advantage or Disadvantage source.",
+      "It fixes initiative, printed Hit Points, a 15-foot unobstructed separation, and a sole hostile target, then stops at the attack-roll frontier or minimal required continuation; the closest tracer instead uses controller-authored rolls, adaptive tactics, and continues until a general battle conclusion."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "lantern-intercept-pairwise-control",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "prone-target-roll-mode-distance-probe",
+            "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+            "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+            "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+            "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+            "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+            "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+            "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+            "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate isolates Dodge-versus-Shortbow behavior across a turn boundary. goblin-warrior-skeleton-tracer shares the minimal two-stat-block direct-SDK purpose; four-way-crank-control-cycle explores four-turn Shove/Grapple control; lantern-intercept-pairwise-control explores three-creature pursuit and pillar-based interception; mounted-dispatch-through-flooded-orchard explores mounted transport, object transfer, elevation, and route tactics; open-grid-wolf-skeleton-pursuit explores pursuit, melee engagement, and Opportunity Attacks; orc-fighter-rogue-close-interception explores Character Sheet authoring and objective defense; prone-target-roll-mode-distance-probe probes Prone attack-roll branches; rs48h-20260824t155852z-synthetic-dash-extended-route-001 probes Dash movement budget; rs48h-20260824t155852z-synthetic-disengage-crossing-001 and rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001 explore Disengage and Opportunity Attack suppression; rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002 explores held target-specific Advantage; rs48h-20260824t155852z-synthetic-large-footprint-route-001 probes Large-footprint movement; rs48h-20260824t155852z-synthetic-total-cover-transition-001 probes Total Cover target eligibility; rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001 explores multi-turn target-priority rotation; rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001 explores a Bite's on-hit Prone continuation; sand-band-four-skeleton-skirmish explores a multi-Skeleton ranged/melee skirmish; synthetic-beacon-eight-round-defense explores eight-round objective defense; table-authored-shove-then-grapple and table-authored-three-shove-cycle explore Table-owned Shove/Grapple and repeated Shove decisions; table-d20-circumstance-advantage-probe-repair-retry probes Table circumstance Disadvantage on one D20 Test; and two-goblins-pursue-skeleton explores pursuit through a Table-owned cover boundary.",
+            "materiallyRelevantMechanics": "The Candidate's tested mechanics are Dodge, End Turn, the resulting cross-turn attack-roll state, and one normal-range Goblin Warrior Shortbow attack. Its fixed printed Hit Points and exact initiative are controls, not the exploratory mechanic. The closest tracer permits ordinary adaptive tactics and controller-authored roll totals without requiring Dodge. The other roll-mode or timing analogues use held ally Advantage in rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002, initial Prone in prone-target-roll-mode-distance-probe, an on-hit Prone rider in rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001, or Table circumstance Disadvantage in table-d20-circumstance-advantage-probe-repair-retry. The remaining records center on Shove/Grapple, movement, Dash, Disengage, Opportunity Attacks, Large footprints, Cover, mounts, objects, Character Sheets, terrain, target rotation, or objectives rather than Dodge across a turn boundary.",
+            "encounterComposition": "The Candidate has exactly one canonical Skeleton and one hostile canonical Goblin Warrior, with no allies, extra creatures, objects, terrain, cover, elevation, or objective. goblin-warrior-skeleton-tracer is the exact composition match. Other two-creature records use a Skeleton/Wolf pair in open-grid-wolf-skeleton-pursuit or rs48h-20260824t155852z-synthetic-dash-extended-route-001, two Wolves in rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001, a Riding Horse/Wolf pair in table-d20-circumstance-advantage-probe-repair-retry, or the same Skeleton/Goblin pair plus a dispatch case in table-authored-shove-then-grapple. Three-creature records are lantern-intercept-pairwise-control, prone-target-roll-mode-distance-probe, rs48h-20260824t155852z-synthetic-disengage-crossing-001, rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001, rs48h-20260824t155852z-synthetic-total-cover-transition-001, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton. Larger compositions are four-way-crank-control-cycle and rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001; mounted-dispatch-through-flooded-orchard, orc-fighter-rogue-close-interception, rs48h-20260824t155852z-synthetic-large-footprint-route-001, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense add mounts, Character Sheets, objects, or multiple combatants.",
+            "interactionSequence": "The Candidate is Skeleton first: Dodge, End Turn, Goblin Warrior second: one Shortbow attack at 15 feet, then the attack-roll frontier and only the minimal required continuation. goblin-warrior-skeleton-tracer overlaps the direct two-stat-block attack path but has no fixed action sequence and continues through adaptive battle play. rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002 also crosses a turn boundary before an attack, but uses Goblin Help and ally-held Advantage; table-authored-shove-then-grapple crosses a Shove outcome into a later Grapple; prone-target-roll-mode-distance-probe requires two attackers to resolve before the Wolf acts; rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001 resolves an accepted Bite, its on-hit Prone rider, and then damage; and table-d20-circumstance-advantage-probe-repair-retry applies a circumstance modifier to one Bite. four-way-crank-control-cycle and table-authored-three-shove-cycle use fixed Shove/Grapple sequences. The remaining sequences are movement or pursuit frontiers, Dash, Disengage and reaction surfacing, Large-footprint routes, Total Cover transition, multi-round target rotation, ranged skirmishing, objective defense, mounted/object transfer, or portcullis-cover pursuit, so they do not reproduce the Candidate's Dodge-to-attack boundary.",
+            "tacticalQuestion": "The Candidate asks whether a Skeleton that takes Dodge and ends its turn is treated as Dodging when the Goblin Warrior makes the next legal Shortbow attack before the Skeleton's next turn. goblin-warrior-skeleton-tracer asks whether a general two-stat-block battle can proceed through the direct SDK; rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002 asks whether held Help Advantage is offered to and consumed by the intended ally; prone-target-roll-mode-distance-probe asks how initial Prone changes melee and ranged attack-roll branches; rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001 asks whether a Bite's accepted attack prefix continues correctly after its own Prone rider; and table-d20-circumstance-advantage-probe-repair-retry asks whether Table Disadvantage can apply to one exact D20 Test. All other admitted questions concern crank control, interception, transport, pursuit, Character Sheet choices, Dash distance, Disengage and Opportunity Attacks, Large geometry, Total Cover, target rotation, difficult terrain, objective defense, Shove/Grapple outcomes, or portcullis cover.",
+            "sdkSupportBoundary": "The Candidate does not declare an unsupported-capability probe; it requests ordinary canonical stat-block setup, Dodge, End Turn, target selection, and Shortbow attack operations, but this comparison does not convert that absence into a verified SDK-support result. The projections mark four-way-crank-control-cycle, lantern-intercept-pairwise-control, open-grid-wolf-skeleton-pursuit, orc-fighter-rogue-close-interception, rs48h-20260824t155852z-synthetic-dash-extended-route-001, rs48h-20260824t155852z-synthetic-disengage-crossing-001, rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001, rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002, rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001, rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton as supportedOnly/supported. They explicitly mark mounted-dispatch-through-flooded-orchard, prone-target-roll-mode-distance-probe, rs48h-20260824t155852z-synthetic-large-footprint-route-001, rs48h-20260824t155852z-synthetic-total-cover-transition-001, and table-d20-circumstance-advantage-probe-repair-retry as probeUnsupportedCapability/explicitUnsupportedProbe. goblin-warrior-skeleton-tracer, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense are notAssessed; that status is not evidence that their mechanics match or support the Candidate.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The Candidate's bright 30-by-40-foot obstacle-free geometry-derived arena, exact coordinates, 15-foot separation, unobstructed sight, and absence of cover make the sole normal-range Shortbow target legal and exclude melee reach; these are controls for the Dodge question, not the purpose by themselves. The projections label goblin-warrior-skeleton-tracer, lantern-intercept-pairwise-control, open-grid-wolf-skeleton-pursuit, orc-fighter-rogue-close-interception, prone-target-roll-mode-distance-probe, rs48h-20260824t155852z-synthetic-dash-extended-route-001, rs48h-20260824t155852z-synthetic-disengage-crossing-001, rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001, rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002, rs48h-20260824t155852z-synthetic-large-footprint-route-001, rs48h-20260824t155852z-synthetic-total-cover-transition-001, rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001, rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001, sand-band-four-skeleton-skirmish, synthetic-beacon-eight-round-defense, and table-d20-circumstance-advantage-probe-repair-retry as geometryAssisted. The source for goblin-warrior-skeleton-tracer specifically says theater of the mind rather than a grid. four-way-crank-control-cycle, mounted-dispatch-through-flooded-orchard, table-authored-shove-then-grapple, table-authored-three-shove-cycle, and two-goblins-pursue-skeleton are tableAuthored. Spatial variation is supporting context and does not itself make the Candidate distinct."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Skeleton and Goblin Warrior are exact members of the supplied canonical availability list, satisfying the availableOnly intent without any unavailable selection."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The required setup and play use canonical Stat Block initialization, resolved current HP, typed initial conditions, geometry-derived setup, surfaced Dodge, End Turn, target selection, and attack-roll resolution. The Candidate does not require the absent fixed-versus-rolled monster HP choice or roll workflow."
+  }
+}
