@@ -3,6 +3,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
 import { verifyCompleteNewcomerJourney } from "../../test-support/mcp-acceptance-scenarios.ts";
+import { SAVED_PLAY_SESSION_TOOL_NAMES } from "../play-session-tool-contract.ts";
 
 const endpoint = new URL(
   process.env.DND_MCP_SAVED_SESSION_URL ?? "http://127.0.0.1:9880/mcp",
@@ -44,11 +45,10 @@ try {
   if (!Array.isArray(challenge) || challenge.length === 0) {
     throw new Error("Anonymous save omitted the MCP OAuth challenge.");
   }
-  const newcomerJourney = await verifyCompleteNewcomerJourney(client, [
-    "delete_saved_play_session",
-    "list_saved_play_sessions",
-    "save_play_session",
-  ]);
+  const newcomerJourney = await verifyCompleteNewcomerJourney(
+    client,
+    SAVED_PLAY_SESSION_TOOL_NAMES,
+  );
   process.stdout.write(
     `${JSON.stringify(
       {
