@@ -53,6 +53,7 @@ import {
   startBattleFromCharacterSheetAndStatBlock,
   type CharacterBattleRouteEvent,
 } from "./index.ts";
+import { authoredStatBlockBattleInput } from "./ammunition-stock.test-support.ts";
 
 const ALERT_UNIT_ID = "alert";
 const CRIMINAL_BACKGROUND_UNIT_ID = "background_criminal";
@@ -398,13 +399,13 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
       initiative: alertInitiativeScoreForBuild(build),
       ammunitionStocks: [],
     },
-    statBlockBattleInput: {
+    statBlockBattleInput: authoredStatBlockBattleInput({
       combatantId: combatantId("combatant:origin-feat-skeleton"),
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
-    },
+    }),
   });
   if (Either.isLeft(entry)) {
     throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));

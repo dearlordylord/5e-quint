@@ -3,7 +3,6 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterId,
   combatantId,
@@ -53,22 +52,7 @@ import {
   characterSheetBattleInit,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectRight(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
+import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
 
 const battleInitProjectionScenarios = [
   "init",
@@ -449,7 +433,7 @@ function projectCharacterBattle(input: {
       battleId: battleId(input.battleIdText),
       combatants: [
         characterInit,
-        battleCreatureInitFromStatBlock({
+        battleCreatureInitFromAuthoredStatBlock({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),

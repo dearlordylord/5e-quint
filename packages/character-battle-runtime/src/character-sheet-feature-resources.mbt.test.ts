@@ -4,7 +4,6 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   characterBattleResourceIsPointPool,
   combatantId,
@@ -69,22 +68,7 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return requireRight(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
+import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
 
 const featureResourceScenarios = [
   "init",
@@ -755,7 +739,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
       battleId: battleId("battle:metamagic-feature-resource-bridge"),
       combatants: [
         characterInit,
-        battleCreatureInitFromStatBlock({
+        battleCreatureInitFromAuthoredStatBlock({
           combatantId: combatantId("combatant:metamagic-skeleton"),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
