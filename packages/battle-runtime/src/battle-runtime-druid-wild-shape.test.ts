@@ -17,6 +17,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS druid_wild_shape
 import {
   battleActSpellPresentation,
+  discoverBattleActsWithStatBlockProjectionIssues,
   battleSubjectPresentation,
 } from "./battle-act-composition.ts";
 import {
@@ -131,6 +132,7 @@ import {
 } from "./index.ts";
 import { canonicalHeldObjectIdsForActor } from "./battle-reducer/command-procedure-discovery.ts";
 import {
+  statBlockProjectionIssuesForActor,
   statBlockProcedurePresentations,
   statBlockProcedurePresentationsForActor,
 } from "./stat-block-presentation.ts";
@@ -175,6 +177,7 @@ const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
 const syntheticProseProneFormId = "synthetic_prose_prone_form";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
 const syntheticSupportedNonAttackFormId = "synthetic_supported_non_attack_form";
+const syntheticTraitProjectionFormId = "synthetic_trait_projection_form";
 const syntheticTypedRidersFormId = "synthetic_typed_riders_form";
 const packAllyId = combatantId("wild-shape-pack-ally");
 const druidGroundPositionId = battleTablePositionId(
@@ -3348,6 +3351,65 @@ function syntheticSupportedNonAttackForm(): StatBlockRecord {
     },
   };
 }
+
+test("surfaces active Wild Shape typed trait projection issues", () => {
+  const baseForm = syntheticSupportedNonAttackForm();
+  const traitForm: StatBlockRecord = {
+    ...baseForm,
+    id: parseSharedStatBlockId(syntheticTraitProjectionFormId),
+    name: "Synthetic Trait Projection Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-trait-projection-form",
+    },
+    statBlock: {
+      ...baseForm.statBlock,
+      traits: [
+        {
+          name: "Table Trait",
+          description: "The form has a table-adjudicated trait.",
+        },
+      ],
+    },
+  };
+  const initial = druidWildShapeSession({ knownForms: [traitForm] });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial.state,
+      wildShapeSubject(initial.state, {
+        action: "assumeForm",
+        formStatBlockId: syntheticTraitProjectionFormId,
+      }),
+    ),
+  );
+
+  expect(
+    statBlockProjectionIssuesForActor(assumed.state, initial.context, druidId),
+  ).toEqual([
+    {
+      tag: "statBlockProjectionIssue",
+      source: { kind: "trait", nonExecutableReason: "textOnlyTrait" },
+    },
+  ]);
+  expect(
+    discoverBattleActsWithStatBlockProjectionIssues(
+      battleRuntimeSessionForTest({
+        state: assumed.state,
+        context: initial.context,
+      }),
+    ).statBlockProjectionIssues,
+  ).toEqual([
+    {
+      combatantId: druidId,
+      issues: [
+        {
+          tag: "statBlockProjectionIssue",
+          source: { kind: "trait", nonExecutableReason: "textOnlyTrait" },
+        },
+      ],
+    },
+  ]);
+});
 
 test("surfaces active Wild Shape non-attack presentation join issues", () => {
   const initial = startBattleSessionRight({

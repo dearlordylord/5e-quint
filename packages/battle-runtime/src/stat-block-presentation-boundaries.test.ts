@@ -1,5 +1,6 @@
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
   characterWeaponPresentationSource,
@@ -55,6 +56,93 @@ describe("battle presentation joins", () => {
       displayName: source.name,
       communication: source.statBlock.communication,
     });
+  });
+
+  test("retains typed traits and accumulates trait and action projection issues", () => {
+    const source = statBlockRecord();
+    const textOnlyTrait = {
+      name: "Synthetic Prose Trait",
+      description:
+        "The creature has Advantage on attack rolls when an ally is nearby.",
+    };
+    const unsupportedTrait = {
+      name: "Synthetic Healing Trait",
+      description: "The creature shares a restorative effect.",
+      effect: {
+        kind: "caster_heal_link" as const,
+        rangeFeet: 30,
+      },
+    };
+    const supportedTrait = {
+      name: "Synthetic Coordinated Trait",
+      description: "The creature coordinates with an ally.",
+      effect: {
+        kind: "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target" as const,
+      },
+    };
+    const textOnlyAction = {
+      kind: "textOnly" as const,
+      procedureOrdinal: authoredProcedureOrdinal(3),
+      name: "Synthetic Unresolved Action",
+      description: "The creature uses a table-adjudicated action.",
+      reason: "required_table_adjudication" as const,
+      resourceRefs: { kind: "none" as const },
+    };
+    const record: StatBlockRecord = {
+      ...source,
+      name: "Synthetic Trait Projection",
+      provenance: {
+        kind: "synthetic-test" as const,
+        section: "synthetic-trait-projection",
+      },
+      statBlock: {
+        ...source.statBlock,
+        traits: [textOnlyTrait, unsupportedTrait, supportedTrait],
+        actions: [...(source.statBlock.actions ?? []), textOnlyAction],
+      },
+    };
+    const projected = Either.getOrThrow(projectAuthoredStatBlock(record));
+
+    expect(projected.presentation.traits).toEqual([
+      textOnlyTrait,
+      unsupportedTrait,
+      supportedTrait,
+    ]);
+
+    const session = startBattleSessionRight({
+      battleId: battleId("stat-block-trait-projection-boundary"),
+      combatants: [
+        statBlockCreatureInit({ statBlock: record, initiative: 10 }),
+      ],
+    });
+    expect(
+      statBlockProjectionIssuesForActor(
+        session.state,
+        session.context,
+        goblinId,
+      ),
+    ).toEqual([
+      {
+        tag: "statBlockProjectionIssue",
+        source: { kind: "trait", nonExecutableReason: "textOnlyTrait" },
+      },
+      {
+        tag: "statBlockProjectionIssue",
+        source: {
+          kind: "trait",
+          nonExecutableReason: "unsupportedTraitEffect",
+        },
+      },
+      {
+        tag: "statBlockProjectionIssue",
+        source: {
+          kind: "action",
+          section: "actions",
+          shape: "special",
+          nonExecutableReason: "required_table_adjudication",
+        },
+      },
+    ]);
   });
 
   test("returns null when durable combatants have no matching presentation owner", () => {
@@ -240,7 +328,9 @@ describe("battle presentation joins", () => {
               procedure === firstProcedure
                 ? {
                     ...procedure,
-                    procedureOrdinal: procedure.procedureOrdinal + 100,
+                    procedureOrdinal: authoredProcedureOrdinal(
+                      procedure.procedureOrdinal + 100,
+                    ),
                   }
                 : procedure,
             ),

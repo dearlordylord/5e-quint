@@ -16,13 +16,18 @@ import * as Either from "effect/Either";
 import { Match } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/types";
 import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
+import { supportedStatBlockTraitAttackRollModes } from "./statblock-action-execution-support.ts";
 import type {
   StatBlockExecutionState,
   StatBlockActionProjectionShape,
   StatBlockProcedure,
 } from "./stat-block-execution-state.ts";
-import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
+import type {
+  StatBlockActionProjectionSection,
+  StatBlockProcedurePresentationJoinIssue,
+} from "./stat-block-presentation-contract.ts";
 
 export type StatBlockProcedurePresentation =
   import("./battle-runtime-context.ts").BattleStatBlockProcedurePresentation;
@@ -43,8 +48,39 @@ export type StatBlockProcedurePresentationResult = Either.Either<
   ReadonlyNonEmptyArray<StatBlockProcedurePresentationJoinIssue>
 >;
 
-function procedurePresentationKey(section: string, ordinal: number): string {
-  return `${section}:${ordinal}`;
+type ProcedureCoordinate = {
+  readonly section: StatBlockActionProjectionSection;
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
+};
+
+type ProcedureCoordinateIndex<T extends ProcedureCoordinate> = ReadonlyMap<
+  StatBlockActionProjectionSection,
+  ReadonlyMap<StatBlockProcedureOrdinal, T>
+>;
+
+function procedureCoordinateIndex<T extends ProcedureCoordinate>(
+  values: readonly T[],
+): ProcedureCoordinateIndex<T> {
+  const index = new Map<
+    StatBlockActionProjectionSection,
+    Map<StatBlockProcedureOrdinal, T>
+  >();
+  for (const value of values) {
+    let ordinals = index.get(value.section);
+    if (ordinals === undefined) {
+      ordinals = new Map();
+      index.set(value.section, ordinals);
+    }
+    ordinals.set(value.procedureOrdinal, value);
+  }
+  return index;
+}
+
+function procedureAtCoordinate<T extends ProcedureCoordinate>(
+  index: ProcedureCoordinateIndex<T>,
+  coordinate: ProcedureCoordinate,
+): T | undefined {
+  return index.get(coordinate.section)?.get(coordinate.procedureOrdinal);
 }
 
 export function statBlockProjectionIssuesForActor(
@@ -53,11 +89,22 @@ export function statBlockProjectionIssuesForActor(
   actorId: CombatantId,
 ): readonly StatBlockProjectionIssue[] | null {
   const actor = state.combatants.get(actorId);
-  if (actor?.origin.kind !== "statBlock") return null;
-  const presentation = context.statBlocks.get(actorId);
+  if (actor?.origin.kind === "statBlock") {
+    const presentation = context.statBlocks.get(actorId);
+    return presentation === undefined
+      ? null
+      : statBlockProjectionIssues(presentation, actor.origin.execution);
+  }
+  const activeForm = activeDruidWildShape(actor);
+  if (activeForm === null) return null;
+  const presentation = context.characters
+    .get(actorId)
+    ?.druidWildShapeFormPresentations?.get(
+      activeForm.admission.execution.scopeRef,
+    );
   return presentation === undefined
     ? null
-    : statBlockProjectionIssues(presentation, actor?.origin.execution);
+    : statBlockProjectionIssues(presentation, activeForm.admission.execution);
 }
 
 function statBlockProjectionIssues(
@@ -65,26 +112,41 @@ function statBlockProjectionIssues(
   execution: StatBlockExecutionState | undefined,
 ): readonly StatBlockProjectionIssue[] {
   if (execution === undefined) return [];
-  const admitted = new Map(
+  const admitted = procedureCoordinateIndex(
     execution.procedureBindings.flatMap((binding) =>
-      binding.procedure.kind === "unarmedStrike"
-        ? []
-        : [
-            [
-              procedurePresentationKey(
-                binding.procedure.section,
-                binding.procedure.procedureOrdinal,
-              ),
-              binding.procedure,
-            ] as const,
-          ],
+      binding.procedure.kind === "unarmedStrike" ? [] : [binding.procedure],
     ),
   );
+  type TraitIssue = Extract<
+    StatBlockProjectionIssue,
+    { readonly source: { readonly kind: "trait" } }
+  >;
   type ActionIssue = Extract<
     StatBlockProjectionIssue,
     { readonly source: { readonly kind: "action" } }
   >;
-  return presentation.orderedProcedures.flatMap(
+  const traitIssues = (presentation.traits ?? []).flatMap(
+    (trait): readonly TraitIssue[] => {
+      const nonExecutableReason =
+        trait.effect === undefined
+          ? "textOnlyTrait"
+          : supportedStatBlockTraitAttackRollModes([trait]) === undefined
+            ? "unsupportedTraitEffect"
+            : undefined;
+      return nonExecutableReason === undefined
+        ? []
+        : [
+            {
+              tag: "statBlockProjectionIssue" as const,
+              source: {
+                kind: "trait" as const,
+                nonExecutableReason,
+              },
+            },
+          ];
+    },
+  );
+  const actionIssues = presentation.orderedProcedures.flatMap(
     (entry): readonly ActionIssue[] => {
       if (entry.kind === "textOnly") {
         return [
@@ -99,9 +161,7 @@ function statBlockProjectionIssues(
           },
         ];
       }
-      const admittedProcedure = admitted.get(
-        procedurePresentationKey(entry.section, entry.procedureOrdinal),
-      );
+      const admittedProcedure = procedureAtCoordinate(admitted, entry);
       if (
         admittedProcedure !== undefined &&
         admittedProcedure.kind ===
@@ -124,6 +184,7 @@ function statBlockProjectionIssues(
       ];
     },
   );
+  return [...traitIssues, ...actionIssues];
 }
 
 function projectionShape(
@@ -159,11 +220,8 @@ export function statBlockProcedurePresentations(
   admission: StatBlockPresentationAdmission,
 ): StatBlockProcedurePresentationResult {
   if (admission.presentation === undefined) return Either.right([]);
-  const labels = new Map(
-    admission.presentation.orderedProcedures.map((entry) => [
-      procedurePresentationKey(entry.section, entry.procedureOrdinal),
-      entry,
-    ]),
+  const labels = procedureCoordinateIndex(
+    admission.presentation.orderedProcedures,
   );
   const issues: StatBlockProcedurePresentationJoinIssue[] = [];
   const presentations: StatBlockProcedurePresentation[] = [];
@@ -183,8 +241,7 @@ export function statBlockProcedurePresentations(
 
 function statBlockProcedurePresentationForBinding(
   binding: StatBlockExecutionState["procedureBindings"][number],
-  labels: ReadonlyMap<
-    string,
+  labels: ProcedureCoordinateIndex<
     BattleStatBlockPresentationSource["orderedProcedures"][number]
   >,
 ): Either.Either<
@@ -227,17 +284,14 @@ function statBlockProcedurePresentationForBinding(
 function joinedExecutableStatBlockProcedurePresentation(
   procedureRef: StatBlockExecutionState["procedureBindings"][number]["procedureRef"],
   procedure: ExecutableStatBlockProcedure,
-  labels: ReadonlyMap<
-    string,
+  labels: ProcedureCoordinateIndex<
     BattleStatBlockPresentationSource["orderedProcedures"][number]
   >,
 ): Either.Either<
   StatBlockProcedurePresentation,
   StatBlockProcedurePresentationJoinIssue
 > {
-  const entry = labels.get(
-    procedurePresentationKey(procedure.section, procedure.procedureOrdinal),
-  );
+  const entry = procedureAtCoordinate(labels, procedure);
   if (entry === undefined) {
     return Either.left({
       tag: "statBlockProcedurePresentationJoinIssue",

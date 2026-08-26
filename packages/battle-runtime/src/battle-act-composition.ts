@@ -114,8 +114,7 @@ export function discoverBattleActsWithStatBlockProjectionIssues(
   session: BattleRuntimeSession,
 ): BattleStatBlockActDiscovery {
   const statBlockProjectionIssues = [...session.state.combatants].flatMap(
-    ([combatantId, combatant]) => {
-      if (combatant.origin.kind !== "statBlock") return [];
+    ([combatantId]) => {
       const issues = statBlockProjectionIssuesForActor(
         session.state,
         session.context,

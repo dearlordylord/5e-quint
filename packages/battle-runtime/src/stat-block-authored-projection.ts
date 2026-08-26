@@ -19,6 +19,7 @@ import {
 } from "./battle-reducer/battle-runtime-protocol.ts";
 import type {
   BattleStatBlockAuthoredProcedurePresentation,
+  BattleStatBlockAuthoredTraitPresentation,
   BattleStatBlockPresentationSource,
 } from "./battle-runtime-context.ts";
 import {
@@ -451,8 +452,21 @@ function presentationProjection(
   return {
     displayName: record.name,
     communication: record.statBlock.communication,
+    ...(record.statBlock.traits === undefined
+      ? {}
+      : { traits: authoredTraitPresentations(record.statBlock.traits) }),
     orderedProcedures: authoredProcedurePresentations(record.statBlock),
   };
+}
+
+function authoredTraitPresentations(
+  traits: NonNullable<StandaloneStatBlock["traits"]>,
+): readonly BattleStatBlockAuthoredTraitPresentation[] {
+  return traits.map((trait) => ({
+    name: trait.name,
+    description: trait.description,
+    ...(trait.effect === undefined ? {} : { effect: trait.effect }),
+  }));
 }
 
 function authoredProcedurePresentations(

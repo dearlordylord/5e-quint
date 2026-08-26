@@ -15,11 +15,18 @@ import type {
 } from "./identity.ts";
 import type { WeaponId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
-import type { StatBlockTextOnlyReason } from "@dnd/surface/surface/types";
+import type {
+  CreatureTraitEffect,
+  StatBlockProcedureOrdinal,
+  StatBlockTextOnlyReason,
+} from "@dnd/surface/surface/types";
 import type { StatBlockCommunication } from "@dnd/surface/surface/types";
 import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
-import type { StatBlockAuthoredProcedurePresentationKind } from "./stat-block-presentation-contract.ts";
+import type {
+  StatBlockActionProjectionSection,
+  StatBlockAuthoredProcedurePresentationKind,
+} from "./stat-block-presentation-contract.ts";
 import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
@@ -76,12 +83,8 @@ export type BattleStatBlockProcedurePresentation =
     };
 
 type BattleStatBlockProcedurePresentationBase = {
-  readonly section:
-    | "actions"
-    | "bonusActions"
-    | "reactions"
-    | "legendaryActions";
-  readonly procedureOrdinal: number;
+  readonly section: StatBlockActionProjectionSection;
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly name: string;
   readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
 };
@@ -97,10 +100,18 @@ export type BattleStatBlockAuthoredProcedurePresentation =
       readonly reason: StatBlockTextOnlyReason;
     });
 
+export type BattleStatBlockAuthoredTraitPresentation = {
+  readonly name: string;
+  readonly description: string;
+  readonly effect?: CreatureTraitEffect;
+};
+
 export type BattleStatBlockPresentationSource = {
   readonly displayName: string;
   /** Authored communication is presentation data; absence is explicit. */
   readonly communication?: StatBlockCommunication;
+  /** Authored trait facts retained for presentation-boundary diagnostics. */
+  readonly traits?: readonly BattleStatBlockAuthoredTraitPresentation[];
   readonly orderedProcedures: readonly BattleStatBlockAuthoredProcedurePresentation[];
 };
 
