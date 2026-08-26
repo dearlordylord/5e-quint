@@ -7,7 +7,17 @@ production deployment path.
 The prototype asks whether Better Auth 1.7.1 can provide the authorization
 server for the existing public MCP resource behind one narrow Effect 3 service
 boundary. It uses a disposable SQLite database, enables CIMD and compatibility
-DCR separately, and leaves every guest tool anonymous.
+DCR separately, and leaves every guest tool anonymous. Saving creates a
+pseudonymous vault through Better Auth's anonymous plugin; the service requests
+no email, password, or account/profile details. Ordinary network metadata is
+still handled under the public privacy and retention policy.
+
+This credential-free variant must use a fresh auth database path. Startup
+rejects a database containing any non-anonymous Better Auth user, so accounts
+and cookies from the earlier email/password prototype cannot silently retain
+access. Changing the path invalidates those old cookies; the retired staging
+database may be retained temporarily for rollback but must not be mounted as
+the active auth database.
 
 The final verdict and the preserved prototype branch/commit belong on the
 decision issue. Main should receive only a later validated production change.
@@ -46,9 +56,18 @@ DND_PROTOTYPE_AUTH_DATABASE_PATH=/path/to/auth.sqlite \
 ## Current result
 
 The runtime path succeeds through authorization-server discovery, JWKS, open
-DCR, authorization code plus S256 PKCE, consent, token exchange, and the
-existing MCP resource verifier. The issued token also authenticates the real
-MCP transport and saves, lists, and deletes a formerly guest-owned Play Session.
+DCR, credential-free pseudonymous vault creation, authorization code plus S256
+PKCE, consent, token exchange, and the existing MCP resource verifier. The
+issued token also authenticates the real MCP transport and saves, lists, and
+deletes a formerly guest-owned Play Session. Only the `play-sessions` and
+standard `offline_access` scopes are requested; the latter enables rotating
+refresh tokens whose inactivity lifetime is derived from the canonical 90-day
+saved-session retention policy. The smoke requires rotation, verifies the MCP
+retry window replays the same rotated response, and uses the refreshed access
+token for the saved-session workflow. It also proves that a second anonymous
+browser session derives a different MCP principal and cannot list or delete the
+first principal's saved session. The prototype does not advertise or request
+email, profile, or OpenID Connect identity scopes.
 CIMD is advertised, and the prototype's Node transport successfully fetches
 ChatGPT's HTTPS client metadata document with resolve-once DNS validation and
 connection pinning. It locally corrects a Better Auth 1.7.1 transport defect:
@@ -63,3 +82,18 @@ declare `@better-auth/utils@0.4.2` as a peer while the resolved package graph
 also requires 0.5.0, and the OAuth provider plugin is rejected as a
 `BetterAuthPlugin` by both the repository compiler and TypeScript 5.9. Runtime
 success does not override that type-safety blocker.
+
+ChatGPT identifies itself as the OAuth client; it does not provide this MCP
+server with a stable ChatGPT user identity. The vault therefore belongs to the
+anonymous Better Auth browser session, and every client authorized from that
+session shares its subject. It remains usable through an authorized client, but
+cannot be recovered solely by signing into the same ChatGPT account after both
+the browser session and authorization are lost. Anonymous-user deletion is
+disabled until auth-state deletion can cascade to saved sessions. A production
+recovery method must remain optional and separate from the default
+credential-free flow.
+
+Both authorization pages resolve the registered client through Better Auth's
+signed pre-login metadata endpoint and display its name, client id, and declared
+URI before enabling consent. The UI never trusts client identity copied from an
+unsigned browser parameter.

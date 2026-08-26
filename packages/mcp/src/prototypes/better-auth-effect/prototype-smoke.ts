@@ -13,10 +13,19 @@ import { Either, Effect, ManagedRuntime, Schema } from "effect";
 import {
   BetterAuthPrototype,
   betterAuthPrototypeLayer,
+  SAVED_SESSION_OAUTH_SCOPES,
+  SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
 } from "./better-auth-service.ts";
-import { PLAY_SESSION_OAUTH_SCOPE } from "../../tool-definition-contract.ts";
 import { createPublicMcpOAuth } from "../../public-oauth.ts";
 import { verifySavedSessionMcp } from "./saved-session-mcp-smoke.ts";
+import {
+  authorizeExistingBrowserSession,
+  PublicClientSchema,
+  responseCookie,
+  SessionResponseSchema,
+} from "./prototype-oauth-smoke-support.ts";
+
+const requestedScopes = SAVED_SESSION_OAUTH_SCOPES.join(" ");
 
 const AuthorizationServerMetadataSchema = Schema.Struct({
   issuer: Schema.NonEmptyTrimmedString,
@@ -40,6 +49,7 @@ const RedirectResultSchema = Schema.Struct({
 
 const TokenResponseSchema = Schema.Struct({
   access_token: Schema.NonEmptyTrimmedString,
+  refresh_token: Schema.NonEmptyTrimmedString,
   scope: Schema.NonEmptyTrimmedString,
   token_type: Schema.NonEmptyTrimmedString,
 });
@@ -92,31 +102,10 @@ try {
         token_endpoint_auth_method: "none",
         grant_types: ["authorization_code", "refresh_token"],
         response_types: ["code"],
-        scope: `openid profile email ${PLAY_SESSION_OAUTH_SCOPE}`,
+        scope: requestedScopes,
       }),
     }),
   );
-  const signupResponse = await fetch(
-    new URL("/api/auth/sign-up/email", origin),
-    {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        origin: origin.origin,
-      },
-      body: JSON.stringify({
-        email: "prototype@example.test",
-        name: "OAuth Prototype User",
-        password: "prototype-password-not-for-production",
-      }),
-    },
-  );
-  if (!signupResponse.ok) {
-    throw new Error(
-      `Sign-up returned HTTP ${signupResponse.status}: ${await signupResponse.text()}`,
-    );
-  }
-  const cookie = responseCookie(signupResponse);
   const verifier = randomBytes(48).toString("base64url");
   const challenge = createHash("sha256").update(verifier).digest("base64url");
   const redirectUri = registered.redirect_uris[0];
@@ -127,20 +116,57 @@ try {
     response_type: "code",
     client_id: registered.client_id,
     redirect_uri: redirectUri.toString(),
-    scope: `openid profile email ${PLAY_SESSION_OAUTH_SCOPE}`,
+    scope: requestedScopes,
     resource: resource.toString(),
     code_challenge: challenge,
     code_challenge_method: "S256",
     state: "prototype-state",
   }).toString();
-  const authorization = await decodeJson(
+  const login = await decodeJson(
     RedirectResultSchema,
-    await fetch(authorizeUrl, { headers: { cookie } }),
+    await fetch(authorizeUrl),
   );
-  if (!authorization.redirect) {
+  if (!login.redirect) {
     throw new Error("Authorization did not return a redirect");
   }
-  const consentUrl = new URL(authorization.url, origin);
+  const loginUrl = new URL(login.url, origin);
+  if (loginUrl.pathname !== "/prototype/vault") {
+    throw new Error(`Expected vault redirect, received ${loginUrl.pathname}`);
+  }
+  const publicClient = await decodeJson(
+    PublicClientSchema,
+    await fetch(new URL("/api/auth/oauth2/public-client-prelogin", origin), {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: origin.origin,
+      },
+      body: JSON.stringify({
+        client_id: registered.client_id,
+        oauth_query: loginUrl.search.slice(1),
+      }),
+    }),
+  );
+  if (publicClient.client_id !== registered.client_id) {
+    throw new Error("Signed client metadata resolved a different client");
+  }
+  const vaultResponse = await fetch(
+    new URL("/api/auth/sign-in/anonymous", origin),
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: origin.origin,
+      },
+      body: JSON.stringify({ oauth_query: loginUrl.search.slice(1) }),
+    },
+  );
+  const vault = await decodeJson(RedirectResultSchema, vaultResponse);
+  const cookie = responseCookie(vaultResponse);
+  if (!vault.redirect) {
+    throw new Error("Vault creation did not continue authorization");
+  }
+  const consentUrl = new URL(vault.url, origin);
   if (consentUrl.pathname !== "/prototype/consent") {
     throw new Error(
       `Expected consent redirect, received ${consentUrl.pathname}`,
@@ -189,11 +215,122 @@ try {
     jwksUrl: metadata.jwks_uri.toString(),
   });
   if (Either.isLeft(oauth)) throw new Error(oauth.left.message);
-  const principal = await oauth.right.verifyAccessToken(tokens.access_token);
+  const refreshedTokens = await decodeJson(
+    TokenResponseSchema,
+    await fetch(metadata.token_endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: registered.client_id,
+        refresh_token: tokens.refresh_token,
+        resource: resource.toString(),
+      }),
+    }),
+  );
+  if (refreshedTokens.refresh_token === tokens.refresh_token) {
+    throw new Error("Refresh-token exchange did not rotate the refresh token");
+  }
+  const replayedRefresh = await decodeJson(
+    TokenResponseSchema,
+    await fetch(metadata.token_endpoint, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        client_id: registered.client_id,
+        refresh_token: tokens.refresh_token,
+        resource: resource.toString(),
+      }),
+    }),
+  );
+  if (
+    replayedRefresh.access_token !== refreshedTokens.access_token ||
+    replayedRefresh.refresh_token !== refreshedTokens.refresh_token
+  ) {
+    throw new Error("Refresh retry did not replay the rotated token response");
+  }
+  const principal = await oauth.right.verifyAccessToken(
+    refreshedTokens.access_token,
+  );
   if (Either.isLeft(principal)) throw new Error(principal.left.message);
+  const restoredBrowserSession = await decodeJson(
+    SessionResponseSchema,
+    await fetch(new URL("/api/auth/get-session", origin), {
+      headers: { cookie },
+    }),
+  );
+  const secondVaultResponse = await fetch(
+    new URL("/api/auth/sign-in/anonymous", origin),
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        origin: origin.origin,
+      },
+      body: JSON.stringify({}),
+    },
+  );
+  if (!secondVaultResponse.ok) {
+    throw new Error(
+      `Second vault returned HTTP ${secondVaultResponse.status}: ${await secondVaultResponse.text()}`,
+    );
+  }
+  const secondCookie = responseCookie(secondVaultResponse);
+  const secondBrowserSession = await decodeJson(
+    SessionResponseSchema,
+    await fetch(new URL("/api/auth/get-session", origin), {
+      headers: { cookie: secondCookie },
+    }),
+  );
+  if (restoredBrowserSession.user.id === secondBrowserSession.user.id) {
+    throw new Error("Independent browser sessions shared an anonymous user");
+  }
+  const isolatedTokens = await authorizeExistingBrowserSession({
+    authorizationEndpoint: metadata.authorization_endpoint,
+    clientId: registered.client_id,
+    cookie: secondCookie,
+    origin,
+    redirectUri,
+    requestedScopes,
+    resource,
+    state: "isolated-prototype-state",
+    tokenEndpoint: metadata.token_endpoint,
+  });
+  const isolatedPrincipal = await oauth.right.verifyAccessToken(
+    isolatedTokens.access_token,
+  );
+  if (Either.isLeft(isolatedPrincipal)) {
+    throw new Error(isolatedPrincipal.left.message);
+  }
+  if (isolatedPrincipal.right === principal.right) {
+    throw new Error("Independent browser sessions derived the same principal");
+  }
+  const deletionResponse = await fetch(
+    new URL("/api/auth/delete-anonymous-user", origin),
+    {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        cookie,
+        origin: origin.origin,
+      },
+      body: JSON.stringify({}),
+    },
+  );
+  const deletionBody = await deletionResponse.text();
+  if (
+    deletionResponse.status !== 400 ||
+    !deletionBody.includes("Deleting anonymous users is disabled")
+  ) {
+    throw new Error(
+      `Anonymous-user deletion endpoint is unexpectedly enabled: HTTP ${deletionResponse.status} ${deletionBody}`,
+    );
+  }
   const savedSessionMcp = await verifySavedSessionMcp({
-    accessToken: tokens.access_token,
+    accessToken: refreshedTokens.access_token,
     databasePath: join(scratchDirectory, "mcp-play-sessions.sqlite"),
+    isolatedAccessToken: isolatedTokens.access_token,
     oauth: oauth.right,
   });
   process.stdout.write(
@@ -212,14 +349,25 @@ try {
           tokenEndpointAuthentication: registered.token_endpoint_auth_method,
         },
         authorizationCodePkce: {
+          credentialFreeVaultCreated: true,
+          registeredClientIdentityDisplayed:
+            publicClient.client_name.length > 0,
           consentRequired: true,
           callbackStatePreserved:
             callbackUrl.searchParams.get("state") === "prototype-state",
           accessTokenIssued: tokens.access_token.length > 0,
           accessTokenType: tokens.token_type,
           scopes: tokens.scope.split(/\s+/u).filter(Boolean).sort(),
+          refreshTokenIssued: tokens.refresh_token.length > 0,
+          refreshTokenRotated: true,
+          refreshRetryReplayedRotatedResponse: true,
+          refreshTokenLifetimeSeconds:
+            SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
           existingMcpVerifierAccepted: true,
           principalDerived: principal.right.length > 0,
+          browserSessionRestored: restoredBrowserSession.user.id.length > 0,
+          independentBrowserSessionsIsolated: true,
+          anonymousUserDeletionDisabled: true,
         },
         savedSessionMcp,
       },
@@ -281,14 +429,4 @@ async function decodeJson<A, I>(
   const decoded = Schema.decodeUnknownEither(schema)(await response.json());
   if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
   return decoded.right;
-}
-
-function responseCookie(response: Response): string {
-  const cookies = response.headers
-    .getSetCookie()
-    .map((value) => value.split(";", 1)[0])
-    .filter((value): value is string => value !== undefined);
-  if (cookies.length === 0)
-    throw new Error("Sign-up returned no session cookie");
-  return cookies.join("; ");
 }

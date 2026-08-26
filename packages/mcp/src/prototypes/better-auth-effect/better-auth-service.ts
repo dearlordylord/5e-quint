@@ -3,11 +3,19 @@ import { DatabaseSync } from "node:sqlite";
 import { cimd } from "@better-auth/cimd";
 import { mcp } from "@better-auth/mcp";
 import { betterAuth } from "better-auth";
-import { jwt } from "better-auth/plugins";
+import { anonymous, jwt } from "better-auth/plugins";
 import { Context, Effect, Layer } from "effect";
 
+import { SAVED_INACTIVITY_RETENTION_MS } from "../../play-session-access.ts";
 import { PLAY_SESSION_OAUTH_SCOPE } from "../../tool-definition-contract.ts";
 import { fetchClientMetadataResource } from "./cimd-metadata-fetch.ts";
+
+export const SAVED_SESSION_OAUTH_SCOPES = [
+  PLAY_SESSION_OAUTH_SCOPE,
+  "offline_access",
+] as const;
+export const SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS =
+  SAVED_INACTIVITY_RETENTION_MS / 1_000;
 
 export type BetterAuthPrototypeConfiguration = {
   readonly authorizationServerOrigin: URL;
@@ -50,6 +58,7 @@ export function betterAuthPrototypeLayer(
         try: async () => {
           const context = await auth.$context;
           await context.runMigrations();
+          assertAnonymousOnlyDatabase(database);
         },
         catch: (cause) => prototypeIssue("initializationFailed", cause),
       });
@@ -79,20 +88,21 @@ function makeBetterAuth(
     database,
     secret: configuration.secret,
     trustedOrigins: [origin],
-    emailAndPassword: { enabled: true },
     plugins: [
       jwt(),
+      anonymous({
+        disableDeleteAnonymousUser: true,
+        emailDomainName: "anonymous.invalid",
+        generateName: () => "Saved Session Vault",
+      }),
       mcp({
-        loginPage: "/prototype/login",
+        loginPage: "/prototype/vault",
         consentPage: "/prototype/consent",
         resource: configuration.resource.toString(),
-        scopes: ["openid", "profile", "email", PLAY_SESSION_OAUTH_SCOPE],
-        clientRegistrationDefaultScopes: [
-          "openid",
-          "profile",
-          "email",
-          PLAY_SESSION_OAUTH_SCOPE,
-        ],
+        scopes: [...SAVED_SESSION_OAUTH_SCOPES],
+        clientRegistrationDefaultScopes: [...SAVED_SESSION_OAUTH_SCOPES],
+        refreshTokenExpiresIn: SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
+        allowPublicClientPrelogin: true,
         allowDynamicClientRegistration: true,
         allowUnauthenticatedClientRegistration: true,
       }),
@@ -102,6 +112,26 @@ function makeBetterAuth(
       }),
     ],
   });
+}
+
+function assertAnonymousOnlyDatabase(database: DatabaseSync): void {
+  const row = database
+    .prepare(
+      'SELECT COUNT(*) AS count FROM "user" WHERE "isAnonymous" IS NOT 1',
+    )
+    .get();
+  if (
+    row === undefined ||
+    typeof row.count !== "number" ||
+    !Number.isSafeInteger(row.count)
+  ) {
+    throw new Error("Could not verify the prototype auth database");
+  }
+  if (row.count > 0) {
+    throw new Error(
+      "The credential-free prototype requires an auth database containing only anonymous users",
+    );
+  }
 }
 
 function prototypeIssue(

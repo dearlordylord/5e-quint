@@ -18,10 +18,12 @@ import { openSqlitePlaySessionRepository } from "../../recoverable-play-session.
 export async function verifySavedSessionMcp(input: {
   readonly accessToken: string;
   readonly databasePath: string;
+  readonly isolatedAccessToken: string;
   readonly oauth: PublicMcpOAuth;
 }): Promise<{
   readonly authenticatedMcpConnection: true;
   readonly guestSessionSaved: true;
+  readonly isolatedPrincipalDenied: true;
   readonly savedSessionListed: true;
   readonly savedSessionDeleted: true;
 }> {
@@ -44,6 +46,10 @@ export async function verifySavedSessionMcp(input: {
   });
   const authenticatedClient = new Client({
     name: "dnd-better-auth-saved-session-prototype",
+    version: "0.1.0",
+  });
+  const isolatedClient = new Client({
+    name: "dnd-better-auth-isolated-vault-prototype",
     version: "0.1.0",
   });
   try {
@@ -106,6 +112,38 @@ export async function verifySavedSessionMcp(input: {
     ) {
       throw new Error("Authenticated list omitted the saved Play Session.");
     }
+    const isolatedTransport = new StreamableHTTPClientTransport(
+      endpoint.right,
+      {
+        requestInit: {
+          headers: {
+            authorization: `Bearer ${input.isolatedAccessToken}`,
+          },
+        },
+      },
+    );
+    await isolatedClient.connect(isolatedTransport as Transport);
+    const isolatedList = await isolatedClient.callTool({
+      name: "list_saved_play_sessions",
+      arguments: {},
+    });
+    const isolatedListResult = validateCanonicalToolResult(
+      playSessionToolNames.listSaved,
+      isolatedList.structuredContent,
+    );
+    if (
+      isolatedList.isError === true ||
+      listedPlaySessionIds(isolatedListResult).includes(playSessionId)
+    ) {
+      throw new Error("An isolated principal could list another vault.");
+    }
+    const isolatedDelete = await isolatedClient.callTool({
+      name: "delete_saved_play_session",
+      arguments: { playSessionId },
+    });
+    if (isolatedDelete.isError !== true) {
+      throw new Error("An isolated principal could delete another vault.");
+    }
     const deleted = await authenticatedClient.callTool({
       name: "delete_saved_play_session",
       arguments: { playSessionId },
@@ -123,12 +161,14 @@ export async function verifySavedSessionMcp(input: {
     return {
       authenticatedMcpConnection: true,
       guestSessionSaved: true,
+      isolatedPrincipalDenied: true,
       savedSessionListed: true,
       savedSessionDeleted: true,
     };
   } finally {
     await guestClient.close();
     await authenticatedClient.close();
+    await isolatedClient.close();
     await mcpServer.close();
     repository.right.close();
   }

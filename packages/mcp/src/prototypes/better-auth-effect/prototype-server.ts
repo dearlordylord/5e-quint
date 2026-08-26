@@ -21,6 +21,11 @@ import {
   type BetterAuthPrototypeService,
   betterAuthPrototypeLayer,
 } from "./better-auth-service.ts";
+import {
+  prototypeConsentPage,
+  prototypeStatusPage,
+  prototypeVaultPage,
+} from "./prototype-pages.ts";
 
 const PrototypeConfigurationSchema = Schema.Struct({
   authDatabasePath: Schema.NonEmptyTrimmedString,
@@ -170,8 +175,8 @@ async function routeRequest(input: {
   if (Either.isLeft(decodedRequest)) throw decodedRequest.left;
   const request = decodedRequest.right;
   const pathname = new URL(request.url).pathname;
-  if (pathname === "/prototype/login") {
-    await writeResponse(input.outgoing, prototypeLoginPage());
+  if (pathname === "/prototype/vault") {
+    await writeResponse(input.outgoing, prototypeVaultPage());
     return;
   }
   if (pathname === "/prototype/consent") {
@@ -325,98 +330,4 @@ function isPrototypeRequestIssue(
     "tag" in value &&
     value.tag === "prototypeRequestIssue"
   );
-}
-
-function prototypeLoginPage(): Response {
-  return htmlResponse(`<!doctype html>
-<meta charset="utf-8">
-<title>5.5e SRD Oracle prototype sign in</title>
-<main>
-  <h1>Prototype sign in</h1>
-  <p>This temporary account is needed only to test saving. Guest play stays anonymous.</p>
-  <p>Use disposable credentials and do not reuse a real password.</p>
-  <form id="login">
-    <label>Email <input name="email" type="email" required></label>
-    <label>Password <input name="password" type="password" minlength="8" required></label>
-    <button name="action" value="sign-in">Sign in</button>
-    <button name="action" value="sign-up">Create prototype account</button>
-  </form>
-  <pre id="message"></pre>
-</main>
-<script>
-const form = document.querySelector("#login");
-const message = document.querySelector("#message");
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const data = new FormData(form);
-  const action = event.submitter.value;
-  const response = await fetch(action === "sign-up" ? "/api/auth/sign-up/email" : "/api/auth/sign-in/email", {
-    method: "POST",
-    credentials: "include",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      email: data.get("email"),
-      password: data.get("password"),
-      name: "5.5e SRD Oracle player",
-      oauth_query: location.search.slice(1),
-    }),
-  });
-  const result = await response.json();
-  if (!response.ok) { message.textContent = result.message ?? JSON.stringify(result); return; }
-  if (result.url) location.href = result.url;
-  else location.reload();
-});
-</script>`);
-}
-
-function prototypeConsentPage(): Response {
-  return htmlResponse(`<!doctype html>
-<meta charset="utf-8">
-<title>Allow saved sessions</title>
-<main>
-  <h1>Save this play session?</h1>
-  <p>The requesting client wants permission to save, list, resume, and delete your account-owned Play Sessions.</p>
-  <p id="scope"></p>
-  <button id="accept">Allow saved sessions</button>
-  <button id="deny">Keep guest-only</button>
-  <pre id="message"></pre>
-</main>
-<script>
-const params = new URLSearchParams(location.search);
-document.querySelector("#scope").textContent = "Requested scopes: " + (params.get("scope") ?? "");
-async function decide(accept) {
-  const response = await fetch("/api/auth/oauth2/consent", {
-    method: "POST",
-    credentials: "include",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ accept, oauth_query: location.search.slice(1) }),
-  });
-  const result = await response.json();
-  if (!response.ok) { document.querySelector("#message").textContent = result.message ?? JSON.stringify(result); return; }
-  location.href = result.url;
-}
-document.querySelector("#accept").addEventListener("click", () => decide(true));
-document.querySelector("#deny").addEventListener("click", () => decide(false));
-</script>`);
-}
-
-function prototypeStatusPage(): Response {
-  return htmlResponse(`<!doctype html>
-<meta charset="utf-8">
-<title>Better Auth prototype</title>
-<h1>Better Auth prototype</h1>
-<p>Guest MCP: <code>/mcp</code></p>
-<p>Authorization issuer: <code>/api/auth</code></p>
-<p>This is throwaway staging evidence, not the production login experience.</p>`);
-}
-
-function htmlResponse(body: string): Response {
-  return new Response(body, {
-    headers: {
-      "content-type": "text/html; charset=utf-8",
-      "cache-control": "no-store",
-      "content-security-policy":
-        "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
-    },
-  });
 }
