@@ -4,6 +4,7 @@ import { Hp } from "@dnd/shared/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 
+import { optionalProperty } from "./optional-property.ts";
 import type { BattleStateInitLeafIssue } from "./battle-state-execution.ts";
 import {
   battleExecutionScopeCursor,
@@ -11,10 +12,12 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
-import type {
-  BattleStatBlockRuntimeFacts,
-  BattleStatBlockRuntimeResource,
+import {
+  parseStatBlockLegendaryActionUses,
+  type BattleStatBlockExecutionSource,
+  type BattleStatBlockExecutionSourceInput,
+  type BattleStatBlockRuntimeFacts,
+  type BattleStatBlockRuntimeResource,
 } from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
@@ -28,7 +31,9 @@ export type BattleStatBlockCombatantSource = {
   readonly statBlock: BattleStatBlockRuntimeFacts;
   readonly procedures: BattleStatBlockExecutionSource["procedures"];
   readonly resources?: readonly BattleStatBlockRuntimeResource[];
-  readonly legendaryActionUses?: number;
+  readonly legendaryActionUses?: NonNullable<
+    BattleStatBlockExecutionSource["legendaryActionUses"]
+  >;
 } & Brand.Brand<"BattleStatBlockCombatantSource">;
 
 const BattleStatBlockCombatantSource =
@@ -134,7 +139,7 @@ export function admitBattleStatBlockCombatantSource(input: {
 }
 
 export function battleStatBlockCombatantSource(
-  statBlock: BattleStatBlockExecutionSource,
+  statBlock: BattleStatBlockExecutionSourceInput,
 ): Either.Either<
   BattleStatBlockCombatantSource,
   StatBlockCombatantAdmissionIssue
@@ -156,9 +161,22 @@ export function battleStatBlockCombatantSource(
   if (typeof statBlock.statBlock.size !== "string") {
     return issue("Battle runtime requires a concrete creature Size.");
   }
+  const legendaryActionUses = parseStatBlockLegendaryActionUses(
+    statBlock.legendaryActionUses,
+  );
+  if (Either.isLeft(legendaryActionUses)) {
+    return issue(
+      "Battle runtime requires Stat Block Legendary Action uses to be a positive integer.",
+    );
+  }
+  const {
+    legendaryActionUses: _unbrandedLegendaryActionUses,
+    ...sourceWithoutLegendaryActionUses
+  } = statBlock;
   return Either.right(
     BattleStatBlockCombatantSource({
-      ...statBlock,
+      ...sourceWithoutLegendaryActionUses,
+      ...optionalProperty("legendaryActionUses", legendaryActionUses.right),
       statBlock: {
         ...statBlock.statBlock,
         ac: statBlock.statBlock.ac,

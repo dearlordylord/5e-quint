@@ -26,6 +26,7 @@ import {
 } from "./identity.ts";
 import {
   admittedStatBlockExecutionState,
+  parseStatBlockLegendaryActionUses,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
   type BattleStatBlockRuntimeResource,
@@ -45,6 +46,7 @@ export type StatBlockExecutionRestoreIssue = {
   readonly scopeRef: BattleStatBlockExecutionScopeRef;
   readonly reason:
     | "invalidResourceCount"
+    | "invalidLegendaryActionUses"
     | "procedureBindingsMismatch"
     | "resourcePoolsMismatch";
 };
@@ -269,7 +271,7 @@ function admitStatBlock(
       !attacks.some((attack) => attack.section === "legendaryActions")
         ? {}
         : {
-            legendaryActionUses: PositiveInteger(statBlock.legendaryActionUses),
+            legendaryActionUses: statBlock.legendaryActionUses,
           }),
       attacks,
       unarmedStrike: admittedUnarmedStrike(statBlock),
@@ -601,6 +603,19 @@ export function restoreStatBlockExecutionAdmissions<
   const restoredScopeRefs = new Set<BattleStatBlockExecutionScopeRef>();
   for (const [restorationIndex, restoration] of restorations.entries()) {
     const snapshot = restoration.snapshot;
+    const legendaryActionUses = parseStatBlockLegendaryActionUses(
+      restoration.statBlock.legendaryActionUses,
+    );
+    if (Either.isLeft(legendaryActionUses)) {
+      issues.push(
+        statBlockExecutionRestoreIssue(
+          restorationIndex,
+          snapshot.scopeRef,
+          "invalidLegendaryActionUses",
+        ),
+      );
+      continue;
+    }
     if (snapshot.resourcePools.some(resourcePoolStateIsOutOfBounds)) {
       issues.push(
         statBlockExecutionRestoreIssue(

@@ -63,6 +63,50 @@ export type AuthoredStatBlockProjection = {
 };
 
 /**
+ * Format an authored projection failure for a boundary that presents it to a
+ * caller. The failure itself remains structured; this helper only supplies
+ * the shared human-readable location and reason text.
+ */
+export function battleStatBlockProjectionFailureMessage(
+  failure: BattleStatBlockProjectionFailure,
+  prefix = "Stat Block authored projection failed",
+): string {
+  const location =
+    failure.reason === "unsupportedProcedureBinding"
+      ? ` in ${failure.issues
+          .map(
+            ({ section, procedureOrdinal }) =>
+              `${section} procedure ${String(procedureOrdinal)}`,
+          )
+          .join(", ")}`
+      : "";
+  const reason = Match.value(failure.reason).pipe(
+    Match.when(
+      "nonLiteralSize",
+      () => "battle initialization requires a concrete Size",
+    ),
+    Match.when(
+      "nonLiteralArmorClass",
+      () => "battle initialization requires literal Armor Class",
+    ),
+    Match.when(
+      "nonLiteralHitPoints",
+      () => "battle initialization requires literal maximum Hit Points",
+    ),
+    Match.when(
+      "nonLiteralSpeed",
+      () => "battle initialization requires unconditional literal Speeds",
+    ),
+    Match.when(
+      "unsupportedProcedureBinding",
+      () => "the procedure binding is not supported by battle execution",
+    ),
+    Match.exhaustive,
+  );
+  return `${prefix}${location}: ${reason}.`;
+}
+
+/**
  * The catalog admission boundary. The authored record is consumed once;
  * execution receives only literal mechanics and ordinal bindings while the
  * presentation companion retains source identity and exact prose.

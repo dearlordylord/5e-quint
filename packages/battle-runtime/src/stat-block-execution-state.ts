@@ -1,12 +1,15 @@
 import { optionalProperty } from "./optional-property.ts";
 import {
+  PositiveInteger,
   resourceCount,
   type DieRollResult,
+  type PositiveInteger as PositiveIntegerType,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
 } from "@dnd/shared/types";
 import type { Ability, CreatureType } from "@dnd/shared/game-facts";
 import { Brand } from "effect";
+import * as Either from "effect/Either";
 import type {
   ChallengeRating,
   CreatureLimitedUse,
@@ -51,8 +54,40 @@ export type BattleStatBlockExecutionSource = {
   /** Ordered executable bindings produced by the authored projection. */
   readonly procedures: readonly BattleStatBlockRuntimeProcedure[];
   readonly resources?: readonly BattleStatBlockRuntimeResource[];
+  readonly legendaryActionUses?: PositiveIntegerType;
+};
+
+/**
+ * Runtime Stat Block facts before the source boundary narrows optional use
+ * counts into the execution brand. External callers may only supply the
+ * unbranded numeric representation here.
+ */
+export type BattleStatBlockExecutionSourceInput = Omit<
+  BattleStatBlockExecutionSource,
+  "legendaryActionUses"
+> & {
   readonly legendaryActionUses?: number;
 };
+
+export type StatBlockLegendaryActionUsesParseFailure = "invalidPositiveInteger";
+
+/**
+ * The one numeric boundary for optional Legendary Action uses. `PositiveInteger`
+ * owns the invariant; callers receive a typed failure instead of its throwing
+ * constructor when untrusted runtime data is malformed.
+ */
+export function parseStatBlockLegendaryActionUses(
+  value: number | undefined,
+): Either.Either<
+  PositiveIntegerType | undefined,
+  StatBlockLegendaryActionUsesParseFailure
+> {
+  if (value === undefined) return Either.right(undefined);
+  return Either.mapLeft(
+    PositiveInteger.either(value),
+    () => "invalidPositiveInteger" as const,
+  );
+}
 
 export type BattleStatBlockRuntimeResource = {
   readonly ordinal: StatBlockProcedureResourceOrdinal;
