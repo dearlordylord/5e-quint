@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import {
   createMcpApplicationServices,
@@ -159,7 +159,13 @@ async function handleNodeRequest(input: PublicHttpRequestInput): Promise<void> {
     durationMilliseconds: Math.round(performance.now() - startedAt),
     ...attempt.observation,
   });
-  if (attempt.tag === "failed") throw attempt.cause;
+  return Match.value(attempt).pipe(
+    Match.when({ tag: "completed" }, () => undefined),
+    Match.when({ tag: "failed" }, ({ cause }) => {
+      throw cause;
+    }),
+    Match.exhaustive,
+  );
 }
 
 async function publicHttpRequestAttempt(

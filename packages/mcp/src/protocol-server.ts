@@ -216,7 +216,7 @@ function requestIdentityFor(
   return options.requestIdentity ?? GUEST_ONLY_REQUEST_IDENTITY;
 }
 
-async function handleCallToolRequest(input: {
+type HandleCallToolRequestInput = {
   readonly request: CallToolRequest;
   readonly advertisedToolNames: ReadonlySet<string>;
   readonly protocolDefinitionByName: ReadonlyMap<
@@ -226,7 +226,9 @@ async function handleCallToolRequest(input: {
   readonly playSessions: PlaySessionRegistry<PlaySessionAccessFailure>;
   readonly requestIdentity: PlaySessionRequestIdentity;
   readonly applicationServices: McpApplicationServices;
-}) {
+};
+
+async function handleCallToolRequest(input: HandleCallToolRequestInput) {
   const { request } = input;
   const name = request.params.name;
   if (!input.advertisedToolNames.has(name)) {
@@ -246,7 +248,7 @@ async function handleCallToolRequest(input: {
 }
 
 function handlePlaySessionToolRequest(
-  input: Parameters<typeof handleCallToolRequest>[0],
+  input: HandleCallToolRequestInput,
   name: PlaySessionToolName,
 ) {
   const args = input.request.params.arguments;
@@ -279,7 +281,7 @@ function handlePlaySessionToolRequest(
 }
 
 function handleStatefulToolRequest(
-  input: Parameters<typeof handleCallToolRequest>[0],
+  input: HandleCallToolRequestInput,
   name: BattleToolName | CharacterToolName | DiceToolName,
 ) {
   const definition = input.protocolDefinitionByName.get(name);

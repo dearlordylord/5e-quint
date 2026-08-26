@@ -70,6 +70,20 @@ export const PUBLIC_MCP_DIAGNOSTIC_REASONS = [
 export type PublicMcpDiagnosticReason =
   (typeof PUBLIC_MCP_DIAGNOSTIC_REASONS)[number];
 
+export type PublicMcpRequestObservation = {
+  readonly environment: PublicMcpDeploymentEnvironment;
+  readonly release: string;
+  readonly traceId: string;
+  readonly spanId: string;
+  readonly method: PublicMcpHttpMethod;
+  readonly route: string;
+  readonly status: number;
+  readonly durationMilliseconds: number;
+  readonly outcome: PublicMcpRequestOutcome;
+  readonly toolName?: string;
+  readonly diagnostic?: PublicMcpDiagnostic;
+};
+
 const knownToolNames = new Set<string>(PLAY_SESSION_NEXT_OPERATION_NAMES);
 const requestCounts = new Map<string, number>();
 let requestCount = 0;
@@ -85,19 +99,9 @@ export function publicMcpTraceContext(): {
   };
 }
 
-export function observePublicMcpRequest(input: {
-  readonly environment: PublicMcpDeploymentEnvironment;
-  readonly release: string;
-  readonly traceId: string;
-  readonly spanId: string;
-  readonly method: PublicMcpHttpMethod;
-  readonly route: string;
-  readonly status: number;
-  readonly durationMilliseconds: number;
-  readonly outcome: PublicMcpRequestOutcome;
-  readonly toolName?: string;
-  readonly diagnostic?: PublicMcpDiagnostic;
-}): void {
+export function observePublicMcpRequest(
+  input: PublicMcpRequestObservation,
+): void {
   const key = publicMcpRequestMetricKey(input);
   requestCounts.set(key, (requestCounts.get(key) ?? 0) + 1);
   requestCount += 1;
@@ -124,19 +128,9 @@ function publicMcpRequestMetricKey(input: {
   ].join("|");
 }
 
-function publicMcpRequestLog(input: {
-  readonly environment: PublicMcpDeploymentEnvironment;
-  readonly release: string;
-  readonly traceId: string;
-  readonly spanId: string;
-  readonly method: PublicMcpHttpMethod;
-  readonly route: string;
-  readonly status: number;
-  readonly durationMilliseconds: number;
-  readonly outcome: PublicMcpRequestOutcome;
-  readonly toolName?: string;
-  readonly diagnostic?: PublicMcpDiagnostic;
-}): Record<string, unknown> {
+function publicMcpRequestLog(
+  input: PublicMcpRequestObservation,
+): Record<string, unknown> {
   return {
     timestamp: new Date().toISOString(),
     severity: input.outcome === "failed" ? "error" : "info",
