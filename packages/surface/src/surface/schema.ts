@@ -57,6 +57,7 @@ export {
   CreatureStatBlockProjectionSchema,
   CreatureStatBlockOverridesSchema,
   CreatureStatBlockSchema,
+  AuthoredStatBlockReactionTriggerSchema,
   AuthoredExecutableProcedureSchema,
   StatBlockActionSectionSchema,
   StatBlockBonusActionSectionSchema,

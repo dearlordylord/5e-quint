@@ -5054,64 +5054,26 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
   actions: CreatureActionsSchema,
 });
 
-/**
- * The SRD monster corpus reaches +19 attack bonuses, DC 27, and 600-foot
- * ranges. Keep authored procedure numerics integral and finite: signed
- * modifiers have room around the ability-score-derived range, while positive
- * counts, dice, DCs, and distances remain inside a 1..1000 authored envelope
- * instead of accepting the runtime's unbounded/scaling value unions.
- */
-const STAT_BLOCK_PROCEDURE_POSITIVE_MIN = 1;
-const STAT_BLOCK_PROCEDURE_POSITIVE_MAX = 1000;
-const STAT_BLOCK_PROCEDURE_SIGNED_MIN = -30;
-const STAT_BLOCK_PROCEDURE_SIGNED_MAX = 30;
+/** Authored procedure quantities are finite, integral, and strictly positive. */
+const StatBlockProcedurePositiveIntegerSchema = PositiveIntegerSchema;
 
-const StatBlockProcedurePositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.between(
-    STAT_BLOCK_PROCEDURE_POSITIVE_MIN,
-    STAT_BLOCK_PROCEDURE_POSITIVE_MAX,
-  ),
-);
-
-const StatBlockProcedureSignedIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.between(
-    STAT_BLOCK_PROCEDURE_SIGNED_MIN,
-    STAT_BLOCK_PROCEDURE_SIGNED_MAX,
-  ),
-);
+/** Authored procedure modifiers are finite integral values of either sign. */
+const StatBlockProcedureSignedIntegerSchema = Schema.Number.pipe(Schema.int());
 
 export const StatBlockProcedureOrdinalSchema =
   StatBlockProcedurePositiveIntegerSchema.pipe(
     Schema.brand("StatBlockProcedureOrdinal"),
   );
 
-const StatBlockProcedurePositiveValueSchema = StatBlockLiteralValueSchema.pipe(
-  Schema.filter(
-    ({ value }) =>
-      Number.isInteger(value) &&
-      value >= STAT_BLOCK_PROCEDURE_POSITIVE_MIN &&
-      value <= STAT_BLOCK_PROCEDURE_POSITIVE_MAX,
-    {
-      message: () =>
-        "Authored Stat Block procedure counts must be positive integers no greater than 1000.",
-    },
-  ),
-);
+const StatBlockProcedurePositiveValueSchema = Schema.Struct({
+  kind: Schema.Literal("literal"),
+  value: StatBlockProcedurePositiveIntegerSchema,
+});
 
-const StatBlockProcedureSignedValueSchema = StatBlockLiteralValueSchema.pipe(
-  Schema.filter(
-    ({ value }) =>
-      Number.isInteger(value) &&
-      value >= STAT_BLOCK_PROCEDURE_SIGNED_MIN &&
-      value <= STAT_BLOCK_PROCEDURE_SIGNED_MAX,
-    {
-      message: () =>
-        "Authored Stat Block procedure modifiers must be integral values from -30 through 30.",
-    },
-  ),
-);
+const StatBlockProcedureSignedValueSchema = Schema.Struct({
+  kind: Schema.Literal("literal"),
+  value: StatBlockProcedureSignedIntegerSchema,
+});
 
 export const StatBlockProcedureResourceOrdinalSchema =
   StatBlockProcedurePositiveIntegerSchema.pipe(
@@ -5437,10 +5399,91 @@ type StatBlockProcedureEntry = Schema.Schema.Type<
   typeof StatBlockProcedureEntrySchema
 >;
 
+type AuthoredStatBlockReactionTrigger =
+  | {
+      readonly kind: "hit_by_attack_roll";
+      readonly weaponFilter?: WeaponFilter;
+    }
+  | {
+      readonly kind: "takes_damage_from_creature";
+      readonly requiresVisibleCreature?: true;
+      readonly rangeFeet?: number;
+    }
+  | {
+      readonly kind: "self_or_visible_creature_falls";
+      readonly rangeFeet: 60;
+    }
+  | { readonly kind: "targeted_by_named_spell"; readonly spellId: UnitId }
+  | {
+      readonly kind: "creature_casts_spell";
+      readonly components: ReadonlyNonEmptyArray<"V" | "S" | "M">;
+      readonly spellLevelAtMost?: SpellLevel;
+      readonly requiresVisibleCaster?: true;
+    }
+  | {
+      readonly kind: "spell_save_outcome";
+      readonly outcome: "success" | "failure";
+      readonly spellLevelAtMost?: SpellLevel;
+      readonly spellSchool?: SpellSchool;
+      readonly spellTargetsOnlySelf?: true;
+      readonly spellHasNoAreaOfEffect?: true;
+    }
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyNonEmptyArray<AuthoredStatBlockReactionTrigger>;
+    };
+
+export const AuthoredStatBlockReactionTriggerSchema: Schema.suspend<
+  AuthoredStatBlockReactionTrigger,
+  AuthoredStatBlockReactionTrigger,
+  never
+> = Schema.suspend(() =>
+  Schema.Union(
+    strictStruct({
+      kind: Schema.Literal("hit_by_attack_roll"),
+      weaponFilter: optionalExact(WeaponFilterSchema),
+    }),
+    strictStruct({
+      kind: Schema.Literal("takes_damage_from_creature"),
+      requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+      rangeFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+    }),
+    strictStruct({
+      kind: Schema.Literal("self_or_visible_creature_falls"),
+      rangeFeet: Schema.Literal(60),
+    }),
+    strictStruct({
+      kind: Schema.Literal("targeted_by_named_spell"),
+      spellId: surfaceReference(
+        Schema.NonEmptyTrimmedString,
+        "spell-reference",
+      ),
+    }),
+    strictStruct({
+      kind: Schema.Literal("creature_casts_spell"),
+      components: nonEmpty(Schema.Literal("V", "S", "M")),
+      spellLevelAtMost: optionalExact(SpellLevelSchema),
+      requiresVisibleCaster: optionalExact(Schema.Literal(true)),
+    }),
+    strictStruct({
+      kind: Schema.Literal("spell_save_outcome"),
+      outcome: Schema.Literal("success", "failure"),
+      spellLevelAtMost: optionalExact(SpellLevelSchema),
+      spellSchool: optionalExact(SpellSchoolSchema),
+      spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
+      spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
+    }),
+    strictStruct({
+      kind: Schema.Literal("any_of"),
+      triggers: nonEmpty(AuthoredStatBlockReactionTriggerSchema),
+    }),
+  ),
+).annotations({ identifier: "AuthoredStatBlockReactionTrigger" });
+
 const StatBlockReactionProcedureEntrySchema = Schema.Union(
   strictStruct({
     ...StatBlockExecutableProcedureEntryFields,
-    trigger: ReactionTriggerSchema,
+    trigger: AuthoredStatBlockReactionTriggerSchema,
   }),
   strictStruct(StatBlockTextOnlyProcedureEntryFields),
 );

@@ -669,6 +669,9 @@ export type StandaloneStatBlockValue = Schema.Schema.Type<
 export type AuthoredExecutableProcedure = Schema.Schema.Type<
   typeof SurfaceSchema.AuthoredExecutableProcedureSchema
 >;
+export type AuthoredStatBlockReactionTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.AuthoredStatBlockReactionTriggerSchema
+>;
 export type StatBlockProcedureEntry = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureEntrySchema
 >;

@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
+  AuthoredStatBlockReactionTriggerSchema,
   CreatureStatBlockProjectionSchema,
   StandaloneStatBlockSchema,
   StatBlockProcedureEntrySchema,
@@ -287,6 +288,17 @@ describe("standalone Stat Block procedure sections", () => {
       }),
     ).toThrow();
     for (const attackBonus of [-31, 31] as const) {
+      expect(
+        decode(StatBlockProcedureEntrySchema, {
+          ...attackEntry,
+          procedure: {
+            ...attackEntry.procedure,
+            attackBonus: { kind: "literal", value: attackBonus },
+          },
+        }),
+      ).toMatchObject({ procedure: { attackBonus: { value: attackBonus } } });
+    }
+    for (const attackBonus of [1.5, NaN, Infinity, -Infinity] as const) {
       expect(() =>
         decode(StatBlockProcedureEntrySchema, {
           ...attackEntry,
@@ -349,7 +361,37 @@ describe("standalone Stat Block procedure sections", () => {
         },
       }),
     ).toThrow();
-    for (const count of [0, 1001] as const) {
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...multiattackEntry,
+        procedure: {
+          ...multiattackEntry.procedure,
+          dispatches: [
+            {
+              ...multiattackEntry.procedure.dispatches[0],
+              count: { kind: "literal", value: 0 },
+            },
+          ],
+        },
+      }),
+    ).toThrow();
+    expect(
+      decode(StatBlockProcedureEntrySchema, {
+        ...multiattackEntry,
+        procedure: {
+          ...multiattackEntry.procedure,
+          dispatches: [
+            {
+              ...multiattackEntry.procedure.dispatches[0],
+              count: { kind: "literal", value: 1001 },
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({
+      procedure: { dispatches: [{ count: { value: 1001 } }] },
+    });
+    for (const count of [-1, 1.5, NaN, Infinity, -Infinity] as const) {
       expect(() =>
         decode(StatBlockProcedureEntrySchema, {
           ...multiattackEntry,
@@ -437,13 +479,62 @@ describe("standalone Stat Block procedure sections", () => {
         },
       }),
     ).toThrow();
-    for (const dc of [0, 1001] as const) {
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...saveEntry,
+        procedure: {
+          ...saveEntry.procedure,
+          dc: { kind: "fixed", dc: 0 },
+        },
+      }),
+    ).toThrow();
+    expect(
+      decode(StatBlockProcedureEntrySchema, {
+        ...saveEntry,
+        procedure: {
+          ...saveEntry.procedure,
+          dc: { kind: "fixed", dc: 1001 },
+        },
+      }),
+    ).toMatchObject({ procedure: { dc: { dc: 1001 } } });
+    for (const dc of [-1, 1.5, NaN, Infinity, -Infinity] as const) {
       expect(() =>
         decode(StatBlockProcedureEntrySchema, {
           ...saveEntry,
           procedure: {
             ...saveEntry.procedure,
             dc: { kind: "fixed", dc },
+          },
+        }),
+      ).toThrow();
+    }
+  });
+
+  test("keeps authored positive procedure quantities finite and uncapped", () => {
+    const attackEntry = syntheticStandaloneStatBlock.actions[1];
+    expect(
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          reachFeet: 1001,
+          rangeFeet: { normal: 1001, long: 1002 },
+        },
+      }),
+    ).toMatchObject({
+      procedure: {
+        reachFeet: 1001,
+        rangeFeet: { normal: 1001, long: 1002 },
+      },
+    });
+
+    for (const value of [0, -1, 1.5, NaN, Infinity, -Infinity] as const) {
+      expect(() =>
+        decode(StatBlockProcedureEntrySchema, {
+          ...attackEntry,
+          procedure: {
+            ...attackEntry.procedure,
+            reachFeet: value,
           },
         }),
       ).toThrow();
@@ -480,6 +571,57 @@ describe("standalone Stat Block procedure sections", () => {
     expect(
       decode(StandaloneStatBlockSchema, syntheticStandaloneStatBlock).reactions,
     ).toEqual(syntheticStandaloneStatBlock.reactions);
+  });
+
+  test("preserves authored reaction trigger variants with finite positive ranges", () => {
+    const validTriggers = [
+      { kind: "hit_by_attack_roll" },
+      {
+        kind: "hit_by_attack_roll",
+        weaponFilter: { kind: "weapon_category", category: "melee" },
+      },
+      { kind: "takes_damage_from_creature", rangeFeet: 1001 },
+      { kind: "self_or_visible_creature_falls", rangeFeet: 60 },
+      {
+        kind: "targeted_by_named_spell",
+        spellId: "unit_spell_synthetic_mending",
+      },
+      { kind: "creature_casts_spell", components: ["V"] },
+      { kind: "spell_save_outcome", outcome: "success" },
+      {
+        kind: "any_of",
+        triggers: [
+          { kind: "takes_damage_from_creature", rangeFeet: 1 },
+          { kind: "spell_save_outcome", outcome: "failure" },
+        ],
+      },
+    ] as const;
+    for (const trigger of validTriggers) {
+      expect(decode(AuthoredStatBlockReactionTriggerSchema, trigger)).toEqual(
+        trigger,
+      );
+    }
+
+    for (const rangeFeet of [-1, 0, 1.5, NaN, Infinity, -Infinity] as const) {
+      expect(() =>
+        decode(AuthoredStatBlockReactionTriggerSchema, {
+          kind: "takes_damage_from_creature",
+          rangeFeet,
+        }),
+      ).toThrow();
+    }
+    expect(() =>
+      decode(AuthoredStatBlockReactionTriggerSchema, {
+        kind: "takes_damage_from_creature",
+        rangeFeet: { kind: "hole", holeId: "synthetic-range" },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(AuthoredStatBlockReactionTriggerSchema, {
+        kind: "targeted_by_named_spell",
+        spellId: "",
+      }),
+    ).toThrow();
   });
 
   test("keeps ordered authored entries out of the grouped projection boundary", () => {
