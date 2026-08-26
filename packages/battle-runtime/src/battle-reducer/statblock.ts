@@ -31,7 +31,7 @@ import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
-import { combatantHasSlowActivePenalties } from "./slow-active-penalties-runtime.ts";
+import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
 
 export function statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
   actor: StatBlockBattleCreatureState,
@@ -39,9 +39,8 @@ export function statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
 ): ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef> {
   const [consumedProcedureRef, ...pendingProcedureRefs] =
     binding.procedure.dispatchProcedureRefs;
-  const effectivePendingProcedureRefs = combatantHasSlowActivePenalties(actor)
-    ? []
-    : pendingProcedureRefs;
+  const effectivePendingProcedureRefs =
+    slowActivePenaltiesEffects(actor).length > 0 ? [] : pendingProcedureRefs;
   return [consumedProcedureRef, ...effectivePendingProcedureRefs];
 }
 

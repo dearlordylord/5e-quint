@@ -132,6 +132,10 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
 import {
+  slowActivePenaltiesEffects,
+  type SlowActivePenaltiesEffect,
+} from "./slow-active-penalties-effects.ts";
+import {
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffects,
   combatantsAfterConcentrationSpellEffectsEndedIfNoEffectsForSources,
   combatantsAfterHideousLaughterSpellEndedIfNoEffects,
@@ -903,11 +907,6 @@ type AbilityD20TestRollModeEndTurnSaveEffect = Extract<
   { readonly kind: "abilityD20TestRollModeEndTurnSave" }
 >;
 
-export type SlowActivePenaltiesEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
->;
-
 type DurationActiveEffect = Extract<
   Exclude<
     BattleActiveEffect,
@@ -1251,16 +1250,6 @@ function unitFeatureConditionEndTurnSavingThrowOutcomeFor(
   hole: BattleUnitFeatureConditionEndTurnSavingThrowOutcomeHole,
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> | undefined {
   return fills.find((fill) => fill.holeId === hole.holeId);
-}
-
-function slowActivePenaltiesEffects(
-  combatant: BattleCreatureState | undefined,
-): readonly SlowActivePenaltiesEffect[] {
-  return activeEffectsMatching(
-    combatant,
-    (effect): effect is SlowActivePenaltiesEffect =>
-      effect.kind === "slowActivePenalties",
-  );
 }
 
 function slowActivePenaltiesEndTurnSavingThrowOutcomeHole(
