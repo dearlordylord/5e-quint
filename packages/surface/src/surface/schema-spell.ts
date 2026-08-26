@@ -5649,10 +5649,26 @@ export const StatBlockInitiativeSchema = Schema.Struct({
   score: NonNegativeIntegerSchema,
 });
 
-const StandaloneCreatureSpeedSchema = Schema.Struct({
-  kind: CreatureSpeedSchema.fields.kind,
+const StandaloneCreatureSpeedFields = {
   feet: StandaloneStatBlockValueSchema,
-});
+} as const;
+
+/**
+ * Hover is an authored qualifier of Fly, not a general speed property. The
+ * union keeps that source fact unavailable on the other special speeds while
+ * leaving CreatureSpeedSchema unchanged for reusable runtime projections.
+ */
+const StandaloneCreatureSpeedSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("walk", "swim", "climb", "burrow"),
+    ...StandaloneCreatureSpeedFields,
+  }),
+  strictStruct({
+    kind: Schema.Literal("fly"),
+    ...StandaloneCreatureSpeedFields,
+    hover: optionalExact(Schema.Literal(true)),
+  }),
+);
 
 export const StatBlockArmorClassSchema = Schema.Struct({
   value: StandaloneStatBlockValueSchema,
