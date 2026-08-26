@@ -20,6 +20,7 @@ import {
   statBlockBonusActionOptionActs,
   statBlockMultiattackActs,
 } from "./battle-reducer/battle-discovery.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import {
   spellBaseArmorClassEffectRouteForDiscoveredAct,
   spellBaseArmorClassEffectRouteForResolution,
@@ -1623,6 +1624,21 @@ describe("battle boundary admission owners", () => {
     const source = projectedStatBlockRuntimeSource(authoredSource);
     const valid = battleStatBlockCombatantSource(source);
     expect(Either.isRight(valid)).toBe(true);
+    const unsupportedSectionProjection = projectAuthoredStatBlock(
+      monsterResourceStatBlockWithUnsupportedAttackSections(),
+    );
+    expect(Either.isLeft(unsupportedSectionProjection)).toBe(true);
+    if (Either.isRight(unsupportedSectionProjection)) return;
+    expect(unsupportedSectionProjection.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "bonusActions",
+          procedureOrdinal: 1,
+        },
+      ],
+    });
     expect(
       battleStatBlockCombatantSource({
         ...source,
@@ -1760,7 +1776,7 @@ describe("battle boundary admission owners", () => {
       battleId("boundary-stat-sections"),
       combatantId("boundary-stat-sections"),
       [
-        monsterResourceStatBlockWithUnsupportedAttackSections(),
+        monsterResourceStatBlock(),
         monsterMultiattackStatBlock(),
         monsterResourceStatBlockWithTwoRechargeActions(),
       ].map(projectedStatBlockRuntimeSource),
@@ -2917,8 +2933,7 @@ describe("battle boundary admission owners", () => {
       statBlockMultiattackActs(unavailableMultiattackState, goblinId),
     ).toEqual([]);
 
-    const limitedBonusAction =
-      monsterResourceStatBlockWithUnsupportedAttackSections();
+    const limitedBonusAction = monsterResourceStatBlock();
     const bonusOption =
       monsterMultiattackStatBlock().statBlock.bonusActions?.find(
         (entry) =>

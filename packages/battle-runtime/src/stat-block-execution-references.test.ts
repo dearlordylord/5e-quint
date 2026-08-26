@@ -81,6 +81,7 @@ import {
 } from "./battle-reducer/api-lifecycle.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 const isolatedExecutionBattleId = battleId(
   "battle-stat-block-isolated-execution-admission",
@@ -525,7 +526,7 @@ describe("Stat Block execution references", () => {
     ).toBe("invalid");
   });
 
-  test("admits only fully supported Bonus Action options and allocates rest-recharge ownership", () => {
+  test("rejects mixed Bonus Action options and allocates supported-only rest-recharge ownership", () => {
     const base = statBlockRecord();
     const statBlock: StatBlockRecord = {
       ...base,
@@ -579,8 +580,37 @@ describe("Stat Block execution references", () => {
         ],
       },
     };
+    const bonusActions = statBlock.statBlock.bonusActions;
+    if (bonusActions === undefined || bonusActions.length !== 2) {
+      throw new Error(
+        "Expected supported and unsupported Bonus Action options.",
+      );
+    }
+    const [supportedBonusAction, unsupportedBonusAction] = bonusActions;
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "bonusActions",
+          procedureOrdinal: unsupportedBonusAction.procedureOrdinal,
+        },
+      ],
+    });
+    const supportedOnlyStatBlock: StatBlockRecord = {
+      ...statBlock,
+      statBlock: {
+        ...statBlock.statBlock,
+        bonusActions: [supportedBonusAction],
+      },
+    };
     const actorId = combatantId("execution-ref-rest-recharge-owner");
-    const admission = isolatedStatBlockAdmissions(actorId, [statBlock])[0];
+    const admission = isolatedStatBlockAdmissions(actorId, [
+      supportedOnlyStatBlock,
+    ])[0];
     if (admission === undefined) {
       throw new Error("Expected the synthetic Stat Block admission.");
     }
@@ -616,7 +646,7 @@ describe("Stat Block execution references", () => {
     const restored = restoreStatBlockExecutionAdmission(
       isolatedExecutionBattleId,
       actorId,
-      projectedStatBlockRuntimeSource(statBlock),
+      projectedStatBlockRuntimeSource(supportedOnlyStatBlock),
       statBlockExecutionSnapshot(spentExecution),
     );
     expect(Either.isRight(restored)).toBe(true);

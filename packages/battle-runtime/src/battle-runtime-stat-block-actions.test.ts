@@ -8,6 +8,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import fc from "fast-check";
 import { Schema } from "effect";
+import * as Either from "effect/Either";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
@@ -101,6 +102,7 @@ import {
 import { supportedStatBlockAttackHitConditionRiders } from "./statblock-attack-hit-condition-support.ts";
 import { statBlockRechargeRollFillMatchesHole } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { isStatBlockBattleCreatureState } from "./battle-reducer/battle-discovery.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 function discoverStatBlockActs(state: BattleState) {
   return discoverBattleActs(
@@ -1153,17 +1155,19 @@ describe("battle runtime: Stat Block actions", () => {
     expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
     expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
 
-    const state = startBattleRight({
-      battleId: battleId("battle-monster-unsupported-condition-rider-rejected"),
-      combatants: [
-        statBlockCreatureInit({ initiative: 20, statBlock }),
-        characterSeed({ initiative: 10 }),
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "actions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
       ],
     });
-
-    expect(
-      discoverStatBlockActs(state).map((act) => act.summary),
-    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Stat Block attacks with non-Prone target-size condition riders remain unsupported", () => {
@@ -1172,19 +1176,19 @@ describe("battle runtime: Stat Block actions", () => {
     expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
     expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
 
-    const state = startBattleRight({
-      battleId: battleId(
-        "battle-monster-non-prone-size-gated-condition-rider-rejected",
-      ),
-      combatants: [
-        statBlockCreatureInit({ initiative: 20, statBlock }),
-        characterSeed({ initiative: 10 }),
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "actions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
       ],
     });
-
-    expect(
-      discoverStatBlockActs(state).map((act) => act.summary),
-    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Stat Block attacks with only condition riders remain unsupported", () => {
@@ -1192,17 +1196,19 @@ describe("battle runtime: Stat Block actions", () => {
     const attack = authoredAttackProcedure(statBlock, "Bite");
     expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
 
-    const state = startBattleRight({
-      battleId: battleId("battle-monster-condition-only-rider-rejected"),
-      combatants: [
-        statBlockCreatureInit({ initiative: 20, statBlock }),
-        characterSeed({ initiative: 10 }),
+    const projected = projectAuthoredStatBlock(statBlock);
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "actions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
       ],
     });
-
-    expect(
-      discoverStatBlockActs(state).map((act) => act.summary),
-    ).not.toContain("Take the Attack action with Bite.");
   });
 
   test("Goblin Warrior discovers Nimble Escape as Stat Block Bonus Action options", () => {
@@ -2607,31 +2613,22 @@ describe("battle runtime: Stat Block actions", () => {
     );
   });
 
-  test("Stat Block Bonus Action and Reaction attacks do not enter the Attack action lane", () => {
-    const goblinTurn = requireResolved(
-      endTurn({
-        state: startBattleRight({
-          battleId: battleId("battle-monster-unsupported-sections"),
-          combatants: [
-            characterSeed({ initiative: 20 }),
-            statBlockCreatureInit({
-              initiative: 10,
-              statBlock:
-                monsterResourceStatBlockWithUnsupportedAttackSections(),
-            }),
-          ],
-        }),
-        actorId: fighterId,
-      }),
-    ).state;
-
-    expect(
-      discoverStatBlockActs(goblinTurn).some(
-        (act) =>
-          act.summary === "Take the Attack action with Swift Bite." ||
-          act.summary === "Take the Attack action with Counter Snap.",
-      ),
-    ).toBe(false);
+  test("Stat Block Bonus Action and Reaction attack sections reject unsupported bindings", () => {
+    const projected = projectAuthoredStatBlock(
+      monsterResourceStatBlockWithUnsupportedAttackSections(),
+    );
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "bonusActions",
+          procedureOrdinal: authoredProcedureOrdinal(1),
+        },
+      ],
+    });
   });
 
   test("Recharge attacks spend availability and use a start-turn d6 roll to return", () => {
