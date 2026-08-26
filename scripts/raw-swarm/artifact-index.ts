@@ -2244,19 +2244,35 @@ export function rebuildLegacyArtifactIndex(input: {
   return { inventory };
 }
 
-export type PortableManifest = {
-  readonly schemaVersion: 1;
-  readonly index: {
-    readonly path: string;
-    readonly sha256: string;
-    readonly byteLength: number;
-  };
-  readonly artifacts: readonly {
-    readonly path: string;
-    readonly sha256: string;
-    readonly byteLength: number;
-  }[];
-};
+const PortableManifestSha256Schema = Schema.String.pipe(
+  Schema.pattern(/^[0-9a-f]{64}$/),
+);
+const PortableManifestByteLengthSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+
+export const PortableManifestArtifactSchema = Schema.Struct({
+  path: Schema.String,
+  sha256: PortableManifestSha256Schema,
+  byteLength: PortableManifestByteLengthSchema,
+});
+export type PortableManifestArtifact = Schema.Schema.Type<
+  typeof PortableManifestArtifactSchema
+>;
+
+export const PortableManifestSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(1),
+  index: Schema.Struct({
+    path: Schema.Literal("index.sqlite"),
+    sha256: PortableManifestSha256Schema,
+    byteLength: PortableManifestByteLengthSchema,
+  }),
+  artifacts: Schema.Array(PortableManifestArtifactSchema),
+});
+export type PortableManifest = Schema.Schema.Type<
+  typeof PortableManifestSchema
+>;
 
 export function exportArtifactIndex(input: {
   readonly dbPath: string;
