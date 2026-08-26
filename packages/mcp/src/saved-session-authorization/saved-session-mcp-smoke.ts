@@ -36,111 +36,26 @@ export async function verifySavedSessionMcp(input: {
     version: "0.1.0",
   });
   try {
-    const guestTransport = new StreamableHTTPClientTransport(input.endpoint);
-    // The SDK class implements Transport; this bridges its exact-optional
-    // sessionId declaration to the interface declaration.
-    await guestClient.connect(guestTransport as Transport);
-    const created = await guestClient.callTool({
-      name: "create_play_session",
-      arguments: {},
-    });
-    const creation = jsonObject(created.structuredContent, "creation response");
-    const operation = jsonObject(creation.operation, "creation operation");
-    const result = jsonObject(operation.result, "creation result");
-    const access = jsonObject(result.access, "guest access");
-    const decodedPlaySessionId = decodePlaySessionId(creation.playSessionId);
-    if (Either.isLeft(decodedPlaySessionId)) {
-      throw new Error("Creation response omitted its Play Session id.");
-    }
-    const playSessionId = decodedPlaySessionId.right;
-    const guestAccessGrant = stringField(access, "guestAccessGrant");
+    const guestSession = await createGuestSession(guestClient, input.endpoint);
     await guestClient.close();
-
-    const authenticatedTransport = new StreamableHTTPClientTransport(
+    await connectAuthenticatedClient(
+      authenticatedClient,
       input.endpoint,
-      {
-        requestInit: {
-          headers: { authorization: `Bearer ${input.accessToken}` },
-        },
-      },
+      input.accessToken,
     );
-    // The SDK class implements Transport; this bridges its exact-optional
-    // sessionId declaration to the interface declaration.
-    await authenticatedClient.connect(authenticatedTransport as Transport);
-    const saved = await authenticatedClient.callTool({
-      name: "save_play_session",
-      arguments: { playSessionId, guestAccessGrant },
-    });
-    const savedResult = validateCanonicalToolResult(
-      playSessionToolNames.save,
-      saved.structuredContent,
+    await saveGuestSession(
+      authenticatedClient,
+      guestSession.playSessionId,
+      guestSession.guestAccessGrant,
     );
-    if (
-      saved.isError === true ||
-      canonicalPlaySessionId(savedResult) !== playSessionId
-    ) {
-      throw new Error("Authenticated save failed.");
-    }
-    const listed = await authenticatedClient.callTool({
-      name: "list_saved_play_sessions",
-      arguments: {},
-    });
-    const listedResult = validateCanonicalToolResult(
-      playSessionToolNames.listSaved,
-      listed.structuredContent,
-    );
-    if (
-      listed.isError === true ||
-      !listedPlaySessionIds(listedResult).includes(playSessionId)
-    ) {
-      throw new Error("Authenticated list omitted the saved Play Session.");
-    }
-    const isolatedTransport = new StreamableHTTPClientTransport(
+    await verifyOwnerList(authenticatedClient, guestSession.playSessionId);
+    await connectAuthenticatedClient(
+      isolatedClient,
       input.endpoint,
-      {
-        requestInit: {
-          headers: {
-            authorization: `Bearer ${input.isolatedAccessToken}`,
-          },
-        },
-      },
+      input.isolatedAccessToken,
     );
-    await isolatedClient.connect(isolatedTransport as Transport);
-    const isolatedList = await isolatedClient.callTool({
-      name: "list_saved_play_sessions",
-      arguments: {},
-    });
-    const isolatedListResult = validateCanonicalToolResult(
-      playSessionToolNames.listSaved,
-      isolatedList.structuredContent,
-    );
-    if (
-      isolatedList.isError === true ||
-      listedPlaySessionIds(isolatedListResult).includes(playSessionId)
-    ) {
-      throw new Error("An isolated principal could list another vault.");
-    }
-    const isolatedDelete = await isolatedClient.callTool({
-      name: "delete_saved_play_session",
-      arguments: { playSessionId },
-    });
-    if (isolatedDelete.isError !== true) {
-      throw new Error("An isolated principal could delete another vault.");
-    }
-    const deleted = await authenticatedClient.callTool({
-      name: "delete_saved_play_session",
-      arguments: { playSessionId },
-    });
-    const deletedResult = validateCanonicalToolResult(
-      playSessionToolNames.deleteSaved,
-      deleted.structuredContent,
-    );
-    if (
-      deleted.isError === true ||
-      canonicalPlaySessionId(deletedResult) !== playSessionId
-    ) {
-      throw new Error("Authenticated delete failed.");
-    }
+    await verifyIsolatedPrincipal(isolatedClient, guestSession.playSessionId);
+    await deleteOwnerSession(authenticatedClient, guestSession.playSessionId);
     return {
       authenticatedMcpConnection: true,
       guestSessionSaved: true,
@@ -152,6 +67,130 @@ export async function verifySavedSessionMcp(input: {
     await guestClient.close();
     await authenticatedClient.close();
     await isolatedClient.close();
+  }
+}
+
+async function createGuestSession(
+  client: Client,
+  endpoint: URL,
+): Promise<{
+  readonly playSessionId: PlaySessionId;
+  readonly guestAccessGrant: string;
+}> {
+  const transport = new StreamableHTTPClientTransport(endpoint);
+  await client.connect(transport as Transport);
+  const created = await client.callTool({
+    name: "create_play_session",
+    arguments: {},
+  });
+  const creation = jsonObject(created.structuredContent, "creation response");
+  const operation = jsonObject(creation.operation, "creation operation");
+  const result = jsonObject(operation.result, "creation result");
+  const access = jsonObject(result.access, "guest access");
+  return {
+    playSessionId: canonicalPlaySessionId(creation),
+    guestAccessGrant: stringField(access, "guestAccessGrant"),
+  };
+}
+
+async function connectAuthenticatedClient(
+  client: Client,
+  endpoint: URL,
+  accessToken: string,
+): Promise<void> {
+  const transport = new StreamableHTTPClientTransport(endpoint, {
+    requestInit: {
+      headers: { authorization: `Bearer ${accessToken}` },
+    },
+  });
+  await client.connect(transport as Transport);
+}
+
+async function saveGuestSession(
+  client: Client,
+  playSessionId: PlaySessionId,
+  guestAccessGrant: string,
+): Promise<void> {
+  const saved = await client.callTool({
+    name: "save_play_session",
+    arguments: { playSessionId, guestAccessGrant },
+  });
+  const result = validateCanonicalToolResult(
+    playSessionToolNames.save,
+    saved.structuredContent,
+  );
+  if (
+    saved.isError === true ||
+    canonicalPlaySessionId(result) !== playSessionId
+  ) {
+    throw new Error("Authenticated save failed.");
+  }
+}
+
+async function verifyOwnerList(
+  client: Client,
+  playSessionId: PlaySessionId,
+): Promise<void> {
+  const listed = await client.callTool({
+    name: "list_saved_play_sessions",
+    arguments: {},
+  });
+  const result = validateCanonicalToolResult(
+    playSessionToolNames.listSaved,
+    listed.structuredContent,
+  );
+  if (
+    listed.isError === true ||
+    !listedPlaySessionIds(result).includes(playSessionId)
+  ) {
+    throw new Error("Authenticated list omitted the saved Play Session.");
+  }
+}
+
+async function verifyIsolatedPrincipal(
+  client: Client,
+  playSessionId: PlaySessionId,
+): Promise<void> {
+  const listed = await client.callTool({
+    name: "list_saved_play_sessions",
+    arguments: {},
+  });
+  const result = validateCanonicalToolResult(
+    playSessionToolNames.listSaved,
+    listed.structuredContent,
+  );
+  if (
+    listed.isError === true ||
+    listedPlaySessionIds(result).includes(playSessionId)
+  ) {
+    throw new Error("An isolated principal could list another vault.");
+  }
+  const deleted = await client.callTool({
+    name: "delete_saved_play_session",
+    arguments: { playSessionId },
+  });
+  if (deleted.isError !== true) {
+    throw new Error("An isolated principal could delete another vault.");
+  }
+}
+
+async function deleteOwnerSession(
+  client: Client,
+  playSessionId: PlaySessionId,
+): Promise<void> {
+  const deleted = await client.callTool({
+    name: "delete_saved_play_session",
+    arguments: { playSessionId },
+  });
+  const result = validateCanonicalToolResult(
+    playSessionToolNames.deleteSaved,
+    deleted.structuredContent,
+  );
+  if (
+    deleted.isError === true ||
+    canonicalPlaySessionId(result) !== playSessionId
+  ) {
+    throw new Error("Authenticated delete failed.");
   }
 }
 

@@ -194,37 +194,49 @@ async function savedSessionAuthorizationRequestAttempt(input: {
   try {
     const result = await handleSavedSessionAuthorizationRequest(input);
     if (Either.isLeft(result)) {
-      const status = result.left.reason === "requestTooLarge" ? 413 : 500;
-      const outcome =
-        result.left.reason === "requestTooLarge" ? "rejected" : "failed";
-      if (input.outgoing.headersSent) {
-        input.outgoing.destroy();
-      } else {
-        await writePublicHttpResponse(
-          input.outgoing,
-          new Response(
-            result.left.reason === "requestTooLarge"
-              ? "Request body is too large"
-              : "Internal server error",
-            { status },
-          ),
-        );
-      }
-      return { status, outcome };
+      return writeSavedSessionAuthorizationIssue(
+        input.outgoing,
+        result.left.reason,
+      );
     }
     const status = input.outgoing.statusCode;
     return { status, outcome: status < 400 ? "accepted" : "rejected" };
   } catch {
-    if (input.outgoing.headersSent) {
-      input.outgoing.destroy();
-    } else {
-      await writePublicHttpResponse(
-        input.outgoing,
-        new Response("Internal server error", { status: 500 }),
-      );
-    }
+    await writeSavedSessionAuthorizationFailure(input.outgoing, 500);
     return { status: 500, outcome: "failed" };
   }
+}
+
+async function writeSavedSessionAuthorizationIssue(
+  outgoing: Parameters<typeof writePublicHttpResponse>[0],
+  reason: "requestFailed" | "requestTooLarge",
+): Promise<{
+  readonly status: number;
+  readonly outcome: "rejected" | "failed";
+}> {
+  if (reason === "requestTooLarge") {
+    await writeSavedSessionAuthorizationFailure(outgoing, 413);
+    return { status: 413, outcome: "rejected" };
+  }
+  await writeSavedSessionAuthorizationFailure(outgoing, 500);
+  return { status: 500, outcome: "failed" };
+}
+
+async function writeSavedSessionAuthorizationFailure(
+  outgoing: Parameters<typeof writePublicHttpResponse>[0],
+  status: 413 | 500,
+): Promise<void> {
+  if (outgoing.headersSent) {
+    outgoing.destroy();
+    return;
+  }
+  await writePublicHttpResponse(
+    outgoing,
+    new Response(
+      status === 413 ? "Request body is too large" : "Internal server error",
+      { status },
+    ),
+  );
 }
 
 function httpServerIssue(

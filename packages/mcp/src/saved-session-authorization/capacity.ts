@@ -41,22 +41,31 @@ export function applySavedSessionAuthorizationBackpressure(
     return undefined;
   }
   pruneExpiredAuthorizationState(database, new Date());
-  const introducesAnonymousVault = pathname === "/api/auth/sign-in/anonymous";
-  const introducesOauthClient =
-    (request.method === "POST" && pathname === "/api/auth/oauth2/register") ||
-    authorizationIntroducesClient(database, request, pathname);
   const admissionThresholdReached =
     retainedAuthorizationRecordCount(database) >= capacities.retainedRecords;
-  const anonymousVaultCapacityReached =
-    introducesAnonymousVault &&
-    tableRowCount(database, "user") >= capacities.anonymousVaults;
-  const oauthClientCapacityReached =
-    introducesOauthClient &&
-    tableRowCount(database, "oauthClient") >= capacities.oauthClients;
-  return anonymousVaultCapacityReached ||
-    oauthClientCapacityReached ||
-    ((introducesAnonymousVault || introducesOauthClient) &&
-      admissionThresholdReached)
+  if (pathname === "/api/auth/sign-in/anonymous") {
+    return admissionResponse(
+      admissionThresholdReached,
+      tableRowCount(database, "user"),
+      capacities.anonymousVaults,
+    );
+  }
+  if (authorizationIntroducesOauthClient(database, request, pathname)) {
+    return admissionResponse(
+      admissionThresholdReached,
+      tableRowCount(database, "oauthClient"),
+      capacities.oauthClients,
+    );
+  }
+  return undefined;
+}
+
+function admissionResponse(
+  admissionThresholdReached: boolean,
+  entityCount: number,
+  entityCapacity: number,
+): Response | undefined {
+  return admissionThresholdReached || entityCount >= entityCapacity
     ? authorizationCapacityResponse()
     : undefined;
 }
@@ -72,11 +81,14 @@ function isAuthorizationStateMutation(
   );
 }
 
-function authorizationIntroducesClient(
+function authorizationIntroducesOauthClient(
   database: DatabaseSync,
   request: Request,
   pathname: string,
 ): boolean {
+  if (request.method === "POST" && pathname === "/api/auth/oauth2/register") {
+    return true;
+  }
   if (request.method !== "GET" || pathname !== "/api/auth/oauth2/authorize") {
     return false;
   }

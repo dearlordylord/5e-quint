@@ -75,6 +75,19 @@ async function webRequest(
   origin: URL,
   signal: AbortSignal,
 ): Promise<Either.Either<Request, SavedSessionAuthorizationHttpIssue>> {
+  const body = await requestBody(incoming);
+  if (Either.isLeft(body)) return Either.left(body.left);
+  return Either.right(
+    new Request(new URL(incoming.url ?? "/", origin), {
+      method: incoming.method ?? "GET",
+      headers: webRequestHeaders(incoming),
+      signal,
+      ...webRequestBody(body.right),
+    }),
+  );
+}
+
+function webRequestHeaders(incoming: IncomingMessage): Headers {
   const headers = new Headers();
   for (const [name, value] of Object.entries(incoming.headers)) {
     if (Array.isArray(value)) {
@@ -83,16 +96,11 @@ async function webRequest(
       headers.set(name, value);
     }
   }
-  const body = await requestBody(incoming);
-  if (Either.isLeft(body)) return Either.left(body.left);
-  return Either.right(
-    new Request(new URL(incoming.url ?? "/", origin), {
-      method: incoming.method ?? "GET",
-      headers,
-      signal,
-      ...(body.right.byteLength === 0 ? {} : { body: body.right }),
-    }),
-  );
+  return headers;
+}
+
+function webRequestBody(body: Uint8Array): { readonly body?: Uint8Array } {
+  return body.byteLength === 0 ? {} : { body };
 }
 
 async function requestBody(

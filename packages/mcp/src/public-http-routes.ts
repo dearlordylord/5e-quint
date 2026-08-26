@@ -55,22 +55,22 @@ export async function handlePublicHttpRequest(
 
 export function publicRouteLabel(pathname: string): string {
   if (isPublicPublisherSitePath(pathname)) return "publisher-site";
-  if (
-    pathname === "/saved-session-vault" ||
-    pathname === "/saved-session-consent"
-  ) {
-    return "saved-session-authorization-page";
-  }
-  if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
-    return "/api/auth/*";
-  }
-  if (pathname === "/mcp") return "/mcp";
-  if (pathname === "/health") return "/health";
-  if (pathname === "/version") return "/version";
-  if (pathname === "/metrics") return "/metrics";
+  const exactLabel = PUBLIC_ROUTE_LABELS.get(pathname);
+  if (exactLabel !== undefined) return exactLabel;
+  if (pathname.startsWith("/api/auth/")) return "/api/auth/*";
   if (pathname.startsWith("/.well-known/")) return "/.well-known/*";
   return "other";
 }
+
+const PUBLIC_ROUTE_LABELS: ReadonlyMap<string, string> = new Map([
+  ["/saved-session-vault", "saved-session-authorization-page"],
+  ["/saved-session-consent", "saved-session-authorization-page"],
+  ["/api/auth", "/api/auth/*"],
+  ["/mcp", "/mcp"],
+  ["/health", "/health"],
+  ["/version", "/version"],
+  ["/metrics", "/metrics"],
+] as const);
 
 async function handleFixedPublicRoute(
   input: PublicHttpRequestInput,
@@ -286,10 +286,20 @@ async function webRequest(
   return Either.right(
     new Request(new URL(incoming.url ?? "/", `http://${hostname}`).toString(), {
       headers,
-      ...(incoming.method === undefined ? {} : { method: incoming.method }),
-      ...(body.right.byteLength === 0 ? {} : { body: body.right }),
+      ...optionalRequestMethod(incoming.method),
+      ...optionalRequestBody(body.right),
     }),
   );
+}
+
+function optionalRequestMethod(method: string | undefined): {
+  readonly method?: string;
+} {
+  return method === undefined ? {} : { method };
+}
+
+function optionalRequestBody(body: Uint8Array): { readonly body?: Uint8Array } {
+  return body.byteLength === 0 ? {} : { body };
 }
 
 function requestHeaders(incoming: IncomingMessage): Headers {

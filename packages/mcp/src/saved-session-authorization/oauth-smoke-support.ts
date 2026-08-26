@@ -103,7 +103,7 @@ export async function requestVaultRedirect(input: {
   return vaultUrl;
 }
 
-export async function verifyChatGptAuthorization(input: {
+type ChatGptAuthorizationVerificationInput = {
   readonly accessTokenLifetimeSeconds: number;
   readonly authorizationEndpoint: URL;
   readonly clientId: string;
@@ -116,11 +116,25 @@ export async function verifyChatGptAuthorization(input: {
   readonly resource: URL;
   readonly tokenEndpoint: URL;
   readonly userInfoEndpoint: URL;
-}): Promise<string> {
+};
+
+export async function verifyChatGptAuthorization(
+  input: ChatGptAuthorizationVerificationInput,
+): Promise<string> {
   const tokens = await authorizeExistingBrowserSession({
     ...input,
     state: "chatgpt-token-regression-state",
   });
+  assertChatGptTokens(tokens, input);
+  const userInfo = await verifyChatGptUserInfo(input.userInfoEndpoint, tokens);
+  await verifyChatGptIdToken(input, tokens, userInfo.sub);
+  return tokens.access_token;
+}
+
+function assertChatGptTokens(
+  tokens: typeof TokenResponseSchema.Type,
+  input: ChatGptAuthorizationVerificationInput,
+): void {
   if (tokens.expires_in !== input.accessTokenLifetimeSeconds)
     throw new Error("ChatGPT access token has the wrong lifetime");
   if (tokens.refresh_token !== undefined || tokens.id_token === undefined)
@@ -128,7 +142,13 @@ export async function verifyChatGptAuthorization(input: {
   const grantedScopes = tokens.scope.split(" ").sort().join(" ");
   if (grantedScopes !== input.requestedScopes.split(" ").sort().join(" "))
     throw new Error(`ChatGPT received unexpected scopes: ${grantedScopes}`);
-  const userInfoResponse = await fetch(input.userInfoEndpoint, {
+}
+
+async function verifyChatGptUserInfo(
+  userInfoEndpoint: URL,
+  tokens: typeof TokenResponseSchema.Type,
+): Promise<{ readonly sub: string }> {
+  const userInfoResponse = await fetch(userInfoEndpoint, {
     headers: { authorization: `Bearer ${tokens.access_token}` },
   });
   const userInfoUnknown: unknown = await userInfoResponse.json();
@@ -149,6 +169,17 @@ export async function verifyChatGptAuthorization(input: {
     throw new Error(`ChatGPT received unexpected identity claims: ${claims}`);
   if (!isAnonymousVaultEmail(userInfo.email))
     throw new Error("ChatGPT did not receive a synthetic vault email");
+  return userInfo;
+}
+
+async function verifyChatGptIdToken(
+  input: ChatGptAuthorizationVerificationInput,
+  tokens: typeof TokenResponseSchema.Type,
+  userInfoSubject: string,
+): Promise<void> {
+  if (tokens.id_token === undefined) {
+    throw new Error("ChatGPT token response omitted its signed ID token");
+  }
   const idToken = await jwtVerify(
     tokens.id_token,
     createRemoteJWKSet(input.jwksUrl),
@@ -157,9 +188,8 @@ export async function verifyChatGptAuthorization(input: {
   const idTokenClaims = Object.keys(idToken.payload).sort().join(" ");
   if (idTokenClaims !== "acr at_hash aud auth_time exp iat iss sub")
     throw new Error(`Signed ID token has unexpected claims: ${idTokenClaims}`);
-  if (idToken.payload.sub !== userInfo.sub)
+  if (idToken.payload.sub !== userInfoSubject)
     throw new Error("Signed ID token does not match the synthetic vault");
-  return tokens.access_token;
 }
 
 export async function authorizeExistingBrowserSession(input: {

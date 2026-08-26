@@ -26,27 +26,35 @@ export type SavedSessionAuthorizationSmokeTarget = {
 export async function openSavedSessionAuthorizationSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTarget> {
   const deployedEndpoint = process.env.DND_MCP_SAVED_SESSION_URL;
   if (deployedEndpoint !== undefined) {
-    const endpoint = Schema.decodeUnknownSync(Schema.URL)(deployedEndpoint);
-    if (
-      endpoint.protocol !== "https:" ||
-      endpoint.pathname !== "/mcp" ||
-      endpoint.search !== "" ||
-      endpoint.hash !== ""
-    ) {
-      throw new Error(
-        "DND_MCP_SAVED_SESSION_URL must be the deployed HTTPS /mcp endpoint",
-      );
-    }
-    return {
-      tag: "deployed",
-      endpoint,
-      origin: Schema.decodeUnknownSync(AuthorizationServerOriginSchema)(
-        endpoint.origin,
-      ),
-      close: () => Promise.resolve(),
-    };
+    return openDeployedSmokeTarget(deployedEndpoint);
   }
+  return openLocalSmokeTarget();
+}
 
+function openDeployedSmokeTarget(
+  deployedEndpoint: string,
+): SavedSessionAuthorizationSmokeTarget {
+  const endpoint = Schema.decodeUnknownSync(Schema.URL)(deployedEndpoint);
+  const isMcpEndpoint =
+    endpoint.pathname === "/mcp" &&
+    endpoint.search === "" &&
+    endpoint.hash === "";
+  if (endpoint.protocol !== "https:" || !isMcpEndpoint) {
+    throw new Error(
+      "DND_MCP_SAVED_SESSION_URL must be the deployed HTTPS /mcp endpoint",
+    );
+  }
+  return {
+    tag: "deployed",
+    endpoint,
+    origin: Schema.decodeUnknownSync(AuthorizationServerOriginSchema)(
+      endpoint.origin,
+    ),
+    close: () => Promise.resolve(),
+  };
+}
+
+async function openLocalSmokeTarget(): Promise<SavedSessionAuthorizationSmokeTarget> {
   const scratchDirectory = await mkdtemp(
     join(tmpdir(), "dnd-saved-session-authorization-"),
   );
