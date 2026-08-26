@@ -436,27 +436,15 @@ export function projectGeometryTargetHoles(input: {
     if (hole.kind === "helpAttackEnemyDecision") {
       return {
         ...hole,
-        choices: hole.choices.filter((targetEnemyId) => {
-          const question: Extract<
-            ScenarioSpatialDecisionQuestion,
-            { readonly kind: "helpAttackTarget" }
-          > = {
-            kind: "helpAttackTarget",
-            helperId: hole.helperId,
-            targetEnemyId,
-          };
-          const relation = scenarioRelationForSpatialQuestion(
-            input.session,
-            question,
-          );
-          return (
-            relation.tag === "relation" &&
-            scenarioTableSpatialFactDistanceWithinLimit(
-              question,
-              relation.relation.distanceFeet,
-            )
-          );
-        }),
+        choices: hole.choices.filter((targetEnemyId) =>
+          Either.isRight(
+            scenarioHelpAttackTargetEligibility({
+              session: input.session,
+              helperId: hole.helperId,
+              targetEnemyId,
+            }),
+          ),
+        ),
       };
     }
     if (hole.kind !== "targetChoice") {
@@ -2375,6 +2363,43 @@ export type ScenarioTableSpatialFactProjectionIssue = Readonly<{
   readonly message: string;
 }>;
 
+function scenarioHelpAttackTargetEligibility(input: {
+  readonly session: ScenarioSession;
+  readonly helperId: CombatantId;
+  readonly targetEnemyId: CombatantId;
+}): Either.Either<
+  ScenarioSpatialRelation,
+  ScenarioTableSpatialFactProjectionIssue
+> {
+  const question: Extract<
+    ScenarioSpatialDecisionQuestion,
+    { readonly kind: "helpAttackTarget" }
+  > = {
+    kind: "helpAttackTarget",
+    helperId: input.helperId,
+    targetEnemyId: input.targetEnemyId,
+  };
+  const relation = scenarioRelationForSpatialQuestion(input.session, question);
+  if (relation.tag !== "relation") {
+    return Either.left({
+      tag: "table-spatial-fact-projection",
+      message: relation.message,
+    });
+  }
+  if (
+    !scenarioTableSpatialFactDistanceWithinLimit(
+      question,
+      relation.relation.distanceFeet,
+    )
+  ) {
+    return Either.left({
+      tag: "table-spatial-fact-projection",
+      message: `The helpAttackTarget spatial witness is outside the supported ${HELP_ATTACK_TARGET_ADJACENCY_FEET}-foot adjacency boundary.`,
+    });
+  }
+  return Either.right(relation.relation);
+}
+
 export type ScenarioTableSpatialFactQuestion = Extract<
   ScenarioSpatialDecisionQuestion,
   | { readonly kind: "grappleTarget" }
@@ -2517,10 +2542,10 @@ function scenarioTableSpatialFactQuestionForSubject(
 }
 
 /**
- * Projects the exact Table/geometry spatial witness for ordinary target
- * choices whose Battle hole consumes a reach or adjacency fact. The caller
- * still supplies the ordinary target choice; only the spatial witness is
- * automatic and canonical.
+ * Projects the exact Table/geometry spatial witness for target choices and
+ * Help enemy decisions whose Battle hole consumes a reach or adjacency fact.
+ * The caller supplies the target; only the spatial witness is automatic and
+ * canonical.
  */
 export function scenarioTableSpatialFactFills(input: {
   readonly session: ScenarioSession;
@@ -2549,35 +2574,12 @@ export function scenarioTableSpatialFactFills(input: {
             "The Help enemy choice does not match the pending Help attack target question.",
         });
       }
-      const targetQuestion: Extract<
-        ScenarioSpatialDecisionQuestion,
-        { readonly kind: "helpAttackTarget" }
-      > = {
-        kind: "helpAttackTarget",
+      const eligibility = scenarioHelpAttackTargetEligibility({
+        session: input.session,
         helperId: input.subject.actorId,
         targetEnemyId: fill.targetEnemyId,
-      };
-      const relation = scenarioRelationForSpatialQuestion(
-        input.session,
-        targetQuestion,
-      );
-      if (relation.tag !== "relation") {
-        return Either.left({
-          tag: "table-spatial-fact-projection",
-          message: relation.message,
-        });
-      }
-      if (
-        !scenarioTableSpatialFactDistanceWithinLimit(
-          targetQuestion,
-          relation.relation.distanceFeet,
-        )
-      ) {
-        return Either.left({
-          tag: "table-spatial-fact-projection",
-          message: `The helpAttackTarget spatial witness is outside the supported ${HELP_ATTACK_TARGET_ADJACENCY_FEET}-foot adjacency boundary.`,
-        });
-      }
+      });
+      if (Either.isLeft(eligibility)) return Either.left(eligibility.left);
       projectedFills.push({
         kind: "helpAttackEnemyDecision",
         holeId: fill.holeId,

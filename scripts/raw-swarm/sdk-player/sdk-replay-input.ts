@@ -101,23 +101,24 @@ const PlayerHelpAttackEnemyDecisionFillSchema = Schema.Struct({
   holeId: Schema.NonEmptyTrimmedString.pipe(Schema.brand("HoleId")),
   targetEnemyId: CombatantId,
 });
-const NonPlayerHelpBattleFillSchema = BattleFillSchema.pipe(
-  Schema.filter(
-    (
-      fill,
-    ): fill is Exclude<
-      BattleFill,
-      { readonly kind: "helpAttackEnemyDecision" }
-    > => fill.kind !== "helpAttackEnemyDecision",
-    {
-      description:
-        "The Raw Swarm player chooses the Help enemy without supplying the ScenarioSession-owned adjacency witness.",
-    },
-  ),
-);
+const CanonicalBattleFillExcludingHelpEnemyDecisionSchema =
+  BattleFillSchema.pipe(
+    Schema.filter(
+      (
+        fill,
+      ): fill is Exclude<
+        BattleFill,
+        { readonly kind: "helpAttackEnemyDecision" }
+      > => fill.kind !== "helpAttackEnemyDecision",
+      {
+        description:
+          "The Raw Swarm player chooses the Help enemy without supplying the ScenarioSession-owned adjacency witness.",
+      },
+    ),
+  );
 const PlayerBattleFillSchema = Schema.Union(
   PlayerHelpAttackEnemyDecisionFillSchema,
-  NonPlayerHelpBattleFillSchema,
+  CanonicalBattleFillExcludingHelpEnemyDecisionSchema,
 );
 const ResolveInputSchema = Schema.Struct({
   subject: BattleSubjectSchema,
