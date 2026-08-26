@@ -160,6 +160,12 @@
         "score": 12
       },
       "passivePerception": 13,
+      "savingThrowModifiers": [
+        {
+          "ability": "dex",
+          "modifier": 4
+        }
+      ],
       "senses": [
         {
           "kind": "darkvision",
@@ -1679,7 +1685,7 @@
       },
       "actions": [
         {
-          "description": "Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.",
+          "description": "Melee Attack Roll: +5, reach 5 ft. Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.",
           "kind": "textOnly",
           "name": "Rend",
           "procedureOrdinal": 1,
@@ -1885,7 +1891,7 @@
           }
         },
         {
-          "description": "Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn.",
+          "description": "Ranged Attack Roll: +6, range 40/160 ft. Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn.",
           "kind": "textOnly",
           "name": "Enchanting Bow",
           "procedureOrdinal": 2,
