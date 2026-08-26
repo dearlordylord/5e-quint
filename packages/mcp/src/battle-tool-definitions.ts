@@ -27,7 +27,6 @@ import { startBattleInputSchema } from "./start-battle-tool-input.ts";
 import {
   DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
   READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
@@ -39,7 +38,7 @@ export const battleToolDefinitions = [
     description:
       "Select an SRD Stat Block for the battle session. This stores only the Stat Block id in the MCP session.",
     inputSchema: selectStatBlockInputSchema,
-    annotations: IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+    annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(SelectStatBlockOutputSchema),
   },
   {

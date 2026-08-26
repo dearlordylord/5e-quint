@@ -19,6 +19,40 @@ import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import type { SavedSessionAuthorizationService } from "./saved-session-authorization/service.ts";
 
 describe("public HTTP boundary", () => {
+  test("serves the silent plugin demonstration as a stable MP4", async () => {
+    const repository = openRepository();
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+    });
+    const endpoint = await listen(server);
+    const demoUrl = new URL("/plugin-demo.mp4", endpoint);
+    try {
+      const response = await fetch(demoUrl);
+      const video = new Uint8Array(await response.arrayBuffer());
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-type")).toBe("video/mp4");
+      expect(response.headers.get("content-disposition")).toContain(
+        "5.5e-SRD-Oracle-demo.mp4",
+      );
+      expect(Number(response.headers.get("content-length"))).toBe(
+        video.byteLength,
+      );
+      expect(new TextDecoder().decode(video.slice(4, 8))).toBe("ftyp");
+
+      const head = await fetch(demoUrl, { method: "HEAD" });
+      expect(head.status).toBe(200);
+      expect(head.headers.get("content-length")).toBe(String(video.byteLength));
+      expect((await head.arrayBuffer()).byteLength).toBe(0);
+
+      const rejected = await fetch(demoUrl, { method: "POST" });
+      expect(rejected.status).toBe(405);
+      expect(rejected.headers.get("allow")).toBe("GET, HEAD");
+    } finally {
+      await close(server);
+      repository.close();
+    }
+  });
+
   test("serves publisher pages with public policy and locked-down headers", async () => {
     const repository = openRepository();
     const server = createDndMcpHttpServer({

@@ -39,13 +39,13 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "better-auth": "1.7.1",
     "effect": "^3.21.0",
-    "jose": "^6.2.10"
+    "jose": "^6.2.10",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@typescript/native": "npm:typescript@^7.0.2",
     "fast-check": "3.23.2",
-    "tsx": "^4.19.2",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "4.1.11"

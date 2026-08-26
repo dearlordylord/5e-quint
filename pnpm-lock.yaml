@@ -495,6 +495,9 @@ importers:
       jose:
         specifier: ^6.2.10
         version: 6.2.10
+      tsx:
+        specifier: ^4.19.2
+        version: 4.21.0
     devDependencies:
       '@types/node':
         specifier: ^22.10.0
@@ -505,9 +508,6 @@ importers:
       fast-check:
         specifier: 3.23.2
         version: 3.23.2
-      tsx:
-        specifier: ^4.19.2
-        version: 4.21.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
