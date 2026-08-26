@@ -165,6 +165,10 @@
 #endif
 
 static const unsigned int dnd_errno = SECCOMP_RET_ERRNO | (EPERM & SECCOMP_RET_DATA);
+/* glibc uses ENOSYS to detect an unavailable clone3 and retry with clone(2).
+ * That fallback still passes through the namespace-flag check below. */
+static const unsigned int dnd_clone3_unavailable =
+    SECCOMP_RET_ERRNO | (ENOSYS & SECCOMP_RET_DATA);
 static const uint32_t dnd_clone_namespace_flags =
     CLONE_NEWNS | CLONE_NEWUTS | CLONE_NEWIPC | CLONE_NEWUSER | CLONE_NEWPID |
     CLONE_NEWNET | CLONE_NEWCGROUP | CLONE_NEWTIME;
@@ -236,7 +240,8 @@ static void configure_test_failure_injection(void) {
  * local Unix socket cannot proxy or transfer a network descriptor. Session,
  * process-group, namespace-changing, and child-subreaper-changing syscalls
  * are denied so descendants cannot escape the native reaping boundary;
- * TUN/TAP setup is denied at ioctl.
+ * clone3 reports ENOSYS so libc can use clone(2), whose namespace flags are
+ * checked above; TUN/TAP setup is denied at ioctl.
  */
 static int install_network_filter(void) {
   const struct sock_filter filter[] = {
@@ -269,7 +274,7 @@ static int install_network_filter(void) {
       BPF_STMT(BPF_RET | BPF_K, dnd_errno),
       BPF_STMT(BPF_RET | BPF_K, SECCOMP_RET_ALLOW),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, SYS_clone3, 0, 1),
-      BPF_STMT(BPF_RET | BPF_K, dnd_errno),
+      BPF_STMT(BPF_RET | BPF_K, dnd_clone3_unavailable),
       BPF_JUMP(BPF_JMP | BPF_JEQ | BPF_K, SYS_socket, 0, 4),
       BPF_STMT(BPF_LD | BPF_W | BPF_ABS,
                offsetof(struct seccomp_data, args[0])),
