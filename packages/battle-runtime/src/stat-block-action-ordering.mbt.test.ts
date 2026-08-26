@@ -147,15 +147,35 @@ function admittedAttackOption(
     throw new Error("Expected a canonical SRD Goblin Warrior attack entry.");
   }
   const statBlock: StatBlockRecord = {
-    ...srdGoblinWarrior,
     id: parseSharedStatBlockId("stat_block_synthetic_action_ordering_attack"),
+    kind: "statBlock",
     name: "Synthetic Action Ordering Attack",
+    challengeRating: 0.25,
     provenance: {
       kind: "synthetic-test",
       section: "Stat Block action ordering fixture",
     },
     statBlock: {
-      ...srdGoblinWarrior.statBlock,
+      size: "small",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
       actions: [{ ...baseAttackEntry, procedure: attack }],
     },
   };

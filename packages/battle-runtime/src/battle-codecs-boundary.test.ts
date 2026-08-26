@@ -241,15 +241,35 @@ function codecStaticDartStatBlock(): StatBlockRecord {
     throw new Error("Expected the static codec Shortbow fixture.");
   }
   return {
-    ...base,
     id: parseSharedStatBlockId("stat_block_codec_static_dart_monster"),
+    kind: "statBlock",
     name: "Codec Static Dart Monster",
+    challengeRating: 0.25,
     provenance: {
       kind: "synthetic-test",
       section: "codec static damage fixture",
     },
     statBlock: {
-      ...base.statBlock,
+      size: "small",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
       actions: [
         {
           ...shortbow,

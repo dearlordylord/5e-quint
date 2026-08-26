@@ -46,7 +46,6 @@ import {
   resolveBattleSubject,
   startBattleRight,
   statBlockCreatureInit,
-  statBlockRecord,
   type BattleFill,
   type BattleHole,
   type BattleState,
@@ -476,19 +475,38 @@ function sizeGatedConditionRiderBattle(
 }
 
 function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
-  const base = statBlockRecord();
   return {
-    ...base,
     id: parseSharedStatBlockId(
       "stat_block_size_gated_condition_rider_mbt_attacker",
     ),
+    kind: "statBlock",
     name: "Stat Block Size-Gated Condition Attacker",
+    challengeRating: 0.25,
     provenance: {
       kind: "synthetic-test",
       section: "size-gated condition rider attacker fixture",
     },
     statBlock: {
-      ...base.statBlock,
+      size: "small",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
       actions: [executableProcedureEntry(1, biteAttack())],
     },
   };
@@ -497,22 +515,39 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
 function sizeGatedConditionRiderTargetStatBlock(
   targetSizeGate: TargetSizeGate,
 ): StatBlockRecord {
-  const base = statBlockRecord();
   return {
-    ...base,
     id: sizeGatedConditionRiderTargetStatBlockId(targetSizeGate),
+    kind: "statBlock",
     name: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
+    challengeRating: 0.25,
     provenance: {
       kind: "synthetic-test",
       section: "size-gated condition rider target fixture",
     },
     statBlock: {
-      ...base.statBlock,
+      size: targetSizeGate === "larger" ? "large" : "medium",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
       hp: { kind: "literal", value: 20 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
       ...(targetSizeGate === "mediumOrSmallerProneImmune"
         ? { immunities: { conditions: ["prone"] } }
         : {}),
-      size: targetSizeGate === "larger" ? "large" : "medium",
     },
   };
 }
