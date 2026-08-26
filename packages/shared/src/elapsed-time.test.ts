@@ -51,12 +51,26 @@ describe("elapsed time algebra", () => {
   });
 
   test("rejects fractional and unsupported elapsed-time values", () => {
-    expect(Result.isFailure(elapsedTimeTicksFromMinutes(1.5))).toBe(true);
-    expect(
-      Result.isFailure(
-        elapsedTimeTicksFromTimeSpanDuration({ unit: "second", amount: 6 }),
-      ),
-    ).toBe(true);
+    const fractional = elapsedTimeTicksFromMinutes(1.5);
+    expect(Result.isFailure(fractional)).toBe(true);
+    if (Result.isFailure(fractional)) {
+      expect(fractional.failure).toEqual({
+        kind: "fractionalAmount",
+        amount: 1.5,
+      });
+    }
+
+    const unsupported = elapsedTimeTicksFromTimeSpanDuration({
+      unit: "second",
+      amount: 6,
+    });
+    expect(Result.isFailure(unsupported)).toBe(true);
+    if (Result.isFailure(unsupported)) {
+      expect(unsupported.failure).toEqual({
+        kind: "unsupportedUnit",
+        unit: "second",
+      });
+    }
   });
 
   test("parses positive elapsed-time ticks without admitting expired timers", () => {
