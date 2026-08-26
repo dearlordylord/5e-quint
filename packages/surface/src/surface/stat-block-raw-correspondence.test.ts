@@ -1,5 +1,21 @@
+import { Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { UnitId } from "@dnd/shared/game-facts";
+import {
+  AuthoredExecutableProcedureSchema,
+  CreatureTraitSchema,
+  SrdStatBlockRecordSchema,
+  StandaloneCreatureSenseSchema,
+  StandaloneStatBlockSchema,
+  StatBlockCommunicationSchema,
+  StatBlockLanguageSetSchema,
+  StatBlockLiteralValueSchema,
+  StatBlockProcedureEntrySchema,
+  StatBlockProcedureResourceRefsSchema,
+  StatBlockProcedureResourceSchema,
+  StatBlockTextOnlyReasonSchema,
+} from "./schema.ts";
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 
 /*
@@ -12,86 +28,181 @@ import { srdStatBlockCollection } from "./stat-block-catalog.ts";
  * from Challenge Rating, but have no authored field in this schema.
  */
 
-const noResourceRefs = { kind: "none" } as const;
+type NonEmpty<T> = readonly [T, ...T[]];
 
-type ResourceRefs = typeof noResourceRefs | ReturnType<typeof resourceRefs>;
+type EncodedLiteralValue = Schema.Schema.Encoded<
+  typeof StatBlockLiteralValueSchema
+>;
+type EncodedProcedure = Schema.Schema.Encoded<
+  typeof AuthoredExecutableProcedureSchema
+>;
+type EncodedProcedureEffect = Extract<
+  EncodedProcedure,
+  { readonly kind: "attack_roll" }
+>["onHit"][number];
+type EncodedDamageEffect = Extract<
+  EncodedProcedureEffect,
+  { readonly kind: "damage" }
+>;
+type EncodedDamageAmount = EncodedDamageEffect["amount"];
+type EncodedDamageExpression = Extract<
+  EncodedDamageAmount,
+  { readonly expr: unknown }
+>["expr"];
+type EncodedResourceRefs = Schema.Schema.Encoded<
+  typeof StatBlockProcedureResourceRefsSchema
+>;
+type EncodedSomeResourceRefs = Extract<
+  EncodedResourceRefs,
+  { readonly kind: "some" }
+>;
+type EncodedStandaloneStatBlock = Schema.Schema.Encoded<
+  typeof StandaloneStatBlockSchema
+>;
+type EncodedStandaloneSpeed = Schema.Schema.Type<
+  typeof StandaloneStatBlockSchema
+>["speeds"][number];
+type EncodedStandaloneSense = Schema.Schema.Type<
+  typeof StandaloneCreatureSenseSchema
+>;
+type EncodedCommunication = Schema.Schema.Encoded<
+  typeof StatBlockCommunicationSchema
+>;
+type EncodedLanguageSet = Schema.Schema.Encoded<
+  typeof StatBlockLanguageSetSchema
+>;
+type EncodedTrait = Schema.Schema.Encoded<typeof CreatureTraitSchema>;
+type EncodedTextOnlyReason = Schema.Schema.Encoded<
+  typeof StatBlockTextOnlyReasonSchema
+>;
 
-const resourceRefs = (...ordinals: readonly number[]) => ({
-  kind: "some" as const,
-  ordinals,
+const decode = <S extends Schema.Schema.AnyNoContext>(
+  schema: S,
+  input: Schema.Schema.Encoded<S>,
+): Schema.Schema.Type<S> => Schema.decodeUnknownSync(schema)(input);
+
+const noResourceRefs: Extract<EncodedResourceRefs, { readonly kind: "none" }> =
+  { kind: "none" };
+
+/** The `some` branch is deliberately impossible to call without an ordinal. */
+const resourceRefs = (
+  firstOrdinal: EncodedSomeResourceRefs["ordinals"][number],
+  ...remainingOrdinals: readonly EncodedSomeResourceRefs["ordinals"][number][]
+): EncodedSomeResourceRefs => {
+  const ordinals: EncodedSomeResourceRefs["ordinals"] = [
+    firstOrdinal,
+    ...remainingOrdinals,
+  ];
+  return { kind: "some", ordinals };
+};
+
+const literal = (value: number): EncodedLiteralValue => ({
+  kind: "literal",
+  value,
 });
 
-const literal = (value: number) => ({ kind: "literal" as const, value });
-
-const dice = (diceCount: number, dieSize: number, flat?: number) => ({
+const dice = (
+  diceCount: number,
+  dieSize: number,
+  flat?: number,
+): EncodedDamageExpression => ({
   dice: diceCount,
   dieSize,
   ...(flat === undefined ? {} : { flat }),
 });
 
 const damage = (
-  damageType: string,
+  damageType: EncodedDamageEffect["damageType"],
   staticValue: number,
-  expression?: ReturnType<typeof dice>,
-) => ({
-  kind: "damage" as const,
+  expression?: EncodedDamageExpression,
+): EncodedProcedureEffect => ({
+  kind: "damage",
   damageType,
   amount:
     expression === undefined
-      ? { kind: "fixed" as const, static: staticValue }
-      : { kind: "fixed" as const, expr: expression, static: staticValue },
+      ? { kind: "fixed", static: staticValue }
+      : { kind: "fixed", expr: expression, static: staticValue },
 });
 
-const advantageDamage = (damageType: string) => ({
-  kind: "conditional_bonus_damage" as const,
-  when: { kind: "attack_roll_had_advantage" as const },
+const advantageDamage = (
+  damageType: Extract<
+    EncodedProcedureEffect,
+    { readonly kind: "conditional_bonus_damage" }
+  >["damageType"],
+): EncodedProcedureEffect => ({
+  kind: "conditional_bonus_damage",
+  when: { kind: "attack_roll_had_advantage" },
   damageType,
   amount: {
-    kind: "fixed" as const,
+    kind: "fixed",
     expr: dice(1, 4),
     static: 2,
   },
 });
 
-const sizeCondition = (condition: string, maxCreatureSize: string) => ({
-  kind: "apply_condition_if_target_size_at_most" as const,
+const sizeCondition = (
+  condition: Extract<
+    EncodedProcedureEffect,
+    { readonly kind: "apply_condition_if_target_size_at_most" }
+  >["condition"],
+  maxCreatureSize: Extract<
+    EncodedProcedureEffect,
+    { readonly kind: "apply_condition_if_target_size_at_most" }
+  >["maxCreatureSize"],
+): EncodedProcedureEffect => ({
+  kind: "apply_condition_if_target_size_at_most",
   condition,
   maxCreatureSize,
 });
 
 const executable = (
   procedureOrdinal: number,
-  procedure: Record<string, unknown>,
-  refs: ResourceRefs = noResourceRefs,
-) => ({
-  kind: "executable" as const,
-  procedureOrdinal,
-  procedure,
-  resourceRefs: refs,
-});
-
-const attack = (input: {
-  readonly procedureOrdinal: number;
-  readonly name: string;
-  readonly attackAbility: string;
-  readonly attackBonus: number;
-  readonly attackType: "melee" | "ranged";
-  readonly onHit: readonly Record<string, unknown>[];
-  readonly reachFeet?: number;
-  readonly rangeFeet?: { readonly normal: number; readonly long: number };
-  readonly ammunition?: string;
-}) =>
-  executable(input.procedureOrdinal, {
-    kind: "attack_roll",
-    attackAbility: input.attackAbility,
-    attackBonus: literal(input.attackBonus),
-    ...(input.reachFeet === undefined ? {} : { reachFeet: input.reachFeet }),
-    ...(input.rangeFeet === undefined ? {} : { rangeFeet: input.rangeFeet }),
-    onHit: input.onHit,
-    attackType: input.attackType,
-    ...(input.ammunition === undefined ? {} : { ammunition: input.ammunition }),
-    name: input.name,
+  procedure: EncodedProcedure,
+  refs: EncodedResourceRefs = noResourceRefs,
+): Extract<
+  Schema.Schema.Type<typeof StatBlockProcedureEntrySchema>,
+  { readonly kind: "executable" }
+> => {
+  const entry = decode(StatBlockProcedureEntrySchema, {
+    kind: "executable",
+    procedureOrdinal,
+    procedure,
+    resourceRefs: refs,
   });
+  if (entry.kind === "executable") return entry;
+  throw new Error("The executable correspondence entry decoded as textOnly.");
+};
+
+type EncodedAttackProcedure = Extract<
+  EncodedProcedure,
+  { readonly kind: "attack_roll" }
+>;
+type EncodedAttackInput = {
+  readonly procedureOrdinal: number;
+  readonly attackBonus: number;
+  readonly onHit: NonEmpty<EncodedProcedureEffect>;
+} & (
+  | Omit<
+      Extract<EncodedAttackProcedure, { readonly attackType: "melee" }>,
+      "kind" | "attackBonus" | "onHit"
+    >
+  | Omit<
+      Extract<EncodedAttackProcedure, { readonly attackType: "ranged" }>,
+      "kind" | "attackBonus" | "onHit"
+    >
+);
+
+const attack = (
+  input: EncodedAttackInput,
+): Schema.Schema.Type<typeof StatBlockProcedureEntrySchema> => {
+  const { procedureOrdinal, attackBonus, onHit, ...procedure } = input;
+  return executable(procedureOrdinal, {
+    kind: "attack_roll",
+    ...procedure,
+    attackBonus: literal(attackBonus),
+    onHit,
+  });
+};
 
 const multiattack = (
   procedureOrdinal: number,
@@ -119,7 +230,9 @@ const invisibility = (procedureOrdinal: number) =>
       {
         kind: "at_will",
         resourceRefs: noResourceRefs,
-        spells: [{ spellId: "invisibility", restriction: "on itself" }],
+        spells: [
+          { spellId: UnitId.make("invisibility"), restriction: "on itself" },
+        ],
       },
     ],
   });
@@ -128,16 +241,23 @@ const textOnly = (
   procedureOrdinal: number,
   name: string,
   description: string,
-  reason: string,
-  refs: ResourceRefs = noResourceRefs,
-) => ({
-  kind: "textOnly" as const,
-  procedureOrdinal,
-  name,
-  description,
-  reason,
-  resourceRefs: refs,
-});
+  reason: EncodedTextOnlyReason,
+  refs: EncodedResourceRefs = noResourceRefs,
+): Extract<
+  Schema.Schema.Type<typeof StatBlockProcedureEntrySchema>,
+  { readonly kind: "textOnly" }
+> => {
+  const entry = decode(StatBlockProcedureEntrySchema, {
+    kind: "textOnly",
+    procedureOrdinal,
+    name,
+    description,
+    reason,
+    resourceRefs: refs,
+  });
+  if (entry.kind === "textOnly") return entry;
+  throw new Error("The textOnly correspondence entry decoded as executable.");
+};
 
 const actionOption = (procedureOrdinal: number) =>
   executable(procedureOrdinal, {
@@ -149,77 +269,109 @@ const actionOption = (procedureOrdinal: number) =>
 const trait = (
   name: string,
   description: string,
-  effect?: Record<string, unknown>,
-) => ({
+  effect?: NonNullable<EncodedTrait["effect"]>,
+): EncodedTrait => ({
   name,
   description,
   ...(effect === undefined ? {} : { effect }),
 });
 
-const darkvision = (rangeFeet: number, qualifier?: string) => ({
+type EncodedDarkvision = Extract<
+  EncodedStandaloneSense,
+  { readonly kind: "darkvision" }
+>;
+
+const darkvision = (
+  rangeFeet: number,
+  qualifier?: EncodedDarkvision["qualifier"],
+): EncodedDarkvision => ({
   kind: "darkvision",
   rangeFeet,
   ...(qualifier === undefined ? {} : { qualifier }),
 });
 
-const blindsight = (rangeFeet: number) => ({
+const blindsight = (
+  rangeFeet: number,
+): Exclude<
+  EncodedStandaloneSense,
+  Extract<EncodedStandaloneSense, { readonly kind: "darkvision" }>
+> & {
+  readonly kind: "blindsight";
+} => ({
   kind: "blindsight",
   rangeFeet,
 });
 
-const speed = (kind: string, feet: number) => ({
-  kind,
-  feet: literal(feet),
+const speed = (
+  kind: EncodedStandaloneSpeed["kind"],
+  feet: number,
+): EncodedStandaloneSpeed =>
+  Match.value(kind).pipe(
+    Match.when("walk", () => ({ kind: "walk", feet: literal(feet) }) as const),
+    Match.when("fly", () => ({ kind: "fly", feet: literal(feet) }) as const),
+    Match.when("swim", () => ({ kind: "swim", feet: literal(feet) }) as const),
+    Match.when(
+      "climb",
+      () => ({ kind: "climb", feet: literal(feet) }) as const,
+    ),
+    Match.when(
+      "burrow",
+      () => ({ kind: "burrow", feet: literal(feet) }) as const,
+    ),
+    Match.exhaustive,
+  );
+
+const namedLanguages = (
+  firstLanguage: string,
+  ...remainingLanguages: readonly string[]
+): Extract<EncodedLanguageSet, { readonly kind: "named" }> => ({
+  kind: "named",
+  languages: [firstLanguage, ...remainingLanguages],
 });
 
-const namedLanguages = (...languages: readonly string[]) => ({
-  kind: "named" as const,
-  languages,
+const spoken = (
+  firstLanguage: string,
+  ...remainingLanguages: readonly string[]
+): Extract<
+  EncodedCommunication,
+  { readonly kind: "spoken_and_understood" }
+> => ({
+  kind: "spoken_and_understood",
+  languages: namedLanguages(firstLanguage, ...remainingLanguages),
 });
 
-const spoken = (...languages: readonly string[]) => ({
-  kind: "spoken_and_understood" as const,
-  languages: namedLanguages(...languages),
+const understood = (
+  firstLanguage: string,
+  ...remainingLanguages: readonly string[]
+): Extract<
+  EncodedCommunication,
+  { readonly kind: "understood_but_cannot_speak" }
+> => ({
+  kind: "understood_but_cannot_speak",
+  languages: namedLanguages(firstLanguage, ...remainingLanguages),
 });
 
-const understood = (...languages: readonly string[]) => ({
-  kind: "understood_but_cannot_speak" as const,
-  languages: namedLanguages(...languages),
-});
+const dailyResource = (
+  ordinal: number,
+  uses: number,
+): Schema.Schema.Type<typeof StatBlockProcedureResourceSchema> =>
+  decode(StatBlockProcedureResourceSchema, {
+    ordinal,
+    ownership: "shared",
+    limit: { kind: "daily", uses },
+  });
 
-const dailyResource = (ordinal: number, uses: number) => ({
-  ordinal,
-  ownership: "shared" as const,
-  limit: { kind: "daily" as const, uses },
-});
-
-const standaloneStatBlock = (input: {
-  readonly size: string;
-  readonly creatureType: string;
-  readonly creatureTypeTags?: readonly string[];
-  readonly alignment:
-    | string
-    | { readonly order: string; readonly morality: string };
+type StandaloneStatBlockInput = Omit<
+  EncodedStandaloneStatBlock,
+  "ac" | "hp"
+> & {
   readonly ac: number;
   readonly hp: number;
-  readonly speeds: readonly Record<string, unknown>[];
-  readonly abilityScores: Record<string, number>;
-  readonly initiative: { readonly modifier: number; readonly score: number };
-  readonly savingThrowModifiers?: readonly Record<string, unknown>[];
-  readonly skillModifiers?: readonly Record<string, unknown>[];
-  readonly vulnerabilities?: Record<string, unknown>;
-  readonly resistances?: Record<string, unknown>;
-  readonly immunities?: Record<string, unknown>;
-  readonly senses?: readonly Record<string, unknown>[];
-  readonly passivePerception: number;
-  readonly gear?: readonly Record<string, unknown>[];
-  readonly communication: Record<string, unknown>;
-  readonly resources?: readonly Record<string, unknown>[];
-  readonly actions: readonly Record<string, unknown>[];
-  readonly bonusActions?: readonly Record<string, unknown>[];
-  readonly reactions?: readonly Record<string, unknown>[];
-  readonly traits?: readonly Record<string, unknown>[];
-}) => {
+};
+
+const standaloneStatBlock = (
+  input: StandaloneStatBlockInput,
+): Schema.Schema.Type<typeof StandaloneStatBlockSchema> => {
   const {
     ac,
     hp,
@@ -237,7 +389,7 @@ const standaloneStatBlock = (input: {
     traits,
     ...required
   } = input;
-  return {
+  return decode(StandaloneStatBlockSchema, {
     ...required,
     ...(creatureTypeTags === undefined ? {} : { creatureTypeTags }),
     ac: { value: literal(ac) },
@@ -253,25 +405,32 @@ const standaloneStatBlock = (input: {
     ...(bonusActions === undefined ? {} : { bonusActions }),
     ...(reactions === undefined ? {} : { reactions }),
     ...(traits === undefined ? {} : { traits }),
-  };
+  });
 };
 
-const sourceRecord = (input: {
-  readonly id: string;
-  readonly name: string;
+type SourceRecordInput = Omit<
+  Schema.Schema.Encoded<typeof SrdStatBlockRecordSchema>,
+  "kind" | "provenance" | "statBlock"
+> & {
   readonly source: string;
-  readonly challengeRating: number;
-  readonly statBlock: Record<string, unknown>;
-}) => ({
-  id: input.id,
-  kind: "statBlock" as const,
-  name: input.name,
-  challengeRating: input.challengeRating,
-  statBlock: input.statBlock,
-  provenance: { kind: "srd-5.2.1" as const, section: input.source },
-});
+  readonly statBlock: EncodedStandaloneStatBlock;
+};
 
-const sourceCorrespondence = [
+const sourceRecord = (
+  input: SourceRecordInput,
+): Schema.Schema.Type<typeof SrdStatBlockRecordSchema> =>
+  decode(SrdStatBlockRecordSchema, {
+    id: input.id,
+    kind: "statBlock",
+    name: input.name,
+    challengeRating: input.challengeRating,
+    statBlock: input.statBlock,
+    provenance: { kind: "srd-5.2.1", section: input.source },
+  });
+
+const sourceCorrespondence: readonly Schema.Schema.Type<
+  typeof SrdStatBlockRecordSchema
+>[] = [
   sourceRecord({
     id: "stat_block_bat",
     name: "Bat",
