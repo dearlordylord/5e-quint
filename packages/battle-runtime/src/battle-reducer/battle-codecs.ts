@@ -5619,19 +5619,22 @@ const StatBlockProcedureBindingSnapshotSchema = Schema.Struct({
   resourcePoolRefs: Schema.Array(BattleResourcePoolExecutionRef),
 });
 
-export const StatBlockExecutionSnapshotSchema = Schema.Struct({
+const StatBlockExecutionSnapshotShapeSchema = Schema.Struct({
   scopeRef: BattleStatBlockExecutionScopeRef,
   procedureBindings: Schema.Array(StatBlockProcedureBindingSnapshotSchema),
   resourcePools: Schema.Array(StatBlockResourcePoolStateSchema),
-}).pipe(
-  Schema.filter(statBlockExecutionSnapshotGraphIsValid, {
-    message: () =>
-      "Stat Block execution snapshot has an invalid reference graph.",
-  }),
-);
+});
+
+export const StatBlockExecutionSnapshotSchema =
+  StatBlockExecutionSnapshotShapeSchema.pipe(
+    Schema.filter(statBlockExecutionSnapshotGraphIsValid, {
+      message: () =>
+        "Stat Block execution snapshot has an invalid reference graph.",
+    }),
+  );
 
 type EncodedStatBlockExecutionSnapshot = Schema.Schema.Type<
-  typeof StatBlockExecutionSnapshotSchema
+  typeof StatBlockExecutionSnapshotShapeSchema
 >;
 type EncodedStatBlockProcedureBinding = Schema.Schema.Type<
   typeof StatBlockProcedureBindingSnapshotSchema
@@ -6123,9 +6126,14 @@ function characterProcedureBindingOwnsResource(
   ) {
     return true;
   }
-  if (procedure.source.kind === "intrinsic") return true;
+  const resourcePoolRef = Match.value(procedure.source).pipe(
+    Match.when({ kind: "intrinsic" }, () => null),
+    Match.when({ kind: "resourcePool" }, (source) => source.resourcePoolRef),
+    Match.exhaustive,
+  );
+  if (resourcePoolRef === null) return true;
   return origin.resources.some(
-    (resource) => resource.resourcePoolRef === procedure.source.resourcePoolRef,
+    (resource) => resource.resourcePoolRef === resourcePoolRef,
   );
 }
 
@@ -7670,7 +7678,8 @@ function serializedBattleActOwnsBoundProcedure(
             readied.procedureRef === procedureRef,
         ),
     ),
-    Match.orElse(() => false),
+    Match.when({ tag: "runtimeCommand" }, () => false),
+    Match.exhaustive,
   );
 }
 
@@ -7832,7 +7841,12 @@ function serializedUnitSubjectOwnsProcedure(
         serializedUnitProcedureExecutionKind(binding.procedure) ===
           MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
     ),
-    Match.orElse(() => binding?.procedure.kind === "unitFeature"),
+    Match.whenOr(
+      { tag: "unitFeature" },
+      { tag: "unitFeatureHeldWeaponActivation" },
+      () => binding?.procedure.kind === "unitFeature",
+    ),
+    Match.exhaustive,
   );
 }
 

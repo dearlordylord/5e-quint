@@ -194,14 +194,21 @@ function characterInitWeaponAttackWithExecutionRefs(
   });
 }
 
-type CharacterWildShapeExecutionAdmission = {
-  readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
-  readonly admittedForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
-  readonly presentations?: ReadonlyMap<
-    BattleStatBlockExecutionScopeRef,
-    BattleStatBlockPresentationSource
-  >;
-};
+type CharacterWildShapeExecutionAdmission =
+  | {
+      readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+      readonly wildShape?: never;
+    }
+  | {
+      readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+      readonly wildShape: {
+        readonly admittedForms: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
+        readonly presentations: ReadonlyMap<
+          BattleStatBlockExecutionScopeRef,
+          BattleStatBlockPresentationSource
+        >;
+      };
+    };
 
 function admitCharacterWildShapeExecution(
   battleId: BattleId,
@@ -241,9 +248,38 @@ function admitCharacterWildShapeExecution(
   }
   return {
     nextScopeOrdinal: executionCohort.nextScopeOrdinal,
-    admittedForms: executionCohort.admissions,
-    presentations: wildShapePresentations,
+    wildShape: {
+      admittedForms: executionCohort.admissions,
+      presentations: wildShapePresentations,
+    },
   };
+}
+
+function admittedWildShapeFormsProjection(
+  admission: CharacterWildShapeExecutionAdmission,
+): {
+  readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
+} {
+  return admission.wildShape === undefined
+    ? {}
+    : {
+        druidWildShapeAvailableForms: admission.wildShape.admittedForms,
+      };
+}
+
+function wildShapePresentationsProjection(
+  admission: CharacterWildShapeExecutionAdmission,
+): {
+  readonly druidWildShapeFormPresentations?: ReadonlyMap<
+    BattleStatBlockExecutionScopeRef,
+    BattleStatBlockPresentationSource
+  >;
+} {
+  return admission.wildShape === undefined
+    ? {}
+    : {
+        druidWildShapeFormPresentations: admission.wildShape.presentations,
+      };
 }
 
 export function battleCreatureStateAdmissionFromInit(
@@ -527,10 +563,7 @@ export function battleCreatureStateAdmissionFromInit(
         classLevels,
         knownLanguages: creatureInit.knownLanguages,
         d20Statistics: creatureInit.d20Statistics,
-        ...optionalProperty(
-          "druidWildShapeAvailableForms",
-          wildShapeAdmission.admittedForms,
-        ),
+        ...admittedWildShapeFormsProjection(wildShapeAdmission),
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
         unarmoredArmorClassBases:
@@ -574,10 +607,7 @@ export function battleCreatureStateAdmissionFromInit(
         spellPresentationSources: [],
         unitProcedureOwnership: execution.right.unitProcedureOwnership,
         unitPresentationSources: creatureInit.characterUnitRefs,
-        ...optionalProperty(
-          "druidWildShapeFormPresentations",
-          wildShapeAdmission.presentations,
-        ),
+        ...wildShapePresentationsProjection(wildShapeAdmission),
       },
     };
   }
