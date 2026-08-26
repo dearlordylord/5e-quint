@@ -449,8 +449,11 @@ function deriveManifest(input: {
     return readInvocationEventEvidence(path);
   });
   const eventHashes = eventEvidence.map(({ authority }) => authority.sha256);
-  const evidenceByHash = new Map(
-    eventEvidence.map((evidence) => [evidence.authority.sha256, evidence]),
+  const evidenceByHash = new Map<string, (typeof eventEvidence)[number]>(
+    eventEvidence.map((evidence) => [
+      String(evidence.authority.sha256),
+      evidence,
+    ]),
   );
   if (
     new Set(eventHashes).size !== eventHashes.length ||

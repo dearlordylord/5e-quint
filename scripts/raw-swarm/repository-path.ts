@@ -2,14 +2,16 @@ import { lstatSync, realpathSync } from "node:fs";
 import { relative, resolve, sep } from "node:path";
 import { Either } from "effect";
 
-function containedBy(root: string, candidate: string): boolean {
+export function relativePathWithinRoot(
+  root: string,
+  candidate: string,
+): string | undefined {
   const relativePath = relative(root, candidate);
-  return (
-    relativePath === "" ||
-    (!relativePath.startsWith(`..${sep}`) &&
-      relativePath !== ".." &&
-      !relativePath.startsWith(sep))
-  );
+  return relativePath === ".." ||
+    relativePath.startsWith(`..${sep}`) ||
+    relativePath.startsWith(sep)
+    ? undefined
+    : relativePath;
 }
 
 /**
@@ -32,13 +34,15 @@ function canonicalOwnedReadPath(
   try {
     const canonicalRoot = realpathSync(ownerRoot);
     const lexicalCandidate = resolve(ownerRoot, candidatePath);
-    if (!containedBy(canonicalRoot, lexicalCandidate)) {
+    if (relativePathWithinRoot(canonicalRoot, lexicalCandidate) === undefined) {
       return Either.left(
         `${authority.role} path escapes ${authority.boundary}.`,
       );
     }
     const canonicalCandidate = realpathSync(lexicalCandidate);
-    if (!containedBy(canonicalRoot, canonicalCandidate)) {
+    if (
+      relativePathWithinRoot(canonicalRoot, canonicalCandidate) === undefined
+    ) {
       return Either.left(
         `${authority.role} symlink escapes ${authority.boundary}.`,
       );
@@ -113,7 +117,7 @@ export function canonicalRepositoryOutputPath(
   try {
     const canonicalRoot = realpathSync(repositoryRoot);
     const lexicalCandidate = resolve(repositoryRoot, candidatePath);
-    if (!containedBy(canonicalRoot, lexicalCandidate)) {
+    if (relativePathWithinRoot(canonicalRoot, lexicalCandidate) === undefined) {
       return Either.left("Repository authority path escapes the repository.");
     }
     let nearestExisting = lexicalCandidate;
@@ -140,7 +144,7 @@ export function canonicalRepositoryOutputPath(
       }
     }
     const canonicalNearest = realpathSync(nearestExisting);
-    if (!containedBy(canonicalRoot, canonicalNearest)) {
+    if (relativePathWithinRoot(canonicalRoot, canonicalNearest) === undefined) {
       return Either.left(
         "Repository authority symlink escapes the repository.",
       );
@@ -148,7 +152,9 @@ export function canonicalRepositoryOutputPath(
     try {
       lstatSync(lexicalCandidate);
       const canonicalCandidate = realpathSync(lexicalCandidate);
-      if (!containedBy(canonicalRoot, canonicalCandidate)) {
+      if (
+        relativePathWithinRoot(canonicalRoot, canonicalCandidate) === undefined
+      ) {
         return Either.left(
           "Repository authority symlink escapes the repository.",
         );

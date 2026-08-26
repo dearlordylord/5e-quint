@@ -9,7 +9,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, extname, relative, resolve, sep } from "node:path";
+import { basename, dirname, extname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { Either, Schema } from "effect";
@@ -29,7 +29,12 @@ import {
 import {
   canonicalRepositoryReadPath,
   canonicalRepositoryReadRelativePath,
+  relativePathWithinRoot,
 } from "./repository-path.ts";
+import {
+  ArtifactByteLengthSchema,
+  ArtifactSha256Schema,
+} from "./artifact-authority-schema.ts";
 
 const INDEX_SCHEMA_VERSION = 3;
 const SQLITE_WAL_HEADER_BYTE_LENGTH = 32;
@@ -227,23 +232,13 @@ function createCanonicalArtifactIndexLockRoot(candidate: string): string {
   }
 }
 
-function pathIsContained(root: string, candidate: string): boolean {
-  const relativePath = relative(root, candidate);
-  return (
-    relativePath === "" ||
-    (!relativePath.startsWith(`..${sep}`) &&
-      relativePath !== ".." &&
-      !relativePath.startsWith(sep))
-  );
-}
-
 function lockRootOverlapsSource(
   sourceDirectory: string,
   lockRoot: string,
 ): boolean {
   return (
-    pathIsContained(sourceDirectory, lockRoot) ||
-    pathIsContained(lockRoot, sourceDirectory)
+    relativePathWithinRoot(sourceDirectory, lockRoot) !== undefined ||
+    relativePathWithinRoot(lockRoot, sourceDirectory) !== undefined
   );
 }
 
@@ -2364,19 +2359,12 @@ export function rebuildLegacyArtifactIndex(input: {
   return { inventory };
 }
 
-const PortableManifestSha256Schema = Schema.String.pipe(
-  Schema.pattern(/^[0-9a-f]{64}$/),
-);
-const PortableManifestByteLengthSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
-);
 const PORTABLE_MANIFEST_SCHEMA_VERSION = 2;
 
 export const PortableManifestArtifactSchema = Schema.Struct({
   path: Schema.String,
-  sha256: PortableManifestSha256Schema,
-  byteLength: PortableManifestByteLengthSchema,
+  sha256: ArtifactSha256Schema,
+  byteLength: ArtifactByteLengthSchema,
 });
 export type PortableManifestArtifact = Schema.Schema.Type<
   typeof PortableManifestArtifactSchema
@@ -2402,8 +2390,8 @@ export const PortableManifestSchema = Schema.Struct({
   schemaVersion: Schema.Literal(PORTABLE_MANIFEST_SCHEMA_VERSION),
   index: Schema.Struct({
     path: Schema.Literal("index.sqlite"),
-    sha256: PortableManifestSha256Schema,
-    byteLength: PortableManifestByteLengthSchema,
+    sha256: ArtifactSha256Schema,
+    byteLength: ArtifactByteLengthSchema,
   }),
   artifacts: Schema.Array(PortableManifestArtifactSchema),
   controlledAttachments: PortableControlledAttachmentsSchema,
@@ -2459,16 +2447,16 @@ export function exportArtifactIndex(input: {
     copyFileSync(sourcePath, exportedPath);
     const portablePath = relative(destination, exportedPath);
     updatePortablePath.run(portablePath, row.sha256);
-    return {
+    return Schema.decodeUnknownSync(PortableManifestArtifactSchema)({
       path: portablePath,
       sha256: row.sha256,
       byteLength: row.byteLength,
-    };
+    });
   });
   snapshotDb.exec("COMMIT");
   snapshotDb.close();
   const indexBytes = readFileSync(snapshot);
-  const manifest: PortableManifest = {
+  const manifest = Schema.decodeUnknownSync(PortableManifestSchema)({
     schemaVersion: PORTABLE_MANIFEST_SCHEMA_VERSION,
     index: {
       path: "index.sqlite",
@@ -2477,7 +2465,7 @@ export function exportArtifactIndex(input: {
     },
     artifacts,
     controlledAttachments: [],
-  };
+  });
   writeFileSync(
     resolve(destination, "manifest.json"),
     `${JSON.stringify(manifest, null, 2)}\n`,

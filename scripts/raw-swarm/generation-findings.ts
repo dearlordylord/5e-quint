@@ -598,7 +598,7 @@ export function projectGenerationFindings(
       Either.isLeft(rejectionRecord) ||
       review.right.campaignId !== manifestIdentity.campaignId ||
       review.right.candidateId !== rejectionRecord.right.candidateId ||
-      review.right.candidateScenarioSha256 !== scenarioSha256 ||
+      String(review.right.candidateScenarioSha256) !== String(scenarioSha256) ||
       review.right.gitSha !== manifestIdentity.gitSha
     ) {
       fail("Candidate review authority identity does not match generation.");

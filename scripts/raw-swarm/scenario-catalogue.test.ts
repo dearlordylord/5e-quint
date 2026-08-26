@@ -32,7 +32,7 @@ import {
 import { isCurrentAdmittedScenarioRecord } from "./scenario-admission.ts";
 import { projectScenarioCatalogueForAuthoring } from "./scenario-authoring.ts";
 import {
-  findAdmittedScenarioInCatalogue,
+  findAuthorableScenarioInCatalogue,
   projectRawSwarmCatalogue,
   readRawSwarmCatalogue,
   type AdmittedScenarioRecord,
@@ -302,7 +302,7 @@ describe("Raw Swarm scenario catalogue", () => {
           result.right.scenarios.map(({ scenarioId }) => scenarioId),
         ).toEqual(["first-synthetic", "second-synthetic"]);
         expect(
-          findAdmittedScenarioInCatalogue({
+          findAuthorableScenarioInCatalogue({
             catalogue: result.right,
             scenarioId: decodeRight(decodeScenarioId("second-synthetic")),
           }),

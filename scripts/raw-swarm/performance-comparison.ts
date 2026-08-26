@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import { dirname, resolve } from "node:path";
 
 import { Either, Match, ParseResult, Schema } from "effect";
 
@@ -46,6 +46,7 @@ import {
 } from "./benchmark-context.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
 import { PortableManifestSchema } from "./artifact-index.ts";
+import { relativePathWithinRoot } from "./repository-path.ts";
 import {
   codexOutputJsonSchema,
   classifyScenarioReviewOutputSchema,
@@ -437,7 +438,7 @@ export function summarizeControlledExecution(
   const reportingManifestRoot = dirname(
     resolve(repoRoot, reportingManifestAuthority.path),
   );
-  const reportingTimingPath = containedRelativePath(
+  const reportingTimingPath = relativePathWithinRoot(
     reportingManifestRoot,
     resolve(repoRoot, reportingTimingAuthority.path),
   );
@@ -1040,19 +1041,6 @@ function decode<A, I>(schema: Schema.Schema<A, I>, path: string): A {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
   return Either.isRight(decoded) ? decoded.right : fail(decoded.left.message);
-}
-
-function containedRelativePath(
-  root: string,
-  candidate: string,
-): string | undefined {
-  const relativePath = relative(root, candidate);
-  return relativePath === "" ||
-    relativePath === ".." ||
-    relativePath.startsWith(`..${sep}`) ||
-    relativePath.startsWith(sep)
-    ? undefined
-    : relativePath;
 }
 
 export function readControlledPerformance(
@@ -4038,9 +4026,9 @@ function currentAuthorityIssues(
     );
     return issues;
   }
-  const eventAuthorities = new Map(
+  const eventAuthorities = new Map<string, ArtifactAuthority>(
     measurement.invocationEvents.map((authority) => [
-      authority.sha256,
+      String(authority.sha256),
       authority,
     ]),
   );
@@ -5231,7 +5219,8 @@ function benchmarkAuthorityIssues(
   } else {
     if (
       decodedScenarioReview.right.scenarioId !== measurement.scenarioId ||
-      decodedScenarioReview.right.scenarioSha256 !== bundle.scenario.sha256
+      String(decodedScenarioReview.right.scenarioSha256) !==
+        String(bundle.scenario.sha256)
     ) {
       issues.push(
         "Benchmark scenario-review authority is not bound to the scenario bundle identity.",
@@ -5414,9 +5403,9 @@ function benchmarkAuthorityIssues(
       "Each benchmark invocation must have exactly one retained event authority.",
     );
   }
-  const eventAuthorities = new Map(
+  const eventAuthorities = new Map<string, ArtifactAuthority>(
     measurement.invocationEvents.map((authority) => [
-      authority.sha256,
+      String(authority.sha256),
       authority,
     ]),
   );

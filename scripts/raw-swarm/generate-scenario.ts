@@ -579,7 +579,7 @@ RAW: use only .references/srd-5.2.1/ and ASSUMPTIONS.md. Check legality, coheren
 
 Content availability: compare selected canonical identities with the supplied availability list and the exact campaign intent. Do not infer a product obligation from an accidental unavailable selection.
 
-SDK capability: compare required setup/play facts with the current public SDK documentation below, not historical run verdicts. Do not inspect implementation files. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Treat a Candidate's requirement for that choice or roll workflow as an absent operation. ${SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY}
+SDK capability: compare required setup/play facts with the current public SDK documentation below, not historical Execution verdicts. Do not inspect implementation files. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Treat a Candidate's requirement for that choice or roll workflow as an absent operation. ${SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY}
 
 Artifact policy: apply docs/mushroom-playbook/AUTHORING.md only to public identity/expression safety. Do not judge mechanics or tactics.
 

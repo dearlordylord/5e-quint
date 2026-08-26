@@ -45,10 +45,12 @@ import {
   inventoryLegacyDatabase,
   openArtifactIndex,
   openArtifactIndexReadOnly,
+  PortableManifestArtifactSchema,
   PortableManifestSchema,
   registerIndexArtifact,
   rebuildLegacyArtifactIndex,
   type PortableManifest,
+  type PortableManifestArtifact,
   type PortableControlledAttachment,
 } from "./artifact-index.ts";
 import {
@@ -63,7 +65,10 @@ import {
   sha256Canonical,
   StartedAtSchema,
 } from "./transcript.ts";
-import { canonicalRepositoryReadPath } from "./repository-path.ts";
+import {
+  canonicalRepositoryReadPath,
+  relativePathWithinRoot,
+} from "./repository-path.ts";
 import {
   EvidenceSetIdSchema,
   ExecutionIdSchema,
@@ -366,11 +371,7 @@ const PersistedCampaignAuditSchema = Schema.Struct({
   ),
 });
 
-type IndexedReportArtifact = Readonly<{
-  readonly sha256: string;
-  readonly byteLength: number;
-  readonly path: string;
-}>;
+type IndexedReportArtifact = PortableManifestArtifact;
 
 type PortableReportBundle = Readonly<{
   readonly root: string;
@@ -378,20 +379,12 @@ type PortableReportBundle = Readonly<{
   readonly controlledAttachments: readonly PortableControlledAttachment[];
 }>;
 
-const SHA256_PATTERN = /^[0-9a-f]{64}$/;
-
 function sha256Bytes(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
 function pathIsContained(root: string, candidate: string): boolean {
-  const candidateRelative = relative(root, candidate);
-  return (
-    candidateRelative === "" ||
-    (!candidateRelative.startsWith(`..${sep}`) &&
-      candidateRelative !== ".." &&
-      !candidateRelative.startsWith(sep))
-  );
+  return relativePathWithinRoot(root, candidate) !== undefined;
 }
 
 function canonicalPortableReportIndexPath(dbPath: string): string {
@@ -442,25 +435,16 @@ function indexedReportArtifacts(
     .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
     .all()
     .map((row, index) => {
-      if (
-        !isJsonRecord(row) ||
-        typeof row.sha256 !== "string" ||
-        !SHA256_PATTERN.test(row.sha256) ||
-        typeof row.byteLength !== "number" ||
-        !Number.isInteger(row.byteLength) ||
-        row.byteLength < 0 ||
-        typeof row.path !== "string" ||
-        row.path.length === 0
-      ) {
+      const decoded = Schema.decodeUnknownEither(
+        PortableManifestArtifactSchema,
+        { onExcessProperty: "error" },
+      )(row);
+      if (Either.isLeft(decoded)) {
         return fail(
           `Portable artifact index row ${String(index + 1)} is invalid.`,
         );
       }
-      return {
-        sha256: row.sha256,
-        byteLength: row.byteLength,
-        path: row.path,
-      };
+      return decoded.right;
     });
 }
 
@@ -743,11 +727,13 @@ function readIndexedFindingsProjection(input: {
   readonly findingsSha256: string;
   readonly findingsByteLength: number;
 }): FindingsProjection {
-  const findingsArtifact = {
+  const findingsArtifact = Schema.decodeUnknownSync(
+    PortableManifestArtifactSchema,
+  )({
     sha256: input.findingsSha256,
     byteLength: input.findingsByteLength,
     path: input.findingsPath,
-  } satisfies IndexedReportArtifact;
+  });
   const bundle = portableReportBundle(input.dbPath);
   if (bundle !== undefined) {
     const artifacts = indexedReportArtifacts(input.db);

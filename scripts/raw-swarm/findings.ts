@@ -16,6 +16,7 @@ import {
 } from "./scenario-campaign.ts";
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
+import { ArtifactAuthoritySchema } from "./artifact-authority-schema.ts";
 import {
   ScenarioStagePlanFindingsSchema,
   scenarioStagePlanFindings,
@@ -127,9 +128,7 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
 
 const AuthoritySchema = Schema.Struct({
   role: Schema.NonEmptyTrimmedString,
-  path: Schema.NonEmptyTrimmedString,
-  byteLength: NonNegativeIntegerSchema,
-  sha256: HashSchema,
+  ...ArtifactAuthoritySchema.fields,
 });
 export type FindingAuthority = Schema.Schema.Type<typeof AuthoritySchema>;
 
@@ -503,9 +502,7 @@ export function authorityFor(source: Source): FindingAuthority {
   const bytes = readFileSync(authorityPath.right);
   return {
     role: source.role,
-    path: canonical,
-    byteLength: bytes.byteLength,
-    sha256: createHash("sha256").update(bytes).digest("hex"),
+    ...artifactAuthorityForBytes(canonical, bytes),
   };
 }
 

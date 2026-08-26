@@ -289,7 +289,7 @@ export type RawSwarmCatalogue = Readonly<{
   readonly rejectedCandidates: readonly RejectedScenarioCandidateRecord[];
 }>;
 
-export function findAdmittedScenarioInCatalogue(input: {
+export function findAuthorableScenarioInCatalogue(input: {
   readonly catalogue: RawSwarmCatalogue;
   readonly scenarioId: ScenarioId;
 }): Either.Either<RawSwarmCatalogue["scenarios"][number], string> {
@@ -298,7 +298,7 @@ export function findAdmittedScenarioInCatalogue(input: {
   );
   return scenario === undefined
     ? Either.left(
-        `Scenario ${input.scenarioId} is not present in the canonically validated admitted catalogue.`,
+        `Scenario ${input.scenarioId} is not present in the canonically validated authorable catalogue.`,
       )
     : Either.right(scenario);
 }

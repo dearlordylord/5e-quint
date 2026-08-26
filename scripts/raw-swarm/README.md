@@ -21,8 +21,8 @@ command also requires a lowercase `RAW_SWARM_OPERATION_ID` and a future
 `RAW_SWARM_OPERATION_DEADLINE_UTC`. They fail before the selected operation if
 the Codex CLI is not authenticated. Model work uses one of three repository
 model-lane locks; catalogue-writing operations additionally use the canonical
-one-at-a-time authoring protocol. The active #332 operation remains responsible
-for assigning distinct worktrees and Evidence Sets to its three lanes.
+one-at-a-time authoring protocol. Each durable campaign's operator assigns
+distinct worktrees and Evidence Sets to its configured lanes.
 The public commands are the only supported model entrypoints: they perform
 the lock, credential, revision, and configuration checks before handing off a
 guarded process. Direct model scripts reject invocation without that handoff.
