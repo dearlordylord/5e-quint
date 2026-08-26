@@ -7,7 +7,15 @@ import {
   quintRun,
   stateCheck,
 } from "@firfi/quint-connect/effect";
-import { Brand, Effect, Option, Result, Schema } from "effect";
+import {
+  Brand,
+  Effect,
+  Match,
+  Option,
+  Result,
+  Schema,
+  SchemaGetter,
+} from "effect";
 import { describe, expect, it } from "vitest";
 
 import type { ActionRestriction } from "@dnd/surface/surface/types";
@@ -332,7 +340,7 @@ function createInitiativeDriver() {
         return;
       }
       if (result.status === "decide") {
-        lastInsert = initiativeLastInsert("decide", result.tie);
+        lastInsert = { status: "decide", tie: result.tie };
         return;
       }
       lastInsert = { status: "error", tie: [] };
@@ -357,20 +365,121 @@ function createInitiativeDriver() {
   });
 }
 
+const RESTRICTED_UNIT_ACTION_ORDERS = [0, 1, 2, 3, 4] as const;
+type RestrictedUnitActionOrder =
+  (typeof RESTRICTED_UNIT_ACTION_ORDERS)[number];
+
+const quintNumberSchema = Schema.Union([Schema.Number, Schema.BigInt]).pipe(
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform<number, number | bigint>((value) =>
+      typeof value === "bigint" ? Number(value) : value,
+    ),
+    encode: SchemaGetter.transform<number, number>((value) => value),
+  }),
+);
+
+const quintRestrictedUnitActionOrderSchema = quintNumberSchema.pipe(
+  Schema.refine(
+    (value): value is RestrictedUnitActionOrder =>
+      value === 0 || value === 1 || value === 2 || value === 3 || value === 4,
+    { expected: "a restricted unit action order from 0 through 4" },
+  ),
+);
+
+const restrictedUnitActionProcedureRefsByOrder = [
+  [],
+  [unitActionA],
+  [unitActionB],
+  [unitActionA, unitActionB],
+  [unitActionB, unitActionA],
+] as const;
+
+const actionEconomySpecStateSchema = Schema.Struct({
+  qTurnActionAvailable: Schema.Boolean,
+  qRestrictedUnitActionOrder: quintRestrictedUnitActionOrderSchema,
+  qHasBonusAction: Schema.Boolean,
+});
+
 const actionEconomyStateCheck = stateCheck(
-  (raw) => Effect.sync(() => normalizeActionEconomySpecState(raw)),
+  decodeActionEconomySpecState,
   compareState,
 );
+
+const conditionsSpecStateSchema = Schema.Struct({
+  qBlinded: Schema.Boolean,
+  qCharmed: Schema.Boolean,
+  qDeafened: Schema.Boolean,
+  qFrightened: Schema.Boolean,
+  qGrappled: Schema.Boolean,
+  qInvisible: Schema.Boolean,
+  qParalyzed: Schema.Boolean,
+  qPetrified: Schema.Boolean,
+  qPoisoned: Schema.Boolean,
+  qProne: Schema.Boolean,
+  qRestrained: Schema.Boolean,
+  qStunned: Schema.Boolean,
+  qUnconscious: Schema.Boolean,
+  qDirectIncapacitated: Schema.Boolean,
+  qHasIncapacitated: Schema.Boolean,
+  qHasProne: Schema.Boolean,
+});
+
 const conditionsStateCheck = stateCheck(
-  (raw) => Effect.sync(() => normalizeConditionsSpecState(raw)),
+  decodeConditionsSpecState,
   compareState,
 );
+
+const deathSavesSpecStateSchema = Schema.Struct({
+  qSuccesses: quintNumberSchema,
+  qFailures: quintNumberSchema,
+  qStable: Schema.Boolean,
+  qDead: Schema.Boolean,
+  qHpRegained: Schema.Boolean,
+});
+
 const deathSavesStateCheck = stateCheck(
-  (raw) => Effect.sync(() => normalizeDeathSavesSpecState(raw)),
+  decodeDeathSavesSpecState,
   compareState,
 );
+
+const initiativeEntrySchema = Schema.Struct({
+  creature: Schema.String,
+  initiative: quintNumberSchema,
+});
+
+const LAST_INSERT_SIMPLE_VARIANTS = [
+  "LastInsertNone",
+  "LastInsertOk",
+  "LastInsertErrorDecisionSuppliedWithoutTie",
+] as const;
+const lastInsertVariantTagSchema = Schema.Literals(LAST_INSERT_SIMPLE_VARIANTS);
+
+const initiativeLastInsertObjectSchema = Schema.Union([
+  Schema.Struct({ tag: Schema.Literal("LastInsertNone") }),
+  Schema.Struct({ tag: Schema.Literal("LastInsertOk") }),
+  Schema.Struct({
+    tag: Schema.Literal("LastInsertDecision"),
+    value: Schema.NonEmptyArray(Schema.String),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("LastInsertErrorDecisionSuppliedWithoutTie"),
+  }),
+]);
+
+const initiativeLastInsertSchema = Schema.Union([
+  lastInsertVariantTagSchema,
+  initiativeLastInsertObjectSchema,
+]);
+
+const initiativeSpecStateSchema = Schema.Struct({
+  qRound: quintNumberSchema,
+  qAlreadyActed: Schema.Array(initiativeEntrySchema),
+  qStillToAct: Schema.Array(initiativeEntrySchema),
+  qLastInsert: initiativeLastInsertSchema,
+});
+
 const initiativeStateCheck = stateCheck(
-  (raw) => Effect.sync(() => normalizeInitiativeSpecState(raw)),
+  decodeInitiativeSpecState,
   compareState,
 );
 
@@ -450,6 +559,55 @@ describe("shared reducer algebra MBT", () => {
       }),
     );
   }, 120_000);
+});
+
+describe("shared reducer algebra trace-state decoders", () => {
+  it("returns a typed failure for malformed action-economy state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(
+        decodeActionEconomySpecState({
+          qTurnActionAvailable: true,
+          qRestrictedUnitActionOrder: 5,
+          qHasBonusAction: true,
+        }),
+      ),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("returns a typed failure for malformed conditions state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(decodeConditionsSpecState({ qBlinded: "not-a-boolean" })),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("returns a typed failure for malformed death-save state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(
+        decodeDeathSavesSpecState({ qSuccesses: "not-a-number" }),
+      ),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
+
+  it("returns a typed failure for malformed initiative state", async () => {
+    const result = await Effect.runPromise(
+      Effect.result(
+        decodeInitiativeSpecState({
+          qRound: 1,
+          qAlreadyActed: [],
+          qStillToAct: [],
+          qLastInsert: "LastInsertDecision",
+        }),
+      ),
+    );
+
+    expect(Result.isFailure(result)).toBe(true);
+  });
 });
 
 function initialActionEconomyState(): ActionEconomyState {
@@ -560,194 +718,108 @@ function projectInitiativeEntry(
   };
 }
 
-function normalizeActionEconomySpecState(
-  raw: unknown,
-): ActionEconomyProjection {
-  const state = quintStateRecord(raw);
-  return {
-    turnActionAvailable: booleanField(state, "qTurnActionAvailable"),
-    restrictedUnitActionProcedureRefs: quintRestrictedUnitActionProcedureRefs(
-      numberField(state, "qRestrictedUnitActionOrder"),
-    ),
-    hasBonusAction: booleanField(state, "qHasBonusAction"),
-  };
-}
-
-function quintRestrictedUnitActionProcedureRefs(
-  order: number,
-): readonly BattleProcedureExecutionRef[] {
-  if (order === 0) return [];
-  if (order === 1) return [unitActionA];
-  if (order === 2) return [unitActionB];
-  if (order === 3) return [unitActionA, unitActionB];
-  if (order === 4) return [unitActionB, unitActionA];
-  throw new Error(`Unknown Quint restricted unit action order: ${order}.`);
-}
-
-function normalizeConditionsSpecState(raw: unknown): ConditionsProjection {
-  const state = quintStateRecord(raw);
-  return {
-    blinded: booleanField(state, "qBlinded"),
-    charmed: booleanField(state, "qCharmed"),
-    deafened: booleanField(state, "qDeafened"),
-    frightened: booleanField(state, "qFrightened"),
-    grappled: booleanField(state, "qGrappled"),
-    invisible: booleanField(state, "qInvisible"),
-    paralyzed: booleanField(state, "qParalyzed"),
-    petrified: booleanField(state, "qPetrified"),
-    poisoned: booleanField(state, "qPoisoned"),
-    prone: booleanField(state, "qProne"),
-    restrained: booleanField(state, "qRestrained"),
-    stunned: booleanField(state, "qStunned"),
-    unconscious: booleanField(state, "qUnconscious"),
-    directIncapacitated: booleanField(state, "qDirectIncapacitated"),
-    hasIncapacitated: booleanField(state, "qHasIncapacitated"),
-    hasProne: booleanField(state, "qHasProne"),
-  };
-}
-
-function normalizeDeathSavesSpecState(raw: unknown): DeathSavesProjection {
-  const state = quintStateRecord(raw);
-  return {
-    successes: numberField(state, "qSuccesses"),
-    failures: numberField(state, "qFailures"),
-    stable: booleanField(state, "qStable"),
-    dead: booleanField(state, "qDead"),
-    hpRegained: booleanField(state, "qHpRegained"),
-  };
-}
-
-function normalizeInitiativeSpecState(raw: unknown): InitiativeProjection {
-  const state = quintStateRecord(raw);
-  return {
-    round: numberField(state, "qRound"),
-    alreadyActed: listField(state, "qAlreadyActed").map(
-      normalizeInitiativeEntry,
-    ),
-    stillToAct: listField(state, "qStillToAct").map(normalizeInitiativeEntry),
-    lastInsert: normalizeInitiativeLastInsert(state["qLastInsert"]),
-  };
-}
-
-function normalizeInitiativeLastInsert(raw: unknown): InitiativeLastInsert {
-  const variant = quintVariant(raw, "qLastInsert");
-  if (variant.tag === "LastInsertNone") return { status: "none", tie: [] };
-  if (variant.tag === "LastInsertOk") return { status: "ok", tie: [] };
-  if (variant.tag === "LastInsertErrorDecisionSuppliedWithoutTie") {
-    return { status: "error", tie: [] };
-  }
-  if (variant.tag === "LastInsertDecision") {
-    return initiativeLastInsert(
-      "decide",
-      listValue(variant.value, "qLastInsert.value").map(stringValue),
-    );
-  }
-  throw new Error(
-    `Unknown Quint initiative last insert variant ${variant.tag}.`,
+function decodeActionEconomySpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(actionEconomySpecStateSchema)(raw).pipe(
+    Effect.map((state): ActionEconomyProjection => ({
+      turnActionAvailable: state.qTurnActionAvailable,
+      restrictedUnitActionProcedureRefs:
+        [
+          ...restrictedUnitActionProcedureRefsByOrder[
+            state.qRestrictedUnitActionOrder
+          ],
+        ],
+      hasBonusAction: state.qHasBonusAction,
+    })),
   );
 }
 
-function initiativeLastInsert(
-  status: InitiativeLastInsert["status"],
-  tie: readonly string[],
+function decodeConditionsSpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(conditionsSpecStateSchema)(raw).pipe(
+    Effect.map((state) => ({
+      blinded: state.qBlinded,
+      charmed: state.qCharmed,
+      deafened: state.qDeafened,
+      frightened: state.qFrightened,
+      grappled: state.qGrappled,
+      invisible: state.qInvisible,
+      paralyzed: state.qParalyzed,
+      petrified: state.qPetrified,
+      poisoned: state.qPoisoned,
+      prone: state.qProne,
+      restrained: state.qRestrained,
+      stunned: state.qStunned,
+      unconscious: state.qUnconscious,
+      directIncapacitated: state.qDirectIncapacitated,
+      hasIncapacitated: state.qHasIncapacitated,
+      hasProne: state.qHasProne,
+    })),
+  );
+}
+
+function decodeDeathSavesSpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(deathSavesSpecStateSchema)(raw).pipe(
+    Effect.map((state) => ({
+      successes: state.qSuccesses,
+      failures: state.qFailures,
+      stable: state.qStable,
+      dead: state.qDead,
+      hpRegained: state.qHpRegained,
+    })),
+  );
+}
+
+function decodeInitiativeSpecState(raw: unknown) {
+  return Schema.decodeUnknownEffect(initiativeSpecStateSchema)(raw).pipe(
+    Effect.map((state) => ({
+      round: state.qRound,
+      alreadyActed: state.qAlreadyActed,
+      stillToAct: state.qStillToAct,
+      lastInsert: decodeInitiativeLastInsert(state.qLastInsert),
+    })),
+  );
+}
+
+type InitiativeLastInsertInput = Schema.Schema.Type<
+  typeof initiativeLastInsertSchema
+>;
+
+function decodeInitiativeLastInsert(
+  raw: InitiativeLastInsertInput,
 ): InitiativeLastInsert {
-  if (status === "decide") {
-    if (tie.length === 0) {
-      throw new Error("Expected decide insert status to carry a nonempty tie.");
-    }
-    return { status, tie: nonEmptyTie(tie) };
-  }
-
-  if (tie.length > 0) {
-    throw new Error("Expected non-decide insert status to carry no tie.");
-  }
-  return { status, tie: [] };
-}
-
-function nonEmptyTie(tie: readonly string[]): readonly [string, ...string[]] {
-  if (tie.length === 0) {
-    throw new Error("Expected initiative tie to be nonempty.");
-  }
-  return [tie[0], ...tie.slice(1)];
-}
-
-function normalizeInitiativeEntry(raw: unknown): InitiativeProjectionEntry {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint initiative entry to be an object.");
-  }
-  return {
-    creature: stringField(raw, "creature"),
-    initiative: numberField(raw, "initiative"),
-  };
+  return Match.value(raw).pipe(
+    Match.when("LastInsertNone", () => ({
+      status: "none" as const,
+      tie: [] as const,
+    })),
+    Match.when("LastInsertOk", () => ({
+      status: "ok" as const,
+      tie: [] as const,
+    })),
+    Match.when(
+      "LastInsertErrorDecisionSuppliedWithoutTie",
+      () => ({ status: "error" as const, tie: [] as const }),
+    ),
+    Match.when({ tag: "LastInsertNone" }, () => ({
+      status: "none" as const,
+      tie: [] as const,
+    })),
+    Match.when({ tag: "LastInsertOk" }, () => ({
+      status: "ok" as const,
+      tie: [] as const,
+    })),
+    Match.when({ tag: "LastInsertErrorDecisionSuppliedWithoutTie" }, () => ({
+      status: "error" as const,
+      tie: [] as const,
+    })),
+    Match.when({ tag: "LastInsertDecision" }, ({ value }) => ({
+      status: "decide" as const,
+      tie: value,
+    })),
+    Match.exhaustive,
+  );
 }
 
 function compareState<T>(spec: T, impl: T): boolean {
   expect(impl).toEqual(spec);
   return true;
-}
-
-function quintStateRecord(raw: unknown): Readonly<Record<string, unknown>> {
-  if (!isRecord(raw)) {
-    throw new Error("Expected Quint state to be an object.");
-  }
-  return raw;
-}
-
-function numberField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): number {
-  const value = state[field];
-  if (typeof value === "number") return value;
-  if (typeof value === "bigint") return Number(value);
-  throw new Error(`Expected Quint integer field ${field}.`);
-}
-
-function booleanField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): boolean {
-  const value = state[field];
-  if (typeof value === "boolean") return value;
-  throw new Error(`Expected Quint boolean field ${field}.`);
-}
-
-function stringField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): string {
-  return stringValue(state[field]);
-}
-
-function stringValue(value: unknown): string {
-  if (typeof value === "string") return value;
-  throw new Error(`Expected Quint string, got ${String(value)}.`);
-}
-
-function listField(
-  state: Readonly<Record<string, unknown>>,
-  field: string,
-): readonly unknown[] {
-  return listValue(state[field], field);
-}
-
-function listValue(value: unknown, field: string): readonly unknown[] {
-  if (Array.isArray(value)) return value;
-  throw new Error(`Expected Quint list field ${field}.`);
-}
-
-function quintVariant(
-  raw: unknown,
-  field: string,
-): { readonly tag: string; readonly value: unknown } {
-  if (typeof raw === "string") return { tag: raw, value: undefined };
-  if (isRecord(raw)) {
-    const tag = raw["tag"];
-    if (typeof tag === "string") return { tag, value: raw["value"] };
-  }
-  throw new Error(`Expected Quint variant field ${field}.`);
-}
-
-function isRecord(raw: unknown): raw is Readonly<Record<string, unknown>> {
-  return typeof raw === "object" && raw !== null;
 }
