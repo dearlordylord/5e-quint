@@ -125,16 +125,16 @@ export async function verifyChatGptAuthorization(
     ...input,
     state: "chatgpt-token-regression-state",
   });
-  assertChatGptTokens(tokens, input);
+  const idToken = assertChatGptTokens(tokens, input);
   const userInfo = await verifyChatGptUserInfo(input.userInfoEndpoint, tokens);
-  await verifyChatGptIdToken(input, tokens, userInfo.sub);
+  await verifyChatGptIdToken(input, idToken, userInfo.sub);
   return tokens.access_token;
 }
 
 function assertChatGptTokens(
   tokens: typeof TokenResponseSchema.Type,
   input: ChatGptAuthorizationVerificationInput,
-): void {
+): string {
   if (tokens.expires_in !== input.accessTokenLifetimeSeconds)
     throw new Error("ChatGPT access token has the wrong lifetime");
   if (tokens.refresh_token !== undefined || tokens.id_token === undefined)
@@ -142,6 +142,7 @@ function assertChatGptTokens(
   const grantedScopes = tokens.scope.split(" ").sort().join(" ");
   if (grantedScopes !== input.requestedScopes.split(" ").sort().join(" "))
     throw new Error(`ChatGPT received unexpected scopes: ${grantedScopes}`);
+  return tokens.id_token;
 }
 
 async function verifyChatGptUserInfo(
@@ -174,14 +175,11 @@ async function verifyChatGptUserInfo(
 
 async function verifyChatGptIdToken(
   input: ChatGptAuthorizationVerificationInput,
-  tokens: typeof TokenResponseSchema.Type,
+  encodedIdToken: string,
   userInfoSubject: string,
 ): Promise<void> {
-  if (tokens.id_token === undefined) {
-    throw new Error("ChatGPT token response omitted its signed ID token");
-  }
   const idToken = await jwtVerify(
-    tokens.id_token,
+    encodedIdToken,
     createRemoteJWKSet(input.jwksUrl),
     { issuer: input.issuer, audience: input.clientId },
   );

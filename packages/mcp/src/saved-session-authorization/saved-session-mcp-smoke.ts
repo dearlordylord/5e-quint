@@ -78,7 +78,7 @@ async function createGuestSession(
   readonly guestAccessGrant: string;
 }> {
   const transport = new StreamableHTTPClientTransport(endpoint);
-  await client.connect(transport as Transport);
+  await connectStreamableHttpTransport(client, transport);
   const created = await client.callTool({
     name: "create_play_session",
     arguments: {},
@@ -103,6 +103,15 @@ async function connectAuthenticatedClient(
       headers: { authorization: `Bearer ${accessToken}` },
     },
   });
+  await connectStreamableHttpTransport(client, transport);
+}
+
+async function connectStreamableHttpTransport(
+  client: Client,
+  transport: StreamableHTTPClientTransport,
+): Promise<void> {
+  // The SDK class implements Transport; this bridges its exact-optional
+  // sessionId declaration to the interface declaration.
   await client.connect(transport as Transport);
 }
 
