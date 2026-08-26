@@ -176,6 +176,16 @@ function successfulRecordedGuestAccessGrants(
         `Replay requires create_play_session at transcript seq ${exchange.seq} to return access.`,
       );
     }
+    if (access.tag === "authenticated") {
+      fail(
+        `Replay does not support authenticated create_play_session at transcript seq ${exchange.seq}.`,
+      );
+    }
+    if (access.tag !== "guest") {
+      fail(
+        `Replay requires guest create_play_session access at transcript seq ${exchange.seq}.`,
+      );
+    }
     const decoded = decodeGuestAccessGrant(access.guestAccessGrant);
     if (Either.isLeft(decoded)) {
       fail(

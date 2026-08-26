@@ -52,8 +52,9 @@ JavaScript/TypeScript form, including JSX/TSX and CJS/MJS/CTS/MTS variants.
 That same canonical extension inventory drives conservative internal-import
 resolution, including extensionless and JS-family-to-TS replacement fallbacks,
 during transitive capability scanning. The deterministic runner statically
-inventories reachable repository-owned sources, preloads a Node capability
-guard, and prepends failing shims for known coding-agent and network CLI names.
+inventories reachable repository-owned sources. Its guarded repository phase
+preloads a Node capability guard and prepends failing shims for known
+coding-agent and network CLI names.
 The quality inventory is partitioned into two mandatory subphases. The closed
 boundary-test partition runs under the native supervisor's `--supervise-only`
 process-tree mode without the outer JavaScript preload, so its nested

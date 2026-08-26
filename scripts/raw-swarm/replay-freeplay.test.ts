@@ -133,6 +133,26 @@ describe("RAW swarm MCP replay", () => {
       "duplicate successful Play Session handle",
     );
   });
+
+  test("rejects authenticated creation replay explicitly", async () => {
+    const response = {
+      content: [{ type: "text", text: "{}" }],
+      structuredContent: {
+        tag: "playSessionAvailable",
+        playSessionId: recordedPlaySessionId.right,
+        operation: {
+          name: "create_play_session",
+          result: {
+            tag: "playSessionCreated",
+            access: { tag: "authenticated" },
+          },
+        },
+      },
+    };
+    await expect(
+      replayMcpExchanges([recordedCreateExchange(1, response)]),
+    ).rejects.toThrow("does not support authenticated create_play_session");
+  });
 });
 
 function recordedCreateExchange(

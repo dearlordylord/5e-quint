@@ -92,9 +92,9 @@ async function main() {
       },
     });
 
-    const vitestCommand = (tests) => [
-      "mise",
-      [
+    const vitestInvocation = (tests) => ({
+      command: "mise",
+      args: [
         "exec",
         "--",
         "pnpm",
@@ -105,10 +105,10 @@ async function main() {
         "--pool=threads",
         "--maxWorkers=1",
       ],
-    ];
-    const runPhase = async (phaseName, phaseRunner, command, args) => {
+    });
+    const runPhase = async ({ phaseName, phaseRunner, invocation }) => {
       runner = phaseRunner;
-      const result = await phaseRunner.run(command, args);
+      const result = await phaseRunner.run(invocation.command, invocation.args);
       if (result.signal !== null) {
         process.stderr.write(
           `Raw Swarm deterministic ${phaseName} phase stopped by ${result.signal}.\n`,
@@ -124,30 +124,37 @@ async function main() {
     };
 
     if (
-      !(await runPhase("guarded typecheck", guardedRepositoryRunner, "pnpm", [
-        "exec",
-        "tsc",
-        "-p",
-        "scripts/raw-swarm/sdk-player/tsconfig.json",
-      ]))
+      !(await runPhase({
+        phaseName: "guarded typecheck",
+        phaseRunner: guardedRepositoryRunner,
+        invocation: {
+          command: "pnpm",
+          args: [
+            "exec",
+            "tsc",
+            "-p",
+            "scripts/raw-swarm/sdk-player/tsconfig.json",
+          ],
+        },
+      }))
     ) {
       return;
     }
     if (
-      !(await runPhase(
-        "trusted boundary",
-        trustedBoundaryRunner,
-        ...vitestCommand(DETERMINISTIC_TRUSTED_BOUNDARY_TESTS),
-      ))
+      !(await runPhase({
+        phaseName: "trusted boundary",
+        phaseRunner: trustedBoundaryRunner,
+        invocation: vitestInvocation(DETERMINISTIC_TRUSTED_BOUNDARY_TESTS),
+      }))
     ) {
       return;
     }
     if (
-      !(await runPhase(
-        "guarded repository",
-        guardedRepositoryRunner,
-        ...vitestCommand(GUARDED_DETERMINISTIC_RAW_SWARM_TESTS),
-      ))
+      !(await runPhase({
+        phaseName: "guarded repository",
+        phaseRunner: guardedRepositoryRunner,
+        invocation: vitestInvocation(GUARDED_DETERMINISTIC_RAW_SWARM_TESTS),
+      }))
     ) {
       return;
     }
