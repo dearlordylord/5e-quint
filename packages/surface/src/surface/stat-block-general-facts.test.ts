@@ -234,7 +234,7 @@ describe("standalone Stat Block general facts", () => {
         }),
       ).toThrow();
     }
-    for (const rangeFeet of [0, 151, 10.5] as const) {
+    for (const rangeFeet of [0, 10.5] as const) {
       expect(() =>
         decode(StandaloneCreatureSenseSchema, {
           kind: "darkvision",
@@ -247,6 +247,23 @@ describe("standalone Stat Block general facts", () => {
           senses: [{ kind: "darkvision", rangeFeet }],
         }),
       ).toThrow();
+    }
+    for (const rangeFeet of [1, 151] as const) {
+      expect(
+        decode(StandaloneCreatureSenseSchema, {
+          kind: "darkvision",
+          rangeFeet,
+        }),
+      ).toEqual({ kind: "darkvision", rangeFeet });
+      expect(
+        decode(StandaloneStatBlockSchema, {
+          ...syntheticStandaloneStatBlock,
+          senses: [{ kind: "darkvision", rangeFeet }],
+        }),
+      ).toEqual({
+        ...syntheticStandaloneStatBlock,
+        senses: [{ kind: "darkvision", rangeFeet }],
+      });
     }
 
     const projection = {
