@@ -128,6 +128,26 @@ describe("CIMD metadata transport", () => {
     expect(lookup).toHaveBeenCalledOnce();
   });
 
+  it("rejects empty DNS answers and an already-aborted lookup", async () => {
+    await expect(
+      resolvePinnedAddress(
+        "metadata.example",
+        new AbortController().signal,
+        vi.fn(async () => []),
+      ),
+    ).rejects.toThrow("returned no DNS addresses");
+
+    const controller = new AbortController();
+    controller.abort(new Error("already cancelled"));
+    await expect(
+      resolvePinnedAddress(
+        "metadata.example",
+        controller.signal,
+        vi.fn(async () => [PUBLIC_IPV4]),
+      ),
+    ).rejects.toThrow("already cancelled");
+  });
+
   it("settles a stalled DNS lookup when the request is aborted", async () => {
     const controller = new AbortController();
     const lookup = vi.fn(() => new Promise<LookupAddress[]>(() => undefined));
@@ -172,6 +192,16 @@ describe("CIMD metadata transport", () => {
     expect(options.servername).toBe("metadata.example");
     expect(options.signal).toBe(controller.signal);
     expect(callback).toHaveBeenCalledWith(null, [PUBLIC_IPV4]);
+
+    expect(
+      metadataRequestOptions(
+        new URL("https://93.184.216.34/client.json"),
+        {},
+        "HEAD",
+        controller.signal,
+        PUBLIC_IPV4,
+      ).servername,
+    ).toBeUndefined();
   });
 
   it("exposes only JSON success bodies and disposes every rejected response shape", () => {
@@ -185,6 +215,7 @@ describe("CIMD metadata transport", () => {
         "content-type": "application/oauth-client-metadata+json",
       }),
     ).toBe(true);
+    expect(shouldExposeBody("GET", 200, {})).toBe(false);
     expect(shouldExposeBody("GET", 200, { "content-type": "text/plain" })).toBe(
       false,
     );
