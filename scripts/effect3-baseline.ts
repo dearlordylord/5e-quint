@@ -815,6 +815,7 @@ function mcpEntrypointEvidence(
       representativeCallResponses: capture.defaultStdio.calls,
     },
     httpWithoutOAuth: {
+      toolsList: capture.httpWithoutOAuth.tools,
       toolsListSha256: httpToolsSha256,
       toolOrder: httpToolOrder,
       securitySchemeOrder: httpToolOrder,

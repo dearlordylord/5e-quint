@@ -94,9 +94,12 @@ describe("Effect 3 migration baseline", () => {
     const httpWithoutOAuth = record(
       recordField(protocolEntrypoints, "httpWithoutOAuth"),
     );
-    expect(array(recordField(httpWithoutOAuth, "toolOrder"))).toEqual(
-      defaultStdioOrder,
-    );
+    const httpTools = array(recordField(httpWithoutOAuth, "toolsList"));
+    expect(httpTools).toHaveLength(24);
+    expect(httpTools).toEqual(defaultStdioTools);
+    const httpToolOrder = array(recordField(httpWithoutOAuth, "toolOrder"));
+    expect(httpToolOrder).toHaveLength(24);
+    expect(httpToolOrder).toEqual(defaultStdioOrder);
     expect(
       Object.keys(record(recordField(defaultStdio, "securitySchemesByTool"))),
     ).toHaveLength(24);
@@ -117,11 +120,17 @@ describe("Effect 3 migration baseline", () => {
         record(recordField(defaultStdio, "representativeCallResponses")),
       ),
     ).toEqual(["describeMcpWorkflow", "listCatalogUnits"]);
-    expect(
-      Object.keys(
-        record(recordField(httpWithoutOAuth, "representativeCallResponses")),
-      ),
-    ).toEqual(["describeMcpWorkflow", "listCatalogUnits"]);
+    const defaultCallResponses = record(
+      recordField(defaultStdio, "representativeCallResponses"),
+    );
+    const httpCallResponses = record(
+      recordField(httpWithoutOAuth, "representativeCallResponses"),
+    );
+    expect(Object.keys(httpCallResponses)).toEqual([
+      "describeMcpWorkflow",
+      "listCatalogUnits",
+    ]);
+    expect(httpCallResponses).toEqual(defaultCallResponses);
     const authenticatedProjection = record(
       recordField(mcp, "authenticatedProjection"),
     );
