@@ -8,12 +8,16 @@ import type { StatBlockRecord } from "@dnd/surface/surface/types";
 export function testAmmunitionStocksForStatBlock(
   statBlock: Pick<StatBlockRecord, "statBlock">,
 ): readonly BattleAmmunitionStock[] {
-  const attacks = [
-    ...(statBlock.statBlock.actions?.attacks ?? []),
-    ...(statBlock.statBlock.legendaryActions?.actions.attacks ?? []),
-  ];
   const ammunitionKinds = new Set<AmmunitionKind>();
-  for (const attack of attacks) {
+  const entries = [
+    ...(statBlock.statBlock.actions ?? []),
+    ...(statBlock.statBlock.legendaryActions?.entries ?? []),
+  ];
+  for (const entry of entries) {
+    if (entry.kind !== "executable" || entry.procedure.kind !== "attack_roll") {
+      continue;
+    }
+    const attack = entry.procedure;
     if (attack.attackType === "ranged" && attack.ammunition !== undefined) {
       ammunitionKinds.add(attack.ammunition);
     }

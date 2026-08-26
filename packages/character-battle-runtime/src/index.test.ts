@@ -62,8 +62,10 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   parseCharacterBattleClassLevels,
   resolveBattleSubject,
+  projectAuthoredStatBlock,
   spendCharacterPointPoolResource,
   startBattle,
+  type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
 import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-support.ts";
@@ -131,7 +133,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -152,7 +154,7 @@ import {
   characterSpellcasting as characterSpellcastingRuntime,
   settleCharacterSheetFromBattle,
   startBattleFromCharacterBuildAndStatBlock as startBattleFromCharacterBuildAndStatBlockRuntime,
-  startBattleFromCharacterSheetAndStatBlock,
+  startBattleFromCharacterSheetAndStatBlock as startBattleFromCharacterSheetAndStatBlockRuntime,
   characterBattleRuntimeIssueMessage,
 } from "./index.ts";
 import { characterBattleDruidWildShapeProjection } from "./battle-creature-init.ts";
@@ -166,18 +168,39 @@ import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
 
+type AuthoredStatBlockBattleInitInput = Omit<
+  StatBlockBattleInitInput,
+  "statBlock" | "presentation"
+> & {
+  readonly statBlock: StatBlockRecord;
+};
+
+function projectAuthoredStatBlockBattleInput(
+  input: AuthoredStatBlockBattleInitInput,
+): StatBlockBattleInitInput {
+  const projected = expectRight(projectAuthoredStatBlock(input.statBlock));
+  return {
+    ...input,
+    statBlock: projected.runtime,
+    presentation: projected.presentation,
+  };
+}
+
 function battleCreatureInitFromStatBlock(
   input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
+    AuthoredStatBlockBattleInitInput,
     "ammunitionStocks" | "conditions"
   >,
 ) {
+  const authoredInput = {
+    ...input,
+    ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
+    conditions: [],
+  } satisfies AuthoredStatBlockBattleInitInput;
   return expectRight(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
+    parseBattleCreatureInitFromStatBlock(
+      projectAuthoredStatBlockBattleInput(authoredInput),
+    ),
   );
 }
 
@@ -221,21 +244,42 @@ function characterSpellcasting(
 function startBattleFromCharacterBuildAndStatBlock(
   input: Omit<
     Parameters<typeof startBattleFromCharacterBuildAndStatBlockRuntime>[0],
-    "character"
+    "character" | "statBlockBattleInput"
   > & {
     readonly character: WithoutResourceExpenditures<
       Parameters<
         typeof startBattleFromCharacterBuildAndStatBlockRuntime
       >[0]["character"]
     >;
+    readonly statBlockBattleInput: AuthoredStatBlockBattleInitInput;
   },
 ) {
   return startBattleFromCharacterBuildAndStatBlockRuntime({
     ...input,
+    statBlockBattleInput: projectAuthoredStatBlockBattleInput(
+      input.statBlockBattleInput,
+    ),
     character: {
       ...input.character,
       resourceExpenditures: input.character.resourceExpenditures ?? [],
     },
+  });
+}
+
+function startBattleFromCharacterSheetAndStatBlock(input: {
+  readonly battleId: Parameters<
+    typeof startBattleFromCharacterSheetAndStatBlockRuntime
+  >[0]["battleId"];
+  readonly character: Parameters<
+    typeof startBattleFromCharacterSheetAndStatBlockRuntime
+  >[0]["character"];
+  readonly statBlockBattleInput: AuthoredStatBlockBattleInitInput;
+}) {
+  return startBattleFromCharacterSheetAndStatBlockRuntime({
+    ...input,
+    statBlockBattleInput: projectAuthoredStatBlockBattleInput(
+      input.statBlockBattleInput,
+    ),
   });
 }
 
@@ -949,47 +993,6 @@ describe("Character Sheet battle handoff", () => {
       left: {
         issue: {
           message: expect.stringContaining("Duplicate combatant id"),
-        },
-      },
-    });
-
-    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
-    expect(
-      startBattleFromCharacterSheetAndStatBlock({
-        battleId: battleId("battle:unsupported-stat-block"),
-        character: {
-          sheet: sheet.right,
-          unitLibrary,
-          statBlockCatalog,
-          combatantId: characterCombatantId,
-          displayName: "Character",
-          initiative: initiativeScore(20),
-          ammunitionStocks: [],
-        },
-        statBlockBattleInput: {
-          combatantId: monsterCombatantId,
-          statBlock: {
-            ...skeleton,
-            statBlock: {
-              ...skeleton.statBlock,
-              hp: {
-                kind: "caster_derived",
-                source: "proficiency_bonus",
-              },
-            },
-          },
-          initiative: initiativeScore(10),
-          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-          conditions: [],
-        },
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        issue: {
-          message: expect.stringContaining(
-            "requires literal Stat Block maximum HP",
-          ),
         },
       },
     });
@@ -6618,36 +6621,6 @@ describe("Character Build battle projection", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { message: expect.stringContaining("max HP must be positive") },
-    });
-
-    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
-    expect(
-      startBattleFromCharacterBuildAndStatBlock({
-        battleId: battleId("battle:invalid-stat-block-boundary"),
-        character: init,
-        statBlockBattleInput: {
-          combatantId: combatantId("invalid-stat-block-boundary"),
-          statBlock: {
-            ...skeleton,
-            statBlock: {
-              ...skeleton.statBlock,
-              hp: {
-                kind: "caster_derived",
-                source: "proficiency_bonus",
-              },
-            },
-          },
-          initiative: initiativeScore(5),
-          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-          conditions: [],
-        },
-        unitLibrary,
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: "Battle runtime requires literal Stat Block maximum HP.",
-      },
     });
   });
 
