@@ -1,0 +1,88 @@
+name: Raw Swarm deterministic
+
+on:
+  push:
+    branches:
+      - master
+    paths: &raw-swarm-deterministic-paths
+      - ".github/workflows/raw-swarm-deterministic.yml"
+      - "mise.toml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "packages/**"
+      - "scripts/raw-swarm/**"
+      - "scripts/assert-resource-lock.sh"
+      - "scripts/process-supervision.sh"
+      - "scripts/resource-lock-owner.sh"
+      - "scripts/with-broad-workspace-lock.sh"
+      - "scripts/with-resource-lock.sh"
+      - "vitest.config.ts"
+  pull_request:
+    paths: *raw-swarm-deterministic-paths
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: raw-swarm-deterministic-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deterministic:
+    name: Raw Swarm deterministic lane
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271 # v6.0.9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install mise toolchain
+        uses: jdx/mise-action@3c2e0cf82a5b2e5249f0d3635a4d83d0ae861518 # v4.2.5
+        with:
+          version: 2026.8.10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install ripgrep
+        env:
+          RIPGREP_SHA256: 4cf9f2741e6c465ffdb7c26f38056a59e2a2544b51f7cc128ef28337eeae4d8e
+          RIPGREP_VERSION: 14.1.1
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/ripgrep.tar.gz"
+          install_dir="$RUNNER_TEMP/ripgrep"
+          asset="ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl"
+          curl \
+            --fail \
+            --location \
+            --silent \
+            --show-error \
+            "https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}/${asset}.tar.gz" \
+            --output "$archive"
+          echo "$RIPGREP_SHA256  $archive" | sha256sum --check
+          mkdir -p "$install_dir"
+          tar -xzf "$archive" -C "$install_dir" --strip-components=1
+          echo "$install_dir" >> "$GITHUB_PATH"
+          "$install_dir/rg" --version
+
+      - name: Restrict tunnel device for deterministic verification
+        run: |
+          if [[ -e /dev/net/tun ]]; then
+            sudo chmod 000 /dev/net/tun
+          fi
+
+      - name: Run Raw Swarm deterministic lane
+        run: pnpm check:raw-swarm-deterministic

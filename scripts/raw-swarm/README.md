@@ -42,11 +42,20 @@ Available model operations are `scenario-campaign`, `scenario-review`,
 catalogue rendering, replay, report, assembly, and comparison commands remain
 direct commands because they do not call a model.
 
-The quality gate runs `check:raw-swarm-lane-hygiene` before the deterministic
-check. The hygiene check preserves the classified quality-owned test inventory,
+The workspace quality gate runs `check:raw-swarm-lane-hygiene` without running
+the expensive deterministic suite. The full suite follows the same ownership
+pattern as QNT proofs: `.github/workflows/raw-swarm-deterministic.yml` runs it
+for relevant pull-request and `master` changes, and `workflow_dispatch` admits
+an explicit milestone run. Run `pnpm check:raw-swarm-deterministic` locally
+after the integration revision is stable and before merging a change covered
+by that workflow's path filters. Any subsequent revision change invalidates
+that result.
+
+The hygiene check preserves the classified deterministic-lane test inventory,
 classifies the two pre-existing MCP prototype tests in a closed exclusion list,
-and rejects any new unclassified test or quality command that reaches a public
-model lane. Its closed Vitest filename inventory expands Vitest's default
+verifies the separate workflow and its path filters, and rejects any new
+unclassified test or deterministic command that reaches a public model lane.
+Its closed Vitest filename inventory expands Vitest's default
 include glob, `**/*.{test,spec}.?(c|m)[jt]s?(x)`, into every `.test` and `.spec`
 JavaScript/TypeScript form, including JSX/TSX and CJS/MJS/CTS/MTS variants.
 That same canonical extension inventory drives conservative internal-import
@@ -55,7 +64,7 @@ during transitive capability scanning. The deterministic runner statically
 inventories reachable repository-owned sources. Its guarded repository phase
 preloads a Node capability guard and prepends failing shims for known
 coding-agent and network CLI names.
-The quality inventory is partitioned into two mandatory subphases. The closed
+The deterministic inventory is partitioned into two mandatory subphases. The closed
 boundary-test partition runs under the native supervisor's `--supervise-only`
 process-tree mode without the outer JavaScript preload, so its nested
 supervisor, signal, permission, and synthetic-agent fixtures can exercise the
