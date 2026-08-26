@@ -80,7 +80,6 @@ type ScenarioCatalogueReadSource = Readonly<{
   readonly path: string;
   readonly source: ScenarioCatalogueSource;
   readonly admissionComparison: ScenarioCatalogueAdmissionComparison;
-  readonly scope: ScenarioCatalogueScope;
 }>;
 
 type ScenarioCatalogueScope = "live" | "contained";
@@ -1051,7 +1050,6 @@ function readScenarioCatalogueSource(
   }
   return Either.right({
     path,
-    scope,
     source: {
       ...record,
       characterRequirement: facts.right.facts.characterRequirement,
