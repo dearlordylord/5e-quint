@@ -165,13 +165,37 @@ async function handleSavedSessionAuthorizationNodeRequest(input: {
 }): Promise<void> {
   const startedAt = performance.now();
   const trace = publicMcpTraceContext();
-  let status = 200;
-  let outcome: "accepted" | "rejected" | "failed" = "accepted";
+  const observation = await savedSessionAuthorizationRequestAttempt(input);
+  observePublicMcpRequest({
+    environment: input.operations.environment,
+    release: input.operations.release,
+    traceId: trace.traceId,
+    spanId: trace.spanId,
+    method: publicMcpHttpMethod(input.incoming.method),
+    route: publicRouteLabel(input.pathname),
+    durationMilliseconds: Math.round(performance.now() - startedAt),
+    ...observation,
+  });
+}
+
+async function savedSessionAuthorizationRequestAttempt(input: {
+  readonly authorization: SavedSessionAuthorizationHttp;
+  readonly incoming: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["incoming"];
+  readonly outgoing: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["outgoing"];
+  readonly pathname: string;
+}): Promise<{
+  readonly status: number;
+  readonly outcome: "accepted" | "rejected" | "failed";
+}> {
   try {
     const result = await handleSavedSessionAuthorizationRequest(input);
     if (Either.isLeft(result)) {
-      status = result.left.reason === "requestTooLarge" ? 413 : 500;
-      outcome =
+      const status = result.left.reason === "requestTooLarge" ? 413 : 500;
+      const outcome =
         result.left.reason === "requestTooLarge" ? "rejected" : "failed";
       if (input.outgoing.headersSent) {
         input.outgoing.destroy();
@@ -186,33 +210,20 @@ async function handleSavedSessionAuthorizationNodeRequest(input: {
           ),
         );
       }
-    } else {
-      status = input.outgoing.statusCode;
-      outcome = status < 400 ? "accepted" : "rejected";
+      return { status, outcome };
     }
+    const status = input.outgoing.statusCode;
+    return { status, outcome: status < 400 ? "accepted" : "rejected" };
   } catch {
-    status = 500;
-    outcome = "failed";
     if (input.outgoing.headersSent) {
       input.outgoing.destroy();
     } else {
       await writePublicHttpResponse(
         input.outgoing,
-        new Response("Internal server error", { status }),
+        new Response("Internal server error", { status: 500 }),
       );
     }
-  } finally {
-    observePublicMcpRequest({
-      environment: input.operations.environment,
-      release: input.operations.release,
-      traceId: trace.traceId,
-      spanId: trace.spanId,
-      method: publicMcpHttpMethod(input.incoming.method),
-      route: publicRouteLabel(input.pathname),
-      status,
-      outcome,
-      durationMilliseconds: Math.round(performance.now() - startedAt),
-    });
+    return { status: 500, outcome: "failed" };
   }
 }
 
