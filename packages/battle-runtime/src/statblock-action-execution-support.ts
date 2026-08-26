@@ -3,7 +3,7 @@ import type {
   CreatureActions,
   CreatureNamedAttackRoll,
   CreatureTrait,
-  StatBlockMechanics,
+  CreatureStatBlock,
 } from "@dnd/surface/surface/types";
 import type {
   StatBlockTraitAttackRollMode,
@@ -13,7 +13,7 @@ import { creatureAttackRollMechanicsAreSupported } from "./statblock-attack-exec
 export { creatureAttackRollMechanicsAreSupported } from "./statblock-attack-execution-mechanics.ts";
 
 export function statBlockActionSurfaceIsSupported(
-  statBlock: StatBlockMechanics,
+  statBlock: CreatureStatBlock,
 ): boolean {
   return (
     creatureActionSectionIsSupported(statBlock.actions) &&
@@ -48,7 +48,7 @@ export function creatureNamedAttackRollIsSupported(
 }
 
 function creatureTraitsAreSupported(
-  traits: StatBlockMechanics["traits"],
+  traits: CreatureStatBlock["traits"],
 ): boolean {
   return (
     traits === undefined ||
@@ -69,7 +69,7 @@ function mentionsAttackRollAdvantage(description: string): boolean {
 }
 
 export function supportedStatBlockTraitAttackRollModes(
-  traits: StatBlockMechanics["traits"],
+  traits: CreatureStatBlock["traits"],
 ): ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode> | undefined {
   const modes = (traits ?? []).flatMap((trait) => {
     const mode = statBlockTraitAttackRollMode(trait);

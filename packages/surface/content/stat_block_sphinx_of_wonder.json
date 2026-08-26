@@ -17,18 +17,22 @@
       "wis": 12
     },
     "ac": {
-      "kind": "literal",
-      "value": 13
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
     },
-    "actions": {
-      "attacks": [
-        {
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
           "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 5
           },
           "attackType": "melee",
+          "kind": "attack_roll",
           "name": "Rend",
           "onHit": [
             {
@@ -58,32 +62,52 @@
             }
           ],
           "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
         }
-      ]
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Celestial",
+          "Common"
+        ]
+      }
     },
     "creatureType": "celestial",
-    "displayName": "Sphinx of Wonder",
     "hp": {
       "kind": "literal",
       "value": 39
     },
-    "initiativeModifier": 3,
-    "languages": [
-      "Celestial",
-      "Common"
-    ],
-    "reactions": {
-      "specials": [
-        {
-          "description": "Trigger: The sphinx or another creature within 30 feet makes an ability check or a saving throw. Response: The sphinx adds 2 to the roll.",
-          "limitedUse": {
-            "kind": "daily",
-            "uses": 2
-          },
-          "name": "Burst of Ingenuity"
-        }
-      ]
+    "initiative": {
+      "modifier": 3,
+      "score": 13
     },
+    "passivePerception": 11,
+    "reactions": [
+      {
+        "description": "Trigger: The sphinx or another creature within 30 feet makes an ability check or a saving throw. Response: The sphinx adds 2 to the roll.",
+        "kind": "textOnly",
+        "name": "Burst of Ingenuity",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
     "resistances": {
       "damageTypes": [
         "necrotic",
@@ -92,6 +116,16 @@
       ],
       "kind": "fixed"
     },
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 2
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
     "senses": [
       {
         "kind": "darkvision",

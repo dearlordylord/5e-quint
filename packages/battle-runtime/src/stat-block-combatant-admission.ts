@@ -1,7 +1,7 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Condition } from "@dnd/shared/game-facts";
 import { Hp, type Size } from "@dnd/shared/types";
-import type { StatBlockMechanics } from "@dnd/surface/surface/types";
+import type { CreatureStatBlock } from "@dnd/surface/surface/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 
@@ -22,15 +22,9 @@ const AdmittedBattleStatBlockCombatant =
 export type BattleStatBlockCombatantSource = {
   readonly id: BattleStatBlockExecutionSource["id"];
   readonly challengeRating: BattleStatBlockExecutionSource["challengeRating"];
-  readonly statBlock: Omit<StatBlockMechanics, "ac" | "hp" | "size"> & {
-    readonly ac: Extract<
-      StatBlockMechanics["ac"],
-      { readonly kind: "literal" }
-    >;
-    readonly hp: Extract<
-      StatBlockMechanics["hp"],
-      { readonly kind: "literal" }
-    >;
+  readonly statBlock: Omit<CreatureStatBlock, "ac" | "hp" | "size"> & {
+    readonly ac: Extract<CreatureStatBlock["ac"], { readonly kind: "literal" }>;
+    readonly hp: Extract<CreatureStatBlock["hp"], { readonly kind: "literal" }>;
     readonly size: Size;
   };
 } & Brand.Brand<"BattleStatBlockCombatantSource">;

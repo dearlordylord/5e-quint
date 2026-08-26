@@ -27,7 +27,7 @@ import {
   decodeFeatRecordSync,
   decodeMagicItemRecordSync,
   decodeMasteryRecordSync,
-  decodeMonsterStatBlockSync,
+  decodeStatBlockRecordSync,
   decodeShieldRecordSync,
   decodeShieldTemplateRecordSync,
   decodeSpeciesRecordSync,
@@ -129,9 +129,7 @@ describe("SRD Surface publication schema", () => {
     });
 
     const monster = srdSurface.statBlocks[0];
-    expect(decodeMonsterStatBlockSync(monster.statBlock)).toEqual(
-      monster.statBlock,
-    );
+    expect(decodeStatBlockRecordSync(monster)).toEqual(monster);
   });
 
   test("reads top-level casting-time and ritual facts without assuming every Spell family has them", () => {

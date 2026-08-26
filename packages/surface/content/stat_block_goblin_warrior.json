@@ -17,18 +17,22 @@
       "wis": 8
     },
     "ac": {
-      "kind": "literal",
-      "value": 15
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
     },
-    "actions": {
-      "attacks": [
-        {
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
           "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 4
           },
           "attackType": "melee",
+          "kind": "attack_roll",
           "name": "Scimitar",
           "onHit": [
             {
@@ -62,7 +66,14 @@
           ],
           "reachFeet": 5
         },
-        {
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
           "ammunition": "arrow",
           "attackAbility": "dex",
           "attackBonus": {
@@ -70,6 +81,7 @@
             "value": 4
           },
           "attackType": "ranged",
+          "kind": "attack_roll",
           "name": "Shortbow",
           "onHit": [
             {
@@ -105,31 +117,71 @@
             "long": 320,
             "normal": 80
           }
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
         }
-      ]
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "chaotic"
     },
-    "bonusActions": {
-      "actionOptions": [
-        {
+    "bonusActions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "kind": "action_option",
           "name": "Nimble Escape",
           "options": [
             "disengage",
             "hide"
           ]
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
         }
-      ]
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Goblin"
+        ]
+      }
     },
     "creatureType": "fey",
-    "displayName": "Goblin Warrior",
+    "creatureTypeTags": [
+      "goblinoid"
+    ],
+    "gear": [
+      {
+        "item": "Leather Armor"
+      },
+      {
+        "item": "Scimitar"
+      },
+      {
+        "item": "Shield"
+      },
+      {
+        "item": "Shortbow"
+      }
+    ],
     "hp": {
       "kind": "literal",
       "value": 10
     },
-    "initiativeModifier": 2,
-    "languages": [
-      "Common",
-      "Goblin"
-    ],
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 9,
     "savingThrowModifiers": [
       {
         "ability": "dex",
@@ -143,6 +195,12 @@
       }
     ],
     "size": "small",
+    "skillModifiers": [
+      {
+        "modifier": 6,
+        "skill": "stealth"
+      }
+    ],
     "speeds": [
       {
         "feet": {

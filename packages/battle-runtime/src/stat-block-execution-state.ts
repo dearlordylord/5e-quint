@@ -10,7 +10,7 @@ import type {
   ChallengeRating,
   CreatureLimitedUse,
   StatBlockId,
-  StatBlockMechanics,
+  CreatureStatBlock,
 } from "@dnd/surface/surface/types";
 import type {
   StatBlockAttackActionOption,
@@ -34,7 +34,7 @@ import type {
 export type BattleStatBlockExecutionSource = {
   readonly id: StatBlockId;
   readonly challengeRating: ChallengeRating;
-  readonly statBlock: StatBlockMechanics;
+  readonly statBlock: CreatureStatBlock;
 };
 
 export type StatBlockActionProjectionSection =

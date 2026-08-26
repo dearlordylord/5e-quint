@@ -711,9 +711,6 @@ export type StatBlockInitiativeModifier = Schema.Schema.Type<
 export type StatBlockInitiative = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockInitiativeSchema
 >;
-export type MonsterStatBlock = Schema.Schema.Type<
-  typeof SurfaceSchema.MonsterStatBlockSchema
->;
 export type CreatureStatBlockOverrides = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureStatBlockOverridesSchema
 >;
@@ -1352,7 +1349,6 @@ export type AuthoredUnitSource = UnitRecord;
 export type DragonbornSpeciesSource = DragonbornSpeciesRecord;
 export type StatBlockId = StatBlockRecord["id"];
 export type ChallengeRating = StatBlockRecord["challengeRating"];
-export type StatBlockMechanics = StatBlockRecord["statBlock"];
 
 export type SpellFreeCastGrant = Extract<
   EffectAtom,

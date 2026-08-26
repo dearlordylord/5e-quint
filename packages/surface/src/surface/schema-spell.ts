@@ -5133,13 +5133,29 @@ export const StatBlockProcedureResourcesSchema = nonEmpty(
   }),
 );
 
-export const StatBlockProcedureResourceRefsSchema = Schema.Array(
-  StatBlockProcedureResourceOrdinalSchema,
-).pipe(
-  Schema.filter((refs) => new Set(refs).size === refs.length, {
-    message: () =>
-      "A Stat Block procedure must not reference one resource more than once.",
-  }),
+/**
+ * Resource references use a tagged empty branch because the Dhall publication
+ * encoder omits empty arrays under `--omit-empty`.  Keeping the empty spelling
+ * as a non-empty object makes authored JSON round-trip without a second
+ * representation while retaining a narrow list for the non-empty branch.
+ */
+const StatBlockProcedureNoResourceRefsSchema = strictStruct({
+  kind: Schema.Literal("none"),
+});
+
+const StatBlockProcedureSomeResourceRefsSchema = strictStruct({
+  kind: Schema.Literal("some"),
+  ordinals: nonEmpty(StatBlockProcedureResourceOrdinalSchema).pipe(
+    Schema.filter((refs) => new Set(refs).size === refs.length, {
+      message: () =>
+        "A Stat Block procedure must not reference one resource more than once.",
+    }),
+  ),
+});
+
+export const StatBlockProcedureResourceRefsSchema = Schema.Union(
+  StatBlockProcedureNoResourceRefsSchema,
+  StatBlockProcedureSomeResourceRefsSchema,
 );
 
 export const StatBlockProcedureDcSourceSchema = strictStruct({
@@ -5155,11 +5171,17 @@ const StatBlockProcedureDiceExprSchema = strictStruct({
   abilityModifier: optionalExact(AbilitySchema),
 });
 
-const StatBlockProcedureDamageAmountSchema = strictStruct({
-  kind: Schema.Literal("fixed"),
-  expr: StatBlockProcedureDiceExprSchema,
-  static: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-});
+const StatBlockProcedureDamageAmountSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    expr: StatBlockProcedureDiceExprSchema,
+    static: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    static: StatBlockProcedurePositiveIntegerSchema,
+  }),
+);
 
 const AuthoredProcedureEffectAtomSchema = Schema.Union(
   strictStruct({
@@ -5342,12 +5364,12 @@ export const StatBlockSpellReferenceSchema = strictStruct({
 export const StatBlockSpellcastingGroupSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("at_will"),
-    resourceRefs: Schema.Tuple(),
+    resourceRefs: StatBlockProcedureNoResourceRefsSchema,
     spells: nonEmpty(StatBlockSpellReferenceSchema),
   }),
   strictStruct({
     kind: Schema.Literal("limited"),
-    resourceRefs: nonEmpty(StatBlockProcedureResourceOrdinalSchema),
+    resourceRefs: StatBlockProcedureSomeResourceRefsSchema,
     spells: nonEmpty(StatBlockSpellReferenceSchema),
   }),
 );
@@ -6129,10 +6151,20 @@ export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
  */
 const StandaloneStatBlockSenseRangeFeetSchema = PositiveIntegerSchema;
 
-export const StandaloneCreatureSenseSchema = Schema.Struct({
-  kind: CreatureSenseSchema.fields.kind,
-  rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
-});
+export const StandaloneCreatureSenseSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("darkvision"),
+    rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
+    qualifier: Schema.optionalWith(
+      Schema.Literal("unimpeded_by_magical_darkness"),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("blindsight", "tremorsense", "truesight"),
+    rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
+  }),
+);
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -6383,13 +6415,18 @@ const hasKnownResourceRefs = (block: StandaloneStatBlockBase): boolean => {
   );
 
   return allProcedureEntries(block).every((entry) => {
-    const procedureResourceRefs = [...entry.resourceRefs];
+    const procedureResourceRefs =
+      entry.resourceRefs.kind === "none"
+        ? []
+        : [...entry.resourceRefs.ordinals];
     if (
       entry.kind === "executable" &&
       entry.procedure.kind === "spellcasting"
     ) {
       for (const group of entry.procedure.groups) {
-        procedureResourceRefs.push(...group.resourceRefs);
+        if (group.resourceRefs.kind === "some") {
+          procedureResourceRefs.push(...group.resourceRefs.ordinals);
+        }
       }
     }
     return procedureResourceRefs.every((resourceOrdinal) =>

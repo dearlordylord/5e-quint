@@ -23,7 +23,6 @@ import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.j
 import locateObjectInput from "../../content/locate_object.json";
 import bagOfHoldingInput from "../../content/magic_item_bag_of_holding.json";
 import chimeOfOpeningInput from "../../content/magic_item_chime_of_opening.json";
-import cloakOfProtectionInput from "../../content/magic_item_cloak_of_protection.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -312,17 +311,25 @@ describe("Surface trace interpreter", () => {
       },
       statBlock: {
         ...goblinWarriorInput.statBlock,
-        actions: {
+        actions: [
           ...goblinWarriorInput.statBlock.actions,
-          supports: [
-            {
+          {
+            kind: "executable",
+            procedureOrdinal: 3,
+            procedure: {
+              kind: "support",
               name: "Synthetic Support",
               target: "ally_in_range",
               rangeFeet: 30,
-              effect: cloakOfProtectionInput.mechanics.grants[0],
+              effect: {
+                kind: "apply_condition_if_target_size_at_most",
+                condition: "prone",
+                maxCreatureSize: "medium",
+              },
             },
-          ],
-        },
+            resourceRefs: { kind: "none" },
+          },
+        ],
       },
     });
 

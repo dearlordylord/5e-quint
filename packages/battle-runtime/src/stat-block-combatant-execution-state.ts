@@ -3,7 +3,7 @@ import { Hp, type Size } from "@dnd/shared/types";
 import type {
   DamageType,
   StatBlockId,
-  StatBlockMechanics,
+  CreatureStatBlock,
 } from "@dnd/surface/surface/types";
 import type { Brand } from "effect";
 
@@ -18,13 +18,13 @@ import type { StatBlockExecutionState } from "./stat-block-execution-state.ts";
 /** Authored-free mechanical facts queried after a Stat Block combatant commits. */
 export type BattleStatBlockCombatantMechanics = {
   readonly creatureType: import("@dnd/shared/game-facts").CreatureType;
-  readonly speeds: StatBlockMechanics["speeds"];
-  readonly abilityScores: StatBlockMechanics["abilityScores"];
+  readonly speeds: CreatureStatBlock["speeds"];
+  readonly abilityScores: CreatureStatBlock["abilityScores"];
   readonly savingThrowModifiers: ReadonlyArray<
-    NonNullable<StatBlockMechanics["savingThrowModifiers"]>[number]
+    NonNullable<CreatureStatBlock["savingThrowModifiers"]>[number]
   >;
   readonly skillModifiers: ReadonlyArray<
-    NonNullable<StatBlockMechanics["skillModifiers"]>[number]
+    NonNullable<CreatureStatBlock["skillModifiers"]>[number]
   >;
   readonly vulnerabilities: readonly DamageType[];
   readonly resistances: readonly DamageType[];
@@ -32,12 +32,12 @@ export type BattleStatBlockCombatantMechanics = {
     readonly damageTypes: readonly DamageType[];
     readonly conditions: ReadonlyArray<
       NonNullable<
-        NonNullable<StatBlockMechanics["immunities"]>["conditions"]
+        NonNullable<CreatureStatBlock["immunities"]>["conditions"]
       >[number]
     >;
   };
   readonly specialSenses: ReadonlyArray<
-    NonNullable<StatBlockMechanics["senses"]>[number]
+    NonNullable<CreatureStatBlock["senses"]>[number]
   >;
 };
 

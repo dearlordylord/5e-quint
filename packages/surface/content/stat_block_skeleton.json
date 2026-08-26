@@ -17,18 +17,22 @@
       "wis": 8
     },
     "ac": {
-      "kind": "literal",
-      "value": 14
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
     },
-    "actions": {
-      "attacks": [
-        {
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
           "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 5
           },
           "attackType": "melee",
+          "kind": "attack_roll",
           "name": "Shortsword",
           "onHit": [
             {
@@ -47,7 +51,14 @@
           ],
           "reachFeet": 5
         },
-        {
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
           "ammunition": "arrow",
           "attackAbility": "dex",
           "attackBonus": {
@@ -55,6 +66,7 @@
             "value": 5
           },
           "attackType": "ranged",
+          "kind": "attack_roll",
           "name": "Shortbow",
           "onHit": [
             {
@@ -75,11 +87,36 @@
             "long": 320,
             "normal": 80
           }
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
         }
-      ]
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "additionalLanguages": 1,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
     },
     "creatureType": "undead",
-    "displayName": "Skeleton",
+    "gear": [
+      {
+        "item": "Shortbow"
+      },
+      {
+        "item": "Shortsword"
+      }
+    ],
     "hp": {
       "kind": "literal",
       "value": 13
@@ -93,10 +130,11 @@
         "poison"
       ]
     },
-    "initiativeModifier": 3,
-    "languages": [
-      "Understands Common plus one other language but can't speak"
-    ],
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 9,
     "savingThrowModifiers": [
       {
         "ability": "str",
