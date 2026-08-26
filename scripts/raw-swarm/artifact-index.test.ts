@@ -1,4 +1,5 @@
 import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import {
   existsSync,
   linkSync,
@@ -10,7 +11,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { basename, dirname, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
@@ -1176,6 +1177,44 @@ process.stdout.write("opened");`,
 
     const writer = openArtifactIndex(relative(repoRoot, dbPath));
     writer.close();
+  });
+
+  test("keeps a directly temporary index free of lock artifacts", () => {
+    const dbPath = resolve(
+      tmpdir(),
+      `raw-swarm-direct-index-${randomUUID()}.sqlite`,
+    );
+    const lockDirectory = resolve(tmpdir(), "raw-swarm-artifact-index-locks");
+    mkdirSync(lockDirectory, { recursive: true });
+    const entriesBefore = new Set(readdirSync(tmpdir()));
+    const lockDigest = sha256Text(dbPath);
+    try {
+      const db = openArtifactIndex(dbPath);
+      db.close();
+      const entriesAfter = readdirSync(tmpdir());
+      const dbName = basename(dbPath);
+      const sourceFiles = new Set([dbName, `${dbName}-wal`, `${dbName}-shm`]);
+      expect(
+        entriesAfter.filter(
+          (entry) => !entriesBefore.has(entry) && !sourceFiles.has(entry),
+        ),
+      ).toEqual([]);
+      expect(
+        existsSync(
+          resolve(
+            tmpdir(),
+            `raw-swarm-artifact-index-${lockDigest}.lock.sqlite`,
+          ),
+        ),
+      ).toBe(false);
+      expect(
+        existsSync(resolve(lockDirectory, `${lockDigest}.lock.sqlite`)),
+      ).toBe(true);
+    } finally {
+      rmSync(dbPath, { force: true });
+      rmSync(`${dbPath}-wal`, { force: true });
+      rmSync(`${dbPath}-shm`, { force: true });
+    }
   });
 
   test("registers controlled attachments in the transcript transaction", () => {

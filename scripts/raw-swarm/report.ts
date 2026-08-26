@@ -527,9 +527,9 @@ function validatePortableArtifactInventory(
   bundle: PortableReportBundle,
   indexed: readonly IndexedReportArtifact[],
 ): void {
-  if (bundle.artifacts.size !== indexed.length) {
+  if (indexed.length > bundle.artifacts.size) {
     fail(
-      `Portable report artifact inventory does not match its manifest: expected ${String(indexed.length)} entries, found ${String(bundle.artifacts.size)}.`,
+      `Portable report artifact inventory does not match its manifest: expected at least ${String(indexed.length)} entries, found ${String(bundle.artifacts.size)}.`,
     );
   }
   for (const artifact of indexed) {
@@ -543,6 +543,8 @@ function validatePortableArtifactInventory(
         `Portable report artifact inventory does not match its manifest: ${artifact.path}.`,
       );
     }
+  }
+  for (const artifact of bundle.artifacts.values()) {
     portableReportArtifactBytes(bundle, artifact);
   }
 }

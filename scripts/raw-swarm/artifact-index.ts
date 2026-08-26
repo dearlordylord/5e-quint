@@ -171,7 +171,11 @@ function artifactIndexLockIdentity(absolute: string): string {
 function artifactIndexLockPath(absolute: string): string {
   const identity = artifactIndexLockIdentity(absolute);
   const digest = createHash("sha256").update(identity).digest("hex");
-  return resolve(tmpdir(), `raw-swarm-artifact-index-${digest}.lock.sqlite`);
+  return resolve(
+    tmpdir(),
+    "raw-swarm-artifact-index-locks",
+    `${digest}.lock.sqlite`,
+  );
 }
 
 function artifactIndexLockFailure(
@@ -209,6 +213,9 @@ function acquireArtifactIndexLock(
   absolute: string,
   mode: ArtifactIndexLockMode,
 ): { readonly release: () => void } {
+  mkdirSync(resolve(tmpdir(), "raw-swarm-artifact-index-locks"), {
+    recursive: true,
+  });
   const lockDb = new DatabaseSync(artifactIndexLockPath(absolute));
   try {
     // Initialization may race with another process creating this lock file;
@@ -311,6 +318,32 @@ function bindArtifactIndexLock(
       ),
   });
   return db;
+}
+
+function openManagedArtifactIndex(
+  lease: { readonly release: () => void },
+  open: () => DatabaseSync,
+  initialize: (db: DatabaseSync) => void,
+): DatabaseSync {
+  const db = (() => {
+    try {
+      return open();
+    } catch (error) {
+      lease.release();
+      throw error;
+    }
+  })();
+  try {
+    initialize(db);
+    return bindArtifactIndexLock(db, lease);
+  } catch (error) {
+    try {
+      db.close();
+    } finally {
+      lease.release();
+    }
+    throw error;
+  }
 }
 
 function requiredCurrentExecutionAuthorityPath(
@@ -425,14 +458,15 @@ export function openArtifactIndex(path: string): DatabaseSync {
   mkdirSync(dirname(absolute), { recursive: true });
   if (existsSync(absolute)) rejectHardLinkedArtifactIndex(absolute, path);
   const lease = acquireArtifactIndexLock(absolute, "writer");
-  let db: DatabaseSync | undefined;
-  try {
-    db = new DatabaseSync(absolute);
-    validateArtifactIndex(db, false);
-    db.exec("PRAGMA foreign_keys = ON");
-    db.exec("PRAGMA journal_mode = WAL");
-    db.exec("PRAGMA busy_timeout = 5000");
-    db.exec(`
+  return openManagedArtifactIndex(
+    lease,
+    () => new DatabaseSync(absolute),
+    (db) => {
+      validateArtifactIndex(db, false);
+      db.exec("PRAGMA foreign_keys = ON");
+      db.exec("PRAGMA journal_mode = WAL");
+      db.exec("PRAGMA busy_timeout = 5000");
+      db.exec(`
     CREATE TABLE IF NOT EXISTS indexMetadata(
       schemaVersion INTEGER PRIMARY KEY CHECK(schemaVersion = ${INDEX_SCHEMA_VERSION})
     ) STRICT;
@@ -619,17 +653,8 @@ export function openArtifactIndex(path: string): DatabaseSync {
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_category ON scenarioCampaignFindings(category);
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_fingerprint ON scenarioCampaignFindings(fingerprint);
     `);
-    const locked = bindArtifactIndexLock(db, lease);
-    db = undefined;
-    return locked;
-  } catch (error) {
-    try {
-      db?.close();
-    } finally {
-      lease.release();
-    }
-    throw error;
-  }
+    },
+  );
 }
 
 export function openArtifactIndexReadOnly(path: string): DatabaseSync {
@@ -656,24 +681,18 @@ export function openArtifactIndexReadOnly(path: string): DatabaseSync {
   })();
   rejectHardLinkedArtifactIndex(absolute, path);
   const lease = acquireArtifactIndexLock(absolute, "reader");
-  let db: DatabaseSync | undefined;
-  try {
-    rejectUncheckpointedWal(absolute, path);
-    db = new DatabaseSync(`${pathToFileURL(absolute).href}?immutable=1`, {
-      readOnly: true,
-    });
-    validateArtifactIndex(db, true);
-    const locked = bindArtifactIndexLock(db, lease);
-    db = undefined;
-    return locked;
-  } catch (error) {
-    try {
-      db?.close();
-    } finally {
-      lease.release();
-    }
-    throw error;
-  }
+  return openManagedArtifactIndex(
+    lease,
+    () => {
+      rejectUncheckpointedWal(absolute, path);
+      return new DatabaseSync(`${pathToFileURL(absolute).href}?immutable=1`, {
+        readOnly: true,
+      });
+    },
+    (db) => {
+      validateArtifactIndex(db, true);
+    },
+  );
 }
 
 function registerArtifact(

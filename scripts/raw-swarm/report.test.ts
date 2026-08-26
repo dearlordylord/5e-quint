@@ -730,12 +730,19 @@ describe("RAW swarm artifact report index", () => {
     const controlledManifest = decodePortableManifest(
       readFileSync(resolve(controlledExportPath, "manifest.json")),
     );
+    const controlledTimingSha256 = createHash("sha256")
+      .update(readFileSync(controlledTimingPath))
+      .digest("hex");
+    expect(
+      query(
+        controlledDbPath,
+        `SELECT 1 FROM artifacts WHERE sha256 = '${controlledTimingSha256}'`,
+      ),
+    ).toBeUndefined();
     expect(controlledManifest.artifacts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          sha256: createHash("sha256")
-            .update(readFileSync(controlledTimingPath))
-            .digest("hex"),
+          sha256: controlledTimingSha256,
         }),
         expect.objectContaining({
           sha256: createHash("sha256")
