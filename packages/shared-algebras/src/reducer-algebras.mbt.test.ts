@@ -4,6 +4,7 @@ import * as path from "node:path";
 
 import {
   defineDriver,
+  ITFBigInt,
   quintRun,
   stateCheck,
 } from "@firfi/quint-connect/effect";
@@ -369,7 +370,11 @@ const RESTRICTED_UNIT_ACTION_ORDERS = [0, 1, 2, 3, 4] as const;
 type RestrictedUnitActionOrder =
   (typeof RESTRICTED_UNIT_ACTION_ORDERS)[number];
 
-const quintNumberSchema = Schema.Union([Schema.Number, Schema.BigInt]).pipe(
+const quintNumberSchema = Schema.Union([
+  Schema.Number,
+  Schema.BigInt,
+  ITFBigInt,
+]).pipe(
   Schema.decodeTo(Schema.Number, {
     decode: SchemaGetter.transform<number, number | bigint>((value) =>
       typeof value === "bigint" ? Number(value) : value,
@@ -562,6 +567,59 @@ describe("shared reducer algebra MBT", () => {
 });
 
 describe("shared reducer algebra trace-state decoders", () => {
+  it("decodes encoded ITF bigint fields across projections", async () => {
+    const actionState = await Effect.runPromise(
+      decodeActionEconomySpecState({
+        qTurnActionAvailable: true,
+        qRestrictedUnitActionOrder: { "#bigint": "3" },
+        qHasBonusAction: false,
+      }),
+    );
+    const deathSaveState = await Effect.runPromise(
+      decodeDeathSavesSpecState({
+        qSuccesses: { "#bigint": "2" },
+        qFailures: { "#bigint": "1" },
+        qStable: false,
+        qDead: false,
+        qHpRegained: false,
+      }),
+    );
+    const initiativeState = await Effect.runPromise(
+      decodeInitiativeSpecState({
+        qRound: { "#bigint": "2" },
+        qAlreadyActed: [
+          { creature: "c4", initiative: { "#bigint": "4" } },
+        ],
+        qStillToAct: [
+          { creature: "c1", initiative: { "#bigint": "1" } },
+        ],
+        qLastInsert: {
+          tag: "LastInsertDecision",
+          value: ["c1"],
+        },
+      }),
+    );
+
+    expect(actionState).toEqual({
+      turnActionAvailable: true,
+      restrictedUnitActionProcedureRefs: [unitActionA, unitActionB],
+      hasBonusAction: false,
+    });
+    expect(deathSaveState).toEqual({
+      successes: 2,
+      failures: 1,
+      stable: false,
+      dead: false,
+      hpRegained: false,
+    });
+    expect(initiativeState).toEqual({
+      round: 2,
+      alreadyActed: [{ creature: "c4", initiative: 4 }],
+      stillToAct: [{ creature: "c1", initiative: 1 }],
+      lastInsert: { status: "decide", tie: ["c1"] },
+    });
+  });
+
   it("returns a typed failure for malformed action-economy state", async () => {
     const result = await Effect.runPromise(
       Effect.result(
