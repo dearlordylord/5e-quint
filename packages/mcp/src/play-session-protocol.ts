@@ -1,4 +1,8 @@
 import { Either } from "effect";
+import {
+  characterDraftId,
+  type CharacterDraftId,
+} from "@dnd/character-creation-runtime";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
@@ -6,7 +10,10 @@ import {
   decodeGuestAccessGrant,
   type PlaySessionCaller,
 } from "./play-session-access.ts";
-import type { CharacterToolName } from "./character-tool-input.ts";
+import {
+  characterToolNames,
+  type CharacterToolName,
+} from "./character-tool-input.ts";
 import {
   decodeDiceToolCall,
   diceToolNames,
@@ -172,10 +179,11 @@ export async function handlePlaySessionOperation(input: {
       ).some(([, session]) => session.tag !== "inBattle"),
     }),
     {
-      commandFor: () =>
+      commandFor: (operation) =>
         retainedPlaySessionCommand(
           input.operationName,
           routed.right.operationArgs,
+          operation.operationContent,
         ),
       retain: (operation) =>
         input.recordOperation &&
@@ -240,7 +248,12 @@ function operationShouldBeRetained(
 function retainedPlaySessionCommand(
   operationName: CharacterToolName | BattleToolName | DiceToolName,
   args: Readonly<Record<string, unknown>>,
+  operationContent: unknown,
 ): PlaySessionCommand {
+  if (operationName === characterToolNames.createCharacterDraft) {
+    const draftId = createdCharacterDraftId(operationContent);
+    return { name: operationName, args: { ...args, draftId } };
+  }
   if (operationName === diceToolNames.rollDice) {
     const decoded = decodeDiceToolCall({ name: operationName, args });
     if (Either.isLeft(decoded)) {
@@ -251,6 +264,25 @@ function retainedPlaySessionCommand(
     return { name: operationName, args: decoded.right.args };
   }
   return { name: operationName, args };
+}
+
+function createdCharacterDraftId(operationContent: unknown): CharacterDraftId {
+  if (!isToolContent(operationContent)) {
+    throw new Error(
+      "A successful Character Draft creation returned invalid tool content.",
+    );
+  }
+  const payload =
+    "structuredContent" in operationContent
+      ? operationContent.structuredContent
+      : jsonContentPayload(operationContent);
+  const draft = isJsonObject(payload) ? payload.draft : undefined;
+  if (!isJsonObject(draft) || typeof draft.draftId !== "string") {
+    throw new Error(
+      "A successful Character Draft creation omitted its retained draft identity.",
+    );
+  }
+  return characterDraftId(draft.draftId);
 }
 
 type RoutedArgs = {

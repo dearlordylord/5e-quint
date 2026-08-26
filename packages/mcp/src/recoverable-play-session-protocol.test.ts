@@ -38,6 +38,49 @@ afterEach(async () => {
 });
 
 describe("recoverable Play Session protocol", () => {
+  test("retains a runtime-assigned Character Draft identity across replay", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "dnd-generated-draft-"));
+    temporaryDirectories.push(directory);
+    const repository = openRepository(join(directory, "play-sessions.sqlite"));
+    const connection = await connectClient(repository);
+
+    try {
+      const created = await callStructuredTool(connection.client, {
+        name: "create_play_session",
+        arguments: {},
+      });
+      const playSessionId = stringField(created, "playSessionId");
+      const draftCreated = await callStructuredTool(connection.client, {
+        name: "create_character_draft",
+        arguments: { playSessionId },
+      });
+      const draftId = stringField(
+        objectField(operationResult(draftCreated), "draft"),
+        "draftId",
+      );
+
+      const resumed = await callStructuredTool(connection.client, {
+        name: "read_play_session",
+        arguments: { playSessionId },
+      });
+      expect(resumed).toMatchObject({
+        projection: { draftIds: [draftId] },
+        restoration: { tag: "retained" },
+      });
+
+      const discovered = await callStructuredTool(connection.client, {
+        name: "discover_creation_holes",
+        arguments: { playSessionId, draftId },
+      });
+      expect(operationResult(discovered)).toMatchObject({
+        draft: { draftId, revision: 0 },
+      });
+    } finally {
+      await connection.close();
+      repository.close();
+    }
+  });
+
   test("continues an accepted Character Draft mutation after reconstructing the application store", async () => {
     const directory = await mkdtemp(join(tmpdir(), "dnd-play-session-"));
     temporaryDirectories.push(directory);
