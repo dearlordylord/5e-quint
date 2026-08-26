@@ -180,12 +180,18 @@ previous_image="$(
   exit 65
 }
 rollback_image="dnd-oracle-rollback-$dokku_app:$previous_release"
+rollback_archive="/var/tmp/dnd-oracle-rollback-$dokku_app-$previous_release.tar"
 ssh "root@$dokku_host" \
   docker image tag \
   "dokku/$dokku_app:latest" \
   "$rollback_image"
 [[ "$(ssh "root@$dokku_host" docker image inspect --format '{{.Id}}' "$rollback_image")" == "$previous_image" ]] || {
   echo "$dokku_app rollback tag does not identify the serving image" >&2
+  exit 65
+}
+ssh "root@$dokku_host" docker image save --output "$rollback_archive" "$rollback_image"
+ssh "root@$dokku_host" test -s "$rollback_archive" || {
+  echo "$dokku_app rollback archive is empty" >&2
   exit 65
 }
 ssh "dokku@$dokku_host" config:set --no-restart "$dokku_app" "DND_MCP_RELEASE=$release" >/dev/null
@@ -198,17 +204,24 @@ if ! ssh "dokku@$dokku_host" \
   "deployment@localhost" < "$image_archive"; then
   echo "Dokku image release failed; restoring $previous_release" >&2
   ssh "dokku@$dokku_host" config:set --no-restart "$dokku_app" "DND_MCP_RELEASE=$previous_release" >/dev/null
+  ssh "root@$dokku_host" docker image load --input "$rollback_archive" >/dev/null
+  [[ "$(ssh "root@$dokku_host" docker image inspect --format '{{.Id}}' "$rollback_image")" == "$previous_image" ]] || {
+    echo "$dokku_app restored rollback image differs from the preceding serving image" >&2
+    exit 65
+  }
   ssh "dokku@$dokku_host" \
     git:from-image \
     "$dokku_app" \
     "$rollback_image" \
     "5e Quint rollback" \
     "deployment@localhost" >/dev/null
-  ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null
+  ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null 2>&1 || true
+  ssh "root@$dokku_host" rm -f -- "$rollback_archive"
   exit 1
 fi
 
-ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null
+ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null 2>&1 || true
+ssh "root@$dokku_host" rm -f -- "$rollback_archive"
 
 DND_MCP_PUBLISHER_NAME="$publisher_name" \
   DND_MCP_PUBLICATION_MODE="$publication_mode" \
