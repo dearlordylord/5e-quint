@@ -1,4 +1,9 @@
 import { Either, Match, Schema } from "effect";
+import {
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceRefsSchema,
+  StatBlockTextOnlyReasonSchema,
+} from "@dnd/surface/surface/schema";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpApplicationServices } from "./composition-root.ts";
@@ -46,40 +51,61 @@ const ListCatalogUnitsOutputSchema = Schema.Struct({
 const StatBlockAttackSummarySchema = Schema.Struct({
   attackName: Schema.String,
   attackType: Schema.String,
-  attackBonus: Schema.Union(Schema.Number, Schema.Null),
+  attackBonus: Schema.Number,
   reachFeet: Schema.optionalWith(Schema.Number, { exact: true }),
   normalRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
   longRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
   onHit: StringArraySchema,
 });
-const StatBlockProcedureSummarySchema = Schema.Struct({
-  section: Schema.Literal(
-    "action",
-    "bonus_action",
-    "reaction",
-    "legendary_action",
-  ),
-  procedureOrdinal: Schema.Number,
-  kind: Schema.Literal(
-    "textOnly",
-    "attack_roll",
-    "multiattack",
-    "save",
-    "support",
-    "action_option",
-    "spellcasting",
-  ),
-  name: Schema.String,
-  description: Schema.optionalWith(Schema.String, { exact: true }),
-  reason: Schema.optionalWith(Schema.String, { exact: true }),
-  resourceOrdinals: Schema.Array(Schema.Number),
+const StatBlockProcedureSectionOutputSchema = Schema.Literal(
+  "action",
+  "bonus_action",
+  "reaction",
+  "legendary_action",
+);
+const StatBlockProcedureKindOutputSchema = Schema.Literal(
+  "attack_roll",
+  "multiattack",
+  "save",
+  "support",
+  "action_option",
+  "spellcasting",
+);
+const StatBlockSpellcastingGroupSummarySchema = Schema.Struct({
+  kind: Schema.Literal("at_will", "limited"),
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
 });
+const StatBlockExecutableProcedureSummarySchema = Schema.Struct({
+  section: StatBlockProcedureSectionOutputSchema,
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  kind: Schema.Literal("executable"),
+  procedureKind: StatBlockProcedureKindOutputSchema,
+  name: Schema.String,
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
+  spellcastingGroups: Schema.optionalWith(
+    Schema.Array(StatBlockSpellcastingGroupSummarySchema),
+    { exact: true },
+  ),
+});
+const StatBlockTextOnlyProcedureSummarySchema = Schema.Struct({
+  section: StatBlockProcedureSectionOutputSchema,
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  kind: Schema.Literal("textOnly"),
+  name: Schema.String,
+  description: Schema.String,
+  reason: StatBlockTextOnlyReasonSchema,
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
+});
+const StatBlockProcedureSummarySchema = Schema.Union(
+  StatBlockExecutableProcedureSummarySchema,
+  StatBlockTextOnlyProcedureSummarySchema,
+);
 const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
-  displayName: Schema.String,
+  name: Schema.String,
   creatureType: Schema.String,
-  armorClass: Schema.Union(Schema.Number, Schema.Null),
-  hitPoints: Schema.Union(Schema.Number, Schema.Null),
+  armorClass: Schema.Number,
+  hitPoints: Schema.Number,
   initiativeModifier: Schema.Number,
   attacks: Schema.Array(StatBlockAttackSummarySchema),
   orderedProcedures: Schema.Array(StatBlockProcedureSummarySchema),
@@ -147,7 +173,7 @@ export const contentToolDefinitions = [
     name: contentToolNames.listStatBlocks,
     title: "List Stat Blocks",
     description:
-      "List every installed redistributable SRD Stat Block with ids, authored display names, ordered procedure summaries (including retained text-only entries), attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
+      "List every installed redistributable SRD Stat Block with ids, authored names, ordered procedure summaries (including retained text-only entries), attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
     inputSchema: emptyInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: listStatBlocksOutputSchema,
@@ -376,7 +402,7 @@ export function statBlockSummary(record: StatBlockRecord) {
   const orderedProcedures = authoredProcedureEntries(statBlock);
   return {
     statBlockId: record.id,
-    displayName: record.name,
+    name: record.name,
     creatureType: stringCreatureType(record),
     armorClass: literalNumber(statBlock.ac.value),
     hitPoints: literalNumber(statBlock.hp),
@@ -435,25 +461,33 @@ function procedureSummary(
   section: "action" | "bonus_action" | "reaction" | "legendary_action",
   entry: StatBlockProcedureEntry,
 ) {
-  const resourceOrdinals =
-    entry.resourceRefs.kind === "none" ? [] : [...entry.resourceRefs.ordinals];
   if (entry.kind === "textOnly") {
     return {
       section,
       procedureOrdinal: entry.procedureOrdinal,
-      kind: "textOnly",
+      kind: "textOnly" as const,
       name: entry.name,
       description: entry.description,
       reason: entry.reason,
-      resourceOrdinals,
+      resourceRefs: entry.resourceRefs,
     };
   }
+  const procedure = entry.procedure;
   return {
     section,
     procedureOrdinal: entry.procedureOrdinal,
-    kind: entry.procedure.kind,
-    name: entry.procedure.name,
-    resourceOrdinals,
+    kind: "executable" as const,
+    procedureKind: procedure.kind,
+    name: procedure.name,
+    resourceRefs: entry.resourceRefs,
+    ...(procedure.kind === "spellcasting"
+      ? {
+          spellcastingGroups: procedure.groups.map((group) => ({
+            kind: group.kind,
+            resourceRefs: group.resourceRefs,
+          })),
+        }
+      : {}),
   };
 }
 
@@ -488,11 +522,8 @@ function literalNumber(
     | StatBlockRecord["statBlock"]["ac"]["value"]
     | StatBlockRecord["statBlock"]["hp"]
     | StatBlockAttack["attackBonus"],
-): number | null {
-  if (value.kind === "literal") {
-    return value.value;
-  }
-  return null;
+): number {
+  return value.value;
 }
 
 function damageModifierTypes(

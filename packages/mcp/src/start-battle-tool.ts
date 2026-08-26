@@ -3,8 +3,10 @@ import {
   battleAdmittedSpellPresentations,
   discoverBattleActs,
   battleCreatureInitFromStatBlock,
+  projectAuthoredStatBlock,
   startBattle,
   battleStateInitIssueMessage,
+  type BattleStatBlockProjectionFailure,
   type BattleCreatureInit,
   type BattleRuntimeSession,
   type CombatantId,
@@ -290,12 +292,22 @@ export function projectBattleCombatant(input: {
           }),
         );
       }
+      const projection = projectAuthoredStatBlock(statBlock.value);
+      if (Either.isLeft(projection)) {
+        return Either.left(
+          statBlockProjectionFailureContent(
+            encounterCombatant.statBlockId,
+            projection.left,
+          ),
+        );
+      }
       const creatureInit = battleCreatureInitFromStatBlock({
         combatantId: statBlockCombatant.combatantId,
-        statBlock: statBlock.value,
+        statBlock: projection.right.runtime,
         initiative: statBlockCombatant.initiative,
         ammunitionStocks: statBlockCombatant.ammunitionStocks,
         conditions: [],
+        presentation: projection.right.presentation,
         ...(encounterCombatant.currentHp === undefined
           ? {}
           : { currentHp: encounterCombatant.currentHp }),
@@ -328,6 +340,21 @@ export function projectBattleCombatant(input: {
     }),
     Match.exhaustive,
   );
+}
+
+function statBlockProjectionFailureContent(
+  statBlockId: string,
+  failure: BattleStatBlockProjectionFailure,
+) {
+  return errorContent("Stat Block projection failed.", {
+    code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+    statBlockId,
+    reason: failure.reason,
+    ...(failure.procedureOrdinal === undefined
+      ? {}
+      : { procedureOrdinal: failure.procedureOrdinal }),
+    ...(failure.section === undefined ? {} : { section: failure.section }),
+  });
 }
 
 function admitCompanionAdmissions(input: {

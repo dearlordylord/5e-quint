@@ -1,4 +1,5 @@
 import { statBlockId } from "@dnd/shared/game-facts";
+import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { Schema } from "effect";
@@ -78,6 +79,7 @@ describe("MCP Stat Block summaries", () => {
       damageResistances: [],
       hitPoints: 10,
       initiativeModifier: 2,
+      name: "Synthetic Summary Creature",
       orderedProcedures: expect.arrayContaining([
         expect.objectContaining({
           section: "action",
@@ -85,6 +87,7 @@ describe("MCP Stat Block summaries", () => {
           kind: "textOnly",
           name: "Unmodeled Roar",
           reason: "unsupported_procedure_family",
+          resourceRefs: { kind: "none" },
         }),
       ]),
       statBlockId: "stat_block_synthetic_summary",
@@ -106,7 +109,7 @@ describe("MCP installed SRD catalog tools", () => {
         "playSessionId",
       );
       expect(JSON.stringify(definition.outputSchema)).not.toMatch(
-        /"(executable|supported)"/,
+        /"supported"/,
       );
     }
   });
@@ -169,5 +172,67 @@ describe("MCP installed SRD catalog tools", () => {
           "Call list_catalog_units and retry with one returned Unit id.",
       },
     });
+  });
+
+  test("retains nested spellcasting group resource references", () => {
+    const root = createMcpPlaySessionRoot();
+    const base = root.statBlockCatalog.requireStatBlock(
+      "stat_block_goblin_warrior",
+    );
+    const summary = statBlockSummary(
+      decodeStatBlockRecordSync({
+        ...base,
+        id: statBlockId("stat_block_synthetic_spellcasting_summary"),
+        name: "Synthetic Spellcasting Creature",
+        statBlock: {
+          ...base.statBlock,
+          actions: [
+            {
+              kind: "executable",
+              procedureOrdinal: 1,
+              procedure: {
+                kind: "spellcasting",
+                name: "Synthetic Spellcasting",
+                ability: "int",
+                groups: [
+                  {
+                    kind: "limited",
+                    resourceRefs: { kind: "some", ordinals: [1] },
+                    spells: [{ spellId: "magic_missile" }],
+                  },
+                ],
+              },
+              resourceRefs: { kind: "none" },
+            },
+          ],
+          resources: [
+            {
+              ordinal: 1,
+              ownership: "shared",
+              limit: { kind: "daily", uses: 1 },
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(summary.orderedProcedures).toEqual(
+      expect.arrayContaining([
+        {
+          section: "action",
+          procedureOrdinal: 1,
+          kind: "executable",
+          procedureKind: "spellcasting",
+          name: "Synthetic Spellcasting",
+          resourceRefs: { kind: "none" },
+          spellcastingGroups: [
+            {
+              kind: "limited",
+              resourceRefs: { kind: "some", ordinals: [1] },
+            },
+          ],
+        },
+      ]),
+    );
   });
 });

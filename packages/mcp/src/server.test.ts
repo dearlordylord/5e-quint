@@ -15,6 +15,7 @@ import {
   endTurn,
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
+  projectAuthoredStatBlock,
   snapshotBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
@@ -171,15 +172,25 @@ function startBattleFromCharacterBuildAndStatBlockRight(
       Parameters<
         typeof startBattleFromCharacterBuildAndStatBlock
       >[0]["statBlockBattleInput"],
-      "ammunitionStocks" | "conditions"
-    >;
+      "ammunitionStocks" | "conditions" | "statBlock"
+    > & {
+      readonly statBlock: StatBlockRecord;
+    };
   },
 ): BattleRuntimeSession {
+  const projection = projectAuthoredStatBlock(
+    input.statBlockBattleInput.statBlock,
+  );
+  if (Either.isLeft(projection)) {
+    throw new Error(`Stat Block projection failed: ${projection.left.reason}`);
+  }
   const result = startBattleFromCharacterBuildAndStatBlock({
     ...input,
     character: { ...input.character, ammunitionStocks: [] },
     statBlockBattleInput: {
       ...input.statBlockBattleInput,
+      statBlock: projection.right.runtime,
+      presentation: projection.right.presentation,
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
     },
@@ -2141,27 +2152,30 @@ describe("MCP server route", () => {
       expect.arrayContaining([
         expect.objectContaining({
           statBlockId: "stat_block_goblin_warrior",
-          displayName: "Goblin Warrior",
+          name: "Goblin Warrior",
+          armorClass: 15,
+          hitPoints: 10,
           attacks: expect.arrayContaining([
-            expect.objectContaining({ attackName: "Scimitar" }),
+            expect.objectContaining({ attackName: "Scimitar", attackBonus: 4 }),
           ]),
           orderedProcedures: expect.arrayContaining([
             expect.objectContaining({
               section: "action",
               procedureOrdinal: 1,
-              kind: "attack_roll",
+              kind: "executable",
+              procedureKind: "attack_roll",
               name: "Scimitar",
             }),
           ]),
         }),
         expect.objectContaining({
           statBlockId: "stat_block_skeleton",
-          displayName: "Skeleton",
+          name: "Skeleton",
           damageVulnerabilities: ["bludgeoning"],
         }),
         expect.objectContaining({
           statBlockId: "stat_block_owl",
-          displayName: "Owl",
+          name: "Owl",
         }),
       ]),
     );

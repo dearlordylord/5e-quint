@@ -346,7 +346,7 @@ const agentConversationScenarios = [
     agentReads:
       "select_stat_block requires a statBlockId string and returns the selected record if the id exists.",
     agentDecision:
-      "It calls select_stat_block with stat_block_goblin_warrior or stat_block_skeleton, then verifies the returned displayName/provenance before starting battle.",
+      "It calls select_stat_block with stat_block_goblin_warrior or stat_block_skeleton, then verifies the returned name/provenance before starting battle.",
     executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
       "Stat Block ids are now discoverable through list_stat_blocks.",
