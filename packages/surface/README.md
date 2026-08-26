@@ -80,6 +80,11 @@ publication contract.
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
 
+`buildStatBlockCatalog` admits only validated `SrdStatBlockCollection` values
+and returns an `SrdStatBlockCatalog`. Its lookup methods retain the SRD record
+type, so a production consumer cannot widen the installed collection into a
+mixed-provenance catalog while continuing to present it as the SRD catalog.
+
 ## Why Surface Is Not Runtime Code
 
 Surface is the authored rules vocabulary, not a reducer and not executable IR.

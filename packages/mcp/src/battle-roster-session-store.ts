@@ -9,7 +9,7 @@ import {
   removeBattleRuntimeCombatants,
 } from "@dnd/battle-runtime";
 import { settleCharacterSheetFromBattle } from "@dnd/character-battle-runtime";
-import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
+import type { SrdStatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Match } from "effect";
 
@@ -51,7 +51,7 @@ export type BattleRosterTransitionPlanner = {
 
 export function createBattleRosterTransitionPlanner(input: {
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
 }): BattleRosterTransitionPlanner {
@@ -127,7 +127,7 @@ function planActiveBattleRosterTransition(input: {
   readonly operation: McpBattleRosterOperation;
   readonly activeBattle: BattleRuntimeSession;
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
 }): Either.Either<
@@ -248,7 +248,7 @@ function planRemoveBattleCombatant(input: {
   >;
   readonly activeBattle: BattleRuntimeSession;
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
   readonly storeIdentity: object;
 }): Either.Either<
@@ -310,7 +310,7 @@ function settledCharacterSessionForBattleRemoval(input: {
   readonly combatant: BattleCreatureState;
   readonly activeBattle: BattleRuntimeSession;
   readonly characters: CharacterSessionRegistry;
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<
   ActiveBattleRosterTransitionPlanData["characterSessionTransitions"],
