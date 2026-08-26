@@ -136,7 +136,19 @@ export function traceCreatureActions(
     ...(actions.supports ?? []).map((a) => a.name),
     ...(actions.actionOptions ?? []).map((a) => a.name),
   ]);
-  actions.multiattacks?.forEach((ma, idx) => {
+  traceCreatureMultiattacks(ctx, actions.multiattacks, definedNames);
+  traceCreatureAttacks(ctx, actions.attacks);
+  traceCreatureSaveGates(ctx, actions.saves);
+  traceCreatureSupports(ctx, actions.supports);
+  traceCreatureActionOptions(ctx, actions.actionOptions);
+}
+
+function traceCreatureMultiattacks(
+  ctx: CreatureCtx,
+  multiattacks: CreatureActions["multiattacks"],
+  definedNames: ReadonlySet<string>,
+): void {
+  multiattacks?.forEach((ma, idx) => {
     for (const d of ma.dispatches) {
       /* v8 ignore start -- @preserve -- a dispatch to an absent named action is malformed Stat Block action composition */
       if (!definedNames.has(d.name)) {
@@ -148,12 +160,34 @@ export function traceCreatureActions(
     }
     traceMultiattack(ctx, ma, idx + 1);
   });
-  actions.attacks?.forEach((ar, idx) => traceCreatureAttack(ctx, ar, idx + 1));
-  actions.saves?.forEach((sg, idx) => traceCreatureSaveGate(ctx, sg, idx + 1));
-  actions.supports?.forEach((sp, idx) =>
-    traceCreatureSupport(ctx, sp, idx + 1),
-  );
-  actions.actionOptions?.forEach((option, idx) =>
+}
+
+function traceCreatureAttacks(
+  ctx: CreatureCtx,
+  attacks: CreatureActions["attacks"],
+): void {
+  attacks?.forEach((attack, idx) => traceCreatureAttack(ctx, attack, idx + 1));
+}
+
+function traceCreatureSaveGates(
+  ctx: CreatureCtx,
+  saves: CreatureActions["saves"],
+): void {
+  saves?.forEach((save, idx) => traceCreatureSaveGate(ctx, save, idx + 1));
+}
+
+function traceCreatureSupports(
+  ctx: CreatureCtx,
+  supports: CreatureActions["supports"],
+): void {
+  supports?.forEach((sp, idx) => traceCreatureSupport(ctx, sp, idx + 1));
+}
+
+function traceCreatureActionOptions(
+  ctx: CreatureCtx,
+  actionOptions: CreatureActions["actionOptions"],
+): void {
+  actionOptions?.forEach((option, idx) =>
     traceCreatureActionOption(ctx, option, idx + 1),
   );
 }
@@ -205,101 +239,8 @@ function traceCreatureAttackWindow(
     readonly scalingEffect: Parameters<typeof traceEffectAtomScaling>[0] | null;
   }[] = [];
   for (const effect of effects) {
-    if (effect.kind === "apply_condition_if_target_size_at_most") {
-      const effectId = ids("eff");
-      nodes.push({
-        id: effectId,
-        category: "effect",
-        atomKind: "apply_condition_if_target_size_at_most",
-        label: `apply_condition_if_target_size_at_most\n${effect.condition}\ntarget size <= ${effect.maxCreatureSize}`,
-      });
-      effectEntries.push({ effectId, scalingEffect: null });
-      continue;
-    }
-
-    if (effect.kind === "damage") {
-      if (effect.amount.kind === "fixed" && !("expr" in effect.amount)) {
-        const effectId = ids("dmg");
-        const whenTag =
-          effect.timing === undefined ? "" : ` (deferred: ${effect.timing})`;
-        nodes.push({
-          id: effectId,
-          category: "effect",
-          atomKind: effect.kind,
-          label: `damage${whenTag}: ${effect.amount.static} ${describeDamageTypeRef(effect.damageType)}`,
-        });
-        effectEntries.push({ effectId, scalingEffect: null });
-        continue;
-      }
-      const traceable: AreaDirectEffectAtom =
-        effect.amount.kind === "fixed"
-          ? effect.timing === undefined
-            ? {
-                kind: effect.kind,
-                damageType: effect.damageType,
-                amount: { kind: "fixed", expr: effect.amount.expr },
-              }
-            : {
-                kind: effect.kind,
-                damageType: effect.damageType,
-                amount: { kind: "fixed", expr: effect.amount.expr },
-                timing: effect.timing,
-              }
-          : effect.timing === undefined
-            ? {
-                kind: effect.kind,
-                damageType: effect.damageType,
-                amount: effect.amount,
-              }
-            : {
-                kind: effect.kind,
-                damageType: effect.damageType,
-                amount: effect.amount,
-                timing: effect.timing,
-              };
-      const effectId = traceEffectAtom(traceable, nodes, ids, edges);
-      if (effectId !== null) {
-        effectEntries.push({ effectId, scalingEffect: traceable });
-      }
-      continue;
-    }
-
-    if (effect.kind === "conditional_bonus_damage") {
-      if (effect.amount.kind === "fixed" && !("expr" in effect.amount)) {
-        const effectId = ids("dmg");
-        const when =
-          effect.when.kind === "target_creature_type"
-            ? `target type: ${effect.when.types.join("/")}`
-            : effect.when.kind;
-        nodes.push({
-          id: effectId,
-          category: "effect",
-          atomKind: effect.kind,
-          label: `conditional_bonus_damage\n${when}\n${effect.amount.static} ${describeDamageTypeRef(effect.damageType)}`,
-        });
-        effectEntries.push({ effectId, scalingEffect: null });
-        continue;
-      }
-      const traceable: AreaDirectEffectAtom = {
-        kind: effect.kind,
-        when: effect.when,
-        damageType: effect.damageType,
-        amount:
-          effect.amount.kind === "fixed"
-            ? { kind: "fixed", expr: effect.amount.expr }
-            : effect.amount,
-      };
-      const effectId = traceEffectAtom(traceable, nodes, ids, edges);
-      if (effectId !== null) {
-        effectEntries.push({ effectId, scalingEffect: traceable });
-      }
-      continue;
-    }
-
-    const effectId = traceEffectAtom(effect, nodes, ids, edges);
-    if (effectId !== null) {
-      effectEntries.push({ effectId, scalingEffect: effect });
-    }
+    const entry = traceCreatureAttackEffect(effect, nodes, edges, ids);
+    if (entry !== null) effectEntries.push(entry);
   }
   if (effectEntries.length === 0) return;
 
@@ -325,6 +266,155 @@ function traceCreatureAttackWindow(
       );
     }
   }
+}
+
+type CreatureAttackEffect = CreatureNamedAttackRoll["onHit"][number];
+type AttackEffectEntry = {
+  readonly effectId: string;
+  readonly scalingEffect: Parameters<typeof traceEffectAtomScaling>[0] | null;
+};
+
+function traceCreatureAttackEffect(
+  effect: CreatureAttackEffect,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): AttackEffectEntry | null {
+  if (effect.kind === "apply_condition_if_target_size_at_most") {
+    return traceTargetSizeCondition(effect, nodes, ids);
+  }
+  if (effect.kind === "damage") {
+    return traceCreatureAttackDamage(effect, nodes, edges, ids);
+  }
+  if (effect.kind === "conditional_bonus_damage") {
+    return traceConditionalBonusDamage(effect, nodes, edges, ids);
+  }
+  return traceScalingAttackEffect(effect, nodes, edges, ids);
+}
+
+function traceTargetSizeCondition(
+  effect: Extract<
+    CreatureAttackEffect,
+    { readonly kind: "apply_condition_if_target_size_at_most" }
+  >,
+  nodes: TraceNode[],
+  ids: IdGen,
+): AttackEffectEntry {
+  const effectId = ids("eff");
+  nodes.push({
+    id: effectId,
+    category: "effect",
+    atomKind: effect.kind,
+    label: `${effect.kind}\n${effect.condition}\ntarget size <= ${effect.maxCreatureSize}`,
+  });
+  return { effectId, scalingEffect: null };
+}
+
+function traceCreatureAttackDamage(
+  effect: Extract<CreatureAttackEffect, { readonly kind: "damage" }>,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): AttackEffectEntry | null {
+  if (effect.amount.kind === "fixed") {
+    if ("expr" in effect.amount) {
+      return traceScalingAttackEffect(
+        traceableDamage({
+          ...effect,
+          amount: { kind: "fixed", expr: effect.amount.expr },
+        }),
+        nodes,
+        edges,
+        ids,
+      );
+    }
+    const effectId = ids("dmg");
+    const whenTag =
+      effect.timing === undefined ? "" : ` (deferred: ${effect.timing})`;
+    nodes.push({
+      id: effectId,
+      category: "effect",
+      atomKind: effect.kind,
+      label: `damage${whenTag}: ${effect.amount.static} ${describeDamageTypeRef(effect.damageType)}`,
+    });
+    return { effectId, scalingEffect: null };
+  }
+  return traceScalingAttackEffect(
+    traceableDamage({ ...effect, amount: effect.amount }),
+    nodes,
+    edges,
+    ids,
+  );
+}
+
+function traceableDamage(
+  effect: Omit<
+    Extract<CreatureAttackEffect, { readonly kind: "damage" }>,
+    "amount"
+  > & {
+    readonly amount: Exclude<
+      Extract<CreatureAttackEffect, { readonly kind: "damage" }>["amount"],
+      { readonly kind: "fixed"; readonly static: number }
+    >;
+  },
+): AreaDirectEffectAtom {
+  const amount =
+    effect.amount.kind === "fixed"
+      ? { kind: "fixed" as const, expr: effect.amount.expr }
+      : effect.amount;
+  return effect.timing === undefined
+    ? { kind: effect.kind, damageType: effect.damageType, amount }
+    : {
+        kind: effect.kind,
+        damageType: effect.damageType,
+        amount,
+        timing: effect.timing,
+      };
+}
+
+function traceConditionalBonusDamage(
+  effect: Extract<
+    CreatureAttackEffect,
+    { readonly kind: "conditional_bonus_damage" }
+  >,
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): AttackEffectEntry | null {
+  if (effect.amount.kind === "fixed" && !("expr" in effect.amount)) {
+    const effectId = ids("dmg");
+    const when =
+      effect.when.kind === "target_creature_type"
+        ? `target type: ${effect.when.types.join("/")}`
+        : effect.when.kind;
+    nodes.push({
+      id: effectId,
+      category: "effect",
+      atomKind: effect.kind,
+      label: `${effect.kind}\n${when}\n${effect.amount.static} ${describeDamageTypeRef(effect.damageType)}`,
+    });
+    return { effectId, scalingEffect: null };
+  }
+  const traceable: AreaDirectEffectAtom = {
+    kind: effect.kind,
+    when: effect.when,
+    damageType: effect.damageType,
+    amount:
+      effect.amount.kind === "fixed"
+        ? { kind: "fixed", expr: effect.amount.expr }
+        : effect.amount,
+  };
+  return traceScalingAttackEffect(traceable, nodes, edges, ids);
+}
+
+function traceScalingAttackEffect(
+  effect: Parameters<typeof traceEffectAtomScaling>[0],
+  nodes: TraceNode[],
+  edges: TraceEdge[],
+  ids: IdGen,
+): AttackEffectEntry | null {
+  const effectId = traceEffectAtom(effect, nodes, ids, edges);
+  return effectId === null ? null : { effectId, scalingEffect: effect };
 }
 
 export function traceCreatureSaveGate(

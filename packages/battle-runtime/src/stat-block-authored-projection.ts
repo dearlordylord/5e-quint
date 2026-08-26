@@ -72,42 +72,31 @@ export function projectAuthoredStatBlock(
     return Either.left(failure("nonLiteralSpeed"));
   }
   const runtimeProcedures = runtimeProcedureBindings(source);
-  const runtime: BattleStatBlockExecutionSource = {
+  const runtime = runtimeProjection(
+    record,
+    source,
+    size,
+    nonEmptyRuntimeValues(speeds),
+    runtimeProcedures,
+  );
+  return Either.right({
+    runtime,
+    presentation: presentationProjection(record),
+  });
+}
+
+function runtimeProjection(
+  record: StatBlockRecord,
+  source: StandaloneStatBlock,
+  size: Size,
+  speeds: ReadonlyNonEmptyArray<BattleStatBlockRuntimeSpeed>,
+  procedures: readonly BattleStatBlockRuntimeProcedure[],
+): BattleStatBlockExecutionSource {
+  return {
     id: record.id,
     challengeRating: record.challengeRating,
-    statBlock: {
-      size,
-      creatureType: source.creatureType,
-      ac: source.ac.value,
-      hp: source.hp,
-      speeds: nonEmptyRuntimeValues(speeds),
-      abilityScores: source.abilityScores,
-      initiativeModifier: source.initiative.modifier,
-      initiativeScore: source.initiative.score,
-      passivePerception: source.passivePerception,
-      ...(source.savingThrowModifiers === undefined
-        ? {}
-        : { savingThrowModifiers: source.savingThrowModifiers }),
-      ...(source.skillModifiers === undefined
-        ? {}
-        : { skillModifiers: source.skillModifiers }),
-      ...(source.saveProficiencies === undefined
-        ? {}
-        : { saveProficiencies: source.saveProficiencies }),
-      ...(source.vulnerabilities === undefined
-        ? {}
-        : { vulnerabilities: source.vulnerabilities }),
-      ...(source.resistances === undefined
-        ? {}
-        : { resistances: source.resistances }),
-      ...(source.immunities === undefined
-        ? {}
-        : { immunities: source.immunities }),
-      ...(source.senses === undefined
-        ? {}
-        : { senses: source.senses.map(runtimeSense) }),
-    },
-    procedures: runtimeProcedures,
+    statBlock: runtimeStatBlockProjection(source, size, speeds),
+    procedures,
     ...(source.resources === undefined
       ? {}
       : { resources: source.resources.map(runtimeResource) }),
@@ -115,10 +104,45 @@ export function projectAuthoredStatBlock(
       ? {}
       : { legendaryActionUses: source.legendaryActions.uses }),
   };
-  return Either.right({
-    runtime,
-    presentation: presentationProjection(record),
-  });
+}
+
+function runtimeStatBlockProjection(
+  source: StandaloneStatBlock,
+  size: Size,
+  speeds: ReadonlyNonEmptyArray<BattleStatBlockRuntimeSpeed>,
+): BattleStatBlockExecutionSource["statBlock"] {
+  return {
+    size,
+    creatureType: source.creatureType,
+    ac: source.ac.value,
+    hp: source.hp,
+    speeds,
+    abilityScores: source.abilityScores,
+    initiativeModifier: source.initiative.modifier,
+    initiativeScore: source.initiative.score,
+    passivePerception: source.passivePerception,
+    ...(source.savingThrowModifiers === undefined
+      ? {}
+      : { savingThrowModifiers: source.savingThrowModifiers }),
+    ...(source.skillModifiers === undefined
+      ? {}
+      : { skillModifiers: source.skillModifiers }),
+    ...(source.saveProficiencies === undefined
+      ? {}
+      : { saveProficiencies: source.saveProficiencies }),
+    ...(source.vulnerabilities === undefined
+      ? {}
+      : { vulnerabilities: source.vulnerabilities }),
+    ...(source.resistances === undefined
+      ? {}
+      : { resistances: source.resistances }),
+    ...(source.immunities === undefined
+      ? {}
+      : { immunities: source.immunities }),
+    ...(source.senses === undefined
+      ? {}
+      : { senses: source.senses.map(runtimeSense) }),
+  };
 }
 
 export function projectAuthoredStatBlockWithCreatureType(
@@ -145,18 +169,7 @@ export function projectAuthoredStatBlockWithCreatureType(
 function runtimeProcedureBindings(
   source: StandaloneStatBlock,
 ): readonly BattleStatBlockRuntimeProcedure[] {
-  const bindings: BattleStatBlockRuntimeProcedure[] = [];
-  const supportedActionAttackOrdinals = new Set(
-    (source.actions ?? []).flatMap((entry) =>
-      entry.kind === "executable" &&
-      entry.procedure.kind === "attack_roll" &&
-      creatureAttackRollMechanicsAreSupported(
-        authoredAttackMechanics(entry.procedure),
-      )
-        ? [entry.procedureOrdinal]
-        : [],
-    ),
-  );
+  const supportedActionAttackOrdinals = supportedAttackOrdinals(source.actions);
   const sections: readonly [
     StatBlockActionProjectionSection,
     readonly StatBlockProcedureEntry[] | undefined,
@@ -167,69 +180,127 @@ function runtimeProcedureBindings(
     ["legendaryActions", source.legendaryActions?.entries],
   ];
 
-  for (const [section, entries] of sections) {
-    for (const entry of entries ?? []) {
-      if (entry.kind !== "executable") continue;
-      const resourceRefs = procedureResourceRefs(entry);
-      const procedure = entry.procedure;
-      if (procedure.kind === "attack_roll") {
-        const attack = authoredAttackMechanics(procedure);
-        if (
-          (section === "actions" || section === "legendaryActions") &&
-          attack !== null &&
-          creatureAttackRollMechanicsAreSupported(attack)
-        ) {
-          bindings.push({
-            kind: "attack",
-            section,
-            procedureOrdinal: entry.procedureOrdinal,
-            attack,
-            resourceRefs,
-            ...traitModes(source),
-          });
-        }
-        continue;
-      }
-      if (procedure.kind === "multiattack" && section === "actions") {
-        // Dispatches retain their authored ordinal/count; the target support
-        // fact is typed so admission can preserve an unsupported routine.
-        bindings.push({
-          kind: "multiattack",
-          section,
-          procedureOrdinal: entry.procedureOrdinal,
-          dispatches: nonEmptyRuntimeValues(
-            procedure.dispatches.map(
-              (dispatch): BattleStatBlockRuntimeMultiattackDispatch => ({
-                procedureOrdinal: dispatch.procedureOrdinal,
-                count: dispatch.count.value,
-                target: supportedActionAttackOrdinals.has(
-                  dispatch.procedureOrdinal,
-                )
-                  ? { kind: "attack" }
-                  : { kind: "unsupported", reason: "nonExecutableTarget" },
-              }),
-            ),
-          ),
-          resourceRefs,
-        });
-        continue;
-      }
-      if (procedure.kind === "action_option" && section === "bonusActions") {
-        const options = procedure.options.filter(isSupportedBonusAction);
-        if (options.length === procedure.options.length) {
-          bindings.push({
-            kind: "bonusActionOption",
-            section,
-            procedureOrdinal: entry.procedureOrdinal,
-            standardActions: nonEmptyRuntimeValues(options),
-            resourceRefs,
-          });
-        }
-      }
-    }
-  }
+  return sections.flatMap(([section, entries]) =>
+    (entries ?? []).flatMap((entry) =>
+      runtimeProcedureBinding(
+        source,
+        section,
+        entry,
+        supportedActionAttackOrdinals,
+      ),
+    ),
+  );
+}
 
-  return bindings;
+function supportedAttackOrdinals(
+  entries: readonly StatBlockProcedureEntry[] | undefined,
+): ReadonlySet<number> {
+  return new Set(
+    (entries ?? []).flatMap((entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      creatureAttackRollMechanicsAreSupported(
+        authoredAttackMechanics(entry.procedure),
+      )
+        ? [entry.procedureOrdinal]
+        : [],
+    ),
+  );
+}
+
+function runtimeProcedureBinding(
+  source: StandaloneStatBlock,
+  section: StatBlockActionProjectionSection,
+  entry: StatBlockProcedureEntry,
+  supportedActionAttackOrdinals: ReadonlySet<number>,
+): readonly BattleStatBlockRuntimeProcedure[] {
+  if (entry.kind !== "executable") return [];
+  const procedure = entry.procedure;
+  if (procedure.kind === "attack_roll") {
+    return runtimeAttackBinding(source, section, entry, procedure);
+  }
+  if (procedure.kind === "multiattack" && section === "actions") {
+    return [
+      runtimeMultiattackBinding(
+        entry,
+        procedure,
+        supportedActionAttackOrdinals,
+      ),
+    ];
+  }
+  if (procedure.kind === "action_option" && section === "bonusActions") {
+    return runtimeBonusActionBinding(entry, procedure);
+  }
+  return [];
+}
+
+function runtimeAttackBinding(
+  source: StandaloneStatBlock,
+  section: StatBlockActionProjectionSection,
+  entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
+  procedure: Extract<typeof entry.procedure, { readonly kind: "attack_roll" }>,
+): readonly BattleStatBlockRuntimeProcedure[] {
+  const attack = authoredAttackMechanics(procedure);
+  if (
+    (section !== "actions" && section !== "legendaryActions") ||
+    !creatureAttackRollMechanicsAreSupported(attack)
+  )
+    return [];
+  return [
+    {
+      kind: "attack",
+      section,
+      procedureOrdinal: entry.procedureOrdinal,
+      attack,
+      resourceRefs: procedureResourceRefs(entry),
+      ...traitModes(source),
+    },
+  ];
+}
+
+function runtimeMultiattackBinding(
+  entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
+  procedure: Extract<typeof entry.procedure, { readonly kind: "multiattack" }>,
+  supportedActionAttackOrdinals: ReadonlySet<number>,
+): BattleStatBlockRuntimeProcedure {
+  return {
+    kind: "multiattack",
+    section: "actions",
+    procedureOrdinal: entry.procedureOrdinal,
+    dispatches: nonEmptyRuntimeValues(
+      procedure.dispatches.map(
+        (dispatch): BattleStatBlockRuntimeMultiattackDispatch => ({
+          procedureOrdinal: dispatch.procedureOrdinal,
+          count: dispatch.count.value,
+          target: supportedActionAttackOrdinals.has(dispatch.procedureOrdinal)
+            ? { kind: "attack" }
+            : { kind: "unsupported", reason: "nonExecutableTarget" },
+        }),
+      ),
+    ),
+    resourceRefs: procedureResourceRefs(entry),
+  };
+}
+
+function runtimeBonusActionBinding(
+  entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
+  procedure: Extract<
+    typeof entry.procedure,
+    { readonly kind: "action_option" }
+  >,
+): readonly BattleStatBlockRuntimeProcedure[] {
+  const options = procedure.options.filter(isSupportedBonusAction);
+  return options.length === procedure.options.length
+    ? [
+        {
+          kind: "bonusActionOption",
+          section: "bonusActions",
+          procedureOrdinal: entry.procedureOrdinal,
+          standardActions: nonEmptyRuntimeValues(options),
+          resourceRefs: procedureResourceRefs(entry),
+        },
+      ]
+    : [];
 }
 
 function presentationProjection(

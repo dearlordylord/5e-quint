@@ -2,7 +2,9 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import type {
   Condition,
+  CreatureNamedAttackRoll,
   CreatureTrait,
+  StatBlockProcedureEntry,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { CONDITIONS } from "@dnd/surface/surface/types";
@@ -223,6 +225,29 @@ function wildShapeFormActionSurfaceCategories(
 ): readonly WildShapeFormActionSurfaceCategory[] {
   const source = form.statBlock;
   const categories = new Set<WildShapeFormActionSurfaceCategory>();
+  addStatBlockSectionCategories(categories, source);
+  const sections = [
+    source.actions,
+    source.bonusActions,
+    source.reactions,
+    source.legendaryActions?.entries,
+  ];
+  for (const entry of sections.flatMap((entries) => entries ?? [])) {
+    addStatBlockProcedureCategory(categories, entry);
+  }
+  for (const trait of source.traits ?? []) {
+    addStatBlockTraitCategory(categories, trait);
+  }
+
+  return WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES.filter((category) =>
+    categories.has(category),
+  );
+}
+
+function addStatBlockSectionCategories(
+  categories: Set<WildShapeFormActionSurfaceCategory>,
+  source: StatBlockRecord["statBlock"],
+): void {
   if (source.bonusActions !== undefined) {
     categories.add("statBlockBonusActionSection");
   }
@@ -232,82 +257,81 @@ function wildShapeFormActionSurfaceCategories(
   if (source.legendaryActions !== undefined) {
     categories.add("statBlockLegendaryActionSection");
   }
-  const sections = [
-    source.actions,
-    source.bonusActions,
-    source.reactions,
-    source.legendaryActions?.entries,
-  ];
-  for (const entries of sections) {
-    for (const entry of entries ?? []) {
-      if (entry.kind === "textOnly") {
-        categories.add("statBlockSpecialAction");
-        continue;
-      }
-      Match.value(entry.procedure).pipe(
-        Match.discriminatorsExhaustive("kind")({
-          multiattack: () => {
-            categories.add("statBlockActionMultiattack");
-          },
-          save: () => {
-            categories.add("statBlockActionSaveGate");
-          },
-          support: () => {
-            categories.add("statBlockActionSupport");
-          },
-          action_option: () => {
-            categories.add("statBlockActionOption");
-          },
-          spellcasting: () => {
-            categories.add("statBlockSpecialAction");
-          },
-          attack_roll: (procedure) => {
-            const damageEffects = procedure.onHit.filter(
-              (effect) => effect.kind === "damage",
-            );
-            if (damageEffects.length === 1) {
-              categories.add("simpleLiteralAttackSingleDamage");
-            } else if (damageEffects.length > 1) {
-              categories.add("multiDamageComponentsOnHit");
-            }
-            for (const effect of procedure.onHit) {
-              if (effect.kind === "apply_condition_if_target_size_at_most") {
-                categories.add("attackHitTargetSizeConditionRider");
-              } else if (effect.kind !== "damage") {
-                categories.add("attackHitOtherRider");
-              }
-            }
-            if (
-              "description" in procedure &&
-              procedure.description !== undefined
-            ) {
-              for (const category of attackHitDescriptionRiderCategories(
-                procedure.description,
-              )) {
-                categories.add(category);
-              }
-            }
-          },
-        }),
-      );
-    }
-  }
+}
 
-  for (const trait of source.traits ?? []) {
-    if (statBlockTraitAttackRollMode(trait) !== null) {
-      categories.add("traitDerivedConditionalAttackRollAdvantage");
-    } else if (trait.effect === undefined) {
-      categories.add(
-        mentionsAttackRollAdvantage(trait.description)
-          ? "traitDerivedConditionalAttackRollAdvantage"
-          : "tableOrProseOnlyTrait",
-      );
-    }
+function addStatBlockProcedureCategory(
+  categories: Set<WildShapeFormActionSurfaceCategory>,
+  entry: StatBlockProcedureEntry,
+): void {
+  if (entry.kind === "textOnly") {
+    categories.add("statBlockSpecialAction");
+    return;
   }
-
-  return WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES.filter((category) =>
-    categories.has(category),
+  Match.value(entry.procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      multiattack: () => categories.add("statBlockActionMultiattack"),
+      save: () => categories.add("statBlockActionSaveGate"),
+      support: () => categories.add("statBlockActionSupport"),
+      action_option: () => categories.add("statBlockActionOption"),
+      spellcasting: () => categories.add("statBlockSpecialAction"),
+      attack_roll: (procedure) =>
+        addAttackRollActionSurfaceCategories(categories, procedure),
+    }),
   );
+}
+
+function addStatBlockTraitCategory(
+  categories: Set<WildShapeFormActionSurfaceCategory>,
+  trait: CreatureTrait,
+): void {
+  if (statBlockTraitAttackRollMode(trait) !== null) {
+    categories.add("traitDerivedConditionalAttackRollAdvantage");
+  } else if (trait.effect === undefined) {
+    categories.add(
+      mentionsAttackRollAdvantage(trait.description)
+        ? "traitDerivedConditionalAttackRollAdvantage"
+        : "tableOrProseOnlyTrait",
+    );
+  }
+}
+
+function addAttackRollActionSurfaceCategories(
+  categories: Set<WildShapeFormActionSurfaceCategory>,
+  procedure: CreatureNamedAttackRoll,
+): void {
+  const damageCount = procedure.onHit.filter(
+    (effect) => effect.kind === "damage",
+  ).length;
+  if (damageCount === 1) {
+    categories.add("simpleLiteralAttackSingleDamage");
+  } else if (damageCount > 1) {
+    categories.add("multiDamageComponentsOnHit");
+  }
+  addAttackHitEffectCategories(categories, procedure);
+  addAttackDescriptionRiderCategories(categories, procedure.description);
+}
+
+function addAttackHitEffectCategories(
+  categories: Set<WildShapeFormActionSurfaceCategory>,
+  procedure: CreatureNamedAttackRoll,
+): void {
+  for (const effect of procedure.onHit) {
+    if (effect.kind === "apply_condition_if_target_size_at_most") {
+      categories.add("attackHitTargetSizeConditionRider");
+    } else if (effect.kind !== "damage") {
+      categories.add("attackHitOtherRider");
+    }
+  }
+}
+
+function addAttackDescriptionRiderCategories(
+  categories: Set<WildShapeFormActionSurfaceCategory>,
+  description: string | undefined,
+): void {
+  if (description === undefined) return;
+  for (const category of attackHitDescriptionRiderCategories(description)) {
+    categories.add(category);
+  }
 }
 
 function attackHitDescriptionRiderCategories(
