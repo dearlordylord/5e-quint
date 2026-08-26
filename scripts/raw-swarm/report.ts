@@ -1,7 +1,20 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  relative,
+  resolve,
+  sep,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
@@ -9,14 +22,18 @@ import { Either, Match, Option, Schema } from "effect";
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
 import {
   defaultEvidenceSetDirectory,
+  FindingsProjectionSchema,
   findingsArtifactPath,
   findingsTranscriptSha256,
+  portableFindingAuthoritySnapshotForBytes,
   projectExecutionFindings,
   readFindingsProjection,
+  validateFindingsProjection,
   writeFindingsProjection,
   type FindingAuthority,
   type Finding,
   type FindingIssueLink,
+  type FindingsProjection,
 } from "./findings.ts";
 import { renderFindingsAudit, writeFindingsAudit } from "./findings-audit.ts";
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
@@ -44,6 +61,7 @@ import {
   sha256Canonical,
   StartedAtSchema,
 } from "./transcript.ts";
+import { canonicalRepositoryReadPath } from "./repository-path.ts";
 import {
   EvidenceSetIdSchema,
   ExecutionIdSchema,
@@ -322,6 +340,11 @@ type PersistedExecutionIdentity = Schema.Schema.Type<
 const PersistedExecutionAuditSchema = Schema.Struct({
   ...PersistedExecutionIdentitySchema.fields,
   findingsPath: Schema.String,
+  findingsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  findingsByteLength: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+  ),
 });
 const PersistedExecutionReviewSchema = Schema.Struct({
   ...PersistedExecutionIdentitySchema.fields,
@@ -334,7 +357,306 @@ const PersistedCampaignAuditSchema = Schema.Struct({
   gitSha: GitShaSchema,
   startedAt: StartedAtSchema,
   findingsPath: Schema.String,
+  findingsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  findingsByteLength: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+  ),
 });
+
+type IndexedReportArtifact = Readonly<{
+  readonly sha256: string;
+  readonly byteLength: number;
+  readonly path: string;
+}>;
+
+type PortableReportBundle = Readonly<{
+  readonly root: string;
+  readonly artifacts: ReadonlyMap<string, IndexedReportArtifact>;
+}>;
+
+const SHA256_PATTERN = /^[0-9a-f]{64}$/;
+
+function sha256Bytes(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function pathIsContained(root: string, candidate: string): boolean {
+  const candidateRelative = relative(root, candidate);
+  return (
+    candidateRelative === "" ||
+    (!candidateRelative.startsWith(`..${sep}`) &&
+      candidateRelative !== ".." &&
+      !candidateRelative.startsWith(sep))
+  );
+}
+
+function indexedReportArtifacts(
+  db: DatabaseSync,
+): readonly IndexedReportArtifact[] {
+  return db
+    .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
+    .all()
+    .map((row, index) => {
+      if (
+        !isJsonRecord(row) ||
+        typeof row.sha256 !== "string" ||
+        !SHA256_PATTERN.test(row.sha256) ||
+        typeof row.byteLength !== "number" ||
+        !Number.isInteger(row.byteLength) ||
+        row.byteLength < 0 ||
+        typeof row.path !== "string" ||
+        row.path.length === 0
+      ) {
+        return fail(
+          `Portable artifact index row ${String(index + 1)} is invalid.`,
+        );
+      }
+      return {
+        sha256: row.sha256,
+        byteLength: row.byteLength,
+        path: row.path,
+      };
+    });
+}
+
+function portableReportBundle(
+  dbPath: string,
+): PortableReportBundle | undefined {
+  let indexPath: string;
+  try {
+    indexPath = realpathSync(resolve(repoRoot, dbPath));
+  } catch (error) {
+    return fail(
+      `Portable report index is unreadable: ${dbPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  const root = dirname(indexPath);
+  const manifestPath = resolve(root, "manifest.json");
+  if (!existsSync(manifestPath)) return undefined;
+  try {
+    const canonicalManifestPath = realpathSync(manifestPath);
+    if (!pathIsContained(root, canonicalManifestPath)) {
+      return fail(
+        `Portable report manifest symlink escapes its bundle: ${manifestPath}`,
+      );
+    }
+  } catch (error) {
+    return fail(
+      `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(readFileSync(manifestPath, "utf8")) as unknown;
+  } catch (error) {
+    return fail(
+      `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (!isJsonRecord(value)) {
+    return fail(`Portable report manifest is invalid: ${manifestPath}`);
+  }
+  const index = value.index;
+  if (
+    !isJsonRecord(index) ||
+    index.path !== "index.sqlite" ||
+    typeof index.sha256 !== "string" ||
+    !SHA256_PATTERN.test(index.sha256) ||
+    typeof index.byteLength !== "number" ||
+    !Number.isInteger(index.byteLength) ||
+    index.byteLength < 0
+  ) {
+    return fail(
+      `Portable report manifest has an invalid index: ${manifestPath}`,
+    );
+  }
+  if (basename(indexPath) !== index.path) {
+    return fail(
+      `Portable report index path does not match its manifest: ${indexPath}`,
+    );
+  }
+  let indexBytes: Buffer;
+  try {
+    indexBytes = readFileSync(indexPath);
+  } catch (error) {
+    return fail(
+      `Portable report index is unreadable: ${indexPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (
+    indexBytes.byteLength !== index.byteLength ||
+    sha256Bytes(indexBytes) !== index.sha256
+  ) {
+    return fail(
+      `Portable report index does not match its manifest: ${indexPath}`,
+    );
+  }
+  if (!Array.isArray(value.artifacts)) {
+    return fail(
+      `Portable report manifest has no artifact list: ${manifestPath}`,
+    );
+  }
+  const artifacts = new Map<string, IndexedReportArtifact>();
+  const artifactPaths = new Set<string>();
+  for (const [entryIndex, entry] of value.artifacts.entries()) {
+    if (
+      !isJsonRecord(entry) ||
+      typeof entry.sha256 !== "string" ||
+      !SHA256_PATTERN.test(entry.sha256) ||
+      typeof entry.byteLength !== "number" ||
+      !Number.isInteger(entry.byteLength) ||
+      entry.byteLength < 0 ||
+      typeof entry.path !== "string" ||
+      entry.path.length === 0 ||
+      entry.path.includes("\0") ||
+      isAbsolute(entry.path) ||
+      !pathIsContained(root, resolve(root, entry.path)) ||
+      artifacts.has(entry.sha256) ||
+      artifactPaths.has(entry.path)
+    ) {
+      return fail(
+        `Portable report manifest artifact ${String(entryIndex + 1)} is invalid: ${manifestPath}`,
+      );
+    }
+    artifacts.set(entry.sha256, {
+      sha256: entry.sha256,
+      byteLength: entry.byteLength,
+      path: entry.path,
+    });
+    artifactPaths.add(entry.path);
+  }
+  return { root, artifacts };
+}
+
+function portableReportArtifactBytes(
+  bundle: PortableReportBundle,
+  indexed: IndexedReportArtifact,
+): Buffer {
+  const manifestArtifact = bundle.artifacts.get(indexed.sha256);
+  if (
+    manifestArtifact === undefined ||
+    manifestArtifact.byteLength !== indexed.byteLength ||
+    manifestArtifact.path !== indexed.path
+  ) {
+    return fail(
+      `Portable report artifact ${indexed.sha256} is not consistently indexed by its manifest.`,
+    );
+  }
+  if (
+    indexed.path.includes("\0") ||
+    indexed.path.length === 0 ||
+    isAbsolute(indexed.path)
+  ) {
+    return fail(`Portable report artifact path is invalid: ${indexed.path}`);
+  }
+  const lexical = resolve(bundle.root, indexed.path);
+  if (!pathIsContained(bundle.root, lexical)) {
+    return fail(
+      `Portable report artifact path escapes its bundle: ${indexed.path}`,
+    );
+  }
+  let canonical: string;
+  try {
+    canonical = realpathSync(lexical);
+  } catch (error) {
+    return fail(
+      `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (!pathIsContained(bundle.root, canonical)) {
+    return fail(
+      `Portable report artifact symlink escapes its bundle: ${indexed.path}`,
+    );
+  }
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(canonical);
+  } catch (error) {
+    return fail(
+      `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (
+    bytes.byteLength !== indexed.byteLength ||
+    sha256Bytes(bytes) !== indexed.sha256
+  ) {
+    return fail(
+      `Portable report artifact hash verification failed: ${indexed.path}`,
+    );
+  }
+  return bytes;
+}
+
+function readPortableFindingsProjection(
+  db: DatabaseSync,
+  bundle: PortableReportBundle,
+  findingsArtifact: IndexedReportArtifact,
+): FindingsProjection {
+  const artifacts = indexedReportArtifacts(db);
+  const findingsBytes = portableReportArtifactBytes(bundle, findingsArtifact);
+  let value: unknown;
+  try {
+    value = JSON.parse(findingsBytes.toString("utf8")) as unknown;
+  } catch (error) {
+    return fail(
+      `Portable findings artifact is invalid JSON: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    return fail(`Invalid findings projection: ${decoded.left.message}`);
+  }
+  const snapshots = decoded.right.authorities.map((authority) => {
+    const indexedAuthority = artifacts.find(
+      (artifact) => artifact.sha256 === authority.sha256,
+    );
+    if (indexedAuthority === undefined) {
+      return fail(
+        `Portable findings authority is not indexed: ${authority.path}`,
+      );
+    }
+    if (indexedAuthority.byteLength !== authority.byteLength) {
+      return fail(
+        `Portable findings authority length does not match: ${authority.path}`,
+      );
+    }
+    const bytes = portableReportArtifactBytes(bundle, indexedAuthority);
+    const snapshot = portableFindingAuthoritySnapshotForBytes(authority, bytes);
+    return Either.isRight(snapshot) ? snapshot.right : fail(snapshot.left);
+  });
+  const validation = validateFindingsProjection(decoded.right, snapshots);
+  return validation.tag === "valid"
+    ? validation.projection
+    : fail(`Invalid findings projection: ${validation.message}`);
+}
+
+function readIndexedFindingsProjection(input: {
+  readonly db: DatabaseSync;
+  readonly dbPath: string;
+  readonly findingsPath: string;
+  readonly findingsSha256: string;
+  readonly findingsByteLength: number;
+}): FindingsProjection {
+  const findingsArtifact = {
+    sha256: input.findingsSha256,
+    byteLength: input.findingsByteLength,
+    path: input.findingsPath,
+  } satisfies IndexedReportArtifact;
+  const bundle = portableReportBundle(input.dbPath);
+  if (bundle !== undefined) {
+    return readPortableFindingsProjection(input.db, bundle, findingsArtifact);
+  }
+  const database = canonicalRepositoryReadPath(repoRoot, input.dbPath);
+  if (Either.isLeft(database)) {
+    return fail(
+      `Portable report index requires a manifest.json beside the relocated database: ${input.dbPath}`,
+    );
+  }
+  return readFindingsProjection(input.findingsPath);
+}
 
 export function ingest(args: readonly string[]): void {
   const [transcriptArg, ...rest] = args;
@@ -743,47 +1065,58 @@ function audit(args: readonly string[]): void {
   );
   const outputPath = flagValue(args, "--output");
   const db = openArtifactIndexReadOnly(dbPath);
-  const row = db
-    .prepare(
-      `SELECT runs.id, runs.executionId, runs.evidenceSetId, runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
-              artifacts.path AS findingsPath
-       FROM runs
-       JOIN runArtifacts ON runArtifacts.runId = runs.id AND runArtifacts.role = 'findings'
-       JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
-       WHERE runs.id = ? AND runs.evidenceKind = 'currentExecution'`,
-    )
-    .get(runId);
-  db.close();
-  const decodedRow = Schema.decodeUnknownEither(PersistedExecutionAuditSchema, {
-    onExcessProperty: "error",
-  })(row);
-  if (Either.isLeft(decodedRow)) {
-    fail(`Execution row ${String(runId)} has no indexed findings artifact.`);
-  }
-  const execution = decodedRow.right;
-  const projection = readFindingsProjection(execution.findingsPath);
-  if (projection.subject.tag !== "execution") {
-    fail(`Execution row ${String(runId)} has non-Execution findings.`);
-  }
-  if (
-    projection.subject.executionId !== execution.executionId ||
-    projection.subject.evidenceSetId !== execution.evidenceSetId ||
-    projection.subject.scenarioId !== execution.scenarioId ||
-    projection.subject.gitSha !== execution.gitSha ||
-    projection.subject.startedAt !== execution.startedAt ||
-    findingsTranscriptSha256(projection.subject) !== execution.transcriptSha256
-  ) {
-    fail(
-      `Findings artifact identity does not match Execution row ${String(runId)}.`,
-    );
-  }
-  if (outputPath === undefined) {
-    process.stdout.write(renderFindingsAudit(projection));
-  } else {
-    writeFindingsAudit({ projection, path: outputPath });
-    console.log(
-      `Rendered Execution row ${String(runId)} audit into ${outputPath}`,
-    );
+  try {
+    const row = db
+      .prepare(
+        `SELECT runs.id, runs.executionId, runs.evidenceSetId, runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
+                artifacts.path AS findingsPath, artifacts.sha256 AS findingsSha256, artifacts.byteLength AS findingsByteLength
+         FROM runs
+         JOIN runArtifacts ON runArtifacts.runId = runs.id AND runArtifacts.role = 'findings'
+         JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
+         WHERE runs.id = ? AND runs.evidenceKind = 'currentExecution'`,
+      )
+      .get(runId);
+    const decodedRow = Schema.decodeUnknownEither(
+      PersistedExecutionAuditSchema,
+      { onExcessProperty: "error" },
+    )(row);
+    if (Either.isLeft(decodedRow)) {
+      fail(`Execution row ${String(runId)} has no indexed findings artifact.`);
+    }
+    const execution = decodedRow.right;
+    const projection = readIndexedFindingsProjection({
+      db,
+      dbPath,
+      findingsPath: execution.findingsPath,
+      findingsSha256: execution.findingsSha256,
+      findingsByteLength: execution.findingsByteLength,
+    });
+    if (projection.subject.tag !== "execution") {
+      fail(`Execution row ${String(runId)} has non-Execution findings.`);
+    }
+    if (
+      projection.subject.executionId !== execution.executionId ||
+      projection.subject.evidenceSetId !== execution.evidenceSetId ||
+      projection.subject.scenarioId !== execution.scenarioId ||
+      projection.subject.gitSha !== execution.gitSha ||
+      projection.subject.startedAt !== execution.startedAt ||
+      findingsTranscriptSha256(projection.subject) !==
+        execution.transcriptSha256
+    ) {
+      fail(
+        `Findings artifact identity does not match Execution row ${String(runId)}.`,
+      );
+    }
+    if (outputPath === undefined) {
+      process.stdout.write(renderFindingsAudit(projection));
+    } else {
+      writeFindingsAudit({ projection, path: outputPath });
+      console.log(
+        `Rendered Execution row ${String(runId)} audit into ${outputPath}`,
+      );
+    }
+  } finally {
+    db.close();
   }
 }
 
@@ -795,53 +1128,63 @@ function generationAudit(args: readonly string[]): void {
   );
   const outputPath = flagValue(args, "--output");
   const db = openArtifactIndexReadOnly(dbPath);
-  const row = db
-    .prepare(
-      `SELECT scenarioCampaigns.campaignId, scenarioCampaigns.plannedScenarioId, scenarioCampaigns.evidenceSetId, scenarioCampaigns.gitSha, scenarioCampaigns.startedAt,
-              artifacts.path AS findingsPath
-       FROM scenarioCampaigns
-       JOIN scenarioCampaignArtifacts
-         ON scenarioCampaignArtifacts.scenarioCampaignRowId = scenarioCampaigns.id
-        AND scenarioCampaignArtifacts.role = 'findings'
-       JOIN artifacts ON artifacts.sha256 = scenarioCampaignArtifacts.artifactSha256
-       WHERE scenarioCampaigns.id = ?`,
-    )
-    .get(campaignRowId);
-  db.close();
-  const decodedRow = Schema.decodeUnknownEither(PersistedCampaignAuditSchema, {
-    onExcessProperty: "error",
-  })(row);
-  if (Either.isLeft(decodedRow)) {
-    fail(
-      `Scenario Campaign row ${String(campaignRowId)} has no indexed findings artifact.`,
-    );
-  }
-  const campaign = decodedRow.right;
-  const projection = readFindingsProjection(campaign.findingsPath);
-  if (projection.subject.tag !== "scenarioCampaign") {
-    fail(
-      `Scenario Campaign row ${String(campaignRowId)} has non-Campaign findings.`,
-    );
-  }
-  if (
-    projection.subject.campaignId !== campaign.campaignId ||
-    projection.subject.plannedScenarioId !== campaign.plannedScenarioId ||
-    projection.subject.evidenceSetId !== campaign.evidenceSetId ||
-    projection.subject.gitSha !== campaign.gitSha ||
-    projection.subject.startedAt !== campaign.startedAt ||
-    findingsTranscriptSha256(projection.subject) !== undefined
-  ) {
-    fail(
-      `Generation findings identity does not match Scenario Campaign row ${String(campaignRowId)}.`,
-    );
-  }
-  if (outputPath === undefined) {
-    process.stdout.write(renderFindingsAudit(projection));
-  } else {
-    writeFindingsAudit({ projection, path: outputPath });
-    console.log(
-      `Rendered Scenario Campaign row ${String(campaignRowId)} audit into ${outputPath}`,
-    );
+  try {
+    const row = db
+      .prepare(
+        `SELECT scenarioCampaigns.campaignId, scenarioCampaigns.plannedScenarioId, scenarioCampaigns.evidenceSetId, scenarioCampaigns.gitSha, scenarioCampaigns.startedAt,
+                artifacts.path AS findingsPath, artifacts.sha256 AS findingsSha256, artifacts.byteLength AS findingsByteLength
+         FROM scenarioCampaigns
+         JOIN scenarioCampaignArtifacts
+           ON scenarioCampaignArtifacts.scenarioCampaignRowId = scenarioCampaigns.id
+          AND scenarioCampaignArtifacts.role = 'findings'
+         JOIN artifacts ON artifacts.sha256 = scenarioCampaignArtifacts.artifactSha256
+         WHERE scenarioCampaigns.id = ?`,
+      )
+      .get(campaignRowId);
+    const decodedRow = Schema.decodeUnknownEither(
+      PersistedCampaignAuditSchema,
+      { onExcessProperty: "error" },
+    )(row);
+    if (Either.isLeft(decodedRow)) {
+      fail(
+        `Scenario Campaign row ${String(campaignRowId)} has no indexed findings artifact.`,
+      );
+    }
+    const campaign = decodedRow.right;
+    const projection = readIndexedFindingsProjection({
+      db,
+      dbPath,
+      findingsPath: campaign.findingsPath,
+      findingsSha256: campaign.findingsSha256,
+      findingsByteLength: campaign.findingsByteLength,
+    });
+    if (projection.subject.tag !== "scenarioCampaign") {
+      fail(
+        `Scenario Campaign row ${String(campaignRowId)} has non-Campaign findings.`,
+      );
+    }
+    if (
+      projection.subject.campaignId !== campaign.campaignId ||
+      projection.subject.plannedScenarioId !== campaign.plannedScenarioId ||
+      projection.subject.evidenceSetId !== campaign.evidenceSetId ||
+      projection.subject.gitSha !== campaign.gitSha ||
+      projection.subject.startedAt !== campaign.startedAt ||
+      findingsTranscriptSha256(projection.subject) !== undefined
+    ) {
+      fail(
+        `Generation findings identity does not match Scenario Campaign row ${String(campaignRowId)}.`,
+      );
+    }
+    if (outputPath === undefined) {
+      process.stdout.write(renderFindingsAudit(projection));
+    } else {
+      writeFindingsAudit({ projection, path: outputPath });
+      console.log(
+        `Rendered Scenario Campaign row ${String(campaignRowId)} audit into ${outputPath}`,
+      );
+    }
+  } finally {
+    db.close();
   }
 }
 
@@ -1406,73 +1749,77 @@ export function review(args: readonly string[]): void {
 function summary(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
   const db = openArtifactIndexReadOnly(dbPath);
-  const evidenceCounts = db
-    .prepare(
-      "SELECT evidenceKind, COUNT(*) AS count FROM runs GROUP BY evidenceKind",
-    )
-    .all();
-  if (
-    evidenceCounts.some(
-      (row) =>
-        !isJsonRecord(row) ||
-        typeof row.evidenceKind !== "string" ||
-        typeof row.count !== "number",
-    )
-  ) {
-    db.close();
-    fail("Report database returned invalid evidence counts");
-  }
-  const count = (kind: "currentExecution" | "historicalObservation") =>
-    evidenceCounts.find((row) => isJsonRecord(row) && row.evidenceKind === kind)
-      ?.count ?? 0;
-  console.log(`Executions: ${String(count("currentExecution"))}`);
-  console.log(
-    `Historical observations: ${String(count("historicalObservation"))}`,
-  );
-  for (const [kind, label] of [
-    ["currentExecution", "Execution verdicts"],
-    ["historicalObservation", "Historical verdicts"],
-  ] as const) {
-    const rows = db
+  try {
+    const evidenceCounts = db
       .prepare(
-        "SELECT verdicts.class, COUNT(*) AS count FROM verdicts JOIN runs ON runs.id = verdicts.runId WHERE runs.evidenceKind = ? GROUP BY verdicts.class ORDER BY verdicts.class",
+        "SELECT evidenceKind, COUNT(*) AS count FROM runs GROUP BY evidenceKind",
       )
-      .all(kind);
-    if (rows.length === 0) console.log(`${label}: none`);
-    for (const row of rows) {
-      if (
-        !isJsonRecord(row) ||
-        typeof row.class !== "string" ||
-        typeof row.count !== "number"
-      ) {
-        db.close();
-        fail("Report database returned an invalid verdict count");
-      }
-      console.log(`${label} ${row.class}: ${row.count}`);
+      .all();
+    if (
+      evidenceCounts.some(
+        (row) =>
+          !isJsonRecord(row) ||
+          typeof row.evidenceKind !== "string" ||
+          typeof row.count !== "number",
+      )
+    ) {
+      fail("Report database returned invalid evidence counts");
     }
+    const count = (kind: "currentExecution" | "historicalObservation") =>
+      evidenceCounts.find(
+        (row) => isJsonRecord(row) && row.evidenceKind === kind,
+      )?.count ?? 0;
+    console.log(`Executions: ${String(count("currentExecution"))}`);
+    console.log(
+      `Historical observations: ${String(count("historicalObservation"))}`,
+    );
+    for (const [kind, label] of [
+      ["currentExecution", "Execution verdicts"],
+      ["historicalObservation", "Historical verdicts"],
+    ] as const) {
+      const rows = db
+        .prepare(
+          "SELECT verdicts.class, COUNT(*) AS count FROM verdicts JOIN runs ON runs.id = verdicts.runId WHERE runs.evidenceKind = ? GROUP BY verdicts.class ORDER BY verdicts.class",
+        )
+        .all(kind);
+      if (rows.length === 0) console.log(`${label}: none`);
+      for (const row of rows) {
+        if (
+          !isJsonRecord(row) ||
+          typeof row.class !== "string" ||
+          typeof row.count !== "number"
+        ) {
+          fail("Report database returned an invalid verdict count");
+        }
+        console.log(`${label} ${row.class}: ${row.count}`);
+      }
+    }
+  } finally {
+    db.close();
   }
-  db.close();
 }
 
 function issues(args: readonly string[]): void {
   const { dbPath, linkFilter } = parseIssuesArgs(args);
   const db = openArtifactIndexReadOnly(dbPath);
-  const rows = db
-    .prepare(
-      `SELECT fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber
-       FROM issues
-       ${issueLinkFilterSql(linkFilter)}
-       ORDER BY firstSeenAt, fingerprint`,
-    )
-    .all();
-  for (const row of rows) {
-    if (!isIssueRow(row)) {
-      db.close();
-      fail("Report database returned an invalid issue row");
+  try {
+    const rows = db
+      .prepare(
+        `SELECT fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber
+         FROM issues
+         ${issueLinkFilterSql(linkFilter)}
+         ORDER BY firstSeenAt, fingerprint`,
+      )
+      .all();
+    for (const row of rows) {
+      if (!isIssueRow(row)) {
+        fail("Report database returned an invalid issue row");
+      }
+      console.log(JSON.stringify(row));
     }
-    console.log(JSON.stringify(row));
+  } finally {
+    db.close();
   }
-  db.close();
 }
 
 function parseIssuesArgs(args: readonly string[]): {

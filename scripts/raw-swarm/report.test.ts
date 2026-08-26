@@ -3,11 +3,14 @@ import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
+  mkdirSync,
+  mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
+import { tmpdir } from "node:os";
 import { relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
@@ -15,6 +18,8 @@ import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 import { openArtifactIndex } from "./artifact-index.ts";
+import { projectGenerationFindings } from "./generation-findings.ts";
+import { writeFindingsProjection } from "./findings.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
@@ -27,6 +32,7 @@ import { repoRoot } from "./transcript.ts";
 
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 const temporaryDirectories: string[] = [];
+const temporaryExternalDirectories: string[] = [];
 
 function temporaryDirectory(): string {
   const directory = rawSwarmTestOutputDirectory("report-test-");
@@ -36,6 +42,9 @@ function temporaryDirectory(): string {
 
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
+    rmSync(directory, { recursive: true, force: true });
+  }
+  for (const directory of temporaryExternalDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
   }
 });
@@ -245,6 +254,183 @@ describe("RAW swarm artifact report index", () => {
     );
     expect(readFileSync(dbPath)).toEqual(indexBefore);
   }, 30_000);
+
+  test("audits populated portable Execution and Campaign bundles after relocation", () => {
+    const directory = temporaryDirectory();
+    const externalRoot = mkdtempSync(resolve(tmpdir(), "raw-swarm-report-"));
+    temporaryExternalDirectories.push(externalRoot);
+    const evidence = controlledReviewEvidenceFixture({
+      directory: resolve(directory, "execution-evidence"),
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "relocated-review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const executionDbPath = resolve(directory, "execution.sqlite");
+    report([
+      "ingest",
+      relative(repoRoot, evidence.transcriptPath),
+      "--db",
+      relative(repoRoot, executionDbPath),
+    ]);
+    report([
+      "review",
+      relative(repoRoot, evidence.reviewPath),
+      "--db",
+      relative(repoRoot, executionDbPath),
+      "--execution-row",
+      "1",
+      "--review-invocation-evidence",
+      relative(repoRoot, evidence.manifestPath),
+    ]);
+    report([
+      "findings",
+      relative(repoRoot, evidence.transcriptPath),
+      "--db",
+      relative(repoRoot, executionDbPath),
+      "--review",
+      relative(repoRoot, evidence.reviewPath),
+      "--generation-ledger",
+      relative(repoRoot, evidence.ledgerPath),
+      "--review-replay-milestone",
+      relative(repoRoot, evidence.replayPrePlayReviewInputPaths[0]!),
+      "--review-replay-final",
+      relative(repoRoot, evidence.replayPrePlayReviewInputPaths[1]!),
+    ]);
+    const executionPortablePath = resolve(externalRoot, "execution");
+    report([
+      "export",
+      "--db",
+      relative(repoRoot, executionDbPath),
+      "--destination",
+      relative(repoRoot, executionPortablePath),
+    ]);
+    rmSync(resolve(directory, "execution-evidence"), {
+      recursive: true,
+      force: true,
+    });
+    const relocatedExecutionIndex = resolve(
+      executionPortablePath,
+      "index.sqlite",
+    );
+    const executionIndexBefore = readFileSync(relocatedExecutionIndex);
+    const executionManifestBefore = readFileSync(
+      resolve(executionPortablePath, "manifest.json"),
+    );
+    const executionManifest = JSON.parse(
+      executionManifestBefore.toString("utf8"),
+    ) as { readonly artifacts: readonly unknown[] };
+    expect(executionManifest.artifacts.length).toBeGreaterThan(0);
+    expect(
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toContain("fixture-execution");
+    expect(readFileSync(relocatedExecutionIndex)).toEqual(executionIndexBefore);
+    expect(
+      readFileSync(resolve(executionPortablePath, "manifest.json")),
+    ).toEqual(executionManifestBefore);
+
+    const generationRoot = resolve(directory, "generation-evidence");
+    mkdirSync(generationRoot, { recursive: true });
+    const campaignPath = resolve(generationRoot, "campaign.json");
+    writeFileSync(
+      campaignPath,
+      `${JSON.stringify({
+        type: "raw-swarm-scenario-campaign",
+        schemaVersion: 1,
+        campaignId: "relocated-campaign",
+        plannedScenarioId: "relocated-scenario",
+        evidenceSetId: "relocated-evidence",
+        gitSha: "a".repeat(40),
+        startedAt: "2026-08-18T00:00:00.000Z",
+        configSha256: "c".repeat(64),
+      })}\n`,
+    );
+    const generationFindingsPath = resolve(
+      generationRoot,
+      "generation-findings.json",
+    );
+    const generationProjection = projectGenerationFindings({
+      authorityPaths: [
+        { role: "campaign", path: relative(repoRoot, campaignPath) },
+      ],
+      generationLedgerPaths: [],
+      scenarioReviewPaths: [],
+      stagePlanPaths: [],
+      stagePlanFindingsPaths: [],
+      disposition: {
+        tag: "campaignFailure",
+        reason: "The relocated campaign fixture stopped before admission.",
+      },
+    });
+    writeFindingsProjection({
+      projection: generationProjection,
+      path: relative(repoRoot, generationFindingsPath),
+    });
+    const generationDbPath = resolve(directory, "generation.sqlite");
+    report([
+      "generation-findings",
+      relative(repoRoot, generationFindingsPath),
+      "--db",
+      relative(repoRoot, generationDbPath),
+    ]);
+    const generationPortablePath = resolve(externalRoot, "generation");
+    report([
+      "export",
+      "--db",
+      relative(repoRoot, generationDbPath),
+      "--destination",
+      relative(repoRoot, generationPortablePath),
+    ]);
+    rmSync(generationRoot, { recursive: true, force: true });
+    const relocatedGenerationIndex = resolve(
+      generationPortablePath,
+      "index.sqlite",
+    );
+    const generationIndexBefore = readFileSync(relocatedGenerationIndex);
+    const generationManifestBefore = readFileSync(
+      resolve(generationPortablePath, "manifest.json"),
+    );
+    const generationManifest = JSON.parse(
+      generationManifestBefore.toString("utf8"),
+    ) as { readonly artifacts: readonly unknown[] };
+    expect(generationManifest.artifacts.length).toBeGreaterThan(0);
+    expect(
+      report([
+        "generation-audit",
+        "--campaign-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedGenerationIndex),
+      ]),
+    ).toContain("relocated-campaign");
+    expect(readFileSync(relocatedGenerationIndex)).toEqual(
+      generationIndexBefore,
+    );
+    expect(
+      readFileSync(resolve(generationPortablePath, "manifest.json")),
+    ).toEqual(generationManifestBefore);
+  }, 60_000);
 
   test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();

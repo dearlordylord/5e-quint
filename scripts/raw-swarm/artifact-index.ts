@@ -5,10 +5,12 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  realpathSync,
   statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, extname, relative, resolve } from "node:path";
+import { basename, dirname, extname, relative, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { Either, Schema } from "effect";
@@ -143,6 +145,136 @@ function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+type ArtifactIndexLockMode = "reader" | "writer";
+
+function isSqliteBusy(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    /SQLITE_BUSY|database is locked|database table is locked/i.test(
+      error.message,
+    )
+  );
+}
+
+function artifactIndexLockIdentity(absolute: string): string {
+  try {
+    return realpathSync(absolute);
+  } catch {
+    try {
+      return resolve(realpathSync(dirname(absolute)), basename(absolute));
+    } catch {
+      return absolute;
+    }
+  }
+}
+
+function artifactIndexLockPath(absolute: string): string {
+  const identity = artifactIndexLockIdentity(absolute);
+  const digest = createHash("sha256").update(identity).digest("hex");
+  return resolve(tmpdir(), `raw-swarm-artifact-index-${digest}.lock.sqlite`);
+}
+
+function artifactIndexLockFailure(
+  mode: ArtifactIndexLockMode,
+  absolute: string,
+): never {
+  return fail(
+    mode === "reader"
+      ? `Raw Swarm index cannot be opened for read-only reporting while a writer is active: ${absolute}`
+      : `Raw Swarm index cannot be opened for writing while a read-only report is active: ${absolute}`,
+  );
+}
+
+function acquireArtifactIndexLock(
+  absolute: string,
+  mode: ArtifactIndexLockMode,
+): { readonly release: () => void } {
+  const lockDb = new DatabaseSync(artifactIndexLockPath(absolute));
+  try {
+    // Initialization may race with another process creating this lock file;
+    // only that short setup phase may wait. Once the row exists, all lease
+    // acquisition is deliberately non-blocking.
+    lockDb.exec("PRAGMA busy_timeout = 1000");
+    const table = lockDb
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'artifactIndexLock'",
+      )
+      .get();
+    if (table === undefined) {
+      lockDb.exec("BEGIN IMMEDIATE");
+      lockDb.exec(`
+        CREATE TABLE IF NOT EXISTS artifactIndexLock(
+          id INTEGER PRIMARY KEY CHECK(id = 1)
+        ) STRICT;
+        INSERT OR IGNORE INTO artifactIndexLock(id) VALUES (1);
+        COMMIT;
+      `);
+    } else {
+      const row = lockDb
+        .prepare("SELECT id FROM artifactIndexLock WHERE id = 1")
+        .get();
+      if (row === undefined) {
+        lockDb.exec("BEGIN IMMEDIATE");
+        lockDb.exec(
+          "INSERT OR IGNORE INTO artifactIndexLock(id) VALUES (1); COMMIT;",
+        );
+      }
+    }
+    lockDb.exec("PRAGMA busy_timeout = 0");
+    lockDb.exec(mode === "reader" ? "BEGIN" : "BEGIN EXCLUSIVE");
+    lockDb.prepare("SELECT id FROM artifactIndexLock WHERE id = 1").get();
+  } catch (error) {
+    try {
+      lockDb.close();
+    } catch {
+      // The lock acquisition failure remains the actionable error.
+    }
+    if (isSqliteBusy(error)) artifactIndexLockFailure(mode, absolute);
+    throw error;
+  }
+
+  let released = false;
+  const release = (): void => {
+    if (released) return;
+    released = true;
+    process.removeListener("exit", releaseOnExit);
+    try {
+      lockDb.exec("ROLLBACK");
+    } catch {
+      // Closing the SQLite connection still releases the OS lock.
+    }
+    try {
+      lockDb.close();
+    } catch {
+      // The lease is already marked released and cannot be acquired again.
+    }
+  };
+  const releaseOnExit = (): void => {
+    release();
+  };
+  process.once("exit", releaseOnExit);
+  return { release };
+}
+
+function bindArtifactIndexLock(
+  db: DatabaseSync,
+  lease: { readonly release: () => void },
+): DatabaseSync {
+  const close = db.close.bind(db);
+  Object.defineProperty(db, "close", {
+    configurable: true,
+    writable: true,
+    value: (): void => {
+      try {
+        close();
+      } finally {
+        lease.release();
+      }
+    },
+  });
+  return db;
+}
+
 function requiredCurrentExecutionAuthorityPath(
   evidenceSetDirectory: string,
   path: string,
@@ -253,17 +385,15 @@ function rejectUncheckpointedWal(absolute: string, displayPath: string): void {
 export function openArtifactIndex(path: string): DatabaseSync {
   const absolute = resolve(repoRoot, path);
   mkdirSync(dirname(absolute), { recursive: true });
-  const db = new DatabaseSync(absolute);
+  const lease = acquireArtifactIndexLock(absolute, "writer");
+  let db: DatabaseSync | undefined;
   try {
+    db = new DatabaseSync(absolute);
     validateArtifactIndex(db, false);
-  } catch (error) {
-    db.close();
-    throw error;
-  }
-  db.exec("PRAGMA foreign_keys = ON");
-  db.exec("PRAGMA journal_mode = WAL");
-  db.exec("PRAGMA busy_timeout = 5000");
-  db.exec(`
+    db.exec("PRAGMA foreign_keys = ON");
+    db.exec("PRAGMA journal_mode = WAL");
+    db.exec("PRAGMA busy_timeout = 5000");
+    db.exec(`
     CREATE TABLE IF NOT EXISTS indexMetadata(
       schemaVersion INTEGER PRIMARY KEY CHECK(schemaVersion = ${INDEX_SCHEMA_VERSION})
     ) STRICT;
@@ -449,8 +579,18 @@ export function openArtifactIndex(path: string): DatabaseSync {
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_campaign ON scenarioCampaignFindings(scenarioCampaignRowId);
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_category ON scenarioCampaignFindings(category);
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_fingerprint ON scenarioCampaignFindings(fingerprint);
-  `);
-  return db;
+    `);
+    const locked = bindArtifactIndexLock(db, lease);
+    db = undefined;
+    return locked;
+  } catch (error) {
+    try {
+      db?.close();
+    } finally {
+      lease.release();
+    }
+    throw error;
+  }
 }
 
 export function openArtifactIndexReadOnly(path: string): DatabaseSync {
@@ -458,25 +598,39 @@ export function openArtifactIndexReadOnly(path: string): DatabaseSync {
   if (!existsSync(lexical)) {
     return fail(`Raw Swarm index does not exist: ${path}`);
   }
-  const canonical = canonicalRepositoryReadPath(repoRoot, lexical);
-  if (Either.isLeft(canonical)) {
-    if (canonical.left.includes("ENOENT")) {
+  let absolute: string;
+  try {
+    absolute = realpathSync(lexical);
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "ENOENT"
+    ) {
       return fail(`Raw Swarm index does not exist: ${path}`);
     }
     return fail(
-      `Raw Swarm index is not repository-owned: ${path}: ${canonical.left}`,
+      `Raw Swarm index is unreadable: ${path}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  const absolute = canonical.right;
-  rejectUncheckpointedWal(absolute, path);
-  const db = new DatabaseSync(`${pathToFileURL(absolute).href}?immutable=1`, {
-    readOnly: true,
-  });
+  const lease = acquireArtifactIndexLock(absolute, "reader");
+  let db: DatabaseSync | undefined;
   try {
+    rejectUncheckpointedWal(absolute, path);
+    db = new DatabaseSync(`${pathToFileURL(absolute).href}?immutable=1`, {
+      readOnly: true,
+    });
     validateArtifactIndex(db, true);
-    return db;
+    const locked = bindArtifactIndexLock(db, lease);
+    db = undefined;
+    return locked;
   } catch (error) {
-    db.close();
+    try {
+      db?.close();
+    } finally {
+      lease.release();
+    }
     throw error;
   }
 }
