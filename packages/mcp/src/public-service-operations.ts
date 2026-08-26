@@ -70,6 +70,20 @@ export const PUBLIC_MCP_DIAGNOSTIC_REASONS = [
 export type PublicMcpDiagnosticReason =
   (typeof PUBLIC_MCP_DIAGNOSTIC_REASONS)[number];
 
+export type PublicMcpRequestObservation = {
+  readonly environment: PublicMcpDeploymentEnvironment;
+  readonly release: string;
+  readonly traceId: string;
+  readonly spanId: string;
+  readonly method: PublicMcpHttpMethod;
+  readonly route: string;
+  readonly status: number;
+  readonly durationMilliseconds: number;
+  readonly outcome: PublicMcpRequestOutcome;
+  readonly toolName?: string;
+  readonly diagnostic?: PublicMcpDiagnostic;
+};
+
 const knownToolNames = new Set<string>(PLAY_SESSION_NEXT_OPERATION_NAMES);
 const requestCounts = new Map<string, number>();
 let requestCount = 0;
@@ -85,20 +99,25 @@ export function publicMcpTraceContext(): {
   };
 }
 
-export function observePublicMcpRequest(input: {
-  readonly environment: PublicMcpDeploymentEnvironment;
-  readonly release: string;
-  readonly traceId: string;
-  readonly spanId: string;
-  readonly method: PublicMcpHttpMethod;
+export function observePublicMcpRequest(
+  input: PublicMcpRequestObservation,
+): void {
+  const key = publicMcpRequestMetricKey(input);
+  requestCounts.set(key, (requestCounts.get(key) ?? 0) + 1);
+  requestCount += 1;
+  requestDurationMilliseconds += input.durationMilliseconds;
+  process.stderr.write(`${JSON.stringify(publicMcpRequestLog(input))}\n`);
+}
+
+function publicMcpRequestMetricKey(input: {
   readonly route: string;
+  readonly method: PublicMcpHttpMethod;
   readonly status: number;
-  readonly durationMilliseconds: number;
   readonly outcome: PublicMcpRequestOutcome;
   readonly toolName?: string;
   readonly diagnostic?: PublicMcpDiagnostic;
-}): void {
-  const key = [
+}): string {
+  return [
     input.route,
     input.method,
     String(input.status),
@@ -107,30 +126,28 @@ export function observePublicMcpRequest(input: {
     input.diagnostic?.code ?? "none",
     input.diagnostic?.reason ?? "none",
   ].join("|");
-  requestCounts.set(key, (requestCounts.get(key) ?? 0) + 1);
-  requestCount += 1;
-  requestDurationMilliseconds += input.durationMilliseconds;
-  process.stderr.write(
-    `${JSON.stringify({
-      timestamp: new Date().toISOString(),
-      severity: input.outcome === "failed" ? "error" : "info",
-      event: "public_mcp_request",
-      service: PUBLIC_MCP_SERVICE_NAME,
-      environment: input.environment,
-      release: input.release,
-      traceId: input.traceId,
-      spanId: input.spanId,
-      method: input.method,
-      route: input.route,
-      status: input.status,
-      outcome: input.outcome,
-      durationMilliseconds: input.durationMilliseconds,
-      ...(input.toolName === undefined ? {} : { toolName: input.toolName }),
-      ...(input.diagnostic === undefined
-        ? {}
-        : { diagnostic: input.diagnostic }),
-    })}\n`,
-  );
+}
+
+function publicMcpRequestLog(
+  input: PublicMcpRequestObservation,
+): Record<string, unknown> {
+  return {
+    timestamp: new Date().toISOString(),
+    severity: input.outcome === "failed" ? "error" : "info",
+    event: "public_mcp_request",
+    service: PUBLIC_MCP_SERVICE_NAME,
+    environment: input.environment,
+    release: input.release,
+    traceId: input.traceId,
+    spanId: input.spanId,
+    method: input.method,
+    route: input.route,
+    status: input.status,
+    outcome: input.outcome,
+    durationMilliseconds: input.durationMilliseconds,
+    ...(input.toolName === undefined ? {} : { toolName: input.toolName }),
+    ...(input.diagnostic === undefined ? {} : { diagnostic: input.diagnostic }),
+  };
 }
 
 export function publicMcpMetrics(): string {
