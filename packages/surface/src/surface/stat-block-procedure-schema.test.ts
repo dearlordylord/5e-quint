@@ -47,7 +47,6 @@ const syntheticStandaloneStatBlock = {
         name: "Synthetic Routine",
         dispatches: [
           { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
-          { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
         ],
       },
       resourceRefs: { kind: "none" },
@@ -168,7 +167,7 @@ describe("standalone Stat Block procedure sections", () => {
       kind: "executable",
       procedure: {
         kind: "multiattack",
-        dispatches: [{ procedureOrdinal: 2 }, { procedureOrdinal: 3 }],
+        dispatches: [{ procedureOrdinal: 2 }],
       },
     });
     expect(decoded.actions?.[2]).toMatchObject({
@@ -206,6 +205,26 @@ describe("standalone Stat Block procedure sections", () => {
             ...syntheticStandaloneStatBlock.actions[1],
             procedureOrdinal: 1,
           },
+          syntheticStandaloneStatBlock.actions[2],
+          syntheticStandaloneStatBlock.actions[3],
+        ],
+      }),
+    ).toThrow();
+
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        actions: [
+          {
+            ...syntheticStandaloneStatBlock.actions[0],
+            procedure: {
+              ...syntheticStandaloneStatBlock.actions[0].procedure,
+              dispatches: [
+                { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
+              ],
+            },
+          },
+          syntheticStandaloneStatBlock.actions[1],
           syntheticStandaloneStatBlock.actions[2],
           syntheticStandaloneStatBlock.actions[3],
         ],
