@@ -178,6 +178,7 @@ export function resolveBattleRuntimeSubject(
       subject: input.subject,
       fills: input.fills,
     }),
+    "ordinary",
   );
 }
 
@@ -319,7 +320,7 @@ function battleRuntimeResolutionWithFamiliarPresentation(
   presentation: BattleStatBlockPresentationSource,
 ): BattleRuntimeResolutionResult {
   if (result.tag !== "resolved") {
-    return battleRuntimeResolutionFromMechanical(session, result);
+    return battleRuntimeResolutionFromMechanical(session, result, "ordinary");
   }
   const combatant = result.state.combatants.get(combatantId);
   if (combatant === undefined) {
@@ -348,16 +349,35 @@ function battleRuntimeResolutionWithFamiliarPresentation(
 function battleRuntimeResolutionFromMechanical(
   session: BattleRuntimeSession,
   result: BattleResolutionResult,
+  checkpointMode: "ordinary" | "interrupt",
 ): BattleRuntimeResolutionResult {
   return Match.value(result).pipe(
     byBattleResolutionTag("resolved", ({ state, ...outcome }) => ({
       ...outcome,
       session: battleRuntimeSessionWithState(session, state),
     })),
-    byBattleResolutionTag("needsHoles", ({ state, ...outcome }) => ({
-      ...outcome,
-      session: battleRuntimeSessionWithState(session, state),
-    })),
+    byBattleResolutionTag("needsHoles", ({ state, ...outcome }) => {
+      if (outcome.holes.length === 0) {
+        return {
+          tag: "invalid" as const,
+          session,
+          reason: "invalidFill" as const,
+          message: "Battle continuation requires a non-empty Hole frontier.",
+          snapshot: snapshotBattle(session.state),
+          ...optionalProperty("routeEvents", outcome.routeEvents),
+        };
+      }
+      const checkpointSession =
+        checkpointMode === "interrupt" ||
+        session.state.interruptStack.length !== state.interruptStack.length
+          ? battleRuntimeSessionWithState(session, state)
+          : session;
+      return {
+        ...outcome,
+        session: checkpointSession,
+        snapshot: snapshotBattle(checkpointSession.state),
+      };
+    }),
     byBattleResolutionTag("invalid", (outcome) => ({
       ...outcome,
       session,
@@ -373,6 +393,7 @@ export function resolveBattleRuntimeInterrupt(input: {
   return battleRuntimeResolutionFromMechanical(
     input.session,
     resolveBattleInterrupt({ state: input.session.state, fill: input.fill }),
+    "interrupt",
   );
 }
 
@@ -388,6 +409,7 @@ export function endBattleRuntimeTurn(input: {
       actorId: input.actorId,
       ...optionalProperty("fills", input.fills),
     }),
+    "ordinary",
   );
 }
 
@@ -465,6 +487,7 @@ export function openCreatureFallsRuntimeInterruptWindow(input: {
       fallingCreatureId: input.fallingCreatureId,
       reactionSpellTargetFacts: input.reactionSpellTargetFacts,
     }),
+    "ordinary",
   );
 }
 

@@ -6215,6 +6215,47 @@ describe("MCP server route", () => {
       validAttackSubject,
     );
     expect(pending.result.tag).toBe("needsHoles");
+    const ordinaryCheckpoint = root.sessionStore.battleSession;
+    expect(ordinaryCheckpoint).not.toBeNull();
+    expect(root.sessionStore.pendingBattleFills?.baseSession).toBe(
+      ordinaryCheckpoint,
+    );
+    expect(root.sessionStore.pendingBattleFills?.fills).toHaveLength(1);
+
+    expect(
+      readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: validAttackSubject,
+          fill: {
+            kind: "targetChoice",
+            holeId: "battle:synthetic-stale-hole",
+            value: "goblin",
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "BATTLE_FILL_HOLE_MISMATCH" },
+    });
+    const currentHole = root.sessionStore.pendingBattleFills?.holes[0];
+    if (currentHole === undefined) {
+      throw new Error("Expected the pending ordinary attack roll hole.");
+    }
+    expect(
+      readPayload(
+        handleToolCall(root, "fill_battle_hole", {
+          subject: validAttackSubject,
+          fill: {
+            kind: "rolledDice",
+            holeId: currentHole.holeId,
+            value: [{ results: [1] }],
+          },
+        }),
+      ),
+    ).toMatchObject({
+      details: { code: "BATTLE_FILL_KIND_MISMATCH" },
+    });
+    expect(root.sessionStore.battleSession).toBe(ordinaryCheckpoint);
+    expect(root.sessionStore.pendingBattleFills?.fills).toHaveLength(1);
     expect(readPayload(handleToolCall(root, "end_battle", {}))).toMatchObject({
       details: { code: "BATTLE_FILLS_PENDING" },
     });
@@ -7066,7 +7107,7 @@ describe("MCP server route", () => {
         tag: "needsHoles",
         holes: [{ kind: "attackDamageDisposition" }],
       },
-      snapshot: { turn: { attackRollMadeThisTurn: true } },
+      snapshot: { turn: { attackRollMadeThisTurn: false } },
     });
 
     const duplicateDamage = readPayload(
@@ -8824,6 +8865,8 @@ describe("MCP server route", () => {
       throw new Error("Expected Fighter to hold a readied spell.");
     }
     readPayload(handleToolCall(root, "end_turn", { actorId: "fighter" }));
+    const ordinaryCheckpoint = root.sessionStore.battleSession;
+    expect(ordinaryCheckpoint?.state.interruptStack).toHaveLength(0);
 
     const goblinAttack = battleAttackSubjectForName(root, "goblin", "Shortbow");
     readPayload(
@@ -8924,6 +8967,13 @@ describe("MCP server route", () => {
     expect(root.sessionStore.battleSession?.state.interruptStack).toHaveLength(
       1,
     );
+    expect(currentPendingBattleFills(root)?.baseSession).toBe(
+      root.sessionStore.battleSession,
+    );
+    expect(currentPendingBattleFills(root)?.baseSession).not.toBe(
+      ordinaryCheckpoint,
+    );
+    expect(currentPendingBattleFills(root)?.fills).toEqual([]);
     expect(afterReactionDecision.session.transientBattleFills).toMatchObject({
       subject: {
         command: "releaseReadiedSpell",
@@ -8956,6 +9006,10 @@ describe("MCP server route", () => {
       tag: "needsHoles",
       holes: [{ kind: "attackRoll" }],
     });
+    expect(currentPendingBattleFills(root)?.baseSession).toBe(
+      root.sessionStore.battleSession,
+    );
+    expect(currentPendingBattleFills(root)?.fills).toHaveLength(1);
   });
 
   test("rejects available character sessions with non-canonical Spell Slot state", () => {
@@ -9719,6 +9773,12 @@ function battleActionSubject(
 
 function readPayload(response: CharacterToolResult | BattleToolResult) {
   return JSON.parse(response.content[0]?.text ?? "null");
+}
+
+function currentPendingBattleFills(
+  root: ReturnType<typeof createMcpPlaySessionRoot>,
+) {
+  return root.sessionStore.pendingBattleFills;
 }
 
 function initialClassHoleIds(): readonly CreationHoleIdText[] {
