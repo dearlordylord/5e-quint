@@ -196,9 +196,9 @@ export const LiquidSurfaceTraversalSchema = strictStruct({
       Schema.Literal("surface_to_liquid"),
       Schema.Literal("liquid_to_surface"),
     ]),
-    fallingIntoLiquid: Schema.Literals([
+    fallingIntoLiquid: Schema.Literal(
       "passes_through_surface_into_liquid_below",
-    ]),
+    ),
   }),
 });
 type LiquidSurfaceTraversal = Schema.Schema.Type<
@@ -302,9 +302,9 @@ export const EtherealPhaseEffectSchema = strictStruct({
   perception: strictStruct({
     originPlaneAppearance: Schema.Literal("shades_of_gray"),
     maxOriginPlaneSightFeet: Schema.Literal(60),
-    originPlaneCreaturesPerceiveSubject: Schema.Literals([
+    originPlaneCreaturesPerceiveSubject: Schema.Literal(
       "only_with_special_ethereal_perception",
-    ]),
+    ),
   }),
   interaction: Schema.Literal("ethereal_plane_creatures_only"),
   returnPlan: strictStruct({
@@ -313,9 +313,9 @@ export const EtherealPhaseEffectSchema = strictStruct({
       Schema.Literal("effect_end_if_on_destination"),
     ]),
     placement: strictStruct({
-      kind: Schema.Literals([
+      kind: Schema.Literal(
         "visible_unoccupied_space_within_feet_of_origin_space",
-      ]),
+      ),
       chooser: Schema.Literal("caster"),
       maxFeet: Schema.Literal(10),
       unavailableFallback: Schema.Literal("nearest_unoccupied_space"),
@@ -326,16 +326,16 @@ export const EtherealPhaseEffectSchema = strictStruct({
 const SPELL_CREATED_HELD_OBJECT_REQUIREMENTS = [
   "free_hand",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
-const SpellCreatedHeldObjectRequirementSchema = Schema.Literals([
+const SpellCreatedHeldObjectRequirementSchema = Schema.Literal(
   ...SPELL_CREATED_HELD_OBJECT_REQUIREMENTS,
-]);
+);
 
 const SPELL_CREATED_HELD_OBJECT_DISAPPEARANCE_TRIGGERS = [
   "caster_lets_go",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
-const SpellCreatedHeldObjectDisappearanceTriggerSchema = Schema.Literals([
+const SpellCreatedHeldObjectDisappearanceTriggerSchema = Schema.Literal(
   ...SPELL_CREATED_HELD_OBJECT_DISAPPEARANCE_TRIGGERS,
-]);
+);
 
 export const LinearPerLevelNumberSchema = Schema.Struct({
   kind: Schema.Literal("linear_per_level"),
@@ -2263,9 +2263,9 @@ export const AreaOccupantDispositionFilterSchema = Schema.Literals([
   "friendly_to_source",
   "hostile_to_source",
 ]);
-export const AreaOccupantPerceptionFilterSchema = Schema.Literals([
+export const AreaOccupantPerceptionFilterSchema = Schema.Literal(
   "can_see_area_effect",
-]);
+);
 
 export const AreaExclusionSchema = strictStruct({
   chooser: Schema.Literal("caster"),
@@ -2749,9 +2749,9 @@ export const CourierTaskEffectSchema = strictStruct({
     flyingMilesPer24Hours: Schema.Literal(50),
   }),
   onArrival: Schema.Literal("deliver_to_described_creature"),
-  onExpiryBeforeArrival: Schema.Literals([
+  onExpiryBeforeArrival: Schema.Literal(
     "message_lost_and_beast_returns_to_casting_location",
-  ]),
+  ),
 });
 
 export const ContinuationPredicateSchema = Schema.Struct({
@@ -2865,23 +2865,23 @@ export const OngoingTriggerSchema = Schema.Union([
     maxCreatureSize: optionalExact(SizeSchema),
   }),
   Schema.Struct({
-    kind: Schema.Literals([
+    kind: Schema.Literal(
       "on_spatial_manifestation_moves_within_distance_of_creature",
-    ]),
+    ),
     distanceFeet: Schema.Number,
     requiresVisibleCreature: optionalExact(Schema.Literal(true)),
   }),
   Schema.Struct({
-    kind: Schema.Literals([
+    kind: Schema.Literal(
       "on_creature_enters_distance_of_spatial_manifestation",
-    ]),
+    ),
     distanceFeet: Schema.Number,
     requiresVisibleCreature: optionalExact(Schema.Literal(true)),
   }),
   Schema.Struct({
-    kind: Schema.Literals([
+    kind: Schema.Literal(
       "on_creature_ends_turn_within_distance_of_spatial_manifestation",
-    ]),
+    ),
     distanceFeet: Schema.Number,
     requiresVisibleCreature: optionalExact(Schema.Literal(true)),
   }),
@@ -3048,9 +3048,9 @@ export const ShapeShiftSpellEffectFormSourceSchema = strictStruct({
   activityLimits: strictStruct({
     communication: Schema.Literal("cannot_talk"),
     objectManipulation: Schema.Literal("cannot_manipulate_objects"),
-    carriedOrHeldObjects: Schema.Literals([
+    carriedOrHeldObjects: Schema.Literal(
       "cannot_be_dropped_used_or_interacted_with",
-    ]),
+    ),
     prohibitedActivities: Schema.Tuple([
       Schema.Literal("attack"),
       Schema.Literal("spellcasting"),
@@ -3576,9 +3576,9 @@ export const EffectAtomSchema: Schema.Schema<EffectAtom> = Schema.suspend(() =>
       initialRiseMaxFeet: Schema.Literal(20),
       suspension: Schema.Literal("spell_duration"),
       targetMovement: strictStruct({
-        allowedBy: Schema.Literals([
+        allowedBy: Schema.Literal(
           "push_or_pull_fixed_object_or_surface_within_reach",
-        ]),
+        ),
         movementMode: Schema.Literal("as_if_climbing"),
       }),
       casterAltitudeControl: strictStruct({
@@ -3795,9 +3795,9 @@ export const EffectAtomSchema: Schema.Schema<EffectAtom> = Schema.suspend(() =>
           kind: Schema.Literal("owned_skill_proficiencies_without_expertise"),
         }),
         Schema.Struct({
-          kind: Schema.Literals([
+          kind: Schema.Literal(
             "listed_owned_skill_proficiencies_without_expertise",
-          ]),
+          ),
           skills: nonEmpty(SkillSchema),
         }).pipe(
           Schema.check(
@@ -4067,9 +4067,9 @@ export const EffectAtomSchema: Schema.Schema<EffectAtom> = Schema.suspend(() =>
       }),
       objectBranch: Schema.Struct({
         auraAppearance: Schema.Literal("nonmagical_magical_or_chosen_school"),
-        observedBy: Schema.Literals([
+        observedBy: Schema.Literal(
           "spells_and_magical_effects_detecting_magical_auras",
-        ]),
+        ),
       }),
     }),
     Schema.Struct({
@@ -4088,9 +4088,7 @@ export const EffectAtomSchema: Schema.Schema<EffectAtom> = Schema.suspend(() =>
       blockedBy: Schema.Literal("any_thickness_of_lead_direct_path"),
     }),
     Schema.Struct({
-      kind: Schema.Literals([
-        "block_divination_targeting_and_scrying_perception",
-      ]),
+      kind: Schema.Literal("block_divination_targeting_and_scrying_perception"),
     }),
     DivinationOmenEffectSchema,
     PlanarEntityAnswersEffectSchema,
@@ -4340,9 +4338,7 @@ export const EffectAtomSchema: Schema.Schema<EffectAtom> = Schema.suspend(() =>
       kind: Schema.Literal("reveal_save_outcome_to_caster"),
     }),
     Schema.Struct({
-      kind: Schema.Literals([
-        "end_overlapping_spell_created_bright_or_dim_light",
-      ]),
+      kind: Schema.Literal("end_overlapping_spell_created_bright_or_dim_light"),
       maxSpellLevel: Schema.Number,
     }),
     strictStruct({
@@ -5086,9 +5082,9 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
 
 export const CreatureTraitEffectSchema = Schema.Union([
   Schema.Struct({
-    kind: Schema.Literals([
+    kind: Schema.Literal(
       "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",
-    ]),
+    ),
   }),
   Schema.Struct({
     kind: Schema.Literal("caster_shared_resistance"),
@@ -5172,24 +5168,24 @@ export const MagicCircleWardedCylinderOccurrenceSchema = strictStruct({
   tableSpatial: strictStruct({
     placement: Schema.Literal("table_witnessed_visible_ground_point"),
     cylinderMembership: Schema.Literal("table_witnessed_cylinder_membership"),
-    insideProtectedTargets: Schema.Literals([
+    insideProtectedTargets: Schema.Literal(
       "table_witnessed_targets_inside_cylinder",
-    ]),
-    outsideProtectedTargets: Schema.Literals([
+    ),
+    outsideProtectedTargets: Schema.Literal(
       "table_witnessed_targets_outside_cylinder",
-    ]),
-    willingNonmagicalEntryAttempt: Schema.Literals([
+    ),
+    willingNonmagicalEntryAttempt: Schema.Literal(
       "table_witnessed_willing_nonmagical_entry_attempt",
-    ]),
-    nonmagicalExitAttempt: Schema.Literals([
+    ),
+    nonmagicalExitAttempt: Schema.Literal(
       "table_witnessed_nonmagical_exit_attempt",
-    ]),
-    teleportationCrossing: Schema.Literals([
+    ),
+    teleportationCrossing: Schema.Literal(
       "table_witnessed_teleportation_crossing",
-    ]),
-    interplanarTravelCrossing: Schema.Literals([
+    ),
+    interplanarTravelCrossing: Schema.Literal(
       "table_witnessed_interplanar_travel_crossing",
-    ]),
+    ),
   }),
 });
 
@@ -5359,15 +5355,15 @@ export const StoneMergeCompleteExpulsionDamageSchema = strictStruct({
 
 export const StoneMergeStoneEventResponsesSchema = strictStruct({
   tableTerrainObject: strictStruct({
-    stoneDamageEvents: Schema.Literals([
+    stoneDamageEvents: Schema.Literal(
       "table_witnessed_stone_damage_destruction_transmutation_events",
-    ]),
-    fitAfterShapeChange: Schema.Literals([
+    ),
+    fitAfterShapeChange: Schema.Literal(
       "table_witnessed_fit_after_shape_change",
-    ]),
-    closestUnoccupiedSpace: Schema.Literals([
+    ),
+    closestUnoccupiedSpace: Schema.Literal(
       "table_witnessed_closest_unoccupied_space_to_entry_location",
-    ]),
+    ),
   }),
   minorPhysicalDamage: strictStruct({
     trigger: Schema.Literal("minor_physical_damage"),
