@@ -17,9 +17,19 @@ import { DatabaseSync } from "node:sqlite";
 import { Either, Schema } from "effect";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
-import { openArtifactIndex } from "./artifact-index.ts";
+import {
+  openArtifactIndex,
+  PortableManifestArtifactSchema,
+  PortableManifestSchema,
+  type PortableManifest,
+  type PortableManifestArtifact,
+} from "./artifact-index.ts";
 import { projectGenerationFindings } from "./generation-findings.ts";
-import { writeFindingsProjection } from "./findings.ts";
+import {
+  FindingsProjectionSchema,
+  writeFindingsProjection,
+  type FindingsProjection,
+} from "./findings.ts";
 import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.test-support.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
@@ -38,6 +48,56 @@ function temporaryDirectory(): string {
   const directory = rawSwarmTestOutputDirectory("report-test-");
   temporaryDirectories.push(directory);
   return directory;
+}
+
+function decodePortableManifest(bytes: Uint8Array): PortableManifest {
+  const value: unknown = JSON.parse(Buffer.from(bytes).toString("utf8"));
+  const decoded = Schema.decodeUnknownEither(PortableManifestSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable manifest fixture is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
+}
+
+function decodePortableArtifact(row: unknown): PortableManifestArtifact {
+  const decoded = Schema.decodeUnknownEither(PortableManifestArtifactSchema, {
+    onExcessProperty: "error",
+  })(row);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable artifact fixture is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
+}
+
+const PortableFindingsRowSchema = Schema.Struct({
+  sha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  path: Schema.String,
+});
+
+function decodePortableFindingsRow(row: unknown): {
+  readonly sha256: string;
+  readonly path: string;
+} {
+  const decoded = Schema.decodeUnknownEither(PortableFindingsRowSchema, {
+    onExcessProperty: "error",
+  })(row);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable findings row is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
+}
+
+function decodeFindingsProjection(bytes: Uint8Array): FindingsProjection {
+  const value: unknown = JSON.parse(Buffer.from(bytes).toString("utf8"));
+  const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    throw new Error(`Portable findings fixture is invalid: ${decoded.left}`);
+  }
+  return decoded.right;
 }
 
 afterEach(() => {
@@ -332,9 +392,7 @@ describe("RAW swarm artifact report index", () => {
     const executionManifestBefore = readFileSync(
       resolve(executionPortablePath, "manifest.json"),
     );
-    const executionManifest = JSON.parse(
-      executionManifestBefore.toString("utf8"),
-    ) as { readonly artifacts: readonly unknown[] };
+    const executionManifest = decodePortableManifest(executionManifestBefore);
     expect(executionManifest.artifacts.length).toBeGreaterThan(0);
     expect(
       report([
@@ -354,22 +412,25 @@ describe("RAW swarm artifact report index", () => {
       executionManifestBefore,
     );
 
-    for (const invalidManifest of [
-      (() => {
-        const value = JSON.parse(
-          executionManifestBefore.toString("utf8"),
-        ) as Record<string, unknown>;
-        delete value.schemaVersion;
-        return value;
-      })(),
+    const { schemaVersion: _schemaVersion, ...withoutSchemaVersion } =
+      executionManifest;
+    const invalidManifests: readonly unknown[] = [
+      withoutSchemaVersion,
+      { ...executionManifest, schemaVersion: 2 },
+      { ...executionManifest, unexpected: true },
       {
-        ...(JSON.parse(executionManifestBefore.toString("utf8")) as Record<
-          string,
-          unknown
-        >),
-        schemaVersion: 2,
+        ...executionManifest,
+        index: { ...executionManifest.index, unexpected: true },
       },
-    ]) {
+      {
+        ...executionManifest,
+        artifacts: [
+          { ...executionManifest.artifacts[0]!, unexpected: true },
+          ...executionManifest.artifacts.slice(1),
+        ],
+      },
+    ];
+    for (const invalidManifest of invalidManifests) {
       writeFileSync(
         executionManifestPath,
         `${JSON.stringify(invalidManifest, null, 2)}\n`,
@@ -382,26 +443,26 @@ describe("RAW swarm artifact report index", () => {
           "--db",
           relative(repoRoot, relocatedExecutionIndex),
         ]),
-      ).toThrow(/Portable report manifest schemaVersion must be 1/);
+      ).toThrow(/Portable report manifest is invalid/);
     }
     writeFileSync(executionManifestPath, executionManifestBefore);
 
     const portableForUnrelated = new DatabaseSync(relocatedExecutionIndex, {
       readOnly: true,
     });
-    const findingsRow = portableForUnrelated
-      .prepare(
-        `SELECT artifacts.sha256, artifacts.path
+    const findingsRow = decodePortableFindingsRow(
+      portableForUnrelated
+        .prepare(
+          `SELECT artifacts.sha256, artifacts.path
          FROM runArtifacts
          JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
          WHERE runArtifacts.runId = 1 AND runArtifacts.role = 'findings'`,
-      )
-      .get() as { readonly sha256: string; readonly path: string };
-    const findingsValue = JSON.parse(
-      readFileSync(resolve(executionPortablePath, findingsRow.path), "utf8"),
-    ) as {
-      readonly authorities?: readonly { readonly sha256?: unknown }[];
-    };
+        )
+        .get(),
+    );
+    const findingsValue = decodeFindingsProjection(
+      readFileSync(resolve(executionPortablePath, findingsRow.path)),
+    );
     const referencedFindingArtifacts = new Set([
       findingsRow.sha256,
       ...(findingsValue.authorities ?? []).flatMap((authority) =>
@@ -411,14 +472,7 @@ describe("RAW swarm artifact report index", () => {
     const unrelatedArtifact = portableForUnrelated
       .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
       .all()
-      .map(
-        (row) =>
-          row as {
-            readonly sha256: string;
-            readonly byteLength: number;
-            readonly path: string;
-          },
-      )
+      .map(decodePortableArtifact)
       .find((artifact) => !referencedFindingArtifacts.has(artifact.sha256));
     portableForUnrelated.close();
     if (unrelatedArtifact === undefined) {
@@ -477,12 +531,9 @@ describe("RAW swarm artifact report index", () => {
       );
     tamperedPortable.close();
     const tamperedIndexBytes = readFileSync(relocatedExecutionIndex);
-    const tamperedManifest = JSON.parse(
-      executionManifestBefore.toString("utf8"),
-    ) as {
-      index: { path: string; sha256: string; byteLength: number };
-      schemaVersion: number;
-      artifacts: readonly unknown[];
+    const tamperedManifest = {
+      ...executionManifest,
+      index: { ...executionManifest.index },
     };
     tamperedManifest.index.sha256 = createHash("sha256")
       .update(tamperedIndexBytes)
@@ -564,9 +615,7 @@ describe("RAW swarm artifact report index", () => {
     const generationManifestBefore = readFileSync(
       resolve(generationPortablePath, "manifest.json"),
     );
-    const generationManifest = JSON.parse(
-      generationManifestBefore.toString("utf8"),
-    ) as { readonly artifacts: readonly unknown[] };
+    const generationManifest = decodePortableManifest(generationManifestBefore);
     expect(generationManifest.artifacts.length).toBeGreaterThan(0);
     expect(
       report([
@@ -678,11 +727,9 @@ describe("RAW swarm artifact report index", () => {
     expect(existsSync(resolve(controlledExportPath, "manifest.json"))).toBe(
       true,
     );
-    // The production export wrote a schema-owned manifest at this exact path;
-    // the test narrows only the artifacts field it asserts below.
-    const controlledManifest = JSON.parse(
-      readFileSync(resolve(controlledExportPath, "manifest.json"), "utf8"),
-    ) as { readonly artifacts: readonly { readonly sha256: string }[] };
+    const controlledManifest = decodePortableManifest(
+      readFileSync(resolve(controlledExportPath, "manifest.json")),
+    );
     expect(controlledManifest.artifacts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

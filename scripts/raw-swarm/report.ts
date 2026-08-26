@@ -46,8 +46,10 @@ import {
   inventoryLegacyDatabase,
   openArtifactIndex,
   openArtifactIndexReadOnly,
+  PortableManifestSchema,
   registerIndexArtifact,
   rebuildLegacyArtifactIndex,
+  type PortableManifest,
 } from "./artifact-index.ts";
 import {
   extractSdkTranscriptSequences,
@@ -401,9 +403,7 @@ function canonicalPortableReportIndexPath(dbPath: string): string {
   }
 }
 
-function readPortableReportManifest(
-  manifestPath: string,
-): Readonly<Record<string, unknown>> {
+function readPortableReportManifest(manifestPath: string): PortableManifest {
   const value = (() => {
     try {
       return JSON.parse(readFileSync(manifestPath, "utf8")) as unknown;
@@ -413,12 +413,15 @@ function readPortableReportManifest(
       );
     }
   })();
-  if (!isJsonRecord(value) || value.schemaVersion !== 1) {
+  const decoded = Schema.decodeUnknownEither(PortableManifestSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
     return fail(
-      `Portable report manifest schemaVersion must be 1: ${manifestPath}`,
+      `Portable report manifest is invalid: ${manifestPath}: ${decoded.left.message}`,
     );
   }
-  return value;
+  return decoded.right;
 }
 
 function readPortableReportIndexBytes(indexPath: string): Buffer {
@@ -481,19 +484,6 @@ function portableReportBundle(
   }
   const value = readPortableReportManifest(manifestPath);
   const index = value.index;
-  if (
-    !isJsonRecord(index) ||
-    index.path !== "index.sqlite" ||
-    typeof index.sha256 !== "string" ||
-    !SHA256_PATTERN.test(index.sha256) ||
-    typeof index.byteLength !== "number" ||
-    !Number.isInteger(index.byteLength) ||
-    index.byteLength < 0
-  ) {
-    return fail(
-      `Portable report manifest has an invalid index: ${manifestPath}`,
-    );
-  }
   if (basename(indexPath) !== index.path) {
     return fail(
       `Portable report index path does not match its manifest: ${indexPath}`,
@@ -508,22 +498,10 @@ function portableReportBundle(
       `Portable report index does not match its manifest: ${indexPath}`,
     );
   }
-  if (!Array.isArray(value.artifacts)) {
-    return fail(
-      `Portable report manifest has no artifact list: ${manifestPath}`,
-    );
-  }
   const artifacts = new Map<string, IndexedReportArtifact>();
   const artifactPaths = new Set<string>();
   for (const [entryIndex, entry] of value.artifacts.entries()) {
     if (
-      !isJsonRecord(entry) ||
-      typeof entry.sha256 !== "string" ||
-      !SHA256_PATTERN.test(entry.sha256) ||
-      typeof entry.byteLength !== "number" ||
-      !Number.isInteger(entry.byteLength) ||
-      entry.byteLength < 0 ||
-      typeof entry.path !== "string" ||
       entry.path.length === 0 ||
       entry.path.includes("\0") ||
       isAbsolute(entry.path) ||
