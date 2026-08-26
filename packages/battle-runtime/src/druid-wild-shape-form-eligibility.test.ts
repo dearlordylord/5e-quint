@@ -34,7 +34,6 @@ function syntheticCrHalfBeast(): StatBlockRecord {
     },
     statBlock: {
       ...base.statBlock,
-      displayName: "Synthetic CR-Half Beast",
     },
   };
 }

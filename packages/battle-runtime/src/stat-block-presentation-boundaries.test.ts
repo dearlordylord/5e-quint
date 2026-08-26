@@ -17,12 +17,12 @@ import {
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { attackExecutionDamageType } from "./battle-action-options.ts";
 import {
   attackActionOptionPresentationName,
   battleCreaturePresentationDisplayName,
-  statBlockLanguagePresentation,
   statBlockProcedurePresentationsForActor,
 } from "./stat-block-presentation.ts";
 
@@ -37,30 +37,13 @@ function presentationSession() {
 }
 
 describe("battle presentation joins", () => {
-  test("projects every Stat Block language source shape", () => {
+  test("projects authored Stat Block communication into presentation context", () => {
     const source = statBlockRecord();
-    const { languages: _languages, ...withoutLanguages } = source.statBlock;
+    const projected = Either.getOrThrow(projectAuthoredStatBlock(source));
 
-    expect(
-      statBlockLanguagePresentation({
-        ...source,
-        statBlock: withoutLanguages,
-      }),
-    ).toEqual({ kind: "absentStatBlockLanguages" });
-    expect(
-      statBlockLanguagePresentation({
-        ...source,
-        statBlock: { ...source.statBlock, languages: "caster_languages" },
-      }),
-    ).toEqual({ kind: "casterLanguagesReference" });
-    expect(
-      statBlockLanguagePresentation({
-        ...source,
-        statBlock: { ...source.statBlock, languages: ["Common"] },
-      }),
-    ).toEqual({
-      kind: "authoredStatBlockLanguageEntries",
-      entries: ["Common"],
+    expect(projected.presentation).toMatchObject({
+      displayName: source.name,
+      communication: source.statBlock.communication,
     });
   });
 
@@ -97,7 +80,7 @@ describe("battle presentation joins", () => {
     ).toBeNull();
   });
 
-  test("distinguishes missing Stat Block admission from a missing procedure presentation", () => {
+  test("uses a fallback label when a procedure presentation is absent", () => {
     const session = presentationSession();
     const subject = goblinAttackSubject(session.state, "Scimitar");
     const actor = session.state.combatants.get(goblinId);
@@ -132,7 +115,7 @@ describe("battle presentation joins", () => {
     }
     const contextWithoutProcedures = battleRuntimeContextForTest(
       session.context.characters,
-      new Map([[goblinId, { ...source, procedures: [] }]]),
+      new Map([[goblinId, { ...source, orderedProcedures: [] }]]),
     );
     expect(
       attackActionOptionPresentationName(
@@ -141,12 +124,7 @@ describe("battle presentation joins", () => {
         goblinId,
         attack,
       ),
-    ).toEqual(
-      Either.left({
-        tag: "attackPresentationJoinIssue",
-        reason: "statBlockPresentationMissing",
-      }),
-    );
+    ).toEqual(Either.right("Unsupported Stat Block procedure"));
   });
 
   test("reports a missing authored weapon source separately from character context", () => {
