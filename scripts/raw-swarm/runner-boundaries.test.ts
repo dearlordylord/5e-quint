@@ -113,6 +113,7 @@ const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
 const DIRECT_SDK_INVALID_ARGUMENTS_OUTER_TIMEOUT_MS = 3 * 60_000;
 const STARTED_AT_HANDOFF_OUTER_TIMEOUT_MS = 10 * 60_000;
 const CONTEXT_AUTHORITY_DELIVERY_OUTER_TIMEOUT_MS = 3 * 60_000;
+const SETSID_FIXTURE_COOPERATIVE_EXIT_DELAY_MS = 250;
 const modelLaneLockDirectory = mkdtempSync(
   resolve(tmpdir(), "dnd-runner-model-lane-"),
 );
@@ -4539,7 +4540,7 @@ esac
     const detachedChildSource = [
       'const fs = require("node:fs");',
       `fs.writeFileSync(${JSON.stringify(childPidPath)}, String(process.pid));`,
-      `process.on("SIGTERM", () => { fs.writeFileSync(${JSON.stringify(termPath)}, "term"); setTimeout(() => { fs.writeFileSync(${JSON.stringify(exitPath)}, "exit"); process.exit(0); }, 1000); });`,
+      `process.on("SIGTERM", () => { fs.writeFileSync(${JSON.stringify(termPath)}, "term"); setTimeout(() => { fs.writeFileSync(${JSON.stringify(exitPath)}, "exit"); process.exit(0); }, ${SETSID_FIXTURE_COOPERATIVE_EXIT_DELAY_MS}); });`,
       "setInterval(() => {}, 1000);",
     ].join(" ");
     const commandSource = [
