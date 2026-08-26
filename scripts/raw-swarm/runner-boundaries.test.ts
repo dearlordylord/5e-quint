@@ -12,7 +12,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
+import { constants as osConstants, tmpdir } from "node:os";
 import { relative, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, describe, expect, test } from "vitest";
@@ -955,8 +955,8 @@ describe("RAW swarm runner boundaries", () => {
       `#define _GNU_SOURCE\n#include <sys/syscall.h>\n#include <unistd.h>\n#define DND_X32_SYSCALL_BIT 0x40000000U\nint main(void) { syscall(DND_X32_SYSCALL_BIT | SYS_getpid); return 1; }\n`,
     );
     const checked = runKernelBoundaryProbe(probe);
-    expect(checked.status).toBeNull();
-    expect(checked.signal).toBe("SIGSYS");
+    expect(checked.status).toBe(128 + osConstants.signals.SIGSYS);
+    expect(checked.signal).toBeNull();
   });
 
   test("kernel source kills an unexpected syscall architecture instead of weakening", () => {
