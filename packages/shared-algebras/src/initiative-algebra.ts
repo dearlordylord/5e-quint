@@ -1,6 +1,6 @@
 import * as EffectArray from "effect/Array";
-import * as Either from "effect/Either";
 import * as Option from "effect/Option";
+import { Result } from "effect";
 
 import type {
   Index,
@@ -167,10 +167,10 @@ export type InitiativeEntry<T> = {
 export const createScoredInitiativeStack = <T>(
   order: ReadonlyNonEmptyArray<InitiativeEntry<T>>,
   round: Round,
-): Either.Either<InitiativeStack<T>, string> =>
+): Result.Result<InitiativeStack<T>, string> =>
   isMonotoneInitiative(order)
-    ? Either.right(createInitiativeStack(order, round))
-    : Either.left("Initiative order must be monotone nonincreasing.");
+    ? Result.succeed(createInitiativeStack(order, round))
+    : Result.fail("Initiative order must be monotone nonincreasing.");
 
 export type InsertWithInitiativeResult<T> =
   | {

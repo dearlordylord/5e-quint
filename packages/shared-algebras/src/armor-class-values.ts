@@ -4,8 +4,7 @@ import { Integer, type Ability } from "@dnd/shared/types";
 export type ArmorClass = Integer & Brand.Brand<"ArmorClass">;
 const ArmorClass = Brand.all(Integer, Brand.nominal<ArmorClass>());
 export const ArmorClassSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("Integer"),
   Schema.brand("ArmorClass"),
 );

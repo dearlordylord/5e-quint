@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either, Option } from "effect";
+import { Option, Result } from "effect";
 
 import {
   abilityScoreAssignment,
@@ -23,19 +23,19 @@ describe("ability score assignment algebra", () => {
       cha: 12,
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(isValidAbilityScoreAssignment("standardArray", result.right)).toBe(
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(isValidAbilityScoreAssignment("standardArray", result.success)).toBe(
       true,
     );
   });
 
   test("returns typed issues for missing or out-of-range scores", () => {
     expect(abilityScoreAssignment(null)).toEqual(
-      Either.left([{ tag: "abilityScoreAssignmentNotObject" }]),
+      Result.fail([{ tag: "abilityScoreAssignmentNotObject" }]),
     );
     expect(abilityScoreAssignment({ str: 15 })).toEqual(
-      Either.left([
+      Result.fail([
         { tag: "missingNumericAbilityScore", ability: "dex" },
         { tag: "missingNumericAbilityScore", ability: "con" },
         { tag: "missingNumericAbilityScore", ability: "int" },
@@ -53,7 +53,7 @@ describe("ability score assignment algebra", () => {
         cha: 12,
       }),
     ).toEqual(
-      Either.left([{ tag: "invalidAbilityScore", ability: "str", value: 31 }]),
+      Result.fail([{ tag: "invalidAbilityScore", ability: "str", value: 31 }]),
     );
     expect(
       abilityScoreAssignment({
@@ -65,7 +65,7 @@ describe("ability score assignment algebra", () => {
         cha: 12,
       }),
     ).toEqual(
-      Either.left([{ tag: "invalidAbilityScore", ability: "str", value: 1.5 }]),
+      Result.fail([{ tag: "invalidAbilityScore", ability: "str", value: 1.5 }]),
     );
   });
 
