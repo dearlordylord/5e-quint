@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+  "scenarioSha256": "9002c593ea2ac558a30f815f6fd62d2fef2daa48d2e656a8ebd13e13e29c2654",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "Only canonical Skeleton and Goblin Warrior stat blocks are initialized; all objectives and relationships are setup facts rather than Character Sheet features."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "The opaque partition, exact coordinates, and movement around its endpoint require geometry-derived cover and route evaluation within the documented helper envelope."
+    }
+  }
+}

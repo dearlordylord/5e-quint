@@ -30,6 +30,7 @@ import {
   ScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
 import { isCurrentAdmittedScenarioRecord } from "./scenario-admission.ts";
+import { projectScenarioCatalogueForAuthoring } from "./scenario-authoring.ts";
 import {
   findAdmittedScenarioInCatalogue,
   projectRawSwarmCatalogue,
@@ -83,6 +84,18 @@ const projectedFacts = {
     },
   },
 };
+
+const CONTAINED_SCENARIO_IDS = [
+  "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+  "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+  "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+  "rs48h-20260824t155852z-synthetic-dodge-defense-lifetime-retry-002",
+  "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+  "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+  "rs48h-20260824t155852z-synthetic-shortbow-long-range-disadvantage-retry-002",
+  "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+  "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+] as const;
 
 describe("Raw Swarm scenario catalogue", () => {
   test("rejects a scenario catalogue root symlink that escapes the repository", () => {
@@ -475,6 +488,7 @@ describe("Raw Swarm scenario catalogue", () => {
             benchmarkIds: ["context-profile-comparison"],
           },
         ],
+        containedScenarios: [],
         rejectedCandidates: [
           {
             schemaVersion: 1,
@@ -1384,8 +1398,10 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(names.some((name) => /^generated-battle-[0-9]+/.test(name))).toBe(
       false,
     );
-    const admittedSourceCount = names.filter((name) =>
-      name.endsWith(".md"),
+    const liveScenarioManifestCount = names.filter(
+      (name) =>
+        name.endsWith(".scenario.json") &&
+        !name.endsWith(".scenario.contained.json"),
     ).length;
     const output = execFileSync(
       "pnpm",
@@ -1397,9 +1413,9 @@ describe("Raw Swarm scenario catalogue", () => {
     const rendered = Schema.decodeUnknownSync(
       Schema.Array(Schema.Struct({ scenarioId: ScenarioIdSchema })),
     )(JSON.parse(output.slice(jsonStart)));
-    expect(rendered).toHaveLength(admittedSourceCount);
+    expect(rendered).toHaveLength(liveScenarioManifestCount);
     expect(new Set(rendered.map(({ scenarioId }) => scenarioId)).size).toBe(
-      admittedSourceCount,
+      liveScenarioManifestCount,
     );
   }, 15_000);
 
@@ -1426,6 +1442,245 @@ describe("Raw Swarm scenario catalogue", () => {
           liveScenarioIds.has(scenarioId),
         ),
       ).toBe(true);
+    }
+  });
+
+  test("contains historical authorities without exposing them to authoring", () => {
+    const scenarioDirectory = resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios",
+    );
+    const catalogue = readRawSwarmCatalogue({
+      repositoryRoot: repoRoot,
+      scenarioDirectory,
+      evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
+    });
+    expect(Either.isRight(catalogue)).toBe(true);
+    if (Either.isLeft(catalogue)) return;
+
+    expect(catalogue.right.scenarios).toHaveLength(14);
+    expect(catalogue.right.containedScenarios).toHaveLength(
+      CONTAINED_SCENARIO_IDS.length,
+    );
+    expect(
+      catalogue.right.containedScenarios.map(({ scenarioId }) => scenarioId),
+    ).toEqual([...CONTAINED_SCENARIO_IDS].sort());
+
+    const liveScenarioIds = new Set(
+      catalogue.right.scenarios.map(({ scenarioId }) => scenarioId),
+    );
+    const allScenarioIds = new Set([
+      ...liveScenarioIds,
+      ...catalogue.right.containedScenarios.map(({ scenarioId }) => scenarioId),
+    ]);
+    expect(
+      liveScenarioIds.has(
+        "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+      ),
+    ).toBe(false);
+    expect(
+      projectScenarioCatalogueForAuthoring(catalogue.right).map(
+        ({ scenarioId }) => scenarioId,
+      ),
+    ).not.toContain(
+      "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+    );
+
+    for (const record of catalogue.right.scenarios) {
+      if (!isCurrentAdmittedScenarioRecord(record)) continue;
+      expect(
+        record.predecessorScenarioIds.every((scenarioId) =>
+          liveScenarioIds.has(scenarioId),
+        ),
+      ).toBe(true);
+    }
+    for (const record of catalogue.right.containedScenarios) {
+      if (!isCurrentAdmittedScenarioRecord(record)) continue;
+      expect(
+        record.predecessorScenarioIds.every((scenarioId) =>
+          allScenarioIds.has(scenarioId),
+        ),
+      ).toBe(true);
+    }
+
+    const totalCoverId =
+      "rs48h-20260824t155852z-synthetic-total-cover-transition-001";
+    const totalCover = catalogue.right.containedScenarios.find(
+      ({ scenarioId }) => scenarioId === totalCoverId,
+    );
+    expect(totalCover?.authoredSource).toMatchObject({
+      byteLength: 1435,
+      sha256:
+        "9002c593ea2ac558a30f815f6fd62d2fef2daa48d2e656a8ebd13e13e29c2654",
+    });
+    expect(
+      createHash("sha256")
+        .update(
+          readFileSync(
+            resolve(
+              scenarioDirectory,
+              `${totalCoverId}.scenario.contained.json`,
+            ),
+          ),
+        )
+        .digest("hex"),
+    ).toBe("549c8bcfbc2d6374fb821621b614199d56ecc920a05fd326e5ed947708dc272d");
+  });
+
+  test("validates historical contained relationships without widening live authoring", () => {
+    const repositoryRoot = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-contained-relationships-"),
+    );
+    const scenarios = resolve(repositoryRoot, "scenarios");
+    const evidenceDirectory = resolve(repositoryRoot, "out");
+    mkdirSync(scenarios);
+    const writeJson = (relativePath: string, value: unknown) => {
+      const path = resolve(repositoryRoot, relativePath);
+      mkdirSync(resolve(path, ".."), { recursive: true });
+      const bytes = `${JSON.stringify(value)}\n`;
+      writeFileSync(path, bytes);
+      return {
+        path: relativePath,
+        byteLength: Buffer.byteLength(bytes),
+        sha256: createHash("sha256").update(bytes).digest("hex"),
+      };
+    };
+    const writeScenario = (input: {
+      readonly scenarioId: string;
+      readonly manifestSuffix: ".scenario.json" | ".scenario.contained.json";
+    }) => {
+      const prosePath = `scenarios/${input.scenarioId}.md`;
+      const prose = `${input.scenarioId} asks a synthetic historical question.\n`;
+      writeFileSync(resolve(repositoryRoot, prosePath), prose);
+      const proseAuthority = {
+        path: prosePath,
+        byteLength: Buffer.byteLength(prose),
+        sha256: createHash("sha256").update(prose).digest("hex"),
+      };
+      const review = writeJson(`${prosePath}.scenario-review.json`, {
+        scenarioId: input.scenarioId,
+        scenarioSha256: proseAuthority.sha256,
+        gitSha: "a".repeat(40),
+        admitReviewedUnsupported: false,
+        rawReview: { classification: "supported", evidence: "Synthetic RAW." },
+        policyReview: { classification: "safe", evidence: "Synthetic policy." },
+        reviewScope: "rawContentSdkCapabilityPolicyQuality",
+        scenarioQuality: {
+          classification: "ready",
+          evidence: "Synthetic quality evidence.",
+        },
+        contentAvailabilityIntent: "availableOnly",
+        contentReview: {
+          classification: "supplied",
+          evidence: "Synthetic content.",
+        },
+        sdkCapabilityIntent: "supportedOnly",
+        sdkCapabilityReview: {
+          classification: "supported",
+          evidence: "Synthetic SDK.",
+        },
+      });
+      const facts = writeJson(`${prosePath}.stage-facts.json`, {
+        schemaVersion: 1,
+        scenarioId: input.scenarioId,
+        scenarioSha256: proseAuthority.sha256,
+        source: "scenarioGenerationCandidate",
+        facts: {
+          schemaVersion: 1,
+          characterRequirement: projectedFacts.characterRequirement,
+          spatialRequirement: projectedFacts.spatialRequirement,
+        },
+      });
+      writeJson(`scenarios/${input.scenarioId}${input.manifestSuffix}`, {
+        schemaVersion: 1,
+        scenarioId: input.scenarioId,
+        title: `Synthetic ${input.scenarioId}`,
+        purpose: `Explore ${input.scenarioId}.`,
+        authoredSource: proseAuthority,
+        admissionReview: review,
+        stageFacts: facts,
+      });
+    };
+    try {
+      const containedScenarioId = "contained-history-target";
+      const liveScenarioId = "live-authoring-scenario";
+      writeScenario({
+        scenarioId: containedScenarioId,
+        manifestSuffix: ".scenario.contained.json",
+      });
+      writeScenario({
+        scenarioId: liveScenarioId,
+        manifestSuffix: ".scenario.json",
+      });
+      writeJson("out/contained-execution/execution.json", {
+        schemaVersion: 1,
+        executionId: "execution-contained-history",
+        scenarioId: containedScenarioId,
+        evidenceSetId: "evidence-contained-history",
+      });
+      writeJson("out/contained-rejection/candidate-rejection.json", {
+        schemaVersion: 1,
+        candidateId: "contained-rejection-candidate",
+        campaignId: "contained-rejection-campaign",
+        evidenceSetId: "evidence-contained-rejection",
+        reason: "The Candidate retained an invalid historical relationship.",
+        predecessorScenarioIds: [containedScenarioId],
+        predecessorBatches: [
+          { batchIndex: 0, scenarioIds: [containedScenarioId] },
+        ],
+        catalogueComparison: {
+          schemaVersion: 1,
+          conclusion: "meaningfullyDistinct",
+          comparedScenarioIds: [containedScenarioId],
+          closestMatches: [],
+          materialDifferentiators: [],
+          basis: {
+            tag: "compared",
+            batches: [
+              {
+                batchIndex: 0,
+                comparedScenarioIds: [containedScenarioId],
+                dimensions: {
+                  exploratoryPurpose: "Distinct purpose.",
+                  materiallyRelevantMechanics: "Distinct mechanics.",
+                  encounterComposition: "Distinct composition.",
+                  interactionSequence: "Distinct sequence.",
+                  tacticalQuestion: "Distinct question.",
+                  sdkSupportBoundary: "Supported boundary.",
+                  spatialContext: { tag: "notMaterial" },
+                },
+              },
+            ],
+          },
+        },
+      });
+
+      const result = readRawSwarmCatalogue({
+        repositoryRoot,
+        scenarioDirectory: scenarios,
+        evidenceDirectory,
+      });
+      expect(Either.isRight(result)).toBe(true);
+      if (Either.isLeft(result)) return;
+      expect(
+        result.right.scenarios.map(({ scenarioId }) => scenarioId),
+      ).toEqual([liveScenarioId]);
+      expect(result.right.containedScenarios).toMatchObject([
+        {
+          scenarioId: containedScenarioId,
+          executionIds: ["execution-contained-history"],
+        },
+      ]);
+      expect(result.right.rejectedCandidates).toMatchObject([
+        { candidateId: "contained-rejection-candidate" },
+      ]);
+      expect(
+        projectScenarioCatalogueForAuthoring(result.right).map(
+          ({ scenarioId }) => scenarioId,
+        ),
+      ).toEqual([liveScenarioId]);
+    } finally {
+      rmSync(repositoryRoot, { recursive: true, force: true });
     }
   });
 

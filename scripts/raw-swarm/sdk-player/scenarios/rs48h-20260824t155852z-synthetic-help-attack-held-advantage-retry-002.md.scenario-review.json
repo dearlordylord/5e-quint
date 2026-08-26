@@ -1,0 +1,126 @@
+{
+  "scenarioId": "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+  "scenarioSha256": "ca883bdd18536a6535f4ed98a03f749f28c8d081490cc044774b219909a6dbd7",
+  "gitSha": "836362a0bf5142381994510f1705ab72c202058c",
+  "admitReviewedUnsupported": false,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "The SRD Help action grants Advantage to the next attack by an ally against an enemy within 5 feet and expires at the helper’s next turn (Rules-Glossary.md:528-534). The supplied 5-foot and 10-foot geometry, Skeleton Shortbow range, 5-foot melee reach, illumination, initiative order, and A2 turn-boundary assumption make the sequence legal and executable; no unresolved RAW choice requires a Table Decision."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The Candidate uses only the supplied SRD identities Goblin Warrior, Skeleton, and Wolf plus standard rules terminology. It contains no PHB+ identity, crosswalk, or protected expression."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The setup isolates a meaningful Help interaction; each combatant has a serious authored objective; fixed roster, geometry, and initiative plus delegated target and dice choices match the campaign preference; statBlocksOnly and geometryAssisted align with the configured purpose; and the supplied complete catalogue comparison records a meaningfullyDistinct result with named dimensions and differentiators."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "meaningfullyDistinct",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "lantern-intercept-pairwise-control",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "prone-target-roll-mode-distance-probe",
+      "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+      "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+      "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+      "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+      "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+      "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+      "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "table-authored-three-shove-cycle",
+        "reason": "It shares the exact one-each Goblin Warrior, Skeleton, and Wolf roster, no movement, and a short ordered turn sequence; the candidate instead tests Help-to-ranged-attack Advantage rather than three Shoves."
+      },
+      {
+        "scenarioId": "prone-target-roll-mode-distance-probe",
+        "reason": "It explicitly controls attack roll mode with stat-block attackers acting before a Wolf and includes melee/ranged attack branches; the candidate's Advantage comes from Help, not Prone, and uses a Skeleton rather than two Goblins."
+      },
+      {
+        "scenarioId": "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+        "reason": "It uses the same three canonical combatant types in open geometry with immediate tactical objectives; the candidate removes movement, Disengage, and Opportunity Attacks to isolate cross-turn Help."
+      },
+      {
+        "scenarioId": "goblin-warrior-skeleton-tracer",
+        "reason": "It shares the Goblin Warrior and Skeleton, open-ground direct-SDK battle framing, and hostile objectives; the candidate adds a Wolf and a precisely bounded Help/Shortbow interaction."
+      },
+      {
+        "scenarioId": "open-grid-wolf-skeleton-pursuit",
+        "reason": "It shares the Wolf/Skeleton pair, bright open geometry, and a close-distance tactical conflict; the candidate replaces pursuit, melee, and Opportunity Attacks with a Goblin-enabled ranged attack."
+      }
+    ],
+    "materialDifferentiators": [
+      "The operative mechanic is the supported Help action with player-selected, target-specific assistance, not Shove, Grapple, Prone, Disengage, cover, movement, or a circumstance modifier.",
+      "The candidate tests Advantage persistence across the Goblin Warrior's turn boundary and consumption during the intended Skeleton attack against the intended Wolf.",
+      "The three-combatant roles are fixed: Goblin Warrior and Skeleton are allies coordinating against one Wolf, with Goblin Help immediately preceding the Skeleton's Shortbow attack.",
+      "Exact geometry establishes a clear legal Shortbow attack at 10 feet while keeping the Wolf beyond the Skeleton's melee reach; no terrain, cover, objects, or competing roll modifiers interfere.",
+      "The interaction stops at the specific Advantage-offered-and-consumed observation, rather than becoming a general battle, pursuit, condition sequence, or movement-interrupt test."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "lantern-intercept-pairwise-control",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "prone-target-roll-mode-distance-probe",
+            "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+            "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+            "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+            "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+            "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+            "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+            "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The candidate isolates a supported cross-turn support interaction: Goblin Warrior uses Help on a selected Wolf target, then the immediately following Skeleton turn tests the resulting target-specific Advantage on Shortbow. The admitted sources instead cover Shove/Grapple cycles, generic battles and pursuits, movement and reactions, cover, terrain, mounts, character sheets, objectives, and separate Prone, Bite-rider, and Table-circumstance probes; none makes Help the operative purpose.",
+            "materiallyRelevantMechanics": "The relevant mechanics are typed Help target selection, Advantage lifetime through the Goblin-to-Skeleton turn boundary, and consumption when the Skeleton resolves its legal Shortbow attack. The source texts contain no admitted counterpart using Help for this purpose; their nearby mechanics are Shove/Grapple, Prone, Bite continuation, Dash, Disengage, Opportunity Attacks, Total Cover, mounted/object transfer, or per-test Table Disadvantage.",
+            "encounterComposition": "The candidate has exactly one canonical Goblin Warrior, Skeleton, and Wolf, with Goblin and Skeleton allied against the Wolf and a fixed Goblin, Skeleton, Wolf initiative order. It overlaps the exact roster of table-authored-three-shove-cycle and the two Disengage probes, while differing from the four-way, lantern, mounted, character-sheet, multi-Skeleton, beacon, and two-Goblin compositions and from their relationships.",
+            "interactionSequence": "The fixed frontier is Goblin Help without movement, player selection of Wolf, End Turn, then the immediately following Skeleton Shortbow selection against that same Wolf, stopping after the held Advantage is offered and consumed before the Goblin acts again. This differs from the Shove/Grapple and three-Shove cycles, Bite-to-Prone-to-damage continuation, movement-interrupt frontiers, and open-ended battle sequences.",
+            "tacticalQuestion": "The question is whether one ally can create held, target-specific Advantage for a particular allied ranged attack across a turn boundary while the Wolf threatens to close. It does not ask about route choice, pursuit, Opportunity Attacks, target-priority rotation, cover eligibility, Prone attack branches, or a per-test environmental modifier.",
+            "sdkSupportBoundary": "The candidate explicitly requires the supported Help action, typed Help targets, and a currently legal Shortbow attack, with no initial Prone, caller-supplied unsupported setup, Table circumstance, Total Cover, Large-footprint, mount, object-transfer, or Character Sheet probe. It is therefore a supported-only interaction distinct from the catalogue's explicit unsupported-capability probes and from its not-assessed broad battles.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The geometry-derived 40-by-20-foot bright obstacle-free arena and exact 5-foot and 10-foot relationships establish clear Shortbow legality, the Wolf's distance beyond Skeleton melee reach, and neutral visibility and roll conditions. Spatial context supports the interaction but is not its exploratory subject; unlike the table-authored sources, it uses no Table spatial fingerprint."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Goblin Warrior, Skeleton, and Wolf all appear in the supplied availability list, exactly satisfying the availableOnly intent."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The supplied capability projection supports canonical stat-block setup, geometry-assisted ScenarioSession composition, typed Battle acts and targets, End Turn continuations, attack rolls, and damage. Those surfaces cover the stated Help-to-Shortbow frontier without unsupported setup or Table-authored facts."
+  }
+}

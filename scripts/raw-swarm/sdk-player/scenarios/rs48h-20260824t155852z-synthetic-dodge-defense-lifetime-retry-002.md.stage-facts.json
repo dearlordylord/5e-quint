@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-dodge-defense-lifetime-retry-002",
+  "scenarioSha256": "d61058e7cc2650b40e9ddcf96d977267a7e30887c1f330afb858acef3a837703",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "Only canonical Skeleton and Goblin Warrior Stat Blocks are initialized, with resolved current Hit Points 13 and 10 respectively."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Placements at (10, 20) and (25, 20) in the stated geometry-derived arena produce an exact unobstructed 15-foot separation."
+    }
+  }
+}

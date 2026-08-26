@@ -16,6 +16,9 @@ These terms have one package-wide meaning:
   Scenario.
 - A **Scenario** is one immutable, admitted authored input with a semantic
   identity, title, purpose, retained review, and retained stage authorities.
+- A **Contained Scenario authority** is an immutable admitted Scenario retained
+  for historical relationship validation but excluded from future authoring
+  and live catalogue comparison.
 - An **Execution** is one externally identified attempt to exercise exactly
   one admitted Scenario through the public SDK, whether it reaches the first
   SDK call or is obstructed during character or setup authoring.
