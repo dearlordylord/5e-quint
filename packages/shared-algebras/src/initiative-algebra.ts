@@ -31,7 +31,7 @@ export const nextInitiative = <T>(
   const [current, ...remaining] = s0.stillToAct;
   const acted = EffectArray.appendAll(s0.alreadyActed, EffectArray.of(current));
 
-  if (!EffectArray.isNonEmptyReadonlyArray(remaining)) {
+  if (!EffectArray.isReadonlyArrayNonEmpty(remaining)) {
     return {
       round: (s0.round + 1) as Round,
       alreadyActed: [],
@@ -93,7 +93,7 @@ export const swapInitialInitiativeScores = <T>(
     )
     .map(({ entry }) => entry);
 
-  return EffectArray.isNonEmptyReadonlyArray(swappedOrder)
+  return EffectArray.isReadonlyArrayNonEmpty(swappedOrder)
     ? Option.some(createInitiativeStack(swappedOrder, stack.round))
     : Option.none();
 };
@@ -144,11 +144,11 @@ export const removeFromInitiative = <T>(
     (entry) => !predicate(entry.creature),
   );
 
-  if (EffectArray.isNonEmptyReadonlyArray(stillToAct)) {
+  if (EffectArray.isReadonlyArrayNonEmpty(stillToAct)) {
     return Option.some({ round: stack.round, alreadyActed: acted, stillToAct });
   }
 
-  if (EffectArray.isNonEmptyReadonlyArray(acted)) {
+  if (EffectArray.isReadonlyArrayNonEmpty(acted)) {
     return Option.some({
       round: (stack.round + 1) as Round,
       alreadyActed: [],
