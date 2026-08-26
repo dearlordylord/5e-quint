@@ -9,7 +9,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, extname, relative, resolve } from "node:path";
+import { basename, dirname, extname, relative, resolve, sep } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { Either, Schema } from "effect";
@@ -149,7 +149,7 @@ type ArtifactIndexLockMode = "reader" | "writer";
 /** Fixed absolute roots keep the cross-process lock identity independent of TMPDIR. */
 export const ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES = [
   "/tmp/raw-swarm-artifact-index-locks-a",
-  "/tmp/raw-swarm-artifact-index-locks-b",
+  "/var/tmp/raw-swarm-artifact-index-locks-b",
 ] as const;
 
 function isSqliteBusy(error: unknown): boolean {
@@ -183,7 +183,40 @@ function canonicalArtifactIndexDirectory(absolute: string): string {
   }
 }
 
-function canonicalArtifactIndexLockRoot(candidate: string): string {
+function canonicalArtifactIndexLockRootCandidate(candidate: string): string {
+  let unresolved = resolve(candidate);
+  const missingSegments: string[] = [];
+  while (true) {
+    try {
+      const canonical = realpathSync(unresolved);
+      return missingSegments.reduceRight(
+        (parent, segment) => resolve(parent, segment),
+        canonical,
+      );
+    } catch (error) {
+      if (
+        typeof error !== "object" ||
+        error === null ||
+        !("code" in error) ||
+        error.code !== "ENOENT"
+      ) {
+        return fail(
+          `Raw Swarm artifact-index lock root is unavailable: ${candidate}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+      const parent = dirname(unresolved);
+      if (parent === unresolved) {
+        return fail(
+          `Raw Swarm artifact-index lock root is unavailable: ${candidate}: no existing ancestor`,
+        );
+      }
+      missingSegments.push(basename(unresolved));
+      unresolved = parent;
+    }
+  }
+}
+
+function createCanonicalArtifactIndexLockRoot(candidate: string): string {
   try {
     mkdirSync(candidate, { recursive: true });
     return realpathSync(candidate);
@@ -194,14 +227,47 @@ function canonicalArtifactIndexLockRoot(candidate: string): string {
   }
 }
 
+function pathIsContained(root: string, candidate: string): boolean {
+  const relativePath = relative(root, candidate);
+  return (
+    relativePath === "" ||
+    (!relativePath.startsWith(`..${sep}`) &&
+      relativePath !== ".." &&
+      !relativePath.startsWith(sep))
+  );
+}
+
+function lockRootOverlapsSource(
+  sourceDirectory: string,
+  lockRoot: string,
+): boolean {
+  return (
+    pathIsContained(sourceDirectory, lockRoot) ||
+    pathIsContained(lockRoot, sourceDirectory)
+  );
+}
+
 export function artifactIndexLockRootForSource(absolute: string): string {
   const sourceDirectory = canonicalArtifactIndexDirectory(absolute);
-  const selected = ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES.map(
-    canonicalArtifactIndexLockRoot,
-  ).find((canonical) => canonical !== sourceDirectory);
-  if (selected === undefined) {
+  const selectedCandidate = ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES.map(
+    (candidate) => ({
+      candidate,
+      canonical: canonicalArtifactIndexLockRootCandidate(candidate),
+    }),
+  ).find(
+    ({ canonical }) => !lockRootOverlapsSource(sourceDirectory, canonical),
+  );
+  if (selectedCandidate === undefined) {
     return fail(
-      `Raw Swarm artifact-index lock roots cannot be separated from the source directory: ${sourceDirectory}`,
+      `Raw Swarm artifact-index lock roots cannot be separated from the source directory tree: ${sourceDirectory}`,
+    );
+  }
+  const selected = createCanonicalArtifactIndexLockRoot(
+    selectedCandidate.candidate,
+  );
+  if (lockRootOverlapsSource(sourceDirectory, selected)) {
+    return fail(
+      `Raw Swarm artifact-index lock root entered the source directory tree: ${sourceDirectory}`,
     );
   }
   return selected;
@@ -2324,6 +2390,14 @@ export type PortableControlledAttachment = Schema.Schema.Type<
   typeof PortableControlledAttachmentSchema
 >;
 
+const PortableControlledAttachmentsSchema = Schema.Union(
+  Schema.Tuple(),
+  Schema.Tuple(PortableControlledAttachmentSchema),
+);
+export type PortableControlledAttachments = Schema.Schema.Type<
+  typeof PortableControlledAttachmentsSchema
+>;
+
 export const PortableManifestSchema = Schema.Struct({
   schemaVersion: Schema.Literal(PORTABLE_MANIFEST_SCHEMA_VERSION),
   index: Schema.Struct({
@@ -2332,7 +2406,7 @@ export const PortableManifestSchema = Schema.Struct({
     byteLength: PortableManifestByteLengthSchema,
   }),
   artifacts: Schema.Array(PortableManifestArtifactSchema),
-  controlledAttachments: Schema.Array(PortableControlledAttachmentSchema),
+  controlledAttachments: PortableControlledAttachmentsSchema,
 });
 export type PortableManifest = Schema.Schema.Type<
   typeof PortableManifestSchema

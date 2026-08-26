@@ -27,7 +27,6 @@ import {
   findingsTranscriptSha256,
   portableFindingAuthoritySnapshotForBytes,
   projectExecutionFindings,
-  readFindingsProjection,
   validateFindingsProjection,
   writeFindingsProjection,
   type FindingAuthority,
@@ -577,6 +576,21 @@ function validatePortableArtifactInventory(
   }
 }
 
+export function auditPortableReportBundle(dbPath: string): void {
+  const db = openArtifactIndexReadOnly(dbPath);
+  try {
+    const bundle = portableReportBundle(dbPath);
+    if (bundle === undefined) {
+      return fail(
+        `Portable report index requires a manifest.json beside the relocated database: ${dbPath}`,
+      );
+    }
+    validatePortableArtifactInventory(bundle, indexedReportArtifacts(db));
+  } finally {
+    db.close();
+  }
+}
+
 function portableReportArtifactBytes(
   bundle: PortableReportBundle,
   indexed: IndexedReportArtifact,
@@ -674,6 +688,54 @@ function readPortableFindingsProjection(
     : fail(`Invalid findings projection: ${validation.message}`);
 }
 
+function readRepositoryFindingsProjection(
+  findingsArtifact: IndexedReportArtifact,
+): FindingsProjection {
+  const canonical = canonicalRepositoryReadPath(
+    repoRoot,
+    findingsArtifact.path,
+  );
+  if (Either.isLeft(canonical)) {
+    return fail(
+      `Source findings artifact is not repository-owned: ${findingsArtifact.path}: ${canonical.left}`,
+    );
+  }
+  const bytes = (() => {
+    try {
+      return readFileSync(canonical.right);
+    } catch (error) {
+      return fail(
+        `Source findings artifact is unreadable: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const authority = artifactAuthorityForBytes(
+    relative(repoRoot, canonical.right),
+    bytes,
+  );
+  if (
+    authority.byteLength !== findingsArtifact.byteLength ||
+    authority.sha256 !== findingsArtifact.sha256
+  ) {
+    return fail(
+      `Source findings artifact does not match its indexed authority: ${findingsArtifact.path}.`,
+    );
+  }
+  const value = (() => {
+    try {
+      return JSON.parse(bytes.toString("utf8")) as unknown;
+    } catch (error) {
+      return fail(
+        `Source findings artifact is invalid JSON: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const validation = validateFindingsProjection(value);
+  return validation.tag === "valid"
+    ? validation.projection
+    : fail(`Invalid findings projection: ${validation.message}`);
+}
+
 function readIndexedFindingsProjection(input: {
   readonly db: DatabaseSync;
   readonly dbPath: string;
@@ -698,7 +760,7 @@ function readIndexedFindingsProjection(input: {
       `Portable report index requires a manifest.json beside the relocated database: ${input.dbPath}`,
     );
   }
-  return readFindingsProjection(input.findingsPath);
+  return readRepositoryFindingsProjection(findingsArtifact);
 }
 
 export function ingest(args: readonly string[]): void {
@@ -1395,15 +1457,17 @@ function controlledReporting(args: readonly string[]): void {
     tag: "controlledReportingTiming",
     ...timingArtifact,
   } satisfies PortableControlledAttachment;
+  if (manifest.controlledAttachments.length !== 0) {
+    fail(
+      "Portable export already contains controlled reporting timing evidence.",
+    );
+  }
   writeFileSync(
     resolve(absoluteDestination, "manifest.json"),
     `${JSON.stringify(
       {
         ...manifest,
-        controlledAttachments: [
-          ...manifest.controlledAttachments,
-          timingAttachment,
-        ].sort((left, right) => left.sha256.localeCompare(right.sha256)),
+        controlledAttachments: [timingAttachment],
       },
       null,
       2,
