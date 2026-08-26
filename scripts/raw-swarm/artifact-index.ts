@@ -2367,16 +2367,24 @@ export function rebuildLegacyArtifactIndex(input: {
 }
 
 const PORTABLE_MANIFEST_SCHEMA_VERSION = 2;
+const PORTABLE_PATH_VALIDATION_ROOT = resolve(
+  "/",
+  "__raw_swarm_portable_root__",
+);
 
 export const PortableRelativePathSchema = Schema.NonEmptyTrimmedString.pipe(
   Schema.filter(
     (path) => {
       if (path.includes("\0") || isAbsolute(path)) return false;
       const withinPortableRoot = relativePathWithinRoot(
-        resolve("/"),
-        resolve("/", path),
+        PORTABLE_PATH_VALIDATION_ROOT,
+        resolve(PORTABLE_PATH_VALIDATION_ROOT, path),
       );
-      return withinPortableRoot !== undefined && withinPortableRoot !== "";
+      return (
+        withinPortableRoot !== undefined &&
+        withinPortableRoot !== "" &&
+        withinPortableRoot === path
+      );
     },
     { message: () => "Portable artifact path must remain below its root." },
   ),

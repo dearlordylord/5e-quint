@@ -21,6 +21,7 @@ import {
   openArtifactIndex,
   PortableManifestArtifactSchema,
   PortableManifestSchema,
+  PortableRelativePathSchema,
   type PortableManifest,
   type PortableManifestArtifact,
 } from "./artifact-index.ts";
@@ -205,6 +206,23 @@ function expectReadOnlyReportCommandsPreserve(
 }
 
 describe("RAW swarm artifact report index", () => {
+  test("rejects direct and nested traversal in portable artifact paths", () => {
+    for (const path of ["../escape.json", "nested/../../escape.json"]) {
+      expect(
+        Either.isLeft(
+          Schema.decodeUnknownEither(PortableRelativePathSchema)(path),
+        ),
+      ).toBe(true);
+    }
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(PortableRelativePathSchema)(
+          "nested/artifact.json",
+        ),
+      ),
+    ).toBe(true);
+  });
+
   test("rejects the unnamed review-replay flag with a value", () => {
     expect(() =>
       report([
@@ -721,6 +739,59 @@ describe("RAW swarm artifact report index", () => {
       readFileSync(resolve(generationPortablePath, "manifest.json")),
     ).toEqual(generationManifestBefore);
   }, 60_000);
+
+  test("rejects direct and nested timing traversal in controlled reporting", () => {
+    const directory = temporaryDirectory();
+    const controlledEvidence = controlledReviewEvidenceFixture({
+      directory: resolve(directory, "controlled-evidence"),
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "traversal-review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+
+    for (const [name, timingArgument] of [
+      ["direct", relative(repoRoot, resolve(directory, "outside-direct.json"))],
+      [
+        "nested",
+        `${relative(repoRoot, resolve(directory, "portable-nested"))}/nested/../../outside-nested.json`,
+      ],
+    ] as const) {
+      const destination = resolve(directory, `portable-${name}`);
+      const escapedTimingPath = resolve(directory, `outside-${name}.json`);
+      expect(() =>
+        report([
+          "controlled-reporting",
+          relative(repoRoot, controlledEvidence.transcriptPath),
+          relative(repoRoot, controlledEvidence.reviewPath),
+          "--db",
+          relative(repoRoot, resolve(directory, `${name}.sqlite`)),
+          "--destination",
+          relative(repoRoot, destination),
+          "--timing",
+          timingArgument,
+          "--review-invocation-evidence",
+          relative(repoRoot, controlledEvidence.manifestPath),
+        ]),
+      ).toThrow(/inside the portable export/);
+      expect(existsSync(escapedTimingPath)).toBe(false);
+    }
+  });
 
   test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();
