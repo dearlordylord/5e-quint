@@ -1,13 +1,12 @@
-import {
-  battleStateInitIssueMessage,
-  type BattleCreatureInit,
-} from "@dnd/battle-runtime";
+import { type BattleCreatureInit } from "@dnd/battle-runtime";
 import {
   composeCharacterBattleEncounter,
   type CharacterBattleEncounterCompositionIssue,
   type CharacterBattleEncounterParticipant,
   type CharacterBattleEncounterProjectionIssue,
+  characterBattleRuntimeIssueMessage,
 } from "@dnd/character-battle-runtime";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import { Either, Match, Option } from "effect";
 
@@ -81,8 +80,16 @@ export function startableBattleCombatants(input: {
     );
   }
 
-  return Either.right({
+  const correlated = correlateBattleCombatantOrigins({
+    resolved: resolved.right,
     creatureInits: composition.right.creatureInits,
+  });
+  if (Either.isLeft(correlated)) {
+    return Either.left(invalidBattleCombatantsContent([correlated.left]));
+  }
+
+  return Either.right({
+    creatureInits: correlated.right,
     characterSessions: resolved.right.flatMap((combatant) =>
       isResolvedCharacterBattleCombatant(combatant)
         ? [combatant.characterSession]
@@ -104,21 +111,9 @@ export function projectBattleCombatant(input: {
   });
   if (Either.isLeft(composition)) {
     const [firstIssue] = compositionToolErrors(composition.left);
-    return Either.left(
-      firstIssue ??
-        errorContent("Battle combatant projection failed.", {
-          code: "BATTLE_COMBATANT_ADMISSION_FAILED",
-        }),
-    );
+    return Either.left(firstIssue);
   }
-  const creatureInit = composition.right.creatureInits[0];
-  if (creatureInit === undefined) {
-    return Either.left(
-      errorContent("Battle combatant projection produced no initialization.", {
-        code: "BATTLE_COMBATANT_ADMISSION_FAILED",
-      }),
-    );
-  }
+  const [creatureInit] = composition.right.creatureInits;
   if (isResolvedCharacterBattleCombatant(resolved.right)) {
     if (!isCharacterBattleRosterCombatant(creatureInit)) {
       return Either.left(
@@ -156,6 +151,53 @@ function isStatBlockBattleRosterCombatant(
   creatureInit: BattleCreatureInit,
 ): creatureInit is StatBlockBattleRosterCombatant {
   return creatureInit.creatureInit.kind === "statBlock";
+}
+
+function correlateBattleCombatantOrigins(input: {
+  readonly resolved: readonly ResolvedBattleCombatant[];
+  readonly creatureInits: readonly BattleCreatureInit[];
+}): Either.Either<readonly BattleCreatureInit[], ToolError> {
+  if (input.resolved.length !== input.creatureInits.length) {
+    return Either.left(
+      errorContent("Battle combatant projection changed the roster length.", {
+        code: "BATTLE_COMBATANT_ADMISSION_FAILED",
+        expectedCombatantCount: input.resolved.length,
+        actualCombatantCount: input.creatureInits.length,
+      }),
+    );
+  }
+
+  const correlated: BattleCreatureInit[] = [];
+  for (const [index, resolved] of input.resolved.entries()) {
+    const creatureInit = input.creatureInits[index];
+    if (creatureInit === undefined) {
+      return Either.left(
+        errorContent("Battle combatant projection omitted an initialization.", {
+          code: "BATTLE_COMBATANT_ADMISSION_FAILED",
+          combatantId: resolved.participant.combatantId,
+        }),
+      );
+    }
+    const matchesOrigin =
+      resolved.participant.origin === "characterSheet"
+        ? isCharacterBattleRosterCombatant(creatureInit)
+        : isStatBlockBattleRosterCombatant(creatureInit);
+    if (!matchesOrigin) {
+      return Either.left(
+        errorContent(
+          "Battle combatant projection origin did not match initialization.",
+          {
+            code: "BATTLE_COMBATANT_ADMISSION_FAILED",
+            combatantId: resolved.participant.combatantId,
+            expectedOrigin: resolved.participant.origin,
+            actualOrigin: creatureInit.creatureInit.kind,
+          },
+        ),
+      );
+    }
+    correlated.push(creatureInit);
+  }
+  return Either.right(correlated);
 }
 
 type ResolvedBattleCombatant =
@@ -262,7 +304,7 @@ function resolveBattleCombatant(input: {
 
 function compositionToolErrors(
   composition: CharacterBattleEncounterCompositionIssue,
-): readonly ToolError[] {
+): ReadonlyNonEmptyArray<ToolError> {
   if (composition.issue.tag === "characterBattleEncounterEmptyRoster") {
     return [
       errorContent("Battle start requires at least one combatant.", {
@@ -270,25 +312,20 @@ function compositionToolErrors(
       }),
     ];
   }
-  return composition.issue.issues.map(({ origin, issue, combatantId }) =>
-    origin === "characterSheet"
-      ? errorContent(issueMessage(issue), {
-          code: "CHARACTER_BATTLE_INIT_INVALID",
-          combatantId,
-        })
-      : errorContent(issueMessage(issue), {
-          code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-          combatantId,
-        }),
-  );
+  const [first, ...rest] = composition.issue.issues;
+  return [projectionToolError(first), ...rest.map(projectionToolError)];
 }
 
-function issueMessage(
-  issue: CharacterBattleEncounterProjectionIssue["issue"],
-): string {
-  return issue.tag === "battleCreatureInitIssue"
-    ? issue.message
-    : battleStateInitIssueMessage(issue);
+function projectionToolError(
+  projection: CharacterBattleEncounterProjectionIssue,
+): ToolError {
+  return errorContent(characterBattleRuntimeIssueMessage(projection.issue), {
+    code:
+      projection.origin === "characterSheet"
+        ? "CHARACTER_BATTLE_INIT_INVALID"
+        : "STAT_BLOCK_BATTLE_INIT_INVALID",
+    combatantId: projection.combatantId,
+  });
 }
 
 function invalidBattleCombatantsContent(issues: readonly ToolError[]) {

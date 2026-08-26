@@ -20,10 +20,12 @@ Owned boundary functions:
   class-spell-list selections without an installed Spell Definition remain on
   the Character Sheet but are omitted from the battle spellcasting projection;
   unknown identities outside that source spell list are rejected.
-- `composeCharacterBattleEncounter` accepts one explicit non-empty roster whose
+- `composeCharacterBattleEncounter` accepts one explicit roster whose
   participants are discriminated as Character Sheet or Stat Block origins,
-  projects every participant with accumulating validation errors, and returns
-  the ordered creature initializations plus Character Sheet participants.
+  projects every participant with accumulating validation errors, and reports
+  an empty roster as a typed composition failure. Successful composition
+  returns the ordered creature initializations plus Character Sheet
+  participants.
   `startBattleFromCharacterBattleRoster` composes that roster and delegates to
   battle-runtime start; callers retain session lookup and transport concerns.
 - `battleCreatureInitFromCharacterBuild` accepts an `armorClassBaseChoice` when
