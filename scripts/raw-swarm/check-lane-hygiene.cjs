@@ -97,16 +97,16 @@ function assertDeterministicWorkflow() {
   assert.match(workflow, /^name: Raw Swarm deterministic$/m);
   assert.match(
     workflow,
-    /^  push:\n    branches:\n      - master\n    paths: &raw-swarm-deterministic-paths$/m,
+    /^ {2}push:\n {4}branches:\n {6}- master\n {4}paths: &raw-swarm-deterministic-paths$/m,
   );
   assert.match(
     workflow,
-    /^  pull_request:\n    paths: \*raw-swarm-deterministic-paths$/m,
+    /^ {2}pull_request:\n {4}paths: \*raw-swarm-deterministic-paths$/m,
   );
-  assert.match(workflow, /^  workflow_dispatch:$/m);
-  assert.match(workflow, /^  cancel-in-progress: true$/m);
+  assert.match(workflow, /^ {2}workflow_dispatch:$/m);
+  assert.match(workflow, /^ {2}cancel-in-progress: true$/m);
   const pathFilterBlock = workflow.match(
-    /^    paths: &raw-swarm-deterministic-paths\n((?:      - ".+"\n)+)/m,
+    /^ {4}paths: &raw-swarm-deterministic-paths\n((?: {6}- ".+"\n)+)/m,
   );
   assert.notEqual(pathFilterBlock, null);
   const workflowPathFilters = pathFilterBlock[1]
