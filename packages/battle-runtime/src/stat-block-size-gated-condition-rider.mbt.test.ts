@@ -4,7 +4,7 @@ import { movementFeet } from "@dnd/shared/types";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { isDeepStrictEqual } from "node:util";
 
-import { describe, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import type {
   AuthoredExecutableProcedure,
@@ -124,6 +124,8 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
 ) {
   return defineDriver<typeof driverSchema, State>(driverSchema, () => {
     let state = sizeGatedConditionRiderBattle("mediumOrSmaller");
+    let resolutionState = state;
+    let subject = attackSubject(state);
     let targetSizeGate: TargetSizeGate = "mediumOrSmaller";
     let holes: readonly BattleHole[] = [];
     let route: readonly ReducerRouteEvent[] = [];
@@ -139,12 +141,14 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
 
     function reset(nextTargetSizeGate: TargetSizeGate): void {
       state = sizeGatedConditionRiderBattle(nextTargetSizeGate);
+      resolutionState = state;
+      subject = attackSubject(state);
       targetSizeGate = nextTargetSizeGate;
       targetChoice = null;
       attackRoll = null;
       const result = resolveBattleSubject({
-        state,
-        subject: attackSubject(state),
+        state: resolutionState,
+        subject,
         fills: [],
       });
       if (result.tag !== "needsHoles") {
@@ -207,7 +211,7 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
         return;
       }
       throw new Error(
-        `Unexpected Stat Block size-gated condition MBT invalid result: ${result.reason}`,
+        `Unexpected Stat Block size-gated condition MBT invalid result: ${result.reason}: ${result.message}`,
       );
     }
 
@@ -218,8 +222,8 @@ function createSizeGatedConditionRiderDriverWithProjection<State>(
     }): void {
       recordResult(
         resolveBattleSubject({
-          state,
-          subject: attackSubject(state),
+          state: resolutionState,
+          subject,
           fills: input.fills,
         }),
         input.routeFill,
@@ -301,6 +305,13 @@ const sizeGatedConditionRiderRouteStateCheck = stateCheck(
 const sizeGatedConditionRiderDefaultMbtSteps = 3;
 
 describe("Stat Block size-gated condition rider focused MBT", () => {
+  it("discovers the authored Bite as the ordinary rolled attack", () => {
+    const subject = attackSubject(
+      sizeGatedConditionRiderBattle("mediumOrSmaller"),
+    );
+    expect(subject.statBlockDamageNotation ?? "rolled").toBe("rolled");
+  });
+
   it(
     "replays a hit applying Prone to a Medium-or-smaller target",
     async () => {
@@ -440,10 +451,19 @@ function attackSubject(
       candidate.subject.actorId === actorId &&
       candidate.subject.action === "attack" &&
       candidate.subject.procedureRef !== undefined &&
-      candidate.subject.statBlockDamageNotation === undefined,
+      (candidate.subject.statBlockDamageNotation ?? "rolled") === "rolled",
   );
   if (matchingActs.length !== 1) {
-    throw new Error(`Expected one rolled ${biteAttackName} attack act.`);
+    const attackSubjects = discoverBattleActCandidates(state).flatMap(
+      (candidate) =>
+        candidate.subject.tag === "action" &&
+        candidate.subject.action === "attack"
+          ? [candidate.subject]
+          : [],
+    );
+    throw new Error(
+      `Expected one rolled ${biteAttackName} attack act; discovered ${JSON.stringify(attackSubjects)}.`,
+    );
   }
   const subject = matchingActs[0]?.subject;
   if (subject?.tag !== "action" || subject.action !== "attack") {

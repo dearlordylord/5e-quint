@@ -188,8 +188,18 @@ function admittedAttackOption(
   if (admission === undefined) {
     throw new Error("Expected the driver Stat Block admission.");
   }
+  const authoredProcedureRef = admission.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "attack" &&
+      binding.procedure.procedureOrdinal === baseAttackEntry.procedureOrdinal,
+  )?.procedureRef;
+  if (authoredProcedureRef === undefined) {
+    throw new Error("Expected the admitted authored attack procedure.");
+  }
   return statBlockAttackActionOptions(admission.execution).find(
-    (option) => option.damageNotation === damageNotation,
+    (option) =>
+      option.procedureRef === authoredProcedureRef &&
+      option.damageNotation === damageNotation,
   );
 }
 
@@ -764,6 +774,7 @@ describe("Stat Block action ordering MBT", () => {
       onHit: rolledOnlyOnHit,
     };
 
+    expect(admittedAttackOption(rolledOnlyScimitar, "rolled")).toBeDefined();
     expect(admittedAttackOption(rolledOnlyScimitar, "static")).toBeUndefined();
   });
 
