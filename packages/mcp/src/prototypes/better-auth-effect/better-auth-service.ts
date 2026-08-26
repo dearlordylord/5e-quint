@@ -10,12 +10,20 @@ import { SAVED_INACTIVITY_RETENTION_MS } from "../../play-session-access.ts";
 import { PLAY_SESSION_OAUTH_SCOPE } from "../../tool-definition-contract.ts";
 import { fetchClientMetadataResource } from "./cimd-metadata-fetch.ts";
 
-export const SAVED_SESSION_OAUTH_SCOPES = [
+export const CHATGPT_SAVED_SESSION_OAUTH_SCOPES = [
+  "openid",
+  "email",
   PLAY_SESSION_OAUTH_SCOPE,
+] as const;
+export const SAVED_SESSION_OAUTH_SCOPES = [
+  ...CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
   "offline_access",
 ] as const;
 export const SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS =
   SAVED_INACTIVITY_RETENTION_MS / 1_000;
+export const CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS =
+  SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS;
+export const REFRESHING_ACCESS_TOKEN_LIFETIME_SECONDS = 60 * 60;
 
 export type BetterAuthPrototypeConfiguration = {
   readonly authorizationServerOrigin: URL;
@@ -101,6 +109,10 @@ function makeBetterAuth(
         resource: configuration.resource.toString(),
         scopes: [...SAVED_SESSION_OAUTH_SCOPES],
         clientRegistrationDefaultScopes: [...SAVED_SESSION_OAUTH_SCOPES],
+        accessTokenExpiresIn: CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS,
+        scopeExpirations: {
+          offline_access: `${REFRESHING_ACCESS_TOKEN_LIFETIME_SECONDS}s`,
+        },
         refreshTokenExpiresIn: SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
         allowPublicClientPrelogin: true,
         allowDynamicClientRegistration: true,

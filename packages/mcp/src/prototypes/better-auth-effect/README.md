@@ -8,9 +8,12 @@ The prototype asks whether Better Auth 1.7.1 can provide the authorization
 server for the existing public MCP resource behind one narrow Effect 3 service
 boundary. It uses a disposable SQLite database, enables CIMD and compatibility
 DCR separately, and leaves every guest tool anonymous. Saving creates a
-pseudonymous vault through Better Auth's anonymous plugin; the service requests
-no email, password, or account/profile details. Ordinary network metadata is
-still handled under the public privacy and retention policy.
+pseudonymous vault through Better Auth's anonymous plugin; users enter no email,
+password, or account/profile details. ChatGPT's client requests the standard
+`openid` and `email` protocol scopes, but Better Auth satisfies them with the
+randomly generated vault identity rather than a personal address or ChatGPT
+identity. Ordinary network metadata is still handled under the public privacy
+and retention policy.
 
 This credential-free variant must use a fresh auth database path. Startup
 rejects a database containing any non-anonymous Better Auth user, so accounts
@@ -59,15 +62,22 @@ The runtime path succeeds through authorization-server discovery, JWKS, open
 DCR, credential-free pseudonymous vault creation, authorization code plus S256
 PKCE, consent, token exchange, and the existing MCP resource verifier. The
 issued token also authenticates the real MCP transport and saves, lists, and
-deletes a formerly guest-owned Play Session. Only the `play-sessions` and
-standard `offline_access` scopes are requested; the latter enables rotating
-refresh tokens whose inactivity lifetime is derived from the canonical 90-day
-saved-session retention policy. The smoke requires rotation, verifies the MCP
-retry window replays the same rotated response, and uses the refreshed access
-token for the saved-session workflow. It also proves that a second anonymous
-browser session derives a different MCP principal and cannot list or delete the
-first principal's saved session. The prototype does not advertise or request
-email, profile, or OpenID Connect identity scopes.
+deletes a formerly guest-owned Play Session. The prototype accepts ChatGPT's
+required `openid`, `email`, and `play-sessions` scopes plus standard
+`offline_access`; the latter enables rotating refresh tokens whose inactivity
+lifetime is derived from the canonical 90-day saved-session retention policy.
+Because ChatGPT does not request `offline_access`, this prototype makes an
+explicit usability/security tradeoff: its bearer access token lasts 90 days.
+The provider applies a separate one-hour scope expiration when
+`offline_access` is present, so refresh-capable clients retain short-lived
+access tokens with 90-day rotating refresh credentials. The smoke executes ChatGPT's exact three-scope
+flow, proves that UserInfo exposes only a pseudonymous subject and unverified
+`@anonymous.invalid` address, and requires no refresh token for that flow. It
+also requires refresh rotation for the four-scope flow, verifies the MCP retry
+window replays the same rotated response, and uses the refreshed access token
+for the saved-session workflow. A second anonymous browser session derives a
+different MCP principal and cannot list or delete the first principal's saved
+session. The prototype does not request profile information.
 CIMD is advertised, and the prototype's Node transport successfully fetches
 ChatGPT's HTTPS client metadata document with resolve-once DNS validation and
 connection pinning. It locally corrects a Better Auth 1.7.1 transport defect:

@@ -13,46 +13,31 @@ import { Either, Effect, ManagedRuntime, Schema } from "effect";
 import {
   BetterAuthPrototype,
   betterAuthPrototypeLayer,
+  CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS,
+  CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
+  REFRESHING_ACCESS_TOKEN_LIFETIME_SECONDS as refreshingTokenLifetime,
   SAVED_SESSION_OAUTH_SCOPES,
   SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
 } from "./better-auth-service.ts";
 import { createPublicMcpOAuth } from "../../public-oauth.ts";
 import { verifySavedSessionMcp } from "./saved-session-mcp-smoke.ts";
 import {
+  AuthorizationServerMetadataSchema,
+  assertTokenLifetime,
   authorizeExistingBrowserSession,
+  decodeJson,
   PublicClientSchema,
+  RedirectResultSchema,
+  RefreshTokenResponseSchema,
+  RegisteredClientSchema,
+  requestVaultRedirect,
+  requestBody,
   responseCookie,
   SessionResponseSchema,
+  verifyChatGptAuthorization,
 } from "./prototype-oauth-smoke-support.ts";
 
 const requestedScopes = SAVED_SESSION_OAUTH_SCOPES.join(" ");
-
-const AuthorizationServerMetadataSchema = Schema.Struct({
-  issuer: Schema.NonEmptyTrimmedString,
-  authorization_endpoint: Schema.URL,
-  token_endpoint: Schema.URL,
-  jwks_uri: Schema.URL,
-  registration_endpoint: Schema.URL,
-  client_id_metadata_document_supported: Schema.Boolean,
-});
-
-const RegisteredClientSchema = Schema.Struct({
-  client_id: Schema.NonEmptyTrimmedString,
-  redirect_uris: Schema.Array(Schema.URL),
-  token_endpoint_auth_method: Schema.Literal("none"),
-});
-
-const RedirectResultSchema = Schema.Struct({
-  redirect: Schema.Boolean,
-  url: Schema.NonEmptyTrimmedString,
-});
-
-const TokenResponseSchema = Schema.Struct({
-  access_token: Schema.NonEmptyTrimmedString,
-  refresh_token: Schema.NonEmptyTrimmedString,
-  scope: Schema.NonEmptyTrimmedString,
-  token_type: Schema.NonEmptyTrimmedString,
-});
 
 const scratchDirectory = await mkdtemp(
   join(tmpdir(), "dnd-better-auth-prototype-"),
@@ -87,9 +72,8 @@ try {
     ),
   );
   const jwksResponse = await fetch(metadata.jwks_uri);
-  if (!jwksResponse.ok) {
+  if (!jwksResponse.ok)
     throw new Error(`JWKS returned HTTP ${jwksResponse.status}`);
-  }
   const registered = await decodeJson(
     RegisteredClientSchema,
     await fetch(metadata.registration_endpoint, {
@@ -111,6 +95,15 @@ try {
   const redirectUri = registered.redirect_uris[0];
   if (redirectUri === undefined)
     throw new Error("DCR returned no redirect URI");
+  await requestVaultRedirect({
+    authorizationEndpoint: metadata.authorization_endpoint,
+    clientId: registered.client_id,
+    origin,
+    redirectUri,
+    requestedScopes: CHATGPT_SAVED_SESSION_OAUTH_SCOPES.join(" "),
+    resource,
+    state: "chatgpt-regression-state",
+  });
   const authorizeUrl = new URL(metadata.authorization_endpoint);
   authorizeUrl.search = new URLSearchParams({
     response_type: "code",
@@ -194,7 +187,7 @@ try {
     throw new Error("Consent redirect did not contain an authorization code");
   }
   const tokens = await decodeJson(
-    TokenResponseSchema,
+    RefreshTokenResponseSchema,
     await fetch(metadata.token_endpoint, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -208,6 +201,21 @@ try {
       }),
     }),
   );
+  assertTokenLifetime(tokens, refreshingTokenLifetime);
+  const chatGptAccessToken = await verifyChatGptAuthorization({
+    accessTokenLifetimeSeconds: CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS,
+    authorizationEndpoint: metadata.authorization_endpoint,
+    clientId: registered.client_id,
+    cookie,
+    issuer: metadata.issuer,
+    jwksUrl: metadata.jwks_uri,
+    origin,
+    redirectUri,
+    requestedScopes: CHATGPT_SAVED_SESSION_OAUTH_SCOPES.join(" "),
+    resource,
+    tokenEndpoint: metadata.token_endpoint,
+    userInfoEndpoint: metadata.userinfo_endpoint,
+  });
   const oauth = createPublicMcpOAuth({
     resource: resource.toString(),
     authorizationServer: issuer.toString(),
@@ -216,7 +224,7 @@ try {
   });
   if (Either.isLeft(oauth)) throw new Error(oauth.left.message);
   const refreshedTokens = await decodeJson(
-    TokenResponseSchema,
+    RefreshTokenResponseSchema,
     await fetch(metadata.token_endpoint, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -228,11 +236,12 @@ try {
       }),
     }),
   );
+  assertTokenLifetime(refreshedTokens, refreshingTokenLifetime);
   if (refreshedTokens.refresh_token === tokens.refresh_token) {
     throw new Error("Refresh-token exchange did not rotate the refresh token");
   }
   const replayedRefresh = await decodeJson(
-    TokenResponseSchema,
+    RefreshTokenResponseSchema,
     await fetch(metadata.token_endpoint, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -244,6 +253,7 @@ try {
       }),
     }),
   );
+  assertTokenLifetime(replayedRefresh, refreshingTokenLifetime);
   if (
     replayedRefresh.access_token !== refreshedTokens.access_token ||
     replayedRefresh.refresh_token !== refreshedTokens.refresh_token
@@ -254,6 +264,12 @@ try {
     refreshedTokens.access_token,
   );
   if (Either.isLeft(principal)) throw new Error(principal.left.message);
+  const chatGptPrincipal =
+    await oauth.right.verifyAccessToken(chatGptAccessToken);
+  if (Either.isLeft(chatGptPrincipal))
+    throw new Error(chatGptPrincipal.left.message);
+  if (chatGptPrincipal.right !== principal.right)
+    throw new Error("ChatGPT and refresh flows derived different principals");
   const restoredBrowserSession = await decodeJson(
     SessionResponseSchema,
     await fetch(new URL("/api/auth/get-session", origin), {
@@ -328,7 +344,7 @@ try {
     );
   }
   const savedSessionMcp = await verifySavedSessionMcp({
-    accessToken: refreshedTokens.access_token,
+    accessToken: chatGptAccessToken,
     databasePath: join(scratchDirectory, "mcp-play-sessions.sqlite"),
     isolatedAccessToken: isolatedTokens.access_token,
     oauth: oauth.right,
@@ -342,6 +358,7 @@ try {
         tokenEndpoint: metadata.token_endpoint.toString(),
         jwksAvailable: true,
         cimdAdvertised: metadata.client_id_metadata_document_supported,
+        chatGptRequiredScopesAccepted: true,
         dcr: {
           publicClientCreated: true,
           clientIdPresent: registered.client_id.length > 0,
@@ -406,27 +423,4 @@ async function handleRequest(
   outgoing.statusCode = response.status;
   response.headers.forEach((value, name) => outgoing.setHeader(name, value));
   outgoing.end(Buffer.from(await response.arrayBuffer()));
-}
-
-async function requestBody(
-  incoming: IncomingMessage,
-): Promise<Uint8Array | undefined> {
-  if (incoming.method === "GET" || incoming.method === "HEAD") return undefined;
-  const chunks: Buffer[] = [];
-  for await (const chunk of incoming) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks);
-}
-
-async function decodeJson<A, I>(
-  schema: Schema.Schema<A, I>,
-  response: Response,
-): Promise<A> {
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status}: ${await response.text()}`);
-  }
-  const decoded = Schema.decodeUnknownEither(schema)(await response.json());
-  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
-  return decoded.right;
 }

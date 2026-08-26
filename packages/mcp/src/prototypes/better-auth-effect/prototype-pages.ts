@@ -29,7 +29,8 @@ export function prototypeVaultPage(): Response {
 <title>Connect a private saved-session vault</title>
 <main>
   <h1>Connect a private saved-session vault</h1>
-  <p>Guest play remains anonymous. No email, password, or account/profile details are requested.</p>
+  <p>Guest play remains anonymous. You do not enter an email, password, or account/profile details.</p>
+  <p>ChatGPT requests standard OpenID and email protocol scopes. They describe only this randomly generated vault identity; this service receives no ChatGPT account identity or personal email address.</p>
   <p>The requesting client does not share your account identity with this service. This private pseudonymous vault belongs to the anonymous authorization session in this browser; clients you authorize from that session share the vault.</p>
   <p>Until optional recovery is available, losing both the browser session and client authorization may make saved sessions unrecoverable. See the <a href="/privacy">privacy and retention policy</a>.</p>
   <p id="client">Verifying the registered client…</p>
@@ -99,7 +100,8 @@ export function prototypeConsentPage(): Response {
 <main>
   <h1>Connect your private saved-session vault?</h1>
   <p>Allow the requesting client to save, list, resume, and delete Play Sessions in your pseudonymous vault.</p>
-  <p>No email, password, or account/profile details are requested. The requesting client does not share your account identity with this service.</p>
+  <p>You do not enter an email, password, or account/profile details. The requesting client does not share your account identity with this service.</p>
+  <p>Standard OpenID and email scopes describe only this randomly generated vault identity, not your ChatGPT identity or personal email address.</p>
   <p>This vault belongs to the anonymous authorization session in this browser. See the <a href="/privacy">privacy and retention policy</a>.</p>
   <p id="client">Verifying the registered client…</p>
   <p id="scope"></p>
