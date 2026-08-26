@@ -12,6 +12,7 @@ import {
 import { relative, resolve, sep } from "node:path";
 import { buildSync } from "esbuild";
 
+import { CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS } from "../lane-classification.cjs";
 import {
   benchmarkContextForRole,
   type BenchmarkContextDelivery,
@@ -368,7 +369,7 @@ export function buildConsumerDistribution(
   );
   buildSync({
     entryPoints: [
-      resolve(repoRoot, "scripts/raw-swarm/sdk-player/supervisor-cli.ts"),
+      resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.supervisor),
     ],
     outfile: resolve(input.trustedDestination, "supervisor.mjs"),
     bundle: true,
@@ -380,7 +381,7 @@ export function buildConsumerDistribution(
   });
   buildSync({
     entryPoints: [
-      resolve(repoRoot, "scripts/raw-swarm/sdk-player/player-client.ts"),
+      resolve(repoRoot, CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.playerClient),
     ],
     outfile: resolve(input.destination, "player-client.mjs"),
     bundle: true,
@@ -489,7 +490,7 @@ export const composeScenarioCharacters: ScenarioCharacters = () => ({
     entryPoints: [
       resolve(
         repoRoot,
-        "scripts/raw-swarm/sdk-player/scenario-character-client.ts",
+        CONSUMER_DISTRIBUTION_BUILD_ENTRYPOINTS.scenarioCharacterClient,
       ),
     ],
     outfile: resolve(input.destination, "character-client.mjs"),

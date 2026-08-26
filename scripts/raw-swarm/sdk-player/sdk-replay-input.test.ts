@@ -145,6 +145,56 @@ describe("SDK replay input", () => {
     expect(JSON.stringify(decoded.input)).not.toContain("attackDamageType");
   });
 
+  test("accepts only the player's Help enemy choice at the SDK boundary", () => {
+    const input = {
+      subject: {
+        tag: "action",
+        actorId: "helper",
+        action: "helpAttack",
+      },
+      fills: [
+        {
+          kind: "helpAttackEnemyDecision",
+          holeId: "battle:help-attack:target",
+          targetEnemyId: "enemy",
+        },
+      ],
+    };
+    expect(
+      canonicalSdkCallInput({
+        operation: "resolveBattleRuntimeSubject",
+        input,
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      input,
+      value: {
+        input: {
+          fills: [
+            {
+              kind: "helpAttackEnemyDecision",
+              targetEnemyId: "enemy",
+            },
+          ],
+        },
+      },
+    });
+    expect(
+      canonicalSdkCallInput({
+        operation: "resolveBattleRuntimeSubject",
+        input: {
+          ...input,
+          fills: [
+            {
+              ...input.fills[0],
+              targetWithinFiveFeetOfHelper: true,
+            },
+          ],
+        },
+      }),
+    ).toMatchObject({ tag: "invalid" });
+  });
+
   test("rejects sparse arrays before live execution and recording", () => {
     const fills = Array<never>(1);
 

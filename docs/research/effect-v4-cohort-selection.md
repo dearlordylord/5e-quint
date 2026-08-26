@@ -1,7 +1,7 @@
 # Effect 4 cohort selection
 
 Status: decision for #369, checked 2026-08-25. This note selects the package
-cohort for the later D&D cutover in #371; it does not change a D&D manifest.
+cohort applied to the D&D cutover in #371.
 
 ## Decision
 
@@ -90,8 +90,8 @@ is currently consumed or selected by D&D.
 
 ## Current dependency disposition
 
-The current workspace was searched in manifests and source. The disposition
-for #371 is:
+The pre-cutover workspace was searched in manifests and source. The resulting
+disposition for #371 is:
 
 | Current package                | Current lock presence | Disposition                                   | Evidence / target                                                                       |
 | ------------------------------ | --------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------- |
@@ -140,16 +140,14 @@ compatibility evidence, not permission to retain the parser's old peer range
 in a D&D manifest.
 
 Quint Connect PR [#23](https://github.com/dearlordylord/quint-connect-ts/pull/23)
-currently demonstrates the same migration shape on rc.108: exact `effect`
-and `@effect/vitest`, Vitest `>=4.1.10`, Node `>=22`, and one Effect lockfile
-version. Its published `@firfi/quint-connect@2.0.2-effect4.1` still hard-pins
-Effect `4.0.0-beta.99`, so it is not the cutover artifact. #370 must refresh
-PR #23's dependency, peer, lockfile, and packed-consumer checks to rc.112 and
-then publish the matching Effect 4 line.
+established the matching dependency, peer, lockfile, and packed-consumer
+checks. The published `@firfi/quint-connect@2.0.2-effect4.2` line now pins
+Effect `4.0.0-rc.112` and Node `>=22.19.0`; the D&D workspace consumes that
+release through its exact pnpm catalog entry.
 
 ## Lockfile invariant
 
-The later cutover must fail closed when any of these conditions is false:
+The cutover must fail closed when any of these conditions is false:
 
 1. Every package manifest reached through `pnpm-workspace.yaml` declares
    `effect`, `@effect/platform-node`, and `@effect/vitest` at the exact
@@ -165,7 +163,8 @@ The later cutover must fail closed when any of these conditions is false:
    `effect@4.0.0-rc.112`,
    `@effect/platform-node@4.0.0-rc.112`,
    `@effect/platform-node-shared@4.0.0-rc.112`, and
-   `@effect/vitest@4.0.0-rc.112`.
+   `@effect/vitest@4.0.0-rc.112` and the published
+   `@firfi/quint-connect@2.0.2-effect4.2` line.
 4. Installation is performed with `--frozen-lockfile --strict-peer-dependencies`.
 
 The executable check is
@@ -174,9 +173,10 @@ It is run by the fixture's `verify-cohort` script and rejects missing or
 floating entries in nested workspace manifests and peer sections, obsolete or
 unknown direct packages, legacy transitive Effect packages, duplicate or
 mismatched Effect or canonical consumer versions, platform package mismatches,
-and a missing or mismatched Vitest resolution. Exact consumer versions are
-derived from the canonical probe manifest's exact direct entries rather than
-duplicated in the verifier. Peer compatibility ranges remain ranges: the
+and a missing or mismatched Vitest or Quint Connect resolution. Exact consumer
+versions are derived from the canonical probe manifest's exact direct entries;
+the published Quint Connect version is checked against the workspace catalog
+and lockfile. Peer compatibility ranges remain ranges: the
 platform peer is `redis >=5 <7`, the Vitest adapter peer is `vitest >=4.1.0
 <5.0.0`, and the parser peer is `effect ^4.0.0-beta.99`; the probe selects
 exact consumer versions for those peers. The current
@@ -248,5 +248,6 @@ self-tests.
 - [`effect@4.0.0-rc.112` npm metadata](https://www.npmjs.com/package/effect/v/4.0.0-rc.112)
 - [`@effect/platform-node@4.0.0-rc.112` npm metadata](https://www.npmjs.com/package/@effect/platform-node/v/4.0.0-rc.112)
 - [`@effect/vitest@4.0.0-rc.112` npm metadata](https://www.npmjs.com/package/@effect/vitest/v/4.0.0-rc.112)
+- [`@firfi/quint-connect@2.0.2-effect4.2` npm metadata](https://www.npmjs.com/package/@firfi/quint-connect/v/2.0.2-effect4.2)
 - [Quint Connect PR #23](https://github.com/dearlordylord/quint-connect-ts/pull/23)
 - [`@firfi/itf-trace-parser@0.2.0-effect4.1` npm metadata](https://www.npmjs.com/package/@firfi/itf-trace-parser/v/0.2.0-effect4.1)

@@ -42,6 +42,7 @@ describe("public MCP deployment operations", () => {
       installFakeCommand(binaryDirectory, "curl", commandLog, "{}");
       installFakeCommand(binaryDirectory, "jq", commandLog, "2", true);
       installFakeCommand(binaryDirectory, "pnpm", commandLog);
+      installFakeCommand(binaryDirectory, "stat", commandLog, "1000");
       installFakeCommand(binaryDirectory, "systemctl", commandLog);
       installFakeCommand(
         binaryDirectory,

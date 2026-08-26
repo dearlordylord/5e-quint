@@ -1227,7 +1227,7 @@
     "packages/mcp/src/json-schema-sharing.ts": {
       "module/binding:visitSchemaChildren": 12
     },
-    "packages/mcp/src/play-session-protocol.ts": {
+    "packages/mcp/src/play-session-next-operations.ts": {
       "module/binding:nextOperationsFrom": 10
     },
     "packages/mcp/src/start-battle-tool.ts": {

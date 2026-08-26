@@ -1,6 +1,6 @@
-FROM node:22-bookworm-slim
+FROM node:22.19.0-bookworm-slim
 
-RUN corepack enable
+RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
 ARG DND_MCP_RELEASE
 RUN test -n "$DND_MCP_RELEASE"
 LABEL org.opencontainers.image.revision=$DND_MCP_RELEASE
@@ -8,7 +8,7 @@ ENV DND_MCP_RELEASE=$DND_MCP_RELEASE
 WORKDIR /srv/dnd
 
 COPY --chown=node:node . .
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --strict-peer-dependencies
 
 USER node
 ENV NODE_ENV=production

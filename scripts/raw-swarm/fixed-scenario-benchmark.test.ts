@@ -704,6 +704,21 @@ describe("fixed scenario benchmark boundary", () => {
     expect(commands.player).toContain("safe-run");
     expect(commands.player).toContain("synthetic-execution");
     expect(commands.player).toContain("synthetic-evidence");
+    expect(commands.player).toContain(
+      "RAW_SWARM_EXPECTED_GIT_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa pnpm raw-swarm:model:trial -- sdk-player",
+    );
+    expect(commands.player).not.toContain(
+      "pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts",
+    );
+    expect(commands.postPlayReview).toContain(
+      "RAW_SWARM_EXPECTED_GIT_SHA=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    );
+    expect(commands.postPlayReview).toContain(
+      "pnpm raw-swarm:model:trial -- post-play-review",
+    );
+    expect(commands.postPlayReview).not.toContain(
+      "scripts/raw-swarm/run-raw-review.sh",
+    );
   });
 
   test("rejects structured reads and external tools while retaining prose-only results", () => {

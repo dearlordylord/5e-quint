@@ -22,12 +22,23 @@ const wrapperNames = [
   "with-broad-workspace-lock.sh",
   "with-mbt-lock.sh",
 ];
+const fixtureScriptNames = [
+  ...wrapperNames,
+  "process-supervision.sh",
+  "raw-swarm/process-supervisor.c",
+];
 const retiredLockNames = [
   "ralph-heavy-verification.lock",
   "ralph-broad-workspace-check.lock",
   "ralph-mbt.lock",
 ];
 const waitTimeoutMs = 20_000;
+const resourceLockEnvironmentKeys = [
+  "DND_RESOURCE_LOCK_KIND",
+  "DND_RESOURCE_LOCK_OWNER_PID",
+  "DND_RESOURCE_LOCK_OWNER_START_TIME",
+];
+const childDiagnostics = new WeakMap();
 
 function run(command, args, cwd) {
   const result = spawnSync(command, args, { cwd, encoding: "utf8" });
@@ -43,8 +54,13 @@ function waitFor(predicate, description) {
   const startedAt = Date.now();
   return new Promise((resolve, reject) => {
     const poll = () => {
-      if (predicate()) {
-        resolve();
+      try {
+        if (predicate()) {
+          resolve();
+          return;
+        }
+      } catch (error) {
+        reject(error);
         return;
       }
       if (Date.now() - startedAt >= waitTimeoutMs) {
@@ -55,6 +71,64 @@ function waitFor(predicate, description) {
     };
     poll();
   });
+}
+
+function waitForResult(resultProvider, description) {
+  const startedAt = Date.now();
+  return new Promise((resolve, reject) => {
+    const poll = () => {
+      const result = resultProvider();
+      if (result !== undefined) {
+        resolve(result);
+        return;
+      }
+      if (Date.now() - startedAt >= waitTimeoutMs) {
+        reject(new Error(`Timed out waiting for ${description}.`));
+        return;
+      }
+      setTimeout(poll, 10);
+    };
+    poll();
+  });
+}
+
+async function assertDetachedSupervision(
+  supervised,
+  detachedPidPath,
+  linked,
+  temporaryRoot,
+) {
+  try {
+    const detachedIdentity = await waitForResult(() => {
+      if (!existsSync(detachedPidPath)) return undefined;
+      return processIdentity(
+        Number(readFileSync(detachedPidPath, "utf8").trim()),
+      );
+    }, "the detached supervised child");
+
+    try {
+      assert.ok(detachedIdentity, "the detached child has a live identity");
+      supervised.kill("SIGTERM");
+      await waitFor(
+        () => !processIdentityIsLive(detachedIdentity),
+        "the detached child to be terminated by shared supervision",
+      );
+
+      const reacquiredLog = path.join(temporaryRoot, "reacquired.log");
+      const reacquired = guardedSpawn(linked, "with-mbt-lock.sh", [
+        "contender",
+        reacquiredLog,
+      ]);
+      assert.equal(await waitForExit(reacquired, "the reacquirer"), 0);
+      assert.deepEqual(logLines(reacquiredLog), ["contender-start"]);
+    } finally {
+      if (supervised.exitCode === null) supervised.kill("SIGKILL");
+      signalProcessIdentity(detachedIdentity, "SIGKILL");
+    }
+  } catch (error) {
+    if (supervised.exitCode === null) supervised.kill("SIGKILL");
+    throw error;
+  }
 }
 
 function waitForExit(child, description) {
@@ -71,18 +145,90 @@ function waitForExit(child, description) {
 }
 
 function guardedSpawn(root, wrapperName, probeArgs) {
-  return spawn(
+  return guardedCommandSpawn(
+    root,
+    wrapperName,
+    "scripts/lock-probe.sh",
+    probeArgs,
+  );
+}
+
+function guardedCommandSpawn(root, wrapperName, command, args, env) {
+  const child = spawn(
     "bash",
     [
       "-c",
       '. scripts/resource-lock-owner.sh && with_resource_lock_owner "$@"',
       "resource-lock-self-test",
       `scripts/${wrapperName}`,
-      "scripts/lock-probe.sh",
-      ...probeArgs,
+      command,
+      ...args,
     ],
-    { cwd: root, stdio: ["ignore", "ignore", "pipe"] },
+    {
+      cwd: root,
+      env: independentFixtureEnvironment(env),
+      stdio: ["ignore", "ignore", "pipe"],
+    },
   );
+  const stderr = [];
+  child.stderr.setEncoding("utf8");
+  child.stderr.on("data", (chunk) => stderr.push(chunk));
+  childDiagnostics.set(child, stderr);
+  return child;
+}
+
+function independentFixtureEnvironment(overrides) {
+  const environment = { ...process.env };
+  for (const key of resourceLockEnvironmentKeys) delete environment[key];
+  return overrides === undefined
+    ? environment
+    : { ...environment, ...overrides };
+}
+
+function fixtureChildFailure(child, description) {
+  if (child.exitCode === null && child.signalCode === null) return undefined;
+  const status =
+    child.signalCode === null
+      ? `exit status ${child.exitCode}`
+      : `signal ${child.signalCode}`;
+  const stderr = childDiagnostics.get(child)?.join("").trim();
+  return `${description} exited before expected probe output (${status})${
+    stderr === undefined || stderr === "" ? "." : `:\n${stderr}`
+  }`;
+}
+
+function assertFixtureChildRunning(child, description) {
+  const failure = fixtureChildFailure(child, description);
+  if (failure !== undefined) throw new Error(failure);
+}
+
+function waitForProbeLine(child, logPath, expectedLine, description) {
+  return waitFor(() => {
+    if (logLines(logPath).includes(expectedLine)) return true;
+    assertFixtureChildRunning(child, description);
+    return false;
+  }, description);
+}
+
+function processIdentity(pid) {
+  if (!Number.isSafeInteger(pid) || pid <= 1) return undefined;
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, "utf8");
+    const fields = stat.slice(stat.lastIndexOf(") ") + 2).split(" ");
+    if (fields[0] === "Z" || fields[0] === "X") return undefined;
+    return { pid, startTime: fields[19] };
+  } catch {
+    return undefined;
+  }
+}
+
+function processIdentityIsLive(identity) {
+  return processIdentity(identity.pid)?.startTime === identity.startTime;
+}
+
+function signalProcessIdentity(identity, signal) {
+  if (!processIdentityIsLive(identity)) return;
+  process.kill(identity.pid, signal);
 }
 
 function logLines(logPath) {
@@ -93,13 +239,16 @@ function logLines(logPath) {
 
 async function assertSerialized(holder, contender, logPath) {
   try {
-    await waitFor(
-      () => logLines(logPath).includes("holder-start"),
-      "the holder to start",
-    );
+    await waitForProbeLine(holder, logPath, "holder-start", "the holder");
     await new Promise((resolve) => setTimeout(resolve, 120));
     assert.deepEqual(logLines(logPath), ["holder-start"]);
     assert.equal(await waitForExit(holder, "the holder"), 0);
+    await waitForProbeLine(
+      contender,
+      logPath,
+      "contender-start",
+      "the contender",
+    );
     assert.equal(await waitForExit(contender, "the contender"), 0);
     assert.deepEqual(logLines(logPath), [
       "holder-start",
@@ -117,6 +266,10 @@ async function runSelfTest() {
     path.join(repositoryRoot, "scripts", "with-resource-lock.sh"),
     "utf8",
   );
+  assert.ok(
+    guardSource.includes('source "$script_directory/process-supervision.sh"'),
+    "the resource guard sources the shared process-supervision helper",
+  );
   const lockNames = ["dnd-heavy-verification.lock", ...retiredLockNames];
   let previousPosition = -1;
   for (const lockName of lockNames) {
@@ -130,10 +283,11 @@ async function runSelfTest() {
   const linked = path.join(temporaryRoot, "linked");
   mkdirSync(path.join(root, "scripts"), { recursive: true });
   try {
-    for (const wrapperName of wrapperNames) {
-      const destination = path.join(root, "scripts", wrapperName);
+    for (const scriptName of fixtureScriptNames) {
+      const destination = path.join(root, "scripts", scriptName);
+      mkdirSync(path.dirname(destination), { recursive: true });
       copyFileSync(
-        path.join(repositoryRoot, "scripts", wrapperName),
+        path.join(repositoryRoot, "scripts", scriptName),
         destination,
       );
       chmodSync(destination, 0o755);
@@ -155,6 +309,30 @@ async function runSelfTest() {
       ].join("\n"),
     );
     chmodSync(probePath, 0o755);
+    const detachedProbePath = path.join(root, "scripts", "detached-probe.cjs");
+    writeFileSync(
+      detachedProbePath,
+      [
+        "#!/usr/bin/env node",
+        'const { spawn } = require("node:child_process");',
+        'const { writeFileSync } = require("node:fs");',
+        'if (process.argv[2] === "child") {',
+        "  writeFileSync(process.env.DETACHED_PID_PATH, String(process.pid));",
+        '  process.on("SIGTERM", () => {});',
+        "  setInterval(() => {}, 1_000);",
+        "} else {",
+        '  const child = spawn(process.execPath, [__filename, "child"], {',
+        "    detached: true,",
+        "    env: process.env,",
+        '    stdio: "ignore",',
+        "  });",
+        "  child.unref();",
+        "  setInterval(() => {}, 1_000);",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    chmodSync(detachedProbePath, 0o755);
 
     run("git", ["init", "-b", "master"], root);
     run("git", ["config", "user.email", "resource-lock@example.invalid"], root);
@@ -167,8 +345,13 @@ async function runSelfTest() {
       root,
     );
     mkdirSync(path.join(linked, "scripts"), { recursive: true });
-    for (const scriptName of [...wrapperNames, "lock-probe.sh"]) {
+    for (const scriptName of [
+      ...fixtureScriptNames,
+      "lock-probe.sh",
+      "detached-probe.cjs",
+    ]) {
       const destination = path.join(linked, "scripts", scriptName);
+      mkdirSync(path.dirname(destination), { recursive: true });
       copyFileSync(path.join(root, "scripts", scriptName), destination);
       chmodSync(destination, 0o755);
     }
@@ -190,8 +373,10 @@ async function runSelfTest() {
       "holder",
       sharedLog,
     ]);
-    await waitFor(
-      () => logLines(sharedLog).includes("holder-start"),
+    await waitForProbeLine(
+      sharedHolder,
+      sharedLog,
+      "holder-start",
       "the shared-lock holder",
     );
     const sharedContender = guardedSpawn(linked, "with-mbt-lock.sh", [
@@ -218,8 +403,10 @@ async function runSelfTest() {
         ],
         { cwd: root, stdio: "ignore" },
       );
-      await waitFor(
-        () => logLines(logPath).includes("holder-start"),
+      await waitForProbeLine(
+        holder,
+        logPath,
+        "holder-start",
         `${retiredLockName} holder`,
       );
       const contender = guardedSpawn(linked, "with-mbt-lock.sh", [
@@ -228,6 +415,21 @@ async function runSelfTest() {
       ]);
       await assertSerialized(holder, contender, logPath);
     }
+
+    const detachedPidPath = path.join(temporaryRoot, "detached-child.pid");
+    const supervised = guardedCommandSpawn(
+      root,
+      "with-broad-workspace-lock.sh",
+      process.execPath,
+      ["scripts/detached-probe.cjs"],
+      { DETACHED_PID_PATH: detachedPidPath },
+    );
+    await assertDetachedSupervision(
+      supervised,
+      detachedPidPath,
+      linked,
+      temporaryRoot,
+    );
   } finally {
     if (existsSync(linked)) {
       spawnSync("git", ["worktree", "remove", "--force", linked], {

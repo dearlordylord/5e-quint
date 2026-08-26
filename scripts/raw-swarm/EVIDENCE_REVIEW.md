@@ -69,7 +69,8 @@ The existing launcher and report commands are documented in
 [`OPERATIONS.md`](OPERATIONS.md). The common direct-SDK review path is:
 
 ```sh
-mise exec -- scripts/raw-swarm/run-raw-review.sh \
+export RAW_SWARM_EXPECTED_GIT_SHA=$(git rev-parse HEAD)
+mise exec -- pnpm raw-swarm:model:trial -- post-play-review \
   scripts/raw-swarm/reviews/sdk-player.prompt.txt \
   scripts/raw-swarm/out/<evidence-set-id>/evidence/sdk-calls.jsonl \
   scripts/raw-swarm/out/<evidence-set-id>/review/sdk-review.json \

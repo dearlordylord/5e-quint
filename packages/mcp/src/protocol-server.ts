@@ -2,6 +2,7 @@ import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
+  type CallToolRequest,
 } from "@modelcontextprotocol/sdk/types.js";
 import { Match, Random } from "effect";
 
@@ -30,6 +31,7 @@ import {
   playSessionToolDefinitions,
   playSessionToolNames,
   statefulPlaySessionToolDefinition,
+  type PlaySessionToolName,
 } from "./play-session-tool-contract.ts";
 import {
   createPlaySessionRegistry,
@@ -43,6 +45,10 @@ import {
   createRecoverablePlaySessionRegistry,
   type PlaySessionRepository,
 } from "./recoverable-play-session.ts";
+import type {
+  EpochMilliseconds,
+  GuestAccessGrantFactory,
+} from "./play-session-access.ts";
 import { isBattleToolName } from "./battle-tools.ts";
 import { isCharacterToolName } from "./character-tools.ts";
 import { isDiceToolName } from "./dice-tool-input.ts";
@@ -62,7 +68,9 @@ export type {
 } from "./tool-definition-contract.ts";
 
 type CommonMcpProtocolServerOptions = {
+  readonly guestAccessGrantFactory?: GuestAccessGrantFactory;
   readonly playSessionIdFactory?: PlaySessionIdFactory;
+  readonly playSessionNow?: () => EpochMilliseconds;
   readonly requestIdentity?: PlaySessionRequestIdentity;
 };
 
@@ -151,10 +159,7 @@ export function createDndMcpProtocolServer(
   definitions: readonly ProtocolToolDefinition[] = toolDefinitions,
   options: McpProtocolServerOptions = {},
 ): McpProtocolServerHost<PlaySessionAccessFailure> {
-  const authenticationAvailable =
-    options.requestIdentity?.tag === "authenticated" ||
-    (options.requestIdentity?.tag === "anonymous" &&
-      options.requestIdentity.savedPlaySessions.tag === "oauth");
+  const authenticationAvailable = hasAuthenticationAvailable(options);
   const protocolDefinitions = buildAdvertisedToolDefinitions(
     definitions,
     authenticationAvailable,
@@ -166,8 +171,7 @@ export function createDndMcpProtocolServer(
     protocolDefinitions.map((definition) => [definition.name, definition]),
   );
   const playSessions = playSessionRegistry(applicationServices, options);
-  const requestIdentity =
-    options.requestIdentity ?? GUEST_ONLY_REQUEST_IDENTITY;
+  const requestIdentity = requestIdentityFor(options);
   const server = new Server(
     { name: "dnd-surface-runtime", version: "0.1.0" },
     {
@@ -181,75 +185,117 @@ export function createDndMcpProtocolServer(
     tools: protocolDefinitions,
   }));
 
-  server.setRequestHandler(CallToolRequestSchema, async (request) => {
-    const name = request.params.name;
-    if (!advertisedToolNames.has(name)) {
-      return errorContent(`Tool is not advertised by this MCP server: ${name}`);
-    }
-    if (isPlaySessionToolName(name)) {
-      return Match.value(name).pipe(
-        Match.when(playSessionToolNames.create, () =>
-          handleCreatePlaySession(
-            playSessions,
-            request.params.arguments,
-            requestIdentity,
-          ),
-        ),
-        Match.when(playSessionToolNames.read, () =>
-          handleReadPlaySession(
-            playSessions,
-            request.params.arguments,
-            requestIdentity,
-          ),
-        ),
-        Match.when(playSessionToolNames.save, () =>
-          handleSavePlaySession(
-            playSessions,
-            request.params.arguments,
-            requestIdentity,
-          ),
-        ),
-        Match.when(playSessionToolNames.listSaved, () =>
-          handleListSavedPlaySessions(
-            playSessions,
-            request.params.arguments,
-            requestIdentity,
-          ),
-        ),
-        Match.when(playSessionToolNames.deleteSaved, () =>
-          handleDeleteSavedPlaySession(
-            playSessions,
-            request.params.arguments,
-            requestIdentity,
-          ),
-        ),
-        Match.exhaustive,
-      );
-    }
-    if (isStatefulToolName(name)) {
-      const definition = protocolDefinitionByName.get(name);
-      if (definition === undefined) {
-        return errorContent(
-          `Tool is not advertised by this MCP server: ${name}`,
-        );
-      }
-      return handlePlaySessionOperation({
-        registry: playSessions,
-        operationName: name,
-        recordOperation: definition.annotations.readOnlyHint !== true,
-        args: request.params.arguments,
-        identity: requestIdentity,
-        handle: (root, args) => handleToolCall(root, name, args),
-      });
-    }
-    return handleApplicationToolCall(
+  server.setRequestHandler(CallToolRequestSchema, (request) =>
+    handleCallToolRequest({
+      request,
+      advertisedToolNames,
+      protocolDefinitionByName,
+      playSessions,
+      requestIdentity,
       applicationServices,
-      name,
-      request.params.arguments,
-    );
-  });
+    }),
+  );
 
   return { applicationServices, playSessions, server };
+}
+
+function hasAuthenticationAvailable(
+  options: McpProtocolServerOptions,
+): boolean {
+  const identity = options.requestIdentity;
+  return (
+    identity?.tag === "authenticated" ||
+    (identity?.tag === "anonymous" &&
+      identity.savedPlaySessions.tag === "oauth")
+  );
+}
+
+function requestIdentityFor(
+  options: McpProtocolServerOptions,
+): PlaySessionRequestIdentity {
+  return options.requestIdentity ?? GUEST_ONLY_REQUEST_IDENTITY;
+}
+
+type HandleCallToolRequestInput = {
+  readonly request: CallToolRequest;
+  readonly advertisedToolNames: ReadonlySet<string>;
+  readonly protocolDefinitionByName: ReadonlyMap<
+    string,
+    ProtocolToolDefinition
+  >;
+  readonly playSessions: PlaySessionRegistry<PlaySessionAccessFailure>;
+  readonly requestIdentity: PlaySessionRequestIdentity;
+  readonly applicationServices: McpApplicationServices;
+};
+
+async function handleCallToolRequest(input: HandleCallToolRequestInput) {
+  const { request } = input;
+  const name = request.params.name;
+  if (!input.advertisedToolNames.has(name)) {
+    return errorContent(`Tool is not advertised by this MCP server: ${name}`);
+  }
+  if (isPlaySessionToolName(name)) {
+    return handlePlaySessionToolRequest(input, name);
+  }
+  if (isStatefulToolName(name)) {
+    return handleStatefulToolRequest(input, name);
+  }
+  return handleApplicationToolCall(
+    input.applicationServices,
+    name,
+    request.params.arguments,
+  );
+}
+
+function handlePlaySessionToolRequest(
+  input: HandleCallToolRequestInput,
+  name: PlaySessionToolName,
+) {
+  const args = input.request.params.arguments;
+  return Match.value(name).pipe(
+    Match.when(playSessionToolNames.create, () =>
+      handleCreatePlaySession(input.playSessions, args, input.requestIdentity),
+    ),
+    Match.when(playSessionToolNames.read, () =>
+      handleReadPlaySession(input.playSessions, args, input.requestIdentity),
+    ),
+    Match.when(playSessionToolNames.save, () =>
+      handleSavePlaySession(input.playSessions, args, input.requestIdentity),
+    ),
+    Match.when(playSessionToolNames.listSaved, () =>
+      handleListSavedPlaySessions(
+        input.playSessions,
+        args,
+        input.requestIdentity,
+      ),
+    ),
+    Match.when(playSessionToolNames.deleteSaved, () =>
+      handleDeleteSavedPlaySession(
+        input.playSessions,
+        args,
+        input.requestIdentity,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function handleStatefulToolRequest(
+  input: HandleCallToolRequestInput,
+  name: BattleToolName | CharacterToolName | DiceToolName,
+) {
+  const definition = input.protocolDefinitionByName.get(name);
+  if (definition === undefined) {
+    return errorContent(`Tool is not advertised by this MCP server: ${name}`);
+  }
+  return handlePlaySessionOperation({
+    registry: input.playSessions,
+    operationName: name,
+    recordOperation: definition.annotations.readOnlyHint !== true,
+    args: input.request.params.arguments,
+    identity: input.requestIdentity,
+    handle: (root, args) => handleToolCall(root, name, args),
+  });
 }
 
 function playSessionRegistry(
@@ -262,6 +308,12 @@ function playSessionRegistry(
       repository: options.playSessionRepository,
       playSessionIdFactory:
         options.playSessionIdFactory ?? generatedPlaySessionId,
+      ...(options.guestAccessGrantFactory === undefined
+        ? {}
+        : { guestAccessGrantFactory: options.guestAccessGrantFactory }),
+      ...(options.playSessionNow === undefined
+        ? {}
+        : { now: options.playSessionNow }),
     });
   }
   return createPlaySessionRegistry({
@@ -281,6 +333,12 @@ function playSessionRegistry(
     ...(options.playSessionIdFactory === undefined
       ? {}
       : { playSessionIdFactory: options.playSessionIdFactory }),
+    ...(options.guestAccessGrantFactory === undefined
+      ? {}
+      : { guestAccessGrantFactory: options.guestAccessGrantFactory }),
+    ...(options.playSessionNow === undefined
+      ? {}
+      : { now: options.playSessionNow }),
   });
 }
 

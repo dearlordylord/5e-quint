@@ -1,21 +1,22 @@
-import {
-  closeSync,
-  existsSync,
-  mkdirSync,
-  openSync,
-  readFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { spawnSync } from "node:child_process";
-import { Either } from "effect";
+import { Either, Schema } from "effect";
 
-import { decodeScenarioId, repoRoot } from "./transcript.ts";
+import {
+  currentGitRevision,
+  decodeScenarioId,
+  GitShaSchema,
+  repoRoot,
+} from "./transcript.ts";
+import { assertModelEntryPointGuard } from "./model-entrypoint-guard.ts";
+import { runCodexInvocation } from "./model-telemetry.ts";
 
 function fail(message: string): never {
   throw new Error(message);
 }
 
-function main(args: readonly string[]): void {
+async function main(args: readonly string[]): Promise<void> {
+  assertModelEntryPointGuard();
   const [scenarioIdInput, ...unexpected] = args;
   if (scenarioIdInput === undefined || unexpected.length > 0) {
     fail("Usage: run-freeplay.ts <scenario-id>");
@@ -23,6 +24,14 @@ function main(args: readonly string[]): void {
   const decodedScenarioId = decodeScenarioId(scenarioIdInput);
   if (Either.isLeft(decodedScenarioId)) fail(decodedScenarioId.left);
   const scenarioId = decodedScenarioId.right;
+  const revision = currentGitRevision();
+  if (revision.tag === "dirty") {
+    fail(
+      "Player recording requires a clean Git worktree so its SHA identifies the tested code.",
+    );
+  }
+  const gitSha = Schema.decodeUnknownEither(GitShaSchema)(revision.sha);
+  if (Either.isLeft(gitSha)) fail(gitSha.left.message);
   const swarmDirectory = resolve(repoRoot, "scripts/raw-swarm");
   const promptPath = resolve(
     swarmDirectory,
@@ -39,6 +48,8 @@ function main(args: readonly string[]): void {
     repoRoot,
     `scripts/raw-swarm/out/${scenarioId}-agent.log`,
   );
+  const invocationEventsPath = `${transcriptPath}.events.jsonl`;
+  const invocationLedgerPath = `${transcriptPath}.invocations.jsonl`;
   mkdirSync(dirname(transcriptPath), { recursive: true });
   mkdirSync(dirname(agentLogPath), { recursive: true });
 
@@ -51,13 +62,12 @@ function main(args: readonly string[]): void {
     "--scenario",
     scenarioId,
   ];
-  const agentLog = openSync(agentLogPath, "w");
-  const result = spawnSync(
-    "codex",
-    [
+  const result = await runCodexInvocation({
+    args: [
       "exec",
       "-C",
       repoRoot,
+      "--json",
       "--sandbox",
       "read-only",
       "--disable",
@@ -74,12 +84,27 @@ function main(args: readonly string[]): void {
       'mcp_servers.dnd.default_tools_approval_mode="approve"',
       readFileSync(promptPath, "utf8"),
     ],
-    { cwd: repoRoot, stdio: ["ignore", agentLog, agentLog] },
-  );
-  closeSync(agentLog);
-  if (result.error !== undefined) fail(result.error.message);
-  if (result.signal !== null) fail(`Player agent stopped by ${result.signal}`);
-  if (result.status !== 0) fail(`Player agent exited ${String(result.status)}`);
+    cwd: repoRoot,
+    env: process.env,
+    eventPath: invocationEventsPath,
+    logPath: agentLogPath,
+    ledgerPath: invocationLedgerPath,
+    phase: "player",
+    stagePlanReason:
+      "The freeplay MCP prototype owns one bounded player invocation.",
+    subject: { tag: "scenario", scenarioId },
+    gitSha: gitSha.right,
+    fallbackInvocationId: `${scenarioId}-freeplay-player`,
+    model: "gpt-5.6-sol",
+    reasoningEffort: "medium",
+    operation: { tag: "noOutput" },
+  });
+  if (result.tag === "failed") {
+    fail(`Player agent invocation failed: ${result.cause.reason}`);
+  }
 }
 
-main(process.argv.slice(2));
+main(process.argv.slice(2)).catch((error: unknown) => {
+  console.error(error);
+  process.exitCode = 1;
+});

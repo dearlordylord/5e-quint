@@ -57,7 +57,8 @@ inputs for later Scenario authoring.
 Use the public command from a clean revision and supply identities explicitly:
 
 ```sh
-mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
+export RAW_SWARM_EXPECTED_GIT_SHA=$(git rev-parse HEAD)
+mise exec -- pnpm raw-swarm:model:trial -- sdk-player \
   <scenario-id> \
   --execution-id <execution-id> \
   --evidence-set-id <evidence-set-id> \

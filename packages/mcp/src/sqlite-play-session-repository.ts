@@ -1,12 +1,11 @@
 import { DatabaseSync } from "node:sqlite";
 
-import { Either, Schema } from "effect";
+import { Either } from "effect";
 
 import { decodePlaySessionId } from "./play-session.ts";
 import {
   GUEST_INACTIVITY_RETENTION_MS,
   GUEST_PRESSURE_PROTECTION_MS,
-  PLAY_SESSION_RATE_LIMIT_WINDOW_MS,
   SAVED_INACTIVITY_RETENTION_MS,
 } from "./play-session-access.ts";
 import {
@@ -18,6 +17,7 @@ import {
   type PlaySessionRepositoryIssue,
   type RecoverablePlaySessionRecord,
 } from "./play-session-repository.ts";
+import { runRateAdmission, runSave } from "./sqlite-play-session-actions.ts";
 import { retireUnownedPlaySessionSchema } from "./sqlite-play-session-schema.ts";
 
 export function openSqlitePlaySessionRepository(
@@ -237,39 +237,14 @@ function createSqlitePlaySessionRepository(
     save(record, tenure, maximumSavedSessionsPerPrincipal) {
       if (closed) return Either.left(closedRepositoryIssue());
       try {
-        const result = save.run(
-          tenure.principalId,
-          tenure.lastActivityAtMs,
-          record.playSessionId,
-          record.revision,
-          tenure.principalId,
+        return runSave({
+          save,
+          select,
+          listSaved,
+          record,
+          tenure,
           maximumSavedSessionsPerPrincipal,
-        );
-        if (result.changes === 0) {
-          const current = select.get(record.playSessionId);
-          if (current === undefined) {
-            return Either.right({ tag: "revisionConflict" });
-          }
-          const decodedCurrent = decodeStoredPlaySessionRecord(
-            current,
-            record.playSessionId,
-          );
-          if (Either.isLeft(decodedCurrent)) {
-            return Either.left(decodedCurrent.left);
-          }
-          if (
-            decodedCurrent.right.revision !== record.revision ||
-            decodedCurrent.right.tenure.tag !== "guest"
-          ) {
-            return Either.right({ tag: "revisionConflict" });
-          }
-          const savedRecords = listSaved.all(tenure.principalId);
-          if (savedRecords.length >= maximumSavedSessionsPerPrincipal) {
-            return Either.right({ tag: "savedSessionQuotaExceeded" });
-          }
-          return Either.right({ tag: "revisionConflict" });
-        }
-        return Either.right({ tag: "saved" });
+        });
       } catch (cause) {
         return Either.left(unreadableRepositoryIssue(cause));
       }
@@ -341,52 +316,18 @@ function createSqlitePlaySessionRepository(
       if (closed) return Either.left(closedRepositoryIssue());
       try {
         database.exec("BEGIN IMMEDIATE");
-        pruneRateLimits.run(nowMs - PLAY_SESSION_RATE_LIMIT_WINDOW_MS);
-        const current = selectRateLimit.get(accessKeyDigest);
-        if (current === undefined) {
-          insertRateLimit.run(accessKeyDigest, nowMs);
-          database.exec("COMMIT");
-          return Either.right({ tag: "admitted" });
-        }
-        const decoded = Schema.decodeUnknownEither(
-          Schema.Struct({
-            window_started_at_ms: Schema.NonNegativeInt,
-            request_count: Schema.Positive,
-          }),
-        )(current);
-        if (Either.isLeft(decoded)) {
-          database.exec("ROLLBACK");
-          return Either.left(invalidStoredRecordIssue(decoded.left.message));
-        }
-        const expired =
-          nowMs >=
-          decoded.right.window_started_at_ms +
-            PLAY_SESSION_RATE_LIMIT_WINDOW_MS;
-        if (
-          !expired &&
-          decoded.right.request_count >= maximumRequestsPerWindow
-        ) {
-          database.exec("COMMIT");
-          return Either.right({
-            tag: "rateExceeded",
-            retryAfterSeconds: Math.max(
-              1,
-              Math.ceil(
-                (decoded.right.window_started_at_ms +
-                  PLAY_SESSION_RATE_LIMIT_WINDOW_MS -
-                  nowMs) /
-                  1_000,
-              ),
-            ),
-          });
-        }
-        updateRateLimit.run(
-          expired ? nowMs : decoded.right.window_started_at_ms,
-          expired ? 1 : decoded.right.request_count + 1,
+        return runRateAdmission({
+          database,
+          statements: {
+            select: selectRateLimit,
+            insert: insertRateLimit,
+            update: updateRateLimit,
+            prune: pruneRateLimits,
+          },
           accessKeyDigest,
-        );
-        database.exec("COMMIT");
-        return Either.right({ tag: "admitted" });
+          nowMs,
+          maximumRequestsPerWindow,
+        });
       } catch (cause) {
         try {
           database.exec("ROLLBACK");

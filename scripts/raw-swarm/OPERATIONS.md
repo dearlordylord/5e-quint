@@ -239,10 +239,15 @@ SDK-capability intents, iteration bounds, candidate count, one review milestone,
 and whether a reviewed RAW-unsupported result may be admitted.
 Start from
 [`scenario-campaign.example.json`](scenario-campaign.example.json), then run
-from a clean revision:
+from a clean revision through the bounded manual-trial lane. A durable
+operation uses `raw-swarm:model:campaign` and also supplies its accepted
+operation identity and UTC deadline as documented in [`README.md`](README.md):
 
 ```sh
-mise exec -- pnpm exec tsx scripts/raw-swarm/generate-scenario.ts \
+export RAW_SWARM_EXPECTED_GIT_SHA=$(git rev-parse HEAD)
+export RAW_SWARM_OPERATION_ID="campaign-$(date -u +%Y%m%d-%H%M%S)"
+export RAW_SWARM_OPERATION_DEADLINE_UTC="$(date -u -d '+8 hours' '+%Y-%m-%dT%H:%M:%SZ')"
+mise exec -- pnpm raw-swarm:model:campaign -- scenario-campaign \
   scripts/raw-swarm/scenario-campaign.example.json
 ```
 
@@ -291,7 +296,8 @@ unique output path for each invocation and one shared ledger path. The command
 also retains the replayed prompt, schema, and typed result beside that ledger:
 
 ```sh
-mise exec -- pnpm exec tsx scripts/raw-swarm/review-scenario.ts \
+export RAW_SWARM_EXPECTED_GIT_SHA=$(git rev-parse HEAD)
+mise exec -- pnpm raw-swarm:model:trial -- scenario-review \
   scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/generation-invocations-review-inputs/scenarioCompositeReview-MILESTONE.json \
   scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/replayed-milestone-review.json \
   scripts/raw-swarm/out/$CAMPAIGN_EVIDENCE/replayed-review-invocations.jsonl
@@ -320,13 +326,13 @@ later tactics. From a clean revision run:
 ```sh
 SCENARIO=synthetic-beacon-eight-round-defense
 
-mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-characters.ts \
+mise exec -- pnpm raw-swarm:model:trial -- scenario-character-authoring \
   "$SCENARIO"
 
 # Commit the retained character source before the clean-revision setup step.
 # If character composition is obstructed, retain that result and skip setup.
 
-mise exec -- pnpm exec tsx scripts/raw-swarm/author-scenario-setup.ts \
+mise exec -- pnpm raw-swarm:model:trial -- scenario-setup-authoring \
   "$SCENARIO"
 
 # Commit the retained setup source before recording play. The player runner,
@@ -622,20 +628,21 @@ SCENARIO=goblin-warrior-skeleton-tracer
 EXECUTION=goblin-skeleton-tracer-execution
 EVIDENCE=goblin-skeleton-tracer-evidence
 CAMPAIGN_EVIDENCE=<campaign-evidence-set-id>
+export RAW_SWARM_EXPECTED_GIT_SHA=$(git rev-parse HEAD)
 
-mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
+mise exec -- pnpm raw-swarm:model:trial -- sdk-player \
   "$SCENARIO" --execution-id "$EXECUTION" --evidence-set-id "$EVIDENCE"
 
 # The standard Codex worker environment does not currently provide the Linux
 # filesystem isolation required by the preferred profile. The runner proves
 # that capability at startup and otherwise requires this explicit fallback:
-mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
+mise exec -- pnpm raw-swarm:model:trial -- sdk-player \
   "$SCENARIO" --execution-id "$EXECUTION" --evidence-set-id "$EVIDENCE" \
   --instructional-isolation
 
 # Record another controlled Execution of the same immutable Scenario without
 # overwriting its earlier Evidence Set. Each identity is supplied explicitly.
-mise exec -- pnpm exec tsx scripts/raw-swarm/run-sdk-player.ts \
+mise exec -- pnpm raw-swarm:model:trial -- sdk-player \
   "$SCENARIO" --execution-id goblin-skeleton-tracer-execution-two \
   --evidence-set-id goblin-skeleton-tracer-evidence-two \
   --instructional-isolation
@@ -668,7 +675,7 @@ once written, so later review rounds cannot silently replace it.
 
 ```sh
 # Run and import the independent whole-trace review first.
-mise exec -- scripts/raw-swarm/run-raw-review.sh \
+mise exec -- pnpm raw-swarm:model:trial -- post-play-review \
   scripts/raw-swarm/reviews/sdk-player.prompt.txt \
   "scripts/raw-swarm/out/$EVIDENCE/evidence/sdk-calls.jsonl" \
   "scripts/raw-swarm/out/$EVIDENCE/review/sdk-review.json" \
@@ -831,7 +838,7 @@ declaration distribution remains in the deleted scratch directory.
 Run the focused executable gate with:
 
 ```sh
-mise exec -- pnpm check:raw-swarm-sdk-player
+mise exec -- pnpm check:raw-swarm-deterministic
 ```
 
 ## Run the existing MCP prototype
@@ -842,8 +849,9 @@ and agent-log paths from the same id:
 
 ```sh
 SCENARIO=freeplay-001-goblin-warrior-vs-skeleton
+export RAW_SWARM_EXPECTED_GIT_SHA=$(git rev-parse HEAD)
 
-mise exec -- pnpm exec tsx scripts/raw-swarm/run-freeplay.ts "$SCENARIO"
+mise exec -- pnpm raw-swarm:model:trial -- freeplay "$SCENARIO"
 
 mise exec -- pnpm exec tsx scripts/raw-swarm/replay-freeplay.ts \
   "scripts/raw-swarm/out/$SCENARIO-transcript.jsonl"
@@ -864,7 +872,7 @@ tested code. Replay also requires that exact revision to be checked out.
 Run the committed adversarial review and import it as one review round:
 
 ```sh
-mise exec -- scripts/raw-swarm/run-raw-review.sh \
+mise exec -- pnpm raw-swarm:model:trial -- post-play-review \
   "scripts/raw-swarm/reviews/$SCENARIO.prompt.txt" \
   "scripts/raw-swarm/out/$SCENARIO-transcript.jsonl" \
   "scripts/raw-swarm/out/$SCENARIO-review.json" \
@@ -904,7 +912,8 @@ generic sequencing DSL. Add another player experiment like this:
    `freeplay/<scenario-id>.prompt.txt`. Describe the setup and player/DM goal;
    do not prescribe internal SDK calls or declare the outcome the agent must
    obtain.
-3. Run `run-freeplay.ts <scenario-id>`, replay the transcript, and ingest it.
+3. Run `pnpm raw-swarm:model:trial -- freeplay <scenario-id>`, replay the
+   transcript, and ingest it.
 4. Add `reviews/<scenario-id>.prompt.txt` that tries to falsify the whole trace,
    then run and import the review.
 5. Inspect the summary and unlinked bug observations. Classify every non-pass as

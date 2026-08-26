@@ -218,6 +218,44 @@ describe("SDK player invocation lifecycle", () => {
     }
   });
 
+  test("waits for asynchronous retention before removing temporary roots", async () => {
+    const root = mkdtempSync(resolve(tmpdir(), "dnd-player-async-retention-"));
+    const scratch = resolve(root, "scratch");
+    const trusted = resolve(root, "trusted");
+    const codexHome = resolve(root, "codex-home");
+    const output = resolve(root, "output");
+    for (const directory of [scratch, trusted, codexHome, output])
+      mkdirSync(directory);
+    const retentionComplete = Promise.withResolvers<unknown>();
+    try {
+      const finalization = await finalizeSdkPlayerExecution({
+        supervisorProcess: undefined,
+        detached: false,
+        directories: {
+          scratch,
+          trusted,
+          codexHome,
+          output,
+        },
+        onReaped: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 25));
+          try {
+            writeFileSync(resolve(trusted, "retained-after-delay"), "retained");
+            retentionComplete.resolve(undefined);
+          } catch (error: unknown) {
+            retentionComplete.resolve(error);
+          }
+        },
+      });
+      const retentionError = await retentionComplete.promise;
+      expect(finalization).toMatchObject({ tag: "reaped" });
+      expect(retentionError).toBeUndefined();
+      expect(existsSync(trusted)).toBe(false);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test("preserves diagnostic roots when evidence retention fails", async () => {
     const root = mkdtempSync(
       resolve(tmpdir(), "dnd-player-retention-failure-"),

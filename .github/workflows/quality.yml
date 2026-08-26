@@ -30,7 +30,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 22
+          node-version: 22.19.0
           cache: pnpm
 
       - name: Install mise toolchain
@@ -39,7 +39,7 @@ jobs:
           version: 2026.8.10
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --strict-peer-dependencies
 
       - name: Install ripgrep
         env:
@@ -93,6 +93,12 @@ jobs:
           installed_version="$("$install_dir/bin/dhall-to-json" --version)"
           test "$installed_version" = "$dhall_json_version"
           echo "dhall-to-json $installed_version"
+
+      - name: Restrict tunnel device for deterministic verification
+        run: |
+          if [[ -e /dev/net/tun ]]; then
+            sudo chmod 000 /dev/net/tun
+          fi
 
       - name: Run workspace quality gate
         run: pnpm quality
