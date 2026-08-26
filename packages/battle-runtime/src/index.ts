@@ -113,6 +113,12 @@ export {
   statBlockExecutionSnapshot,
 } from "./stat-block-execution.ts";
 
+export {
+  projectAuthoredStatBlock,
+  type AuthoredStatBlockProjection,
+  type BattleStatBlockProjectionFailure,
+} from "./stat-block-authored-projection.ts";
+
 export type {
   CharacterZeroHpLifecycleInit,
   ZeroHpLifecycle,

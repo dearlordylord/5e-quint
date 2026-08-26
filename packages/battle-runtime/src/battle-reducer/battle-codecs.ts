@@ -5537,6 +5537,7 @@ const StatBlockResourcePoolStateSchema = Schema.Union(
 const StatBlockAttackProcedureSchema = Schema.Struct({
   kind: Schema.Literal("attack"),
   section: Schema.Literal("actions", "legendaryActions"),
+  procedureOrdinal: Schema.Number.pipe(Schema.int()),
   attack: CreatureAttackRollMechanicsSchema.pipe(
     Schema.filter(creatureAttackRollMechanicsAreSupported, {
       message: () => "Unsupported Stat Block attack procedure mechanics.",
@@ -5557,12 +5558,14 @@ const StatBlockProcedureSchema = Schema.Union(
   StatBlockAttackProcedureSchema,
   Schema.Struct({
     kind: Schema.Literal("multiattack"),
+    procedureOrdinal: Schema.Number.pipe(Schema.int()),
     dispatchProcedureRefs: Schema.NonEmptyArray(
       BattleStatBlockProcedureExecutionRef,
     ),
   }),
   Schema.Struct({
     kind: Schema.Literal("bonusActionOption"),
+    procedureOrdinal: Schema.Number.pipe(Schema.int()),
     standardActions: Schema.NonEmptyArray(
       Schema.Literal(...SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
     ),

@@ -24,6 +24,7 @@ import {
   goblinId,
   movementFill,
   monsterResourceStatBlock,
+  projectedStatBlockRuntimeSource,
   requireHole,
   resolveBattleSubject,
   snapshotBattle,
@@ -121,7 +122,7 @@ function encodedStatBlockSnapshots() {
   const admission = statBlockExecutionAdmissionCohort(
     battleId("gh227-codec-stat-block"),
     combatantId("gh227-codec-stat-block"),
-    [monsterResourceStatBlock()],
+    [projectedStatBlockRuntimeSource(monsterResourceStatBlock())],
     battleExecutionScopeOrdinal(0),
   ).admissions[0];
   if (admission === undefined) {
