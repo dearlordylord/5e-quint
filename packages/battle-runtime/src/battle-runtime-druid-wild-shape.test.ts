@@ -2532,6 +2532,38 @@ test("rejects decoded synthetic Wild Shape mechanics outside the admitted suppor
   ).toBeNull();
 });
 
+test("filters unsupported Wild Shape procedure forms without dropping later supported forms", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const unsupportedForm = syntheticActionSectionForm();
+  const projection = projectAuthoredStatBlock(unsupportedForm);
+  if (Either.isRight(projection)) {
+    throw new Error(
+      "Expected the synthetic action-section form to be unsupported.",
+    );
+  }
+  expect(projection.left.reason).toBe("unsupportedProcedureBinding");
+  if (projection.left.reason !== "unsupportedProcedureBinding") {
+    throw new Error("Expected accumulated unsupported procedure bindings.");
+  }
+  expect(projection.left.issues.length).toBeGreaterThan(1);
+
+  const result = battleAvailableDruidWildShapeKnownForms({
+    profile,
+    forms: [unsupportedForm, statBlockCatalog.requireStatBlock(ridingHorseId)],
+  });
+
+  expect(Either.isRight(result)).toBe(true);
+  if (Either.isRight(result)) {
+    expect(result.right.map((form) => form.id)).toEqual([ridingHorseId]);
+  }
+});
+
 test("rejects duplicate supplied Wild Shape form records before battle initialization", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),

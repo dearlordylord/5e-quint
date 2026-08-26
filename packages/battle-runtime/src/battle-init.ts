@@ -42,6 +42,7 @@ import type { BattleStatBlockPresentationSource } from "./battle-runtime-context
 import {
   battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlock,
+  type AuthoredStatBlockProjection,
   type BattleStatBlockProjectionFailure,
 } from "./stat-block-authored-projection.ts";
 import type {
@@ -176,9 +177,30 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
     if (!statBlockTraitsAreSupported(form.statBlock.traits)) {
       continue;
     }
-    const projected = battleDruidWildShapeFormProjectionStatBlock(form);
-    if (Either.isLeft(projected)) return Either.left(projected.left);
-    parsed.push(battleDruidWildShapeKnownForm(projected.right));
+    const projected = projectAuthoredStatBlock(form);
+    if (Either.isLeft(projected)) {
+      const disposition = Match.value(projected.left.reason).pipe(
+        Match.when("unsupportedProcedureBinding", () => "skip" as const),
+        Match.when("nonLiteralSize", () => "fail" as const),
+        Match.when("nonLiteralArmorClass", () => "fail" as const),
+        Match.when("nonLiteralHitPoints", () => "fail" as const),
+        Match.when("nonLiteralSpeed", () => "fail" as const),
+        Match.when("invalidLegendaryActionUses", () => "fail" as const),
+        Match.exhaustive,
+      );
+      if (disposition === "skip") {
+        continue;
+      }
+      return Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message: projected.left.reason,
+      });
+    }
+    const formProjection = battleDruidWildShapeFormProjectionStatBlock(
+      projected.right,
+    );
+    if (Either.isLeft(formProjection)) return Either.left(formProjection.left);
+    parsed.push(battleDruidWildShapeKnownForm(formProjection.right));
   }
   return Either.right(parsed);
 }
@@ -192,41 +214,32 @@ function battleDruidWildShapeKnownForm(
 }
 
 function battleDruidWildShapeFormProjectionStatBlock(
-  form: StatBlockRecord,
+  projection: AuthoredStatBlockProjection,
 ): Either.Either<
   BattleDruidWildShapeKnownFormProjection,
   BattleDruidWildShapeKnownFormIssue
 > {
-  const projected = projectAuthoredStatBlock(form);
-  if (Either.isLeft(projected)) {
-    return Either.left({
-      tag: "battleDruidWildShapeKnownFormIssue",
-      message: projected.left.reason,
-    });
-  }
-  const armorClass = projected.right.runtime.statBlock.ac;
+  const armorClass = projection.runtime.statBlock.ac;
   if (armorClass.kind !== "literal") {
     return Either.left({
       tag: "battleDruidWildShapeKnownFormIssue",
       message: "Druid Wild Shape battle forms require literal Armor Class.",
     });
   }
-  const creatureSize = projected.right.runtime.statBlock.size;
+  const creatureSize = projection.runtime.statBlock.size;
   if (typeof creatureSize !== "string") {
     return Either.left({
       tag: "battleDruidWildShapeKnownFormIssue",
       message: "Druid Wild Shape battle forms require literal Size.",
     });
   }
-  const speeds = battleDruidWildShapeFormProjectionSpeeds(
-    projected.right.runtime,
-  );
+  const speeds = battleDruidWildShapeFormProjectionSpeeds(projection.runtime);
   if (Either.isLeft(speeds)) return Either.left(speeds.left);
   return Either.right({
-    ...projected.right.runtime,
-    presentation: projected.right.presentation,
+    ...projection.runtime,
+    presentation: projection.presentation,
     statBlock: {
-      ...projected.right.runtime.statBlock,
+      ...projection.runtime.statBlock,
       ac: armorClass,
       size: creatureSize,
       speeds: speeds.right,
