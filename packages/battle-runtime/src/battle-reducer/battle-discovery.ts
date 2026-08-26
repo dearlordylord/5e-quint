@@ -155,7 +155,7 @@ import {
 import {
   attackActionOptionIsOrdinaryAttackAction,
   attackSubjectPart,
-  statBlockMultiattackDispatchPlanForActor,
+  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
   statBlockAttackProcedureSection,
 } from "./statblock.ts";
 import type {
@@ -1734,15 +1734,16 @@ export function statBlockMultiattackActs(
   }
   const origin = actor.origin;
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
-    const dispatchPlan = statBlockMultiattackDispatchPlanForActor(
-      actor,
-      binding,
-    );
+    const effectiveDispatchProcedureRefs =
+      statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+        actor,
+        binding,
+      );
     if (
       !statBlockMultiattackResourcesAvailable(
         origin.execution,
         binding,
-        dispatchPlan.effectiveProcedureRefs,
+        effectiveDispatchProcedureRefs,
       )
     ) {
       return [];

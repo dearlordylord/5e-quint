@@ -160,7 +160,7 @@ import {
 import {
   spendStatBlockAttackResources,
   statBlockAttackProcedureSection,
-  statBlockMultiattackDispatchPlanForActor,
+  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
   updateStatBlockActorResources,
 } from "./statblock.ts";
 import {
@@ -994,15 +994,16 @@ export function resolveMultiattack(
   const actor = input.actor;
   const origin = actor.origin;
   const multiattackBinding = input.multiattackBinding;
-  const dispatchPlan = statBlockMultiattackDispatchPlanForActor(
-    actor,
-    multiattackBinding,
-  );
+  const [consumedProcedureRef, ...pendingProcedureRefs] =
+    statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+      actor,
+      multiattackBinding,
+    );
   if (
     !statBlockMultiattackResourcesAvailable(
       origin.execution,
       multiattackBinding,
-      dispatchPlan.effectiveProcedureRefs,
+      [consumedProcedureRef, ...pendingProcedureRefs],
     )
   ) {
     return invalidResult(
@@ -1025,7 +1026,7 @@ export function resolveMultiattack(
       ...spent.right,
       actionResources: [
         ...spent.right.actionResources,
-        ...dispatchPlan.pendingProcedureRefs.map((dispatch) => ({
+        ...pendingProcedureRefs.map((dispatch) => ({
           kind: "action" as const,
           source: "statBlockMultiattack" as const,
           sourceOwnerId: input.subject.actorId,
@@ -1041,7 +1042,7 @@ export function resolveMultiattack(
   const nextExecution = spendStatBlockMultiattackActivationResources(
     origin.execution,
     multiattackBinding,
-    dispatchPlan.consumedProcedureRef,
+    consumedProcedureRef,
   );
   const nextState = {
     ...nextStateWithPendingDispatches,

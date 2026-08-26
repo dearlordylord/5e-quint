@@ -1,5 +1,9 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
-import { resourceCount, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import {
+  NonNegativeInteger,
+  resourceCount,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import fc from "fast-check";
@@ -76,6 +80,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   BattleStatBlockProcedureExecutionRef,
+  battleStatBlockProcedureExecutionRef,
   spellId,
   type BattleResourcePoolExecutionRef,
   type CombatantId,
@@ -88,7 +93,7 @@ import {
   type StatBlockMultiattackProcedure,
   type StatBlockProcedureBindingFor,
 } from "./stat-block-execution-state.ts";
-import { statBlockMultiattackDispatchPlanForActor } from "./battle-reducer/statblock.ts";
+import { statBlockMultiattackEffectiveDispatchProcedureRefsForActor } from "./battle-reducer/statblock.ts";
 import {
   creatureActionSectionIsSupported,
   creatureNamedAttackRollIsSupported,
@@ -2100,12 +2105,9 @@ describe("battle runtime: Stat Block actions", () => {
     if (ownPoolRef === undefined || dispatchPoolRef === undefined) {
       throw new Error("Expected resource-backed attack bindings.");
     }
-    const multiattackProcedureRef = BattleStatBlockProcedureExecutionRef.make(
-      JSON.stringify({
-        scopeRef: actor.origin.execution.scopeRef,
-        kind: "procedure",
-        ordinal: 99,
-      }),
+    const multiattackProcedureRef = battleStatBlockProcedureExecutionRef(
+      actor.origin.execution.scopeRef,
+      NonNegativeInteger(99),
     );
 
     fc.assert(
@@ -2138,10 +2140,13 @@ describe("battle runtime: Stat Block actions", () => {
                 ],
               }
             : actor;
-          const dispatchPlan = statBlockMultiattackDispatchPlanForActor(
-            actorForPlan,
-            binding,
-          );
+          const effectiveDispatchProcedureRefs =
+            statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+              actorForPlan,
+              binding,
+            );
+          const [consumedProcedureRef, ...pendingProcedureRefs] =
+            effectiveDispatchProcedureRefs;
           const relevantResourcePoolRefs = shared
             ? [dispatchPoolRef]
             : [ownPoolRef, dispatchPoolRef];
@@ -2168,17 +2173,17 @@ describe("battle runtime: Stat Block actions", () => {
             ? availableUses >= 1 + effectiveDispatchCount
             : availableUses >= 1 && availableUses >= effectiveDispatchCount;
 
-          expect(dispatchPlan.effectiveProcedureRefs).toHaveLength(
+          expect(effectiveDispatchProcedureRefs).toHaveLength(
             effectiveDispatchCount,
           );
-          expect(dispatchPlan.pendingProcedureRefs).toHaveLength(
+          expect(pendingProcedureRefs).toHaveLength(
             slowed ? 0 : dispatchCount - 1,
           );
           expect(
             statBlockMultiattackResourcesAvailable(
               execution,
               binding,
-              dispatchPlan.effectiveProcedureRefs,
+              effectiveDispatchProcedureRefs,
             ),
           ).toBe(expectedAvailable);
 
@@ -2188,7 +2193,7 @@ describe("battle runtime: Stat Block actions", () => {
           const spent = spendStatBlockMultiattackActivationResources(
             execution,
             binding,
-            dispatchPlan.consumedProcedureRef,
+            consumedProcedureRef,
           );
           const bindingPool = spent.resourcePools.find(
             (pool) =>
