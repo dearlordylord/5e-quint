@@ -53,12 +53,20 @@ disabled_checks="$(ssh "dokku@$dokku_host" checks:report "$dokku_app" --checks-d
   echo "$dokku_app must stop its old web process before starting a release" >&2
   exit 65
 }
-configured_dockerfile_path="$(
+dokku_not_deployed_report=" !     not deployed"
+configured_dockerfile_path=""
+if ! configured_dockerfile_path="$(
   ssh "dokku@$dokku_host" \
     builder-dockerfile:report \
     "$dokku_app" \
-    --builder-dockerfile-dockerfile-path
-)"
+    --builder-dockerfile-dockerfile-path 2>&1
+)"; then
+  [[ "$configured_dockerfile_path" == "$dokku_not_deployed_report" ]] || {
+    echo "$configured_dockerfile_path" >&2
+    exit 69
+  }
+  configured_dockerfile_path=""
+fi
 [[ -z "$configured_dockerfile_path" ]] || {
   echo "$dokku_app must not override the generated image deployment Dockerfile" >&2
   echo "Run pnpm configure:mcp:dokku-memory to clear the stale override" >&2

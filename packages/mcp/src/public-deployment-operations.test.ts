@@ -51,6 +51,7 @@ describe("public MCP deployment operations", () => {
     expect(deployDokku).toContain("git:load-image");
     expect(deployDokku).toContain("rollback_image");
     expect(deployDokku).toContain("docker image tag");
+    expect(deployDokku).toContain("dokku_not_deployed_report");
     expect(deployDokku).not.toContain("git push");
     expect(memorySafety).toContain("fallocate -l 2G");
     expect(memorySafety).toContain('checks:disable "$app" web');
