@@ -99,6 +99,9 @@ consumption and closure are centralized in
 The authored Stat Block lookup needed for familiar reappearance is owned by
 `find-familiar-stat-block-catalog.ts`; admission and presentation consume this
 narrow capability, while Battle State retains only projected execution facts.
+Druid Wild Shape follows the same boundary: the authored form projection stays
+at admission/presentation, and source-free known-form facts live in
+`druid-wild-shape-known-form-runtime.ts` for execution consumers.
 
 Post-cast persistent spatial spell procedures are owned by
 `battle-reducer/persistent-spatial-spell-procedures.ts`. It owns the admitted

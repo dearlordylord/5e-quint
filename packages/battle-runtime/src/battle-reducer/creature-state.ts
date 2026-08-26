@@ -81,7 +81,7 @@ import type {
   CharacterBattleRuntimeContext,
 } from "../battle-runtime-context.ts";
 import type { CharacterBattleClassLevels } from "../character-class-level.ts";
-import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-runtime.ts";
 import { characterExecutionFromUnits } from "../character-execution-admission.ts";
 import {
   parseSupportedUnitFeatureProfile,

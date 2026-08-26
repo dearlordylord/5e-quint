@@ -223,7 +223,7 @@ import type {
   CharacterBattleLoadoutRef,
   HeldWeaponLoadoutSlot,
 } from "./character-creature-execution-facts.ts";
-import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
 import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-state.ts";
 import type {

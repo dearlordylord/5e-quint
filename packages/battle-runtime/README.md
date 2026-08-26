@@ -51,6 +51,9 @@ The registry is an operation dependency, never Battle State or session state.
 Find Familiar's authored Stat Block lookup is owned by
 `find-familiar-stat-block-catalog.ts` and is threaded only through admission
 and presentation; it does not enter Battle State.
+Druid Wild Shape keeps its authored presentation projection in
+`druid-wild-shape-known-form-execution.ts`, while the source-free known-form
+facts used by execution are owned by `druid-wild-shape-known-form-runtime.ts`.
 
 Canonical mechanical vocabulary may still come from Surface or shared owners.
 Do not duplicate abilities, damage types, dice, ranges, or durations merely to
