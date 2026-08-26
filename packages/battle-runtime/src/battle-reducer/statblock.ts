@@ -16,6 +16,7 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
+  type BattleCreatureState,
   type BattleState,
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
@@ -62,16 +63,25 @@ export function statBlockAttackProcedureSection(
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockAttackSection | null {
   const actor = state.combatants.get(actorId);
-  const execution =
-    actor?.origin.kind === "statBlock"
-      ? actor.origin.execution
-      : activeDruidWildShape(actor)?.admission.execution;
+  const execution = statBlockExecutionForActor(actor);
   if (execution === undefined) return null;
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  return binding?.procedure.kind === "attack" ||
-    binding?.procedure.kind === "unarmedStrike"
-    ? binding.procedure.section
-    : null;
+  return statBlockAttackBindingSection(binding);
+}
+
+function statBlockExecutionForActor(actor: BattleCreatureState | undefined) {
+  if (actor?.origin.kind === "statBlock") return actor.origin.execution;
+  return activeDruidWildShape(actor)?.admission.execution;
+}
+
+function statBlockAttackBindingSection(
+  binding: ReturnType<typeof statBlockProcedureBinding>,
+): StatBlockAttackSection | null {
+  if (binding?.procedure.kind === "attack") return binding.procedure.section;
+  if (binding?.procedure.kind === "unarmedStrike") {
+    return binding.procedure.section;
+  }
+  return null;
 }
 
 export function spendStatBlockAttackResources(input: {

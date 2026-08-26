@@ -99,6 +99,7 @@ import {
   BattleStatBlockProcedureExecutionRef,
   BattleProcedureExecutionRef,
   BattleProcedureExecutionCursor,
+  type BattleExecutionScopeRef,
   BattleExecutionScopeCursor,
   battleProcedureExecutionRefBelongsToScope,
   battleProcedureExecutionRefOrdinalIsBefore,
@@ -5629,15 +5630,19 @@ export const StatBlockExecutionSnapshotSchema = Schema.Struct({
   }),
 );
 
-function statBlockExecutionSnapshotGraphIsValid(snapshot: {
-  readonly scopeRef: BattleStatBlockExecutionScopeRef;
-  readonly procedureBindings: readonly Schema.Schema.Type<
-    typeof StatBlockProcedureBindingSnapshotSchema
-  >[];
-  readonly resourcePools: readonly Schema.Schema.Type<
-    typeof StatBlockResourcePoolStateSchema
-  >[];
-}): boolean {
+type EncodedStatBlockExecutionSnapshot = Schema.Schema.Type<
+  typeof StatBlockExecutionSnapshotSchema
+>;
+type EncodedStatBlockProcedureBinding = Schema.Schema.Type<
+  typeof StatBlockProcedureBindingSnapshotSchema
+>;
+type EncodedStatBlockResourcePool = Schema.Schema.Type<
+  typeof StatBlockResourcePoolStateSchema
+>;
+
+function statBlockExecutionSnapshotGraphIsValid(
+  snapshot: EncodedStatBlockExecutionSnapshot,
+): boolean {
   const procedureRefs = snapshot.procedureBindings.map(
     (binding) => binding.procedureRef,
   );
@@ -5694,67 +5699,165 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
   );
   const legendaryPool = legendaryPools[0];
   return (
-    battleStatBlockExecutionScopeRefIsWellFormed(snapshot.scopeRef) &&
-    procedureRefs.every((ref) =>
-      battleProcedureExecutionRefBelongsToScope(ref, snapshot.scopeRef),
-    ) &&
-    resourcePoolRefs.every((ref) =>
-      battleResourcePoolExecutionRefBelongsToScope(ref, snapshot.scopeRef),
-    ) &&
-    new Set(procedureRefs).size === procedureRefs.length &&
-    new Set(procedureOrdinalKeys).size === procedureOrdinalKeys.length &&
-    resourcePoolRefSet.size === resourcePoolRefs.length &&
+    statBlockExecutionSnapshotRefsAreValid({
+      snapshot,
+      procedureRefs,
+      procedureOrdinalKeys,
+      resourcePoolRefs,
+      resourcePoolRefSet,
+    }) &&
     snapshot.resourcePools.every((pool) =>
       resourcePoolStateGraphIsValid(pool, bindingCountByPoolRef),
     ) &&
-    snapshot.procedureBindings.every((binding) => {
-      const pools = binding.resourcePoolRefs.flatMap((ref) => {
-        const pool = resourcePoolsByRef.get(ref);
-        return pool === undefined ? [] : [pool];
-      });
-      const legendaryPoolCount = pools.filter(
-        (pool) => pool.kind === "legendaryActions",
-      ).length;
-      const limitedUsePoolCount = pools.length - legendaryPoolCount;
-      const procedurePoolShapeIsValid =
-        binding.procedure.kind === "unarmedStrike" ||
-        binding.procedure.kind === "unsupported"
-          ? pools.length === 0
-          : binding.procedure.kind === "multiattack"
-            ? legendaryPoolCount === 0
-            : binding.procedure.kind === "bonusActionOption" ||
-                (binding.procedure.kind === "attack" &&
-                  binding.procedure.section === "actions")
-              ? legendaryPoolCount === 0
-              : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
-      const legendaryPoolOwnershipIsValid =
-        binding.procedure.kind !== "attack" ||
-        binding.procedure.section !== "legendaryActions" ||
-        (legendaryPool !== undefined &&
-          binding.resourcePoolRefs.includes(legendaryPool.resourcePoolRef));
-      return (
-        new Set(binding.resourcePoolRefs).size ===
-          binding.resourcePoolRefs.length &&
-        pools.length === binding.resourcePoolRefs.length &&
-        procedurePoolShapeIsValid &&
-        legendaryPoolOwnershipIsValid &&
-        (binding.procedure.kind !== "multiattack" ||
-          (binding.procedure.dispatchProcedureRefs.length > 0 &&
-            binding.procedure.dispatchProcedureRefs.every((ref) =>
-              actionAttackRefs.has(ref),
-            ) &&
-            multiattackDispatchesRespectLimitedUse(
-              binding.procedure.dispatchProcedureRefs,
-              limitedUseActionAttackRefs,
-            ))) &&
-        (binding.procedure.kind !== "bonusActionOption" ||
-          binding.procedure.standardActions.length > 0)
-      );
-    }) &&
-    (legendaryBindings.length === 0
-      ? legendaryPools.length === 0
-      : legendaryPools.length === 1)
+    snapshot.procedureBindings.every((binding) =>
+      statBlockProcedureBindingGraphIsValid({
+        binding,
+        resourcePoolsByRef,
+        legendaryPool,
+        actionAttackRefs,
+        limitedUseActionAttackRefs,
+      }),
+    ) &&
+    legendaryProcedurePoolCardinalityIsValid(
+      legendaryBindings.length,
+      legendaryPools.length,
+    )
   );
+}
+
+function statBlockExecutionSnapshotRefsAreValid(input: {
+  readonly snapshot: EncodedStatBlockExecutionSnapshot;
+  readonly procedureRefs: readonly BattleStatBlockProcedureExecutionRef[];
+  readonly procedureOrdinalKeys: readonly string[];
+  readonly resourcePoolRefs: readonly BattleResourcePoolExecutionRef[];
+  readonly resourcePoolRefSet: ReadonlySet<BattleResourcePoolExecutionRef>;
+}): boolean {
+  return (
+    battleStatBlockExecutionScopeRefIsWellFormed(input.snapshot.scopeRef) &&
+    input.procedureRefs.every((ref) =>
+      battleProcedureExecutionRefBelongsToScope(ref, input.snapshot.scopeRef),
+    ) &&
+    input.resourcePoolRefs.every((ref) =>
+      battleResourcePoolExecutionRefBelongsToScope(
+        ref,
+        input.snapshot.scopeRef,
+      ),
+    ) &&
+    new Set(input.procedureRefs).size === input.procedureRefs.length &&
+    new Set(input.procedureOrdinalKeys).size ===
+      input.procedureOrdinalKeys.length &&
+    input.resourcePoolRefSet.size === input.resourcePoolRefs.length
+  );
+}
+
+function statBlockProcedureBindingGraphIsValid(input: {
+  readonly binding: EncodedStatBlockProcedureBinding;
+  readonly resourcePoolsByRef: ReadonlyMap<
+    BattleResourcePoolExecutionRef,
+    EncodedStatBlockResourcePool
+  >;
+  readonly legendaryPool: EncodedStatBlockResourcePool | undefined;
+  readonly actionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
+  readonly limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>;
+}): boolean {
+  const pools = input.binding.resourcePoolRefs.flatMap((ref) => {
+    const pool = input.resourcePoolsByRef.get(ref);
+    return pool === undefined ? [] : [pool];
+  });
+  return (
+    new Set(input.binding.resourcePoolRefs).size ===
+      input.binding.resourcePoolRefs.length &&
+    pools.length === input.binding.resourcePoolRefs.length &&
+    statBlockProcedurePoolShapeIsValid(input.binding, pools) &&
+    legendaryProcedurePoolOwnershipIsValid(
+      input.binding,
+      input.legendaryPool,
+    ) &&
+    multiattackBindingDispatchIsValid(
+      input.binding,
+      input.actionAttackRefs,
+      input.limitedUseActionAttackRefs,
+    ) &&
+    bonusActionOptionBindingIsNonempty(input.binding)
+  );
+}
+
+function statBlockProcedurePoolShapeIsValid(
+  binding: EncodedStatBlockProcedureBinding,
+  pools: readonly EncodedStatBlockResourcePool[],
+): boolean {
+  const legendaryPoolCount = pools.filter(
+    (pool) => pool.kind === "legendaryActions",
+  ).length;
+  const limitedUsePoolCount = pools.length - legendaryPoolCount;
+  if (
+    binding.procedure.kind === "unarmedStrike" ||
+    binding.procedure.kind === "unsupported"
+  ) {
+    return pools.length === 0;
+  }
+  if (binding.procedure.kind === "multiattack") {
+    return legendaryPoolCount === 0;
+  }
+  if (
+    binding.procedure.kind === "bonusActionOption" ||
+    (binding.procedure.kind === "attack" &&
+      binding.procedure.section === "actions")
+  ) {
+    return legendaryPoolCount === 0;
+  }
+  return legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
+}
+
+function legendaryProcedurePoolOwnershipIsValid(
+  binding: EncodedStatBlockProcedureBinding,
+  legendaryPool: EncodedStatBlockResourcePool | undefined,
+): boolean {
+  if (
+    binding.procedure.kind !== "attack" ||
+    binding.procedure.section !== "legendaryActions"
+  ) {
+    return true;
+  }
+  return (
+    legendaryPool !== undefined &&
+    binding.resourcePoolRefs.includes(legendaryPool.resourcePoolRef)
+  );
+}
+
+function multiattackBindingDispatchIsValid(
+  binding: EncodedStatBlockProcedureBinding,
+  actionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>,
+  limitedUseActionAttackRefs: ReadonlySet<BattleStatBlockProcedureExecutionRef>,
+): boolean {
+  if (binding.procedure.kind !== "multiattack") return true;
+  const dispatchRefs = binding.procedure.dispatchProcedureRefs;
+  return (
+    dispatchRefs.length > 0 &&
+    dispatchRefs.every((ref) => actionAttackRefs.has(ref)) &&
+    multiattackDispatchesRespectLimitedUse(
+      dispatchRefs,
+      limitedUseActionAttackRefs,
+    )
+  );
+}
+
+function bonusActionOptionBindingIsNonempty(
+  binding: EncodedStatBlockProcedureBinding,
+): boolean {
+  return (
+    binding.procedure.kind !== "bonusActionOption" ||
+    binding.procedure.standardActions.length > 0
+  );
+}
+
+function legendaryProcedurePoolCardinalityIsValid(
+  legendaryBindingCount: number,
+  legendaryPoolCount: number,
+): boolean {
+  return legendaryBindingCount === 0
+    ? legendaryPoolCount === 0
+    : legendaryPoolCount === 1;
 }
 
 function runtimeProcedureOrdinalKey(
@@ -5773,19 +5876,24 @@ function runtimeProcedureOrdinalKey(
 }
 
 function resourcePoolStateGraphIsValid(
-  pool: Schema.Schema.Type<typeof StatBlockResourcePoolStateSchema>,
+  pool: EncodedStatBlockResourcePool,
   bindingCountByPoolRef: ReadonlyMap<BattleResourcePoolExecutionRef, number>,
 ): boolean {
   const count = bindingCountByPoolRef.get(pool.resourcePoolRef) ?? 0;
-  const usageBoundsAreValid =
-    pool.kind !== "daily" && pool.kind !== "legendaryActions"
-      ? true
-      : Number(pool.usesMax) >= 1 &&
-        Number(pool.usesRemaining) >= 0 &&
-        Number(pool.usesRemaining) <= Number(pool.usesMax);
-  if (!usageBoundsAreValid) return false;
+  if (!resourcePoolUsageBoundsAreValid(pool)) return false;
   if (pool.kind === "legendaryActions") return true;
   return pool.ownership === "shared" ? count >= 1 : count === 1;
+}
+
+function resourcePoolUsageBoundsAreValid(
+  pool: EncodedStatBlockResourcePool,
+): boolean {
+  if (pool.kind !== "daily" && pool.kind !== "legendaryActions") return true;
+  return (
+    Number(pool.usesMax) >= 1 &&
+    Number(pool.usesRemaining) >= 0 &&
+    Number(pool.usesRemaining) <= Number(pool.usesMax)
+  );
 }
 
 function multiattackDispatchesRespectLimitedUse(
@@ -5933,6 +6041,10 @@ type BattleCreatureSnapshotInvariantShapeSchema = Schema.Struct<
 
 type BattleCreatureSnapshotInvariantInput =
   Schema.Schema.Type<BattleCreatureSnapshotInvariantShapeSchema>;
+type EncodedCharacterBattleCreatureOrigin = Extract<
+  BattleCreatureSnapshotInvariantInput["origin"],
+  { readonly kind: "character" }
+>;
 
 function battleCreatureSnapshotInvariantsHold(
   snapshot: BattleCreatureSnapshotInvariantInput,
@@ -5944,7 +6056,16 @@ function battleCreatureSnapshotInvariantsHold(
       snapshot.combatantId,
     );
   }
-  const characterOrigin = snapshot.origin;
+  return characterBattleCreatureSnapshotInvariantsHold(
+    snapshot.origin,
+    snapshot.combatantId,
+  );
+}
+
+function characterBattleCreatureSnapshotInvariantsHold(
+  characterOrigin: EncodedCharacterBattleCreatureOrigin,
+  combatantId: CombatantId,
+): boolean {
   const attackProcedureRefs = [
     characterOrigin.attackExecution.attackProcedureRef,
     characterOrigin.attackExecution.unarmedStrikeProcedureRef,
@@ -5953,67 +6074,87 @@ function battleCreatureSnapshotInvariantsHold(
   return (
     battleCharacterExecutionScopeRefBelongsToCombatant(
       characterOrigin.execution.scopeRef,
-      snapshot.combatantId,
+      combatantId,
     ) &&
-    characterOrigin.execution.procedureBindings.every((binding) =>
-      battleProcedureExecutionRefOrdinalIsBefore(
-        binding.procedureRef,
-        characterOrigin.execution.scopeRef,
-        characterOrigin.execution.nextProcedureOrdinal,
-      ),
-    ) &&
-    characterOrigin.execution.procedureBindings.length ===
-      characterOrigin.execution.nextProcedureOrdinal &&
-    new Set(
-      characterOrigin.execution.procedureBindings.map(
-        (binding) => binding.procedureRef,
-      ),
-    ).size === characterOrigin.execution.procedureBindings.length &&
-    characterOrigin.execution.procedureBindings.every((binding) => {
-      const procedure = binding.procedure;
-      if (
-        procedure.kind !== "unitFeature" &&
-        procedure.kind !== "unitSupportProfile"
-      ) {
-        return true;
-      }
-      const source = procedure.source;
-      return (
-        source.kind === "intrinsic" ||
-        characterOrigin.resources.some(
-          (resource) => resource.resourcePoolRef === source.resourcePoolRef,
-        )
-      );
-    }) &&
-    characterOrigin.resources.every((resource) =>
-      battleResourcePoolExecutionRefBelongsToScope(
-        resource.resourcePoolRef,
-        characterOrigin.execution.scopeRef,
-      ),
-    ) &&
-    new Set(
-      characterOrigin.resources.map((resource) => resource.resourcePoolRef),
-    ).size === characterOrigin.resources.length &&
+    characterProcedureBindingGraphIsValid(characterOrigin) &&
+    characterResourcePoolGraphIsValid(characterOrigin) &&
     battleAttackExecutionScopeRefBelongsToCombatant(
       characterOrigin.attackExecution.scopeRef,
-      snapshot.combatantId,
+      combatantId,
     ) &&
     characterAttackExecutionRefsMatchLayout(
       characterOrigin.attackExecution.scopeRef,
       characterOrigin.attackExecution,
     ) &&
     new Set(attackProcedureRefs).size === attackProcedureRefs.length &&
-    characterOrigin.druidWildShapeAvailableForms.every((form) =>
-      battleStatBlockExecutionScopeRefBelongsToCombatant(
-        form.execution.scopeRef,
-        snapshot.combatantId,
+    characterWildShapeFormScopesAreValid(characterOrigin, combatantId)
+  );
+}
+
+function characterProcedureBindingGraphIsValid(
+  origin: EncodedCharacterBattleCreatureOrigin,
+): boolean {
+  const bindings = origin.execution.procedureBindings;
+  return (
+    bindings.every((binding) =>
+      battleProcedureExecutionRefOrdinalIsBefore(
+        binding.procedureRef,
+        origin.execution.scopeRef,
+        origin.execution.nextProcedureOrdinal,
       ),
     ) &&
-    new Set(
-      characterOrigin.druidWildShapeAvailableForms.map(
-        (form) => form.execution.scopeRef,
+    bindings.length === origin.execution.nextProcedureOrdinal &&
+    new Set(bindings.map((binding) => binding.procedureRef)).size ===
+      bindings.length &&
+    bindings.every((binding) =>
+      characterProcedureBindingOwnsResource(origin, binding),
+    )
+  );
+}
+
+function characterProcedureBindingOwnsResource(
+  origin: EncodedCharacterBattleCreatureOrigin,
+  binding: EncodedCharacterBattleCreatureOrigin["execution"]["procedureBindings"][number],
+): boolean {
+  const procedure = binding.procedure;
+  if (
+    procedure.kind !== "unitFeature" &&
+    procedure.kind !== "unitSupportProfile"
+  ) {
+    return true;
+  }
+  if (procedure.source.kind === "intrinsic") return true;
+  return origin.resources.some(
+    (resource) => resource.resourcePoolRef === procedure.source.resourcePoolRef,
+  );
+}
+
+function characterResourcePoolGraphIsValid(
+  origin: EncodedCharacterBattleCreatureOrigin,
+): boolean {
+  return (
+    origin.resources.every((resource) =>
+      battleResourcePoolExecutionRefBelongsToScope(
+        resource.resourcePoolRef,
+        origin.execution.scopeRef,
       ),
-    ).size === characterOrigin.druidWildShapeAvailableForms.length
+    ) &&
+    new Set(origin.resources.map((resource) => resource.resourcePoolRef))
+      .size === origin.resources.length
+  );
+}
+
+function characterWildShapeFormScopesAreValid(
+  origin: EncodedCharacterBattleCreatureOrigin,
+  combatantId: CombatantId,
+): boolean {
+  const scopeRefs = origin.druidWildShapeAvailableForms.map(
+    (form) => form.execution.scopeRef,
+  );
+  return (
+    scopeRefs.every((scopeRef) =>
+      battleStatBlockExecutionScopeRefBelongsToCombatant(scopeRef, combatantId),
+    ) && new Set(scopeRefs).size === scopeRefs.length
   );
 }
 
@@ -6587,6 +6728,10 @@ function serializedSubjectProcedureReference(
 const noSerializedExecutionReferences =
   (): readonly SerializedExecutionReferenceOwnership[] => [];
 
+function optionalItems<T>(items: readonly T[] | undefined): readonly T[] {
+  return items === undefined ? [] : items;
+}
+
 function serializedBattleHoleExecutionReferences(
   hole: EncodedBattleHole,
 ): readonly SerializedExecutionReferenceOwnership[] {
@@ -6802,24 +6947,28 @@ function serializedBattleHoleExecutionReferences(
       ),
       Match.when({ attack: Match.any }, (hole) => [
         ...attackOptionReferences(hole.attack),
-        ...(hole.attackDamageRiders ?? []).map((rider) =>
+        ...optionalItems(hole.attackDamageRiders).map((rider) =>
           owned(rider.procedureRef, rider.attackerId),
         ),
-        ...(hole.spellWeaponDamageRiders ?? []).map((rider) =>
+        ...optionalItems(hole.spellWeaponDamageRiders).map((rider) =>
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
         ),
-        ...(hole.spellMarkedDamageRiders ?? []).map((rider) =>
+        ...optionalItems(hole.spellMarkedDamageRiders).map((rider) =>
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
         ),
-        ...(hole.cunningStrikeOptions ?? []).flatMap((option) => [
+        ...optionalItems(hole.cunningStrikeOptions).flatMap((option) => [
           bound(option.procedureRef),
           bound(option.sourceDamageRiderProcedureRef),
         ]),
-        ...(hole.weaponDamageDiceRollChoiceProcedureRefs ?? []).map(bound),
-        ...(hole.attackDamageDieFloorChoiceProcedureRefs ?? []).map(bound),
-        ...(hole.attackDamageAbilityModifierChoice?.procedureRefs ?? []).map(
+        ...optionalItems(hole.weaponDamageDiceRollChoiceProcedureRefs).map(
           bound,
         ),
+        ...optionalItems(hole.attackDamageDieFloorChoiceProcedureRefs).map(
+          bound,
+        ),
+        ...optionalItems(
+          hole.attackDamageAbilityModifierChoice?.procedureRefs,
+        ).map(bound),
       ]),
       Match.when({ kind: "rolledDice" }, () => []),
       Match.exhaustive,
@@ -7439,191 +7588,284 @@ function serializedBattleActOwnsBoundProcedure(
   if (!("procedureRef" in subject)) return true;
   const procedureRef = subject.procedureRef;
   if (procedureRef === undefined) return false;
-  if (subject.tag === "pactOfTheChainFamiliarAttack") {
-    return serializedAttackProcedureRefIsBound(
-      combatants,
-      subject.familiarId,
-      procedureRef,
-    );
-  }
-  if (subject.tag === "action" && subject.action === "attack") {
-    const owner = combatants.find(
-      (combatant) => combatant.combatantId === subject.actorId,
-    );
-    return owner?.origin.kind === "character"
-      ? owner.origin.attackExecution.attackProcedureRef === procedureRef ||
-          owner.origin.attackExecution.unarmedStrikeProcedureRef ===
-            procedureRef
-      : serializedAttackProcedureRefIsBound(
-          combatants,
-          subject.actorId,
+  return Match.value(subject).pipe(
+    Match.when({ tag: "pactOfTheChainFamiliarAttack" }, (value) =>
+      serializedAttackProcedureRefIsBound(
+        combatants,
+        value.familiarId,
+        procedureRef,
+      ),
+    ),
+    Match.when({ tag: "action", action: "attack" }, (value) =>
+      serializedOrdinaryAttackSubjectOwnsProcedure(
+        value,
+        procedureRef,
+        combatants,
+      ),
+    ),
+    Match.when({ tag: "monkFocusFlurryOfBlowsStrike" }, (value) =>
+      serializedFlurryStrikeSubjectOwnsProcedure(
+        value,
+        procedureRef,
+        combatants,
+      ),
+    ),
+    Match.whenOr(
+      { tag: "bonusAction", action: "offHandAttack" },
+      { tag: "bonusAction", action: "martialArtsUnarmedStrike" },
+      (value) =>
+        serializedBonusAttackSubjectOwnsProcedure(
+          value,
           procedureRef,
-        );
-  }
-  if (subject.tag === "monkFocusFlurryOfBlowsStrike") {
-    const owner = combatants.find(
-      (combatant) => combatant.combatantId === subject.actorId,
-    );
-    const focusBinding = characterProcedureBinding(
-      combatants,
-      subject.actorId,
-      subject.focusProcedureRef,
-    );
-    return (
-      owner?.origin.kind === "character" &&
-      owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef &&
-      focusBinding?.procedure.kind === "unitSupportProfile" &&
-      serializedUnitProcedureExecutionKind(focusBinding.procedure) ===
-        MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE
-    );
-  }
-  if (
-    (subject.tag === "bonusAction" && subject.action === "offHandAttack") ||
-    (subject.tag === "bonusAction" &&
-      subject.action === "martialArtsUnarmedStrike")
-  ) {
-    const owner = combatants.find(
-      (combatant) => combatant.combatantId === subject.actorId,
-    );
-    if (owner?.origin.kind !== "character") return false;
-    return subject.action === "offHandAttack"
-      ? owner.origin.attackExecution.offHandAttackProcedureRef === procedureRef
-      : owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef;
-  }
-  if (subject.tag === "action" && subject.action === "multiattack") {
-    return (
-      serializedStatBlockProcedureKind(
+          combatants,
+        ),
+    ),
+    Match.when(
+      { tag: "action", action: "multiattack" },
+      (value) =>
+        serializedStatBlockProcedureKind(
+          combatants,
+          value.actorId,
+          procedureRef,
+        ) === "multiattack",
+    ),
+    Match.when(
+      { tag: "bonusAction", action: "statBlockActionOption" },
+      (value) =>
+        serializedStatBlockProcedureKind(
+          combatants,
+          value.actorId,
+          procedureRef,
+        ) === "bonusActionOption",
+    ),
+    Match.whenOr(
+      { tag: "actionSpell" },
+      { tag: "bonusActionSpell" },
+      { tag: "bonusActionDashSpell" },
+      { tag: "findFamiliarTouchSpell" },
+      (value) =>
+        serializedSpellSubjectOwnsProcedure(value, procedureRef, combatants),
+    ),
+    Match.whenOr(
+      { tag: "unitFeature" },
+      { tag: "unitFeatureHeldWeaponActivation" },
+      { tag: "druidWildShape" },
+      { tag: "monkFocusOption" },
+      (value) =>
+        serializedUnitSubjectOwnsProcedure(value, procedureRef, combatants),
+    ),
+    Match.when({ tag: "bonusActionStandardAction" }, (value) =>
+      serializedBonusStandardActionSubjectOwnsProcedure(
+        value,
+        procedureRef,
+        combatants,
+      ),
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "releaseReadiedSpell" },
+      (value) =>
+        readiedSpells.some(
+          (readied) =>
+            readied.casterId === value.readiedSpellCasterId &&
+            readied.procedureRef === procedureRef,
+        ),
+    ),
+    Match.orElse(() => false),
+  );
+}
+
+function serializedOrdinaryAttackSubjectOwnsProcedure(
+  subject: Extract<EncodedBattleSubject, { tag: "action"; action: "attack" }>,
+  procedureRef: BattleProcedureExecutionRef,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === subject.actorId,
+  );
+  return owner?.origin.kind === "character"
+    ? owner.origin.attackExecution.attackProcedureRef === procedureRef ||
+        owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef
+    : serializedAttackProcedureRefIsBound(
         combatants,
         subject.actorId,
         procedureRef,
-      ) === "multiattack"
-    );
-  }
-  if (
-    subject.tag === "bonusAction" &&
-    subject.action === "statBlockActionOption"
-  ) {
-    return (
-      serializedStatBlockProcedureKind(
-        combatants,
-        subject.actorId,
-        procedureRef,
-      ) === "bonusActionOption"
-    );
-  }
-  if (
-    subject.tag === "actionSpell" ||
-    subject.tag === "bonusActionSpell" ||
-    subject.tag === "bonusActionDashSpell" ||
-    subject.tag === "findFamiliarTouchSpell"
-  ) {
-    const binding = characterProcedureBinding(
-      combatants,
-      subject.actorId,
-      procedureRef,
-    );
-    if (binding?.procedure.kind !== "spellInvocation") return false;
-    const spellProcedure = binding.procedure;
-    if (subject.tag === "findFamiliarTouchSpell") {
-      return (
-        "familiarTouchDelivery" in spellProcedure.executionFacts &&
-        spellProcedure.executionFacts.familiarTouchDelivery &&
-        spellProcedure.executionFacts.kind ===
-          (subject.spellAction === "action"
-            ? "actionSpell"
-            : "bonusActionSpell")
       );
+}
+
+function serializedFlurryStrikeSubjectOwnsProcedure(
+  subject: Extract<
+    EncodedBattleSubject,
+    { tag: "monkFocusFlurryOfBlowsStrike" }
+  >,
+  procedureRef: BattleProcedureExecutionRef,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === subject.actorId,
+  );
+  const focusBinding = characterProcedureBinding(
+    combatants,
+    subject.actorId,
+    subject.focusProcedureRef,
+  );
+  return (
+    owner?.origin.kind === "character" &&
+    owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef &&
+    focusBinding?.procedure.kind === "unitSupportProfile" &&
+    serializedUnitProcedureExecutionKind(focusBinding.procedure) ===
+      MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE
+  );
+}
+
+function serializedBonusAttackSubjectOwnsProcedure(
+  subject: Extract<
+    EncodedBattleSubject,
+    {
+      tag: "bonusAction";
+      action: "offHandAttack" | "martialArtsUnarmedStrike";
     }
-    if (subject.tag === "bonusActionDashSpell") {
-      return spellProcedure.executionFacts.kind === "bonusActionDashSpell";
-    }
-    if (subject.tag === "bonusActionSpell") {
-      return (
-        spellProcedure.executionFacts.kind === "bonusActionSpell" ||
-        (spellProcedure.executionFacts.kind === "actionSpell" &&
-          (subject.metamagic ?? []).some(
+  >,
+  procedureRef: BattleProcedureExecutionRef,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === subject.actorId,
+  );
+  if (owner?.origin.kind !== "character") return false;
+  return subject.action === "offHandAttack"
+    ? owner.origin.attackExecution.offHandAttackProcedureRef === procedureRef
+    : owner.origin.attackExecution.unarmedStrikeProcedureRef === procedureRef;
+}
+
+type EncodedSpellBattleSubject = Extract<
+  EncodedBattleSubject,
+  {
+    tag:
+      | "actionSpell"
+      | "bonusActionSpell"
+      | "bonusActionDashSpell"
+      | "findFamiliarTouchSpell";
+  }
+>;
+
+function serializedSpellSubjectOwnsProcedure(
+  subject: EncodedSpellBattleSubject,
+  procedureRef: BattleProcedureExecutionRef,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const binding = characterProcedureBinding(
+    combatants,
+    subject.actorId,
+    procedureRef,
+  );
+  if (binding?.procedure.kind !== "spellInvocation") return false;
+  const executionFacts = binding.procedure.executionFacts;
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "findFamiliarTouchSpell" },
+      (value) =>
+        "familiarTouchDelivery" in executionFacts &&
+        executionFacts.familiarTouchDelivery &&
+        executionFacts.kind ===
+          (value.spellAction === "action" ? "actionSpell" : "bonusActionSpell"),
+    ),
+    Match.when(
+      { tag: "bonusActionDashSpell" },
+      () => executionFacts.kind === "bonusActionDashSpell",
+    ),
+    Match.when(
+      { tag: "bonusActionSpell" },
+      (value) =>
+        executionFacts.kind === "bonusActionSpell" ||
+        (executionFacts.kind === "actionSpell" &&
+          optionalItems(value.metamagic).some(
             (option) =>
               option.effectKind ===
               "action_casting_time_to_bonus_action_with_spell_turn_limit",
-          ))
-      );
-    }
-    return (
-      spellProcedure.executionFacts.kind === subject.tag &&
-      (subject.mode.tag !== "ready" ||
-        (spellProcedure.executionFacts.kind === "actionSpell" &&
-          spellProcedure.executionFacts.readiedSpellCompatible))
-    );
+          )),
+    ),
+    Match.when(
+      { tag: "actionSpell" },
+      (value) =>
+        executionFacts.kind === value.tag &&
+        (value.mode.tag !== "ready" ||
+          (executionFacts.kind === "actionSpell" &&
+            executionFacts.readiedSpellCompatible)),
+    ),
+    Match.exhaustive,
+  );
+}
+
+type EncodedUnitBattleSubject = Extract<
+  EncodedBattleSubject,
+  {
+    tag:
+      | "unitFeature"
+      | "unitFeatureHeldWeaponActivation"
+      | "druidWildShape"
+      | "monkFocusOption";
   }
-  if (
-    subject.tag === "unitFeature" ||
-    subject.tag === "unitFeatureHeldWeaponActivation" ||
-    subject.tag === "druidWildShape" ||
-    subject.tag === "monkFocusOption"
-  ) {
-    const binding = characterProcedureBinding(
-      combatants,
-      subject.actorId,
-      procedureRef,
-    );
-    if (subject.tag === "druidWildShape") {
-      return (
+>;
+
+function serializedUnitSubjectOwnsProcedure(
+  subject: EncodedUnitBattleSubject,
+  procedureRef: BattleProcedureExecutionRef,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const binding = characterProcedureBinding(
+    combatants,
+    subject.actorId,
+    procedureRef,
+  );
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "druidWildShape" },
+      () =>
         binding?.procedure.kind === "unitFeature" &&
         serializedUnitProcedureExecutionKind(binding.procedure) ===
-          DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE
-      );
-    }
-    if (subject.tag === "monkFocusOption") {
-      return (
+          DRUID_WILD_SHAPE_KNOWN_FORM_SUPPORT_PROFILE,
+    ),
+    Match.when(
+      { tag: "monkFocusOption" },
+      () =>
         binding?.procedure.kind === "unitSupportProfile" &&
         serializedUnitProcedureExecutionKind(binding.procedure) ===
-          MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE
-      );
-    }
-    return binding?.procedure.kind === "unitFeature";
-  }
-  if (subject.tag === "bonusActionStandardAction") {
-    const binding = characterProcedureBinding(
-      combatants,
-      subject.actorId,
-      procedureRef,
-    );
-    if (binding === undefined) return false;
-    return Match.value(binding.procedure).pipe(
-      Match.discriminatorsExhaustive("kind")({
-        spellInvocation: (procedure) =>
-          procedure.executionFacts.kind === "bonusActionDashSpell",
-        /* v8 ignore next -- @preserve -- Malformed snapshot defense: an explicitly unavailable Spell Invocation can never own an executable Bonus Action standard-action subject. */
-        unavailableSpellInvocation: () => false,
-        unitFeature: (procedure) => {
-          const executionKind = procedure.execution.kind;
-          return (
-            executionKind ===
+          MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
+    ),
+    Match.orElse(() => binding?.procedure.kind === "unitFeature"),
+  );
+}
+
+function serializedBonusStandardActionSubjectOwnsProcedure(
+  subject: Extract<EncodedBattleSubject, { tag: "bonusActionStandardAction" }>,
+  procedureRef: BattleProcedureExecutionRef,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const binding = characterProcedureBinding(
+    combatants,
+    subject.actorId,
+    procedureRef,
+  );
+  if (binding === undefined) return false;
+  return Match.value(binding.procedure).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      spellInvocation: (procedure) =>
+        procedure.executionFacts.kind === "bonusActionDashSpell",
+      /* v8 ignore next -- @preserve -- Malformed snapshot defense: an explicitly unavailable Spell Invocation can never own an executable Bonus Action standard-action subject. */
+      unavailableSpellInvocation: () => false,
+      unitFeature: (procedure) =>
+        procedure.execution.kind ===
+        BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE,
+      unitSupportProfile: (procedure) => {
+        const executionKind = serializedUnitProcedureExecutionKind(procedure);
+        return (
+          executionKind === "alternateActionCost" ||
+          executionKind ===
             BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE
-          );
-        },
-        unitSupportProfile: (procedure) => {
-          const executionKind = serializedUnitProcedureExecutionKind(procedure);
-          return (
-            executionKind === "alternateActionCost" ||
-            executionKind ===
-              BONUS_ACTION_DASH_TEMPORARY_HIT_POINTS_SUPPORT_PROFILE
-          );
-        },
-      }),
-    );
-  }
-  if (
-    subject.tag === "runtimeCommand" &&
-    subject.command === "releaseReadiedSpell"
-  ) {
-    return readiedSpells.some(
-      (readied) =>
-        readied.casterId === subject.readiedSpellCasterId &&
-        readied.procedureRef === procedureRef,
-    );
-  }
-  return false;
+        );
+      },
+    }),
+  );
 }
 
 function serializedBattleSubjectOwnsBoundExecutionReferences(
@@ -8030,43 +8272,15 @@ function battleSnapshotInvariantsHold(
     ),
   );
   return (
-    battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
-    new Set([...executionScopeRefs, ...retiredExecutionScopeRefs]).size ===
-      executionScopeRefs.length + retiredExecutionScopeRefs.length &&
-    cursorByCombatant.size === snapshot.executionScopeCursors.length &&
-    cursorByCombatant.size === liveCombatantIds.size &&
-    retiredAllocationByCombatant.size ===
-      snapshot.retiredExecutionScopeAllocations.length &&
-    snapshot.retiredExecutionScopeAllocations.every(
-      (allocation) =>
-        !liveCombatantIds.has(allocation.combatantId) &&
-        retiredExecutionScopeOwnershipIsValid({
-          ownership: allocation.ownership,
-          combatantId: allocation.combatantId,
-          battleId: snapshot.battleId,
-          nextScopeOrdinal: allocation.nextScopeOrdinal,
-        }),
-    ) &&
-    snapshot.acts.every(
-      (act) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          act.subject,
-          snapshot.combatants,
-        ) &&
-        serializedBattleActOwnsBoundProcedure(
-          act,
-          snapshot.combatants,
-          snapshot.readiedResponses.spells,
-        ) &&
-        serializedBattleHolesOwnBoundExecutionReferences({
-          holes: act.initialHoles,
-          combatants: snapshot.combatants,
-          boundExecutionRefs,
-          expectedProcedureRefs: serializedBattleSubjectProcedureRefs(
-            act.subject,
-          ),
-        }),
-    ) &&
+    battleSnapshotExecutionAllocationGraphIsValid({
+      snapshot,
+      liveCombatantIds,
+      executionScopeRefs,
+      retiredExecutionScopeRefs,
+      cursorByCombatant,
+      retiredAllocationByCombatant,
+    }) &&
+    battleSnapshotActsOwnReferences(snapshot, boundExecutionRefs) &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
     ) &&
@@ -8074,41 +8288,135 @@ function battleSnapshotInvariantsHold(
       serializedReadiedResponseIsBound(snapshot.combatants, readied),
     ) &&
     battleSnapshotPendingInterruptIsValid(snapshot, boundExecutionRefs) &&
+    battleSnapshotSpatialSourcesAreBound(snapshot) &&
+    executionScopes.every((executionScope) =>
+      battleExecutionScopeIsLive({
+        scopeRef: executionScope.scopeRef,
+        cursor: cursorByCombatant.get(executionScope.combatantId),
+        battleId: snapshot.battleId,
+      }),
+    )
+  );
+}
+
+function battleSnapshotExecutionAllocationGraphIsValid(input: {
+  readonly snapshot: BattleSnapshotInvariantInput;
+  readonly liveCombatantIds: ReadonlySet<CombatantId>;
+  readonly executionScopeRefs: readonly BattleExecutionScopeRef[];
+  readonly retiredExecutionScopeRefs: readonly BattleExecutionScopeRef[];
+  readonly cursorByCombatant: ReadonlyMap<
+    CombatantId,
+    BattleExecutionScopeCursor
+  >;
+  readonly retiredAllocationByCombatant: ReadonlyMap<
+    CombatantId,
+    BattleSnapshotInvariantInput["retiredExecutionScopeAllocations"][number]
+  >;
+}): boolean {
+  const scopeRefCount =
+    input.executionScopeRefs.length + input.retiredExecutionScopeRefs.length;
+  return (
+    battleSnapshotLiveCombatantIdsAreUnique(
+      input.snapshot,
+      input.liveCombatantIds,
+    ) &&
+    new Set([...input.executionScopeRefs, ...input.retiredExecutionScopeRefs])
+      .size === scopeRefCount &&
+    input.cursorByCombatant.size ===
+      input.snapshot.executionScopeCursors.length &&
+    input.cursorByCombatant.size === input.liveCombatantIds.size &&
+    input.retiredAllocationByCombatant.size ===
+      input.snapshot.retiredExecutionScopeAllocations.length &&
+    input.snapshot.retiredExecutionScopeAllocations.every(
+      (allocation) =>
+        !input.liveCombatantIds.has(allocation.combatantId) &&
+        retiredExecutionScopeOwnershipIsValid({
+          ownership: allocation.ownership,
+          combatantId: allocation.combatantId,
+          battleId: input.snapshot.battleId,
+          nextScopeOrdinal: allocation.nextScopeOrdinal,
+        }),
+    )
+  );
+}
+
+function battleSnapshotActsOwnReferences(
+  snapshot: BattleSnapshotInvariantInput,
+  boundExecutionRefs: ReadonlySet<string>,
+): boolean {
+  return snapshot.acts.every(
+    (act) =>
+      serializedBattleSubjectOwnsBoundExecutionReferences(
+        act.subject,
+        snapshot.combatants,
+      ) &&
+      serializedBattleActOwnsBoundProcedure(
+        act,
+        snapshot.combatants,
+        snapshot.readiedResponses.spells,
+      ) &&
+      serializedBattleHolesOwnBoundExecutionReferences({
+        holes: act.initialHoles,
+        combatants: snapshot.combatants,
+        boundExecutionRefs,
+        expectedProcedureRefs: serializedBattleSubjectProcedureRefs(
+          act.subject,
+        ),
+      }),
+  );
+}
+
+function battleSnapshotSpatialSourcesAreBound(
+  snapshot: BattleSnapshotInvariantInput,
+): boolean {
+  return (
     snapshot.lightEmitters.every((emitter) =>
       serializedLightEmitterOwnsSource(emitter, snapshot.combatants),
     ) &&
     snapshot.obscurementZones.every((zone) =>
       serializedObscurementZoneOwnsSource(zone, snapshot.combatants),
+    )
+  );
+}
+
+function battleExecutionScopeIsLive(input: {
+  readonly scopeRef: BattleExecutionScopeRef;
+  readonly cursor: BattleExecutionScopeCursor | undefined;
+  readonly battleId: BattleId;
+}): boolean {
+  if (Schema.is(BattleAttackExecutionScopeRef)(input.scopeRef)) {
+    return (
+      battleAttackExecutionScopeRefOrdinalIsBefore(
+        input.scopeRef,
+        input.cursor,
+      ) &&
+      battleAttackExecutionScopeRefBelongsToBattle(
+        input.scopeRef,
+        input.battleId,
+      )
+    );
+  }
+  if (Schema.is(BattleCharacterExecutionScopeRef)(input.scopeRef)) {
+    return (
+      battleCharacterExecutionScopeRefOrdinalIsBefore(
+        input.scopeRef,
+        input.cursor,
+      ) &&
+      battleCharacterExecutionScopeRefBelongsToBattle(
+        input.scopeRef,
+        input.battleId,
+      )
+    );
+  }
+  return (
+    battleStatBlockExecutionScopeRefOrdinalIsBefore(
+      input.scopeRef,
+      input.cursor,
     ) &&
-    executionScopes.every((executionScope) => {
-      const cursor = cursorByCombatant.get(executionScope.combatantId);
-      return Schema.is(BattleAttackExecutionScopeRef)(executionScope.scopeRef)
-        ? battleAttackExecutionScopeRefOrdinalIsBefore(
-            executionScope.scopeRef,
-            cursor,
-          ) &&
-            battleAttackExecutionScopeRefBelongsToBattle(
-              executionScope.scopeRef,
-              snapshot.battleId,
-            )
-        : Schema.is(BattleCharacterExecutionScopeRef)(executionScope.scopeRef)
-          ? battleCharacterExecutionScopeRefOrdinalIsBefore(
-              executionScope.scopeRef,
-              cursor,
-            ) &&
-            battleCharacterExecutionScopeRefBelongsToBattle(
-              executionScope.scopeRef,
-              snapshot.battleId,
-            )
-          : battleStatBlockExecutionScopeRefOrdinalIsBefore(
-              executionScope.scopeRef,
-              cursor,
-            ) &&
-            battleStatBlockExecutionScopeRefBelongsToBattle(
-              executionScope.scopeRef,
-              snapshot.battleId,
-            );
-    })
+    battleStatBlockExecutionScopeRefBelongsToBattle(
+      input.scopeRef,
+      input.battleId,
+    )
   );
 }
 
