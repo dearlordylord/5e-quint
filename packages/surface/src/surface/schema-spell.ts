@@ -5054,12 +5054,69 @@ export const CreatureLegendaryActionsSchema = Schema.Struct({
   actions: CreatureActionsSchema,
 });
 
-export const StatBlockProcedureOrdinalSchema = PositiveIntegerSchema.pipe(
-  Schema.brand("StatBlockProcedureOrdinal"),
+/**
+ * The SRD monster corpus reaches +19 attack bonuses, DC 27, and 600-foot
+ * ranges. Keep authored procedure numerics integral and finite: signed
+ * modifiers have room around the ability-score-derived range, while positive
+ * counts, dice, DCs, and distances remain inside a 1..1000 authored envelope
+ * instead of accepting the runtime's unbounded/scaling value unions.
+ */
+const STAT_BLOCK_PROCEDURE_POSITIVE_MIN = 1;
+const STAT_BLOCK_PROCEDURE_POSITIVE_MAX = 1000;
+const STAT_BLOCK_PROCEDURE_SIGNED_MIN = -30;
+const STAT_BLOCK_PROCEDURE_SIGNED_MAX = 30;
+
+const StatBlockProcedurePositiveIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(
+    STAT_BLOCK_PROCEDURE_POSITIVE_MIN,
+    STAT_BLOCK_PROCEDURE_POSITIVE_MAX,
+  ),
+);
+
+const StatBlockProcedureSignedIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(
+    STAT_BLOCK_PROCEDURE_SIGNED_MIN,
+    STAT_BLOCK_PROCEDURE_SIGNED_MAX,
+  ),
+);
+
+export const StatBlockProcedureOrdinalSchema =
+  StatBlockProcedurePositiveIntegerSchema.pipe(
+    Schema.brand("StatBlockProcedureOrdinal"),
+  );
+
+const StatBlockProcedurePositiveValueSchema = StatBlockLiteralValueSchema.pipe(
+  Schema.filter(
+    ({ value }) =>
+      Number.isInteger(value) &&
+      value >= STAT_BLOCK_PROCEDURE_POSITIVE_MIN &&
+      value <= STAT_BLOCK_PROCEDURE_POSITIVE_MAX,
+    {
+      message: () =>
+        "Authored Stat Block procedure counts must be positive integers no greater than 1000.",
+    },
+  ),
+);
+
+const StatBlockProcedureSignedValueSchema = StatBlockLiteralValueSchema.pipe(
+  Schema.filter(
+    ({ value }) =>
+      Number.isInteger(value) &&
+      value >= STAT_BLOCK_PROCEDURE_SIGNED_MIN &&
+      value <= STAT_BLOCK_PROCEDURE_SIGNED_MAX,
+    {
+      message: () =>
+        "Authored Stat Block procedure modifiers must be integral values from -30 through 30.",
+    },
+  ),
 );
 
 export const StatBlockProcedureResourceOrdinalSchema =
-  PositiveIntegerSchema.pipe(Schema.brand("StatBlockProcedureResourceOrdinal"));
+  StatBlockProcedurePositiveIntegerSchema.pipe(
+    Schema.brand("StatBlockProcedureResourceOrdinal"),
+  );
 
 const STAT_BLOCK_TEXT_ONLY_REASONS = [
   "unparsed_prose",
@@ -5076,7 +5133,7 @@ export const StatBlockTextOnlyReasonSchema = Schema.Literal(
 export const StatBlockProcedureResourceLimitSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("daily"),
-    uses: PositiveIntegerSchema,
+    uses: StatBlockProcedurePositiveIntegerSchema,
   }),
   strictStruct({
     kind: Schema.Literal("recharge"),
@@ -5120,17 +5177,138 @@ export const StatBlockProcedureResourceRefsSchema = Schema.Array(
   }),
 );
 
+export const StatBlockProcedureDcSourceSchema = strictStruct({
+  kind: Schema.Literal("fixed"),
+  dc: StatBlockProcedurePositiveIntegerSchema,
+});
+
+const StatBlockProcedureDiceExprSchema = strictStruct({
+  dice: StatBlockProcedurePositiveIntegerSchema,
+  dieSize: StatBlockProcedurePositiveIntegerSchema,
+  flat: optionalExact(StatBlockProcedureSignedIntegerSchema),
+  spellcastingMod: optionalExact(Schema.Literal(true)),
+  abilityModifier: optionalExact(AbilitySchema),
+});
+
+const StatBlockProcedureDamageAmountSchema = strictStruct({
+  kind: Schema.Literal("fixed"),
+  expr: StatBlockProcedureDiceExprSchema,
+  static: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+});
+
+const AuthoredProcedureEffectAtomSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("damage"),
+    damageType: DamageTypeSchema,
+    amount: StatBlockProcedureDamageAmountSchema,
+    timing: optionalExact(Schema.Literal("end_of_next_turn")),
+  }),
+  strictStruct({
+    kind: Schema.Literal("conditional_bonus_damage"),
+    when: Schema.Union(
+      strictStruct({
+        kind: Schema.Literal("target_creature_type"),
+        types: nonEmpty(CreatureTypeSchema),
+      }),
+      strictStruct({ kind: Schema.Literal("attack_roll_had_advantage") }),
+    ),
+    damageType: DamageTypeSchema,
+    amount: StatBlockProcedureDamageAmountSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("apply_condition_if_target_size_at_most"),
+    condition: ConditionSchema,
+    maxCreatureSize: SizeSchema,
+  }),
+);
+
+const AuthoredSaveSuccessOutcomeSchema = Schema.Union(
+  strictStruct({ kind: Schema.Literal("half_damage") }),
+  AuthoredProcedureEffectAtomSchema,
+);
+
+export const StatBlockProcedureAreaShapeSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("sphere"),
+    radiusFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("circle"),
+    radiusFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("sphere_cluster"),
+    count: StatBlockProcedurePositiveIntegerSchema,
+    radiusFeet: StatBlockProcedurePositiveIntegerSchema,
+    overlapResolution: Schema.Literal("affect_once"),
+  }),
+  strictStruct({
+    kind: Schema.Literal("cone"),
+    lengthFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("cube"),
+    sideFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("cube_cluster"),
+    maxCubes: StatBlockProcedurePositiveIntegerSchema,
+    sideFeet: StatBlockProcedurePositiveIntegerSchema,
+    contiguous: optionalExact(Schema.Literal(true)),
+  }),
+  strictStruct({
+    kind: Schema.Literal("cylinder"),
+    radiusFeet: StatBlockProcedurePositiveIntegerSchema,
+    heightFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("emanation"),
+    radiusFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("line"),
+    lengthFeet: StatBlockProcedurePositiveIntegerSchema,
+    widthFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal("wall_volume"),
+    maxLengthFeet: StatBlockProcedurePositiveIntegerSchema,
+    maxHeightFeet: StatBlockProcedurePositiveIntegerSchema,
+    thicknessFeet: StatBlockProcedurePositiveIntegerSchema,
+  }),
+);
+
 const AuthoredAttackRollProcedureSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("attack_roll"),
-    ...CreatureAttackRollMechanicsCommonFields,
+    attackAbility: AbilitySchema,
+    attackBonus: StatBlockProcedureSignedValueSchema,
+    reachFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+    rangeFeet: optionalExact(
+      strictStruct({
+        normal: StatBlockProcedurePositiveIntegerSchema,
+        long: StatBlockProcedurePositiveIntegerSchema,
+      }),
+    ),
+    onHit: nonEmpty(AuthoredProcedureEffectAtomSchema),
+    multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
     attackType: Schema.Literal("melee"),
     name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
     description: optionalExact(surfaceExactProse(Schema.String)),
   }),
   strictStruct({
     kind: Schema.Literal("attack_roll"),
-    ...CreatureAttackRollMechanicsCommonFields,
+    attackAbility: AbilitySchema,
+    attackBonus: StatBlockProcedureSignedValueSchema,
+    reachFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+    rangeFeet: optionalExact(
+      strictStruct({
+        normal: StatBlockProcedurePositiveIntegerSchema,
+        long: StatBlockProcedurePositiveIntegerSchema,
+      }),
+    ),
+    onHit: nonEmpty(AuthoredProcedureEffectAtomSchema),
+    multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
     attackType: Schema.Literal("ranged"),
     ammunition: optionalExact(AmmunitionKindSchema),
     name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
@@ -5143,22 +5321,22 @@ const AuthoredSaveGateProcedureBaseFields = {
   name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
   description: optionalExact(surfaceExactProse(Schema.String)),
   ability: AbilitySchema,
-  dc: DcSourceSchema,
-  onFail: EffectAtomSchema,
-  onSuccess: SaveSuccessOutcomeSchema,
-  multiattackCount: optionalExact(StatBlockValueSchema),
+  dc: StatBlockProcedureDcSourceSchema,
+  onFail: AuthoredProcedureEffectAtomSchema,
+  onSuccess: AuthoredSaveSuccessOutcomeSchema,
+  multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
 } as const;
 
 const AuthoredSaveGateProcedureSchema = Schema.Union(
   strictStruct({
     ...AuthoredSaveGateProcedureBaseFields,
-    area: AreaShapeDescriptorSchema,
+    area: StatBlockProcedureAreaShapeSchema,
   }),
   strictStruct({
     ...AuthoredSaveGateProcedureBaseFields,
     target: Schema.Struct({
       kind: Schema.Literal("one_creature_in_range"),
-      rangeFeet: Schema.Number,
+      rangeFeet: StatBlockProcedurePositiveIntegerSchema,
     }),
   }),
 );
@@ -5167,9 +5345,9 @@ const AuthoredSupportProcedureSchema = strictStruct({
   kind: Schema.Literal("support"),
   name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
   target: Schema.Literal("self", "ally_in_range"),
-  rangeFeet: optionalExact(Schema.Number),
-  effect: EffectAtomSchema,
-  multiattackCount: optionalExact(StatBlockValueSchema),
+  rangeFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+  effect: AuthoredProcedureEffectAtomSchema,
+  multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
 });
 
 const AuthoredActionOptionProcedureSchema = strictStruct({
@@ -5184,14 +5362,14 @@ const AuthoredMultiattackProcedureSchema = strictStruct({
   dispatches: nonEmpty(
     strictStruct({
       procedureOrdinal: StatBlockProcedureOrdinalSchema,
-      count: StatBlockValueSchema,
+      count: StatBlockProcedurePositiveValueSchema,
     }),
   ),
 });
 
 export const StatBlockSpellReferenceSchema = strictStruct({
   spellId: surfaceReference(Schema.NonEmptyTrimmedString, "spell-reference"),
-  count: optionalExact(PositiveIntegerSchema),
+  count: optionalExact(StatBlockProcedurePositiveIntegerSchema),
   castAtLevel: optionalExact(SpellLevelSchema),
   restriction: optionalExact(surfaceExactProse(Schema.NonEmptyTrimmedString)),
 });
@@ -5219,8 +5397,8 @@ const AuthoredSpellcastingProcedureSchema = strictStruct({
   kind: Schema.Literal("spellcasting"),
   name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
   ability: AbilitySchema,
-  spellSaveDc: optionalExact(DcSourceSchema),
-  spellAttackBonus: optionalExact(StatBlockValueSchema),
+  spellSaveDc: optionalExact(StatBlockProcedureDcSourceSchema),
+  spellAttackBonus: optionalExact(StatBlockProcedureSignedValueSchema),
   components: optionalExact(StatBlockSpellcastingComponentsSchema),
   groups: nonEmpty(StatBlockSpellcastingGroupSchema),
 });
@@ -5234,29 +5412,41 @@ export const AuthoredExecutableProcedureSchema = Schema.Union(
   AuthoredSpellcastingProcedureSchema,
 );
 
+const StatBlockExecutableProcedureEntryFields = {
+  kind: Schema.Literal("executable"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  procedure: AuthoredExecutableProcedureSchema,
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
+} as const;
+
+const StatBlockTextOnlyProcedureEntryFields = {
+  kind: Schema.Literal("textOnly"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
+  description: surfaceExactProse(Schema.NonEmptyTrimmedString),
+  reason: StatBlockTextOnlyReasonSchema,
+  resourceRefs: StatBlockProcedureResourceRefsSchema,
+} as const;
+
 export const StatBlockProcedureEntrySchema = Schema.Union(
-  strictStruct({
-    kind: Schema.Literal("executable"),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    procedure: AuthoredExecutableProcedureSchema,
-    resourceRefs: StatBlockProcedureResourceRefsSchema,
-  }),
-  strictStruct({
-    kind: Schema.Literal("textOnly"),
-    procedureOrdinal: StatBlockProcedureOrdinalSchema,
-    name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-    description: surfaceExactProse(Schema.NonEmptyTrimmedString),
-    reason: StatBlockTextOnlyReasonSchema,
-    resourceRefs: StatBlockProcedureResourceRefsSchema,
-  }),
+  strictStruct(StatBlockExecutableProcedureEntryFields),
+  strictStruct(StatBlockTextOnlyProcedureEntryFields),
 );
 
 type StatBlockProcedureEntry = Schema.Schema.Type<
   typeof StatBlockProcedureEntrySchema
 >;
 
+const StatBlockReactionProcedureEntrySchema = Schema.Union(
+  strictStruct({
+    ...StatBlockExecutableProcedureEntryFields,
+    trigger: ReactionTriggerSchema,
+  }),
+  strictStruct(StatBlockTextOnlyProcedureEntryFields),
+);
+
 const hasStrictlyIncreasingProcedureOrdinals = (
-  entries: ReadonlyArray<StatBlockProcedureEntry>,
+  entries: ReadonlyArray<{ readonly procedureOrdinal: number }>,
 ): boolean =>
   entries.every(
     (entry, index) =>
@@ -5296,15 +5486,29 @@ export const StatBlockProcedureSectionSchema = nonEmpty(
 export const StatBlockActionSectionSchema = StatBlockProcedureSectionSchema;
 export const StatBlockBonusActionSectionSchema =
   StatBlockProcedureSectionSchema;
-export const StatBlockReactionSectionSchema = StatBlockProcedureSectionSchema;
+export const StatBlockReactionSectionSchema = nonEmpty(
+  StatBlockReactionProcedureEntrySchema,
+).pipe(
+  Schema.filter(hasStrictlyIncreasingProcedureOrdinals, {
+    message: () =>
+      "Stat Block procedure entries must have strictly increasing ordinals.",
+  }),
+  Schema.filter(hasKnownMultiattackDispatches, {
+    message: () =>
+      "Stat Block Multiattack dispatches must reference an authored procedure ordinal in the same section.",
+  }),
+);
 
 export const StatBlockLegendaryActionSectionSchema = strictStruct({
-  uses: PositiveIntegerSchema,
+  uses: StatBlockProcedurePositiveIntegerSchema,
   entries: StatBlockProcedureSectionSchema,
 });
 
 type StatBlockProcedureSection = Schema.Schema.Type<
   typeof StatBlockProcedureSectionSchema
+>;
+type StatBlockReactionProcedureSection = Schema.Schema.Type<
+  typeof StatBlockReactionSectionSchema
 >;
 
 export const CreatureTraitEffectSchema = Schema.Union(
@@ -6085,7 +6289,7 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
 type StandaloneStatBlockProcedureFields = {
   readonly actions?: StatBlockProcedureSection;
   readonly bonusActions?: StatBlockProcedureSection;
-  readonly reactions?: StatBlockProcedureSection;
+  readonly reactions?: StatBlockReactionProcedureSection;
   readonly legendaryActions?: Schema.Schema.Type<
     typeof StatBlockLegendaryActionSectionSchema
   >;

@@ -272,6 +272,216 @@ describe("standalone Stat Block procedure sections", () => {
     ).toThrow();
   });
 
+  test("rejects runtime-derived, level-scaled, and hole-valued authored procedure facts", () => {
+    const attackEntry = syntheticStandaloneStatBlock.actions[1];
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          attackBonus: {
+            kind: "caster_derived",
+            source: "proficiency_bonus",
+          },
+        },
+      }),
+    ).toThrow();
+    for (const attackBonus of [-31, 31] as const) {
+      expect(() =>
+        decode(StatBlockProcedureEntrySchema, {
+          ...attackEntry,
+          procedure: {
+            ...attackEntry.procedure,
+            attackBonus: { kind: "literal", value: attackBonus },
+          },
+        }),
+      ).toThrow();
+    }
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          attackBonus: {
+            kind: "linear_per_level",
+            axis: "character",
+            base: 1,
+            perLevel: 1,
+            startingAtLevel: 1,
+          },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          onHit: [
+            {
+              ...attackEntry.procedure.onHit[0],
+              damageType: {
+                kind: "hole",
+                holeId: "synthetic-damage-type",
+                value: "force",
+              },
+            },
+          ],
+        },
+      }),
+    ).toThrow();
+
+    const multiattackEntry = syntheticStandaloneStatBlock.actions[0];
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...multiattackEntry,
+        procedure: {
+          ...multiattackEntry.procedure,
+          dispatches: [
+            {
+              ...multiattackEntry.procedure.dispatches[0],
+              count: {
+                kind: "caster_derived",
+                source: "proficiency_bonus",
+              },
+            },
+          ],
+        },
+      }),
+    ).toThrow();
+    for (const count of [0, 1001] as const) {
+      expect(() =>
+        decode(StatBlockProcedureEntrySchema, {
+          ...multiattackEntry,
+          procedure: {
+            ...multiattackEntry.procedure,
+            dispatches: [
+              {
+                ...multiattackEntry.procedure.dispatches[0],
+                count: { kind: "literal", value: count },
+              },
+            ],
+          },
+        }),
+      ).toThrow();
+    }
+
+    const spellcastingEntry = syntheticStandaloneStatBlock.actions[3];
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...spellcastingEntry,
+        procedure: {
+          ...spellcastingEntry.procedure,
+          spellSaveDc: { kind: "caster_spell_save_dc" },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...spellcastingEntry,
+        procedure: {
+          ...spellcastingEntry.procedure,
+          spellAttackBonus: {
+            kind: "linear_per_level",
+            axis: "character",
+            base: 1,
+            perLevel: 1,
+            startingAtLevel: 1,
+          },
+        },
+      }),
+    ).toThrow();
+
+    const saveEntry = {
+      kind: "executable",
+      procedureOrdinal: 5,
+      procedure: {
+        kind: "save",
+        name: "Synthetic Save",
+        ability: "dex",
+        dc: { kind: "fixed", dc: 14 },
+        onFail: {
+          kind: "damage",
+          damageType: "force",
+          amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 } },
+        },
+        onSuccess: { kind: "half_damage" },
+        area: { kind: "cone", lengthFeet: 30 },
+      },
+      resourceRefs: [],
+    } as const;
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...saveEntry,
+        procedure: {
+          ...saveEntry.procedure,
+          dc: { kind: "caster_spell_save_dc" },
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...saveEntry,
+        procedure: {
+          ...saveEntry.procedure,
+          area: {
+            kind: "sphere",
+            radiusFeet: {
+              kind: "linear_per_level",
+              axis: "character",
+              base: 1,
+              perLevel: 1,
+              startingAtLevel: 1,
+            },
+          },
+        },
+      }),
+    ).toThrow();
+    for (const dc of [0, 1001] as const) {
+      expect(() =>
+        decode(StatBlockProcedureEntrySchema, {
+          ...saveEntry,
+          procedure: {
+            ...saveEntry.procedure,
+            dc: { kind: "fixed", dc },
+          },
+        }),
+      ).toThrow();
+    }
+  });
+
+  test("requires a parsed trigger for executable reactions while retaining text-only reactions", () => {
+    const executableReaction = {
+      kind: "executable",
+      procedureOrdinal: 1,
+      procedure: syntheticStandaloneStatBlock.actions[1].procedure,
+      trigger: { kind: "hit_by_attack_roll" },
+      resourceRefs: [],
+    } as const;
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        reactions: [executableReaction],
+      }).reactions,
+    ).toEqual([executableReaction]);
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        reactions: [
+          {
+            kind: "executable",
+            procedureOrdinal: 1,
+            procedure: syntheticStandaloneStatBlock.actions[1].procedure,
+            resourceRefs: [],
+          },
+        ],
+      }),
+    ).toThrow();
+    expect(
+      decode(StandaloneStatBlockSchema, syntheticStandaloneStatBlock).reactions,
+    ).toEqual(syntheticStandaloneStatBlock.reactions);
+  });
+
   test("keeps ordered authored entries out of the grouped projection boundary", () => {
     expect(() =>
       decode(CreatureStatBlockProjectionSchema, {

@@ -681,8 +681,17 @@ export type StatBlockProcedureResource = Schema.Schema.Type<
 export type StatBlockProcedureResourceLimit = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureResourceLimitSchema
 >;
+export type StatBlockProcedureAreaShape = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureAreaShapeSchema
+>;
+export type StatBlockProcedureDcSource = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureDcSourceSchema
+>;
 export type StatBlockProcedureSection = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureSectionSchema
+>;
+export type StatBlockReactionSection = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockReactionSectionSchema
 >;
 export type StatBlockSpellReference = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockSpellReferenceSchema
