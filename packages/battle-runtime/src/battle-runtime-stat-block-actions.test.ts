@@ -313,25 +313,33 @@ function sizeGatedConditionRiderStatBlock(): StatBlockRecord {
   };
 }
 
-function untypedConditionRiderStatBlock(): StatBlockRecord {
+function unsupportedConditionRiderStatBlock(): StatBlockRecord {
   const base = sizeGatedConditionRiderStatBlock();
+  const bite = authoredAttackProcedure(base, "Bite");
+  const damage = bite.onHit[0];
+  if (damage === undefined) {
+    throw new Error("Expected synthetic Bite damage.");
+  }
   return {
     ...base,
     id: parseSharedStatBlockId(
-      "stat_block_untyped_condition_rider_test_monster",
+      "stat_block_unsupported_condition_rider_test_monster",
     ),
-    name: "Untyped Condition Rider Test Monster",
+    name: "Unsupported Condition Rider Test Monster",
     statBlock: {
       ...base.statBlock,
       actions: [
-        {
-          kind: "textOnly",
-          procedureOrdinal: authoredProcedureOrdinal(1),
-          name: "Bite",
-          description: "Bite has an unsupported condition rider.",
-          reason: "unsupported_action_shape",
-          resourceRefs: { kind: "none" },
-        },
+        executableProcedureEntry(1, {
+          ...bite,
+          onHit: [
+            damage,
+            {
+              condition: "restrained",
+              kind: "apply_condition_if_target_size_at_most",
+              maxCreatureSize: "medium",
+            },
+          ],
+        }),
       ],
     },
   };
@@ -1090,11 +1098,15 @@ describe("battle runtime: Stat Block actions", () => {
     expect(hasCondition(target.conditions, "prone")).toBe(false);
   });
 
-  test("Stat Block text-only condition riders remain unsupported", () => {
-    const statBlock = untypedConditionRiderStatBlock();
+  test("Stat Block executable condition riders remain unsupported", () => {
+    const statBlock = unsupportedConditionRiderStatBlock();
+    const attack = authoredAttackProcedure(statBlock, "Bite");
+
+    expect(creatureNamedAttackRollIsSupported(attack)).toBe(false);
+    expect(supportedStatBlockAttackHitConditionRiders(attack)).toBeNull();
 
     const state = startBattleRight({
-      battleId: battleId("battle-monster-untyped-condition-rider-rejected"),
+      battleId: battleId("battle-monster-unsupported-condition-rider-rejected"),
       combatants: [
         statBlockCreatureInit({ initiative: 20, statBlock }),
         characterSeed({ initiative: 10 }),
@@ -1716,19 +1728,58 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("Stat Block Multiattack preserves ordinal dispatches that share one resource pool", () => {
+  test("Stat Block action bindings preserve shared resource identity by ordinal", () => {
     const statBlock = monsterResourceStatBlockWithSharedResource();
-    const actions = statBlock.statBlock.actions;
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-monster-shared-resource-identity"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({
+              initiative: 10,
+              statBlock,
+            }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const goblin = goblinTurn.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+
+    const cinderBinding = goblin.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedureRef === procedureRefForAttack(goblinTurn, 1),
+    );
+    const dreadBinding = goblin.origin.execution.procedureBindings.find(
+      (binding) =>
+        binding.procedureRef === procedureRefForAttack(goblinTurn, 2),
+    );
+    if (cinderBinding === undefined || dreadBinding === undefined) {
+      throw new Error("Expected both shared-resource action bindings.");
+    }
+    expect(cinderBinding.resourcePoolRefs).toEqual(
+      dreadBinding.resourcePoolRefs,
+    );
+    expect(cinderBinding.resourcePoolRefs).toHaveLength(1);
+  });
+
+  test("Stat Block Multiattack rejects repeated dispatches beyond a shared one-use pool", () => {
+    const base = monsterResourceStatBlockWithSharedResource();
+    const actions = base.statBlock.actions;
     if (actions === undefined) {
       throw new Error("Expected shared-resource action fixtures.");
     }
-    const repeatedLimitedUseStatBlock: StatBlockRecord = {
-      ...statBlock,
+    const statBlock: StatBlockRecord = {
+      ...base,
       id: parseSharedStatBlockId(
         "stat_block_repeated_limited_use_multiattack_test_monster",
       ),
       statBlock: {
-        ...statBlock.statBlock,
+        ...base.statBlock,
         actions: [
           ...actions,
           executableProcedureEntry(3, {
@@ -1756,51 +1807,34 @@ describe("battle runtime: Stat Block actions", () => {
             characterSeed({ initiative: 20 }),
             statBlockCreatureInit({
               initiative: 10,
-              statBlock: repeatedLimitedUseStatBlock,
+              statBlock,
             }),
           ],
         }),
         actorId: fighterId,
       }),
     ).state;
-    const goblin = goblinTurn.combatants.get(goblinId);
-    if (goblin?.origin.kind !== "statBlock") {
-      throw new Error("Expected Stat Block goblin.");
-    }
-
-    const multiattackBinding = goblin.origin.execution.procedureBindings.find(
-      (binding) => binding.procedure.kind === "multiattack",
-    );
-    if (
-      multiattackBinding === undefined ||
-      multiattackBinding.procedure.kind !== "multiattack"
-    ) {
-      throw new Error("Expected the shared-resource Multiattack binding.");
-    }
-    expect(multiattackBinding.procedure.dispatchProcedureRefs).toHaveLength(2);
-    const dispatchedAttackPoolRefs =
-      multiattackBinding.procedure.dispatchProcedureRefs.map((procedureRef) => {
-        const binding = goblin.origin.execution.procedureBindings.find(
-          (candidate) =>
-            candidate.procedureRef === procedureRef &&
-            "resourcePoolRefs" in candidate,
-        );
-        if (binding === undefined || !("resourcePoolRefs" in binding)) {
-          throw new Error(
-            "Expected each Multiattack dispatch to be an attack.",
-          );
-        }
-        return binding.resourcePoolRefs;
-      });
-    expect(dispatchedAttackPoolRefs[0]).toEqual(dispatchedAttackPoolRefs[1]);
-    expect(dispatchedAttackPoolRefs[0]).toHaveLength(1);
+    const multiattackSubject = unavailableMultiattackSubject(goblinTurn);
     expect(discoverStatBlockActs(goblinTurn)).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          subject: unavailableMultiattackSubject(goblinTurn),
-        }),
+        expect.objectContaining({ subject: multiattackSubject }),
       ]),
     );
+    const afterMultiattack = requireResolved(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: multiattackSubject,
+        fills: [],
+      }),
+    ).state;
+    expect(
+      discoverStatBlockActs(afterMultiattack).map((act) => act.subject),
+    ).not.toContainEqual({
+      tag: "action",
+      actorId: goblinId,
+      action: "attack",
+      procedureRef: procedureRefForAttack(afterMultiattack, 2),
+    });
   });
 
   test("Stat Block Multiattack dispatch resources do not authorize Escape Grapple", () => {
