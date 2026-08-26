@@ -8,6 +8,10 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
+    "prototype:better-auth": "tsx src/prototypes/better-auth-effect/prototype-smoke.ts",
+    "prototype:better-auth:guest": "tsx src/prototypes/better-auth-effect/guest-smoke.ts",
+    "prototype:better-auth:registrations": "tsx src/prototypes/better-auth-effect/registration-evidence.ts",
+    "serve:prototype:better-auth": "tsx src/prototypes/better-auth-effect/prototype-server.ts",
     "serve:http": "tsx src/public-index.ts",
     "verify:staging": "tsx src/staging-http-smoke.ts",
     "mirror": "tsx src/admin-mirror-server.ts",
@@ -18,6 +22,10 @@
     "test:mcp-scenario-evidence": "vitest run src/mcp-scenario-evidence.test.ts src/mcp-protocol.test.ts src/mcp-level-five-sheet-scenario.test.ts src/mcp-level-six-sheet-scenario.test.ts src/mcp-level-nine-scenario.test.ts src/mcp-level-ten-scenario.test.ts"
   },
   "dependencies": {
+    "@better-auth/cimd": "1.7.1",
+    "@better-auth/core": "1.7.1",
+    "@better-auth/mcp": "1.7.1",
+    "@better-auth/oauth-provider": "1.7.1",
     "@dnd/battle-runtime": "workspace:*",
     "@dnd/character-battle-runtime": "workspace:*",
     "@dnd/character-creation-runtime": "workspace:*",
@@ -27,6 +35,7 @@
     "@dnd/surface": "workspace:*",
     "@effect/platform-node": "^0.106.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
+    "better-auth": "1.7.1",
     "effect": "^3.21.0",
     "jose": "^6.2.2"
   },
