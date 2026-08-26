@@ -23,8 +23,8 @@
       "Help me create an SRD character as a guest.",
       "Start a rules-backed battle with my character."
     ],
-    "brandColor": "#4F46E5",
-    "composerIcon": "./assets/icon.svg",
+    "brandColor": "#4FB8B2",
+    "composerIcon": "./assets/icon.png",
     "logo": "./assets/logo.svg",
     "logoDark": "./assets/logo-dark.svg"
   }
