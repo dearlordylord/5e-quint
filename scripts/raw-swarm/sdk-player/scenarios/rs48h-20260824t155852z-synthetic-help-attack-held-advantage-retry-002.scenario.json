@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+  "title": "Synthetic Help attack held Advantage retry 002",
+  "purpose": "Exercise the supported Help action for an ally's attack, including target selection, turn transition, and consumption of the held Advantage by the intended ally against the intended enemy.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002.md",
+    "byteLength": 1932,
+    "sha256": "ca883bdd18536a6535f4ed98a03f749f28c8d081490cc044774b219909a6dbd7"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002.md.scenario-review.json",
+    "byteLength": 10625,
+    "sha256": "9a722b2a49e38bad940a871a5f983eacdf28e5bec07b5c33119af5bb999c7db1"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002.md.stage-facts.json",
+    "byteLength": 743,
+    "sha256": "737e558c5570c2adb483eed4d9f36e8aec97e5943a0b65670e52269f8b370245"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "prone-target-roll-mode-distance-probe",
+    "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+    "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+    "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+    "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+    "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+    "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+    "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}

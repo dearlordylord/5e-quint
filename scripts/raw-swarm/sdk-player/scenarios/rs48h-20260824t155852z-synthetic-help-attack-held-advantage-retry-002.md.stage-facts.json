@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+  "scenarioSha256": "ca883bdd18536a6535f4ed98a03f749f28c8d081490cc044774b219909a6dbd7",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The exact roster consists solely of three available canonical stat blocks and depends on no Character Sheet data."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Geometry fixes the aligned 5-foot and 10-foot separations and witnesses the Skeleton’s unobstructed legal Shortbow attack while keeping the Wolf beyond melee reach."
+    }
+  }
+}
