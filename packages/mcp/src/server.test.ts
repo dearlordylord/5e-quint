@@ -3620,6 +3620,58 @@ describe("MCP server route", () => {
     });
   });
 
+  test("accumulates mixed-roster projection issues through the runtime owner", () => {
+    const root = createMcpPlaySessionRoot();
+    const firstDraftId = "draft:mcp-runtime-owner-invalid-first";
+    const secondDraftId = "draft:mcp-runtime-owner-invalid-second";
+    createFinalizedFighterSheet(root, firstDraftId);
+    createFinalizedFighterSheet(root, secondDraftId);
+    const incompleteUnitLibrary = {
+      getUnit: () => Option.none(),
+      listUnits: () => root.unitLibrary.listUnits(),
+      requireUnit: root.unitLibrary.requireUnit,
+    };
+    const invalidRoot = {
+      ...root,
+      unitLibrary: incompleteUnitLibrary,
+    };
+
+    const rejected = readPayload(
+      handleToolCall(invalidRoot, "start_battle", {
+        battleId: "battle:mcp-runtime-owner-invalid-roster",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId: testCharacterId(firstDraftId),
+            combatantId: "invalid-first",
+            initiative: 18,
+          },
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId: testCharacterId(secondDraftId),
+            combatantId: "invalid-second",
+            initiative: 12,
+          },
+        ],
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          { details: { code: "CHARACTER_BATTLE_INIT_INVALID" } },
+          { details: { code: "CHARACTER_BATTLE_INIT_INVALID" } },
+        ],
+      },
+    });
+    expect(root.sessionStore.battleSession).toBeNull();
+  });
+
   test("start_battle admits a retained companion from Character Sheet state", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-find-familiar-admission";

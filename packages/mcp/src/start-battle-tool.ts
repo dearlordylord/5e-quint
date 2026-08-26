@@ -2,27 +2,15 @@ import {
   battlePresentedSnapshot,
   battleAdmittedSpellPresentations,
   discoverBattleActs,
-  battleCreatureInitFromStatBlock,
   startBattle,
   battleStateInitIssueMessage,
-  type BattleCreatureInit,
   type BattleRuntimeSession,
   type CombatantId,
 } from "@dnd/battle-runtime";
-import {
-  admitCharacterSheetCompanionToBattle,
-  characterSheetBattleInit,
-} from "@dnd/character-battle-runtime";
-import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
-import { Either, Match, Option } from "effect";
+import { admitCharacterSheetCompanionToBattle } from "@dnd/character-battle-runtime";
+import { Either, Match } from "effect";
 
-import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import { type AvailableCharacterSession } from "./session-store.ts";
-import type {
-  CharacterBattleRosterCombatant,
-  StatBlockBattleRosterCombatant,
-} from "./battle-roster-session-types.ts";
 import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import {
   type BattleCombatantToolInput,
@@ -31,33 +19,23 @@ import {
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
-import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
+import { schemaJsonContent } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
-import { errorContent, jsonContentPayload } from "./tool-content.ts";
+import { errorContent } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
+import {
+  startableBattleCombatants,
+  type StartableCharacterSessionCombatant,
+} from "./battle-combatant-projection.ts";
 
-export type StartableCharacterSessionCombatant = {
-  readonly character: CharacterSessionCombatantToolInput;
-  readonly session: AvailableCharacterSession;
-};
-
-export type StartableBattleCombatants = {
-  readonly creatureInits: readonly BattleCreatureInit[];
-  readonly characterSessions: readonly StartableCharacterSessionCombatant[];
-};
-
-export type ProjectedBattleCombatant =
-  | {
-      readonly tag: "characterSession";
-      readonly creatureInit: CharacterBattleRosterCombatant;
-      readonly characterSession: StartableCharacterSessionCombatant;
-    }
-  | {
-      readonly tag: "encounterCombatant";
-      readonly creatureInit: StatBlockBattleRosterCombatant;
-    };
+export { projectBattleCombatant } from "./battle-combatant-projection.ts";
+export type {
+  ProjectedBattleCombatant,
+  StartableBattleCombatants,
+  StartableCharacterSessionCombatant,
+} from "./battle-combatant-projection.ts";
 
 export function handleStartBattleToolCall(
   root: McpPlaySessionRoot,
@@ -194,142 +172,6 @@ function duplicateStartBattleInputContent(
   return null;
 }
 
-function startableBattleCombatants(input: {
-  readonly root: McpPlaySessionRoot;
-  readonly initialCombatants: readonly BattleCombatantToolInput[];
-}): Either.Either<StartableBattleCombatants, ReturnType<typeof errorContent>> {
-  const combatants = traverseValidation(input.initialCombatants, (combatant) =>
-    projectBattleCombatant({
-      root: input.root,
-      combatant,
-    }),
-  );
-  if (Either.isLeft(combatants)) {
-    return Either.left(invalidBattleCombatantsContent(combatants.left));
-  }
-
-  return Either.right({
-    creatureInits: combatants.right.map((combatant) => combatant.creatureInit),
-    characterSessions: combatants.right.flatMap((combatant) =>
-      combatant.tag === "characterSession" ? [combatant.characterSession] : [],
-    ),
-  });
-}
-
-export function projectBattleCombatant(input: {
-  readonly root: McpPlaySessionRoot;
-  readonly combatant: BattleCombatantToolInput;
-}): Either.Either<ProjectedBattleCombatant, ToolError> {
-  const { root, combatant } = input;
-  return Match.value(combatant).pipe(
-    Match.when({ kind: "characterSession" }, (character) => {
-      const session = root.sessionStore.characters.get(character.characterId);
-      if (session === undefined) {
-        return Either.left(
-          errorContent(
-            `Unknown finalized character session: ${character.characterId}`,
-            {
-              code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
-              characterId: character.characterId,
-            },
-          ),
-        );
-      }
-      if (session.tag === "inBattle") {
-        return Either.left(
-          errorContent("Character is already assigned to a battle.", {
-            code: "CHARACTER_ALREADY_IN_BATTLE",
-            characterId: character.characterId,
-            battleId: session.battleId,
-          }),
-        );
-      }
-      const characterInit = characterSheetBattleInit({
-        combatantId: character.combatantId,
-        displayName: characterBuildDisplayName(root.unitLibrary, session.build),
-        sheet: session,
-        initiative: character.initiative,
-        ammunitionStocks: character.ammunitionStocks,
-        unitLibrary: root.unitLibrary,
-        statBlockCatalog: root.statBlockCatalog,
-      });
-      if (Either.isLeft(characterInit)) {
-        return Either.left(
-          errorContent(characterInit.left.message, {
-            code: "CHARACTER_BATTLE_INIT_INVALID",
-          }),
-        );
-      }
-      if (characterInit.right.creatureInit.kind !== "character") {
-        return Either.left(
-          errorContent(
-            "Character battle initialization produced a non-character combatant.",
-            { code: "CHARACTER_BATTLE_INIT_INVALID" },
-          ),
-        );
-      }
-      return Either.right({
-        tag: "characterSession" as const,
-        creatureInit: {
-          ...characterInit.right,
-          creatureInit: characterInit.right.creatureInit,
-        },
-        characterSession: { character, session },
-      });
-    }),
-    Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
-      const encounterCombatant = statBlockCombatant;
-      const statBlock = root.statBlockCatalog.getStatBlock(
-        encounterCombatant.statBlockId,
-      );
-      if (Option.isNone(statBlock)) {
-        return Either.left(
-          errorContent("Unknown Stat Block combatant.", {
-            code: "UNKNOWN_STAT_BLOCK_COMBATANT",
-            statBlockId: encounterCombatant.statBlockId,
-          }),
-        );
-      }
-      const creatureInit = battleCreatureInitFromStatBlock({
-        combatantId: statBlockCombatant.combatantId,
-        statBlock: statBlock.value,
-        initiative: statBlockCombatant.initiative,
-        ammunitionStocks: statBlockCombatant.ammunitionStocks,
-        conditions: [],
-        ...(encounterCombatant.currentHp === undefined
-          ? {}
-          : { currentHp: encounterCombatant.currentHp }),
-        ...(encounterCombatant.tempHp === undefined
-          ? {}
-          : { tempHp: encounterCombatant.tempHp }),
-      });
-      if (Either.isLeft(creatureInit)) {
-        return Either.left(
-          errorContent(battleStateInitIssueMessage(creatureInit.left), {
-            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-          }),
-        );
-      }
-      if (creatureInit.right.creatureInit.kind !== "statBlock") {
-        return Either.left(
-          errorContent(
-            "Stat Block battle initialization produced a character combatant.",
-            { code: "STAT_BLOCK_BATTLE_INIT_INVALID" },
-          ),
-        );
-      }
-      return Either.right({
-        tag: "encounterCombatant" as const,
-        creatureInit: {
-          ...creatureInit.right,
-          creatureInit: creatureInit.right.creatureInit,
-        },
-      });
-    }),
-    Match.exhaustive,
-  );
-}
-
 function admitCompanionAdmissions(input: {
   readonly root: McpPlaySessionRoot;
   readonly session: BattleRuntimeSession;
@@ -405,13 +247,6 @@ function initialCombatantOrderForStartInput(
       ),
     ].map((combatantId, index) => [combatantId, index]),
   );
-}
-
-function invalidBattleCombatantsContent(issues: readonly ToolError[]) {
-  return errorContent("Invalid battle start combatants.", {
-    code: "INVALID_BATTLE_COMBATANTS",
-    issues: issues.map(jsonContentPayload),
-  });
 }
 
 function isCharacterSessionCombatant(

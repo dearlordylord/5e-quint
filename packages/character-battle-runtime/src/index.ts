@@ -25,6 +25,7 @@ import {
   type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
   type StatBlockBattleInitInput,
+  type CombatantId,
   battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import {
@@ -60,6 +61,7 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import {
   CONDITIONS,
   resourceCount,
+  type ReadonlyNonEmptyArray,
   type Condition,
   type ResourceCount,
   type SpellSlotLevel,
@@ -68,6 +70,7 @@ import {
   EMPTY_CONDITION_STATE,
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
+import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
@@ -95,11 +98,24 @@ import {
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
 export function characterBattleRuntimeIssueMessage(
-  issue: BattleCreatureInitIssue | BattleStateInitIssue,
+  issue:
+    | BattleCreatureInitIssue
+    | BattleStateInitIssue
+    | CharacterBattleEncounterCompositionFailure,
 ): string {
-  return issue.tag === "battleCreatureInitIssue"
-    ? issue.message
-    : battleStateInitIssueMessage(issue);
+  if (issue.tag === "battleCreatureInitIssue") return issue.message;
+  if (issue.tag === "characterBattleEncounterEmptyRoster") {
+    return "Character battle encounter requires at least one participant.";
+  }
+  if (issue.tag === "characterBattleEncounterProjectionIssues") {
+    return issue.issues
+      .map(
+        ({ combatantId, issue: participantIssue }) =>
+          `${combatantId}: ${characterBattleRuntimeIssueMessage(participantIssue)}`,
+      )
+      .join("; ");
+  }
+  return battleStateInitIssueMessage(issue);
 }
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
@@ -203,6 +219,60 @@ export type CharacterSheetBattleInitInput = Omit<
   readonly statBlockCatalog: StatBlockCatalog;
 };
 
+/**
+ * One explicitly selected Battle participant. The origin discriminant carries
+ * the only source-specific fields, so a Character Sheet cannot also carry a
+ * Stat Block role (or vice versa).
+ */
+export type CharacterBattleEncounterParticipant =
+  | (Omit<CharacterSheetBattleInitInput, "unitLibrary" | "statBlockCatalog"> & {
+      readonly origin: "characterSheet";
+    })
+  | (Omit<StatBlockBattleInitInput, "statBlock"> & {
+      readonly origin: "statBlock";
+      readonly statBlock: StatBlockBattleInitInput["statBlock"];
+    });
+
+export type CharacterBattleEncounterRoster =
+  ReadonlyNonEmptyArray<CharacterBattleEncounterParticipant>;
+
+export type CharacterBattleEncounterProjectionIssue = {
+  readonly tag: "characterBattleEncounterProjectionIssue";
+  readonly origin: CharacterBattleEncounterParticipant["origin"];
+  readonly combatantId: CombatantId;
+  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
+};
+
+export type CharacterBattleEncounterProjectionIssues = {
+  readonly tag: "characterBattleEncounterProjectionIssues";
+  readonly issues: ReadonlyNonEmptyArray<CharacterBattleEncounterProjectionIssue>;
+};
+
+export type CharacterBattleEncounterCompositionFailure =
+  | { readonly tag: "characterBattleEncounterEmptyRoster" }
+  | CharacterBattleEncounterProjectionIssues;
+
+export type CharacterBattleEncounterCompositionIssue = {
+  readonly issue: CharacterBattleEncounterCompositionFailure;
+  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
+  readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
+};
+
+export type CharacterBattleEncounterComposition = {
+  readonly creatureInits: ReadonlyNonEmptyArray<BattleCreatureInit>;
+  readonly characterSheetParticipants: readonly Extract<
+    CharacterBattleEncounterParticipant,
+    { readonly origin: "characterSheet" }
+  >[];
+  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
+  readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
+};
+
+type CharacterBattleEncounterParticipantProjectionIssue = {
+  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
+  readonly routeEvents: readonly CharacterBattleRouteEvent[];
+};
+
 export type CharacterBattleInitProjection = {
   readonly init: BattleCreatureInit;
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
@@ -220,7 +290,10 @@ export type CharacterBattleRuntimeEntry = {
 };
 
 export type CharacterBattleRuntimeEntryIssue = {
-  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
+  readonly issue:
+    | BattleCreatureInitIssue
+    | BattleStateInitIssue
+    | CharacterBattleEncounterCompositionFailure;
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
@@ -366,6 +439,152 @@ function characterBuildInitIssueRoute(
     : rejectCharacterBattleInitProjectionRoute();
 }
 
+/**
+ * Projects an arbitrary non-empty mixed-origin roster once. Callers that own
+ * transport or session lookup should resolve those facts into this explicit
+ * roster, then consume the returned creature initializations and character
+ * participants without reproducing source-specific projection.
+ */
+export function composeCharacterBattleEncounter(input: {
+  readonly roster: CharacterBattleEncounterRoster;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog: StatBlockCatalog;
+}): Either.Either<
+  CharacterBattleEncounterComposition,
+  CharacterBattleEncounterCompositionIssue
+> {
+  if (input.roster.length === 0) {
+    return Either.left({
+      issue: { tag: "characterBattleEncounterEmptyRoster" },
+      initProjectionRouteEvents: [],
+      encounterCompositionRouteEvents: [],
+    });
+  }
+
+  const initProjectionRouteEvents: CharacterBattleRouteEvent[] = [];
+  const projections = traverseValidation(input.roster, (participant) => {
+    const projected = projectCharacterBattleEncounterParticipant({
+      participant,
+      unitLibrary: input.unitLibrary,
+      statBlockCatalog: input.statBlockCatalog,
+    });
+    if (Either.isLeft(projected)) {
+      initProjectionRouteEvents.push(...projected.left.routeEvents);
+      return Either.left({
+        tag: "characterBattleEncounterProjectionIssue" as const,
+        origin: participant.origin,
+        combatantId: participant.combatantId,
+        issue: projected.left.issue,
+      });
+    }
+    initProjectionRouteEvents.push(...projected.right.routeEvents);
+    return Either.right(projected.right.init);
+  });
+
+  if (Either.isLeft(projections)) {
+    return Either.left({
+      issue: {
+        tag: "characterBattleEncounterProjectionIssues",
+        issues: projections.left,
+      },
+      initProjectionRouteEvents,
+      encounterCompositionRouteEvents: [],
+    });
+  }
+
+  const [first, ...rest] = projections.right;
+  if (first === undefined) {
+    return Either.left({
+      issue: { tag: "characterBattleEncounterEmptyRoster" },
+      initProjectionRouteEvents,
+      encounterCompositionRouteEvents: [],
+    });
+  }
+  const encounterCompositionRouteEvents =
+    characterBattleEncounterCompositionRoute();
+  return Either.right({
+    creatureInits: [first, ...rest],
+    characterSheetParticipants: input.roster.flatMap((participant) =>
+      participant.origin === "characterSheet" ? [participant] : [],
+    ),
+    initProjectionRouteEvents,
+    encounterCompositionRouteEvents,
+  });
+}
+
+export function startBattleFromCharacterBattleRoster(input: {
+  readonly battleId: BattleId;
+  readonly roster: CharacterBattleEncounterRoster;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog: StatBlockCatalog;
+}): Either.Either<
+  CharacterBattleRuntimeEntry,
+  CharacterBattleRuntimeEntryIssue
+> {
+  const composition = composeCharacterBattleEncounter(input);
+  if (Either.isLeft(composition)) {
+    return Either.left({
+      issue: composition.left.issue,
+      routeEvents: [
+        ...composition.left.initProjectionRouteEvents,
+        ...composition.left.encounterCompositionRouteEvents,
+      ],
+    });
+  }
+
+  const session = startBattle({
+    battleId: input.battleId,
+    combatants: composition.right.creatureInits,
+  });
+  if (Either.isLeft(session)) {
+    return Either.left({
+      issue: session.left,
+      routeEvents: [
+        ...composition.right.initProjectionRouteEvents,
+        ...composition.right.encounterCompositionRouteEvents,
+      ],
+    });
+  }
+  return Either.right({
+    session: session.right,
+    initProjectionRouteEvents: composition.right.initProjectionRouteEvents,
+    encounterCompositionRouteEvents:
+      composition.right.encounterCompositionRouteEvents,
+  });
+}
+
+function projectCharacterBattleEncounterParticipant(input: {
+  readonly participant: CharacterBattleEncounterParticipant;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog: StatBlockCatalog;
+}): Either.Either<
+  CharacterBattleInitProjection,
+  CharacterBattleEncounterParticipantProjectionIssue
+> {
+  return input.participant.origin === "characterSheet"
+    ? characterSheetBattleInitWithRoute({
+        ...input.participant,
+        unitLibrary: input.unitLibrary,
+        statBlockCatalog: input.statBlockCatalog,
+      })
+    : statBlockBattleInitProjection(input.participant);
+}
+
+function statBlockBattleInitProjection(
+  participant: Extract<
+    CharacterBattleEncounterParticipant,
+    { readonly origin: "statBlock" }
+  >,
+): Either.Either<
+  CharacterBattleInitProjection,
+  CharacterBattleEncounterParticipantProjectionIssue
+> {
+  const init = battleCreatureInitFromStatBlock(participant);
+  return Either.isLeft(init)
+    ? Either.left({ issue: init.left, routeEvents: [] })
+    : Either.right({ init: init.right, routeEvents: [] });
+}
+
 export function startBattleFromCharacterSheetAndStatBlock(input: {
   readonly battleId: BattleId;
   readonly character: CharacterSheetBattleInitInput;
@@ -374,37 +593,50 @@ export function startBattleFromCharacterSheetAndStatBlock(input: {
   CharacterBattleRuntimeEntry,
   CharacterBattleRuntimeEntryIssue
 > {
-  const characterInit = characterSheetBattleInitWithRoute(input.character);
-  if (Either.isLeft(characterInit)) {
-    return Either.left({
-      issue: characterInit.left.issue,
-      routeEvents: characterInit.left.routeEvents,
-    });
-  }
-  const statBlockInit = battleCreatureInitFromStatBlock(
-    input.statBlockBattleInput,
-  );
-  if (Either.isLeft(statBlockInit)) {
-    return Either.left({
-      issue: statBlockInit.left,
-      routeEvents: characterInit.right.routeEvents,
-    });
-  }
-  const session = startBattle({
+  const { unitLibrary, statBlockCatalog, ...character } = input.character;
+  const entry = startBattleFromCharacterBattleRoster({
     battleId: input.battleId,
-    combatants: [characterInit.right.init, statBlockInit.right],
+    unitLibrary,
+    statBlockCatalog,
+    roster: [
+      { origin: "characterSheet", ...character },
+      { origin: "statBlock", ...input.statBlockBattleInput },
+    ],
   });
-  if (Either.isLeft(session)) {
-    return Either.left({
-      issue: session.left,
-      routeEvents: characterInit.right.routeEvents,
-    });
+  if (Either.isRight(entry)) return entry;
+  return Either.left({
+    issue: fixedRosterEntryIssue(entry.left.issue),
+    routeEvents: entry.left.routeEvents,
+  });
+}
+
+function fixedRosterEntryIssue(
+  issue: CharacterBattleRuntimeEntryIssue["issue"],
+): BattleCreatureInitIssue | BattleStateInitIssue {
+  if (issue.tag !== "characterBattleEncounterProjectionIssues") {
+    return issue.tag === "characterBattleEncounterEmptyRoster"
+      ? characterBattleCreatureInitIssue(
+          "Character battle encounter requires at least one participant.",
+        )
+      : issue;
   }
-  return Either.right({
-    session: session.right,
-    initProjectionRouteEvents: characterInit.right.routeEvents,
-    encounterCompositionRouteEvents: characterBattleEncounterCompositionRoute(),
-  });
+  const projectedIssues = issue.issues;
+  if (projectedIssues.length === 1) {
+    return projectedIssues[0].issue;
+  }
+  return characterBattleCreatureInitIssue(
+    projectedIssues
+      .map(({ issue: participantIssue }) =>
+        characterBattleRuntimeIssueMessage(participantIssue),
+      )
+      .join("; "),
+  );
+}
+
+function characterBattleCreatureInitIssue(
+  message: string,
+): BattleCreatureInitIssue {
+  return { tag: "battleCreatureInitIssue", message };
 }
 
 function acceptedCharacterSheetBattleInitRoute(input: {

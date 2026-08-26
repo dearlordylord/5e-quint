@@ -150,8 +150,10 @@ import {
   characterBattleLoadoutFromBuild,
   characterOffHandAttackActionOption,
   characterSpellcasting as characterSpellcastingRuntime,
+  composeCharacterBattleEncounter,
   settleCharacterSheetFromBattle,
   startBattleFromCharacterBuildAndStatBlock as startBattleFromCharacterBuildAndStatBlockRuntime,
+  startBattleFromCharacterBattleRoster,
   startBattleFromCharacterSheetAndStatBlock,
   characterBattleRuntimeIssueMessage,
 } from "./index.ts";
@@ -993,6 +995,139 @@ describe("Character Sheet battle handoff", () => {
         },
       },
     });
+  });
+
+  test("composes an arbitrary mixed roster while preserving execution identities", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:arbitrary-roster"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const characterCombatantId = combatantId("CaseSensitiveCharacter");
+    const firstStatBlockCombatantId = combatantId("stat-block-A");
+    const secondStatBlockCombatantId = combatantId("stat-block-B");
+    const roster = [
+      {
+        origin: "characterSheet" as const,
+        sheet,
+        combatantId: characterCombatantId,
+        displayName: "Caller Character Name",
+        initiative: initiativeScore(20),
+        ammunitionStocks: [],
+      },
+      {
+        origin: "statBlock" as const,
+        statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        combatantId: firstStatBlockCombatantId,
+        initiative: initiativeScore(10),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        conditions: [],
+      },
+      {
+        origin: "statBlock" as const,
+        statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        combatantId: secondStatBlockCombatantId,
+        initiative: initiativeScore(5),
+        ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+        conditions: [],
+      },
+    ] as const;
+
+    const composition = composeCharacterBattleEncounter({
+      roster,
+      unitLibrary,
+      statBlockCatalog,
+    });
+    expect(Either.isRight(composition)).toBe(true);
+    if (Either.isLeft(composition)) return;
+
+    expect(
+      composition.right.creatureInits.map(({ combatantId }) => combatantId),
+    ).toEqual([
+      characterCombatantId,
+      firstStatBlockCombatantId,
+      secondStatBlockCombatantId,
+    ]);
+    expect(composition.right.creatureInits[0]?.displayName).toBe(
+      "Caller Character Name",
+    );
+    expect(composition.right.characterSheetParticipants).toEqual([roster[0]]);
+
+    const entry = startBattleFromCharacterBattleRoster({
+      battleId: battleId("battle:arbitrary-roster"),
+      roster,
+      unitLibrary,
+      statBlockCatalog,
+    });
+    expect(Either.isRight(entry)).toBe(true);
+    if (Either.isLeft(entry)) return;
+    expect([...entry.right.session.state.combatants.keys()]).toEqual([
+      characterCombatantId,
+      firstStatBlockCombatantId,
+      secondStatBlockCombatantId,
+    ]);
+  });
+
+  test("accumulates independent projection issues for every roster participant", () => {
+    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+    const unsupportedStatBlock = {
+      ...skeleton,
+      statBlock: {
+        ...skeleton.statBlock,
+        hp: {
+          kind: "caster_derived" as const,
+          source: "proficiency_bonus" as const,
+        },
+      },
+    };
+    const firstCombatantId = combatantId("invalid-stat-block-A");
+    const secondCombatantId = combatantId("invalid-stat-block-B");
+    const composition = composeCharacterBattleEncounter({
+      roster: [
+        {
+          origin: "statBlock" as const,
+          statBlock: unsupportedStatBlock,
+          combatantId: firstCombatantId,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          conditions: [],
+        },
+        {
+          origin: "statBlock" as const,
+          statBlock: unsupportedStatBlock,
+          combatantId: secondCombatantId,
+          initiative: initiativeScore(5),
+          ammunitionStocks: [],
+          conditions: [],
+        },
+      ],
+      unitLibrary,
+      statBlockCatalog,
+    });
+
+    expect(Either.isLeft(composition)).toBe(true);
+    if (Either.isRight(composition)) return;
+    expect(composition.left.issue.tag).toBe(
+      "characterBattleEncounterProjectionIssues",
+    );
+    if (
+      composition.left.issue.tag !== "characterBattleEncounterProjectionIssues"
+    ) {
+      return;
+    }
+    expect(
+      composition.left.issue.issues.map(({ origin, combatantId }) => ({
+        origin,
+        combatantId,
+      })),
+    ).toEqual([
+      { origin: "statBlock", combatantId: firstCombatantId },
+      { origin: "statBlock", combatantId: secondCombatantId },
+    ]);
   });
 
   test("routes Character Sheet initialization failures from caller catalog drift", () => {
