@@ -20,6 +20,11 @@ export const PLAY_SESSION_TOOL_NAMES = [
 ] as const;
 
 export type PlaySessionToolName = (typeof PLAY_SESSION_TOOL_NAMES)[number];
+export const SAVED_PLAY_SESSION_TOOL_NAMES = [
+  playSessionToolNames.save,
+  playSessionToolNames.listSaved,
+  playSessionToolNames.deleteSaved,
+] as const satisfies ReadonlyArray<PlaySessionToolName>;
 export const PLAY_SESSION_OPERATION_NAMES = [
   ...PLAY_SESSION_TOOL_NAMES,
   ...CHARACTER_TOOL_NAMES,

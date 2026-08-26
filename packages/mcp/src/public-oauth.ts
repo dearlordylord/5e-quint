@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { Either, Schema } from "effect";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
@@ -97,37 +99,6 @@ function oauthPrincipalId(
   );
 }
 
-export function createPublicMcpOAuthFromEnvironment(
-  environment: Readonly<Record<string, string | undefined>>,
-): Either.Either<PublicMcpOAuth | undefined, PublicMcpOAuthIssue> {
-  const input = {
-    resource: nonEmptyEnvironmentValue(environment.DND_OAUTH_RESOURCE_URL),
-    authorizationServer: nonEmptyEnvironmentValue(
-      environment.DND_OAUTH_AUTHORIZATION_SERVER,
-    ),
-    issuer: nonEmptyEnvironmentValue(environment.DND_OAUTH_ISSUER),
-    jwksUrl: nonEmptyEnvironmentValue(environment.DND_OAUTH_JWKS_URL),
-  };
-  if (Object.values(input).every((value) => value === undefined)) {
-    return Either.right(undefined);
-  }
-  if (Object.values(input).some((value) => value === undefined)) {
-    return Either.left({
-      tag: "publicMcpOAuthIssue",
-      reason: "invalidConfiguration",
-      message:
-        "OAuth configuration is partial. Set all DND_OAUTH_* variables or none of them.",
-    });
-  }
-  return createPublicMcpOAuth(input);
-}
-
-function nonEmptyEnvironmentValue(
-  value: string | undefined,
-): string | undefined {
-  return value?.trim() === "" ? undefined : value;
-}
-
 function tokenScopes(scope: unknown, scp: unknown): readonly string[] {
   if (typeof scope === "string") return scope.split(/\s+/u).filter(Boolean);
   if (Array.isArray(scp) && scp.every((item) => typeof item === "string")) {
@@ -143,4 +114,3 @@ function invalidTokenIssue(): PublicMcpOAuthIssue {
     message: "The OAuth access token is invalid or lacks the required scope.",
   };
 }
-import { createHash } from "node:crypto";

@@ -1,14 +1,17 @@
 import type { LookupAddress } from "node:dns";
+import { EventEmitter } from "node:events";
 import { Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
 
 import {
   metadataRequestOptions,
   metadataResponseBody,
+  makeClientMetadataResourceFetch,
   pinnedLookup,
   resolvePinnedAddress,
   shouldExposeBody,
-} from "./cimd-metadata-fetch.ts";
+  type MetadataResponse,
+} from "./client-metadata-fetch.ts";
 
 const PUBLIC_IPV4: LookupAddress = { address: "93.184.216.34", family: 4 };
 const PUBLIC_IPV6: LookupAddress = {
@@ -17,6 +20,82 @@ const PUBLIC_IPV6: LookupAddress = {
 };
 
 describe("CIMD metadata transport", () => {
+  it("fetches metadata through the validated pinned transport", async () => {
+    const response = Object.assign(
+      Readable.from([Buffer.from('{"client_name":"Oracle"}')]),
+      {
+        statusCode: 200,
+        statusMessage: "OK",
+        headers: {
+          "content-type": "application/json",
+          "set-cookie": ["first=1", "second=2"],
+        },
+      },
+    );
+    let respond: ((response: MetadataResponse) => void) | undefined;
+    const metadataRequest = Object.assign(new EventEmitter(), {
+      end: vi.fn(() => {
+        if (respond === undefined) throw new Error("Missing response callback");
+        respond(response);
+        return metadataRequest;
+      }),
+    });
+    const requestMetadataResource = vi.fn(
+      (
+        _url: URL,
+        _options: ReturnType<typeof metadataRequestOptions>,
+        onResponse: (response: MetadataResponse) => void,
+      ) => {
+        respond = onResponse;
+        return metadataRequest;
+      },
+    );
+    const fetchMetadata = makeClientMetadataResourceFetch(
+      vi.fn(async () => [PUBLIC_IPV4]),
+      requestMetadataResource,
+    );
+
+    const result = await fetchMetadata(
+      new Request("https://metadata.example/client.json", {
+        headers: { accept: "application/json" },
+      }),
+    );
+
+    expect(result.status).toBe(200);
+    expect(result.statusText).toBe("OK");
+    expect(result.headers.get("set-cookie")).toContain("first=1");
+    await expect(result.json()).resolves.toEqual({ client_name: "Oracle" });
+    expect(requestMetadataResource).toHaveBeenCalledOnce();
+  });
+
+  it("rejects unsupported URLs and methods before transport", async () => {
+    const fetchMetadata = makeClientMetadataResourceFetch();
+
+    await expect(
+      fetchMetadata("http://metadata.example/client.json"),
+    ).rejects.toThrow("requires an HTTPS URL");
+    await expect(
+      fetchMetadata("https://metadata.example/client.json", { method: "POST" }),
+    ).rejects.toThrow("supports only GET and HEAD");
+  });
+
+  it("propagates pinned transport failures", async () => {
+    const metadataRequest = Object.assign(new EventEmitter(), {
+      end: vi.fn(() => {
+        metadataRequest.emit("error", new Error("transport failed"));
+        return metadataRequest;
+      }),
+    });
+    const fetchMetadata = makeClientMetadataResourceFetch(
+      vi.fn(async () => [PUBLIC_IPV4]),
+      vi.fn(() => metadataRequest),
+    );
+
+    await expect(
+      fetchMetadata("https://metadata.example/client.json"),
+    ).rejects.toThrow("transport failed");
+  });
+
   it("resolves once, validates every answer, and pins the first public address", async () => {
     const lookup = vi.fn(async () => [PUBLIC_IPV4, PUBLIC_IPV6]);
     const pinned = await resolvePinnedAddress(
@@ -47,6 +126,26 @@ describe("CIMD metadata transport", () => {
       ),
     ).rejects.toThrow("must resolve only to public-routable addresses");
     expect(lookup).toHaveBeenCalledOnce();
+  });
+
+  it("rejects empty DNS answers and an already-aborted lookup", async () => {
+    await expect(
+      resolvePinnedAddress(
+        "metadata.example",
+        new AbortController().signal,
+        vi.fn(async () => []),
+      ),
+    ).rejects.toThrow("returned no DNS addresses");
+
+    const controller = new AbortController();
+    controller.abort(new Error("already cancelled"));
+    await expect(
+      resolvePinnedAddress(
+        "metadata.example",
+        controller.signal,
+        vi.fn(async () => [PUBLIC_IPV4]),
+      ),
+    ).rejects.toThrow("already cancelled");
   });
 
   it("settles a stalled DNS lookup when the request is aborted", async () => {
@@ -93,6 +192,16 @@ describe("CIMD metadata transport", () => {
     expect(options.servername).toBe("metadata.example");
     expect(options.signal).toBe(controller.signal);
     expect(callback).toHaveBeenCalledWith(null, [PUBLIC_IPV4]);
+
+    expect(
+      metadataRequestOptions(
+        new URL("https://93.184.216.34/client.json"),
+        {},
+        "HEAD",
+        controller.signal,
+        PUBLIC_IPV4,
+      ).servername,
+    ).toBeUndefined();
   });
 
   it("exposes only JSON success bodies and disposes every rejected response shape", () => {
@@ -106,6 +215,7 @@ describe("CIMD metadata transport", () => {
         "content-type": "application/oauth-client-metadata+json",
       }),
     ).toBe(true);
+    expect(shouldExposeBody("GET", 200, {})).toBe(false);
     expect(shouldExposeBody("GET", 200, { "content-type": "text/plain" })).toBe(
       false,
     );

@@ -12,7 +12,7 @@ const RegistrationRowSchema = Schema.Struct({
 });
 
 const configuration = Schema.decodeUnknownEither(EvidenceConfigurationSchema)({
-  databasePath: process.env.DND_PROTOTYPE_AUTH_DATABASE_PATH,
+  databasePath: process.env.DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH,
 });
 if (Either.isLeft(configuration)) {
   process.stderr.write(`${configuration.left.message}\n`);

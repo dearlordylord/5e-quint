@@ -231,7 +231,13 @@ export function publicMcpHttpMethod(
 }
 
 export function writePublicMcpInitializationFailure(
-  phase: "configuration" | "oauth" | "storage" | "listen" | "shutdown",
+  phase:
+    | "configuration"
+    | "authorization"
+    | "oauth"
+    | "storage"
+    | "listen"
+    | "shutdown",
 ): void {
   process.stderr.write(
     `${JSON.stringify({

@@ -111,39 +111,33 @@ stateful requests per minute per capability or principal. Limit failures are
 typed and rate failures include a retry delay. HTTP bodies over 1 MiB are
 rejected before MCP parsing.
 
-Run the provider-neutral Node HTTP entrypoint with an explicit database path:
+Run the provider-neutral Node HTTP entrypoint with explicit application and
+authorization state paths:
 
 ```sh
+DND_MCP_PUBLIC_ORIGIN=https://oracle.example.test \
 DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
+DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH=/var/lib/dnd-oracle/saved-session-authorization.sqlite \
+DND_SAVED_SESSION_AUTHORIZATION_SECRET=replace-with-at-least-32-random-characters \
   pnpm --filter @dnd/mcp serve:http
 ```
 
 `DND_MCP_HOST` defaults to `0.0.0.0` and `PORT` defaults to `8787`. Stdio
 development continues to use `pnpm --filter @dnd/mcp dev`; Secure MCP Tunnel
-continues to launch that stdio entrypoint rather than the public database.
-Guest play and stateless catalog discovery need no OAuth configuration. To
-enable saved-session creation, save, list, resume, and delete, set the complete
-provider-neutral OAuth configuration; a partial configuration fails startup:
+continues to launch that stdio entrypoint rather than the public database. To
+exercise the same public composition during development, expose `serve:http`
+through an HTTPS tunnel and set `DND_MCP_PUBLIC_ORIGIN` to that tunnel origin.
 
-```sh
-DND_OAUTH_RESOURCE_URL=https://oracle.example.test/mcp \
-DND_OAUTH_AUTHORIZATION_SERVER=https://identity.example.test \
-DND_OAUTH_ISSUER=https://identity.example.test \
-DND_OAUTH_JWKS_URL=https://identity.example.test/.well-known/jwks.json \
-DND_PLAY_SESSION_DATABASE_PATH=/var/lib/dnd-oracle/play-sessions.sqlite \
-  pnpm --filter @dnd/mcp serve:http
-```
-
-The MCP resource URL is also the required access-token audience; it is one
-canonical resource identity rather than a separately configurable pair. The
-server publishes OAuth protected-resource metadata at
+Guest play and stateless catalog discovery remain anonymous. The same public
+process owns credential-free saved-session authorization under `/api/auth`;
+there is no external identity-provider configuration and no provider-specific
+hosting dependency. The public origin canonically derives the MCP resource,
+OAuth issuer, audience, and JWKS URLs. The server publishes protected-resource
+metadata at
 `/.well-known/oauth-protected-resource`. It verifies token signature, issuer,
 audience, expiry, subject, and the `play-sessions` scope on every bearer
 request. The OAuth provider and hosting provider are not application owners and
 can be replaced without changing the session model.
-When OAuth is not configured, the server advertises anonymous security only and
-omits the save/list/delete tools instead of offering capabilities that cannot
-run.
 The executable parity test starts both real transports, compares the server
 instructions and complete advertised tool contracts, compares representative
 static and stateful results, and runs the complete newcomer journey through

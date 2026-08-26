@@ -1,28 +1,20 @@
 import { createHash, randomBytes } from "node:crypto";
-import {
-  createServer,
-  type IncomingMessage,
-  type ServerResponse,
-} from "node:http";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 
-import { Either, Effect, ManagedRuntime, Schema } from "effect";
+import { Either } from "effect";
 
 import {
-  BetterAuthPrototype,
-  betterAuthPrototypeLayer,
   CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS,
   CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
   REFRESHING_ACCESS_TOKEN_LIFETIME_SECONDS as refreshingTokenLifetime,
   SAVED_SESSION_OAUTH_SCOPES,
   SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
-} from "./better-auth-service.ts";
-import { createPublicMcpOAuth } from "../../public-oauth.ts";
+} from "./service.ts";
+import { createPublicMcpOAuth } from "../public-oauth.ts";
 import { verifySavedSessionMcp } from "./saved-session-mcp-smoke.ts";
+import { openSavedSessionAuthorizationSmokeTarget } from "./smoke-target.ts";
 import {
   AuthorizationServerMetadataSchema,
+  assertRemainingTokenLifetime,
   assertTokenLifetime,
   authorizeExistingBrowserSession,
   decodeJson,
@@ -31,40 +23,26 @@ import {
   RefreshTokenResponseSchema,
   RegisteredClientSchema,
   requestVaultRedirect,
-  requestBody,
   responseCookie,
   SessionResponseSchema,
   verifyChatGptAuthorization,
-} from "./prototype-oauth-smoke-support.ts";
+} from "./oauth-smoke-support.ts";
 
 const requestedScopes = SAVED_SESSION_OAUTH_SCOPES.join(" ");
 
-const scratchDirectory = await mkdtemp(
-  join(tmpdir(), "dnd-better-auth-prototype-"),
-);
-const origin = new URL("http://127.0.0.1:9876");
+const target = await openSavedSessionAuthorizationSmokeTarget();
+const origin = target.origin;
 const resource = new URL("/mcp", origin);
 const issuer = new URL("/api/auth", origin);
-const layer = betterAuthPrototypeLayer({
-  authorizationServerOrigin: origin,
-  databasePath: join(scratchDirectory, "PROTOTYPE-WIPE-ME.sqlite"),
-  resource,
-  secret: "prototype-only-secret-at-least-32-characters",
+const oauth = createPublicMcpOAuth({
+  resource: resource.toString(),
+  authorizationServer: issuer.toString(),
+  issuer: issuer.toString().replace(/\/$/u, ""),
+  jwksUrl: new URL("/api/auth/jwks", origin).toString(),
 });
-const authRuntime = ManagedRuntime.make(layer);
-const service = await authRuntime.runPromise(BetterAuthPrototype);
-const server = createServer((incoming, outgoing) => {
-  handleRequest(incoming, outgoing).catch((cause) => {
-    outgoing.statusCode = 500;
-    outgoing.end(cause instanceof Error ? cause.message : String(cause));
-  });
-});
+if (Either.isLeft(oauth)) throw new Error(oauth.left.message);
 
 try {
-  await new Promise<void>((resolve, reject) => {
-    server.once("error", reject);
-    server.listen(9876, "127.0.0.1", resolve);
-  });
   const metadata = await decodeJson(
     AuthorizationServerMetadataSchema,
     await fetch(
@@ -80,9 +58,9 @@ try {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
-        client_name: "5.5e SRD Oracle local OAuth prototype",
+        client_name: "5.5e SRD Oracle local OAuth smoke",
         application_type: "native",
-        redirect_uris: [new URL("/prototype/callback", origin).toString()],
+        redirect_uris: [new URL("/oauth-smoke-callback", origin).toString()],
         token_endpoint_auth_method: "none",
         grant_types: ["authorization_code", "refresh_token"],
         response_types: ["code"],
@@ -113,7 +91,7 @@ try {
     resource: resource.toString(),
     code_challenge: challenge,
     code_challenge_method: "S256",
-    state: "prototype-state",
+    state: "saved-session-state",
   }).toString();
   const login = await decodeJson(
     RedirectResultSchema,
@@ -123,7 +101,7 @@ try {
     throw new Error("Authorization did not return a redirect");
   }
   const loginUrl = new URL(login.url, origin);
-  if (loginUrl.pathname !== "/prototype/vault") {
+  if (loginUrl.pathname !== "/saved-session-vault") {
     throw new Error(`Expected vault redirect, received ${loginUrl.pathname}`);
   }
   const publicClient = await decodeJson(
@@ -160,7 +138,7 @@ try {
     throw new Error("Vault creation did not continue authorization");
   }
   const consentUrl = new URL(vault.url, origin);
-  if (consentUrl.pathname !== "/prototype/consent") {
+  if (consentUrl.pathname !== "/saved-session-consent") {
     throw new Error(
       `Expected consent redirect, received ${consentUrl.pathname}`,
     );
@@ -216,13 +194,6 @@ try {
     tokenEndpoint: metadata.token_endpoint,
     userInfoEndpoint: metadata.userinfo_endpoint,
   });
-  const oauth = createPublicMcpOAuth({
-    resource: resource.toString(),
-    authorizationServer: issuer.toString(),
-    issuer: metadata.issuer,
-    jwksUrl: metadata.jwks_uri.toString(),
-  });
-  if (Either.isLeft(oauth)) throw new Error(oauth.left.message);
   const refreshedTokens = await decodeJson(
     RefreshTokenResponseSchema,
     await fetch(metadata.token_endpoint, {
@@ -253,7 +224,7 @@ try {
       }),
     }),
   );
-  assertTokenLifetime(replayedRefresh, refreshingTokenLifetime);
+  assertRemainingTokenLifetime(replayedRefresh, refreshingTokenLifetime);
   if (
     replayedRefresh.access_token !== refreshedTokens.access_token ||
     replayedRefresh.refresh_token !== refreshedTokens.refresh_token
@@ -310,7 +281,7 @@ try {
     redirectUri,
     requestedScopes,
     resource,
-    state: "isolated-prototype-state",
+    state: "isolated-saved-session-state",
     tokenEndpoint: metadata.token_endpoint,
   });
   const isolatedPrincipal = await oauth.right.verifyAccessToken(
@@ -345,14 +316,14 @@ try {
   }
   const savedSessionMcp = await verifySavedSessionMcp({
     accessToken: chatGptAccessToken,
-    databasePath: join(scratchDirectory, "mcp-play-sessions.sqlite"),
+    endpoint: target.endpoint,
     isolatedAccessToken: isolatedTokens.access_token,
-    oauth: oauth.right,
   });
   process.stdout.write(
     `${JSON.stringify(
       {
-        tag: "betterAuthPrototypeObserved",
+        tag: "savedSessionAuthorizationObserved",
+        target: target.tag,
         issuer: metadata.issuer,
         authorizationEndpoint: metadata.authorization_endpoint.toString(),
         tokenEndpoint: metadata.token_endpoint.toString(),
@@ -371,7 +342,7 @@ try {
             publicClient.client_name.length > 0,
           consentRequired: true,
           callbackStatePreserved:
-            callbackUrl.searchParams.get("state") === "prototype-state",
+            callbackUrl.searchParams.get("state") === "saved-session-state",
           accessTokenIssued: tokens.access_token.length > 0,
           accessTokenType: tokens.token_type,
           scopes: tokens.scope.split(/\s+/u).filter(Boolean).sort(),
@@ -393,34 +364,5 @@ try {
     )}\n`,
   );
 } finally {
-  await new Promise<void>((resolve) => server.close(() => resolve()));
-  await authRuntime.dispose();
-  await rm(scratchDirectory, { recursive: true });
-}
-
-async function handleRequest(
-  incoming: IncomingMessage,
-  outgoing: ServerResponse,
-): Promise<void> {
-  const body = await requestBody(incoming);
-  const headers = new Headers();
-  for (const [name, value] of Object.entries(incoming.headers)) {
-    if (Array.isArray(value)) {
-      for (const item of value) headers.append(name, item);
-    } else if (value !== undefined) {
-      headers.set(name, value);
-    }
-  }
-  const response = await Effect.runPromise(
-    service.handle(
-      new Request(new URL(incoming.url ?? "/", origin), {
-        method: incoming.method ?? "GET",
-        headers,
-        ...(body === undefined ? {} : { body }),
-      }),
-    ),
-  );
-  outgoing.statusCode = response.status;
-  response.headers.forEach((value, name) => outgoing.setHeader(name, value));
-  outgoing.end(Buffer.from(await response.arrayBuffer()));
+  await target.close();
 }

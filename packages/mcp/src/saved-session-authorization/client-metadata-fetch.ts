@@ -13,58 +13,86 @@ type MetadataLookup = (
   options: LookupOptions & { readonly all: true },
 ) => Promise<LookupAddress[]>;
 
+type MetadataRequest = (
+  url: URL,
+  options: ReturnType<typeof metadataRequestOptions>,
+  response: (response: MetadataResponse) => void,
+) => MetadataRequestHandle;
+
+type MetadataRequestHandle = {
+  readonly once: (event: "error", listener: (error: Error) => void) => unknown;
+  readonly end: () => unknown;
+};
+
+export type MetadataResponse = Readable & {
+  readonly headers: IncomingHttpHeaders;
+  readonly statusCode?: number | undefined;
+  readonly statusMessage?: string | undefined;
+};
+
 const JSON_CONTENT_TYPE = /^application\/(?:[-\w.]+\+)?json\s*(?:;|$)/iu;
 
-export const fetchClientMetadataResource: ClientMetadataResourceFetch = async (
-  input,
-  init,
-) => {
-  const webRequest = new Request(input, init);
-  const url = new URL(webRequest.url);
-  if (url.protocol !== "https:") {
-    throw new TypeError("CIMD Node transport requires an HTTPS URL");
-  }
-  if (webRequest.method !== "GET" && webRequest.method !== "HEAD") {
-    throw new TypeError("CIMD Node transport supports only GET and HEAD");
-  }
+const nodeMetadataRequest: MetadataRequest = (url, options, response) =>
+  request(url, options, response);
 
-  const signal =
-    init?.signal ??
-    (input instanceof Request ? input.signal : webRequest.signal);
-  const pinnedAddress = await resolvePinnedAddress(url.hostname, signal);
-  const headers = Object.fromEntries(webRequest.headers.entries());
-  headers.host = url.host;
+export function makeClientMetadataResourceFetch(
+  lookupMetadataHost: MetadataLookup = lookup,
+  requestMetadataResource: MetadataRequest = nodeMetadataRequest,
+): ClientMetadataResourceFetch {
+  return async (input, init) => {
+    const webRequest = new Request(input, init);
+    const url = new URL(webRequest.url);
+    if (url.protocol !== "https:") {
+      throw new TypeError("CIMD Node transport requires an HTTPS URL");
+    }
+    if (webRequest.method !== "GET" && webRequest.method !== "HEAD") {
+      throw new TypeError("CIMD Node transport supports only GET and HEAD");
+    }
 
-  return new Promise((resolve, reject) => {
-    const metadataRequest = request(
-      url,
-      metadataRequestOptions(
-        url,
-        headers,
-        webRequest.method,
-        signal,
-        pinnedAddress,
-      ),
-      (response) => {
-        const status = response.statusCode ?? 500;
-        const headers = responseHeaders(response.headers);
-        const exposeBody = shouldExposeBody(
-          webRequest.method,
-          status,
-          response.headers,
-        );
-        const body = metadataResponseBody(response, exposeBody);
-        const responseInit: ResponseInit =
-          response.statusMessage === undefined
-            ? { headers, status }
-            : { headers, status, statusText: response.statusMessage };
-        resolve(new Response(body, responseInit));
-      },
+    const signal =
+      init?.signal ??
+      (input instanceof Request ? input.signal : webRequest.signal);
+    const pinnedAddress = await resolvePinnedAddress(
+      url.hostname,
+      signal,
+      lookupMetadataHost,
     );
-    metadataRequest.once("error", reject);
-    metadataRequest.end();
-  });
-};
+    const headers = Object.fromEntries(webRequest.headers.entries());
+    headers.host = url.host;
+
+    return new Promise((resolve, reject) => {
+      const metadataRequest = requestMetadataResource(
+        url,
+        metadataRequestOptions(
+          url,
+          headers,
+          webRequest.method,
+          signal,
+          pinnedAddress,
+        ),
+        (response) => {
+          const status = response.statusCode ?? 500;
+          const headers = responseHeaders(response.headers);
+          const exposeBody = shouldExposeBody(
+            webRequest.method,
+            status,
+            response.headers,
+          );
+          const body = metadataResponseBody(response, exposeBody);
+          const responseInit: ResponseInit =
+            response.statusMessage === undefined
+              ? { headers, status }
+              : { headers, status, statusText: response.statusMessage };
+          resolve(new Response(body, responseInit));
+        },
+      );
+      metadataRequest.once("error", reject);
+      metadataRequest.end();
+    });
+  };
+}
+
+export const fetchClientMetadataResource = makeClientMetadataResourceFetch();
 
 export async function resolvePinnedAddress(
   hostname: string,

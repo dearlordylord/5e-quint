@@ -67,6 +67,25 @@ configured_database_path="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_
   echo "$dokku_app does not store Play Sessions in its persistent mount" >&2
   exit 65
 }
+configured_public_origin="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_PUBLIC_ORIGIN)"
+configured_authorization_database_path="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH)"
+configured_authorization_secret="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_SAVED_SESSION_AUTHORIZATION_SECRET)"
+[[ "$configured_public_origin" == "$public_origin" ]] || {
+  echo "$dokku_app public origin differs from $public_origin" >&2
+  exit 65
+}
+[[ "$configured_authorization_database_path" == /var/lib/dnd-oracle/saved-session-authorization.sqlite ]] || {
+  echo "$dokku_app does not store saved-session authorization in its persistent mount" >&2
+  exit 65
+}
+(( ${#configured_authorization_secret} >= 32 )) || {
+  echo "$dokku_app has no valid saved-session authorization secret" >&2
+  exit 65
+}
+[[ "$configured_authorization_secret" != replace-with-* && "$configured_authorization_secret" != *'<'* && "$configured_authorization_secret" != *'>'* ]] || {
+  echo "$dokku_app uses a saved-session authorization placeholder instead of a generated secret" >&2
+  exit 65
+}
 publisher_name="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_PUBLISHER_NAME)"
 publication_mode="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_PUBLICATION_MODE)"
 configured_environment="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_ENVIRONMENT)"
@@ -78,14 +97,6 @@ openai_apps_challenge="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OPE
 if [[ "$deployment_environment" == production ]]; then
   [[ "$publication_mode" == enabled && "$publisher_name" != "5e Quint developers" && -n "$openai_apps_challenge" ]] || {
     echo "Production requires publication mode, the verified publisher name, and the OpenAI domain challenge" >&2
-    exit 65
-  }
-  oauth_resource="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_RESOURCE_URL)"
-  oauth_authorization_server="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_AUTHORIZATION_SERVER)"
-  oauth_issuer="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_ISSUER)"
-  oauth_jwks_url="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OAUTH_JWKS_URL)"
-  [[ "$oauth_resource" == "$public_origin/mcp" && -n "$oauth_authorization_server" && -n "$oauth_issuer" && -n "$oauth_jwks_url" ]] || {
-    echo "Production requires complete OAuth configuration for its exact MCP resource" >&2
     exit 65
   }
 fi

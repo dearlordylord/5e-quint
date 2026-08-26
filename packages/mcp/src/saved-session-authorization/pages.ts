@@ -1,3 +1,5 @@
+import { randomBytes } from "node:crypto";
+
 const clientIdentityScript = `
 const oauthParams = new URLSearchParams(location.search);
 async function loadClientIdentity() {
@@ -29,8 +31,10 @@ function clientLabel(client) {
 }
 `;
 
-export function prototypeVaultPage(): Response {
-  return htmlResponse(`<!doctype html>
+export function savedSessionVaultPage(): Response {
+  const nonce = contentSecurityPolicyNonce();
+  return htmlResponse(
+    `<!doctype html>
 <meta charset="utf-8">
 <title>Save your games</title>
 <main>
@@ -41,7 +45,7 @@ export function prototypeVaultPage(): Response {
   <button id="connect" disabled>Create vault &amp; allow</button>
   <pre id="message"></pre>
 </main>
-<script>
+<script nonce="${nonce}">
 ${clientIdentityScript}
 const button = document.querySelector("#connect");
 const message = document.querySelector("#message");
@@ -68,7 +72,7 @@ button.addEventListener("click", async () => {
       }
       pendingConsentUrl = new URL(vaultResult.url, location.origin);
     }
-    if (pendingConsentUrl.pathname !== "/prototype/consent") {
+    if (pendingConsentUrl.pathname !== "/saved-session-consent") {
       location.href = pendingConsentUrl.toString();
       return;
     }
@@ -95,11 +99,15 @@ button.addEventListener("click", async () => {
     button.disabled = false;
   }
 });
-</script>`);
+</script>`,
+    nonce,
+  );
 }
 
-export function prototypeConsentPage(): Response {
-  return htmlResponse(`<!doctype html>
+export function savedSessionConsentPage(): Response {
+  const nonce = contentSecurityPolicyNonce();
+  return htmlResponse(
+    `<!doctype html>
 <meta charset="utf-8">
 <title>Allow access to saved games?</title>
 <main>
@@ -110,7 +118,7 @@ export function prototypeConsentPage(): Response {
   <button id="deny" disabled>Cancel</button>
   <pre id="message"></pre>
 </main>
-<script>
+<script nonce="${nonce}">
 ${clientIdentityScript}
 const params = new URLSearchParams(location.search);
 document.querySelector("#scope").textContent = "Requested scopes: " + (params.get("scope") ?? "");
@@ -143,26 +151,21 @@ async function decide(accept) {
 }
 document.querySelector("#accept").addEventListener("click", () => decide(true));
 document.querySelector("#deny").addEventListener("click", () => decide(false));
-</script>`);
+</script>`,
+    nonce,
+  );
 }
 
-export function prototypeStatusPage(): Response {
-  return htmlResponse(`<!doctype html>
-<meta charset="utf-8">
-<title>Better Auth prototype</title>
-<h1>Better Auth prototype</h1>
-<p>Guest MCP: <code>/mcp</code></p>
-<p>Authorization issuer: <code>/api/auth</code></p>
-<p>Saved-session authorization creates a pseudonymous vault without email or password credentials.</p>`);
-}
-
-function htmlResponse(body: string): Response {
+function htmlResponse(body: string, nonce: string): Response {
   return new Response(body, {
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
-      "content-security-policy":
-        "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+      "content-security-policy": `default-src 'none'; script-src 'nonce-${nonce}'; connect-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`,
     },
   });
+}
+
+function contentSecurityPolicyNonce(): string {
+  return randomBytes(18).toString("base64url");
 }
