@@ -178,6 +178,24 @@ describe("RAW swarm artifact report index", () => {
     expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
   }, 30_000);
 
+  test("preserves the legacy inventory obstruction for read-only report commands", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "legacy.sqlite");
+    const legacy = new DatabaseSync(dbPath);
+    legacy.exec(
+      "CREATE TABLE steps(id INTEGER PRIMARY KEY); INSERT INTO steps VALUES (1);",
+    );
+    legacy.close();
+    const indexBefore = readFileSync(dbPath);
+
+    expect(() =>
+      report(["summary", "--db", relative(repoRoot, dbPath)]),
+    ).toThrow(
+      /Legacy Raw Swarm database must be inventoried and rebuilt before use/,
+    );
+    expect(readFileSync(dbPath)).toEqual(indexBefore);
+  }, 30_000);
+
   test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();
     const transcriptPath = resolve(directory, "run.jsonl");
