@@ -73,44 +73,56 @@ import {
   SpawnedCreatureStatBlockSchema,
 } from "./schema-spell.ts";
 
-const surfaceIdentity = <S extends Schema.Top & { readonly Type: string }>(
-  schema: S,
+const surfaceIdentity = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   kind: SurfaceIdentityKind,
-) =>
+): Schema.Codec<A, I, RD, RE> =>
   surfaceSchemaRole(schema, {
     category: "identity",
     kind,
   });
 
-const surfaceProtocol = <S extends Schema.Top & { readonly Type: string }>(
-  schema: S,
+const surfaceProtocol = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   kind: SurfaceProtocolKind,
-) => surfaceSchemaRole(schema, { category: "protocol", kind });
+): Schema.Codec<A, I, RD, RE> =>
+  surfaceSchemaRole(schema, { category: "protocol", kind });
 
-const surfaceProjection = <S extends Schema.Top & { readonly Type: string }>(
-  schema: S,
+const surfaceProjection = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   kind: SurfaceProjectionKind,
-) => surfaceSchemaRole(schema, { category: "projection", kind });
+): Schema.Codec<A, I, RD, RE> =>
+  surfaceSchemaRole(schema, { category: "projection", kind });
 
-const surfaceReference = <S extends Schema.Top & { readonly Type: string }>(
-  schema: S,
+const surfaceReference = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitReferenceRelation,
-) =>
-  surfaceSchemaRole(Schema.toType(schema.pipe(Schema.decodeTo(UnitId))), {
+): Schema.Codec<UnitIdType, I, RD, RE> => {
+  const role = {
     category: "reference",
     relation,
     targetKind: "unit",
-  });
+  } as const;
+  return surfaceSchemaRole(
+    surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(UnitId)),
+    role,
+  );
+};
 
-const surfaceDependency = <S extends Schema.Top & { readonly Type: string }>(
-  schema: S,
+const surfaceDependency = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitDependencyRelation,
-) =>
-  surfaceSchemaRole(Schema.toType(schema.pipe(Schema.decodeTo(UnitId))), {
+): Schema.Codec<UnitIdType, I, RD, RE> => {
+  const role = {
     category: "dependency",
     relation,
     targetKind: "unit",
-  });
+  } as const;
+  return surfaceSchemaRole(
+    surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(UnitId)),
+    role,
+  );
+};
 
 const surfaceExactDependency = <const Value extends string>(
   value: Value,
@@ -138,9 +150,10 @@ const surfaceExactDependency = <const Value extends string>(
   return schema;
 };
 
-const surfaceProse = <S extends Schema.Top & { readonly Type: string }>(
-  schema: S,
-) => surfaceSchemaRole(schema, { category: "prose", evidence: "summary" });
+const surfaceProse = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
+): Schema.Codec<A, I, RD, RE> =>
+  surfaceSchemaRole(schema, { category: "prose", evidence: "summary" });
 
 const NonEmptyStringSchema = Schema.Trimmed.check(Schema.isNonEmpty());
 
@@ -1844,7 +1857,7 @@ export const PassiveMechanicsSchema = Schema.Struct({
   condition: exactOptional(EquipmentPredicateSchema),
   suppressedBy: exactOptional(Schema.NonEmptyArray(PassiveSuppressorSchema)),
   grants: Schema.Array(EffectAtomSchema).pipe(
-    Schema.withDecodingDefaultTypeKey(Effect.succeed([])),
+    Schema.withDecodingDefaultTypeKey(Effect.sync(() => [])),
   ),
   operations: exactOptional(Schema.NonEmptyArray(PassiveOperationSchema)),
 });
@@ -3700,7 +3713,7 @@ export const SubclassRecordSchema = Schema.Struct({
   kind: SubclassRecordKindSchema,
   className: ClassNameSchema,
   featureGrants: Schema.Array(ClassFeatureGrantSchema).pipe(
-    Schema.withDecodingDefaultTypeKey(Effect.succeed([])),
+    Schema.withDecodingDefaultTypeKey(Effect.sync(() => [])),
   ),
 });
 
@@ -4468,21 +4481,30 @@ export const WeaponRecordSchema = Schema.Struct({
   costGp: Schema.Number,
 });
 
-export const UnitRecordSchema = Schema.Union([
+// Keep this tuple as the single concrete-member source for UnitRecord and all
+// provenance/publication specializations. Category unions above remain useful
+// to their own callers, but expanding them here prevents fields added by a
+// specialization from widening away member-level checks.
+export const UNIT_RECORD_MEMBER_SCHEMAS = [
   SpellRecordSchema,
-  ClassRecordSchema,
+  ...NonWizardClassRecordSchema.members,
+  WizardClassRecordSchema,
   SubclassRecordSchema,
-  ClassFeatureRecordSchema,
+  ...ClassFeatureRecordSchema.members,
   BackgroundRecordSchema,
   MasteryRecordSchema,
   FeatRecordSchema,
-  SpeciesRecordSchema,
+  ...SpeciesRecordSchema.members,
   SpeciesTraitRecordSchema,
-  MagicItemRecordSchema,
-  ArmorRecordSchema,
+  ...MagicItemRecordSchema.members,
+  ...ArmorRecordSchema.members,
   ArmorTemplateRecordSchema,
-  ShieldRecordSchema,
+  ...ShieldRecordSchema.members,
   ShieldTemplateRecordSchema,
   WeaponTemplateRecordSchema,
   WeaponRecordSchema,
-]).pipe(Schema.annotate({ identifier: "UnitRecord" }));
+] as const;
+
+export const UnitRecordSchema = Schema.Union(UNIT_RECORD_MEMBER_SCHEMAS).pipe(
+  Schema.annotate({ identifier: "UnitRecord" }),
+);

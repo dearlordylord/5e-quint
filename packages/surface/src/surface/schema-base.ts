@@ -236,9 +236,10 @@ export function readSurfaceSchemaRole(
   return isSurfaceSchemaRole(value) ? value : undefined;
 }
 
-export function surfaceSchemaRole<
-  S extends Schema.Top & { readonly Type: string },
->(schema: S, role: SurfaceSchemaFieldRole): S["Rebuild"] {
+export function surfaceSchemaRole<A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
+  role: SurfaceSchemaFieldRole,
+): Schema.Codec<A, I, RD, RE> {
   /* v8 ignore start -- @preserve -- this helper is typed for string schemas; a non-string AST requires malformed internal schema construction */
   if (!isStringSchemaAst(schema.ast)) {
     throw new Error("Surface schema roles can only annotate string schemas");
@@ -261,11 +262,14 @@ export function surfaceSchemaRole<
     throw new Error("Conflicting Surface schema roles");
   }
   /* v8 ignore stop -- @preserve */
-  return schema.pipe(
-    Schema.annotate({
-      [SURFACE_SCHEMA_ROLE_ANNOTATION]: role,
-    }),
+  const annotations = {
+    [SURFACE_SCHEMA_ROLE_ANNOTATION]: role,
+  } as const;
+  const annotated = schema.pipe(
+    Schema.annotate(annotations),
+    Schema.annotateEncoded(annotations),
   );
+  return annotated;
 }
 
 export { STANDARD_ACTION_KINDS } from "@dnd/shared/game-facts";

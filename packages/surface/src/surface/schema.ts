@@ -1,4 +1,4 @@
-import { JsonSchema, Result, Schema, SchemaIssue, Tuple } from "effect";
+import { JsonSchema, Result, Schema, SchemaIssue, Struct, Tuple } from "effect";
 import { StatBlockId } from "@dnd/shared/game-facts";
 import * as SchemaAST from "effect/SchemaAST";
 
@@ -425,6 +425,7 @@ export {
   WarlockPactSlotRecoveryMechanicsSchema,
   WizardClassRecordSchema,
   UnitRecordSchema,
+  UNIT_RECORD_MEMBER_SCHEMAS,
   WeaponMasteryChoiceMechanicsSchema,
   ItemDestructionPolicySchema,
   MagicItemSpawnedCreatureMechanicsSchema,
@@ -442,13 +443,11 @@ import {
   FeatRecordSchema,
   MagicItemRecordSchema,
   MasteryRecordSchema,
-  NonWizardClassRecordSchema,
   ShieldRecordSchema,
   ShieldTemplateRecordSchema,
   SpeciesRecordSchema,
   SpeciesTraitRecordSchema,
   UnitRecordSchema,
-  WizardClassRecordSchema,
   WeaponTemplateRecordSchema,
   WeaponRecordSchema,
 } from "./schema-nonspell.ts";
@@ -523,28 +522,6 @@ export const RulesExcerptSchema = surfaceSchemaRole(
   },
 ).pipe(Schema.annotate({ identifier: "RulesExcerpt" }));
 
-// UnitRecordSchema groups concrete records in category unions. Expand those
-// groups at the schema boundary so fieldsAssign receives only Struct members.
-const UnitRecordVariantsSchema = Schema.Union([
-  SpellRecordSchema,
-  ...NonWizardClassRecordSchema.members,
-  WizardClassRecordSchema,
-  SubclassRecordSchema,
-  ...ClassFeatureRecordSchema.members,
-  BackgroundRecordSchema,
-  MasteryRecordSchema,
-  FeatRecordSchema,
-  ...SpeciesRecordSchema.members,
-  SpeciesTraitRecordSchema,
-  ...MagicItemRecordSchema.members,
-  ...ArmorRecordSchema.members,
-  ArmorTemplateRecordSchema,
-  ...ShieldRecordSchema.members,
-  ShieldTemplateRecordSchema,
-  WeaponTemplateRecordSchema,
-  WeaponRecordSchema,
-]).pipe(Schema.annotate({ identifier: "UnitRecord" }));
-
 const SrdRecordFieldsSchema = Schema.Struct({
   provenance: SrdProvenanceSchema,
 });
@@ -554,21 +531,44 @@ const PublishedSrdRecordFieldsSchema = Schema.Struct({
   rulesExcerpt: RulesExcerptSchema,
 });
 
+interface AssignFieldsPreservingChecks<NewFields extends Schema.Struct.Fields>
+  extends Struct.Lambda {
+  <Fields extends Schema.Struct.Fields>(
+    struct: Schema.Struct<Fields>,
+  ): Schema.Struct<Struct.Assign<Fields, NewFields>>;
+  readonly "~lambda.out": this["~lambda.in"] extends Schema.Struct<Schema.Struct.Fields>
+    ? Schema.Struct<Struct.Assign<this["~lambda.in"]["fields"], NewFields>>
+    : "Error: schema not eligible for field assignment";
+}
+
+const assignFieldsPreservingChecks = <NewFields extends Schema.Struct.Fields>(
+  fields: NewFields,
+) =>
+  Struct.lambda<AssignFieldsPreservingChecks<NewFields>>((struct) =>
+    struct.mapFields((existing) => ({ ...existing, ...fields }), {
+      unsafePreserveChecks: true,
+    }),
+  );
+
 const specializeUnitRecordSchema = <Fields extends Schema.Struct.Fields>(
   fields: Schema.Struct<Fields>,
   identifier: string,
 ) =>
-  UnitRecordVariantsSchema.mapMembers(
-    Tuple.map(Schema.fieldsAssign(fields.fields)),
+  UnitRecordSchema.mapMembers(
+    Tuple.map(assignFieldsPreservingChecks(fields.fields)),
+    {
+      unsafePreserveChecks: true,
+    },
   ).pipe(Schema.annotate({ identifier }));
 
 const specializeStatBlockRecordSchema = <Fields extends Schema.Struct.Fields>(
   fields: Schema.Struct<Fields>,
   identifier: string,
 ) =>
-  StatBlockRecordSchema.pipe(Schema.fieldsAssign(fields.fields)).pipe(
-    Schema.annotate({ identifier }),
-  );
+  StatBlockRecordSchema.mapFields(
+    (existing) => ({ ...existing, ...fields.fields }),
+    { unsafePreserveChecks: true },
+  ).pipe(Schema.annotate({ identifier }));
 
 type EncodedPublicationFactorState = {
   readonly nextId: { value: number };
