@@ -35,12 +35,20 @@ const characterCombatantId = combatantId("projection-character");
 const statBlockCombatantId = combatantId("projection-stat-block");
 
 test("projects Stat Block senses and authored communication text", () => {
+  const base = statBlockRecord();
   const statBlock = {
-    ...statBlockRecord(),
+    ...base,
     statBlock: {
-      ...statBlockRecord().statBlock,
+      ...base.statBlock,
       senses: [{ kind: "darkvision", rangeFeet: 60 }],
-      languages: ["Common", "Synthetic Signal Code"],
+      passivePerception: 14,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: {
+          kind: "named",
+          languages: ["Common", "Synthetic Signal Code"],
+        },
+      },
       skillModifiers: [{ skill: "perception", modifier: 4 }],
     },
   } satisfies StatBlockRecord;
@@ -64,11 +72,12 @@ test("projects Stat Block senses and authored communication text", () => {
 
 test("projects absent Stat Block languages distinctly from authored entries", () => {
   const base = statBlockRecord();
-  const { languages: _languages, ...statBlockWithoutLanguages } =
-    base.statBlock;
   const session = statBlockSession({
     ...base,
-    statBlock: statBlockWithoutLanguages,
+    statBlock: {
+      ...base.statBlock,
+      communication: { kind: "none" },
+    },
   });
   const combatant = requireCombatant(session.state, statBlockCombatantId);
 
@@ -141,7 +150,14 @@ test("projects Wild Shape form senses while retaining character communication", 
     statBlock: {
       ...statBlockCatalog.requireStatBlock("stat_block_riding_horse").statBlock,
       senses: [{ kind: "blindsight", rangeFeet: 10 }],
-      languages: ["Synthetic Beast Vocalization"],
+      passivePerception: 15,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: {
+          kind: "named",
+          languages: ["Synthetic Beast Vocalization"],
+        },
+      },
       skillModifiers: [{ skill: "perception", modifier: 5 }],
     },
   } satisfies StatBlockRecord;

@@ -5,6 +5,7 @@ import {
 } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import * as Either from "effect/Either";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.brutal-strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-01-BRUTAL-STRIKE-RECKLESS-DAMAGE barbarian_brutal_strike
@@ -81,6 +82,7 @@ import {
   startBattle,
   startBattleSessionRight,
 } from "./battle-runtime.test-support.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { BRUTAL_STRIKE_SUPPORT_PROFILE } from "./unit-feature-support.ts";
 import { activeRageDamageBonusForFrenzy } from "./battle-reducer/barbarian-frenzy.ts";
 import { ongoingFeatureDamageModifier } from "./battle-reducer/damage-helpers.ts";
@@ -2622,13 +2624,23 @@ describe("battle runtime: class action features", () => {
     if (!isCharacterBattleCreatureState(ragingActor)) {
       throw new Error("Expected the raging fixture to be a character.");
     }
-    const strengthBasedStatBlockAttack = statBlockCatalog
-      .requireStatBlock("stat_block_wolf")
-      .statBlock.actions?.attacks?.find((attack) => attack.name === "Bite");
-    if (
-      strengthBasedStatBlockAttack === undefined ||
-      !creatureNamedAttackRollIsSupported(strengthBasedStatBlockAttack)
-    ) {
+    const projectedWolf = Either.getOrThrow(
+      projectAuthoredStatBlock(
+        statBlockCatalog.requireStatBlock("stat_block_wolf"),
+      ),
+    );
+    const strengthBasedStatBlockAttack = projectedWolf.runtime.procedures.find(
+      (procedure) =>
+        procedure.kind === "attack" && procedure.attack.attackAbility === "str",
+    );
+    if (strengthBasedStatBlockAttack?.kind !== "attack") {
+      throw new Error("Expected a supported Strength-based Stat Block attack.");
+    }
+    const strengthBasedAttack: CreatureNamedAttackRoll = {
+      ...strengthBasedStatBlockAttack.attack,
+      name: "Synthetic Strength Attack",
+    };
+    if (!creatureNamedAttackRollIsSupported(strengthBasedAttack)) {
       throw new Error("Expected a supported Strength-based Stat Block attack.");
     }
     const statBlockAttackSubject = goblinAttackSubject(state, "Scimitar");
@@ -2638,14 +2650,14 @@ describe("battle runtime: class action features", () => {
     const statBlockProcedureRef = BattleStatBlockProcedureExecutionRef.make(
       statBlockAttackSubject.procedureRef,
     );
-    const baseDamageEffect = strengthBasedStatBlockAttack.onHit.find(
+    const baseDamageEffect = strengthBasedAttack.onHit.find(
       (effect) => effect.kind === "damage",
     );
     if (baseDamageEffect === undefined) {
       throw new Error("Expected the Strength-based attack to deal damage.");
     }
     const multiDamageStatBlockAttack: CreatureNamedAttackRoll = {
-      ...strengthBasedStatBlockAttack,
+      ...strengthBasedAttack,
       onHit: [
         baseDamageEffect,
         {
@@ -2660,7 +2672,7 @@ describe("battle runtime: class action features", () => {
       ],
     };
     const duplicateDamageTypeStatBlockAttack: CreatureNamedAttackRoll = {
-      ...strengthBasedStatBlockAttack,
+      ...strengthBasedAttack,
       onHit: [
         baseDamageEffect,
         {
@@ -2688,7 +2700,7 @@ describe("battle runtime: class action features", () => {
       activeRageDamageBonusForFrenzy(ragingActor, {
         kind: "statBlockAttack",
         procedureRef: statBlockProcedureRef,
-        attack: strengthBasedStatBlockAttack,
+        attack: strengthBasedAttack,
         damageNotation: "rolled",
       }),
     ).toMatchObject({ damageBonus: 2 });
@@ -2731,7 +2743,7 @@ describe("battle runtime: class action features", () => {
     const singleDamageStatBlockOption = {
       kind: "statBlockAttack",
       procedureRef: statBlockProcedureRef,
-      attack: strengthBasedStatBlockAttack,
+      attack: strengthBasedAttack,
       damageNotation: "rolled",
     } as const;
     const mixedDamageStatBlockOption = {
