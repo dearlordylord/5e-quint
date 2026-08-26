@@ -41,6 +41,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleAreaId,
   battleLineDirectionId,
@@ -221,12 +222,19 @@ const left = (name: string, holeValue: EncodedHole): CodecCase => ({
   hole: holeValue,
 });
 
-function codecStaticDartStatBlock() {
+function codecStaticDartStatBlock(): StatBlockRecord {
   const base = monsterMultiattackStatBlock();
-  const shortbow = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Shortbow",
+  const shortbow = base.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Shortbow",
   );
-  if (shortbow === undefined) {
+  if (
+    shortbow === undefined ||
+    shortbow.kind !== "executable" ||
+    shortbow.procedure.kind !== "attack_roll"
+  ) {
     throw new Error("Expected the static codec Shortbow fixture.");
   }
   return {
@@ -234,26 +242,26 @@ function codecStaticDartStatBlock() {
     name: "Codec Static Dart Monster",
     statBlock: {
       ...base.statBlock,
-      displayName: "Codec Static Dart Monster",
-      actions: {
-        ...base.statBlock.actions,
-        attacks: [
-          {
-            ...shortbow,
+      actions: [
+        {
+          ...shortbow,
+          procedure: {
+            ...shortbow.procedure,
+            name: "Static Dart",
             onHit: [
               {
-                kind: "damage" as const,
-                damageType: "piercing" as const,
+                kind: "damage",
+                damageType: "piercing",
                 amount: {
-                  kind: "fixed" as const,
+                  kind: "fixed",
                   expr: { dice: 1, dieSize: 4 },
                   static: 3,
                 },
               },
-            ] as const,
+            ],
           },
-        ] as const,
-      },
+        },
+      ],
     },
   };
 }

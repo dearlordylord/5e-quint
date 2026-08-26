@@ -3,6 +3,7 @@ import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { decodeStatBlockRecordEither } from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
@@ -23,6 +24,7 @@ import {
   startBattleRight,
   statBlockCreatureInit,
   statBlockRecord,
+  projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
@@ -38,7 +40,7 @@ describe("Stat Block combatant admission capability", () => {
     const admission = admitBattleStatBlockCombatant({
       battleId: admittedBattleId,
       combatantId: combatant,
-      statBlock: source,
+      statBlock: projectedStatBlockRuntimeSource(source),
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
     if (Either.isLeft(admission))
@@ -76,13 +78,13 @@ describe("Stat Block combatant admission capability", () => {
     const admission = admitBattleStatBlockCombatant({
       battleId: battleId("unresolved-resistance-choice"),
       combatantId: admittedCombatantId,
-      statBlock: {
+      statBlock: projectedStatBlockRuntimeSource({
         ...source,
         statBlock: {
           ...source.statBlock,
           resistances: { kind: "choose_one_from", options: ["fire"] },
         },
-      },
+      }),
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
@@ -100,13 +102,13 @@ describe("Stat Block combatant admission capability", () => {
     const admission = admitBattleStatBlockCombatant({
       battleId: battleId("fractional-stat-block-hp"),
       combatantId: admittedCombatantId,
-      statBlock: {
+      statBlock: projectedStatBlockRuntimeSource({
         ...source,
         statBlock: {
           ...source.statBlock,
           hp: { kind: "literal", value: 1.5 },
         },
-      },
+      }),
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
@@ -119,27 +121,16 @@ describe("Stat Block combatant admission capability", () => {
     );
   });
 
-  test("returns a typed issue for nonliteral Stat Block initialization facts", () => {
+  test("rejects nonliteral authored Stat Block initialization facts at the schema boundary", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: admittedCombatantId,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
+    const malformedArmorClass = decodeStatBlockRecordEither({
+      ...source,
       statBlock: {
-        ...source,
-        statBlock: {
-          ...source.statBlock,
-          ac: { kind: "caster_derived", source: "spell_save_dc" },
-        },
+        ...source.statBlock,
+        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
       },
     });
-
-    expect(
-      Either.isLeft(initialized)
-        ? battleStateInitIssueMessage(initialized.left)
-        : "initialized",
-    ).toBe("Battle runtime requires literal Stat Block Armor Class.");
+    expect(Either.isLeft(malformedArmorClass)).toBe(true);
   });
 
   test("retains caller-supplied initial conditions for Stat Block creatures", () => {
@@ -149,7 +140,7 @@ describe("Stat Block combatant admission capability", () => {
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: ["prone"],
-      statBlock: source,
+      statBlock: projectedStatBlockRuntimeSource(source),
     });
     expect(Either.isRight(initialized)).toBe(true);
     if (Either.isLeft(initialized)) return;
@@ -229,13 +220,13 @@ describe("Stat Block combatant admission capability", () => {
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: ["prone"],
-      statBlock: {
+      statBlock: projectedStatBlockRuntimeSource({
         ...source,
         statBlock: {
           ...source.statBlock,
           immunities: { conditions: ["prone"] },
         },
-      },
+      }),
     });
 
     expect(
@@ -268,7 +259,7 @@ describe("Stat Block combatant admission capability", () => {
     ]);
     expect("statBlock" in admitted.admission).toBe(false);
     expect("displayName" in admitted.admission).toBe(false);
-    expect(serialized).not.toContain(admitted.source.statBlock.displayName);
+    expect(serialized).not.toContain(admitted.source.name);
   });
 
   test("consumes transition and initialization facts without retaining them in the durable origin", () => {
@@ -312,6 +303,9 @@ describe("Stat Block combatant admission capability", () => {
       "resistances",
       "immunities",
       "specialSenses",
+      "initiativeModifier",
+      "initiativeScore",
+      "passivePerception",
     ]);
   });
 

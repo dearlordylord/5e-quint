@@ -5,8 +5,14 @@ import { movementFeet } from "@dnd/shared/types";
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, it } from "vitest";
+import { Schema } from "effect";
 
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { StatBlockProcedureOrdinalSchema } from "@dnd/surface/surface/schema";
+import type {
+  AuthoredExecutableProcedure,
+  StatBlockProcedureEntry,
+  StatBlockRecord,
+} from "@dnd/surface/surface/types";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -70,9 +76,14 @@ type SizeGatedConditionRiderRouteProjection =
     readonly route: readonly ReducerRouteEvent[];
   };
 
-type StatBlockAttack = NonNullable<
-  NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
->[number];
+type StatBlockAttack = Extract<
+  AuthoredExecutableProcedure,
+  { readonly kind: "attack_roll" }
+>;
+type ExecutableProcedureEntry = Extract<
+  StatBlockProcedureEntry,
+  { readonly kind: "executable" }
+>;
 
 const actorId = combatantId("stat-block-size-rider-mbt-actor");
 const targetId = combatantId("stat-block-size-rider-mbt-target");
@@ -484,8 +495,7 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
     },
     statBlock: {
       ...base.statBlock,
-      displayName: "Stat Block Size-Gated Condition Attacker",
-      actions: { attacks: [biteAttack()] },
+      actions: [executableProcedureEntry(1, biteAttack())],
     },
   };
 }
@@ -504,13 +514,28 @@ function sizeGatedConditionRiderTargetStatBlock(
     },
     statBlock: {
       ...base.statBlock,
-      displayName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
       hp: { kind: "literal", value: 20 },
       ...(targetSizeGate === "mediumOrSmallerProneImmune"
         ? { immunities: { conditions: ["prone"] } }
         : {}),
       size: targetSizeGate === "larger" ? "large" : "medium",
     },
+  };
+}
+
+function authoredProcedureOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
+}
+
+function executableProcedureEntry(
+  procedureOrdinal: number,
+  procedure: AuthoredExecutableProcedure,
+): ExecutableProcedureEntry {
+  return {
+    kind: "executable",
+    procedureOrdinal: authoredProcedureOrdinal(procedureOrdinal),
+    procedure,
+    resourceRefs: { kind: "none" },
   };
 }
 
@@ -546,6 +571,7 @@ function sizeGatedConditionRiderTargetStatBlockId(
 
 function biteAttack(): StatBlockAttack {
   return {
+    kind: "attack_roll",
     attackAbility: "str",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "melee",

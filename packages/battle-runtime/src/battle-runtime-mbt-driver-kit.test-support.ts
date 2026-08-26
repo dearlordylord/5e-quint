@@ -22,6 +22,7 @@ import {
 } from "@firfi/quint-connect/effect";
 import { Either, Match, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
@@ -35,7 +36,10 @@ import {
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import {
+  decodeUnitRecordSync,
+  StatBlockProcedureOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -18027,7 +18031,11 @@ function skeletonCreatureInit(input: {
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(skeletonMultiattackStatBlock()),
+        battleStatBlockCombatantSource(
+          Either.getOrThrow(
+            projectAuthoredStatBlock(skeletonMultiattackStatBlock()),
+          ).runtime,
+        ),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
@@ -18039,21 +18047,40 @@ function skeletonCreatureInit(input: {
 
 function skeletonMultiattackStatBlock(): StatBlockRecord {
   const base = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  const actions = base.statBlock.actions;
+  const shortsword = actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Shortsword",
+  );
+  if (actions === undefined || shortsword === undefined) {
+    throw new Error("Expected canonical Skeleton Shortsword fixture.");
+  }
   return {
     ...base,
     statBlock: {
       ...base.statBlock,
-      actions: {
-        ...base.statBlock.actions,
-        multiattacks: [
-          {
+      actions: [
+        ...actions,
+        {
+          kind: "executable",
+          procedureOrdinal: Schema.decodeSync(StatBlockProcedureOrdinalSchema)(
+            3,
+          ),
+          procedure: {
+            kind: "multiattack",
             name: "Multiattack",
             dispatches: [
-              { name: "Shortsword", count: { kind: "literal", value: 2 } },
+              {
+                procedureOrdinal: shortsword.procedureOrdinal,
+                count: { kind: "literal", value: 2 },
+              },
             ],
           },
-        ],
-      },
+          resourceRefs: { kind: "none" },
+        },
+      ],
     },
   };
 }
