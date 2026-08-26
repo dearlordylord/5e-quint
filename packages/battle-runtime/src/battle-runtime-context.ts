@@ -17,6 +17,7 @@ import type { WeaponId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type { StatBlockTextOnlyReason } from "@dnd/surface/surface/types";
 import type { StatBlockCommunication } from "@dnd/surface/surface/types";
+import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import type {
   FindFamiliarFormSelection,
@@ -87,7 +88,7 @@ type BattleStatBlockProcedurePresentationBase = {
     | "legendaryActions";
   readonly procedureOrdinal: number;
   readonly name: string;
-  readonly resourceRefs: readonly number[];
+  readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
 };
 
 export type BattleStatBlockAuthoredProcedurePresentation =

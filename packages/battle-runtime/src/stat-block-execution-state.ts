@@ -21,6 +21,7 @@ import type {
   CreatureVulnerabilityList,
   StatBlockId,
   StatBlockProcedureOrdinal,
+  StatBlockProcedureResourceOrdinal,
 } from "@dnd/surface/surface/types";
 import type { Size } from "@dnd/shared/types";
 import type {
@@ -54,7 +55,7 @@ export type BattleStatBlockExecutionSource = {
 };
 
 export type BattleStatBlockRuntimeResource = {
-  readonly ordinal: number;
+  readonly ordinal: StatBlockProcedureResourceOrdinal;
   readonly ownership: "shared" | "each";
   readonly limit:
     | { readonly kind: "daily"; readonly uses: number }
@@ -113,7 +114,7 @@ export type BattleStatBlockRuntimeProcedure =
       >;
       readonly procedureOrdinal: StatBlockProcedureOrdinal;
       readonly attack: SupportedCreatureAttackRollMechanics;
-      readonly resourceRefs: readonly number[];
+      readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
       readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
     }
   | {
@@ -121,14 +122,14 @@ export type BattleStatBlockRuntimeProcedure =
       readonly section: "actions";
       readonly procedureOrdinal: StatBlockProcedureOrdinal;
       readonly dispatches: ReadonlyNonEmptyArray<BattleStatBlockRuntimeMultiattackDispatch>;
-      readonly resourceRefs: readonly number[];
+      readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
     }
   | {
       readonly kind: "bonusActionOption";
       readonly section: "bonusActions";
       readonly procedureOrdinal: StatBlockProcedureOrdinal;
       readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
-      readonly resourceRefs: readonly number[];
+      readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
     };
 
 export type StatBlockActionProjectionSection =

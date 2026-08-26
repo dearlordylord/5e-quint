@@ -681,6 +681,9 @@ export type StatBlockProcedureEntry = Schema.Schema.Type<
 export type StatBlockProcedureOrdinal = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureOrdinalSchema
 >;
+export type StatBlockProcedureResourceOrdinal = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureResourceOrdinalSchema
+>;
 export type StatBlockProcedureResource = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureResourceSchema
 >;

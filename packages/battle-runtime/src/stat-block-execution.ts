@@ -37,6 +37,7 @@ import {
   type StatBlockProcedureBindingSnapshot,
   type StatBlockResourcePoolState,
 } from "./stat-block-execution-state.ts";
+import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
 export * from "./stat-block-execution-state.ts";
 
 export type StatBlockExecutionRestoreIssue = {
@@ -91,7 +92,7 @@ export type AdmittedAttackOccurrence = {
     BattleStatBlockRuntimeProcedure,
     { readonly kind: "attack" }
   >["traitAttackRollModes"];
-  readonly resourceRefs: readonly number[];
+  readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
 };
 
 export type AdmittedUnarmedStrikeOccurrence = {
@@ -108,7 +109,7 @@ export type AdmittedMultiattackOccurrence = {
     BattleStatBlockRuntimeProcedure,
     { readonly kind: "multiattack" }
   >["procedureOrdinal"];
-  readonly resourceRefs: readonly number[];
+  readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
   readonly dispatches: ReadonlyNonEmptyArray<{
     readonly attack: AdmittedAttackOccurrence;
     readonly procedureOrdinal: Extract<
@@ -138,7 +139,7 @@ export type AdmittedBonusActionOccurrence = {
     { readonly kind: "bonusActionOption" }
   >["procedureOrdinal"];
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
-  readonly resourceRefs: readonly number[];
+  readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
 };
 
 export type AdmittedStatBlockOccurrences = {
@@ -432,7 +433,10 @@ function allocateStatBlockExecution(
     AdmittedAttackOccurrence,
     BattleStatBlockProcedureExecutionRef
   >();
-  const sharedResourcePools = new Map<number, StatBlockResourcePoolState>();
+  const sharedResourcePools = new Map<
+    StatBlockProcedureResourceOrdinal,
+    StatBlockResourcePoolState
+  >();
   for (const occurrence of admitted.attacks) {
     const resourcePoolRefs = allocateProcedureResourcePools(
       allocator,
@@ -926,8 +930,11 @@ function sameMembers<T>(actual: readonly T[], expected: readonly T[]): boolean {
 function allocateProcedureResourcePools(
   allocator: ExecutionReferenceAllocator,
   resources: readonly BattleStatBlockRuntimeResource[],
-  resourceRefs: readonly number[],
-  sharedResourcePools: Map<number, StatBlockResourcePoolState>,
+  resourceRefs: readonly StatBlockProcedureResourceOrdinal[],
+  sharedResourcePools: Map<
+    StatBlockProcedureResourceOrdinal,
+    StatBlockResourcePoolState
+  >,
   resourcePools: StatBlockResourcePoolState[],
 ): readonly BattleResourcePoolExecutionRef[] {
   const refs: BattleResourcePoolExecutionRef[] = [];
