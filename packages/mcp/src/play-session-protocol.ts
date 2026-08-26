@@ -28,10 +28,13 @@ import {
 } from "./tool-content.ts";
 import {
   playSessionToolNames,
+  type PlaySessionNextOperationName,
   type PlaySessionOperationName,
 } from "./play-session-tool-contract.ts";
+import type { McpSessionSummary } from "./session-snapshot-output.ts";
 import {
   unresolvedInputsFrom,
+  type OperationProjectionIssue,
   type UnresolvedInputGroup,
 } from "./play-session-operation-projection.ts";
 import { nextOperationsFrom } from "./play-session-next-operations.ts";
@@ -322,17 +325,7 @@ function availableEnvelope(input: {
   readonly isError?: boolean;
 }): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
   const projection = mcpSessionSummary(input.projection);
-  const unresolvedInputsResult =
-    projection.pendingBattleHoles !== null
-      ? Either.right<readonly UnresolvedInputGroup[]>([
-          {
-            sourcePath: "$.projection.pendingBattleHoles",
-            inputs: projection.pendingBattleHoles,
-          },
-        ])
-      : input.isError === true
-        ? Either.right<readonly UnresolvedInputGroup[]>([])
-        : unresolvedInputsFrom(input.operationName, input.operationResult);
+  const unresolvedInputsResult = unresolvedInputsForEnvelope(input, projection);
   if (Either.isLeft(unresolvedInputsResult)) {
     return errorContent("MCP operation output projection failed.", {
       code: "INVALID_OPERATION_OUTPUT",
@@ -341,11 +334,10 @@ function availableEnvelope(input: {
     });
   }
   const unresolvedInputs = unresolvedInputsResult.right;
-  const nextOperations = nextOperationsFrom(
-    input.operationName,
+  const nextOperations = nextOperationsForEnvelope(
+    input,
     projection,
     unresolvedInputs,
-    input.hasAvailableCharacterSession === true,
   );
   const payload = jsonSerializablePayload({
     tag: "playSessionAvailable",
@@ -355,18 +347,9 @@ function availableEnvelope(input: {
       result: input.operationResult,
     },
     projection,
-    tenure:
-      input.tenure.tag === "guest"
-        ? { ...input.tenure, save: guestSaveAvailability(input.identity) }
-        : input.tenure,
+    tenure: envelopeTenure(input.tenure, input.identity),
     unresolvedInputs,
-    nextOperations:
-      input.tenure.tag === "guest" &&
-      guestSaveAvailability(input.identity).tag === "available" &&
-      (input.operationName === characterToolNames.finalizeCharacter ||
-        input.operationName === battleToolNames.endBattle)
-        ? [...new Set([...nextOperations, playSessionToolNames.save])]
-        : nextOperations,
+    nextOperations,
     restoration: { tag: "retained" },
   });
   return {
@@ -374,6 +357,63 @@ function availableEnvelope(input: {
     structuredContent: payload,
     ...(input.isError === true ? { isError: true as const } : {}),
   };
+}
+
+function unresolvedInputsForEnvelope(
+  input: {
+    readonly operationName: PlaySessionOperationName;
+    readonly operationResult: unknown;
+    readonly isError?: boolean;
+  },
+  projection: McpSessionSummary,
+): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  if (projection.pendingBattleHoles !== null) {
+    return Either.right([
+      {
+        sourcePath: "$.projection.pendingBattleHoles",
+        inputs: projection.pendingBattleHoles,
+      },
+    ]);
+  }
+  if (input.isError === true) return Either.right([]);
+  return unresolvedInputsFrom(input.operationName, input.operationResult);
+}
+
+function envelopeTenure(
+  tenure: PlaySessionTenureProjection,
+  identity: PlaySessionRequestIdentity,
+) {
+  if (tenure.tag !== "guest") return tenure;
+  return { ...tenure, save: guestSaveAvailability(identity) };
+}
+
+function nextOperationsForEnvelope(
+  input: {
+    readonly operationName: PlaySessionOperationName;
+    readonly tenure: PlaySessionTenureProjection;
+    readonly identity: PlaySessionRequestIdentity;
+    readonly hasAvailableCharacterSession?: boolean;
+  },
+  projection: McpSessionSummary,
+  unresolvedInputs: readonly UnresolvedInputGroup[],
+): readonly PlaySessionNextOperationName[] {
+  const nextOperations = nextOperationsFrom(
+    input.operationName,
+    projection,
+    unresolvedInputs,
+    input.hasAvailableCharacterSession === true,
+  );
+  if (input.tenure.tag !== "guest") return nextOperations;
+  if (guestSaveAvailability(input.identity).tag !== "available") {
+    return nextOperations;
+  }
+  if (
+    input.operationName !== characterToolNames.finalizeCharacter &&
+    input.operationName !== battleToolNames.endBattle
+  ) {
+    return nextOperations;
+  }
+  return [...new Set([...nextOperations, playSessionToolNames.save])];
 }
 
 function redactGuestAccessGrants(value: unknown): unknown {
