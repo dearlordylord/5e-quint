@@ -1,4 +1,4 @@
-import { Option } from "effect";
+import { Brand, Option } from "effect";
 import { StatBlockId as StatBlockIdSchema } from "@dnd/shared/game-facts";
 
 // Content JSON is generated from the matching content/*.dhall source.
@@ -46,6 +46,14 @@ export type StatBlockCatalog = {
   readonly requireStatBlock: (id: string) => StatBlockRecord;
 };
 
+export type SrdStatBlockCatalog = {
+  readonly getStatBlock: (id: string) => Option.Option<Srd521StatBlock>;
+  readonly listStatBlocks: () => readonly Srd521StatBlock[];
+  readonly requireStatBlock: (id: string) => Srd521StatBlock;
+} & Brand.Brand<"SrdStatBlockCatalog">;
+
+const toSrdStatBlockCatalog = Brand.nominal<SrdStatBlockCatalog>();
+
 export type StatBlockCatalogBuildIssue =
   | {
       readonly code: "duplicateStatBlockId";
@@ -60,7 +68,7 @@ export type StatBlockCatalogBuildIssue =
     };
 
 export type StatBlockCatalogBuildResult =
-  | { readonly tag: "ok"; readonly catalog: StatBlockCatalog }
+  | { readonly tag: "ok"; readonly catalog: SrdStatBlockCatalog }
   | {
       readonly tag: "invalid";
       readonly issues: readonly StatBlockCatalogBuildIssue[];
@@ -127,7 +135,7 @@ export function buildStatBlockCatalog(input: {
   readonly collections: readonly SrdStatBlockCollection[];
 }): StatBlockCatalogBuildResult {
   const issues: StatBlockCatalogBuildIssue[] = [];
-  const records = new Map<StatBlockId, StatBlockRecord>();
+  const records = new Map<StatBlockId, Srd521StatBlock>();
 
   for (const collection of input.collections) {
     issues.push(...validateSrdStatBlockCollection(collection));
@@ -150,12 +158,12 @@ export function buildStatBlockCatalog(input: {
 
   return {
     tag: "ok",
-    catalog: {
+    catalog: toSrdStatBlockCatalog({
       getStatBlock: (id) =>
         Option.fromNullable(records.get(StatBlockIdSchema.make(id))),
       listStatBlocks: () => Array.from(records.values()),
       requireStatBlock: (id) => records.get(StatBlockIdSchema.make(id))!,
-    },
+    }),
   };
 }
 

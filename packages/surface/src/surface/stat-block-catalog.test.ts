@@ -445,7 +445,7 @@ describe("Stat Block catalog boundary", () => {
     });
   });
 
-  test("catalog returns generic records and rejects duplicate ids", () => {
+  test("catalog returns only SRD records and rejects duplicate ids", () => {
     const collection = defineSrdStatBlockCollection({
       statBlocks: [assertSrd521StatBlock(goblinWarrior)],
     });
@@ -456,6 +456,11 @@ describe("Stat Block catalog boundary", () => {
       expect(valid.catalog.requireStatBlock(goblinWarrior.id)).toEqual(
         goblinWarrior,
       );
+      expect(
+        valid.catalog
+          .listStatBlocks()
+          .map((statBlock) => statBlock.provenance.kind),
+      ).toEqual(["srd-5.2.1"]);
     }
 
     const duplicate = buildStatBlockCatalog({
