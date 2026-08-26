@@ -8,6 +8,7 @@ import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-blo
 import {
   SRD_STAT_BLOCK_SOURCE_PATHS,
   deriveSrdStatBlockParity,
+  discoverSrdStatBlocks,
   readSrdStatBlockParity,
   type SrdStatBlockParityInstalledRecord,
   type SrdStatBlockSourceFile,
@@ -132,6 +133,99 @@ describe("SRD Stat Block source parity operation", () => {
     expect(
       report.issues.filter((issue) => issue.kind === "duplicate-id"),
     ).toHaveLength(0);
+    expect(
+      report.issues.filter((issue) => issue.kind === "duplicate-identity"),
+    ).toHaveLength(0);
+    expect(
+      report.issues.filter((issue) => issue.kind === "cardinality"),
+    ).toHaveLength(0);
+  });
+
+  test("rejects a pilot duplicate identity even when membership still reports 309 missing", () => {
+    const bat = srdStatBlockCollection.statBlocks.find(
+      (statBlock) => statBlock.name === "Bat",
+    );
+    expect(bat).toBeDefined();
+    if (bat === undefined) return;
+
+    const duplicateBat = {
+      ...bat,
+      id: statBlockId("stat_block_bat_duplicate_identity"),
+    };
+    const report = readSrdStatBlockParity({
+      repoRoot: process.cwd(),
+      installedStatBlocks: [...srdStatBlockCollection.statBlocks, duplicateBat],
+      peerObservations: [],
+    });
+
+    expect(report.issues).toContainEqual({
+      kind: "duplicate-identity",
+      name: "Bat",
+      normalizedIdentity: "bat",
+      statBlockIds: [bat.id, duplicateBat.id],
+    });
+    expect(
+      report.issues.filter((issue) => issue.kind === "missing"),
+    ).toHaveLength(309);
+    expect(
+      report.issues.filter((issue) => issue.kind === "cardinality"),
+    ).toEqual([]);
+  });
+
+  test("enforces discovered cardinality once every source identity is installed", () => {
+    const sourceFiles = completeSourceFiles([
+      {
+        sourcePath: ".references/srd-5.2.1/Animals.md",
+        contents:
+          "# Animals\n\n## Alpha\n\n**AC** 12\n**CR** 1\n\n### Actions\n\n**Synthetic Action.** Alpha acts.\n",
+      },
+    ]);
+    const discovery = discoverSrdStatBlocks(sourceFiles);
+    const installedStatBlocks = discovery.identities.map((identity, index) => {
+      const anchor = identity.occurrences[0]?.anchor;
+      if (anchor === undefined) {
+        throw new Error(
+          `Synthetic identity ${identity.name} has no source anchor`,
+        );
+      }
+      return parityRecord({
+        id: statBlockId(`stat_block_synthetic_${index}`),
+        name: identity.name,
+        provenance: { kind: "srd-5.2.1", section: anchor.section },
+      });
+    });
+    const alpha = installedStatBlocks.find(
+      (statBlock) => statBlock.name === "Alpha",
+    );
+    expect(alpha).toBeDefined();
+    if (alpha === undefined) return;
+    const duplicateAlpha = parityRecord({
+      id: statBlockId("stat_block_synthetic_alpha_duplicate"),
+      name: " alpha ",
+      provenance: alpha.provenance,
+    });
+
+    const report = deriveSrdStatBlockParity({
+      sourceFiles,
+      installedStatBlocks: [...installedStatBlocks, duplicateAlpha],
+      sourceReadIssues: [],
+      peerObservations: [],
+    });
+
+    expect(report.issues).toContainEqual({
+      kind: "duplicate-identity",
+      name: "Alpha",
+      normalizedIdentity: "alpha",
+      statBlockIds: [alpha.id, duplicateAlpha.id],
+    });
+    expect(report.issues).toContainEqual({
+      kind: "cardinality",
+      expectedIdentityCount: report.discovery.identities.length,
+      actualInstalledCount: installedStatBlocks.length + 1,
+    });
+    expect(report.issues.filter((issue) => issue.kind === "missing")).toEqual(
+      [],
+    );
   });
 
   test("accumulates catalog, provenance, divergent-source, and publication-peer issues", () => {

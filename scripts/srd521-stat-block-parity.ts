@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { StatBlockRecord } from "../packages/surface/src/surface/types.ts";
+import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
 import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observations.ts";
 
 export const SRD_STAT_BLOCK_SOURCE_PATHS = [
@@ -97,6 +98,17 @@ export type SrdStatBlockParityIssue =
   | {
       readonly kind: "duplicate-id";
       readonly statBlockId: StatBlockRecord["id"];
+    }
+  | {
+      readonly kind: "duplicate-identity";
+      readonly name: string;
+      readonly normalizedIdentity: string;
+      readonly statBlockIds: readonly StatBlockRecord["id"][];
+    }
+  | {
+      readonly kind: "cardinality";
+      readonly expectedIdentityCount: number;
+      readonly actualInstalledCount: number;
     }
   | {
       readonly kind: "divergent-source";
@@ -230,7 +242,7 @@ export function discoverSrdStatBlocks(
   const identityMap = new Map<string, SrdStatBlockSourceOccurrence[]>();
 
   for (const occurrence of occurrences) {
-    const key = normalizeIdentity(occurrence.name);
+    const key = normalizeStatBlockIdentity(occurrence.name);
     const existing = identityMap.get(key);
     if (existing === undefined) {
       identityMap.set(key, [occurrence]);
@@ -261,7 +273,7 @@ export function deriveSrdStatBlockParity(
   );
   const sourceIdentities = new Map(
     discovery.identities.map((identity) => [
-      normalizeIdentity(identity.name),
+      normalizeStatBlockIdentity(identity.name),
       identity,
     ]),
   );
@@ -270,6 +282,10 @@ export function deriveSrdStatBlockParity(
     sourceIdentities,
     sourceCoverage,
   );
+  const missingIssues =
+    sourceCoverage.tag === "complete"
+      ? deriveMissingIssues(discovery, installedCatalog.installedNames)
+      : [];
   const issues = [
     ...sourceReadIssues.map((sourceReadIssue) => ({
       kind: "unreadable-source" as const,
@@ -280,8 +296,9 @@ export function deriveSrdStatBlockParity(
     ...discovery.issues,
     ...deriveDivergentSourceIssues(discovery),
     ...installedCatalog.issues,
-    ...(sourceCoverage.tag === "complete"
-      ? deriveMissingIssues(discovery, installedCatalog.installedNames)
+    ...missingIssues,
+    ...(sourceCoverage.tag === "complete" && missingIssues.length === 0
+      ? deriveInstalledCardinalityIssues(discovery, input.installedStatBlocks)
       : []),
     ...input.peerObservations
       .filter((evidence) => evidence.tag !== "present")
@@ -385,13 +402,27 @@ function deriveInstalledCatalogIssues(
 } {
   const installedNames = new Set<string>();
   const installedIds = new Set<string>();
+  const identityRecords = new Map<
+    string,
+    { readonly name: string; readonly statBlockIds: StatBlockRecord["id"][] }
+  >();
   const issues: SrdStatBlockParityIssue[] = [];
 
   for (const statBlock of installedStatBlocks) {
     const duplicateIdIssue = deriveDuplicateIdIssue(statBlock, installedIds);
     if (duplicateIdIssue !== undefined) issues.push(duplicateIdIssue);
     installedIds.add(statBlock.id);
-    installedNames.add(normalizeIdentity(statBlock.name));
+    const normalizedIdentity = normalizeStatBlockIdentity(statBlock.name);
+    installedNames.add(normalizedIdentity);
+    const identityRecord = identityRecords.get(normalizedIdentity);
+    if (identityRecord === undefined) {
+      identityRecords.set(normalizedIdentity, {
+        name: statBlock.name,
+        statBlockIds: [statBlock.id],
+      });
+    } else if (!identityRecord.statBlockIds.includes(statBlock.id)) {
+      identityRecord.statBlockIds.push(statBlock.id);
+    }
     issues.push(
       ...deriveProvenanceIssues(statBlock, sourceIdentities, sourceCoverage),
       ...(sourceCoverage.tag === "complete"
@@ -400,7 +431,33 @@ function deriveInstalledCatalogIssues(
     );
   }
 
+  for (const identityRecord of identityRecords.values()) {
+    if (identityRecord.statBlockIds.length < 2) continue;
+    issues.push({
+      kind: "duplicate-identity",
+      name: identityRecord.name,
+      normalizedIdentity: normalizeStatBlockIdentity(identityRecord.name),
+      statBlockIds: identityRecord.statBlockIds,
+    });
+  }
+
   return { installedNames, issues };
+}
+
+function deriveInstalledCardinalityIssues(
+  discovery: SrdStatBlockSourceDiscovery,
+  installedStatBlocks: readonly SrdStatBlockParityInstalledRecord[],
+): readonly SrdStatBlockParityIssue[] {
+  const expectedIdentityCount = srdStatBlockSourceIdentityCount(discovery);
+  return installedStatBlocks.length === expectedIdentityCount
+    ? []
+    : [
+        {
+          kind: "cardinality" as const,
+          expectedIdentityCount,
+          actualInstalledCount: installedStatBlocks.length,
+        },
+      ];
 }
 
 function deriveDuplicateIdIssue(
@@ -430,7 +487,7 @@ function deriveProvenanceIssues(
   }
 
   const sourceIdentity = sourceIdentities.get(
-    normalizeIdentity(statBlock.name),
+    normalizeStatBlockIdentity(statBlock.name),
   );
   if (sourceIdentity === undefined) return [];
   const provenanceSection = statBlock.provenance.section;
@@ -503,7 +560,7 @@ function deriveExtraIssue(
   statBlock: SrdStatBlockParityInstalledRecord,
   sourceIdentities: ReadonlyMap<string, SrdStatBlockSourceIdentity>,
 ): readonly SrdStatBlockParityIssue[] {
-  return sourceIdentities.has(normalizeIdentity(statBlock.name))
+  return sourceIdentities.has(normalizeStatBlockIdentity(statBlock.name))
     ? []
     : [
         {
@@ -519,7 +576,10 @@ function deriveMissingIssues(
   installedNames: ReadonlySet<string>,
 ): readonly SrdStatBlockParityIssue[] {
   return discovery.identities
-    .filter((identity) => !installedNames.has(normalizeIdentity(identity.name)))
+    .filter(
+      (identity) =>
+        !installedNames.has(normalizeStatBlockIdentity(identity.name)),
+    )
     .map((identity) => ({ kind: "missing" as const, name: identity.name }));
 }
 
@@ -780,10 +840,6 @@ function statBlockAnchorRange(
     lineEnd: lineEndIndex,
     spanEnd: physicalEndIndex,
   };
-}
-
-function normalizeIdentity(name: string): string {
-  return name.normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
 }
 
 function sourcePathMatches(

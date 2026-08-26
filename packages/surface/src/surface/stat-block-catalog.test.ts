@@ -1,6 +1,8 @@
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { statBlockId } from "@dnd/shared/game-facts";
+
 import findFamiliarInput from "../../content/find_familiar.json";
 import findFamiliarStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
 import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
@@ -473,6 +475,38 @@ describe("Stat Block catalog boundary", () => {
         {
           code: "duplicateStatBlockId",
           statBlockId: goblinWarrior.id,
+        },
+      ],
+    });
+  });
+
+  test("rejects distinct records with the same normalized identity", () => {
+    const srdGoblinWarrior = assertSrd521StatBlock(goblinWarrior);
+    const duplicateName = assertSrd521StatBlock({
+      ...srdGoblinWarrior,
+      id: statBlockId("stat_block_goblin_warrior_duplicate_identity"),
+      name: "  GOBLIN   WARRIOR ",
+      provenance: {
+        kind: "srd-5.2.1",
+        section: srdGoblinWarrior.provenance.section,
+      },
+    });
+    const result = buildStatBlockCatalog({
+      collections: [
+        defineSrdStatBlockCollection({
+          statBlocks: [srdGoblinWarrior, duplicateName],
+        }),
+      ],
+    });
+
+    expect(result).toEqual({
+      tag: "invalid",
+      issues: [
+        {
+          code: "duplicateStatBlockIdentity",
+          normalizedIdentity: "goblin warrior",
+          statBlockId: duplicateName.id,
+          priorStatBlockId: srdGoblinWarrior.id,
         },
       ],
     });

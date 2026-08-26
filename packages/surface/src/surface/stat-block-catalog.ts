@@ -1,6 +1,8 @@
 import { Brand, Option } from "effect";
 import { StatBlockId as StatBlockIdSchema } from "@dnd/shared/game-facts";
 
+import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
+
 // Content JSON is generated from the matching content/*.dhall source.
 // Keep authoring changes in Dhall, then regenerate JSON and trace output.
 import findFamiliarStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
@@ -58,6 +60,12 @@ export type StatBlockCatalogBuildIssue =
   | {
       readonly code: "duplicateStatBlockId";
       readonly statBlockId: StatBlockId;
+    }
+  | {
+      readonly code: "duplicateStatBlockIdentity";
+      readonly normalizedIdentity: string;
+      readonly statBlockId: StatBlockId;
+      readonly priorStatBlockId: StatBlockId;
     }
   | {
       readonly code: "mixedProvenance";
@@ -136,6 +144,7 @@ export function buildStatBlockCatalog(input: {
 }): StatBlockCatalogBuildResult {
   const issues: StatBlockCatalogBuildIssue[] = [];
   const records = new Map<StatBlockId, Srd521StatBlock>();
+  const identityOwners = new Map<string, StatBlockId>();
 
   for (const collection of input.collections) {
     issues.push(...validateSrdStatBlockCollection(collection));
@@ -148,6 +157,19 @@ export function buildStatBlockCatalog(input: {
         });
       } else {
         records.set(statBlock.id, statBlock);
+      }
+
+      const normalizedIdentity = normalizeStatBlockIdentity(statBlock.name);
+      const priorStatBlockId = identityOwners.get(normalizedIdentity);
+      if (priorStatBlockId !== undefined && priorStatBlockId !== statBlock.id) {
+        issues.push({
+          code: "duplicateStatBlockIdentity",
+          normalizedIdentity,
+          statBlockId: statBlock.id,
+          priorStatBlockId,
+        });
+      } else if (priorStatBlockId === undefined) {
+        identityOwners.set(normalizedIdentity, statBlock.id);
       }
     }
   }
