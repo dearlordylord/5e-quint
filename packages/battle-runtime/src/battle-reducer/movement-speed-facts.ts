@@ -12,7 +12,7 @@ import {
   type SpeedChange,
 } from "@dnd/shared-algebras/speed-algebra";
 import type { SpeedType } from "@dnd/shared/game-facts";
-import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-runtime.ts";
 import {
   BATTLE_MOVEMENT_SPEED_KINDS,
   BATTLE_SPECIAL_SPEED_KINDS,

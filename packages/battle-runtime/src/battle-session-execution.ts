@@ -30,7 +30,7 @@ import type {
   BattleSnapshot,
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
-import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
+import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
 import {
   admitTableD20TestCircumstanceDecisions,
@@ -46,7 +46,7 @@ export type BattleRuntimeResolutionInput = {
   readonly session: BattleRuntimeSession;
   readonly subject: BattleSubject;
   readonly fills: BattleResolutionInput["fills"];
-  readonly statBlockCatalog?: BattleStatBlockExecutionCatalog;
+  readonly statBlockCatalog?: FindFamiliarStatBlockCatalog;
 };
 
 type ResolvedBattleResult = Extract<

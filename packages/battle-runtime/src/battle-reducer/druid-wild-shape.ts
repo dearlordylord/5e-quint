@@ -34,10 +34,7 @@ import {
   type StatBlockExecutionState,
   type StatBlockExecutionAdmission,
 } from "../stat-block-execution-state.ts";
-import type {
-  BattleDruidWildShapeKnownForm,
-  BattleDruidWildShapeKnownFormRuntime,
-} from "../druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-runtime.ts";
 import type {
   BattleActiveEffect,
   BattleCreatureState,
@@ -95,11 +92,11 @@ const SKILL_ABILITIES = {
 } as const satisfies Record<Skill, Ability>;
 
 export function druidWildShapeAvailableFormsIssueForProfile(
-  forms: readonly BattleDruidWildShapeKnownForm[] | undefined,
+  forms: readonly BattleDruidWildShapeKnownFormRuntime[] | undefined,
   profile: BattleDruidWildShapeKnownFormSupportProfile,
 ): string | null;
 export function druidWildShapeAvailableFormsIssueForProfile(
-  forms: readonly BattleDruidWildShapeKnownForm[] | undefined,
+  forms: readonly BattleDruidWildShapeKnownFormRuntime[] | undefined,
 ): string | null {
   if (forms === undefined) {
     return "Druid Wild Shape battle initialization requires an available known-form subset.";

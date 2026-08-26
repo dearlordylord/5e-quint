@@ -41,12 +41,14 @@ import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import type {
-  BattleDruidWildShapeFormSpeeds,
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormProjection,
+} from "./druid-wild-shape-known-form-execution.ts";
+import type {
+  BattleDruidWildShapeFormSpeeds,
   LiteralStatBlockSpeed,
   LiteralWalkStatBlockSpeed,
-} from "./druid-wild-shape-known-form-execution.ts";
+} from "./druid-wild-shape-known-form-runtime.ts";
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type {
   BattleAmmunitionStock,

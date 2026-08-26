@@ -179,7 +179,6 @@ import type {
   SpellMechanics,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import type * as Option from "effect/Option";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
@@ -224,21 +223,14 @@ import type {
   CharacterBattleLoadoutRef,
   HeldWeaponLoadoutSlot,
 } from "./character-creature-execution-facts.ts";
-import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
 import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-state.ts";
 import type {
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution-state.ts";
-import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
-
-export type BattleStatBlockExecutionCatalog = {
-  readonly getStatBlock: (
-    statBlockId: StatBlockId,
-  ) => Option.Option<StatBlockRecord>;
-};
+import type { UnitId } from "@dnd/shared/game-facts";
 import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,

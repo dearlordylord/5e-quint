@@ -20,6 +20,7 @@ import {
 import { resolveFindFamiliarForm } from "@dnd/surface/surface/find-familiar-forms";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
 
 type WithoutBattleState<Input> = Input extends unknown
   ? Omit<Input, "state">
@@ -223,7 +224,7 @@ function companionPresentationFromCatalog(input: {
   readonly state: import("./battle-state-execution.ts").BattleState;
   readonly combatantId: CombatantId;
   readonly statBlockId: import("@dnd/shared/game-facts").StatBlockId;
-  readonly catalog: import("./battle-state-execution.ts").BattleStatBlockExecutionCatalog;
+  readonly catalog: FindFamiliarStatBlockCatalog;
 }): Either.Either<
   | {
       readonly combatantId: CombatantId;
