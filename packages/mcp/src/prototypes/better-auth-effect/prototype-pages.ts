@@ -16,25 +16,29 @@ async function loadClientIdentity() {
   if (!response.ok || result.client_id !== clientId || typeof result.client_name !== "string") {
     throw new Error("The requesting client's registered identity could not be verified.");
   }
-  const details = [result.client_name, result.client_id];
-  if (typeof result.client_uri === "string") details.push(result.client_uri);
-  document.querySelector("#client").textContent = "Registered client: " + details.join(" — ");
-  return result.client_name;
+  return result;
+}
+function clientLabel(client) {
+  try {
+    const url = new URL(client.client_id);
+    if (url.protocol === "https:" || url.protocol === "http:") {
+      return client.client_name + " (" + url.origin + ")";
+    }
+  } catch {}
+  return client.client_name + " (" + client.client_id + ")";
 }
 `;
 
 export function prototypeVaultPage(): Response {
   return htmlResponse(`<!doctype html>
 <meta charset="utf-8">
-<title>Connect a private saved-session vault</title>
+<title>Save your games</title>
 <main>
-  <h1>Connect a private saved-session vault</h1>
-  <p>Guest play remains anonymous. You do not enter an email, password, or account/profile details.</p>
-  <p>ChatGPT requests standard OpenID and email protocol scopes. It may display a generated <code>${ANONYMOUS_VAULT_EMAIL_DISPLAY}</code> identifier. That is a vault label—not an inbox, login, or error—and this service receives no ChatGPT account identity or personal email address.</p>
-  <p>The requesting client does not share your account identity with this service. This private pseudonymous vault belongs to the anonymous authorization session in this browser; clients you authorize from that session share the vault.</p>
-  <p>Until optional recovery is available, losing both the browser session and client authorization may make saved sessions unrecoverable. See the <a href="/privacy">privacy and retention policy</a>.</p>
-  <p id="client">Verifying the registered client…</p>
-  <button id="connect" disabled>Create vault and allow this client to manage saved sessions</button>
+  <h1>Save your games</h1>
+  <p id="client">Verifying the requesting app…</p>
+  <p>No account or personal email required.</p>
+  <p>If you disconnect and lose this browser session, saved games may be unrecoverable. See the <a href="/privacy">privacy policy</a>.</p>
+  <button id="connect" disabled>Create vault &amp; allow</button>
   <pre id="message"></pre>
 </main>
 <script>
@@ -42,8 +46,9 @@ ${clientIdentityScript}
 const button = document.querySelector("#connect");
 const message = document.querySelector("#message");
 let pendingConsentUrl;
-loadClientIdentity().then((clientName) => {
-  button.textContent = "Create vault and allow " + clientName + " to manage saved sessions";
+loadClientIdentity().then((client) => {
+  const label = clientLabel(client);
+  document.querySelector("#client").textContent = label + " can save, resume, and delete games in your private vault.";
   button.disabled = false;
 }).catch((error) => { message.textContent = error.message; });
 button.addEventListener("click", async () => {
@@ -96,25 +101,22 @@ button.addEventListener("click", async () => {
 export function prototypeConsentPage(): Response {
   return htmlResponse(`<!doctype html>
 <meta charset="utf-8">
-<title>Allow saved sessions</title>
+<title>Allow access to saved games?</title>
 <main>
-  <h1>Connect your private saved-session vault?</h1>
-  <p>Allow the requesting client to save, list, resume, and delete Play Sessions in your pseudonymous vault.</p>
-  <p>You do not enter an email, password, or account/profile details. The requesting client does not share your account identity with this service.</p>
-  <p>Standard OpenID and email scopes describe only this randomly generated vault identity, not your ChatGPT identity or personal email address. A displayed <code>${ANONYMOUS_VAULT_EMAIL_DISPLAY}</code> value is a vault label, not an inbox, login, or error.</p>
-  <p>This vault belongs to the anonymous authorization session in this browser. See the <a href="/privacy">privacy and retention policy</a>.</p>
-  <p id="client">Verifying the registered client…</p>
+  <h1>Allow access to saved games?</h1>
+  <p id="client">Verifying the requesting app…</p>
   <p id="scope"></p>
-  <button id="accept" disabled>Allow saved sessions</button>
-  <button id="deny" disabled>Keep guest-only</button>
+  <button id="accept" disabled>Allow</button>
+  <button id="deny" disabled>Cancel</button>
   <pre id="message"></pre>
 </main>
 <script>
 ${clientIdentityScript}
 const params = new URLSearchParams(location.search);
 document.querySelector("#scope").textContent = "Requested scopes: " + (params.get("scope") ?? "");
-loadClientIdentity().then((clientName) => {
-  document.querySelector("#accept").textContent = "Allow " + clientName + " to manage saved sessions";
+loadClientIdentity().then((client) => {
+  const label = clientLabel(client);
+  document.querySelector("#client").textContent = label + " can save, resume, and delete games in your private vault.";
   document.querySelectorAll("button").forEach((button) => { button.disabled = false; });
 }).catch((error) => { document.querySelector("#message").textContent = error.message; });
 async function decide(accept) {
@@ -164,4 +166,3 @@ function htmlResponse(body: string): Response {
     },
   });
 }
-import { ANONYMOUS_VAULT_EMAIL_DISPLAY } from "./anonymous-vault-identity.ts";

@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
 
 export const ANONYMOUS_VAULT_EMAIL_PREFIX = "saved-session-vault-";
-export const ANONYMOUS_VAULT_EMAIL_DOMAIN = "anonymous.invalid";
-export const ANONYMOUS_VAULT_EMAIL_DISPLAY = `${ANONYMOUS_VAULT_EMAIL_PREFIX}…@${ANONYMOUS_VAULT_EMAIL_DOMAIN}`;
+export const ANONYMOUS_VAULT_EMAIL_DOMAIN =
+  "vault.dnd-oracle.apps.loskutoff.com";
 
 export function makeAnonymousVaultEmail(): string {
   return `${ANONYMOUS_VAULT_EMAIL_PREFIX}${randomUUID()}@${ANONYMOUS_VAULT_EMAIL_DOMAIN}`;

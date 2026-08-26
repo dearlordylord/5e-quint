@@ -154,17 +154,37 @@ function assertAnonymousOnlyDatabase(database: DatabaseSync): void {
 
 function normalizeAnonymousVaultEmailLabels(database: DatabaseSync): void {
   const legacyPrefix = "temp-";
+  const legacySuffix = "@anonymous.invalid";
   database
     .prepare(
       `UPDATE "user"
-       SET "email" = ? || substr("email", length(?) + 1)
+       SET "email" = ? || substr(
+         "email",
+         length(?) + 1,
+         length("email") - length(?) - length(?)
+       ) || '@' || ?
        WHERE "isAnonymous" IS 1
          AND "email" LIKE ?`,
     )
     .run(
       ANONYMOUS_VAULT_EMAIL_PREFIX,
       legacyPrefix,
-      `${legacyPrefix}%@${ANONYMOUS_VAULT_EMAIL_DOMAIN}`,
+      legacyPrefix,
+      legacySuffix,
+      ANONYMOUS_VAULT_EMAIL_DOMAIN,
+      `${legacyPrefix}%${legacySuffix}`,
+    );
+  database
+    .prepare(
+      `UPDATE "user"
+       SET "email" = substr("email", 1, length("email") - length(?)) || '@' || ?
+       WHERE "isAnonymous" IS 1
+         AND "email" LIKE ?`,
+    )
+    .run(
+      legacySuffix,
+      ANONYMOUS_VAULT_EMAIL_DOMAIN,
+      `${ANONYMOUS_VAULT_EMAIL_PREFIX}%${legacySuffix}`,
     );
 }
 
