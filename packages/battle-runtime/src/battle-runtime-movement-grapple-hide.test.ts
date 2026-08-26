@@ -2792,7 +2792,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
             name: "Unequal Speed Climber",
             statBlock: {
               ...base.statBlock,
-              displayName: "Unequal Speed Climber",
               speeds: [
                 { kind: "walk", feet: { kind: "literal", value: 30 } },
                 { kind: "climb", feet: { kind: "literal", value: 40 } },
@@ -3078,7 +3077,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
             name: "Huge Grapple Target",
             statBlock: {
               ...baseTarget.statBlock,
-              displayName: "Huge Grapple Target",
               size: "huge",
             },
           },

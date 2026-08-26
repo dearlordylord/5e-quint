@@ -3,6 +3,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import * as Either from "effect/Either";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, test } from "vitest";
 import {
   battleId,
@@ -1398,6 +1399,11 @@ function poisonImmuneSkeletonCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
 }): BattleCreatureInit {
+  const projected = Either.getOrThrow(
+    projectAuthoredStatBlock(
+      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    ),
+  );
   return {
     combatantId: input.combatantId,
     displayName: input.displayName,
@@ -1405,14 +1411,13 @@ function poisonImmuneSkeletonCreature(input: {
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(
-          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-        ),
+        battleStatBlockCombatantSource(projected.runtime),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }

@@ -88,6 +88,7 @@ import {
   characterSpellProcedure,
   type SpellProcedureExecution,
 } from "./character-execution-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 type CreatureTypeProtectionAndCharmSelectedIdentityLastResult =
   | "init"
@@ -1408,19 +1409,23 @@ function statBlockCreature(input: {
   readonly statBlock: StatBlockRecord;
   readonly initiative: number;
 }): BattleCreatureInit {
+  const projected = Either.getOrThrow(
+    projectAuthoredStatBlock(input.statBlock),
+  );
   return {
     combatantId: input.combatantId,
-    displayName: input.statBlock.statBlock.displayName,
+    displayName: input.statBlock.name,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
+        battleStatBlockCombatantSource(projected.runtime),
       ),
-      currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
+      currentHp: Hp(projected.runtime.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }
@@ -1435,22 +1440,9 @@ function statBlockWithCreatureType(
     name: `Selected Identity ${creatureType}`,
     statBlock: {
       ...base.statBlock,
-      displayName: `Selected Identity ${creatureType}`,
       creatureType,
     },
   };
-}
-
-function statBlockLiteralNumber(
-  value: StatBlockRecord["statBlock"]["hp"],
-): number {
-  if (typeof value === "number") {
-    return value;
-  }
-  if (value.kind === "literal") {
-    return value.value;
-  }
-  throw new Error("Expected literal stat block number.");
 }
 
 function protectionFromEvilAndGoodSpellAct(state: BattleState): ActionSpellAct {
