@@ -1,0 +1,127 @@
+{
+  "scenarioId": "rs48h-20260824t155852z-synthetic-dodge-defense-lifetime-retry-001",
+  "scenarioSha256": "288ec1993699b2f03fb3350b75e0835d815d1ff54ee60bd6d5817fc587d2ff95",
+  "gitSha": "1d2b13ad5f206caf14ca8f37a6d1213c73415ee6",
+  "admitReviewedUnsupported": false,
+  "rawReview": {
+    "classification": "supported",
+    "evidence": "SRD 5.2.1 permits Dodge until the start of the next turn, fixed monster Initiative scores (Skeleton 13, Goblin Warrior 12), and the prescribed Shortbow attack at 15 feet. Fixed or rolled Hit Points are explicitly delegated, and no further RAW Table Decision is missing."
+  },
+  "policyReview": {
+    "classification": "safe",
+    "evidence": "The scenario uses only canonical SRD identities and independently authored framing; it exposes no PHB+ identity, crosswalk, or protected expression under AUTHORING.md."
+  },
+  "reviewScope": "rawContentSdkCapabilityPolicyQuality",
+  "scenarioQuality": {
+    "classification": "ready",
+    "evidence": "The stat-block-only and geometry-assisted typed facts align with the Dodge-duration purpose. Both combatants have serious strategy-bearing objectives, prescribed and delegated choices match the campaign preference, and the supplied complete-catalogue comparison identifies a material Dodge duration-boundary distinction."
+  },
+  "catalogueComparison": {
+    "schemaVersion": 1,
+    "conclusion": "meaningfullyDistinct",
+    "comparedScenarioIds": [
+      "four-way-crank-control-cycle",
+      "goblin-warrior-skeleton-tracer",
+      "lantern-intercept-pairwise-control",
+      "mounted-dispatch-through-flooded-orchard",
+      "open-grid-wolf-skeleton-pursuit",
+      "orc-fighter-rogue-close-interception",
+      "prone-target-roll-mode-distance-probe",
+      "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+      "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+      "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+      "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+      "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+      "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+      "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+      "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+      "sand-band-four-skeleton-skirmish",
+      "synthetic-beacon-eight-round-defense",
+      "table-authored-shove-then-grapple",
+      "table-authored-three-shove-cycle",
+      "table-d20-circumstance-advantage-probe-repair-retry",
+      "two-goblins-pursue-skeleton"
+    ],
+    "closestMatches": [
+      {
+        "scenarioId": "goblin-warrior-skeleton-tracer",
+        "reason": "It has the closest canonical composition: one Goblin Warrior and one Skeleton in open space. The Candidate adds a fixed Skeleton-first Dodge turn and one subsequent Shortbow attack, whereas the tracer is an open-ended minimal battle without this duration probe."
+      },
+      {
+        "scenarioId": "prone-target-roll-mode-distance-probe",
+        "reason": "Both isolate attack-roll modifiers with other sources neutralized, but this admitted scenario tests initial Prone at melee and ranged distances while the Candidate tests Dodge remaining active after the Dodging creature ends its turn."
+      },
+      {
+        "scenarioId": "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+        "reason": "Both establish a roll-mode effect before a later attack across a turn boundary. Help grants target-specific Advantage to an ally and tests its consumption; the Candidate tests defender-owned Dodge protection against the next attack."
+      },
+      {
+        "scenarioId": "table-d20-circumstance-advantage-probe-repair-retry",
+        "reason": "Both focus on a bounded attack roll with other modifiers neutralized, but the admitted scenario applies Table-imposed per-test Disadvantage during a Horse/Wolf pursuit, while the Candidate tests the Dodge action's cross-turn duration."
+      },
+      {
+        "scenarioId": "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+        "reason": "Both stop after tightly bounded attack and damage resolution while examining temporal state behavior. The admitted scenario tests an in-attack Bite Prone rider; the Candidate tests a prior-turn Dodge effect on a later Shortbow attack."
+      }
+    ],
+    "materialDifferentiators": [
+      "The Candidate's central purpose is the Dodge-duration boundary: the Skeleton takes Dodge, ends its turn, and is attacked on the Goblin Warrior's immediately following turn while Dodge remains relevant. None of the 21 admitted sources describes this cross-turn Dodge probe.",
+      "The roll-mode source is materially different: the Candidate uses a defender's Dodge action and visibility, not initial Prone, allied Help, long range, a Table-imposed circumstance, or an attack's own on-hit rider.",
+      "The Candidate isolates exactly one Shortbow attack and conditional damage in a two-stat-block encounter, with no movement, extra actions, reactions, additional attacks, or encounter-wide conclusion.",
+      "The 15-foot separation establishes ordinary Shortbow legality while excluding melee and long-range complications; spatial placement controls the Dodge question rather than supplying the novelty."
+    ],
+    "basis": {
+      "tag": "compared",
+      "batches": [
+        {
+          "batchIndex": 0,
+          "comparedScenarioIds": [
+            "four-way-crank-control-cycle",
+            "goblin-warrior-skeleton-tracer",
+            "lantern-intercept-pairwise-control",
+            "mounted-dispatch-through-flooded-orchard",
+            "open-grid-wolf-skeleton-pursuit",
+            "orc-fighter-rogue-close-interception",
+            "prone-target-roll-mode-distance-probe",
+            "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+            "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+            "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+            "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+            "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+            "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+            "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+            "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+            "sand-band-four-skeleton-skirmish",
+            "synthetic-beacon-eight-round-defense",
+            "table-authored-shove-then-grapple",
+            "table-authored-three-shove-cycle",
+            "table-d20-circumstance-advantage-probe-repair-retry",
+            "two-goblins-pursue-skeleton"
+          ],
+          "dimensions": {
+            "exploratoryPurpose": "The Candidate asks whether Dodge taken by the Skeleton remains relevant to the Goblin Warrior's next-turn Shortbow attack after the Skeleton ends its turn. This differs from Shove/Grapple control cycles, open-ended battle tracing, pursuit and interception, mounted dispatch, Character Sheet encounters, Prone branches, movement probes, cover transitions, terrain and objective defenses, the Wolf Bite rider, and the Table circumstance test. It overlaps the admitted bounded roll-mode family only at a high level while adding the absent Dodge-duration purpose.",
+            "materiallyRelevantMechanics": "The Candidate requires the Dodge action, its attack-roll consequence against a visible attacker, initiative turn completion, one canonical Shortbow attack, surfaced attack and damage rolls, and the Table's fixed-or-rolled starting-Hit-Points choice. The Prone scenario instead uses initial Prone with separate Scimitar and Shortbow branches; Help uses held Advantage and consumption; table-d20 uses per-test Table Disadvantage; Wolf Bite uses an on-hit Prone rider. Other sources center on Shove/Grapple, Dash, Disengage, movement and Opportunity Attacks, footprint geometry, Total Cover, pillars or portcullis, mounts, objects, elevation, difficult terrain, Character Sheets, or multi-round objectives.",
+            "encounterComposition": "The Candidate has exactly one canonical Skeleton and one canonical Goblin Warrior, mutually hostile, with no allies, extra combatants, Character Sheets, object, mount, or synthetic objective. This most closely matches goblin-warrior-skeleton-tracer's Goblin/Skeleton pair; table-authored-shove-then-grapple shares the pair but adds a dispatch case and Table-owned spatial branches. The other admitted sources use different rosters, additional Wolves, Goblins, Skeletons, Hawks, Horses, Character Sheets, objects, or objectives.",
+            "interactionSequence": "The Candidate fixes initiative as Skeleton then Goblin Warrior; the Skeleton takes Dodge, holds position, and Ends Turn; the Goblin Warrior then makes exactly one legal Shortbow attack; the player supplies surfaced attack and conditional damage rolls; the scenario stops after resolution. This differs from the tracer's adaptive continuation, Prone's two required attacks, Help's Help-then-ally-attack sequence, Wolf Bite's within-attack rider continuation, table-d20's Horse/Wolf chase, Shove/Grapple and three-Shove sequences, movement frontiers, cover transitions, mounted dispatch branches, and the multi-turn pursuit, skirmish, Watchfire, and beacon-defense sequences.",
+            "tacticalQuestion": "Does a visible attacker face Dodge-derived attack-roll protection during the turn immediately after the Dodging creature completes its own turn? The Candidate does not ask whether initial Prone changes melee versus ranged rolls, whether Help grants and consumes Advantage, whether a Table circumstance modifies one D20 Test, whether an on-hit rider changes a continuing attack, whether movement creates an Opportunity Attack, whether cover changes target eligibility, or whether broader objectives determine an encounter result. Its normal Shortbow range is a control, not a long-range roll-mode branch.",
+            "sdkSupportBoundary": "The Candidate is framed as an ordinary canonical-stat-block, geometry-assisted public-SDK interaction using surfaced starting-Hit-Points choice, Dodge, End Turn, Shortbow, attack-roll, and damage procedures; it does not declare an unsupported-capability probe. The explicit unsupported boundaries are mounted-dispatch-through-flooded-orchard, prone-target-roll-mode-distance-probe, rs48h-20260824t155852z-synthetic-large-footprint-route-001, rs48h-20260824t155852z-synthetic-total-cover-transition-001, and table-d20-circumstance-advantage-probe-repair-retry. The notAssessed entries are goblin-warrior-skeleton-tracer, sand-band-four-skeleton-skirmish, and synthetic-beacon-eight-round-defense; the remaining entries are marked supportedOnly/supported, but none duplicates this Dodge sequence.",
+            "spatialContext": {
+              "tag": "supporting",
+              "evidence": "The Candidate's bright, obstacle-free 40-foot-square geometry-derived arena, exact positions, clear visibility, no cover or terrain, melee exclusion, and ordinary Shortbow range make the interaction legal and controlled. These facts are supporting rather than the differentiator. The batch's geometry-assisted scenarios use varied open, cover, terrain, pillar, partition, grid, or objective spaces, while its Table-authored scenarios use fixed Table-owned spatial fingerprints; none changes the Dodge-duration comparison."
+            }
+          }
+        }
+      ]
+    }
+  },
+  "contentAvailabilityIntent": "availableOnly",
+  "contentReview": {
+    "classification": "supplied",
+    "evidence": "Skeleton and Goblin Warrior are both present in the supplied canonical availability list, matching the exact availableOnly campaign intent."
+  },
+  "sdkCapabilityIntent": "supportedOnly",
+  "sdkCapabilityReview": {
+    "classification": "supported",
+    "evidence": "The current public projection covers canonical stat-block setup, illumination, environment, pairwise relationships, geometry-derived spatial setup, surfaced Battle acts, typed targets, rolls, damage, and End Turn continuations required by this scenario."
+  }
+}
