@@ -5620,14 +5620,11 @@ export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
 });
 
 /**
- * The SRD 5.2.1 monster corpus uses special-sense ranges from 10 through
- * 150 feet. Keep the authored boundary positive and bounded while leaving
- * CreatureSenseSchema unchanged for reusable runtime projections.
+ * Authored special-sense ranges are positive integral feet values. Keep the
+ * authored boundary strict while leaving CreatureSenseSchema unchanged for
+ * reusable runtime projections.
  */
-const StandaloneStatBlockSenseRangeFeetSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.between(1, 150),
-);
+const StandaloneStatBlockSenseRangeFeetSchema = PositiveIntegerSchema;
 
 export const StandaloneCreatureSenseSchema = Schema.Struct({
   kind: CreatureSenseSchema.fields.kind,

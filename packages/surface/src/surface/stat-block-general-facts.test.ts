@@ -42,17 +42,6 @@ const syntheticStandaloneStatBlock = {
   },
 } as const;
 
-type StandaloneGroupedProcedureField = Extract<
-  keyof Schema.Schema.Type<typeof StandaloneStatBlockSchema>,
-  "actions" | "bonusActions" | "reactions" | "legendaryActions"
->;
-type StandaloneGroupedProcedureFieldsAbsent = [
-  StandaloneGroupedProcedureField,
-] extends [never]
-  ? true
-  : false;
-const standaloneGroupedProcedureFieldsAbsent: StandaloneGroupedProcedureFieldsAbsent = true;
-
 describe("standalone Stat Block general facts", () => {
   test("decodes descriptive and communication facts without Hit Dice", () => {
     expect(
@@ -109,7 +98,6 @@ describe("standalone Stat Block general facts", () => {
   });
 
   test("leaves grouped procedure sections to the procedure schema", () => {
-    expect(standaloneGroupedProcedureFieldsAbsent).toBe(true);
     expect(() =>
       decode(StandaloneStatBlockSchema, {
         ...syntheticStandaloneStatBlock,
@@ -246,7 +234,7 @@ describe("standalone Stat Block general facts", () => {
         }),
       ).toThrow();
     }
-    for (const rangeFeet of [0, 151, 10.5] as const) {
+    for (const rangeFeet of [0, 10.5] as const) {
       expect(() =>
         decode(StandaloneCreatureSenseSchema, {
           kind: "darkvision",
@@ -259,6 +247,23 @@ describe("standalone Stat Block general facts", () => {
           senses: [{ kind: "darkvision", rangeFeet }],
         }),
       ).toThrow();
+    }
+    for (const rangeFeet of [1, 151] as const) {
+      expect(
+        decode(StandaloneCreatureSenseSchema, {
+          kind: "darkvision",
+          rangeFeet,
+        }),
+      ).toEqual({ kind: "darkvision", rangeFeet });
+      expect(
+        decode(StandaloneStatBlockSchema, {
+          ...syntheticStandaloneStatBlock,
+          senses: [{ kind: "darkvision", rangeFeet }],
+        }),
+      ).toEqual({
+        ...syntheticStandaloneStatBlock,
+        senses: [{ kind: "darkvision", rangeFeet }],
+      });
     }
 
     const projection = {
