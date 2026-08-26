@@ -1,6 +1,6 @@
 import { createRequire } from "node:module";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   type SurfacePublicationArtifacts,
@@ -14,14 +14,14 @@ import {
 } from "../packages/surface/src/surface/schema.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
-const SourceResolutionSchema = Schema.Union(
+const SourceResolutionSchema = Schema.Union([
   Schema.Struct({
     part: Schema.Literal(""),
     status: Schema.Literal("empty-section-part"),
   }),
   Schema.Struct({
-    part: Schema.NonEmptyTrimmedString,
-    status: Schema.Literal(
+    part: Schema.Trimmed.check(Schema.isNonEmpty()),
+    status: Schema.Literals([
       "ok-line-range",
       "ok-line-range-alias",
       "bad-line-range",
@@ -33,25 +33,25 @@ const SourceResolutionSchema = Schema.Union(
       "missing-file",
       "ok-file",
       "ok-file-alias",
-    ),
+    ]),
   }),
-);
+]);
 type SourceResolution = Schema.Schema.Type<typeof SourceResolutionSchema>;
 
-const RulesExcerptResultSchema = Schema.Union(
+const RulesExcerptResultSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("ok"),
     rulesExcerpt: RulesExcerptSchema,
   }),
   Schema.Struct({
-    tag: Schema.Literal(
+    tag: Schema.Literals([
       "invalid-locator",
       "invalid-resolution",
       "empty-excerpt",
-    ),
+    ]),
     resolutions: Schema.Array(SourceResolutionSchema),
   }),
-);
+]);
 
 export type SurfacePublicationExcerptSource = {
   readonly buildReferenceIndex: () => unknown;
@@ -198,19 +198,19 @@ export function buildSrdSurfacePublication(
       });
       return undefined;
     }
-    const decodedResult = Schema.decodeUnknownEither(RulesExcerptResultSchema, {
+    const decodedResult = Schema.decodeUnknownResult(RulesExcerptResultSchema, {
       onExcessProperty: "error",
     })(candidate);
-    if (Either.isLeft(decodedResult)) {
+    if (Result.isFailure(decodedResult)) {
       issues.push({
         kind: "excerpt-result-invalid",
         recordId: record.id,
         section: record.provenance.section,
-        message: String(decodedResult.left),
+        message: decodedResult.failure.message,
       });
       return undefined;
     }
-    const result = decodedResult.right;
+    const result = decodedResult.success;
     if (result.tag !== "ok") {
       issues.push({
         kind: "record-excerpt-invalid",

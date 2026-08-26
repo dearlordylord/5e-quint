@@ -24,7 +24,7 @@ import {
   WizardClassRecordSchema,
 } from "./schema-nonspell.ts";
 
-const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
+const decode = <A>(schema: Schema.ConstraintDecoder<A>, input: unknown): A =>
   Schema.decodeUnknownSync(schema)(input);
 
 describe("Surface non-spell schema readers", () => {

@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
 
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   formatSurfaceDecodeError,
@@ -167,20 +167,20 @@ function decodeRecord(value: unknown): string | undefined {
     value.kind === "statBlock";
   const diagnostic = isStatBlock
     ? (() => {
-        const decoded = Schema.decodeUnknownEither(StatBlockRecordSchema, {
+        const decoded = Schema.decodeUnknownResult(StatBlockRecordSchema, {
           onExcessProperty: "error",
         })(value);
-        return Either.isRight(decoded)
+        return Result.isSuccess(decoded)
           ? undefined
-          : formatSurfaceDecodeError(decoded.left);
+          : formatSurfaceDecodeError(decoded.failure);
       })()
     : (() => {
-        const decoded = Schema.decodeUnknownEither(UnitRecordSchema, {
+        const decoded = Schema.decodeUnknownResult(UnitRecordSchema, {
           onExcessProperty: "error",
         })(value);
-        return Either.isRight(decoded)
+        return Result.isSuccess(decoded)
           ? undefined
-          : formatSurfaceDecodeError(decoded.left);
+          : formatSurfaceDecodeError(decoded.failure);
       })();
 
   if (diagnostic === undefined) return undefined;
