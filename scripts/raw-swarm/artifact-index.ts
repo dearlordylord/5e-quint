@@ -10,7 +10,6 @@ import {
   writeFileSync,
 } from "node:fs";
 import { basename, dirname, extname, relative, resolve } from "node:path";
-import { tmpdir } from "node:os";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { Either, Schema } from "effect";
@@ -147,6 +146,12 @@ function sha256(bytes: Uint8Array): string {
 
 type ArtifactIndexLockMode = "reader" | "writer";
 
+/** Fixed absolute roots keep the cross-process lock identity independent of TMPDIR. */
+export const ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES = [
+  "/tmp/raw-swarm-artifact-index-locks-a",
+  "/tmp/raw-swarm-artifact-index-locks-b",
+] as const;
+
 function isSqliteBusy(error: unknown): boolean {
   return (
     error instanceof Error &&
@@ -168,12 +173,45 @@ function artifactIndexLockIdentity(absolute: string): string {
   }
 }
 
+function canonicalArtifactIndexDirectory(absolute: string): string {
+  try {
+    return realpathSync(dirname(artifactIndexLockIdentity(absolute)));
+  } catch (error) {
+    return fail(
+      `Raw Swarm index parent directory is unreadable: ${dirname(absolute)}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function canonicalArtifactIndexLockRoot(candidate: string): string {
+  try {
+    mkdirSync(candidate, { recursive: true });
+    return realpathSync(candidate);
+  } catch (error) {
+    return fail(
+      `Raw Swarm artifact-index lock root is unavailable: ${candidate}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+export function artifactIndexLockRootForSource(absolute: string): string {
+  const sourceDirectory = canonicalArtifactIndexDirectory(absolute);
+  const selected = ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES.map(
+    canonicalArtifactIndexLockRoot,
+  ).find((canonical) => canonical !== sourceDirectory);
+  if (selected === undefined) {
+    return fail(
+      `Raw Swarm artifact-index lock roots cannot be separated from the source directory: ${sourceDirectory}`,
+    );
+  }
+  return selected;
+}
+
 function artifactIndexLockPath(absolute: string): string {
   const identity = artifactIndexLockIdentity(absolute);
   const digest = createHash("sha256").update(identity).digest("hex");
   return resolve(
-    tmpdir(),
-    "raw-swarm-artifact-index-locks",
+    artifactIndexLockRootForSource(absolute),
     `${digest}.lock.sqlite`,
   );
 }
@@ -213,9 +251,6 @@ function acquireArtifactIndexLock(
   absolute: string,
   mode: ArtifactIndexLockMode,
 ): { readonly release: () => void } {
-  mkdirSync(resolve(tmpdir(), "raw-swarm-artifact-index-locks"), {
-    recursive: true,
-  });
   const lockDb = new DatabaseSync(artifactIndexLockPath(absolute));
   try {
     // Initialization may race with another process creating this lock file;
@@ -2270,6 +2305,7 @@ const PortableManifestByteLengthSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
 );
+const PORTABLE_MANIFEST_SCHEMA_VERSION = 2;
 
 export const PortableManifestArtifactSchema = Schema.Struct({
   path: Schema.String,
@@ -2280,14 +2316,23 @@ export type PortableManifestArtifact = Schema.Schema.Type<
   typeof PortableManifestArtifactSchema
 >;
 
+export const PortableControlledAttachmentSchema = Schema.Struct({
+  tag: Schema.Literal("controlledReportingTiming"),
+  ...PortableManifestArtifactSchema.fields,
+});
+export type PortableControlledAttachment = Schema.Schema.Type<
+  typeof PortableControlledAttachmentSchema
+>;
+
 export const PortableManifestSchema = Schema.Struct({
-  schemaVersion: Schema.Literal(1),
+  schemaVersion: Schema.Literal(PORTABLE_MANIFEST_SCHEMA_VERSION),
   index: Schema.Struct({
     path: Schema.Literal("index.sqlite"),
     sha256: PortableManifestSha256Schema,
     byteLength: PortableManifestByteLengthSchema,
   }),
   artifacts: Schema.Array(PortableManifestArtifactSchema),
+  controlledAttachments: Schema.Array(PortableControlledAttachmentSchema),
 });
 export type PortableManifest = Schema.Schema.Type<
   typeof PortableManifestSchema
@@ -2350,13 +2395,14 @@ export function exportArtifactIndex(input: {
   snapshotDb.close();
   const indexBytes = readFileSync(snapshot);
   const manifest: PortableManifest = {
-    schemaVersion: 1,
+    schemaVersion: PORTABLE_MANIFEST_SCHEMA_VERSION,
     index: {
       path: "index.sqlite",
       sha256: sha256(indexBytes),
       byteLength: indexBytes.byteLength,
     },
     artifacts,
+    controlledAttachments: [],
   };
   writeFileSync(
     resolve(destination, "manifest.json"),

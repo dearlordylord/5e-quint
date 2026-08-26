@@ -106,7 +106,7 @@ describe("whole-path performance evidence", () => {
       const timingBytes = readFileSync(reportingTiming);
       writeFileSync(
         reportingManifest,
-        `${JSON.stringify({ schemaVersion: 1, index: { sha256: indexSha256 }, artifacts: [{ path: "reporting-timing.json", sha256: sha256Text(timingBytes.toString("utf8")), byteLength: timingBytes.byteLength }] })}\n`,
+        `${JSON.stringify({ schemaVersion: 2, index: { path: "index.sqlite", sha256: indexSha256, byteLength: 0 }, artifacts: [], controlledAttachments: [{ tag: "controlledReportingTiming", path: "reporting-timing.json", sha256: sha256Text(timingBytes.toString("utf8")), byteLength: timingBytes.byteLength }] })}\n`,
       );
     };
     writeReportingTiming(50);

@@ -21,6 +21,7 @@ import {
   openArtifactIndex,
   PortableManifestArtifactSchema,
   PortableManifestSchema,
+  type PortableControlledAttachment,
   type PortableManifest,
   type PortableManifestArtifact,
 } from "./artifact-index.ts";
@@ -38,7 +39,7 @@ import {
   SwarmFingerprintSchema,
   type GitHubCommandRunner,
 } from "./report.ts";
-import { repoRoot } from "./transcript.ts";
+import { isJsonRecord, repoRoot } from "./transcript.ts";
 
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 const temporaryDirectories: string[] = [];
@@ -416,7 +417,7 @@ describe("RAW swarm artifact report index", () => {
       executionManifest;
     const invalidManifests: readonly unknown[] = [
       withoutSchemaVersion,
-      { ...executionManifest, schemaVersion: 2 },
+      { ...executionManifest, schemaVersion: 1 },
       { ...executionManifest, unexpected: true },
       {
         ...executionManifest,
@@ -427,6 +428,12 @@ describe("RAW swarm artifact report index", () => {
         artifacts: [
           { ...executionManifest.artifacts[0]!, unexpected: true },
           ...executionManifest.artifacts.slice(1),
+        ],
+      },
+      {
+        ...executionManifest,
+        controlledAttachments: [
+          { ...executionManifest.artifacts[0]!, tag: "unclassified" },
         ],
       },
     ];
@@ -509,6 +516,46 @@ describe("RAW swarm artifact report index", () => {
       ]),
     ).toThrow(/Portable report artifact hash verification failed/);
     writeFileSync(unrelatedArtifactPath, unrelatedArtifactBytes);
+
+    const arbitraryManifestOnlyBytes = Buffer.from(
+      "arbitrary manifest-only artifact\n",
+    );
+    const arbitraryManifestOnlyPath = resolve(
+      executionPortablePath,
+      "arbitrary-manifest-only.txt",
+    );
+    writeFileSync(arbitraryManifestOnlyPath, arbitraryManifestOnlyBytes);
+    writeFileSync(
+      executionManifestPath,
+      `${JSON.stringify(
+        {
+          ...executionManifest,
+          artifacts: [
+            ...executionManifest.artifacts,
+            {
+              path: "arbitrary-manifest-only.txt",
+              sha256: createHash("sha256")
+                .update(arbitraryManifestOnlyBytes)
+                .digest("hex"),
+              byteLength: arbitraryManifestOnlyBytes.byteLength,
+            },
+          ],
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact inventory does not match its manifest/);
+    writeFileSync(executionManifestPath, executionManifestBefore);
+    rmSync(arbitraryManifestOnlyPath);
 
     const unreferencedBytes = Buffer.from("unreferenced portable artifact\n");
     const unreferencedSha256 = createHash("sha256")
@@ -739,11 +786,23 @@ describe("RAW swarm artifact report index", () => {
         `SELECT 1 FROM artifacts WHERE sha256 = '${controlledTimingSha256}'`,
       ),
     ).toBeUndefined();
-    expect(controlledManifest.artifacts).toEqual(
+    expect(controlledManifest.controlledAttachments).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          tag: "controlledReportingTiming",
+          sha256: controlledTimingSha256,
+        }),
+      ]),
+    );
+    expect(controlledManifest.artifacts).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           sha256: controlledTimingSha256,
         }),
+      ]),
+    );
+    expect(controlledManifest.artifacts).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           sha256: createHash("sha256")
             .update(readFileSync(controlledEvidence.manifestPath))
@@ -793,6 +852,110 @@ describe("RAW swarm artifact report index", () => {
       "--review-replay-final",
       relative(repoRoot, controlledEvidence.replayPrePlayReviewInputPaths[1]!),
     ]);
+    const controlledPortableAuditPath = resolve(
+      directory,
+      "controlled-portable-audit",
+    );
+    report([
+      "export",
+      "--db",
+      relative(repoRoot, controlledDbPath),
+      "--destination",
+      relative(repoRoot, controlledPortableAuditPath),
+    ]);
+    const controlledPortableAuditIndexPath = resolve(
+      controlledPortableAuditPath,
+      "index.sqlite",
+    );
+    const controlledPortableAuditManifestPath = resolve(
+      controlledPortableAuditPath,
+      "manifest.json",
+    );
+    const controlledPortableAuditManifest = decodePortableManifest(
+      readFileSync(controlledPortableAuditManifestPath),
+    );
+    const controlledTimingValue: unknown = JSON.parse(
+      readFileSync(controlledTimingPath, "utf8"),
+    );
+    if (!isJsonRecord(controlledTimingValue)) {
+      throw new Error("Controlled reporting timing fixture is not an object.");
+    }
+    const controlledPortableAuditTimingBytes = Buffer.from(
+      `${JSON.stringify(
+        {
+          ...controlledTimingValue,
+          indexSha256: controlledPortableAuditManifest.index.sha256,
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    const controlledPortableAuditTimingPath = resolve(
+      controlledPortableAuditPath,
+      "reporting-timing.json",
+    );
+    writeFileSync(
+      controlledPortableAuditTimingPath,
+      controlledPortableAuditTimingBytes,
+    );
+    const controlledTimingAttachment: PortableControlledAttachment = {
+      tag: "controlledReportingTiming",
+      path: "reporting-timing.json",
+      sha256: createHash("sha256")
+        .update(controlledPortableAuditTimingBytes)
+        .digest("hex"),
+      byteLength: controlledPortableAuditTimingBytes.byteLength,
+    };
+    writeFileSync(
+      controlledPortableAuditManifestPath,
+      `${JSON.stringify(
+        {
+          ...controlledPortableAuditManifest,
+          controlledAttachments: [controlledTimingAttachment],
+        },
+        null,
+        2,
+      )}\n`,
+    );
+    expect(
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, controlledPortableAuditIndexPath),
+      ]),
+    ).toContain("fixture-execution");
+    rmSync(controlledPortableAuditTimingPath);
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, controlledPortableAuditIndexPath),
+      ]),
+    ).toThrow(/Portable report artifact is unreadable/);
+    writeFileSync(
+      controlledPortableAuditTimingPath,
+      Buffer.concat([
+        controlledPortableAuditTimingBytes,
+        Buffer.from("tampered"),
+      ]),
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, controlledPortableAuditIndexPath),
+      ]),
+    ).toThrow(/Portable report artifact hash verification failed/);
+    writeFileSync(
+      controlledPortableAuditTimingPath,
+      controlledPortableAuditTimingBytes,
+    );
     expect(
       report([
         "audit",
@@ -802,7 +965,7 @@ describe("RAW swarm artifact report index", () => {
         relative(repoRoot, controlledDbPath),
       ]),
     ).toContain("fixture-execution");
-  }, 30_000);
+  }, 60_000);
 
   test("establishes and verifies the GitHub backlink and label idempotently", () => {
     let body = "Existing issue body";

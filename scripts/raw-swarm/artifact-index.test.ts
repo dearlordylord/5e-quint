@@ -7,6 +7,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -19,6 +20,8 @@ import { pathToFileURL } from "node:url";
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES,
+  artifactIndexLockRootForSource,
   exportArtifactIndex,
   ingestArtifactRun,
   ingestArtifactRunWithArtifacts,
@@ -1184,10 +1187,9 @@ process.stdout.write("opened");`,
       tmpdir(),
       `raw-swarm-direct-index-${randomUUID()}.sqlite`,
     );
-    const lockDirectory = resolve(tmpdir(), "raw-swarm-artifact-index-locks");
-    mkdirSync(lockDirectory, { recursive: true });
+    const lockDirectory = artifactIndexLockRootForSource(dbPath);
+    expect(lockDirectory).not.toBe(realpathSync(dirname(dbPath)));
     const entriesBefore = new Set(readdirSync(tmpdir()));
-    const lockDigest = sha256Text(dbPath);
     try {
       const db = openArtifactIndex(dbPath);
       db.close();
@@ -1199,22 +1201,90 @@ process.stdout.write("opened");`,
           (entry) => !entriesBefore.has(entry) && !sourceFiles.has(entry),
         ),
       ).toEqual([]);
-      expect(
-        existsSync(
-          resolve(
-            tmpdir(),
-            `raw-swarm-artifact-index-${lockDigest}.lock.sqlite`,
-          ),
-        ),
-      ).toBe(false);
-      expect(
-        existsSync(resolve(lockDirectory, `${lockDigest}.lock.sqlite`)),
-      ).toBe(true);
     } finally {
       rmSync(dbPath, { force: true });
       rmSync(`${dbPath}-wal`, { force: true });
       rmSync(`${dbPath}-shm`, { force: true });
     }
+  });
+
+  test.each(ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES)(
+    "keeps an index in lock-root candidate %s free of lock artifacts",
+    (candidate) => {
+      mkdirSync(candidate, { recursive: true });
+      const dbPath = resolve(
+        candidate,
+        `raw-swarm-candidate-index-${randomUUID()}.sqlite`,
+      );
+      const selectedLockRoot = artifactIndexLockRootForSource(dbPath);
+      expect(selectedLockRoot).not.toBe(realpathSync(candidate));
+      const entriesBefore = new Set(readdirSync(candidate));
+      try {
+        const db = openArtifactIndex(dbPath);
+        db.close();
+        const dbName = basename(dbPath);
+        const sourceFiles = new Set([dbName, `${dbName}-wal`, `${dbName}-shm`]);
+        expect(
+          readdirSync(candidate).filter(
+            (entry) => !entriesBefore.has(entry) && !sourceFiles.has(entry),
+          ),
+        ).toEqual([]);
+      } finally {
+        rmSync(dbPath, { force: true });
+        rmSync(`${dbPath}-wal`, { force: true });
+        rmSync(`${dbPath}-shm`, { force: true });
+      }
+    },
+  );
+
+  test("keeps lock identity stable when a child process changes TMPDIR", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "tmpdir-variance.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+    const reader = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    const alternateTmpdir = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-alternate-tmpdir-"),
+    );
+    temporaryExternalDirectories.push(alternateTmpdir);
+    const artifactIndexModule = pathToFileURL(
+      resolve(repoRoot, "scripts/raw-swarm/artifact-index.ts"),
+    ).href;
+    try {
+      const child = spawnSync(
+        process.execPath,
+        [
+          "--experimental-strip-types",
+          "--input-type=module",
+          "--eval",
+          `import { openArtifactIndex } from ${JSON.stringify(artifactIndexModule)};
+try {
+  const db = openArtifactIndex(process.argv[1]);
+  db.close();
+  process.stdout.write("opened");
+} catch (error) {
+  process.stdout.write(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+}`,
+          relative(repoRoot, dbPath),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: { ...process.env, TMPDIR: alternateTmpdir },
+          timeout: 15_000,
+        },
+      );
+      expect(child.error).toBeUndefined();
+      expect(child.status).toBe(1);
+      expect(`${child.stdout}${child.stderr}`).toMatch(
+        /cannot be opened for writing while another operation is active/,
+      );
+    } finally {
+      reader.close();
+    }
+    const writer = openArtifactIndex(relative(repoRoot, dbPath));
+    writer.close();
   });
 
   test("registers controlled attachments in the transcript transaction", () => {
