@@ -20,7 +20,7 @@ if ! load_dokku_environment "$1"; then
 fi
 cd "$repository_root"
 
-for command in curl git jq pnpm ssh; do
+for command in curl find gh git jq pnpm ssh; do
   command -v "$command" >/dev/null || {
     echo "Required command is unavailable: $command" >&2
     exit 69
@@ -41,20 +41,16 @@ release="$(git rev-parse --verify HEAD)"
   echo "HEAD is not a full Git release identity" >&2
   exit 65
 }
-
-if configured_remote="$(git remote get-url "$dokku_remote" 2>/dev/null)"; then
-  [[ "$configured_remote" == "$dokku_remote_url" ]] || {
-    echo "$dokku_remote points to $configured_remote, expected $dokku_remote_url" >&2
-    exit 65
-  }
-else
-  git remote add "$dokku_remote" "$dokku_remote_url"
-fi
+git fetch origin master
+[[ "$(git rev-parse origin/master)" == "$release" ]] || {
+  echo "Deployments require HEAD to be the published origin/master release" >&2
+  exit 65
+}
 
 ssh "dokku@$dokku_host" apps:exists "$dokku_app" >/dev/null
-configured_dockerfile="$(ssh "dokku@$dokku_host" builder-dockerfile:report "$dokku_app" --builder-dockerfile-computed-dockerfile-path)"
-[[ "$configured_dockerfile" == "$expected_dockerfile" ]] || {
-  echo "$dokku_app builds $configured_dockerfile, expected $expected_dockerfile" >&2
+disabled_checks="$(ssh "dokku@$dokku_host" checks:report "$dokku_app" --checks-disabled-list)"
+[[ ",$disabled_checks," == *,web,* ]] || {
+  echo "$dokku_app must stop its old web process before starting a release" >&2
   exit 65
 }
 configured_storage_mount="$(ssh "dokku@$dokku_host" storage:report "$dokku_app" --storage-deploy-mounts)"
@@ -105,11 +101,81 @@ previous_release="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_RELE
   echo "$dokku_app has no valid configured release to restore" >&2
   exit 65
 }
+available_memory_kib="$(ssh "root@$dokku_host" "awk '/^MemAvailable:/ { print \$2 }' /proc/meminfo")"
+available_swap_kib="$(ssh "root@$dokku_host" "awk '/^SwapFree:/ { print \$2 }' /proc/meminfo")"
+minimum_available_memory_kib=$((512 * 1024))
+minimum_available_swap_kib=$((1024 * 1024))
+(( available_memory_kib >= minimum_available_memory_kib )) || {
+  echo "$dokku_host has less than 512 MiB available memory; refusing deployment" >&2
+  exit 75
+}
+(( available_swap_kib >= minimum_available_swap_kib )) || {
+  echo "$dokku_host has less than 1 GiB free swap; refusing deployment" >&2
+  exit 75
+}
+
+workflow="public-mcp-image.yml"
+gh workflow run "$workflow" --ref master -f "release=$release"
+run_id=""
+for ((attempt = 1; attempt <= 30; attempt += 1)); do
+  run_id="$(
+    gh run list \
+      --workflow "$workflow" \
+      --event workflow_dispatch \
+      --commit "$release" \
+      --limit 20 \
+      --json databaseId,createdAt \
+      --jq 'sort_by(.createdAt) | last | .databaseId // empty'
+  )"
+  [[ -z "$run_id" ]] || break
+  sleep 2
+done
+[[ -n "$run_id" ]] || {
+  echo "Unable to locate the off-host image build for $release" >&2
+  exit 69
+}
+gh run watch "$run_id" --exit-status
+
+artifact_directory="$(mktemp -d)"
+trap 'rm -rf "$artifact_directory"' EXIT
+gh run download "$run_id" --dir "$artifact_directory"
+mapfile -t image_archives < <(
+  find "$artifact_directory" -type f -name '*.tar' -print
+)
+(( ${#image_archives[@]} == 1 )) || {
+  echo "The off-host image build must produce exactly one image archive" >&2
+  exit 65
+}
+image_archive="${image_archives[0]}"
+[[ -s "$image_archive" ]] || {
+  echo "The off-host image archive is empty" >&2
+  exit 65
+}
+
+previous_image="$(
+  ssh "root@$dokku_host" \
+    docker image inspect --format '{{.Id}}' "dokku/$dokku_app:latest"
+)"
+[[ "$previous_image" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+  echo "$dokku_app has no immutable image available for rollback" >&2
+  exit 65
+}
 ssh "dokku@$dokku_host" config:set --no-restart "$dokku_app" "DND_MCP_RELEASE=$release" >/dev/null
 
-if ! git push "$dokku_remote" HEAD:master; then
-  echo "Dokku push failed; restoring the configured release to $previous_release" >&2
+if ! ssh "dokku@$dokku_host" \
+  git:load-image \
+  "$dokku_app" \
+  "dnd-oracle:$release" \
+  "5e Quint deployment" \
+  "deployment@localhost" < "$image_archive"; then
+  echo "Dokku image release failed; restoring $previous_release" >&2
   ssh "dokku@$dokku_host" config:set --no-restart "$dokku_app" "DND_MCP_RELEASE=$previous_release" >/dev/null
+  ssh "dokku@$dokku_host" \
+    git:from-image \
+    "$dokku_app" \
+    "$previous_image" \
+    "5e Quint rollback" \
+    "deployment@localhost" >/dev/null
   exit 1
 fi
 

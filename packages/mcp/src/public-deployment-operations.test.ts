@@ -22,6 +22,39 @@ const repositoryRoot = resolve(
 const operationsDirectory = join(repositoryRoot, "operations/public-mcp");
 
 describe("public MCP deployment operations", () => {
+  test("builds the production image off-host and prevents memory overlap", () => {
+    const dockerfile = readFileSync(
+      join(operationsDirectory, "Dockerfile"),
+      "utf8",
+    );
+    const deployDokku = readFileSync(
+      join(operationsDirectory, "deploy-dokku.sh"),
+      "utf8",
+    );
+    const memorySafety = readFileSync(
+      join(operationsDirectory, "configure-dokku-memory-safety.sh"),
+      "utf8",
+    );
+    const imageWorkflow = readFileSync(
+      join(repositoryRoot, ".github/workflows/public-mcp-image.yml"),
+      "utf8",
+    );
+
+    expect(dockerfile).toContain("FROM node:22-bookworm-slim AS builder");
+    expect(dockerfile).toContain("deploy --prod --legacy /srv/deploy");
+    expect(dockerfile).toContain("COPY --from=builder");
+    expect(deployDokku).toContain("public-mcp-image.yml");
+    expect(deployDokku).toContain("--checks-disabled-list");
+    expect(deployDokku).toContain("minimum_available_memory_kib");
+    expect(deployDokku).toContain("minimum_available_swap_kib");
+    expect(deployDokku).toContain("git:load-image");
+    expect(deployDokku).not.toContain("git push");
+    expect(memorySafety).toContain("fallocate -l 2G");
+    expect(memorySafety).toContain('checks:disable "$app" web');
+    expect(imageWorkflow).toContain("Build deployable image off-host");
+    expect(imageWorkflow).toContain("docker image save");
+  });
+
   test("records and restores the preceding immutable image and release", () => {
     const temporaryDirectory = mkdtempSync(
       join(tmpdir(), "dnd-public-deployment-"),

@@ -85,14 +85,35 @@ pnpm deploy:mcp:dokku-staging
 pnpm deploy:mcp:dokku-production
 ```
 
-The commands create their local `dokku-oracle-staging` or
-`dokku-oracle-production` remote when absent, update the release build argument,
-push `HEAD` to the dedicated application, and require live HTTPS health,
-release, publisher pages, and the complete guest newcomer journey to pass. They
-ignore untracked files but refuse uncommitted tracked changes or a branch other
-than `master`. Production additionally refuses to deploy until the application
-reports `production`, publication mode is enabled, the publisher is no longer
-the development placeholder, and the OpenAI domain challenge is configured.
+Prepare or repair the current memory-constrained Dokku host once with:
+
+```sh
+pnpm configure:mcp:dokku-memory
+```
+
+This idempotently provisions a 2 GiB `/swapfile` with low swappiness and
+disables zero-downtime overlap only for the staging and production Oracle web
+processes. It does not stop unrelated applications.
+
+The commands trigger `.github/workflows/public-mcp-image.yml` for the exact
+release, wait for its production-only OCI image artifact, and stream that
+already-built image into the dedicated Dokku application. Hetzner never runs
+dependency resolution, TypeScript checks, or the workspace Docker build. The
+commands refuse to deploy unless the host has at least 512 MiB available RAM,
+1 GiB free swap, and Dokku is configured to stop the old Oracle web process
+before starting the replacement. This intentionally trades a brief maintenance
+gap for bounded memory on the current 4 GiB host; zero-downtime overlap is not a
+supported deployment mode there.
+
+After release, the commands require live HTTPS health, release and publisher
+pages, and the complete guest newcomer journey to pass. They ignore untracked
+files but refuse uncommitted tracked changes or a branch other than `master`.
+Production additionally refuses to deploy until the application reports
+`production`, publication mode is enabled, the publisher is no longer the
+development placeholder, and the OpenAI domain challenge is configured. The
+operator needs GitHub CLI access to trigger and download workflow artifacts,
+`dokku` SSH access for application operations, and `root` SSH access only for
+the memory preflight and immutable rollback image lookup.
 
 After a production deployment, create the non-secret live-deployment evidence
 consumed by the plugin package builder:

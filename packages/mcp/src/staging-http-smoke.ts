@@ -3,7 +3,10 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Either } from "effect";
 
-import { verifyCompleteNewcomerJourney } from "../test-support/mcp-acceptance-scenarios.ts";
+import {
+  verifyCompleteNewcomerJourney,
+  verifyRuntimeAssignedDraftReplay,
+} from "../test-support/mcp-acceptance-scenarios.ts";
 import { SAVED_PLAY_SESSION_TOOL_NAMES } from "./play-session-tool-contract.ts";
 
 const endpoint = stagingEndpoint(process.env.DND_MCP_STAGING_URL);
@@ -24,8 +27,9 @@ if (Either.isLeft(endpoint)) {
       client,
       SAVED_PLAY_SESSION_TOOL_NAMES,
     );
+    const assignedDraft = await verifyRuntimeAssignedDraftReplay(client);
     process.stdout.write(
-      `Staging newcomer journey passed: ${JSON.stringify(journey)}\n`,
+      `Staging newcomer journey passed: ${JSON.stringify({ journey, assignedDraft })}\n`,
     );
   } finally {
     await client.close();

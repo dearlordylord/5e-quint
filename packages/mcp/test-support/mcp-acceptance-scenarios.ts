@@ -1217,6 +1217,18 @@ export async function verifyCompleteNewcomerJourney(
   };
 }
 
+export async function verifyRuntimeAssignedDraftReplay(
+  client: Client,
+): Promise<{ readonly draftId: string }> {
+  const created = await callTool(client, "create_character_draft", {});
+  const draftId = parseString(get(created, "draft.draftId"), "draft.draftId");
+  const discovered = await callTool(client, "discover_creation_holes", {
+    draftId,
+  });
+  assert.equal(get(discovered, "draft.draftId"), draftId);
+  return { draftId };
+}
+
 export async function verifyWidthVertical(client: Client) {
   const fighterDraftId = "draft:stdio-post5-orc-soldier-fighter-two";
   const wizardDraftId = "draft:stdio-post5-elf-soldier-wizard-two";
