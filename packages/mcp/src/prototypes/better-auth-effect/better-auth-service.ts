@@ -1,13 +1,13 @@
 import { DatabaseSync } from "node:sqlite";
 
 import { cimd } from "@better-auth/cimd";
-import { fetchClientMetadataResource } from "@better-auth/cimd/node";
 import { mcp } from "@better-auth/mcp";
 import { betterAuth } from "better-auth";
 import { jwt } from "better-auth/plugins";
 import { Context, Effect, Layer } from "effect";
 
 import { PLAY_SESSION_OAUTH_SCOPE } from "../../tool-definition-contract.ts";
+import { fetchClientMetadataResource } from "./cimd-metadata-fetch.ts";
 
 export type BetterAuthPrototypeConfiguration = {
   readonly authorizationServerOrigin: URL;

@@ -49,10 +49,13 @@ The runtime path succeeds through authorization-server discovery, JWKS, open
 DCR, authorization code plus S256 PKCE, consent, token exchange, and the
 existing MCP resource verifier. The issued token also authenticates the real
 MCP transport and saves, lists, and deletes a formerly guest-owned Play Session.
-CIMD is advertised but requires an HTTPS client metadata URL, so the ChatGPT
-developer-mode connection is the remaining interoperability check. The
-registration evidence command distinguishes CIMD from DCR using Better Auth's
-stored client-discovery fact.
+CIMD is advertised, and the prototype's Node transport successfully fetches
+ChatGPT's HTTPS client metadata document with resolve-once DNS validation and
+connection pinning. It locally corrects a Better Auth 1.7.1 transport defect:
+the package always supplies the single-address DNS callback shape even when
+Node requests the all-addresses shape. The live ChatGPT authorization retry is
+the remaining interoperability check. The registration evidence command
+distinguishes CIMD from DCR using Better Auth's stored client-discovery fact.
 
 The Better Auth 1.7.1 package set is not currently suitable for a cast-free
 production integration. `@better-auth/oauth-provider` and `@better-auth/core`
