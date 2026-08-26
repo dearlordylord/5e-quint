@@ -94,6 +94,46 @@ function expectDirectoryUnchanged(
   );
 }
 
+type ReadOnlyReportAssertion = (invoke: () => string) => void;
+
+const readOnlyReportCommands: readonly {
+  readonly args: readonly string[];
+  readonly assert: ReadOnlyReportAssertion;
+}[] = [
+  {
+    args: ["summary"],
+    assert: (invoke) => expect(invoke()).toContain("Executions: 0"),
+  },
+  {
+    args: ["issues"],
+    assert: (invoke) => expect(invoke()).toBe(""),
+  },
+  {
+    args: ["audit", "--execution-row", "1"],
+    assert: (invoke) => expect(invoke).toThrow(/no indexed findings artifact/),
+  },
+  {
+    args: ["generation-audit", "--campaign-row", "1"],
+    assert: (invoke) => expect(invoke).toThrow(/no indexed findings artifact/),
+  },
+];
+
+function expectReadOnlyReportCommandsPreserve(
+  dbPath: string,
+  directorySnapshots: readonly {
+    readonly directory: string;
+    readonly before: ReturnType<typeof snapshotDirectory>;
+  }[],
+): void {
+  const dbArgument = relative(repoRoot, dbPath);
+  for (const command of readOnlyReportCommands) {
+    command.assert(() => report([...command.args, "--db", dbArgument]));
+    for (const snapshot of directorySnapshots) {
+      expectDirectoryUnchanged(snapshot.directory, snapshot.before);
+    }
+  }
+}
+
 describe("RAW swarm artifact report index", () => {
   test("rejects the unnamed review-replay flag with a value", () => {
     expect(() =>
@@ -161,7 +201,7 @@ describe("RAW swarm artifact report index", () => {
     ).toThrow(/--review-replay-milestone requires a value/);
   });
 
-  test("keeps the source directory and portable export stable across read-only report commands", () => {
+  test("keeps source and portable directories stable across read-only report commands", () => {
     const directory = temporaryDirectory();
     const sourceDirectory = resolve(directory, "source");
     const dbPath = resolve(sourceDirectory, "source.sqlite");
@@ -178,39 +218,15 @@ describe("RAW swarm artifact report index", () => {
     ]);
 
     const portableIndexPath = resolve(destination, "index.sqlite");
-    const portableIndexBefore = readFileSync(portableIndexPath);
     expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
-    expect(report(["summary", "--db", relative(repoRoot, dbPath)])).toContain(
-      "Executions: 0",
-    );
-    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
-    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
-    expect(report(["issues", "--db", relative(repoRoot, dbPath)])).toBe("");
-    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
-    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
-    expect(() =>
-      report([
-        "audit",
-        "--execution-row",
-        "1",
-        "--db",
-        relative(repoRoot, dbPath),
-      ]),
-    ).toThrow(/no indexed findings artifact/);
-    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
-    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
-    expect(() =>
-      report([
-        "generation-audit",
-        "--campaign-row",
-        "1",
-        "--db",
-        relative(repoRoot, dbPath),
-      ]),
-    ).toThrow(/no indexed findings artifact/);
-    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
-    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
-  }, 30_000);
+    const portableDirectoryBefore = snapshotDirectory(destination);
+    const directorySnapshots = [
+      { directory: sourceDirectory, before: sourceDirectoryBefore },
+      { directory: destination, before: portableDirectoryBefore },
+    ];
+    expectReadOnlyReportCommandsPreserve(dbPath, directorySnapshots);
+    expectReadOnlyReportCommandsPreserve(portableIndexPath, directorySnapshots);
+  }, 60_000);
 
   test("preserves the legacy inventory obstruction for read-only report commands", () => {
     const directory = temporaryDirectory();
