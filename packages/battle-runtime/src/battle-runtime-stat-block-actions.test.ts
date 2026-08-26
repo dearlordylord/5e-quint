@@ -1697,6 +1697,96 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
+  test("Stat Block Multiattack spends its own limited-use resource and rejects replay", () => {
+    const base = monsterMultiattackStatBlock();
+    const actions = base.statBlock.actions;
+    const multiattack = authoredProcedure(base, 3);
+    if (actions === undefined || multiattack.procedure.kind !== "multiattack") {
+      throw new Error("Expected the synthetic Multiattack fixtures.");
+    }
+    const retainedActions = actions.filter(
+      (entry) => entry.procedureOrdinal !== multiattack.procedureOrdinal,
+    );
+    const [firstRetainedAction, ...remainingRetainedActions] = retainedActions;
+    if (firstRetainedAction === undefined) {
+      throw new Error("Expected a non-Multiattack action fixture.");
+    }
+    const statBlock: StatBlockRecord = {
+      ...base,
+      id: parseSharedStatBlockId(
+        "stat_block_limited_multiattack_own_resource_test_monster",
+      ),
+      name: "Limited Multiattack Own Resource Test Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "limited-multiattack-own-resource-test-monster",
+      },
+      statBlock: {
+        ...base.statBlock,
+        actions: [
+          firstRetainedAction,
+          ...remainingRetainedActions,
+          {
+            ...executableProcedureEntry(3, multiattack.procedure),
+            resourceRefs: {
+              kind: "some",
+              ordinals: [resourceOrdinal(1)],
+            },
+          },
+        ],
+        resources: [
+          {
+            ordinal: resourceOrdinal(1),
+            ownership: "each",
+            limit: { kind: "daily", uses: 1 },
+          },
+        ],
+      },
+    };
+    const goblinTurn = requireResolved(
+      endTurn({
+        state: startBattleRight({
+          battleId: battleId("battle-stat-block-multiattack-own-resource"),
+          combatants: [
+            characterSeed({ initiative: 20 }),
+            statBlockCreatureInit({ initiative: 10, statBlock }),
+          ],
+        }),
+        actorId: fighterId,
+      }),
+    ).state;
+    const subject = discoveredMultiattackSubject(goblinTurn);
+    const afterMultiattack = requireResolved(
+      resolveBattleSubject({ state: goblinTurn, subject, fills: [] }),
+    ).state;
+    const goblin = afterMultiattack.combatants.get(goblinId);
+    if (goblin?.origin.kind !== "statBlock") {
+      throw new Error("Expected Stat Block goblin.");
+    }
+    expect(goblin.origin.execution.resourcePools).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "daily", usesRemaining: 0 }),
+      ]),
+    );
+    const fighterTurn = requireResolved(
+      endTurn({ state: afterMultiattack, actorId: goblinId }),
+    ).state;
+    const nextGoblinTurn = requireResolved(
+      endTurn({ state: fighterTurn, actorId: fighterId }),
+    ).state;
+
+    expect(
+      discoverStatBlockActs(nextGoblinTurn).map((act) => act.subject),
+    ).not.toContainEqual(subject);
+    expect(
+      resolveBattleSubject({ state: nextGoblinTurn, subject, fills: [] }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Multiattack Stat Block resources are no longer available.",
+    });
+  });
+
   test("Stat Block Multiattack remains gated when a dispatch has no positive literal count", () => {
     const goblinTurn = requireResolved(
       endTurn({
@@ -1782,20 +1872,26 @@ describe("battle runtime: Stat Block actions", () => {
         ...base.statBlock,
         actions: [
           ...actions,
-          executableProcedureEntry(3, {
-            kind: "multiattack",
-            name: "Synthetic Repeated Limited Attack",
-            dispatches: [
-              {
-                procedureOrdinal: authoredProcedureOrdinal(1),
-                count: { kind: "literal", value: 1 },
-              },
-              {
-                procedureOrdinal: authoredProcedureOrdinal(2),
-                count: { kind: "literal", value: 1 },
-              },
-            ],
-          }),
+          {
+            ...executableProcedureEntry(3, {
+              kind: "multiattack",
+              name: "Synthetic Repeated Limited Attack",
+              dispatches: [
+                {
+                  procedureOrdinal: authoredProcedureOrdinal(1),
+                  count: { kind: "literal", value: 1 },
+                },
+                {
+                  procedureOrdinal: authoredProcedureOrdinal(2),
+                  count: { kind: "literal", value: 1 },
+                },
+              ],
+            }),
+            resourceRefs: {
+              kind: "some",
+              ordinals: [resourceOrdinal(1)],
+            },
+          },
         ],
       },
     };
@@ -1818,17 +1914,20 @@ describe("battle runtime: Stat Block actions", () => {
     expect(
       discoverStatBlockActs(goblinTurn).map((act) => act.subject),
     ).not.toContainEqual(multiattackSubject);
-    expect(
-      resolveBattleSubject({
-        state: goblinTurn,
-        subject: multiattackSubject,
-        fills: [],
-      }),
-    ).toMatchObject({
+    const rejected = resolveBattleSubject({
+      state: goblinTurn,
+      subject: multiattackSubject,
+      fills: [],
+    });
+    expect(rejected).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
       message: "Multiattack Stat Block resources are no longer available.",
     });
+    if (rejected.tag !== "invalid") {
+      throw new Error("Expected shared-pool Multiattack rejection.");
+    }
+    expect(rejected.snapshot).toEqual(snapshotBattle(goblinTurn));
   });
 
   test("Stat Block Multiattack dispatch resources do not authorize Escape Grapple", () => {

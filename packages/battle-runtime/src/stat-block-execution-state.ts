@@ -358,13 +358,12 @@ export function statBlockProcedureResourcesAvailable(
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): boolean {
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  return (
-    binding !== undefined &&
-    binding.resourcePoolRefs.every((resourcePoolRef) => {
-      const pool = statBlockResourcePool(execution, resourcePoolRef);
-      return pool !== undefined && resourcePoolAvailable(pool);
-    })
-  );
+  return binding !== undefined
+    ? statBlockResourcePoolUsesAvailable(
+        execution,
+        resourcePoolUsesForRefs(binding.resourcePoolRefs),
+      )
+    : false;
 }
 
 /**
@@ -376,11 +375,7 @@ export function statBlockMultiattackResourcesAvailable(
   execution: StatBlockExecutionState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
 ): boolean {
-  if (!statBlockProcedureResourcesAvailable(execution, binding.procedureRef)) {
-    return false;
-  }
-
-  const requiredUsesByPool = new Map<BattleResourcePoolExecutionRef, number>();
+  const requiredUsesByPool = resourcePoolUsesForRefs(binding.resourcePoolRefs);
   for (const procedureRef of binding.procedure.dispatchProcedureRefs) {
     const dispatchBinding = statBlockProcedureBinding(execution, procedureRef);
     if (dispatchBinding === undefined) return false;
@@ -391,18 +386,29 @@ export function statBlockMultiattackResourcesAvailable(
       );
     }
   }
+  return statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool);
+}
 
-  return [...requiredUsesByPool].every(([resourcePoolRef, requiredUses]) => {
-    const pool = statBlockResourcePool(execution, resourcePoolRef);
-    if (pool === undefined) return false;
-    const availableUses =
-      pool.kind === "daily" || pool.kind === "legendaryActions"
-        ? Number(pool.usesRemaining)
-        : pool.available
-          ? 1
-          : 0;
-    return availableUses >= requiredUses;
-  });
+/**
+ * A Multiattack spends its own resource declaration together with the first
+ * dispatched procedure when activation grants the remaining dispatches. The
+ * complete demand is checked above, while this operation spends only the
+ * activation portion and leaves pending dispatches to their own resolution.
+ */
+export function spendStatBlockMultiattackActivationResources(
+  execution: StatBlockExecutionState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+): StatBlockExecutionState {
+  const [firstDispatch] = binding.procedure.dispatchProcedureRefs;
+  const firstDispatchBinding = statBlockProcedureBinding(
+    execution,
+    firstDispatch,
+  );
+  if (firstDispatchBinding === undefined) return execution;
+  return spendStatBlockResourcePoolUses(execution, [
+    ...binding.resourcePoolRefs,
+    ...firstDispatchBinding.resourcePoolRefs,
+  ]);
 }
 
 export function spendStatBlockProcedureResources(
@@ -410,19 +416,9 @@ export function spendStatBlockProcedureResources(
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockExecutionState {
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  if (
-    binding === undefined ||
-    !statBlockProcedureResourcesAvailable(execution, procedureRef)
-  ) {
-    return execution;
-  }
-  const ownedPoolRefs = new Set(binding.resourcePoolRefs);
-  return admittedStatBlockExecutionState({
-    ...execution,
-    resourcePools: execution.resourcePools.map((pool) =>
-      ownedPoolRefs.has(pool.resourcePoolRef) ? spendResourcePool(pool) : pool,
-    ),
-  });
+  return binding === undefined
+    ? execution
+    : spendStatBlockResourcePoolUses(execution, binding.resourcePoolRefs);
 }
 
 export function refreshStatBlockStartTurnExecution(
@@ -475,19 +471,66 @@ function statBlockResourcePool(
   );
 }
 
-function resourcePoolAvailable(pool: StatBlockResourcePoolState): boolean {
+function resourcePoolAvailableUses(pool: StatBlockResourcePoolState): number {
   return pool.kind === "daily" || pool.kind === "legendaryActions"
-    ? pool.usesRemaining > 0
-    : pool.available;
+    ? Number(pool.usesRemaining)
+    : pool.available
+      ? 1
+      : 0;
+}
+
+function resourcePoolUsesForRefs(
+  resourcePoolRefs: readonly BattleResourcePoolExecutionRef[],
+): Map<BattleResourcePoolExecutionRef, number> {
+  const requiredUsesByPool = new Map<BattleResourcePoolExecutionRef, number>();
+  for (const resourcePoolRef of resourcePoolRefs) {
+    requiredUsesByPool.set(
+      resourcePoolRef,
+      (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+    );
+  }
+  return requiredUsesByPool;
+}
+
+function statBlockResourcePoolUsesAvailable(
+  execution: StatBlockExecutionState,
+  requiredUsesByPool: ReadonlyMap<BattleResourcePoolExecutionRef, number>,
+): boolean {
+  return [...requiredUsesByPool].every(([resourcePoolRef, requiredUses]) => {
+    const pool = statBlockResourcePool(execution, resourcePoolRef);
+    return (
+      pool !== undefined && resourcePoolAvailableUses(pool) >= requiredUses
+    );
+  });
+}
+
+function spendStatBlockResourcePoolUses(
+  execution: StatBlockExecutionState,
+  resourcePoolRefs: readonly BattleResourcePoolExecutionRef[],
+): StatBlockExecutionState {
+  const requiredUsesByPool = resourcePoolUsesForRefs(resourcePoolRefs);
+  if (!statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool)) {
+    return execution;
+  }
+  return admittedStatBlockExecutionState({
+    ...execution,
+    resourcePools: execution.resourcePools.map((pool) => {
+      const requiredUses = requiredUsesByPool.get(pool.resourcePoolRef);
+      return requiredUses === undefined
+        ? pool
+        : spendResourcePool(pool, requiredUses);
+    }),
+  });
 }
 
 function spendResourcePool(
   pool: StatBlockResourcePoolState,
+  requiredUses: number,
 ): StatBlockResourcePoolState {
   if (pool.kind === "daily" || pool.kind === "legendaryActions") {
     return {
       ...pool,
-      usesRemaining: resourceCount(Number(pool.usesRemaining) - 1),
+      usesRemaining: resourceCount(Number(pool.usesRemaining) - requiredUses),
     };
   }
   return { ...pool, available: false };
