@@ -79,11 +79,12 @@ work and are intentionally not folded into this certificate command.
 
 ## Reviewer-loop evidence
 
-The completed review passes below are historical evidence for the exact
-source/certificate commits `60aa87176` (baseline hardening) and `c450fb9dd`
-(protocol-entrypoint remediation, with evidence updated in `431c57457`). They
-do not cover the provisional HTTP-payload refresh in `f0c265b4c` and do not
-claim final convergence for the current certificate.
+The historical review passes below cover the exact source/certificate commits
+`60aa87176` (baseline hardening) and `c450fb9dd` (protocol-entrypoint
+remediation, with evidence updated in `431c57457`). The post-remediation review
+was completed against checkout commit `d3e06012e`; its source and certificate
+content are from `f0c265b4c` and certificate SHA-256
+`dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.
 
 1. RAW/PHB+, domain language, architecture, and connascence: the command adds
    no rule behavior or authored PHB+ identity; it reads MCP, Surface,
@@ -97,12 +98,25 @@ claim final convergence for the current certificate.
    runtime narrowing instead of an unchecked JSON cast. The focused test also
    proves ignored Raw Swarm output does not perturb the certificate.
 
-The current remediation in `f0c265b4c` persists the actual HTTP `tools/list`
-payload and strengthens its parity and representative-call assertions. It has
-not yet undergone its required RAW/PHB+, domain-language,
-architecture/connascence, and code-review passes. After those passes converge,
-make a docs-only evidence commit updating this section; until then, no final
-convergence claim is made.
+Post-remediation reviewer-loop results for `d3e06012e`:
+
+1. Standards review: no findings; the certificate remains canonical-owner
+   evidence, preserves the tracked regular-file boundary, and keeps the
+   replacement and normalization safeguards intact.
+2. Spec review: no findings; the actual HTTP `tools/list` payload, 24-tool
+   ordering/count, parity hash, and representative HTTP CallTool responses are
+   persisted and asserted without changing D&D rules or authored identity.
+3. RAW/PHB+ review: clean; no RAW rule behavior or PHB+ identity was added.
+4. Domain-language review: clean; MCP protocol-entrypoint evidence and the
+   separately named authenticated projection remain distinct contracts.
+5. Architecture/connascence review: clean; the capture still reads canonical
+   MCP, Surface, persistence, reducer, and Raw Swarm owners without a parallel
+   registry or caller-order dependency.
+6. Code/lifecycle review: no findings; protocol resources are closed and the
+   focused tests, typecheck, lint, formatting, and baseline verification pass.
+
+The reviewer loop has converged for the #368 baseline scope; no reasonable
+findings remain in this reviewed source/certificate/documentation set.
 
 The certificate is an Effect 3 behavioral oracle, not a claim that every
 currently present authored record or every Raw Swarm scenario is executable.
