@@ -4910,20 +4910,19 @@ esac
     }
   }, 15_000);
 
-  // Vitest otherwise reindents this long process fixture when its named
-  // timeout replaces the numeric literal.
-  // prettier-ignore
-  test("retains one runner-owned startedAt across execution and supervisor handoff", async () => {
-    const outputRoot = mkdtempSync(
-      resolve(repoRoot, "scripts/raw-swarm/out/runner-started-at-"),
-    );
-    const output = resolve(outputRoot, "execution");
-    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-git-"));
-    const fakeGit = resolve(commandRoot, "git");
-    const fakeCodex = resolve(commandRoot, "codex");
-    writeFileSync(
-      fakeGit,
-      String.raw`#!/bin/sh
+  test(
+    "retains one runner-owned startedAt across execution and supervisor handoff",
+    async () => {
+      const outputRoot = mkdtempSync(
+        resolve(repoRoot, "scripts/raw-swarm/out/runner-started-at-"),
+      );
+      const output = resolve(outputRoot, "execution");
+      const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-runner-git-"));
+      const fakeGit = resolve(commandRoot, "git");
+      const fakeCodex = resolve(commandRoot, "codex");
+      writeFileSync(
+        fakeGit,
+        String.raw`#!/bin/sh
 set -eu
 case "$*" in
   *--git-common-dir*) printf '%s\n' '${modelLaneLockDirectory}' ;;
@@ -4933,11 +4932,11 @@ case "$*" in
   *) exit 0 ;;
 esac
 `,
-    );
-    chmodSync(fakeGit, 0o755);
-    writeFileSync(
-      fakeCodex,
-      String.raw`#!/bin/sh
+      );
+      chmodSync(fakeGit, 0o755);
+      writeFileSync(
+        fakeCodex,
+        String.raw`#!/bin/sh
 set -eu
 printf '%s\n' "$$" > "$FAKE_CODEX_PID_PATH"
 if [ "$#" -gt 0 ] && [ "$1" = "sandbox" ]; then
@@ -4964,101 +4963,106 @@ printf '%s\n' '{"type":"thread.started","thread_id":"synthetic-deterministic-thr
 printf '%s\n' '{"type":"turn.completed"}'
 printf '%s\n' 'Synthetic deterministic player evidence.' > evidence/agent-final.txt
 `,
-    );
-    chmodSync(fakeCodex, 0o755);
-    const canonicalStagePlanPath = resolve(
-      rawSwarmOutputDirectory,
-      "mounted-dispatch-through-flooded-orchard-stage-plan.json",
-    );
-    const canonicalStagePlanFindingsPath = resolve(
-      rawSwarmOutputDirectory,
-      "mounted-dispatch-through-flooded-orchard-stage-plan-findings.json",
-    );
-    try {
-      await runAsync(
-        sdkPlayerLauncher,
-        [
-          "mounted-dispatch-through-flooded-orchard",
-          "--execution-id",
-          "runner-started-at-execution",
-          "--evidence-set-id",
-          "runner-started-at-evidence",
-          "--output-path",
-          relative(repoRoot, output),
-          "--instructional-isolation",
-        ],
-        {
-          ...modelEntryPointTestEnvironment,
-          PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
-          FAKE_CODEX_PID_PATH: resolve(outputRoot, "fake-codex.pid"),
-        },
       );
-      const fakeCodexPid = Number(
-        readFileSync(resolve(outputRoot, "fake-codex.pid"), "utf8").trim(),
+      chmodSync(fakeCodex, 0o755);
+      const canonicalStagePlanPath = resolve(
+        rawSwarmOutputDirectory,
+        "mounted-dispatch-through-flooded-orchard-stage-plan.json",
       );
-      expect(Number.isInteger(fakeCodexPid)).toBe(true);
-      expect(processIsLive(fakeCodexPid)).toBe(false);
-      const executionStartInput: unknown = JSON.parse(
-        readFileSync(resolve(output, "evidence/execution-start.json"), "utf8"),
+      const canonicalStagePlanFindingsPath = resolve(
+        rawSwarmOutputDirectory,
+        "mounted-dispatch-through-flooded-orchard-stage-plan-findings.json",
       );
-      const executionStart = Schema.decodeUnknownEither(
-        ExecutionStartRecordSchema,
-        { onExcessProperty: "error" },
-      )(executionStartInput);
-      expect(Either.isRight(executionStart)).toBe(true);
-      if (Either.isLeft(executionStart)) {
-        throw new Error(
-          `Invalid execution-start evidence: ${executionStart.left.message}`,
+      try {
+        await runAsync(
+          sdkPlayerLauncher,
+          [
+            "mounted-dispatch-through-flooded-orchard",
+            "--execution-id",
+            "runner-started-at-execution",
+            "--evidence-set-id",
+            "runner-started-at-evidence",
+            "--output-path",
+            relative(repoRoot, output),
+            "--instructional-isolation",
+          ],
+          {
+            ...modelEntryPointTestEnvironment,
+            PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
+            FAKE_CODEX_PID_PATH: resolve(outputRoot, "fake-codex.pid"),
+          },
         );
-      }
-      const transcriptHeaderInput: unknown = JSON.parse(
-        readFileSync(resolve(output, "evidence/sdk-calls.jsonl"), "utf8")
-          .trim()
-          .split("\n")[0]!,
-      );
-      const transcriptHeader = Schema.decodeUnknownEither(
-        SdkPlayerTranscriptHeaderSchema,
-        { onExcessProperty: "error" },
-      )(transcriptHeaderInput);
-      expect(Either.isRight(transcriptHeader)).toBe(true);
-      if (Either.isLeft(transcriptHeader)) {
-        throw new Error(
-          `Invalid SDK transcript header: ${transcriptHeader.left.message}`,
+        const fakeCodexPid = Number(
+          readFileSync(resolve(outputRoot, "fake-codex.pid"), "utf8").trim(),
         );
+        expect(Number.isInteger(fakeCodexPid)).toBe(true);
+        expect(processIsLive(fakeCodexPid)).toBe(false);
+        const executionStartInput: unknown = JSON.parse(
+          readFileSync(
+            resolve(output, "evidence/execution-start.json"),
+            "utf8",
+          ),
+        );
+        const executionStart = Schema.decodeUnknownEither(
+          ExecutionStartRecordSchema,
+          { onExcessProperty: "error" },
+        )(executionStartInput);
+        expect(Either.isRight(executionStart)).toBe(true);
+        if (Either.isLeft(executionStart)) {
+          throw new Error(
+            `Invalid execution-start evidence: ${executionStart.left.message}`,
+          );
+        }
+        const transcriptHeaderInput: unknown = JSON.parse(
+          readFileSync(resolve(output, "evidence/sdk-calls.jsonl"), "utf8")
+            .trim()
+            .split("\n")[0]!,
+        );
+        const transcriptHeader = Schema.decodeUnknownEither(
+          SdkPlayerTranscriptHeaderSchema,
+          { onExcessProperty: "error" },
+        )(transcriptHeaderInput);
+        expect(Either.isRight(transcriptHeader)).toBe(true);
+        if (Either.isLeft(transcriptHeader)) {
+          throw new Error(
+            `Invalid SDK transcript header: ${transcriptHeader.left.message}`,
+          );
+        }
+        expect(transcriptHeader.right.startedAt).toBe(
+          executionStart.right.startedAt,
+        );
+        expect(existsSync(resolve(output, "replay-supervisor.mjs"))).toBe(true);
+        expect(
+          existsSync(resolve(output, "evidence/findings-checkpoint.json")),
+        ).toBe(true);
+        const invalidStartedAt = spawnSync(
+          process.execPath,
+          [
+            resolve(output, "replay-supervisor.mjs"),
+            "init",
+            "mounted-dispatch-through-flooded-orchard",
+            "a".repeat(40),
+            "instructionalFallback",
+            "not-a-canonical-timestamp",
+            "b".repeat(64),
+            "c".repeat(64),
+            "d".repeat(64),
+          ],
+          { cwd: output, encoding: "utf8" },
+        );
+        expect(invalidStartedAt.status).toBe(1);
+        expect(
+          `${invalidStartedAt.stdout}${invalidStartedAt.stderr}`,
+        ).toContain("Invalid started-at authority");
+      } finally {
+        rmSync(outputRoot, { recursive: true, force: true });
+        rmSync(commandRoot, { recursive: true, force: true });
+        rmSync(canonicalStagePlanPath, { force: true });
+        rmSync(canonicalStagePlanFindingsPath, { force: true });
       }
-      expect(transcriptHeader.right.startedAt).toBe(
-        executionStart.right.startedAt,
-      );
-      expect(existsSync(resolve(output, "replay-supervisor.mjs"))).toBe(true);
-      expect(
-        existsSync(resolve(output, "evidence/findings-checkpoint.json")),
-      ).toBe(true);
-      const invalidStartedAt = spawnSync(
-        process.execPath,
-        [
-          resolve(output, "replay-supervisor.mjs"),
-          "init",
-          "mounted-dispatch-through-flooded-orchard",
-          "a".repeat(40),
-          "instructionalFallback",
-          "not-a-canonical-timestamp",
-          "b".repeat(64),
-          "c".repeat(64),
-          "d".repeat(64),
-        ],
-        { cwd: output, encoding: "utf8" },
-      );
-      expect(invalidStartedAt.status).toBe(1);
-      expect(`${invalidStartedAt.stdout}${invalidStartedAt.stderr}`).toContain(
-        "Invalid started-at authority",
-      );
-    } finally {
-      rmSync(outputRoot, { recursive: true, force: true });
-      rmSync(commandRoot, { recursive: true, force: true });
-      rmSync(canonicalStagePlanPath, { force: true });
-      rmSync(canonicalStagePlanFindingsPath, { force: true });
-    }
-  }, STARTED_AT_HANDOFF_OUTER_TIMEOUT_MS);
+    },
+    STARTED_AT_HANDOFF_OUTER_TIMEOUT_MS,
+  );
 
   test("rejects an implementation revision that is not the current clean revision", () => {
     const mismatchedGitSha = `${currentGitSha[0] === "a" ? "b" : "a"}${currentGitSha.slice(1)}`;
@@ -5101,32 +5105,33 @@ esac
     }
   }, 30_000);
 
-  // prettier-ignore
-  test("delivers a context authority inline while retaining its path and byte hash", () => {
-    const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
-    const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
-    const contextPath = resolve(testRoot, "review-context.md");
-    const promptPath = resolve(testRoot, "prompt.txt");
-    const transcriptPath = reviewTranscriptPath(testRoot);
-    const reviewPath = resolve(testRoot, "review.json");
-    const logPath = resolve(testRoot, "review.log");
-    const capturePath = resolve(testRoot, "codex-input.bin");
-    const context = "exact context bytes α\nwith no pointer substitution";
-    writeFileSync(contextPath, context);
-    writeFileSync(
-      promptPath,
-      "Review the packet.\n{{POST_PLAY_REVIEW_ACCESS_POLICY}}\n{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}\n",
-    );
-    writeFileSync(transcriptPath, "synthetic transcript\n");
-    const fakePnpm = resolve(commandRoot, "pnpm");
-    const fakeCodex = resolve(commandRoot, "codex");
-    const fakeGit = resolve(commandRoot, "git");
-    const realPnpm = execFileSync("which", ["pnpm"], {
-      encoding: "utf8",
-    }).trim();
-    writeFileSync(
-      fakeGit,
-      String.raw`#!/bin/sh
+  test(
+    "delivers a context authority inline while retaining its path and byte hash",
+    () => {
+      const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
+      const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
+      const contextPath = resolve(testRoot, "review-context.md");
+      const promptPath = resolve(testRoot, "prompt.txt");
+      const transcriptPath = reviewTranscriptPath(testRoot);
+      const reviewPath = resolve(testRoot, "review.json");
+      const logPath = resolve(testRoot, "review.log");
+      const capturePath = resolve(testRoot, "codex-input.bin");
+      const context = "exact context bytes α\nwith no pointer substitution";
+      writeFileSync(contextPath, context);
+      writeFileSync(
+        promptPath,
+        "Review the packet.\n{{POST_PLAY_REVIEW_ACCESS_POLICY}}\n{{POST_PLAY_REVIEW_CONTEXT_DESCRIPTION}}\n",
+      );
+      writeFileSync(transcriptPath, "synthetic transcript\n");
+      const fakePnpm = resolve(commandRoot, "pnpm");
+      const fakeCodex = resolve(commandRoot, "codex");
+      const fakeGit = resolve(commandRoot, "git");
+      const realPnpm = execFileSync("which", ["pnpm"], {
+        encoding: "utf8",
+      }).trim();
+      writeFileSync(
+        fakeGit,
+        String.raw`#!/bin/sh
 set -eu
 case "$*" in
   *--git-common-dir*) printf '%s\n' '${modelLaneLockDirectory}' ;;
@@ -5135,10 +5140,10 @@ case "$*" in
   *) exit 0 ;;
 esac
 `,
-    );
-    writeFileSync(
-      fakePnpm,
-      String.raw`#!/bin/sh
+      );
+      writeFileSync(
+        fakePnpm,
+        String.raw`#!/bin/sh
 set -eu
 last=""
 for arg do last="$arg"; done
@@ -5150,10 +5155,10 @@ case "$*" in
   *) ;;
 esac
 `,
-    );
-    writeFileSync(
-      fakeCodex,
-      String.raw`#!/bin/sh
+      );
+      writeFileSync(
+        fakeCodex,
+        String.raw`#!/bin/sh
 set -eu
 output=""
 while [ "$#" -gt 0 ]; do
@@ -5168,66 +5173,68 @@ printf '%s\n' '{"type":"turn.completed"}'
 cat > "$RAW_REVIEW_CAPTURE"
 printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","transcriptSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","reviewer":"synthetic-reviewer","verdicts":[{"class":"pass","claim":"Synthetic review output is valid.","evidence":"Synthetic review evidence is retained."}]}' > "$output"
 `,
-    );
-    chmodSync(fakeGit, 0o755);
-    chmodSync(fakePnpm, 0o755);
-    chmodSync(fakeCodex, 0o755);
-    const result = spawnSync(
-      reviewer,
-      [promptPath, transcriptPath, reviewPath, logPath],
-      {
-        cwd: repoRoot,
-        env: {
-          ...modelEntryPointTestEnvironment,
-          PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
-          RAW_REVIEW_CAPTURE: capturePath,
-          RAW_REVIEW_CONTEXT_PATH: relative(repoRoot, contextPath),
-          RAW_REVIEW_CONTEXT_PROFILE: "boundedCapabilityProjection",
-          RAW_REVIEW_CONTEXT_ROLE: "postPlayReview",
-          RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
+      );
+      chmodSync(fakeGit, 0o755);
+      chmodSync(fakePnpm, 0o755);
+      chmodSync(fakeCodex, 0o755);
+      const result = spawnSync(
+        reviewer,
+        [promptPath, transcriptPath, reviewPath, logPath],
+        {
+          cwd: repoRoot,
+          env: {
+            ...modelEntryPointTestEnvironment,
+            PATH: `${commandRoot}:${process.env.PATH ?? ""}`,
+            RAW_REVIEW_CAPTURE: capturePath,
+            RAW_REVIEW_CONTEXT_PATH: relative(repoRoot, contextPath),
+            RAW_REVIEW_CONTEXT_PROFILE: "boundedCapabilityProjection",
+            RAW_REVIEW_CONTEXT_ROLE: "postPlayReview",
+            RAW_REVIEW_IMPLEMENTATION_GIT_SHA: currentGitSha,
+          },
+          stdio: inheritedModelLaneStdio(),
+          encoding: "utf8",
         },
-        stdio: inheritedModelLaneStdio(),
-        encoding: "utf8",
-      },
-    );
-    try {
-      expect(result.status).toBe(0);
-      const captured = readFileSync(capturePath);
-      expect(captured.includes(Buffer.from(context))).toBe(true);
-      const capturedText = captured.toString("utf8");
-      expect(capturedText).toContain(
-        `<RAW_SWARM_CAPABILITY_CONTEXT role="postPlayReview" profile="boundedCapabilityProjection" path="${resolve(contextPath)}" bytes="${Buffer.byteLength(context)}"`,
       );
-      const contextSha = execFileSync("sha256sum", [contextPath], {
-        encoding: "utf8",
-      })
-        .split(" ")[0]
-        ?.trim();
-      expect(contextSha).toBeDefined();
-      expect(capturedText).toContain(`sha256="${contextSha}"`);
-      expect(capturedText).toContain(
-        "This is the bounded capability-projection profile.",
-      );
-      expect(capturedText).toContain(
-        "Do not read files or use commands or tools",
-      );
-      expect(capturedText).toContain(
-        "one bounded, versioned Raw Swarm capability projection",
-      );
-      const deliveryPath = `${reviewPath.slice(0, -".json".length)}.context-delivery.json`;
-      expect(JSON.parse(readFileSync(deliveryPath, "utf8"))).toEqual({
-        schemaVersion: 1,
-        profile: "boundedCapabilityProjection",
-        role: "postPlayReview",
-        path: relative(repoRoot, resolve(contextPath)),
-        byteLength: Buffer.byteLength(context),
-        sha256: contextSha,
-      });
-    } finally {
-      rmSync(testRoot, { recursive: true, force: true });
-      rmSync(commandRoot, { recursive: true, force: true });
-    }
-  }, CONTEXT_AUTHORITY_DELIVERY_OUTER_TIMEOUT_MS);
+      try {
+        expect(result.status).toBe(0);
+        const captured = readFileSync(capturePath);
+        expect(captured.includes(Buffer.from(context))).toBe(true);
+        const capturedText = captured.toString("utf8");
+        expect(capturedText).toContain(
+          `<RAW_SWARM_CAPABILITY_CONTEXT role="postPlayReview" profile="boundedCapabilityProjection" path="${resolve(contextPath)}" bytes="${Buffer.byteLength(context)}"`,
+        );
+        const contextSha = execFileSync("sha256sum", [contextPath], {
+          encoding: "utf8",
+        })
+          .split(" ")[0]
+          ?.trim();
+        expect(contextSha).toBeDefined();
+        expect(capturedText).toContain(`sha256="${contextSha}"`);
+        expect(capturedText).toContain(
+          "This is the bounded capability-projection profile.",
+        );
+        expect(capturedText).toContain(
+          "Do not read files or use commands or tools",
+        );
+        expect(capturedText).toContain(
+          "one bounded, versioned Raw Swarm capability projection",
+        );
+        const deliveryPath = `${reviewPath.slice(0, -".json".length)}.context-delivery.json`;
+        expect(JSON.parse(readFileSync(deliveryPath, "utf8"))).toEqual({
+          schemaVersion: 1,
+          profile: "boundedCapabilityProjection",
+          role: "postPlayReview",
+          path: relative(repoRoot, resolve(contextPath)),
+          byteLength: Buffer.byteLength(context),
+          sha256: contextSha,
+        });
+      } finally {
+        rmSync(testRoot, { recursive: true, force: true });
+        rmSync(commandRoot, { recursive: true, force: true });
+      }
+    },
+    CONTEXT_AUTHORITY_DELIVERY_OUTER_TIMEOUT_MS,
+  );
 
   test("keeps the legacy document authority out of initial input and records command-read policy", () => {
     const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
