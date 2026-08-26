@@ -47,7 +47,6 @@ import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
   battleActUnitPresentation,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleCreaturePresentationDisplayName,
   battleAmmunitionStock,
   battleId,
@@ -62,10 +61,8 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   parseCharacterBattleClassLevels,
   resolveBattleSubject,
-  projectAuthoredStatBlock,
   spendCharacterPointPoolResource,
   startBattle,
-  type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
 import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-support.ts";
@@ -133,7 +130,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
-import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
+import type { UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -166,43 +163,11 @@ import {
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
-
-type AuthoredStatBlockBattleInitInput = Omit<
-  StatBlockBattleInitInput,
-  "statBlock" | "presentation"
-> & {
-  readonly statBlock: StatBlockRecord;
-};
-
-function projectAuthoredStatBlockBattleInput(
-  input: AuthoredStatBlockBattleInitInput,
-): StatBlockBattleInitInput {
-  const projected = expectRight(projectAuthoredStatBlock(input.statBlock));
-  return {
-    ...input,
-    statBlock: projected.runtime,
-    presentation: projected.presentation,
-  };
-}
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    AuthoredStatBlockBattleInitInput,
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  const authoredInput = {
-    ...input,
-    ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-    conditions: [],
-  } satisfies AuthoredStatBlockBattleInitInput;
-  return expectRight(
-    parseBattleCreatureInitFromStatBlock(
-      projectAuthoredStatBlockBattleInput(authoredInput),
-    ),
-  );
-}
+import {
+  authoredStatBlockBattleInput,
+  battleCreatureInitFromAuthoredStatBlock as battleCreatureInitFromStatBlock,
+  type AuthoredStatBlockBattleInitInput,
+} from "./ammunition-stock.test-support.ts";
 
 type WithoutResourceExpenditures<
   T extends { readonly resourceExpenditures: unknown },
@@ -256,7 +221,7 @@ function startBattleFromCharacterBuildAndStatBlock(
 ) {
   return startBattleFromCharacterBuildAndStatBlockRuntime({
     ...input,
-    statBlockBattleInput: projectAuthoredStatBlockBattleInput(
+    statBlockBattleInput: authoredStatBlockBattleInput(
       input.statBlockBattleInput,
     ),
     character: {
@@ -277,7 +242,7 @@ function startBattleFromCharacterSheetAndStatBlock(input: {
 }) {
   return startBattleFromCharacterSheetAndStatBlockRuntime({
     ...input,
-    statBlockBattleInput: projectAuthoredStatBlockBattleInput(
+    statBlockBattleInput: authoredStatBlockBattleInput(
       input.statBlockBattleInput,
     ),
   });
