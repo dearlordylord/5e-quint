@@ -151,6 +151,13 @@ test("projects Wild Shape form senses while retaining character communication", 
       ...statBlockCatalog.requireStatBlock("stat_block_riding_horse").statBlock,
       senses: [{ kind: "blindsight", rangeFeet: 10 }],
       passivePerception: 15,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: {
+          kind: "named",
+          languages: ["Synthetic Beast Vocalization"],
+        },
+      },
       skillModifiers: [{ skill: "perception", modifier: 5 }],
     },
   } satisfies StatBlockRecord;
