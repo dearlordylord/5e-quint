@@ -163,6 +163,7 @@ function syntheticDruidWildShapeUnit(
 }
 const wolfId = "stat_block_wolf";
 const spiderId = "stat_block_spider";
+const syntheticNonLiteralSizeFormId = "synthetic_non_literal_size_form";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
 const syntheticProseProneFormId = "synthetic_prose_prone_form";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
@@ -2604,6 +2605,12 @@ test("rejects known Beast forms without literal Size", () => {
   const baseForm = statBlockCatalog.requireStatBlock(ratId);
   const nonLiteralSizeForm: StatBlockRecord = {
     ...baseForm,
+    id: parseSharedStatBlockId(syntheticNonLiteralSizeFormId),
+    name: "Synthetic Nonliteral Size Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-non-literal-size-form",
+    },
     statBlock: {
       ...baseForm.statBlock,
       size: {
@@ -2834,7 +2841,10 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
       }),
       expect.objectContaining({
         category: "attackHitTargetSizeConditionRider",
-        exampleStatBlockIds: expect.arrayContaining([wolfId]),
+        exampleStatBlockIds: expect.arrayContaining([
+          wolfId,
+          syntheticTypedRidersFormId,
+        ]),
       }),
       expect.objectContaining({
         category: "traitDerivedConditionalAttackRollAdvantage",
@@ -2844,7 +2854,6 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
         category: "attackHitConditionRider",
         exampleStatBlockIds: expect.arrayContaining([
           syntheticProseProneFormId,
-          syntheticTypedRidersFormId,
         ]),
         closedBoundary: expect.objectContaining({
           owner: expect.stringContaining("condition rider owner"),
@@ -2861,6 +2870,16 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
         closedBoundary: expect.objectContaining({
           owner: expect.stringContaining("forced-movement rider owner"),
           reason: expect.stringContaining("typed movement payload"),
+        }),
+      }),
+      expect.objectContaining({
+        category: "attackHitOtherRider",
+        exampleStatBlockIds: expect.arrayContaining([
+          syntheticTypedRidersFormId,
+        ]),
+        closedBoundary: expect.objectContaining({
+          owner: expect.stringContaining("attack-hit rider owner"),
+          reason: expect.stringContaining("typed payload"),
         }),
       }),
       expect.objectContaining({
@@ -3030,8 +3049,21 @@ function syntheticTypedRidersForm(): StatBlockRecord {
           ...hooves,
           procedure: {
             ...hooves.procedure,
-            description:
-              "The target gains the Prone condition and is pushed 5 feet.",
+            onHit: [
+              ...hooves.procedure.onHit,
+              {
+                kind: "apply_condition_if_target_size_at_most",
+                condition: "prone",
+                maxCreatureSize: "medium",
+              },
+              {
+                kind: "conditional_bonus_damage",
+                when: { kind: "attack_roll_had_advantage" },
+                damageType: "bludgeoning",
+                amount: { kind: "fixed", static: 1 },
+              },
+            ],
+            description: "The target is pushed 5 feet.",
             name: "Synthetic Rider Strike",
           },
         },
