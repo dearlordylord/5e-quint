@@ -9,18 +9,7 @@ import {
 } from "@dnd/shared/types";
 import { Brand, Match } from "effect";
 import * as Either from "effect/Either";
-import type {
-  CreatureActions,
-  CreatureLimitedUse,
-  CreatureNamedActionOption,
-  CreatureNamedAttackRoll,
-  CreatureNamedMultiattack,
-} from "@dnd/surface/surface/types";
-import type { StatBlockAttackSection } from "./battle-action-options.ts";
-import {
-  SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS,
-  type SupportedStatBlockBonusActionStandardAction,
-} from "./battle-reducer/battle-runtime-protocol.ts";
+import type { SupportedStatBlockBonusActionStandardAction } from "./battle-reducer/battle-runtime-protocol.ts";
 import {
   type BattleStatBlockProcedureExecutionRef,
   type BattleId,
@@ -36,17 +25,10 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import {
-  creatureNamedAttackRollIsSupported,
-  supportedStatBlockTraitAttackRollModes,
-} from "./statblock-action-execution-support.ts";
-
-import {
   admittedStatBlockExecutionState,
   type BattleStatBlockExecutionSource,
-  type StatBlockActionProjectionSection,
-  type StatBlockActionProjectionShape,
-  type StatBlockProjectionIssue,
-  type StatBlockAttackProcedure,
+  type BattleStatBlockRuntimeProcedure,
+  type BattleStatBlockRuntimeResource,
   type StatBlockExecutionState,
   type StatBlockExecutionAdmission,
   type StatBlockExecutionSnapshot,
@@ -78,6 +60,8 @@ type ExecutionScopeAllocator = {
   scopeOrdinal: BattleExecutionScopeOrdinal;
 };
 
+const UNARMED_STRIKE_PROCEDURE_ORDINAL = -1;
+
 type AllocatedStatBlockExecution = {
   readonly execution: StatBlockExecutionState;
   readonly procedureRefs: ReadonlyMap<
@@ -91,23 +75,37 @@ type AllocatedStatBlockExecution = {
 
 export type AdmittedAttackOccurrence = {
   readonly kind: "attack";
-  readonly source: CreatureNamedAttackRoll;
-  readonly section: StatBlockAttackProcedure["section"];
-  readonly attack: StatBlockAttackProcedure["attack"];
-  readonly traitAttackRollModes?: StatBlockAttackProcedure["traitAttackRollModes"];
-  readonly limitedUse?: CreatureLimitedUse;
+  readonly procedureOrdinal: number;
+  readonly section: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "attack" }
+  >["section"];
+  readonly attack: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "attack" }
+  >["attack"];
+  readonly traitAttackRollModes?: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "attack" }
+  >["traitAttackRollModes"];
+  readonly resourceRefs: readonly number[];
 };
 
 export type AdmittedUnarmedStrikeOccurrence = {
   readonly kind: "unarmedStrike";
-  readonly attack: StatBlockAttackProcedure["attack"];
+  readonly attack: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "attack" }
+  >["attack"];
 };
 
 export type AdmittedMultiattackOccurrence = {
   readonly kind: "multiattack";
-  readonly source: CreatureNamedMultiattack;
+  readonly procedureOrdinal: number;
+  readonly resourceRefs: readonly number[];
   readonly dispatches: ReadonlyNonEmptyArray<{
     readonly attack: AdmittedAttackOccurrence;
+    readonly procedureOrdinal: number;
     readonly count: PositiveInteger;
   }>;
 };
@@ -117,9 +115,9 @@ type AdmittedMultiattackDispatch =
 
 export type AdmittedBonusActionOccurrence = {
   readonly kind: "bonusActionOption";
-  readonly source: CreatureNamedActionOption;
+  readonly procedureOrdinal: number;
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
-  readonly limitedUse?: CreatureLimitedUse;
+  readonly resourceRefs: readonly number[];
 };
 
 export type AdmittedStatBlockOccurrences = {
@@ -128,39 +126,12 @@ export type AdmittedStatBlockOccurrences = {
   readonly unarmedStrike: AdmittedUnarmedStrikeOccurrence;
   readonly multiattacks: readonly AdmittedMultiattackOccurrence[];
   readonly bonusActions: readonly AdmittedBonusActionOccurrence[];
+  readonly resources: readonly BattleStatBlockRuntimeResource[];
 };
 
 type AdmittedStatBlock = {
   readonly occurrences: AdmittedStatBlockOccurrences;
 };
-
-type UnsupportedStatBlockActionProjectionShape = Extract<
-  StatBlockActionProjectionShape,
-  "save" | "support" | "special"
->;
-
-type UnsupportedActionProjectionSource =
-  | {
-      readonly shape: Extract<
-        UnsupportedStatBlockActionProjectionShape,
-        "save"
-      >;
-      readonly occurrences: CreatureActions["saves"];
-    }
-  | {
-      readonly shape: Extract<
-        UnsupportedStatBlockActionProjectionShape,
-        "support"
-      >;
-      readonly occurrences: CreatureActions["supports"];
-    }
-  | {
-      readonly shape: Extract<
-        UnsupportedStatBlockActionProjectionShape,
-        "special"
-      >;
-      readonly occurrences: CreatureActions["specials"];
-    };
 
 export function statBlockExecutionAdmissionCohort<
   TStatBlock extends BattleStatBlockExecutionSource,
@@ -202,6 +173,7 @@ export function statBlockExecutionAdmissionCohort<
     combatantId,
     scopeOrdinal: startingScopeOrdinal,
   };
+
   const admissions = statBlocks.map((statBlock) => {
     const scopeRef = allocateExecutionScopeRef(scopeAllocator);
     const admitted = admitStatBlock(statBlock);
@@ -220,42 +192,40 @@ export function statBlockExecutionAdmissionCohort<
 function admitStatBlock(
   statBlock: Pick<
     BattleStatBlockExecutionSource,
-    "challengeRating" | "statBlock"
+    | "challengeRating"
+    | "statBlock"
+    | "procedures"
+    | "resources"
+    | "legendaryActionUses"
   >,
 ): AdmittedStatBlock {
   const attacks: AdmittedAttackOccurrence[] = [];
-  const traitAttackRollModes = supportedStatBlockTraitAttackRollModes(
-    statBlock.statBlock.traits,
-  );
-  for (const [section, sectionAttacks] of statBlockAttackSections(statBlock)) {
+  for (const procedure of statBlock.procedures) {
+    if (procedure.kind !== "attack") continue;
+    const { section, procedureOrdinal, attack, resourceRefs } = procedure;
     if (
       section === "legendaryActions" &&
-      statBlock.statBlock.legendaryActions?.uses === undefined
+      statBlock.legendaryActionUses === undefined
     ) {
       continue;
     }
-    for (const attack of sectionAttacks) {
-      if (!creatureNamedAttackRollIsSupported(attack)) continue;
-      const {
-        name: _name,
-        description: _description,
-        limitedUse,
-        ...attackMechanics
-      } = attack;
-      const occurrence: AdmittedAttackOccurrence = {
-        kind: "attack",
-        source: attack,
-        section,
-        attack: attackMechanics,
-        ...optionalProperty("traitAttackRollModes", traitAttackRollModes),
-        ...optionalProperty("limitedUse", limitedUse),
-      };
-      attacks.push(occurrence);
-    }
+    const occurrence: AdmittedAttackOccurrence = {
+      kind: "attack",
+      procedureOrdinal,
+      section,
+      attack,
+      resourceRefs,
+      ...optionalProperty(
+        "traitAttackRollModes",
+        procedure.traitAttackRollModes,
+      ),
+    };
+    attacks.push(occurrence);
   }
   const actionAttacks = attacks.filter(({ section }) => section === "actions");
   const multiattacks: AdmittedMultiattackOccurrence[] = [];
-  for (const multiattack of statBlock.statBlock.actions?.multiattacks ?? []) {
+  for (const multiattack of statBlock.procedures) {
+    if (multiattack.kind !== "multiattack") continue;
     const dispatches = admittedMultiattackDispatches(
       multiattack,
       actionAttacks,
@@ -263,243 +233,38 @@ function admitStatBlock(
     if (dispatches === null) continue;
     const occurrence: AdmittedMultiattackOccurrence = {
       kind: "multiattack",
-      source: multiattack,
+      procedureOrdinal: multiattack.procedureOrdinal,
+      resourceRefs: multiattack.resourceRefs,
       dispatches,
     };
     multiattacks.push(occurrence);
   }
 
   const bonusActions: AdmittedBonusActionOccurrence[] = [];
-  for (const option of statBlock.statBlock.bonusActions?.actionOptions ?? []) {
-    const standardActions = option.options.filter(
-      (
-        standardAction,
-      ): standardAction is SupportedStatBlockBonusActionStandardAction =>
-        SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
-          (supported) => supported === standardAction,
-        ),
-    );
-    if (
-      standardActions.length === 0 ||
-      standardActions.length !== option.options.length
-    ) {
-      continue;
-    }
-    const admittedStandardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction> =
-      [standardActions[0], ...standardActions.slice(1)];
+  for (const option of statBlock.procedures) {
+    if (option.kind !== "bonusActionOption") continue;
     const occurrence: AdmittedBonusActionOccurrence = {
       kind: "bonusActionOption",
-      source: option,
-      standardActions: admittedStandardActions,
-      ...optionalProperty("limitedUse", option.limitedUse),
+      procedureOrdinal: option.procedureOrdinal,
+      standardActions: option.standardActions,
+      resourceRefs: option.resourceRefs,
     };
     bonusActions.push(occurrence);
   }
 
   return {
     occurrences: {
-      ...(statBlock.statBlock.legendaryActions?.uses === undefined ||
+      ...(statBlock.legendaryActionUses === undefined ||
       !attacks.some((attack) => attack.section === "legendaryActions")
         ? {}
         : {
-            legendaryActionUses: PositiveInteger(
-              statBlock.statBlock.legendaryActions.uses,
-            ),
+            legendaryActionUses: PositiveInteger(statBlock.legendaryActionUses),
           }),
       attacks,
       unarmedStrike: admittedUnarmedStrike(statBlock),
       multiattacks,
       bonusActions,
-    },
-  };
-}
-
-export function statBlockProjectionIssues(
-  statBlock: Pick<
-    BattleStatBlockExecutionSource,
-    "challengeRating" | "statBlock"
-  >,
-): readonly StatBlockProjectionIssue[] {
-  const admitted = admitStatBlock(statBlock).occurrences;
-  const issues: StatBlockProjectionIssue[] = [];
-
-  for (const trait of statBlock.statBlock.traits ?? []) {
-    if (trait.effect === undefined) {
-      issues.push({
-        tag: "statBlockProjectionIssue",
-        source: {
-          kind: "trait",
-          nonExecutableReason: "textOnlyTrait",
-        },
-      });
-      continue;
-    }
-    if (supportedStatBlockTraitAttackRollModes([trait]) === undefined) {
-      issues.push({
-        tag: "statBlockProjectionIssue",
-        source: {
-          kind: "trait",
-          nonExecutableReason: "unsupportedTraitEffect",
-        },
-      });
-    }
-  }
-
-  appendActionProjectionIssues(
-    issues,
-    "actions",
-    statBlock.statBlock.actions,
-    admitted,
-  );
-  appendActionProjectionIssues(
-    issues,
-    "bonusActions",
-    statBlock.statBlock.bonusActions,
-    admitted,
-  );
-  appendActionProjectionIssues(
-    issues,
-    "reactions",
-    statBlock.statBlock.reactions,
-    admitted,
-  );
-  appendActionProjectionIssues(
-    issues,
-    "legendaryActions",
-    statBlock.statBlock.legendaryActions?.actions,
-    admitted,
-  );
-  return issues;
-}
-
-function appendActionProjectionIssues(
-  issues: StatBlockProjectionIssue[],
-  section: StatBlockActionProjectionSection,
-  actions: CreatureActions | undefined,
-  admitted: AdmittedStatBlockOccurrences,
-): void {
-  if (actions === undefined) return;
-  appendAttackProjectionIssues(issues, section, actions.attacks, admitted);
-  appendMultiattackProjectionIssues(
-    issues,
-    section,
-    actions.multiattacks,
-    admitted,
-  );
-  appendUnsupportedActionProjectionIssues(issues, section, {
-    shape: "save",
-    occurrences: actions.saves,
-  });
-  appendUnsupportedActionProjectionIssues(issues, section, {
-    shape: "support",
-    occurrences: actions.supports,
-  });
-  appendActionOptionProjectionIssues(
-    issues,
-    section,
-    actions.actionOptions,
-    admitted,
-  );
-  appendUnsupportedActionProjectionIssues(issues, section, {
-    shape: "special",
-    occurrences: actions.specials,
-  });
-}
-
-function appendAttackProjectionIssues(
-  issues: StatBlockProjectionIssue[],
-  section: StatBlockActionProjectionSection,
-  attacks: readonly CreatureNamedAttackRoll[] | undefined,
-  admitted: AdmittedStatBlockOccurrences,
-): void {
-  for (const attack of attacks ?? []) {
-    if (isAdmittedAttackInSection(admitted, section, attack)) continue;
-    issues.push(actionProjectionIssue(section, "attack"));
-  }
-}
-
-function isAdmittedAttackInSection(
-  admitted: AdmittedStatBlockOccurrences,
-  section: StatBlockActionProjectionSection,
-  attack: CreatureNamedAttackRoll,
-): boolean {
-  return admitted.attacks.some(
-    (occurrence) =>
-      occurrence.section === section && occurrence.source === attack,
-  );
-}
-
-function appendMultiattackProjectionIssues(
-  issues: StatBlockProjectionIssue[],
-  section: StatBlockActionProjectionSection,
-  multiattacks: readonly CreatureNamedMultiattack[] | undefined,
-  admitted: AdmittedStatBlockOccurrences,
-): void {
-  for (const multiattack of multiattacks ?? []) {
-    if (isAdmittedMultiattackInSection(admitted, section, multiattack)) {
-      continue;
-    }
-    issues.push(actionProjectionIssue(section, "multiattack"));
-  }
-}
-
-function isAdmittedMultiattackInSection(
-  admitted: AdmittedStatBlockOccurrences,
-  section: StatBlockActionProjectionSection,
-  multiattack: CreatureNamedMultiattack,
-): boolean {
-  if (section !== "actions") return false;
-  return admitted.multiattacks.some(
-    (occurrence) => occurrence.source === multiattack,
-  );
-}
-
-function appendUnsupportedActionProjectionIssues(
-  issues: StatBlockProjectionIssue[],
-  section: StatBlockActionProjectionSection,
-  source: UnsupportedActionProjectionSource,
-): void {
-  source.occurrences?.forEach(() =>
-    issues.push(actionProjectionIssue(section, source.shape)),
-  );
-}
-
-function appendActionOptionProjectionIssues(
-  issues: StatBlockProjectionIssue[],
-  section: StatBlockActionProjectionSection,
-  actionOptions: readonly CreatureNamedActionOption[] | undefined,
-  admitted: AdmittedStatBlockOccurrences,
-): void {
-  for (const actionOption of actionOptions ?? []) {
-    if (isAdmittedActionOptionInSection(admitted, section, actionOption)) {
-      continue;
-    }
-    issues.push(actionProjectionIssue(section, "actionOption"));
-  }
-}
-
-function isAdmittedActionOptionInSection(
-  admitted: AdmittedStatBlockOccurrences,
-  section: StatBlockActionProjectionSection,
-  actionOption: CreatureNamedActionOption,
-): boolean {
-  if (section !== "bonusActions") return false;
-  return admitted.bonusActions.some(
-    (occurrence) => occurrence.source === actionOption,
-  );
-}
-
-function actionProjectionIssue(
-  section: StatBlockActionProjectionSection,
-  shape: StatBlockActionProjectionShape,
-): StatBlockProjectionIssue {
-  return {
-    tag: "statBlockProjectionIssue",
-    source: {
-      kind: "action",
-      section,
-      shape,
-      nonExecutableReason: "unsupportedActionShape",
+      resources: statBlock.resources ?? [],
     },
   };
 }
@@ -514,7 +279,7 @@ function admittedUnarmedStrike(
     statBlock.statBlock.abilityScores.str,
   );
   const damage = Math.max(0, 1 + strengthModifier);
-  const attack: StatBlockAttackProcedure["attack"] = {
+  const attack: AdmittedUnarmedStrikeOccurrence["attack"] = {
     attackAbility: "str",
     attackType: "melee",
     attackBonus: {
@@ -555,18 +320,16 @@ function statBlockProficiencyBonus(
 }
 
 function admittedMultiattackDispatches(
-  multiattack: CreatureNamedMultiattack,
+  multiattack: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "multiattack" }
+  >,
   actionAttacks: readonly AdmittedAttackOccurrence[],
 ): AdmittedMultiattackOccurrence["dispatches"] | null {
   const [firstDispatch, ...remainingDispatches] = multiattack.dispatches;
-  const limitedUseDispatchCountByAttack = new Map<
-    AdmittedAttackOccurrence,
-    number
-  >();
   const firstAdmittedDispatch = admittedMultiattackDispatch(
     firstDispatch,
     actionAttacks,
-    limitedUseDispatchCountByAttack,
   );
   if (firstAdmittedDispatch === null) return null;
   const admittedDispatches: [
@@ -577,7 +340,6 @@ function admittedMultiattackDispatches(
     const admittedDispatch = admittedMultiattackDispatch(
       dispatch,
       actionAttacks,
-      limitedUseDispatchCountByAttack,
     );
     if (admittedDispatch === null) return null;
     admittedDispatches.push(admittedDispatch);
@@ -586,55 +348,23 @@ function admittedMultiattackDispatches(
 }
 
 function admittedMultiattackDispatch(
-  dispatch: CreatureNamedMultiattack["dispatches"][number],
+  dispatch: Extract<
+    BattleStatBlockRuntimeProcedure,
+    { readonly kind: "multiattack" }
+  >["dispatches"][number],
   actionAttacks: readonly AdmittedAttackOccurrence[],
-  limitedUseDispatchCountByAttack: Map<AdmittedAttackOccurrence, number>,
 ): AdmittedMultiattackDispatch | null {
-  const count = validMultiattackDispatchCount(dispatch);
-  if (count === null) return null;
-  const candidates = actionAttacks.filter(
-    (attack) => attack.source.name === dispatch.name,
+  if (!Number.isInteger(dispatch.count) || dispatch.count < 1) return null;
+  const count = PositiveInteger(dispatch.count);
+  const candidate = actionAttacks.find(
+    (attack) => attack.procedureOrdinal === dispatch.procedureOrdinal,
   );
-  const [candidate] = candidates;
-  if (candidate === undefined || candidates.length !== 1) return null;
-  if (
-    !recordAdmittedLimitedUseDispatch(
-      candidate,
-      count,
-      limitedUseDispatchCountByAttack,
-    )
-  )
-    return null;
+  if (candidate === undefined) return null;
   return {
     attack: candidate,
-    count: PositiveInteger(count),
+    procedureOrdinal: dispatch.procedureOrdinal,
+    count,
   };
-}
-
-function validMultiattackDispatchCount(
-  dispatch: CreatureNamedMultiattack["dispatches"][number],
-): number | null {
-  if (
-    dispatch.count.kind !== "literal" ||
-    dispatch.count.value < 1 ||
-    !Number.isInteger(dispatch.count.value)
-  ) {
-    return null;
-  }
-  return dispatch.count.value;
-}
-
-function recordAdmittedLimitedUseDispatch(
-  candidate: AdmittedAttackOccurrence,
-  count: number,
-  limitedUseDispatchCountByAttack: Map<AdmittedAttackOccurrence, number>,
-): boolean {
-  if (candidate.limitedUse === undefined) return true;
-  const totalDispatchCount =
-    (limitedUseDispatchCountByAttack.get(candidate) ?? 0) + count;
-  if (totalDispatchCount > 1) return false;
-  limitedUseDispatchCountByAttack.set(candidate, totalDispatchCount);
-  return true;
 }
 
 function allocateStatBlockExecution(
@@ -669,12 +399,15 @@ function allocateStatBlockExecution(
     AdmittedAttackOccurrence,
     BattleStatBlockProcedureExecutionRef
   >();
+  const sharedResourcePools = new Map<number, StatBlockResourcePoolState>();
   for (const occurrence of admitted.attacks) {
-    const limitedUsePool = statBlockLimitedUsePool(
+    const resourcePoolRefs = allocateProcedureResourcePools(
       allocator,
-      occurrence.limitedUse,
+      admitted.resources,
+      occurrence.resourceRefs,
+      sharedResourcePools,
+      resourcePools,
     );
-    if (limitedUsePool !== null) resourcePools.push(limitedUsePool);
     const procedureRef = allocateProcedureRef(allocator);
     procedureRefs.set(occurrence, procedureRef);
     attackProcedureRefs.set(occurrence, procedureRef);
@@ -682,6 +415,7 @@ function allocateStatBlockExecution(
       procedureRef,
       procedure: {
         kind: "attack",
+        procedureOrdinal: occurrence.procedureOrdinal,
         section: occurrence.section,
         attack: occurrence.attack,
         ...optionalProperty(
@@ -690,7 +424,7 @@ function allocateStatBlockExecution(
         ),
       },
       resourcePoolRefs: [
-        ...(limitedUsePool === null ? [] : [limitedUsePool.resourcePoolRef]),
+        ...resourcePoolRefs,
         ...(occurrence.section !== "legendaryActions" ||
         legendaryPool === undefined
           ? []
@@ -705,6 +439,7 @@ function allocateStatBlockExecution(
     procedureRef: unarmedStrikeProcedureRef,
     procedure: {
       kind: "attack",
+      procedureOrdinal: UNARMED_STRIKE_PROCEDURE_ORDINAL,
       section: "actions",
       attack: admitted.unarmedStrike.attack,
     },
@@ -722,29 +457,42 @@ function allocateStatBlockExecution(
     );
     const procedureRef = allocateProcedureRef(allocator);
     procedureRefs.set(multiattack, procedureRef);
+    const resourcePoolRefs = allocateProcedureResourcePools(
+      allocator,
+      admitted.resources,
+      multiattack.resourceRefs,
+      sharedResourcePools,
+      resourcePools,
+    );
     procedureBindings.push({
       procedureRef,
-      procedure: { kind: "multiattack", dispatchProcedureRefs },
-      resourcePoolRefs: [],
+      procedure: {
+        kind: "multiattack",
+        procedureOrdinal: multiattack.procedureOrdinal,
+        dispatchProcedureRefs,
+      },
+      resourcePoolRefs,
     });
   }
 
   for (const option of admitted.bonusActions) {
-    const limitedUsePool = statBlockLimitedUsePool(
+    const resourcePoolRefs = allocateProcedureResourcePools(
       allocator,
-      option.limitedUse,
+      admitted.resources,
+      option.resourceRefs,
+      sharedResourcePools,
+      resourcePools,
     );
-    if (limitedUsePool !== null) resourcePools.push(limitedUsePool);
     const procedureRef = allocateProcedureRef(allocator);
     procedureRefs.set(option, procedureRef);
     procedureBindings.push({
       procedureRef,
       procedure: {
         kind: "bonusActionOption",
+        procedureOrdinal: option.procedureOrdinal,
         standardActions: option.standardActions,
       },
-      resourcePoolRefs:
-        limitedUsePool === null ? [] : [limitedUsePool.resourcePoolRef],
+      resourcePoolRefs,
     });
   }
 
@@ -1120,26 +868,43 @@ function sameMembers<T>(actual: readonly T[], expected: readonly T[]): boolean {
   );
 }
 
-function statBlockAttackSections(
-  statBlock: Pick<BattleStatBlockExecutionSource, "statBlock">,
-): readonly [StatBlockAttackSection, readonly CreatureNamedAttackRoll[]][] {
-  return [
-    ["actions", statBlock.statBlock.actions?.attacks ?? []],
-    [
-      "legendaryActions",
-      statBlock.statBlock.legendaryActions?.actions.attacks ?? [],
-    ],
-  ];
+function allocateProcedureResourcePools(
+  allocator: ExecutionReferenceAllocator,
+  resources: readonly BattleStatBlockRuntimeResource[],
+  resourceRefs: readonly number[],
+  sharedResourcePools: Map<number, StatBlockResourcePoolState>,
+  resourcePools: StatBlockResourcePoolState[],
+): readonly BattleResourcePoolExecutionRef[] {
+  const refs: BattleResourcePoolExecutionRef[] = [];
+  for (const resourceOrdinal of new Set(resourceRefs)) {
+    const declaration = resources.find(
+      (resource) => resource.ordinal === resourceOrdinal,
+    );
+    if (declaration === undefined) continue;
+    if (declaration.ownership === "shared") {
+      const existing = sharedResourcePools.get(resourceOrdinal);
+      if (existing !== undefined) {
+        refs.push(existing.resourcePoolRef);
+        continue;
+      }
+    }
+    const pool = resourcePoolFromDeclaration(allocator, declaration);
+    resourcePools.push(pool);
+    if (declaration.ownership === "shared") {
+      sharedResourcePools.set(resourceOrdinal, pool);
+    }
+    refs.push(pool.resourcePoolRef);
+  }
+  return refs;
 }
 
-function statBlockLimitedUsePool(
+function resourcePoolFromDeclaration(
   allocator: ExecutionReferenceAllocator,
-  limitedUse: CreatureLimitedUse | undefined,
-): StatBlockResourcePoolState | null {
-  if (limitedUse === undefined) return null;
+  declaration: BattleStatBlockRuntimeResource,
+): StatBlockResourcePoolState {
   const resourcePoolRef = allocateResourcePoolRef(allocator);
-  if (limitedUse.kind === "daily") {
-    const uses = resourceCount(limitedUse.uses);
+  if (declaration.limit.kind === "daily") {
+    const uses = resourceCount(declaration.limit.uses);
     return {
       resourcePoolRef,
       kind: "daily",
@@ -1147,11 +912,11 @@ function statBlockLimitedUsePool(
       usesRemaining: uses,
     };
   }
-  if (limitedUse.kind === "recharge") {
+  if (declaration.limit.kind === "recharge") {
     return {
       resourcePoolRef,
       kind: "recharge",
-      minimumRoll: limitedUse.minimumRoll,
+      minimumRoll: declaration.limit.minimumRoll,
       available: true,
     };
   }

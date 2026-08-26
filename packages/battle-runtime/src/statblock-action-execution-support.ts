@@ -4,6 +4,7 @@ import type {
   CreatureNamedAttackRoll,
   CreatureTrait,
   CreatureStatBlock,
+  StandaloneStatBlock,
 } from "@dnd/surface/surface/types";
 import type {
   StatBlockTraitAttackRollMode,
@@ -69,7 +70,7 @@ function mentionsAttackRollAdvantage(description: string): boolean {
 }
 
 export function supportedStatBlockTraitAttackRollModes(
-  traits: CreatureStatBlock["traits"],
+  traits: CreatureStatBlock["traits"] | StandaloneStatBlock["traits"],
 ): ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode> | undefined {
   const modes = (traits ?? []).flatMap((trait) => {
     const mode = statBlockTraitAttackRollMode(trait);

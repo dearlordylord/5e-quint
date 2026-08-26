@@ -228,16 +228,16 @@ import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-for
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
 import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-state.ts";
 import type {
-  BattleStatBlockExecutionSource,
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
     statBlockId: StatBlockId,
-  ) => Option.Option<BattleStatBlockExecutionSource>;
+  ) => Option.Option<StatBlockRecord>;
 };
 import {
   type BattleInterruptTrigger,

@@ -10,8 +10,7 @@ import type { BattleStateInitIssue } from "./battle-state-execution.ts";
 import type { BattleResolutionResult } from "./battle-state-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
-import { statBlockProjectionIssues } from "./stat-block-execution.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import {
   admitCompanionToBattle,
   castResolvedFindFamiliar,
@@ -21,10 +20,6 @@ import {
 import { resolveFindFamiliarForm } from "@dnd/surface/surface/find-familiar-forms";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import {
-  statBlockLanguagePresentation,
-  statBlockProcedurePresentations,
-} from "./stat-block-presentation.ts";
 
 type WithoutBattleState<Input> = Input extends unknown
   ? Omit<Input, "state">
@@ -173,10 +168,20 @@ export function castRetainedFindFamiliarRuntime(
     };
   }
   /* v8 ignore stop -- @preserve */
+  const projected = projectAuthoredStatBlock(resolvedForm.form.statBlock);
+  if (Either.isLeft(projected)) {
+    return {
+      tag: "invalid",
+      session: input.session,
+      reason: "invalidFill",
+      message: `Find Familiar form projection failed: ${projected.left.reason}.`,
+      snapshot: snapshotBattle(input.session.state),
+    };
+  }
   const presentation = companionPresentationFromSource({
     state: result.state,
     combatantId: input.familiarId,
-    statBlock: resolvedForm.form.statBlock,
+    presentation: projected.right.presentation,
   });
   /* v8 ignore start -- @preserve -- A resolved familiar cast just admitted this combatant from the same resolved Stat Block source, so presentation cannot observe a missing/non-Stat-Block combatant. */
   if (Either.isLeft(presentation)) {
@@ -237,17 +242,24 @@ function companionPresentationFromCatalog(input: {
     });
   }
   /* v8 ignore stop -- @preserve */
+  const projected = projectAuthoredStatBlock(statBlock.value);
+  if (Either.isLeft(projected)) {
+    return Either.left({
+      tag: "battleStateInitIssue",
+      message: `Find Familiar form projection failed: ${projected.left.reason}.`,
+    });
+  }
   return companionPresentationFromSource({
     state: input.state,
     combatantId: input.combatantId,
-    statBlock: statBlock.value,
+    presentation: projected.right.presentation,
   });
 }
 
 function companionPresentationFromSource(input: {
   readonly state: import("./battle-state-execution.ts").BattleState;
   readonly combatantId: CombatantId;
-  readonly statBlock: BattleStatBlockExecutionSource;
+  readonly presentation: BattleStatBlockPresentationSource;
 }): Either.Either<
   {
     readonly combatantId: CombatantId;
@@ -267,14 +279,6 @@ function companionPresentationFromSource(input: {
   /* v8 ignore stop -- @preserve */
   return Either.right({
     combatantId: input.combatantId,
-    source: {
-      displayName: input.statBlock.statBlock.displayName,
-      languages: statBlockLanguagePresentation(input.statBlock),
-      procedures: statBlockProcedurePresentations({
-        statBlock: input.statBlock,
-        execution: combatant.origin.execution,
-      }),
-      projectionIssues: statBlockProjectionIssues(input.statBlock),
-    },
+    source: input.presentation,
   });
 }

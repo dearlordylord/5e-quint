@@ -38,6 +38,8 @@ import type {
   BattleUnitSupportProfile,
 } from "./unit-feature-support.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
+import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import type {
   BattleDruidWildShapeFormSpeeds,
   BattleDruidWildShapeKnownForm,
@@ -57,7 +59,7 @@ import {
   type BattleStatBlockCombatantSource,
 } from "./stat-block-combatant-admission.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
-import { statBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
+import { runtimeStatBlockActionSurfaceIsSupported } from "./statblock-action-support.ts";
 import {
   wildShapeKnownFormEligibilityIssue,
   type WildShapeKnownFormEligibilityIssueCode,
@@ -167,7 +169,7 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
     }
     const projected = battleDruidWildShapeFormProjectionStatBlock(form);
     if (Either.isLeft(projected)) return Either.left(projected.left);
-    if (!statBlockActionSurfaceIsSupported(form.statBlock)) {
+    if (!runtimeStatBlockActionSurfaceIsSupported(projected.right)) {
       continue;
     }
     parsed.push(battleDruidWildShapeKnownForm(projected.right));
@@ -189,27 +191,36 @@ function battleDruidWildShapeFormProjectionStatBlock(
   BattleDruidWildShapeKnownFormProjection,
   BattleDruidWildShapeKnownFormIssue
 > {
-  const armorClass = form.statBlock.ac;
+  const projected = projectAuthoredStatBlock(form);
+  if (Either.isLeft(projected)) {
+    return Either.left({
+      tag: "battleDruidWildShapeKnownFormIssue",
+      message: projected.left.reason,
+    });
+  }
+  const armorClass = projected.right.runtime.statBlock.ac;
   if (armorClass.kind !== "literal") {
     return Either.left({
       tag: "battleDruidWildShapeKnownFormIssue",
       message: "Druid Wild Shape battle forms require literal Armor Class.",
     });
   }
-  const creatureSize = form.statBlock.size;
+  const creatureSize = projected.right.runtime.statBlock.size;
   if (typeof creatureSize !== "string") {
     return Either.left({
       tag: "battleDruidWildShapeKnownFormIssue",
       message: "Druid Wild Shape battle forms require literal Size.",
     });
   }
-  const speeds = battleDruidWildShapeFormProjectionSpeeds(form);
+  const speeds = battleDruidWildShapeFormProjectionSpeeds(
+    projected.right.runtime,
+  );
   if (Either.isLeft(speeds)) return Either.left(speeds.left);
   return Either.right({
-    id: form.id,
-    challengeRating: form.challengeRating,
+    ...projected.right.runtime,
+    presentation: projected.right.presentation,
     statBlock: {
-      ...form.statBlock,
+      ...projected.right.runtime.statBlock,
       ac: armorClass,
       size: creatureSize,
       speeds: speeds.right,
@@ -218,17 +229,14 @@ function battleDruidWildShapeFormProjectionStatBlock(
 }
 
 function battleDruidWildShapeFormProjectionSpeeds(
-  form: StatBlockRecord,
+  form: BattleStatBlockExecutionSource,
 ): Either.Either<
   BattleDruidWildShapeFormSpeeds,
   BattleDruidWildShapeKnownFormIssue
 > {
   const literalSpeeds: LiteralStatBlockSpeed[] = [];
   for (const speed of form.statBlock.speeds) {
-    if (
-      speed.feet.kind !== "literal" ||
-      speed.requiresSlotLevel !== undefined
-    ) {
+    if (speed.feet.kind !== "literal") {
       return Either.left({
         tag: "battleDruidWildShapeKnownFormIssue",
         message:
@@ -309,6 +317,8 @@ export type StatBlockBattleInitInput = {
   readonly tempHp?: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
+  /** Authored presentation is admitted beside the runtime projection. */
+  readonly presentation?: BattleStatBlockPresentationSource;
 };
 
 export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
@@ -322,6 +332,7 @@ export type StatBlockBattleCreatureInit = {
   readonly tempHp: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
+  readonly presentation?: BattleStatBlockPresentationSource;
 };
 
 export type BattleCreatureInit = {
@@ -350,7 +361,7 @@ export function battleCreatureInitFromStatBlock(
   const maxHp = toHp(source.right.statBlock.hp.value);
   return Either.right({
     combatantId: input.combatantId,
-    displayName: input.statBlock.statBlock.displayName,
+    displayName: input.presentation?.displayName ?? input.statBlock.id,
     initiative: input.initiative,
     creatureInit: {
       kind: "statBlock",
@@ -359,6 +370,9 @@ export function battleCreatureInitFromStatBlock(
       tempHp: input.tempHp ?? toHp(0),
       ammunitionStocks: input.ammunitionStocks,
       conditions: input.conditions,
+      ...(input.presentation === undefined
+        ? {}
+        : { presentation: input.presentation }),
     },
   });
 }

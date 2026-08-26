@@ -45,6 +45,7 @@ export {
   CreatureDismissalSchema,
   CreatureImmunityListSchema,
   CreatureSavingThrowModifierSchema,
+  CreatureSkillModifierSchema,
   CreatureModeSchema,
   CreatureNamedAttackRollSchema,
   CreatureAttackRollMechanicsSchema,

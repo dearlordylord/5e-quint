@@ -12,10 +12,7 @@ import {
   ammunitionStockIssues,
   missingRequiredAmmunitionKinds,
 } from "../battle-ammunition.ts";
-import {
-  statBlockAttackActionOptions,
-  statBlockProjectionIssues,
-} from "../stat-block-execution.ts";
+import { statBlockAttackActionOptions } from "../stat-block-execution.ts";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import { Either, Match } from "effect";
 import {
@@ -140,10 +137,6 @@ import {
   admitBattleStatBlockCombatantSource,
   statBlockInitialConditionImmunityIssue,
 } from "../stat-block-combatant-admission.ts";
-import {
-  statBlockLanguagePresentation,
-  statBlockProcedurePresentations,
-} from "../stat-block-presentation.ts";
 
 function characterInitWeaponAttackExecutionRefs(
   slot: "main-hand" | "off-hand",
@@ -579,14 +572,9 @@ export function battleCreatureStateAdmissionFromInit(
     tag: "admitted",
     creature: admittedCreature,
     nextScopeOrdinal: admission.right.cursorTransition.to,
-    statBlockPresentation: {
+    statBlockPresentation: creatureInit.presentation ?? {
       displayName: input.displayName,
-      languages: statBlockLanguagePresentation(creatureInit.source),
-      procedures: statBlockProcedurePresentations({
-        statBlock: creatureInit.source,
-        execution: admission.right.origin.execution,
-      }),
-      projectionIssues: statBlockProjectionIssues(creatureInit.source),
+      orderedProcedures: [],
     },
   };
 }

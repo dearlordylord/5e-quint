@@ -107,8 +107,6 @@ export type {
   StatBlockResourcePoolState,
 } from "./stat-block-execution.ts";
 
-export { statBlockProjectionIssues } from "./stat-block-execution.ts";
-
 export {
   restoreStatBlockExecutionAdmission,
   restoreStatBlockExecutionAdmissions,

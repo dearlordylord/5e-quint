@@ -104,6 +104,7 @@ function supportedStatBlockBaseDamageEffect(
   if (
     effect.kind !== "damage" ||
     effect.amount.kind !== "fixed" ||
+    !("expr" in effect.amount) ||
     typeof effect.damageType !== "string"
   ) {
     return null;
@@ -119,6 +120,7 @@ function supportedStatBlockAdvantageBonusDamageEffect(
     effect.kind !== "conditional_bonus_damage" ||
     effect.when.kind !== "attack_roll_had_advantage" ||
     effect.amount.kind !== "fixed" ||
+    !("expr" in effect.amount) ||
     typeof effect.damageType !== "string"
   ) {
     return null;

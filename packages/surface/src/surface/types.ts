@@ -648,6 +648,9 @@ export type CreatureLegendaryActions = Schema.Schema.Type<
 export type CreatureSavingThrowModifier = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureSavingThrowModifierSchema
 >;
+export type CreatureSkillModifier = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureSkillModifierSchema
+>;
 export type CreatureTraitEffect = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureTraitEffectSchema
 >;
@@ -680,6 +683,9 @@ export type StatBlockProcedureOrdinal = Schema.Schema.Type<
 >;
 export type StatBlockProcedureResource = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureResourceSchema
+>;
+export type StatBlockCommunication = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockCommunicationSchema
 >;
 export type StatBlockProcedureResourceLimit = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureResourceLimitSchema

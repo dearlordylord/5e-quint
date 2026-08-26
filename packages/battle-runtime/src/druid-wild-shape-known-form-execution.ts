@@ -5,6 +5,7 @@ import type {
 } from "@dnd/surface/surface/types";
 
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 
 export type LiteralStatBlockValue = Extract<
   StatBlockValue,
@@ -30,6 +31,7 @@ declare const battleDruidWildShapeKnownFormBrand: unique symbol;
 
 export type BattleDruidWildShapeKnownFormProjection =
   BattleStatBlockExecutionSource & {
+    readonly presentation: BattleStatBlockPresentationSource;
     readonly statBlock: Omit<
       BattleStatBlockExecutionSource["statBlock"],
       "ac" | "size" | "speeds"

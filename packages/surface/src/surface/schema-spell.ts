@@ -4881,11 +4881,18 @@ export const CreatureSenseSchema = Schema.Struct({
   rangeFeet: Schema.Number,
 });
 
-const StatBlockDamageNotationAmountSchema = Schema.Struct({
-  kind: Schema.Literal("fixed"),
-  expr: DiceExprSchema,
-  static: optionalExact(Schema.Number),
-});
+/** Runtime projections may preserve a static-only printed damage amount. */
+const StatBlockDamageNotationAmountSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    expr: DiceExprSchema,
+    static: optionalExact(Schema.Number),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    static: Schema.Number,
+  }),
+);
 
 const CreatureAttackEffectAtomSchema = Schema.Union(
   Schema.Struct({

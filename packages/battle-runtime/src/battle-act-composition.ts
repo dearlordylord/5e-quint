@@ -575,7 +575,7 @@ function characterProcedurePresentationJoin(
     if (form === undefined || unit === undefined) {
       return undefined;
     }
-    const label = `${battleUnitPresentationName(unit)}: ${form.statBlock.statBlock.displayName}`;
+    const label = `${battleUnitPresentationName(unit)}: ${form.statBlock.presentation.displayName}`;
     return {
       label,
       summary: `Use ${label}.`,

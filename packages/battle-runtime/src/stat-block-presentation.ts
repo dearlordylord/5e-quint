@@ -6,24 +6,28 @@ import type {
 } from "./battle-state-execution.ts";
 import {
   characterWeaponPresentationSource,
-  type BattleStatBlockProcedurePresentation,
   type BattleStatBlockPresentationSource,
   type BattleRuntimeContext,
 } from "./battle-runtime-context.ts";
 import { activeDruidWildShape } from "./battle-reducer/druid-wild-shape.ts";
 import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import type { CombatantId } from "./identity.ts";
-import {
-  statBlockPresentationAllocation,
-  type StatBlockExecutionAdmission,
-} from "./stat-block-execution.ts";
 import * as Either from "effect/Either";
 import { Match } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
 import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
+import type {
+  StatBlockExecutionState,
+  StatBlockActionProjectionShape,
+} from "./stat-block-execution-state.ts";
 
 export type StatBlockProcedurePresentation =
-  BattleStatBlockProcedurePresentation;
+  import("./battle-runtime-context.ts").BattleStatBlockProcedurePresentation;
+
+export type StatBlockPresentationAdmission = {
+  readonly execution: StatBlockExecutionState;
+  readonly presentation: BattleStatBlockPresentationSource;
+};
 
 export function statBlockProjectionIssuesForActor(
   state: BattleState,
@@ -32,7 +36,80 @@ export function statBlockProjectionIssuesForActor(
 ): readonly StatBlockProjectionIssue[] | null {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind !== "statBlock") return null;
-  return context.statBlocks.get(actorId)?.projectionIssues ?? null;
+  const presentation = context.statBlocks.get(actorId);
+  return presentation === undefined
+    ? null
+    : statBlockProjectionIssues(presentation, actor?.origin.execution);
+}
+
+function statBlockProjectionIssues(
+  presentation: BattleStatBlockPresentationSource,
+  execution: StatBlockExecutionState | undefined,
+): readonly StatBlockProjectionIssue[] {
+  if (execution === undefined) return [];
+  const admitted = new Set(
+    execution.procedureBindings.map((binding) => {
+      const procedure = binding.procedure;
+      return `${procedure.kind}:${procedure.procedureOrdinal}`;
+    }),
+  );
+  type ActionIssue = Extract<
+    StatBlockProjectionIssue,
+    { readonly source: { readonly kind: "action" } }
+  >;
+  return presentation.orderedProcedures.flatMap(
+    (entry): readonly ActionIssue[] => {
+      if (entry.kind === "textOnly") {
+        return [
+          {
+            tag: "statBlockProjectionIssue" as const,
+            source: {
+              kind: "action" as const,
+              section: entry.section,
+              shape: "special" as const,
+              nonExecutableReason: entry.reason,
+            },
+          },
+        ];
+      }
+      const expectedKind =
+        entry.kind === "bonusActionOption" ? "bonusActionOption" : entry.kind;
+      if (admitted.has(`${expectedKind}:${entry.procedureOrdinal}`)) return [];
+      return [
+        {
+          tag: "statBlockProjectionIssue" as const,
+          source: {
+            kind: "action" as const,
+            section: entry.section,
+            shape: projectionShape(entry.kind),
+            nonExecutableReason: "unsupportedActionShape" as const,
+          },
+        },
+      ];
+    },
+  );
+}
+
+function projectionShape(
+  kind: Exclude<
+    BattleStatBlockPresentationSource["orderedProcedures"][number]["kind"],
+    "textOnly"
+  >,
+): StatBlockActionProjectionShape {
+  switch (kind) {
+    case "attack":
+      return "attack";
+    case "multiattack":
+      return "multiattack";
+    case "bonusActionOption":
+      return "actionOption";
+    case "save":
+      return "save";
+    case "support":
+      return "support";
+    case "spellcasting":
+      return "special";
+  }
 }
 
 export function battleCreaturePresentationDisplayName(
@@ -47,67 +124,59 @@ export function battleCreaturePresentationDisplayName(
     : combatant.origin.displayName;
 }
 
-export function statBlockLanguagePresentation(
-  statBlock: Pick<StatBlockExecutionAdmission, "statBlock">["statBlock"],
-): BattleStatBlockPresentationSource["languages"] {
-  const languages = statBlock.statBlock.languages;
-  if (languages === undefined) return { kind: "absentStatBlockLanguages" };
-  return languages === "caster_languages"
-    ? { kind: "casterLanguagesReference" }
-    : { kind: "authoredStatBlockLanguageEntries", entries: languages };
-}
-
 export function statBlockProcedurePresentations(
-  admission: Pick<StatBlockExecutionAdmission, "statBlock" | "execution">,
+  admission: StatBlockPresentationAdmission,
 ): readonly StatBlockProcedurePresentation[] {
-  const allocation = statBlockPresentationAllocation(admission);
-  return [
-    ...allocation.occurrences.attacks.map((occurrence) => ({
-      procedureRef: requirePresentationProcedureRef(
-        allocation.procedureRefs,
-        occurrence,
-      ),
-      kind: "attack" as const,
-      name: occurrence.source.name,
-    })),
-    {
-      procedureRef: requirePresentationProcedureRef(
-        allocation.procedureRefs,
-        allocation.occurrences.unarmedStrike,
-      ),
-      kind: "attack" as const,
-      name: UNARMED_STRIKE_NAME,
+  const labels = new Map(
+    admission.presentation.orderedProcedures.map((entry) => [
+      `${entry.section}:${entry.procedureOrdinal}`,
+      entry,
+    ]),
+  );
+  const labelFor = (section: string, ordinal: number): string =>
+    labels.get(`${section}:${ordinal}`)?.name ??
+    "Unsupported Stat Block procedure";
+  return admission.execution.procedureBindings.flatMap(
+    (binding): readonly StatBlockProcedurePresentation[] => {
+      if (binding.procedure.procedureOrdinal === -1) {
+        return [
+          {
+            procedureRef: binding.procedureRef,
+            kind: "attack" as const,
+            name: UNARMED_STRIKE_NAME,
+          },
+        ];
+      }
+      if (binding.procedure.kind === "attack") {
+        return [
+          {
+            procedureRef: binding.procedureRef,
+            kind: "attack" as const,
+            name: labelFor(
+              binding.procedure.section,
+              binding.procedure.procedureOrdinal,
+            ),
+          },
+        ];
+      }
+      if (binding.procedure.kind === "multiattack") {
+        return [
+          {
+            procedureRef: binding.procedureRef,
+            kind: "multiattack" as const,
+            label: labelFor("actions", binding.procedure.procedureOrdinal),
+          },
+        ];
+      }
+      return [
+        {
+          procedureRef: binding.procedureRef,
+          kind: "bonusActionOption" as const,
+          label: labelFor("bonusActions", binding.procedure.procedureOrdinal),
+        },
+      ];
     },
-    ...allocation.occurrences.multiattacks.map((occurrence) => ({
-      procedureRef: requirePresentationProcedureRef(
-        allocation.procedureRefs,
-        occurrence,
-      ),
-      kind: "multiattack" as const,
-      label: occurrence.source.name,
-    })),
-    ...allocation.occurrences.bonusActions.map((occurrence) => ({
-      procedureRef: requirePresentationProcedureRef(
-        allocation.procedureRefs,
-        occurrence,
-      ),
-      kind: "bonusActionOption" as const,
-      label: occurrence.source.name,
-    })),
-  ];
-}
-
-function requirePresentationProcedureRef(
-  refs: ReturnType<typeof statBlockPresentationAllocation>["procedureRefs"],
-  occurrence: Parameters<typeof refs.get>[0],
-): import("./identity.ts").BattleStatBlockProcedureExecutionRef {
-  const procedureRef = refs.get(occurrence);
-  if (procedureRef === undefined) {
-    throw new Error(
-      "Every admitted Stat Block presentation occurrence must have an allocated ref.",
-    );
-  }
-  return procedureRef;
+  );
 }
 
 export function attackActionOptionPresentationName(
@@ -206,10 +275,19 @@ export function statBlockProcedurePresentationsForActor(
 ): readonly StatBlockProcedurePresentation[] | null {
   const actor = state.combatants.get(actorId);
   if (actor?.origin.kind === "statBlock") {
-    return context.statBlocks.get(actorId)?.procedures ?? null;
+    const presentation = context.statBlocks.get(actorId);
+    return presentation === undefined
+      ? null
+      : statBlockProcedurePresentations({
+          execution: actor.origin.execution,
+          presentation,
+        });
   }
   const activeForm = activeDruidWildShape(actor);
   return activeForm === null
     ? null
-    : statBlockProcedurePresentations(activeForm.admission);
+    : statBlockProcedurePresentations({
+        execution: activeForm.admission.execution,
+        presentation: activeForm.admission.statBlock.presentation,
+      });
 }

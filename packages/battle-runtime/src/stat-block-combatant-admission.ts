@@ -1,7 +1,6 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Condition } from "@dnd/shared/game-facts";
-import { Hp, type Size } from "@dnd/shared/types";
-import type { CreatureStatBlock } from "@dnd/surface/surface/types";
+import { Hp } from "@dnd/shared/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 
@@ -13,6 +12,10 @@ import {
 } from "./identity.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import type {
+  BattleStatBlockRuntimeFacts,
+  BattleStatBlockRuntimeResource,
+} from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
@@ -22,11 +25,10 @@ const AdmittedBattleStatBlockCombatant =
 export type BattleStatBlockCombatantSource = {
   readonly id: BattleStatBlockExecutionSource["id"];
   readonly challengeRating: BattleStatBlockExecutionSource["challengeRating"];
-  readonly statBlock: Omit<CreatureStatBlock, "ac" | "hp" | "size"> & {
-    readonly ac: Extract<CreatureStatBlock["ac"], { readonly kind: "literal" }>;
-    readonly hp: Extract<CreatureStatBlock["hp"], { readonly kind: "literal" }>;
-    readonly size: Size;
-  };
+  readonly statBlock: BattleStatBlockRuntimeFacts;
+  readonly procedures: BattleStatBlockExecutionSource["procedures"];
+  readonly resources?: readonly BattleStatBlockRuntimeResource[];
+  readonly legendaryActionUses?: number;
 } & Brand.Brand<"BattleStatBlockCombatantSource">;
 
 const BattleStatBlockCombatantSource =
@@ -107,6 +109,10 @@ export function admitBattleStatBlockCombatantSource(input: {
             conditions: statBlock.statBlock.immunities?.conditions ?? [],
           },
           specialSenses: statBlock.statBlock.senses ?? [],
+          initiativeModifier: statBlock.statBlock.initiativeModifier,
+          initiativeScore: statBlock.statBlock.initiativeScore,
+          passivePerception: statBlock.statBlock.passivePerception,
+          communication: statBlock.statBlock.communication,
         },
         execution: allocation.execution,
       },

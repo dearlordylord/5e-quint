@@ -12,10 +12,9 @@ import type {
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "./identity.ts";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { WeaponId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
-import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
+import type { StatBlockTextOnlyReason } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
 import type {
   FindFamiliarFormSelection,
@@ -67,17 +66,37 @@ export type BattleStatBlockProcedurePresentation =
       readonly label: string;
     };
 
+type BattleStatBlockProcedurePresentationBase = {
+  readonly section:
+    | "actions"
+    | "bonusActions"
+    | "reactions"
+    | "legendaryActions";
+  readonly procedureOrdinal: number;
+  readonly name: string;
+  readonly resourceRefs: readonly number[];
+};
+
+export type BattleStatBlockAuthoredProcedurePresentation =
+  | (BattleStatBlockProcedurePresentationBase & {
+      readonly kind:
+        | "attack"
+        | "multiattack"
+        | "bonusActionOption"
+        | "save"
+        | "support"
+        | "spellcasting";
+      readonly description?: string;
+    })
+  | (BattleStatBlockProcedurePresentationBase & {
+      readonly kind: "textOnly";
+      readonly description: string;
+      readonly reason: StatBlockTextOnlyReason;
+    });
+
 export type BattleStatBlockPresentationSource = {
   readonly displayName: string;
-  readonly procedures: readonly BattleStatBlockProcedurePresentation[];
-  readonly projectionIssues: readonly StatBlockProjectionIssue[];
-  readonly languages:
-    | { readonly kind: "absentStatBlockLanguages" }
-    | { readonly kind: "casterLanguagesReference" }
-    | {
-        readonly kind: "authoredStatBlockLanguageEntries";
-        readonly entries: ReadonlyNonEmptyArray<string>;
-      };
+  readonly orderedProcedures: readonly BattleStatBlockAuthoredProcedurePresentation[];
 };
 
 export function characterWeaponPresentationSource(

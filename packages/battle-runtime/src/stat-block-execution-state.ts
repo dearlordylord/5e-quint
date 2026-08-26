@@ -5,13 +5,24 @@ import {
   type ReadonlyNonEmptyArray,
   type ResourceCount,
 } from "@dnd/shared/types";
+import type { Ability, CreatureType } from "@dnd/shared/game-facts";
 import { Brand } from "effect";
 import type {
   ChallengeRating,
   CreatureLimitedUse,
+  CreatureSense,
+  CreatureImmunityList,
+  CreatureSavingThrowModifier,
+  CreatureSkillModifier,
+  SixAbilityScores,
+  StatBlockLiteralValue,
+  StatBlockCommunication,
+  StatBlockTextOnlyReason,
+  CreatureResistanceList,
+  CreatureVulnerabilityList,
   StatBlockId,
-  CreatureStatBlock,
 } from "@dnd/surface/surface/types";
+import type { Size } from "@dnd/shared/types";
 import type {
   StatBlockAttackActionOption,
   StatBlockAttackSection,
@@ -34,8 +45,84 @@ import type {
 export type BattleStatBlockExecutionSource = {
   readonly id: StatBlockId;
   readonly challengeRating: ChallengeRating;
-  readonly statBlock: CreatureStatBlock;
+  /** Parsed, source-free facts consumed by runtime admission. */
+  readonly statBlock: BattleStatBlockRuntimeFacts;
+  /** Ordered executable bindings produced by the authored projection. */
+  readonly procedures: readonly BattleStatBlockRuntimeProcedure[];
+  readonly resources?: readonly BattleStatBlockRuntimeResource[];
+  readonly legendaryActionUses?: number;
 };
+
+export type BattleStatBlockRuntimeResource = {
+  readonly ordinal: number;
+  readonly ownership: "shared" | "each";
+  readonly limit:
+    | { readonly kind: "daily"; readonly uses: number }
+    | { readonly kind: "recharge"; readonly minimumRoll: number }
+    | { readonly kind: "recharge_after_rest" };
+};
+
+export type BattleStatBlockRuntimeFacts = {
+  readonly size: Size;
+  readonly creatureType: CreatureType;
+  readonly ac: StatBlockLiteralValue;
+  readonly hp: StatBlockLiteralValue;
+  readonly speeds: readonly BattleStatBlockRuntimeSpeed[];
+  readonly abilityScores: SixAbilityScores;
+  readonly initiativeModifier: number;
+  readonly initiativeScore: number;
+  readonly passivePerception: number;
+  readonly communication: StatBlockCommunication;
+  readonly savingThrowModifiers?: readonly CreatureSavingThrowModifier[];
+  readonly skillModifiers?: readonly CreatureSkillModifier[];
+  readonly saveProficiencies?: readonly Ability[];
+  readonly vulnerabilities?: CreatureVulnerabilityList;
+  readonly resistances?: CreatureResistanceList;
+  readonly immunities?: CreatureImmunityList;
+  readonly senses?: readonly BattleStatBlockRuntimeSense[];
+};
+
+export type BattleStatBlockRuntimeSpeed = {
+  readonly kind: "walk" | "burrow" | "climb" | "fly" | "swim";
+  readonly feet: StatBlockLiteralValue;
+  readonly hover?: true;
+};
+
+export type BattleStatBlockRuntimeSense = {
+  readonly kind: CreatureSense["kind"];
+  readonly rangeFeet: number;
+  readonly qualifier?: "unimpeded_by_magical_darkness";
+};
+
+export type BattleStatBlockRuntimeProcedure =
+  | {
+      readonly kind: "attack";
+      readonly section: Extract<
+        StatBlockAttackSection,
+        "actions" | "legendaryActions"
+      >;
+      readonly procedureOrdinal: number;
+      readonly attack: SupportedCreatureAttackRollMechanics;
+      readonly resourceRefs: readonly number[];
+      readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
+    }
+  | {
+      readonly kind: "multiattack";
+      readonly section: "actions";
+      readonly procedureOrdinal: number;
+      readonly dispatches: ReadonlyNonEmptyArray<{
+        readonly procedureOrdinal: number;
+        readonly count: number;
+      }>;
+      readonly resourceRefs: readonly number[];
+    }
+  | {
+      readonly kind: "bonusActionOption";
+      readonly section: "bonusActions";
+      readonly procedureOrdinal: number;
+      readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
+      readonly resourceRefs: readonly number[];
+    };
 
 export type StatBlockActionProjectionSection =
   | "actions"
@@ -72,12 +159,15 @@ export type StatBlockProjectionIssue =
         readonly kind: "action";
         readonly section: StatBlockActionProjectionSection;
         readonly shape: StatBlockActionProjectionShape;
-        readonly nonExecutableReason: "unsupportedActionShape";
+        readonly nonExecutableReason:
+          | "unsupportedActionShape"
+          | StatBlockTextOnlyReason;
       };
     };
 
 export type StatBlockAttackProcedure = {
   readonly kind: "attack";
+  readonly procedureOrdinal: number;
   readonly section: Extract<
     StatBlockAttackSection,
     "actions" | "legendaryActions"
@@ -88,11 +178,13 @@ export type StatBlockAttackProcedure = {
 
 export type StatBlockMultiattackProcedure = {
   readonly kind: "multiattack";
+  readonly procedureOrdinal: number;
   readonly dispatchProcedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
 };
 
 export type StatBlockBonusActionOptionProcedure = {
   readonly kind: "bonusActionOption";
+  readonly procedureOrdinal: number;
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
 };
 
