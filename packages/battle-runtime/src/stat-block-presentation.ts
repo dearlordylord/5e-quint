@@ -132,20 +132,15 @@ function projectionShape(
     "textOnly"
   >,
 ): StatBlockActionProjectionShape {
-  switch (kind) {
-    case "attack":
-      return "attack";
-    case "multiattack":
-      return "multiattack";
-    case "bonusActionOption":
-      return "actionOption";
-    case "save":
-      return "save";
-    case "support":
-      return "support";
-    case "spellcasting":
-      return "special";
-  }
+  return Match.value(kind).pipe(
+    Match.when("attack", () => "attack" as const),
+    Match.when("multiattack", () => "multiattack" as const),
+    Match.when("bonusActionOption", () => "actionOption" as const),
+    Match.when("save", () => "save" as const),
+    Match.when("support", () => "support" as const),
+    Match.when("spellcasting", () => "special" as const),
+    Match.exhaustive,
+  );
 }
 
 export function battleCreaturePresentationDisplayName(

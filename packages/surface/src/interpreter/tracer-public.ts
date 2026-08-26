@@ -4,6 +4,7 @@ import type {
   UnitRecord,
 } from "../surface/types.ts";
 import type { Trace, TraceEdge, TraceNode } from "./tracer-model.ts";
+import { Match } from "effect";
 
 import { idGen } from "./tracer-rule-labels.ts";
 import { describeStatBlockValue } from "./tracer-creature-actions.ts";
@@ -143,50 +144,44 @@ function traceStandaloneProcedures(
         : entry.resourceRefs.ordinals.join(",");
     const nodeId = ids("proc");
     const prefix = `${kind} ${entry.procedureOrdinal}: ${procedureName}`;
-    let atomKind: string;
-    let detail: string;
-    switch (procedure.kind) {
-      case "attack_roll":
-        atomKind = "attack_roll";
-        detail = `${procedure.attackType} (+${describeStatBlockValue(procedure.attackBonus)})`;
-        break;
-      case "multiattack":
-        atomKind = "multiattack";
-        detail = `dispatches: ${procedure.dispatches
-          .map(
-            (dispatch) =>
-              `${describeStatBlockValue(dispatch.count)}× ordinal ${dispatch.procedureOrdinal}`,
-          )
-          .join(" + ")}`;
-        break;
-      case "action_option":
-        atomKind = "action_option";
-        detail = procedure.options.join(" or ");
-        break;
-      case "support":
-        atomKind = "direct_apply";
-        detail = `target: ${procedure.target}${procedure.rangeFeet === undefined ? "" : ` (${procedure.rangeFeet} ft)`}`;
-        break;
-      case "save":
-        atomKind = "save_gate";
-        detail = `${procedure.ability.toUpperCase()} save DC ${procedure.dc.dc}`;
-        break;
-      case "spellcasting":
-        atomKind = "spellcasting";
-        detail = procedure.groups
-          .map(
-            (group) =>
-              `${group.kind}: ${group.spells.map((spell) => spell.spellId).join(", ")}`,
-          )
-          .join("; ");
-        break;
-      /* v8 ignore start -- authored executable procedure union is exhaustive */
-      default: {
-        const _exhaustive: never = procedure;
-        throw new Error(`unhandled authored procedure: ${String(_exhaustive)}`);
-      }
-      /* v8 ignore stop */
-    }
+    const { atomKind, detail } = Match.value(procedure).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        attack_roll: (attack) => ({
+          atomKind: "attack_roll",
+          detail: `${attack.attackType} (+${describeStatBlockValue(attack.attackBonus)})`,
+        }),
+        multiattack: (multiattack) => ({
+          atomKind: "multiattack",
+          detail: `dispatches: ${multiattack.dispatches
+            .map(
+              (dispatch) =>
+                `${describeStatBlockValue(dispatch.count)}× ordinal ${dispatch.procedureOrdinal}`,
+            )
+            .join(" + ")}`,
+        }),
+        action_option: (option) => ({
+          atomKind: "action_option",
+          detail: option.options.join(" or "),
+        }),
+        support: (support) => ({
+          atomKind: "direct_apply",
+          detail: `target: ${support.target}${support.rangeFeet === undefined ? "" : ` (${support.rangeFeet} ft)`}`,
+        }),
+        save: (save) => ({
+          atomKind: "save_gate",
+          detail: `${save.ability.toUpperCase()} save DC ${save.dc.dc}`,
+        }),
+        spellcasting: (spellcasting) => ({
+          atomKind: "spellcasting",
+          detail: spellcasting.groups
+            .map(
+              (group) =>
+                `${group.kind}: ${group.spells.map((spell) => spell.spellId).join(", ")}`,
+            )
+            .join("; "),
+        }),
+      }),
+    );
     nodes.push({
       id: nodeId,
       category: "procedure",
