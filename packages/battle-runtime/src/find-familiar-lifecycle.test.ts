@@ -35,6 +35,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
+import { StatBlockRecordSchema } from "@dnd/surface/surface/schema";
 import {
   findFamiliarFormEligibilityForSpell,
   pactOfTheChainFindFamiliarFormEligibilityForSpell,
@@ -1153,6 +1154,55 @@ function pactScratchSubject(
 }
 
 describe("Find Familiar lifecycle", () => {
+  test("rejects nonliteral familiar HP before authored projection admission", () => {
+    const source = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const malformed = {
+      ...source,
+      id: parseSharedStatBlockId("synthetic_nonliteral_familiar_hp"),
+      name: "Synthetic Nonliteral Familiar HP",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic-nonliteral-familiar-hp",
+      },
+      statBlock: {
+        ...source.statBlock,
+        hp: { kind: "caster_derived", source: "spell_save_dc" },
+      },
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(StatBlockRecordSchema)(malformed),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects nonliteral familiar Armor Class before authored projection admission", () => {
+    const source = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const malformed = {
+      ...source,
+      id: parseSharedStatBlockId("synthetic_nonliteral_familiar_ac"),
+      name: "Synthetic Nonliteral Familiar Armor Class",
+      provenance: {
+        kind: "synthetic-test",
+        section: "synthetic-nonliteral-familiar-armor-class",
+      },
+      statBlock: {
+        ...source.statBlock,
+        ac: {
+          ...source.statBlock.ac,
+          value: { kind: "caster_derived", source: "spell_save_dc" },
+        },
+      },
+    };
+
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(StatBlockRecordSchema)(malformed),
+      ),
+    ).toBe(true);
+  });
+
   test("retained companion presentation follows admission and recast transitions", () => {
     const initial = startBattle({
       battleId: battleId("retained-companion-presentation"),

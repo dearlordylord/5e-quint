@@ -23,6 +23,7 @@ import { attackExecutionDamageType } from "./battle-action-options.ts";
 import {
   attackActionOptionPresentationName,
   battleCreaturePresentationDisplayName,
+  statBlockProjectionIssuesForActor,
   statBlockProcedurePresentationsForActor,
 } from "./stat-block-presentation.ts";
 
@@ -80,7 +81,7 @@ describe("battle presentation joins", () => {
     ).toBeNull();
   });
 
-  test("uses a fallback label when a procedure presentation is absent", () => {
+  test("reports a typed issue when a procedure presentation misses its binding", () => {
     const session = presentationSession();
     const subject = goblinAttackSubject(session.state, "Scimitar");
     const actor = session.state.combatants.get(goblinId);
@@ -94,7 +95,6 @@ describe("battle presentation joins", () => {
       throw new Error("Expected Goblin attack execution.");
     }
     expect(attackExecutionDamageType(attack)).toBeUndefined();
-
     expect(
       attackActionOptionPresentationName(
         session.state,
@@ -113,18 +113,44 @@ describe("battle presentation joins", () => {
     if (source === undefined) {
       throw new Error("Expected Goblin presentation source.");
     }
-    const contextWithoutProcedures = battleRuntimeContextForTest(
+    const firstProcedure = source.orderedProcedures[0];
+    if (firstProcedure === undefined) {
+      throw new Error("Expected Goblin procedure presentation.");
+    }
+    const contextWithMissingProcedure = battleRuntimeContextForTest(
       session.context.characters,
-      new Map([[goblinId, { ...source, orderedProcedures: [] }]]),
+      new Map([
+        [
+          goblinId,
+          {
+            ...source,
+            orderedProcedures: [
+              {
+                ...firstProcedure,
+                procedureOrdinal: firstProcedure.procedureOrdinal + 100,
+              },
+            ],
+          },
+        ],
+      ]),
     );
     expect(
-      attackActionOptionPresentationName(
+      statBlockProjectionIssuesForActor(
         session.state,
-        contextWithoutProcedures,
+        contextWithMissingProcedure,
         goblinId,
-        attack,
       ),
-    ).toEqual(Either.right("Unsupported Stat Block procedure"));
+    ).toEqual([
+      {
+        tag: "statBlockProjectionIssue",
+        source: {
+          kind: "action",
+          section: firstProcedure.section,
+          shape: "attack",
+          nonExecutableReason: "unsupportedActionShape",
+        },
+      },
+    ]);
   });
 
   test("reports a missing authored weapon source separately from character context", () => {

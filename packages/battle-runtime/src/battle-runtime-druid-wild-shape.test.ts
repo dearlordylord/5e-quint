@@ -33,6 +33,7 @@ import {
   decodeUnitRecordSync,
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
+  StatBlockRecordSchema,
 } from "@dnd/surface/surface/schema";
 import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
 import { Schema } from "effect";
@@ -2628,6 +2629,58 @@ test("rejects known Beast forms without literal Size", () => {
   if (Either.isLeft(result)) {
     expect(result.left.message).toBe("nonLiteralSize");
   }
+});
+
+test("rejects known Beast forms with nonliteral Armor Class at the authored parser boundary", () => {
+  const baseForm = statBlockCatalog.requireStatBlock(ratId);
+  const malformed = {
+    ...baseForm,
+    id: parseSharedStatBlockId("synthetic_nonliteral_armor_class_form"),
+    name: "Synthetic Nonliteral Armor Class Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-nonliteral-armor-class-form",
+    },
+    statBlock: {
+      ...baseForm.statBlock,
+      ac: {
+        ...baseForm.statBlock.ac,
+        value: { kind: "caster_derived", source: "spell_save_dc" },
+      },
+    },
+  };
+
+  expect(
+    Either.isLeft(Schema.decodeUnknownEither(StatBlockRecordSchema)(malformed)),
+  ).toBe(true);
+});
+
+test("rejects known Beast forms with conditional Speed at the authored parser boundary", () => {
+  const baseForm = statBlockCatalog.requireStatBlock(ratId);
+  const firstSpeed = baseForm.statBlock.speeds[0];
+  const malformed = {
+    ...baseForm,
+    id: parseSharedStatBlockId("synthetic_conditional_speed_form"),
+    name: "Synthetic Conditional Speed Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-conditional-speed-form",
+    },
+    statBlock: {
+      ...baseForm.statBlock,
+      speeds: [
+        {
+          ...firstSpeed,
+          feet: { kind: "caster_derived", source: "spell_save_dc" },
+        },
+        ...baseForm.statBlock.speeds.slice(1),
+      ],
+    },
+  };
+
+  expect(
+    Either.isLeft(Schema.decodeUnknownEither(StatBlockRecordSchema)(malformed)),
+  ).toBe(true);
 });
 
 test("admits selected Beast forms with multi-component attack damage and typed hit riders", () => {
