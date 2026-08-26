@@ -18,6 +18,16 @@ by earlier staging builds and rejects an authorization database containing
 non-anonymous users. Anonymous-user deletion remains disabled until auth-state
 deletion can cascade to saved Play Sessions.
 
+Every state-changing authorization request serializes cleanup and capacity
+admission with the provider call. Expired sessions, verification values, client
+assertion replay guards, access tokens, and refresh tokens are removed without
+touching an active vault. New mutations receive standard OAuth
+`temporarily_unavailable` backpressure when the database reaches 10,000 vaults,
+10,000 clients, or 100,000 retained authorization records. Those explicit
+bounds preserve existing 90-day vault ownership while preventing an
+unauthenticated registration or vault-creation surface from growing storage
+without limit.
+
 The Effect service owns Better Auth initialization, migrations, database
 lifetime, and request failures. The Node adapter owns bounded request-body and
 streaming response conversion. Better Auth supplies OAuth discovery, JWKS,
@@ -37,6 +47,11 @@ Run the complete local authorization and MCP witness with:
 pnpm --filter @dnd/mcp smoke:saved-session-authorization
 ```
 
+Set `DND_MCP_SAVED_SESSION_URL=https://oracle.example.test/mcp` to run the same
+witness against a deployed staging or production process. Deployment smoke uses
+this mode so local success cannot conceal ingress, cookie, persistent-volume,
+or same-origin composition failures.
+
 The witness exercises ChatGPT's `openid email play-sessions` flow, a
 refresh-token-capable flow, two isolated pseudonymous vaults, and save/list/
 delete against the same public MCP process. Access tokens for ChatGPT's flow
@@ -47,6 +62,11 @@ retention.
 
 The runtime entrypoint requires one public origin, separate SQLite paths for
 Play Sessions and authorization state, and a secret of at least 32 characters:
+
+Generate the environment's secret once with `openssl rand -hex 32`, store it in
+the deployment's protected environment configuration, and keep it stable across
+releases. The placeholder below is intentionally rejected by deployment
+validation.
 
 ```sh
 DND_MCP_PUBLIC_ORIGIN=https://oracle.example.test \

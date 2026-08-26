@@ -3,13 +3,15 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { ManagedRuntime } from "effect";
+import { ManagedRuntime, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
   SavedSessionAuthorization,
   savedSessionAuthorizationLayer,
 } from "./service.ts";
+import { AuthorizationServerOriginSchema } from "../public-origin.ts";
+import { applySavedSessionAuthorizationBackpressure } from "./capacity.ts";
 
 describe("credential-free Better Auth database admission", () => {
   it("reopens anonymous-only data and rejects a non-anonymous user", async () => {
@@ -17,7 +19,9 @@ describe("credential-free Better Auth database admission", () => {
       join(tmpdir(), "dnd-better-auth-admission-"),
     );
     const databasePath = join(scratchDirectory, "auth.sqlite");
-    const origin = new URL("http://127.0.0.1:9878");
+    const origin = Schema.decodeUnknownSync(AuthorizationServerOriginSchema)(
+      "http://127.0.0.1:9878",
+    );
     const configuration = {
       authorizationServerOrigin: origin,
       databasePath,
@@ -45,6 +49,22 @@ describe("credential-free Better Auth database admission", () => {
         ),
       );
       expect(created.status).toBe(200);
+
+      const capacityDatabase = new DatabaseSync(databasePath);
+      const capacityResponse = applySavedSessionAuthorizationBackpressure(
+        capacityDatabase,
+        new Request(new URL("/api/auth/sign-in/anonymous", origin), {
+          method: "POST",
+        }),
+        {
+          anonymousVaults: 1,
+          oauthClients: 10,
+          retainedRecords: 100,
+        },
+      );
+      expect(capacityResponse?.status).toBe(503);
+      expect(capacityResponse?.headers.get("retry-after")).toBe("60");
+      capacityDatabase.close();
       await creatingRuntime.dispose();
 
       const legacyDatabase = new DatabaseSync(databasePath);

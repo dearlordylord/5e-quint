@@ -2,6 +2,7 @@ import { Either, Effect, ManagedRuntime, Schema } from "effect";
 
 import { createDndMcpHttpServer } from "./public-http-server.ts";
 import { createPublicMcpOAuth } from "./public-oauth.ts";
+import { PublicMcpOriginSchema } from "./public-origin.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import {
   SavedSessionAuthorization,
@@ -24,7 +25,7 @@ const PublicMcpConfigurationSchema = Schema.Struct({
   environment: Schema.Literal(...PUBLIC_MCP_DEPLOYMENT_ENVIRONMENTS),
   release: Schema.NonEmptyTrimmedString,
   publisherName: PublicMcpPublisherNameSchema,
-  publicOrigin: Schema.URL,
+  publicOrigin: PublicMcpOriginSchema,
 });
 
 const configuration = Schema.decodeUnknownEither(PublicMcpConfigurationSchema)({

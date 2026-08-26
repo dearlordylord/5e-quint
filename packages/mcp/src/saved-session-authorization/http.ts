@@ -3,11 +3,12 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { Either, Effect } from "effect";
 
 import { PUBLIC_MCP_MAX_REQUEST_BYTES } from "../public-http-routes.ts";
+import type { AuthorizationServerOrigin } from "../public-origin.ts";
 import { savedSessionConsentPage, savedSessionVaultPage } from "./pages.ts";
 import type { SavedSessionAuthorizationService } from "./service.ts";
 
 export type SavedSessionAuthorizationHttp = {
-  readonly origin: URL;
+  readonly origin: AuthorizationServerOrigin;
   readonly service: SavedSessionAuthorizationService;
 };
 
@@ -32,29 +33,47 @@ export async function handleSavedSessionAuthorizationRequest(input: {
   readonly outgoing: ServerResponse;
   readonly pathname: string;
 }): Promise<Either.Either<void, SavedSessionAuthorizationHttpIssue>> {
-  if (input.pathname === "/saved-session-vault") {
-    await writeResponse(input.outgoing, savedSessionVaultPage());
+  const cancellation = nodeRequestCancellation(input.incoming, input.outgoing);
+  try {
+    if (input.pathname === "/saved-session-vault") {
+      await writeResponse(
+        input.outgoing,
+        savedSessionVaultPage(),
+        cancellation.signal,
+      );
+      return Either.right(undefined);
+    }
+    if (input.pathname === "/saved-session-consent") {
+      await writeResponse(
+        input.outgoing,
+        savedSessionConsentPage(),
+        cancellation.signal,
+      );
+      return Either.right(undefined);
+    }
+    const request = await webRequest(
+      input.incoming,
+      input.authorization.origin,
+      cancellation.signal,
+    );
+    if (Either.isLeft(request)) return request;
+    const response = await Effect.runPromise(
+      input.authorization.service.handle(request.right).pipe(Effect.either),
+    );
+    if (Either.isLeft(response)) {
+      return Either.left(httpIssue("requestFailed"));
+    }
+    await writeResponse(input.outgoing, response.right, cancellation.signal);
     return Either.right(undefined);
+  } finally {
+    cancellation.dispose();
   }
-  if (input.pathname === "/saved-session-consent") {
-    await writeResponse(input.outgoing, savedSessionConsentPage());
-    return Either.right(undefined);
-  }
-  const request = await webRequest(input.incoming, input.authorization.origin);
-  if (Either.isLeft(request)) return request;
-  const response = await Effect.runPromise(
-    input.authorization.service.handle(request.right).pipe(Effect.either),
-  );
-  if (Either.isLeft(response)) {
-    return Either.left(httpIssue("requestFailed"));
-  }
-  await writeResponse(input.outgoing, response.right);
-  return Either.right(undefined);
 }
 
 async function webRequest(
   incoming: IncomingMessage,
   origin: URL,
+  signal: AbortSignal,
 ): Promise<Either.Either<Request, SavedSessionAuthorizationHttpIssue>> {
   const headers = new Headers();
   for (const [name, value] of Object.entries(incoming.headers)) {
@@ -70,6 +89,7 @@ async function webRequest(
     new Request(new URL(incoming.url ?? "/", origin), {
       method: incoming.method ?? "GET",
       headers,
+      signal,
       ...(body.right.byteLength === 0 ? {} : { body: body.right }),
     }),
   );
@@ -97,6 +117,7 @@ async function requestBody(
 async function writeResponse(
   outgoing: ServerResponse,
   response: Response,
+  signal: AbortSignal,
 ): Promise<void> {
   outgoing.statusCode = response.status;
   for (const cookie of response.headers.getSetCookie()) {
@@ -110,6 +131,8 @@ async function writeResponse(
     return;
   }
   const reader = response.body.getReader();
+  const cancelReader = () => reader.cancel().catch(() => undefined);
+  signal.addEventListener("abort", cancelReader, { once: true });
   try {
     while (!outgoing.destroyed) {
       const next = await reader.read();
@@ -119,9 +142,34 @@ async function writeResponse(
       }
     }
   } finally {
+    signal.removeEventListener("abort", cancelReader);
+    if (signal.aborted) await cancelReader();
     reader.releaseLock();
   }
   outgoing.end();
+}
+
+function nodeRequestCancellation(
+  incoming: IncomingMessage,
+  outgoing: ServerResponse,
+): {
+  readonly signal: AbortSignal;
+  readonly dispose: () => void;
+} {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  const abortUnfinishedResponse = () => {
+    if (!outgoing.writableFinished) abort();
+  };
+  incoming.once("aborted", abort);
+  outgoing.once("close", abortUnfinishedResponse);
+  return {
+    signal: controller.signal,
+    dispose: () => {
+      incoming.off("aborted", abort);
+      outgoing.off("close", abortUnfinishedResponse);
+    },
+  };
 }
 
 async function waitForDrainOrClose(outgoing: ServerResponse): Promise<void> {

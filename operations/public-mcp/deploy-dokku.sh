@@ -82,6 +82,10 @@ configured_authorization_secret="$(ssh "dokku@$dokku_host" config:get "$dokku_ap
   echo "$dokku_app has no valid saved-session authorization secret" >&2
   exit 65
 }
+[[ "$configured_authorization_secret" != replace-with-* && "$configured_authorization_secret" != *'<'* && "$configured_authorization_secret" != *'>'* ]] || {
+  echo "$dokku_app uses a saved-session authorization placeholder instead of a generated secret" >&2
+  exit 65
+}
 publisher_name="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_PUBLISHER_NAME)"
 publication_mode="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_PUBLICATION_MODE)"
 configured_environment="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_MCP_ENVIRONMENT)"

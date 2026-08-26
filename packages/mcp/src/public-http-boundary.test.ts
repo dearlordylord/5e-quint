@@ -1,3 +1,6 @@
+import { EventEmitter, once } from "node:events";
+import { request as requestHttp } from "node:http";
+
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
@@ -10,6 +13,7 @@ import {
   PUBLIC_MCP_MAX_REQUEST_BYTES,
 } from "./public-http-server.ts";
 import type { PublicMcpOAuth } from "./public-oauth.ts";
+import { AuthorizationServerOriginSchema } from "./public-origin.ts";
 import { PublicMcpPublisherNameSchema } from "./public-service-operations.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
 import type { SavedSessionAuthorizationService } from "./saved-session-authorization/service.ts";
@@ -210,7 +214,9 @@ describe("public HTTP boundary", () => {
     const server = createDndMcpHttpServer({
       playSessionRepository: repository,
       savedSessionAuthorization: {
-        origin: new URL("https://oracle.example.test"),
+        origin: Schema.decodeUnknownSync(AuthorizationServerOriginSchema)(
+          "https://oracle.example.test",
+        ),
         service: authorization,
       },
     });
@@ -238,6 +244,55 @@ describe("public HTTP boundary", () => {
         },
       );
       expect(oversized.status).toBe(413);
+    } finally {
+      await close(server);
+      repository.close();
+    }
+  });
+
+  test("cancels saved-session authorization when the client disconnects", async () => {
+    const repository = openRepository();
+    const observations = new EventEmitter();
+    const requestAborted = once(observations, "requestAborted");
+    const responseCancelled = once(observations, "responseCancelled");
+    const authorization: SavedSessionAuthorizationService = {
+      handle: (request) => {
+        request.signal.addEventListener(
+          "abort",
+          () => observations.emit("requestAborted"),
+          { once: true },
+        );
+        return Effect.succeed(
+          new Response(
+            new ReadableStream<Uint8Array>({
+              start: (controller) =>
+                controller.enqueue(new TextEncoder().encode("started")),
+              cancel: () => {
+                observations.emit("responseCancelled");
+              },
+            }),
+          ),
+        );
+      },
+    };
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+      savedSessionAuthorization: {
+        origin: Schema.decodeUnknownSync(AuthorizationServerOriginSchema)(
+          "https://oracle.example.test",
+        ),
+        service: authorization,
+      },
+    });
+    const endpoint = await listen(server);
+    try {
+      await disconnectAfterFirstResponseChunk(
+        new URL("/api/auth/stalled", endpoint),
+      );
+      await withTimeout(
+        Promise.all([requestAborted, responseCancelled]),
+        "authorization cancellation",
+      );
     } finally {
       await close(server);
       repository.close();
@@ -297,4 +352,27 @@ async function close(
 ): Promise<void> {
   const closed = await server.close();
   if (Either.isLeft(closed)) throw new Error(closed.left.message);
+}
+
+async function disconnectAfterFirstResponseChunk(url: URL): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const request = requestHttp(url, (response) => {
+      response.once("data", () => {
+        request.destroy();
+        resolve();
+      });
+    });
+    request.once("error", reject);
+    request.end();
+  });
+}
+
+async function withTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
+  const timeout = new Promise<never>((_resolve, reject) => {
+    setTimeout(
+      () => reject(new Error(`Timed out waiting for ${label}`)),
+      5_000,
+    );
+  });
+  return Promise.race([promise, timeout]);
 }

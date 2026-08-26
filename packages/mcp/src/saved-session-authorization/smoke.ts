@@ -1,13 +1,8 @@
 import { createHash, randomBytes } from "node:crypto";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 
-import { Either, ManagedRuntime } from "effect";
+import { Either } from "effect";
 
 import {
-  SavedSessionAuthorization,
-  savedSessionAuthorizationLayer,
   CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS,
   CHATGPT_SAVED_SESSION_OAUTH_SCOPES,
   REFRESHING_ACCESS_TOKEN_LIFETIME_SECONDS as refreshingTokenLifetime,
@@ -15,9 +10,8 @@ import {
   SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS,
 } from "./service.ts";
 import { createPublicMcpOAuth } from "../public-oauth.ts";
-import { createDndMcpHttpServer } from "../public-http-server.ts";
-import { openSqlitePlaySessionRepository } from "../recoverable-play-session.ts";
 import { verifySavedSessionMcp } from "./saved-session-mcp-smoke.ts";
+import { openSavedSessionAuthorizationSmokeTarget } from "./smoke-target.ts";
 import {
   AuthorizationServerMetadataSchema,
   assertRemainingTokenLifetime,
@@ -36,20 +30,10 @@ import {
 
 const requestedScopes = SAVED_SESSION_OAUTH_SCOPES.join(" ");
 
-const scratchDirectory = await mkdtemp(
-  join(tmpdir(), "dnd-saved-session-authorization-"),
-);
-const origin = new URL("http://127.0.0.1:9876");
+const target = await openSavedSessionAuthorizationSmokeTarget();
+const origin = target.origin;
 const resource = new URL("/mcp", origin);
 const issuer = new URL("/api/auth", origin);
-const layer = savedSessionAuthorizationLayer({
-  authorizationServerOrigin: origin,
-  databasePath: join(scratchDirectory, "authorization.sqlite"),
-  resource,
-  secret: "saved-session-smoke-secret-at-least-32-characters",
-});
-const authRuntime = ManagedRuntime.make(layer);
-const service = await authRuntime.runPromise(SavedSessionAuthorization);
 const oauth = createPublicMcpOAuth({
   resource: resource.toString(),
   authorizationServer: issuer.toString(),
@@ -57,21 +41,8 @@ const oauth = createPublicMcpOAuth({
   jwksUrl: new URL("/api/auth/jwks", origin).toString(),
 });
 if (Either.isLeft(oauth)) throw new Error(oauth.left.message);
-const repository = openSqlitePlaySessionRepository(
-  join(scratchDirectory, "mcp-play-sessions.sqlite"),
-);
-if (Either.isLeft(repository)) throw new Error(repository.left.message);
-const server = createDndMcpHttpServer({
-  hostname: "127.0.0.1",
-  port: 9876,
-  playSessionRepository: repository.right,
-  oauth: oauth.right,
-  savedSessionAuthorization: { origin, service },
-});
 
 try {
-  const endpoint = await server.listen();
-  if (Either.isLeft(endpoint)) throw new Error(endpoint.left.message);
   const metadata = await decodeJson(
     AuthorizationServerMetadataSchema,
     await fetch(
@@ -345,13 +316,14 @@ try {
   }
   const savedSessionMcp = await verifySavedSessionMcp({
     accessToken: chatGptAccessToken,
-    endpoint: new URL("/mcp", origin),
+    endpoint: target.endpoint,
     isolatedAccessToken: isolatedTokens.access_token,
   });
   process.stdout.write(
     `${JSON.stringify(
       {
         tag: "savedSessionAuthorizationObserved",
+        target: target.tag,
         issuer: metadata.issuer,
         authorizationEndpoint: metadata.authorization_endpoint.toString(),
         tokenEndpoint: metadata.token_endpoint.toString(),
@@ -392,8 +364,5 @@ try {
     )}\n`,
   );
 } finally {
-  await server.close();
-  repository.right.close();
-  await authRuntime.dispose();
-  await rm(scratchDirectory, { recursive: true });
+  await target.close();
 }

@@ -216,6 +216,20 @@ describe("public MCP deployment operations", () => {
       expectReleaseHistory(releaseDirectory, ["3", "1"]);
 
       const disabledConfiguration = readFileSync(environmentFile, "utf8");
+      writeFileSync(
+        environmentFile,
+        disabledConfiguration.replace(
+          "synthetic-saved-session-authorization-secret",
+          "replace-with-at-least-32-random-characters",
+        ),
+      );
+      expect(
+        runVerification(environmentFile, binaryDirectory, commandLog),
+      ).toMatchObject({
+        status: 65,
+        stderr: expect.stringContaining("not a placeholder"),
+      });
+      writeFileSync(environmentFile, disabledConfiguration);
       const enabledConfiguration = disabledConfiguration.replace(
         "DND_MCP_PUBLICATION_MODE=disabled",
         "DND_MCP_PUBLICATION_MODE=enabled",

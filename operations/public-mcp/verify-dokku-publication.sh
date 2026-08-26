@@ -61,6 +61,10 @@ readonly jwks_url="$authorization_server/jwks"
   echo "$dokku_app has incomplete saved-session authorization or domain-challenge configuration" >&2
   exit 65
 }
+[[ "$authorization_secret" != replace-with-* && "$authorization_secret" != *'<'* && "$authorization_secret" != *'>'* ]] || {
+  echo "$dokku_app uses a saved-session authorization placeholder instead of a generated secret" >&2
+  exit 65
+}
 
 protected_resource="$(curl --fail --silent --show-error "$public_origin/.well-known/oauth-protected-resource")"
 jq -e \

@@ -29,3 +29,5 @@ curl --fail --silent --show-error "$origin/api/auth/jwks" |
   jq -e '.keys | type == "array" and length > 0' >/dev/null
 
 DND_MCP_STAGING_URL="$origin/mcp" pnpm --filter @dnd/mcp verify:staging
+DND_MCP_SAVED_SESSION_URL="$origin/mcp" \
+  pnpm --filter @dnd/mcp smoke:saved-session-authorization

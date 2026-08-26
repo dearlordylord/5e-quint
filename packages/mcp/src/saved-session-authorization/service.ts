@@ -8,7 +8,13 @@ import { Context, Effect, Layer } from "effect";
 
 import { SAVED_INACTIVITY_RETENTION_MS } from "../play-session-access.ts";
 import { PLAY_SESSION_OAUTH_SCOPE } from "../tool-definition-contract.ts";
+import type { AuthorizationServerOrigin } from "../public-origin.ts";
 import { fetchClientMetadataResource } from "./client-metadata-fetch.ts";
+import {
+  applySavedSessionAuthorizationBackpressure,
+  pruneExpiredAuthorizationState,
+  SAVED_SESSION_AUTHORIZATION_CAPACITIES,
+} from "./capacity.ts";
 import {
   ANONYMOUS_VAULT_EMAIL_DOMAIN,
   ANONYMOUS_VAULT_EMAIL_PREFIX,
@@ -31,7 +37,7 @@ export const CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS =
 export const REFRESHING_ACCESS_TOKEN_LIFETIME_SECONDS = 60 * 60;
 
 export type SavedSessionAuthorizationConfiguration = {
-  readonly authorizationServerOrigin: URL;
+  readonly authorizationServerOrigin: AuthorizationServerOrigin;
   readonly databasePath: string;
   readonly resource: URL;
   readonly secret: string;
@@ -73,15 +79,28 @@ export function savedSessionAuthorizationLayer(
           await context.runMigrations();
           assertAnonymousOnlyDatabase(database);
           normalizeAnonymousVaultEmailLabels(database);
+          pruneExpiredAuthorizationState(database, Date.now());
         },
         catch: (cause) => authorizationIssue("initializationFailed", cause),
       });
+      const requestMutex = yield* Effect.makeSemaphore(1);
       const handle = Effect.fn("SavedSessionAuthorization.handle")(
         (request: Request) =>
-          Effect.tryPromise({
-            try: () => auth.handler(request),
-            catch: (cause) => authorizationIssue("requestFailed", cause),
-          }),
+          requestMutex.withPermits(1)(
+            Effect.tryPromise({
+              try: () => {
+                const backpressure = applySavedSessionAuthorizationBackpressure(
+                  database,
+                  request,
+                  SAVED_SESSION_AUTHORIZATION_CAPACITIES,
+                );
+                return backpressure === undefined
+                  ? auth.handler(request)
+                  : Promise.resolve(backpressure);
+              },
+              catch: (cause) => authorizationIssue("requestFailed", cause),
+            }),
+          ),
       );
       return SavedSessionAuthorization.of({ handle });
     }),

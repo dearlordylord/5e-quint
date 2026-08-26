@@ -87,6 +87,10 @@ done
   echo "DND_SAVED_SESSION_AUTHORIZATION_SECRET must contain at least 32 characters" >&2
   exit 65
 }
+[[ "$DND_SAVED_SESSION_AUTHORIZATION_SECRET" != replace-with-* && "$DND_SAVED_SESSION_AUTHORIZATION_SECRET" != *'<'* && "$DND_SAVED_SESSION_AUTHORIZATION_SECRET" != *'>'* ]] || {
+  echo "DND_SAVED_SESSION_AUTHORIZATION_SECRET must be a generated secret, not a placeholder" >&2
+  exit 65
+}
 
 case "$DND_MCP_PUBLICATION_MODE" in
   disabled) ;;
