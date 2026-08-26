@@ -222,6 +222,50 @@ describe("standalone Stat Block general facts", () => {
     ).toThrow();
   });
 
+  test("qualifies hover only on an authored fly speed", () => {
+    const hoveredStatBlock = {
+      ...syntheticStandaloneStatBlock,
+      speeds: [
+        {
+          kind: "fly",
+          feet: { kind: "literal", value: 90 },
+          hover: true,
+        },
+      ],
+    } as const;
+
+    expect(decode(StandaloneStatBlockSchema, hoveredStatBlock)).toEqual(
+      hoveredStatBlock,
+    );
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        speeds: [
+          {
+            kind: "fly",
+            feet: { kind: "literal", value: 90 },
+            hover: false,
+          },
+        ],
+      }),
+    ).toThrow();
+
+    for (const kind of ["walk", "swim", "climb", "burrow"] as const) {
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...syntheticStandaloneStatBlock,
+          speeds: [
+            {
+              kind,
+              feet: { kind: "literal", value: 30 },
+              hover: true,
+            },
+          ],
+        }),
+      ).toThrow();
+    }
+  });
+
   test("bounds authored ability scores and sense ranges while keeping projections reusable", () => {
     for (const value of [0, 31, 10.5] as const) {
       expect(() =>
