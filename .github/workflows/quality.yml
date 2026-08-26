@@ -94,5 +94,11 @@ jobs:
           test "$installed_version" = "$dhall_json_version"
           echo "dhall-to-json $installed_version"
 
+      - name: Restrict tunnel device for deterministic verification
+        run: |
+          if [[ -e /dev/net/tun ]]; then
+            sudo chmod 000 /dev/net/tun
+          fi
+
       - name: Run workspace quality gate
         run: pnpm quality
