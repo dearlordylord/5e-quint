@@ -1,5 +1,5 @@
 import fc from "fast-check";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   ALIGNMENT_CHOICES,
@@ -131,10 +131,10 @@ describe("shared domain primitive constructors", () => {
     expect(isArrayOfOne([1])).toBe(true);
     expect(isArrayOfOne([])).toBe(false);
     expect(getOnlyOneStrict(["only"])).toBe("only");
-    expect(Either.getOrThrow(getOnlyOne(["only"]))).toBe("only");
-    expect(Either.isLeft(getOnlyOne([]))).toBe(true);
-    expect(Either.isLeft(getOnlyOne([], (length) => `length:${length}`))).toBe(
-      true,
-    );
+    expect(Result.getOrThrow(getOnlyOne(["only"]))).toBe("only");
+    expect(Result.isFailure(getOnlyOne([]))).toBe(true);
+    expect(
+      Result.isFailure(getOnlyOne([], (length) => `length:${length}`)),
+    ).toBe(true);
   });
 });

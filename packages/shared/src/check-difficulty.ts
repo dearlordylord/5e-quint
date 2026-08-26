@@ -1,8 +1,7 @@
 import { Schema } from "effect";
 
 export const DifficultyClass = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("DifficultyClass"),
 );
 export type DifficultyClass = typeof DifficultyClass.Type;
@@ -11,7 +10,7 @@ export function difficultyClass(n: number): DifficultyClass {
 }
 
 export const AbilityModifier = Schema.Number.pipe(
-  Schema.int(),
+  Schema.check(Schema.isInt()),
   Schema.brand("AbilityModifier"),
 );
 export type AbilityModifier = typeof AbilityModifier.Type;
