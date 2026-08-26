@@ -121,11 +121,10 @@ for ((attempt = 1; attempt <= 30; attempt += 1)); do
   run_id="$(
     gh run list \
       --workflow "$workflow" \
-      --event workflow_dispatch \
-      --commit "$release" \
       --limit 20 \
-      --json databaseId,createdAt \
-      --jq 'sort_by(.createdAt) | last | .databaseId // empty'
+      --json databaseId,createdAt,event,headSha \
+      --jq \
+      "map(select(.event == \"workflow_dispatch\" and .headSha == \"$release\")) | sort_by(.createdAt) | last | .databaseId // empty"
   )"
   [[ -z "$run_id" ]] || break
   sleep 2
