@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve, sep } from "node:path";
 
 import { Either, Match, ParseResult, Schema } from "effect";
 
@@ -434,6 +434,13 @@ export function summarizeControlledExecution(
     PortableManifestSchema,
     input.reportingManifestPath,
   );
+  const reportingManifestRoot = dirname(
+    resolve(repoRoot, reportingManifestAuthority.path),
+  );
+  const reportingTimingPath = containedRelativePath(
+    reportingManifestRoot,
+    resolve(repoRoot, reportingTimingAuthority.path),
+  );
   const timingAttachment = reportingManifest.controlledAttachments.find(
     ({ tag, sha256, byteLength }) =>
       tag === "controlledReportingTiming" &&
@@ -444,7 +451,9 @@ export function summarizeControlledExecution(
     reportingTiming.transcriptSha256 !== transcriptAuthority.sha256 ||
     reportingTiming.reviewSha256 !== reviewAuthority.sha256 ||
     reportingManifest.index.sha256 !== reportingTiming.indexSha256 ||
-    timingAttachment === undefined
+    timingAttachment === undefined ||
+    reportingTimingPath === undefined ||
+    timingAttachment.path !== reportingTimingPath
   ) {
     fail("Controlled reporting timing does not match its execution artifacts.");
   }
@@ -1031,6 +1040,19 @@ function decode<A, I>(schema: Schema.Schema<A, I>, path: string): A {
     onExcessProperty: "error",
   })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
   return Either.isRight(decoded) ? decoded.right : fail(decoded.left.message);
+}
+
+function containedRelativePath(
+  root: string,
+  candidate: string,
+): string | undefined {
+  const relativePath = relative(root, candidate);
+  return relativePath === "" ||
+    relativePath === ".." ||
+    relativePath.startsWith(`..${sep}`) ||
+    relativePath.startsWith(sep)
+    ? undefined
+    : relativePath;
 }
 
 export function readControlledPerformance(

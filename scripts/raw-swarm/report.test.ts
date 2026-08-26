@@ -11,7 +11,7 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { relative, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 
 import { Either, Schema } from "effect";
@@ -21,7 +21,6 @@ import {
   openArtifactIndex,
   PortableManifestArtifactSchema,
   PortableManifestSchema,
-  type PortableControlledAttachment,
   type PortableManifest,
   type PortableManifestArtifact,
 } from "./artifact-index.ts";
@@ -35,11 +34,12 @@ import { controlledReviewEvidenceFixture } from "./review-invocation-evidence.te
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import {
   GitHubIssueNumberSchema,
+  auditPortableReportBundle,
   makeGitHubIssueLinker,
   SwarmFingerprintSchema,
   type GitHubCommandRunner,
 } from "./report.ts";
-import { isJsonRecord, repoRoot } from "./transcript.ts";
+import { repoRoot } from "./transcript.ts";
 
 const reportScript = resolve(repoRoot, "scripts/raw-swarm/report.ts");
 const temporaryDirectories: string[] = [];
@@ -373,6 +373,34 @@ describe("RAW swarm artifact report index", () => {
       "--review-replay-final",
       relative(repoRoot, evidence.replayPrePlayReviewInputPaths[1]!),
     ]);
+    const sourceFindingsPath = resolve(
+      dirname(dirname(evidence.transcriptPath)),
+      "evidence/findings.json",
+    );
+    const sourceFindingsBytes = readFileSync(sourceFindingsPath);
+    expect(
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, executionDbPath),
+      ]),
+    ).toContain("fixture-execution");
+    writeFileSync(
+      sourceFindingsPath,
+      Buffer.concat([sourceFindingsBytes, Buffer.from("replacement")]),
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, executionDbPath),
+      ]),
+    ).toThrow(/Source findings artifact does not match its indexed authority/);
+    writeFileSync(sourceFindingsPath, sourceFindingsBytes);
     const executionPortablePath = resolve(externalRoot, "execution");
     report([
       "export",
@@ -434,6 +462,19 @@ describe("RAW swarm artifact report index", () => {
         ...executionManifest,
         controlledAttachments: [
           { ...executionManifest.artifacts[0]!, tag: "unclassified" },
+        ],
+      },
+      {
+        ...executionManifest,
+        controlledAttachments: [
+          {
+            ...executionManifest.artifacts[0]!,
+            tag: "controlledReportingTiming",
+          },
+          {
+            ...executionManifest.artifacts[0]!,
+            tag: "controlledReportingTiming",
+          },
         ],
       },
     ];
@@ -794,6 +835,7 @@ describe("RAW swarm artifact report index", () => {
         }),
       ]),
     );
+    expect(controlledManifest.controlledAttachments).toHaveLength(1);
     expect(controlledManifest.artifacts).not.toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -852,110 +894,32 @@ describe("RAW swarm artifact report index", () => {
       "--review-replay-final",
       relative(repoRoot, controlledEvidence.replayPrePlayReviewInputPaths[1]!),
     ]);
-    const controlledPortableAuditPath = resolve(
-      directory,
-      "controlled-portable-audit",
-    );
-    report([
-      "export",
-      "--db",
-      relative(repoRoot, controlledDbPath),
-      "--destination",
-      relative(repoRoot, controlledPortableAuditPath),
-    ]);
-    const controlledPortableAuditIndexPath = resolve(
-      controlledPortableAuditPath,
+    const controlledPortableIndexPath = resolve(
+      controlledExportPath,
       "index.sqlite",
     );
-    const controlledPortableAuditManifestPath = resolve(
-      controlledPortableAuditPath,
-      "manifest.json",
-    );
-    const controlledPortableAuditManifest = decodePortableManifest(
-      readFileSync(controlledPortableAuditManifestPath),
-    );
-    const controlledTimingValue: unknown = JSON.parse(
-      readFileSync(controlledTimingPath, "utf8"),
-    );
-    if (!isJsonRecord(controlledTimingValue)) {
-      throw new Error("Controlled reporting timing fixture is not an object.");
-    }
-    const controlledPortableAuditTimingBytes = Buffer.from(
-      `${JSON.stringify(
-        {
-          ...controlledTimingValue,
-          indexSha256: controlledPortableAuditManifest.index.sha256,
-        },
-        null,
-        2,
-      )}\n`,
-    );
-    const controlledPortableAuditTimingPath = resolve(
-      controlledPortableAuditPath,
-      "reporting-timing.json",
-    );
-    writeFileSync(
-      controlledPortableAuditTimingPath,
-      controlledPortableAuditTimingBytes,
-    );
-    const controlledTimingAttachment: PortableControlledAttachment = {
-      tag: "controlledReportingTiming",
-      path: "reporting-timing.json",
-      sha256: createHash("sha256")
-        .update(controlledPortableAuditTimingBytes)
-        .digest("hex"),
-      byteLength: controlledPortableAuditTimingBytes.byteLength,
-    };
-    writeFileSync(
-      controlledPortableAuditManifestPath,
-      `${JSON.stringify(
-        {
-          ...controlledPortableAuditManifest,
-          controlledAttachments: [controlledTimingAttachment],
-        },
-        null,
-        2,
-      )}\n`,
-    );
-    expect(
-      report([
-        "audit",
-        "--execution-row",
-        "1",
-        "--db",
-        relative(repoRoot, controlledPortableAuditIndexPath),
-      ]),
-    ).toContain("fixture-execution");
-    rmSync(controlledPortableAuditTimingPath);
     expect(() =>
-      report([
-        "audit",
-        "--execution-row",
-        "1",
-        "--db",
-        relative(repoRoot, controlledPortableAuditIndexPath),
-      ]),
+      auditPortableReportBundle(
+        relative(repoRoot, controlledPortableIndexPath),
+      ),
+    ).not.toThrow();
+    const controlledTimingBytes = readFileSync(controlledTimingPath);
+    rmSync(controlledTimingPath);
+    expect(() =>
+      auditPortableReportBundle(
+        relative(repoRoot, controlledPortableIndexPath),
+      ),
     ).toThrow(/Portable report artifact is unreadable/);
     writeFileSync(
-      controlledPortableAuditTimingPath,
-      Buffer.concat([
-        controlledPortableAuditTimingBytes,
-        Buffer.from("tampered"),
-      ]),
+      controlledTimingPath,
+      Buffer.concat([controlledTimingBytes, Buffer.from("tampered")]),
     );
     expect(() =>
-      report([
-        "audit",
-        "--execution-row",
-        "1",
-        "--db",
-        relative(repoRoot, controlledPortableAuditIndexPath),
-      ]),
+      auditPortableReportBundle(
+        relative(repoRoot, controlledPortableIndexPath),
+      ),
     ).toThrow(/Portable report artifact hash verification failed/);
-    writeFileSync(
-      controlledPortableAuditTimingPath,
-      controlledPortableAuditTimingBytes,
-    );
+    writeFileSync(controlledTimingPath, controlledTimingBytes);
     expect(
       report([
         "audit",

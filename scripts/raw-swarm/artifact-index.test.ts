@@ -50,6 +50,18 @@ function temporaryDirectory(): string {
   return directory;
 }
 
+function directoryTreeEntries(root: string): readonly string[] {
+  if (!existsSync(root)) return [];
+  return readdirSync(root, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = resolve(root, entry.name);
+      return entry.isDirectory()
+        ? [path, ...directoryTreeEntries(path)]
+        : [path];
+    })
+    .sort();
+}
+
 afterEach(() => {
   for (const directory of temporaryDirectories.splice(0)) {
     rmSync(directory, { recursive: true, force: true });
@@ -1187,9 +1199,15 @@ process.stdout.write("opened");`,
       tmpdir(),
       `raw-swarm-direct-index-${randomUUID()}.sqlite`,
     );
+    const entriesBefore = new Set(readdirSync(tmpdir()));
+    const inTreeLockCandidate = ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES[0];
+    const inTreeCandidateEntriesBefore =
+      directoryTreeEntries(inTreeLockCandidate);
     const lockDirectory = artifactIndexLockRootForSource(dbPath);
     expect(lockDirectory).not.toBe(realpathSync(dirname(dbPath)));
-    const entriesBefore = new Set(readdirSync(tmpdir()));
+    expect(lockDirectory).toBe(
+      realpathSync(ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES[1]),
+    );
     try {
       const db = openArtifactIndex(dbPath);
       db.close();
@@ -1199,6 +1217,11 @@ process.stdout.write("opened");`,
       expect(
         entriesAfter.filter(
           (entry) => !entriesBefore.has(entry) && !sourceFiles.has(entry),
+        ),
+      ).toEqual([]);
+      expect(
+        directoryTreeEntries(inTreeLockCandidate).filter(
+          (entry) => !inTreeCandidateEntriesBefore.includes(entry),
         ),
       ).toEqual([]);
     } finally {
@@ -1216,17 +1239,19 @@ process.stdout.write("opened");`,
         candidate,
         `raw-swarm-candidate-index-${randomUUID()}.sqlite`,
       );
+      const entriesBefore = directoryTreeEntries(candidate);
       const selectedLockRoot = artifactIndexLockRootForSource(dbPath);
       expect(selectedLockRoot).not.toBe(realpathSync(candidate));
-      const entriesBefore = new Set(readdirSync(candidate));
       try {
         const db = openArtifactIndex(dbPath);
         db.close();
-        const dbName = basename(dbPath);
-        const sourceFiles = new Set([dbName, `${dbName}-wal`, `${dbName}-shm`]);
         expect(
-          readdirSync(candidate).filter(
-            (entry) => !entriesBefore.has(entry) && !sourceFiles.has(entry),
+          directoryTreeEntries(candidate).filter(
+            (entry) =>
+              !entriesBefore.includes(entry) &&
+              entry !== dbPath &&
+              entry !== `${dbPath}-wal` &&
+              entry !== `${dbPath}-shm`,
           ),
         ).toEqual([]);
       } finally {
@@ -1236,6 +1261,12 @@ process.stdout.write("opened");`,
       }
     },
   );
+
+  test("rejects a source root when no lock-root candidate is outside it", () => {
+    expect(() =>
+      artifactIndexLockRootForSource("/raw-swarm-root-source.sqlite"),
+    ).toThrow(/cannot be separated from the source directory tree: \/$/);
+  });
 
   test("keeps lock identity stable when a child process changes TMPDIR", () => {
     const directory = temporaryDirectory();

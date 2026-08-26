@@ -143,6 +143,31 @@ describe("whole-path performance evidence", () => {
       perCallMilliseconds: 50,
       replayCacheDecision: { admitted: false },
     });
+    const alternateReportingTiming = resolve(
+      directory,
+      "alternate-reporting-timing.json",
+    );
+    writeFileSync(alternateReportingTiming, readFileSync(reportingTiming));
+    writeFileSync(
+      reportingManifest,
+      readFileSync(reportingManifest, "utf8").replace(
+        "reporting-timing.json",
+        "alternate-reporting-timing.json",
+      ),
+    );
+    expect(() =>
+      summarizeControlledExecution({
+        schemaVersion: 1,
+        reviewInvocationEvidencePath: fixture.manifestPath,
+        continuationObservationPath: observations,
+        supervisorTimingPath: timings,
+        reportingTimingPath: reportingTiming,
+        reportingManifestPath: reportingManifest,
+      }),
+    ).toThrow(
+      /Controlled reporting timing does not match its execution artifacts/,
+    );
+    writeReportingTiming(50);
     writeSupervisorTimings("f".repeat(64));
     expect(() =>
       summarizeControlledExecution({
