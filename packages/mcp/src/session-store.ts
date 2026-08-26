@@ -21,7 +21,7 @@ import {
 } from "@dnd/character-sheet-runtime";
 type CharacterId = CharacterSheetId;
 import type {
-  StatBlockCatalog,
+  SrdStatBlockCatalog,
   StatBlockId,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
@@ -153,7 +153,7 @@ export function characterIdFromDraftId(draftId: CharacterDraftId): CharacterId {
 }
 
 export function createMcpSessionStore(input: {
-  readonly statBlockCatalog: StatBlockCatalog;
+  readonly statBlockCatalog: SrdStatBlockCatalog;
   readonly unitLibrary: UnitCatalog;
 }): McpSessionStore {
   const { statBlockCatalog, unitLibrary } = input;
