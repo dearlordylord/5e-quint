@@ -41,6 +41,7 @@ import {
   rollbackScenarioRejectionBundle,
   publishScenarioRejectionBundle,
   retainCodexInvocationArtifacts,
+  generationPreamble,
 } from "./generate-scenario.ts";
 import { openArtifactIndex } from "./artifact-index.ts";
 import {
@@ -423,6 +424,24 @@ const readyQuality = {
 };
 
 describe("scenario generation campaign", () => {
+  test("generation prompt names the resolved HP boundary", () => {
+    const prompt = generationPreamble(
+      ["Synthetic Skeleton"],
+      "availableOnly",
+      "supportedOnly",
+      "bounded capability context",
+    );
+    expect(prompt).toContain(
+      "battleCreatureInitFromStatBlock accepts a resolved currentHp",
+    );
+    expect(prompt).toContain(
+      "does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow",
+    );
+    expect(prompt).toContain(
+      "A supportedOnly Candidate requiring that absent operation must be revised",
+    );
+  });
+
   test("retains a settled failed-invocation sidecar beside the Campaign event stream", () => {
     const root = mkdtempSync(resolve(tmpdir(), "scenario-retained-sidecar-"));
     const sourceDirectory = resolve(root, "source");
@@ -730,9 +749,9 @@ describe("scenario generation campaign", () => {
                 ? {
                     classification: "needsRevision" as const,
                     evidence:
-                      "The first revision lacks an objective-bearing setup.",
+                      "The first revision contains conflicting numeric spatial authorities.",
                     critique:
-                      "Give every combatant a strategy-bearing objective.",
+                      "Reconcile every quantity, position, and derived distance before ready classification.",
                   }
                 : readyQuality.scenarioQuality,
           };
@@ -744,7 +763,9 @@ describe("scenario generation campaign", () => {
     expect(reviewCount).toBe(2);
     expect(generationInputs[1]).toMatchObject({
       priorRevision: {
-        critiques: ["Give every combatant a strategy-bearing objective."],
+        critiques: [
+          "Reconcile every quantity, position, and derived distance before ready classification.",
+        ],
       },
     });
   });
@@ -1612,13 +1633,17 @@ describe("scenario generation campaign", () => {
       .fn()
       .mockResolvedValueOnce({
         classification: "unsupported",
-        evidence: "The current public SDK cannot represent elevation.",
-        critique: "Remove elevation-dependent mechanics.",
+        evidence:
+          "The public SDK accepts resolved currentHp but does not surface the Table's fixed-vs-rolled monster Hit Points choice or roll workflow.",
+        critique:
+          "Remove the absent fixed-vs-rolled monster Hit Points operation from this supportedOnly Candidate.",
       })
       .mockResolvedValue({
         classification: "unsupported",
-        evidence: "The current public SDK cannot represent elevation.",
-        critique: "Remove elevation-dependent mechanics.",
+        evidence:
+          "The public SDK accepts resolved currentHp but does not surface the Table's fixed-vs-rolled monster Hit Points choice or roll workflow.",
+        critique:
+          "Remove the absent fixed-vs-rolled monster Hit Points operation from this supportedOnly Candidate.",
       });
     const result = await runScenarioCampaign(
       {
@@ -1659,7 +1684,11 @@ describe("scenario generation campaign", () => {
     );
 
     expect(generationInputs[1]).toMatchObject({
-      priorRevision: { critiques: ["Remove elevation-dependent mechanics."] },
+      priorRevision: {
+        critiques: [
+          "Remove the absent fixed-vs-rolled monster Hit Points operation from this supportedOnly Candidate.",
+        ],
+      },
     });
     expect(Either.isRight(result)).toBe(true);
     if (Either.isRight(result)) {
