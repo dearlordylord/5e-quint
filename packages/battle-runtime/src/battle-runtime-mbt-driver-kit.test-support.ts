@@ -16026,14 +16026,26 @@ function skeletonShortswordSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
+  const skeleton = session.state.combatants.get(skeletonId);
+  if (skeleton?.origin.kind !== "statBlock") {
+    throw new Error("Expected the Skeleton Stat Block origin.");
+  }
+  const shortswordBinding = skeleton.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "attack" &&
+      binding.procedure.section === "actions" &&
+      binding.procedure.procedureOrdinal === 1,
+  );
+  if (shortswordBinding === undefined) {
+    throw new Error("Expected the authored ordinal 1 Shortsword binding.");
+  }
   const matchingActs = discoverBattleActs(session).filter(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === skeletonId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.procedureRef !== undefined &&
-      candidate.subject.statBlockDamageNotation === undefined &&
-      candidate.summary === "Take the Attack action with Shortsword.",
+      candidate.subject.procedureRef === shortswordBinding.procedureRef &&
+      candidate.subject.statBlockDamageNotation === undefined,
   );
   if (matchingActs.length !== 1) {
     throw new Error("Expected one rolled Skeleton Shortsword attack act.");
