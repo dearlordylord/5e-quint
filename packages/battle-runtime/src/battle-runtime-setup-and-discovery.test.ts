@@ -352,12 +352,13 @@ describe("battle runtime: setup and discovery", () => {
         ],
       });
     const session = makeSession("damage");
-    const unarmedStrike = session.context.statBlocks
-      .get(skeletonId)
-      ?.procedures.find(
-        (procedure) =>
-          procedure.kind === "attack" && procedure.name === "Unarmed Strike",
-      );
+    const skeleton = session.state.combatants.get(skeletonId);
+    if (skeleton?.origin.kind !== "statBlock") {
+      throw new Error("Expected the Skeleton Stat Block origin.");
+    }
+    const unarmedStrike = skeleton.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "unarmedStrike",
+    );
 
     expect(unarmedStrike).toBeDefined();
     const attackAct = snapshotBattle(session.state).acts.find(

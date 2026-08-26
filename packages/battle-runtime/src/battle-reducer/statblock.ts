@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   CharacterAttackExecutionSelection,
   StatBlockAttackExecutionSelection,
@@ -21,12 +22,27 @@ import {
 import {
   statBlockProcedureBinding,
   spendStatBlockProcedureResources,
+  type StatBlockMultiattackProcedure,
+  type StatBlockProcedureBindingFor,
 } from "../stat-block-execution-state.ts";
 export { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
+import { combatantHasSlowActivePenalties } from "./slow-active-penalties-runtime.ts";
+
+export function statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+  actor: StatBlockBattleCreatureState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+): ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef> {
+  const [consumedProcedureRef, ...pendingProcedureRefs] =
+    binding.procedure.dispatchProcedureRefs;
+  const effectivePendingProcedureRefs = combatantHasSlowActivePenalties(actor)
+    ? []
+    : pendingProcedureRefs;
+  return [consumedProcedureRef, ...effectivePendingProcedureRefs];
+}
 
 export function attackActionOptionIsOrdinaryAttackAction(
   state: BattleState,
