@@ -1,6 +1,12 @@
-import { Schema } from "effect";
+import { Effect, Schema, Tuple } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import { StatBlockId, UnitId, type ClassName } from "@dnd/shared/game-facts";
+import {
+  StatBlockId,
+  UnitId,
+  type ClassName,
+  type StatBlockId as StatBlockIdType,
+  type UnitId as UnitIdType,
+} from "@dnd/shared/game-facts";
 import {
   AbilitySchema,
   AmmunitionKindSchema,
@@ -46,76 +52,96 @@ import {
   strictStruct,
 } from "./schema-helpers.ts";
 
-const surfaceIdentity = <A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+const surfaceIdentity = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   kind: SurfaceIdentityKind,
-) =>
+): Schema.Codec<A, I, RD, RE> =>
   surfaceSchemaRole(schema, {
     category: "identity",
     kind,
   });
 
-const surfaceProtocol = <A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+const surfaceProtocol = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   kind: SurfaceProtocolKind,
-) => surfaceSchemaRole(schema, { category: "protocol", kind });
+): Schema.Codec<A, I, RD, RE> =>
+  surfaceSchemaRole(schema, { category: "protocol", kind });
 
-const surfaceReference = <A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+const surfaceReference = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitReferenceRelation,
-) =>
-  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
+): Schema.Codec<UnitIdType, I, RD, RE> => {
+  const role = {
     category: "reference",
     relation,
     targetKind: "unit",
-  });
+  } as const;
+  return surfaceSchemaRole(
+    surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(UnitId)),
+    role,
+  );
+};
 
-const surfaceDependency = <A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+const surfaceDependency = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceUnitDependencyRelation,
-) =>
-  surfaceSchemaRole(Schema.typeSchema(schema.pipe(Schema.compose(UnitId))), {
+): Schema.Codec<UnitIdType, I, RD, RE> => {
+  const role = {
     category: "dependency",
     relation,
     targetKind: "unit",
-  });
+  } as const;
+  return surfaceSchemaRole(
+    surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(UnitId)),
+    role,
+  );
+};
 
-const surfaceStatBlockReference = <A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+const surfaceStatBlockReference = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceStatBlockReferenceRelation,
-) =>
-  surfaceSchemaRole(
-    Schema.typeSchema(schema.pipe(Schema.compose(StatBlockId))),
-    {
-      category: "reference",
-      relation,
-      targetKind: "statBlock",
-    },
+): Schema.Codec<StatBlockIdType, I, RD, RE> => {
+  const role = {
+    category: "reference",
+    relation,
+    targetKind: "statBlock",
+  } as const;
+  return surfaceSchemaRole(
+    surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(StatBlockId)),
+    role,
   );
+};
 
-const surfaceStatBlockDependency = <A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+const surfaceStatBlockDependency = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   relation: SurfaceStatBlockDependencyRelation,
-) =>
-  surfaceSchemaRole(
-    Schema.typeSchema(schema.pipe(Schema.compose(StatBlockId))),
-    {
-      category: "dependency",
-      relation,
-      targetKind: "statBlock",
-    },
+): Schema.Codec<StatBlockIdType, I, RD, RE> => {
+  const role = {
+    category: "dependency",
+    relation,
+    targetKind: "statBlock",
+  } as const;
+  return surfaceSchemaRole(
+    surfaceSchemaRole(schema, role).pipe(Schema.decodeTo(StatBlockId)),
+    role,
   );
+};
 
-const surfaceProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
+const surfaceProse = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
+): Schema.Codec<A, I, RD, RE> =>
   surfaceSchemaRole(schema, { category: "prose", evidence: "summary" });
 
-const surfaceExactProse = <A, I, R>(schema: Schema.Schema<A & string, I, R>) =>
+const surfaceExactProse = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
+): Schema.Codec<A, I, RD, RE> =>
   surfaceSchemaRole(schema, { category: "prose", evidence: "exact" });
 
-const surfaceProjection = <A, I, R>(
-  schema: Schema.Schema<A & string, I, R>,
+const surfaceProjection = <A extends string, I, RD, RE>(
+  schema: Schema.Codec<A, I, RD, RE>,
   kind: SurfaceProjectionKind,
-) => surfaceSchemaRole(schema, { category: "projection", kind });
+): Schema.Codec<A, I, RD, RE> =>
+  surfaceSchemaRole(schema, { category: "projection", kind });
 // Handwritten spell / mechanics surface schema slice built on the shared base
 // vocabulary in schema-base.ts.
 
@@ -123,11 +149,10 @@ export const SPELL_SLOT_LEVELS = [
   1, 2, 3, 4, 5, 6, 7, 8, 9,
 ] as const satisfies ReadonlyArray<number>;
 
-export const SpellLevelSchema = Schema.Literal(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
-export const SpellSlotLevelSchema = Schema.Literal(...SPELL_SLOT_LEVELS);
+export const SpellLevelSchema = Schema.Literals([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+export const SpellSlotLevelSchema = Schema.Literals(SPELL_SLOT_LEVELS);
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
 );
 type StandardActionKind = Schema.Schema.Type<typeof StandardActionKindSchema>;
 
@@ -138,7 +163,7 @@ const ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT = [
   "utilize",
 ] as const satisfies ReadonlyArray<StandardActionKind>;
 
-export const SpellSchoolSchema = Schema.Literal(
+export const SpellSchoolSchema = Schema.Literals([
   "abjuration",
   "conjuration",
   "divination",
@@ -147,7 +172,7 @@ export const SpellSchoolSchema = Schema.Literal(
   "illusion",
   "necromancy",
   "transmutation",
-);
+]);
 
 const DETECTION_PROPERTIES = [
   "magic",
@@ -156,7 +181,7 @@ const DETECTION_PROPERTIES = [
   "thoughts",
   "traps",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
-const DetectionPropertySchema = Schema.Literal(...DETECTION_PROPERTIES);
+const DetectionPropertySchema = Schema.Literals(DETECTION_PROPERTIES);
 type DetectionProperty = Schema.Schema.Type<typeof DetectionPropertySchema>;
 
 const LOCATE_KIND_SUBJECTS = [
@@ -164,17 +189,17 @@ const LOCATE_KIND_SUBJECTS = [
   "plant_creature",
   "nonmagical_plant",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
-const LocateKindSubjectSchema = Schema.Literal(...LOCATE_KIND_SUBJECTS);
+const LocateKindSubjectSchema = Schema.Literals(LOCATE_KIND_SUBJECTS);
 type LocateKindSubject = Schema.Schema.Type<typeof LocateKindSubjectSchema>;
 
-const LiquidSurfaceTraversalExamplesSchema = Schema.Tuple(
+const LiquidSurfaceTraversalExamplesSchema = Schema.Tuple([
   Schema.Literal("water"),
   Schema.Literal("acid"),
   Schema.Literal("mud"),
   Schema.Literal("snow"),
   Schema.Literal("quicksand"),
   Schema.Literal("lava"),
-);
+]);
 
 export const LiquidSurfaceTraversalSchema = strictStruct({
   kind: Schema.Literal("grant_liquid_surface_traversal"),
@@ -193,10 +218,10 @@ export const LiquidSurfaceTraversalSchema = strictStruct({
   }),
   surfaceLiquidTransition: strictStruct({
     deliberateCost: Schema.Literal("bonus_action"),
-    directions: Schema.Tuple(
+    directions: Schema.Tuple([
       Schema.Literal("surface_to_liquid"),
       Schema.Literal("liquid_to_surface"),
-    ),
+    ]),
     fallingIntoLiquid: Schema.Literal(
       "passes_through_surface_into_liquid_below",
     ),
@@ -309,10 +334,10 @@ export const EtherealPhaseEffectSchema = strictStruct({
   }),
   interaction: Schema.Literal("ethereal_plane_creatures_only"),
   returnPlan: strictStruct({
-    timings: Schema.Tuple(
+    timings: Schema.Tuple([
       Schema.Literal("start_of_next_caster_turn"),
       Schema.Literal("effect_end_if_on_destination"),
-    ),
+    ]),
     placement: strictStruct({
       kind: Schema.Literal(
         "visible_unoccupied_space_within_feet_of_origin_space",
@@ -396,9 +421,11 @@ export const CastTimeEffectModeChoiceSchema = Schema.Struct({
       id: surfaceProtocol(Schema.String, "optionId"),
       displayName: surfaceIdentity(Schema.String, "displayName"),
       effects: optionalExact(
-        Schema.suspend(() => nonEmpty(EffectAtomSchema)).annotations({
-          identifier: "EffectAtomArray",
-        }),
+        Schema.suspend(() => nonEmpty(EffectAtomSchema)).pipe(
+          Schema.annotate({
+            identifier: "EffectAtomArray",
+          }),
+        ),
       ),
     }),
   ),
@@ -411,7 +438,7 @@ export const HoleLabelSchema = surfaceProjection(
   "derived-label",
 );
 
-function makeHoleSchema<A, I, R>(value: Schema.Schema<A, I, R>) {
+function makeHoleSchema<A, E, RD, RE>(value: Schema.Codec<A, E, RD, RE>) {
   return Schema.Struct({
     kind: Schema.Literal("hole"),
     holeId: HoleIdSchema,
@@ -426,7 +453,7 @@ export const CastTimeChoiceAbilitySchema = Schema.Struct({
   options: nonEmpty(AbilitySchema),
 });
 
-export const AbilityFilterSchema = Schema.Union(
+export const AbilityFilterSchema = Schema.Union([
   nonEmpty(AbilitySchema),
   makeHoleSchema(CastTimeChoiceAbilitySchema),
   Schema.Struct({
@@ -439,9 +466,9 @@ export const AbilityFilterSchema = Schema.Union(
     value: CastTimeChoiceAbilitySchema,
     label: optionalExact(HoleLabelSchema),
   }),
-);
+]);
 
-export const DamageTypeRefBaseSchema = Schema.Union(
+export const DamageTypeRefBaseSchema = Schema.Union([
   DamageTypeSchema,
   Schema.Struct({
     kind: Schema.Literal("all_damage_types"),
@@ -462,12 +489,12 @@ export const DamageTypeRefBaseSchema = Schema.Union(
     holeId: HoleIdSchema,
     options: DamageTypeChoiceTableSchema,
   }),
-);
+]);
 
-export const DamageTypeRefSchema = Schema.Union(
+export const DamageTypeRefSchema = Schema.Union([
   DamageTypeRefBaseSchema,
   makeHoleSchema(DamageTypeRefBaseSchema),
-);
+]);
 
 const AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema = strictStruct({
   kind: Schema.Literal("choice_table"),
@@ -476,7 +503,7 @@ const AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema = strictStruct({
     "holeId",
   ),
   label: surfaceIdentity(Schema.Literal("natural weapon growth"), "label"),
-  options: Schema.Tuple(
+  options: Schema.Tuple([
     strictStruct({
       id: surfaceIdentity(Schema.Literal("claws"), "id"),
       displayName: surfaceIdentity(Schema.Literal("claws"), "displayName"),
@@ -497,10 +524,10 @@ const AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema = strictStruct({
       displayName: surfaceIdentity(Schema.Literal("hooves"), "displayName"),
       damageType: Schema.Literal("bludgeoning"),
     }),
-  ),
+  ]),
 });
 
-export const ActionRestrictionAllowedActionSchema = Schema.Union(
+export const ActionRestrictionAllowedActionSchema = Schema.Union([
   strictStruct({
     action: Schema.Literal("attack"),
     attackLimit: strictStruct({
@@ -509,11 +536,11 @@ export const ActionRestrictionAllowedActionSchema = Schema.Union(
     }),
   }),
   strictStruct({
-    action: Schema.Literal(...ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT),
+    action: Schema.Literals(ACTION_RESTRICTION_ACTIONS_WITHOUT_ATTACK_LIMIT),
   }),
-);
+]);
 
-export const ActionRestrictionSchema = Schema.Union(
+export const ActionRestrictionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("none"),
   }),
@@ -525,7 +552,7 @@ export const ActionRestrictionSchema = Schema.Union(
     kind: Schema.Literal("allow_only"),
     actions: nonEmpty(ActionRestrictionAllowedActionSchema),
   }),
-);
+]);
 
 export const CommandTargetNextTurnOptionsSchema = strictStruct({
   approach: strictStruct({
@@ -597,7 +624,7 @@ const MagicWeaponEnhancementBonusSchema = strictStruct({
   kind: Schema.Literal("threshold_tiers"),
   axis: Schema.Literal("slot"),
   base: Schema.Literal(1),
-  tiers: Schema.Tuple(
+  tiers: Schema.Tuple([
     strictStruct({
       atLevel: Schema.Literal(3),
       value: Schema.Literal(2),
@@ -606,7 +633,7 @@ const MagicWeaponEnhancementBonusSchema = strictStruct({
       atLevel: Schema.Literal(6),
       value: Schema.Literal(3),
     }),
-  ),
+  ]),
   sign: Schema.Literal("+"),
 });
 
@@ -619,7 +646,7 @@ export const ForceMovePushEffectSchema = strictStruct({
 
 export const ForceMovePullSlideEffectSchema = strictStruct({
   kind: Schema.Literal("force_move"),
-  movementKind: Schema.Literal("pull", "slide"),
+  movementKind: Schema.Literals(["pull", "slide"]),
   distanceFeet: PositiveIntegerSchema,
 });
 
@@ -630,11 +657,11 @@ export const ForceMoveAnyDirectionEffectSchema = strictStruct({
   distanceFeet: PositiveIntegerSchema,
 });
 
-export const ForceMoveEffectSchema = Schema.Union(
+export const ForceMoveEffectSchema = Schema.Union([
   ForceMovePushEffectSchema,
   ForceMovePullSlideEffectSchema,
   ForceMoveAnyDirectionEffectSchema,
-);
+]);
 
 export const ActionBonusActionChoiceEffectSchema = strictStruct({
   kind: Schema.Literal("choose_action_or_bonus_action_each_turn"),
@@ -663,10 +690,10 @@ type Skill = Schema.Schema.Type<typeof SkillSchema>;
 type Condition = Schema.Schema.Type<typeof ConditionSchema>;
 type CreatureType = Schema.Schema.Type<typeof CreatureTypeSchema>;
 type Ability = Schema.Schema.Type<typeof AbilitySchema>;
-const SpellcastingAbilityCheckAbilitySchema = Schema.Union(
+const SpellcastingAbilityCheckAbilitySchema = Schema.Union([
   AbilitySchema,
   Schema.Literal("caster_spellcasting_ability"),
-);
+]);
 type SpellcastingAbilityCheckAbility = Schema.Schema.Type<
   typeof SpellcastingAbilityCheckAbilitySchema
 >;
@@ -2033,56 +2060,58 @@ type OngoingOperation = {
   readonly usageLimit?: UsageLimit;
 };
 
-export const ReactionTriggerSchema: Schema.suspend<
+export const ReactionTriggerSchema: Schema.Codec<
   ReactionTrigger,
-  ReactionTrigger,
+  unknown,
+  never,
   never
-> = Schema.suspend(() =>
-  Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("hit_by_attack_roll"),
-      weaponFilter: optionalExact(WeaponFilterSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("takes_damage_from_creature"),
-      requiresVisibleCreature: optionalExact(Schema.Literal(true)),
-      rangeFeet: optionalExact(Schema.Number),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("self_or_visible_creature_falls"),
-      rangeFeet: Schema.Literal(60),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("targeted_by_named_spell"),
-      spellId: surfaceReference(Schema.String, "spell-reference"),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("creature_casts_spell"),
-      components: nonEmpty(Schema.Literal("V", "S", "M")),
-      spellLevelAtMost: optionalExact(SpellLevelSchema),
-      requiresVisibleCaster: optionalExact(Schema.Literal(true)),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("spell_save_outcome"),
-      outcome: Schema.Literal("success", "failure"),
-      spellLevelAtMost: optionalExact(SpellLevelSchema),
-      spellSchool: optionalExact(SpellSchoolSchema),
-      spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
-      spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("any_of"),
-      triggers: nonEmpty(ReactionTriggerSchema),
-    }),
-  ),
-).annotations({ identifier: "ReactionTrigger" });
+> = Schema.suspend(
+  (): Schema.Codec<ReactionTrigger, unknown, never, never> =>
+    Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("hit_by_attack_roll"),
+        weaponFilter: optionalExact(WeaponFilterSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("takes_damage_from_creature"),
+        requiresVisibleCreature: optionalExact(Schema.Literal(true)),
+        rangeFeet: optionalExact(Schema.Number),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("self_or_visible_creature_falls"),
+        rangeFeet: Schema.Literal(60),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("targeted_by_named_spell"),
+        spellId: surfaceReference(Schema.String, "spell-reference"),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("creature_casts_spell"),
+        components: nonEmpty(Schema.Literals(["V", "S", "M"])),
+        spellLevelAtMost: optionalExact(SpellLevelSchema),
+        requiresVisibleCaster: optionalExact(Schema.Literal(true)),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("spell_save_outcome"),
+        outcome: Schema.Literals(["success", "failure"]),
+        spellLevelAtMost: optionalExact(SpellLevelSchema),
+        spellSchool: optionalExact(SpellSchoolSchema),
+        spellTargetsOnlySelf: optionalExact(Schema.Literal(true)),
+        spellHasNoAreaOfEffect: optionalExact(Schema.Literal(true)),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("any_of"),
+        triggers: nonEmpty(ReactionTriggerSchema),
+      }),
+    ]),
+).pipe(Schema.annotate({ identifier: "ReactionTrigger" }));
 
 export const BonusActionTriggerSchema = Schema.Struct({
   kind: Schema.Literal("after_hit_with"),
-  attack: Schema.Literal("melee_weapon_or_unarmed_strike", "weapon"),
+  attack: Schema.Literals(["melee_weapon_or_unarmed_strike", "weapon"]),
 });
 
-export const CastingTimeSchema = Schema.Union(
+export const CastingTimeSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("action"),
     ritual: optionalExact(Schema.Literal(true)),
@@ -2097,39 +2126,43 @@ export const CastingTimeSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("minutes"),
-    amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+    amount: Schema.Number.pipe(
+      Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+    ),
     ritual: Schema.Boolean,
   }),
   Schema.Struct({
     kind: Schema.Literal("hours"),
-    amount: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+    amount: Schema.Number.pipe(
+      Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+    ),
     ritual: Schema.Boolean,
   }),
-);
+]);
 
-export const RangeSchema = Schema.Union(
+export const RangeSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("self") }),
   Schema.Struct({ kind: Schema.Literal("touch") }),
   Schema.Struct({ kind: Schema.Literal("unlimited") }),
   Schema.Struct({
     kind: Schema.Literal("point"),
-    feet: Schema.Union(Schema.Number, ThresholdTiersNumberSchema),
+    feet: Schema.Union([Schema.Number, ThresholdTiersNumberSchema]),
   }),
-);
+]);
 
 export const MaterialComponentSchema = strictStruct({
   kind: Schema.Literal("paired_worn_items"),
   itemKind: Schema.Literal("ring"),
   material: Schema.Literal("platinum"),
   minimumValueGpEach: PositiveIntegerSchema,
-  wornBy: Schema.Tuple(Schema.Literal("caster"), Schema.Literal("target")),
+  wornBy: Schema.Tuple([Schema.Literal("caster"), Schema.Literal("target")]),
   requiredFor: Schema.Literal("spell_duration"),
 });
 
 const GenericComponentsSchema = Schema.Struct({
   v: Schema.Boolean,
   s: Schema.Boolean,
-  m: Schema.Union(Schema.Literal(false), surfaceExactProse(Schema.String)),
+  m: Schema.Union([Schema.Literal(false), surfaceExactProse(Schema.String)]),
   materialCostGp: optionalExact(Schema.Number),
   materialConsumed: optionalExact(Schema.Literal(true)),
 });
@@ -2140,12 +2173,12 @@ const StructuredMaterialComponentsSchema = strictStruct({
   m: MaterialComponentSchema,
 });
 
-export const ComponentsSchema = Schema.Union(
+export const ComponentsSchema = Schema.Union([
   GenericComponentsSchema,
   StructuredMaterialComponentsSchema,
-);
+]);
 
-export const DurationEndTriggerSchema = Schema.Union(
+export const DurationEndTriggerSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("target_makes_attack_roll") }),
   Schema.Struct({ kind: Schema.Literal("target_deals_damage") }),
   Schema.Struct({ kind: Schema.Literal("target_casts_spell") }),
@@ -2160,7 +2193,7 @@ export const DurationEndTriggerSchema = Schema.Union(
   }),
   Schema.Struct({ kind: Schema.Literal("area_dispersed_by_strong_wind") }),
   Schema.Struct({ kind: Schema.Literal("caster_lets_go_of_attached_weapon") }),
-);
+]);
 
 export const TimedPermanentAfterSchema = Schema.Struct({
   kind: Schema.Literal("repeated_casts"),
@@ -2201,11 +2234,12 @@ type Duration =
       }>;
     };
 
-const DurationBranchSchema: Schema.Schema<
+const DurationBranchSchema: Schema.Codec<
   DurationBranch,
-  DurationBranch,
+  unknown,
+  never,
   never
-> = Schema.Union(
+> = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("instantaneous"),
   }),
@@ -2223,12 +2257,12 @@ const DurationBranchSchema: Schema.Schema<
   }),
   Schema.Struct({
     kind: Schema.Literal("permanent"),
-    endsOn: optionalExact(nonEmpty(Schema.Literal("dispel", "damage"))),
+    endsOn: optionalExact(nonEmpty(Schema.Literals(["dispel", "damage"]))),
   }),
-);
+]);
 
-export const DurationSchema: Schema.Schema<Duration, Duration, never> =
-  Schema.Union(
+export const DurationSchema: Schema.Codec<Duration, unknown, never, never> =
+  Schema.Union([
     DurationBranchSchema,
     Schema.Struct({
       kind: Schema.Literal("slot_tiered"),
@@ -2236,14 +2270,13 @@ export const DurationSchema: Schema.Schema<Duration, Duration, never> =
       tiers: nonEmpty(
         Schema.Struct({
           atSlot: Schema.Number.pipe(
-            Schema.int(),
-            Schema.greaterThanOrEqualTo(1),
+            Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
           ),
           duration: DurationBranchSchema,
         }),
       ),
     }),
-  );
+  ]);
 
 export const SpellMechanicsCommonHeaderSchema = Schema.Struct({
   level: SpellLevelSchema,
@@ -2253,19 +2286,20 @@ export const SpellMechanicsCommonHeaderSchema = Schema.Struct({
   duration: DurationSchema,
 });
 
-export const SpellMechanicsHeaderSchema = Schema.extend(
-  SpellMechanicsCommonHeaderSchema,
-  Schema.Struct({
-    castingTime: CastingTimeSchema,
-  }),
+export const SpellMechanicsHeaderSchema = SpellMechanicsCommonHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    Schema.Struct({
+      castingTime: CastingTimeSchema,
+    }).fields,
+  ),
 );
 
 export const TargetTypeFilterSchema = nonEmpty(CreatureTypeSchema);
 
-export const AreaOccupantDispositionFilterSchema = Schema.Literal(
+export const AreaOccupantDispositionFilterSchema = Schema.Literals([
   "friendly_to_source",
   "hostile_to_source",
-);
+]);
 export const AreaOccupantPerceptionFilterSchema = Schema.Literal(
   "can_see_area_effect",
 );
@@ -2288,52 +2322,52 @@ const TARGET_KINDS = [
   "object",
   "magical_effect",
 ] as const satisfies ReadonlyNonEmptyArray<string>;
-export const TargetKindSchema = Schema.Literal(...TARGET_KINDS);
+export const TargetKindSchema = Schema.Literals(TARGET_KINDS);
 export const TargetDispositionSchema = Schema.Literal("willing");
 export const TargetVisibilityRequirementSchema =
   Schema.Literal("caster_can_see");
-export const TargetStateFilterSchema = Schema.Union(
-  Schema.Tuple(Schema.Literal("falling")),
-  Schema.Tuple(Schema.Literal("zero_hp_not_dead")),
-  Schema.Tuple(Schema.Literal("dead")),
-);
+export const TargetStateFilterSchema = Schema.Union([
+  Schema.Tuple([Schema.Literal("falling")]),
+  Schema.Tuple([Schema.Literal("zero_hp_not_dead")]),
+  Schema.Tuple([Schema.Literal("dead")]),
+]);
 const CreatureTargetKindsSchema = nonEmpty(Schema.Literal("creature"));
-const CreatureOrObjectTargetKindsSchema = Schema.Union(
-  Schema.Tuple(Schema.Literal("creature"), Schema.Literal("object")),
-  Schema.Tuple(Schema.Literal("object"), Schema.Literal("creature")),
-);
-const CreatureObjectOrLocationTargetKindsSchema = Schema.Union(
-  Schema.Tuple(
+const CreatureOrObjectTargetKindsSchema = Schema.Union([
+  Schema.Tuple([Schema.Literal("creature"), Schema.Literal("object")]),
+  Schema.Tuple([Schema.Literal("object"), Schema.Literal("creature")]),
+]);
+const CreatureObjectOrLocationTargetKindsSchema = Schema.Union([
+  Schema.Tuple([
     Schema.Literal("creature"),
     Schema.Literal("object"),
     Schema.Literal("location"),
-  ),
-  Schema.Tuple(
+  ]),
+  Schema.Tuple([
     Schema.Literal("creature"),
     Schema.Literal("location"),
     Schema.Literal("object"),
-  ),
-  Schema.Tuple(
+  ]),
+  Schema.Tuple([
     Schema.Literal("object"),
     Schema.Literal("creature"),
     Schema.Literal("location"),
-  ),
-  Schema.Tuple(
+  ]),
+  Schema.Tuple([
     Schema.Literal("object"),
     Schema.Literal("location"),
     Schema.Literal("creature"),
-  ),
-  Schema.Tuple(
+  ]),
+  Schema.Tuple([
     Schema.Literal("location"),
     Schema.Literal("creature"),
     Schema.Literal("object"),
-  ),
-  Schema.Tuple(
+  ]),
+  Schema.Tuple([
     Schema.Literal("location"),
     Schema.Literal("object"),
     Schema.Literal("creature"),
-  ),
-);
+  ]),
+]);
 
 export const TargetRelativePositionSchema = strictStruct({
   kind: Schema.Literal("within_feet_of_attachment"),
@@ -2346,9 +2380,11 @@ export const CreatureTargetSelectionSchema = strictStruct({
   targetKinds: CreatureTargetKindsSchema,
   typeFilter: optionalExact(TargetTypeFilterSchema),
   creatureSizeFilter: optionalExact(
-    Schema.suspend(() => CreatureSizeFilterSchema).annotations({
-      identifier: "CreatureSizeFilter",
-    }),
+    Schema.suspend(() => CreatureSizeFilterSchema).pipe(
+      Schema.annotate({
+        identifier: "CreatureSizeFilter",
+      }),
+    ),
   ),
   visibility: optionalExact(TargetVisibilityRequirementSchema),
   relativePosition: optionalExact(TargetRelativePositionSchema),
@@ -2358,13 +2394,15 @@ export const TargetCastingRequirementSchema = strictStruct({
   kind: Schema.Literal("remain_within_spell_range_for_entire_casting"),
 });
 
-export const TargetSelectionSchema = Schema.Union(
+export const TargetSelectionSchema = Schema.Union([
   strictStruct({
     mode: Schema.Literal("one"),
     targetKinds: CreatureOrObjectTargetKindsSchema,
-    objectFilter: Schema.suspend(() => ObjectFilterSchema).annotations({
-      identifier: "ObjectFilter",
-    }),
+    objectFilter: Schema.suspend(() => ObjectFilterSchema).pipe(
+      Schema.annotate({
+        identifier: "ObjectFilter",
+      }),
+    ),
     creatureDisposition: optionalExact(TargetDispositionSchema),
   }),
   strictStruct({
@@ -2395,11 +2433,11 @@ export const TargetSelectionSchema = Schema.Union(
   }),
   strictStruct({
     mode: Schema.Literal("choose_up_to"),
-    count: Schema.Union(
+    count: Schema.Union([
       PositiveIntegerSchema,
       TargetCountSlotScalingSchema,
       TargetCountThresholdTiersSchema,
-    ),
+    ]),
     repeatsAllowed: optionalExact(Schema.Literal(true)),
     targetKinds: optionalExact(nonEmpty(TargetKindSchema)),
     typeFilter: optionalExact(TargetTypeFilterSchema),
@@ -2407,11 +2445,11 @@ export const TargetSelectionSchema = Schema.Union(
   }),
   strictStruct({
     mode: Schema.Literal("choose_up_to"),
-    count: Schema.Union(
+    count: Schema.Union([
       PositiveIntegerSchema,
       TargetCountSlotScalingSchema,
       TargetCountThresholdTiersSchema,
-    ),
+    ]),
     repeatsAllowed: optionalExact(Schema.Literal(true)),
     targetKinds: CreatureTargetKindsSchema,
     typeFilter: optionalExact(TargetTypeFilterSchema),
@@ -2419,11 +2457,11 @@ export const TargetSelectionSchema = Schema.Union(
   }),
   strictStruct({
     mode: Schema.Literal("choose_up_to"),
-    count: Schema.Union(
+    count: Schema.Union([
       PositiveIntegerSchema,
       TargetCountSlotScalingSchema,
       TargetCountThresholdTiersSchema,
-    ),
+    ]),
     repeatsAllowed: optionalExact(Schema.Literal(true)),
     targetKinds: CreatureTargetKindsSchema,
     disposition: TargetDispositionSchema,
@@ -2450,28 +2488,28 @@ export const TargetSelectionSchema = Schema.Union(
     stateFilter: optionalExact(TargetStateFilterSchema),
     visibility: optionalExact(TargetVisibilityRequirementSchema),
   }),
-);
+]);
 
-export const AreaOriginSchema = Schema.Union(
+export const AreaOriginSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("point_within_range") }),
   Schema.Struct({ kind: Schema.Literal("on_primary_target") }),
   Schema.Struct({ kind: Schema.Literal("on_attached_creature") }),
   Schema.Struct({ kind: Schema.Literal("self") }),
-);
+]);
 
-export const AreaShapeDescriptorSchema = Schema.Union(
+export const AreaShapeDescriptorSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("sphere"),
-    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
+    radiusFeet: Schema.Union([Schema.Number, LinearPerLevelNumberSchema]),
   }),
   Schema.Struct({
     kind: Schema.Literal("circle"),
-    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
+    radiusFeet: Schema.Union([Schema.Number, LinearPerLevelNumberSchema]),
   }),
   Schema.Struct({
     kind: Schema.Literal("sphere_cluster"),
     count: Schema.Number,
-    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
+    radiusFeet: Schema.Union([Schema.Number, LinearPerLevelNumberSchema]),
     overlapResolution: Schema.Literal("affect_once"),
   }),
   Schema.Struct({
@@ -2490,12 +2528,12 @@ export const AreaShapeDescriptorSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("cylinder"),
-    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
+    radiusFeet: Schema.Union([Schema.Number, LinearPerLevelNumberSchema]),
     heightFeet: Schema.Number,
   }),
   Schema.Struct({
     kind: Schema.Literal("emanation"),
-    radiusFeet: Schema.Union(Schema.Number, LinearPerLevelNumberSchema),
+    radiusFeet: Schema.Union([Schema.Number, LinearPerLevelNumberSchema]),
   }),
   Schema.Struct({
     kind: Schema.Literal("line"),
@@ -2508,15 +2546,15 @@ export const AreaShapeDescriptorSchema = Schema.Union(
     maxHeightFeet: Schema.Number,
     thicknessFeet: Schema.Number,
   }),
-);
+]);
 
-export const AreaShapeSpecSchema = Schema.Union(
+export const AreaShapeSpecSchema = Schema.Union([
   AreaShapeDescriptorSchema,
   Schema.Struct({
     kind: Schema.Literal("choice"),
     options: nonEmpty(AreaShapeDescriptorSchema),
   }),
-);
+]);
 
 export const MarkTransferEventSchema = Schema.Struct({
   kind: Schema.Literal("target_drops_to_0_hp"),
@@ -2526,14 +2564,14 @@ export const MarkTransferCostSchema = Schema.Struct({
   kind: Schema.Literal("bonus_action"),
 });
 
-export const MarkTransferAvailabilitySchema = Schema.Union(
+export const MarkTransferAvailabilitySchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("after_trigger"),
   }),
   Schema.Struct({
     kind: Schema.Literal("later_turn_after_trigger"),
   }),
-);
+]);
 
 export const MarkTransferSchema = Schema.Struct({
   onEvent: MarkTransferEventSchema,
@@ -2541,10 +2579,10 @@ export const MarkTransferSchema = Schema.Struct({
   cost: MarkTransferCostSchema,
 });
 
-export const AttachmentRangeOriginSchema = Schema.Literal(
+export const AttachmentRangeOriginSchema = Schema.Literals([
   "caster",
   "spell_sensor",
-);
+]);
 
 export const BondRangeSchema = strictStruct({
   kind: Schema.Literal("within_feet"),
@@ -2563,42 +2601,42 @@ export const CreatureTargetAttachmentBaseSchema = Schema.Struct({
   rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
 });
 
-export const CreatureTargetAttachmentSchema = Schema.Union(
+export const CreatureTargetAttachmentSchema = Schema.Union([
   CreatureTargetAttachmentBaseSchema,
   makeHoleSchema(CreatureTargetAttachmentBaseSchema),
-);
+]);
 
-export const TargetAttachmentSchema = Schema.Union(
+export const TargetAttachmentSchema = Schema.Union([
   TargetAttachmentBaseSchema,
   makeHoleSchema(TargetAttachmentBaseSchema),
-);
+]);
 
-export const SizeSchema = Schema.Literal(
+export const SizeSchema = Schema.Literals([
   "tiny",
   "small",
   "medium",
   "large",
   "huge",
   "gargantuan",
-);
+]);
 
 export const CreatureSizeFilterSchema = strictStruct({
   kind: Schema.Literal("exact"),
   creatureSize: SizeSchema,
 });
 
-export const ObjectMaterialSchema = Schema.Literal(
+export const ObjectMaterialSchema = Schema.Literals([
   "metal",
   "flammable",
   "stone",
-);
+]);
 const ObjectKindFilterSchema = Schema.Literal("weapon");
 const ObjectMagicalityFilterSchema = MagicalitySchema;
 
-export const ObjectTargetRelationSchema = Schema.Literal(
+export const ObjectTargetRelationSchema = Schema.Literals([
   "loose",
   "not_worn_or_carried",
-);
+]);
 
 export const ObjectAccessPreventionMeansSchema =
   Schema.Literal("mundane_or_magical");
@@ -2629,10 +2667,10 @@ export const AreaAttachmentBaseSchema = Schema.Struct({
   rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
 });
 
-export const AreaAttachmentSchema = Schema.Union(
+export const AreaAttachmentSchema = Schema.Union([
   AreaAttachmentBaseSchema,
   makeHoleSchema(AreaAttachmentBaseSchema),
-);
+]);
 
 export const SpellSpatialManifestationAttachmentBaseSchema = strictStruct({
   kind: Schema.Literal("spell_spatial_manifestation"),
@@ -2652,12 +2690,12 @@ export const SpellSpatialManifestationAttachmentBaseSchema = strictStruct({
   rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
 });
 
-export const SpellSpatialManifestationAttachmentSchema = Schema.Union(
+export const SpellSpatialManifestationAttachmentSchema = Schema.Union([
   SpellSpatialManifestationAttachmentBaseSchema,
   makeHoleSchema(SpellSpatialManifestationAttachmentBaseSchema),
-);
+]);
 
-export const AttachmentBaseSchema = Schema.Union(
+export const AttachmentBaseSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("self"),
   }),
@@ -2676,7 +2714,7 @@ export const AttachmentBaseSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("object"),
-    count: Schema.Literal(1, 2),
+    count: Schema.Literals([1, 2]),
     filter: optionalExact(ObjectFilterSchema),
     rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
   }),
@@ -2692,12 +2730,12 @@ export const AttachmentBaseSchema = Schema.Union(
     rangeOrigin: optionalExact(AttachmentRangeOriginSchema),
   }),
   SpellSpatialManifestationAttachmentBaseSchema,
-);
+]);
 
-export const AttachmentSchema = Schema.Union(
+export const AttachmentSchema = Schema.Union([
   AttachmentBaseSchema,
   makeHoleSchema(AttachmentBaseSchema),
-);
+]);
 
 export const ExtradimensionalSpaceEffectSchema = strictStruct({
   kind: Schema.Literal("create_extradimensional_space"),
@@ -2758,16 +2796,16 @@ export const ContinuationPredicateSchema = Schema.Struct({
   minimumMultiplicity: Schema.Literal(2),
 });
 
-export const ContinuationLimitSchema = Schema.Union(
+export const ContinuationLimitSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("max_leaps_from_slot_level"),
   }),
   Schema.Struct({
     kind: Schema.Literal("exclude_already_targeted_in_same_cast"),
   }),
-);
+]);
 
-export const DcSourceSchema = Schema.Union(
+export const DcSourceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("caster_spell_save_dc"),
   }),
@@ -2784,18 +2822,18 @@ export const DcSourceSchema = Schema.Union(
     base: Schema.Number,
     ability: AbilitySchema,
   }),
-);
+]);
 
-export const OngoingActionCostSchema = Schema.Union(
+export const OngoingActionCostSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("action") }),
   Schema.Struct({ kind: Schema.Literal("bonus_action") }),
   Schema.Struct({
     kind: Schema.Literal("standard_action"),
     action: StandardActionKindSchema,
   }),
-);
+]);
 
-export const OngoingTurnWindowSchema = Schema.Union(
+export const OngoingTurnWindowSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("effect_turn"),
     turn: Schema.Number,
@@ -2805,15 +2843,15 @@ export const OngoingTurnWindowSchema = Schema.Union(
     from: Schema.Number,
     to: Schema.Number,
   }),
-);
+]);
 
-export const OngoingTriggerSchema = Schema.Union(
+export const OngoingTriggerSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("passive") }),
   Schema.Struct({ kind: Schema.Literal("on_effect_starts") }),
   Schema.Struct({ kind: Schema.Literal("on_caster_attack_hit") }),
   Schema.Struct({
     kind: Schema.Literal("on_caster_deals_damage_to_attachment"),
-    damageSource: nonEmpty(Schema.Literal("attack_roll", "spell")),
+    damageSource: nonEmpty(Schema.Literals(["attack_roll", "spell"])),
   }),
   Schema.Struct({
     kind: Schema.Literal("on_attached_hit_by_attack_roll"),
@@ -2831,7 +2869,7 @@ export const OngoingTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("on_attached_damaged") }),
   Schema.Struct({
     kind: Schema.Literal("on_attached_targeted"),
-    targeting: nonEmpty(Schema.Literal("attack_roll", "damaging_spell")),
+    targeting: nonEmpty(Schema.Literals(["attack_roll", "damaging_spell"])),
     excludes: Schema.Literal("area_of_effect"),
   }),
   Schema.Struct({
@@ -2856,7 +2894,7 @@ export const OngoingTriggerSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("on_creature_attempts_magical_escape"),
-    methods: nonEmpty(Schema.Literal("teleportation", "interplanar_travel")),
+    methods: nonEmpty(Schema.Literals(["teleportation", "interplanar_travel"])),
   }),
   Schema.Struct({ kind: Schema.Literal("on_object_section_destroyed") }),
   Schema.Struct({
@@ -2904,16 +2942,16 @@ export const OngoingTriggerSchema = Schema.Union(
     cost: OngoingActionCostSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("on_creature_studies") }),
-);
+]);
 
-export const OngoingPredicateSchema = Schema.Union(
+export const OngoingPredicateSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("attached_bond_within_range"),
   }),
   Schema.Struct({
     kind: Schema.Literal("at_hp_threshold"),
     threshold: Schema.Number,
-    comparison: Schema.Literal("lte", "eq", "gte"),
+    comparison: Schema.Literals(["lte", "eq", "gte"]),
   }),
   Schema.Struct({
     kind: Schema.Literal("has_condition"),
@@ -2929,9 +2967,9 @@ export const OngoingPredicateSchema = Schema.Union(
     kind: Schema.Literal("caster_within_feet_of_attachment"),
     feet: Schema.Number,
   }),
-);
+]);
 
-const BaseAcReplacementFormulaSchema = Schema.Union(
+const BaseAcReplacementFormulaSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("base_plus_dex"),
     base: Schema.Number,
@@ -2948,7 +2986,7 @@ const BaseAcReplacementFormulaSchema = Schema.Union(
     kind: Schema.Literal("base_plus_dex_cha"),
     base: Schema.Number,
   }),
-);
+]);
 
 export const ModifyAcSetBaseEffectSchema = Schema.Struct({
   kind: Schema.Literal("modify_ac_set_base"),
@@ -2960,12 +2998,12 @@ export const ModifyAcSetFloorEffectSchema = Schema.Struct({
   const: Schema.Number,
 });
 
-export const IllusionSensoryChannelSchema = Schema.Literal(
+export const IllusionSensoryChannelSchema = Schema.Literals([
   "visual",
   "sound",
   "smell",
   "temperature",
-);
+]);
 
 export const CreatedObjectDurabilitySchema = Schema.Struct({
   acValue: Schema.Number,
@@ -2978,14 +3016,14 @@ export const CreatedObjectDurabilitySchema = Schema.Struct({
 export const ShapeShiftCatalogRefFormSourceSchema = Schema.Struct({
   kind: Schema.Literal("catalog_ref"),
   creatureType: CreatureTypeSchema,
-  crBound: Schema.Union(
+  crBound: Schema.Union([
     Schema.Struct({ kind: Schema.Literal("target_cr_or_level") }),
     Schema.Struct({ kind: Schema.Literal("caster_level") }),
     Schema.Struct({
       kind: Schema.Literal("fixed"),
       cr: Schema.Number,
     }),
-  ),
+  ]),
 });
 
 export const ShapeShiftKnownFormsRosterSourceSchema = Schema.Struct({
@@ -2994,7 +3032,7 @@ export const ShapeShiftKnownFormsRosterSourceSchema = Schema.Struct({
   knownForms: ClassLevelChoiceCountSchema,
   recommendedFormStatBlockIds: nonEmpty(
     surfaceStatBlockReference(
-      Schema.NonEmptyTrimmedString,
+      Schema.Trimmed.check(Schema.isNonEmpty()),
       "recommended-stat-block-reference",
     ),
   ),
@@ -3003,19 +3041,19 @@ export const ShapeShiftKnownFormsRosterSourceSchema = Schema.Struct({
     replacementCount: Schema.Literal(1),
   }),
   maxChallengeRating: ThresholdTiersNumberSchema,
-  flySpeed: Schema.Union(
+  flySpeed: Schema.Union([
     Schema.Struct({ kind: Schema.Literal("forbidden") }),
     Schema.Struct({
       kind: Schema.Literal("allowed_at_class_level"),
       atLevel: PositiveIntegerSchema,
     }),
-  ),
+  ]),
 });
 
-export const ShapeShiftStatBlockFormSourceSchema = Schema.Union(
+export const ShapeShiftStatBlockFormSourceSchema = Schema.Union([
   ShapeShiftCatalogRefFormSourceSchema,
   ShapeShiftKnownFormsRosterSourceSchema,
-);
+]);
 
 export const ShapeShiftSpellEffectFormSourceSchema = strictStruct({
   kind: Schema.Literal("spell_effect_mist_cloud"),
@@ -3032,17 +3070,17 @@ export const ShapeShiftSpellEffectFormSourceSchema = strictStruct({
     liquids: Schema.Literal("treat_as_solid_surfaces"),
   }),
   passive: strictStruct({
-    damageResistances: Schema.Tuple(
+    damageResistances: Schema.Tuple([
       Schema.Literal("bludgeoning"),
       Schema.Literal("piercing"),
       Schema.Literal("slashing"),
-    ),
-    conditionImmunities: Schema.Tuple(Schema.Literal("prone")),
-    savingThrowAdvantage: Schema.Tuple(
+    ]),
+    conditionImmunities: Schema.Tuple([Schema.Literal("prone")]),
+    savingThrowAdvantage: Schema.Tuple([
       Schema.Literal("str"),
       Schema.Literal("dex"),
       Schema.Literal("con"),
-    ),
+    ]),
   }),
   activityLimits: strictStruct({
     communication: Schema.Literal("cannot_talk"),
@@ -3050,19 +3088,19 @@ export const ShapeShiftSpellEffectFormSourceSchema = strictStruct({
     carriedOrHeldObjects: Schema.Literal(
       "cannot_be_dropped_used_or_interacted_with",
     ),
-    prohibitedActivities: Schema.Tuple(
+    prohibitedActivities: Schema.Tuple([
       Schema.Literal("attack"),
       Schema.Literal("spellcasting"),
-    ),
+    ]),
   }),
 });
 
-export const ShapeShiftFormSourceSchema = Schema.Union(
+export const ShapeShiftFormSourceSchema = Schema.Union([
   ShapeShiftStatBlockFormSourceSchema,
   ShapeShiftSpellEffectFormSourceSchema,
-);
+]);
 
-export const ShapeShiftRetainedFieldSchema = Schema.Literal(
+export const ShapeShiftRetainedFieldSchema = Schema.Literals([
   "alignment",
   "personality",
   "memories",
@@ -3078,12 +3116,12 @@ export const ShapeShiftRetainedFieldSchema = Schema.Literal(
   "saving_throw_proficiencies",
   "languages",
   "feats",
-);
+]);
 
-export const ShapeShiftActionRestrictionSchema = Schema.Literal(
+export const ShapeShiftActionRestrictionSchema = Schema.Literals([
   "no_speech_no_spells",
   "no_spellcasting",
-);
+]);
 
 export const EffectEndTargetStateSchema = strictStruct({
   kind: Schema.Literal("effect_end_target_state"),
@@ -3095,7 +3133,7 @@ export const EffectEndTargetStateSchema = strictStruct({
   }),
 });
 
-export const ShapeShiftRevertTriggerSchema = Schema.Union(
+export const ShapeShiftRevertTriggerSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("zero_hp") }),
   Schema.Struct({ kind: Schema.Literal("spell_ends") }),
   Schema.Struct({ kind: Schema.Literal("temp_hp_depleted") }),
@@ -3109,11 +3147,11 @@ export const ShapeShiftRevertTriggerSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("death") }),
   Schema.Struct({
     kind: Schema.Literal("dismissed_by_target"),
-    action: Schema.Literal("bonus_action", "magic_action"),
+    action: Schema.Literals(["bonus_action", "magic_action"]),
   }),
-);
+]);
 
-export const TransformTargetEffectSchema = Schema.Union(
+export const TransformTargetEffectSchema = Schema.Union([
   strictStruct({
     kind: Schema.Literal("transform_target"),
     newForm: ShapeShiftStatBlockFormSourceSchema,
@@ -3127,7 +3165,7 @@ export const TransformTargetEffectSchema = Schema.Union(
     newForm: ShapeShiftSpellEffectFormSourceSchema,
     revertTriggers: nonEmpty(ShapeShiftRevertTriggerSchema),
   }),
-);
+]);
 
 export const ObjectContactDamageEffectSchema = strictStruct({
   kind: Schema.Literal("object_contact_damage"),
@@ -3159,1298 +3197,1341 @@ export const ObjectContactDamageEffectSchema = strictStruct({
       fallback: strictStruct({
         kind: Schema.Literal("modify_roll_advantage"),
         mode: Schema.Literal("disadvantage"),
-        on: Schema.Tuple(
+        on: Schema.Tuple([
           Schema.Literal("attack_roll"),
           Schema.Literal("ability_check"),
-        ),
+        ]),
         expiresOn: strictStruct({ kind: Schema.Literal("caster_turn_start") }),
       }),
     }),
   }),
 });
 
-export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
-  Schema.suspend(() =>
-    Schema.Union(
-      ObjectContactDamageEffectSchema,
-      EffectEndTargetStateSchema,
-      Schema.Struct({
-        kind: Schema.Literal("curse_occurrence"),
-        removal: strictStruct({
-          kind: Schema.Literal("all_curses_affecting_target_end"),
-          target: Schema.Literal("attached_target"),
-        }),
-        options: nonEmpty(
-          strictStruct({
-            id: surfaceProtocol(Schema.String, "optionId"),
-            displayName: surfaceIdentity(Schema.String, "displayName"),
-            operations: nonEmpty(
-              Schema.suspend(() => OngoingOperationSchema).annotations({
-                identifier: "OngoingOperation",
-              }),
-            ),
+export const EffectAtomSchema: Schema.Codec<EffectAtom, unknown, never, never> =
+  Schema.suspend(
+    (): Schema.Codec<EffectAtom, unknown, never, never> =>
+      Schema.Union([
+        ObjectContactDamageEffectSchema,
+        EffectEndTargetStateSchema,
+        Schema.Struct({
+          kind: Schema.Literal("curse_occurrence"),
+          removal: strictStruct({
+            kind: Schema.Literal("all_curses_affecting_target_end"),
+            target: Schema.Literal("attached_target"),
           }),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("damage"),
-        damageType: DamageTypeRefSchema,
-        amount: DiceAmountSchema,
-        timing: optionalExact(Schema.Literal("end_of_next_turn")),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("half_initial_damage_only"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("conditional_bonus_damage"),
-        when: Schema.Union(
-          Schema.Struct({
-            kind: Schema.Literal("target_creature_type"),
-            types: nonEmpty(CreatureTypeSchema),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal("attack_roll_had_advantage"),
-          }),
-        ),
-        damageType: DamageTypeRefSchema,
-        amount: DiceAmountSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("conditional_by_current_hp"),
-        threshold: Schema.Number,
-        comparison: Schema.Literal("lte", "lt", "gte", "gt", "eq"),
-        onMatch: EffectAtomSchema,
-        otherwise: optionalExact(EffectAtomSchema),
-      }),
-      Schema.Struct({ kind: Schema.Literal("kill_target") }),
-      Schema.Struct({ kind: Schema.Literal("end_current_effect") }),
-      Schema.Struct({
-        kind: Schema.Literal("repeat_save_for_condition"),
-        condition: ConditionSchema,
-        ability: AbilitySchema,
-        dc: DcSourceSchema,
-        cadence: Schema.Literal("end_of_target_turn"),
-        onSuccess: Schema.Literal("ends_condition"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("repeat_save_counter"),
-        condition: ConditionSchema,
-        ability: AbilitySchema,
-        dc: DcSourceSchema,
-        cadence: Schema.Literal("end_of_target_turn"),
-        appliesCondition: optionalExact(Schema.Literal(true)),
-        successCount: Schema.Number,
-        failureCount: Schema.Number,
-        onSuccessCount: EffectAtomSchema,
-        onFailureCount: EffectAtomSchema,
-      }),
-      /* v8 ignore start -- @preserve -- this declarative delayed-save union arm initializes during collection; canonical delayed-save spells are decoded by catalog tests */
-      Schema.Struct({
-        kind: Schema.Literal("delayed_save"),
-        condition: optionalExact(ConditionSchema),
-        ability: AbilitySchema,
-        dc: DcSourceSchema,
-        cadence: Schema.Literal("start_of_caster_next_turn"),
-        onSuccess: EffectAtomSchema,
-        onFailure: EffectAtomSchema,
-      }),
-      /* v8 ignore stop -- @preserve */
-      Schema.Struct({
-        kind: Schema.Literal("condition_persists_after_full_duration"),
-        condition: ConditionSchema,
-        untilEndedBy: surfaceProse(Schema.String),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("heal_hp"),
-        amount: DiceAmountSchema,
-        target: Schema.Literal("self", "target_creature"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("grant_rest_benefit"),
-        benefit: Schema.Literal("short_rest"),
-        target: Schema.Literal("target_creature"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("spell_recipient_rest_lockout"),
-        resetBy: Schema.Literal("target_finishes_long_rest"),
-        target: Schema.Literal("target_creature"),
-      }),
-      MentalMessageDeliveryEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("prevent_hit_point_regain"),
-        expiresAt: Schema.Literal("end_of_caster_next_turn"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("heal_to_max_hp"),
-        target: Schema.Literal("target_creature"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_max_hp"),
-        direction: Schema.Literal("increase"),
-        delta: DiceAmountSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_max_hp"),
-        direction: Schema.Literal("decrease"),
-        delta: DiceAmountSchema,
-        floor: optionalExact(Schema.Number),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_ac"),
-        delta: DiceDeltaSchema,
-      }),
-      ModifyAcSetBaseEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("modify_save_dc"),
-        delta: DiceDeltaSchema,
-        spellSourceFilter: optionalExact(
-          Schema.Struct({ className: ClassNameSchema }),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("apply_condition"),
-        condition: Schema.Union(
-          ConditionSchema,
-          nonEmpty(ConditionSchema),
-          Schema.Struct({
-            kind: Schema.Literal("choose"),
-            from: nonEmpty(ConditionSchema),
-          }),
-        ),
-        duration: optionalExact(
-          Schema.Literal(
-            "current_turn",
-            "end_of_next_turn",
-            "end_of_caster_next_turn",
-            "spell_duration",
-            "until_long_rest_or_greater_restoration",
-          ),
-        ),
-      }),
-      strictStruct({
-        kind: Schema.Literal("apply_condition_while_in_area_or_until_escape"),
-        condition: Schema.Literal("restrained"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("suppress_condition_self_end"),
-        condition: Schema.Literal("prone"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("restrict_action_usage"),
-        actions: nonEmpty(Schema.Literal("action", "bonus_action", "reaction")),
-        whileCondition: optionalExact(ConditionSchema),
-        duration: optionalExact(
-          Schema.Literal("current_turn", "spell_duration"),
-        ),
-      }),
-      ActionBonusActionChoiceEffectSchema,
-      strictStruct({
-        kind: Schema.Literal("target_effect_escape_action"),
-        actor: Schema.Literal("another_creature"),
-        cost: Schema.Literal("action"),
-        method: Schema.Literal("shake_awake"),
-        outcome: Schema.Literal("end_current_effect"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("command_target_next_turn"),
-        execution: Schema.Literal("target_next_turn"),
-        options: CommandTargetNextTurnOptionsSchema,
-      }),
-      ForcedReactionMovementSchema,
-      JumpMovementReplacementSchema,
-      FeatherFallMitigationSchema,
-      AudibleEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("remove_condition"),
-        condition: Schema.Union(
-          ConditionSchema,
-          nonEmpty(ConditionSchema),
-          Schema.Struct({
-            kind: Schema.Literal("choose"),
-            from: nonEmpty(ConditionSchema),
-          }),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_resistance"),
-        damageType: DamageTypeRefSchema,
-        sourceFilter: optionalExact(ResistanceSourceFilterSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("reduce_damage_taken"),
-        amount: DiceAmountSchema,
-        damageType: optionalExact(DamageTypeRefSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("share_damage_to_caster"),
-        amount: Schema.Literal("same_as_attached_damage_taken"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("retaliatory_damage"),
-        target: Schema.Literal("triggering_attacker"),
-        damageType: DamageTypeRefSchema,
-        amount: DiceAmountSchema,
-      }),
-      strictStruct({
-        kind: Schema.Literal("take_standard_action"),
-        action: StandardActionKindSchema,
-        cost: Schema.Literal("included_in_effect"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("grant_alternate_action_cost"),
-        ...AlternateActionCostSchema.fields,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_extra_action"),
-        restriction: ActionRestrictionSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("scale_attack_count"),
-        additional: Schema.Number,
-      }),
-      AttackActionAttackCapEffectSchema,
-      SomaticSpellFailureChanceEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("modify_roll_numeric"),
-        on: nonEmpty(RollKindSchema),
-        delta: DiceDeltaSchema,
-        weaponFilter: optionalExact(WeaponFilterSchema),
-        skillFilter: optionalExact(
-          Schema.Union(
-            Schema.Struct({
-              kind: Schema.Literal("fixed"),
-              skills: nonEmpty(SkillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("choice"),
-              options: nonEmpty(SkillSchema),
-            }),
-          ),
-        ),
-        abilityFilter: optionalExact(AbilityFilterSchema),
-        count: optionalExact(Schema.Number),
-      }),
-      strictStruct({
-        kind: Schema.Literal("initiative_swap"),
-        timing: Schema.Literal("immediately_after_initiative_roll"),
-        ally: Schema.Literal("willing_ally_same_combat"),
-        prohibitedByCondition: Schema.Literal("incapacitated"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("jack_of_all_trades_ability_check_bonus"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_damage_numeric"),
-        delta: DiceDeltaSchema,
-        damageSourceFilter: optionalExact(DamageSourceFilterSchema),
-        weaponFilter: optionalExact(WeaponFilterSchema),
-        abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
-        minimumDamageTotal: optionalExact(Schema.Literal(1)),
-      }),
-      strictStruct({
-        kind: Schema.Literal("grant_magic_weapon_enhancement"),
-        bonus: MagicWeaponEnhancementBonusSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_size_category"),
-        direction: Schema.Literal("increase", "decrease"),
-        steps: Schema.Literal(1),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_crit_range"),
-        threshold: Schema.Number,
-        attackRollFilter: Schema.Literal("weapon_or_unarmed_strike"),
-        weaponFilter: optionalExact(WeaponFilterSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("transfer_weapon_bonus_to_ac"),
-        maxBonus: Schema.Number,
-        from: Schema.Literal("attack_and_damage_bonus"),
-        trigger: Schema.Literal("first_attack_roll_each_turn"),
-        duration: Schema.Literal("start_of_next_turn"),
-        weaponFilter: optionalExact(WeaponFilterSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("suppress_incoming_critical_hit"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_roll_advantage"),
-        mode: Schema.Literal("advantage", "disadvantage"),
-        affects: optionalExact(
-          Schema.Literal("self_roll", "rolls_against_self"),
-        ),
-        on: nonEmpty(RollKindSchema),
-        abilityCheckTrigger: optionalExact(
-          strictStruct({
-            kind: Schema.Literal("condition_end"),
-            condition: ConditionSchema,
-          }),
-        ),
-        spellSourceFilter: optionalExact(
-          Schema.Struct({ className: ClassNameSchema }),
-        ),
-        attackerTypeFilter: optionalExact(nonEmpty(CreatureTypeSchema)),
-        skillFilter: optionalExact(
-          Schema.Union(
-            Schema.Struct({
-              kind: Schema.Literal("fixed"),
-              skills: nonEmpty(SkillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("choice"),
-              options: nonEmpty(SkillSchema),
-            }),
-          ),
-        ),
-        conditionFilter: optionalExact(nonEmpty(ConditionSchema)),
-        abilityFilter: optionalExact(AbilityFilterSchema),
-        saveAbilityFilter: optionalExact(AbilityFilterSchema),
-        saveSourceFilter: optionalExact(SavingThrowSourceFilterSchema),
-        contextRangeFeet: optionalExact(Schema.Number),
-        attackRollTarget: optionalExact(Schema.Literal("caster")),
-        count: optionalExact(Schema.Number),
-        expiresOn: optionalExact(
-          Schema.Union(
-            Schema.Struct({
-              kind: Schema.Literal("target_uses_or_turn_start"),
-            }),
-            Schema.Struct({ kind: Schema.Literal("end_of_next_turn") }),
-            Schema.Struct({ kind: Schema.Literal("caster_turn_start") }),
-          ),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("suppress_roll_disadvantage"),
-        on: nonEmpty(RollKindSchema),
-        skillFilter: optionalExact(
-          Schema.Union(
-            Schema.Struct({
-              kind: Schema.Literal("fixed"),
-              skills: nonEmpty(SkillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("choice"),
-              options: nonEmpty(SkillSchema),
-            }),
-          ),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("remove_equipment_requirement"),
-        requirement: Schema.Literal("strength"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_speed"),
-        delta: Schema.Number,
-        unit: Schema.Literal("feet"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("set_speed"),
-        feet: Schema.Number,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("set_speed_ratio"),
-        numerator: Schema.Number,
-        denominator: Schema.Number,
-      }),
-      ForceMoveEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("suspend_target"),
-        until: Schema.Literal("end_of_next_turn"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("fall_at_end_of_next_turn_unless_reapplied"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("force_fall"),
-        direction: Schema.Literal("upward", "downward"),
-        maxDistanceFeet: optionalExact(Schema.Number),
-        impactAsNormalFall: optionalExact(Schema.Literal(true)),
-      }),
-      strictStruct({
-        kind: Schema.Literal("levitate_target"),
-        initialRiseMaxFeet: Schema.Literal(20),
-        suspension: Schema.Literal("spell_duration"),
-        targetMovement: strictStruct({
-          allowedBy: Schema.Literal(
-            "push_or_pull_fixed_object_or_surface_within_reach",
-          ),
-          movementMode: Schema.Literal("as_if_climbing"),
-        }),
-        casterAltitudeControl: strictStruct({
-          maxDistanceFeet: Schema.Literal(20),
-          direction: Schema.Literal("up_or_down"),
-          cost: Schema.Literal("magic_action_on_caster_turn"),
-          targetMustRemainWithinSpellRange: Schema.Literal(true),
-        }),
-        selfAltitudeControl: strictStruct({
-          maxDistanceFeet: Schema.Literal(20),
-          direction: Schema.Literal("up_or_down"),
-          cost: Schema.Literal("part_of_move"),
-        }),
-        ending: Schema.Literal("float_gently_to_ground_if_aloft"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("grab_fixed_object") }),
-      Schema.Struct({
-        kind: Schema.Literal("suspend_in_area"),
-        location: Schema.Literal("top"),
-        until: Schema.Literal("effect_ends"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("fall_when_effect_ends"),
-        direction: Schema.Literal("downward"),
-        unlessCanStopFall: optionalExact(Schema.Literal(true)),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("move_area"),
-        distanceFeet: Schema.Number,
-        direction: Schema.Literal("away_from_caster"),
-        includeCreaturesInArea: optionalExact(Schema.Literal(true)),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("reduce_area_height"),
-        amount: DiceAmountSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("end_current_effect_at_area_height_zero"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("ability_check_to_move_in_area"),
-        ability: Schema.Literal("str"),
-        skill: Schema.Literal("athletics"),
-        dc: DcSourceSchema,
-        onFailure: Schema.Literal("cannot_move"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("fall_to_ground") }),
-      Schema.Struct({
-        kind: Schema.Literal("block_targeting"),
-        scope: surfaceProjection(Schema.String, "derived-label"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("choose_new_target_or_lose"),
-        subject: Schema.Literal("triggering_attack_or_spell"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("block_travel"),
-        scope: surfaceProjection(Schema.String, "derived-label"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("end_if_created_in_occupied_space"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("allow_designated_creatures_safe_passage"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("object_immune_to_all_damage") }),
-      Schema.Struct({
-        kind: Schema.Literal("object_destroyed_by_spell"),
-        spellId: surfaceReference(Schema.String, "spell-reference"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("cannot_be_dispelled_by_spell"),
-        spellId: surfaceReference(Schema.String, "spell-reference"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("block_ethereal_travel") }),
-      Schema.Struct({
-        kind: Schema.Literal("replace_destroyed_object_section_with_area"),
-        areaLabel: surfaceIdentity(Schema.String, "label"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("block_projectiles"),
-        projectile: Schema.Literal("ordinary"),
-        exception: optionalExact(Schema.Literal("giant_or_siege")),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("block_gases_and_gaseous_creatures"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("block_flying_movement"),
-        maxSize: Schema.Literal("small"),
-        includesObjects: optionalExact(Schema.Literal(true)),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("negate_named_effect"),
-        spellId: surfaceReference(Schema.String, "spell-reference"),
-        scope: Schema.Literal("damage_only", "all_effects"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("negate_triggering_spell"),
-        maxSpellLevel: optionalExact(Schema.Number),
-      }),
-      Schema.Struct({ kind: Schema.Literal("reflect_triggering_spell") }),
-      Schema.Struct({
-        kind: Schema.Literal("waste_triggering_spell_or_effect"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("maximize_healing_received") }),
-      TransformTargetEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("end_ongoing_spells"),
-        maxSpellLevel: Schema.Union(
-          Schema.Number,
-          Schema.Literal("caster_slot_level", "contested_spell_level"),
-        ),
-      }),
-      Schema.Struct({ kind: Schema.Literal("see_invisible_and_ethereal") }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_sense"),
-        sense: Schema.Literal(
-          "darkvision",
-          "blindsight",
-          "tremorsense",
-          "truesight",
-        ),
-        rangeFeet: Schema.Number,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_sense_range"),
-        sense: Schema.Literal(
-          "darkvision",
-          "blindsight",
-          "tremorsense",
-          "truesight",
-        ),
-        grantIfAbsentFeet: Schema.Number,
-        increaseIfPresentFeet: Schema.Number,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_language_understanding"),
-        scope: Schema.Literal(
-          "spoken_or_signed",
-          "spoken_signed_written_literal",
-        ),
-        intelligibleToAnyLanguageKnower: Schema.Boolean,
-        writtenRequiresTouch: optionalExact(Schema.Literal(true)),
-        excludesCodesAndSecretMessages: optionalExact(Schema.Literal(true)),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_creature_communication"),
-        creatureType: CreatureTypeSchema,
-        includesInfluenceActionOptions: Schema.Boolean,
-      }),
-      Schema.Struct({ kind: Schema.Literal("deny_opportunity_attack") }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_temp_hp"),
-        amount: DiceAmountSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("prevent_drop_to_0_hp"),
-        replacementHp: Schema.Number,
-        consumesEffect: optionalExact(Schema.Literal(true)),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("negate_instant_death"),
-        consumesEffect: optionalExact(Schema.Literal(true)),
-      }),
-      Schema.Struct({ kind: Schema.Literal("make_stable") }),
-      strictStruct({
-        kind: Schema.Literal("revive_dead_creature"),
-        deathWindow: strictStruct({
-          unit: Schema.Literal("minute", "day"),
-          amount: PositiveIntegerSchema,
-        }),
-        hitPoints: PositiveIntegerSchema,
-        spiritConsent: Schema.Literal("can_refuse"),
-        excludedDeathCauses: Schema.Tuple(Schema.Literal("old_age")),
-        missingBodyParts: Schema.Literal("not_restored"),
-        returningOngoingEffects: strictStruct({
-          conditions: Schema.Literal("preserve_if_duration_ongoing"),
-          magicalContagions: Schema.Literal("preserve_if_duration_ongoing"),
-          curses: Schema.Literal("preserve_if_duration_ongoing"),
-          exhaustion: strictStruct({
-            kind: Schema.Literal("reduce_by"),
-            amount: PositiveIntegerSchema,
-          }),
-          attunement: Schema.Literal("ends"),
-        }),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_feat"),
-        category: Schema.Literal(
-          "general",
-          "fighting_style",
-          "epic_boon",
-          "origin",
-        ),
-        openFallback: optionalExact(Schema.Literal("any_qualifying_feat")),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_feat"),
-        categories: nonEmpty(
-          Schema.Literal("general", "fighting_style", "epic_boon", "origin"),
-        ),
-        openFallback: optionalExact(Schema.Literal("any_qualifying_feat")),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_proficiency"),
-        proficiency: ProficiencyGrantSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_expertise"),
-        choiceCount: ClassLevelChoiceCountSchema,
-        skills: Schema.Union(
-          Schema.Struct({
-            kind: Schema.Literal("owned_skill_proficiencies_without_expertise"),
-          }),
-          Schema.Struct({
-            kind: Schema.Literal(
-              "listed_owned_skill_proficiencies_without_expertise",
-            ),
-            skills: nonEmpty(SkillSchema),
-          }).pipe(
-            Schema.filter((source) => distinctSkills(source.skills), {
-              /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed Expertise source repeats a skill */
-              message: () =>
-                "Listed Expertise skill source must contain distinct skills.",
-            }),
-          ),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_language"),
-        languageId: surfaceIdentity(Schema.NonEmptyTrimmedString, "reference"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_hidden_language_messages"),
-        languageId: surfaceIdentity(Schema.NonEmptyTrimmedString, "reference"),
-        message: Schema.Struct({
-          kind: Schema.Literal("hidden_language_message"),
-        }),
-        spotting: Schema.Struct({
-          languageKnowers: Schema.Literal("automatic"),
-          others: Schema.Struct({
-            ability: Schema.Literal("int"),
-            skill: Schema.Literal("investigation"),
-            dc: Schema.Literal(15),
-          }),
-        }),
-        deciphering: Schema.Struct({
-          withoutLanguageRequires: Schema.Literal("magic"),
-        }),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_language_choice"),
-        source: Schema.Literal("character_creation_language_tables"),
-        count: PositiveIntegerSchema,
-      }),
-      strictStruct({
-        kind: Schema.Literal("grant_spell_access"),
-        spellId: surfaceDependency(Schema.String, "spell-reference"),
-        mode: SpellAccessModeSchema,
-        dcOverride: optionalExact(DcSourceSchema),
-        areaOverride: optionalExact(AreaShapeSpecSchema),
-        targetRestriction: optionalExact(GrantedSpellTargetRestrictionSchema),
-        durationOverride: optionalExact(GrantedSpellDurationOverrideSchema),
-      }),
-      strictStruct({
-        kind: Schema.Literal("grant_spell_access_choice"),
-        spellList: Schema.Literal(...CLASS_SPELLCASTING_CLASS_NAMES),
-        spellLevel: SpellLevelSchema,
-        mode: SpellAccessModeSchema,
-        count: PositiveIntegerSchema,
-        replacement: optionalExact(
-          strictStruct({
-            trigger: Schema.Literal("class_level_gain"),
-            replacementCount: PositiveIntegerSchema,
-          }),
-        ),
-      }),
-      strictStruct({
-        kind: Schema.Literal("grant_class_level_prepared_spell_access"),
-        tiers: nonEmpty(
-          Schema.Struct({
-            minimumClassLevel: PositiveIntegerSchema,
-            spellIds: nonEmpty(
-              surfaceReference(Schema.NonEmptyTrimmedString, "spell-list"),
-            ),
-          }),
-        ),
-      }),
-      strictStruct({
-        kind: Schema.Literal("grant_land_choice_prepared_spell_access"),
-        choice: Schema.Struct({
-          kind: Schema.Literal("druid_circle_land"),
-          trigger: Schema.Literal("long_rest"),
-        }),
-        spellsByLand: Schema.Struct({
-          arid: nonEmpty(
-            Schema.Struct({
-              minimumClassLevel: PositiveIntegerSchema,
-              spellIds: nonEmpty(
-                surfaceReference(Schema.NonEmptyTrimmedString, "spell-list"),
-              ),
-            }),
-          ),
-          polar: nonEmpty(
-            Schema.Struct({
-              minimumClassLevel: PositiveIntegerSchema,
-              spellIds: nonEmpty(
-                surfaceReference(Schema.NonEmptyTrimmedString, "spell-list"),
-              ),
-            }),
-          ),
-          temperate: nonEmpty(
-            Schema.Struct({
-              minimumClassLevel: PositiveIntegerSchema,
-              spellIds: nonEmpty(
-                surfaceReference(Schema.NonEmptyTrimmedString, "spell-list"),
-              ),
-            }),
-          ),
-          tropical: nonEmpty(
-            Schema.Struct({
-              minimumClassLevel: PositiveIntegerSchema,
-              spellIds: nonEmpty(
-                surfaceReference(Schema.NonEmptyTrimmedString, "spell-list"),
+          options: nonEmpty(
+            strictStruct({
+              id: surfaceProtocol(Schema.String, "optionId"),
+              displayName: surfaceIdentity(Schema.String, "displayName"),
+              operations: nonEmpty(
+                Schema.suspend(() => OngoingOperationSchema).pipe(
+                  Schema.annotate({
+                    identifier: "OngoingOperation",
+                  }),
+                ),
               ),
             }),
           ),
         }),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_spell_free_casts"),
-        spellId: surfaceDependency(
-          Schema.NonEmptyTrimmedString,
-          "spell-reference",
-        ),
-        count: Schema.Union(
-          PositiveIntegerSchema,
-          strictStruct({
-            kind: Schema.Literal("proficiency_bonus"),
-          }),
-        ),
-        resetCadence: Schema.Literal("long_rest", "short_or_long_rest"),
-        scaling: optionalExact(
-          Schema.Struct({
-            axis: Schema.Literal("class"),
-            tiers: nonEmpty(
-              Schema.Struct({
-                atLevel: PositiveIntegerSchema,
-                count: PositiveIntegerSchema,
-              }),
-            ),
-          }),
-        ),
-      }).pipe(
-        /* v8 ignore start -- @preserve -- a free-cast grant that combines a numeric count with class scaling is malformed authored input */
-        Schema.filter(
-          (grant) =>
-            typeof grant.count === "number" || grant.scaling === undefined,
-          {
-            /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after a malformed free-cast grant supplies both a numeric count and class scaling */
-            message: () =>
-              "Proficiency Bonus spell free-cast counts must not also carry class-level scaling.",
-          },
-        ),
-        /* v8 ignore stop -- @preserve */
-      ),
-      Schema.Struct({
-        kind: Schema.Literal("grant_die_token"),
-        die: DiceAmountSchema,
-        trigger: Schema.Literal("failed_d20_test"),
-        duration: Schema.Struct({
-          unit: Schema.Literal("hour"),
-          amount: PositiveIntegerSchema,
+        Schema.Struct({
+          kind: Schema.Literal("damage"),
+          damageType: DamageTypeRefSchema,
+          amount: DiceAmountSchema,
+          timing: optionalExact(Schema.Literal("end_of_next_turn")),
         }),
-        maxHeld: PositiveIntegerSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_bonus_action_attack"),
-        attack: Schema.Literal("unarmed_strike"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("replace_damage_die"),
-        die: DiceAmountSchema,
-        scope: Schema.Literal("unarmed_or_monk_weapon"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("substitute_ability_for_rolls"),
-        use: AbilitySchema,
-        replaces: AbilitySchema,
-        on: nonEmpty(
-          Schema.Literal(
-            "attack_roll",
-            "damage_roll",
-            "unarmed_strike_save_dc",
-          ),
-        ),
-        scope: Schema.Literal("unarmed_or_monk_weapon"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("offer_ability_substitution_for_ability_checks"),
-        use: AbilitySchema,
-        skillFilter: Schema.Struct({
-          kind: Schema.Literal("fixed"),
-          skills: nonEmpty(SkillSchema),
+        Schema.Struct({
+          kind: Schema.Literal("half_initial_damage_only"),
         }),
-        requiredActiveFeature: optionalExact(
-          Schema.Struct({
-            kind: Schema.Literal("class_feature"),
-            unitId: surfaceReference(Schema.String, "unit-reference"),
-          }),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("offer_ability_substitution_for_jump_distance"),
-        use: AbilitySchema,
-        replaces: AbilitySchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_condition_immunity"),
-        condition: ConditionSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("suppress_condition_benefit"),
-        condition: ConditionSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_damage_immunity"),
-        damageType: DamageTypeSchema,
-      }),
-      Schema.Struct({ kind: Schema.Literal("block_max_hp_reduction") }),
-      Schema.Struct({
-        kind: Schema.Literal("set_ability_score"),
-        ability: AbilitySchema,
-        value: Schema.Number,
-        mode: Schema.Literal("set", "floor"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_ability_score"),
-        ability: AbilitySchema,
-        delta: Schema.Number,
-        minimum: optionalExact(Schema.Number),
-        maximum: optionalExact(Schema.Number),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("modify_proficiency_bonus"),
-        delta: Schema.Number,
-        minimum: optionalExact(Schema.Number),
-        maximum: optionalExact(Schema.Number),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("detect"),
-        property: DetectionPropertySchema,
-        radiusFeet: Schema.Number,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("magical_identity_mask"),
-        creatureBranch: Schema.Struct({
-          chosenCreatureType: Schema.Literal("other_than_actual_type"),
-          treatedAsBy: Schema.Literal("spells_and_magical_effects"),
-        }),
-        objectBranch: Schema.Struct({
-          auraAppearance: Schema.Literal("nonmagical_magical_or_chosen_school"),
-          observedBy: Schema.Literal(
-            "spells_and_magical_effects_detecting_magical_auras",
-          ),
-        }),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("locate_kind"),
-        subjectKinds: nonEmpty(LocateKindSubjectSchema),
-        maxDistanceFeet: PositiveIntegerSchema,
-        match: Schema.Literal("closest"),
-        query: Schema.Literal("described_or_named_specific_kind"),
-        result: Schema.Literal("direction_and_distance"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("object_location_sense"),
-        searchModes: ObjectLocationSenseSearchModesSchema,
-        maxDistanceFeet: PositiveIntegerSchema,
-        result: Schema.Literal("direction_to_location_and_movement"),
-        blockedBy: Schema.Literal("any_thickness_of_lead_direct_path"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal(
-          "block_divination_targeting_and_scrying_perception",
-        ),
-      }),
-      DivinationOmenEffectSchema,
-      PlanarEntityAnswersEffectSchema,
-      CourierTaskEffectSchema,
-      EtherealPhaseEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("grant_speed"),
-        speedKind: Schema.Literal("fly", "swim", "climb", "burrow"),
-        feet: Schema.Union(Schema.Number, LinkedSpeedSchema),
-        hover: optionalExact(Schema.Boolean),
-      }),
-      LiquidSurfaceTraversalSchema,
-      Schema.Struct({ kind: Schema.Literal("ignore_web_restrictions") }),
-      Schema.Struct({
-        kind: Schema.Literal("alter_item_kind"),
-        newKind: surfaceIdentity(Schema.String, "reference"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("natural_weapons"),
-        damageType: AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema,
-        damageDie: Schema.Literal(6),
-        replacesAbility: Schema.Literal("str"),
-        attackRollAbility: Schema.Literal("spellcasting"),
-        damageRollAbility: Schema.Literal("spellcasting"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("water_breathing") }),
-      Schema.Struct({
-        kind: Schema.Literal("teleport"),
-        maxFeet: Schema.Number,
-        destination: Schema.Literal("unoccupied_visible_space"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("transport_exile"),
-        destination: Schema.Literal(
-          "demiplane",
-          "astral_plane",
-          "ethereal_plane",
-          "plane_of_origin",
-          "different_plane",
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("make_weapon_attack"),
-        weapon: Schema.Literal("material_component"),
-        abilityOverride: optionalExact(Schema.Literal("spellcasting")),
-        damageTypeChoice: optionalExact(
-          nonEmpty(Schema.Literal("radiant", "weapon_normal")),
-        ),
-        bonusDamage: optionalExact(
-          Schema.Struct({
-            damageType: DamageTypeRefSchema,
-            amount: DiceAmountSchema,
-          }),
-        ),
-      }),
-      strictStruct({
-        kind: Schema.Literal("override_attached_weapon_attack"),
-        replacesAbility: Schema.Literal("str"),
-        attackRollAbility: Schema.Literal("spellcasting"),
-        damageRollAbility: Schema.Literal("spellcasting"),
-        attackScope: Schema.Literal("melee_attacks_using_attached_weapon"),
-        damageDie: DiceAmountSchema,
-        damageTypeChoice: Schema.Tuple(
-          Schema.Literal("force"),
-          Schema.Literal("weapon_normal"),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("container_storage"),
-        storage: Schema.Struct({
-          maxWeightPounds: Schema.Number,
-          maxVolumeCubicFeet: Schema.Number,
-          weightOverridePounds: optionalExact(Schema.Number),
-          airSupply: optionalExact(
+        Schema.Struct({
+          kind: Schema.Literal("conditional_bonus_damage"),
+          when: Schema.Union([
             Schema.Struct({
-              sharedMinutes: Schema.Number,
+              kind: Schema.Literal("target_creature_type"),
+              types: nonEmpty(CreatureTypeSchema),
             }),
-          ),
-          extradimensional: optionalExact(Schema.Literal(true)),
-        }),
-      }),
-      ExtradimensionalSpaceEffectSchema,
-      Schema.Struct({
-        kind: Schema.Literal("create_sensor"),
-        visibility: Schema.Literal("invisible"),
-        durability: Schema.Literal("invulnerable"),
-        sensorSenses: optionalExact(
-          nonEmpty(
             Schema.Struct({
-              kind: Schema.Literal(
-                "darkvision",
-                "blindsight",
-                "tremorsense",
-                "truesight",
-              ),
-              rangeFeet: Schema.Number,
+              kind: Schema.Literal("attack_roll_had_advantage"),
             }),
-          ),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("remote_perception"),
-        senses: nonEmpty(Schema.Literal("seeing", "hearing")),
-        switchCost: optionalExact(Schema.Literal("bonus_action")),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("emit_light"),
-        brightRadiusFeet: Schema.Number,
-        dimAdditionalFeet: optionalExact(Schema.Number),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("emit_dim_light"),
-        radiusFeet: Schema.Number,
-        expiresAt: Schema.Literal("end_of_caster_next_turn"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("spell_created_held_object"),
-        heldBy: Schema.Literal("caster"),
-        requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
-        disappearsWhen: nonEmpty(
-          SpellCreatedHeldObjectDisappearanceTriggerSchema,
-        ),
-        reEvoke: strictStruct({
-          cost: strictStruct({ kind: Schema.Literal("bonus_action") }),
-          requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
-        }),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("composite"),
-        effects: nonEmpty(EffectAtomSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("choose_effect_mode"),
-        label: surfaceProjection(Schema.String, "derived-label"),
-        options: nonEmpty(
-          Schema.Struct({
-            id: surfaceProtocol(Schema.String, "optionId"),
-            displayName: surfaceIdentity(Schema.String, "displayName"),
-            effects: nonEmpty(OngoingEffectSchema),
-          }),
-        ),
-      }),
-      Schema.Struct({ kind: Schema.Literal("block_reanimation") }),
-      Schema.Struct({
-        kind: Schema.Literal("ignite_objects"),
-        filter: ObjectFilterSchema,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("create_object"),
-        maxSize: SizeSchema,
-        shape: optionalExact(AreaShapeSpecSchema),
-        consumable: optionalExact(Schema.Literal(true)),
-        durability: optionalExact(CreatedObjectDurabilitySchema),
-      }),
-      strictStruct({
-        kind: Schema.Literal("create_illusion"),
-        maxSize: SizeSchema,
-        channels: nonEmpty(IllusionSensoryChannelSchema),
-      }),
-      strictStruct({
-        kind: Schema.Literal("create_phantasmal_illusion"),
-        maxCubeSideFeet: Schema.Literal(10),
-        channels: nonEmpty(IllusionSensoryChannelSchema),
-        perception: Schema.Literal("target_only"),
-        rationalization: Schema.Literal("treat_illogical_outcomes_as_real"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("force_drop_item") }),
-      Schema.Struct({
-        kind: Schema.Literal("move_object"),
-        maxDistanceFeet: Schema.Number,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("pull_object_away"),
-        maxDistanceFeet: Schema.Number,
-      }),
-      Schema.Struct({ kind: Schema.Literal("manipulate_object") }),
-      Schema.Struct({ kind: Schema.Literal("break_concentration") }),
-      Schema.Struct({
-        kind: Schema.Literal("damage_structure"),
-        amount: DiceAmountSchema,
-        damageType: DamageTypeRefSchema,
-        structureContact: Schema.Literal("ground_in_area"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("collapse_structure"),
-        trigger: Schema.Literal("structure_drops_to_0_hp"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("bury_in_rubble"),
-        escape: Schema.Struct({
-          kind: Schema.Literal("ability_check"),
-          ability: Schema.Literal("str"),
-          skill: Schema.Literal("athletics"),
-          dc: Schema.Number,
-          action: Schema.Literal("action"),
-        }),
-      }),
-      Schema.Struct({ kind: Schema.Literal("bond_objects") }),
-      Schema.Struct({
-        kind: Schema.Literal("lock_object"),
-        password: optionalExact(surfaceProse(Schema.String)),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("release_object_access"),
-        mundaneLockLimit: Schema.Literal(1),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("suppress_arcane_lock"),
-        duration: Schema.Struct({
-          unit: Schema.Literal("minute"),
-          amount: Schema.Literal(10),
-        }),
-        allowsOpenClose: Schema.Literal(true),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("reposition_attachment"),
-        maxMoveFeet: optionalExact(Schema.Number),
-        destination: optionalExact(
-          strictStruct({
-            kind: Schema.Literal("visible_unoccupied_space"),
-            chooser: Schema.Literal("caster"),
-          }),
-        ),
-      }),
-      Schema.Struct({ kind: Schema.Literal("area_is_difficult_terrain") }),
-      Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
-      Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
-      Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
-      Schema.Struct({ kind: Schema.Literal("douse_exposed_flames") }),
-      Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
-      strictStruct({
-        kind: Schema.Literal("area_of_silence"),
-        soundBoundary: Schema.Literal("blocks_creation_and_passage"),
-        appliesWhen: Schema.Literal("entirely_inside_area"),
-        grantsDamageImmunity: Schema.Literal("thunder"),
-        imposesCondition: Schema.Literal("deafened"),
-        preventsSpellComponent: Schema.Literal("verbal"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("truthfulness_constraint"),
-        prohibitedCommunication: Schema.Literal("deliberate_lie"),
-        appliesWhile: Schema.Literal("in_spell_area"),
-        targetAwareness: Schema.Literal("aware_of_spell"),
-        allowedResponse: Schema.Literal("evasive_or_silent_truthful"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("reveal_save_outcome_to_caster"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal(
-          "end_overlapping_spell_created_bright_or_dim_light",
-        ),
-        maxSpellLevel: Schema.Number,
-      }),
-      strictStruct({
-        kind: Schema.Literal("area_anchor_or_layering_requirement"),
-        anchor: strictStruct({
-          kind: Schema.Literal("between_solid_masses"),
-          count: Schema.Literal(2),
-        }),
-        layering: strictStruct({
-          kind: Schema.Literal("across_surface"),
-          surfaces: Schema.Tuple(
-            Schema.Literal("floor"),
-            Schema.Literal("wall"),
-            Schema.Literal("ceiling"),
-          ),
-          flatSurfaceDepthFeet: Schema.Literal(5),
-        }),
-        unmetOutcome: strictStruct({
-          kind: Schema.Literal("collapse_and_end_effect"),
-          timing: Schema.Literal("start_of_caster_next_turn"),
-        }),
-      }),
-      strictStruct({
-        kind: Schema.Literal("area_section_burns_away"),
-        section: strictStruct({
-          kind: Schema.Literal("cube"),
-          sideFeet: Schema.Literal(5),
-        }),
-        exposure: Schema.Literal("fire"),
-        burnsAwayAfter: strictStruct({
-          unit: Schema.Literal("round"),
-          amount: Schema.Literal(1),
-        }),
-        creatureStartsTurnInFireDamage: strictStruct({
-          damageType: Schema.Literal("fire"),
+          ]),
+          damageType: DamageTypeRefSchema,
           amount: DiceAmountSchema,
         }),
-      }),
-      Schema.Struct({ kind: Schema.Literal("area_has_strong_wind") }),
-      Schema.Struct({ kind: Schema.Literal("prevent_ranged_weapon_attacks") }),
-      Schema.Struct({
-        kind: Schema.Literal("area_movement_cost_multiplier"),
-        multiplier: PositiveIntegerSchema,
-        appliesTo: Schema.Literal("any_movement", "toward_source"),
-      }),
-      strictStruct({
-        kind: Schema.Literal("plant_enrichment"),
-        duration: strictStruct({
-          unit: Schema.Literal("day"),
-          amount: PositiveIntegerSchema,
+        Schema.Struct({
+          kind: Schema.Literal("conditional_by_current_hp"),
+          threshold: Schema.Number,
+          comparison: Schema.Literals(["lte", "lt", "gte", "gt", "eq"]),
+          onMatch: EffectAtomSchema,
+          otherwise: optionalExact(EffectAtomSchema),
         }),
-        harvestYieldMultiplier: PositiveIntegerSchema,
-        benefitLimit: strictStruct({
-          kind: Schema.Literal("one_application_per_year"),
+        Schema.Struct({ kind: Schema.Literal("kill_target") }),
+        Schema.Struct({ kind: Schema.Literal("end_current_effect") }),
+        Schema.Struct({
+          kind: Schema.Literal("repeat_save_for_condition"),
+          condition: ConditionSchema,
+          ability: AbilitySchema,
+          dc: DcSourceSchema,
+          cadence: Schema.Literal("end_of_target_turn"),
+          onSuccess: Schema.Literal("ends_condition"),
         }),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("grant_cover"),
-        cover: Schema.Literal("three_quarters"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("block_line_of_sight") }),
-      Schema.Struct({
-        kind: Schema.Literal("prevent_creature_passage"),
-        exceptCreatureTypes: nonEmpty(CreatureTypeSchema),
-        allowsThroughBarrier: nonEmpty(
-          Schema.Literal("spells", "ranged_attacks", "reach_weapon_attacks"),
-        ),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("prevent_spellcasting_and_magic_actions"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("prevent_magical_ranged_attacks") }),
-      Schema.Struct({
-        kind: Schema.Literal("block_magical_targeting_and_aoe"),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("block_teleport_and_planar_travel"),
-      }),
-      Schema.Struct({ kind: Schema.Literal("suppress_magic_items") }),
-      Schema.Struct({
-        kind: Schema.Literal("suppress_ongoing_magic_effects"),
-        exceptSources: nonEmpty(Schema.Literal("artifact", "deity")),
-        suppressedTimeCountsAgainstDuration: Schema.Literal(true),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("ordered_barrier_layers"),
-        layers: nonEmpty(
-          Schema.Struct({
-            order: Schema.Number,
-            label: surfaceIdentity(Schema.String, "label"),
-            save: optionalExact(
+        Schema.Struct({
+          kind: Schema.Literal("repeat_save_counter"),
+          condition: ConditionSchema,
+          ability: AbilitySchema,
+          dc: DcSourceSchema,
+          cadence: Schema.Literal("end_of_target_turn"),
+          appliesCondition: optionalExact(Schema.Literal(true)),
+          successCount: Schema.Number,
+          failureCount: Schema.Number,
+          onSuccessCount: EffectAtomSchema,
+          onFailureCount: EffectAtomSchema,
+        }),
+        /* v8 ignore start -- @preserve -- this declarative delayed-save union arm initializes during collection; canonical delayed-save spells are decoded by catalog tests */
+        Schema.Struct({
+          kind: Schema.Literal("delayed_save"),
+          condition: optionalExact(ConditionSchema),
+          ability: AbilitySchema,
+          dc: DcSourceSchema,
+          cadence: Schema.Literal("start_of_caster_next_turn"),
+          onSuccess: EffectAtomSchema,
+          onFailure: EffectAtomSchema,
+        }),
+        /* v8 ignore stop -- @preserve */
+        Schema.Struct({
+          kind: Schema.Literal("condition_persists_after_full_duration"),
+          condition: ConditionSchema,
+          untilEndedBy: surfaceProse(Schema.String),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("heal_hp"),
+          amount: DiceAmountSchema,
+          target: Schema.Literals(["self", "target_creature"]),
+        }),
+        strictStruct({
+          kind: Schema.Literal("grant_rest_benefit"),
+          benefit: Schema.Literal("short_rest"),
+          target: Schema.Literal("target_creature"),
+        }),
+        strictStruct({
+          kind: Schema.Literal("spell_recipient_rest_lockout"),
+          resetBy: Schema.Literal("target_finishes_long_rest"),
+          target: Schema.Literal("target_creature"),
+        }),
+        MentalMessageDeliveryEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("prevent_hit_point_regain"),
+          expiresAt: Schema.Literal("end_of_caster_next_turn"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("heal_to_max_hp"),
+          target: Schema.Literal("target_creature"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_max_hp"),
+          direction: Schema.Literal("increase"),
+          delta: DiceAmountSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_max_hp"),
+          direction: Schema.Literal("decrease"),
+          delta: DiceAmountSchema,
+          floor: optionalExact(Schema.Number),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_ac"),
+          delta: DiceDeltaSchema,
+        }),
+        ModifyAcSetBaseEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("modify_save_dc"),
+          delta: DiceDeltaSchema,
+          spellSourceFilter: optionalExact(
+            Schema.Struct({ className: ClassNameSchema }),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("apply_condition"),
+          condition: Schema.Union([
+            ConditionSchema,
+            nonEmpty(ConditionSchema),
+            Schema.Struct({
+              kind: Schema.Literal("choose"),
+              from: nonEmpty(ConditionSchema),
+            }),
+          ]),
+          duration: optionalExact(
+            Schema.Literals([
+              "current_turn",
+              "end_of_next_turn",
+              "end_of_caster_next_turn",
+              "spell_duration",
+              "until_long_rest_or_greater_restoration",
+            ]),
+          ),
+        }),
+        strictStruct({
+          kind: Schema.Literal("apply_condition_while_in_area_or_until_escape"),
+          condition: Schema.Literal("restrained"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("suppress_condition_self_end"),
+          condition: Schema.Literal("prone"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("restrict_action_usage"),
+          actions: nonEmpty(
+            Schema.Literals(["action", "bonus_action", "reaction"]),
+          ),
+          whileCondition: optionalExact(ConditionSchema),
+          duration: optionalExact(
+            Schema.Literals(["current_turn", "spell_duration"]),
+          ),
+        }),
+        ActionBonusActionChoiceEffectSchema,
+        strictStruct({
+          kind: Schema.Literal("target_effect_escape_action"),
+          actor: Schema.Literal("another_creature"),
+          cost: Schema.Literal("action"),
+          method: Schema.Literal("shake_awake"),
+          outcome: Schema.Literal("end_current_effect"),
+        }),
+        strictStruct({
+          kind: Schema.Literal("command_target_next_turn"),
+          execution: Schema.Literal("target_next_turn"),
+          options: CommandTargetNextTurnOptionsSchema,
+        }),
+        ForcedReactionMovementSchema,
+        JumpMovementReplacementSchema,
+        FeatherFallMitigationSchema,
+        AudibleEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("remove_condition"),
+          condition: Schema.Union([
+            ConditionSchema,
+            nonEmpty(ConditionSchema),
+            Schema.Struct({
+              kind: Schema.Literal("choose"),
+              from: nonEmpty(ConditionSchema),
+            }),
+          ]),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_resistance"),
+          damageType: DamageTypeRefSchema,
+          sourceFilter: optionalExact(ResistanceSourceFilterSchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("reduce_damage_taken"),
+          amount: DiceAmountSchema,
+          damageType: optionalExact(DamageTypeRefSchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("share_damage_to_caster"),
+          amount: Schema.Literal("same_as_attached_damage_taken"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("retaliatory_damage"),
+          target: Schema.Literal("triggering_attacker"),
+          damageType: DamageTypeRefSchema,
+          amount: DiceAmountSchema,
+        }),
+        strictStruct({
+          kind: Schema.Literal("take_standard_action"),
+          action: StandardActionKindSchema,
+          cost: Schema.Literal("included_in_effect"),
+        }),
+        strictStruct({
+          kind: Schema.Literal("grant_alternate_action_cost"),
+          ...AlternateActionCostSchema.fields,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_extra_action"),
+          restriction: ActionRestrictionSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("scale_attack_count"),
+          additional: Schema.Number,
+        }),
+        AttackActionAttackCapEffectSchema,
+        SomaticSpellFailureChanceEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("modify_roll_numeric"),
+          on: nonEmpty(RollKindSchema),
+          delta: DiceDeltaSchema,
+          weaponFilter: optionalExact(WeaponFilterSchema),
+          skillFilter: optionalExact(
+            Schema.Union([
               Schema.Struct({
-                ability: AbilitySchema,
-                dc: DcSourceSchema,
-                onFail: EffectAtomSchema,
-                onSuccess: SaveSuccessOutcomeSchema,
+                kind: Schema.Literal("fixed"),
+                skills: nonEmpty(SkillSchema),
+              }),
+              Schema.Struct({
+                kind: Schema.Literal("choice"),
+                options: nonEmpty(SkillSchema),
+              }),
+            ]),
+          ),
+          abilityFilter: optionalExact(AbilityFilterSchema),
+          count: optionalExact(Schema.Number),
+        }),
+        strictStruct({
+          kind: Schema.Literal("initiative_swap"),
+          timing: Schema.Literal("immediately_after_initiative_roll"),
+          ally: Schema.Literal("willing_ally_same_combat"),
+          prohibitedByCondition: Schema.Literal("incapacitated"),
+        }),
+        strictStruct({
+          kind: Schema.Literal("jack_of_all_trades_ability_check_bonus"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_damage_numeric"),
+          delta: DiceDeltaSchema,
+          damageSourceFilter: optionalExact(DamageSourceFilterSchema),
+          weaponFilter: optionalExact(WeaponFilterSchema),
+          abilityFilter: optionalExact(nonEmpty(AbilitySchema)),
+          minimumDamageTotal: optionalExact(Schema.Literal(1)),
+        }),
+        strictStruct({
+          kind: Schema.Literal("grant_magic_weapon_enhancement"),
+          bonus: MagicWeaponEnhancementBonusSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_size_category"),
+          direction: Schema.Literals(["increase", "decrease"]),
+          steps: Schema.Literal(1),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_crit_range"),
+          threshold: Schema.Number,
+          attackRollFilter: Schema.Literal("weapon_or_unarmed_strike"),
+          weaponFilter: optionalExact(WeaponFilterSchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("transfer_weapon_bonus_to_ac"),
+          maxBonus: Schema.Number,
+          from: Schema.Literal("attack_and_damage_bonus"),
+          trigger: Schema.Literal("first_attack_roll_each_turn"),
+          duration: Schema.Literal("start_of_next_turn"),
+          weaponFilter: optionalExact(WeaponFilterSchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("suppress_incoming_critical_hit"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_roll_advantage"),
+          mode: Schema.Literals(["advantage", "disadvantage"]),
+          affects: optionalExact(
+            Schema.Literals(["self_roll", "rolls_against_self"]),
+          ),
+          on: nonEmpty(RollKindSchema),
+          abilityCheckTrigger: optionalExact(
+            strictStruct({
+              kind: Schema.Literal("condition_end"),
+              condition: ConditionSchema,
+            }),
+          ),
+          spellSourceFilter: optionalExact(
+            Schema.Struct({ className: ClassNameSchema }),
+          ),
+          attackerTypeFilter: optionalExact(nonEmpty(CreatureTypeSchema)),
+          skillFilter: optionalExact(
+            Schema.Union([
+              Schema.Struct({
+                kind: Schema.Literal("fixed"),
+                skills: nonEmpty(SkillSchema),
+              }),
+              Schema.Struct({
+                kind: Schema.Literal("choice"),
+                options: nonEmpty(SkillSchema),
+              }),
+            ]),
+          ),
+          conditionFilter: optionalExact(nonEmpty(ConditionSchema)),
+          abilityFilter: optionalExact(AbilityFilterSchema),
+          saveAbilityFilter: optionalExact(AbilityFilterSchema),
+          saveSourceFilter: optionalExact(SavingThrowSourceFilterSchema),
+          contextRangeFeet: optionalExact(Schema.Number),
+          attackRollTarget: optionalExact(Schema.Literal("caster")),
+          count: optionalExact(Schema.Number),
+          expiresOn: optionalExact(
+            Schema.Union([
+              Schema.Struct({
+                kind: Schema.Literal("target_uses_or_turn_start"),
+              }),
+              Schema.Struct({ kind: Schema.Literal("end_of_next_turn") }),
+              Schema.Struct({ kind: Schema.Literal("caster_turn_start") }),
+            ]),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("suppress_roll_disadvantage"),
+          on: nonEmpty(RollKindSchema),
+          skillFilter: optionalExact(
+            Schema.Union([
+              Schema.Struct({
+                kind: Schema.Literal("fixed"),
+                skills: nonEmpty(SkillSchema),
+              }),
+              Schema.Struct({
+                kind: Schema.Literal("choice"),
+                options: nonEmpty(SkillSchema),
+              }),
+            ]),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("remove_equipment_requirement"),
+          requirement: Schema.Literal("strength"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_speed"),
+          delta: Schema.Number,
+          unit: Schema.Literal("feet"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("set_speed"),
+          feet: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("set_speed_ratio"),
+          numerator: Schema.Number,
+          denominator: Schema.Number,
+        }),
+        ForceMoveEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("suspend_target"),
+          until: Schema.Literal("end_of_next_turn"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("fall_at_end_of_next_turn_unless_reapplied"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("force_fall"),
+          direction: Schema.Literals(["upward", "downward"]),
+          maxDistanceFeet: optionalExact(Schema.Number),
+          impactAsNormalFall: optionalExact(Schema.Literal(true)),
+        }),
+        strictStruct({
+          kind: Schema.Literal("levitate_target"),
+          initialRiseMaxFeet: Schema.Literal(20),
+          suspension: Schema.Literal("spell_duration"),
+          targetMovement: strictStruct({
+            allowedBy: Schema.Literal(
+              "push_or_pull_fixed_object_or_surface_within_reach",
+            ),
+            movementMode: Schema.Literal("as_if_climbing"),
+          }),
+          casterAltitudeControl: strictStruct({
+            maxDistanceFeet: Schema.Literal(20),
+            direction: Schema.Literal("up_or_down"),
+            cost: Schema.Literal("magic_action_on_caster_turn"),
+            targetMustRemainWithinSpellRange: Schema.Literal(true),
+          }),
+          selfAltitudeControl: strictStruct({
+            maxDistanceFeet: Schema.Literal(20),
+            direction: Schema.Literal("up_or_down"),
+            cost: Schema.Literal("part_of_move"),
+          }),
+          ending: Schema.Literal("float_gently_to_ground_if_aloft"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("grab_fixed_object") }),
+        Schema.Struct({
+          kind: Schema.Literal("suspend_in_area"),
+          location: Schema.Literal("top"),
+          until: Schema.Literal("effect_ends"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("fall_when_effect_ends"),
+          direction: Schema.Literal("downward"),
+          unlessCanStopFall: optionalExact(Schema.Literal(true)),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("move_area"),
+          distanceFeet: Schema.Number,
+          direction: Schema.Literal("away_from_caster"),
+          includeCreaturesInArea: optionalExact(Schema.Literal(true)),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("reduce_area_height"),
+          amount: DiceAmountSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("end_current_effect_at_area_height_zero"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("ability_check_to_move_in_area"),
+          ability: Schema.Literal("str"),
+          skill: Schema.Literal("athletics"),
+          dc: DcSourceSchema,
+          onFailure: Schema.Literal("cannot_move"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("fall_to_ground") }),
+        Schema.Struct({
+          kind: Schema.Literal("block_targeting"),
+          scope: surfaceProjection(Schema.String, "derived-label"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("choose_new_target_or_lose"),
+          subject: Schema.Literal("triggering_attack_or_spell"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("block_travel"),
+          scope: surfaceProjection(Schema.String, "derived-label"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("end_if_created_in_occupied_space"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("allow_designated_creatures_safe_passage"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("object_immune_to_all_damage") }),
+        Schema.Struct({
+          kind: Schema.Literal("object_destroyed_by_spell"),
+          spellId: surfaceReference(Schema.String, "spell-reference"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("cannot_be_dispelled_by_spell"),
+          spellId: surfaceReference(Schema.String, "spell-reference"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("block_ethereal_travel") }),
+        Schema.Struct({
+          kind: Schema.Literal("replace_destroyed_object_section_with_area"),
+          areaLabel: surfaceIdentity(Schema.String, "label"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("block_projectiles"),
+          projectile: Schema.Literal("ordinary"),
+          exception: optionalExact(Schema.Literal("giant_or_siege")),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("block_gases_and_gaseous_creatures"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("block_flying_movement"),
+          maxSize: Schema.Literal("small"),
+          includesObjects: optionalExact(Schema.Literal(true)),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("negate_named_effect"),
+          spellId: surfaceReference(Schema.String, "spell-reference"),
+          scope: Schema.Literals(["damage_only", "all_effects"]),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("negate_triggering_spell"),
+          maxSpellLevel: optionalExact(Schema.Number),
+        }),
+        Schema.Struct({ kind: Schema.Literal("reflect_triggering_spell") }),
+        Schema.Struct({
+          kind: Schema.Literal("waste_triggering_spell_or_effect"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("maximize_healing_received") }),
+        TransformTargetEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("end_ongoing_spells"),
+          maxSpellLevel: Schema.Union([
+            Schema.Number,
+            Schema.Literals(["caster_slot_level", "contested_spell_level"]),
+          ]),
+        }),
+        Schema.Struct({ kind: Schema.Literal("see_invisible_and_ethereal") }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_sense"),
+          sense: Schema.Literals([
+            "darkvision",
+            "blindsight",
+            "tremorsense",
+            "truesight",
+          ]),
+          rangeFeet: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_sense_range"),
+          sense: Schema.Literals([
+            "darkvision",
+            "blindsight",
+            "tremorsense",
+            "truesight",
+          ]),
+          grantIfAbsentFeet: Schema.Number,
+          increaseIfPresentFeet: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_language_understanding"),
+          scope: Schema.Literals([
+            "spoken_or_signed",
+            "spoken_signed_written_literal",
+          ]),
+          intelligibleToAnyLanguageKnower: Schema.Boolean,
+          writtenRequiresTouch: optionalExact(Schema.Literal(true)),
+          excludesCodesAndSecretMessages: optionalExact(Schema.Literal(true)),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_creature_communication"),
+          creatureType: CreatureTypeSchema,
+          includesInfluenceActionOptions: Schema.Boolean,
+        }),
+        Schema.Struct({ kind: Schema.Literal("deny_opportunity_attack") }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_temp_hp"),
+          amount: DiceAmountSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("prevent_drop_to_0_hp"),
+          replacementHp: Schema.Number,
+          consumesEffect: optionalExact(Schema.Literal(true)),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("negate_instant_death"),
+          consumesEffect: optionalExact(Schema.Literal(true)),
+        }),
+        Schema.Struct({ kind: Schema.Literal("make_stable") }),
+        strictStruct({
+          kind: Schema.Literal("revive_dead_creature"),
+          deathWindow: strictStruct({
+            unit: Schema.Literals(["minute", "day"]),
+            amount: PositiveIntegerSchema,
+          }),
+          hitPoints: PositiveIntegerSchema,
+          spiritConsent: Schema.Literal("can_refuse"),
+          excludedDeathCauses: Schema.Tuple([Schema.Literal("old_age")]),
+          missingBodyParts: Schema.Literal("not_restored"),
+          returningOngoingEffects: strictStruct({
+            conditions: Schema.Literal("preserve_if_duration_ongoing"),
+            magicalContagions: Schema.Literal("preserve_if_duration_ongoing"),
+            curses: Schema.Literal("preserve_if_duration_ongoing"),
+            exhaustion: strictStruct({
+              kind: Schema.Literal("reduce_by"),
+              amount: PositiveIntegerSchema,
+            }),
+            attunement: Schema.Literal("ends"),
+          }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_feat"),
+          category: Schema.Literals([
+            "general",
+            "fighting_style",
+            "epic_boon",
+            "origin",
+          ]),
+          openFallback: optionalExact(Schema.Literal("any_qualifying_feat")),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_feat"),
+          categories: nonEmpty(
+            Schema.Literals([
+              "general",
+              "fighting_style",
+              "epic_boon",
+              "origin",
+            ]),
+          ),
+          openFallback: optionalExact(Schema.Literal("any_qualifying_feat")),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_proficiency"),
+          proficiency: ProficiencyGrantSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_expertise"),
+          choiceCount: ClassLevelChoiceCountSchema,
+          skills: Schema.Union([
+            Schema.Struct({
+              kind: Schema.Literal(
+                "owned_skill_proficiencies_without_expertise",
+              ),
+            }),
+            Schema.Struct({
+              kind: Schema.Literal(
+                "listed_owned_skill_proficiencies_without_expertise",
+              ),
+              skills: nonEmpty(SkillSchema),
+            }).pipe(
+              Schema.check(
+                Schema.makeFilter((source) => distinctSkills(source.skills), {
+                  /* v8 ignore next 2 -- @preserve -- this annotation formats the diagnostic after a malformed Expertise source repeats a skill */
+                  message:
+                    "Listed Expertise skill source must contain distinct skills.",
+                }),
+              ),
+            ),
+          ]),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_language"),
+          languageId: surfaceIdentity(
+            Schema.Trimmed.check(Schema.isNonEmpty()),
+            "reference",
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_hidden_language_messages"),
+          languageId: surfaceIdentity(
+            Schema.Trimmed.check(Schema.isNonEmpty()),
+            "reference",
+          ),
+          message: Schema.Struct({
+            kind: Schema.Literal("hidden_language_message"),
+          }),
+          spotting: Schema.Struct({
+            languageKnowers: Schema.Literal("automatic"),
+            others: Schema.Struct({
+              ability: Schema.Literal("int"),
+              skill: Schema.Literal("investigation"),
+              dc: Schema.Literal(15),
+            }),
+          }),
+          deciphering: Schema.Struct({
+            withoutLanguageRequires: Schema.Literal("magic"),
+          }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_language_choice"),
+          source: Schema.Literal("character_creation_language_tables"),
+          count: PositiveIntegerSchema,
+        }),
+        strictStruct({
+          kind: Schema.Literal("grant_spell_access"),
+          spellId: surfaceDependency(Schema.String, "spell-reference"),
+          mode: SpellAccessModeSchema,
+          dcOverride: optionalExact(DcSourceSchema),
+          areaOverride: optionalExact(AreaShapeSpecSchema),
+          targetRestriction: optionalExact(GrantedSpellTargetRestrictionSchema),
+          durationOverride: optionalExact(GrantedSpellDurationOverrideSchema),
+        }),
+        strictStruct({
+          kind: Schema.Literal("grant_spell_access_choice"),
+          spellList: Schema.Literals(CLASS_SPELLCASTING_CLASS_NAMES),
+          spellLevel: SpellLevelSchema,
+          mode: SpellAccessModeSchema,
+          count: PositiveIntegerSchema,
+          replacement: optionalExact(
+            strictStruct({
+              trigger: Schema.Literal("class_level_gain"),
+              replacementCount: PositiveIntegerSchema,
+            }),
+          ),
+        }),
+        strictStruct({
+          kind: Schema.Literal("grant_class_level_prepared_spell_access"),
+          tiers: nonEmpty(
+            Schema.Struct({
+              minimumClassLevel: PositiveIntegerSchema,
+              spellIds: nonEmpty(
+                surfaceReference(
+                  Schema.Trimmed.check(Schema.isNonEmpty()),
+                  "spell-list",
+                ),
+              ),
+            }),
+          ),
+        }),
+        strictStruct({
+          kind: Schema.Literal("grant_land_choice_prepared_spell_access"),
+          choice: Schema.Struct({
+            kind: Schema.Literal("druid_circle_land"),
+            trigger: Schema.Literal("long_rest"),
+          }),
+          spellsByLand: Schema.Struct({
+            arid: nonEmpty(
+              Schema.Struct({
+                minimumClassLevel: PositiveIntegerSchema,
+                spellIds: nonEmpty(
+                  surfaceReference(
+                    Schema.Trimmed.check(Schema.isNonEmpty()),
+                    "spell-list",
+                  ),
+                ),
               }),
             ),
-            passiveEffects: optionalExact(nonEmpty(EffectAtomSchema)),
-            destroyedBy: surfaceProse(Schema.String),
+            polar: nonEmpty(
+              Schema.Struct({
+                minimumClassLevel: PositiveIntegerSchema,
+                spellIds: nonEmpty(
+                  surfaceReference(
+                    Schema.Trimmed.check(Schema.isNonEmpty()),
+                    "spell-list",
+                  ),
+                ),
+              }),
+            ),
+            temperate: nonEmpty(
+              Schema.Struct({
+                minimumClassLevel: PositiveIntegerSchema,
+                spellIds: nonEmpty(
+                  surfaceReference(
+                    Schema.Trimmed.check(Schema.isNonEmpty()),
+                    "spell-list",
+                  ),
+                ),
+              }),
+            ),
+            tropical: nonEmpty(
+              Schema.Struct({
+                minimumClassLevel: PositiveIntegerSchema,
+                spellIds: nonEmpty(
+                  surfaceReference(
+                    Schema.Trimmed.check(Schema.isNonEmpty()),
+                    "spell-list",
+                  ),
+                ),
+              }),
+            ),
           }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_spell_free_casts"),
+          spellId: surfaceDependency(
+            Schema.Trimmed.check(Schema.isNonEmpty()),
+            "spell-reference",
+          ),
+          count: Schema.Union([
+            PositiveIntegerSchema,
+            strictStruct({
+              kind: Schema.Literal("proficiency_bonus"),
+            }),
+          ]),
+          resetCadence: Schema.Literals(["long_rest", "short_or_long_rest"]),
+          scaling: optionalExact(
+            Schema.Struct({
+              axis: Schema.Literal("class"),
+              tiers: nonEmpty(
+                Schema.Struct({
+                  atLevel: PositiveIntegerSchema,
+                  count: PositiveIntegerSchema,
+                }),
+              ),
+            }),
+          ),
+        }).pipe(
+          /* v8 ignore start -- @preserve -- a free-cast grant that combines a numeric count with class scaling is malformed authored input */
+          Schema.check(
+            Schema.makeFilter(
+              (grant) =>
+                typeof grant.count === "number" || grant.scaling === undefined,
+              {
+                /* v8 ignore next 2 -- @preserve -- this annotation formats the diagnostic after a malformed free-cast grant supplies both a numeric count and class scaling */
+                message:
+                  "Proficiency Bonus spell free-cast counts must not also carry class-level scaling.",
+              },
+            ),
+          ),
+          /* v8 ignore stop -- @preserve */
         ),
-      }),
-      Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
-      Schema.Struct({
-        kind: Schema.Literal("revert_shape_shift_to_true_form"),
-        onlyIfTargetIsShapeShifted: Schema.Literal(true),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("suppress_shape_shifting_while_in_area"),
-        onlyIfTargetIsShapeShifted: Schema.Literal(true),
-      }),
-      Schema.Struct({ kind: Schema.Literal("none") }),
-    ),
-  ).annotations({ identifier: "EffectAtom" });
+        Schema.Struct({
+          kind: Schema.Literal("grant_die_token"),
+          die: DiceAmountSchema,
+          trigger: Schema.Literal("failed_d20_test"),
+          duration: Schema.Struct({
+            unit: Schema.Literal("hour"),
+            amount: PositiveIntegerSchema,
+          }),
+          maxHeld: PositiveIntegerSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_bonus_action_attack"),
+          attack: Schema.Literal("unarmed_strike"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("replace_damage_die"),
+          die: DiceAmountSchema,
+          scope: Schema.Literal("unarmed_or_monk_weapon"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("substitute_ability_for_rolls"),
+          use: AbilitySchema,
+          replaces: AbilitySchema,
+          on: nonEmpty(
+            Schema.Literals([
+              "attack_roll",
+              "damage_roll",
+              "unarmed_strike_save_dc",
+            ]),
+          ),
+          scope: Schema.Literal("unarmed_or_monk_weapon"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("offer_ability_substitution_for_ability_checks"),
+          use: AbilitySchema,
+          skillFilter: Schema.Struct({
+            kind: Schema.Literal("fixed"),
+            skills: nonEmpty(SkillSchema),
+          }),
+          requiredActiveFeature: optionalExact(
+            Schema.Struct({
+              kind: Schema.Literal("class_feature"),
+              unitId: surfaceReference(Schema.String, "unit-reference"),
+            }),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("offer_ability_substitution_for_jump_distance"),
+          use: AbilitySchema,
+          replaces: AbilitySchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_condition_immunity"),
+          condition: ConditionSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("suppress_condition_benefit"),
+          condition: ConditionSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_damage_immunity"),
+          damageType: DamageTypeSchema,
+        }),
+        Schema.Struct({ kind: Schema.Literal("block_max_hp_reduction") }),
+        Schema.Struct({
+          kind: Schema.Literal("set_ability_score"),
+          ability: AbilitySchema,
+          value: Schema.Number,
+          mode: Schema.Literals(["set", "floor"]),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_ability_score"),
+          ability: AbilitySchema,
+          delta: Schema.Number,
+          minimum: optionalExact(Schema.Number),
+          maximum: optionalExact(Schema.Number),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("modify_proficiency_bonus"),
+          delta: Schema.Number,
+          minimum: optionalExact(Schema.Number),
+          maximum: optionalExact(Schema.Number),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("detect"),
+          property: DetectionPropertySchema,
+          radiusFeet: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("magical_identity_mask"),
+          creatureBranch: Schema.Struct({
+            chosenCreatureType: Schema.Literal("other_than_actual_type"),
+            treatedAsBy: Schema.Literal("spells_and_magical_effects"),
+          }),
+          objectBranch: Schema.Struct({
+            auraAppearance: Schema.Literal(
+              "nonmagical_magical_or_chosen_school",
+            ),
+            observedBy: Schema.Literal(
+              "spells_and_magical_effects_detecting_magical_auras",
+            ),
+          }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("locate_kind"),
+          subjectKinds: nonEmpty(LocateKindSubjectSchema),
+          maxDistanceFeet: PositiveIntegerSchema,
+          match: Schema.Literal("closest"),
+          query: Schema.Literal("described_or_named_specific_kind"),
+          result: Schema.Literal("direction_and_distance"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("object_location_sense"),
+          searchModes: ObjectLocationSenseSearchModesSchema,
+          maxDistanceFeet: PositiveIntegerSchema,
+          result: Schema.Literal("direction_to_location_and_movement"),
+          blockedBy: Schema.Literal("any_thickness_of_lead_direct_path"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal(
+            "block_divination_targeting_and_scrying_perception",
+          ),
+        }),
+        DivinationOmenEffectSchema,
+        PlanarEntityAnswersEffectSchema,
+        CourierTaskEffectSchema,
+        EtherealPhaseEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("grant_speed"),
+          speedKind: Schema.Literals(["fly", "swim", "climb", "burrow"]),
+          feet: Schema.Union([Schema.Number, LinkedSpeedSchema]),
+          hover: optionalExact(Schema.Boolean),
+        }),
+        LiquidSurfaceTraversalSchema,
+        Schema.Struct({ kind: Schema.Literal("ignore_web_restrictions") }),
+        Schema.Struct({
+          kind: Schema.Literal("alter_item_kind"),
+          newKind: surfaceIdentity(Schema.String, "reference"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("natural_weapons"),
+          damageType: AlterSelfNaturalWeaponGrowthDamageTypeChoiceSchema,
+          damageDie: Schema.Literal(6),
+          replacesAbility: Schema.Literal("str"),
+          attackRollAbility: Schema.Literal("spellcasting"),
+          damageRollAbility: Schema.Literal("spellcasting"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("water_breathing") }),
+        Schema.Struct({
+          kind: Schema.Literal("teleport"),
+          maxFeet: Schema.Number,
+          destination: Schema.Literal("unoccupied_visible_space"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("transport_exile"),
+          destination: Schema.Literals([
+            "demiplane",
+            "astral_plane",
+            "ethereal_plane",
+            "plane_of_origin",
+            "different_plane",
+          ]),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("make_weapon_attack"),
+          weapon: Schema.Literal("material_component"),
+          abilityOverride: optionalExact(Schema.Literal("spellcasting")),
+          damageTypeChoice: optionalExact(
+            nonEmpty(Schema.Literals(["radiant", "weapon_normal"])),
+          ),
+          bonusDamage: optionalExact(
+            Schema.Struct({
+              damageType: DamageTypeRefSchema,
+              amount: DiceAmountSchema,
+            }),
+          ),
+        }),
+        strictStruct({
+          kind: Schema.Literal("override_attached_weapon_attack"),
+          replacesAbility: Schema.Literal("str"),
+          attackRollAbility: Schema.Literal("spellcasting"),
+          damageRollAbility: Schema.Literal("spellcasting"),
+          attackScope: Schema.Literal("melee_attacks_using_attached_weapon"),
+          damageDie: DiceAmountSchema,
+          damageTypeChoice: Schema.Tuple([
+            Schema.Literal("force"),
+            Schema.Literal("weapon_normal"),
+          ]),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("container_storage"),
+          storage: Schema.Struct({
+            maxWeightPounds: Schema.Number,
+            maxVolumeCubicFeet: Schema.Number,
+            weightOverridePounds: optionalExact(Schema.Number),
+            airSupply: optionalExact(
+              Schema.Struct({
+                sharedMinutes: Schema.Number,
+              }),
+            ),
+            extradimensional: optionalExact(Schema.Literal(true)),
+          }),
+        }),
+        ExtradimensionalSpaceEffectSchema,
+        Schema.Struct({
+          kind: Schema.Literal("create_sensor"),
+          visibility: Schema.Literal("invisible"),
+          durability: Schema.Literal("invulnerable"),
+          sensorSenses: optionalExact(
+            nonEmpty(
+              Schema.Struct({
+                kind: Schema.Literals([
+                  "darkvision",
+                  "blindsight",
+                  "tremorsense",
+                  "truesight",
+                ]),
+                rangeFeet: Schema.Number,
+              }),
+            ),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("remote_perception"),
+          senses: nonEmpty(Schema.Literals(["seeing", "hearing"])),
+          switchCost: optionalExact(Schema.Literal("bonus_action")),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("emit_light"),
+          brightRadiusFeet: Schema.Number,
+          dimAdditionalFeet: optionalExact(Schema.Number),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("emit_dim_light"),
+          radiusFeet: Schema.Number,
+          expiresAt: Schema.Literal("end_of_caster_next_turn"),
+        }),
+        strictStruct({
+          kind: Schema.Literal("spell_created_held_object"),
+          heldBy: Schema.Literal("caster"),
+          requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
+          disappearsWhen: nonEmpty(
+            SpellCreatedHeldObjectDisappearanceTriggerSchema,
+          ),
+          reEvoke: strictStruct({
+            cost: strictStruct({ kind: Schema.Literal("bonus_action") }),
+            requirements: nonEmpty(SpellCreatedHeldObjectRequirementSchema),
+          }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("composite"),
+          effects: nonEmpty(EffectAtomSchema),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("choose_effect_mode"),
+          label: surfaceProjection(Schema.String, "derived-label"),
+          options: nonEmpty(
+            Schema.Struct({
+              id: surfaceProtocol(Schema.String, "optionId"),
+              displayName: surfaceIdentity(Schema.String, "displayName"),
+              effects: nonEmpty(OngoingEffectSchema),
+            }),
+          ),
+        }),
+        Schema.Struct({ kind: Schema.Literal("block_reanimation") }),
+        Schema.Struct({
+          kind: Schema.Literal("ignite_objects"),
+          filter: ObjectFilterSchema,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("create_object"),
+          maxSize: SizeSchema,
+          shape: optionalExact(AreaShapeSpecSchema),
+          consumable: optionalExact(Schema.Literal(true)),
+          durability: optionalExact(CreatedObjectDurabilitySchema),
+        }),
+        strictStruct({
+          kind: Schema.Literal("create_illusion"),
+          maxSize: SizeSchema,
+          channels: nonEmpty(IllusionSensoryChannelSchema),
+        }),
+        strictStruct({
+          kind: Schema.Literal("create_phantasmal_illusion"),
+          maxCubeSideFeet: Schema.Literal(10),
+          channels: nonEmpty(IllusionSensoryChannelSchema),
+          perception: Schema.Literal("target_only"),
+          rationalization: Schema.Literal("treat_illogical_outcomes_as_real"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("force_drop_item") }),
+        Schema.Struct({
+          kind: Schema.Literal("move_object"),
+          maxDistanceFeet: Schema.Number,
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("pull_object_away"),
+          maxDistanceFeet: Schema.Number,
+        }),
+        Schema.Struct({ kind: Schema.Literal("manipulate_object") }),
+        Schema.Struct({ kind: Schema.Literal("break_concentration") }),
+        Schema.Struct({
+          kind: Schema.Literal("damage_structure"),
+          amount: DiceAmountSchema,
+          damageType: DamageTypeRefSchema,
+          structureContact: Schema.Literal("ground_in_area"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("collapse_structure"),
+          trigger: Schema.Literal("structure_drops_to_0_hp"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("bury_in_rubble"),
+          escape: Schema.Struct({
+            kind: Schema.Literal("ability_check"),
+            ability: Schema.Literal("str"),
+            skill: Schema.Literal("athletics"),
+            dc: Schema.Number,
+            action: Schema.Literal("action"),
+          }),
+        }),
+        Schema.Struct({ kind: Schema.Literal("bond_objects") }),
+        Schema.Struct({
+          kind: Schema.Literal("lock_object"),
+          password: optionalExact(surfaceProse(Schema.String)),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("release_object_access"),
+          mundaneLockLimit: Schema.Literal(1),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("suppress_arcane_lock"),
+          duration: Schema.Struct({
+            unit: Schema.Literal("minute"),
+            amount: Schema.Literal(10),
+          }),
+          allowsOpenClose: Schema.Literal(true),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("reposition_attachment"),
+          maxMoveFeet: optionalExact(Schema.Number),
+          destination: optionalExact(
+            strictStruct({
+              kind: Schema.Literal("visible_unoccupied_space"),
+              chooser: Schema.Literal("caster"),
+            }),
+          ),
+        }),
+        Schema.Struct({ kind: Schema.Literal("area_is_difficult_terrain") }),
+        Schema.Struct({ kind: Schema.Literal("area_emits_dim_light") }),
+        Schema.Struct({ kind: Schema.Literal("area_is_lightly_obscured") }),
+        Schema.Struct({ kind: Schema.Literal("area_is_heavily_obscured") }),
+        Schema.Struct({ kind: Schema.Literal("douse_exposed_flames") }),
+        Schema.Struct({ kind: Schema.Literal("area_is_magical_darkness") }),
+        strictStruct({
+          kind: Schema.Literal("area_of_silence"),
+          soundBoundary: Schema.Literal("blocks_creation_and_passage"),
+          appliesWhen: Schema.Literal("entirely_inside_area"),
+          grantsDamageImmunity: Schema.Literal("thunder"),
+          imposesCondition: Schema.Literal("deafened"),
+          preventsSpellComponent: Schema.Literal("verbal"),
+        }),
+        strictStruct({
+          kind: Schema.Literal("truthfulness_constraint"),
+          prohibitedCommunication: Schema.Literal("deliberate_lie"),
+          appliesWhile: Schema.Literal("in_spell_area"),
+          targetAwareness: Schema.Literal("aware_of_spell"),
+          allowedResponse: Schema.Literal("evasive_or_silent_truthful"),
+        }),
+        strictStruct({
+          kind: Schema.Literal("reveal_save_outcome_to_caster"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal(
+            "end_overlapping_spell_created_bright_or_dim_light",
+          ),
+          maxSpellLevel: Schema.Number,
+        }),
+        strictStruct({
+          kind: Schema.Literal("area_anchor_or_layering_requirement"),
+          anchor: strictStruct({
+            kind: Schema.Literal("between_solid_masses"),
+            count: Schema.Literal(2),
+          }),
+          layering: strictStruct({
+            kind: Schema.Literal("across_surface"),
+            surfaces: Schema.Tuple([
+              Schema.Literal("floor"),
+              Schema.Literal("wall"),
+              Schema.Literal("ceiling"),
+            ]),
+            flatSurfaceDepthFeet: Schema.Literal(5),
+          }),
+          unmetOutcome: strictStruct({
+            kind: Schema.Literal("collapse_and_end_effect"),
+            timing: Schema.Literal("start_of_caster_next_turn"),
+          }),
+        }),
+        strictStruct({
+          kind: Schema.Literal("area_section_burns_away"),
+          section: strictStruct({
+            kind: Schema.Literal("cube"),
+            sideFeet: Schema.Literal(5),
+          }),
+          exposure: Schema.Literal("fire"),
+          burnsAwayAfter: strictStruct({
+            unit: Schema.Literal("round"),
+            amount: Schema.Literal(1),
+          }),
+          creatureStartsTurnInFireDamage: strictStruct({
+            damageType: Schema.Literal("fire"),
+            amount: DiceAmountSchema,
+          }),
+        }),
+        Schema.Struct({ kind: Schema.Literal("area_has_strong_wind") }),
+        Schema.Struct({
+          kind: Schema.Literal("prevent_ranged_weapon_attacks"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("area_movement_cost_multiplier"),
+          multiplier: PositiveIntegerSchema,
+          appliesTo: Schema.Literals(["any_movement", "toward_source"]),
+        }),
+        strictStruct({
+          kind: Schema.Literal("plant_enrichment"),
+          duration: strictStruct({
+            unit: Schema.Literal("day"),
+            amount: PositiveIntegerSchema,
+          }),
+          harvestYieldMultiplier: PositiveIntegerSchema,
+          benefitLimit: strictStruct({
+            kind: Schema.Literal("one_application_per_year"),
+          }),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("grant_cover"),
+          cover: Schema.Literal("three_quarters"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("block_line_of_sight") }),
+        Schema.Struct({
+          kind: Schema.Literal("prevent_creature_passage"),
+          exceptCreatureTypes: nonEmpty(CreatureTypeSchema),
+          allowsThroughBarrier: nonEmpty(
+            Schema.Literals([
+              "spells",
+              "ranged_attacks",
+              "reach_weapon_attacks",
+            ]),
+          ),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("prevent_spellcasting_and_magic_actions"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("prevent_magical_ranged_attacks"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("block_magical_targeting_and_aoe"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("block_teleport_and_planar_travel"),
+        }),
+        Schema.Struct({ kind: Schema.Literal("suppress_magic_items") }),
+        Schema.Struct({
+          kind: Schema.Literal("suppress_ongoing_magic_effects"),
+          exceptSources: nonEmpty(Schema.Literals(["artifact", "deity"])),
+          suppressedTimeCountsAgainstDuration: Schema.Literal(true),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("ordered_barrier_layers"),
+          layers: nonEmpty(
+            Schema.Struct({
+              order: Schema.Number,
+              label: surfaceIdentity(Schema.String, "label"),
+              save: optionalExact(
+                Schema.Struct({
+                  ability: AbilitySchema,
+                  dc: DcSourceSchema,
+                  onFail: EffectAtomSchema,
+                  onSuccess: SaveSuccessOutcomeSchema,
+                }),
+              ),
+              passiveEffects: optionalExact(nonEmpty(EffectAtomSchema)),
+              destroyedBy: surfaceProse(Schema.String),
+            }),
+          ),
+        }),
+        Schema.Struct({ kind: Schema.Literal("allow_reaction_stand_up") }),
+        Schema.Struct({
+          kind: Schema.Literal("revert_shape_shift_to_true_form"),
+          onlyIfTargetIsShapeShifted: Schema.Literal(true),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("suppress_shape_shifting_while_in_area"),
+          onlyIfTargetIsShapeShifted: Schema.Literal(true),
+        }),
+        Schema.Struct({ kind: Schema.Literal("none") }),
+      ]),
+  ).pipe(Schema.annotate({ identifier: "EffectAtom" }));
 
 export const AreaScopedEffectAtomSchema = AreaPushUnsecuredObjectsSchema;
-export const AreaDirectEffectAtomSchema = Schema.Union(
+export const AreaDirectEffectAtomSchema = Schema.Union([
   EffectAtomSchema,
   AreaScopedEffectAtomSchema,
-);
+]);
 
-export const SaveSuccessOutcomeSchema: Schema.suspend<
-  SaveSuccessOutcome,
-  SaveSuccessOutcome,
-  never
-> = Schema.suspend(() =>
-  Schema.Union(
+export const SaveSuccessOutcomeSchema = Schema.suspend(() =>
+  Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("half_damage"),
     }),
     EffectAtomSchema,
-  ),
-).annotations({ identifier: "SaveSuccessOutcome" });
+  ]),
+).pipe(Schema.annotate({ identifier: "SaveSuccessOutcome" }));
 
 export const RepeatSaveSpecSchema = Schema.Struct({
-  cadence: Schema.Literal("end_of_target_turn", "on_target_takes_damage"),
+  cadence: Schema.Literals(["end_of_target_turn", "on_target_takes_damage"]),
   rollMode: optionalExact(Schema.Literal("advantage")),
   onSuccess: Schema.Literal("ends_on_target"),
   onFailAgain: optionalExact(EffectAtomSchema),
@@ -4464,172 +4545,176 @@ export const RandomTableRollSchema = Schema.Struct({
   modifier: optionalExact(Schema.Number),
 });
 
-export const RandomTableOutcomeSchema: Schema.suspend<
-  RandomTableOutcome,
-  RandomTableOutcome,
-  never
-> = Schema.suspend(() =>
+export const RandomTableOutcomeSchema = Schema.suspend(() =>
   Schema.Struct({
     min: Schema.Number,
     max: Schema.Number,
     label: surfaceProjection(Schema.String, "derived-label"),
     phases: optionalExact(nonEmpty(ActivationPhaseSchema)),
   }),
-).annotations({ identifier: "RandomTableOutcome" });
+).pipe(Schema.annotate({ identifier: "RandomTableOutcome" }));
 
-export const OngoingRandomTableOutcomeSchema: Schema.suspend<
-  OngoingRandomTableOutcome,
-  OngoingRandomTableOutcome,
-  never
-> = Schema.suspend(() =>
+export const OngoingRandomTableOutcomeSchema = Schema.suspend(() =>
   Schema.Struct({
     min: Schema.Number,
     max: Schema.Number,
     label: surfaceProjection(Schema.String, "derived-label"),
     effects: optionalExact(nonEmpty(OngoingEffectSchema)),
   }),
-).annotations({ identifier: "OngoingRandomTableOutcome" });
+).pipe(Schema.annotate({ identifier: "OngoingRandomTableOutcome" }));
 
-export const PhaseContinuationSchema: Schema.suspend<
+export const PhaseContinuationSchema: Schema.Codec<
   PhaseContinuation,
-  PhaseContinuation,
+  unknown,
+  never,
   never
-> = Schema.suspend(() =>
-  Schema.Struct({
-    kind: Schema.Literal("repeat"),
-    when: ContinuationPredicateSchema,
-    limits: nonEmpty(ContinuationLimitSchema),
-    next: nonEmpty(ActivationPhaseSchema),
-  }),
-).annotations({ identifier: "PhaseContinuation" });
+> = Schema.suspend(
+  (): Schema.Codec<PhaseContinuation, unknown, never, never> =>
+    Schema.Struct({
+      kind: Schema.Literal("repeat"),
+      when: ContinuationPredicateSchema,
+      limits: nonEmpty(ContinuationLimitSchema),
+      next: nonEmpty(ActivationPhaseSchema),
+    }),
+).pipe(Schema.annotate({ identifier: "PhaseContinuation" }));
 
-export const ActivationPhaseSchema: Schema.suspend<
+export const ActivationPhaseSchema: Schema.Codec<
   ActivationPhase,
-  ActivationPhase,
+  unknown,
+  never,
   never
-> = Schema.suspend(() =>
-  Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("attack_roll"),
-      attachment: AttachmentSchema,
-      attackKind: Schema.Literal("ranged_spell_attack", "melee_spell_attack"),
-      onHit: nonEmpty(EffectAtomSchema),
-      onMiss: nonEmpty(EffectAtomSchema),
-      continue: optionalExact(PhaseContinuationSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("save_gate"),
-      attachment: AttachmentSchema,
-      ability: AbilitySchema,
-      dc: DcSourceSchema,
-      onFail: EffectAtomSchema,
-      onSuccess: SaveSuccessOutcomeSchema,
-      repeatSaves: optionalExact(nonEmpty(RepeatSaveSpecSchema)),
-      autoSuccessIfCasterSlotGte: optionalExact(
-        Schema.Literal("triggering_spell_level"),
-      ),
-      autoSuccessIfTarget: optionalExact(ForbiddenValueSchema),
-      saveAppliesIf: optionalExact(
-        Schema.Literal("unwilling_target", "unwilling_creature_target"),
-      ),
-      usageLimit: optionalExact(UsageLimitSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("save_gate"),
-      attachment: CreatureTargetAttachmentSchema,
-      ability: AbilitySchema,
-      dc: DcSourceSchema,
-      onFail: EffectAtomSchema,
-      onSuccess: SaveSuccessOutcomeSchema,
-      repeatSaves: optionalExact(nonEmpty(RepeatSaveSpecSchema)),
-      autoSuccessIfCasterSlotGte: optionalExact(
-        Schema.Literal("triggering_spell_level"),
-      ),
-      autoSuccessIfTarget: SaveGateTargetAutoSuccessPredicateSchema,
-      saveAppliesIf: optionalExact(
-        Schema.Literal("unwilling_target", "unwilling_creature_target"),
-      ),
-      usageLimit: optionalExact(UsageLimitSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("ability_check_gate"),
-      attachment: AttachmentSchema,
-      ability: SpellcastingAbilityCheckAbilitySchema,
-      skill: optionalExact(SkillSchema),
-      dc: Schema.Number,
-      onPass: EffectAtomSchema,
-      onFail: optionalExact(EffectAtomSchema),
-      autoSuccessIfCasterSlotGte: optionalExact(
-        Schema.Literal("target_spell_level"),
-      ),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("random_table"),
-      roll: RandomTableRollSchema,
-      outcomes: nonEmpty(RandomTableOutcomeSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("direct"),
-      attachment: AreaAttachmentSchema,
-      effects: nonEmpty(AreaDirectEffectAtomSchema),
-      mode: optionalExact(CastTimeEffectModeChoiceSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("direct"),
-      attachment: AttachmentSchema,
-      effects: optionalExact(nonEmpty(EffectAtomSchema)),
-      mode: optionalExact(CastTimeEffectModeChoiceSchema),
-    }),
-  ),
-).annotations({ identifier: "ActivationPhase" });
+> = Schema.suspend(
+  (): Schema.Codec<ActivationPhase, unknown, never, never> =>
+    Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("attack_roll"),
+        attachment: AttachmentSchema,
+        attackKind: Schema.Literals([
+          "ranged_spell_attack",
+          "melee_spell_attack",
+        ]),
+        onHit: nonEmpty(EffectAtomSchema),
+        onMiss: nonEmpty(EffectAtomSchema),
+        continue: optionalExact(PhaseContinuationSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("save_gate"),
+        attachment: AttachmentSchema,
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        onFail: EffectAtomSchema,
+        onSuccess: SaveSuccessOutcomeSchema,
+        repeatSaves: optionalExact(nonEmpty(RepeatSaveSpecSchema)),
+        autoSuccessIfCasterSlotGte: optionalExact(
+          Schema.Literal("triggering_spell_level"),
+        ),
+        autoSuccessIfTarget: optionalExact(ForbiddenValueSchema),
+        saveAppliesIf: optionalExact(
+          Schema.Literals(["unwilling_target", "unwilling_creature_target"]),
+        ),
+        usageLimit: optionalExact(UsageLimitSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("save_gate"),
+        attachment: CreatureTargetAttachmentSchema,
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        onFail: EffectAtomSchema,
+        onSuccess: SaveSuccessOutcomeSchema,
+        repeatSaves: optionalExact(nonEmpty(RepeatSaveSpecSchema)),
+        autoSuccessIfCasterSlotGte: optionalExact(
+          Schema.Literal("triggering_spell_level"),
+        ),
+        autoSuccessIfTarget: SaveGateTargetAutoSuccessPredicateSchema,
+        saveAppliesIf: optionalExact(
+          Schema.Literals(["unwilling_target", "unwilling_creature_target"]),
+        ),
+        usageLimit: optionalExact(UsageLimitSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("ability_check_gate"),
+        attachment: AttachmentSchema,
+        ability: SpellcastingAbilityCheckAbilitySchema,
+        skill: optionalExact(SkillSchema),
+        dc: Schema.Number,
+        onPass: EffectAtomSchema,
+        onFail: optionalExact(EffectAtomSchema),
+        autoSuccessIfCasterSlotGte: optionalExact(
+          Schema.Literal("target_spell_level"),
+        ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("random_table"),
+        roll: RandomTableRollSchema,
+        outcomes: nonEmpty(RandomTableOutcomeSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("direct"),
+        attachment: AreaAttachmentSchema,
+        effects: nonEmpty(AreaDirectEffectAtomSchema),
+        mode: optionalExact(CastTimeEffectModeChoiceSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("direct"),
+        attachment: AttachmentSchema,
+        effects: optionalExact(nonEmpty(EffectAtomSchema)),
+        mode: optionalExact(CastTimeEffectModeChoiceSchema),
+      }),
+    ]),
+).pipe(Schema.annotate({ identifier: "ActivationPhase" }));
 
-export const OngoingEffectSchema: Schema.suspend<
+export const OngoingEffectSchema: Schema.Codec<
   OngoingEffect,
-  OngoingEffect,
+  unknown,
+  never,
   never
-> = Schema.suspend(() =>
-  Schema.Union(
-    EffectAtomSchema,
-    Schema.Struct({
-      kind: Schema.Literal("random_table"),
-      roll: RandomTableRollSchema,
-      outcomes: nonEmpty(OngoingRandomTableOutcomeSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("save_gate"),
-      attachment: optionalExact(AreaAttachmentSchema),
-      ability: AbilitySchema,
-      dc: DcSourceSchema,
-      onFail: EffectAtomSchema,
-      onSuccess: SaveSuccessOutcomeSchema,
-      saveApplication: optionalExact(
-        strictStruct({
-          kind: Schema.Literal("caster_may_force_target_save"),
-        }),
-      ),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("ability_check_gate"),
-      ability: SpellcastingAbilityCheckAbilitySchema,
-      skill: optionalExact(SkillSchema),
-      dc: DcSourceSchema,
-      onPass: EffectAtomSchema,
-      onFail: optionalExact(EffectAtomSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("attack_roll"),
-      attachment: optionalExact(CreatureTargetAttachmentSchema),
-      attackKind: Schema.Literal("ranged_spell_attack", "melee_spell_attack"),
-      onHit: nonEmpty(EffectAtomSchema),
-      onMiss: nonEmpty(EffectAtomSchema),
-    }),
-    Schema.Struct({
-      kind: Schema.Literal("composite_ongoing"),
-      effects: nonEmpty(OngoingEffectSchema),
-    }),
-    ModifyAcSetFloorEffectSchema,
-  ),
-).annotations({ identifier: "OngoingEffect" });
+> = Schema.suspend(
+  (): Schema.Codec<OngoingEffect, unknown, never, never> =>
+    Schema.Union([
+      EffectAtomSchema,
+      Schema.Struct({
+        kind: Schema.Literal("random_table"),
+        roll: RandomTableRollSchema,
+        outcomes: nonEmpty(OngoingRandomTableOutcomeSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("save_gate"),
+        attachment: optionalExact(AreaAttachmentSchema),
+        ability: AbilitySchema,
+        dc: DcSourceSchema,
+        onFail: EffectAtomSchema,
+        onSuccess: SaveSuccessOutcomeSchema,
+        saveApplication: optionalExact(
+          strictStruct({
+            kind: Schema.Literal("caster_may_force_target_save"),
+          }),
+        ),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("ability_check_gate"),
+        ability: SpellcastingAbilityCheckAbilitySchema,
+        skill: optionalExact(SkillSchema),
+        dc: DcSourceSchema,
+        onPass: EffectAtomSchema,
+        onFail: optionalExact(EffectAtomSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("attack_roll"),
+        attachment: optionalExact(CreatureTargetAttachmentSchema),
+        attackKind: Schema.Literals([
+          "ranged_spell_attack",
+          "melee_spell_attack",
+        ]),
+        onHit: nonEmpty(EffectAtomSchema),
+        onMiss: nonEmpty(EffectAtomSchema),
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("composite_ongoing"),
+        effects: nonEmpty(OngoingEffectSchema),
+      }),
+      ModifyAcSetFloorEffectSchema,
+    ]),
+).pipe(Schema.annotate({ identifier: "OngoingEffect" }));
 
 export const AuthoredConditionalEffectSchema = strictStruct({
   kind: Schema.Literal("phantasm_damage"),
@@ -4652,89 +4737,96 @@ export const OngoingOperationSchema = Schema.Struct({
     Schema.Struct({
       count: Schema.Number,
       distinct: Schema.Literal(true),
-      targetTypes: nonEmpty(Schema.Literal("creature", "object")),
+      targetTypes: nonEmpty(Schema.Literals(["creature", "object"])),
     }),
   ),
   effect: OngoingEffectSchema,
   usageLimit: optionalExact(UsageLimitSchema),
 });
 
-export const OngoingEffectMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("ongoing_effect"),
-    attachment: AttachmentSchema,
-    initialPhase: optionalExact(ActivationPhaseSchema),
-    operations: nonEmpty(OngoingOperationSchema),
-    authoredConditionalEffects: optionalExact(
-      nonEmpty(AuthoredConditionalEffectSchema),
-    ),
-  }),
+export const OngoingEffectMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    Schema.Struct({
+      family: Schema.Literal("ongoing_effect"),
+      attachment: AttachmentSchema,
+      initialPhase: optionalExact(ActivationPhaseSchema),
+      operations: nonEmpty(OngoingOperationSchema),
+      authoredConditionalEffects: optionalExact(
+        nonEmpty(AuthoredConditionalEffectSchema),
+      ),
+    }).fields,
+  ),
 );
 
-export const ActivationMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("activation"),
-    phases: nonEmpty(ActivationPhaseSchema),
-  }),
+export const ActivationMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    Schema.Struct({
+      family: Schema.Literal("activation"),
+      phases: nonEmpty(ActivationPhaseSchema),
+    }).fields,
+  ),
 );
 
 /* v8 ignore start -- @preserve -- these exported declarative schemas initialize during full-suite collection before V8 attributes their statements; schema-spell-readers.test.ts decodes their shapes directly */
-export const ModalActivationMechanicsSchema = Schema.extend(
-  SpellMechanicsCommonHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("modal_activation"),
-    mode: strictStruct({
-      label: surfaceProjection(Schema.String, "derived-label"),
-      options: nonEmpty(
-        strictStruct({
-          id: surfaceProtocol(Schema.String, "optionId"),
-          displayName: surfaceIdentity(Schema.String, "displayName"),
-          castingTime: CastingTimeSchema,
-          attachment: AttachmentSchema,
-          effects: nonEmpty(AreaDirectEffectAtomSchema),
+export const ModalActivationMechanicsSchema =
+  SpellMechanicsCommonHeaderSchema.pipe(
+    Schema.fieldsAssign(
+      Schema.Struct({
+        family: Schema.Literal("modal_activation"),
+        mode: strictStruct({
+          label: surfaceProjection(Schema.String, "derived-label"),
+          options: nonEmpty(
+            strictStruct({
+              id: surfaceProtocol(Schema.String, "optionId"),
+              displayName: surfaceIdentity(Schema.String, "displayName"),
+              castingTime: CastingTimeSchema,
+              attachment: AttachmentSchema,
+              effects: nonEmpty(AreaDirectEffectAtomSchema),
+            }),
+          ),
         }),
-      ),
-    }),
-  }),
+      }).fields,
+    ),
+  );
+
+export const TriggeredReactionMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    Schema.Struct({
+      family: Schema.Literal("triggered_reaction"),
+      interruptsTrigger: Schema.Boolean,
+      phases: nonEmpty(ActivationPhaseSchema),
+    }).fields,
+  ),
 );
 
-export const TriggeredReactionMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("triggered_reaction"),
-    interruptsTrigger: Schema.Boolean,
-    phases: nonEmpty(ActivationPhaseSchema),
-  }),
-);
+export const PassiveHitInterceptMechanicsSchema =
+  SpellMechanicsHeaderSchema.pipe(
+    Schema.fieldsAssign(
+      Schema.Struct({
+        family: Schema.Literal("passive_hit_intercept"),
+        attachment: Schema.Struct({
+          kind: Schema.Literal("self"),
+        }),
+        duplicatePool: Schema.Struct({
+          count: Schema.Literal(3),
+          dicePerRemainingDuplicate: Schema.Literal(1),
+          dieSize: Schema.Literal(6),
+          successAtLeast: Schema.Literal(3),
+          onHit: Schema.Literal("duplicate_hit_instead_and_destroyed"),
+          onFailure: Schema.Literal("caster_hit_normally"),
+          ignoresOtherDamageAndEffects: Schema.Literal(true),
+          endsWhen: Schema.Literal("all_duplicates_destroyed"),
+          unaffectedBy: Schema.Tuple([
+            Schema.Literal("blinded"),
+            Schema.Literal("blindsight"),
+            Schema.Literal("truesight"),
+          ]),
+        }),
+      }).fields,
+    ),
+  );
 
-export const PassiveHitInterceptMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("passive_hit_intercept"),
-    attachment: Schema.Struct({
-      kind: Schema.Literal("self"),
-    }),
-    duplicatePool: Schema.Struct({
-      count: Schema.Literal(3),
-      dicePerRemainingDuplicate: Schema.Literal(1),
-      dieSize: Schema.Literal(6),
-      successAtLeast: Schema.Literal(3),
-      onHit: Schema.Literal("duplicate_hit_instead_and_destroyed"),
-      onFailure: Schema.Literal("caster_hit_normally"),
-      ignoresOtherDamageAndEffects: Schema.Literal(true),
-      endsWhen: Schema.Literal("all_duplicates_destroyed"),
-      unaffectedBy: Schema.Tuple(
-        Schema.Literal("blinded"),
-        Schema.Literal("blindsight"),
-        Schema.Literal("truesight"),
-      ),
-    }),
-  }),
-);
-
-export const AnchorTargetSchema = Schema.Union(
+export const AnchorTargetSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("location"),
     description: Schema.Literal("door_or_window"),
@@ -4751,23 +4843,23 @@ export const AnchorTargetSchema = Schema.Union(
       maxSideFeet: Schema.Number,
     }),
   }),
-);
+]);
 
-export const AnchoredEventSchema = Schema.Union(
+export const AnchoredEventSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("physical_contact") }),
   Schema.Struct({ kind: Schema.Literal("enters_area") }),
   Schema.Struct({
     kind: Schema.Literal("caster_defined_visual_or_audible_condition"),
     maxDistanceFeet: Schema.Literal(30),
   }),
-);
+]);
 
 export const AnchoredFilterSchema = Schema.Struct({
   kind: Schema.Literal("creature_exemption_list"),
   chosenAtCast: Schema.Literal(true),
 });
 
-export const AnchoredSignalSchema = Schema.Union(
+export const AnchoredSignalSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("audible"),
     sound: surfaceIdentity(Schema.String, "label"),
@@ -4788,23 +4880,23 @@ export const AnchoredSignalSchema = Schema.Union(
     mouthPlacement: Schema.Literal("object_mouth_if_present"),
     repetition: Schema.Literal("caster_choice_once_or_repeating"),
   }),
+]);
+
+export const AnchoredTriggerMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    Schema.Struct({
+      family: Schema.Literal("anchored_trigger"),
+      anchor: AnchorTargetSchema,
+      events: Schema.Array(AnchoredEventSchema),
+      filters: Schema.Array(AnchoredFilterSchema).pipe(
+        Schema.withDecodingDefaultTypeKey(Effect.sync(() => [])),
+      ),
+      signals: Schema.Array(AnchoredSignalSchema),
+    }).fields,
+  ),
 );
 
-export const AnchoredTriggerMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("anchored_trigger"),
-    anchor: AnchorTargetSchema,
-    events: Schema.Array(AnchoredEventSchema),
-    filters: Schema.optionalWith(Schema.Array(AnchoredFilterSchema), {
-      exact: true,
-      default: () => [],
-    }),
-    signals: Schema.Array(AnchoredSignalSchema),
-  }),
-);
-
-export const StatBlockValueSchema = Schema.Union(
+export const StatBlockValueSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("literal"),
     value: Schema.Number,
@@ -4812,14 +4904,14 @@ export const StatBlockValueSchema = Schema.Union(
   LinearPerLevelNumberSchema,
   Schema.Struct({
     kind: Schema.Literal("caster_derived"),
-    source: Schema.Literal(
+    source: Schema.Literals([
       "spell_attack_mod",
       "spell_save_dc",
       "proficiency_bonus",
       "spellcasting_ability_mod",
-    ),
+    ]),
   }),
-);
+]);
 
 export const SixAbilityScoresSchema = Schema.Struct({
   str: Schema.Number,
@@ -4831,13 +4923,13 @@ export const SixAbilityScoresSchema = Schema.Struct({
 });
 
 export const CreatureSpeedSchema = Schema.Struct({
-  kind: Schema.Literal("walk", "fly", "swim", "climb", "burrow"),
+  kind: Schema.Literals(["walk", "fly", "swim", "climb", "burrow"]),
   feet: StatBlockValueSchema,
   requiresSlotLevel: optionalExact(Schema.Number),
 });
 /* v8 ignore stop -- @preserve */
 
-export const CreatureResistanceListSchema = Schema.Union(
+export const CreatureResistanceListSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("fixed"),
     damageTypes: nonEmpty(DamageTypeSchema),
@@ -4846,7 +4938,7 @@ export const CreatureResistanceListSchema = Schema.Union(
     kind: Schema.Literal("choose_one_from"),
     options: nonEmpty(DamageTypeSchema),
   }),
-);
+]);
 
 export const CreatureVulnerabilityListSchema = Schema.Struct({
   kind: Schema.Literal("fixed"),
@@ -4859,7 +4951,12 @@ export const CreatureImmunityListSchema = Schema.Struct({
 });
 
 export const CreatureSenseSchema = Schema.Struct({
-  kind: Schema.Literal("darkvision", "blindsight", "tremorsense", "truesight"),
+  kind: Schema.Literals([
+    "darkvision",
+    "blindsight",
+    "tremorsense",
+    "truesight",
+  ]),
   rangeFeet: Schema.Number,
 });
 
@@ -4869,7 +4966,7 @@ const StatBlockDamageNotationAmountSchema = Schema.Struct({
   static: optionalExact(Schema.Number),
 });
 
-const CreatureAttackEffectAtomSchema = Schema.Union(
+const CreatureAttackEffectAtomSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("damage"),
     damageType: DamageTypeRefSchema,
@@ -4878,7 +4975,7 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
   }),
   Schema.Struct({
     kind: Schema.Literal("conditional_bonus_damage"),
-    when: Schema.Union(
+    when: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("target_creature_type"),
         types: nonEmpty(CreatureTypeSchema),
@@ -4886,7 +4983,7 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("attack_roll_had_advantage"),
       }),
-    ),
+    ]),
     damageType: DamageTypeRefSchema,
     amount: StatBlockDamageNotationAmountSchema,
   }),
@@ -4896,10 +4993,10 @@ const CreatureAttackEffectAtomSchema = Schema.Union(
     maxCreatureSize: SizeSchema,
   }),
   EffectAtomSchema,
-);
+]);
 
 const CreatureAttackRollMechanicsCommonFields = {
-  attackAbility: Schema.Union(AbilitySchema, Schema.Literal("spellcasting")),
+  attackAbility: Schema.Union([AbilitySchema, Schema.Literal("spellcasting")]),
   attackBonus: StatBlockValueSchema,
   reachFeet: optionalExact(Schema.Number),
   rangeFeet: optionalExact(
@@ -4912,7 +5009,7 @@ const CreatureAttackRollMechanicsCommonFields = {
   multiattackCount: optionalExact(StatBlockValueSchema),
 } as const;
 
-export const CreatureAttackRollMechanicsSchema = Schema.Union(
+export const CreatureAttackRollMechanicsSchema = Schema.Union([
   Schema.Struct({
     ...CreatureAttackRollMechanicsCommonFields,
     attackType: Schema.Literal("melee"),
@@ -4922,20 +5019,24 @@ export const CreatureAttackRollMechanicsSchema = Schema.Union(
     attackType: Schema.Literal("ranged"),
     ammunition: optionalExact(AmmunitionKindSchema),
   }),
-);
+]);
 
-export const CreatureNamedAttackRollSchema = Schema.extend(
-  CreatureAttackRollMechanicsSchema,
-  Schema.Struct({
-    name: surfaceIdentity(Schema.String, "name"),
-    description: optionalExact(surfaceExactProse(Schema.String)),
-    limitedUse: optionalExact(
-      Schema.suspend(() => CreatureLimitedUseSchema).annotations({
-        identifier: "CreatureLimitedUse",
+export const CreatureNamedAttackRollSchema =
+  CreatureAttackRollMechanicsSchema.mapMembers(
+    Tuple.map(
+      Schema.fieldsAssign({
+        name: surfaceIdentity(Schema.String, "name"),
+        description: optionalExact(surfaceExactProse(Schema.String)),
+        limitedUse: optionalExact(
+          Schema.suspend(() => CreatureLimitedUseSchema).pipe(
+            Schema.annotate({
+              identifier: "CreatureLimitedUse",
+            }),
+          ),
+        ),
       }),
     ),
-  }),
-);
+  );
 
 const CreatureNamedSaveGateBaseSchemaFields = {
   name: surfaceIdentity(Schema.String, "name"),
@@ -4946,13 +5047,15 @@ const CreatureNamedSaveGateBaseSchemaFields = {
   onSuccess: SaveSuccessOutcomeSchema,
   multiattackCount: optionalExact(StatBlockValueSchema),
   limitedUse: optionalExact(
-    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
-      identifier: "CreatureLimitedUse",
-    }),
+    Schema.suspend(() => CreatureLimitedUseSchema).pipe(
+      Schema.annotate({
+        identifier: "CreatureLimitedUse",
+      }),
+    ),
   ),
 } as const;
 
-export const CreatureNamedSaveGateSchema = Schema.Union(
+export const CreatureNamedSaveGateSchema = Schema.Union([
   strictStruct({
     ...CreatureNamedSaveGateBaseSchemaFields,
     area: AreaShapeDescriptorSchema,
@@ -4964,18 +5067,20 @@ export const CreatureNamedSaveGateSchema = Schema.Union(
       rangeFeet: Schema.Number,
     }),
   }),
-);
+]);
 
 export const CreatureNamedSupportSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
-  target: Schema.Literal("self", "ally_in_range"),
+  target: Schema.Literals(["self", "ally_in_range"]),
   rangeFeet: optionalExact(Schema.Number),
   effect: EffectAtomSchema,
   multiattackCount: optionalExact(StatBlockValueSchema),
   limitedUse: optionalExact(
-    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
-      identifier: "CreatureLimitedUse",
-    }),
+    Schema.suspend(() => CreatureLimitedUseSchema).pipe(
+      Schema.annotate({
+        identifier: "CreatureLimitedUse",
+      }),
+    ),
   ),
 });
 
@@ -4993,9 +5098,11 @@ export const CreatureNamedActionOptionSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
   options: nonEmpty(StandardActionKindSchema),
   limitedUse: optionalExact(
-    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
-      identifier: "CreatureLimitedUse",
-    }),
+    Schema.suspend(() => CreatureLimitedUseSchema).pipe(
+      Schema.annotate({
+        identifier: "CreatureLimitedUse",
+      }),
+    ),
   ),
 });
 
@@ -5003,9 +5110,11 @@ export const CreatureNamedSpecialActionSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
   description: surfaceExactProse(Schema.String),
   limitedUse: optionalExact(
-    Schema.suspend(() => CreatureLimitedUseSchema).annotations({
-      identifier: "CreatureLimitedUse",
-    }),
+    Schema.suspend(() => CreatureLimitedUseSchema).pipe(
+      Schema.annotate({
+        identifier: "CreatureLimitedUse",
+      }),
+    ),
   ),
 });
 
@@ -5019,28 +5128,31 @@ export const CreatureActionsSchema = Schema.Struct({
 });
 
 export const CreatureRechargeMinimumRollSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.between(2, 6),
+  Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 2, maximum: 6 })),
 );
 
-export const CreatureLimitedUseSchema = Schema.Union(
+export const CreatureLimitedUseSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("daily"),
-    uses: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+    uses: Schema.Number.pipe(
+      Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+    ),
   }),
   Schema.Struct({
     kind: Schema.Literal("recharge"),
     minimumRoll: CreatureRechargeMinimumRollSchema,
   }),
   Schema.Struct({ kind: Schema.Literal("recharge_after_rest") }),
-);
+]);
 
 export const CreatureLegendaryActionsSchema = Schema.Struct({
-  uses: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  uses: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+  ),
   actions: CreatureActionsSchema,
 });
 
-export const CreatureTraitEffectSchema = Schema.Union(
+export const CreatureTraitEffectSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal(
       "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target",
@@ -5054,7 +5166,7 @@ export const CreatureTraitEffectSchema = Schema.Union(
     kind: Schema.Literal("caster_heal_link"),
     rangeFeet: Schema.Number,
   }),
-);
+]);
 
 export const CreatureTraitSchema = Schema.Struct({
   name: surfaceIdentity(Schema.String, "name"),
@@ -5082,9 +5194,9 @@ const MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES = [
   "undead",
 ] as const satisfies ReadonlyNonEmptyArray<CreatureType>;
 
-export const MagicCircleAffectedCreatureTypeSchema = Schema.Literal(
+export const MagicCircleAffectedCreatureTypeSchema = Schema.Literals([
   ...MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES,
-);
+]);
 
 export const MagicCircleAffectedCreatureTypeChoiceSchema = strictStruct({
   kind: Schema.Literal("one_or_more_creature_type_choice"),
@@ -5096,14 +5208,16 @@ export const MagicCircleAffectedCreatureTypeChoiceSchema = strictStruct({
   selection: Schema.Literal("one_or_more"),
   options: nonEmpty(MagicCircleAffectedCreatureTypeSchema),
 }).pipe(
-  Schema.filter(
-    (choice) =>
-      sameStringSet(choice.options, MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES),
-    {
-      /* v8 ignore next 2 -- @preserve -- this callback only formats the diagnostic after malformed Magic Circle choices differ from the fixed creature-type set */
-      message: () =>
-        "Magic Circle affected creature type choice must expose exactly Celestial, Elemental, Fey, Fiend, and Undead.",
-    },
+  Schema.check(
+    Schema.makeFilter(
+      (choice) =>
+        sameStringSet(choice.options, MAGIC_CIRCLE_AFFECTED_CREATURE_TYPES),
+      {
+        /* v8 ignore next 2 -- @preserve -- this annotation formats the diagnostic after malformed Magic Circle choices differ from the fixed creature-type set */
+        message:
+          "Magic Circle affected creature type choice must expose exactly Celestial, Elemental, Fey, Fiend, and Undead.",
+      },
+    ),
   ),
 );
 
@@ -5148,10 +5262,10 @@ export const MagicCircleWardedCylinderOccurrenceSchema = strictStruct({
 });
 
 export const MagicCircleMagicalCrossingGateSchema = strictStruct({
-  methods: Schema.Tuple(
+  methods: Schema.Tuple([
     Schema.Literal("teleportation"),
     Schema.Literal("interplanar_travel"),
-  ),
+  ]),
   ability: Schema.Literal("cha"),
   dc: DcSourceSchema,
 });
@@ -5160,15 +5274,15 @@ export const MagicCircleProtectedTargetEffectsSchema = strictStruct({
   attackRollDisadvantage: strictStruct({
     attacker: Schema.Literal("affected_creature"),
     target: Schema.Literal("protected_target"),
-    on: Schema.Tuple(Schema.Literal("attack_roll")),
+    on: Schema.Tuple([Schema.Literal("attack_roll")]),
   }),
   sourceScopedPrevention: strictStruct({
     source: Schema.Literal("affected_creature"),
     possession: Schema.Literal("prevented"),
-    conditions: Schema.Tuple(
+    conditions: Schema.Tuple([
       Schema.Literal("charmed"),
       Schema.Literal("frightened"),
-    ),
+    ]),
   }),
 });
 
@@ -5204,14 +5318,15 @@ export const MagicCircleWardDirectionChoiceSchema = strictStruct({
   reversedDirection: MagicCircleReversedWardDirectionSchema,
 });
 
-export const MagicCircleWardMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  strictStruct({
-    family: Schema.Literal("magic_circle_ward"),
-    occurrence: MagicCircleWardedCylinderOccurrenceSchema,
-    affectedCreatureTypes: MagicCircleAffectedCreatureTypeChoiceSchema,
-    direction: MagicCircleWardDirectionChoiceSchema,
-  }),
+export const MagicCircleWardMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    strictStruct({
+      family: Schema.Literal("magic_circle_ward"),
+      occurrence: MagicCircleWardedCylinderOccurrenceSchema,
+      affectedCreatureTypes: MagicCircleAffectedCreatureTypeChoiceSchema,
+      direction: MagicCircleWardDirectionChoiceSchema,
+    }).fields,
+  ),
 );
 
 export const StoneMergeAnchorChoiceSchema = strictStruct({
@@ -5327,31 +5442,32 @@ export const StoneMergeStoneEventResponsesSchema = strictStruct({
     outcome: Schema.Literal("no_harm_to_merged_creature"),
   }),
   partialDestructionOrShapeChange: strictStruct({
-    triggers: Schema.Tuple(
+    triggers: Schema.Tuple([
       Schema.Literal("partial_destruction"),
       Schema.Literal("shape_change_no_longer_fits"),
-    ),
+    ]),
     damage: StoneMergePartialExpulsionDamageSchema,
     expulsion: StoneMergeExpulsionSchema,
   }),
   completeDestructionOrTransmutation: strictStruct({
-    triggers: Schema.Tuple(
+    triggers: Schema.Tuple([
       Schema.Literal("complete_destruction"),
       Schema.Literal("transmutation_to_different_substance"),
-    ),
+    ]),
     damage: StoneMergeCompleteExpulsionDamageSchema,
     expulsion: StoneMergeExpulsionSchema,
   }),
 });
 
-export const StoneMergeMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  strictStruct({
-    family: Schema.Literal("stone_merge"),
-    target: StoneMergeTargetSchema,
-    occupancy: StoneMergeOccupancySchema,
-    stoneEventResponses: StoneMergeStoneEventResponsesSchema,
-  }),
+export const StoneMergeMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    strictStruct({
+      family: Schema.Literal("stone_merge"),
+      target: StoneMergeTargetSchema,
+      occupancy: StoneMergeOccupancySchema,
+      stoneEventResponses: StoneMergeStoneEventResponsesSchema,
+    }).fields,
+  ),
 );
 
 export const GlyphWardingInscriptionAnchorChoiceSchema = strictStruct({
@@ -5405,16 +5521,16 @@ export const GlyphWardingTriggerSchema = strictStruct({
     kind: Schema.Literal("table_witnessed_trigger_occurrence"),
   }),
   commonEvents: strictStruct({
-    surface: Schema.Tuple(
+    surface: Schema.Tuple([
       Schema.Literal("touching_glyph"),
       Schema.Literal("stepping_on_glyph"),
       Schema.Literal("removing_covering_object"),
       Schema.Literal("approaching_within_caster_set_distance"),
-    ),
-    closeableObject: Schema.Tuple(
+    ]),
+    closeableObject: Schema.Tuple([
       Schema.Literal("opening_object"),
       Schema.Literal("seeing_glyph"),
-    ),
+    ]),
   }),
   refinement: strictStruct({
     activationFilter: strictStruct({
@@ -5440,13 +5556,13 @@ export const GlyphWardingExplosiveRuneDamageTypeRefSchema = strictStruct({
       Schema.Literal("explosive rune damage type"),
       "label",
     ),
-    options: Schema.Tuple(
+    options: Schema.Tuple([
       Schema.Literal("acid"),
       Schema.Literal("cold"),
       Schema.Literal("fire"),
       Schema.Literal("lightning"),
       Schema.Literal("thunder"),
-    ),
+    ]),
   }),
 });
 
@@ -5489,10 +5605,10 @@ export const GlyphWardingStoredSpellEligibilitySchema = strictStruct({
     baseMaxLevel: Schema.Literal(3),
     upcastMaxLevel: Schema.Literal("same_as_cast_slot_level"),
   }),
-  targetShape: Schema.Tuple(
+  targetShape: Schema.Tuple([
     strictStruct({ kind: Schema.Literal("single_creature_target") }),
     strictStruct({ kind: Schema.Literal("area_target") }),
-  ),
+  ]),
 });
 
 export const GlyphWardingSpellGlyphBranchSchema = strictStruct({
@@ -5505,11 +5621,11 @@ export const GlyphWardingSpellGlyphBranchSchema = strictStruct({
       areaSpellOrigin: Schema.Literal("centered_on_triggering_creature"),
     }),
     hostilePlacement: strictStruct({
-      appliesTo: Schema.Tuple(
+      appliesTo: Schema.Tuple([
         Schema.Literal("summoned_hostile_creatures"),
         Schema.Literal("harmful_objects"),
         Schema.Literal("traps"),
-      ),
+      ]),
       placement: Schema.Literal("as_close_as_possible_to_triggering_creature"),
       attackTarget: Schema.Literal("triggering_creature"),
     }),
@@ -5525,38 +5641,41 @@ export const GlyphWardingReleaseChoiceSchema = strictStruct({
   spellGlyph: GlyphWardingSpellGlyphBranchSchema,
 });
 
-export const GlyphWardingMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  strictStruct({
-    family: Schema.Literal("glyph_warding"),
-    occurrence: GlyphWardingOccurrenceSchema,
-    trigger: GlyphWardingTriggerSchema,
-    release: GlyphWardingReleaseChoiceSchema,
-  }),
+export const GlyphWardingMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    strictStruct({
+      family: Schema.Literal("glyph_warding"),
+      occurrence: GlyphWardingOccurrenceSchema,
+      trigger: GlyphWardingTriggerSchema,
+      release: GlyphWardingReleaseChoiceSchema,
+    }).fields,
+  ),
 );
 
 export const CreatureSavingThrowModifierSchema = Schema.Struct({
   ability: AbilitySchema,
-  modifier: Schema.Number.pipe(Schema.int()),
+  modifier: Schema.Number.pipe(Schema.check(Schema.isInt())),
 });
 
 export const CreatureSkillModifierSchema = Schema.Struct({
   skill: SkillSchema,
-  modifier: Schema.Number.pipe(Schema.int()),
+  modifier: Schema.Number.pipe(Schema.check(Schema.isInt())),
 });
 
 export const CreatureStatBlockSchema = Schema.Struct({
   displayName: surfaceIdentity(Schema.String, "displayName"),
-  size: Schema.Union(SizeSchema, CastTimeChoiceSizeSchema),
-  creatureType: Schema.Union(
+  size: Schema.Union([SizeSchema, CastTimeChoiceSizeSchema]),
+  creatureType: Schema.Union([
     CreatureTypeSchema,
     CastTimeChoiceCreatureTypeSchema,
-  ),
+  ]),
   ac: StatBlockValueSchema,
   hp: StatBlockValueSchema,
   speeds: nonEmpty(CreatureSpeedSchema),
   abilityScores: SixAbilityScoresSchema,
-  initiativeModifier: optionalExact(Schema.Number.pipe(Schema.int())),
+  initiativeModifier: optionalExact(
+    Schema.Number.pipe(Schema.check(Schema.isInt())),
+  ),
   savingThrowModifiers: optionalExact(
     nonEmpty(CreatureSavingThrowModifierSchema),
   ),
@@ -5567,10 +5686,10 @@ export const CreatureStatBlockSchema = Schema.Struct({
   immunities: optionalExact(CreatureImmunityListSchema),
   senses: optionalExact(nonEmpty(CreatureSenseSchema)),
   languages: optionalExact(
-    Schema.Union(
+    Schema.Union([
       Schema.Literal("caster_languages"),
       nonEmpty(surfaceIdentity(Schema.String, "label")),
-    ),
+    ]),
   ),
   actions: optionalExact(CreatureActionsSchema),
   bonusActions: optionalExact(CreatureActionsSchema),
@@ -5601,16 +5720,16 @@ export const CreatureModeSchema = Schema.Struct({
 });
 
 export const CreatureControlSchema = Schema.Struct({
-  initiative: Schema.Literal("shared_with_caster", "own_roll"),
+  initiative: Schema.Literals(["shared_with_caster", "own_roll"]),
   turnOrder: optionalExact(Schema.Literal("immediately_after_caster")),
-  commandCost: Schema.Union(
+  commandCost: Schema.Union([
     Schema.Struct({ kind: Schema.Literal("no_action_required") }),
     Schema.Struct({ kind: Schema.Literal("bonus_action") }),
     Schema.Struct({ kind: Schema.Literal("action") }),
-  ),
+  ]),
   commandRangeFeet: optionalExact(Schema.Number),
   defaultBehavior: optionalExact(
-    Schema.Literal("dodge_and_avoid", "independent"),
+    Schema.Literals(["dodge_and_avoid", "independent"]),
   ),
   telepathy: optionalExact(
     Schema.Struct({
@@ -5624,18 +5743,18 @@ export const CreatureControlSchema = Schema.Struct({
 export const CreatureDismissalSchema = Schema.Struct({
   onZeroHp: optionalExact(Schema.Literal("disappears")),
   onSpawnedCreatureDamage: optionalExact(Schema.Literal("spell_ends")),
-  onSpellEnd: Schema.Union(
+  onSpellEnd: Schema.Union([
     Schema.Literal("disappears"),
     Schema.Struct({
       kind: Schema.Literal("gradual_fade"),
       riderDismountGrace: DurationValueSchema,
     }),
-  ),
+  ]),
   caster0Hp: optionalExact(Schema.Literal("disappears")),
   manualDismiss: optionalExact(
-    Schema.Literal("magic_action", "bonus_action", "never"),
+    Schema.Literals(["magic_action", "bonus_action", "never"]),
   ),
-  leavesBehind: optionalExact(Schema.Literal("equipment", "nothing")),
+  leavesBehind: optionalExact(Schema.Literals(["equipment", "nothing"])),
 });
 
 export const SpawnedCreatureMountSchema = Schema.Struct({
@@ -5643,7 +5762,7 @@ export const SpawnedCreatureMountSchema = Schema.Struct({
   hourlyTravelMiles: optionalExact(PositiveIntegerSchema),
   createdEquipment: optionalExact(
     Schema.Struct({
-      items: nonEmpty(Schema.Literal("saddle", "bit", "bridle")),
+      items: nonEmpty(Schema.Literals(["saddle", "bit", "bridle"])),
       vanishesIfCarriedMoreThanFeetFromCreature: PositiveIntegerSchema,
     }),
   ),
@@ -5661,22 +5780,24 @@ export const TemplatedSizeTierSchema = Schema.Struct({
   slamDamage: DiceAmountSchema,
 });
 
-export const TemplatedMultiSpawnMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("templated_multi_spawn"),
-    capacity: TemplatedCapacitySchema,
-    baseStatBlock: CreatureStatBlockSchema,
-    sizeTiers: nonEmpty(TemplatedSizeTierSchema),
-    control: CreatureControlSchema,
-    revertOnZeroHp: Schema.Literal(true),
-  }),
-);
+export const TemplatedMultiSpawnMechanicsSchema =
+  SpellMechanicsHeaderSchema.pipe(
+    Schema.fieldsAssign(
+      Schema.Struct({
+        family: Schema.Literal("templated_multi_spawn"),
+        capacity: TemplatedCapacitySchema,
+        baseStatBlock: CreatureStatBlockSchema,
+        sizeTiers: nonEmpty(TemplatedSizeTierSchema),
+        control: CreatureControlSchema,
+        revertOnZeroHp: Schema.Literal(true),
+      }).fields,
+    ),
+  );
 
-export const ReanimationTargetKindSchema = Schema.Literal(
+export const ReanimationTargetKindSchema = Schema.Literals([
   "corpse_or_bones_of_small_or_medium_humanoid",
   "corpse_of_small_or_medium_humanoid",
-);
+]);
 
 export const ReanimationSlotOptionSchema = Schema.Struct({
   monsterId: surfaceStatBlockDependency(Schema.String, "monster-reference"),
@@ -5691,26 +5812,29 @@ export const ReanimationSlotEntrySchema = Schema.Struct({
 export const ReanimationMenuSchema = nonEmpty(ReanimationSlotEntrySchema);
 
 export const ReanimationReassertWindowSchema = Schema.Struct({
-  hours: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(1)),
+  hours: Schema.Number.pipe(
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
+  ),
   maxReassertPerCast: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(1),
+    Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   ),
 });
 
-export const ReanimatedCreatureMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.Struct({
-    family: Schema.Literal("reanimated_creature"),
-    targetKind: ReanimationTargetKindSchema,
-    menu: ReanimationMenuSchema,
-    control: CreatureControlSchema,
-    reassertWindow: ReanimationReassertWindowSchema,
-    nightOnly: optionalExact(Schema.Literal(true)),
-  }),
-);
+export const ReanimatedCreatureMechanicsSchema =
+  SpellMechanicsHeaderSchema.pipe(
+    Schema.fieldsAssign(
+      Schema.Struct({
+        family: Schema.Literal("reanimated_creature"),
+        targetKind: ReanimationTargetKindSchema,
+        menu: ReanimationMenuSchema,
+        control: CreatureControlSchema,
+        reassertWindow: ReanimationReassertWindowSchema,
+        nightOnly: optionalExact(Schema.Literal(true)),
+      }).fields,
+    ),
+  );
 
-export const SpawnedCreatureStatBlockSchema = Schema.Union(
+export const SpawnedCreatureStatBlockSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("inline"),
     statBlock: CreatureStatBlockSchema,
@@ -5725,13 +5849,16 @@ export const SpawnedCreatureStatBlockSchema = Schema.Union(
     kind: Schema.Literal("familiar_form_catalog"),
     normalForms: nonEmpty(
       Schema.Struct({
-        formId: surfaceIdentity(Schema.NonEmptyTrimmedString, "reference"),
+        formId: surfaceIdentity(
+          Schema.Trimmed.check(Schema.isNonEmpty()),
+          "reference",
+        ),
         statBlockId: surfaceStatBlockDependency(
-          Schema.NonEmptyTrimmedString,
+          Schema.Trimmed.check(Schema.isNonEmpty()),
           "stat-block-reference",
         ),
         displayName: surfaceIdentity(
-          Schema.NonEmptyTrimmedString,
+          Schema.Trimmed.check(Schema.isNonEmpty()),
           "displayName",
         ),
       }),
@@ -5740,7 +5867,7 @@ export const SpawnedCreatureStatBlockSchema = Schema.Union(
       kind: Schema.Literal("challengeRatingZeroBeast"),
     }),
   }),
-);
+]);
 
 export const SpawnedCreaturePayloadSchema = Schema.Struct({
   creature: SpawnedCreatureStatBlockSchema,
@@ -5750,13 +5877,15 @@ export const SpawnedCreaturePayloadSchema = Schema.Struct({
   dismissal: CreatureDismissalSchema,
 });
 
-export const SpawnedCreatureMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  Schema.extend(
-    SpawnedCreaturePayloadSchema,
-    Schema.Struct({
-      family: Schema.Literal("spawned_creature"),
-    }),
+export const SpawnedCreatureMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    SpawnedCreaturePayloadSchema.pipe(
+      Schema.fieldsAssign(
+        Schema.Struct({
+          family: Schema.Literal("spawned_creature"),
+        }).fields,
+      ),
+    ).fields,
   ),
 );
 
@@ -5775,11 +5904,11 @@ const MinorMagicEffectMenuSchema = strictStruct({
   }),
   firePlay: strictStruct({
     kind: Schema.Literal("light_or_snuff_small_fire"),
-    sources: Schema.Tuple(
+    sources: Schema.Tuple([
       Schema.Literal("candle"),
       Schema.Literal("torch"),
       Schema.Literal("small_campfire"),
-    ),
+    ]),
     duration: Schema.Literal("instantaneous"),
   }),
   cleanOrSoil: strictStruct({
@@ -5790,56 +5919,59 @@ const MinorMagicEffectMenuSchema = strictStruct({
   minorSensation: strictStruct({
     kind: Schema.Literal("alter_nonliving_material_sensation"),
     maxVolumeCubicFeet: Schema.Literal(1),
-    sensations: Schema.Tuple(
+    sensations: Schema.Tuple([
       Schema.Literal("chill"),
       Schema.Literal("warm"),
       Schema.Literal("flavor"),
-    ),
+    ]),
     duration: Schema.Literal("spell_duration"),
   }),
   magicMark: strictStruct({
     kind: Schema.Literal("mark_object_or_surface"),
-    marks: Schema.Tuple(
+    marks: Schema.Tuple([
       Schema.Literal("color"),
       Schema.Literal("small_mark"),
       Schema.Literal("symbol"),
-    ),
+    ]),
     duration: Schema.Literal("spell_duration"),
   }),
   minorCreation: strictStruct({
     kind: Schema.Literal("create_hand_sized_trinket_or_illusion"),
-    creations: Schema.Tuple(
+    creations: Schema.Tuple([
       Schema.Literal("nonmagical_trinket"),
       Schema.Literal("illusory_image"),
-    ),
+    ]),
     canDealDamage: Schema.Literal(false),
     hasMonetaryWorth: Schema.Literal(false),
     duration: Schema.Literal("end_of_caster_next_turn"),
   }),
 });
 
-export const ObjectRepairMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  strictStruct({
-    family: Schema.Literal("object_repair"),
-    target: strictStruct({
-      kind: Schema.Literal("object"),
-      count: Schema.Literal(1),
-    }),
-    effect: ObjectRepairUtilityEffectSchema,
-  }),
+export const ObjectRepairMechanicsSchema = SpellMechanicsHeaderSchema.pipe(
+  Schema.fieldsAssign(
+    strictStruct({
+      family: Schema.Literal("object_repair"),
+      target: strictStruct({
+        kind: Schema.Literal("object"),
+        count: Schema.Literal(1),
+      }),
+      effect: ObjectRepairUtilityEffectSchema,
+    }).fields,
+  ),
 );
 
-export const MinorMagicEffectMenuMechanicsSchema = Schema.extend(
-  SpellMechanicsHeaderSchema,
-  strictStruct({
-    family: Schema.Literal("minor_magic_effect_menu"),
-    effects: MinorMagicEffectMenuSchema,
-    nonInstantaneousEffectLimit: Schema.Literal(3),
-  }),
-);
+export const MinorMagicEffectMenuMechanicsSchema =
+  SpellMechanicsHeaderSchema.pipe(
+    Schema.fieldsAssign(
+      strictStruct({
+        family: Schema.Literal("minor_magic_effect_menu"),
+        effects: MinorMagicEffectMenuSchema,
+        nonInstantaneousEffectLimit: Schema.Literal(3),
+      }).fields,
+    ),
+  );
 
-export const SpellMechanicsSchema = Schema.Union(
+export const SpellMechanicsSchema = Schema.Union([
   OngoingEffectMechanicsSchema,
   ActivationMechanicsSchema,
   ModalActivationMechanicsSchema,
@@ -5854,7 +5986,7 @@ export const SpellMechanicsSchema = Schema.Union(
   TemplatedMultiSpawnMechanicsSchema,
   ObjectRepairMechanicsSchema,
   MinorMagicEffectMenuMechanicsSchema,
-);
+]);
 
 export const SpellRecordSchema = Schema.Struct({
   id: surfaceIdentity(UnitId, "id"),

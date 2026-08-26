@@ -13,7 +13,7 @@ import {
   surfaceSchemaRolesEqual,
 } from "./schema-base.ts";
 
-const decode = <A, I>(schema: Schema.Schema<A, I>, input: I): A =>
+const decode = <A>(schema: Schema.ConstraintDecoder<A>, input: unknown): A =>
   Schema.decodeUnknownSync(schema)(input);
 
 describe("Surface base schemas", () => {

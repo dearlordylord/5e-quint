@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import findFamiliarInput from "../../content/find_familiar.json";
@@ -7,7 +7,7 @@ import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
 import skeletonInput from "../../content/stat_block_skeleton.json";
 import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
 import {
-  decodeStatBlockRecordEither,
+  decodeStatBlockRecordResult,
   decodeStatBlockRecordSync,
 } from "./schema.ts";
 import {
@@ -107,18 +107,18 @@ describe("Stat Block catalog boundary", () => {
 
   test("rejects empty Stat Block ids and names", () => {
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, id: "" }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, id: "" }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, id: "   " }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, id: "   " }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({ ...goblinWarriorInput, name: "   " }),
+      Result.isFailure(
+        decodeStatBlockRecordResult({ ...goblinWarriorInput, name: "   " }),
       ),
     ).toBe(true);
   });
@@ -131,16 +131,16 @@ describe("Stat Block catalog boundary", () => {
       }).challengeRating,
     ).toBe(0.125);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...goblinWarriorInput,
           challengeRating: 0.13,
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...goblinWarriorInput,
           challengeRating: 31,
         }),
@@ -157,8 +157,8 @@ describe("Stat Block catalog boundary", () => {
 
     const { target: _target, ...targetlessSting } = sting;
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...pseudodragonInput,
           id: "stat_block_reject_targetless_save_gate",
           statBlock: {
@@ -172,8 +172,8 @@ describe("Stat Block catalog boundary", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        decodeStatBlockRecordEither({
+      Result.isFailure(
+        decodeStatBlockRecordResult({
           ...pseudodragonInput,
           id: "stat_block_reject_ambiguous_save_gate",
           statBlock: {
@@ -285,7 +285,7 @@ describe("Stat Block catalog boundary", () => {
         },
       },
     };
-    expect(Either.isLeft(decodeStatBlockRecordEither(malformed))).toBe(true);
+    expect(Result.isFailure(decodeStatBlockRecordResult(malformed))).toBe(true);
   });
 
   test("exports Skeleton's SRD Stat Block vulnerabilities and immunities", () => {

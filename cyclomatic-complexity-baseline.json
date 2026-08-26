@@ -1334,13 +1334,13 @@
       "module/binding:surfaceSchemaRoleKey": 9
     },
     "packages/surface/src/surface/schema-nonspell.ts": {
-      "module/call:Schema.filter:argument-0:selector-0d851a375de1": 17,
-      "module/call:Schema.filter:argument-0:selector-4f2a16240006": 14,
-      "module/call:Schema.filter:argument-0:selector-d6439d46566a": 14,
-      "module/call:Schema.filter:argument-0:selector-e8d6fdfe4db4": 10
+      "module/call:Schema.makeFilter:argument-0:selector-5a4d3eae6657": 10,
+      "module/call:Schema.makeFilter:argument-0:selector-977ec7c7f821": 14,
+      "module/call:Schema.makeFilter:argument-0:selector-9b63a8d53180": 17,
+      "module/call:Schema.makeFilter:argument-0:selector-f113f2374944": 14
     },
     "packages/surface/src/surface/schema.ts": {
-      "module/binding:factorUnionAst": 11
+      "module/binding:factorEncodedPublicationAst": 10
     },
     "packages/surface/src/surface/unit-catalog.ts": {
       "module/binding:buildUnitCatalog": 9
