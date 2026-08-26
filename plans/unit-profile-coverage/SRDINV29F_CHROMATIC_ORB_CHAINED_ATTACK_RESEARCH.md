@@ -177,5 +177,5 @@ Implementation tasks should verify:
   `saveGatedDamage` subjects are not widened by a damage-type choice ref;
 - `pnpm unit-profile-coverage:check` after evidence updates;
 - Tier 1 battle-runtime MBT only after the promoted runtime behavior changes;
-- `pnpm quality`;
+- `pnpm quality:milestone`;
 - reviewer loop convergence, minimum two rounds for implementation slices.

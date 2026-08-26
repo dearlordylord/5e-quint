@@ -444,6 +444,43 @@ function selfTest() {
   const rootPackage = JSON.parse(
     readFileSync(join(ROOT, "package.json"), "utf8"),
   );
+  assert.equal(
+    rootPackage.scripts.quality,
+    "node scripts/quality-milestone-guidance.cjs",
+    "The ordinary quality command must fail fast with milestone guidance.",
+  );
+  assert.equal(
+    rootPackage.scripts["quality:milestone"],
+    ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run quality:body",
+    "The milestone quality command must own the broad workspace lock.",
+  );
+  const qualityWorkflow = readFileSync(
+    join(ROOT, ".github/workflows/quality.yml"),
+    "utf8",
+  );
+  assert.equal(
+    (qualityWorkflow.match(/^\s*run: pnpm quality:milestone\s*$/gm) ?? [])
+      .length,
+    1,
+    "The quality workflow must run the milestone quality command exactly once.",
+  );
+  assert.doesNotMatch(
+    qualityWorkflow,
+    /run: pnpm quality\s*(?:#.*)?$/m,
+    "The quality workflow must not use the guarded development command.",
+  );
+  const qualityGuidance = run(
+    process.execPath,
+    [join(ROOT, "scripts/quality-milestone-guidance.cjs")],
+    { capture: true },
+  );
+  assert.equal(
+    qualityGuidance.status,
+    64,
+    "The guarded quality command must fail before starting verification.",
+  );
+  assert.match(qualityGuidance.stderr, /pnpm quality:milestone/);
+  assert.match(qualityGuidance.stderr, /Raw Swarm deterministic verification/);
   assert.match(
     rootPackage.scripts["quality:body"],
     /(?:^|&&\s*)pnpm run coverage:body(?:\s*&&|$)/,

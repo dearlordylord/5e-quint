@@ -200,9 +200,9 @@ reproduction, and Quint syntax guidance live in
 
 `pnpm check:qnt-inventory` rejects every package QNT file that is neither an
 executable root nor transitively imported by one. The guarded root `pnpm
-proof:qnt` and `pnpm quality` lanes run this gate; package-local proof work must
-run the listed inventory check separately. This README therefore does not
-maintain a parallel QNT file inventory.
+proof:qnt` and `pnpm quality:milestone` lanes run this gate; package-local proof
+work must run the listed inventory check separately. This README therefore does
+not maintain a parallel QNT file inventory.
 
 Runtime behavior and focused tests must cite the relevant local SRD 5.2.1
 passage. Modeling choices belong in `ASSUMPTIONS.md`; coverage accounting belongs

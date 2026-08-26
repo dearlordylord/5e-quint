@@ -101,4 +101,4 @@ jobs:
           fi
 
       - name: Run workspace quality gate
-        run: pnpm quality
+        run: pnpm quality:milestone
