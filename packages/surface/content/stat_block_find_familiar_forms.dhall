@@ -98,6 +98,7 @@
           )
     , senses = Some
       [ { kind = "blindsight", qualifier = None Text, rangeFeet = 60 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -208,6 +209,7 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
+    , savingThrowModifiers = Some [ { ability = "dex", modifier = 4 } ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 3, skill = "perception" }
@@ -325,6 +327,7 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 1, skill = "perception" }
@@ -446,6 +449,7 @@
     , senses =
         None
           (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 6, skill = "perception" } ]
     , speeds =
@@ -555,6 +559,7 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -667,6 +672,7 @@
       ]
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "small"
     , skillModifiers = Some
       [ { modifier = 2, skill = "perception" }
@@ -787,6 +793,7 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "perception" }
@@ -904,6 +911,7 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 2, skill = "perception" } ]
     , speeds =
@@ -1020,6 +1028,7 @@
     , senses =
         None
           (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 3, skill = "perception" } ]
     , speeds =
@@ -1142,6 +1151,7 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 4, skill = "stealth" } ]
     , speeds =
@@ -1260,6 +1270,7 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "acrobatics" }
@@ -1377,6 +1388,7 @@
           )
     , senses = Some
       [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -1601,6 +1613,7 @@
         , rangeFeet = 120
         }
       ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 4, skill = "deception" }
@@ -1820,6 +1833,7 @@
       [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 }
       , { kind = "darkvision", qualifier = None Text, rangeFeet = 60 }
       ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "perception" }
@@ -1849,7 +1863,7 @@
     , ac.value = { kind = "literal", value = 13 }
     , actions =
       [ { description = Some
-            "Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn."
+            "Melee Attack Roll: +5, reach 5 ft. Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn."
         , kind = "textOnly"
         , name = Some "Rend"
         , procedure =
@@ -2098,6 +2112,7 @@
       ]
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 5, skill = "stealth" } ]
     , speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" } ]
@@ -2163,7 +2178,7 @@
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       , { description = Some
-            "Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn."
+            "Ranged Attack Roll: +6, range 40/160 ft. Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn."
         , kind = "textOnly"
         , name = Some "Enchanting Bow"
         , procedure =
@@ -2363,6 +2378,7 @@
     , senses =
         None
           (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
+    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 3, skill = "perception" }

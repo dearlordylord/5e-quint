@@ -323,6 +323,7 @@ const sourceCorrespondence = [
       senses: [darkvision(60)],
       passivePerception: 13,
       communication: { kind: "none" },
+      savingThrowModifiers: [{ ability: "dex", modifier: 4 }],
       actions: [
         attack({
           procedureOrdinal: 1,
@@ -858,7 +859,7 @@ const sourceCorrespondence = [
         textOnly(
           1,
           "Rend",
-          "Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.",
+          "Melee Attack Roll: +5, reach 5 ft. Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.",
           "unsupported_action_shape",
         ),
         invisibility(2),
@@ -917,7 +918,7 @@ const sourceCorrespondence = [
         textOnly(
           2,
           "Enchanting Bow",
-          "Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn.",
+          "Ranged Attack Roll: +6, range 40/160 ft. Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn.",
           "unsupported_action_shape",
         ),
         textOnly(
