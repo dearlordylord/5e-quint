@@ -1,5 +1,7 @@
 import {
   battleInitiativePosition,
+  battleFillKind,
+  battleHoleFamilyKind,
   discoverBattleActs,
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleRuntimeInterrupt,
@@ -7,6 +9,7 @@ import {
   sameBattleSubject,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleFill,
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 
@@ -101,6 +104,13 @@ export function handleBattleToolCall(
           pendingSubject: previous.subject,
           requestedSubject: subject,
         });
+      }
+      const frontierIssue = pendingFillFrontierIssue(
+        previous,
+        matched.args.fill,
+      );
+      if (frontierIssue !== null) {
+        return errorContent(frontierIssue.message, frontierIssue.details);
       }
       const discoveredAct = discoverBattleActs(visibleSession.right).find(
         (act) => sameBattleSubject(act.subject, subject),
@@ -380,4 +390,56 @@ function activeBattleForTool(
     );
   }
   return Either.right(state.session);
+}
+
+function pendingFillFrontierIssue(
+  pending: PendingBattleFillSession | null,
+  fill: BattleFill,
+): {
+  readonly message: string;
+  readonly details:
+    | {
+        readonly code: "BATTLE_FILL_HOLE_MISMATCH";
+        readonly pendingHoles: PendingBattleFillSession["holes"];
+        readonly requestedFill: BattleFill;
+      }
+    | {
+        readonly code: "BATTLE_FILL_KIND_MISMATCH";
+        readonly pendingHole: PendingBattleFillSession["holes"][number];
+        readonly requestedFill: BattleFill;
+      };
+} | null {
+  if (pending === null) return null;
+  const matchingHoles = pending.holes.filter(
+    (hole) => hole.holeId === fill.holeId,
+  );
+  if (matchingHoles.length === 0) {
+    const wasAlreadyAccepted = pending.fills.some(
+      (acceptedFill) => acceptedFill.holeId === fill.holeId,
+    );
+    return wasAlreadyAccepted
+      ? null
+      : {
+          message: "Battle fill does not match the current Hole frontier.",
+          details: {
+            code: "BATTLE_FILL_HOLE_MISMATCH" as const,
+            pendingHoles: pending.holes,
+            requestedFill: fill,
+          },
+        };
+  }
+  const matchingKindHole = matchingHoles.find(
+    (hole) => battleHoleFamilyKind(hole) === battleFillKind(fill),
+  );
+  if (matchingKindHole !== undefined) return null;
+  const pendingHole = matchingHoles[0];
+  if (pendingHole === undefined) return null;
+  return {
+    message: "Battle fill kind does not match the current Hole.",
+    details: {
+      code: "BATTLE_FILL_KIND_MISMATCH" as const,
+      pendingHole,
+      requestedFill: fill,
+    },
+  };
 }

@@ -40,23 +40,17 @@ export function pendingTransactionForResult({
     firstHole,
     ...result.holes.slice(1),
   ];
-  const interruptContinuation = {
-    isInterruptDecision,
-    previous,
-    resultSubject: result.subject,
-    filledSubject,
-  };
-  if (continuesPreviousInterruptTransaction(interruptContinuation)) {
-    return {
-      baseSession: interruptContinuation.previous.baseSession,
-      subject: result.subject,
-      fills: interruptContinuation.previous.fills,
-      holes,
-    };
-  }
   const transactionHistory = Match.value(isInterruptDecision).pipe(
     Match.when(true, () => ({ baseSession: result.session, fills: [] })),
-    Match.when(false, () => ({ baseSession: replaySession, fills })),
+    Match.when(false, () =>
+      ordinaryContinuationHistory({
+        filledSubject,
+        previous,
+        replaySession,
+        result,
+        fills,
+      }),
+    ),
     Match.exhaustive,
   );
   return {
@@ -67,17 +61,52 @@ export function pendingTransactionForResult({
   };
 }
 
-function continuesPreviousInterruptTransaction(input: {
-  readonly isInterruptDecision: boolean;
-  readonly previous: PendingBattleFillSession | null;
-  readonly resultSubject: BattleFillSession["subject"];
+function ordinaryContinuationHistory({
+  filledSubject,
+  previous,
+  replaySession,
+  result,
+  fills,
+}: {
   readonly filledSubject: BattleFillSession["subject"];
-}): input is typeof input & {
-  readonly previous: PendingBattleFillSession;
+  readonly previous: PendingBattleFillSession | null;
+  readonly replaySession: BattleRuntimeSession;
+  readonly result: Extract<
+    BattleRuntimeResolutionResult,
+    { readonly tag: "needsHoles" }
+  >;
+  readonly fills: readonly BattleFill[];
+}): {
+  readonly baseSession: BattleRuntimeSession;
+  readonly fills: readonly BattleFill[];
 } {
-  return (
-    input.isInterruptDecision &&
-    input.previous !== null &&
-    sameBattleSubject(input.resultSubject, input.filledSubject)
-  );
+  if (
+    previous !== null &&
+    !sameBattleSubject(previous.subject, filledSubject)
+  ) {
+    return { baseSession: replaySession, fills };
+  }
+
+  const resultInterruptDepth = result.session.state.interruptStack.length;
+  const previousInterruptDepth =
+    previous?.baseSession.state.interruptStack.length;
+
+  // An interrupt opening or closure changes the durable replay segment. The
+  // resulting runtime session is the new checkpoint and the caller must not
+  // carry ordinary fills across that boundary.
+  if (previous === null) {
+    return {
+      baseSession: result.session,
+      fills: resultInterruptDepth > 0 ? [] : fills,
+    };
+  }
+
+  if (resultInterruptDepth !== previousInterruptDepth) {
+    return { baseSession: result.session, fills: [] };
+  }
+
+  return {
+    baseSession: previous.baseSession,
+    fills,
+  };
 }
