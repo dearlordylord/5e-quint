@@ -918,10 +918,10 @@ describe("RAW swarm runner boundaries", () => {
     expect(checked.status).toBe(0);
   });
 
-  test("Linux kernel boundary denies process-group and namespace escape syscalls", () => {
+  test("Linux kernel boundary blocks namespace escapes and exposes clone3 fallback", () => {
     const probe = compileKernelBoundaryProbe(
       "namespace-escape-probe",
-      `#define _GNU_SOURCE\n#include <errno.h>\n#include <sched.h>\n#include <signal.h>\n#include <sys/prctl.h>\n#include <sys/syscall.h>\n#include <unistd.h>\n#ifndef SYS_clone\n#error "clone is required for the namespace probe"\n#endif\n#ifndef SYS_clone3\n#error "clone3 is required for the namespace probe"\n#endif\n#ifndef SYS_setns\n#error "setns is required for the namespace probe"\n#endif\n#ifndef SYS_setpgid\n#error "setpgid is required for the namespace probe"\n#endif\n#ifndef SYS_setsid\n#error "setsid is required for the namespace probe"\n#endif\n#ifndef SYS_unshare\n#error "unshare is required for the namespace probe"\n#endif\n#ifndef SYS_prctl\n#error "prctl is required for the namespace probe"\n#endif\nstatic int denied(long result) { return result == -1 && errno == EPERM ? 0 : 1; }\nint main(void) { errno = 0; if (denied(syscall(SYS_setsid)) != 0) return 1; errno = 0; if (denied(syscall(SYS_setpgid, 0, 0)) != 0) return 2; errno = 0; if (denied(syscall(SYS_setns, -1, 0)) != 0) return 3; errno = 0; if (denied(syscall(SYS_unshare, CLONE_NEWNS)) != 0) return 4; errno = 0; if (denied(syscall(SYS_clone, CLONE_NEWPID | SIGCHLD, 0, 0, 0, 0)) != 0) return 5; errno = 0; if (denied(syscall(SYS_clone3, 0, 0)) != 0) return 6; errno = 0; if (denied(syscall(SYS_prctl, PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0)) != 0) return 7; return 0; }\n`,
+      `#define _GNU_SOURCE\n#include <errno.h>\n#include <sched.h>\n#include <signal.h>\n#include <sys/prctl.h>\n#include <sys/syscall.h>\n#include <unistd.h>\n#ifndef SYS_clone\n#error "clone is required for the namespace probe"\n#endif\n#ifndef SYS_clone3\n#error "clone3 is required for the namespace probe"\n#endif\n#ifndef SYS_setns\n#error "setns is required for the namespace probe"\n#endif\n#ifndef SYS_setpgid\n#error "setpgid is required for the namespace probe"\n#endif\n#ifndef SYS_setsid\n#error "setsid is required for the namespace probe"\n#endif\n#ifndef SYS_unshare\n#error "unshare is required for the namespace probe"\n#endif\n#ifndef SYS_prctl\n#error "prctl is required for the namespace probe"\n#endif\nstatic int denied(long result) { return result == -1 && errno == EPERM ? 0 : 1; }\nstatic int unavailable(long result) { return result == -1 && errno == ENOSYS ? 0 : 1; }\nint main(void) { errno = 0; if (denied(syscall(SYS_setsid)) != 0) return 1; errno = 0; if (denied(syscall(SYS_setpgid, 0, 0)) != 0) return 2; errno = 0; if (denied(syscall(SYS_setns, -1, 0)) != 0) return 3; errno = 0; if (denied(syscall(SYS_unshare, CLONE_NEWNS)) != 0) return 4; errno = 0; if (denied(syscall(SYS_clone, CLONE_NEWPID | SIGCHLD, 0, 0, 0, 0)) != 0) return 5; errno = 0; if (unavailable(syscall(SYS_clone3, 0, 0)) != 0) return 6; errno = 0; if (denied(syscall(SYS_prctl, PR_SET_CHILD_SUBREAPER, 1, 0, 0, 0)) != 0) return 7; return 0; }\n`,
     );
     const checked = runKernelBoundaryProbe(probe);
     expect(checked.status).toBe(0);
@@ -978,6 +978,8 @@ describe("RAW swarm runner boundaries", () => {
     expect(source).toContain("SYS_unshare");
     expect(source).toContain("SYS_clone");
     expect(source).toContain("SYS_clone3");
+    expect(source).toContain("ENOSYS");
+    expect(source).toContain("dnd_clone3_unavailable");
     expect(source).toContain("SYS_prctl");
     expect(source).toContain("PR_SET_CHILD_SUBREAPER");
     expect(source).toContain("DND_OWNER_PID_OPTION");
@@ -1646,7 +1648,7 @@ describe("RAW swarm runner boundaries", () => {
     expect(checked.status).toBe(0);
   });
 
-  test("worker threads retain the kernel boundary after clearing execArgv and NODE_OPTIONS", () => {
+  test("Node worker threads use clone3 fallback and retain the kernel boundary", () => {
     const dgramModule = ["node", "dgram"].join(":");
     const createSocket = ["create", "Socket"].join("");
     const workerSource = `const { parentPort } = require("node:worker_threads"); const socket = require(${JSON.stringify(dgramModule)})[${JSON.stringify(createSocket)}]("udp4"); socket.once("error", (error) => parentPort.postMessage(error.code === "EPERM" ? "blocked" : "wrong")); socket.bind(0, "127.0.0.1");`;
