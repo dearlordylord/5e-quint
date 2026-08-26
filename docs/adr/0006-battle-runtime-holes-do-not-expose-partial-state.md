@@ -1,3 +1,7 @@
+---
+status: superseded by ADR-0009
+---
+
 # Battle Runtime Holes Do Not Expose Partial State
 
 Battle Acts commit their mechanical state changes atomically when they resolve. A Runtime Hole frontier exposes only the inputs needed to continue the selected Act; every snapshot returned before resolution remains the last committed battle snapshot, while partially applied procedure state and interrupt frames remain internal. Available-Act and Runtime-Hole frontiers are therefore separate from the mechanical snapshot, and rejection or an open frontier cannot publish partial progress as battle state.
