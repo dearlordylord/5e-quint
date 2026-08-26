@@ -34,7 +34,7 @@
     "check:resource-lock": "node scripts/resource-lock-self-test.cjs",
     "check:raw-swarm-lane-hygiene": "node scripts/raw-swarm/check-lane-hygiene.cjs",
     "check:raw-swarm-deterministic": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-broad-workspace-lock.sh pnpm run check:raw-swarm-deterministic:body",
-    "check:raw-swarm-deterministic:body": "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node --require=scripts/raw-swarm/deterministic-capability-guard.cjs scripts/raw-swarm/run-deterministic-check.cjs",
+    "check:raw-swarm-deterministic:body": "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node --require=./scripts/raw-swarm/deterministic-capability-guard.cjs scripts/raw-swarm/run-deterministic-check.cjs",
     "proof:qnt": ". scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm run proof:qnt:body",
     "proof:qnt:body": "scripts/assert-resource-lock.sh mbt && pnpm check:qnt-inventory && pnpm check:mbt-driver-closure && pnpm check:qnt-proof-closure && pnpm --filter @dnd/battle-runtime test:qnt-proofs:body && pnpm --filter @dnd/shared-algebras proof:quint:body && pnpm --filter @dnd/character-creation-runtime test:qnt-slice:body",
     "raw-coverage:check": "node scripts/raw-coverage-check.cjs",

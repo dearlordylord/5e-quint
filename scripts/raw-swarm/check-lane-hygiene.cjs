@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const ts = require("typescript");
 const {
   existsSync,
@@ -54,6 +55,36 @@ function filesBelow(directory) {
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function assertDeterministicLauncherResolvable(command) {
+  const preloadMatch = command.match(/(?:^|\s)--require(?:=|\s+)(\S+)/u);
+  assert.ok(
+    preloadMatch !== null,
+    "The deterministic launcher must declare a Node preload.",
+  );
+  const result = spawnSync(
+    process.execPath,
+    [
+      `--require=${preloadMatch[1]}`,
+      "-e",
+      'if (globalThis[Symbol.for("dnd.raw-swarm.deterministic-capability-guard")] !== true) process.exit(1);',
+    ],
+    {
+      cwd: root,
+      env: {
+        ...process.env,
+        NODE_OPTIONS: "",
+        RAW_SWARM_EXECUTION_LANE: "deterministic",
+      },
+      encoding: "utf8",
+    },
+  );
+  assert.equal(
+    result.status,
+    0,
+    `The deterministic launcher preload could not resolve or initialize:\n${result.stderr}`,
+  );
 }
 
 const codingAgentAlternation =
@@ -1180,7 +1211,10 @@ function runLaneHygiene() {
   const scripts = packageJson.scripts;
   assert.equal(
     scripts["check:raw-swarm-deterministic:body"],
-    "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node --require=scripts/raw-swarm/deterministic-capability-guard.cjs scripts/raw-swarm/run-deterministic-check.cjs",
+    "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node --require=./scripts/raw-swarm/deterministic-capability-guard.cjs scripts/raw-swarm/run-deterministic-check.cjs",
+  );
+  assertDeterministicLauncherResolvable(
+    scripts["check:raw-swarm-deterministic:body"],
   );
   assert.match(
     scripts["check:raw-swarm-deterministic"],
