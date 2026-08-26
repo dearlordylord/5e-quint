@@ -72,12 +72,42 @@ describe("Raw Swarm model invocation telemetry", () => {
       });
   }
 
+  function controlledNodeSpawnAfterReadiness(
+    fixturePath: string,
+    readinessPath: string,
+  ): SpawnOwnedCodexProcess {
+    return ({ args, cwd, env, stdinFd, eventFd, logFd, detached }) => {
+      const child = spawn(process.execPath, [fixturePath, ...args], {
+        cwd,
+        env,
+        stdio: [stdinFd ?? "ignore", eventFd, logFd],
+        detached,
+      });
+      const waitBuffer = new Int32Array(new SharedArrayBuffer(4));
+      const deadline = Date.now() + 1_000;
+      while (!existsSync(readinessPath) && Date.now() < deadline) {
+        Atomics.wait(waitBuffer, 0, 0, 1);
+      }
+      if (!existsSync(readinessPath)) {
+        child.kill("SIGKILL");
+        throw new Error(
+          `Timed out waiting for fixture readiness: ${readinessPath}`,
+        );
+      }
+      return child;
+    };
+  }
+
   function fakeInvocationInput(root: string, timeoutMilliseconds?: number) {
     const fixturePath = resolve(root, "codex-fixture.cjs");
     const events = resolve(root, "events.jsonl");
     const log = resolve(root, "agent.log");
     const ledger = resolve(root, "ledger.jsonl");
     const output = resolve(root, "output.json");
+    const invocationEnvironment: NodeJS.ProcessEnv = {
+      ...process.env,
+      PATH: `${root}:${process.env.PATH ?? ""}`,
+    };
     return {
       args: [
         "exec",
@@ -87,7 +117,7 @@ describe("Raw Swarm model invocation telemetry", () => {
         'model_reasoning_effort="medium"',
       ] as const,
       cwd: root,
-      env: { ...process.env, PATH: `${root}:${process.env.PATH ?? ""}` },
+      env: invocationEnvironment,
       eventPath: events,
       logPath: log,
       ledgerPath: ledger,
@@ -221,14 +251,22 @@ describe("Raw Swarm model invocation telemetry", () => {
 
   test("retains typed timeout evidence when a child leaves a partial JSONL line", async () => {
     const root = mkdtempSync(resolve(tmpdir(), "dnd-model-partial-timeout-"));
+    const readinessPath = resolve(root, "partial-output-ready");
     writeFileSync(
       resolve(root, "codex-fixture.cjs"),
-      `process.stdout.write('{"type":"turn.started"}\\n{"type":"turn.completed"');
+      `const fs = require("node:fs");
+fs.writeSync(1, Buffer.from('{"type":"turn.started"}\\n{"type":"turn.completed"'));
+fs.writeFileSync(process.env.RAW_PARTIAL_OUTPUT_READY, "ready");
 setTimeout(() => {}, 1000);
 `,
     );
     try {
       const input = fakeInvocationInput(root, 25);
+      input.env.RAW_PARTIAL_OUTPUT_READY = readinessPath;
+      input.spawnProcess = controlledNodeSpawnAfterReadiness(
+        resolve(root, "codex-fixture.cjs"),
+        readinessPath,
+      );
       const result = await runCodexInvocation(input);
       expect(result).toMatchObject({
         tag: "failed",
