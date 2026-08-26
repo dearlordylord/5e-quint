@@ -21,12 +21,40 @@ import {
 import {
   statBlockProcedureBinding,
   spendStatBlockProcedureResources,
+  type StatBlockMultiattackProcedure,
+  type StatBlockProcedureBindingFor,
 } from "../stat-block-execution-state.ts";
 export { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
+import { combatantHasSlowActivePenalties } from "./slow-active-penalties-runtime.ts";
+
+export type StatBlockMultiattackDispatchPlan = {
+  readonly consumedProcedureRef: BattleStatBlockProcedureExecutionRef;
+  readonly pendingProcedureRefs: readonly BattleStatBlockProcedureExecutionRef[];
+  readonly effectiveProcedureRefs: readonly BattleStatBlockProcedureExecutionRef[];
+};
+
+export function statBlockMultiattackDispatchPlanForActor(
+  actor: StatBlockBattleCreatureState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+): StatBlockMultiattackDispatchPlan {
+  const [consumedProcedureRef, ...pendingProcedureRefs] =
+    binding.procedure.dispatchProcedureRefs;
+  const effectivePendingProcedureRefs = combatantHasSlowActivePenalties(actor)
+    ? []
+    : pendingProcedureRefs;
+  return {
+    consumedProcedureRef,
+    pendingProcedureRefs: effectivePendingProcedureRefs,
+    effectiveProcedureRefs: [
+      consumedProcedureRef,
+      ...effectivePendingProcedureRefs,
+    ],
+  };
+}
 
 export function attackActionOptionIsOrdinaryAttackAction(
   state: BattleState,

@@ -155,6 +155,7 @@ import {
 import {
   attackActionOptionIsOrdinaryAttackAction,
   attackSubjectPart,
+  statBlockMultiattackDispatchPlanForActor,
   statBlockAttackProcedureSection,
 } from "./statblock.ts";
 import type {
@@ -1725,7 +1726,7 @@ export function statBlockMultiattackActs(
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
-    actor?.origin.kind !== "statBlock" ||
+    !isStatBlockBattleCreatureState(actor) ||
     !combatantCanTakeActions(actor) ||
     !hasTurnActionResource(state.currentTurnResources)
   ) {
@@ -1733,7 +1734,17 @@ export function statBlockMultiattackActs(
   }
   const origin = actor.origin;
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
-    if (!statBlockMultiattackResourcesAvailable(origin.execution, binding)) {
+    const dispatchPlan = statBlockMultiattackDispatchPlanForActor(
+      actor,
+      binding,
+    );
+    if (
+      !statBlockMultiattackResourcesAvailable(
+        origin.execution,
+        binding,
+        dispatchPlan.effectiveProcedureRefs,
+      )
+    ) {
       return [];
     }
     return [

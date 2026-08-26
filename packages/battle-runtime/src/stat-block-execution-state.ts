@@ -367,16 +367,17 @@ export function statBlockProcedureResourcesAvailable(
 }
 
 /**
- * A Multiattack consumes each dispatched procedure in order.  A shared or
- * binary limited-use pool therefore has to cover every occurrence, rather
- * than merely being available for each distinct procedure reference.
+ * A Multiattack consumes each effective dispatched procedure in order. A
+ * shared or binary limited-use pool therefore has to cover every occurrence,
+ * rather than merely being available for each distinct procedure reference.
  */
 export function statBlockMultiattackResourcesAvailable(
   execution: StatBlockExecutionState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+  effectiveDispatchProcedureRefs: readonly BattleStatBlockProcedureExecutionRef[],
 ): boolean {
   const requiredUsesByPool = resourcePoolUsesForRefs(binding.resourcePoolRefs);
-  for (const procedureRef of binding.procedure.dispatchProcedureRefs) {
+  for (const procedureRef of effectiveDispatchProcedureRefs) {
     const dispatchBinding = statBlockProcedureBinding(execution, procedureRef);
     if (dispatchBinding === undefined) return false;
     for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
@@ -398,11 +399,11 @@ export function statBlockMultiattackResourcesAvailable(
 export function spendStatBlockMultiattackActivationResources(
   execution: StatBlockExecutionState,
   binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+  consumedProcedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockExecutionState {
-  const [firstDispatch] = binding.procedure.dispatchProcedureRefs;
   const firstDispatchBinding = statBlockProcedureBinding(
     execution,
-    firstDispatch,
+    consumedProcedureRef,
   );
   if (firstDispatchBinding === undefined) return execution;
   return spendStatBlockResourcePoolUses(execution, [
