@@ -18,6 +18,7 @@ import {
   capabilityContextForRole,
   SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY,
   STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY,
+  SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY,
 } from "./capability-projection.ts";
 import {
   codexOutputJsonSchema,
@@ -479,7 +480,7 @@ ${contentAvailabilityIntent === "availableOnly" ? "Use canonical stat blocks onl
 
 SDK-capability intent: ${sdkCapabilityIntent}
 
-${sdkCapabilityIntent === "supportedOnly" ? `Use only scenario facts and interactions representable through the current public SDK described below. Do not repeat known unsupported mechanics merely because a prior scenario used them. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY}` : "Deliberately exercise one capability absent from the current public SDK described below, and explicitly name that capability as the intended probe. Keep the remaining scenario representable."}
+${sdkCapabilityIntent === "supportedOnly" ? `Use only scenario facts and interactions representable through the current public SDK described below. Do not repeat known unsupported mechanics merely because a prior scenario used them. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} ${SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY}` : "Deliberately exercise one capability absent from the current public SDK described below, and explicitly name that capability as the intended probe. Keep the remaining scenario representable."}
 
 ${capabilityContext}`;
 }
@@ -577,13 +578,13 @@ RAW: use only .references/srd-5.2.1/ and ASSUMPTIONS.md. Check legality, coheren
 
 Content availability: compare selected canonical identities with the supplied availability list and the exact campaign intent. Do not infer a product obligation from an accidental unavailable selection.
 
-SDK capability: compare required setup/play facts with the current public SDK documentation below, not historical run verdicts. Do not inspect implementation files. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Treat a Candidate's requirement for that choice or roll workflow as an absent operation: under supportedOnly, return an unsupported critique so the Candidate is revised rather than marked ready.
+SDK capability: compare required setup/play facts with the current public SDK documentation below, not historical run verdicts. Do not inspect implementation files. ${STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY} Treat a Candidate's requirement for that choice or roll workflow as an absent operation. ${SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY}
 
 Artifact policy: apply docs/mushroom-playbook/AUTHORING.md only to public identity/expression safety. Do not judge mechanics or tactics.
 
 Scenario quality: independently classify the setup and encounter as ready only when it is mechanically meaningful, every represented combatant or group seriously pursues an authored strategy-bearing objective, fixed versus delegated choices fit the campaign distribution preference, and the Candidate's prose and typed stage facts align with the configured exploratory purpose. Treat a contradiction between the configured purpose and either authority as a material needsRevision finding; for example, a purpose requiring delegated Character Sheet choices cannot be ready when the typed character requirement classifies the scenario as stat-block-only. Use the supplied typed stage facts as controller evidence rather than inferring them from prose, and do not repair a contradiction by silently changing the configured purpose. Do not impose generic balance: a deliberately loose or highly prescribed scenario can be ready. Do not choose tactics, predict an outcome, or rewrite prose. Return one concise critique when this quality responsibility needs a material revision.
 
-${SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY} Inspect stage-fact evidence text and every retained catalogue-comparison dimension as part of that reconciliation. A supportedOnly Candidate that requires an operation absent from the public SDK must likewise be classified as an unsupported capability and needsRevision, never ready; it must never be marked ready after silently removing the requirement.
+${SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY} Inspect stage-fact evidence text and every retained catalogue-comparison dimension as part of that reconciliation. Never mark a Candidate ready after silently removing a requirement.
 
 Content-availability intent: ${contentAvailabilityIntent}
 SDK-capability intent: ${sdkCapabilityIntent}

@@ -438,7 +438,7 @@ describe("scenario generation campaign", () => {
       "does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow",
     );
     expect(prompt).toContain(
-      "A supportedOnly Candidate requiring that absent operation must be revised",
+      "For supportedOnly generation and review, a Candidate requiring an absent public-SDK operation must be classified as unsupported and needsRevision, never marked ready",
     );
   });
 

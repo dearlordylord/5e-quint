@@ -115,13 +115,10 @@ export type CapabilityBoundary = Schema.Schema.Type<
   typeof CapabilityBoundarySchema
 >;
 
-/**
- * The setup initializer receives already-resolved values. It is not a Table
- * choice or dice-rolling workflow, so authoring must not treat its optional
- * currentHp input as evidence that monster Hit Point selection is surfaced.
- */
 export const STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY =
-  "battleCreatureInitFromStatBlock accepts a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow. A supportedOnly Candidate requiring that absent operation must be revised.";
+  "battleCreatureInitFromStatBlock accepts a resolved currentHp and typed initial conditions, but the public SDK does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow.";
+export const SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY =
+  "For supportedOnly generation and review, a Candidate requiring an absent public-SDK operation must be classified as unsupported and needsRevision, never marked ready.";
 export const SCENARIO_AUTHORITY_RECONCILIATION_BOUNDARY =
   "Reviews must reconcile every concrete quantity or count, coordinate or position, derived distance or range, size or shape, and other numeric fact across Candidate prose, typed stage facts, and catalogue-comparison evidence. Contradictions or unresolved mismatches are needsRevision findings and must never be silently repaired, normalized, or resolved by choosing one authority.";
 
@@ -312,8 +309,13 @@ const CANONICAL_CAPABILITIES = [
 const CANONICAL_BOUNDARIES = [
   {
     id: "stat-block-initialization-boundary",
-    roles: ["generation", "setupAuthoring", "review"],
+    roles: ["generation", "review"],
     statement: STAT_BLOCK_INITIALIZATION_CAPABILITY_BOUNDARY,
+  },
+  {
+    id: "supported-only-capability-revision",
+    roles: ["generation", "review"],
+    statement: SUPPORTED_ONLY_CAPABILITY_REVISION_POLICY,
   },
   {
     id: "scenario-authority-reconciliation",
