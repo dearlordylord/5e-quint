@@ -454,8 +454,10 @@ function portableReportBundle(
       `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  if (!isJsonRecord(value)) {
-    return fail(`Portable report manifest is invalid: ${manifestPath}`);
+  if (!isJsonRecord(value) || value.schemaVersion !== 1) {
+    return fail(
+      `Portable report manifest schemaVersion must be 1: ${manifestPath}`,
+    );
   }
   const index = value.index;
   if (
@@ -529,6 +531,29 @@ function portableReportBundle(
   return { root, artifacts };
 }
 
+function validatePortableArtifactInventory(
+  bundle: PortableReportBundle,
+  indexed: readonly IndexedReportArtifact[],
+): void {
+  if (bundle.artifacts.size !== indexed.length) {
+    fail(
+      `Portable report artifact inventory does not match its manifest: expected ${String(indexed.length)} entries, found ${String(bundle.artifacts.size)}.`,
+    );
+  }
+  for (const artifact of indexed) {
+    const manifestArtifact = bundle.artifacts.get(artifact.sha256);
+    if (
+      manifestArtifact === undefined ||
+      manifestArtifact.byteLength !== artifact.byteLength ||
+      manifestArtifact.path !== artifact.path
+    ) {
+      fail(
+        `Portable report artifact inventory does not match its manifest: ${artifact.path}.`,
+      );
+    }
+  }
+}
+
 function portableReportArtifactBytes(
   bundle: PortableReportBundle,
   indexed: IndexedReportArtifact,
@@ -589,11 +614,10 @@ function portableReportArtifactBytes(
 }
 
 function readPortableFindingsProjection(
-  db: DatabaseSync,
   bundle: PortableReportBundle,
   findingsArtifact: IndexedReportArtifact,
+  artifacts: readonly IndexedReportArtifact[],
 ): FindingsProjection {
-  const artifacts = indexedReportArtifacts(db);
   const findingsBytes = portableReportArtifactBytes(bundle, findingsArtifact);
   let value: unknown;
   try {
@@ -647,7 +671,9 @@ function readIndexedFindingsProjection(input: {
   } satisfies IndexedReportArtifact;
   const bundle = portableReportBundle(input.dbPath);
   if (bundle !== undefined) {
-    return readPortableFindingsProjection(input.db, bundle, findingsArtifact);
+    const artifacts = indexedReportArtifacts(input.db);
+    validatePortableArtifactInventory(bundle, artifacts);
+    return readPortableFindingsProjection(bundle, findingsArtifact, artifacts);
   }
   const database = canonicalRepositoryReadPath(repoRoot, input.dbPath);
   if (Either.isLeft(database)) {
