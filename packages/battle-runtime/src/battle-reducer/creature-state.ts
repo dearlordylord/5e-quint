@@ -208,7 +208,7 @@ export function battleCreatureStateAdmissionFromInit(
       readonly tag: "admitted";
       readonly creature: StatBlockBattleCreatureState;
       readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
-      readonly statBlockPresentation: BattleStatBlockPresentationSource;
+      readonly statBlockPresentation?: BattleStatBlockPresentationSource;
     }
   | {
       readonly tag: "invalid";
@@ -350,12 +350,19 @@ export function battleCreatureStateAdmissionFromInit(
       wildShapeRuntimeForms,
       attackExecution.nextScopeOrdinal,
     );
+    const wildShapePresentationsByStatBlockId = new Map(
+      (wildShapeForms ?? []).map(
+        (form) => [form.id, form.presentation] as const,
+      ),
+    );
     const wildShapePresentations = new Map<
       BattleStatBlockExecutionScopeRef,
       BattleStatBlockPresentationSource
     >();
-    for (const [index, admission] of executionCohort.admissions.entries()) {
-      const presentation = wildShapeForms?.[index]?.presentation;
+    for (const admission of executionCohort.admissions) {
+      const presentation = wildShapePresentationsByStatBlockId.get(
+        admission.statBlock.id,
+      );
       if (presentation !== undefined) {
         wildShapePresentations.set(admission.execution.scopeRef, presentation);
       }
@@ -592,10 +599,9 @@ export function battleCreatureStateAdmissionFromInit(
     tag: "admitted",
     creature: admittedCreature,
     nextScopeOrdinal: admission.right.cursorTransition.to,
-    statBlockPresentation: creatureInit.presentation ?? {
-      displayName: input.displayName,
-      orderedProcedures: [],
-    },
+    ...(creatureInit.presentation === undefined
+      ? {}
+      : { statBlockPresentation: creatureInit.presentation }),
   };
 }
 

@@ -36,7 +36,6 @@ import {
   type StatBlockProcedureBinding,
   type StatBlockProcedureBindingSnapshot,
   type StatBlockResourcePoolState,
-  UNARMED_STRIKE_PROCEDURE_ORDINAL,
 } from "./stat-block-execution-state.ts";
 export * from "./stat-block-execution-state.ts";
 
@@ -473,7 +472,6 @@ function allocateStatBlockExecution(
     procedureRef: unarmedStrikeProcedureRef,
     procedure: {
       kind: "unarmedStrike",
-      procedureOrdinal: UNARMED_STRIKE_PROCEDURE_ORDINAL,
       section: "actions",
       attack: admitted.unarmedStrike.attack,
     },

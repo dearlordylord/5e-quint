@@ -53,9 +53,6 @@ export type BattleStatBlockExecutionSource = {
   readonly legendaryActionUses?: number;
 };
 
-/** The sole negative procedure ordinal is reserved for the runtime Unarmed Strike. */
-export const UNARMED_STRIKE_PROCEDURE_ORDINAL = -1 as const;
-
 export type BattleStatBlockRuntimeResource = {
   readonly ordinal: number;
   readonly ownership: "shared" | "each";
@@ -186,10 +183,9 @@ export type StatBlockAttackProcedure = {
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
-/** Runtime-injected Unarmed Strike; authored procedure ordinals remain positive. */
+/** Runtime-injected Unarmed Strike; it has no authored procedure ordinal. */
 export type StatBlockUnarmedStrikeProcedure = {
   readonly kind: "unarmedStrike";
-  readonly procedureOrdinal: typeof UNARMED_STRIKE_PROCEDURE_ORDINAL;
   readonly section: "actions";
   readonly attack: SupportedCreatureAttackRollMechanics;
 };

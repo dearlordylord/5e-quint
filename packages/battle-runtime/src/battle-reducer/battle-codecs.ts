@@ -118,7 +118,6 @@ import {
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
-import { UNARMED_STRIKE_PROCEDURE_ORDINAL } from "../stat-block-execution-state.ts";
 import { creatureAttackRollMechanicsAreSupported } from "../statblock-action-support.ts";
 import { ATTACK_DAMAGE_ABILITY_MODIFIER_CHOICE_SELECTIONS } from "./attack-damage-ability-modifier-choice.ts";
 import { ATTACK_DAMAGE_DIE_FLOOR_CHOICE_SELECTIONS } from "./attack-damage-die-floor-choice.ts";
@@ -5561,7 +5560,6 @@ const StatBlockAttackProcedureSchema = Schema.Struct({
 
 const StatBlockUnarmedStrikeProcedureSchema = Schema.Struct({
   kind: Schema.Literal("unarmedStrike"),
-  procedureOrdinal: Schema.Literal(UNARMED_STRIKE_PROCEDURE_ORDINAL),
   section: Schema.Literal("actions"),
   attack: CreatureAttackRollMechanicsSchema.pipe(
     Schema.filter(creatureAttackRollMechanicsAreSupported, {
@@ -5762,16 +5760,15 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
 function runtimeProcedureOrdinalKey(
   procedure: Schema.Schema.Type<typeof StatBlockProcedureSchema>,
 ): string {
+  if (procedure.kind === "unarmedStrike") return "actions:unarmedStrike";
   const section =
     procedure.kind === "attack"
       ? procedure.section
-      : procedure.kind === "unarmedStrike"
+      : procedure.kind === "unsupported"
         ? procedure.section
-        : procedure.kind === "unsupported"
-          ? procedure.section
-          : procedure.kind === "bonusActionOption"
-            ? "bonusActions"
-            : "actions";
+        : procedure.kind === "bonusActionOption"
+          ? "bonusActions"
+          : "actions";
   return `${section}:${procedure.procedureOrdinal}`;
 }
 

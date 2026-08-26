@@ -253,7 +253,10 @@ export function startBattle(
     if ("runtimeContext" in admission) {
       characterContexts.set(combatant.combatantId, admission.runtimeContext);
     }
-    if ("statBlockPresentation" in admission) {
+    if (
+      "statBlockPresentation" in admission &&
+      admission.statBlockPresentation !== undefined
+    ) {
       statBlockPresentations.set(
         combatant.combatantId,
         admission.statBlockPresentation,
@@ -595,9 +598,11 @@ function statBlockPresentationProjectionForAdmission(
 ):
   | { readonly statBlockPresentation: BattleStatBlockPresentationSource }
   | Record<never, never> {
-  return "statBlockPresentation" in admission
-    ? { statBlockPresentation: admission.statBlockPresentation }
-    : {};
+  if (!("statBlockPresentation" in admission)) return {};
+  const presentation = admission.statBlockPresentation;
+  return presentation === undefined
+    ? {}
+    : { statBlockPresentation: presentation };
 }
 
 function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<

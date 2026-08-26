@@ -30,6 +30,10 @@ export type StatBlockPresentationAdmission = {
   readonly presentation?: BattleStatBlockPresentationSource;
 };
 
+function procedurePresentationKey(section: string, ordinal: number): string {
+  return `${section}:${ordinal}`;
+}
+
 export function statBlockProjectionIssuesForActor(
   state: BattleState,
   context: BattleRuntimeContext,
@@ -49,10 +53,19 @@ function statBlockProjectionIssues(
 ): readonly StatBlockProjectionIssue[] {
   if (execution === undefined) return [];
   const admitted = new Map(
-    execution.procedureBindings.map((binding) => [
-      `${binding.procedure.section}:${binding.procedure.procedureOrdinal}`,
-      binding.procedure,
-    ]),
+    execution.procedureBindings.flatMap((binding) =>
+      binding.procedure.kind === "unarmedStrike"
+        ? []
+        : [
+            [
+              procedurePresentationKey(
+                binding.procedure.section,
+                binding.procedure.procedureOrdinal,
+              ),
+              binding.procedure,
+            ] as const,
+          ],
+    ),
   );
   type ActionIssue = Extract<
     StatBlockProjectionIssue,
@@ -74,7 +87,7 @@ function statBlockProjectionIssues(
         ];
       }
       const admittedProcedure = admitted.get(
-        `${entry.section}:${entry.procedureOrdinal}`,
+        procedurePresentationKey(entry.section, entry.procedureOrdinal),
       );
       if (admittedProcedure?.kind === "unsupported") {
         return [
@@ -153,12 +166,12 @@ export function statBlockProcedurePresentations(
   if (admission.presentation === undefined) return [];
   const labels = new Map(
     admission.presentation.orderedProcedures.map((entry) => [
-      `${entry.section}:${entry.procedureOrdinal}`,
+      procedurePresentationKey(entry.section, entry.procedureOrdinal),
       entry,
     ]),
   );
   const labelFor = (section: string, ordinal: number): string =>
-    labels.get(`${section}:${ordinal}`)?.name ??
+    labels.get(procedurePresentationKey(section, ordinal))?.name ??
     "Unsupported Stat Block procedure";
   return admission.execution.procedureBindings.flatMap(
     (binding): readonly StatBlockProcedurePresentation[] => {

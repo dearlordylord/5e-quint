@@ -36,7 +36,7 @@ import { statBlockTraitsAreSupported } from "./statblock-action-support.ts";
 const authoredOrdinal = (value: number) =>
   Schema.decodeUnknownSync(StatBlockProcedureOrdinalSchema)(value);
 
-function initializedStatBlock(source: ReturnType<typeof statBlockRecord>) {
+function initializedStatBlock(source: StatBlockRecord) {
   const projected = projectAuthoredStatBlock(source);
   if (Either.isLeft(projected)) {
     throw new Error(`Expected Stat Block projection: ${projected.left.reason}`);
@@ -55,7 +55,7 @@ function initializedStatBlock(source: ReturnType<typeof statBlockRecord>) {
   return initialized.right;
 }
 
-function startedStatBlock(source: ReturnType<typeof statBlockRecord>) {
+function startedStatBlock(source: StatBlockRecord) {
   const started = startBattle({
     battleId: battleId("stat-block-projection"),
     combatants: [initializedStatBlock(source)],
@@ -95,6 +95,34 @@ function firstProjectionIssue(
 }
 
 describe("generic Stat Block projection", () => {
+  test("does not synthesize presentation when initialization omits authored context", () => {
+    const projected = projectAuthoredStatBlock(statBlockRecord());
+    expect(Either.isRight(projected)).toBe(true);
+    if (Either.isLeft(projected)) return;
+
+    const initialized = battleCreatureInitFromStatBlock({
+      combatantId: combatantId("stat-block-without-presentation"),
+      statBlock: projected.right.runtime,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
+    });
+    expect(Either.isRight(initialized)).toBe(true);
+    if (Either.isLeft(initialized)) return;
+
+    const started = startBattle({
+      battleId: battleId("stat-block-without-presentation"),
+      combatants: [initialized.right],
+    });
+    expect(Either.isRight(started)).toBe(true);
+    if (Either.isLeft(started)) return;
+    expect(
+      started.right.context.statBlocks.has(
+        combatantId("stat-block-without-presentation"),
+      ),
+    ).toBe(false);
+  });
+
   test("admits only typed attack-roll trait effects", () => {
     const untyped = [
       {
@@ -338,7 +366,7 @@ describe("generic Stat Block projection", () => {
     if (actionAttack === undefined) {
       throw new Error("Expected a fixture action attack.");
     }
-    const reusedAcrossSections = {
+    const reusedAcrossSections: StatBlockRecord = {
       ...source,
       id: statBlockId("synthetic-reused-action-attack"),
       statBlock: {

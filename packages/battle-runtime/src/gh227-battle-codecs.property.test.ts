@@ -182,14 +182,15 @@ describe("GH-227 battle codec properties", () => {
 
   test("a reachable Stat Block execution graph round-trips", () => {
     const encoded = encodedStatBlockSnapshots();
-    expect(encoded.procedureBindings).toContainEqual(
-      expect.objectContaining({
-        procedure: expect.objectContaining({
-          kind: "unarmedStrike",
-          procedureOrdinal: -1,
-        }),
-      }),
+    const unarmedBinding = encoded.procedureBindings.find(
+      (binding) => binding.procedure.kind === "unarmedStrike",
     );
+    expect(unarmedBinding).toBeDefined();
+    if (unarmedBinding === undefined) return;
+    expect(unarmedBinding.procedure).toEqual(
+      expect.objectContaining({ kind: "unarmedStrike" }),
+    );
+    expect(unarmedBinding.procedure).not.toHaveProperty("procedureOrdinal");
     const decoded = Schema.decodeUnknownEither(
       StatBlockExecutionSnapshotSchema,
     )(encoded);
@@ -225,7 +226,11 @@ describe("GH-227 battle codec properties", () => {
         "procedureBindings",
         (binding) => ({
           ...binding,
-          procedure: { ...binding.procedure, procedureOrdinal },
+          procedure: replaceProcedureField(
+            binding,
+            "procedureOrdinal",
+            procedureOrdinal,
+          ),
         }),
       );
       expect(
@@ -238,18 +243,14 @@ describe("GH-227 battle codec properties", () => {
     },
   );
 
-  test("rejects the unarmed sentinel on an authored attack binding", () => {
+  test("rejects a negative ordinal on an authored attack binding", () => {
     const encoded = encodedStatBlockSnapshots();
     const malformed = replaceFirstRecordInArray(
       encoded,
       "procedureBindings",
       (binding) => ({
         ...binding,
-        procedure: {
-          ...binding.procedure,
-          kind: "attack",
-          procedureOrdinal: -1,
-        },
+        procedure: replaceProcedureField(binding, "procedureOrdinal", -1),
       }),
     );
     expect(
@@ -261,17 +262,32 @@ describe("GH-227 battle codec properties", () => {
 
   test("rejects duplicate runtime Stat Block procedure ordinals", () => {
     const encoded = encodedStatBlockSnapshots();
-    const first = encoded.procedureBindings[0];
-    if (first === undefined) throw new Error("Expected a procedure binding.");
+    const ordinalBindings = encoded.procedureBindings.filter(
+      (binding) => binding.procedure.kind !== "unarmedStrike",
+    );
+    const first = ordinalBindings[0];
+    const second = ordinalBindings[1];
+    if (first === undefined || second === undefined) {
+      throw new Error("Expected two ordinal-bearing procedure bindings.");
+    }
+    const firstProcedure = first.procedure;
+    const secondProcedure = second.procedure;
+    if (
+      firstProcedure.kind === "unarmedStrike" ||
+      secondProcedure.kind === "unarmedStrike"
+    ) {
+      throw new Error("Expected authored procedure bindings.");
+    }
+    const firstProcedureOrdinal = firstProcedure.procedureOrdinal;
     const malformed = {
       ...encoded,
-      procedureBindings: encoded.procedureBindings.map((binding, index) =>
-        index === 1
+      procedureBindings: encoded.procedureBindings.map((binding) =>
+        binding.procedureRef === second.procedureRef
           ? {
               ...binding,
               procedure: {
                 ...binding.procedure,
-                procedureOrdinal: first.procedure.procedureOrdinal,
+                procedureOrdinal: firstProcedureOrdinal,
               },
             }
           : binding,
@@ -373,3 +389,15 @@ describe("GH-227 battle codec properties", () => {
     ).toBe(true);
   });
 });
+
+function replaceProcedureField(
+  binding: UnknownRecord,
+  field: string,
+  value: unknown,
+): UnknownRecord {
+  const procedure = binding["procedure"];
+  if (!isRecord(procedure)) {
+    throw new Error("Expected a procedure object.");
+  }
+  return { ...procedure, [field]: value };
+}
