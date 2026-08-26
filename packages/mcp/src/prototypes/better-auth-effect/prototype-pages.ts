@@ -30,7 +30,7 @@ export function prototypeVaultPage(): Response {
 <main>
   <h1>Connect a private saved-session vault</h1>
   <p>Guest play remains anonymous. You do not enter an email, password, or account/profile details.</p>
-  <p>ChatGPT requests standard OpenID and email protocol scopes. They describe only this randomly generated vault identity; this service receives no ChatGPT account identity or personal email address.</p>
+  <p>ChatGPT requests standard OpenID and email protocol scopes. It may display a generated <code>${ANONYMOUS_VAULT_EMAIL_DISPLAY}</code> identifier. That is a vault label—not an inbox, login, or error—and this service receives no ChatGPT account identity or personal email address.</p>
   <p>The requesting client does not share your account identity with this service. This private pseudonymous vault belongs to the anonymous authorization session in this browser; clients you authorize from that session share the vault.</p>
   <p>Until optional recovery is available, losing both the browser session and client authorization may make saved sessions unrecoverable. See the <a href="/privacy">privacy and retention policy</a>.</p>
   <p id="client">Verifying the registered client…</p>
@@ -101,7 +101,7 @@ export function prototypeConsentPage(): Response {
   <h1>Connect your private saved-session vault?</h1>
   <p>Allow the requesting client to save, list, resume, and delete Play Sessions in your pseudonymous vault.</p>
   <p>You do not enter an email, password, or account/profile details. The requesting client does not share your account identity with this service.</p>
-  <p>Standard OpenID and email scopes describe only this randomly generated vault identity, not your ChatGPT identity or personal email address.</p>
+  <p>Standard OpenID and email scopes describe only this randomly generated vault identity, not your ChatGPT identity or personal email address. A displayed <code>${ANONYMOUS_VAULT_EMAIL_DISPLAY}</code> value is a vault label, not an inbox, login, or error.</p>
   <p>This vault belongs to the anonymous authorization session in this browser. See the <a href="/privacy">privacy and retention policy</a>.</p>
   <p id="client">Verifying the registered client…</p>
   <p id="scope"></p>
@@ -164,3 +164,4 @@ function htmlResponse(body: string): Response {
     },
   });
 }
+import { ANONYMOUS_VAULT_EMAIL_DISPLAY } from "./anonymous-vault-identity.ts";

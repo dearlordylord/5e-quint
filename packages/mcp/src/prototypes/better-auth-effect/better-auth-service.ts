@@ -9,6 +9,11 @@ import { Context, Effect, Layer } from "effect";
 import { SAVED_INACTIVITY_RETENTION_MS } from "../../play-session-access.ts";
 import { PLAY_SESSION_OAUTH_SCOPE } from "../../tool-definition-contract.ts";
 import { fetchClientMetadataResource } from "./cimd-metadata-fetch.ts";
+import {
+  ANONYMOUS_VAULT_EMAIL_DOMAIN,
+  ANONYMOUS_VAULT_EMAIL_PREFIX,
+  makeAnonymousVaultEmail,
+} from "./anonymous-vault-identity.ts";
 
 export const CHATGPT_SAVED_SESSION_OAUTH_SCOPES = [
   "openid",
@@ -67,6 +72,7 @@ export function betterAuthPrototypeLayer(
           const context = await auth.$context;
           await context.runMigrations();
           assertAnonymousOnlyDatabase(database);
+          normalizeAnonymousVaultEmailLabels(database);
         },
         catch: (cause) => prototypeIssue("initializationFailed", cause),
       });
@@ -100,7 +106,7 @@ function makeBetterAuth(
       jwt(),
       anonymous({
         disableDeleteAnonymousUser: true,
-        emailDomainName: "anonymous.invalid",
+        generateRandomEmail: makeAnonymousVaultEmail,
         generateName: () => "Saved Session Vault",
       }),
       mcp({
@@ -144,6 +150,22 @@ function assertAnonymousOnlyDatabase(database: DatabaseSync): void {
       "The credential-free prototype requires an auth database containing only anonymous users",
     );
   }
+}
+
+function normalizeAnonymousVaultEmailLabels(database: DatabaseSync): void {
+  const legacyPrefix = "temp-";
+  database
+    .prepare(
+      `UPDATE "user"
+       SET "email" = ? || substr("email", length(?) + 1)
+       WHERE "isAnonymous" IS 1
+         AND "email" LIKE ?`,
+    )
+    .run(
+      ANONYMOUS_VAULT_EMAIL_PREFIX,
+      legacyPrefix,
+      `${legacyPrefix}%@${ANONYMOUS_VAULT_EMAIL_DOMAIN}`,
+    );
 }
 
 function prototypeIssue(

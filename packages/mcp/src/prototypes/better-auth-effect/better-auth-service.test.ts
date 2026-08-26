@@ -45,6 +45,14 @@ describe("credential-free Better Auth database admission", () => {
       expect(created.status).toBe(200);
       await creatingRuntime.dispose();
 
+      const legacyDatabase = new DatabaseSync(databasePath);
+      legacyDatabase
+        .prepare(
+          `UPDATE "user" SET "email" = 'temp-legacy-vault@anonymous.invalid'`,
+        )
+        .run();
+      legacyDatabase.close();
+
       const anonymousOnlyRuntime = ManagedRuntime.make(
         betterAuthPrototypeLayer(configuration),
       );
@@ -54,6 +62,10 @@ describe("credential-free Better Auth database admission", () => {
       await anonymousOnlyRuntime.dispose();
 
       const database = new DatabaseSync(databasePath);
+      const migrated = database.prepare('SELECT "email" FROM "user"').get();
+      expect(migrated?.email).toBe(
+        "saved-session-vault-legacy-vault@anonymous.invalid",
+      );
       database.prepare('UPDATE "user" SET "isAnonymous" = 0').run();
       database.close();
 

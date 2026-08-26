@@ -11,7 +11,8 @@ describe("credential-free saved-session vault pages", () => {
     const html = await prototypeVaultPage().text();
 
     expect(html).toContain("You do not enter an email, password");
-    expect(html).toContain("randomly generated vault identity");
+    expect(html).toContain("display a generated");
+    expect(html).toContain("vault label—not an inbox, login, or error");
     expect(html).toContain("no ChatGPT account identity or personal email");
     expect(html).toContain("requesting client does not share your account");
     expect(html).toContain("clients you authorize from that session share");
@@ -37,6 +38,7 @@ describe("credential-free saved-session vault pages", () => {
     expect(html).toContain("pseudonymous vault");
     expect(html).toContain("requesting client does not share your account");
     expect(html).toContain("not your ChatGPT identity or personal email");
+    expect(html).toContain("vault label, not an inbox, login, or error");
     expect(html).toContain("/api/auth/oauth2/public-client-prelogin");
     expect(html).toContain("Registered client:");
     expect(html).toContain('typeof result.url !== "string"');

@@ -4,6 +4,8 @@ import type { IncomingMessage } from "node:http";
 import { Either, Schema } from "effect";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
+import { isAnonymousVaultEmail } from "./anonymous-vault-identity.ts";
+
 export const AuthorizationServerMetadataSchema = Schema.Struct({
   issuer: Schema.NonEmptyTrimmedString,
   authorization_endpoint: Schema.URL,
@@ -136,7 +138,7 @@ export async function verifyChatGptAuthorization(input: {
   const claims = Object.keys(userInfoRecord).sort().join(" ");
   if (claims !== "email email_verified sub")
     throw new Error(`ChatGPT received unexpected identity claims: ${claims}`);
-  if (!userInfo.email.endsWith("@anonymous.invalid"))
+  if (!isAnonymousVaultEmail(userInfo.email))
     throw new Error("ChatGPT did not receive a synthetic vault email");
   const idToken = await jwtVerify(
     tokens.id_token,
