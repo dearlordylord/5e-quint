@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-shortbow-long-range-disadvantage-001",
+  "scenarioSha256": "0f31c522e6bc0709694255495d5ea62febad99c65d6230e1b36272e91f9e1ca1",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "No authored character build is needed beyond the canonical Skeleton and Wolf Stat Blocks."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Optional tactical geometry fully covers the exact placement, distance, equal elevation, open terrain, and unobstructed sight facts."
+    }
+  }
+}

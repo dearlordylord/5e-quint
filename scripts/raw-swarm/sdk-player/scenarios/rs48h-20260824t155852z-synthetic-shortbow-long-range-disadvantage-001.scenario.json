@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-shortbow-long-range-disadvantage-001",
+  "title": "Synthetic Shortbow long-range Disadvantage 001",
+  "purpose": "Exercise range-derived attack-roll Disadvantage for a canonical Shortbow attack made beyond normal range but within long range.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-shortbow-long-range-disadvantage-001.md",
+    "byteLength": 1343,
+    "sha256": "0f31c522e6bc0709694255495d5ea62febad99c65d6230e1b36272e91f9e1ca1"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-shortbow-long-range-disadvantage-001.md.scenario-review.json",
+    "byteLength": 10762,
+    "sha256": "4b15d645fb79e7f2ef2779c204045e836dd96eacee69ea17e94be5338aec2557"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-shortbow-long-range-disadvantage-001.md.stage-facts.json",
+    "byteLength": 684,
+    "sha256": "5fed08b9063a41c7a351f6e25ae820d113b6968886bd3a81c24accb44a27ed2d"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "prone-target-roll-mode-distance-probe",
+    "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+    "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+    "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+    "rs48h-20260824t155852z-synthetic-dodge-defense-lifetime-retry-001",
+    "rs48h-20260824t155852z-synthetic-help-attack-held-advantage-retry-002",
+    "rs48h-20260824t155852z-synthetic-large-footprint-route-001",
+    "rs48h-20260824t155852z-synthetic-total-cover-transition-001",
+    "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+    "rs48h-20260824t155852z-synthetic-wolf-bite-prone-prefix-001",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}
