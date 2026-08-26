@@ -1,11 +1,9 @@
 import {
   battlePresentedSnapshot,
   battleAdmittedSpellPresentations,
-  discoverBattleActs,
-  battleCreatureInitFromAuthoredStatBlock,
-  startBattle,
   battleStateInitIssueMessage,
-  type BattleStatBlockProjectionFailure,
+  discoverBattleActs,
+  startBattle,
   type BattleCreatureInit,
   type BattleRuntimeSession,
   type CombatantId,
@@ -15,7 +13,7 @@ import {
   characterSheetBattleInit,
 } from "@dnd/character-battle-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
-import { Either, Match, Option } from "effect";
+import { Either, Match } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -38,6 +36,7 @@ import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
+import { projectStatBlockBattleCombatant } from "./stat-block-battle-combatant-projection.ts";
 
 export type StartableCharacterSessionCombatant = {
   readonly character: CharacterSessionCombatantToolInput;
@@ -278,83 +277,11 @@ export function projectBattleCombatant(input: {
         characterSession: { character, session },
       });
     }),
-    Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
-      const encounterCombatant = statBlockCombatant;
-      const statBlock = root.statBlockCatalog.getStatBlock(
-        encounterCombatant.statBlockId,
-      );
-      if (Option.isNone(statBlock)) {
-        return Either.left(
-          errorContent("Unknown Stat Block combatant.", {
-            code: "UNKNOWN_STAT_BLOCK_COMBATANT",
-            statBlockId: encounterCombatant.statBlockId,
-          }),
-        );
-      }
-      const creatureInit = battleCreatureInitFromAuthoredStatBlock({
-        combatantId: statBlockCombatant.combatantId,
-        statBlock: statBlock.value,
-        initiative: statBlockCombatant.initiative,
-        ammunitionStocks: statBlockCombatant.ammunitionStocks,
-        conditions: [],
-        ...(encounterCombatant.currentHp === undefined
-          ? {}
-          : { currentHp: encounterCombatant.currentHp }),
-        ...(encounterCombatant.tempHp === undefined
-          ? {}
-          : { tempHp: encounterCombatant.tempHp }),
-      });
-      if (Either.isLeft(creatureInit)) {
-        return Either.left(
-          Match.value(creatureInit.left).pipe(
-            Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
-              statBlockProjectionFailureContent(
-                encounterCombatant.statBlockId,
-                failure,
-              ),
-            ),
-            Match.when({ tag: "battleStateInitIssue" }, (issue) =>
-              errorContent(battleStateInitIssueMessage(issue), {
-                code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-              }),
-            ),
-            Match.exhaustive,
-          ),
-        );
-      }
-      if (creatureInit.right.creatureInit.kind !== "statBlock") {
-        return Either.left(
-          errorContent(
-            "Stat Block battle initialization produced a character combatant.",
-            { code: "STAT_BLOCK_BATTLE_INIT_INVALID" },
-          ),
-        );
-      }
-      return Either.right({
-        tag: "encounterCombatant" as const,
-        creatureInit: {
-          ...creatureInit.right,
-          creatureInit: creatureInit.right.creatureInit,
-        },
-      });
-    }),
+    Match.when({ kind: "statBlock" }, (combatant) =>
+      projectStatBlockBattleCombatant({ root, combatant }),
+    ),
     Match.exhaustive,
   );
-}
-
-function statBlockProjectionFailureContent(
-  statBlockId: string,
-  failure: BattleStatBlockProjectionFailure,
-) {
-  return errorContent("Stat Block projection failed.", {
-    code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-    statBlockId,
-    reason: failure.reason,
-    ...(failure.procedureOrdinal === undefined
-      ? {}
-      : { procedureOrdinal: failure.procedureOrdinal }),
-    ...(failure.section === undefined ? {} : { section: failure.section }),
-  });
 }
 
 function admitCompanionAdmissions(input: {

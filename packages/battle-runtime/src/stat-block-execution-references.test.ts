@@ -1045,7 +1045,7 @@ describe("Stat Block execution references", () => {
     ) {
       throw new Error("Expected a Scimitar attack fixture.");
     }
-    const [_, shortbow] = actions;
+    const shortbow = actions[1];
     if (shortbow === undefined) {
       throw new Error("Expected the second Goblin Warrior action.");
     }
