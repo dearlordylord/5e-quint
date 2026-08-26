@@ -1,7 +1,10 @@
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId as parseSharedStatBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
@@ -239,7 +242,12 @@ function codecStaticDartStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
+    id: parseSharedStatBlockId("stat_block_codec_static_dart_monster"),
     name: "Codec Static Dart Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "codec static damage fixture",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [

@@ -5,12 +5,9 @@ import { movementFeet } from "@dnd/shared/types";
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, it } from "vitest";
-import { Schema } from "effect";
 
-import { StatBlockProcedureOrdinalSchema } from "@dnd/surface/surface/schema";
 import type {
   AuthoredExecutableProcedure,
-  StatBlockProcedureEntry,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 
@@ -44,6 +41,7 @@ import {
   damageRollFill,
   DieRollResult,
   discoverBattleActCandidates,
+  executableProcedureEntry,
   hasCondition,
   resolveBattleSubject,
   startBattleRight,
@@ -79,10 +77,6 @@ type SizeGatedConditionRiderRouteProjection =
 type StatBlockAttack = Extract<
   AuthoredExecutableProcedure,
   { readonly kind: "attack_roll" }
->;
-type ExecutableProcedureEntry = Extract<
-  StatBlockProcedureEntry,
-  { readonly kind: "executable" }
 >;
 
 const actorId = combatantId("stat-block-size-rider-mbt-actor");
@@ -490,8 +484,8 @@ function sizeGatedConditionRiderAttackerStatBlock(): StatBlockRecord {
     ),
     name: "Stat Block Size-Gated Condition Attacker",
     provenance: {
-      kind: "srd-5.2.1",
-      section: "Stat Block size-gated condition rider MBT fixture",
+      kind: "synthetic-test",
+      section: "size-gated condition rider attacker fixture",
     },
     statBlock: {
       ...base.statBlock,
@@ -509,8 +503,8 @@ function sizeGatedConditionRiderTargetStatBlock(
     id: sizeGatedConditionRiderTargetStatBlockId(targetSizeGate),
     name: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
     provenance: {
-      kind: "srd-5.2.1",
-      section: "Stat Block size-gated condition rider MBT fixture",
+      kind: "synthetic-test",
+      section: "size-gated condition rider target fixture",
     },
     statBlock: {
       ...base.statBlock,
@@ -520,22 +514,6 @@ function sizeGatedConditionRiderTargetStatBlock(
         : {}),
       size: targetSizeGate === "larger" ? "large" : "medium",
     },
-  };
-}
-
-function authoredProcedureOrdinal(value: number) {
-  return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
-}
-
-function executableProcedureEntry(
-  procedureOrdinal: number,
-  procedure: AuthoredExecutableProcedure,
-): ExecutableProcedureEntry {
-  return {
-    kind: "executable",
-    procedureOrdinal: authoredProcedureOrdinal(procedureOrdinal),
-    procedure,
-    resourceRefs: { kind: "none" },
   };
 }
 

@@ -1,4 +1,7 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId as parseSharedStatBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import * as path from "node:path";
 import {
@@ -36,10 +39,7 @@ import {
   movementFeet,
   proficiencyBonus,
 } from "@dnd/shared/types";
-import {
-  decodeUnitRecordSync,
-  StatBlockProcedureOrdinalSchema,
-} from "@dnd/surface/surface/schema";
+import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -79,6 +79,7 @@ import {
   secondWizardId as interruptSecondWizardId,
   wizardId as interruptWizardId,
   resolveBattleSubject,
+  executableProcedureEntry,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -18059,27 +18060,26 @@ function skeletonMultiattackStatBlock(): StatBlockRecord {
   }
   return {
     ...base,
+    id: parseSharedStatBlockId("stat_block_synthetic_boneblade_multiattacker"),
+    name: "Synthetic Boneblade Multiattacker",
+    provenance: {
+      kind: "synthetic-test",
+      section: "Skeleton multiattack MBT fixture",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [
         ...actions,
-        {
-          kind: "executable",
-          procedureOrdinal: Schema.decodeSync(StatBlockProcedureOrdinalSchema)(
-            3,
-          ),
-          procedure: {
-            kind: "multiattack",
-            name: "Multiattack",
-            dispatches: [
-              {
-                procedureOrdinal: shortsword.procedureOrdinal,
-                count: { kind: "literal", value: 2 },
-              },
-            ],
-          },
-          resourceRefs: { kind: "none" },
-        },
+        executableProcedureEntry(3, {
+          kind: "multiattack",
+          name: "Multiattack",
+          dispatches: [
+            {
+              procedureOrdinal: shortsword.procedureOrdinal,
+              count: { kind: "literal", value: 2 },
+            },
+          ],
+        }),
       ],
     },
   };

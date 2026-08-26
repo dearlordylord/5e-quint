@@ -130,7 +130,47 @@ describe("Stat Block combatant admission capability", () => {
         ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
       },
     });
-    expect(Either.isLeft(malformedArmorClass)).toBe(true);
+    expect(malformedArmorClass).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "ParseError",
+        issue: {
+          _tag: "Composite",
+          issues: {
+            _tag: "Pointer",
+            path: "statBlock",
+            issue: {
+              _tag: "Refinement",
+              issue: {
+                _tag: "Composite",
+                issues: {
+                  _tag: "Pointer",
+                  path: "ac",
+                  issue: {
+                    _tag: "Composite",
+                    issues: {
+                      _tag: "Pointer",
+                      path: "value",
+                      issue: {
+                        _tag: "Refinement",
+                        issue: {
+                          _tag: "Composite",
+                          issues: {
+                            _tag: "Pointer",
+                            path: "source",
+                            issue: { _tag: "Unexpected" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
   });
 
   test("retains caller-supplied initial conditions for Stat Block creatures", () => {

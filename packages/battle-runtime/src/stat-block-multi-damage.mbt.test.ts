@@ -1,23 +1,21 @@
 import { movementFeet } from "@dnd/shared/types";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
+  executableProcedureEntry,
   projectedStatBlockRuntimeSource,
   resolveBattleSubject,
-  statBlockRecord,
 } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import { isDeepStrictEqual } from "node:util";
 
-import { Either, Schema } from "effect";
+import { Either } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, it } from "vitest";
 
 import { DieRollResult, Hp } from "@dnd/shared/types";
-import { StatBlockProcedureOrdinalSchema } from "@dnd/surface/surface/schema";
 import type {
   AuthoredExecutableProcedure,
-  StatBlockProcedureEntry,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
@@ -77,10 +75,6 @@ type StatBlockMultiDamageRouteProjection = StatBlockMultiDamageProjection & {
 type StatBlockAttack = Extract<
   AuthoredExecutableProcedure,
   { readonly kind: "attack_roll" }
->;
-type ExecutableProcedureEntry = Extract<
-  StatBlockProcedureEntry,
-  { readonly kind: "executable" }
 >;
 
 const actorId = combatantId("stat-block-multi-damage-mbt-actor");
@@ -488,17 +482,22 @@ function poisonImmuneTargetStatBlock(): StatBlockRecord {
 }
 
 function baseStatBlockRecord(id: string): StatBlockRecord {
-  const base = statBlockRecord();
   return {
-    ...base,
     id: parseSharedStatBlockId(id),
+    kind: "statBlock",
     name: id,
+    challengeRating: 0.25,
     provenance: {
       kind: "synthetic-test",
       section: "Stat Block multi-damage MBT fixture",
     },
     statBlock: {
-      ...base.statBlock,
+      size: "medium",
+      creatureType: "humanoid",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 12 } },
+      hp: { kind: "literal", value: 12 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
         cha: 10,
         con: 10,
@@ -507,30 +506,13 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
         str: 10,
         wis: 10,
       },
-      ac: { value: { kind: "literal", value: 12 } },
-      creatureType: "humanoid",
-      hp: { kind: "literal", value: 12 },
       initiative: { modifier: 0, score: 10 },
       passivePerception: 10,
-      size: "medium",
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
     },
-  };
-}
-
-function authoredProcedureOrdinal(value: number) {
-  return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
-}
-
-function executableProcedureEntry(
-  procedureOrdinal: number,
-  procedure: AuthoredExecutableProcedure,
-): ExecutableProcedureEntry {
-  return {
-    kind: "executable",
-    procedureOrdinal: authoredProcedureOrdinal(procedureOrdinal),
-    procedure,
-    resourceRefs: { kind: "none" },
   };
 }
 

@@ -84,6 +84,7 @@ import {
 } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   AreaDirectEffectAtom,
+  AuthoredExecutableProcedure,
   DamageType,
   EffectAtom,
   Size,
@@ -4075,7 +4076,7 @@ type AttackProcedureEntry = AuthoredExecutableProcedureEntry & {
   >;
 };
 
-function testStatBlockProcedureOrdinal(value: number) {
+export function authoredProcedureOrdinal(value: number) {
   return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
 }
 
@@ -4095,6 +4096,18 @@ function attackProcedureEntry(
   );
 }
 
+export function executableProcedureEntry(
+  procedureOrdinal: number,
+  procedure: AuthoredExecutableProcedure,
+): AuthoredExecutableProcedureEntry {
+  return {
+    kind: "executable",
+    procedureOrdinal: authoredProcedureOrdinal(procedureOrdinal),
+    procedure,
+    resourceRefs: { kind: "none" },
+  };
+}
+
 function renamedAttackProcedureEntry(input: {
   readonly entry: AttackProcedureEntry;
   readonly name: string;
@@ -4103,7 +4116,7 @@ function renamedAttackProcedureEntry(input: {
 }): AttackProcedureEntry {
   return {
     ...input.entry,
-    procedureOrdinal: testStatBlockProcedureOrdinal(input.procedureOrdinal),
+    procedureOrdinal: authoredProcedureOrdinal(input.procedureOrdinal),
     procedure: {
       ...input.entry.procedure,
       name: input.name,
@@ -4125,7 +4138,7 @@ function textOnlyProcedureEntry(input: {
 }): Extract<StatBlockProcedureEntry, { readonly kind: "textOnly" }> {
   return {
     kind: "textOnly",
-    procedureOrdinal: testStatBlockProcedureOrdinal(input.procedureOrdinal),
+    procedureOrdinal: authoredProcedureOrdinal(input.procedureOrdinal),
     name: input.name,
     description: input.description,
     reason: "unsupported_action_shape",
@@ -4143,6 +4156,10 @@ export function monsterResourceStatBlock(): StatBlockRecord {
     ...base,
     id: statBlockId("stat_block_resource_test_monster"),
     name: "Resource Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "resource-backed execution fixture",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [
@@ -4240,6 +4257,11 @@ export function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlo
   return {
     ...base,
     id: statBlockId("stat_block_unsupported_attack_sections_test_monster"),
+    name: "Unsupported Section Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "unsupported Stat Block action sections",
+    },
     statBlock: {
       ...base.statBlock,
       bonusActions: [
@@ -4275,6 +4297,11 @@ export function monsterMultiattackStatBlock(input?: {
   return {
     ...base,
     id: statBlockId("stat_block_multiattack_test_monster"),
+    name: "Multiattack Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "multiattack execution fixture",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [
@@ -4287,7 +4314,7 @@ export function monsterMultiattackStatBlock(input?: {
           : shortbow,
         {
           kind: "executable",
-          procedureOrdinal: testStatBlockProcedureOrdinal(3),
+          procedureOrdinal: authoredProcedureOrdinal(3),
           procedure: {
             kind: "multiattack",
             name: "Multiattack",
@@ -4327,6 +4354,11 @@ export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecor
   return {
     ...base,
     id: statBlockId("stat_block_two_recharge_test_monster"),
+    name: "Two Recharge Actions Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "multiple recharge action fixture",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [
@@ -4379,6 +4411,10 @@ export function resistantSkeletonCreatureInit(input: {
       ...skeleton,
       id: statBlockId("stat_block_slashing_resistant_skeleton"),
       name: "Slashing Resistant Skeleton",
+      provenance: {
+        kind: "synthetic-test",
+        section: "slashing-resistant skeleton fixture",
+      },
       statBlock: {
         ...statBlockWithoutDamageModifiers,
         resistances: { kind: "fixed", damageTypes: ["slashing"] },

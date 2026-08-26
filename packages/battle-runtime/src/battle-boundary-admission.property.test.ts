@@ -5,7 +5,8 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { decodeStatBlockRecordEither } from "@dnd/surface/surface/schema";
 import { classLevel, resourceCount } from "@dnd/shared/types";
-import { unitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
@@ -1635,7 +1636,47 @@ describe("battle boundary admission owners", () => {
         ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
       },
     });
-    expect(Either.isLeft(malformedArmorClass)).toBe(true);
+    expect(malformedArmorClass).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "ParseError",
+        issue: {
+          _tag: "Composite",
+          issues: {
+            _tag: "Pointer",
+            path: "statBlock",
+            issue: {
+              _tag: "Refinement",
+              issue: {
+                _tag: "Composite",
+                issues: {
+                  _tag: "Pointer",
+                  path: "ac",
+                  issue: {
+                    _tag: "Composite",
+                    issues: {
+                      _tag: "Pointer",
+                      path: "value",
+                      issue: {
+                        _tag: "Refinement",
+                        issue: {
+                          _tag: "Composite",
+                          issues: {
+                            _tag: "Pointer",
+                            path: "source",
+                            issue: { _tag: "Unexpected" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
     const malformedCreatureType = decodeStatBlockRecordEither({
       ...authoredSource,
       statBlock: { ...authoredSource.statBlock, creatureType: 42 },
@@ -2791,8 +2832,14 @@ describe("battle boundary admission owners", () => {
         resourceRefs: { kind: "none" },
       },
     ];
-    const limitedMultiattack = {
+    const limitedMultiattack: StatBlockRecord = {
       ...resourceMonster,
+      id: statBlockId("stat_block_boundary_limited_multiattack"),
+      name: "Boundary Limited Multiattack Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "boundary unavailable multiattack fixture",
+      },
       statBlock: {
         ...resourceMonster.statBlock,
         actions: limitedActions,
@@ -2885,27 +2932,34 @@ describe("battle boundary admission owners", () => {
         "Expected canonical bonus action and daily resource fixtures.",
       );
     }
+    const limitedBonusActionFixture: StatBlockRecord = {
+      ...limitedBonusAction,
+      id: statBlockId("stat_block_boundary_limited_bonus_action"),
+      name: "Boundary Limited Bonus Action Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "boundary unavailable bonus action fixture",
+      },
+      statBlock: {
+        ...limitedBonusAction.statBlock,
+        bonusActions: [
+          {
+            ...bonusOption,
+            resourceRefs: {
+              kind: "some",
+              ordinals: [dailyResource.ordinal],
+            },
+          },
+        ],
+      },
+    };
     const bonusActionState = startBattleSessionRight({
       battleId: battleId("boundary-unavailable-bonus-action"),
       combatants: [
         characterSeed({ initiative: 20 }),
         statBlockCreatureInit({
           initiative: 10,
-          statBlock: {
-            ...limitedBonusAction,
-            statBlock: {
-              ...limitedBonusAction.statBlock,
-              bonusActions: [
-                {
-                  ...bonusOption,
-                  resourceRefs: {
-                    kind: "some",
-                    ordinals: [dailyResource.ordinal],
-                  },
-                },
-              ],
-            },
-          },
+          statBlock: limitedBonusActionFixture,
         }),
       ],
     }).state;

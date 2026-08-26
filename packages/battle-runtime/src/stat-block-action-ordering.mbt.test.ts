@@ -4,6 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import srdGoblinWarriorInput from "../../surface/content/stat_block_goblin_warrior.json";
 import { decodeStatBlockRecordSync } from "../../surface/src/surface/schema.ts";
@@ -147,6 +148,12 @@ function admittedAttackOption(
   }
   const statBlock: StatBlockRecord = {
     ...srdGoblinWarrior,
+    id: parseSharedStatBlockId("stat_block_synthetic_action_ordering_attack"),
+    name: "Synthetic Action Ordering Attack",
+    provenance: {
+      kind: "synthetic-test",
+      section: "Stat Block action ordering fixture",
+    },
     statBlock: {
       ...srdGoblinWarrior.statBlock,
       actions: [{ ...baseAttackEntry, procedure: attack }],
