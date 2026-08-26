@@ -1,12 +1,10 @@
 import { optionalProperty } from "../optional-property.ts";
-import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { Match } from "effect";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {
   BattleReadyResponse,
   BattleReadyResponseSnapshot,
-  BattleSubject,
 } from "../battle-subjects.ts";
 import type { BattleCompanionSnapshot } from "../companion-state.ts";
 import { battleCompanionEntries } from "../find-familiar-state.ts";
@@ -20,11 +18,6 @@ import {
   battleLightEmitters,
   battleObscurementZones,
 } from "./spells-holes-fills.ts";
-import {
-  discoverBattleActCandidatesWithExecutionRegistry,
-  discoverBattleActCandidatesWithoutSpellProcedures,
-} from "./battle-discovery.ts";
-import { battleSubjectBeginsBonusAction } from "./action-eligibility.ts";
 import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   INTERRUPT_DECISION_HOLE_ID,
@@ -34,7 +27,7 @@ import type {
   BattleInterruptFrame,
   BattleInterruptDecisionHole,
   BattleInterruptCheckpoint,
-  BattleHole,
+  BattlePendingInterruptSnapshot,
   BattleSnapshot,
   BattleState,
   BattleTurnSnapshot,
@@ -43,59 +36,32 @@ import type {
 export function battleSnapshotProjection(state: BattleState): {
   readonly snapshot: BattleSnapshot;
 } {
-  return battleSnapshotProjectionFromActs(
-    state,
-    discoverBattleActCandidatesWithoutSpellProcedures,
-  );
+  return battleSnapshotProjectionFromCommittedState(state);
 }
 
 export function battleSnapshotProjectionWithExecutionRegistry(
   state: BattleState,
   executionRegistry: SpellProcedureExecutionRegistry,
 ): { readonly snapshot: BattleSnapshot } {
-  return battleSnapshotProjectionFromActs(state, (snapshotState) =>
-    discoverBattleActCandidatesWithExecutionRegistry(
-      snapshotState,
-      executionRegistry,
-    ),
-  );
+  // Act discovery belongs to the continuation frontier, not the durable
+  // checkpoint. Keep this entry point for callers that already have a
+  // procedure registry; the registry is intentionally irrelevant to a
+  // committed snapshot.
+  void executionRegistry;
+  return battleSnapshotProjectionFromCommittedState(state);
 }
 
-function battleSnapshotProjectionFromActs(
-  state: BattleState,
-  discoverActs: (state: BattleState) => readonly {
-    readonly subject: BattleSubject;
-    readonly initialHoles: readonly BattleHole[];
-  }[],
-): { readonly snapshot: BattleSnapshot } {
+function battleSnapshotProjectionFromCommittedState(state: BattleState): {
+  readonly snapshot: BattleSnapshot;
+} {
   const normalizedState = normalizeEarlyEndedOngoingFeatures(state);
   if (normalizedState !== state) {
-    return battleSnapshotProjectionFromActs(normalizedState, discoverActs);
+    return battleSnapshotProjectionFromCommittedState(normalizedState);
   }
   const turnOrder = [...initiativeOrder(state.initiative)];
-  const availableActs = discoverActs(state);
-  const executionScopeCursorEntries = [...state.executionScopeCursors];
 
   const snapshot: BattleSnapshot = {
     battleId: state.battleId,
-    executionScopeCursors: executionScopeCursorEntries.flatMap(
-      ([combatantId, allocation]) =>
-        allocation.kind === "active"
-          ? [{ combatantId, nextScopeOrdinal: allocation.nextScopeOrdinal }]
-          : [],
-    ),
-    retiredExecutionScopeAllocations: executionScopeCursorEntries.flatMap(
-      ([combatantId, allocation]) =>
-        allocation.kind === "retired"
-          ? [
-              {
-                combatantId,
-                nextScopeOrdinal: allocation.nextScopeOrdinal,
-                ownership: allocation.ownership,
-              },
-            ]
-          : [],
-    ),
     round: state.initiative.round,
     currentActorId: currentActorId(state),
     turnOrder,
@@ -132,11 +98,7 @@ function battleSnapshotProjectionFromActs(
     ),
     lightEmitters: battleLightEmitters(state),
     obscurementZones: battleObscurementZones(state),
-    acts: availableActs.map(({ subject, initialHoles }) => ({
-      subject,
-      initialHoles,
-    })),
-    turn: battleTurnSnapshot(state, availableActs),
+    turn: battleTurnSnapshot(state),
     readiedResponses: {
       spells: [...state.readiedSpells].map(([casterId, readiedSpell]) => ({
         casterId,
@@ -152,7 +114,6 @@ function battleSnapshotProjectionFromActs(
       ),
     },
     helpAttackMarkers: state.helpAttacks,
-    pendingInterrupt: pendingInterruptSnapshot(state),
   };
   return { snapshot };
 }
@@ -184,18 +145,11 @@ export function snapshotBattleWithExecutionRegistry(
     .snapshot;
 }
 
-export function battleTurnSnapshot(
-  state: BattleState,
-  availableActs: readonly { readonly subject: BattleSubject }[],
-): BattleTurnSnapshot {
+export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
   const resources = state.currentTurnResources;
   return {
     actionResources: resources.actionResources,
-    bonusActionAvailable:
-      canSpendBonusAction(resources) &&
-      availableActs.some(({ subject }) =>
-        battleSubjectBeginsBonusAction(state, subject),
-      ),
+    bonusActionAvailable: resources.currentHasBonusAction,
     jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
     heightenedStepOfTheWindCarriedCreatures:
       resources.heightenedStepOfTheWindCarriedCreatures,
@@ -258,7 +212,7 @@ function requirePresentFamiliarCombatantStatBlockId(
 
 export function pendingInterruptSnapshot(
   state: BattleState,
-): BattleSnapshot["pendingInterrupt"] {
+): BattlePendingInterruptSnapshot | null {
   const frame = currentInterruptCheckpoint(state);
   return frame === null
     ? null
