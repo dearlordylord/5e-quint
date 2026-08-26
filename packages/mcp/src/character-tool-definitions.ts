@@ -22,7 +22,6 @@ import { mcpOutputJsonSchema } from "./schema-codec.ts";
 import {
   DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
   NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
   type ProtocolToolDefinition,
@@ -53,7 +52,7 @@ export const characterToolDefinitions = [
     description:
       "Submit an atomic batch of creation fills for a stored draft using option ids returned by its current holes. Accepted batches replace the stored draft; rejected batches leave it unchanged.",
     inputSchema: fillCreationHolesInputSchema,
-    annotations: IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
+    annotations: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpOutputJsonSchema(FillCreationHolesOutputSchema),
   },
   {
