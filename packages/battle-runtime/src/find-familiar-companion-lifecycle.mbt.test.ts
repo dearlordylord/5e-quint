@@ -373,7 +373,7 @@ function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent
     heldObjectIds: [],
   });
   const reappeared = reappearTemporarilyDismissedFindFamiliar({
-    state: requireResolved(dismissed),
+    state: withFreshMagicAction(requireResolved(dismissed)),
     casterId,
     catalog: statBlockCatalog,
     initiative: initiativeScore(18),
@@ -861,6 +861,16 @@ function requireFindFamiliarEligibility(
     throw new Error("Expected Find Familiar form eligibility.");
   }
   return eligibility;
+}
+
+function withFreshMagicAction(state: BattleState): BattleState {
+  return {
+    ...state,
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      actionResources: [{ kind: "action", source: "turn" }],
+    },
+  };
 }
 
 function touchSpellTargetFill(
