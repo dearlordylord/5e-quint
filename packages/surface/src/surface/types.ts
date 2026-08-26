@@ -666,6 +666,45 @@ export type StandaloneStatBlock = Schema.Schema.Type<
 export type StandaloneStatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StandaloneStatBlockValueSchema
 >;
+export type AuthoredExecutableProcedure = Schema.Schema.Type<
+  typeof SurfaceSchema.AuthoredExecutableProcedureSchema
+>;
+export type AuthoredStatBlockReactionTrigger = Schema.Schema.Type<
+  typeof SurfaceSchema.AuthoredStatBlockReactionTriggerSchema
+>;
+export type StatBlockProcedureEntry = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureEntrySchema
+>;
+export type StatBlockProcedureOrdinal = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureOrdinalSchema
+>;
+export type StatBlockProcedureResource = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureResourceSchema
+>;
+export type StatBlockProcedureResourceLimit = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureResourceLimitSchema
+>;
+export type StatBlockProcedureAreaShape = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureAreaShapeSchema
+>;
+export type StatBlockProcedureDcSource = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureDcSourceSchema
+>;
+export type StatBlockProcedureSection = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockProcedureSectionSchema
+>;
+export type StatBlockReactionSection = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockReactionSectionSchema
+>;
+export type StatBlockSpellReference = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellReferenceSchema
+>;
+export type StatBlockSpellcastingGroup = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellcastingGroupSchema
+>;
+export type StatBlockTextOnlyReason = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockTextOnlyReasonSchema
+>;
 export type StatBlockInitiativeModifier = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockInitiativeModifierSchema
 >;
