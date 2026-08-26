@@ -76,9 +76,7 @@ describe("recoverable Play Session properties", () => {
       );
       expect(Either.isRight(authorized)).toBe(true);
 
-      now = requireEpochMilliseconds(
-        1_001 + GUEST_INACTIVITY_RETENTION_MS,
-      );
+      now = requireEpochMilliseconds(1_001 + GUEST_INACTIVITY_RETENTION_MS);
       const expired = await registry.run(
         playSessionId,
         { tag: "guest", guestAccessGrant },
