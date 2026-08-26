@@ -1,0 +1,30 @@
+{
+  "name": "@dnd/opaque-oracle",
+  "private": true,
+  "dndWorkspacePackageKind": "production",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@dnd/character-creation-runtime": "workspace:*",
+    "@dnd/character-sheet-runtime": "workspace:*",
+    "@dnd/shared": "workspace:*",
+    "@dnd/surface": "workspace:*",
+    "effect": "^3.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@typescript/native": "npm:typescript@^7.0.2",
+    "typescript": "^5.9.3",
+    "vitest": "4.1.11"
+  }
+}
