@@ -95,6 +95,7 @@ export function traceStatBlock(record: StatBlockRecord): Trace {
     [record.statBlock.actions, "action"],
     [record.statBlock.bonusActions, "bonus_action"],
     [record.statBlock.reactions, "reaction"],
+    [record.statBlock.legendaryActions?.entries, "legendary_action"],
   ] as const) {
     if (slot === undefined) continue;
     traceStandaloneProcedures(slot, kind, rootId, nodes, edges, ids);
@@ -111,7 +112,7 @@ export function traceStatBlock(record: StatBlockRecord): Trace {
 
 function traceStandaloneProcedures(
   entries: ReadonlyArray<StatBlockProcedureEntry>,
-  kind: "action" | "bonus_action" | "reaction",
+  kind: "action" | "bonus_action" | "reaction" | "legendary_action",
   rootId: string,
   nodes: TraceNode[],
   edges: TraceEdge[],

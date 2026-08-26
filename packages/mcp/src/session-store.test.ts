@@ -11,6 +11,7 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
+  projectAuthoredStatBlock,
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
@@ -34,6 +35,31 @@ import {
 } from "./session-store.ts";
 import type { StatBlockBattleRosterCombatant } from "./battle-roster-session-types.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
+
+type AuthoredStatBlockBattleInitInput = Omit<
+  Parameters<typeof battleCreatureInitFromStatBlock>[0],
+  "statBlock" | "presentation"
+> & {
+  readonly statBlock: StatBlockRecord;
+  readonly presentation?: Parameters<
+    typeof battleCreatureInitFromStatBlock
+  >[0]["presentation"];
+};
+
+function battleCreatureInitFromAuthoredStatBlock(
+  input: AuthoredStatBlockBattleInitInput,
+) {
+  return Either.flatMap(
+    projectAuthoredStatBlock(input.statBlock),
+    ({ runtime, presentation }) =>
+      battleCreatureInitFromStatBlock({
+        ...input,
+        statBlock: runtime,
+        presentation: input.presentation ?? presentation,
+      }),
+  );
+}
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
 const unitCatalogResult = buildUnitCatalog({
@@ -416,7 +442,7 @@ describe("MCP character sessions", () => {
       "stat_block_goblin_warrior",
     );
     const combatant = expectRight(
-      battleCreatureInitFromStatBlock({
+      battleCreatureInitFromAuthoredStatBlock({
         combatantId: combatantId("store-transition-goblin"),
         statBlock: goblin,
         initiative: initiativeScore(10),
@@ -495,7 +521,7 @@ describe("MCP character sessions", () => {
     );
     const wolf = root.statBlockCatalog.requireStatBlock("stat_block_wolf");
     const initial = expectRight(
-      battleCreatureInitFromStatBlock({
+      battleCreatureInitFromAuthoredStatBlock({
         combatantId: combatantId("store-plan-initial"),
         statBlock: goblin,
         initiative: initiativeScore(10),
@@ -507,7 +533,7 @@ describe("MCP character sessions", () => {
     );
     const staleCombatant = expectStatBlockCombatant(
       expectRight(
-        battleCreatureInitFromStatBlock({
+        battleCreatureInitFromAuthoredStatBlock({
           combatantId: combatantId("store-plan-stale"),
           statBlock: skeleton,
           initiative: initiativeScore(8),
@@ -520,7 +546,7 @@ describe("MCP character sessions", () => {
     );
     const interveningCombatant = expectStatBlockCombatant(
       expectRight(
-        battleCreatureInitFromStatBlock({
+        battleCreatureInitFromAuthoredStatBlock({
           combatantId: combatantId("store-plan-intervening"),
           statBlock: wolf,
           initiative: initiativeScore(6),
@@ -533,7 +559,7 @@ describe("MCP character sessions", () => {
     );
     const foreignCombatant = expectStatBlockCombatant(
       expectRight(
-        battleCreatureInitFromStatBlock({
+        battleCreatureInitFromAuthoredStatBlock({
           combatantId: combatantId("store-plan-foreign"),
           statBlock: skeleton,
           initiative: initiativeScore(4),
@@ -627,7 +653,7 @@ describe("MCP character sessions", () => {
       }),
     );
     const goblin = expectRight(
-      battleCreatureInitFromStatBlock({
+      battleCreatureInitFromAuthoredStatBlock({
         combatantId: combatantId("store-plan-character-goblin"),
         statBlock: root.statBlockCatalog.requireStatBlock(
           "stat_block_goblin_warrior",
@@ -690,7 +716,7 @@ describe("MCP character sessions", () => {
       unitLibrary: root.unitLibrary,
     });
     const goblin = expectRight(
-      battleCreatureInitFromStatBlock({
+      battleCreatureInitFromAuthoredStatBlock({
         combatantId: combatantId("store-plan-fills-goblin"),
         statBlock: root.statBlockCatalog.requireStatBlock(
           "stat_block_goblin_warrior",
@@ -704,7 +730,7 @@ describe("MCP character sessions", () => {
     );
     const skeleton = expectStatBlockCombatant(
       expectRight(
-        battleCreatureInitFromStatBlock({
+        battleCreatureInitFromAuthoredStatBlock({
           combatantId: combatantId("store-plan-fills-skeleton"),
           statBlock: root.statBlockCatalog.requireStatBlock(
             "stat_block_skeleton",
