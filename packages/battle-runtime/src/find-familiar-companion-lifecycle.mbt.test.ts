@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { isDeepStrictEqual } from "node:util";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
@@ -81,6 +82,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { statBlockCatalog } from "./unit-profile-admission-catalog.test-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
@@ -372,7 +374,7 @@ function observeFamiliarDismissalReappearanceRoute(): readonly ReducerRouteEvent
     heldObjectIds: [],
   });
   const reappeared = reappearTemporarilyDismissedFindFamiliar({
-    state: requireResolved(dismissed),
+    state: withFreshMagicAction(requireResolved(dismissed)),
     casterId,
     catalog: statBlockCatalog,
     initiative: initiativeScore(18),
@@ -862,6 +864,16 @@ function requireFindFamiliarEligibility(
   return eligibility;
 }
 
+function withFreshMagicAction(state: BattleState): BattleState {
+  return {
+    ...state,
+    currentTurnResources: {
+      ...state.currentTurnResources,
+      actionResources: [{ kind: "action", source: "turn" }],
+    },
+  };
+}
+
 function touchSpellTargetFill(
   hole: Extract<BattleHole, { readonly kind: "targetChoice" }>,
   procedureRef: Extract<
@@ -913,7 +925,11 @@ function pactScratchSubject(
     throw new Error("Expected the committed familiar Stat Block admission.");
   }
   const procedureRef = statBlockProcedurePresentations({
-    statBlock: statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+    presentation: Either.getOrThrow(
+      projectAuthoredStatBlock(
+        statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+      ),
+    ).presentation,
     execution: familiar.origin.execution,
   }).find(
     (presentation) =>
@@ -1132,20 +1148,10 @@ function findFamiliarCompanionLastResult(raw: unknown): LastResult {
 }
 
 function compareFindFamiliarCompanionStates(
-  runtime: FindFamiliarCompanionProjection,
-  quint: FindFamiliarCompanionProjection,
+  spec: FindFamiliarCompanionProjection,
+  impl: FindFamiliarCompanionProjection,
 ): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(
-        `${error.message}\n${JSON.stringify({ runtime, quint }, null, 2)}`,
-      );
-    }
-    throw error;
-  }
-  return true;
+  return isDeepStrictEqual(spec, impl);
 }
 
 function familiarFormForWitness(
