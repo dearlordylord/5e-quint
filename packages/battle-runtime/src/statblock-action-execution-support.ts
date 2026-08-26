@@ -13,18 +13,6 @@ import type {
 import { creatureAttackRollMechanicsAreSupported } from "./statblock-attack-execution-mechanics.ts";
 export { creatureAttackRollMechanicsAreSupported } from "./statblock-attack-execution-mechanics.ts";
 
-export function statBlockActionSurfaceIsSupported(
-  statBlock: CreatureStatBlock,
-): boolean {
-  return (
-    creatureActionSectionIsSupported(statBlock.actions) &&
-    statBlockTraitsAreSupported(statBlock.traits) &&
-    statBlock.bonusActions === undefined &&
-    statBlock.reactions === undefined &&
-    statBlock.legendaryActions === undefined
-  );
-}
-
 export function creatureActionSectionIsSupported(
   actions: CreatureActions | undefined,
 ): boolean {
