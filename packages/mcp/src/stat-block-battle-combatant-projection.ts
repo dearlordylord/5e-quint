@@ -87,6 +87,9 @@ function statBlockProjectionFailureContent(
     })),
     Match.when({ reason: "nonLiteralHitPoints" }, ({ reason }) => ({ reason })),
     Match.when({ reason: "nonLiteralSpeed" }, ({ reason }) => ({ reason })),
+    Match.when({ reason: "invalidLegendaryActionUses" }, ({ reason }) => ({
+      reason,
+    })),
     Match.exhaustive,
   );
   return errorContent("Stat Block projection failed.", {
