@@ -8,6 +8,7 @@ import {
   SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE,
   battleActSpellPresentation,
   battleAmmunitionStock,
+  battleCreatureInitFromStatBlock,
   battleId,
   characterId,
   combatantId,
@@ -16,6 +17,7 @@ import {
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
   snapshotBattle,
+  startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
   type BattleSubject,
@@ -66,7 +68,6 @@ import {
   createMcpPlaySessionRoot,
   createMcpSessionStore,
   handleToolCall as handleWireToolCall,
-  startBattleFromCharacterBuildAndStatBlock,
   toolDefinitions,
 } from "./server.ts";
 import { buildAdvertisedToolDefinitions } from "./protocol-server.ts";
@@ -78,8 +79,10 @@ import {
   CharacterSessionQueryOutputSchema,
 } from "./character-tool-output.ts";
 import {
+  battleCreatureInitFromCharacterBuild,
   characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
+  type CharacterBuildCreatureInput,
 } from "@dnd/character-battle-runtime";
 import {
   availableCharacterSession,
@@ -88,6 +91,8 @@ import {
 import { characterBuildDisplayName } from "./character-display.ts";
 import {
   completeMagicalCunningRite,
+  characterSheetCurrentHp,
+  characterSheetTempHp,
   parseCharacterSheet,
   parseCharacterSheetRetainedCompanionId,
   replaceCharacterSheetCompanion,
@@ -124,6 +129,7 @@ import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-f
 import {
   buildUnitCatalog,
   defineSrdUnitCollection,
+  srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { adminProjection } from "./admin-mirror.ts";
 
@@ -153,33 +159,43 @@ function testBattleCreatureStateWithoutKnockOut(
   };
 }
 
-function startBattleFromCharacterBuildAndStatBlockRight(
-  input: Omit<
-    Parameters<typeof startBattleFromCharacterBuildAndStatBlock>[0],
-    "character" | "statBlockBattleInput"
+function startBattleFromCharacterBuildAndStatBlockRight(input: {
+  readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
+  readonly character: Omit<
+    CharacterBuildCreatureInput,
+    "ammunitionStocks" | "resourceExpenditures"
   > & {
-    readonly character: Omit<
-      Parameters<
-        typeof startBattleFromCharacterBuildAndStatBlock
-      >[0]["character"],
-      "ammunitionStocks"
-    >;
-    readonly statBlockBattleInput: Omit<
-      Parameters<
-        typeof startBattleFromCharacterBuildAndStatBlock
-      >[0]["statBlockBattleInput"],
-      "ammunitionStocks" | "conditions"
-    >;
-  },
-): BattleRuntimeSession {
-  const result = startBattleFromCharacterBuildAndStatBlock({
-    ...input,
-    character: { ...input.character, ammunitionStocks: [] },
-    statBlockBattleInput: {
-      ...input.statBlockBattleInput,
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-    },
+    readonly ammunitionStocks?: CharacterBuildCreatureInput["ammunitionStocks"];
+    readonly resourceExpenditures?: CharacterBuildCreatureInput["resourceExpenditures"];
+  };
+  readonly statBlockBattleInput: Omit<
+    Parameters<typeof battleCreatureInitFromStatBlock>[0],
+    "ammunitionStocks" | "conditions"
+  >;
+  readonly unitLibrary: Parameters<
+    typeof battleCreatureInitFromCharacterBuild
+  >[0]["unitLibrary"];
+}): BattleRuntimeSession {
+  const characterInit = battleCreatureInitFromCharacterBuild({
+    ...input.character,
+    ammunitionStocks: input.character.ammunitionStocks ?? [],
+    resourceExpenditures: input.character.resourceExpenditures ?? [],
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(characterInit)) {
+    throw new Error(characterBattleRuntimeIssueMessage(characterInit.left));
+  }
+  const statBlockInit = battleCreatureInitFromStatBlock({
+    ...input.statBlockBattleInput,
+    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+    conditions: [],
+  });
+  if (Either.isLeft(statBlockInit)) {
+    throw new Error(characterBattleRuntimeIssueMessage(statBlockInit.left));
+  }
+  const result = startBattle({
+    battleId: input.battleId,
+    combatants: [characterInit.right, statBlockInit.right],
   });
   if (Either.isLeft(result)) {
     throw new Error(characterBattleRuntimeIssueMessage(result.left));
@@ -997,7 +1013,12 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "INVALID_BATTLE_COMBATANTS",
-        issues: [{ details: { code: "CHARACTER_BATTLE_INIT_INVALID" } }],
+        issues: [
+          {
+            kind: "characterSheetProjection",
+            code: "CHARACTER_BATTLE_INIT_INVALID",
+          },
+        ],
       },
     });
   });
@@ -1191,7 +1212,6 @@ describe("MCP server route", () => {
       combatants: [
         {
           combatantId: fighterId,
-          displayName: "Orc Soldier Fighter",
           hp: 12,
           armorClass: 19,
         },
@@ -1203,6 +1223,9 @@ describe("MCP server route", () => {
       ],
     });
     expect(snapshotBattle(state).combatants[1]).not.toHaveProperty(
+      "displayName",
+    );
+    expect(snapshotBattle(state).combatants[0]).not.toHaveProperty(
       "displayName",
     );
     expect(state.combatants.get(fighterId)?.initiative).toBe(12);
@@ -3304,7 +3327,6 @@ describe("MCP server route", () => {
     const combatants = new Map(battleState.state.combatants).set(allyId, {
       ...rogue,
       combatantId: allyId,
-      origin: { ...rogue.origin, displayName: "Sneak Attack Ally" },
     });
     root.sessionStore.storeActiveBattle(
       battleRuntimeSessionForTest({
@@ -3546,20 +3568,16 @@ describe("MCP server route", () => {
         code: "INVALID_BATTLE_COMBATANTS",
         issues: [
           {
-            details: {
-              code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
-              characterId: testCharacterId(
-                "draft:mcp-missing-additional-secondary",
-              ),
-            },
+            kind: "characterSheetSourceUnavailable",
+            ownerPath: ["initialCombatants", 1],
+            characterId: testCharacterId(
+              "draft:mcp-missing-additional-secondary",
+            ),
           },
           {
-            details: {
-              code: "UNKNOWN_FINALIZED_CHARACTER_SESSION",
-              characterId: testCharacterId(
-                "draft:mcp-missing-additional-third",
-              ),
-            },
+            kind: "characterSheetSourceUnavailable",
+            ownerPath: ["initialCombatants", 2],
+            characterId: testCharacterId("draft:mcp-missing-additional-third"),
           },
         ],
       },
@@ -4084,6 +4102,205 @@ describe("MCP server route", () => {
     );
   });
 
+  test("accumulates mixed-roster duplicate, projection, and initialization issues by owner path", () => {
+    const root = createMcpPlaySessionRoot();
+    const validDraftId = "draft:mixed-roster-admission-valid";
+    createFinalizedFighterSheet(root, validDraftId);
+    const validCharacterId = testCharacterId(validDraftId);
+    const validCharacter = root.sessionStore.characters.get(validCharacterId);
+    if (validCharacter?.tag !== "available") {
+      throw new Error("Expected a finalized Character Sheet fixture.");
+    }
+
+    const invalidCharacterId = testCharacterId(
+      "draft:mixed-roster-admission-invalid-character",
+    );
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        characterId: invalidCharacterId,
+        build: {
+          ...validCharacter.build,
+          species: unitId("species_elf"),
+        },
+        currentHp: characterSheetCurrentHp(validCharacter),
+        tempHp: characterSheetTempHp(validCharacter),
+        hitPointMaximumReduction: validCharacter.hitPointMaximumReduction,
+        unitLibrary: root.unitLibrary,
+      }),
+    );
+
+    const skeleton = root.statBlockCatalog.requireStatBlock(
+      "stat_block_skeleton",
+    );
+    const malformedStatBlock: StatBlockRecord = {
+      ...skeleton,
+      id: statBlockId("synthetic_invalid_battle_roster_stat_block"),
+      statBlock: {
+        ...skeleton.statBlock,
+        hp: {
+          kind: "caster_derived" as const,
+          source: "proficiency_bonus" as const,
+        },
+      },
+    };
+    const malformedCatalog: typeof root.statBlockCatalog = {
+      ...root.statBlockCatalog,
+      getStatBlock: (requestedId) =>
+        requestedId === malformedStatBlock.id
+          ? Option.some(malformedStatBlock)
+          : root.statBlockCatalog.getStatBlock(requestedId),
+    };
+    const unitCatalog = buildUnitCatalog({
+      collections: [
+        defineSrdUnitCollection({
+          units: srdUnitCollection.units.filter(
+            (unit) => unit.id !== "species_elf",
+          ),
+        }),
+      ],
+    });
+    if (unitCatalog.tag !== "ok") {
+      throw new Error("Expected the missing-species test catalog to build.");
+    }
+    const startRoot = {
+      ...root,
+      unitLibrary: unitCatalog.catalog,
+      statBlockCatalog: malformedCatalog,
+    };
+
+    const rejected = readPayload(
+      handleToolCall(startRoot, "start_battle", {
+        battleId: "battle:mixed-roster-admission-invalid",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: validCharacterId,
+            combatantId: "mixed-fighter",
+            initiative: 18,
+            ammunitionStocks: [],
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "mixed-goblin-missing-ammunition",
+            initiative: 12,
+            ammunitionStocks: [],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_skeleton",
+            combatantId: "mixed-goblin-missing-ammunition",
+            initiative: 10,
+            ammunitionStocks: [],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+          {
+            kind: "characterSession",
+            characterId: invalidCharacterId,
+            combatantId: "mixed-invalid-character",
+            initiative: 8,
+            ammunitionStocks: [],
+          },
+          {
+            kind: "statBlock",
+            statBlockId: malformedStatBlock.id,
+            combatantId: "mixed-invalid-stat-block",
+            initiative: 6,
+            ammunitionStocks: [],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_skeleton",
+            combatantId: "mixed-skeleton",
+            initiative: 4,
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+      }),
+    );
+
+    expect(rejected).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "duplicateCombatantId",
+            ownerPath: ["initialCombatants", 2],
+            firstOwnerPath: ["initialCombatants", 1],
+          },
+          {
+            kind: "characterSheetProjection",
+            ownerPath: ["initialCombatants", 3],
+          },
+          {
+            kind: "statBlockProjection",
+            ownerPath: ["initialCombatants", 4],
+          },
+          {
+            kind: "battleInitialization",
+            ownerPath: ["initialCombatants", 1],
+            issueTag: "battleStateInitIssue",
+          },
+        ],
+      },
+    });
+    expect(root.sessionStore.battleSession).toBeNull();
+
+    const repaired = readPayload(
+      handleToolCall(startRoot, "start_battle", {
+        battleId: "battle:mixed-roster-admission-repaired",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            characterId: validCharacterId,
+            combatantId: "mixed-fighter-repaired",
+            initiative: 18,
+            ammunitionStocks: [],
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "mixed-goblin-repaired",
+            initiative: 12,
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_skeleton",
+            combatantId: "mixed-skeleton-repaired",
+            initiative: 10,
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+      }),
+    );
+    expect(repaired.snapshot.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: "mixed-fighter-repaired",
+          origin: expect.objectContaining({ kind: "character" }),
+        }),
+        expect.objectContaining({
+          combatantId: "mixed-goblin-repaired",
+          origin: expect.objectContaining({ kind: "statBlock" }),
+        }),
+        expect.objectContaining({
+          combatantId: "mixed-skeleton-repaired",
+          origin: expect.objectContaining({ kind: "statBlock" }),
+        }),
+      ]),
+    );
+  });
+
   test("end_battle leaves every Character Session and Battle unchanged when its atomic commit fails", () => {
     const root = createMcpPlaySessionRoot();
     const firstDraftId = "draft:gh324-atomic-first";
@@ -4320,7 +4537,12 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "INVALID_BATTLE_COMBATANTS",
-        issues: [{ details: { code: "UNKNOWN_STAT_BLOCK_COMBATANT" } }],
+        issues: [
+          {
+            kind: "statBlockSourceUnavailable",
+            code: "UNKNOWN_STAT_BLOCK_COMBATANT",
+          },
+        ],
       },
     });
 
@@ -4357,7 +4579,12 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "INVALID_BATTLE_COMBATANTS",
-        issues: [{ details: { code: "CHARACTER_ALREADY_IN_BATTLE" } }],
+        issues: [
+          {
+            kind: "characterSheetSourceUnavailable",
+            code: "CHARACTER_ALREADY_IN_BATTLE",
+          },
+        ],
       },
     });
   });
@@ -4481,7 +4708,13 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       details: {
-        code: "BATTLE_START_FAILED",
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "battleInitialization",
+            code: "BATTLE_INITIALIZATION_INVALID",
+          },
+        ],
       },
     });
 
@@ -4526,7 +4759,12 @@ describe("MCP server route", () => {
     ).toMatchObject({
       details: {
         code: "INVALID_BATTLE_COMBATANTS",
-        issues: [{ details: { code: "STAT_BLOCK_BATTLE_INIT_INVALID" } }],
+        issues: [
+          {
+            kind: "statBlockProjection",
+            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+          },
+        ],
       },
     });
 
@@ -6288,8 +6526,14 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       details: {
-        code: "DUPLICATE_BATTLE_CHARACTER_ID",
-        characterId: testCharacterId(firstDraftId),
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "duplicateCharacterId",
+            characterId: testCharacterId(firstDraftId),
+            ownerPath: ["initialCombatants", 2],
+          },
+        ],
       },
     });
     expect(
@@ -6306,8 +6550,14 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       details: {
-        code: "DUPLICATE_BATTLE_COMBATANT_ID",
-        combatantId: "goblin",
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "duplicateCombatantId",
+            combatantId: "goblin",
+            ownerPath: ["initialCombatants", 2],
+          },
+        ],
       },
     });
     expect(root.sessionStore.battleSession).toBeNull();

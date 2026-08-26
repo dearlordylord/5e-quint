@@ -1,5 +1,4 @@
 import {
-  battleCreatureInitFromStatBlock,
   battleAvailableDruidWildShapeKnownForms,
   characterBattleResourceForUnit,
   characterBattleResourceMaxPoints,
@@ -9,7 +8,6 @@ import {
   parseSupportedUnitFeatureProfile,
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   scoreModifier,
-  startBattle,
   initiativeScore,
   type CharacterBattleFeatureInit,
   type CharacterBattleMetamagicInit,
@@ -19,15 +17,11 @@ import {
   type CharacterBattleClassLevels,
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
-  type BattleId,
-  type BattleRuntimeSession,
-  type BattleStateInitIssue,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
   type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
-  type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import {
   characterBuildDruidWildShapeFacts,
@@ -186,33 +180,6 @@ export function characterBattleInitiativeScore(input: {
     characterLevel(totalLevel),
   );
   return Either.right(initiativeScore(input.rollTotal + proficiencyBonus));
-}
-
-export function startBattleFromCharacterBuildAndStatBlock(input: {
-  readonly battleId: BattleId;
-  readonly character: CharacterBuildCreatureInput;
-  readonly statBlockBattleInput: StatBlockBattleInitInput;
-  readonly unitLibrary: UnitCatalog;
-}): Either.Either<
-  BattleRuntimeSession,
-  BattleStateInitIssue | BattleCreatureInitIssue
-> {
-  const characterInit = battleCreatureInitFromCharacterBuild({
-    ...input.character,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(characterInit)) {
-    return battleCreatureInitIssue(characterInit.left.message);
-  }
-  const statBlockInit = battleCreatureInitFromStatBlock(
-    input.statBlockBattleInput,
-  );
-  if (Either.isLeft(statBlockInit)) return Either.left(statBlockInit.left);
-
-  return startBattle({
-    battleId: input.battleId,
-    combatants: [characterInit.right, statBlockInit.right],
-  });
 }
 
 export function battleCreatureInitFromCharacterBuild(

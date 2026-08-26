@@ -135,7 +135,6 @@ describe("battle runtime: setup and discovery", () => {
         },
         {
           combatantId: fighterId,
-          displayName: "Fighter",
           hp: 12,
           maxHp: 12,
           tempHp: 0,
@@ -182,6 +181,7 @@ describe("battle runtime: setup and discovery", () => {
     expect(Either.isRight(presented)).toBe(true);
     if (Either.isLeft(presented)) return;
     expect(presented.right.combatants[0]?.displayName).toBe("Goblin Warrior");
+    expect(presented.right.combatants[1]?.displayName).toBe("Fighter");
     expect(Schema.is(BattlePresentedSnapshotSchema)(presented.right)).toBe(
       true,
     );

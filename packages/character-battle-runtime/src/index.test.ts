@@ -29,6 +29,7 @@ import type {
   BattleRuntimeContext,
   BattleRuntimeSession,
   BattleState,
+  BattleStateInitIssue,
   BattleCompanionState,
   RetainedCompanionBattleSelection,
   CharacterBattleClassLevels,
@@ -132,7 +133,7 @@ import {
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -147,16 +148,23 @@ import {
   characterArmorClassState,
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
+  composeCharacterBattleRoster,
   characterBattleLoadoutFromBuild,
   characterOffHandAttackActionOption,
   characterSpellcasting as characterSpellcastingRuntime,
   settleCharacterSheetFromBattle,
-  startBattleFromCharacterBuildAndStatBlock as startBattleFromCharacterBuildAndStatBlockRuntime,
-  startBattleFromCharacterSheetAndStatBlock,
   characterBattleRuntimeIssueMessage,
 } from "./index.ts";
+import type { CharacterBattleRosterIssue } from "./index.ts";
+import {
+  characterBattleEncounterCompositionRoute,
+  type CharacterBattleRouteEvent,
+} from "./character-battle-route.ts";
 import { characterBattleDruidWildShapeProjection } from "./battle-creature-init.ts";
-import { characterPactBladeBondedWeaponItemId } from "./battle-character-build-projection.ts";
+import {
+  characterPactBladeBondedWeaponItemId,
+  type BattleCreatureInitIssue,
+} from "./battle-character-build-projection.ts";
 import {
   battleSupportProfileSourceFactsForBuild,
   characterBattleWeaponMasterySelections,
@@ -218,24 +226,147 @@ function characterSpellcasting(
   });
 }
 
-function startBattleFromCharacterBuildAndStatBlock(
-  input: Omit<
-    Parameters<typeof startBattleFromCharacterBuildAndStatBlockRuntime>[0],
-    "character"
-  > & {
-    readonly character: WithoutResourceExpenditures<
-      Parameters<
-        typeof startBattleFromCharacterBuildAndStatBlockRuntime
-      >[0]["character"]
-    >;
-  },
-) {
-  return startBattleFromCharacterBuildAndStatBlockRuntime({
-    ...input,
-    character: {
-      ...input.character,
-      resourceExpenditures: input.character.resourceExpenditures ?? [],
+function startBattleFromCharacterBuildAndStatBlock(input: {
+  readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
+  readonly character: WithoutResourceExpenditures<
+    Omit<
+      Parameters<typeof battleCreatureInitFromCharacterBuildRuntime>[0],
+      "unitLibrary"
+    >
+  >;
+  readonly statBlockBattleInput: Parameters<
+    typeof parseBattleCreatureInitFromStatBlock
+  >[0];
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  BattleRuntimeSession,
+  BattleStateInitIssue | BattleCreatureInitIssue
+> {
+  const characterInit = battleCreatureInitFromCharacterBuildRuntime({
+    ...input.character,
+    resourceExpenditures: input.character.resourceExpenditures ?? [],
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(characterInit)) return Either.left(characterInit.left);
+  const statBlockInit = parseBattleCreatureInitFromStatBlock(
+    input.statBlockBattleInput,
+  );
+  if (Either.isLeft(statBlockInit)) return Either.left(statBlockInit.left);
+  return startBattle({
+    battleId: input.battleId,
+    combatants: [characterInit.right, statBlockInit.right],
+  });
+}
+
+type TestCharacterBattleRuntimeEntry = {
+  readonly session: BattleRuntimeSession;
+  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
+  readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
+};
+
+type TestCharacterBattleRuntimeEntryIssue = {
+  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
+  readonly routeEvents: readonly CharacterBattleRouteEvent[];
+};
+
+function testIssueForCharacterBattleRosterIssue(
+  issue: CharacterBattleRosterIssue,
+): BattleCreatureInitIssue | BattleStateInitIssue {
+  return Match.value(issue).pipe(
+    Match.when(
+      { kind: "characterSheetProjection" },
+      ({ issue: projectionIssue }) => projectionIssue,
+    ),
+    Match.when(
+      { kind: "statBlockProjection" },
+      ({ issue: projectionIssue }) => projectionIssue,
+    ),
+    Match.when({ kind: "duplicateCombatantId" }, ({ combatantId }) => ({
+      tag: "battleStateInitIssue" as const,
+      message: `Duplicate combatant id: ${combatantId}`,
+    })),
+    Match.when({ kind: "duplicateCharacterId" }, ({ characterId }) => ({
+      tag: "battleStateInitIssue" as const,
+      message: `Duplicate character id: ${characterId}`,
+    })),
+    Match.when({ kind: "statBlockSourceUnavailable" }, ({ statBlockId }) => ({
+      tag: "battleStateInitIssue" as const,
+      message: `Stat Block source ${statBlockId} is unavailable.`,
+    })),
+    Match.when({ kind: "characterSheetSourceUnavailable" }, (source) =>
+      Match.value(source).pipe(
+        Match.when({ reason: "missing" }, ({ characterId }) => ({
+          tag: "battleStateInitIssue" as const,
+          message: `Character Sheet source ${characterId} is unavailable.`,
+        })),
+        Match.when({ reason: "inBattle" }, ({ characterId, battleId }) => ({
+          tag: "battleStateInitIssue" as const,
+          message: `Character ${characterId} is already in battle ${battleId}.`,
+        })),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function startBattleFromCharacterSheetAndStatBlock(input: {
+  readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
+  readonly character: Parameters<typeof characterSheetBattleInit>[0];
+  readonly statBlockBattleInput: Parameters<
+    typeof parseBattleCreatureInitFromStatBlock
+  >[0];
+}): Either.Either<
+  TestCharacterBattleRuntimeEntry,
+  TestCharacterBattleRuntimeEntryIssue
+> {
+  const composition = composeCharacterBattleRoster([
+    {
+      kind: "characterSheet",
+      source: { kind: "available", input: input.character },
     },
+    {
+      kind: "statBlock",
+      source: { kind: "available", input: input.statBlockBattleInput },
+    },
+  ]);
+  if (composition.issues.length > 0) {
+    const [issue] = composition.issues;
+    if (issue === undefined) {
+      return Either.left({
+        issue: {
+          tag: "battleStateInitIssue",
+          message: "Character battle roster admission failed.",
+        },
+        routeEvents: [],
+      });
+    }
+    const projection = characterSheetBattleInitWithRoute(input.character);
+    return Either.left({
+      issue: testIssueForCharacterBattleRosterIssue(issue),
+      routeEvents: Either.isLeft(projection)
+        ? projection.left.routeEvents
+        : projection.right.routeEvents,
+    });
+  }
+  const session = startBattle({
+    battleId: input.battleId,
+    combatants: composition.admissions.map((admission) => admission.combatant),
+  });
+  if (Either.isLeft(session)) {
+    return Either.left({
+      issue: session.left,
+      routeEvents: composition.admissions.flatMap((admission) =>
+        admission.kind === "characterSheet" ? admission.routeEvents : [],
+      ),
+    });
+  }
+  return Either.right({
+    session: session.right,
+    initProjectionRouteEvents: composition.admissions.flatMap((admission) =>
+      admission.kind === "characterSheet" ? admission.routeEvents : [],
+    ),
+    encounterCompositionRouteEvents: characterBattleEncounterCompositionRoute(),
   });
 }
 

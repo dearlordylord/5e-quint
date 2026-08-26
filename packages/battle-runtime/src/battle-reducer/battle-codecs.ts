@@ -5973,12 +5973,10 @@ const battleCreatureSnapshotInvariantAnnotations = {
 const BattleCreatureSnapshotSchema = Schema.Union(
   Schema.Struct({
     ...BattleCreatureSnapshotCommonFields,
-    displayName: Schema.String,
     origin: CharacterBattleCreatureOriginSnapshotSchema,
   }),
   Schema.Struct({
     ...BattleCreatureSnapshotCommonFields,
-    displayName: Schema.optionalWith(Schema.Never, { exact: true }),
     origin: StatBlockBattleCreatureOriginSnapshotSchema,
   }),
 ).pipe(

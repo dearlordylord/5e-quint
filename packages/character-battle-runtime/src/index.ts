@@ -11,14 +11,14 @@ import {
   KNOCKED_OUT_UNCONSCIOUS,
   parseSupportedUnitFeatureProfile,
   battleCreatureInitFromStatBlock,
-  startBattle,
+  battleStateInitIssueLeaves,
   type BattleCreatureInit,
   type BattleId,
   type BattleCreatureState,
   type BattleStateInitIssue,
+  type BattleStateInitLeafIssue,
   type BattleState,
   type BattleRuntimeContext,
-  type BattleRuntimeSession,
   type CharacterBattleResourceOwnership,
   type CharacterBattleResourceState,
   type CharacterBattleClassLevels,
@@ -71,7 +71,7 @@ import {
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 
 import {
   CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
@@ -85,7 +85,6 @@ import {
   type CharacterSheetBattleHandoffIssue,
 } from "./battle-handoff-issue.ts";
 import {
-  characterBattleEncounterCompositionRoute,
   enterBattleRuntimeRoute,
   projectCharacterSheetToBattleRoute,
   recordCharacterBattleHandoffFactsRoute,
@@ -112,7 +111,6 @@ export {
   battleCreatureInitFromCharacterBuild,
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
-  startBattleFromCharacterBuildAndStatBlock,
   type CharacterBattleInitiativeProficiencyChoice,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
@@ -204,7 +202,7 @@ export type CharacterSheetBattleInitInput = Omit<
 };
 
 export type CharacterBattleInitProjection = {
-  readonly init: BattleCreatureInit;
+  readonly init: CharacterBattleRosterCharacterCombatant;
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
@@ -213,16 +211,153 @@ export type CharacterBattleInitProjectionIssue = {
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
-export type CharacterBattleRuntimeEntry = {
-  readonly session: BattleRuntimeSession;
-  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
-  readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
+export type CharacterBattleRosterCharacterCombatant = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >;
 };
 
-export type CharacterBattleRuntimeEntryIssue = {
-  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
-  readonly routeEvents: readonly CharacterBattleRouteEvent[];
+export type CharacterBattleRosterStatBlockCombatant = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "statBlock" }
+  >;
 };
+
+export type CharacterBattleRosterCharacterSource =
+  | {
+      readonly kind: "available";
+      readonly input: CharacterSheetBattleInitInput;
+    }
+  | {
+      readonly kind: "missing";
+      readonly characterId: CharacterSheet["characterId"];
+      readonly combatantId: CharacterSheetBattleInitInput["combatantId"];
+    }
+  | {
+      readonly kind: "inBattle";
+      readonly characterId: CharacterSheet["characterId"];
+      readonly combatantId: CharacterSheetBattleInitInput["combatantId"];
+      readonly battleId: BattleId;
+    };
+
+export type CharacterBattleRosterStatBlockSource =
+  | {
+      readonly kind: "available";
+      readonly input: StatBlockBattleInitInput;
+    }
+  | {
+      readonly kind: "missing";
+      readonly statBlockId: StatBlockRecord["id"];
+      readonly combatantId: StatBlockBattleInitInput["combatantId"];
+    };
+
+export type CharacterBattleRosterEntry =
+  | {
+      readonly kind: "characterSheet";
+      readonly source: CharacterBattleRosterCharacterSource;
+    }
+  | {
+      readonly kind: "statBlock";
+      readonly source: CharacterBattleRosterStatBlockSource;
+    };
+
+export type CharacterBattleRosterAdmission =
+  | {
+      readonly index: number;
+      readonly kind: "characterSheet";
+      readonly combatant: CharacterBattleRosterCharacterCombatant;
+      readonly routeEvents: readonly CharacterBattleRouteEvent[];
+    }
+  | {
+      readonly index: number;
+      readonly kind: "statBlock";
+      readonly combatant: CharacterBattleRosterStatBlockCombatant;
+      readonly routeEvents: readonly [];
+    };
+
+export type CharacterBattleRosterIssue =
+  | {
+      readonly kind: "duplicateCombatantId";
+      readonly index: number;
+      readonly combatantId: BattleCreatureInit["combatantId"];
+      readonly firstIndex: number;
+    }
+  | {
+      readonly kind: "duplicateCharacterId";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly firstIndex: number;
+    }
+  | {
+      readonly kind: "characterSheetSourceUnavailable";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly reason: "missing";
+    }
+  | {
+      readonly kind: "characterSheetSourceUnavailable";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly reason: "inBattle";
+      readonly battleId: BattleId;
+    }
+  | {
+      readonly kind: "statBlockSourceUnavailable";
+      readonly index: number;
+      readonly statBlockId: StatBlockRecord["id"];
+      readonly combatantId: BattleCreatureInit["combatantId"];
+    }
+  | {
+      readonly kind: "characterSheetProjection";
+      readonly index: number;
+      readonly characterId: CharacterSheet["characterId"];
+      readonly issue: BattleCreatureInitIssue;
+    }
+  | {
+      readonly kind: "statBlockProjection";
+      readonly index: number;
+      readonly combatantId: BattleCreatureInit["combatantId"];
+      readonly issue: BattleStateInitLeafIssue;
+    };
+
+export type CharacterBattleRosterComposition = {
+  readonly admissions: readonly CharacterBattleRosterAdmission[];
+  readonly issues: readonly CharacterBattleRosterIssue[];
+};
+
+function isCharacterBattleRosterCombatant(
+  input: BattleCreatureInit,
+): input is CharacterBattleRosterCharacterCombatant {
+  return input.creatureInit.kind === "character";
+}
+
+function characterBattleInitProjectionFromInit(
+  init: BattleCreatureInit,
+  routeEvents: readonly CharacterBattleRouteEvent[],
+): Either.Either<
+  CharacterBattleInitProjection,
+  CharacterBattleInitProjectionIssue
+> {
+  if (isCharacterBattleRosterCombatant(init)) {
+    return Either.right({ init, routeEvents });
+  }
+  return Either.left({
+    issue: {
+      tag: "battleCreatureInitIssue",
+      message:
+        "Character battle initialization produced a Stat Block combatant.",
+    },
+    routeEvents,
+  });
+}
 
 type CharacterBattleCreatureState = BattleCreatureState & {
   readonly origin: Extract<
@@ -312,15 +447,240 @@ export function characterSheetBattleInitWithRoute(
       ? {}
       : { druidWildShapeAvailableForms }),
   });
-  return Either.isLeft(init)
-    ? Either.left({
-        issue: init.left,
-        routeEvents: rejectCharacterBattleInitProjectionRoute(),
-      })
-    : Either.right({
-        init: init.right,
-        routeEvents: acceptedCharacterSheetBattleInitRoute({ sheet }),
+  if (Either.isLeft(init)) {
+    return Either.left({
+      issue: init.left,
+      routeEvents: rejectCharacterBattleInitProjectionRoute(),
+    });
+  }
+  return characterBattleInitProjectionFromInit(
+    init.right,
+    acceptedCharacterSheetBattleInitRoute({ sheet }),
+  );
+}
+
+/**
+ * Admit an arbitrary mixed-origin initial roster in caller order.  The
+ * operation owns identity checks and source/projection admission so callers
+ * can inspect every entry before deciding whether to start a battle.
+ */
+export function composeCharacterBattleRoster(
+  entries: readonly CharacterBattleRosterEntry[],
+): CharacterBattleRosterComposition {
+  const combatantOwners = new Map<BattleCreatureInit["combatantId"], number>();
+  const characterOwners = new Map<CharacterSheet["characterId"], number>();
+  const admissions: CharacterBattleRosterAdmission[] = [];
+  const issues: CharacterBattleRosterIssue[] = [];
+
+  for (const [index, entry] of entries.entries()) {
+    const combatantId = rosterEntryCombatantId(entry);
+    const firstCombatantIndex = combatantOwners.get(combatantId);
+    const duplicateCombatant = firstCombatantIndex !== undefined;
+    if (duplicateCombatant) {
+      issues.push({
+        kind: "duplicateCombatantId",
+        index,
+        combatantId,
+        firstIndex: firstCombatantIndex,
       });
+    } else {
+      combatantOwners.set(combatantId, index);
+    }
+
+    const characterId = rosterEntryCharacterId(entry);
+    const firstCharacterIndex =
+      characterId === undefined ? undefined : characterOwners.get(characterId);
+    const duplicateCharacter = firstCharacterIndex !== undefined;
+    if (duplicateCharacter && characterId !== undefined) {
+      issues.push({
+        kind: "duplicateCharacterId",
+        index,
+        characterId,
+        firstIndex: firstCharacterIndex,
+      });
+    } else if (characterId !== undefined) {
+      characterOwners.set(characterId, index);
+    }
+
+    const projection = projectCharacterBattleRosterEntry(entry, index);
+    if (Either.isLeft(projection)) {
+      issues.push(...projection.left);
+      continue;
+    }
+    if (duplicateCombatant || duplicateCharacter) continue;
+    admissions.push(projection.right);
+  }
+
+  return { admissions, issues };
+}
+
+function rosterEntryCombatantId(
+  entry: CharacterBattleRosterEntry,
+): BattleCreatureInit["combatantId"] {
+  return Match.value(entry).pipe(
+    Match.when({ kind: "characterSheet" }, ({ source }) =>
+      characterRosterSourceCombatantId(source),
+    ),
+    Match.when({ kind: "statBlock" }, ({ source }) =>
+      statBlockRosterSourceCombatantId(source),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function characterRosterSourceCombatantId(
+  source: CharacterBattleRosterCharacterSource,
+): BattleCreatureInit["combatantId"] {
+  return Match.value(source).pipe(
+    Match.when({ kind: "available" }, ({ input }) => input.combatantId),
+    Match.when({ kind: "missing" }, ({ combatantId }) => combatantId),
+    Match.when({ kind: "inBattle" }, ({ combatantId }) => combatantId),
+    Match.exhaustive,
+  );
+}
+
+function statBlockRosterSourceCombatantId(
+  source: CharacterBattleRosterStatBlockSource,
+): BattleCreatureInit["combatantId"] {
+  return Match.value(source).pipe(
+    Match.when({ kind: "available" }, ({ input }) => input.combatantId),
+    Match.when({ kind: "missing" }, ({ combatantId }) => combatantId),
+    Match.exhaustive,
+  );
+}
+
+function rosterEntryCharacterId(
+  entry: CharacterBattleRosterEntry,
+): CharacterSheet["characterId"] | undefined {
+  return Match.value(entry).pipe(
+    Match.when({ kind: "characterSheet" }, ({ source }) =>
+      Match.value(source).pipe(
+        Match.when(
+          { kind: "available" },
+          ({ input }) => input.sheet.characterId,
+        ),
+        Match.when({ kind: "missing" }, ({ characterId }) => characterId),
+        Match.when({ kind: "inBattle" }, ({ characterId }) => characterId),
+        Match.exhaustive,
+      ),
+    ),
+    Match.when({ kind: "statBlock" }, () => undefined),
+    Match.exhaustive,
+  );
+}
+
+function projectCharacterBattleRosterEntry(
+  entry: CharacterBattleRosterEntry,
+  index: number,
+): Either.Either<
+  CharacterBattleRosterAdmission,
+  readonly CharacterBattleRosterIssue[]
+> {
+  return Match.value(entry).pipe(
+    Match.when({ kind: "characterSheet" }, (matched) => {
+      return Match.value(matched.source).pipe(
+        Match.when({ kind: "missing" }, (source) =>
+          Either.left([
+            {
+              kind: "characterSheetSourceUnavailable" as const,
+              index,
+              characterId: source.characterId,
+              reason: "missing" as const,
+            },
+          ]),
+        ),
+        Match.when({ kind: "inBattle" }, (source) =>
+          Either.left([
+            {
+              kind: "characterSheetSourceUnavailable" as const,
+              index,
+              characterId: source.characterId,
+              reason: "inBattle" as const,
+              battleId: source.battleId,
+            },
+          ]),
+        ),
+        Match.when({ kind: "available" }, (source) => {
+          const projection = characterSheetBattleInitWithRoute(source.input);
+          if (Either.isLeft(projection)) {
+            return Either.left([
+              {
+                kind: "characterSheetProjection" as const,
+                index,
+                characterId: source.input.sheet.characterId,
+                issue: projection.left.issue,
+              },
+            ]);
+          }
+          return Either.right({
+            kind: "characterSheet" as const,
+            index,
+            combatant: projection.right.init,
+            routeEvents: projection.right.routeEvents,
+          });
+        }),
+        Match.exhaustive,
+      );
+    }),
+    Match.when({ kind: "statBlock" }, (matched) => {
+      return Match.value(matched.source).pipe(
+        Match.when({ kind: "missing" }, (source) =>
+          Either.left([
+            {
+              kind: "statBlockSourceUnavailable" as const,
+              index,
+              statBlockId: source.statBlockId,
+              combatantId: source.combatantId,
+            },
+          ]),
+        ),
+        Match.when({ kind: "available" }, (source) => {
+          const projection = battleCreatureInitFromStatBlock(source.input);
+          if (Either.isLeft(projection)) {
+            return Either.left(
+              battleStateInitIssueLeaves(projection.left).map((issue) => ({
+                kind: "statBlockProjection" as const,
+                index,
+                combatantId: source.input.combatantId,
+                issue,
+              })),
+            );
+          }
+          const creatureInit = projection.right.creatureInit;
+          return Match.value(creatureInit).pipe(
+            Match.when({ kind: "statBlock" }, (statBlockCreatureInit) =>
+              Either.right({
+                kind: "statBlock" as const,
+                index,
+                combatant: {
+                  ...projection.right,
+                  creatureInit: statBlockCreatureInit,
+                },
+                routeEvents: [] as const,
+              }),
+            ),
+            Match.when({ kind: "character" }, () =>
+              Either.left([
+                {
+                  kind: "statBlockProjection" as const,
+                  index,
+                  combatantId: source.input.combatantId,
+                  issue: {
+                    tag: "battleStateInitIssue" as const,
+                    message:
+                      "Stat Block battle initialization produced a character combatant.",
+                  },
+                },
+              ]),
+            ),
+            Match.exhaustive,
+          );
+        }),
+        Match.exhaustive,
+      );
+    }),
+    Match.exhaustive,
+  );
 }
 
 export function battleCreatureInitFromCharacterBuildWithRoute(
@@ -332,29 +692,27 @@ export function battleCreatureInitFromCharacterBuildWithRoute(
   CharacterBattleInitProjectionIssue
 > {
   const init = battleCreatureInitFromCharacterBuild(input);
-  return Either.isLeft(init)
-    ? Either.left({
-        issue: init.left,
-        routeEvents: characterBuildInitIssueRoute(init.left),
-      })
-    : Either.right({
-        init: init.right,
-        routeEvents: [
-          projectCharacterSheetToBattleRoute({
-            subject: "sheetToBattleInit",
-            owner: "characterBattleBuildProjection",
-          }),
-          recordCharacterBattleHandoffFactsRoute({
-            subject: "sheetToBattleInit",
-            facts: ["buildHitPointMaximumInput"],
-            owner: "characterBattleBuildProjection",
-          }),
-          enterBattleRuntimeRoute({
-            subject: "sheetToBattleInit",
-            owner: "characterBattleInitProjection",
-          }),
-        ],
-      });
+  if (Either.isLeft(init)) {
+    return Either.left({
+      issue: init.left,
+      routeEvents: characterBuildInitIssueRoute(init.left),
+    });
+  }
+  return characterBattleInitProjectionFromInit(init.right, [
+    projectCharacterSheetToBattleRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleBuildProjection",
+    }),
+    recordCharacterBattleHandoffFactsRoute({
+      subject: "sheetToBattleInit",
+      facts: ["buildHitPointMaximumInput"],
+      owner: "characterBattleBuildProjection",
+    }),
+    enterBattleRuntimeRoute({
+      subject: "sheetToBattleInit",
+      owner: "characterBattleInitProjection",
+    }),
+  ]);
 }
 
 function characterBuildInitIssueRoute(
@@ -364,47 +722,6 @@ function characterBuildInitIssueRoute(
     CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE
     ? rejectBuildHitPointBattleInitRoute()
     : rejectCharacterBattleInitProjectionRoute();
-}
-
-export function startBattleFromCharacterSheetAndStatBlock(input: {
-  readonly battleId: BattleId;
-  readonly character: CharacterSheetBattleInitInput;
-  readonly statBlockBattleInput: StatBlockBattleInitInput;
-}): Either.Either<
-  CharacterBattleRuntimeEntry,
-  CharacterBattleRuntimeEntryIssue
-> {
-  const characterInit = characterSheetBattleInitWithRoute(input.character);
-  if (Either.isLeft(characterInit)) {
-    return Either.left({
-      issue: characterInit.left.issue,
-      routeEvents: characterInit.left.routeEvents,
-    });
-  }
-  const statBlockInit = battleCreatureInitFromStatBlock(
-    input.statBlockBattleInput,
-  );
-  if (Either.isLeft(statBlockInit)) {
-    return Either.left({
-      issue: statBlockInit.left,
-      routeEvents: characterInit.right.routeEvents,
-    });
-  }
-  const session = startBattle({
-    battleId: input.battleId,
-    combatants: [characterInit.right.init, statBlockInit.right],
-  });
-  if (Either.isLeft(session)) {
-    return Either.left({
-      issue: session.left,
-      routeEvents: characterInit.right.routeEvents,
-    });
-  }
-  return Either.right({
-    session: session.right,
-    initProjectionRouteEvents: characterInit.right.routeEvents,
-    encounterCompositionRouteEvents: characterBattleEncounterCompositionRoute(),
-  });
 }
 
 function acceptedCharacterSheetBattleInitRoute(input: {

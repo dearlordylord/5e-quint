@@ -2,6 +2,7 @@
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 
 import * as Either from "effect/Either";
+import { Match } from "effect";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
 import type {
@@ -42,6 +43,19 @@ export function battleStateInitIssueMessage(
     : issue.tag === "battleStateInitIssues"
       ? issue.issues.map(battleStateInitIssueMessage).join("; ")
       : issue.message;
+}
+
+export function battleStateInitIssueLeaves(
+  issue: BattleStateInitIssue,
+): readonly BattleStateInitLeafIssue[] {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) =>
+      issues.flatMap(battleStateInitIssueLeaves),
+    ),
+    Match.when({ tag: "battleStateInitIssue" }, (leaf) => [leaf]),
+    Match.when({ tag: "weaponLoadoutMismatch" }, (leaf) => [leaf]),
+    Match.exhaustive,
+  );
 }
 
 export function battleStateInitIssues(

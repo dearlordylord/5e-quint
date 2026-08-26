@@ -4040,9 +4040,6 @@ type BattleCreatureStateCommon = {
         // Authored identity retained for settlement / catalog reference. The
         // reducer never dispatches on characterId.
         readonly characterId: CharacterId;
-        // Presentation label retained as a snapshot convenience. Not used by
-        // reducer execution.
-        readonly displayName: string;
         readonly execution: CharacterExecutionState;
         readonly classLevels: CharacterBattleClassLevels;
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
@@ -4235,10 +4232,12 @@ export type BattleStateInitLeafIssue =
   | {
       readonly tag: "battleStateInitIssue";
       readonly message: string;
+      readonly ownerPath?: readonly (string | number)[];
     }
   | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
+      readonly ownerPath?: readonly (string | number)[];
     };
 
 export type BattleStateInitIssue =
@@ -7088,7 +7087,6 @@ type BattleCreatureSnapshotCommon = {
 export type BattleCreatureSnapshot = BattleCreatureSnapshotCommon &
   (
     | {
-        readonly displayName: string;
         readonly origin: Extract<
           BattleCreatureOriginSnapshot,
           { readonly kind: "character" }
