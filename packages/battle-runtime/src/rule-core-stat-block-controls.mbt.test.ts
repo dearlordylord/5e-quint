@@ -3,6 +3,9 @@ import {
   resolveBattleSubject,
   startBattleRight,
   statBlockProcedurePresentationsForStateForTest,
+  authoredProcedureOrdinal,
+  executableProcedureEntry,
+  projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
@@ -31,7 +34,10 @@ import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission
 import { describe, it } from "vitest";
 
 import { Hp, DieRollResult, movementFeet } from "@dnd/shared/types";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  AuthoredExecutableProcedure,
+  StatBlockRecord,
+} from "@dnd/surface/surface/types";
 
 import {
   battleId,
@@ -86,9 +92,10 @@ type StatBlockMultiattackResourceSnapshot = Extract<
   ReturnType<typeof snapshotBattle>["turn"]["actionResources"][number],
   { readonly source: "statBlockMultiattack" }
 >;
-type StatBlockAttack = NonNullable<
-  NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
->[0];
+type StatBlockAttack = Extract<
+  AuthoredExecutableProcedure,
+  { readonly kind: "attack_roll" }
+>;
 
 const actorId = combatantId("rule-core-stat-block-actor");
 const targetId = combatantId("rule-core-stat-block-target");
@@ -318,7 +325,9 @@ function statBlockCreature(input: {
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(input.statBlock),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(input.statBlock),
+        ),
       ),
       currentHp: Hp(12),
       tempHp: Hp(0),
@@ -685,25 +694,31 @@ function multiattackStatBlock(): StatBlockRecord {
     name: "Rule Core Multiattacker",
     statBlock: {
       ...base.statBlock,
-      displayName: "Rule Core Multiattacker",
-      actions: {
-        attacks: [primaryAttack(), secondaryAttack()],
-        multiattacks: [
-          {
-            name: multiattackName,
-            dispatches: [
-              { name: primaryAttackName, count: { kind: "literal", value: 2 } },
-              {
-                name: secondaryAttackName,
-                count: { kind: "literal", value: 1 },
-              },
-            ],
-          },
-        ],
-      },
-      bonusActions: {
-        actionOptions: [{ name: "Nimble Escape", options: ["disengage"] }],
-      },
+      actions: [
+        executableProcedureEntry(1, primaryAttack()),
+        executableProcedureEntry(2, secondaryAttack()),
+        executableProcedureEntry(3, {
+          kind: "multiattack",
+          name: multiattackName,
+          dispatches: [
+            {
+              procedureOrdinal: authoredProcedureOrdinal(1),
+              count: { kind: "literal", value: 2 },
+            },
+            {
+              procedureOrdinal: authoredProcedureOrdinal(2),
+              count: { kind: "literal", value: 1 },
+            },
+          ],
+        }),
+      ],
+      bonusActions: [
+        executableProcedureEntry(1, {
+          kind: "action_option",
+          name: "Nimble Escape",
+          options: ["disengage"],
+        }),
+      ],
     },
   };
 }
@@ -715,8 +730,7 @@ function targetStatBlock(): StatBlockRecord {
     name: "Rule Core Target",
     statBlock: {
       ...base.statBlock,
-      displayName: "Rule Core Target",
-      actions: { attacks: [primaryAttack()] },
+      actions: [executableProcedureEntry(1, primaryAttack())],
     },
   };
 }
@@ -728,10 +742,16 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
     name: id,
     challengeRating: 0.25,
     provenance: {
-      kind: "srd-5.2.1",
+      kind: "synthetic-test",
       section: "QMBT6 typed fixture",
     },
     statBlock: {
+      size: "medium",
+      creatureType: "humanoid",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 12 } },
+      hp: { kind: "literal", value: 12 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
       abilityScores: {
         cha: 10,
         con: 10,
@@ -740,21 +760,19 @@ function baseStatBlockRecord(id: string): StatBlockRecord {
         str: 10,
         wis: 10,
       },
-      ac: { kind: "literal", value: 12 },
-      actions: { attacks: [primaryAttack()] },
-      creatureType: "humanoid",
-      displayName: id,
-      hp: { kind: "literal", value: 12 },
-      initiativeModifier: 0,
-      languages: ["Common"],
-      size: "medium",
-      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      initiative: { modifier: 0, score: 10 },
+      passivePerception: 10,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
     },
   };
 }
 
 function primaryAttack(): StatBlockAttack {
   return {
+    kind: "attack_roll",
     attackAbility: "str",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "melee",
@@ -772,6 +790,7 @@ function primaryAttack(): StatBlockAttack {
 
 function secondaryAttack(): StatBlockAttack {
   return {
+    kind: "attack_roll",
     attackAbility: "dex",
     attackBonus: { kind: "literal", value: 4 },
     attackType: "ranged",

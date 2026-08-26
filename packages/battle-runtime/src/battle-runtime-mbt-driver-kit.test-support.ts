@@ -1,4 +1,7 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId as parseSharedStatBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import * as path from "node:path";
 import {
@@ -22,6 +25,7 @@ import {
 } from "@firfi/quint-connect/effect";
 import { Either, Match, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
@@ -75,6 +79,7 @@ import {
   secondWizardId as interruptSecondWizardId,
   wizardId as interruptWizardId,
   resolveBattleSubject,
+  executableProcedureEntry,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -18027,7 +18032,11 @@ function skeletonCreatureInit(input: {
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(skeletonMultiattackStatBlock()),
+        battleStatBlockCombatantSource(
+          Either.getOrThrow(
+            projectAuthoredStatBlock(skeletonMultiattackStatBlock()),
+          ).runtime,
+        ),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
@@ -18039,21 +18048,39 @@ function skeletonCreatureInit(input: {
 
 function skeletonMultiattackStatBlock(): StatBlockRecord {
   const base = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  const actions = base.statBlock.actions;
+  const shortsword = actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Shortsword",
+  );
+  if (actions === undefined || shortsword === undefined) {
+    throw new Error("Expected canonical Skeleton Shortsword fixture.");
+  }
   return {
     ...base,
+    id: parseSharedStatBlockId("stat_block_synthetic_boneblade_multiattacker"),
+    name: "Synthetic Boneblade Multiattacker",
+    provenance: {
+      kind: "synthetic-test",
+      section: "Skeleton multiattack MBT fixture",
+    },
     statBlock: {
       ...base.statBlock,
-      actions: {
-        ...base.statBlock.actions,
-        multiattacks: [
-          {
-            name: "Multiattack",
-            dispatches: [
-              { name: "Shortsword", count: { kind: "literal", value: 2 } },
-            ],
-          },
-        ],
-      },
+      actions: [
+        ...actions,
+        executableProcedureEntry(3, {
+          kind: "multiattack",
+          name: "Multiattack",
+          dispatches: [
+            {
+              procedureOrdinal: shortsword.procedureOrdinal,
+              count: { kind: "literal", value: 2 },
+            },
+          ],
+        }),
+      ],
     },
   };
 }
