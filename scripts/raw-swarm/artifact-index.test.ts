@@ -1,6 +1,7 @@
 import { execFileSync, spawnSync } from "node:child_process";
 import {
   existsSync,
+  linkSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
@@ -969,6 +970,24 @@ describe("Raw Swarm artifact index", () => {
     );
   });
 
+  test("rejects hard-linked index aliases before lock or WAL checks", () => {
+    const directory = temporaryDirectory();
+    const targetPath = resolve(directory, "target.sqlite");
+    const aliasPath = resolve(directory, "alias.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, targetPath));
+    initial.close();
+    linkSync(targetPath, aliasPath);
+
+    expect(() => openArtifactIndex(relative(repoRoot, aliasPath))).toThrow(
+      /has multiple hard links; refusing an ambiguous WAL\/lock identity/,
+    );
+    expect(() =>
+      openArtifactIndexReadOnly(relative(repoRoot, aliasPath)),
+    ).toThrow(
+      /has multiple hard links; refusing an ambiguous WAL\/lock identity/,
+    );
+  });
+
   test("holds the read lease for the full read-only connection lifetime", () => {
     const directory = temporaryDirectory();
     const dbPath = resolve(directory, "lifetime.sqlite");
@@ -977,12 +996,42 @@ describe("Raw Swarm artifact index", () => {
 
     const reader = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
     expect(() => openArtifactIndex(relative(repoRoot, dbPath))).toThrow(
-      /cannot be opened for writing while a read-only report is active/,
+      /cannot be opened for writing while another operation is active/,
     );
     reader.close();
 
     const writer = openArtifactIndex(relative(repoRoot, dbPath));
     writer.close();
+  });
+
+  test("releases leases through close and Symbol.dispose idempotently", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "dispose-lifetime.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+
+    const disposed = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    disposed[Symbol.dispose]();
+    expect(() => disposed.close()).not.toThrow();
+    const writerAfterDispose = openArtifactIndex(relative(repoRoot, dbPath));
+    writerAfterDispose.close();
+
+    const closed = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    closed.close();
+    expect(() => closed[Symbol.dispose]()).not.toThrow();
+  });
+
+  test("uses a neutral contention diagnostic for a second writer", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "writer-contention.sqlite");
+    const first = openArtifactIndex(relative(repoRoot, dbPath));
+    try {
+      expect(() => openArtifactIndex(relative(repoRoot, dbPath))).toThrow(
+        /cannot be opened for writing while another operation is active/,
+      );
+    } finally {
+      first.close();
+    }
   });
 
   test("blocks a cross-process writer until the read-only connection closes", () => {
@@ -1044,7 +1093,7 @@ process.stdout.write("opened");`,
       expect(child.error).toBeUndefined();
       expect(child.status).toBe(1);
       expect(`${child.stdout}${child.stderr}`).toMatch(
-        /cannot be opened for writing while a read-only report is active/,
+        /cannot be opened for writing while another operation is active/,
       );
       expect(readdirSync(directory).sort()).toEqual(entriesBefore);
     } finally {

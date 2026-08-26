@@ -269,11 +269,11 @@ type ParsedSourceAuthority = Readonly<
   Pick<FindingAuthority, "byteLength" | "sha256">
 >;
 
-const canonicalFindingAuthoritySnapshotBrand: unique symbol = Symbol(
-  "canonicalFindingAuthoritySnapshot",
+const verifiedFindingAuthoritySnapshotBrand: unique symbol = Symbol(
+  "verifiedFindingAuthoritySnapshot",
 );
-const canonicalFindingAuthoritySnapshots = new WeakSet<object>();
-const canonicalFindingAuthoritySnapshotValues = new WeakMap<
+const verifiedFindingAuthoritySnapshots = new WeakSet<object>();
+const verifiedFindingAuthoritySnapshotValues = new WeakMap<
   object,
   Readonly<{
     readonly authority: FindingAuthority;
@@ -284,13 +284,13 @@ const canonicalFindingAuthoritySnapshotValues = new WeakMap<
 export type CanonicalFindingAuthoritySnapshot = Readonly<{
   readonly path: string;
   readonly scope: "repository";
-  readonly [canonicalFindingAuthoritySnapshotBrand]: true;
+  readonly [verifiedFindingAuthoritySnapshotBrand]: true;
 }>;
 
 export type PortableFindingAuthoritySnapshot = Readonly<{
   readonly path: string;
   readonly scope: "bundle";
-  readonly [canonicalFindingAuthoritySnapshotBrand]: true;
+  readonly [verifiedFindingAuthoritySnapshotBrand]: true;
 }>;
 
 export type FindingAuthoritySnapshot =
@@ -330,10 +330,10 @@ export function canonicalFindingAuthoritySnapshotForBytes(
   const snapshot = {
     path: authority.path,
     scope: "repository" as const,
-    [canonicalFindingAuthoritySnapshotBrand]: true,
+    [verifiedFindingAuthoritySnapshotBrand]: true,
   } as const satisfies CanonicalFindingAuthoritySnapshot;
-  canonicalFindingAuthoritySnapshots.add(snapshot);
-  canonicalFindingAuthoritySnapshotValues.set(snapshot, {
+  verifiedFindingAuthoritySnapshots.add(snapshot);
+  verifiedFindingAuthoritySnapshotValues.set(snapshot, {
     authority: {
       role: authority.role,
       path: authority.path,
@@ -365,10 +365,10 @@ export function portableFindingAuthoritySnapshotForBytes(
   const snapshot = {
     path: authority.path,
     scope: "bundle" as const,
-    [canonicalFindingAuthoritySnapshotBrand]: true,
+    [verifiedFindingAuthoritySnapshotBrand]: true,
   } as const satisfies PortableFindingAuthoritySnapshot;
-  canonicalFindingAuthoritySnapshots.add(snapshot);
-  canonicalFindingAuthoritySnapshotValues.set(snapshot, {
+  verifiedFindingAuthoritySnapshots.add(snapshot);
+  verifiedFindingAuthoritySnapshotValues.set(snapshot, {
     authority: {
       role: authority.role,
       path: authority.path,
@@ -658,12 +658,12 @@ function findingAuthoritySnapshotBytes(
   snapshot: FindingAuthoritySnapshot,
   authority: FindingAuthority,
 ): Either.Either<Uint8Array, string> {
-  if (!canonicalFindingAuthoritySnapshots.has(snapshot)) {
+  if (!verifiedFindingAuthoritySnapshots.has(snapshot)) {
     return Either.left(
-      `Finding authority snapshot is not canonical: ${authority.path}.`,
+      `Finding authority snapshot is not verified: ${authority.path}.`,
     );
   }
-  const captured = canonicalFindingAuthoritySnapshotValues.get(snapshot);
+  const captured = verifiedFindingAuthoritySnapshotValues.get(snapshot);
   if (
     captured === undefined ||
     captured.authority.byteLength !== authority.byteLength ||
@@ -682,10 +682,10 @@ function findingAuthoritySnapshotBytesForPath(
 ): Either.Either<Uint8Array, string> | undefined {
   const snapshot = findingAuthoritySnapshotForPath(path, snapshots);
   if (snapshot === undefined) return undefined;
-  if (!canonicalFindingAuthoritySnapshots.has(snapshot)) {
-    return Either.left(`Finding authority snapshot is not canonical: ${path}.`);
+  if (!verifiedFindingAuthoritySnapshots.has(snapshot)) {
+    return Either.left(`Finding authority snapshot is not verified: ${path}.`);
   }
-  const captured = canonicalFindingAuthoritySnapshotValues.get(snapshot);
+  const captured = verifiedFindingAuthoritySnapshotValues.get(snapshot);
   return captured === undefined
     ? Either.left(`Finding authority snapshot is unavailable: ${path}.`)
     : Either.right(captured.bytes);
@@ -697,7 +697,7 @@ function readFindingAuthorityRecord(
 ): unknown {
   const snapshot = findingAuthoritySnapshotForPath(path, snapshots);
   if (snapshot === undefined) return readSourceRecord(path);
-  const captured = canonicalFindingAuthoritySnapshotValues.get(snapshot);
+  const captured = verifiedFindingAuthoritySnapshotValues.get(snapshot);
   if (captured === undefined) return undefined;
   try {
     return JSON.parse(Buffer.from(captured.bytes).toString("utf8"));
@@ -2165,7 +2165,7 @@ export function validateFindingsProjection(
   if (!Array.isArray(snapshots)) {
     return {
       tag: "invalid",
-      message: "Finding authority snapshots must be a canonical snapshot list.",
+      message: "Finding authority snapshots must be a verified snapshot list.",
     };
   }
   return validateDecodedProjection(decoded.right, snapshots);

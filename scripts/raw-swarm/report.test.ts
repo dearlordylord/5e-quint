@@ -346,9 +346,92 @@ describe("RAW swarm artifact report index", () => {
       ]),
     ).toContain("fixture-execution");
     expect(readFileSync(relocatedExecutionIndex)).toEqual(executionIndexBefore);
-    expect(
-      readFileSync(resolve(executionPortablePath, "manifest.json")),
-    ).toEqual(executionManifestBefore);
+    const executionManifestPath = resolve(
+      executionPortablePath,
+      "manifest.json",
+    );
+    expect(readFileSync(executionManifestPath)).toEqual(
+      executionManifestBefore,
+    );
+
+    for (const invalidManifest of [
+      (() => {
+        const value = JSON.parse(
+          executionManifestBefore.toString("utf8"),
+        ) as Record<string, unknown>;
+        delete value.schemaVersion;
+        return value;
+      })(),
+      {
+        ...(JSON.parse(executionManifestBefore.toString("utf8")) as Record<
+          string,
+          unknown
+        >),
+        schemaVersion: 2,
+      },
+    ]) {
+      writeFileSync(
+        executionManifestPath,
+        `${JSON.stringify(invalidManifest, null, 2)}\n`,
+      );
+      expect(() =>
+        report([
+          "audit",
+          "--execution-row",
+          "1",
+          "--db",
+          relative(repoRoot, relocatedExecutionIndex),
+        ]),
+      ).toThrow(/Portable report manifest schemaVersion must be 1/);
+    }
+    writeFileSync(executionManifestPath, executionManifestBefore);
+
+    const unreferencedBytes = Buffer.from("unreferenced portable artifact\n");
+    const unreferencedSha256 = createHash("sha256")
+      .update(unreferencedBytes)
+      .digest("hex");
+    writeFileSync(
+      resolve(executionPortablePath, "unreferenced-artifact.txt"),
+      unreferencedBytes,
+    );
+    const tamperedPortable = new DatabaseSync(relocatedExecutionIndex);
+    tamperedPortable
+      .prepare(
+        "INSERT INTO artifacts(sha256, byteLength, mediaType, path) VALUES (?, ?, ?, ?)",
+      )
+      .run(
+        unreferencedSha256,
+        unreferencedBytes.byteLength,
+        "text/plain",
+        "unreferenced-artifact.txt",
+      );
+    tamperedPortable.close();
+    const tamperedIndexBytes = readFileSync(relocatedExecutionIndex);
+    const tamperedManifest = JSON.parse(
+      executionManifestBefore.toString("utf8"),
+    ) as {
+      index: { path: string; sha256: string; byteLength: number };
+      schemaVersion: number;
+      artifacts: readonly unknown[];
+    };
+    tamperedManifest.index.sha256 = createHash("sha256")
+      .update(tamperedIndexBytes)
+      .digest("hex");
+    tamperedManifest.index.byteLength = tamperedIndexBytes.byteLength;
+    writeFileSync(
+      executionManifestPath,
+      `${JSON.stringify(tamperedManifest, null, 2)}\n`,
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact inventory does not match its manifest/);
+    writeFileSync(executionManifestPath, executionManifestBefore);
 
     const generationRoot = resolve(directory, "generation-evidence");
     mkdirSync(generationRoot, { recursive: true });

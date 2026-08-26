@@ -180,9 +180,28 @@ function artifactIndexLockFailure(
 ): never {
   return fail(
     mode === "reader"
-      ? `Raw Swarm index cannot be opened for read-only reporting while a writer is active: ${absolute}`
-      : `Raw Swarm index cannot be opened for writing while a read-only report is active: ${absolute}`,
+      ? `Raw Swarm index cannot be opened for read-only reporting while another operation is active: ${absolute}`
+      : `Raw Swarm index cannot be opened for writing while another operation is active: ${absolute}`,
   );
+}
+
+function rejectHardLinkedArtifactIndex(
+  absolute: string,
+  displayPath: string,
+): void {
+  let links: number;
+  try {
+    links = statSync(absolute).nlink;
+  } catch (error) {
+    return fail(
+      `Raw Swarm index is unreadable: ${displayPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  if (links > 1) {
+    fail(
+      `Raw Swarm index ${displayPath} has multiple hard links; refusing an ambiguous WAL/lock identity.`,
+    );
+  }
 }
 
 function acquireArtifactIndexLock(
@@ -261,16 +280,26 @@ function bindArtifactIndexLock(
   lease: { readonly release: () => void },
 ): DatabaseSync {
   const close = db.close.bind(db);
+  const dispose = db[Symbol.dispose].bind(db);
+  let closed = false;
+  const closeWithLease = (operation: () => void): void => {
+    if (closed) return;
+    closed = true;
+    try {
+      operation();
+    } finally {
+      lease.release();
+    }
+  };
   Object.defineProperty(db, "close", {
     configurable: true,
     writable: true,
-    value: (): void => {
-      try {
-        close();
-      } finally {
-        lease.release();
-      }
-    },
+    value: (): void => closeWithLease(close),
+  });
+  Object.defineProperty(db, Symbol.dispose, {
+    configurable: true,
+    writable: true,
+    value: (): void => closeWithLease(dispose),
   });
   return db;
 }
@@ -385,6 +414,7 @@ function rejectUncheckpointedWal(absolute: string, displayPath: string): void {
 export function openArtifactIndex(path: string): DatabaseSync {
   const absolute = resolve(repoRoot, path);
   mkdirSync(dirname(absolute), { recursive: true });
+  if (existsSync(absolute)) rejectHardLinkedArtifactIndex(absolute, path);
   const lease = acquireArtifactIndexLock(absolute, "writer");
   let db: DatabaseSync | undefined;
   try {
@@ -614,6 +644,7 @@ export function openArtifactIndexReadOnly(path: string): DatabaseSync {
       `Raw Swarm index is unreadable: ${path}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
+  rejectHardLinkedArtifactIndex(absolute, path);
   const lease = acquireArtifactIndexLock(absolute, "reader");
   let db: DatabaseSync | undefined;
   try {
@@ -2233,23 +2264,7 @@ export function exportArtifactIndex(input: {
   }
   const snapshotDb = new DatabaseSync(snapshot);
   const artifactRows = snapshotDb
-    .prepare(
-      `SELECT DISTINCT artifacts.sha256, artifacts.byteLength, artifacts.path
-       FROM artifacts
-       WHERE artifacts.sha256 IN (
-         SELECT transcriptSha256 FROM runs
-         UNION SELECT artifactSha256 FROM runArtifacts
-         UNION SELECT artifactSha256 FROM reviews
-         UNION SELECT auditSha256 FROM reviews WHERE auditSha256 IS NOT NULL
-         UNION SELECT invocationLedgerSha256 FROM reviews WHERE invocationLedgerSha256 IS NOT NULL
-         UNION SELECT extractionArtifactSha256 FROM reviewDrilldowns
-         UNION SELECT provenanceSha256 FROM reviewDrilldowns
-         UNION SELECT evidenceSha256 FROM legacyInventory WHERE evidenceSha256 IS NOT NULL
-         UNION SELECT artifactSha256 FROM scenarioCampaignArtifacts
-         UNION SELECT artifactSha256 FROM scenarioCampaignFindings
-       )
-       ORDER BY artifacts.sha256`,
-    )
+    .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
     .all();
   const updatePortablePath = snapshotDb.prepare(
     "UPDATE artifacts SET path = ? WHERE sha256 = ?",
