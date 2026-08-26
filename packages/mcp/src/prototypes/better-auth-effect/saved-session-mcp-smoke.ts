@@ -59,7 +59,11 @@ export async function verifySavedSessionMcp(input: {
     const operation = jsonObject(creation.operation, "creation operation");
     const result = jsonObject(operation.result, "creation result");
     const access = jsonObject(result.access, "guest access");
-    const playSessionId = stringField(creation, "playSessionId");
+    const decodedPlaySessionId = decodePlaySessionId(creation.playSessionId);
+    if (Either.isLeft(decodedPlaySessionId)) {
+      throw new Error("Creation response omitted its Play Session id.");
+    }
+    const playSessionId = decodedPlaySessionId.right;
     const guestAccessGrant = stringField(access, "guestAccessGrant");
     await guestClient.close();
 
