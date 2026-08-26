@@ -19,6 +19,7 @@ import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog"
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { characterIdFromDraftId } from "../src/session-store.ts";
 import { decodeGuestAccessGrant } from "../src/play-session-access.ts";
+import type { PlaySessionToolName } from "../src/play-session-tool-names.ts";
 import { CONTENT_TOOL_NAMES } from "../src/content-tools.ts";
 import { characterProgressionEntry } from "../../character-creation-runtime/src/character-progression-types.ts";
 
@@ -462,10 +463,16 @@ const agentConversationScenarios = [
   },
 ] as const;
 
-export async function verifyToolContract(client: Client) {
+export async function verifyToolContract(
+  client: Client,
+  additionalExpectedToolNames: ReadonlyArray<PlaySessionToolName> = [],
+) {
   const listed = await client.listTools();
   const toolNames = listed.tools.map((tool) => tool.name).sort();
-  assert.deepEqual(toolNames, [...expectedTools].sort());
+  assert.deepEqual(
+    toolNames,
+    [...expectedTools, ...additionalExpectedToolNames].sort(),
+  );
   for (const tool of listed.tools) {
     assert.ok(tool.inputSchema, `${tool.name} must expose inputSchema`);
     assert.ok(tool.outputSchema, `${tool.name} must expose outputSchema`);
@@ -1024,8 +1031,11 @@ export async function verifyBaselineVertical(
  * exercises the shared Character Session and Battle lifecycle surfaces before
  * returning to the durable Character Session list.
  */
-export async function verifyCompleteNewcomerJourney(client: Client) {
-  await verifyToolContract(client);
+export async function verifyCompleteNewcomerJourney(
+  client: Client,
+  additionalExpectedToolNames: ReadonlyArray<PlaySessionToolName> = [],
+) {
+  await verifyToolContract(client, additionalExpectedToolNames);
   const baseline = await verifyBaselineVertical(client);
   const { characterId } = baseline;
 
