@@ -14,6 +14,8 @@
     "check:battle-runtime-test-support-boundary": "node scripts/check-battle-runtime-test-support-boundary.cjs",
     "check:character-sheet-runtime-split": "node scripts/audit-character-sheet-runtime-split.mjs",
     "check:surface-content-publication": "node scripts/check-surface-content-json-sync.cjs",
+    "capture:effect3-baseline": "pnpm exec tsx scripts/effect3-baseline.ts capture",
+    "verify:effect3-baseline": "pnpm exec tsx scripts/effect3-baseline.ts verify",
     "check:cleanroom-provenance": "node scripts/check-cleanroom-provenance.cjs",
     "check:markdown-links": "node scripts/check-markdown-links.cjs --self-test && node scripts/check-markdown-links.cjs",
     "check:surface-publication-typecheck": "tsc -p scripts/surface-publication.tsconfig.json --noEmit",
