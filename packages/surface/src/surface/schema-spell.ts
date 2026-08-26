@@ -3,8 +3,10 @@ import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
+  SPEED_TYPES,
   StatBlockId,
   UnitId,
+  type SpeedType,
   type ClassName,
 } from "@dnd/shared/game-facts";
 import {
@@ -4838,8 +4840,10 @@ export const SixAbilityScoresSchema = Schema.Struct({
   cha: Schema.Number,
 });
 
+const CreatureSpeedKindSchema = Schema.Literal(...SPEED_TYPES);
+
 export const CreatureSpeedSchema = Schema.Struct({
-  kind: Schema.Literal("walk", "fly", "swim", "climb", "burrow"),
+  kind: CreatureSpeedKindSchema,
   feet: StatBlockValueSchema,
   requiresSlotLevel: optionalExact(Schema.Number),
 });
@@ -5649,10 +5653,33 @@ export const StatBlockInitiativeSchema = Schema.Struct({
   score: NonNegativeIntegerSchema,
 });
 
-const StandaloneCreatureSpeedSchema = Schema.Struct({
-  kind: CreatureSpeedSchema.fields.kind,
+const StandaloneNonFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
+  Schema.filter((kind): kind is Exclude<SpeedType, "fly"> => kind !== "fly"),
+);
+const StandaloneFlyCreatureSpeedKindSchema = CreatureSpeedKindSchema.pipe(
+  Schema.filter((kind): kind is Extract<SpeedType, "fly"> => kind === "fly"),
+);
+
+const StandaloneCreatureSpeedFields = {
   feet: StandaloneStatBlockValueSchema,
-});
+} as const;
+
+/**
+ * Hover is an authored qualifier of Fly, not a general speed property. The
+ * union keeps that source fact unavailable on the other special speeds while
+ * leaving the reusable runtime projection shape unchanged.
+ */
+const StandaloneCreatureSpeedSchema = Schema.Union(
+  strictStruct({
+    kind: StandaloneNonFlyCreatureSpeedKindSchema,
+    ...StandaloneCreatureSpeedFields,
+  }),
+  strictStruct({
+    kind: StandaloneFlyCreatureSpeedKindSchema,
+    ...StandaloneCreatureSpeedFields,
+    hover: optionalExact(Schema.Literal(true)),
+  }),
+);
 
 export const StatBlockArmorClassSchema = Schema.Struct({
   value: StandaloneStatBlockValueSchema,
