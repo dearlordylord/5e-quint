@@ -198,6 +198,17 @@ function validateArtifactIndex(
   db: DatabaseSync,
   requireCurrentSchema: boolean,
 ): void {
+  const legacySteps = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'steps'",
+    )
+    .get();
+  if (legacySteps !== undefined) {
+    fail(
+      "Legacy Raw Swarm database must be inventoried and rebuilt before use.",
+    );
+  }
+
   const existingMetadata = db
     .prepare(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'indexMetadata'",
@@ -219,16 +230,6 @@ function validateArtifactIndex(
         `Raw Swarm index schema is not version ${String(INDEX_SCHEMA_VERSION)}; inventory and rebuild the database before using this command.`,
       );
     }
-  }
-  const legacySteps = db
-    .prepare(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'steps'",
-    )
-    .get();
-  if (legacySteps !== undefined) {
-    fail(
-      "Legacy Raw Swarm database must be inventoried and rebuilt before use.",
-    );
   }
 }
 
