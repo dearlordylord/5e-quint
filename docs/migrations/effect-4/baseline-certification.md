@@ -4,10 +4,14 @@ Date: 2026-08-25
 Baseline commit: `76d9abaf0` (`ops: add Dokku publication handoff`)
 Certificate: [`effect3-behavioral-oracle.json`](./effect3-behavioral-oracle.json)
 
-Certification run: 2026-08-25T22:49:47-04:00
+Initial certification run: 2026-08-25T22:49:47-04:00
 (2026-08-26T02:49:49Z). The checkout was commit `60aa87176` before this
 certification commit. Environment: Node `v24.18.0`, pnpm `10.29.3`, mise
 `2026.7.11 linux-arm64`, Linux `7.0.14-orbstack-00380-ga7e0a2dc9535`.
+
+Provisional certificate refresh: source/tests and the regenerated certificate
+are committed as `f0c265b4c` (`test: persist HTTP Effect 3 baseline payload
+(#368)`). The refresh has not yet completed its reviewer loop.
 
 This certificate freezes the externally observable Effect 3 behavior that the
 Effect 4 migration must preserve. It is generated from the repository's
@@ -64,8 +68,8 @@ work and are intentionally not folded into this certificate command.
 
 | Command                                                                             | Result | Evidence                                                                                                                                                                                                                                                                                                                 |
 | ----------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm verify:effect3-baseline`                                                      | pass   | Certificate bytes matched SHA-256 `d12f85a64db76226e77019b724a77f98f8df7bc8b5dfb707091beddbd803e593`.                                                                                                                                                                                                                    |
-| `pnpm exec vitest run packages/mcp/src/effect3-baseline.test.ts --reporter=verbose` | pass   | Four focused reproducibility, canonicalization, dirty-generated-output, and shipped-protocol-entrypoint tests passed (28.50s on the final run).                                                                                                                                                                          |
+| `pnpm verify:effect3-baseline`                                                      | pass   | Initial certificate bytes matched SHA-256 `d12f85a64db76226e77019b724a77f98f8df7bc8b5dfb707091beddbd803e593`; the provisional refresh in `f0c265b4c` matched SHA-256 `dc131ce8b7e588e288d20a25881df1817552b1469b9aea1dc2b55ba3fdc6df7b`.                                                                                 |
+| `pnpm exec vitest run packages/mcp/src/effect3-baseline.test.ts --reporter=verbose` | pass   | Four focused reproducibility, canonicalization, dirty-generated-output, and shipped-protocol-entrypoint tests passed (47.05s on the provisional refresh in `f0c265b4c`).                                                                                                                                                 |
 | `pnpm --filter @dnd/mcp typecheck`                                                  | pass   | MCP package typecheck passed (12.13s on the final run).                                                                                                                                                                                                                                                                  |
 | `pnpm typecheck`                                                                    | pass   | Direct public gate: 13/13 workspace tasks succeeded; 11 were cached (44.663s).                                                                                                                                                                                                                                           |
 | `pnpm test`                                                                         | pass   | Direct public gate on clean commit `c450fb9dd`: 10/10 workspace tasks succeeded; `@dnd/mcp` passed 45 files/348 tests and `@dnd/app` passed 17 files/76 tests (4m15.705s).                                                                                                                                               |
@@ -75,10 +79,11 @@ work and are intentionally not folded into this certificate command.
 
 ## Reviewer-loop evidence
 
-The first two focused review passes below were completed before the protocol
-entrypoint remediation. They are retained as historical evidence; they do not
-claim final convergence for the current certificate until the remediation has
-completed its own review passes.
+The completed review passes below are historical evidence for the exact
+source/certificate commits `60aa87176` (baseline hardening) and `c450fb9dd`
+(protocol-entrypoint remediation, with evidence updated in `431c57457`). They
+do not cover the provisional HTTP-payload refresh in `f0c265b4c` and do not
+claim final convergence for the current certificate.
 
 1. RAW/PHB+, domain language, architecture, and connascence: the command adds
    no rule behavior or authored PHB+ identity; it reads MCP, Surface,
@@ -92,16 +97,12 @@ completed its own review passes.
    runtime narrowing instead of an unchecked JSON cast. The focused test also
    proves ignored Raw Swarm output does not perturb the certificate.
 
-After the protocol-entrypoint remediation, two additional review passes were
-completed. The RAW/PHB+, domain-language, architecture, and connascence pass
-found no rules or authored-identity change; it confirmed that the shipped
-entrypoints are exercised while the canonical MCP, Surface, persistence,
-reducer, and Raw Swarm owners remain the only sources. The code/lifecycle pass
-found and fixed the certificate-order assertion to name security order
-explicitly, drained stdio diagnostics, and bounded health/protocol requests;
-the final focused tests, typecheck, formatting, lint, and baseline verification
-then passed with no dangling entrypoint processes. No reasonable findings
-remain in the reviewed scope.
+The current remediation in `f0c265b4c` persists the actual HTTP `tools/list`
+payload and strengthens its parity and representative-call assertions. It has
+not yet undergone its required RAW/PHB+, domain-language,
+architecture/connascence, and code-review passes. After those passes converge,
+make a docs-only evidence commit updating this section; until then, no final
+convergence claim is made.
 
 The certificate is an Effect 3 behavioral oracle, not a claim that every
 currently present authored record or every Raw Swarm scenario is executable.
