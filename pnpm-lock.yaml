@@ -454,6 +454,12 @@ importers:
       '@dnd/surface':
         specifier: workspace:*
         version: link:../surface
+      '@drdice/dice':
+        specifier: 0.4.0
+        version: 0.4.0
+      '@drdice/prng':
+        specifier: 0.4.0
+        version: 0.4.0
       '@effect/platform-node':
         specifier: ^0.106.0
         version: 0.106.0(@effect/cluster@0.58.0(@effect/platform@0.96.3(effect@3.21.5))(@effect/rpc@0.75.0(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(@effect/sql@0.51.0(@effect/experimental@0.60.0(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(@effect/workflow@0.18.0(@effect/experimental@0.60.0(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(@effect/platform@0.96.3(effect@3.21.5))(@effect/rpc@0.75.0(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(effect@3.21.5))(effect@3.21.5))(@effect/platform@0.96.3(effect@3.21.5))(@effect/rpc@0.75.0(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(@effect/sql@0.51.0(@effect/experimental@0.60.0(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(@effect/platform@0.96.3(effect@3.21.5))(effect@3.21.5))(effect@3.21.5)
@@ -785,6 +791,12 @@ packages:
 
   '@dimforge/rapier3d-compat@0.12.0':
     resolution: {integrity: sha512-uekIGetywIgopfD97oDL5PfeezkFpNhwlzlaEYNOA0N6ghdsOvh/HYjSMek5Q2O1PYvRSDFcqFVJl4r4ZBwOow==}
+
+  '@drdice/dice@0.4.0':
+    resolution: {integrity: sha512-ZSQuzMIVvRTBu/z1yD7UtjKT0nDKZMansHkU974mcQLFjK2t2XZLGoHKgeNpbI7UU06cQrncMtdFwGZJXnVz3w==}
+
+  '@drdice/prng@0.4.0':
+    resolution: {integrity: sha512-zXA2AWc16eThMrRYY5DI/ct+UdIEA4qeS7yqT4ZY76c9T7r2jSAK2iu9sX7VAPeM7yR4XWKW8cXBsgxNEAT1hg==}
 
   '@effect/cli@0.75.2':
     resolution: {integrity: sha512-+cMn/ZtFB+jEvgB6phrTT6XyPkIUnmX4G0nUSln7yj3lwyiHQ578Iwr8nHeU1CKEtlh4Xt+mYc0yiT912xu7YA==}
@@ -5568,6 +5580,12 @@ snapshots:
       node-source-walk: 7.0.1
 
   '@dimforge/rapier3d-compat@0.12.0': {}
+
+  '@drdice/dice@0.4.0':
+    dependencies:
+      '@drdice/prng': 0.4.0
+
+  '@drdice/prng@0.4.0': {}
 
   '@effect/cli@0.75.2(@effect/platform@0.96.3(effect@3.21.5))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.5))(effect@3.21.5))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.5))(effect@3.21.5))(effect@3.21.5)':
     dependencies:

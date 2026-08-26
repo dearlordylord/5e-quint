@@ -7,10 +7,16 @@ import {
   type PlaySessionCaller,
 } from "./play-session-access.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
-import type { DiceToolName } from "./dice-tool-input.ts";
+import {
+  decodeDiceToolCall,
+  diceToolNames,
+  type DiceToolName,
+} from "./dice-tool-input.ts";
+import { decodeRollDiceResult } from "./dice-tool-output.ts";
 import {
   decodePlaySessionId,
   type PlaySessionAccessFailure,
+  type PlaySessionCommand,
   type PlaySessionId,
   type PlaySessionRegistry,
 } from "./play-session.ts";
@@ -166,14 +172,19 @@ export async function handlePlaySessionOperation(input: {
       ).some(([, session]) => session.tag !== "inBattle"),
     }),
     {
-      command: {
-        name: input.operationName,
-        args: routed.right.operationArgs,
-      },
+      commandFor: () =>
+        retainedPlaySessionCommand(
+          input.operationName,
+          routed.right.operationArgs,
+        ),
       retain: (operation) =>
         input.recordOperation &&
         isToolContent(operation.operationContent) &&
-        operation.operationContent.isError !== true,
+        operation.operationContent.isError !== true &&
+        operationShouldBeRetained(
+          input.operationName,
+          operation.operationContent,
+        ),
       succeeded: (operation) =>
         isToolContent(operation.operationContent) &&
         operation.operationContent.isError !== true,
@@ -209,6 +220,37 @@ export async function handlePlaySessionOperation(input: {
     tenure: result.right.tenure,
     identity: input.identity ?? GUEST_ONLY_REQUEST_IDENTITY,
   });
+}
+
+function operationShouldBeRetained(
+  operationName: CharacterToolName | BattleToolName | DiceToolName,
+  content:
+    | ReturnType<typeof errorContent>
+    | {
+        readonly structuredContent?: unknown;
+      },
+): boolean {
+  if (operationName !== diceToolNames.rollDice) return true;
+  const payload =
+    "structuredContent" in content ? content.structuredContent : undefined;
+  const decoded = decodeRollDiceResult(payload);
+  return Either.isRight(decoded) && decoded.right.disposition === "sampled";
+}
+
+function retainedPlaySessionCommand(
+  operationName: CharacterToolName | BattleToolName | DiceToolName,
+  args: Readonly<Record<string, unknown>>,
+): PlaySessionCommand {
+  if (operationName === diceToolNames.rollDice) {
+    const decoded = decodeDiceToolCall({ name: operationName, args });
+    if (Either.isLeft(decoded)) {
+      throw new Error(
+        "A retained successful dice operation no longer decodes as its command.",
+      );
+    }
+    return { name: operationName, args: decoded.right.args };
+  }
+  return { name: operationName, args };
 }
 
 type RoutedArgs = {

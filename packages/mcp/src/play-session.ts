@@ -5,7 +5,7 @@ import { Either, Schema } from "effect";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
-import type { DiceToolName } from "./dice-tool-input.ts";
+import type { DiceToolName, RollDiceRequest } from "./dice-tool-input.ts";
 import type { McpSessionSnapshot } from "./session-store.ts";
 import {
   generatedGuestAccessGrant,
@@ -125,13 +125,18 @@ export type SavedPlaySessionSummary = {
   readonly tenure: Extract<PlaySessionTenureProjection, { tag: "saved" }>;
 };
 
-export type PlaySessionCommand = {
-  readonly name: CharacterToolName | BattleToolName | DiceToolName;
-  readonly args: Readonly<Record<string, unknown>>;
-};
+export type PlaySessionCommand =
+  | {
+      readonly name: CharacterToolName | BattleToolName;
+      readonly args: Readonly<Record<string, unknown>>;
+    }
+  | {
+      readonly name: DiceToolName;
+      readonly args: RollDiceRequest;
+    };
 
 export type PlaySessionCommandRetention<A> = {
-  readonly command: PlaySessionCommand;
+  readonly commandFor: (result: A) => PlaySessionCommand;
   readonly retain: (result: A) => boolean;
   readonly succeeded?: (result: A) => boolean;
 };

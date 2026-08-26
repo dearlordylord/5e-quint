@@ -18,7 +18,7 @@ import {
   type RecoverablePlaySessionRecord,
 } from "./play-session-repository.ts";
 import { runRateAdmission, runSave } from "./sqlite-play-session-actions.ts";
-import { retireUnownedPlaySessionSchema } from "./sqlite-play-session-schema.ts";
+import { preparePlaySessionSchema } from "./sqlite-play-session-schema.ts";
 
 export function openSqlitePlaySessionRepository(
   databasePath: string,
@@ -36,12 +36,15 @@ function createSqlitePlaySessionRepository(
   const database = new DatabaseSync(databasePath);
   database.exec("PRAGMA journal_mode = WAL");
   database.exec("PRAGMA busy_timeout = 5000");
-  retireUnownedPlaySessionSchema(database);
+  preparePlaySessionSchema(database);
   database.exec(`
     CREATE TABLE IF NOT EXISTS play_sessions (
       play_session_id TEXT PRIMARY KEY,
       format_version INTEGER NOT NULL,
-      random_seed TEXT NOT NULL,
+      dice_seed TEXT NOT NULL,
+      dice_group_semantic_profile TEXT NOT NULL,
+      prng_sequence_profile TEXT NOT NULL,
+      state_schema_version INTEGER NOT NULL,
       revision INTEGER NOT NULL,
       operations_json TEXT NOT NULL,
       tenure_kind TEXT NOT NULL CHECK (tenure_kind IN ('guest', 'saved')),
@@ -66,14 +69,17 @@ function createSqlitePlaySessionRepository(
     INSERT OR IGNORE INTO play_sessions (
       play_session_id,
       format_version,
-      random_seed,
+      dice_seed,
+      dice_group_semantic_profile,
+      prng_sequence_profile,
+      state_schema_version,
       revision,
       operations_json,
       tenure_kind,
       guest_access_grant_digest,
       principal_id,
       last_activity_at_ms
-    ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?
+    ) SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
     WHERE (
       ? = 'guest' AND (
         SELECT COUNT(*) FROM play_sessions WHERE tenure_kind = 'guest'
@@ -86,7 +92,8 @@ function createSqlitePlaySessionRepository(
     )
   `);
   const select = database.prepare(`
-    SELECT format_version, random_seed, revision, operations_json,
+    SELECT format_version, dice_seed, dice_group_semantic_profile,
+      prng_sequence_profile, state_schema_version, revision, operations_json,
       tenure_kind, guest_access_grant_digest, principal_id, last_activity_at_ms
     FROM play_sessions
     WHERE play_session_id = ?
@@ -115,7 +122,8 @@ function createSqlitePlaySessionRepository(
       ) < ?
   `);
   const listSaved = database.prepare(`
-    SELECT play_session_id, format_version, random_seed, revision,
+    SELECT play_session_id, format_version, dice_seed,
+      dice_group_semantic_profile, prng_sequence_profile, state_schema_version, revision,
       operations_json, tenure_kind, guest_access_grant_digest, principal_id,
       last_activity_at_ms
     FROM play_sessions
@@ -171,7 +179,10 @@ function createSqlitePlaySessionRepository(
         const result = insert.run(
           record.playSessionId,
           record.formatVersion,
-          record.randomSeed,
+          record.diceReplay.seed.join(""),
+          record.diceReplay.randomSource.diceGroupSemanticProfile,
+          record.diceReplay.randomSource.prngSequenceProfile,
+          record.diceReplay.randomSource.stateSchemaVersion,
           record.revision,
           JSON.stringify(record.operations),
           record.tenure.tag,

@@ -93,13 +93,16 @@ already-finalized result; it never reconstructs both lifecycle owners. Active
 Battle recovery continues the same Character + Goblin Warrior workflow across
 the target, attack-roll, and damage Runtime Holes: the target fill is retained
 before replacement, competing attack-roll fills settle as one `needsHoles` and
-one typed `invalidFill`, the server-correlated damage roll resolves after
+one typed `invalidFill`, the idempotent damage sampling resolves after
 replacement, and another replacement reconstructs the damaged combatant before
 atomic closeout. A final replacement reconstructs the complete available
-Character Session roster with no active Battle. The serialized random seed and
-retained command prefix also have a bounded property test over arbitrary valid
-dice-group sequences: two independently reconstructed owners produce identical
-raw faces for every prefix without a parallel dice cursor.
+Character Session roster with no active Battle. Recoverable records retain the
+DRDice Seed, Dice Group Semantic Profile, PRNG Sequence Profile, State Schema
+Identity, and command prefix. A bounded property test over arbitrary valid Dice
+Groups proves that independently reconstructed owners produce identical faces
+for every prefix without a parallel dice cursor. Opening a format-2 database
+preserves its Effect Random rows in `retired_effect_random_play_sessions_v2`;
+they are not replayed under DRDice semantics.
 The boundary stores only a digest of a guest grant, compares presented grants
 in constant time, and never returns another user's session through list,
 resume, save, or delete. The default limits are 1,000 retained guest sessions,
@@ -298,10 +301,13 @@ The battle-session tool boundary exposes these user-facing tools:
   workflow state: `none`, `initialInitiativeSetup`, or `activeBattle`.
   Character occupancy remains visible through the Character Session read models
   while the SDK setup object or active Battle owns the combat facts.
-- `roll_dice` is an optional independent bounded raw-face roller. It returns
-  server-correlated results, but never derives modifiers or outcomes, inspects
-  or auto-fills Battle holes, retains history, or provides caller idempotency;
-  calculations must use canonical returned facts.
+- `roll_dice` is an optional independent bounded raw-face sampler backed by
+  `@drdice/dice`. It requires a caller UUID: identical retries return the
+  original faces without consuming state, while conflicting reuse is rejected.
+  Results declare the Dice Group, PRNG Sequence, and State Schema profiles. The
+  tool never derives modifiers or outcomes or inspects or auto-fills Battle
+  holes; calculations must use canonical returned facts. DRDice is reproducible
+  non-cryptographic sampling, not commit/reveal or wagering-grade fairness.
 - `discover_battle_acts` returns the current actor's battle acts. The battle
   runtime is the source of truth for which acts are currently available.
 - `fill_battle_hole` submits one fill at a time for a selected battle act

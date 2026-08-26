@@ -4,7 +4,7 @@ import {
   ListToolsRequestSchema,
   type CallToolRequest,
 } from "@modelcontextprotocol/sdk/types.js";
-import { Match, Random } from "effect";
+import { Match } from "effect";
 
 import {
   createMcpApplicationServices,
@@ -16,6 +16,7 @@ import {
 } from "./server.ts";
 import { adminMirrorSessionId } from "./admin-mirror-contract.ts";
 import { errorContent } from "./tool-content.ts";
+import type { DiceSeed } from "./dice-sampling-service.ts";
 import {
   handleCreatePlaySession,
   handleDeleteSavedPlaySession,
@@ -76,12 +77,12 @@ type CommonMcpProtocolServerOptions = {
 
 type ProcessLifetimeMcpProtocolServerOptions =
   CommonMcpProtocolServerOptions & {
-    readonly playSessionRandomFactory?: () => Random.Random;
+    readonly playSessionDiceSeedFactory?: () => DiceSeed;
     readonly playSessionRepository?: undefined;
   };
 
 type RecoverableMcpProtocolServerOptions = CommonMcpProtocolServerOptions & {
-  readonly playSessionRandomFactory?: never;
+  readonly playSessionDiceSeedFactory?: never;
   readonly playSessionRepository: PlaySessionRepository;
 };
 
@@ -318,8 +319,8 @@ function playSessionRegistry(
   }
   return createPlaySessionRegistry({
     createRoot: (playSessionId) => {
-      const random = options.playSessionRandomFactory?.();
-      return random === undefined
+      const diceSeed = options.playSessionDiceSeedFactory?.();
+      return diceSeed === undefined
         ? createMcpPlaySessionRoot(
             applicationServices,
             adminMirrorSessionId(playSessionId),
@@ -327,7 +328,7 @@ function playSessionRegistry(
         : createMcpPlaySessionRoot(
             applicationServices,
             adminMirrorSessionId(playSessionId),
-            random,
+            diceSeed,
           );
     },
     ...(options.playSessionIdFactory === undefined

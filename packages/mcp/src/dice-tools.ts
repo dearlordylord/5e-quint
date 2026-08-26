@@ -1,21 +1,18 @@
-import { randomUUID } from "node:crypto";
-
 import { DieRollResult } from "@dnd/shared/types";
-import { Effect, Match, Random } from "effect";
+import { Effect, Either, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import {
-  diceToolNames,
-  type DiceRollGroup,
-  type DiceToolCall,
-  type RollDiceRequest,
-} from "./dice-tool-input.ts";
+import { diceToolNames, type DiceToolCall } from "./dice-tool-input.ts";
 import {
   RollDiceOutputSchema,
   type RollDiceResult,
 } from "./dice-tool-output.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
+import {
+  DICE_RANDOM_SOURCE,
+  type DiceSampling,
+} from "./dice-sampling-service.ts";
 
 export type DiceToolResult =
   | ReturnType<typeof schemaJsonContent>
@@ -26,9 +23,30 @@ export function handleDiceToolCall(
   call: DiceToolCall,
 ): DiceToolResult {
   return Match.value(call).pipe(
-    Match.when({ name: diceToolNames.rollDice }, ({ args }) =>
-      schemaJsonContent(RollDiceOutputSchema, rollDice(args, root.random)),
-    ),
+    Match.when({ name: diceToolNames.rollDice }, ({ args }) => {
+      const sampled = Effect.runSync(
+        Effect.either(root.diceSampling.sample(args.requestId, args.groups)),
+      );
+      return Either.isLeft(sampled)
+        ? errorContent(sampled.left.message, {
+            code: Match.value(sampled.left.reason).pipe(
+              Match.when(
+                "requestIdConflict",
+                () => "DICE_REQUEST_ID_CONFLICT" as const,
+              ),
+              Match.when(
+                "retentionLimitExceeded",
+                () => "DICE_RETENTION_LIMIT_EXCEEDED" as const,
+              ),
+              Match.when(
+                "samplingFailed",
+                () => "DICE_SAMPLING_FAILED" as const,
+              ),
+              Match.exhaustive,
+            ),
+          })
+        : schemaJsonContent(RollDiceOutputSchema, rollDice(sampled.right));
+    }),
     Match.exhaustive,
   );
 }
@@ -39,47 +57,16 @@ export function handleDiceToolCall(
  * not construct a BattleFill; callers may copy these raw results into the
  * existing typed fill path when a live Runtime Hole requires them.
  */
-export function rollDice(
-  request: RollDiceRequest,
-  random: Random.Random,
-): RollDiceResult {
+export function rollDice(sampling: DiceSampling): RollDiceResult {
   return {
-    correlationId: randomUUID(),
-    groups: mapNonEmpty(request.groups, (group) => ({
-      dieSize: group.dieSize,
-      results: mapNonEmpty(drawGroup(group, random), (result) =>
-        DieRollResult(result),
-      ),
+    requestId: sampling.requestId,
+    disposition: sampling.disposition,
+    randomSource: DICE_RANDOM_SOURCE,
+    groups: mapNonEmpty(sampling.groups, (group) => ({
+      dieSize: group.sideCount,
+      results: mapNonEmpty(group.faces, (result) => DieRollResult(result)),
     })),
   };
-}
-
-function drawGroup(
-  group: DiceRollGroup,
-  random: Random.Random,
-): readonly [number, ...number[]] {
-  const values = Effect.runSync(
-    Effect.withRandom(
-      Effect.map(
-        Effect.all({
-          first: Random.nextIntBetween(1, group.dieSize + 1),
-          rest: Effect.forEach(
-            Array.from({ length: group.dice - 1 }, () => undefined),
-            () => Random.nextIntBetween(1, group.dieSize + 1),
-          ),
-        }),
-        ({ first, rest }) => {
-          const nonEmptyValues: readonly [number, ...number[]] = [
-            first,
-            ...rest,
-          ];
-          return nonEmptyValues;
-        },
-      ),
-      random,
-    ),
-  );
-  return values;
 }
 
 function mapNonEmpty<A, B>(

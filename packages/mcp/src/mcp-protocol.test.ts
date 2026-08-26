@@ -3,7 +3,8 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
 import { describe, expect, test } from "vitest";
-import { Either, Random } from "effect";
+import { Either } from "effect";
+import { decodeDiceSeed, type DiceSeed } from "./dice-sampling-service.ts";
 import { battleRuntimeSessionForTest } from "@dnd/battle-runtime/test-support";
 import { characterId, combatantId } from "@dnd/battle-runtime";
 import {
@@ -629,20 +630,23 @@ describe("MCP protocol server", () => {
     FULL_ACCEPTANCE_TEST_TIMEOUT_MS,
   );
 
-  test("gives each fresh Play Session its own deterministic Random stream", async () => {
+  test("gives each fresh Play Session its own deterministic DRDice stream", async () => {
     const [clientTransport, serverTransport] =
       InMemoryTransport.createLinkedPair();
-    const randomStreams = [Random.fixed([1, 3]), Random.fixed([2, 4])];
+    const diceSeeds: DiceSeed[] = [
+      requireDiceSeed(["00000001", "00000002", "00000003", "00000004"]),
+      requireDiceSeed(["00000005", "00000006", "00000007", "00000008"]),
+    ];
     const { server } = createDndMcpProtocolServer(
       createMcpApplicationServices(),
       undefined,
       {
-        playSessionRandomFactory: () => {
-          const stream = randomStreams.shift();
-          if (stream === undefined) {
+        playSessionDiceSeedFactory: () => {
+          const seed = diceSeeds.shift();
+          if (seed === undefined) {
             throw new Error("Unexpected Play Session construction.");
           }
-          return stream;
+          return seed;
         },
       },
     );
@@ -661,6 +665,7 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: first,
+          requestId: "00000000-0000-4000-8000-000000000101",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
@@ -668,6 +673,7 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: second,
+          requestId: "00000000-0000-4000-8000-000000000102",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
@@ -675,6 +681,7 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: first,
+          requestId: "00000000-0000-4000-8000-000000000103",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
@@ -682,22 +689,26 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId: second,
+          requestId: "00000000-0000-4000-8000-000000000104",
           groups: [{ dice: 1, dieSize: 6 }],
         },
       });
 
       expect(operationResult(firstRoll)).toMatchObject({
-        groups: [{ dieSize: 6, results: [1] }],
+        disposition: "sampled",
       });
       expect(operationResult(secondRoll)).toMatchObject({
-        groups: [{ dieSize: 6, results: [2] }],
+        disposition: "sampled",
       });
       expect(operationResult(firstRollAgain)).toMatchObject({
-        groups: [{ dieSize: 6, results: [3] }],
+        disposition: "sampled",
       });
       expect(operationResult(secondRollAgain)).toMatchObject({
-        groups: [{ dieSize: 6, results: [4] }],
+        disposition: "sampled",
       });
+      expect(operationResult(firstRoll).groups).not.toEqual(
+        operationResult(secondRoll).groups,
+      );
 
       const firstCharacters = await callStructuredTool(client, {
         name: "list_characters",
@@ -893,6 +904,7 @@ describe("MCP protocol server", () => {
         name: "roll_dice",
         arguments: {
           playSessionId,
+          requestId: "00000000-0000-4000-8000-000000000105",
           groups: [{ dice: 1, dieSize: 20 }],
         },
       });
@@ -903,7 +915,12 @@ describe("MCP protocol server", () => {
         throw new Error("Expected typed roll_dice result.");
       }
       const rawDice = operationResult(rawDiceRaw.structuredContent);
-      expect(rawDice.correlationId).toBeTypeOf("string");
+      expect(rawDice.requestId).toBe("00000000-0000-4000-8000-000000000105");
+      expect(rawDice.randomSource).toMatchObject({
+        diceGroupSemanticProfile:
+          "dice-groups-v1/ordered-atomic-rejection-5-blocks-x-5-attempts",
+        stateSchemaVersion: 1,
+      });
       expect(arrayField(rawDice, "groups")[0]).toMatchObject({
         dieSize: 20,
       });
@@ -3593,6 +3610,12 @@ function ajvJsonSchema(schema: unknown): JsonSchemaType {
   // The MCP client has already protocol-decoded this object as a JSON Schema;
   // the assertion only bridges the SDK's readonly tool type to AJV's mutable alias.
   return schema as JsonSchemaType;
+}
+
+function requireDiceSeed(input: readonly [string, string, string, string]) {
+  const decoded = decodeDiceSeed(input);
+  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
+  return decoded.right;
 }
 
 function operationResult(

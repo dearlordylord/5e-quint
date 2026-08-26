@@ -309,7 +309,7 @@ function workflowGuide() {
     limits: [
       "Use discover_creation_holes, list_characters, inspect_character_session, query_character_session, list_stat_blocks, and discover_battle_acts for the currently executable workflows, projections, and acts.",
       "Character creation exposes one draft.progression.initial fill for a progression derived from the runtime's contiguous class-level capabilities; MCP does not expose a later level-1 class-entry fill.",
-      "roll_dice is an optional independent raw-face roller: it returns bounded groups with server correlation only. It does not derive modifiers or outcomes, inspect or auto-fill Battle holes, retain history, or provide caller idempotency; calculations must use canonical returned facts.",
+      "roll_dice is an optional independent raw-face sampler: it returns bounded groups from the declared DRDice semantic profiles and requires a caller idempotency key. It does not derive modifiers or outcomes, inspect or auto-fill Battle holes, or retain Battle history; calculations must use canonical returned facts.",
       "Character Session queries do not persist derived facts, expose generic out-of-Battle casting, maintain a spell ledger, or add search, pagination, indexing, or recommendation infrastructure.",
       "Revival workflows beyond the typed zero-HP character closeout remain unsupported.",
     ],

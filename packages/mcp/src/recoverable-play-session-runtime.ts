@@ -28,7 +28,7 @@ import {
   type PlaySessionRunResult,
 } from "./play-session.ts";
 import type {
-  PlaySessionRandomSeed,
+  PlaySessionDiceReplay,
   PlaySessionRepository,
   RecoverablePlaySessionRecord,
 } from "./play-session-repository.ts";
@@ -41,7 +41,7 @@ export type RecoverableRegistryInput = {
   readonly repository: PlaySessionRepository;
   readonly playSessionIdFactory: PlaySessionIdFactory;
   readonly guestAccessGrantFactory?: GuestAccessGrantFactory;
-  readonly randomSeedFactory?: () => PlaySessionRandomSeed;
+  readonly diceReplayFactory?: () => PlaySessionDiceReplay;
   readonly now?: () => EpochMilliseconds;
   readonly maximumGuestSessions?: number;
   readonly maximumRetainedCommandsPerSession?: number;

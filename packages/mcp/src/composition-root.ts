@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
@@ -13,7 +12,6 @@ import {
   CHARACTER_CREATION_SUPPORT_PROFILE,
   type CharacterCreationSupportProfile,
 } from "@dnd/character-creation-runtime";
-import { Random } from "effect";
 
 import {
   createHttpAdminMirrorPublisher,
@@ -30,6 +28,12 @@ import {
   createMcpSessionStore,
   type McpSessionStore,
 } from "./session-store.ts";
+import {
+  createDiceSamplingService,
+  generatedDiceSeed,
+  type DiceSeed,
+  type DiceSamplingService,
+} from "./dice-sampling-service.ts";
 
 export type McpApplicationServices = {
   readonly unitLibrary: UnitCatalog;
@@ -44,7 +48,7 @@ export type McpApplicationServices = {
 export type McpPlaySessionRoot = McpApplicationServices & {
   readonly sessionStore: McpSessionStore;
   readonly adminMirrorPublication: AdminMirrorPublication;
-  readonly random: Random.Random;
+  readonly diceSampling: DiceSamplingService;
 };
 
 export function createMcpApplicationServices(
@@ -89,7 +93,7 @@ export function createMcpApplicationServices(
 export function createMcpPlaySessionRoot(
   applicationServices: McpApplicationServices = createMcpApplicationServices(),
   mirrorSessionId: AdminMirrorSessionId = applicationServices.configuredAdminMirrorSessionId,
-  random: Random.Random = Random.make(randomBytes(32).toString("hex")),
+  diceSeed: DiceSeed = generatedDiceSeed(),
 ): McpPlaySessionRoot {
   return {
     ...applicationServices,
@@ -99,7 +103,7 @@ export function createMcpPlaySessionRoot(
     }),
     adminMirrorPublication:
       applicationServices.createAdminMirrorPublication(mirrorSessionId),
-    random,
+    diceSampling: createDiceSamplingService(diceSeed),
   };
 }
 

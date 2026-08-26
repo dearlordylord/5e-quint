@@ -1,5 +1,6 @@
 import { Effect, Either } from "effect";
 import { describe, expect, test } from "vitest";
+import { decodeDiceRollRequestId } from "./dice-tool-input.ts";
 
 import {
   createMcpApplicationServices,
@@ -223,7 +224,15 @@ describe("Play Session operation scheduling", () => {
     nowMs = GUEST_INACTIVITY_RETENTION_MS - 1;
     expect(
       await registry.run(guest.playSessionId, guest.caller, () => "failed", {
-        command: { name: "roll_dice", args: {} },
+        commandFor: () => ({
+          name: "roll_dice",
+          args: {
+            requestId: requireDiceRollRequestId(
+              "00000000-0000-4000-8000-000000000401",
+            ),
+            groups: [{ dice: 1, dieSize: 6 }],
+          },
+        }),
         retain: () => false,
         succeeded: () => false,
       }),
@@ -262,6 +271,12 @@ function createdGuestPlaySession(registry: PlaySessionRegistry) {
 
 function testEpochMilliseconds(input: number) {
   const decoded = decodeEpochMilliseconds(input);
+  if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
+  return decoded.right;
+}
+
+function requireDiceRollRequestId(input: string) {
+  const decoded = decodeDiceRollRequestId(input);
   if (Either.isLeft(decoded)) throw new Error(decoded.left.message);
   return decoded.right;
 }

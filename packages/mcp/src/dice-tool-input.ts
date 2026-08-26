@@ -38,7 +38,18 @@ export const DiceRollGroupSchema = Schema.Struct({
     "One structured dice group. Groups are rolled in the order supplied.",
 });
 
+export const DiceRollRequestIdSchema = Schema.UUID.pipe(
+  Schema.brand("DiceRollRequestId"),
+).annotations({
+  description:
+    "Caller-generated idempotency key. Reusing it with identical groups returns the original faces; reusing it with different groups is rejected.",
+});
+export const decodeDiceRollRequestId = Schema.decodeUnknownEither(
+  DiceRollRequestIdSchema,
+);
+
 export const RollDiceArgsSchema = Schema.Struct({
+  requestId: DiceRollRequestIdSchema,
   groups: Schema.NonEmptyArray(DiceRollGroupSchema).pipe(
     Schema.maxItems(MAX_DICE_GROUPS_PER_CALL),
   ),
@@ -55,6 +66,7 @@ export const DICE_TOOL_NAMES = [diceToolNames.rollDice] as const;
 export type DiceToolName = (typeof DICE_TOOL_NAMES)[number];
 
 export type DiceRollGroup = typeof DiceRollGroupSchema.Type;
+export type DiceRollRequestId = (typeof RollDiceArgsSchema.Type)["requestId"];
 export type RollDiceRequest = typeof RollDiceArgsSchema.Type;
 
 export type DiceToolCall = {

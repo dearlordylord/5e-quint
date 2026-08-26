@@ -361,7 +361,11 @@
         },
         {
           "toolName": "roll_dice",
-          "pathSegments": ["operation", "result", "correlationId"]
+          "pathSegments": ["operation", "result", "requestId"]
+        },
+        {
+          "toolName": "roll_dice",
+          "pathSegments": ["operation", "result", "randomSource"]
         }
       ],
       "mcpEvidence": {

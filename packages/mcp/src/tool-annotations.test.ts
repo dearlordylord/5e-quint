@@ -44,7 +44,7 @@ const expectedAnnotations = {
   resolve_battle_act: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   end_turn: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
   end_battle: DESTRUCTIVE_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-  roll_dice: NON_DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
+  roll_dice: IDEMPOTENT_NON_DESTRUCTIVE_CLOSED_WORLD_TOOL_ANNOTATIONS,
 } as const;
 const expectedAnnotationByName = new Map(Object.entries(expectedAnnotations));
 const expectedTitles = {

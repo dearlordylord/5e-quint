@@ -383,7 +383,7 @@ const agentConversationScenarios = [
       "It chooses an available act, copies its subject exactly, fills targetChoice, then attackRoll, then rolledDice using the holeIds requested by the runtime. If the result says needsHoles, it continues the same subject; if resolved, it rediscovers or ends turn.",
     executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
-      "Battle fill shapes are schema-discoverable. The optional roll_dice tool returns bounded independent raw faces with server correlation; it does not derive modifiers, outcomes, holes, auto-fill, history, or idempotency.",
+      "Battle fill shapes are schema-discoverable. The optional roll_dice tool returns bounded independent raw faces with caller-owned idempotency and explicit random-source profiles; it does not derive modifiers, outcomes, holes, auto-fill, or battle history.",
   },
   {
     id: "use-action-surge",
@@ -1085,12 +1085,15 @@ export async function verifyCompleteNewcomerJourney(client: Client) {
   });
 
   const dice = await callTool(client, "roll_dice", {
+    requestId: "10000000-0000-4000-8000-000000000001",
     groups: [
       { dice: 1, dieSize: 20 },
       { dice: 2, dieSize: 6 },
     ],
   });
-  assert.equal(typeof get(dice, "correlationId"), "string");
+  assert.equal(get(dice, "requestId"), "10000000-0000-4000-8000-000000000001");
+  assert.equal(get(dice, "disposition"), "sampled");
+  assert.equal(typeof get(dice, "randomSource"), "object");
   assert.deepEqual(
     jsonObjectArrayAt(dice, "groups").map((group) => group.dieSize),
     [20, 6],

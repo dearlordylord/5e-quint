@@ -100,7 +100,7 @@ describe("public HTTP boundary", () => {
         environment: "staging",
         release: "git:0123456789abcdef",
         publisher: "Verified Publisher",
-        storageFormatVersion: 2,
+        storageFormatVersion: 3,
       });
       const challenge = await fetch(
         new URL("/.well-known/openai-apps-challenge", endpoint),
