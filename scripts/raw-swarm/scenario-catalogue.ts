@@ -328,7 +328,7 @@ export function projectRawSwarmCatalogue(
     /** Current admitted Scenarios available to future authoring. */
     readonly scenarios: readonly ScenarioCatalogueSource[];
     /** Immutable admitted authorities retained only for historical validation. */
-    readonly containedScenarios?: readonly ScenarioCatalogueSource[];
+    readonly containedScenarios: readonly ScenarioCatalogueSource[];
     readonly executions: readonly ScenarioExecutionRecord[];
     /** Profile records remain distinct from ordinary execution records. */
     readonly executionProfiles?: readonly BenchmarkExecutionProfileDescriptor[];
@@ -337,7 +337,7 @@ export function projectRawSwarmCatalogue(
   }>,
 ): Either.Either<RawSwarmCatalogue, NonEmptyIssues<ScenarioCatalogueFailure>> {
   const issues: ScenarioCatalogueFailure[] = [];
-  const containedScenarioSources = input.containedScenarios ?? [];
+  const containedScenarioSources = input.containedScenarios;
   const allScenarioSources = [...input.scenarios, ...containedScenarioSources];
   const executionRecords: readonly ScenarioExecutionRecord[] = [
     ...input.executions,

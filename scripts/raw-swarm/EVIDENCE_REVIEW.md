@@ -27,8 +27,9 @@ For a new Campaign, inspect the existing authorities named by its manifest and
 findings projection:
 
 - the final Scenario review, including `catalogueComparison`;
-- the admitted `.scenario.json` record and its source/review/stage-facts
-  authorities;
+- the live admitted `.scenario.json` record and its source/review/stage-facts
+  authorities; contained authorities remain historical validation inputs, not
+  live catalogue entries (see the [package vocabulary](README.md#vocabulary));
 - the candidate or admitted stage plan and stage-plan findings;
 - the generation invocation ledger and its first-party event streams; and
 - for a rejection, the Candidate prose, Candidate review, and rejection record.
@@ -43,10 +44,14 @@ invalid. Do not create a second comparison file, registry, or copied catalogue
 record to repair missing fields; reject the authoring evidence and send it
 through the existing Campaign revision path.
 
-The catalogue itself remains derived from canonical admission records and
-referenced authorities. A later operator can inspect a closest match by its
-Scenario id and the existing record; the comparison field is an explanation of
-the admission decision, not a new source of mechanics or support facts.
+The catalogue itself is the live admitted-Scenario projection derived from
+canonical live admission records and referenced authorities. Contained Scenario
+authorities remain available for validating immutable historical relationships,
+but are excluded from live authoring and comparison; see the [package
+vocabulary](README.md#vocabulary). A later operator can inspect a closest match
+by its Scenario id and the existing record; the comparison field is an
+explanation of the admission decision, not a new source of mechanics or support
+facts.
 
 ## Bounded review reads
 

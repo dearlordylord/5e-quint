@@ -389,6 +389,7 @@ describe("Raw Swarm scenario catalogue", () => {
     } satisfies AdmittedScenarioRecord;
     const result = projectRawSwarmCatalogue({
       scenarios: [{ ...record, ...projectedFacts }],
+      containedScenarios: [],
       executions: [
         {
           schemaVersion: 1,
@@ -442,6 +443,7 @@ describe("Raw Swarm scenario catalogue", () => {
 
     const projected = projectRawSwarmCatalogue({
       scenarios: [{ ...record, ...projectedFacts }],
+      containedScenarios: [],
       executions: [
         {
           schemaVersion: 1,
@@ -503,6 +505,7 @@ describe("Raw Swarm scenario catalogue", () => {
 
     const renamedExecution = projectRawSwarmCatalogue({
       scenarios: [{ ...record, ...projectedFacts }],
+      containedScenarios: [],
       executions: [
         {
           schemaVersion: 1,
@@ -548,6 +551,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source, source],
+        containedScenarios: [],
         executions: [],
         benchmarks: [],
         rejectedCandidates: [],
@@ -560,6 +564,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source, source],
+        containedScenarios: [],
         executions: [
           {
             schemaVersion: 1,
@@ -580,6 +585,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source],
+        containedScenarios: [],
         executions: [
           {
             schemaVersion: 1,
@@ -599,6 +605,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source],
+        containedScenarios: [],
         executions: [],
         benchmarks: [
           {
@@ -628,6 +635,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source],
+        containedScenarios: [],
         executions: [],
         benchmarks: [],
         rejectedCandidates: [rejection, rejection],
@@ -640,6 +648,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source],
+        containedScenarios: [],
         executions: [
           {
             schemaVersion: 1,
@@ -666,6 +675,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source, otherSource],
+        containedScenarios: [],
         executions: [
           {
             schemaVersion: 1,
@@ -701,6 +711,7 @@ describe("Raw Swarm scenario catalogue", () => {
     expect(
       projectRawSwarmCatalogue({
         scenarios: [source],
+        containedScenarios: [],
         executions: [
           {
             schemaVersion: 1,
@@ -763,6 +774,7 @@ describe("Raw Swarm scenario catalogue", () => {
               ...scenario,
               ...projectedFacts,
             })),
+            containedScenarios: [],
             executions: [],
             benchmarks: [],
             rejectedCandidates: [],
@@ -831,6 +843,7 @@ describe("Raw Swarm scenario catalogue", () => {
           );
           const base = {
             scenarios: [{ ...record, ...projectedFacts }],
+            containedScenarios: [],
             executions,
             rejectedCandidates: [],
           } as const;
