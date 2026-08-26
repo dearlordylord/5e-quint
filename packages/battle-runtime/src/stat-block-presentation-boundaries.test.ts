@@ -17,12 +17,13 @@ import {
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { attackExecutionDamageType } from "./battle-action-options.ts";
 import {
   attackActionOptionPresentationName,
   battleCreaturePresentationDisplayName,
-  statBlockLanguagePresentation,
+  statBlockProjectionIssuesForActor,
   statBlockProcedurePresentationsForActor,
 } from "./stat-block-presentation.ts";
 
@@ -37,30 +38,13 @@ function presentationSession() {
 }
 
 describe("battle presentation joins", () => {
-  test("projects every Stat Block language source shape", () => {
+  test("projects authored Stat Block communication into presentation context", () => {
     const source = statBlockRecord();
-    const { languages: _languages, ...withoutLanguages } = source.statBlock;
+    const projected = Either.getOrThrow(projectAuthoredStatBlock(source));
 
-    expect(
-      statBlockLanguagePresentation({
-        ...source,
-        statBlock: withoutLanguages,
-      }),
-    ).toEqual({ kind: "absentStatBlockLanguages" });
-    expect(
-      statBlockLanguagePresentation({
-        ...source,
-        statBlock: { ...source.statBlock, languages: "caster_languages" },
-      }),
-    ).toEqual({ kind: "casterLanguagesReference" });
-    expect(
-      statBlockLanguagePresentation({
-        ...source,
-        statBlock: { ...source.statBlock, languages: ["Common"] },
-      }),
-    ).toEqual({
-      kind: "authoredStatBlockLanguageEntries",
-      entries: ["Common"],
+    expect(projected.presentation).toMatchObject({
+      displayName: source.name,
+      communication: source.statBlock.communication,
     });
   });
 
@@ -97,7 +81,7 @@ describe("battle presentation joins", () => {
     ).toBeNull();
   });
 
-  test("distinguishes missing Stat Block admission from a missing procedure presentation", () => {
+  test("reports a typed issue when a procedure presentation misses its binding", () => {
     const session = presentationSession();
     const subject = goblinAttackSubject(session.state, "Scimitar");
     const actor = session.state.combatants.get(goblinId);
@@ -111,7 +95,6 @@ describe("battle presentation joins", () => {
       throw new Error("Expected Goblin attack execution.");
     }
     expect(attackExecutionDamageType(attack)).toBeUndefined();
-
     expect(
       attackActionOptionPresentationName(
         session.state,
@@ -130,23 +113,44 @@ describe("battle presentation joins", () => {
     if (source === undefined) {
       throw new Error("Expected Goblin presentation source.");
     }
-    const contextWithoutProcedures = battleRuntimeContextForTest(
+    const firstProcedure = source.orderedProcedures[0];
+    if (firstProcedure === undefined) {
+      throw new Error("Expected Goblin procedure presentation.");
+    }
+    const contextWithMissingProcedure = battleRuntimeContextForTest(
       session.context.characters,
-      new Map([[goblinId, { ...source, procedures: [] }]]),
+      new Map([
+        [
+          goblinId,
+          {
+            ...source,
+            orderedProcedures: [
+              {
+                ...firstProcedure,
+                procedureOrdinal: firstProcedure.procedureOrdinal + 100,
+              },
+            ],
+          },
+        ],
+      ]),
     );
     expect(
-      attackActionOptionPresentationName(
+      statBlockProjectionIssuesForActor(
         session.state,
-        contextWithoutProcedures,
+        contextWithMissingProcedure,
         goblinId,
-        attack,
       ),
-    ).toEqual(
-      Either.left({
-        tag: "attackPresentationJoinIssue",
-        reason: "statBlockPresentationMissing",
-      }),
-    );
+    ).toEqual([
+      {
+        tag: "statBlockProjectionIssue",
+        source: {
+          kind: "action",
+          section: firstProcedure.section,
+          shape: "attack",
+          nonExecutableReason: "unsupportedActionShape",
+        },
+      },
+    ]);
   });
 
   test("reports a missing authored weapon source separately from character context", () => {
