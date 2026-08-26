@@ -6938,6 +6938,14 @@ export const BATTLE_INVALID_REASON_CODES = [
 export type BattleInvalidReasonCode =
   (typeof BATTLE_INVALID_REASON_CODES)[number];
 
+export type BattleResolutionCheckpointBoundary =
+  | { readonly kind: "durableInterruptCheckpoint" }
+  | { readonly kind: "durableContinuationCheckpoint" };
+
+export const DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY = {
+  kind: "durableContinuationCheckpoint",
+} as const satisfies BattleResolutionCheckpointBoundary;
+
 export type BattleResolutionResult =
   | {
       readonly tag: "resolved";
@@ -6957,6 +6965,8 @@ export type BattleResolutionResult =
       readonly subject: BattleSubject;
       readonly holes: readonly BattleHole[];
       readonly snapshot: BattleSnapshot;
+      /** Set when this result advances the runtime's durable checkpoint. */
+      readonly checkpointBoundary?: BattleResolutionCheckpointBoundary;
       readonly routeEvents?: BattleReducerRouteEvents;
     }
   | {

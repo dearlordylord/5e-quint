@@ -6,6 +6,7 @@ import {
   attackRollFill,
   battleId,
   characterSeed,
+  damageRollFill,
   fighterAttackSubject,
   findHole,
   goblinId,
@@ -36,6 +37,7 @@ describe("battle runtime ordinary continuation replay", () => {
     expect(initial.tag).toBe("needsHoles");
     if (initial.tag !== "needsHoles") return;
     expect(initial.session).toBe(session);
+    expect(initial.checkpointBoundary).toEqual({ kind: "ordinaryReplay" });
     expect(initial.snapshot).toEqual(committedSnapshot);
 
     const target = attackInitialTargetHole(session.state, subject);
@@ -48,6 +50,7 @@ describe("battle runtime ordinary continuation replay", () => {
     expect(afterTarget.tag).toBe("needsHoles");
     if (afterTarget.tag !== "needsHoles") return;
     expect(afterTarget.session).toBe(session);
+    expect(afterTarget.checkpointBoundary).toEqual({ kind: "ordinaryReplay" });
     expect(afterTarget.snapshot).toEqual(committedSnapshot);
     expect(afterTarget.holes).toEqual(
       expect.arrayContaining([expect.objectContaining({ kind: "attackRoll" })]),
@@ -82,5 +85,27 @@ describe("battle runtime ordinary continuation replay", () => {
       snapshot: committedSnapshot,
       holes: afterTarget.holes,
     });
+
+    const acceptedAttackRoll = attackRollFill(attackRoll, {
+      total: 18,
+      naturalD20: 12,
+    });
+    const afterAttackRoll = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [selectedTarget, acceptedAttackRoll],
+    });
+    expect(afterAttackRoll.tag).toBe("needsHoles");
+    if (afterAttackRoll.tag !== "needsHoles") return;
+    expect(afterAttackRoll.session).toBe(session);
+    expect(afterAttackRoll.snapshot).toEqual(committedSnapshot);
+
+    const damage = findHole(afterAttackRoll.holes, "rolledDice");
+    const resolved = resolveBattleRuntimeSubject({
+      session,
+      subject,
+      fills: [selectedTarget, acceptedAttackRoll, damageRollFill(damage, 5)],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
   });
 });

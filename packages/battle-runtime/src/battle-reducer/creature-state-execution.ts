@@ -181,7 +181,7 @@ export function combatantSnapshot(
   combatant: BattleCreatureState,
 ): BattleCreatureSnapshot {
   const sourceGrapple = grappledBy(state, combatant.combatantId) ?? null;
-  const common = {
+  const common: Omit<BattleCreatureSnapshot, "origin"> = {
     combatantId: combatant.combatantId,
     initiative: combatant.initiative,
     hp: combatant.hp,
@@ -205,9 +205,17 @@ export function combatantSnapshot(
     ammunitionStocks: combatant.ammunitionStocks,
   };
   const origin = combatantOriginSnapshot(combatant);
-  return origin.kind === "character"
-    ? { ...common, origin }
-    : { ...common, origin };
+  return Match.value(origin).pipe(
+    Match.when({ kind: "character" }, (characterOrigin) => ({
+      ...common,
+      origin: characterOrigin,
+    })),
+    Match.when({ kind: "statBlock" }, (statBlockOrigin) => ({
+      ...common,
+      origin: statBlockOrigin,
+    })),
+    Match.exhaustive,
+  );
 }
 
 type BattleCreatureOriginProjection =

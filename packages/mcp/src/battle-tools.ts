@@ -123,29 +123,28 @@ export function handleBattleToolCall(
       }
 
       const fills = [...(previous?.fills ?? []), matched.args.fill];
-      const isInterruptDecision =
-        matched.args.fill.kind === "interruptDecision";
-      const replaySession = isInterruptDecision
-        ? visibleSession.right
-        : (previous?.baseSession ?? visibleSession.right);
-      const result = isInterruptDecision
-        ? resolveBattleRuntimeInterrupt({
-            session: replaySession,
-            fill: matched.args.fill,
-          })
-        : resolveBattleRuntimeSubject({
-            session: replaySession,
-            subject,
-            fills,
-            statBlockCatalog: root.statBlockCatalog,
-          });
+      const replaySession =
+        matched.args.fill.kind === "interruptDecision"
+          ? visibleSession.right
+          : (previous?.baseSession ?? visibleSession.right);
+      const result =
+        matched.args.fill.kind === "interruptDecision"
+          ? resolveBattleRuntimeInterrupt({
+              session: replaySession,
+              fill: matched.args.fill,
+            })
+          : resolveBattleRuntimeSubject({
+              session: replaySession,
+              subject,
+              fills,
+              statBlockCatalog: root.statBlockCatalog,
+            });
       const pendingTransaction = pendingTransactionForResult({
         result,
         filledSubject: subject,
         previous,
         fills,
         replaySession,
-        isInterruptDecision,
       });
       return storedBattleResolutionContent(root, result, pendingTransaction);
     }),
@@ -173,7 +172,6 @@ export function handleBattleToolCall(
             previous: null,
             fills: [],
             replaySession: state.right,
-            isInterruptDecision: false,
           }),
         );
       }
@@ -207,7 +205,6 @@ export function handleBattleToolCall(
           previous: null,
           fills: [],
           replaySession: state.right,
-          isInterruptDecision: false,
         }),
       );
     }),
@@ -240,7 +237,6 @@ export function handleBattleToolCall(
           previous: null,
           fills: [],
           replaySession: state.right,
-          isInterruptDecision: false,
         }),
       );
     }),

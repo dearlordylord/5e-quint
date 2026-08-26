@@ -18,6 +18,7 @@ import type {
   BattleState,
   BattleTargetSpatialFact,
 } from "../battle-state-execution.ts";
+import { DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY } from "../battle-state-execution.ts";
 import type {
   BattleAttackResolvers,
   BattleAttackRouteResolvers,
@@ -177,9 +178,12 @@ export function resumeInterruptedProcedure(
           ),
         ],
       };
-      return needsHolesResult(pendingState, continuation.participant, [
-        concentrationPending,
-      ]);
+      return needsHolesResult(
+        pendingState,
+        continuation.participant,
+        [concentrationPending],
+        DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
+      );
     }
     const continuationConcentrationSavingThrows =
       attackDamageContinuationConcentrationFills(continuation);
@@ -528,7 +532,12 @@ function resolveAttackDamageContinuationCunningStrike(input: {
         pendingFrame,
       ],
     };
-    return needsHolesResult(pendingState, input.subject, resolved.holes);
+    return needsHolesResult(
+      pendingState,
+      input.subject,
+      resolved.holes,
+      DURABLE_CONTINUATION_CHECKPOINT_BOUNDARY,
+    );
   }
   return openAttackDamageAfterDamageSequence({
     state: resolved.state,

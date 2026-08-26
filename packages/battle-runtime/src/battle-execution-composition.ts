@@ -42,8 +42,8 @@ import type { BattleInterruptTrigger } from "./battle-interrupt-triggers.ts";
 import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import { discoverBattleActCandidatesWithExecutionRegistry } from "./battle-reducer/battle-discovery.ts";
 import {
-  battleSnapshotProjectionWithExecutionRegistry,
-  snapshotBattleWithExecutionRegistry,
+  battleSnapshotProjection as battleSnapshotProjectionFromState,
+  snapshotBattle as snapshotBattleFromState,
 } from "./battle-reducer/battle-snapshot.ts";
 import type { FindFamiliarWithin100FeetFact } from "./find-familiar-telepathy.ts";
 import type { CombatantId } from "./identity.ts";
@@ -71,7 +71,6 @@ export function resolveAdmittedBattleSubject(
       BATTLE_ATTACK_ROUTE_RESOLVERS,
       handledInterruptTrigger === undefined ? {} : { handledInterruptTrigger },
     ),
-    executionRegistry,
     handledInterruptTrigger,
   );
 }
@@ -88,7 +87,6 @@ export function resolveBattleInterrupt(input: {
       executionRegistry,
       BATTLE_ATTACK_ROUTE_RESOLVERS,
     ),
-    executionRegistry,
   );
 }
 
@@ -97,11 +95,9 @@ export function resolveAdmittedFindFamiliarReappearanceSubject(
     typeof resolveAdmittedFindFamiliarReappearanceSubjectStateOnly
   >[0],
 ): BattleResolutionResult {
-  const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.admission.state,
     resolveAdmittedFindFamiliarReappearanceSubjectStateOnly(input),
-    executionRegistry,
   );
 }
 
@@ -143,7 +139,6 @@ export function endTurn(input: {
       executionRegistry,
       BATTLE_ATTACK_ROUTE_RESOLVERS,
     ),
-    executionRegistry,
   );
 }
 
@@ -162,10 +157,7 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
       tag: "invalid",
       reason: "unsupportedActOption",
       message: "Find Familiar touch delivery requires an immediate spell cast.",
-      snapshot: snapshotBattleWithExecutionRegistry(
-        input.state,
-        executionRegistry,
-      ),
+      snapshot: snapshotBattleFromState(input.state),
     };
   }
   const subject: Extract<
@@ -208,59 +200,44 @@ export function deliverTouchSpellThroughFindFamiliar(input: {
       ),
       "uncommitted",
     ),
-    executionRegistry,
   );
 }
 
 export function shareFindFamiliarSenses(
   input: Parameters<typeof shareFindFamiliarSensesStateOnly>[0],
 ): BattleResolutionResult {
-  const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.state,
     shareFindFamiliarSensesStateOnly(input),
-    executionRegistry,
   );
 }
 
 export function openCreatureFallsInterruptWindow(
   input: Parameters<typeof openCreatureFallsInterruptWindowStateOnly>[0],
 ): BattleResolutionResult {
-  const executionRegistry = spellProcedureExecutionRegistry();
   return battleResolutionWithExecutionSnapshot(
     input.state,
     openCreatureFallsInterruptWindowStateOnly(input),
-    executionRegistry,
   );
 }
 
 export function resolveFeatherFallLanding(
   input: Parameters<typeof resolveFeatherFallLandingStateOnly>[0],
 ): ReturnType<typeof resolveFeatherFallLandingStateOnly> {
-  const executionRegistry = spellProcedureExecutionRegistry();
-  return resultWithExecutionSnapshot(
-    resolveFeatherFallLandingStateOnly(input),
-    executionRegistry,
-  );
+  return resultWithExecutionSnapshot(resolveFeatherFallLandingStateOnly(input));
 }
 
 export function resolveFallDamageLanding(
   input: Parameters<typeof resolveFallDamageLandingStateOnly>[0],
 ): ReturnType<typeof resolveFallDamageLandingStateOnly> {
-  const executionRegistry = spellProcedureExecutionRegistry();
-  return resultWithExecutionSnapshot(
-    resolveFallDamageLandingStateOnly(input),
-    executionRegistry,
-  );
+  return resultWithExecutionSnapshot(resolveFallDamageLandingStateOnly(input));
 }
 
 export function resolveFlySpeedGrantEndFallCleanup(
   input: Parameters<typeof resolveFlySpeedGrantEndFallCleanupStateOnly>[0],
 ): ReturnType<typeof resolveFlySpeedGrantEndFallCleanupStateOnly> {
-  const executionRegistry = spellProcedureExecutionRegistry();
   return resultWithExecutionSnapshot(
     resolveFlySpeedGrantEndFallCleanupStateOnly(input),
-    executionRegistry,
   );
 }
 
@@ -283,7 +260,6 @@ export function resolveReplayContinuationFromState(
       fills,
       execution: replayContinuationExecution(executionRegistry),
     }),
-    executionRegistry,
   );
 }
 
@@ -312,26 +288,20 @@ export function discoverBattleActCandidates(
 }
 
 export function battleSnapshotProjection(state: BattleState): {
-  readonly snapshot: ReturnType<typeof snapshotBattleWithExecutionRegistry>;
+  readonly snapshot: ReturnType<typeof snapshotBattleFromState>;
 } {
-  const executionRegistry = spellProcedureExecutionRegistry();
-  return battleSnapshotProjectionWithExecutionRegistry(
-    state,
-    executionRegistry,
-  );
+  return battleSnapshotProjectionFromState(state);
 }
 
 export function snapshotBattle(
   state: BattleState,
-): ReturnType<typeof snapshotBattleWithExecutionRegistry> {
-  const executionRegistry = spellProcedureExecutionRegistry();
-  return snapshotBattleWithExecutionRegistry(state, executionRegistry);
+): ReturnType<typeof snapshotBattleFromState> {
+  return snapshotBattleFromState(state);
 }
 
 function battleResolutionWithExecutionSnapshot(
   inputState: BattleState,
   result: BattleResolutionResult,
-  executionRegistry: ReturnType<typeof spellProcedureExecutionRegistry>,
   handledInterruptTrigger?: BattleInterruptTrigger,
 ): BattleResolutionResult {
   const resolvedSubjectPhase =
@@ -369,10 +339,7 @@ function battleResolutionWithExecutionSnapshot(
         };
   const snapshotState =
     phasedResult.tag === "invalid" ? inputState : phasedResult.state;
-  const snapshot = snapshotBattleWithExecutionRegistry(
-    snapshotState,
-    executionRegistry,
-  );
+  const snapshot = snapshotBattleFromState(snapshotState);
   return {
     ...phasedResult,
     snapshot,
@@ -444,15 +411,9 @@ function resultWithExecutionSnapshot<
     readonly state: BattleState;
     readonly snapshot: BattleSnapshot;
   },
->(
-  result: Result,
-  executionRegistry: ReturnType<typeof spellProcedureExecutionRegistry>,
-): Result {
+>(result: Result): Result {
   return {
     ...result,
-    snapshot: snapshotBattleWithExecutionRegistry(
-      result.state,
-      executionRegistry,
-    ),
+    snapshot: snapshotBattleFromState(result.state),
   };
 }

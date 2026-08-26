@@ -25,6 +25,7 @@ import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
 import type {
   BattleFill,
   BattleHole,
+  BattleResolutionCheckpointBoundary,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSnapshot,
@@ -58,6 +59,10 @@ type NeedsHolesBattleResult = Extract<
   { readonly tag: "needsHoles" }
 >;
 
+export type BattleRuntimeCheckpointBoundary =
+  | BattleResolutionCheckpointBoundary
+  | { readonly kind: "ordinaryReplay" };
+
 export type BattleRuntimeResolutionResult =
   | {
       readonly tag: "resolved";
@@ -77,6 +82,7 @@ export type BattleRuntimeResolutionResult =
       readonly subject: NeedsHolesBattleResult["subject"];
       readonly holes: NeedsHolesBattleResult["holes"];
       readonly snapshot: NeedsHolesBattleResult["snapshot"];
+      readonly checkpointBoundary: BattleRuntimeCheckpointBoundary;
       readonly routeEvents?: BattleReducerRouteEvents;
     }
   | {
@@ -367,15 +373,26 @@ function battleRuntimeResolutionFromMechanical(
           ...optionalProperty("routeEvents", outcome.routeEvents),
         };
       }
-      const checkpointSession =
-        checkpointMode === "interrupt" ||
-        session.state.interruptStack.length !== state.interruptStack.length
-          ? battleRuntimeSessionWithState(session, state)
-          : session;
+      const checkpointBoundary =
+        outcome.checkpointBoundary ??
+        (checkpointMode === "interrupt"
+          ? { kind: "durableInterruptCheckpoint" as const }
+          : { kind: "ordinaryReplay" as const });
+      const checkpointSession = Match.value(checkpointBoundary.kind).pipe(
+        Match.when("ordinaryReplay", () => session),
+        Match.when("durableInterruptCheckpoint", () =>
+          battleRuntimeSessionWithState(session, state),
+        ),
+        Match.when("durableContinuationCheckpoint", () =>
+          battleRuntimeSessionWithState(session, state),
+        ),
+        Match.exhaustive,
+      );
       return {
         ...outcome,
         session: checkpointSession,
         snapshot: snapshotBattle(checkpointSession.state),
+        checkpointBoundary,
       };
     }),
     byBattleResolutionTag("invalid", (outcome) => ({

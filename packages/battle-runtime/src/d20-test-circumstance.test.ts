@@ -806,6 +806,12 @@ describe("Table-authored per-test D20 circumstances", () => {
     });
     expect(concentrationStage.tag).toBe("needsHoles");
     if (concentrationStage.tag !== "needsHoles") return;
+    expect(concentrationStage.checkpointBoundary).toEqual({
+      kind: "durableContinuationCheckpoint",
+    });
+    expect(
+      concentrationStage.session.state.interruptStack.at(-1),
+    ).toMatchObject({ kind: "attackDamageContinuationConcentration" });
     const concentrationHole = concentrationStage.holes.find(
       (hole) => hole.kind === "concentrationSavingThrow",
     );

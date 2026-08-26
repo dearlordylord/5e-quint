@@ -19,14 +19,12 @@ export function pendingTransactionForResult({
   previous,
   fills,
   replaySession,
-  isInterruptDecision,
 }: {
   readonly result: BattleRuntimeResolutionResult;
   readonly filledSubject: BattleFillSession["subject"];
   readonly previous: PendingBattleFillSession | null;
   readonly fills: readonly BattleFill[];
   readonly replaySession: BattleRuntimeSession;
-  readonly isInterruptDecision: boolean;
 }): PendingBattleFillSession | null {
   if (result.tag !== "needsHoles") return null;
   const resultPresentation = battleSubjectPresentation(
@@ -40,9 +38,18 @@ export function pendingTransactionForResult({
     firstHole,
     ...result.holes.slice(1),
   ];
-  const transactionHistory = Match.value(isInterruptDecision).pipe(
-    Match.when(true, () => ({ baseSession: result.session, fills: [] })),
-    Match.when(false, () =>
+  const transactionHistory = Match.value(result.checkpointBoundary.kind).pipe(
+    Match.when("durableInterruptCheckpoint", () => ({
+      kind: "durableInterruptCheckpoint" as const,
+      baseSession: result.session,
+      fills: [],
+    })),
+    Match.when("durableContinuationCheckpoint", () => ({
+      kind: "durableContinuationCheckpoint" as const,
+      baseSession: result.session,
+      fills: [],
+    })),
+    Match.when("ordinaryReplay", () =>
       ordinaryContinuationHistory({
         filledSubject,
         previous,
@@ -77,6 +84,7 @@ function ordinaryContinuationHistory({
   >;
   readonly fills: readonly BattleFill[];
 }): {
+  readonly kind: "ordinaryReplay";
   readonly baseSession: BattleRuntimeSession;
   readonly fills: readonly BattleFill[];
 } {
@@ -84,28 +92,15 @@ function ordinaryContinuationHistory({
     previous !== null &&
     !sameBattleSubject(previous.subject, filledSubject)
   ) {
-    return { baseSession: replaySession, fills };
+    return { kind: "ordinaryReplay", baseSession: replaySession, fills };
   }
 
-  const resultInterruptDepth = result.session.state.interruptStack.length;
-  const previousInterruptDepth =
-    previous?.baseSession.state.interruptStack.length;
-
-  // An interrupt opening or closure changes the durable replay segment. The
-  // resulting runtime session is the new checkpoint and the caller must not
-  // carry ordinary fills across that boundary.
   if (previous === null) {
-    return {
-      baseSession: result.session,
-      fills: resultInterruptDepth > 0 ? [] : fills,
-    };
-  }
-
-  if (resultInterruptDepth !== previousInterruptDepth) {
-    return { baseSession: result.session, fills: [] };
+    return { kind: "ordinaryReplay", baseSession: result.session, fills };
   }
 
   return {
+    kind: "ordinaryReplay",
     baseSession: previous.baseSession,
     fills,
   };

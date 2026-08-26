@@ -18,7 +18,6 @@ import {
   battleLightEmitters,
   battleObscurementZones,
 } from "./spells-holes-fills.ts";
-import type { SpellProcedureExecutionRegistry } from "./spell-procedure-profiles/execution-registry.ts";
 import {
   INTERRUPT_DECISION_HOLE_ID,
   INTERRUPT_DECISION_HOLE_INSTANCE,
@@ -36,18 +35,6 @@ import type {
 export function battleSnapshotProjection(state: BattleState): {
   readonly snapshot: BattleSnapshot;
 } {
-  return battleSnapshotProjectionFromCommittedState(state);
-}
-
-export function battleSnapshotProjectionWithExecutionRegistry(
-  state: BattleState,
-  executionRegistry: SpellProcedureExecutionRegistry,
-): { readonly snapshot: BattleSnapshot } {
-  // Act discovery belongs to the continuation frontier, not the durable
-  // checkpoint. Keep this entry point for callers that already have a
-  // procedure registry; the registry is intentionally irrelevant to a
-  // committed snapshot.
-  void executionRegistry;
   return battleSnapshotProjectionFromCommittedState(state);
 }
 
@@ -135,14 +122,6 @@ function readyResponseSnapshot(
 
 export function snapshotBattle(state: BattleState): BattleSnapshot {
   return battleSnapshotProjection(state).snapshot;
-}
-
-export function snapshotBattleWithExecutionRegistry(
-  state: BattleState,
-  executionRegistry: SpellProcedureExecutionRegistry,
-): BattleSnapshot {
-  return battleSnapshotProjectionWithExecutionRegistry(state, executionRegistry)
-    .snapshot;
 }
 
 export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {

@@ -597,6 +597,7 @@ function openPreparedInterruptWindowWithChoices(
     subject: interruptedProcedureSubject(frame.continuation),
     holes: [decisionHole],
     snapshot: snapshotBattle(nextState),
+    checkpointBoundary: { kind: "durableInterruptCheckpoint" },
   };
 }
 

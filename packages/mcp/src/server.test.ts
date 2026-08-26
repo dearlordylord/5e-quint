@@ -6271,6 +6271,51 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({ details: { code: "BATTLE_FILL_SUBJECT_MISMATCH" } });
+
+    const afterAttackRoll = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "attackRoll",
+        holeId: currentHole.holeId,
+        value: { total: 18, naturalD20: 12 },
+      },
+      validAttackSubject,
+    );
+    expect(afterAttackRoll.result.tag).toBe("needsHoles");
+    const damageHole = root.sessionStore.pendingBattleFills?.holes[0];
+    if (damageHole === undefined) {
+      throw new Error("Expected the pending ordinary damage hole.");
+    }
+    const afterDamage = fillBattleHoleThroughTool(
+      root,
+      "fighter",
+      "Longsword",
+      {
+        kind: "rolledDice",
+        holeId: damageHole.holeId,
+        value: [{ results: [5] }],
+      },
+      afterAttackRoll.result.subject,
+    );
+    expect(afterDamage.result.tag).toBe("resolved");
+    expect(root.sessionStore.pendingBattleFills).toBeNull();
+    const committedBattle = root.sessionStore.battleSession;
+    const repeated = readPayload(
+      handleToolCall(root, "fill_battle_hole", {
+        subject: validAttackSubject,
+        fill: {
+          kind: "rolledDice",
+          holeId: damageHole.holeId,
+          value: [{ results: [5] }],
+        },
+      }),
+    );
+    expect(repeated).toMatchObject({
+      details: { code: "BATTLE_ACT_NOT_AVAILABLE" },
+    });
+    expect(root.sessionStore.battleSession).toBe(committedBattle);
   });
 
   test("start_battle rejects duplicate character and combatant ids", () => {

@@ -2,16 +2,29 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
+  currentInterruptCheckpoint,
+  pendingInterruptSnapshot,
+} from "./battle-reducer/battle-snapshot.ts";
+import {
   BattleSnapshotSchema,
+  attackInitialTargetHole,
+  attackRollFill,
+  attackRollHoleAfterTarget,
   battleId,
   combatantId,
   fighterVsGoblinBattle,
+  fighterAttackSubject,
+  fighterTurnWithReadiedRay,
   characterSeed,
   goblinId,
+  interruptDecisionFill,
+  resolveBattleInterrupt,
+  resolveBattleSubject,
   skeletonId,
   startBattleRight,
   snapshotBattle,
   statBlockCreatureInit,
+  targetFill,
   wizardId,
 } from "./battle-runtime.test-support.ts";
 
@@ -66,6 +79,79 @@ describe("BattleSnapshot durable checkpoint", () => {
     expect(
       Either.isRight(Schema.decodeUnknownEither(BattleSnapshotSchema)(encoded)),
     ).toBe(true);
+  });
+
+  test("keeps committed interrupt mechanics separate from checkpoint and frontier projections", () => {
+    const state = fighterTurnWithReadiedRay("attackHit");
+    const subject = fighterAttackSubject(state);
+    const target = attackInitialTargetHole(state, subject);
+    const attackRoll = attackRollHoleAfterTarget(state, target, subject);
+    const awaitingReaction = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        targetFill(target, goblinId),
+        attackRollFill(attackRoll, { total: 18, naturalD20: 12 }),
+      ],
+    });
+    expect(awaitingReaction.tag).toBe("needsHoles");
+    if (awaitingReaction.tag !== "needsHoles") return;
+    expect(awaitingReaction.checkpointBoundary).toEqual({
+      kind: "durableInterruptCheckpoint",
+    });
+
+    const frontier = pendingInterruptSnapshot(awaitingReaction.state);
+    expect(frontier).toMatchObject({ trigger: "attackHit" });
+    expect(currentInterruptCheckpoint(awaitingReaction.state)).toMatchObject({
+      trigger: "attackHit",
+    });
+    expect(snapshotBattle(awaitingReaction.state)).not.toHaveProperty(
+      "pendingInterrupt",
+    );
+
+    if (frontier === null) return;
+    const releaseChoice = frontier.choices.find(
+      (choice) => choice.kind === "releaseReadiedSpell",
+    );
+    if (
+      releaseChoice?.kind !== "releaseReadiedSpell" ||
+      releaseChoice.subject.tag !== "runtimeCommand" ||
+      releaseChoice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected a readied-spell release choice.");
+    }
+    const released = resolveBattleInterrupt({
+      state: awaitingReaction.state,
+      fill: interruptDecisionFill(frontier.decisionHole, {
+        kind: "resolve",
+        responderId: wizardId,
+        choice: {
+          kind: "releaseReadiedSpell",
+          readiedSpellCasterId: wizardId,
+          procedureRef: releaseChoice.subject.procedureRef,
+          fills: [],
+        },
+      }),
+    });
+    expect(released.tag).toBe("needsHoles");
+    if (released.tag !== "needsHoles") return;
+
+    const committed = snapshotBattle(released.state);
+    expect(committed.combatants).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          combatantId: wizardId,
+          reactionAvailable: false,
+        }),
+      ]),
+    );
+    expect(committed).not.toHaveProperty("pendingInterrupt");
+    expect(currentInterruptCheckpoint(released.state)).toMatchObject({
+      trigger: "attackHit",
+    });
+    expect(pendingInterruptSnapshot(released.state)).toMatchObject({
+      trigger: "attackHit",
+    });
   });
 
   test("rejects legacy frontier and allocator fields at the codec boundary", () => {
