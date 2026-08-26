@@ -2,49 +2,33 @@ import { Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleToolName } from "./battle-tool-input.ts";
-import { battleToolNames } from "./battle-tool-input.ts";
 import {
   decodeGuestAccessGrant,
   type PlaySessionCaller,
-  type PlaySessionTenureProjection,
 } from "./play-session-access.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
-import { characterToolNames } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
 import {
   decodePlaySessionId,
-  PLAY_SESSION_UNAVAILABLE,
   type PlaySessionAccessFailure,
   type PlaySessionId,
   type PlaySessionRegistry,
 } from "./play-session.ts";
-import { mcpSessionSummary } from "./session-snapshot-output.ts";
-import type { McpSessionSnapshot } from "./session-store.ts";
-import {
-  errorContent,
-  jsonContent,
-  jsonContentPayload,
-  jsonSerializablePayload,
-} from "./tool-content.ts";
+import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import {
   playSessionToolNames,
-  type PlaySessionNextOperationName,
   type PlaySessionOperationName,
 } from "./play-session-tool-contract.ts";
-import type { McpSessionSummary } from "./session-snapshot-output.ts";
-import {
-  unresolvedInputsFrom,
-  type OperationProjectionIssue,
-  type UnresolvedInputGroup,
-} from "./play-session-operation-projection.ts";
-import { nextOperationsFrom } from "./play-session-next-operations.ts";
 import { playSessionAccessFailureContent } from "./play-session-management-protocol.ts";
 import {
   GUEST_ONLY_REQUEST_IDENTITY,
   guestPlaySessionGuidance,
-  guestSaveAvailability,
   type PlaySessionRequestIdentity,
 } from "./play-session-request-identity.ts";
+import {
+  availablePlaySessionEnvelope,
+  unavailablePlaySessionEnvelope,
+} from "./play-session-envelope.ts";
 
 export {
   unresolvedInputsFrom,
@@ -57,11 +41,8 @@ export {
   handleSavePlaySession,
 } from "./play-session-management-protocol.ts";
 
-export type PlaySessionProtocolResult = ReturnType<typeof jsonContent> & {
-  readonly structuredContent: unknown;
-  readonly isError?: true;
-  readonly _meta?: Readonly<Record<string, unknown>>;
-};
+export type { PlaySessionProtocolResult } from "./play-session-envelope.ts";
+import type { PlaySessionProtocolResult } from "./play-session-envelope.ts";
 
 export {
   GUEST_ONLY_REQUEST_IDENTITY,
@@ -89,7 +70,7 @@ export function handleCreatePlaySession(
         : {}),
     });
   }
-  return availableEnvelope({
+  return availablePlaySessionEnvelope({
     playSessionId: created.right.playSessionId,
     operationName: playSessionToolNames.create,
     operationResult: {
@@ -135,13 +116,13 @@ export async function handleReadPlaySession(
   );
   if (Either.isLeft(result)) {
     return result.left.tag === "playSessionUnavailable"
-      ? unavailableEnvelope(
+      ? unavailablePlaySessionEnvelope(
           routed.right.playSessionId,
           playSessionToolNames.read,
         )
       : playSessionAccessFailureContent(result.left);
   }
-  return availableEnvelope({
+  return availablePlaySessionEnvelope({
     playSessionId: routed.right.playSessionId,
     operationName: playSessionToolNames.read,
     operationResult: {
@@ -200,7 +181,10 @@ export async function handlePlaySessionOperation(input: {
   );
   if (Either.isLeft(result)) {
     return result.left.tag === "playSessionUnavailable"
-      ? unavailableEnvelope(routed.right.playSessionId, input.operationName)
+      ? unavailablePlaySessionEnvelope(
+          routed.right.playSessionId,
+          input.operationName,
+        )
       : playSessionAccessFailureContent(result.left);
   }
 
@@ -211,7 +195,7 @@ export async function handlePlaySessionOperation(input: {
       operationName: input.operationName,
     });
   }
-  return availableEnvelope({
+  return availablePlaySessionEnvelope({
     playSessionId: routed.right.playSessionId,
     operationName: input.operationName,
     operationResult:
@@ -312,145 +296,6 @@ function callerFrom(
       guestAccessGrant: decodedGuestAccessGrant,
     })),
   );
-}
-
-function availableEnvelope(input: {
-  readonly playSessionId: PlaySessionId;
-  readonly operationName: PlaySessionOperationName;
-  readonly operationResult: unknown;
-  readonly projection: McpSessionSnapshot;
-  readonly tenure: PlaySessionTenureProjection;
-  readonly identity: PlaySessionRequestIdentity;
-  readonly hasAvailableCharacterSession?: boolean;
-  readonly isError?: boolean;
-}): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
-  const projection = mcpSessionSummary(input.projection);
-  const unresolvedInputsResult = unresolvedInputsForEnvelope(input, projection);
-  if (Either.isLeft(unresolvedInputsResult)) {
-    return errorContent("MCP operation output projection failed.", {
-      code: "INVALID_OPERATION_OUTPUT",
-      operationName: input.operationName,
-      projectionIssue: unresolvedInputsResult.left,
-    });
-  }
-  const unresolvedInputs = unresolvedInputsResult.right;
-  const nextOperations = nextOperationsForEnvelope(
-    input,
-    projection,
-    unresolvedInputs,
-  );
-  const payload = jsonSerializablePayload({
-    tag: "playSessionAvailable",
-    playSessionId: input.playSessionId,
-    operation: {
-      name: input.operationName,
-      result: input.operationResult,
-    },
-    projection,
-    tenure: envelopeTenure(input.tenure, input.identity),
-    unresolvedInputs,
-    nextOperations,
-    restoration: { tag: "retained" },
-  });
-  return {
-    ...jsonContent(redactGuestAccessGrants(payload)),
-    structuredContent: payload,
-    ...(input.isError === true ? { isError: true as const } : {}),
-  };
-}
-
-function unresolvedInputsForEnvelope(
-  input: {
-    readonly operationName: PlaySessionOperationName;
-    readonly operationResult: unknown;
-    readonly isError?: boolean;
-  },
-  projection: McpSessionSummary,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  if (projection.pendingBattleHoles !== null) {
-    return Either.right([
-      {
-        sourcePath: "$.projection.pendingBattleHoles",
-        inputs: projection.pendingBattleHoles,
-      },
-    ]);
-  }
-  if (input.isError === true) return Either.right([]);
-  return unresolvedInputsFrom(input.operationName, input.operationResult);
-}
-
-function envelopeTenure(
-  tenure: PlaySessionTenureProjection,
-  identity: PlaySessionRequestIdentity,
-) {
-  if (tenure.tag !== "guest") return tenure;
-  return { ...tenure, save: guestSaveAvailability(identity) };
-}
-
-function nextOperationsForEnvelope(
-  input: {
-    readonly operationName: PlaySessionOperationName;
-    readonly tenure: PlaySessionTenureProjection;
-    readonly identity: PlaySessionRequestIdentity;
-    readonly hasAvailableCharacterSession?: boolean;
-  },
-  projection: McpSessionSummary,
-  unresolvedInputs: readonly UnresolvedInputGroup[],
-): readonly PlaySessionNextOperationName[] {
-  const nextOperations = nextOperationsFrom(
-    input.operationName,
-    projection,
-    unresolvedInputs,
-    input.hasAvailableCharacterSession === true,
-  );
-  if (input.tenure.tag !== "guest") return nextOperations;
-  if (guestSaveAvailability(input.identity).tag !== "available") {
-    return nextOperations;
-  }
-  if (
-    input.operationName !== characterToolNames.finalizeCharacter &&
-    input.operationName !== battleToolNames.endBattle
-  ) {
-    return nextOperations;
-  }
-  return [...new Set([...nextOperations, playSessionToolNames.save])];
-}
-
-function redactGuestAccessGrants(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(redactGuestAccessGrants);
-  if (!isJsonObject(value)) return value;
-  return Object.fromEntries(
-    Object.entries(value).map(([key, nested]) => [
-      key,
-      key === "guestAccessGrant"
-        ? "[REDACTED]"
-        : redactGuestAccessGrants(nested),
-    ]),
-  );
-}
-
-function unavailableEnvelope(
-  playSessionId: PlaySessionId,
-  operationName: PlaySessionOperationName,
-): PlaySessionProtocolResult {
-  const payload = jsonSerializablePayload({
-    tag: PLAY_SESSION_UNAVAILABLE.tag,
-    playSessionId,
-    operation: {
-      name: operationName,
-      result: PLAY_SESSION_UNAVAILABLE,
-    },
-    projection: null,
-    tenure: null,
-    unresolvedInputs: [],
-    nextOperations: [playSessionToolNames.create],
-    restoration: PLAY_SESSION_UNAVAILABLE.restoration,
-  });
-  return {
-    ...jsonContent(payload),
-    structuredContent: payload,
-    isError: true,
-  };
 }
 
 function isJsonObject(
