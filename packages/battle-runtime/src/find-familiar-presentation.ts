@@ -17,7 +17,10 @@ import {
   type CompanionBattleAdmissionInput,
   type FindFamiliarCastInput,
 } from "./find-familiar-lifecycle.ts";
-import { resolveFindFamiliarForm } from "@dnd/surface/surface/find-familiar-forms";
+import {
+  resolveFindFamiliarForm,
+  type FindFamiliarResolvedForm,
+} from "@dnd/surface/surface/find-familiar-forms";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
@@ -105,21 +108,18 @@ export type RetainedCompanionRuntimeCastResult =
       >["snapshot"];
     };
 
-export function castRetainedFindFamiliarRuntime(
-  input: Omit<FindFamiliarCastInput, "state"> & {
-    readonly session: BattleRuntimeSession;
-  },
-): RetainedCompanionRuntimeCastResult {
+type RetainedFindFamiliarRuntimeInput = Omit<FindFamiliarCastInput, "state"> & {
+  readonly session: BattleRuntimeSession;
+};
+
+function resolveRetainedFindFamiliarCastForm(
+  input: RetainedFindFamiliarRuntimeInput,
+): Either.Either<FindFamiliarResolvedForm, string> {
   const ownerContext = input.session.context.characters.get(input.casterId);
   if (ownerContext?.retainedCompanionSelection === undefined) {
-    return {
-      tag: "invalid",
-      session: input.session,
-      reason: "invalidFill",
-      message:
-        "Retained Find Familiar recast requires a battle-owned authored form selection.",
-      snapshot: snapshotBattle(input.session.state),
-    };
+    return Either.left(
+      "Retained Find Familiar recast requires a battle-owned authored form selection.",
+    );
   }
   const resolvedForm = resolveFindFamiliarForm({
     catalog: input.catalog,
@@ -128,11 +128,21 @@ export function castRetainedFindFamiliarRuntime(
     creatureTypeOverrideChoiceId: input.creatureTypeOverrideChoiceId,
   });
   if (resolvedForm.tag === "issue") {
+    return Either.left(resolvedForm.message);
+  }
+  return Either.right(resolvedForm.form);
+}
+
+export function castRetainedFindFamiliarRuntime(
+  input: RetainedFindFamiliarRuntimeInput,
+): RetainedCompanionRuntimeCastResult {
+  const resolvedForm = resolveRetainedFindFamiliarCastForm(input);
+  if (Either.isLeft(resolvedForm)) {
     return {
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
-      message: resolvedForm.message,
+      message: resolvedForm.left,
       snapshot: snapshotBattle(input.session.state),
     };
   }
@@ -140,7 +150,7 @@ export function castRetainedFindFamiliarRuntime(
     state: input.session.state,
     casterId: input.casterId,
     familiarId: input.familiarId,
-    resolvedForm: resolvedForm.form,
+    resolvedForm: resolvedForm.right,
     initiative: input.initiative,
     placement: input.placement,
     ammunitionStocks: input.ammunitionStocks,
@@ -169,7 +179,7 @@ export function castRetainedFindFamiliarRuntime(
     };
   }
   /* v8 ignore stop -- @preserve */
-  const projected = projectAuthoredStatBlock(resolvedForm.form.statBlock);
+  const projected = projectAuthoredStatBlock(resolvedForm.right.statBlock);
   if (Either.isLeft(projected)) {
     return {
       tag: "invalid",

@@ -333,6 +333,20 @@ export type ResolvedFindFamiliarCastInput = Omit<
   readonly retainedTransition: "reject" | "sessionOwned";
 };
 
+function retainedFindFamiliarCastIssue(input: {
+  readonly prior: FindFamiliarCastPrior;
+  readonly retainedTransition: ResolvedFindFamiliarCastInput["retainedTransition"];
+}): string | undefined {
+  if (
+    input.prior.tag !== "none" &&
+    input.prior.familiar.identity.tag === "retainedBetweenBattles" &&
+    input.retainedTransition !== "sessionOwned"
+  ) {
+    return "Retained Find Familiar recast requires the session-owned authored selection transition.";
+  }
+  return undefined;
+}
+
 export function castResolvedFindFamiliar(
   input: ResolvedFindFamiliarCastInput,
 ): BattleResolutionResult {
@@ -349,15 +363,15 @@ export function castResolvedFindFamiliar(
     findCompanionEntryByOwner(input.state.companions, input.casterId)
       ?.companion,
   );
-  if (
-    prior.tag !== "none" &&
-    prior.familiar.identity.tag === "retainedBetweenBattles" &&
-    input.retainedTransition !== "sessionOwned"
-  ) {
+  const retainedCastIssue = retainedFindFamiliarCastIssue({
+    prior,
+    retainedTransition: input.retainedTransition,
+  });
+  if (retainedCastIssue !== undefined) {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      "Retained Find Familiar recast requires the session-owned authored selection transition.",
+      retainedCastIssue,
     );
   }
   const familiarId =
@@ -446,24 +460,43 @@ export function castResolvedFindFamiliar(
   );
 }
 
+type WildCompanionCasterAdmissionIssue = {
+  readonly reason: "missingCombatant" | "invalidFill";
+  readonly message: string;
+};
+
+function wildCompanionCasterAdmissionIssue(
+  owner: BattleCreatureState | undefined,
+): WildCompanionCasterAdmissionIssue | undefined {
+  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
+  if (owner?.origin.kind !== "character") {
+    return {
+      reason: "missingCombatant",
+      message: "Wild Companion caster is not a character in this battle.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The admitted character must carry the Druid Wild Companion feature before its resource can be spent. */
+  if (!characterHasWildCompanionFeature(owner.origin.execution)) {
+    return {
+      reason: "invalidFill",
+      message: "Wild Companion requires the Druid Wild Companion feature.",
+    };
+  }
+  /* v8 ignore stop -- @preserve */
+  return undefined;
+}
+
 export function castWildCompanion(
   input: WildCompanionCastInput,
 ): BattleResolutionResult {
   const owner = input.state.combatants.get(input.casterId);
-  /* v8 ignore start -- @preserve -- Stale direct call: Wild Companion discovery is available only for an admitted character caster. */
-  if (owner?.origin.kind !== "character") {
+  const ownerIssue = wildCompanionCasterAdmissionIssue(owner);
+  if (ownerIssue !== undefined) {
     return invalidFindFamiliarResult(
       input.state,
-      "missingCombatant",
-      "Wild Companion caster is not a character in this battle.",
-    );
-  }
-  /* v8 ignore stop -- @preserve */
-  if (!characterHasWildCompanionFeature(owner.origin.execution)) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      "Wild Companion requires the Druid Wild Companion feature.",
+      ownerIssue.reason,
+      ownerIssue.message,
     );
   }
   const spent = spendWildCompanionCost({
@@ -581,37 +614,45 @@ export function castWildCompanion(
   return resolvedFindFamiliarResult(nextState.state, []);
 }
 
-export function admitCompanionToBattle(
+function companionAdmissionInitialIssue(
   input: CompanionBattleAdmissionInput,
-): Either.Either<BattleState, BattleStateInitIssue> {
+): string | undefined {
   /* v8 ignore start -- @preserve -- Malformed handoff: character-battle admission supplies an owner from the battle roster it just created. */
   if (!input.state.combatants.has(input.ownerId)) {
-    return battleStateInitIssue(
-      "Companion admission owner is not in this battle.",
-    );
+    return "Companion admission owner is not in this battle.";
   }
   /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- Durable identity is authored at the retained-companion boundary and cannot be empty. */
   if (input.identity.durableCompanionId.length === 0) {
-    return battleStateInitIssue("Companion admission requires durable id.");
+    return "Companion admission requires durable id.";
   }
-  /* v8 ignore start -- @preserve -- Malformed handoff: the one-at-a-time retained companion boundary cannot admit a second companion for the same owner. */
+  /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- The one-at-a-time retained companion boundary cannot admit a second companion for the same owner. */
   if (
     findCompanionByOwner(input.state.companions, input.ownerId) !== undefined
   ) {
-    return battleStateInitIssue(
-      "Companion admission requires at most one retained companion per owner.",
-    );
+    return "Companion admission requires at most one retained companion per owner.";
   }
   /* v8 ignore stop -- @preserve */
+  /* v8 ignore start -- @preserve -- A retained durable identity cannot be reused by another companion. */
   if (
     companionDurableIdentityInUse(
       input.state.companions,
       input.identity.durableCompanionId,
     )
   ) {
-    return battleStateInitIssue(
-      "Companion admission identity is already used by another companion.",
-    );
+    return "Companion admission identity is already used by another companion.";
+  }
+  /* v8 ignore stop -- @preserve */
+  return undefined;
+}
+
+export function admitCompanionToBattle(
+  input: CompanionBattleAdmissionInput,
+): Either.Either<BattleState, BattleStateInitIssue> {
+  const initialIssue = companionAdmissionInitialIssue(input);
+  if (initialIssue !== undefined) {
+    return battleStateInitIssue(initialIssue);
   }
   if (!("companionId" in input)) {
     return admitAbsentCompanionToBattle({
