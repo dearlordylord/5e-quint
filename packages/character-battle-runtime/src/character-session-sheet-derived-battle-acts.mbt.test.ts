@@ -3,7 +3,6 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleActSpellPresentation,
   battleId,
   combatantId,
@@ -60,22 +59,7 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectRight(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
+import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
 
 type SheetDerivedOutcome =
   | "init"
@@ -657,7 +641,7 @@ function startSheetDerivedSession(
 }
 
 function battleCreatureInitFromRidingHorse() {
-  return battleCreatureInitFromStatBlock({
+  return battleCreatureInitFromAuthoredStatBlock({
     combatantId: targetCombatantId,
     statBlock: statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
     initiative: initiativeScore(10),

@@ -3628,7 +3628,7 @@ function elementalTouchStatBlock(damageType: "fire" | "cold"): StatBlockRecord {
     ),
     name: `Synthetic ${displayDamageType} Touch`,
     provenance: {
-      kind: "xphb",
+      kind: "synthetic-test",
       section: "level5-sdk-tracer-bullets synthetic test fixture",
     },
     statBlock: {
