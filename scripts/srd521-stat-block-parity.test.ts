@@ -128,7 +128,7 @@ describe("SRD Stat Block source parity operation", () => {
         .filter((issue) => issue.kind === "provenance")
         .map((issue) => issue.name)
         .sort(),
-    ).toEqual(["Pseudodragon", "Riding Horse", "Weasel"]);
+    ).toEqual([]);
     expect(
       report.issues.filter((issue) => issue.kind === "duplicate-id"),
     ).toHaveLength(0);
