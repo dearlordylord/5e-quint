@@ -48,12 +48,7 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
         },
       },
     };
-    let projection: ReturnType<typeof projectAuthoredStatBlock> | undefined;
-    expect(() => {
-      projection = projectAuthoredStatBlock(malformed);
-    }).not.toThrow();
-    expect(projection).toBeDefined();
-    if (projection === undefined) return;
+    const projection = projectAuthoredStatBlock(malformed);
     expect(Either.isLeft(projection)).toBe(true);
     if (Either.isRight(projection)) return;
     expect(projection.left).toEqual({
@@ -85,12 +80,7 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
           ...source,
           legendaryActionUses,
         };
-        let sourceAdmission:
-          | ReturnType<typeof battleStatBlockCombatantSource>
-          | undefined;
-        expect(() => {
-          sourceAdmission = battleStatBlockCombatantSource(malformed);
-        }).not.toThrow();
+        const sourceAdmission = battleStatBlockCombatantSource(malformed);
         expect(sourceAdmission).toMatchObject({
           _tag: "Left",
           left: {
@@ -104,17 +94,12 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
           { ...source },
           { legendaryActionUses },
         );
-        let restoredAdmission:
-          | ReturnType<typeof restoreStatBlockExecutionAdmission>
-          | undefined;
-        expect(() => {
-          restoredAdmission = restoreStatBlockExecutionAdmission(
-            battleId("legendary-use-count-boundary"),
-            combatantId("legendary-use-count-boundary"),
-            malformedForRestore,
-            snapshot,
-          );
-        }).not.toThrow();
+        const restoredAdmission = restoreStatBlockExecutionAdmission(
+          battleId("legendary-use-count-boundary"),
+          combatantId("legendary-use-count-boundary"),
+          malformedForRestore,
+          snapshot,
+        );
         expect(restoredAdmission).toMatchObject({
           _tag: "Left",
           left: {
@@ -136,12 +121,7 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
       ...source,
       legendaryActionUses,
     };
-    let sourceAdmission:
-      | ReturnType<typeof battleStatBlockCombatantSource>
-      | undefined;
-    expect(() => {
-      sourceAdmission = battleStatBlockCombatantSource(malformed);
-    }).not.toThrow();
+    const sourceAdmission = battleStatBlockCombatantSource(malformed);
     expect(sourceAdmission).toMatchObject({
       _tag: "Left",
       left: {
