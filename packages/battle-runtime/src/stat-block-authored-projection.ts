@@ -21,13 +21,14 @@ import type {
   BattleStatBlockAuthoredProcedurePresentation,
   BattleStatBlockPresentationSource,
 } from "./battle-runtime-context.ts";
-import type {
-  BattleStatBlockExecutionSource,
-  BattleStatBlockRuntimeProcedure,
-  BattleStatBlockRuntimeResource,
-  BattleStatBlockRuntimeSpeed,
-  BattleStatBlockRuntimeSense,
-  StatBlockActionProjectionSection,
+import {
+  parseStatBlockLegendaryActionUses,
+  type BattleStatBlockExecutionSource,
+  type BattleStatBlockRuntimeProcedure,
+  type BattleStatBlockRuntimeResource,
+  type BattleStatBlockRuntimeSpeed,
+  type BattleStatBlockRuntimeSense,
+  type StatBlockActionProjectionSection,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 
@@ -35,7 +36,8 @@ type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
   | "nonLiteralArmorClass"
   | "nonLiteralHitPoints"
-  | "nonLiteralSpeed";
+  | "nonLiteralSpeed"
+  | "invalidLegendaryActionUses";
 
 export type BattleStatBlockUnsupportedProcedureBinding = {
   readonly section: StatBlockActionProjectionSection;
@@ -98,6 +100,11 @@ export function battleStatBlockProjectionFailureMessage(
       () => "battle initialization requires unconditional literal Speeds",
     ),
     Match.when(
+      "invalidLegendaryActionUses",
+      () =>
+        "battle initialization requires positive integer Legendary Action uses",
+    ),
+    Match.when(
       "unsupportedProcedureBinding",
       () => "the procedure binding is not supported by battle execution",
     ),
@@ -130,6 +137,12 @@ export function projectAuthoredStatBlock(
   if (speeds.some((speed) => speed === null)) {
     return Either.left(failure("nonLiteralSpeed"));
   }
+  const legendaryActionUses = parseStatBlockLegendaryActionUses(
+    source.legendaryActions?.uses,
+  );
+  if (Either.isLeft(legendaryActionUses)) {
+    return Either.left(failure("invalidLegendaryActionUses"));
+  }
   const runtimeProcedures = runtimeProcedureBindings(source);
   if (Either.isLeft(runtimeProcedures)) {
     return Either.left(
@@ -142,6 +155,7 @@ export function projectAuthoredStatBlock(
     size,
     nonEmptyRuntimeValues(speeds),
     runtimeProcedures.right,
+    legendaryActionUses.right,
   );
   return Either.right({
     runtime,
@@ -155,6 +169,7 @@ function runtimeProjection(
   size: Size,
   speeds: ReadonlyNonEmptyArray<BattleStatBlockRuntimeSpeed>,
   procedures: readonly BattleStatBlockRuntimeProcedure[],
+  legendaryActionUses: BattleStatBlockExecutionSource["legendaryActionUses"],
 ): BattleStatBlockExecutionSource {
   return {
     id: record.id,
@@ -164,9 +179,7 @@ function runtimeProjection(
     ...(source.resources === undefined
       ? {}
       : { resources: source.resources.map(runtimeResource) }),
-    ...(source.legendaryActions === undefined
-      ? {}
-      : { legendaryActionUses: source.legendaryActions.uses }),
+    ...(legendaryActionUses === undefined ? {} : { legendaryActionUses }),
   };
 }
 

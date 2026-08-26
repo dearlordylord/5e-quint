@@ -32,6 +32,36 @@ const malformedLegendaryActionUses = fc.oneof(
 );
 
 describe("Stat Block Legendary Action use-count boundaries", () => {
+  test("returns a typed failure for a structurally typed but malformed authored count", () => {
+    const authored = monsterResourceStatBlock();
+    const legendaryActions = authored.statBlock.legendaryActions;
+    expect(legendaryActions).toBeDefined();
+    if (legendaryActions === undefined) return;
+
+    const malformed: typeof authored = {
+      ...authored,
+      statBlock: {
+        ...authored.statBlock,
+        legendaryActions: {
+          ...legendaryActions,
+          uses: 0,
+        },
+      },
+    };
+    let projection: ReturnType<typeof projectAuthoredStatBlock> | undefined;
+    expect(() => {
+      projection = projectAuthoredStatBlock(malformed);
+    }).not.toThrow();
+    expect(projection).toBeDefined();
+    if (projection === undefined) return;
+    expect(Either.isLeft(projection)).toBe(true);
+    if (Either.isRight(projection)) return;
+    expect(projection.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "invalidLegendaryActionUses",
+    });
+  });
+
   test("reject malformed counts without throwing or crossing admission boundaries", () => {
     const authored = monsterResourceStatBlock();
     const projected = projectAuthoredStatBlock(authored);
