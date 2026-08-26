@@ -72,12 +72,6 @@ export type BattleStatBlockProcedurePresentation =
       readonly procedureRef: BattleStatBlockProcedureExecutionRef;
       readonly kind: "multiattack" | "bonusActionOption";
       readonly label: string;
-    }
-  | {
-      readonly procedureRef: BattleStatBlockProcedureExecutionRef;
-      readonly kind: "unsupported";
-      readonly label: string;
-      readonly reason: "unsupportedMultiattackDispatch";
     };
 
 type BattleStatBlockProcedurePresentationBase = {

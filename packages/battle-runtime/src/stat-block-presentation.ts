@@ -89,19 +89,6 @@ function statBlockProjectionIssues(
       const admittedProcedure = admitted.get(
         procedurePresentationKey(entry.section, entry.procedureOrdinal),
       );
-      if (admittedProcedure?.kind === "unsupported") {
-        return [
-          {
-            tag: "statBlockProjectionIssue" as const,
-            source: {
-              kind: "action" as const,
-              section: entry.section,
-              shape: projectionShape(entry.kind),
-              nonExecutableReason: "unsupportedActionShape" as const,
-            },
-          },
-        ];
-      }
       if (
         admittedProcedure !== undefined &&
         admittedProcedure.kind ===
@@ -197,14 +184,6 @@ export function statBlockProcedurePresentations(
             procedureRef: binding.procedureRef,
             kind: "bonusActionOption" as const,
             label: labelFor("bonusActions", procedure.procedureOrdinal),
-          },
-        ]),
-        Match.when({ kind: "unsupported" }, (procedure) => [
-          {
-            procedureRef: binding.procedureRef,
-            kind: "unsupported" as const,
-            label: labelFor(procedure.section, procedure.procedureOrdinal),
-            reason: procedure.reason,
           },
         ]),
         Match.exhaustive,

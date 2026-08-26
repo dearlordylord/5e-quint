@@ -23,7 +23,6 @@ import type {
 } from "./battle-runtime-context.ts";
 import type {
   BattleStatBlockExecutionSource,
-  BattleStatBlockRuntimeMultiattackDispatch,
   BattleStatBlockRuntimeProcedure,
   BattleStatBlockRuntimeResource,
   BattleStatBlockRuntimeSpeed,
@@ -238,7 +237,7 @@ function authoredProcedureSections(
 
 function supportedAttackOrdinals(
   entries: readonly StatBlockProcedureEntry[] | undefined,
-): ReadonlySet<number> {
+): ReadonlySet<StatBlockProcedureOrdinal> {
   return new Set(
     (entries ?? []).flatMap((entry) =>
       entry.kind === "executable" &&
@@ -256,7 +255,7 @@ function runtimeProcedureBinding(
   source: StandaloneStatBlock,
   section: StatBlockActionProjectionSection,
   entry: StatBlockProcedureEntry,
-  supportedActionAttackOrdinals: ReadonlySet<number>,
+  supportedActionAttackOrdinals: ReadonlySet<StatBlockProcedureOrdinal>,
 ): Either.Either<
   readonly BattleStatBlockRuntimeProcedure[],
   BattleStatBlockUnsupportedProcedureBinding
@@ -269,13 +268,11 @@ function runtimeProcedureBinding(
     ),
     Match.when({ kind: "multiattack" }, (multiattack) =>
       section === "actions"
-        ? Either.right([
-            runtimeMultiattackBinding(
-              entry,
-              multiattack,
-              supportedActionAttackOrdinals,
-            ),
-          ])
+        ? runtimeMultiattackBinding(
+            entry,
+            multiattack,
+            supportedActionAttackOrdinals,
+          )
         : Either.left(procedureBindingIssue(section, entry.procedureOrdinal)),
     ),
     Match.when({ kind: "action_option" }, (actionOption) =>
@@ -326,25 +323,34 @@ function runtimeAttackBinding(
 function runtimeMultiattackBinding(
   entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
   procedure: Extract<typeof entry.procedure, { readonly kind: "multiattack" }>,
-  supportedActionAttackOrdinals: ReadonlySet<number>,
-): BattleStatBlockRuntimeProcedure {
-  return {
-    kind: "multiattack",
-    section: "actions",
-    procedureOrdinal: entry.procedureOrdinal,
-    dispatches: nonEmptyRuntimeValues(
-      procedure.dispatches.map(
-        (dispatch): BattleStatBlockRuntimeMultiattackDispatch => ({
+  supportedActionAttackOrdinals: ReadonlySet<StatBlockProcedureOrdinal>,
+): Either.Either<
+  readonly BattleStatBlockRuntimeProcedure[],
+  BattleStatBlockUnsupportedProcedureBinding
+> {
+  if (
+    !procedure.dispatches.every(({ procedureOrdinal }) =>
+      supportedActionAttackOrdinals.has(procedureOrdinal),
+    )
+  ) {
+    return Either.left(
+      procedureBindingIssue("actions", entry.procedureOrdinal),
+    );
+  }
+  return Either.right([
+    {
+      kind: "multiattack",
+      section: "actions",
+      procedureOrdinal: entry.procedureOrdinal,
+      dispatches: nonEmptyRuntimeValues(
+        procedure.dispatches.map((dispatch) => ({
           procedureOrdinal: dispatch.procedureOrdinal,
           count: dispatch.count.value,
-          target: supportedActionAttackOrdinals.has(dispatch.procedureOrdinal)
-            ? { kind: "attack" }
-            : { kind: "unsupported", reason: "nonExecutableTarget" },
-        }),
+        })),
       ),
-    ),
-    resourceRefs: procedureResourceRefs(entry),
-  };
+      resourceRefs: procedureResourceRefs(entry),
+    },
+  ]);
 }
 
 function runtimeBonusActionBinding(

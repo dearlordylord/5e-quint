@@ -22,7 +22,6 @@ import {
   initiativeScore,
   projectAuthoredStatBlock,
   startBattle,
-  statBlockProcedurePresentations,
 } from "./index.ts";
 import {
   statBlockCatalog,
@@ -225,7 +224,7 @@ describe("generic Stat Block projection", () => {
     });
   });
 
-  test("retains an authored Multiattack but reports a non-executable target", () => {
+  test("rejects an authored Multiattack targeting a text-only action", () => {
     const source = statBlockRecord();
     const attack = source.statBlock.actions?.[0];
     if (attack === undefined || attack.kind !== "executable") {
@@ -267,105 +266,67 @@ describe("generic Stat Block projection", () => {
     };
 
     const projected = projectAuthoredStatBlock(withUnsupportedDispatch);
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-    expect(projected.right.presentation.orderedProcedures).toContainEqual(
-      expect.objectContaining({
-        section: "actions",
-        procedureOrdinal: 3,
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [{ section: "actions", procedureOrdinal: authoredOrdinal(3) }],
+    });
+  });
+
+  test("rejects an authored Multiattack targeting an unsupported executable attack", () => {
+    const source = statBlockRecord();
+    const attack = source.statBlock.actions?.[0];
+    if (attack === undefined || attack.kind !== "executable") {
+      throw new Error("Expected an authored action attack.");
+    }
+    const unsupportedAttack = {
+      ...attack,
+      procedure: {
+        ...attack.procedure,
+        multiattackCount: { kind: "literal" as const, value: 2 },
+      },
+    };
+    const multiattack: Extract<
+      StatBlockProcedureEntry,
+      { readonly kind: "executable" }
+    > = {
+      kind: "executable",
+      procedureOrdinal: authoredOrdinal(3),
+      procedure: {
         kind: "multiattack",
-      }),
-    );
-    expect(projected.right.runtime.procedures).toContainEqual(
-      expect.objectContaining({
-        kind: "multiattack",
-        procedureOrdinal: 3,
+        name: "Synthetic Routine",
         dispatches: [
           {
-            procedureOrdinal: 2,
-            count: 1,
-            target: {
-              kind: "unsupported",
-              reason: "nonExecutableTarget",
-            },
-          },
-        ],
-      }),
-    );
-
-    const session = startedStatBlock(withUnsupportedDispatch);
-    const actor = session.state.combatants.get(
-      combatantId("stat-block-projection-actor"),
-    );
-    expect(actor?.origin.kind).toBe("statBlock");
-    if (actor?.origin.kind === "statBlock") {
-      expect(actor.origin.execution.procedureBindings).toContainEqual(
-        expect.objectContaining({
-          procedure: expect.objectContaining({
-            kind: "unsupported",
-            procedureOrdinal: 3,
-            reason: "unsupportedMultiattackDispatch",
-            dispatches: [
-              {
-                procedureOrdinal: 2,
-                count: 1,
-                target: {
-                  kind: "unsupported",
-                  reason: "nonExecutableTarget",
-                },
-              },
-            ],
-          }),
-          resourcePoolRefs: [],
-        }),
-      );
-      const presentation = session.context.statBlocks.get(
-        combatantId("stat-block-projection-actor"),
-      );
-      if (presentation === undefined) {
-        throw new Error("Expected Stat Block presentation context.");
-      }
-      expect(
-        statBlockProcedurePresentations({
-          execution: actor.origin.execution,
-          presentation,
-        }),
-      ).toContainEqual(
-        expect.objectContaining({
-          kind: "unsupported",
-          label: "Synthetic Routine",
-          reason: "unsupportedMultiattackDispatch",
-        }),
-      );
-    }
-    expect(
-      discoverBattleActsWithStatBlockProjectionIssues(session)
-        .statBlockProjectionIssues,
-    ).toEqual([
-      {
-        combatantId: combatantId("stat-block-projection-actor"),
-        issues: [
-          {
-            tag: "statBlockProjectionIssue",
-            source: {
-              kind: "action",
-              section: "actions",
-              shape: "special",
-              nonExecutableReason: "required_table_adjudication",
-            },
-          },
-          {
-            tag: "statBlockProjectionIssue",
-            source: {
-              kind: "action",
-              section: "actions",
-              shape: "multiattack",
-              nonExecutableReason: "unsupportedActionShape",
-            },
+            procedureOrdinal: attack.procedureOrdinal,
+            count: { kind: "literal", value: 1 },
           },
         ],
       },
-    ]);
+      resourceRefs: { kind: "none" },
+    };
+    const projected = projectAuthoredStatBlock({
+      ...source,
+      id: statBlockId("synthetic-multiattack-unsupported-attack"),
+      statBlock: {
+        ...source.statBlock,
+        actions: [unsupportedAttack, multiattack],
+      },
+    });
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        { section: "actions", procedureOrdinal: attack.procedureOrdinal },
+        {
+          section: "actions",
+          procedureOrdinal: multiattack.procedureOrdinal,
+        },
+      ],
+    });
   });
 
   test("renamed equivalent mechanics project to the same creature facts and Acts", () => {

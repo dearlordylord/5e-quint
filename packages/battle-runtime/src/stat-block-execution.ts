@@ -28,7 +28,6 @@ import {
   admittedStatBlockExecutionState,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
-  type BattleStatBlockRuntimeMultiattackDispatch,
   type BattleStatBlockRuntimeResource,
   type StatBlockExecutionState,
   type StatBlockExecutionAdmission,
@@ -68,7 +67,6 @@ type AllocatedStatBlockExecution = {
     | AdmittedAttackOccurrence
     | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
-    | AdmittedUnsupportedOccurrence
     | AdmittedBonusActionOccurrence,
     BattleStatBlockProcedureExecutionRef
   >;
@@ -120,15 +118,6 @@ export type AdmittedMultiattackOccurrence = {
   }>;
 };
 
-export type AdmittedUnsupportedOccurrence = {
-  readonly kind: "unsupported";
-  readonly procedureOrdinal: Extract<
-    BattleStatBlockRuntimeProcedure,
-    { readonly kind: "multiattack" }
-  >["procedureOrdinal"];
-  readonly dispatches: ReadonlyNonEmptyArray<BattleStatBlockRuntimeMultiattackDispatch>;
-};
-
 type AdmittedMultiattackDispatch =
   AdmittedMultiattackOccurrence["dispatches"][number];
 
@@ -147,7 +136,6 @@ export type AdmittedStatBlockOccurrences = {
   readonly attacks: readonly AdmittedAttackOccurrence[];
   readonly unarmedStrike: AdmittedUnarmedStrikeOccurrence;
   readonly multiattacks: readonly AdmittedMultiattackOccurrence[];
-  readonly unsupported: readonly AdmittedUnsupportedOccurrence[];
   readonly bonusActions: readonly AdmittedBonusActionOccurrence[];
   readonly resources: readonly BattleStatBlockRuntimeResource[];
 };
@@ -247,21 +235,13 @@ function admitStatBlock(
   }
   const actionAttacks = attacks.filter(({ section }) => section === "actions");
   const multiattacks: AdmittedMultiattackOccurrence[] = [];
-  const unsupported: AdmittedUnsupportedOccurrence[] = [];
   for (const multiattack of statBlock.procedures) {
     if (multiattack.kind !== "multiattack") continue;
     const dispatches = admittedMultiattackDispatches(
       multiattack,
       actionAttacks,
     );
-    if (dispatches === null) {
-      unsupported.push({
-        kind: "unsupported",
-        procedureOrdinal: multiattack.procedureOrdinal,
-        dispatches: multiattack.dispatches,
-      });
-      continue;
-    }
+    if (dispatches === null) continue;
     const occurrence: AdmittedMultiattackOccurrence = {
       kind: "multiattack",
       procedureOrdinal: multiattack.procedureOrdinal,
@@ -294,7 +274,6 @@ function admitStatBlock(
       attacks,
       unarmedStrike: admittedUnarmedStrike(statBlock),
       multiattacks,
-      unsupported,
       bonusActions,
       resources: statBlock.resources ?? [],
     },
@@ -387,7 +366,6 @@ function admittedMultiattackDispatch(
   actionAttacks: readonly AdmittedAttackOccurrence[],
 ): AdmittedMultiattackDispatch | null {
   if (!Number.isInteger(dispatch.count) || dispatch.count < 1) return null;
-  if (dispatch.target.kind !== "attack") return null;
   const count = PositiveInteger(dispatch.count);
   const candidate = actionAttacks.find(
     (attack) => attack.procedureOrdinal === dispatch.procedureOrdinal,
@@ -410,7 +388,6 @@ function allocateStatBlockExecution(
     | AdmittedAttackOccurrence
     | AdmittedUnarmedStrikeOccurrence
     | AdmittedMultiattackOccurrence
-    | AdmittedUnsupportedOccurrence
     | AdmittedBonusActionOccurrence,
     BattleStatBlockProcedureExecutionRef
   >();
@@ -509,22 +486,6 @@ function allocateStatBlockExecution(
         dispatchProcedureRefs,
       },
       resourcePoolRefs,
-    });
-  }
-
-  for (const unsupported of admitted.unsupported) {
-    const procedureRef = allocateProcedureRef(allocator);
-    procedureRefs.set(unsupported, procedureRef);
-    procedureBindings.push({
-      procedureRef,
-      procedure: {
-        kind: "unsupported",
-        section: "actions",
-        procedureOrdinal: unsupported.procedureOrdinal,
-        reason: "unsupportedMultiattackDispatch",
-        dispatches: unsupported.dispatches,
-      },
-      resourcePoolRefs: [],
     });
   }
 

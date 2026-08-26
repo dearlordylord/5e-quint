@@ -5569,32 +5569,9 @@ const StatBlockUnarmedStrikeProcedureSchema = Schema.Struct({
   ),
 });
 
-const StatBlockUnsupportedMultiattackDispatchSchema = Schema.Struct({
-  procedureOrdinal: StatBlockProcedureOrdinalSchema,
-  count: Schema.Number.pipe(Schema.int(), Schema.greaterThan(0)),
-  target: Schema.Union(
-    Schema.Struct({ kind: Schema.Literal("attack") }),
-    Schema.Struct({
-      kind: Schema.Literal("unsupported"),
-      reason: Schema.Literal("nonExecutableTarget"),
-    }),
-  ),
-});
-
-const StatBlockUnsupportedProcedureSchema = Schema.Struct({
-  kind: Schema.Literal("unsupported"),
-  section: Schema.Literal("actions"),
-  procedureOrdinal: StatBlockProcedureOrdinalSchema,
-  reason: Schema.Literal("unsupportedMultiattackDispatch"),
-  dispatches: Schema.NonEmptyArray(
-    StatBlockUnsupportedMultiattackDispatchSchema,
-  ),
-});
-
 const StatBlockProcedureSchema = Schema.Union(
   StatBlockAttackProcedureSchema,
   StatBlockUnarmedStrikeProcedureSchema,
-  StatBlockUnsupportedProcedureSchema,
   Schema.Struct({
     kind: Schema.Literal("multiattack"),
     section: Schema.Literal("actions"),
@@ -5793,10 +5770,7 @@ function statBlockProcedurePoolShapeIsValid(
     (pool) => pool.kind === "legendaryActions",
   ).length;
   const limitedUsePoolCount = pools.length - legendaryPoolCount;
-  if (
-    binding.procedure.kind === "unarmedStrike" ||
-    binding.procedure.kind === "unsupported"
-  ) {
+  if (binding.procedure.kind === "unarmedStrike") {
     return pools.length === 0;
   }
   if (binding.procedure.kind === "multiattack") {
@@ -5870,11 +5844,9 @@ function runtimeProcedureOrdinalKey(
   const section =
     procedure.kind === "attack"
       ? procedure.section
-      : procedure.kind === "unsupported"
-        ? procedure.section
-        : procedure.kind === "bonusActionOption"
-          ? "bonusActions"
-          : "actions";
+      : procedure.kind === "bonusActionOption"
+        ? "bonusActions"
+        : "actions";
   return `${section}:${procedure.procedureOrdinal}`;
 }
 
@@ -7574,7 +7546,6 @@ function serializedStatBlockProcedureKind(
 ):
   | "attack"
   | "unarmedStrike"
-  | "unsupported"
   | "multiattack"
   | "bonusActionOption"
   | undefined {

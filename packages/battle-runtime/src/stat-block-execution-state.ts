@@ -66,12 +66,6 @@ export type BattleStatBlockRuntimeResource = {
 export type BattleStatBlockRuntimeMultiattackDispatch = {
   readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly count: number;
-  readonly target:
-    | { readonly kind: "attack" }
-    | {
-        readonly kind: "unsupported";
-        readonly reason: "nonExecutableTarget";
-      };
 };
 
 export type BattleStatBlockRuntimeFacts = {
@@ -198,14 +192,6 @@ export type StatBlockMultiattackProcedure = {
   readonly dispatchProcedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
 };
 
-export type StatBlockUnsupportedProcedure = {
-  readonly kind: "unsupported";
-  readonly section: "actions";
-  readonly procedureOrdinal: StatBlockProcedureOrdinal;
-  readonly reason: "unsupportedMultiattackDispatch";
-  readonly dispatches: ReadonlyNonEmptyArray<BattleStatBlockRuntimeMultiattackDispatch>;
-};
-
 export type StatBlockBonusActionOptionProcedure = {
   readonly kind: "bonusActionOption";
   readonly section: "bonusActions";
@@ -217,8 +203,7 @@ export type StatBlockProcedure =
   | StatBlockAttackProcedure
   | StatBlockUnarmedStrikeProcedure
   | StatBlockMultiattackProcedure
-  | StatBlockBonusActionOptionProcedure
-  | StatBlockUnsupportedProcedure;
+  | StatBlockBonusActionOptionProcedure;
 
 export type StatBlockProcedureBindingFor<
   TProcedure extends StatBlockProcedure,
