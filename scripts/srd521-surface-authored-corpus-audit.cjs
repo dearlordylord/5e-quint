@@ -33,7 +33,7 @@ const STRUCTURAL_VOCABULARY_ROLE = Object.freeze({
 });
 
 function schemaRoleAt(ast) {
-  const annotation = ast?.annotations?.[SURFACE_SCHEMA_ROLE_ANNOTATION];
+  const annotation = SchemaAST.resolveAt(SURFACE_SCHEMA_ROLE_ANNOTATION)(ast);
   if (annotation === undefined) return undefined;
   if (!isSurfaceSchemaRole(annotation)) {
     throw new Error("Surface schema role annotation is malformed");

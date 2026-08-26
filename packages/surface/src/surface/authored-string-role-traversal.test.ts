@@ -92,6 +92,29 @@ describe("Surface authored string role traversal", () => {
     });
   });
 
+  it("resolves roles attached to checked string annotations", () => {
+    const checked = surfaceSchemaRole(
+      Schema.String.pipe(Schema.check(Schema.isMinLength(2))),
+      { category: "prose", evidence: "summary" },
+    );
+    expect(checked.ast.annotations?.[SURFACE_SCHEMA_ROLE_ANNOTATION]).toBe(
+      undefined,
+    );
+    expect(
+      AST.resolveAt<unknown>(SURFACE_SCHEMA_ROLE_ANNOTATION)(checked.ast),
+    ).toEqual({ category: "prose", evidence: "summary" });
+
+    const roles: string[] = [];
+    traversal.walkSurfaceValue(
+      Schema.Struct({ text: checked }),
+      { text: "checked" },
+      (_path: string, _value: string, role: { readonly category: string }) => {
+        roles.push(role.category);
+      },
+    );
+    expect(roles).toEqual(["prose"]);
+  });
+
   it("accepts only closed, category-consistent authored relation roles", () => {
     const validRoles = [
       {
