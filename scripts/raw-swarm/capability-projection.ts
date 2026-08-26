@@ -264,7 +264,7 @@ const CANONICAL_CAPABILITIES = [
     operation: "resolveBattleRuntimeSubject",
     summary: "Resolve one surfaced battle subject with canonical fills.",
     boundary:
-      "Carry the complete accepted fill prefix and latest session; preserve the public reducer protocol exactly.",
+      "Carry the complete accepted fill prefix and latest session; choose a surfaced Help enemy without restating its adjacency witness, which the ScenarioSession supplies from its spatial source.",
   },
   {
     id: "resolve-movement",
