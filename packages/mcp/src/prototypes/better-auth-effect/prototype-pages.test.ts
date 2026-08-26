@@ -10,18 +10,21 @@ describe("credential-free saved-session vault pages", () => {
   it("creates and authorizes a pseudonymous vault with one explicit action", async () => {
     const html = await prototypeVaultPage().text();
 
-    expect(html).toContain("You do not enter an email, password");
-    expect(html).toContain("display a generated");
-    expect(html).toContain("vault label—not an inbox, login, or error");
-    expect(html).toContain("no ChatGPT account identity or personal email");
-    expect(html).toContain("requesting client does not share your account");
-    expect(html).toContain("clients you authorize from that session share");
+    expect(html).toContain("Save your games");
+    expect(html).toContain(
+      "can save, resume, and delete games in your private vault",
+    );
+    expect(html).toContain("No account or personal email required");
+    expect(html).toContain("saved games may be unrecoverable");
     expect(html).toContain("/api/auth/sign-in/anonymous");
     expect(html).toContain("/api/auth/oauth2/consent");
     expect(html).toContain("/api/auth/oauth2/public-client-prelogin");
-    expect(html).toContain("Registered client:");
     expect(html).toContain("result.client_id !== clientId");
-    expect(html).toContain("Create vault and allow this client");
+    expect(html).toContain('client.client_name + " (" + url.origin + ")"');
+    expect(html).toContain(
+      'client.client_name + " (" + client.client_id + ")"',
+    );
+    expect(html).toContain("Create vault &amp; allow");
     expect(html).toContain("pendingConsentUrl === undefined");
     expect(html).toContain('location.href = "/api/auth/oauth2/authorize?"');
     expect(html).toContain('href="/privacy"');
@@ -33,14 +36,14 @@ describe("credential-free saved-session vault pages", () => {
   it("keeps consent explicit for an existing vault session", async () => {
     const html = await prototypeConsentPage().text();
 
-    expect(html).toContain("Allow saved sessions");
-    expect(html).toContain("Keep guest-only");
-    expect(html).toContain("pseudonymous vault");
-    expect(html).toContain("requesting client does not share your account");
-    expect(html).toContain("not your ChatGPT identity or personal email");
-    expect(html).toContain("vault label, not an inbox, login, or error");
+    expect(html).toContain("Allow access to saved games?");
+    expect(html).toContain("private vault");
+    expect(html).toContain(">Allow</button>");
+    expect(html).toContain(">Cancel</button>");
     expect(html).toContain("/api/auth/oauth2/public-client-prelogin");
-    expect(html).toContain("Registered client:");
+    expect(html).toContain(
+      "can save, resume, and delete games in your private vault",
+    );
     expect(html).toContain('typeof result.url !== "string"');
     expect(html).toContain("button.disabled = true");
   });

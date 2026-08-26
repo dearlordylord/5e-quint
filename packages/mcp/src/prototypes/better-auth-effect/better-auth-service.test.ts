@@ -64,10 +64,32 @@ describe("credential-free Better Auth database admission", () => {
       const database = new DatabaseSync(databasePath);
       const migrated = database.prepare('SELECT "email" FROM "user"').get();
       expect(migrated?.email).toBe(
-        "saved-session-vault-legacy-vault@anonymous.invalid",
+        "saved-session-vault-legacy-vault@vault.dnd-oracle.apps.loskutoff.com",
       );
-      database.prepare('UPDATE "user" SET "isAnonymous" = 0').run();
+      database
+        .prepare(
+          `UPDATE "user" SET "email" = 'saved-session-vault-existing@anonymous.invalid'`,
+        )
+        .run();
       database.close();
+
+      const existingLabelRuntime = ManagedRuntime.make(
+        betterAuthPrototypeLayer(configuration),
+      );
+      await expect(
+        existingLabelRuntime.runPromise(BetterAuthPrototype),
+      ).resolves.toBeDefined();
+      await existingLabelRuntime.dispose();
+
+      const normalizedDatabase = new DatabaseSync(databasePath);
+      const normalized = normalizedDatabase
+        .prepare('SELECT "email" FROM "user"')
+        .get();
+      expect(normalized?.email).toBe(
+        "saved-session-vault-existing@vault.dnd-oracle.apps.loskutoff.com",
+      );
+      normalizedDatabase.prepare('UPDATE "user" SET "isAnonymous" = 0').run();
+      normalizedDatabase.close();
 
       const rejectingRuntime = ManagedRuntime.make(
         betterAuthPrototypeLayer(configuration),

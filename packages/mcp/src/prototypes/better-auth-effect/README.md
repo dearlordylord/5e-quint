@@ -15,10 +15,10 @@ randomly generated vault identity rather than a personal address or ChatGPT
 identity. Ordinary network metadata is still handled under the public privacy
 and retention policy.
 
-The generated identifier is deliberately formatted as
-`saved-session-vault-…@anonymous.invalid`. ChatGPT may display it as the
-connected identity; it is a vault label, not an inbox, login credential, or
-error. Startup normalizes the earlier `temp-…@anonymous.invalid` labels.
+The generated identifier uses the service-owned
+`vault.dnd-oracle.apps.loskutoff.com` domain. Startup normalizes the earlier
+`temp-…@anonymous.invalid` and `saved-session-vault-…@anonymous.invalid`
+labels.
 
 This credential-free variant must use a fresh auth database path. Startup
 rejects a database containing any non-anonymous Better Auth user, so accounts
