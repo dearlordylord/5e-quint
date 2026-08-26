@@ -34,30 +34,32 @@ function unitDetailPayload(response: ReturnType<typeof handleToolCall>) {
 }
 
 describe("MCP Stat Block summaries", () => {
-  test("projects cast-time choices and nonliteral execution values", () => {
+  test("projects authored names and ordered procedure summaries", () => {
     const root = createMcpPlaySessionRoot();
     const base = root.statBlockCatalog.requireStatBlock(
       "stat_block_goblin_warrior",
     );
-    const {
-      actions: _actions,
-      initiativeModifier: _initiativeModifier,
-      ...baseMechanics
-    } = base.statBlock;
+    const firstAction = base.statBlock.actions?.[0];
+    if (firstAction === undefined) {
+      throw new Error("Goblin Warrior fixture must have an action");
+    }
     const summary = statBlockSummary({
       ...base,
       id: statBlockId("stat_block_synthetic_summary"),
       name: "Synthetic Summary Creature",
       statBlock: {
-        ...baseMechanics,
-        displayName: "Synthetic Summary Creature",
-        creatureType: {
-          kind: "choice",
-          label: "Synthetic creature type",
-          options: ["beast"],
-        },
-        ac: { kind: "caster_derived", source: "spell_save_dc" },
-        hp: { kind: "caster_derived", source: "proficiency_bonus" },
+        ...base.statBlock,
+        actions: [
+          {
+            kind: "textOnly",
+            procedureOrdinal: firstAction.procedureOrdinal,
+            name: "Unmodeled Roar",
+            description: "A synthetic procedure retained for presentation.",
+            reason: "unsupported_procedure_family",
+            resourceRefs: { kind: "none" },
+          },
+        ],
+        creatureType: "beast",
         immunities: { conditions: ["poisoned"] },
         resistances: {
           kind: "choose_one_from",
@@ -67,17 +69,26 @@ describe("MCP Stat Block summaries", () => {
     });
 
     expect(summary).toMatchObject({
-      armorClass: null,
+      armorClass: 15,
       attacks: [],
       conditionImmunities: ["poisoned"],
-      creatureType: expect.stringContaining("Synthetic creature type"),
+      creatureType: "beast",
       damageImmunities: [],
       damageResistanceChoices: ["cold", "fire"],
       damageResistances: [],
-      hitPoints: null,
+      hitPoints: 10,
+      initiativeModifier: 2,
+      orderedProcedures: expect.arrayContaining([
+        expect.objectContaining({
+          section: "action",
+          procedureOrdinal: 1,
+          kind: "textOnly",
+          name: "Unmodeled Roar",
+          reason: "unsupported_procedure_family",
+        }),
+      ]),
       statBlockId: "stat_block_synthetic_summary",
     });
-    expect(summary).not.toHaveProperty("initiativeModifier");
   });
 });
 

@@ -52,14 +52,37 @@ const StatBlockAttackSummarySchema = Schema.Struct({
   longRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
   onHit: StringArraySchema,
 });
+const StatBlockProcedureSummarySchema = Schema.Struct({
+  section: Schema.Literal(
+    "action",
+    "bonus_action",
+    "reaction",
+    "legendary_action",
+  ),
+  procedureOrdinal: Schema.Number,
+  kind: Schema.Literal(
+    "textOnly",
+    "attack_roll",
+    "multiattack",
+    "save",
+    "support",
+    "action_option",
+    "spellcasting",
+  ),
+  name: Schema.String,
+  description: Schema.optionalWith(Schema.String, { exact: true }),
+  reason: Schema.optionalWith(Schema.String, { exact: true }),
+  resourceOrdinals: Schema.Array(Schema.Number),
+});
 const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
   displayName: Schema.String,
   creatureType: Schema.String,
   armorClass: Schema.Union(Schema.Number, Schema.Null),
   hitPoints: Schema.Union(Schema.Number, Schema.Null),
-  initiativeModifier: Schema.optionalWith(Schema.Number, { exact: true }),
+  initiativeModifier: Schema.Number,
   attacks: Schema.Array(StatBlockAttackSummarySchema),
+  orderedProcedures: Schema.Array(StatBlockProcedureSummarySchema),
   damageVulnerabilities: StringArraySchema,
   damageResistances: StringArraySchema,
   damageResistanceChoices: StringArraySchema,
@@ -124,7 +147,7 @@ export const contentToolDefinitions = [
     name: contentToolNames.listStatBlocks,
     title: "List Stat Blocks",
     description:
-      "List every installed redistributable SRD Stat Block with ids, display names, attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
+      "List every installed redistributable SRD Stat Block with ids, authored display names, ordered procedure summaries (including retained text-only entries), attacks, defenses, and damage modifiers. Catalog presence does not imply that every source is executable in every workflow.",
     inputSchema: emptyInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: listStatBlocksOutputSchema,
@@ -141,9 +164,21 @@ export const contentToolDefinitions = [
   inspectCatalogUnitToolDefinition,
 ] as const satisfies readonly ProtocolToolDefinition[];
 
-type StatBlockAttack = NonNullable<
-  NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
->[number];
+type StatBlockProcedureEntry =
+  | NonNullable<StatBlockRecord["statBlock"]["actions"]>[number]
+  | NonNullable<StatBlockRecord["statBlock"]["bonusActions"]>[number]
+  | NonNullable<StatBlockRecord["statBlock"]["reactions"]>[number]
+  | NonNullable<
+      NonNullable<StatBlockRecord["statBlock"]["legendaryActions"]>["entries"]
+    >[number];
+type StatBlockExecutableProcedureEntry = Extract<
+  StatBlockProcedureEntry,
+  { readonly kind: "executable" }
+>;
+type StatBlockAttack = Extract<
+  StatBlockExecutableProcedureEntry["procedure"],
+  { readonly kind: "attack_roll" }
+>;
 
 export type ContentToolResult =
   | ReturnType<typeof schemaJsonContent>
@@ -338,16 +373,20 @@ function groupUnitsByKind(units: readonly UnitRecord[]) {
 
 export function statBlockSummary(record: StatBlockRecord) {
   const statBlock = record.statBlock;
+  const orderedProcedures = authoredProcedureEntries(statBlock);
   return {
     statBlockId: record.id,
-    displayName: statBlock.displayName,
+    displayName: record.name,
     creatureType: stringCreatureType(record),
-    armorClass: literalNumber(statBlock.ac),
+    armorClass: literalNumber(statBlock.ac.value),
     hitPoints: literalNumber(statBlock.hp),
-    ...(statBlock.initiativeModifier === undefined
-      ? {}
-      : { initiativeModifier: statBlock.initiativeModifier }),
-    attacks: (statBlock.actions?.attacks ?? []).map(attackSummary),
+    initiativeModifier: statBlock.initiative.modifier,
+    attacks: orderedProcedures.flatMap(({ entry }) =>
+      isAttackProcedure(entry) ? [attackSummary(entry.procedure)] : [],
+    ),
+    orderedProcedures: orderedProcedures.map(({ section, entry }) =>
+      procedureSummary(section, entry),
+    ),
     damageVulnerabilities: damageModifierTypes(statBlock.vulnerabilities),
     damageResistances: damageModifierTypes(statBlock.resistances),
     damageResistanceChoices: damageResistanceChoices(statBlock.resistances),
@@ -355,6 +394,66 @@ export function statBlockSummary(record: StatBlockRecord) {
     conditionImmunities: conditionModifierTypes(statBlock.immunities),
     provenanceKind: record.provenance.kind,
     provenanceSection: record.provenance.section,
+  };
+}
+
+function authoredProcedureEntries(
+  statBlock: StatBlockRecord["statBlock"],
+): ReadonlyArray<{
+  readonly section: "action" | "bonus_action" | "reaction" | "legendary_action";
+  readonly entry: StatBlockProcedureEntry;
+}> {
+  return [
+    ...(statBlock.actions ?? []).map((entry) => ({
+      section: "action" as const,
+      entry,
+    })),
+    ...(statBlock.bonusActions ?? []).map((entry) => ({
+      section: "bonus_action" as const,
+      entry,
+    })),
+    ...(statBlock.reactions ?? []).map((entry) => ({
+      section: "reaction" as const,
+      entry,
+    })),
+    ...(statBlock.legendaryActions?.entries ?? []).map((entry) => ({
+      section: "legendary_action" as const,
+      entry,
+    })),
+  ];
+}
+
+function isAttackProcedure(
+  entry: StatBlockProcedureEntry,
+): entry is StatBlockExecutableProcedureEntry & {
+  readonly procedure: StatBlockAttack;
+} {
+  return entry.kind === "executable" && entry.procedure.kind === "attack_roll";
+}
+
+function procedureSummary(
+  section: "action" | "bonus_action" | "reaction" | "legendary_action",
+  entry: StatBlockProcedureEntry,
+) {
+  const resourceOrdinals =
+    entry.resourceRefs.kind === "none" ? [] : [...entry.resourceRefs.ordinals];
+  if (entry.kind === "textOnly") {
+    return {
+      section,
+      procedureOrdinal: entry.procedureOrdinal,
+      kind: "textOnly",
+      name: entry.name,
+      description: entry.description,
+      reason: entry.reason,
+      resourceOrdinals,
+    };
+  }
+  return {
+    section,
+    procedureOrdinal: entry.procedureOrdinal,
+    kind: entry.procedure.kind,
+    name: entry.procedure.name,
+    resourceOrdinals,
   };
 }
 
@@ -386,11 +485,9 @@ function stringCreatureType(record: StatBlockRecord): string {
 
 function literalNumber(
   value:
-    | StatBlockRecord["statBlock"]["ac"]
+    | StatBlockRecord["statBlock"]["ac"]["value"]
     | StatBlockRecord["statBlock"]["hp"]
-    | NonNullable<
-        NonNullable<StatBlockRecord["statBlock"]["actions"]>["attacks"]
-      >[number]["attackBonus"],
+    | StatBlockAttack["attackBonus"],
 ): number | null {
   if (value.kind === "literal") {
     return value.value;

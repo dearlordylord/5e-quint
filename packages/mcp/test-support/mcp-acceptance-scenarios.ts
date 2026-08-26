@@ -581,10 +581,7 @@ export async function verifyToolContract(client: Client) {
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
   });
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Goblin Warrior",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Goblin Warrior");
 
   await expectToolError(client, "start_battle", {
     battleId: "battle:empty-rejected",
@@ -799,10 +796,7 @@ export async function verifyBaselineVertical(
     get(selected, "selectedStatBlock.id"),
     "selectedStatBlock.id",
   );
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Goblin Warrior",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Goblin Warrior");
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-accepted-vertical",
@@ -1212,10 +1206,7 @@ export async function verifyWidthVertical(client: Client) {
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_skeleton",
   });
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Skeleton",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Skeleton");
   assert.deepEqual(
     get(selected, "selectedStatBlock.statBlock.vulnerabilities.damageTypes"),
     ["bludgeoning"],
@@ -1552,10 +1543,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_sphinx_of_wonder",
   });
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Sphinx of Wonder",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Sphinx of Wonder");
 
   const started = await callTool(client, "start_battle", {
     battleId: "battle:stdio-level-three-scorching-ray",
@@ -1855,10 +1843,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_sphinx_of_wonder",
   });
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Sphinx of Wonder",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Sphinx of Wonder");
 
   const started = await callTool(client, "start_battle", {
     battleId: levelFiveWizardFireballBattleId,
@@ -2193,10 +2178,7 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
   });
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Goblin Warrior",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Goblin Warrior");
 
   const started = await callTool(client, "start_battle", {
     battleId: levelSixRogueExpertiseBattleId,
@@ -2381,10 +2363,7 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
   });
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Goblin Warrior",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Goblin Warrior");
 
   const started = await callTool(client, "start_battle", {
     battleId: levelNineRangerExpertiseBattleId,
@@ -2518,10 +2497,7 @@ export async function verifyLevelTenFighterChampionBattleHandoff(
   const selected = await callTool(client, "select_stat_block", {
     statBlockId: "stat_block_goblin_warrior",
   });
-  assert.equal(
-    get(selected, "selectedStatBlock.statBlock.displayName"),
-    "Goblin Warrior",
-  );
+  assert.equal(get(selected, "selectedStatBlock.name"), "Goblin Warrior");
 
   const started = await callTool(client, "start_battle", {
     battleId: levelTenFighterChampionBattleId,

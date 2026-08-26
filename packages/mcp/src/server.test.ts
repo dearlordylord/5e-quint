@@ -119,7 +119,10 @@ import {
   buildStatBlockCatalog,
   defineSrdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
-import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
+import {
+  decodeStatBlockRecordSync,
+  decodeUnitRecordSync,
+} from "@dnd/surface/surface/schema";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
   buildUnitCatalog,
@@ -2141,6 +2144,14 @@ describe("MCP server route", () => {
           displayName: "Goblin Warrior",
           attacks: expect.arrayContaining([
             expect.objectContaining({ attackName: "Scimitar" }),
+          ]),
+          orderedProcedures: expect.arrayContaining([
+            expect.objectContaining({
+              section: "action",
+              procedureOrdinal: 1,
+              kind: "attack_roll",
+              name: "Scimitar",
+            }),
           ]),
         }),
         expect.objectContaining({
@@ -4491,7 +4502,6 @@ describe("MCP server route", () => {
       name: "Synthetic Invalid Mechanics",
       statBlock: {
         ...base.statBlock,
-        displayName: "Synthetic Invalid Mechanics",
         hp: { kind: "literal", value: -1 },
       },
     } satisfies StatBlockRecord;
@@ -4525,41 +4535,6 @@ describe("MCP server route", () => {
         code: "INVALID_BATTLE_COMBATANTS",
         issues: [{ details: { code: "STAT_BLOCK_BATTLE_INIT_INVALID" } }],
       },
-    });
-
-    const invalidDisplayRecord = {
-      ...base,
-      id: statBlockId("stat_block_synthetic_invalid_display"),
-      name: "Synthetic Invalid Display",
-      statBlock: { ...base.statBlock, displayName: "" },
-    } satisfies StatBlockRecord;
-    const invalidDisplayRoot = {
-      ...createMcpPlaySessionRoot(),
-      statBlockCatalog: {
-        ...invalidHpRoot.statBlockCatalog,
-        getStatBlock: () => Option.some(invalidDisplayRecord),
-      },
-    };
-    expect(
-      readPayload(
-        handleToolCall(invalidDisplayRoot, "start_battle", {
-          battleId: "battle:stat-block-invalid-display",
-          initiativeMode: "direct",
-          companionAdmissions: [],
-          initialCombatants: [
-            {
-              kind: "statBlock",
-              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-              statBlockId: invalidDisplayRecord.id,
-              combatantId: "synthetic-invalid-display",
-              initiative: 10,
-              admissionSource: { kind: "encounterParticipant" },
-            },
-          ],
-        }),
-      ),
-    ).toMatchObject({
-      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
     });
   });
 
@@ -6443,9 +6418,7 @@ describe("MCP server route", () => {
     expect(selected.selectedStatBlock).toMatchObject({
       id: "stat_block_goblin_warrior",
       provenance: { kind: "srd-5.2.1" },
-      statBlock: {
-        displayName: "Goblin Warrior",
-      },
+      name: "Goblin Warrior",
     });
 
     const started = readPayload(
@@ -9068,26 +9041,30 @@ function goblinWarriorMultiattackStatBlock(
   );
   // MCP-only upgraded Goblin Warrior fixture: the SRD Goblin Warrior has no
   // Multiattack, but this keeps the fixture small while exercising the tool path.
-  return {
+  return decodeStatBlockRecordSync({
     ...base,
     id: statBlockId("stat_block_goblin_warrior_mcp_multiattack"),
     name: "Upgraded Goblin Warrior",
     statBlock: {
       ...base.statBlock,
-      actions: {
-        ...base.statBlock.actions,
-        multiattacks: [
-          {
+      actions: [
+        ...(base.statBlock.actions ?? []),
+        {
+          kind: "executable",
+          procedureOrdinal: 3,
+          procedure: {
+            kind: "multiattack",
             name: "Multiattack",
             dispatches: [
-              { name: "Scimitar", count: { kind: "literal", value: 1 } },
-              { name: "Shortbow", count: { kind: "literal", value: 1 } },
+              { procedureOrdinal: 1, count: { kind: "literal", value: 1 } },
+              { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
             ],
           },
-        ],
-      },
+          resourceRefs: { kind: "none" },
+        },
+      ],
     },
-  };
+  });
 }
 
 function fighterTwoCharacterBuild(
