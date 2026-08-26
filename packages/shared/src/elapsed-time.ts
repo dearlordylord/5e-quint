@@ -1,4 +1,4 @@
-import { Brand, Either, Match, Schema } from "effect";
+import { Brand, Match, Result, Schema } from "effect";
 
 export const TIME_SPAN_SECONDS_PER_ROUND = 6;
 export const TIME_SPAN_SECONDS_PER_MINUTE = 60;
@@ -15,8 +15,7 @@ export type TimeSpanUnit = (typeof TIME_SPAN_UNITS)[number];
 export type ElapsedTimeTicks = number & Brand.Brand<"ElapsedTimeTicks">;
 const ElapsedTimeTicks = Brand.nominal<ElapsedTimeTicks>();
 export const ElapsedTimeTicksSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("ElapsedTimeTicks"),
 );
 
@@ -24,8 +23,7 @@ export type PositiveElapsedTimeTicks = ElapsedTimeTicks &
   Brand.Brand<"PositiveElapsedTimeTicks">;
 const PositiveElapsedTimeTicks = Brand.nominal<PositiveElapsedTimeTicks>();
 export const PositiveElapsedTimeTicksSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("ElapsedTimeTicks"),
   Schema.brand("PositiveElapsedTimeTicks"),
 );
@@ -63,14 +61,14 @@ export function isTimeSpanUnit(unit: string): unit is TimeSpanUnit {
 
 export function parseElapsedTimeTicks(
   value: number,
-): Either.Either<ElapsedTimeTicks, ElapsedTimeParseError> {
+): Result.Result<ElapsedTimeTicks, ElapsedTimeParseError> {
   if (!Number.isInteger(value)) {
-    return Either.left({ kind: "fractionalAmount", amount: value });
+    return Result.fail({ kind: "fractionalAmount", amount: value });
   }
   if (value < 0) {
-    return Either.left({ kind: "negativeAmount", amount: value });
+    return Result.fail({ kind: "negativeAmount", amount: value });
   }
-  return Either.right(ElapsedTimeTicks(value));
+  return Result.succeed(ElapsedTimeTicks(value));
 }
 
 export function elapsedTimeTicks(value: number): ElapsedTimeTicks {
@@ -83,14 +81,14 @@ function positiveElapsedTimeTicks(value: number): PositiveElapsedTimeTicks {
 
 export function parsePositiveElapsedTimeTicks(
   value: number,
-): Either.Either<PositiveElapsedTimeTicks, ElapsedTimeParseError> {
+): Result.Result<PositiveElapsedTimeTicks, ElapsedTimeParseError> {
   if (!Number.isInteger(value)) {
-    return Either.left({ kind: "fractionalAmount", amount: value });
+    return Result.fail({ kind: "fractionalAmount", amount: value });
   }
   if (value <= 0) {
-    return Either.left({ kind: "nonPositiveAmount", amount: value });
+    return Result.fail({ kind: "nonPositiveAmount", amount: value });
   }
-  return Either.right(positiveElapsedTimeTicks(value));
+  return Result.succeed(positiveElapsedTimeTicks(value));
 }
 
 export function boundaryCrossingsRemaining(
@@ -101,23 +99,23 @@ export function boundaryCrossingsRemaining(
 
 export function parseBoundaryCrossingsRemaining(
   value: number,
-): Either.Either<BoundaryCrossingsRemaining, ElapsedTimeParseError> {
+): Result.Result<BoundaryCrossingsRemaining, ElapsedTimeParseError> {
   const parsed = parsePositiveInt(value);
-  return Either.isRight(parsed)
-    ? Either.right(BoundaryCrossingsRemaining(parsed.right))
-    : Either.left(parsed.left);
+  return Result.isSuccess(parsed)
+    ? Result.succeed(BoundaryCrossingsRemaining(parsed.success))
+    : Result.fail(parsed.failure);
 }
 
 export function parsePositiveInt(
   value: number,
-): Either.Either<PositiveInt, ElapsedTimeParseError> {
+): Result.Result<PositiveInt, ElapsedTimeParseError> {
   if (!Number.isInteger(value)) {
-    return Either.left({ kind: "fractionalAmount", amount: value });
+    return Result.fail({ kind: "fractionalAmount", amount: value });
   }
   if (value <= 0) {
-    return Either.left({ kind: "nonPositiveAmount", amount: value });
+    return Result.fail({ kind: "nonPositiveAmount", amount: value });
   }
-  return Either.right(PositiveInt(value));
+  return Result.succeed(PositiveInt(value));
 }
 
 export function decrementBoundaryCrossingsRemaining(
@@ -130,15 +128,15 @@ export function decrementBoundaryCrossingsRemaining(
 export function elapsedTimeTicksFromUnit(
   unit: TimeSpanUnit,
   amount: number,
-): Either.Either<ElapsedTimeTicks, ElapsedTimeParseError> {
+): Result.Result<ElapsedTimeTicks, ElapsedTimeParseError> {
   if (!Number.isInteger(amount)) {
-    return Either.left({ kind: "fractionalAmount", amount });
+    return Result.fail({ kind: "fractionalAmount", amount });
   }
   if (amount < 0) {
-    return Either.left({ kind: "negativeAmount", amount });
+    return Result.fail({ kind: "negativeAmount", amount });
   }
 
-  return Either.right(
+  return Result.succeed(
     elapsedTimeTicks(
       Match.value(unit).pipe(
         Match.when("round", () => amount),
@@ -153,34 +151,38 @@ export function elapsedTimeTicksFromUnit(
 
 export function elapsedTimeTicksFromTimeSpanDuration(
   duration: SurfaceTimeSpanDurationValue,
-): Either.Either<ElapsedTimeTicks, ElapsedTimeParseError> {
+): Result.Result<ElapsedTimeTicks, ElapsedTimeParseError> {
   if (!isTimeSpanUnit(duration.unit)) {
-    return Either.left({ kind: "unsupportedUnit", unit: duration.unit });
+    return Result.fail({ kind: "unsupportedUnit", unit: duration.unit });
   }
   return elapsedTimeTicksFromUnit(duration.unit, duration.amount);
 }
 
 export function timeSpanDuration(
   value: SurfaceTimeSpanDurationValue,
-): Either.Either<TimeSpanDuration, ElapsedTimeParseError> {
+): Result.Result<TimeSpanDuration, ElapsedTimeParseError> {
   if (!isTimeSpanUnit(value.unit)) {
-    return Either.left({ kind: "unsupportedUnit", unit: value.unit });
+    return Result.fail({ kind: "unsupportedUnit", unit: value.unit });
   }
   const amount = parsePositiveInt(value.amount);
-  return Either.isRight(amount)
-    ? Either.right({ kind: "timeSpan", unit: value.unit, amount: amount.right })
-    : Either.left(amount.left);
+  return Result.isSuccess(amount)
+    ? Result.succeed({
+        kind: "timeSpan",
+        unit: value.unit,
+        amount: amount.success,
+      })
+    : Result.fail(amount.failure);
 }
 
 export function elapsedTimeTicksFromMinutes(
   minutes: number,
-): Either.Either<ElapsedTimeTicks, ElapsedTimeParseError> {
+): Result.Result<ElapsedTimeTicks, ElapsedTimeParseError> {
   return elapsedTimeTicksFromUnit("minute", minutes);
 }
 
 export function elapsedTimeTicksFromHours(
   hours: number,
-): Either.Either<ElapsedTimeTicks, ElapsedTimeParseError> {
+): Result.Result<ElapsedTimeTicks, ElapsedTimeParseError> {
   return elapsedTimeTicksFromUnit("hour", hours);
 }
 

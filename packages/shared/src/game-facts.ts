@@ -14,15 +14,19 @@ export const AMMUNITION_KINDS = [
   "sling_bullet",
 ] as const;
 export type AmmunitionKind = (typeof AMMUNITION_KINDS)[number];
-export const AmmunitionKindSchema = Schema.Literal(...AMMUNITION_KINDS);
+export const AmmunitionKindSchema = Schema.Literals(AMMUNITION_KINDS);
 
 /** Dependency-safe authored identity vocabulary for execution projections. */
-export const UnitId = Schema.NonEmptyTrimmedString.pipe(Schema.brand("UnitId"));
+export const UnitId = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
+  Schema.brand("UnitId"),
+);
 export type UnitId = typeof UnitId.Type;
 export const unitId: (value: string) => UnitId = UnitId.make;
 /** Weapon records are authored units, so their identity uses the UnitId domain. */
 export type WeaponId = UnitId;
-export const StatBlockId = Schema.NonEmptyTrimmedString.pipe(
+export const StatBlockId = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
   Schema.brand("StatBlockId"),
 );
 export type StatBlockId = typeof StatBlockId.Type;
@@ -195,12 +199,10 @@ export const CHARACTER_CLASS_LEVELS = [
 export type CharacterClassLevel = number & Brand.Brand<"CharacterClassLevel">;
 
 export const CharacterClassLevel = Brand.all(
-  Brand.refined<CharacterClassLevel>(
+  Brand.make<CharacterClassLevel>(
     (value) =>
       Number.isInteger(value) &&
       CHARACTER_CLASS_LEVELS.some((level) => level === value),
-    (value) =>
-      Brand.error(`Character class level must be from 1 through 20: ${value}`),
   ),
 );
 
