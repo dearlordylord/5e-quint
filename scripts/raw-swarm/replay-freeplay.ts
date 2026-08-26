@@ -12,6 +12,14 @@ import {
   decodePlaySessionId,
   type PlaySessionId,
 } from "../../packages/mcp/src/play-session.ts";
+import {
+  GUEST_INACTIVITY_RETENTION_MS,
+  SAVED_INACTIVITY_RETENTION_MS,
+  decodeGuestAccessGrant,
+  decodeEpochMilliseconds,
+  type EpochMilliseconds,
+  type GuestAccessGrant,
+} from "../../packages/mcp/src/play-session-access.ts";
 
 import {
   currentGitRevision,
@@ -30,7 +38,15 @@ export async function replayMcpExchanges(
   exchanges: readonly McpToolExchange[],
 ): Promise<number> {
   const recordedPlaySessionIds = successfulRecordedPlaySessionIds(exchanges);
+  const recordedGuestAccessGrants =
+    successfulRecordedGuestAccessGrants(exchanges);
   let nextPlaySessionId = 0;
+  let nextGuestAccessGrant = 0;
+  const initialReplayTime = decodeEpochMilliseconds(0);
+  if (Either.isLeft(initialReplayTime)) {
+    throw new Error(initialReplayTime.left.message);
+  }
+  let replayTime = initialReplayTime.right;
   const { server } = createDndMcpProtocolServer(undefined, undefined, {
     playSessionIdFactory: () => {
       const recorded = recordedPlaySessionIds[nextPlaySessionId];
@@ -42,6 +58,17 @@ export async function replayMcpExchanges(
       nextPlaySessionId += 1;
       return recorded;
     },
+    guestAccessGrantFactory: () => {
+      const recorded = recordedGuestAccessGrants[nextGuestAccessGrant];
+      if (recorded === undefined) {
+        throw new Error(
+          "Replay encountered more anonymous create_play_session calls than the transcript recorded.",
+        );
+      }
+      nextGuestAccessGrant += 1;
+      return recorded;
+    },
+    playSessionNow: () => replayTime,
   });
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -59,6 +86,8 @@ export async function replayMcpExchanges(
           `Replay cannot route non-object arguments for ${exchange.tool} at transcript seq ${exchange.seq}.`,
         );
       }
+      const recordedTime = recordedActivityTime(exchange.response);
+      if (recordedTime !== undefined) replayTime = recordedTime;
       const actual = await client.callTool({
         name: exchange.tool,
         arguments: exchange.args,
@@ -74,6 +103,97 @@ export async function replayMcpExchanges(
   } finally {
     await Promise.allSettled([client.close(), server.close()]);
   }
+}
+
+function recordedActivityTime(
+  response: unknown,
+): EpochMilliseconds | undefined {
+  if (!isJsonRecord(response)) return undefined;
+  const structuredContent = response.structuredContent;
+  if (!isJsonRecord(structuredContent)) return undefined;
+  const tenure = structuredContent.tenure;
+  if (!isJsonRecord(tenure)) return undefined;
+  const retentionMilliseconds =
+    tenure.tag === "guest"
+      ? GUEST_INACTIVITY_RETENTION_MS
+      : tenure.tag === "saved"
+        ? SAVED_INACTIVITY_RETENTION_MS
+        : undefined;
+  if (
+    retentionMilliseconds === undefined ||
+    typeof tenure.inactiveExpiresAt !== "string"
+  ) {
+    return undefined;
+  }
+  const inactiveExpiresAt = Date.parse(tenure.inactiveExpiresAt);
+  if (!Number.isFinite(inactiveExpiresAt)) {
+    fail("Replay encountered an invalid Play Session inactivity timestamp.");
+  }
+  const decoded = decodeEpochMilliseconds(
+    inactiveExpiresAt - retentionMilliseconds,
+  );
+  if (Either.isLeft(decoded)) {
+    fail(
+      `Replay encountered an invalid Play Session activity time: ${decoded.left.message}`,
+    );
+  }
+  return decoded.right;
+}
+
+function successfulRecordedGuestAccessGrants(
+  exchanges: readonly McpToolExchange[],
+): readonly GuestAccessGrant[] {
+  return exchanges.flatMap((exchange) => {
+    if (exchange.tool !== "create_play_session") return [];
+    const playSessionId = successfulRecordedPlaySessionId(exchange);
+    if (playSessionId === undefined) return [];
+    if (!isJsonRecord(exchange.response)) {
+      fail(
+        `Replay requires a create response at transcript seq ${exchange.seq}.`,
+      );
+    }
+    const structuredContent = exchange.response.structuredContent;
+    if (!isJsonRecord(structuredContent)) {
+      fail(
+        `Replay requires create_play_session at transcript seq ${exchange.seq} to return structuredContent.`,
+      );
+    }
+    const operation = structuredContent.operation;
+    if (!isJsonRecord(operation)) {
+      fail(
+        `Replay requires create_play_session at transcript seq ${exchange.seq} to return an operation.`,
+      );
+    }
+    const result = operation.result;
+    if (!isJsonRecord(result)) {
+      fail(
+        `Replay requires create_play_session at transcript seq ${exchange.seq} to return an operation result.`,
+      );
+    }
+    const access = result.access;
+    if (!isJsonRecord(access)) {
+      fail(
+        `Replay requires create_play_session at transcript seq ${exchange.seq} to return access.`,
+      );
+    }
+    if (access.tag === "authenticated") {
+      fail(
+        `Replay does not support authenticated create_play_session at transcript seq ${exchange.seq}.`,
+      );
+    }
+    if (access.tag !== "guest") {
+      fail(
+        `Replay requires guest create_play_session access at transcript seq ${exchange.seq}.`,
+      );
+    }
+    const decoded = decodeGuestAccessGrant(access.guestAccessGrant);
+    if (Either.isLeft(decoded)) {
+      fail(
+        `Replay requires a valid Guest Play Session access grant at transcript seq ${exchange.seq}: ${decoded.left}`,
+      );
+    }
+    return [decoded.right];
+  });
 }
 
 function successfulRecordedPlaySessionIds(

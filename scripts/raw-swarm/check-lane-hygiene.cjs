@@ -31,6 +31,8 @@ const {
   MODEL_BACKED_PROFILE_BUDGET_SECONDS,
   MODEL_BACKED_SOURCE_FILES,
   NETWORK_CLI_EXECUTABLES,
+  DETERMINISTIC_TRUSTED_BOUNDARY_TESTS,
+  GUARDED_DETERMINISTIC_RAW_SWARM_TESTS,
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
   SUPPORTED_VITEST_SOURCE_FILE_EXTENSIONS,
@@ -57,16 +59,15 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-function assertDeterministicLauncherResolvable(command) {
-  const preloadMatch = command.match(/(?:^|\s)--require(?:=|\s+)(\S+)/u);
-  assert.ok(
-    preloadMatch !== null,
-    "The deterministic launcher must declare a Node preload.",
+function assertDeterministicGuardResolvable() {
+  const guardPath = resolve(
+    root,
+    "scripts/raw-swarm/deterministic-capability-guard.cjs",
   );
   const result = spawnSync(
     process.execPath,
     [
-      `--require=${preloadMatch[1]}`,
+      `--require=${guardPath}`,
       "-e",
       'if (globalThis[Symbol.for("dnd.raw-swarm.deterministic-capability-guard")] !== true) process.exit(1);',
     ],
@@ -83,7 +84,7 @@ function assertDeterministicLauncherResolvable(command) {
   assert.equal(
     result.status,
     0,
-    `The deterministic launcher preload could not resolve or initialize:\n${result.stderr}`,
+    `The deterministic capability guard could not resolve or initialize:\n${result.stderr}`,
   );
 }
 
@@ -1170,6 +1171,36 @@ function runLaneHygiene() {
     false,
     "A Raw Swarm test cannot be both quality-owned and excluded from quality.",
   );
+  assert.equal(
+    new Set(QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS).size,
+    QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.length,
+    "The quality-owned deterministic test inventory must be duplicate-free.",
+  );
+  assert.equal(
+    new Set(DETERMINISTIC_TRUSTED_BOUNDARY_TESTS).size,
+    DETERMINISTIC_TRUSTED_BOUNDARY_TESTS.length,
+    "The trusted deterministic boundary test partition must be duplicate-free.",
+  );
+  assert.equal(
+    new Set(GUARDED_DETERMINISTIC_RAW_SWARM_TESTS).size,
+    GUARDED_DETERMINISTIC_RAW_SWARM_TESTS.length,
+    "The guarded deterministic test partition must be duplicate-free.",
+  );
+  for (const testPath of DETERMINISTIC_TRUSTED_BOUNDARY_TESTS) {
+    assert.equal(
+      QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.includes(testPath),
+      true,
+      `Trusted deterministic boundary test ${testPath} must remain quality-owned.`,
+    );
+  }
+  assert.deepEqual(
+    [
+      ...DETERMINISTIC_TRUSTED_BOUNDARY_TESTS,
+      ...GUARDED_DETERMINISTIC_RAW_SWARM_TESTS,
+    ].sort(),
+    QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+    "The trusted and guarded deterministic phases must partition every quality-owned test exactly once.",
+  );
   for (const testPath of discoveredTests) {
     const ownedTestPath = repositoryOwnedSourceFile(
       testPath,
@@ -1211,11 +1242,9 @@ function runLaneHygiene() {
   const scripts = packageJson.scripts;
   assert.equal(
     scripts["check:raw-swarm-deterministic:body"],
-    "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node --require=./scripts/raw-swarm/deterministic-capability-guard.cjs scripts/raw-swarm/run-deterministic-check.cjs",
+    "env -u NODE_OPTIONS RAW_SWARM_EXECUTION_LANE=deterministic node scripts/raw-swarm/run-deterministic-check.cjs",
   );
-  assertDeterministicLauncherResolvable(
-    scripts["check:raw-swarm-deterministic:body"],
-  );
+  assertDeterministicGuardResolvable();
   assert.match(
     scripts["check:raw-swarm-deterministic"],
     /with-broad-workspace-lock\.sh pnpm run check:raw-swarm-deterministic:body$/,
@@ -1279,6 +1308,13 @@ function runLaneHygiene() {
   assert.match(deterministicRunner, /process-supervisor\.c/);
   assert.match(deterministicRunner, /deterministic-toolchain\.cjs/);
   assert.match(deterministicRunner, /deterministic-runner\.cjs/);
+  assert.match(deterministicRunner, /DETERMINISTIC_TRUSTED_BOUNDARY_TESTS/);
+  assert.match(deterministicRunner, /GUARDED_DETERMINISTIC_RAW_SWARM_TESTS/);
+  assert.match(
+    deterministicRunner,
+    /superviseOnly: true/,
+    "Boundary fixtures must run under process-tree supervision without the outer seccomp filter.",
+  );
   assert.match(deterministicRunner, /NODE_OPTIONS: deterministicNodeOptions/);
   assert.doesNotMatch(
     deterministicRunner,

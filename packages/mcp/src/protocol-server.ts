@@ -43,6 +43,10 @@ import {
   createRecoverablePlaySessionRegistry,
   type PlaySessionRepository,
 } from "./recoverable-play-session.ts";
+import type {
+  EpochMilliseconds,
+  GuestAccessGrantFactory,
+} from "./play-session-access.ts";
 import { isBattleToolName } from "./battle-tools.ts";
 import { isCharacterToolName } from "./character-tools.ts";
 import { isDiceToolName } from "./dice-tool-input.ts";
@@ -62,7 +66,9 @@ export type {
 } from "./tool-definition-contract.ts";
 
 type CommonMcpProtocolServerOptions = {
+  readonly guestAccessGrantFactory?: GuestAccessGrantFactory;
   readonly playSessionIdFactory?: PlaySessionIdFactory;
+  readonly playSessionNow?: () => EpochMilliseconds;
   readonly requestIdentity?: PlaySessionRequestIdentity;
 };
 
@@ -262,6 +268,12 @@ function playSessionRegistry(
       repository: options.playSessionRepository,
       playSessionIdFactory:
         options.playSessionIdFactory ?? generatedPlaySessionId,
+      ...(options.guestAccessGrantFactory === undefined
+        ? {}
+        : { guestAccessGrantFactory: options.guestAccessGrantFactory }),
+      ...(options.playSessionNow === undefined
+        ? {}
+        : { now: options.playSessionNow }),
     });
   }
   return createPlaySessionRegistry({
@@ -281,6 +293,12 @@ function playSessionRegistry(
     ...(options.playSessionIdFactory === undefined
       ? {}
       : { playSessionIdFactory: options.playSessionIdFactory }),
+    ...(options.guestAccessGrantFactory === undefined
+      ? {}
+      : { guestAccessGrantFactory: options.guestAccessGrantFactory }),
+    ...(options.playSessionNow === undefined
+      ? {}
+      : { now: options.playSessionNow }),
   });
 }
 

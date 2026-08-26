@@ -49,6 +49,7 @@ const QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/artifact-index.test.ts",
   "scripts/raw-swarm/capability-projection.test.ts",
   "scripts/raw-swarm/complete-path-comparison.test.ts",
+  "scripts/raw-swarm/deterministic-capability.test.ts",
   "scripts/raw-swarm/findings.test.ts",
   "scripts/raw-swarm/fixed-baseline-measurement.test.ts",
   "scripts/raw-swarm/fixed-scenario-benchmark.test.ts",
@@ -83,6 +84,25 @@ const QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS = [
   "scripts/raw-swarm/sdk-player/sdk-transcript.property.test.ts",
   "scripts/raw-swarm/stage-plan-authority.test.ts",
 ].sort();
+
+// These suites exercise the native process and fixture boundaries themselves.
+// They need to start nested supervisors, synthetic coding-agent processes, and
+// permission-restricted children, so the phase that owns them gets process-tree
+// supervision without the outer JavaScript capability preload. The list is
+// deliberately closed; the guarded phase is derived as its exact complement.
+const DETERMINISTIC_TRUSTED_BOUNDARY_TESTS = Object.freeze(
+  [
+    "scripts/raw-swarm/model-telemetry.test.ts",
+    "scripts/raw-swarm/run-sdk-player.test.ts",
+    "scripts/raw-swarm/runner-boundaries.test.ts",
+    "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+  ].sort(),
+);
+const GUARDED_DETERMINISTIC_RAW_SWARM_TESTS = Object.freeze(
+  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS.filter(
+    (testPath) => !DETERMINISTIC_TRUSTED_BOUNDARY_TESTS.includes(testPath),
+  ),
+);
 
 const RAW_SWARM_TESTS_OUTSIDE_QUALITY = Object.freeze({
   "scripts/raw-swarm/battle-slice-tools.test.ts":
@@ -232,6 +252,8 @@ module.exports = {
   SUPPORTED_VITEST_TEST_FILE_SUFFIXES,
   isSupportedVitestTestFilename,
   QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+  DETERMINISTIC_TRUSTED_BOUNDARY_TESTS,
+  GUARDED_DETERMINISTIC_RAW_SWARM_TESTS,
   RAW_SWARM_TESTS_OUTSIDE_QUALITY,
   MODEL_BACKED_OPERATIONS,
   MODEL_BACKED_ENTRYPOINTS,

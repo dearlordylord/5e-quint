@@ -9,11 +9,11 @@ membership into a RAW-coverage or player-correctness claim.
 Raw Swarm has three operational lanes. Choose the lane before running a
 command; a successful command in one lane is not evidence for another lane.
 
-| Lane                                  | Purpose                                                                                                                                                                                                                                                     | Public command                                     |
-| ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
-| Deterministic repository verification | Unit, property, schema, protocol, projection, replay, report, and boundary tests. Reachable repository-owned Node sources run under a capability guard; no live model, provider API, coding-agent, or network capability is admitted through that boundary. | `pnpm check:raw-swarm-deterministic`               |
-| Bounded manual trial                  | One explicitly selected model-backed authoring, player, review, or benchmark operation.                                                                                                                                                                     | `pnpm raw-swarm:model:trial -- <operation> ...`    |
-| Durable campaign                      | One operation within an operator-owned, deadline-bound campaign such as #332. The campaign protocol still owns unique identities, serialized catalogue/index writes, replay, review, and export.                                                            | `pnpm raw-swarm:model:campaign -- <operation> ...` |
+| Lane                                  | Purpose                                                                                                                                                                                                                                                                                                                                                    | Public command                                     |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Deterministic repository verification | Unit, property, schema, protocol, projection, replay, report, and boundary tests. Boundary fixtures run in a narrowly enumerated supervisor-only phase; all other repository-owned Node sources run under native and JavaScript capability guards. No live model, provider API, coding-agent, or network capability is admitted through the guarded phase. | `pnpm check:raw-swarm-deterministic`               |
+| Bounded manual trial                  | One explicitly selected model-backed authoring, player, review, or benchmark operation.                                                                                                                                                                                                                                                                    | `pnpm raw-swarm:model:trial -- <operation> ...`    |
+| Durable campaign                      | One operation within an operator-owned, deadline-bound campaign such as #332. The campaign protocol still owns unique identities, serialized catalogue/index writes, replay, review, and export.                                                                                                                                                           | `pnpm raw-swarm:model:campaign -- <operation> ...` |
 
 Both model commands require a clean worktree and
 `RAW_SWARM_EXPECTED_GIT_SHA` equal to its full current revision. The campaign
@@ -52,11 +52,20 @@ JavaScript/TypeScript form, including JSX/TSX and CJS/MJS/CTS/MTS variants.
 That same canonical extension inventory drives conservative internal-import
 resolution, including extensionless and JS-family-to-TS replacement fallbacks,
 during transitive capability scanning. The deterministic runner statically
-inventories reachable repository-owned sources, preloads a Node capability
-guard, and prepends
-failing shims for known coding-agent and network CLI names. Model-telemetry
-tests inject controlled Node fixtures through the spawn seam; no stamped or
-forgeable coding-agent executable is admitted.
+inventories reachable repository-owned sources. Its guarded repository phase
+preloads a Node capability guard and prepends failing shims for known
+coding-agent and network CLI names.
+The quality inventory is partitioned into two mandatory subphases. The closed
+boundary-test partition runs under the native supervisor's `--supervise-only`
+process-tree mode without the outer JavaScript preload, so its nested
+supervisor, signal, permission, and synthetic-agent fixtures can exercise the
+native and application contracts. The derived complement runs under the
+native seccomp boundary and JavaScript capability guard; it includes a runtime
+regression proving that network and coding-agent capabilities remain blocked.
+Both partitions are checked by the same lane-hygiene inventory and execute as
+part of the public deterministic command. Model-telemetry tests inject
+controlled Node fixtures through the spawn seam; no stamped or forgeable
+coding-agent executable is admitted.
 
 The named JS-family replacement contract follows the installed Vite 7
 resolver's `knownTsOutputRE` and `tryCleanFsResolve` implementation in
@@ -68,12 +77,14 @@ repository-owned `process-supervisor.c` helper with the validated
 `/usr/bin/cc` system compiler, and refuses to continue if that compiler or
 Linux seccomp is unavailable. Compiler lookup ignores `PATH`, `CC`, and
 compiler-option environment variables and uses a small sanitized environment.
-This bootstrap happens before the kernel filter; the compiler is therefore a
-trusted host-toolchain prerequisite, not something this lane claims to isolate
-with its own filter. The helper installs the filter before `pnpm`, `mise`, or
-the test runner starts; the Linux kernel then inherits it across
-workers, forks, shells, `env -i`, and custom launchers, independently of
-JavaScript environment variables.
+This bootstrap happens before either verification phase; the compiler is
+therefore a trusted host-toolchain prerequisite, not something this lane
+claims to isolate with its own filter. The guarded repository phase starts its
+supervisor with the filter before `pnpm`, `mise`, or the test runner starts;
+the Linux kernel then inherits it across workers, forks, shells, `env -i`, and
+custom launchers, independently of JavaScript environment variables. The
+boundary-test phase deliberately uses process-tree ownership without this
+filter so its nested boundary probes can exercise the contract.
 
 The filter allows only `AF_UNIX` socket and socket-pair creation, closes every
 inherited descriptor above standard error, and allows only regular files,
@@ -106,12 +117,14 @@ deterministic and model lanes. It becomes a Linux subreaper, forks the command,
 and uses one parent-lineage ownership mechanism plus `waitpid(-1, ...)` to
 signal and reap the leader and every reparented descendant. A detached child
 cannot escape ownership by calling `setsid` or clearing its environment. The
-deterministic runner starts the supervisor with the seccomp filter; model
-wrappers start the same supervisor in
-`--supervise-only` mode, so model/API/coding-agent network access remains
-available. Both modes compile the repository-owned supervisor with the
-validated `/usr/bin/cc` system compiler and fail explicitly if the Linux
-toolchain or `/proc` ownership boundary is unavailable. Before forking the
+guarded deterministic runner starts the supervisor with the seccomp filter; the
+boundary-test phase and model wrappers start the same supervisor in
+`--supervise-only` mode. Model/API/coding-agent network access remains
+available only to the explicit model lane; boundary fixtures use synthetic
+processes and nested boundary probes. Both modes compile the repository-owned
+supervisor with the validated `/usr/bin/cc` system compiler and fail
+explicitly if the Linux toolchain or `/proc` ownership boundary is unavailable.
+Before forking the
 command, the supervisor preflights the monotonic clock and the complete
 parent-lineage inventory. After launch, a process that vanishes while being
 observed is treated as settled, but unreadable, malformed, or otherwise

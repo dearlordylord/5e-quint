@@ -22,6 +22,7 @@ import {
   playSessionIsExpired,
   projectPlaySessionTenure,
   type EpochMilliseconds,
+  type GuestAccessGrantFactory,
 } from "./play-session-access.ts";
 import {
   RECOVERABLE_PLAY_SESSION_FORMAT_VERSION,
@@ -57,6 +58,7 @@ export function createRecoverablePlaySessionRegistry(input: {
   readonly applicationServices: McpApplicationServices;
   readonly repository: PlaySessionRepository;
   readonly playSessionIdFactory: PlaySessionIdFactory;
+  readonly guestAccessGrantFactory?: GuestAccessGrantFactory;
   readonly randomSeedFactory?: () => PlaySessionRandomSeed;
   readonly now?: () => EpochMilliseconds;
   readonly maximumGuestSessions?: number;
@@ -102,7 +104,11 @@ export function createRecoverablePlaySessionRegistry(input: {
         const playSessionId = input.playSessionIdFactory();
         const randomSeed =
           input.randomSeedFactory?.() ?? generatedPlaySessionRandomSeed();
-        const creationTenure = initialTenure(caller, creationTime);
+        const creationTenure = initialTenure(
+          caller,
+          creationTime,
+          input.guestAccessGrantFactory,
+        );
         const tenure = creationTenure.tenure;
         const record: RecoverablePlaySessionRecord = {
           playSessionId,

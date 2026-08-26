@@ -16,7 +16,11 @@ async function awaitDeterministicHelperClose(closePromise, signal) {
   }
 }
 
-function createDeterministicRunner({ boundary, environment }) {
+function createDeterministicRunner({
+  boundary,
+  environment,
+  superviseOnly = false,
+}) {
   let activeRun;
 
   return {
@@ -29,7 +33,13 @@ function createDeterministicRunner({ boundary, environment }) {
 
       const child = spawn(
         boundary,
-        ["--owner-pid", String(process.pid), command, ...args],
+        [
+          "--owner-pid",
+          String(process.pid),
+          ...(superviseOnly ? ["--supervise-only"] : []),
+          command,
+          ...args,
+        ],
         {
           env: environment,
           stdio: "inherit",
