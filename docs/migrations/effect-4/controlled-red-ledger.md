@@ -6,10 +6,10 @@ Cutover starting point: `fba977c5ed3abf554631ce43c006b5a0ad4c5557`
 Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
 Status: the dependency cutover is complete and the cohort gate is green. The
-repository is intentionally controlled-red until the downstream Effect 4 API
-migration closes the diagnostics below. This ledger records the first
-post-cutover evidence; it is not a waiver and does not claim product or rule
-behavior is green.
+repository remains intentionally controlled-red for downstream Effect 4 API
+migration: the current owner sweep records seven failing package owners, while
+`@dnd/surface` is at zero diagnostics after #373. This ledger is evidence, not
+a waiver, and does not claim product or rule behavior is green.
 
 ## Scope and ownership
 
@@ -78,17 +78,20 @@ Quint Connect manifest consumer, and missing lockfile sections.
 | `pnpm install --frozen-lockfile --strict-peer-dependencies`                                                                                           | pass   | Installed 897 packages with pnpm `10.29.3`; the lockfile was accepted without peer errors. pnpm reported only its existing ignored-build-script notice for `msgpackr-extract`, `protobufjs`, and `unrs-resolver`; this was not a resource or verification failure.                             |
 | `pnpm check:effect4-cohort:self-test`                                                                                                                 | pass   | `Effect 4 cohort verifier self-tests passed`.                                                                                                                                                                                                                                                  |
 | `pnpm check:effect4-cohort`                                                                                                                           | pass   | `Effect 4 cohort verified: 4.0.0-rc.112`.                                                                                                                                                                                                                                                      |
-| `pnpm regenerate:effect4-controlled-red`                                                                                                              | pass   | Regenerated [`controlled-red-inventory.json`](./controlled-red-inventory.json) after #372: 39,561 raw and 16,884 source-keyed deduplicated diagnostics; output SHA-256 `0e96d25366a721e4914d176e3c0dde01289cfaaf92f5f410497ddcba217c95bb`.                                                     |
+| `pnpm regenerate:effect4-controlled-red`                                                                                                              | pass   | Regenerated [`controlled-red-inventory.json`](./controlled-red-inventory.json) after #373: 25,013 raw and 11,654 source-keyed deduplicated diagnostics; output SHA-256 `4ec2269e9be76ce97af98591f9c78946142562d80f527dfce194606e9deac2aa`.                                                     |
 | Installed declaration probe                                                                                                                           | pass   | `effect`, `effect/Result`, `effect/Schema`, `@effect/vitest`, and `@effect/platform-node` loaded from the installed tree; `effect/Either` was absent as required by the v4 declaration surface; `Schema.decodeUnknownResult` was present; D&D resolved `@firfi/quint-connect@2.0.2-effect4.2`. |
 | `node --check scripts/check-effect4-cohort.mjs`                                                                                                       | pass   | Verifier parses as valid Node module.                                                                                                                                                                                                                                                          |
 | `node --check scripts/regenerate-effect4-controlled-red.mjs`                                                                                          | pass   | Inventory generator parses as valid Node module.                                                                                                                                                                                                                                               |
 | `pnpm exec eslint scripts/check-effect4-cohort.mjs scripts/regenerate-effect4-controlled-red.mjs --max-warnings=0 --report-unused-disable-directives` | pass   | No diagnostics.                                                                                                                                                                                                                                                                                |
 | Focused Prettier check over changed JSON/YAML/MJS/Markdown/workspace manifests                                                                        | pass   | All selected files use Prettier code style.                                                                                                                                                                                                                                                    |
 
-## Public gate classification
+## Public gate classification (initial cutover snapshot)
 
-The public commands were run directly. Each public workspace command acquired
-and released the repository broad lock through its own documented wrapper.
+The following is the initial post-cutover snapshot, retained as historical
+evidence from before the #372 and #373 downstream source migrations. Each
+public workspace command acquired and released the repository broad lock
+through its own documented wrapper. The current owner status is recorded in
+the regenerated inventory below.
 
 | Command          | Result       | Controlled-red classification                                                                                                                                                                                                                                    |
 | ---------------- | ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -97,8 +100,8 @@ and released the repository broad lock through its own documented wrapper.
 | `pnpm test`      | fail, exit 1 | `@dnd/tactical-space` passed 1 file/53 tests. `@dnd/shared` then stopped the lane with two failed suites and zero collected tests: `Schema.int is not a function` and missing `effect/Either`.                                                                   |
 
 The build and test failures are intentionally recorded at their first public
-stop point. The owner sweep below was run separately under the repository broad
-lock to inventory the remaining diagnostics without changing source behavior.
+stop point in that historical snapshot. The owner sweep below is the current
+regenerated inventory and was run separately under the repository broad lock.
 
 ## Exhaustive typecheck inventory
 
@@ -132,27 +135,28 @@ The inventory ran each workspace `typecheck` script once in this order:
 @dnd/tactical-space-prototype
 ```
 
-The four prototype/tactical owners and `@dnd/shared` passed. The eight remaining
-Effect-consuming owners failed. The raw counts below are the committed output's per-command counts;
-workspace-linked source is repeated when a dependent package typechecks it.
+The four prototype/tactical owners, `@dnd/shared`, and `@dnd/surface` passed.
+The seven remaining Effect-consuming owners failed. The raw counts below are
+the committed output's per-command counts; workspace-linked source is repeated
+when a dependent package typechecks it.
 The deduplicated count is the durable closure baseline from the same output.
 
 | Package command owner             | Raw diagnostics |
 | --------------------------------- | --------------: |
-| `@dnd/app`                        |           6,399 |
-| `@dnd/battle-runtime`             |          10,647 |
-| `@dnd/character-battle-runtime`   |           7,331 |
-| `@dnd/character-creation-runtime` |           1,906 |
-| `@dnd/character-sheet-runtime`    |           3,077 |
-| `@dnd/mcp`                        |           7,430 |
+| `@dnd/app`                        |           4,491 |
+| `@dnd/battle-runtime`             |           7,682 |
+| `@dnd/character-battle-runtime`   |           5,236 |
+| `@dnd/character-creation-runtime` |             632 |
+| `@dnd/character-sheet-runtime`    |           1,517 |
+| `@dnd/mcp`                        |           5,424 |
 | `@dnd/shared`                     |               0 |
-| `@dnd/shared-algebras`            |             843 |
-| `@dnd/surface`                    |           1,928 |
+| `@dnd/shared-algebras`            |              31 |
+| `@dnd/surface`                    |               0 |
 | Four prototype/tactical owners    |               0 |
-| **Raw total**                     |      **39,561** |
+| **Raw total**                     |      **25,013** |
 
 The raw total contains repeated linked-source diagnostics. After deduplication
-there are **16,884** diagnostics. The retained
+there are **11,654** diagnostics. The retained
 `scripts/effect3-baseline.ts` oracle remains included because it is imported by
 MCP; the output is authoritative for the complete source-keyed total.
 
@@ -167,16 +171,16 @@ output followed by deduplicated output.
 
 | Diagnostic family                  | Codes                                                                                  |        Raw | Deduplicated |
 | ---------------------------------- | -------------------------------------------------------------------------------------- | ---------: | -----------: |
-| Removed/renamed module entrypoints | TS2305, TS2307                                                                         |        934 |          430 |
-| Removed/renamed Effect API members | TS2551, TS2694, TS2724                                                                 |      2,947 |          895 |
-| Changed schema/type signatures     | TS2314, TS2344, TS2394, TS2554, TS2556, TS2558, TS2560, TS2740, TS2741, TS2749, TS2769 |      5,741 |        1,216 |
-| Downstream type/inference cascade  | All remaining codes below                                                              |     29,939 |       14,343 |
-| **Total**                          | **All diagnostics**                                                                    | **39,561** |   **16,884** |
+| Removed/renamed module entrypoints | TS2305, TS2307                                                                         |        912 |          422 |
+| Removed/renamed Effect API members | TS2551, TS2694, TS2724                                                                 |      2,114 |          755 |
+| Changed schema/type signatures     | TS2314, TS2344, TS2394, TS2554, TS2556, TS2558, TS2560, TS2740, TS2741, TS2749, TS2769 |      2,355 |          730 |
+| Downstream type/inference cascade  | All remaining codes below                                                              |     19,632 |        9,747 |
+| **Total**                          | **All diagnostics**                                                                    | **25,013** |   **11,654** |
 
-The eight workspace owners still affected by the family inventory are
+The seven workspace owners still affected by the family inventory are
 `@dnd/app`, `@dnd/battle-runtime`, `@dnd/character-battle-runtime`,
 `@dnd/character-creation-runtime`, `@dnd/character-sheet-runtime`,
-`@dnd/mcp`, `@dnd/shared-algebras`, and `@dnd/surface`.
+`@dnd/mcp`, and `@dnd/shared-algebras`.
 
 ### TypeScript code counts
 
@@ -186,60 +190,54 @@ baseline.
 
 | Code    |   Raw | Deduplicated |
 | ------- | ----: | -----------: |
-| TS1360  |    57 |           15 |
-| TS18046 | 6,810 |        4,293 |
-| TS18047 |   408 |          137 |
-| TS18048 |    61 |           27 |
-| TS2305  |   734 |          340 |
-| TS2307  |   200 |           90 |
-| TS2314  |   327 |           55 |
-| TS2322  | 5,636 |        3,292 |
-| TS2339  | 9,576 |        3,260 |
-| TS2344  |    31 |            8 |
-| TS2345  | 2,563 |        1,203 |
-| TS2352  |     4 |            4 |
-| TS2353  |   358 |          107 |
-| TS2366  |     1 |            1 |
-| TS2367  |   140 |           55 |
-| TS2375  |    17 |            8 |
-| TS2379  |    11 |            5 |
-| TS2394  |     1 |            1 |
+| TS1360  |     2 |            2 |
+| TS18046 | 5,210 |        3,434 |
+| TS18047 |   346 |          118 |
+| TS18048 |    53 |           26 |
+| TS2305  |   714 |          334 |
+| TS2307  |   198 |           88 |
+| TS2314  |    44 |           17 |
+| TS2322  | 2,820 |        1,406 |
+| TS2339  | 6,985 |        2,589 |
+| TS2344  |     5 |            2 |
+| TS2345  | 1,643 |          768 |
+| TS2352  |     1 |            1 |
+| TS2353  |   331 |           94 |
+| TS2367  |     5 |            2 |
+| TS2375  |    10 |            4 |
+| TS2379  |     8 |            2 |
 | TS2488  |     6 |            3 |
-| TS2536  |    24 |            3 |
-| TS2551  | 2,850 |          862 |
-| TS2554  | 3,853 |          718 |
-| TS2556  |    72 |           19 |
-| TS2558  |    24 |            3 |
-| TS2560  |    49 |           14 |
+| TS2551  | 2,051 |          728 |
+| TS2554  | 1,556 |          430 |
+| TS2556  |    55 |           16 |
+| TS2560  |    12 |            4 |
 | TS2571  |   371 |          362 |
-| TS2638  |     8 |            8 |
-| TS2677  |     8 |            2 |
-| TS2678  |     1 |            1 |
-| TS2694  |    72 |           27 |
-| TS2698  |   353 |          287 |
-| TS2700  |     2 |            2 |
-| TS2724  |    25 |            6 |
-| TS2739  |    34 |           22 |
-| TS2740  | 1,222 |          263 |
-| TS2741  |    39 |           20 |
+| TS2638  |     7 |            7 |
+| TS2694  |    46 |           22 |
+| TS2698  |   330 |          276 |
+| TS2700  |     1 |            1 |
+| TS2724  |    17 |            5 |
+| TS2739  |    16 |            4 |
+| TS2740  |   592 |          172 |
+| TS2741  |     3 |            3 |
 | TS2749  |     7 |            5 |
-| TS2769  |   116 |          110 |
-| TS7006  | 3,069 |        1,116 |
+| TS2769  |    81 |           81 |
+| TS7006  | 1,294 |          581 |
 | TS7031  |   150 |           56 |
-| TS7053  |   271 |           74 |
+| TS7053  |    43 |           11 |
 
 ## Focused reproductions and owners
 
-These commands reproduce the first representative diagnostic in each family.
+These commands reproduce a representative diagnostic in each still-red family.
 They intentionally remain red until the owning downstream migration lands.
 
-| Family                         | Focused reproduction                                                                                                                                                                                                 | Current owner and closure work                                                                                      |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Removed module entrypoints     | `pnpm --filter @dnd/shared-algebras typecheck`; `pnpm --filter @dnd/app run build`                                                                                                                                   | #373+ must replace remaining `effect/Either` entrypoints at their owning package boundaries.                        |
-| Removed/renamed API members    | `pnpm --filter @dnd/surface typecheck`; `rg -n -e 'Schema\.int' -e 'Schema\.greaterThanOrEqualTo' -e 'Schema\.optionalWith' -e 'Schema\.decodeUnknownEither' -e 'Brand\.refined' -e 'Brand\.error' packages scripts` | #373+ owns the remaining v4 Schema/Brand/Result API migration with no compatibility facade or casts.                |
-| Changed schema/type signatures | `pnpm --filter @dnd/surface typecheck`                                                                                                                                                                               | Each downstream owner must adopt exact installed v4 signatures and preserve the #368 oracle.                        |
-| Inference/control-flow cascade | `pnpm --filter @dnd/battle-runtime typecheck`; `pnpm --filter @dnd/character-sheet-runtime typecheck`                                                                                                                | #373+ must resolve v4 narrowing and downstream types at their canonical source owners; do not suppress diagnostics. |
-| Test collection/runtime        | `pnpm --filter @dnd/shared-algebras test`                                                                                                                                                                            | `@dnd/shared` is green; #373+ must restore collection and behavior parity for downstream owners.                    |
+| Family                         | Focused reproduction                                                                                                                                                                                             | Current owner and closure work                                                                                       |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Removed module entrypoints     | `pnpm --filter @dnd/shared-algebras typecheck`; `pnpm --filter @dnd/app run build`                                                                                                                               | #374+ must replace remaining `effect/Either` entrypoints at their owning package boundaries.                         |
+| Removed/renamed API members    | `pnpm --filter @dnd/app typecheck`; `rg -n -e 'Schema\.int' -e 'Schema\.greaterThanOrEqualTo' -e 'Schema\.optionalWith' -e 'Schema\.decodeUnknownEither' -e 'Brand\.refined' -e 'Brand\.error' packages scripts` | #374+ owns the remaining v4 Schema/Brand/Result API migration with no compatibility facade or casts.                 |
+| Changed schema/type signatures | `pnpm --filter @dnd/app typecheck`                                                                                                                                                                               | Each downstream owner must adopt exact installed v4 signatures and preserve the #368 oracle.                         |
+| Inference/control-flow cascade | `pnpm --filter @dnd/battle-runtime typecheck`; `pnpm --filter @dnd/character-sheet-runtime typecheck`                                                                                                            | #374+ must resolve v4 narrowing and downstream types at their canonical source owners; do not suppress diagnostics.  |
+| Test collection/runtime        | `pnpm --filter @dnd/shared-algebras test`                                                                                                                                                                        | `@dnd/shared` and `@dnd/surface` are green; #374+ must restore collection and behavior parity for downstream owners. |
 
 ## Issue #372 closure evidence
 
@@ -254,8 +252,9 @@ compatibility alias, duplicate primitive, or diagnostic waiver was added.
 `pnpm --filter @dnd/shared test` run passes 2 files and 10 tests, including
 property coverage for numeric constructors and focused success/failure examples
 for collection and elapsed-time parsing. The locked inventory regeneration
-records `@dnd/shared` at zero while retaining the downstream diagnostics owned by
-#373 through #385.
+records `@dnd/shared` at zero. The latest refresh additionally records
+`@dnd/surface` at zero after #373; remaining diagnostics are owned by #374
+through #385.
 
 The first #372 standards/spec/domain/architecture review found two evidence
 defects: Result tests checked tags without asserting success/failure payload
@@ -320,7 +319,7 @@ Close this controlled-red interval only when all of the following are true:
    with the exact values in this ledger, and the lockfile still contains one
    `effect` version (`4.0.0-rc.112`) with no removed or unsupported Effect
    packages.
-2. The nine affected workspace owners and `scripts/effect3-baseline.ts` have
+2. The seven currently affected workspace owners and `scripts/effect3-baseline.ts` have
    zero deduplicated diagnostics. The code-count table is regenerated rather
    than manually decremented.
 3. Direct `pnpm build`, `pnpm typecheck`, and `pnpm test` pass under the public
