@@ -424,10 +424,7 @@ export function castResolvedFindFamiliar(
     familiarId,
     familiar: nextFamiliar,
     initiative: input.initiative,
-    statBlock: familiarRuntimeWithCreatureTypeOverride(
-      projected.right,
-      resolvedForm.creatureTypeOverride,
-    ),
+    statBlock: projected.right.runtime,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: reactionAvailable.right,
     ...(preservedHitPoints === null
@@ -903,7 +900,13 @@ function projectFamiliarStatBlock(
     ? Either.left(
         `Find Familiar form projection failed: ${projected.left.reason}.`,
       )
-    : Either.right(projected.right);
+    : Either.right({
+        ...projected.right,
+        runtime: familiarRuntimeWithCreatureTypeOverride(
+          projected.right,
+          form.creatureTypeOverride,
+        ),
+      });
 }
 
 function familiarRuntimeWithCreatureTypeOverride(

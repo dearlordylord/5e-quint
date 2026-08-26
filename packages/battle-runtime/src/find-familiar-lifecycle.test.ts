@@ -21,6 +21,7 @@ import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 import { Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { describe, expect, test } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -98,6 +99,7 @@ import {
   assertBattleSnapshotCodecRoundTripForTest,
   characterBattleFeatureInitForTest,
   readyDeclarationFillForTest,
+  projectedStatBlockRuntimeSource,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -250,7 +252,11 @@ function startFixtureBattle(
         initiative: initiativeScore(12),
         creatureInit: {
           kind: "statBlock",
-          source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+          source: Either.getOrThrow(
+            battleStatBlockCombatantSource(
+              projectedStatBlockRuntimeSource(skeleton),
+            ),
+          ),
           currentHp: maxHp,
           tempHp: Hp(0),
           ammunitionStocks: [
@@ -268,7 +274,9 @@ function startFixtureBattle(
               creatureInit: {
                 kind: "statBlock" as const,
                 source: Either.getOrThrow(
-                  battleStatBlockCombatantSource(skeleton),
+                  battleStatBlockCombatantSource(
+                    projectedStatBlockRuntimeSource(skeleton),
+                  ),
                 ),
                 currentHp: maxHp,
                 tempHp: Hp(0),
@@ -293,7 +301,9 @@ function startFixtureBattle(
               creatureInit: {
                 kind: "statBlock" as const,
                 source: Either.getOrThrow(
-                  battleStatBlockCombatantSource(skeleton),
+                  battleStatBlockCombatantSource(
+                    projectedStatBlockRuntimeSource(skeleton),
+                  ),
                 ),
                 currentHp: maxHp,
                 tempHp: Hp(0),
@@ -1121,7 +1131,11 @@ function pactScratchSubject(
     throw new Error("Expected the committed familiar Stat Block admission.");
   }
   const procedureRef = statBlockProcedurePresentations({
-    statBlock: statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+    presentation: Either.getOrThrow(
+      projectAuthoredStatBlock(
+        statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+      ),
+    ).presentation,
     execution: familiar.origin.execution,
   }).find(
     (presentation) =>
@@ -2227,7 +2241,11 @@ describe("Find Familiar lifecycle", () => {
           initiative: initiativeScore(12),
           creatureInit: {
             kind: "statBlock",
-            source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            source: Either.getOrThrow(
+              battleStatBlockCombatantSource(
+                projectedStatBlockRuntimeSource(skeleton),
+              ),
+            ),
             currentHp: skeletonHp,
             tempHp: Hp(0),
             ammunitionStocks: [
@@ -2242,7 +2260,11 @@ describe("Find Familiar lifecycle", () => {
           initiative: initiativeScore(11),
           creatureInit: {
             kind: "statBlock",
-            source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            source: Either.getOrThrow(
+              battleStatBlockCombatantSource(
+                projectedStatBlockRuntimeSource(skeleton),
+              ),
+            ),
             currentHp: skeletonHp,
             tempHp: Hp(0),
             ammunitionStocks: [
@@ -2344,7 +2366,9 @@ describe("Find Familiar lifecycle", () => {
     if (cast.tag !== "resolved") return;
     const catSource = Either.getOrThrow(
       battleStatBlockCombatantSource(
-        statBlockCatalog.requireStatBlock("stat_block_cat"),
+        projectedStatBlockRuntimeSource(
+          statBlockCatalog.requireStatBlock("stat_block_cat"),
+        ),
       ),
     );
     expect(
@@ -2352,7 +2376,10 @@ describe("Find Familiar lifecycle", () => {
         ...catSource,
         statBlock: {
           ...catSource.statBlock,
-          hp: { kind: "caster_derived", source: "spell_save_dc" },
+          hp: {
+            kind: "caster_derived",
+            source: "spell_save_dc",
+          } as unknown as typeof catSource.statBlock.hp,
         },
       }),
     ).toBe("Find Familiar form Stat Block must use literal HP.");
@@ -4724,30 +4751,28 @@ describe("Find Familiar lifecycle", () => {
       }),
     );
 
-    const catSource = Either.getOrThrow(
-      battleStatBlockCombatantSource(
-        statBlockCatalog.requireStatBlock("stat_block_cat"),
-      ),
-    );
+    const catRecord = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const malformedRecord = {
+      ...catRecord,
+      statBlock: {
+        ...catRecord.statBlock,
+        ac: {
+          value: { kind: "caster_derived", source: "spell_save_dc" },
+        } as unknown as typeof catRecord.statBlock.ac,
+      },
+    } satisfies StatBlockRecord;
     const malformed = admitFindFamiliarReappearance({
       state: dismissed.state,
       casterId,
       catalog: {
-        getStatBlock: () =>
-          Option.some({
-            ...catSource,
-            statBlock: {
-              ...catSource.statBlock,
-              ac: { kind: "caster_derived", source: "spell_save_dc" },
-            },
-          }),
+        getStatBlock: () => Option.some(malformedRecord),
       },
     });
     expect(Either.isLeft(malformed)).toBe(true);
     if (Either.isRight(malformed)) return;
     expect(malformed.left).toEqual({
       tag: "findFamiliarReappearanceAdmissionIssue",
-      message: "Battle runtime requires literal Stat Block Armor Class.",
+      message: "Find Familiar form projection failed: nonLiteralArmorClass.",
     });
   });
 
