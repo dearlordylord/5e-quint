@@ -5,10 +5,12 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, extname, relative, resolve } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { pathToFileURL } from "node:url";
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
@@ -29,6 +31,7 @@ import {
 } from "./repository-path.ts";
 
 const INDEX_SCHEMA_VERSION = 3;
+const SQLITE_WAL_HEADER_BYTE_LENGTH = 32;
 
 const IndexedExecutionRecordSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
@@ -230,6 +233,20 @@ function validateArtifactIndex(
         `Raw Swarm index schema is not version ${String(INDEX_SCHEMA_VERSION)}; inventory and rebuild the database before using this command.`,
       );
     }
+  }
+}
+
+function rejectUncheckpointedWal(absolute: string): void {
+  const walPath = `${absolute}-wal`;
+  // A header-only WAL has no frames, so immutable mode cannot miss committed
+  // rows.
+  if (
+    existsSync(walPath) &&
+    statSync(walPath).size > SQLITE_WAL_HEADER_BYTE_LENGTH
+  ) {
+    fail(
+      `Raw Swarm index has a non-empty WAL sidecar; checkpoint ${walPath} before using a read-only report command.`,
+    );
   }
 }
 
@@ -441,7 +458,10 @@ export function openArtifactIndexReadOnly(path: string): DatabaseSync {
   if (!existsSync(absolute)) {
     return fail(`Raw Swarm index does not exist: ${path}`);
   }
-  const db = new DatabaseSync(absolute, { readOnly: true });
+  rejectUncheckpointedWal(absolute);
+  const db = new DatabaseSync(`${pathToFileURL(absolute).href}?immutable=1`, {
+    readOnly: true,
+  });
   try {
     validateArtifactIndex(db, true);
     return db;

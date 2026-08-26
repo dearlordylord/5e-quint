@@ -20,6 +20,7 @@ import {
   ingestArtifactRunWithArtifacts,
   inventoryLegacyDatabase,
   openArtifactIndex,
+  openArtifactIndexReadOnly,
   rebuildLegacyArtifactIndex,
   registerIndexArtifact,
 } from "./artifact-index.ts";
@@ -916,6 +917,26 @@ describe("Raw Swarm artifact index", () => {
         dbPath: relative(repoRoot, resolve(directory, "index.sqlite")),
       }),
     ).toThrow("do not match the parsed transcript source");
+  });
+
+  test("rejects a non-empty WAL before opening a read-only index", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "uncheckpointed.sqlite");
+    const writer = new DatabaseSync(dbPath);
+    try {
+      writer.exec(
+        "PRAGMA journal_mode=WAL; CREATE TABLE committed(value INTEGER); INSERT INTO committed VALUES (1);",
+      );
+      expect(existsSync(`${dbPath}-wal`)).toBe(true);
+      expect(readFileSync(`${dbPath}-wal`).byteLength).toBeGreaterThan(32);
+      expect(() =>
+        openArtifactIndexReadOnly(relative(repoRoot, dbPath)),
+      ).toThrow(
+        /non-empty WAL sidecar; checkpoint .* before using a read-only report command/,
+      );
+    } finally {
+      writer.close();
+    }
   });
 
   test("registers controlled attachments in the transcript transaction", () => {
