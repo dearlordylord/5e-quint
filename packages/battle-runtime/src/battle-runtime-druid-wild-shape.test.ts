@@ -2584,73 +2584,35 @@ test("rejects known Beast forms without promoted movement facts", () => {
   }
 });
 
-test.each([
-  {
-    label: "literal Armor Class",
-    expected: "Druid Wild Shape battle forms require literal Armor Class.",
-    mutate: (form: StatBlockRecord): StatBlockRecord => ({
-      ...form,
-      statBlock: {
-        ...form.statBlock,
-        ac: {
-          value: { kind: "caster_derived", source: "spell_save_dc" },
-        } as unknown as StatBlockRecord["statBlock"]["ac"],
+test("rejects known Beast forms without literal Size", () => {
+  const profile = parseSupportedUnitFeatureProfile(
+    unitLibrary.requireUnit("druid_wild_shape"),
+    [{ className: "druid", level: ClassLevel.make(2) }],
+  );
+  if (profile?.kind !== "druidWildShapeKnownForm") {
+    throw new Error("Expected Druid Wild Shape support profile.");
+  }
+  const baseForm = statBlockCatalog.requireStatBlock(ratId);
+  const nonLiteralSizeForm: StatBlockRecord = {
+    ...baseForm,
+    statBlock: {
+      ...baseForm.statBlock,
+      size: {
+        kind: "alternatives",
+        options: ["small", "medium"],
       },
-    }),
-  },
-  {
-    label: "literal Size",
-    expected: "Druid Wild Shape battle forms require literal Size.",
-    mutate: (form: StatBlockRecord): StatBlockRecord => ({
-      ...form,
-      statBlock: {
-        ...form.statBlock,
-        size: {
-          kind: "alternatives",
-          options: ["small", "medium"],
-        },
-      },
-    }),
-  },
-  {
-    label: "unconditional literal Speeds",
-    expected:
-      "Druid Wild Shape battle forms require unconditional literal Speeds.",
-    mutate: (form: StatBlockRecord): StatBlockRecord => ({
-      ...form,
-      statBlock: {
-        ...form.statBlock,
-        speeds: [
-          {
-            ...form.statBlock.speeds[0],
-            feet: { kind: "caster_derived", source: "spell_save_dc" },
-          } as unknown as StatBlockRecord["statBlock"]["speeds"][number],
-          ...form.statBlock.speeds.slice(1),
-        ],
-      },
-    }),
-  },
-] as const)(
-  "rejects known Beast forms without $label",
-  ({ mutate, expected }) => {
-    const profile = parseSupportedUnitFeatureProfile(
-      unitLibrary.requireUnit("druid_wild_shape"),
-      [{ className: "druid", level: ClassLevel.make(2) }],
-    );
-    if (profile?.kind !== "druidWildShapeKnownForm") {
-      throw new Error("Expected Druid Wild Shape support profile.");
-    }
-    const result = battleAvailableDruidWildShapeKnownForms({
-      profile,
-      forms: [mutate(statBlockCatalog.requireStatBlock(ratId))],
-    });
+    },
+  };
+  const result = battleAvailableDruidWildShapeKnownForms({
+    profile,
+    forms: [nonLiteralSizeForm],
+  });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(expected);
-    }
-  },
-);
+  expect(Either.isLeft(result)).toBe(true);
+  if (Either.isLeft(result)) {
+    expect(result.left.message).toBe("nonLiteralSize");
+  }
+});
 
 test("admits selected Beast forms with multi-component attack damage and typed hit riders", () => {
   const profile = parseSupportedUnitFeatureProfile(
@@ -2693,6 +2655,10 @@ test("filters untyped trait-derived attack-roll advantage from battle-available 
   const traitAdvantageForm = {
     ...baseForm,
     id: parseSharedStatBlockId("synthetic_untyped_coordinated_shape"),
+    provenance: {
+      kind: "synthetic-test" as const,
+      section: "synthetic-untyped-coordinated-shape",
+    },
     statBlock: {
       ...baseForm.statBlock,
       traits: [
@@ -3005,6 +2971,10 @@ function syntheticProseProneForm(): StatBlockRecord {
     ...base,
     id: parseSharedStatBlockId(syntheticProseProneFormId),
     name: "Synthetic Prose Prone Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-prose-prone-form",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [
@@ -3035,6 +3005,10 @@ function syntheticTypedRidersForm(): StatBlockRecord {
     ...base,
     id: parseSharedStatBlockId(syntheticTypedRidersFormId),
     name: "Synthetic Typed Riders Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-typed-riders-form",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [
@@ -3065,6 +3039,10 @@ function syntheticActionSectionForm(): StatBlockRecord {
     ...base,
     id: parseSharedStatBlockId(syntheticActionSectionFormId),
     name: "Synthetic Action Section Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-action-section-form",
+    },
     statBlock: {
       ...base.statBlock,
       actions: [
@@ -3114,7 +3092,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
               damageType: "bludgeoning",
               amount: {
                 kind: "fixed",
-                expr: { dice: 0, dieSize: 1, flat: 1 },
+                static: 1,
               },
             },
           },
@@ -3983,6 +3961,10 @@ function syntheticCoordinatedShape(): StatBlockRecord {
     ...baseForm,
     id: parseSharedStatBlockId(syntheticCoordinatedShapeId),
     name: "Synthetic Coordinated Shape",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-coordinated-shape",
+    },
     statBlock: {
       ...baseForm.statBlock,
       traits: [

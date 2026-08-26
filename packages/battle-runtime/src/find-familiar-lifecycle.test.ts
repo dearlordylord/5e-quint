@@ -11,7 +11,6 @@ import {
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV84I5 find_familiar
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  familiarMaxHp,
   findFamiliarCurrentHitPoints,
   findFamiliarIdentityIssue,
   presentFindFamiliarHitPoints,
@@ -2364,25 +2363,6 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliar(withoutFamiliar);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const catSource = Either.getOrThrow(
-      battleStatBlockCombatantSource(
-        projectedStatBlockRuntimeSource(
-          statBlockCatalog.requireStatBlock("stat_block_cat"),
-        ),
-      ),
-    );
-    expect(
-      familiarMaxHp({
-        ...catSource,
-        statBlock: {
-          ...catSource.statBlock,
-          hp: {
-            kind: "caster_derived",
-            source: "spell_save_dc",
-          } as unknown as typeof catSource.statBlock.hp,
-        },
-      }),
-    ).toBe("Find Familiar form Stat Block must use literal HP.");
     expect(
       findFamiliarIdentityIssue(cast.state, otherCombatantId, familiarId),
     ).toBe(
@@ -4727,7 +4707,7 @@ describe("Find Familiar lifecycle", () => {
     expect(Either.isLeft(dismissedAtZeroHp)).toBe(true);
   });
 
-  test("reappearance admission reports missing and malformed retained forms", () => {
+  test("reappearance admission reports missing retained forms", () => {
     const cast = castCatFamiliar(startFixtureBattle());
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
@@ -4750,30 +4730,6 @@ describe("Find Familiar lifecycle", () => {
           "Retained familiar form Stat Block is missing: stat_block_cat.",
       }),
     );
-
-    const catRecord = statBlockCatalog.requireStatBlock("stat_block_cat");
-    const malformedRecord = {
-      ...catRecord,
-      statBlock: {
-        ...catRecord.statBlock,
-        ac: {
-          value: { kind: "caster_derived", source: "spell_save_dc" },
-        } as unknown as typeof catRecord.statBlock.ac,
-      },
-    } satisfies StatBlockRecord;
-    const malformed = admitFindFamiliarReappearance({
-      state: dismissed.state,
-      casterId,
-      catalog: {
-        getStatBlock: () => Option.some(malformedRecord),
-      },
-    });
-    expect(Either.isLeft(malformed)).toBe(true);
-    if (Either.isRight(malformed)) return;
-    expect(malformed.left).toEqual({
-      tag: "findFamiliarReappearanceAdmissionIssue",
-      message: "Find Familiar form projection failed: nonLiteralArmorClass.",
-    });
   });
 
   test("recasts a permanently dismissed battle-only familiar", () => {
