@@ -8,7 +8,7 @@ import {
   pinnedLookup,
   resolvePinnedAddress,
   shouldExposeBody,
-} from "./cimd-metadata-fetch.ts";
+} from "./client-metadata-fetch.ts";
 
 const PUBLIC_IPV4: LookupAddress = { address: "93.184.216.34", family: 4 };
 const PUBLIC_IPV6: LookupAddress = {

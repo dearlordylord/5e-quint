@@ -1,14 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  prototypeConsentPage,
-  prototypeStatusPage,
-  prototypeVaultPage,
-} from "./prototype-pages.ts";
+import { savedSessionConsentPage, savedSessionVaultPage } from "./pages.ts";
 
 describe("credential-free saved-session vault pages", () => {
   it("creates and authorizes a pseudonymous vault with one explicit action", async () => {
-    const html = await prototypeVaultPage().text();
+    const response = savedSessionVaultPage();
+    const html = await response.text();
 
     expect(html).toContain("Save your games");
     expect(html).toContain(
@@ -31,10 +28,14 @@ describe("credential-free saved-session vault pages", () => {
     expect(html).not.toContain('name="email"');
     expect(html).not.toContain('name="password"');
     expect(html).not.toContain("sign-up/email");
+    const policy = response.headers.get("content-security-policy");
+    expect(policy).toMatch(/script-src 'nonce-[A-Za-z0-9_-]+'/u);
+    expect(policy).not.toContain("unsafe-inline");
+    expect(html).toMatch(/<script nonce="[A-Za-z0-9_-]+">/u);
   });
 
   it("keeps consent explicit for an existing vault session", async () => {
-    const html = await prototypeConsentPage().text();
+    const html = await savedSessionConsentPage().text();
 
     expect(html).toContain("Allow access to saved games?");
     expect(html).toContain("private vault");
@@ -46,13 +47,5 @@ describe("credential-free saved-session vault pages", () => {
     );
     expect(html).toContain('typeof result.url !== "string"');
     expect(html).toContain("button.disabled = true");
-  });
-
-  it("describes the credential-free authorization boundary", async () => {
-    const html = await prototypeStatusPage().text();
-
-    expect(html).toContain(
-      "creates a pseudonymous vault without email or password credentials",
-    );
   });
 });

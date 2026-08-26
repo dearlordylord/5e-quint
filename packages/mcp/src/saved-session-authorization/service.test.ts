@@ -7,9 +7,9 @@ import { ManagedRuntime } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
-  BetterAuthPrototype,
-  betterAuthPrototypeLayer,
-} from "./better-auth-service.ts";
+  SavedSessionAuthorization,
+  savedSessionAuthorizationLayer,
+} from "./service.ts";
 
 describe("credential-free Better Auth database admission", () => {
   it("reopens anonymous-only data and rejects a non-anonymous user", async () => {
@@ -22,14 +22,16 @@ describe("credential-free Better Auth database admission", () => {
       authorizationServerOrigin: origin,
       databasePath,
       resource: new URL("/mcp", origin),
-      secret: "prototype-admission-test-secret-32-characters",
+      secret: "saved-session-admission-secret-32-characters",
     } as const;
 
     try {
       const creatingRuntime = ManagedRuntime.make(
-        betterAuthPrototypeLayer(configuration),
+        savedSessionAuthorizationLayer(configuration),
       );
-      const service = await creatingRuntime.runPromise(BetterAuthPrototype);
+      const service = await creatingRuntime.runPromise(
+        SavedSessionAuthorization,
+      );
       const created = await creatingRuntime.runPromise(
         service.handle(
           new Request(new URL("/api/auth/sign-in/anonymous", origin), {
@@ -54,10 +56,10 @@ describe("credential-free Better Auth database admission", () => {
       legacyDatabase.close();
 
       const anonymousOnlyRuntime = ManagedRuntime.make(
-        betterAuthPrototypeLayer(configuration),
+        savedSessionAuthorizationLayer(configuration),
       );
       await expect(
-        anonymousOnlyRuntime.runPromise(BetterAuthPrototype),
+        anonymousOnlyRuntime.runPromise(SavedSessionAuthorization),
       ).resolves.toBeDefined();
       await anonymousOnlyRuntime.dispose();
 
@@ -74,10 +76,10 @@ describe("credential-free Better Auth database admission", () => {
       database.close();
 
       const existingLabelRuntime = ManagedRuntime.make(
-        betterAuthPrototypeLayer(configuration),
+        savedSessionAuthorizationLayer(configuration),
       );
       await expect(
-        existingLabelRuntime.runPromise(BetterAuthPrototype),
+        existingLabelRuntime.runPromise(SavedSessionAuthorization),
       ).resolves.toBeDefined();
       await existingLabelRuntime.dispose();
 
@@ -92,16 +94,14 @@ describe("credential-free Better Auth database admission", () => {
       normalizedDatabase.close();
 
       const rejectingRuntime = ManagedRuntime.make(
-        betterAuthPrototypeLayer(configuration),
+        savedSessionAuthorizationLayer(configuration),
       );
       await expect(
-        rejectingRuntime.runPromise(BetterAuthPrototype),
-      ).rejects.toThrow(
-        "requires an auth database containing only anonymous users",
-      );
+        rejectingRuntime.runPromise(SavedSessionAuthorization),
+      ).rejects.toThrow("requires a database containing only anonymous users");
       await rejectingRuntime.dispose();
     } finally {
       await rm(scratchDirectory, { recursive: true });
     }
-  });
+  }, 20_000);
 });

@@ -31,8 +31,9 @@ operations/public-mcp/deploy.sh /etc/dnd-oracle/production.env
 The release is baked into the image and `/version`; Compose cannot replace it,
 so the smoke detects an image/release mismatch. The deploy verifies
 configuration, installs and reloads the environment-specific Caddy route, pulls
-the exact digest, waits for container health, checks the release and optional exact OpenAI challenge token, and runs
-the complete guest newcomer journey through HTTPS `/mcp`. The official OpenAI
+the exact digest, waits for container health, checks the release, same-origin
+OAuth discovery/JWKS, optional exact OpenAI challenge token, and complete guest
+newcomer journey through HTTPS `/mcp`. The official OpenAI
 submission contract requires the challenge response to contain only the token
 ([OpenAI submission documentation](https://developers.openai.com/plugins/deploy/submission#domain-verification));
 the application exposes it at `/.well-known/openai-apps-challenge` only when
@@ -46,6 +47,21 @@ checks all four pages and requires `/version` to report the exact
 name must be the verified publisher identity, not the development placeholder.
 Their response Content Security Policy permits no script, style, image, font,
 frame, form, or network source.
+
+The same Node process also serves the saved-session authorization server at
+`/api/auth`. `DND_MCP_PUBLIC_ORIGIN` is derived from `DND_MCP_DOMAIN`; it is the
+single source for the OAuth issuer, MCP audience, protected-resource metadata,
+and JWKS URL. Each environment persists Play Sessions and authorization state
+in separate SQLite files within its isolated state mount and requires its own
+`DND_SAVED_SESSION_AUTHORIZATION_SECRET`. There is no Auth0 account, external
+identity provider, Cloudflare runtime, proxy process, or second MCP process in
+the deployment contract.
+
+For development through a tunnel, run the normal HTTP entrypoint locally and
+set `DND_MCP_PUBLIC_ORIGIN` to the tunnel's stable HTTPS origin. Forward that
+origin to the configured local port without rewriting paths. This exercises the
+same `/mcp`, `/api/auth`, discovery, JWKS, and publisher routes as Dokku; only
+the ingress transport differs.
 
 ## Current Dokku host
 
@@ -152,8 +168,9 @@ permissions and remove only the warned retired path.
 
 The checked-in thresholds are initial caps, not provider prices. Replace them
 with measured capacity and the actual fixed-host invoice before production.
-Set `DND_MCP_PUBLICATION_MODE=enabled` only with the exact challenge and complete
-OAuth configuration; validation then fails closed if either publication
-boundary is missing. DNS/TLS deployment, live
+Set `DND_MCP_PUBLICATION_MODE=enabled` only with the exact challenge and
+verified publisher name; validation then fails closed if either publication
+boundary is missing. Saved-session authorization is required in both modes.
+DNS/TLS deployment, live
 smokes, storage snapshots, the recipient, and alert delivery require operator
 access and cannot be evidenced from this checkout.

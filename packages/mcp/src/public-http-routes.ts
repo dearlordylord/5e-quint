@@ -55,6 +55,15 @@ export async function handlePublicHttpRequest(
 
 export function publicRouteLabel(pathname: string): string {
   if (isPublicPublisherSitePath(pathname)) return "publisher-site";
+  if (
+    pathname === "/saved-session-vault" ||
+    pathname === "/saved-session-consent"
+  ) {
+    return "saved-session-authorization-page";
+  }
+  if (pathname === "/api/auth" || pathname.startsWith("/api/auth/")) {
+    return "/api/auth/*";
+  }
   if (pathname === "/mcp") return "/mcp";
   if (pathname === "/health") return "/health";
   if (pathname === "/version") return "/version";

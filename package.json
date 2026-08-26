@@ -100,7 +100,10 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
-    ]
+    ],
+    "patchedDependencies": {
+      "better-call@1.4.0": "patches/better-call@1.4.0.patch"
+    }
   },
   "lint-staged": {
     "*.{cjs,css,cts,html,js,jsx,json,md,mjs,mts,scss,ts,tsx}": "prettier --write",

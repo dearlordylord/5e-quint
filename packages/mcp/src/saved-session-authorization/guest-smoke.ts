@@ -2,13 +2,13 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 
-import { verifyCompleteNewcomerJourney } from "../../../test-support/mcp-acceptance-scenarios.ts";
+import { verifyCompleteNewcomerJourney } from "../../test-support/mcp-acceptance-scenarios.ts";
 
 const endpoint = new URL(
-  process.env.DND_PROTOTYPE_MCP_URL ?? "http://127.0.0.1:9880/mcp",
+  process.env.DND_MCP_SAVED_SESSION_URL ?? "http://127.0.0.1:9880/mcp",
 );
 const client = new Client({
-  name: "dnd-better-auth-guest-prototype",
+  name: "dnd-saved-session-guest-smoke",
   version: "0.1.0",
 });
 
@@ -52,7 +52,7 @@ try {
   process.stdout.write(
     `${JSON.stringify(
       {
-        tag: "betterAuthGuestPrototypeObserved",
+        tag: "savedSessionGuestObserved",
         guestCreationWithoutLogin: true,
         guestGrantIssued: guestAccessGrant.length > 0,
         tenure,

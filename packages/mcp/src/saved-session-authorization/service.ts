@@ -6,14 +6,14 @@ import { betterAuth } from "better-auth";
 import { anonymous, jwt } from "better-auth/plugins";
 import { Context, Effect, Layer } from "effect";
 
-import { SAVED_INACTIVITY_RETENTION_MS } from "../../play-session-access.ts";
-import { PLAY_SESSION_OAUTH_SCOPE } from "../../tool-definition-contract.ts";
-import { fetchClientMetadataResource } from "./cimd-metadata-fetch.ts";
+import { SAVED_INACTIVITY_RETENTION_MS } from "../play-session-access.ts";
+import { PLAY_SESSION_OAUTH_SCOPE } from "../tool-definition-contract.ts";
+import { fetchClientMetadataResource } from "./client-metadata-fetch.ts";
 import {
   ANONYMOUS_VAULT_EMAIL_DOMAIN,
   ANONYMOUS_VAULT_EMAIL_PREFIX,
   makeAnonymousVaultEmail,
-} from "./anonymous-vault-identity.ts";
+} from "./vault-identity.ts";
 
 export const CHATGPT_SAVED_SESSION_OAUTH_SCOPES = [
   "openid",
@@ -30,39 +30,39 @@ export const CHATGPT_ACCESS_TOKEN_LIFETIME_SECONDS =
   SAVED_SESSION_REFRESH_TOKEN_LIFETIME_SECONDS;
 export const REFRESHING_ACCESS_TOKEN_LIFETIME_SECONDS = 60 * 60;
 
-export type BetterAuthPrototypeConfiguration = {
+export type SavedSessionAuthorizationConfiguration = {
   readonly authorizationServerOrigin: URL;
   readonly databasePath: string;
   readonly resource: URL;
   readonly secret: string;
 };
 
-export type BetterAuthPrototypeIssue = {
-  readonly tag: "betterAuthPrototypeIssue";
+export type SavedSessionAuthorizationIssue = {
+  readonly tag: "savedSessionAuthorizationIssue";
   readonly reason: "initializationFailed" | "requestFailed";
   readonly message: string;
 };
 
-export type BetterAuthPrototypeService = {
+export type SavedSessionAuthorizationService = {
   readonly handle: (
     request: Request,
-  ) => Effect.Effect<Response, BetterAuthPrototypeIssue>;
+  ) => Effect.Effect<Response, SavedSessionAuthorizationIssue>;
 };
 
-export class BetterAuthPrototype extends Context.Tag(
-  "@dnd/mcp/prototype/BetterAuth",
-)<BetterAuthPrototype, BetterAuthPrototypeService>() {}
+export class SavedSessionAuthorization extends Context.Tag(
+  "@dnd/mcp/SavedSessionAuthorization",
+)<SavedSessionAuthorization, SavedSessionAuthorizationService>() {}
 
-export function betterAuthPrototypeLayer(
-  configuration: BetterAuthPrototypeConfiguration,
-): Layer.Layer<BetterAuthPrototype, BetterAuthPrototypeIssue> {
+export function savedSessionAuthorizationLayer(
+  configuration: SavedSessionAuthorizationConfiguration,
+): Layer.Layer<SavedSessionAuthorization, SavedSessionAuthorizationIssue> {
   return Layer.scoped(
-    BetterAuthPrototype,
+    SavedSessionAuthorization,
     Effect.gen(function* () {
       const database = yield* Effect.acquireRelease(
         Effect.try({
           try: () => new DatabaseSync(configuration.databasePath),
-          catch: (cause) => prototypeIssue("initializationFailed", cause),
+          catch: (cause) => authorizationIssue("initializationFailed", cause),
         }),
         (acquired) => Effect.sync(() => acquired.close()),
       );
@@ -74,29 +74,29 @@ export function betterAuthPrototypeLayer(
           assertAnonymousOnlyDatabase(database);
           normalizeAnonymousVaultEmailLabels(database);
         },
-        catch: (cause) => prototypeIssue("initializationFailed", cause),
+        catch: (cause) => authorizationIssue("initializationFailed", cause),
       });
-      const handle = Effect.fn("BetterAuthPrototype.handle")(
+      const handle = Effect.fn("SavedSessionAuthorization.handle")(
         (request: Request) =>
           Effect.tryPromise({
             try: () => auth.handler(request),
-            catch: (cause) => prototypeIssue("requestFailed", cause),
+            catch: (cause) => authorizationIssue("requestFailed", cause),
           }),
       );
-      return BetterAuthPrototype.of({ handle });
+      return SavedSessionAuthorization.of({ handle });
     }),
   );
 }
 
 function makeBetterAuth(
-  configuration: BetterAuthPrototypeConfiguration,
+  configuration: SavedSessionAuthorizationConfiguration,
   database: DatabaseSync,
 ) {
   const origin = configuration.authorizationServerOrigin
     .toString()
     .replace(/\/$/u, "");
   return betterAuth({
-    appName: "5.5e SRD Oracle Better Auth prototype",
+    appName: "5.5e SRD Oracle",
     baseURL: origin,
     basePath: "/api/auth",
     database,
@@ -110,8 +110,8 @@ function makeBetterAuth(
         generateName: () => "Saved Session Vault",
       }),
       mcp({
-        loginPage: "/prototype/vault",
-        consentPage: "/prototype/consent",
+        loginPage: "/saved-session-vault",
+        consentPage: "/saved-session-consent",
         resource: configuration.resource.toString(),
         scopes: [...SAVED_SESSION_OAUTH_SCOPES],
         clientRegistrationDefaultScopes: [...SAVED_SESSION_OAUTH_SCOPES],
@@ -143,11 +143,13 @@ function assertAnonymousOnlyDatabase(database: DatabaseSync): void {
     typeof row.count !== "number" ||
     !Number.isSafeInteger(row.count)
   ) {
-    throw new Error("Could not verify the prototype auth database");
+    throw new Error(
+      "Could not verify the saved-session authorization database",
+    );
   }
   if (row.count > 0) {
     throw new Error(
-      "The credential-free prototype requires an auth database containing only anonymous users",
+      "Saved-session authorization requires a database containing only anonymous users",
     );
   }
 }
@@ -188,12 +190,12 @@ function normalizeAnonymousVaultEmailLabels(database: DatabaseSync): void {
     );
 }
 
-function prototypeIssue(
-  reason: BetterAuthPrototypeIssue["reason"],
+function authorizationIssue(
+  reason: SavedSessionAuthorizationIssue["reason"],
   cause: unknown,
-): BetterAuthPrototypeIssue {
+): SavedSessionAuthorizationIssue {
   return {
-    tag: "betterAuthPrototypeIssue",
+    tag: "savedSessionAuthorizationIssue",
     reason,
     message: cause instanceof Error ? cause.message : String(cause),
   };

@@ -1,7 +1,7 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
-import { Either, Schema } from "effect";
+import { Either, Effect, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodePrincipalId } from "./play-session-access.ts";
@@ -12,6 +12,7 @@ import {
 import type { PublicMcpOAuth } from "./public-oauth.ts";
 import { PublicMcpPublisherNameSchema } from "./public-service-operations.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
+import type { SavedSessionAuthorizationService } from "./saved-session-authorization/service.ts";
 
 describe("public HTTP boundary", () => {
   test("serves publisher pages with public policy and locked-down headers", async () => {
@@ -188,6 +189,54 @@ describe("public HTTP boundary", () => {
         method: "POST",
         body: "x".repeat(PUBLIC_MCP_MAX_REQUEST_BYTES + 1),
       });
+      expect(oversized.status).toBe(413);
+    } finally {
+      await close(server);
+      repository.close();
+    }
+  });
+
+  test("serves saved-session authorization through the public process", async () => {
+    const repository = openRepository();
+    const authorization: SavedSessionAuthorizationService = {
+      handle: (request) =>
+        Effect.succeed(
+          Response.json(
+            { pathname: new URL(request.url).pathname },
+            { headers: { "set-cookie": "vault=created; HttpOnly" } },
+          ),
+        ),
+    };
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+      savedSessionAuthorization: {
+        origin: new URL("https://oracle.example.test"),
+        service: authorization,
+      },
+    });
+    const endpoint = await listen(server);
+    try {
+      const vault = await fetch(new URL("/saved-session-vault", endpoint));
+      expect(vault.status).toBe(200);
+      expect(await vault.text()).toContain("Create vault &amp; allow");
+
+      const authorizationResponse = await fetch(
+        new URL("/api/auth/oauth2/authorize", endpoint),
+      );
+      expect(await authorizationResponse.json()).toEqual({
+        pathname: "/api/auth/oauth2/authorize",
+      });
+      expect(authorizationResponse.headers.get("set-cookie")).toContain(
+        "vault=created",
+      );
+
+      const oversized = await fetch(
+        new URL("/api/auth/oauth2/token", endpoint),
+        {
+          method: "POST",
+          body: "x".repeat(PUBLIC_MCP_MAX_REQUEST_BYTES + 1),
+        },
+      );
       expect(oversized.status).toBe(413);
     } finally {
       await close(server);

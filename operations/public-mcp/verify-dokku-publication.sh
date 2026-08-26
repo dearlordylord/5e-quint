@@ -37,11 +37,13 @@ environment="$(read_config DND_MCP_ENVIRONMENT)"
 publication_mode="$(read_config DND_MCP_PUBLICATION_MODE)"
 publisher_name="$(read_config DND_MCP_PUBLISHER_NAME)"
 release="$(read_config DND_MCP_RELEASE)"
-resource="$(read_config DND_OAUTH_RESOURCE_URL)"
-authorization_server="$(read_config DND_OAUTH_AUTHORIZATION_SERVER)"
-issuer="$(read_config DND_OAUTH_ISSUER)"
-jwks_url="$(read_config DND_OAUTH_JWKS_URL)"
+configured_public_origin="$(read_config DND_MCP_PUBLIC_ORIGIN)"
+authorization_database_path="$(read_config DND_SAVED_SESSION_AUTHORIZATION_DATABASE_PATH)"
+authorization_secret="$(read_config DND_SAVED_SESSION_AUTHORIZATION_SECRET)"
 challenge="$(read_config DND_OPENAI_APPS_CHALLENGE)"
+readonly authorization_server="$public_origin/api/auth"
+readonly issuer="$authorization_server"
+readonly jwks_url="$authorization_server/jwks"
 
 [[ "$environment" == production && "$publication_mode" == enabled ]] || {
   echo "$dokku_app is not in production publication mode" >&2
@@ -51,12 +53,12 @@ challenge="$(read_config DND_OPENAI_APPS_CHALLENGE)"
   echo "$dokku_app does not use a verified publisher name" >&2
   exit 65
 }
-[[ "$release" =~ ^[0-9a-f]{40}$ && "$resource" == "$expected_resource" ]] || {
-  echo "$dokku_app has invalid release or resource identity" >&2
+[[ "$release" =~ ^[0-9a-f]{40}$ && "$configured_public_origin" == "$public_origin" ]] || {
+  echo "$dokku_app has invalid release or public origin" >&2
   exit 65
 }
-[[ -n "$authorization_server" && -n "$issuer" && -n "$jwks_url" && -n "$challenge" ]] || {
-  echo "$dokku_app has incomplete OAuth or domain-challenge configuration" >&2
+[[ "$authorization_database_path" == /var/lib/dnd-oracle/saved-session-authorization.sqlite && ${#authorization_secret} -ge 32 && -n "$challenge" ]] || {
+  echo "$dokku_app has incomplete saved-session authorization or domain-challenge configuration" >&2
   exit 65
 }
 
@@ -70,10 +72,11 @@ jq -e \
    (.scopes_supported | index($scope) != null)' \
   <<<"$protected_resource" >/dev/null
 
-authorization_server_base="${authorization_server%/}"
 authorization_metadata=""
-for metadata_path in /.well-known/oauth-authorization-server /.well-known/openid-configuration; do
-  if candidate="$(curl --fail --silent --show-error "$authorization_server_base$metadata_path" 2>/dev/null)"; then
+for metadata_url in \
+  "$authorization_server/.well-known/oauth-authorization-server" \
+  "$public_origin/.well-known/oauth-authorization-server/api/auth"; do
+  if candidate="$(curl --fail --silent --show-error "$metadata_url" 2>/dev/null)"; then
     if jq -e --arg issuer "$issuer" '.issuer == $issuer' <<<"$candidate" >/dev/null; then
       authorization_metadata="$candidate"
       break

@@ -4,42 +4,17 @@ import { Either } from "effect";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { describe, expect, test } from "vitest";
 
-import { createPublicMcpOAuthFromEnvironment } from "./public-oauth.ts";
+import { createPublicMcpOAuth } from "./public-oauth.ts";
 
-describe("public MCP OAuth configuration", () => {
-  test("keeps local guest development auth-free when OAuth is unconfigured", () => {
-    expect(createPublicMcpOAuthFromEnvironment({})).toEqual(
-      Either.right(undefined),
-    );
-    expect(
-      createPublicMcpOAuthFromEnvironment({
-        DND_OAUTH_RESOURCE_URL: "",
-        DND_OAUTH_AUTHORIZATION_SERVER: "",
-        DND_OAUTH_ISSUER: "",
-        DND_OAUTH_JWKS_URL: "",
-      }),
-    ).toEqual(Either.right(undefined));
-  });
-
-  test("rejects partial configuration instead of silently weakening save auth", () => {
-    expect(
-      createPublicMcpOAuthFromEnvironment({
-        DND_OAUTH_RESOURCE_URL: "https://oracle.example.test/mcp",
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: { reason: "invalidConfiguration" },
-    });
-  });
-
+describe("public MCP OAuth", () => {
   test("derives provider-neutral protected-resource metadata", () => {
-    const oauth = createPublicMcpOAuthFromEnvironment({
-      DND_OAUTH_RESOURCE_URL: "https://oracle.example.test/mcp",
-      DND_OAUTH_AUTHORIZATION_SERVER: "https://identity.example.test",
-      DND_OAUTH_ISSUER: "https://identity.example.test",
-      DND_OAUTH_JWKS_URL: "https://identity.example.test/.well-known/jwks.json",
+    const oauth = createPublicMcpOAuth({
+      resource: "https://oracle.example.test/mcp",
+      authorizationServer: "https://identity.example.test",
+      issuer: "https://identity.example.test",
+      jwksUrl: "https://identity.example.test/.well-known/jwks.json",
     });
-    if (Either.isLeft(oauth) || oauth.right === undefined) {
+    if (Either.isLeft(oauth)) {
       throw new Error("Expected complete OAuth configuration.");
     }
     expect(oauth.right.protectedResourceMetadata).toEqual({
@@ -69,13 +44,13 @@ describe("public MCP OAuth configuration", () => {
         resolve(new URL(`http://127.0.0.1:${address.port}/jwks`));
       });
     });
-    const oauth = createPublicMcpOAuthFromEnvironment({
-      DND_OAUTH_RESOURCE_URL: "https://oracle.example.test/mcp",
-      DND_OAUTH_AUTHORIZATION_SERVER: "https://identity.example.test",
-      DND_OAUTH_ISSUER: "https://issuer.example.test",
-      DND_OAUTH_JWKS_URL: jwksUrl.toString(),
+    const oauth = createPublicMcpOAuth({
+      resource: "https://oracle.example.test/mcp",
+      authorizationServer: "https://identity.example.test",
+      issuer: "https://issuer.example.test",
+      jwksUrl: jwksUrl.toString(),
     });
-    if (Either.isLeft(oauth) || oauth.right === undefined) {
+    if (Either.isLeft(oauth)) {
       throw new Error("Expected complete OAuth configuration.");
     }
     try {

@@ -8,10 +8,9 @@
   },
   "scripts": {
     "dev": "tsx src/index.ts",
-    "prototype:better-auth": "tsx src/prototypes/better-auth-effect/prototype-smoke.ts",
-    "prototype:better-auth:guest": "tsx src/prototypes/better-auth-effect/guest-smoke.ts",
-    "prototype:better-auth:registrations": "tsx src/prototypes/better-auth-effect/registration-evidence.ts",
-    "serve:prototype:better-auth": "tsx src/prototypes/better-auth-effect/prototype-server.ts",
+    "smoke:saved-session-authorization": "tsx src/saved-session-authorization/smoke.ts",
+    "smoke:saved-session-guest": "tsx src/saved-session-authorization/guest-smoke.ts",
+    "evidence:saved-session-registrations": "tsx src/saved-session-authorization/registration-evidence.ts",
     "serve:http": "tsx src/public-index.ts",
     "verify:staging": "tsx src/staging-http-smoke.ts",
     "mirror": "tsx src/admin-mirror-server.ts",
@@ -26,6 +25,7 @@
     "@better-auth/core": "1.7.1",
     "@better-auth/mcp": "1.7.1",
     "@better-auth/oauth-provider": "1.7.1",
+    "@better-auth/utils": "0.4.2",
     "@dnd/battle-runtime": "workspace:*",
     "@dnd/character-battle-runtime": "workspace:*",
     "@dnd/character-creation-runtime": "workspace:*",
@@ -37,7 +37,7 @@
     "@modelcontextprotocol/sdk": "^1.30.0",
     "better-auth": "1.7.1",
     "effect": "^3.21.0",
-    "jose": "^6.2.2"
+    "jose": "^6.2.10"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

@@ -4,7 +4,7 @@ import type { IncomingMessage } from "node:http";
 import { Either, Schema } from "effect";
 import { createRemoteJWKSet, jwtVerify } from "jose";
 
-import { isAnonymousVaultEmail } from "./anonymous-vault-identity.ts";
+import { isAnonymousVaultEmail } from "./vault-identity.ts";
 
 export const AuthorizationServerMetadataSchema = Schema.Struct({
   issuer: Schema.NonEmptyTrimmedString,
@@ -61,6 +61,15 @@ export function assertTokenLifetime(
     throw new Error("OAuth access token has the wrong lifetime");
 }
 
+export function assertRemainingTokenLifetime(
+  tokens: { readonly expires_in: number },
+  maximumSeconds: number,
+): void {
+  if (tokens.expires_in <= 0 || tokens.expires_in > maximumSeconds) {
+    throw new Error("OAuth access token has an invalid remaining lifetime");
+  }
+}
+
 export async function requestVaultRedirect(input: {
   readonly authorizationEndpoint: URL;
   readonly clientId: string;
@@ -88,7 +97,7 @@ export async function requestVaultRedirect(input: {
     await fetch(authorizeUrl),
   );
   const vaultUrl = new URL(authorization.url, input.origin);
-  if (!authorization.redirect || vaultUrl.pathname !== "/prototype/vault") {
+  if (!authorization.redirect || vaultUrl.pathname !== "/saved-session-vault") {
     throw new Error("Authorization did not reach anonymous vault creation");
   }
   return vaultUrl;
@@ -185,7 +194,7 @@ export async function authorizeExistingBrowserSession(input: {
     throw new Error("Existing browser session was not authorized");
   const authorizationUrl = new URL(authorization.url, input.origin);
   const callbackUrl =
-    authorizationUrl.pathname === "/prototype/consent"
+    authorizationUrl.pathname === "/saved-session-consent"
       ? new URL(
           (
             await decodeJson(

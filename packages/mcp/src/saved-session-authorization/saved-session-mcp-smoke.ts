@@ -4,22 +4,18 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import { Either } from "effect";
 
-import { requireJsonSchema } from "../../../test-support/json-schema.ts";
-import { decodePlaySessionId, type PlaySessionId } from "../../play-session.ts";
+import { requireJsonSchema } from "../../test-support/json-schema.ts";
+import { decodePlaySessionId, type PlaySessionId } from "../play-session.ts";
 import {
   playSessionToolDefinitions,
   playSessionToolNames,
   type PlaySessionToolName,
-} from "../../play-session-tool-contract.ts";
-import { createDndMcpHttpServer } from "../../public-http-server.ts";
-import type { PublicMcpOAuth } from "../../public-oauth.ts";
-import { openSqlitePlaySessionRepository } from "../../recoverable-play-session.ts";
+} from "../play-session-tool-contract.ts";
 
 export async function verifySavedSessionMcp(input: {
   readonly accessToken: string;
-  readonly databasePath: string;
+  readonly endpoint: URL;
   readonly isolatedAccessToken: string;
-  readonly oauth: PublicMcpOAuth;
 }): Promise<{
   readonly authenticatedMcpConnection: true;
   readonly guestSessionSaved: true;
@@ -27,33 +23,20 @@ export async function verifySavedSessionMcp(input: {
   readonly savedSessionListed: true;
   readonly savedSessionDeleted: true;
 }> {
-  const repository = openSqlitePlaySessionRepository(input.databasePath);
-  if (Either.isLeft(repository)) throw new Error(repository.left.message);
-  const mcpServer = createDndMcpHttpServer({
-    hostname: "127.0.0.1",
-    port: 0,
-    playSessionRepository: repository.right,
-    oauth: input.oauth,
-  });
-  const endpoint = await mcpServer.listen();
-  if (Either.isLeft(endpoint)) {
-    repository.right.close();
-    throw new Error(endpoint.left.message);
-  }
   const guestClient = new Client({
-    name: "dnd-better-auth-guest-to-saved-prototype",
+    name: "dnd-saved-session-guest",
     version: "0.1.0",
   });
   const authenticatedClient = new Client({
-    name: "dnd-better-auth-saved-session-prototype",
+    name: "dnd-saved-session-owner",
     version: "0.1.0",
   });
   const isolatedClient = new Client({
-    name: "dnd-better-auth-isolated-vault-prototype",
+    name: "dnd-saved-session-isolated-vault",
     version: "0.1.0",
   });
   try {
-    const guestTransport = new StreamableHTTPClientTransport(endpoint.right);
+    const guestTransport = new StreamableHTTPClientTransport(input.endpoint);
     // The SDK class implements Transport; this bridges its exact-optional
     // sessionId declaration to the interface declaration.
     await guestClient.connect(guestTransport as Transport);
@@ -74,7 +57,7 @@ export async function verifySavedSessionMcp(input: {
     await guestClient.close();
 
     const authenticatedTransport = new StreamableHTTPClientTransport(
-      endpoint.right,
+      input.endpoint,
       {
         requestInit: {
           headers: { authorization: `Bearer ${input.accessToken}` },
@@ -113,7 +96,7 @@ export async function verifySavedSessionMcp(input: {
       throw new Error("Authenticated list omitted the saved Play Session.");
     }
     const isolatedTransport = new StreamableHTTPClientTransport(
-      endpoint.right,
+      input.endpoint,
       {
         requestInit: {
           headers: {
@@ -169,8 +152,6 @@ export async function verifySavedSessionMcp(input: {
     await guestClient.close();
     await authenticatedClient.close();
     await isolatedClient.close();
-    await mcpServer.close();
-    repository.right.close();
   }
 }
 

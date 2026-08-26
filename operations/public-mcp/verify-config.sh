@@ -17,7 +17,7 @@ case "${DND_MCP_ENVIRONMENT:-}" in
   *) echo "DND_MCP_ENVIRONMENT must be staging or production" >&2; exit 65 ;;
 esac
 
-required=(COMPOSE_PROJECT_NAME DND_MCP_DOMAIN DND_MCP_PUBLISHER_NAME DND_MCP_LOOPBACK_PORT DND_MCP_CADDY_CONFIG_DIRECTORY DND_MCP_OPERATIONS_DIRECTORY DND_MCP_SYSTEMD_DIRECTORY DND_MCP_IMAGE DND_MCP_RELEASE DND_MCP_STATE_DIRECTORY DND_MCP_RELEASE_DIRECTORY DND_MCP_METRICS_TOKEN DND_MCP_BUDGET_ALERT_RECIPIENT DND_MCP_FIXED_HOST_MONTHLY_USD DND_MCP_PUBLICATION_MODE)
+required=(COMPOSE_PROJECT_NAME DND_MCP_DOMAIN DND_MCP_PUBLISHER_NAME DND_MCP_LOOPBACK_PORT DND_MCP_CADDY_CONFIG_DIRECTORY DND_MCP_OPERATIONS_DIRECTORY DND_MCP_SYSTEMD_DIRECTORY DND_MCP_IMAGE DND_MCP_RELEASE DND_MCP_STATE_DIRECTORY DND_MCP_RELEASE_DIRECTORY DND_MCP_METRICS_TOKEN DND_SAVED_SESSION_AUTHORIZATION_SECRET DND_MCP_BUDGET_ALERT_RECIPIENT DND_MCP_FIXED_HOST_MONTHLY_USD DND_MCP_PUBLICATION_MODE)
 for name in "${required[@]}"; do
   [[ -n "${!name:-}" ]] || { echo "$name is required" >&2; exit 65; }
 done
@@ -83,26 +83,19 @@ done
   echo "DND_MCP_BUDGET_ALERT_RECIPIENT must be an email address" >&2
   exit 65
 }
+(( ${#DND_SAVED_SESSION_AUTHORIZATION_SECRET} >= 32 )) || {
+  echo "DND_SAVED_SESSION_AUTHORIZATION_SECRET must contain at least 32 characters" >&2
+  exit 65
+}
 
 case "$DND_MCP_PUBLICATION_MODE" in
   disabled) ;;
   enabled)
     [[ "$DND_MCP_PUBLISHER_NAME" != "5e Quint developers" ]] || { echo "publication requires the verified publisher identity" >&2; exit 65; }
     [[ -n "${DND_OPENAI_APPS_CHALLENGE:-}" ]] || { echo "publication requires DND_OPENAI_APPS_CHALLENGE" >&2; exit 65; }
-    oauth=(DND_OAUTH_RESOURCE_URL DND_OAUTH_AUTHORIZATION_SERVER DND_OAUTH_ISSUER DND_OAUTH_JWKS_URL)
-    for name in "${oauth[@]}"; do
-      [[ -n "${!name:-}" ]] || { echo "publication requires $name" >&2; exit 65; }
-    done
     ;;
   *) echo "DND_MCP_PUBLICATION_MODE must be disabled or enabled" >&2; exit 65 ;;
 esac
-
-if [[ -n "${DND_OAUTH_RESOURCE_URL:-}" ]]; then
-  [[ "$DND_OAUTH_RESOURCE_URL" == "https://$DND_MCP_DOMAIN/mcp" ]] || {
-    echo "DND_OAUTH_RESOURCE_URL must be the environment's exact HTTPS /mcp URL" >&2
-    exit 65
-  }
-fi
 
 docker compose --env-file "$environment_file" -f "$(dirname "$0")/compose.yaml" config --quiet
 echo "Public MCP configuration is valid for $DND_MCP_ENVIRONMENT."

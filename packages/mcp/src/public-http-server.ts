@@ -22,6 +22,11 @@ import {
   publicMcpTraceContext,
   type PublicMcpServiceOperations,
 } from "./public-service-operations.ts";
+import {
+  handleSavedSessionAuthorizationRequest,
+  isSavedSessionAuthorizationPath,
+  type SavedSessionAuthorizationHttp,
+} from "./saved-session-authorization/http.ts";
 
 export type DndMcpHttpServer = {
   listen(): Promise<Either.Either<URL, DndMcpHttpServerIssue>>;
@@ -57,12 +62,33 @@ export function createDndMcpHttpServer(input: {
   readonly port?: number;
   readonly oauth?: PublicMcpOAuth;
   readonly operations?: PublicMcpServiceOperations;
+  readonly savedSessionAuthorization?: SavedSessionAuthorizationHttp;
 }): DndMcpHttpServer {
   const applicationServices =
     input.applicationServices ?? createMcpApplicationServices();
   const hostname = input.hostname ?? "127.0.0.1";
   const port = input.port ?? 0;
+  const operations = input.operations ?? {
+    environment: "development" as const,
+    release: "development",
+    publisherName: DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
+  };
   const server = createServer((incoming, outgoing) => {
+    const pathname = new URL(incoming.url ?? "/", `http://${hostname}`)
+      .pathname;
+    if (
+      input.savedSessionAuthorization !== undefined &&
+      isSavedSessionAuthorizationPath(pathname)
+    ) {
+      handleSavedSessionAuthorizationNodeRequest({
+        authorization: input.savedSessionAuthorization,
+        incoming,
+        operations,
+        outgoing,
+        pathname,
+      }).catch(() => outgoing.destroy());
+      return;
+    }
     handleNodeRequest({
       incoming,
       outgoing,
@@ -70,11 +96,7 @@ export function createDndMcpHttpServer(input: {
       applicationServices,
       playSessionRepository: input.playSessionRepository,
       ...(input.oauth === undefined ? {} : { oauth: input.oauth }),
-      operations: input.operations ?? {
-        environment: "development",
-        release: "development",
-        publisherName: DEFAULT_PUBLIC_MCP_PUBLISHER_NAME,
-      },
+      operations,
     }).catch(() => {
       if (outgoing.headersSent) {
         outgoing.destroy();
@@ -128,6 +150,70 @@ export function createDndMcpHttpServer(input: {
       });
     },
   };
+}
+
+async function handleSavedSessionAuthorizationNodeRequest(input: {
+  readonly authorization: SavedSessionAuthorizationHttp;
+  readonly incoming: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["incoming"];
+  readonly operations: PublicMcpServiceOperations;
+  readonly outgoing: Parameters<
+    typeof handleSavedSessionAuthorizationRequest
+  >[0]["outgoing"];
+  readonly pathname: string;
+}): Promise<void> {
+  const startedAt = performance.now();
+  const trace = publicMcpTraceContext();
+  let status = 200;
+  let outcome: "accepted" | "rejected" | "failed" = "accepted";
+  try {
+    const result = await handleSavedSessionAuthorizationRequest(input);
+    if (Either.isLeft(result)) {
+      status = result.left.reason === "requestTooLarge" ? 413 : 500;
+      outcome =
+        result.left.reason === "requestTooLarge" ? "rejected" : "failed";
+      if (input.outgoing.headersSent) {
+        input.outgoing.destroy();
+      } else {
+        await writePublicHttpResponse(
+          input.outgoing,
+          new Response(
+            result.left.reason === "requestTooLarge"
+              ? "Request body is too large"
+              : "Internal server error",
+            { status },
+          ),
+        );
+      }
+    } else {
+      status = input.outgoing.statusCode;
+      outcome = status < 400 ? "accepted" : "rejected";
+    }
+  } catch {
+    status = 500;
+    outcome = "failed";
+    if (input.outgoing.headersSent) {
+      input.outgoing.destroy();
+    } else {
+      await writePublicHttpResponse(
+        input.outgoing,
+        new Response("Internal server error", { status }),
+      );
+    }
+  } finally {
+    observePublicMcpRequest({
+      environment: input.operations.environment,
+      release: input.operations.release,
+      traceId: trace.traceId,
+      spanId: trace.spanId,
+      method: publicMcpHttpMethod(input.incoming.method),
+      route: publicRouteLabel(input.pathname),
+      status,
+      outcome,
+      durationMilliseconds: Math.round(performance.now() - startedAt),
+    });
+  }
 }
 
 function httpServerIssue(
