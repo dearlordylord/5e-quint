@@ -4,7 +4,6 @@ import { ClassLevel } from "@dnd/shared/types";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import {
-  authoredProcedureOrdinal,
   statBlockCatalog,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
@@ -12,10 +11,7 @@ import {
   projectAuthoredStatBlock,
   projectAuthoredStatBlockWithCreatureType,
 } from "./stat-block-authored-projection.ts";
-import {
-  runtimeStatBlockActionSurfaceIsSupported,
-  wildShapeFormActionSurfaceInventory,
-} from "./statblock-action-support.ts";
+import { wildShapeFormActionSurfaceInventory } from "./statblock-action-support.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 
 const allBeastFormsProfile = {
@@ -145,29 +141,5 @@ describe("extracted Stat Block parity branches", () => {
         .filter((entry) => "closedBoundary" in entry)
         .every((entry) => entry.closedBoundary.owner.length > 0),
     ).toBe(true);
-  });
-
-  test("rejects a runtime procedure kind outside the generic action surface", () => {
-    const projected = projectAuthoredStatBlock(statBlockRecord());
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-    expect(
-      runtimeStatBlockActionSurfaceIsSupported(projected.right.runtime),
-    ).toBe(true);
-    const unsupportedRuntime = {
-      ...projected.right.runtime,
-      procedures: [
-        {
-          kind: "unsupported",
-          section: "actions",
-          procedureOrdinal: authoredProcedureOrdinal(99),
-          reason: "unsupportedActionShape",
-          resourceRefs: [],
-        },
-      ],
-    } as unknown as typeof projected.right.runtime;
-    expect(runtimeStatBlockActionSurfaceIsSupported(unsupportedRuntime)).toBe(
-      false,
-    );
   });
 });

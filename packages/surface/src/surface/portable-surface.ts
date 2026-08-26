@@ -338,6 +338,18 @@ function scanJsonMembers(text: string): JsonScanResult {
   return new JsonMemberScanner(text).scan();
 }
 
+type JsonParseResult =
+  | { readonly tag: "parsed"; readonly value: unknown }
+  | { readonly tag: "rejected"; readonly error: unknown };
+
+function parseJson(text: string): JsonParseResult {
+  try {
+    return { tag: "parsed", value: JSON.parse(text) };
+  } catch (error) {
+    return { tag: "rejected", error };
+  }
+}
+
 export function decodePortableSrdSurfaceText(
   text: string,
 ): PortableSrdSurfaceDecodeResult {
@@ -350,18 +362,16 @@ export function decodePortableSrdSurfaceText(
     );
   }
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
+  const parsed = parseJson(text);
+  if (parsed.tag === "rejected") {
     return rejected([
       jsonIssue(
         "$",
-        `Surface aggregate JSON could not be parsed: ${String(error)}`,
+        `Surface aggregate JSON could not be parsed: ${String(parsed.error)}`,
       ),
     ]);
   }
-  return decodePortableSrdSurface(parsed);
+  return decodePortableSrdSurface(parsed.value);
 }
 
 function unknownRootPropertyIssues(
