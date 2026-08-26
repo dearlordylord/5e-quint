@@ -1,9 +1,11 @@
 import type {
   ScenarioBarrierHeight,
   ScenarioSetup,
+  ScenarioSetupContext,
   ScenarioSpatialSetupInput,
 } from "@dnd/scenario-setup-sdk";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+
+type ScenarioStatBlockRecord = ScenarioSetupContext["statBlocks"][number];
 
 type GeometrySpatialSetup = Extract<
   ScenarioSpatialSetupInput,
@@ -104,9 +106,10 @@ export const setupScenario: ScenarioSetup = (context) => {
   const statBlockResolution = (() => {
     const statBlocks: {
       readonly input: (typeof combatantInputs)[number];
-      readonly statBlock: StatBlockRecord;
+      readonly statBlock: ScenarioStatBlockRecord;
     }[] = [];
-    const missingStatBlockIds: string[] = [];
+    const missingStatBlockIds: (typeof combatantInputs)[number]["statBlockId"][] =
+      [];
     for (const input of combatantInputs) {
       const statBlock = context.statBlockCatalog.getStatBlock(
         input.statBlockId,
