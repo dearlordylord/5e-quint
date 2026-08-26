@@ -939,6 +939,28 @@ describe("Raw Swarm artifact index", () => {
     }
   });
 
+  test("rejects a symlink to a non-empty WAL before opening a read-only index", () => {
+    const directory = temporaryDirectory();
+    const targetPath = resolve(directory, "target.sqlite");
+    const linkPath = resolve(directory, "linked.sqlite");
+    const writer = openArtifactIndex(relative(repoRoot, targetPath));
+    try {
+      writer.exec(
+        "CREATE TABLE walProbe(value INTEGER); INSERT INTO walProbe VALUES (1);",
+      );
+      symlinkSync(targetPath, linkPath);
+      expect(existsSync(`${linkPath}-wal`)).toBe(false);
+      expect(readFileSync(`${targetPath}-wal`).byteLength).toBeGreaterThan(32);
+      expect(() =>
+        openArtifactIndexReadOnly(relative(repoRoot, linkPath)),
+      ).toThrow(
+        /non-empty WAL sidecar; checkpoint .* before using a read-only report command/,
+      );
+    } finally {
+      writer.close();
+    }
+  });
+
   test("registers controlled attachments in the transcript transaction", () => {
     const directory = temporaryDirectory();
     const transcript = sdkTranscript(directory);
