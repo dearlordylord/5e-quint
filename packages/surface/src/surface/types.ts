@@ -590,6 +590,9 @@ export type GlyphWardingMechanics = Schema.Schema.Type<
 export type StatBlockValue = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockValueSchema
 >;
+export type StatBlockLiteralValue = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockLiteralValueSchema
+>;
 export type Size = Schema.Schema.Type<typeof SurfaceSchema.SizeSchema>;
 export type SixAbilityScores = Schema.Schema.Type<
   typeof SurfaceSchema.SixAbilityScoresSchema
@@ -608,6 +611,12 @@ export type CreatureImmunityList = Schema.Schema.Type<
 >;
 export type CreatureSense = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureSenseSchema
+>;
+export type StandaloneCreatureSense = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneCreatureSenseSchema
+>;
+export type StandaloneStatBlockAbilityScores = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockAbilityScoresSchema
 >;
 export type CreatureNamedAttackRoll = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureNamedAttackRollSchema
@@ -647,6 +656,21 @@ export type CreatureTrait = Schema.Schema.Type<
 >;
 export type CreatureStatBlock = Schema.Schema.Type<
   typeof SurfaceSchema.CreatureStatBlockSchema
+>;
+export type StatBlockCreatureProjection = Schema.Schema.Type<
+  typeof SurfaceSchema.CreatureStatBlockProjectionSchema
+>;
+export type StandaloneStatBlock = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockSchema
+>;
+export type StandaloneStatBlockValue = Schema.Schema.Type<
+  typeof SurfaceSchema.StandaloneStatBlockValueSchema
+>;
+export type StatBlockInitiativeModifier = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockInitiativeModifierSchema
+>;
+export type StatBlockInitiative = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockInitiativeSchema
 >;
 export type MonsterStatBlock = Schema.Schema.Type<
   typeof SurfaceSchema.MonsterStatBlockSchema
