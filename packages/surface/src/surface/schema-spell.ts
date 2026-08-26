@@ -5532,17 +5532,22 @@ const hasStrictlyIncreasingProcedureOrdinals = (
 const hasKnownMultiattackDispatches = (
   entries: ReadonlyArray<StatBlockProcedureEntry>,
 ): boolean => {
-  const ordinals = new Set(entries.map((entry) => entry.procedureOrdinal));
-  return entries.every(
-    (entry) =>
-      entry.kind !== "executable" ||
-      entry.procedure.kind !== "multiattack" ||
-      entry.procedure.dispatches.every(
-        (dispatch) =>
-          dispatch.procedureOrdinal !== entry.procedureOrdinal &&
-          ordinals.has(dispatch.procedureOrdinal),
-      ),
+  const entriesByOrdinal = new Map(
+    entries.map((entry) => [entry.procedureOrdinal, entry]),
   );
+  return entries.every((entry) => {
+    if (entry.kind !== "executable" || entry.procedure.kind !== "multiattack") {
+      return true;
+    }
+    return entry.procedure.dispatches.every((dispatch) => {
+      const target = entriesByOrdinal.get(dispatch.procedureOrdinal);
+      return (
+        dispatch.procedureOrdinal !== entry.procedureOrdinal &&
+        target?.kind === "executable" &&
+        target.procedure.kind === "attack_roll"
+      );
+    });
+  });
 };
 
 export const StatBlockProcedureSectionSchema = nonEmpty(

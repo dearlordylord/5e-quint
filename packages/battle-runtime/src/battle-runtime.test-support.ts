@@ -28,6 +28,7 @@ import { attackActionOptionName } from "./battle-reducer/statblock-attacks.ts";
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
 import { resolveAdmittedFindFamiliarReappearanceSubject } from "./battle-reducer/find-familiar-procedures.ts";
 
@@ -74,6 +75,10 @@ import {
 } from "@dnd/shared/game-facts";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import {
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
+import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
 } from "@dnd/surface/surface/stat-block-catalog";
@@ -84,6 +89,7 @@ import type {
   Size,
   SpellRecord,
   StatBlockRecord,
+  StatBlockProcedureEntry,
   UnitRecord,
   WeaponRecord,
 } from "@dnd/surface/surface/types";
@@ -477,7 +483,10 @@ export function statBlockProcedurePresentationsForStateForTest(
   if (presentations === undefined) {
     throw new Error("Expected registered Stat Block test presentation.");
   }
-  return presentations.procedures;
+  return statBlockProcedurePresentations({
+    execution: actor.origin.execution,
+    presentation: presentations,
+  });
 }
 
 export function battleRuntimeContextForStateForTest(
@@ -4006,29 +4015,34 @@ export function statBlockCreatureInit(input: {
   >["ammunitionStocks"];
 }): BattleCreatureInit {
   const statBlock = input.statBlock ?? statBlockRecord();
-  if (statBlock.statBlock.hp.kind !== "literal") {
+  const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
+  if (projected.runtime.statBlock.hp.kind !== "literal") {
     throw new Error(
       "Battle runtime test Stat Block fixture must use literal HP.",
     );
   }
-  const maxHp = statBlock.statBlock.hp.value;
+  const maxHp = projected.runtime.statBlock.hp.value;
   const ammunitionStocks =
     input.ammunitionStocks ??
     requiredAmmunitionKinds([
-      ...(statBlock.statBlock.actions?.attacks ?? []),
-      ...(statBlock.statBlock.legendaryActions?.actions.attacks ?? []),
+      ...projected.runtime.procedures.flatMap((procedure) =>
+        procedure.kind === "attack" ? [procedure.attack] : [],
+      ),
     ]).map((ammunition) => battleAmmunitionStock(ammunition, 20));
   return {
     combatantId: input.combatantId ?? goblinId,
-    displayName: input.displayName ?? statBlock.statBlock.displayName,
+    displayName: input.displayName ?? projected.presentation.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(projected.runtime),
+      ),
       currentHp: Hp(input.currentHp ?? maxHp),
       tempHp: Hp(input.tempHp ?? 0),
       ammunitionStocks,
       conditions: [],
+      presentation: projected.presentation,
     },
   };
 }
@@ -4037,11 +4051,91 @@ export function statBlockRecord(): StatBlockRecord {
   return statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
 }
 
+/** Test-only admission helper: execution tests consume the source-free runtime projection. */
+export function projectedStatBlockRuntimeSource(
+  record: StatBlockRecord = statBlockRecord(),
+) {
+  const projected = projectAuthoredStatBlock(record);
+  if (Either.isLeft(projected)) {
+    throw new Error(
+      `Expected a projectable Stat Block fixture: ${projected.left.reason}.`,
+    );
+  }
+  return projected.right.runtime;
+}
+
+type AuthoredExecutableProcedureEntry = Extract<
+  StatBlockProcedureEntry,
+  { readonly kind: "executable" }
+>;
+type AttackProcedureEntry = AuthoredExecutableProcedureEntry & {
+  readonly procedure: Extract<
+    AuthoredExecutableProcedureEntry["procedure"],
+    { readonly kind: "attack_roll" }
+  >;
+};
+
+function testStatBlockProcedureOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureOrdinalSchema)(value);
+}
+
+function testStatBlockResourceOrdinal(value: number) {
+  return Schema.decodeSync(StatBlockProcedureResourceOrdinalSchema)(value);
+}
+
+function attackProcedureEntry(
+  entries: readonly StatBlockProcedureEntry[] | undefined,
+  name: string,
+): AttackProcedureEntry | undefined {
+  return entries?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === name,
+  );
+}
+
+function renamedAttackProcedureEntry(input: {
+  readonly entry: AttackProcedureEntry;
+  readonly name: string;
+  readonly procedureOrdinal: number;
+  readonly resourceOrdinal?: number;
+}): AttackProcedureEntry {
+  return {
+    ...input.entry,
+    procedureOrdinal: testStatBlockProcedureOrdinal(input.procedureOrdinal),
+    procedure: {
+      ...input.entry.procedure,
+      name: input.name,
+    },
+    resourceRefs:
+      input.resourceOrdinal === undefined
+        ? { kind: "none" }
+        : {
+            kind: "some",
+            ordinals: [testStatBlockResourceOrdinal(input.resourceOrdinal)],
+          },
+  };
+}
+
+function textOnlyProcedureEntry(input: {
+  readonly name: string;
+  readonly description: string;
+  readonly procedureOrdinal: number;
+}): Extract<StatBlockProcedureEntry, { readonly kind: "textOnly" }> {
+  return {
+    kind: "textOnly",
+    procedureOrdinal: testStatBlockProcedureOrdinal(input.procedureOrdinal),
+    name: input.name,
+    description: input.description,
+    reason: "unsupported_action_shape",
+    resourceRefs: { kind: "none" },
+  };
+}
+
 export function monsterResourceStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
-  const scimitar = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
-  );
+  const scimitar = attackProcedureEntry(base.statBlock.actions, "Scimitar");
   if (scimitar === undefined) {
     throw new Error("Expected Goblin Warrior Scimitar fixture.");
   }
@@ -4051,40 +4145,94 @@ export function monsterResourceStatBlock(): StatBlockRecord {
     name: "Resource Test Monster",
     statBlock: {
       ...base.statBlock,
-      displayName: "Resource Test Monster",
-      actions: {
-        attacks: [
-          {
-            ...scimitar,
-            name: "Cinder Breath",
-            limitedUse: { kind: "recharge", minimumRoll: 5 },
-          },
-          {
-            ...scimitar,
-            name: "Dread Gaze",
-            limitedUse: { kind: "daily", uses: 1 },
-          },
-        ],
-      },
+      actions: [
+        renamedAttackProcedureEntry({
+          entry: scimitar,
+          name: "Cinder Breath",
+          procedureOrdinal: 1,
+          resourceOrdinal: 1,
+        }),
+        renamedAttackProcedureEntry({
+          entry: scimitar,
+          name: "Dread Gaze",
+          procedureOrdinal: 2,
+          resourceOrdinal: 2,
+        }),
+      ],
+      resources: [
+        {
+          ordinal: testStatBlockResourceOrdinal(1),
+          ownership: "each",
+          limit: { kind: "recharge", minimumRoll: 5 },
+        },
+        {
+          ordinal: testStatBlockResourceOrdinal(2),
+          ownership: "each",
+          limit: { kind: "daily", uses: 1 },
+        },
+      ],
       legendaryActions: {
         uses: 2,
-        actions: {
-          attacks: [
-            {
-              ...scimitar,
-              name: "Tail Swipe",
-            },
-          ],
-        },
+        entries: [
+          renamedAttackProcedureEntry({
+            entry: scimitar,
+            name: "Tail Swipe",
+            procedureOrdinal: 1,
+          }),
+        ],
       },
+    },
+  };
+}
+
+export function monsterResourceStatBlockWithSharedResource(): StatBlockRecord {
+  const base = monsterResourceStatBlock();
+  const actions = base.statBlock.actions;
+  const resources = base.statBlock.resources;
+  if (actions === undefined || resources === undefined) {
+    throw new Error("Expected resource-backed Stat Block fixture.");
+  }
+  const sharedResource = resources.find((resource) => resource.ordinal === 1);
+  if (sharedResource === undefined) {
+    throw new Error("Expected the first Stat Block resource fixture.");
+  }
+  const cinderBreath = attackProcedureEntry(actions, "Cinder Breath");
+  const dreadGaze = attackProcedureEntry(actions, "Dread Gaze");
+  if (cinderBreath === undefined || dreadGaze === undefined) {
+    throw new Error("Expected both resource-backed action fixtures.");
+  }
+  const sharedDreadGaze = renamedAttackProcedureEntry({
+    entry: dreadGaze,
+    name: "Dread Gaze",
+    procedureOrdinal: 2,
+    resourceOrdinal: 1,
+  });
+  return {
+    ...base,
+    id: statBlockId("stat_block_shared_resource_test_monster"),
+    name: "Shared Resource Test Monster",
+    provenance: {
+      kind: "synthetic-test",
+      section: "shared-resource-execution",
+    },
+    statBlock: {
+      ...base.statBlock,
+      actions: [cinderBreath, sharedDreadGaze],
+      resources: [
+        {
+          ...sharedResource,
+          ownership: "shared" as const,
+        },
+      ],
     },
   };
 }
 
 export function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlockRecord {
   const base = monsterResourceStatBlock();
-  const cinderBreath = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Cinder Breath",
+  const cinderBreath = attackProcedureEntry(
+    base.statBlock.actions,
+    "Cinder Breath",
   );
   if (cinderBreath === undefined) {
     throw new Error("Expected Cinder Breath fixture.");
@@ -4094,22 +4242,21 @@ export function monsterResourceStatBlockWithUnsupportedAttackSections(): StatBlo
     id: statBlockId("stat_block_unsupported_attack_sections_test_monster"),
     statBlock: {
       ...base.statBlock,
-      bonusActions: {
-        attacks: [
-          {
-            ...cinderBreath,
-            name: "Swift Bite",
-          },
-        ],
-      },
-      reactions: {
-        attacks: [
-          {
-            ...cinderBreath,
-            name: "Counter Snap",
-          },
-        ],
-      },
+      bonusActions: [
+        renamedAttackProcedureEntry({
+          entry: cinderBreath,
+          name: "Swift Bite",
+          procedureOrdinal: 1,
+          resourceOrdinal: 1,
+        }),
+      ],
+      reactions: [
+        textOnlyProcedureEntry({
+          name: "Counter Snap",
+          description: "Counter Snap is an unsupported reaction attack.",
+          procedureOrdinal: 1,
+        }),
+      ],
     },
   };
 }
@@ -4120,12 +4267,8 @@ export function monsterMultiattackStatBlock(input?: {
   readonly duplicateScimitarAttack?: boolean;
 }): StatBlockRecord {
   const base = statBlockRecord();
-  const scimitar = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
-  );
-  const shortbow = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Shortbow",
-  );
+  const scimitar = attackProcedureEntry(base.statBlock.actions, "Scimitar");
+  const shortbow = attackProcedureEntry(base.statBlock.actions, "Shortbow");
   if (scimitar === undefined || shortbow === undefined) {
     throw new Error("Expected Goblin Warrior attack fixtures.");
   }
@@ -4134,37 +4277,49 @@ export function monsterMultiattackStatBlock(input?: {
     id: statBlockId("stat_block_multiattack_test_monster"),
     statBlock: {
       ...base.statBlock,
-      displayName: "Multiattack Test Monster",
-      actions: {
-        ...base.statBlock.actions,
-        multiattacks: [
-          {
+      actions: [
+        scimitar,
+        input?.duplicateScimitarAttack === true
+          ? {
+              ...shortbow,
+              procedure: { ...shortbow.procedure, name: "Scimitar" },
+            }
+          : shortbow,
+        {
+          kind: "executable",
+          procedureOrdinal: testStatBlockProcedureOrdinal(3),
+          procedure: {
+            kind: "multiattack",
             name: "Multiattack",
             dispatches: [
               {
-                name: "Scimitar",
-                count: { kind: "literal", value: input?.scimitarCount ?? 2 },
+                procedureOrdinal: scimitar.procedureOrdinal,
+                count: {
+                  kind: "literal",
+                  value: input?.scimitarCount ?? 2,
+                },
               },
               {
-                name: "Shortbow",
-                count: { kind: "literal", value: input?.shortbowCount ?? 1 },
+                procedureOrdinal: shortbow.procedureOrdinal,
+                count: {
+                  kind: "literal",
+                  value: input?.shortbowCount ?? 1,
+                },
               },
             ],
           },
-        ],
-        attacks:
-          input?.duplicateScimitarAttack === true
-            ? [scimitar, { ...shortbow, name: "Scimitar" }]
-            : [scimitar, shortbow],
-      },
+          resourceRefs: { kind: "none" },
+        },
+      ],
     },
   };
 }
 
 export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecord {
   const base = monsterResourceStatBlock();
-  const cinderBreath = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Cinder Breath",
+  const cinderBreath = attackProcedureEntry(
+    base.statBlock.actions,
+    "Cinder Breath",
   );
   if (cinderBreath === undefined) {
     throw new Error("Expected Cinder Breath fixture.");
@@ -4174,17 +4329,23 @@ export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecor
     id: statBlockId("stat_block_two_recharge_test_monster"),
     statBlock: {
       ...base.statBlock,
-      actions: {
-        ...base.statBlock.actions,
-        attacks: [
-          ...(base.statBlock.actions?.attacks ?? []),
-          {
-            ...cinderBreath,
-            name: "Ash Cloud",
-            limitedUse: { kind: "recharge", minimumRoll: 6 },
-          },
-        ],
-      },
+      actions: [
+        ...(base.statBlock.actions ?? []),
+        renamedAttackProcedureEntry({
+          entry: cinderBreath,
+          name: "Ash Cloud",
+          procedureOrdinal: 3,
+          resourceOrdinal: 3,
+        }),
+      ],
+      resources: [
+        ...(base.statBlock.resources ?? []),
+        {
+          ordinal: testStatBlockResourceOrdinal(3),
+          ownership: "each",
+          limit: { kind: "recharge", minimumRoll: 6 },
+        },
+      ],
     },
   };
 }
@@ -4192,23 +4353,14 @@ export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecor
 export function skeletonCreatureInit(input: {
   readonly initiative: number;
 }): BattleCreatureInit {
-  return {
+  return statBlockCreatureInit({
     combatantId: skeletonId,
     displayName: "Skeleton",
-    initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource(
-          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-        ),
-      ),
-      currentHp: Hp(13),
-      tempHp: Hp(0),
-      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-      conditions: [],
-    },
-  };
+    statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    initiative: input.initiative,
+    currentHp: 13,
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+  });
 }
 
 export function resistantSkeletonCreatureInit(input: {
@@ -4220,29 +4372,22 @@ export function resistantSkeletonCreatureInit(input: {
     immunities: _immunities,
     ...statBlockWithoutDamageModifiers
   } = skeleton.statBlock;
-  return {
+  return statBlockCreatureInit({
     combatantId: skeletonId,
     displayName: "Slashing Resistant Skeleton",
-    initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource({
-          id: statBlockId("stat_block_slashing_resistant_skeleton"),
-          challengeRating: skeleton.challengeRating,
-          statBlock: {
-            ...statBlockWithoutDamageModifiers,
-            displayName: "Slashing Resistant Skeleton",
-            resistances: { kind: "fixed", damageTypes: ["slashing"] },
-          },
-        }),
-      ),
-      currentHp: Hp(13),
-      tempHp: Hp(0),
-      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
-      conditions: [],
+    statBlock: {
+      ...skeleton,
+      id: statBlockId("stat_block_slashing_resistant_skeleton"),
+      name: "Slashing Resistant Skeleton",
+      statBlock: {
+        ...statBlockWithoutDamageModifiers,
+        resistances: { kind: "fixed", damageTypes: ["slashing"] },
+      },
     },
-  };
+    initiative: input.initiative,
+    currentHp: 13,
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
+  });
 }
 
 export function actionSurgeResource(input?: {
