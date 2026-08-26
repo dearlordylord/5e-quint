@@ -253,14 +253,9 @@ export function startBattle(
     if ("runtimeContext" in admission) {
       characterContexts.set(combatant.combatantId, admission.runtimeContext);
     }
-    if (
-      "statBlockPresentation" in admission &&
-      admission.statBlockPresentation !== undefined
-    ) {
-      statBlockPresentations.set(
-        combatant.combatantId,
-        admission.statBlockPresentation,
-      );
+    const statBlockPresentation = statBlockPresentationForAdmission(admission);
+    if (statBlockPresentation !== undefined) {
+      statBlockPresentations.set(combatant.combatantId, statBlockPresentation);
     }
     if (admission.nextScopeOrdinal <= 0) {
       return battleStateInitIssue(
@@ -590,19 +585,15 @@ function admitCharacterSpellExecution(input: {
   };
 }
 
-function statBlockPresentationProjectionForAdmission(
+function statBlockPresentationForAdmission(
   admission: Extract<
     ReturnType<typeof battleCreatureStateAdmissionFromInit>,
     { readonly tag: "admitted" }
   >,
-):
-  | { readonly statBlockPresentation: BattleStatBlockPresentationSource }
-  | Record<never, never> {
-  if (!("statBlockPresentation" in admission)) return {};
-  const presentation = admission.statBlockPresentation;
-  return presentation === undefined
-    ? {}
-    : { statBlockPresentation: presentation };
+): BattleStatBlockPresentationSource | undefined {
+  return "statBlockPresentation" in admission
+    ? admission.statBlockPresentation
+    : undefined;
 }
 
 function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
@@ -692,7 +683,10 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
     ...(characterSpellAdmission === undefined
       ? {}
       : { characterContext: characterSpellAdmission.runtimeContext }),
-    ...statBlockPresentationProjectionForAdmission(admission),
+    ...optionalProperty(
+      "statBlockPresentation",
+      statBlockPresentationForAdmission(admission),
+    ),
   });
 }
 

@@ -13,7 +13,11 @@ import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
+import type {
+  BattleProcedureExecutionRef,
+  BattleStatBlockExecutionScopeRef,
+  CombatantId,
+} from "./identity.ts";
 import { spellActiveEffectForExecutionRef } from "./active-effect/execution-ref.ts";
 import { boundAttackExecutionSelectionMatchesOption } from "./battle-action-options.ts";
 import {
@@ -34,6 +38,7 @@ import type {
 import type {
   BattleRuntimeContext,
   BattleRuntimeSession,
+  BattleStatBlockPresentationSource,
 } from "./battle-runtime-context.ts";
 import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 import {
@@ -572,25 +577,19 @@ function characterProcedurePresentationJoin(
       procedureRef,
       DRUID_WILD_SHAPE_PROCEDURE_QUERY,
     );
-    if (form === undefined || unit === undefined) {
-      return undefined;
-    }
-    const formPresentation = context.characters
-      .get(actor.combatantId)
-      ?.druidWildShapeFormPresentations?.get(form.execution.scopeRef);
-    if (formPresentation === undefined) return undefined;
-    const label = `${battleUnitPresentationName(unit)}: ${formPresentation.displayName}`;
-    return {
-      label,
-      summary: `Use ${label}.`,
-      presentation: {
-        kind: "druidWildShapeForm",
-        procedureRef,
-        formExecutionRef: subject.formExecutionRef,
-        unitId: unit.id,
-        formStatBlockId: form.statBlock.id,
-      },
-    };
+    if (form === undefined || unit === undefined) return undefined;
+    const formPresentation = druidWildShapeFormPresentationForScope(
+      context,
+      actor.combatantId,
+      form.execution.scopeRef,
+    );
+    return druidWildShapeFormPresentationJoin(
+      procedureRef,
+      subject,
+      form,
+      unit,
+      formPresentation,
+    );
   }
   if (
     subject.tag === "bonusActionStandardAction" &&
@@ -679,6 +678,48 @@ function characterProcedurePresentationJoin(
     };
   }
   return { label: name, summary: `Use ${name}.`, presentation };
+}
+
+function druidWildShapeFormPresentationForScope(
+  context: BattleRuntimeContext,
+  actorId: CombatantId,
+  scopeRef: BattleStatBlockExecutionScopeRef,
+): BattleStatBlockPresentationSource | undefined {
+  return context.characters
+    .get(actorId)
+    ?.druidWildShapeFormPresentations?.get(scopeRef);
+}
+
+type CharacterWildShapeFormAdmission = NonNullable<
+  Extract<
+    CharacterBattleCreatureState["origin"],
+    { readonly kind: "character" }
+  >["druidWildShapeAvailableForms"]
+>[number];
+
+function druidWildShapeFormPresentationJoin(
+  procedureRef: BattleProcedureExecutionRef,
+  subject: Extract<
+    CharacterProcedureBattleSubject,
+    { readonly tag: "druidWildShape"; readonly action: "assumeForm" }
+  >,
+  form: CharacterWildShapeFormAdmission,
+  unit: BattleUnitRef["unit"],
+  formPresentation: BattleStatBlockPresentationSource | undefined,
+): Pick<AvailableBattleAct, "label" | "summary" | "presentation"> | undefined {
+  if (formPresentation === undefined) return undefined;
+  const label = `${battleUnitPresentationName(unit)}: ${formPresentation.displayName}`;
+  return {
+    label,
+    summary: `Use ${label}.`,
+    presentation: {
+      kind: "druidWildShapeForm",
+      procedureRef,
+      formExecutionRef: subject.formExecutionRef,
+      unitId: unit.id,
+      formStatBlockId: form.statBlock.id,
+    },
+  };
 }
 
 function spellProcedurePresentationText(
