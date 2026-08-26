@@ -147,6 +147,26 @@ const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES = {
     "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
 } as const satisfies Record<WildShapeKnownFormEligibilityIssueCode, string>;
 
+type WildShapeKnownFormScalarProjectionFailureReason = Exclude<
+  BattleStatBlockProjectionFailure["reason"],
+  "unsupportedProcedureBinding"
+>;
+
+const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
+  nonLiteralSize: "Druid Wild Shape battle forms require literal Size.",
+  nonLiteralArmorClass:
+    "Druid Wild Shape battle forms require literal Armor Class.",
+  nonLiteralHitPoints:
+    "Druid Wild Shape battle forms require literal maximum Hit Points.",
+  nonLiteralSpeed:
+    "Druid Wild Shape battle forms require unconditional literal Speeds.",
+  invalidLegendaryActionUses:
+    "Druid Wild Shape battle forms require positive integer Legendary Action uses.",
+} as const satisfies Record<
+  WildShapeKnownFormScalarProjectionFailureReason,
+  string
+>;
+
 export function battleAvailableDruidWildShapeKnownForms(input: {
   readonly forms: readonly StatBlockRecord[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
@@ -180,20 +200,37 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
     const projected = projectAuthoredStatBlock(form);
     if (Either.isLeft(projected)) {
       const disposition = Match.value(projected.left.reason).pipe(
-        Match.when("unsupportedProcedureBinding", () => "skip" as const),
-        Match.when("nonLiteralSize", () => "fail" as const),
-        Match.when("nonLiteralArmorClass", () => "fail" as const),
-        Match.when("nonLiteralHitPoints", () => "fail" as const),
-        Match.when("nonLiteralSpeed", () => "fail" as const),
-        Match.when("invalidLegendaryActionUses", () => "fail" as const),
+        Match.when("unsupportedProcedureBinding", () => ({
+          kind: "skip" as const,
+        })),
+        Match.when("nonLiteralSize", (reason) => ({
+          kind: "failure" as const,
+          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
+        })),
+        Match.when("nonLiteralArmorClass", (reason) => ({
+          kind: "failure" as const,
+          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
+        })),
+        Match.when("nonLiteralHitPoints", (reason) => ({
+          kind: "failure" as const,
+          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
+        })),
+        Match.when("nonLiteralSpeed", (reason) => ({
+          kind: "failure" as const,
+          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
+        })),
+        Match.when("invalidLegendaryActionUses", (reason) => ({
+          kind: "failure" as const,
+          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
+        })),
         Match.exhaustive,
       );
-      if (disposition === "skip") {
+      if (disposition.kind === "skip") {
         continue;
       }
       return Either.left({
         tag: "battleDruidWildShapeKnownFormIssue",
-        message: projected.left.reason,
+        message: disposition.message,
       });
     }
     const formProjection = battleDruidWildShapeFormProjectionStatBlock(

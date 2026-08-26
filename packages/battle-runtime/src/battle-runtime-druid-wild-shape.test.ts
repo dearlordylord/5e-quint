@@ -2659,7 +2659,9 @@ test("rejects known Beast forms without literal Size", () => {
 
   expect(Either.isLeft(result)).toBe(true);
   if (Either.isLeft(result)) {
-    expect(result.left.message).toBe("nonLiteralSize");
+    expect(result.left.message).toBe(
+      "Druid Wild Shape battle forms require literal Size.",
+    );
   }
 });
 
