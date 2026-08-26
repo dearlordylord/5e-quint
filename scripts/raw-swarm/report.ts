@@ -28,6 +28,7 @@ import {
   ingestGenerationFindings,
   inventoryLegacyDatabase,
   openArtifactIndex,
+  openArtifactIndexReadOnly,
   registerIndexArtifact,
   rebuildLegacyArtifactIndex,
 } from "./artifact-index.ts";
@@ -741,7 +742,7 @@ function audit(args: readonly string[]): void {
     required(flagValue(args, "--execution-row"), "--execution-row"),
   );
   const outputPath = flagValue(args, "--output");
-  const db = openArtifactIndex(dbPath);
+  const db = openArtifactIndexReadOnly(dbPath);
   const row = db
     .prepare(
       `SELECT runs.id, runs.executionId, runs.evidenceSetId, runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
@@ -793,7 +794,7 @@ function generationAudit(args: readonly string[]): void {
     "--campaign-row",
   );
   const outputPath = flagValue(args, "--output");
-  const db = openArtifactIndex(dbPath);
+  const db = openArtifactIndexReadOnly(dbPath);
   const row = db
     .prepare(
       `SELECT scenarioCampaigns.campaignId, scenarioCampaigns.plannedScenarioId, scenarioCampaigns.evidenceSetId, scenarioCampaigns.gitSha, scenarioCampaigns.startedAt,
@@ -1404,7 +1405,7 @@ export function review(args: readonly string[]): void {
 
 function summary(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
-  const db = openArtifactIndex(dbPath);
+  const db = openArtifactIndexReadOnly(dbPath);
   const evidenceCounts = db
     .prepare(
       "SELECT evidenceKind, COUNT(*) AS count FROM runs GROUP BY evidenceKind",
@@ -1455,7 +1456,7 @@ function summary(args: readonly string[]): void {
 
 function issues(args: readonly string[]): void {
   const { dbPath, linkFilter } = parseIssuesArgs(args);
-  const db = openArtifactIndex(dbPath);
+  const db = openArtifactIndexReadOnly(dbPath);
   const rows = db
     .prepare(
       `SELECT fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber

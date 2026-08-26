@@ -194,23 +194,28 @@ function jsonLines(path: string): readonly unknown[] {
     .map((line): unknown => JSON.parse(line));
 }
 
-export function openArtifactIndex(path: string): DatabaseSync {
-  const absolute = resolve(repoRoot, path);
-  mkdirSync(dirname(absolute), { recursive: true });
-  const db = new DatabaseSync(absolute);
+function validateArtifactIndex(
+  db: DatabaseSync,
+  requireCurrentSchema: boolean,
+): void {
   const existingMetadata = db
     .prepare(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'indexMetadata'",
     )
     .get();
-  if (existingMetadata !== undefined) {
+  if (existingMetadata === undefined) {
+    if (requireCurrentSchema) {
+      fail(
+        "Raw Swarm index is not initialized; use a write command before a read-only report command.",
+      );
+    }
+  } else {
     const version = db.prepare("SELECT schemaVersion FROM indexMetadata").get();
     if (
       !isJsonRecord(version) ||
       version.schemaVersion !== INDEX_SCHEMA_VERSION
     ) {
-      db.close();
-      return fail(
+      fail(
         `Raw Swarm index schema is not version ${String(INDEX_SCHEMA_VERSION)}; inventory and rebuild the database before using this command.`,
       );
     }
@@ -221,10 +226,21 @@ export function openArtifactIndex(path: string): DatabaseSync {
     )
     .get();
   if (legacySteps !== undefined) {
-    db.close();
-    return fail(
+    fail(
       "Legacy Raw Swarm database must be inventoried and rebuilt before use.",
     );
+  }
+}
+
+export function openArtifactIndex(path: string): DatabaseSync {
+  const absolute = resolve(repoRoot, path);
+  mkdirSync(dirname(absolute), { recursive: true });
+  const db = new DatabaseSync(absolute);
+  try {
+    validateArtifactIndex(db, false);
+  } catch (error) {
+    db.close();
+    throw error;
   }
   db.exec("PRAGMA foreign_keys = ON");
   db.exec("PRAGMA journal_mode = WAL");
@@ -417,6 +433,21 @@ export function openArtifactIndex(path: string): DatabaseSync {
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_fingerprint ON scenarioCampaignFindings(fingerprint);
   `);
   return db;
+}
+
+export function openArtifactIndexReadOnly(path: string): DatabaseSync {
+  const absolute = resolve(repoRoot, path);
+  if (!existsSync(absolute)) {
+    return fail(`Raw Swarm index does not exist: ${path}`);
+  }
+  const db = new DatabaseSync(absolute, { readOnly: true });
+  try {
+    validateArtifactIndex(db, true);
+    return db;
+  } catch (error) {
+    db.close();
+    throw error;
+  }
 }
 
 function registerArtifact(
@@ -2008,7 +2039,7 @@ export function exportArtifactIndex(input: {
   const destination = resolve(input.destination);
   if (existsSync(destination)) fail("Refusing to overwrite portable export.");
   mkdirSync(destination, { recursive: true });
-  const source = openArtifactIndex(input.dbPath);
+  const source = openArtifactIndexReadOnly(input.dbPath);
   const snapshot = resolve(destination, "index.sqlite");
   try {
     source.exec(`VACUUM INTO '${snapshot.replaceAll("'", "''")}'`);
