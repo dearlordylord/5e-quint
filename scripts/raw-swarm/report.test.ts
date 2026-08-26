@@ -130,6 +130,54 @@ describe("RAW swarm artifact report index", () => {
     ).toThrow(/--review-replay-milestone requires a value/);
   });
 
+  test("keeps a portable index byte-stable across read-only report commands", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "source.sqlite");
+    const source = openArtifactIndex(relative(repoRoot, dbPath));
+    source.close();
+    const sourceIndexBefore = readFileSync(dbPath);
+    const destination = resolve(directory, "portable");
+    report([
+      "export",
+      "--db",
+      relative(repoRoot, dbPath),
+      "--destination",
+      relative(repoRoot, destination),
+    ]);
+
+    const portableIndexPath = resolve(destination, "index.sqlite");
+    const portableIndexBefore = readFileSync(portableIndexPath);
+    expect(readFileSync(dbPath)).toEqual(sourceIndexBefore);
+    expect(
+      report(["summary", "--db", relative(repoRoot, portableIndexPath)]),
+    ).toContain("Executions: 0");
+    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
+    expect(
+      report(["issues", "--db", relative(repoRoot, portableIndexPath)]),
+    ).toBe("");
+    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, portableIndexPath),
+      ]),
+    ).toThrow(/no indexed findings artifact/);
+    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
+    expect(() =>
+      report([
+        "generation-audit",
+        "--campaign-row",
+        "1",
+        "--db",
+        relative(repoRoot, portableIndexPath),
+      ]),
+    ).toThrow(/no indexed findings artifact/);
+    expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
+  }, 30_000);
+
   test("rejects unclassified historical input and retains controlled Execution verdict facts", () => {
     const directory = temporaryDirectory();
     const transcriptPath = resolve(directory, "run.jsonl");
