@@ -1,10 +1,13 @@
 import type { LookupAddress } from "node:dns";
+import { EventEmitter } from "node:events";
+import type { ClientRequest, IncomingMessage } from "node:http";
 import { Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
 
 import {
   metadataRequestOptions,
   metadataResponseBody,
+  makeClientMetadataResourceFetch,
   pinnedLookup,
   resolvePinnedAddress,
   shouldExposeBody,
@@ -17,6 +20,78 @@ const PUBLIC_IPV6: LookupAddress = {
 };
 
 describe("CIMD metadata transport", () => {
+  it("fetches metadata through the validated pinned transport", async () => {
+    const response = Readable.from([
+      Buffer.from('{"client_name":"Oracle"}'),
+    ]) as IncomingMessage;
+    response.statusCode = 200;
+    response.statusMessage = "OK";
+    response.headers = {
+      "content-type": "application/json",
+      "set-cookie": ["first=1", "second=2"],
+    };
+    let respond: ((response: IncomingMessage) => void) | undefined;
+    const metadataRequest = new EventEmitter() as ClientRequest;
+    metadataRequest.end = vi.fn(() => {
+      if (respond === undefined) throw new Error("Missing response callback");
+      respond(response);
+      return metadataRequest;
+    });
+    const requestMetadataResource = vi.fn(
+      (
+        _url: URL,
+        _options: ReturnType<typeof metadataRequestOptions>,
+        onResponse: (response: IncomingMessage) => void,
+      ) => {
+        respond = onResponse;
+        return metadataRequest;
+      },
+    );
+    const fetchMetadata = makeClientMetadataResourceFetch(
+      vi.fn(async () => [PUBLIC_IPV4]),
+      requestMetadataResource,
+    );
+
+    const result = await fetchMetadata(
+      new Request("https://metadata.example/client.json", {
+        headers: { accept: "application/json" },
+      }),
+    );
+
+    expect(result.status).toBe(200);
+    expect(result.statusText).toBe("OK");
+    expect(result.headers.get("set-cookie")).toContain("first=1");
+    await expect(result.json()).resolves.toEqual({ client_name: "Oracle" });
+    expect(requestMetadataResource).toHaveBeenCalledOnce();
+  });
+
+  it("rejects unsupported URLs and methods before transport", async () => {
+    const fetchMetadata = makeClientMetadataResourceFetch();
+
+    await expect(
+      fetchMetadata("http://metadata.example/client.json"),
+    ).rejects.toThrow("requires an HTTPS URL");
+    await expect(
+      fetchMetadata("https://metadata.example/client.json", { method: "POST" }),
+    ).rejects.toThrow("supports only GET and HEAD");
+  });
+
+  it("propagates pinned transport failures", async () => {
+    const metadataRequest = new EventEmitter() as ClientRequest;
+    metadataRequest.end = vi.fn(() => {
+      metadataRequest.emit("error", new Error("transport failed"));
+      return metadataRequest;
+    });
+    const fetchMetadata = makeClientMetadataResourceFetch(
+      vi.fn(async () => [PUBLIC_IPV4]),
+      vi.fn(() => metadataRequest),
+    );
+
+    await expect(
+      fetchMetadata("https://metadata.example/client.json"),
+    ).rejects.toThrow("transport failed");
+  });
+
   it("resolves once, validates every answer, and pins the first public address", async () => {
     const lookup = vi.fn(async () => [PUBLIC_IPV4, PUBLIC_IPV6]);
     const pinned = await resolvePinnedAddress(
