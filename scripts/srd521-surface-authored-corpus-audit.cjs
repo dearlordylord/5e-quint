@@ -131,6 +131,7 @@ function walkSchemaShape(
     return;
   }
   if (
+    SchemaAST.isNull(branch) ||
     SchemaAST.isBoolean(branch) ||
     SchemaAST.isNumber(branch) ||
     SchemaAST.isNever(branch) ||
@@ -322,6 +323,8 @@ function branchMatchStatus(ast, value) {
       return current === branch.literal ? "match" : "no-match";
     if (SchemaAST.isString(branch))
       return typeof current === "string" ? "match" : "no-match";
+    if (SchemaAST.isNull(branch))
+      return current === null ? "match" : "no-match";
     if (SchemaAST.isNumber(branch))
       return typeof current === "number" ? "match" : "no-match";
     if (SchemaAST.isBoolean(branch))
@@ -575,6 +578,7 @@ function walkSurfaceValue(schema, value, visitString, pathName = "value") {
         });
       }
     } else if (
+      SchemaAST.isNull(branch) ||
       SchemaAST.isBoolean(branch) ||
       SchemaAST.isNumber(branch) ||
       SchemaAST.isNever(branch) ||

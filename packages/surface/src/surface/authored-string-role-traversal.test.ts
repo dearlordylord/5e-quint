@@ -806,6 +806,40 @@ describe("Surface authored string role traversal", () => {
     }
   });
 
+  it("terminates null AST branches without requiring a string role", () => {
+    const schema = Schema.Struct({
+      resetCadence: Schema.Struct({
+        regain: Schema.NullOr(
+          surfaceSchemaRole(Schema.String, {
+            category: "prose",
+            evidence: "summary",
+          }),
+        ),
+      }),
+    });
+    expect(() =>
+      traversal.walkSchemaShape(schema.ast, "Synthetic", () => {}),
+    ).not.toThrow();
+    const roles: string[] = [];
+    traversal.walkSurfaceValue(
+      schema,
+      { resetCadence: { regain: null } },
+      (_path: string, _value: string, role: { readonly category: string }) => {
+        roles.push(role.category);
+      },
+    );
+    expect(roles).toEqual([]);
+
+    traversal.walkSurfaceValue(
+      schema,
+      { resetCadence: { regain: "restored" } },
+      (_path: string, _value: string, role: { readonly category: string }) => {
+        roles.push(role.category);
+      },
+    );
+    expect(roles).toEqual(["prose"]);
+  });
+
   it("traverses every decoded Surface string path", () => {
     for (const record of traversal.readSurfaceRecords()) {
       const decodedPaths = traversal.collectDecodedStringPaths(record.value);
