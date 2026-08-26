@@ -386,6 +386,76 @@ describe("RAW swarm artifact report index", () => {
     }
     writeFileSync(executionManifestPath, executionManifestBefore);
 
+    const portableForUnrelated = new DatabaseSync(relocatedExecutionIndex, {
+      readOnly: true,
+    });
+    const findingsRow = portableForUnrelated
+      .prepare(
+        `SELECT artifacts.sha256, artifacts.path
+         FROM runArtifacts
+         JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
+         WHERE runArtifacts.runId = 1 AND runArtifacts.role = 'findings'`,
+      )
+      .get() as { readonly sha256: string; readonly path: string };
+    const findingsValue = JSON.parse(
+      readFileSync(resolve(executionPortablePath, findingsRow.path), "utf8"),
+    ) as {
+      readonly authorities?: readonly { readonly sha256?: unknown }[];
+    };
+    const referencedFindingArtifacts = new Set([
+      findingsRow.sha256,
+      ...(findingsValue.authorities ?? []).flatMap((authority) =>
+        typeof authority.sha256 === "string" ? [authority.sha256] : [],
+      ),
+    ]);
+    const unrelatedArtifact = portableForUnrelated
+      .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
+      .all()
+      .map(
+        (row) =>
+          row as {
+            readonly sha256: string;
+            readonly byteLength: number;
+            readonly path: string;
+          },
+      )
+      .find((artifact) => !referencedFindingArtifacts.has(artifact.sha256));
+    portableForUnrelated.close();
+    if (unrelatedArtifact === undefined) {
+      throw new Error(
+        "Portable fixture did not contain an unrelated artifact.",
+      );
+    }
+    const unrelatedArtifactPath = resolve(
+      executionPortablePath,
+      unrelatedArtifact.path,
+    );
+    const unrelatedArtifactBytes = readFileSync(unrelatedArtifactPath);
+    rmSync(unrelatedArtifactPath);
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact is unreadable/);
+    writeFileSync(
+      unrelatedArtifactPath,
+      Buffer.concat([unrelatedArtifactBytes, Buffer.from("tampered")]),
+    );
+    expect(() =>
+      report([
+        "audit",
+        "--execution-row",
+        "1",
+        "--db",
+        relative(repoRoot, relocatedExecutionIndex),
+      ]),
+    ).toThrow(/Portable report artifact hash verification failed/);
+    writeFileSync(unrelatedArtifactPath, unrelatedArtifactBytes);
+
     const unreferencedBytes = Buffer.from("unreferenced portable artifact\n");
     const unreferencedSha256 = createHash("sha256")
       .update(unreferencedBytes)

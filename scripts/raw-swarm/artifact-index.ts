@@ -189,14 +189,15 @@ function rejectHardLinkedArtifactIndex(
   absolute: string,
   displayPath: string,
 ): void {
-  let links: number;
-  try {
-    links = statSync(absolute).nlink;
-  } catch (error) {
-    return fail(
-      `Raw Swarm index is unreadable: ${displayPath}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const links = (() => {
+    try {
+      return statSync(absolute).nlink;
+    } catch (error) {
+      return fail(
+        `Raw Swarm index is unreadable: ${displayPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
   if (links > 1) {
     fail(
       `Raw Swarm index ${displayPath} has multiple hard links; refusing an ambiguous WAL/lock identity.`,
@@ -300,6 +301,14 @@ function bindArtifactIndexLock(
     configurable: true,
     writable: true,
     value: (): void => closeWithLease(dispose),
+  });
+  Object.defineProperty(db, "open", {
+    configurable: true,
+    writable: true,
+    value: (): never =>
+      fail(
+        "Raw Swarm index connections are managed and cannot be reopened; acquire a new connection instead.",
+      ),
   });
   return db;
 }
@@ -628,22 +637,23 @@ export function openArtifactIndexReadOnly(path: string): DatabaseSync {
   if (!existsSync(lexical)) {
     return fail(`Raw Swarm index does not exist: ${path}`);
   }
-  let absolute: string;
-  try {
-    absolute = realpathSync(lexical);
-  } catch (error) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "code" in error &&
-      error.code === "ENOENT"
-    ) {
-      return fail(`Raw Swarm index does not exist: ${path}`);
+  const absolute = (() => {
+    try {
+      return realpathSync(lexical);
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return fail(`Raw Swarm index does not exist: ${path}`);
+      }
+      return fail(
+        `Raw Swarm index is unreadable: ${path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
-    return fail(
-      `Raw Swarm index is unreadable: ${path}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  })();
   rejectHardLinkedArtifactIndex(absolute, path);
   const lease = acquireArtifactIndexLock(absolute, "reader");
   let db: DatabaseSync | undefined;

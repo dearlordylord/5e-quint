@@ -391,6 +391,46 @@ function pathIsContained(root: string, candidate: string): boolean {
   );
 }
 
+function canonicalPortableReportIndexPath(dbPath: string): string {
+  try {
+    return realpathSync(resolve(repoRoot, dbPath));
+  } catch (error) {
+    return fail(
+      `Portable report index is unreadable: ${dbPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function readPortableReportManifest(
+  manifestPath: string,
+): Readonly<Record<string, unknown>> {
+  const value = (() => {
+    try {
+      return JSON.parse(readFileSync(manifestPath, "utf8")) as unknown;
+    } catch (error) {
+      return fail(
+        `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  if (!isJsonRecord(value) || value.schemaVersion !== 1) {
+    return fail(
+      `Portable report manifest schemaVersion must be 1: ${manifestPath}`,
+    );
+  }
+  return value;
+}
+
+function readPortableReportIndexBytes(indexPath: string): Buffer {
+  try {
+    return readFileSync(indexPath);
+  } catch (error) {
+    return fail(
+      `Portable report index is unreadable: ${indexPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
 function indexedReportArtifacts(
   db: DatabaseSync,
 ): readonly IndexedReportArtifact[] {
@@ -423,14 +463,7 @@ function indexedReportArtifacts(
 function portableReportBundle(
   dbPath: string,
 ): PortableReportBundle | undefined {
-  let indexPath: string;
-  try {
-    indexPath = realpathSync(resolve(repoRoot, dbPath));
-  } catch (error) {
-    return fail(
-      `Portable report index is unreadable: ${dbPath}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const indexPath = canonicalPortableReportIndexPath(dbPath);
   const root = dirname(indexPath);
   const manifestPath = resolve(root, "manifest.json");
   if (!existsSync(manifestPath)) return undefined;
@@ -446,19 +479,7 @@ function portableReportBundle(
       `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
-  let value: unknown;
-  try {
-    value = JSON.parse(readFileSync(manifestPath, "utf8")) as unknown;
-  } catch (error) {
-    return fail(
-      `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-  if (!isJsonRecord(value) || value.schemaVersion !== 1) {
-    return fail(
-      `Portable report manifest schemaVersion must be 1: ${manifestPath}`,
-    );
-  }
+  const value = readPortableReportManifest(manifestPath);
   const index = value.index;
   if (
     !isJsonRecord(index) ||
@@ -478,14 +499,7 @@ function portableReportBundle(
       `Portable report index path does not match its manifest: ${indexPath}`,
     );
   }
-  let indexBytes: Buffer;
-  try {
-    indexBytes = readFileSync(indexPath);
-  } catch (error) {
-    return fail(
-      `Portable report index is unreadable: ${indexPath}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const indexBytes = readPortableReportIndexBytes(indexPath);
   if (
     indexBytes.byteLength !== index.byteLength ||
     sha256Bytes(indexBytes) !== index.sha256
@@ -551,6 +565,7 @@ function validatePortableArtifactInventory(
         `Portable report artifact inventory does not match its manifest: ${artifact.path}.`,
       );
     }
+    portableReportArtifactBytes(bundle, artifact);
   }
 }
 
@@ -575,33 +590,36 @@ function portableReportArtifactBytes(
   ) {
     return fail(`Portable report artifact path is invalid: ${indexed.path}`);
   }
-  const lexical = resolve(bundle.root, indexed.path);
-  if (!pathIsContained(bundle.root, lexical)) {
-    return fail(
-      `Portable report artifact path escapes its bundle: ${indexed.path}`,
-    );
-  }
-  let canonical: string;
-  try {
-    canonical = realpathSync(lexical);
-  } catch (error) {
-    return fail(
-      `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
-  if (!pathIsContained(bundle.root, canonical)) {
-    return fail(
-      `Portable report artifact symlink escapes its bundle: ${indexed.path}`,
-    );
-  }
-  let bytes: Buffer;
-  try {
-    bytes = readFileSync(canonical);
-  } catch (error) {
-    return fail(
-      `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const canonical = (() => {
+    const lexical = resolve(bundle.root, indexed.path);
+    if (!pathIsContained(bundle.root, lexical)) {
+      return fail(
+        `Portable report artifact path escapes its bundle: ${indexed.path}`,
+      );
+    }
+    try {
+      const resolved = realpathSync(lexical);
+      if (!pathIsContained(bundle.root, resolved)) {
+        return fail(
+          `Portable report artifact symlink escapes its bundle: ${indexed.path}`,
+        );
+      }
+      return resolved;
+    } catch (error) {
+      return fail(
+        `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const bytes = (() => {
+    try {
+      return readFileSync(canonical);
+    } catch (error) {
+      return fail(
+        `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
   if (
     bytes.byteLength !== indexed.byteLength ||
     sha256Bytes(bytes) !== indexed.sha256
@@ -619,14 +637,15 @@ function readPortableFindingsProjection(
   artifacts: readonly IndexedReportArtifact[],
 ): FindingsProjection {
   const findingsBytes = portableReportArtifactBytes(bundle, findingsArtifact);
-  let value: unknown;
-  try {
-    value = JSON.parse(findingsBytes.toString("utf8")) as unknown;
-  } catch (error) {
-    return fail(
-      `Portable findings artifact is invalid JSON: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
-    );
-  }
+  const value = (() => {
+    try {
+      return JSON.parse(findingsBytes.toString("utf8")) as unknown;
+    } catch (error) {
+      return fail(
+        `Portable findings artifact is invalid JSON: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
   const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
     onExcessProperty: "error",
   })(value);
