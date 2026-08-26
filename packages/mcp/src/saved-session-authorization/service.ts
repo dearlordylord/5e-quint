@@ -79,7 +79,7 @@ export function savedSessionAuthorizationLayer(
           await context.runMigrations();
           assertAnonymousOnlyDatabase(database);
           normalizeAnonymousVaultEmailLabels(database);
-          pruneExpiredAuthorizationState(database, Date.now());
+          pruneExpiredAuthorizationState(database, new Date());
         },
         catch: (cause) => authorizationIssue("initializationFailed", cause),
       });

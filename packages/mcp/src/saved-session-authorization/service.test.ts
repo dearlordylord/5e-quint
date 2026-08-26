@@ -64,6 +64,23 @@ describe("credential-free Better Auth database admission", () => {
       );
       expect(capacityResponse?.status).toBe(503);
       expect(capacityResponse?.headers.get("retry-after")).toBe("60");
+      for (const path of [
+        "/api/auth/oauth2/consent",
+        "/api/auth/oauth2/token",
+      ]) {
+        expect(
+          applySavedSessionAuthorizationBackpressure(
+            capacityDatabase,
+            new Request(new URL(path, origin), { method: "POST" }),
+            {
+              anonymousVaults: 1,
+              oauthClients: 10,
+              retainedRecords: 1,
+            },
+          ),
+          `${path} must remain available to an existing vault at admission capacity`,
+        ).toBeUndefined();
+      }
       capacityDatabase.close();
       await creatingRuntime.dispose();
 

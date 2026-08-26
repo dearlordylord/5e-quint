@@ -21,12 +21,12 @@ deletion can cascade to saved Play Sessions.
 Every state-changing authorization request serializes cleanup and capacity
 admission with the provider call. Expired sessions, verification values, client
 assertion replay guards, access tokens, and refresh tokens are removed without
-touching an active vault. New mutations receive standard OAuth
+touching an active vault. New vault or client admissions receive standard OAuth
 `temporarily_unavailable` backpressure when the database reaches 10,000 vaults,
-10,000 clients, or 100,000 retained authorization records. Those explicit
-bounds preserve existing 90-day vault ownership while preventing an
-unauthenticated registration or vault-creation surface from growing storage
-without limit.
+10,000 clients, or the 100,000-record new-admission threshold. Existing vaults
+can still consent and rotate tokens. User and client ceilings bound durable
+identities while time-based cleanup bounds ephemeral records without violating
+the 90-day saved-vault ownership policy.
 
 The Effect service owns Better Auth initialization, migrations, database
 lifetime, and request failures. The Node adapter owns bounded request-body and

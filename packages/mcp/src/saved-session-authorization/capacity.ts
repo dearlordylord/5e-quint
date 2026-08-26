@@ -40,19 +40,23 @@ export function applySavedSessionAuthorizationBackpressure(
   if (!isAuthorizationStateMutation(request, pathname)) {
     return undefined;
   }
-  pruneExpiredAuthorizationState(database, Date.now());
+  pruneExpiredAuthorizationState(database, new Date());
+  const introducesAnonymousVault = pathname === "/api/auth/sign-in/anonymous";
+  const introducesOauthClient =
+    (request.method === "POST" && pathname === "/api/auth/oauth2/register") ||
+    authorizationIntroducesClient(database, request, pathname);
+  const admissionThresholdReached =
+    retainedAuthorizationRecordCount(database) >= capacities.retainedRecords;
   const anonymousVaultCapacityReached =
-    pathname === "/api/auth/sign-in/anonymous" &&
+    introducesAnonymousVault &&
     tableRowCount(database, "user") >= capacities.anonymousVaults;
   const oauthClientCapacityReached =
-    ((request.method === "POST" && pathname === "/api/auth/oauth2/register") ||
-      authorizationIntroducesClient(database, request, pathname)) &&
+    introducesOauthClient &&
     tableRowCount(database, "oauthClient") >= capacities.oauthClients;
-  const retainedRecordCapacityReached =
-    retainedAuthorizationRecordCount(database) >= capacities.retainedRecords;
   return anonymousVaultCapacityReached ||
     oauthClientCapacityReached ||
-    retainedRecordCapacityReached
+    ((introducesAnonymousVault || introducesOauthClient) &&
+      admissionThresholdReached)
     ? authorizationCapacityResponse()
     : undefined;
 }
@@ -87,14 +91,15 @@ function authorizationIntroducesClient(
 
 export function pruneExpiredAuthorizationState(
   database: DatabaseSync,
-  nowEpochMilliseconds: number,
+  now: Date,
 ): void {
+  const nowIso = now.toISOString();
   database
     .prepare(
       `DELETE FROM "oauthAccessToken"
        WHERE "expiresAt" <= ? OR "revoked" IS NOT NULL`,
     )
-    .run(nowEpochMilliseconds);
+    .run(nowIso);
   database
     .prepare(
       `DELETE FROM "oauthRefreshToken"
@@ -107,7 +112,7 @@ export function pruneExpiredAuthorizationState(
             )
           )`,
     )
-    .run(nowEpochMilliseconds, nowEpochMilliseconds);
+    .run(nowIso, nowIso);
   for (const table of [
     "session",
     "verification",
@@ -115,7 +120,7 @@ export function pruneExpiredAuthorizationState(
   ] as const) {
     database
       .prepare(`DELETE FROM "${table}" WHERE "expiresAt" <= ?`)
-      .run(nowEpochMilliseconds);
+      .run(nowIso);
   }
 }
 

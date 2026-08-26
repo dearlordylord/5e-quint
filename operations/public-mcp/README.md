@@ -33,9 +33,11 @@ so the smoke detects an image/release mismatch. The deploy verifies
 configuration, installs and reloads the environment-specific Caddy route, pulls
 the exact digest, waits for container health, checks the release, same-origin
 OAuth discovery/JWKS, optional exact OpenAI challenge token, and complete guest
-newcomer journey through HTTPS `/mcp`. It then executes credential-free vault
-creation, DCR, S256 PKCE, consent, token exchange, isolated principals, and
-authenticated save/list/delete against that deployed process. The official OpenAI
+newcomer journey through HTTPS `/mcp`. In staging it also executes
+credential-free vault creation, DCR, S256 PKCE, consent, token exchange,
+isolated principals, and authenticated save/list/delete against that deployed
+process. Production smoke does not create durable synthetic vaults or OAuth
+clients. The official OpenAI
 submission contract requires the challenge response to contain only the token
 ([OpenAI submission documentation](https://developers.openai.com/plugins/deploy/submission#domain-verification));
 the application exposes it at `/.well-known/openai-apps-challenge` only when
