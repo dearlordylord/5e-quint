@@ -1,6 +1,5 @@
 import type { LookupAddress } from "node:dns";
 import { EventEmitter } from "node:events";
-import type { ClientRequest, IncomingMessage } from "node:http";
 import { Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
 
@@ -11,6 +10,7 @@ import {
   pinnedLookup,
   resolvePinnedAddress,
   shouldExposeBody,
+  type MetadataResponse,
 } from "./client-metadata-fetch.ts";
 
 const PUBLIC_IPV4: LookupAddress = { address: "93.184.216.34", family: 4 };
@@ -21,27 +21,30 @@ const PUBLIC_IPV6: LookupAddress = {
 
 describe("CIMD metadata transport", () => {
   it("fetches metadata through the validated pinned transport", async () => {
-    const response = Readable.from([
-      Buffer.from('{"client_name":"Oracle"}'),
-    ]) as IncomingMessage;
-    response.statusCode = 200;
-    response.statusMessage = "OK";
-    response.headers = {
-      "content-type": "application/json",
-      "set-cookie": ["first=1", "second=2"],
-    };
-    let respond: ((response: IncomingMessage) => void) | undefined;
-    const metadataRequest = new EventEmitter() as ClientRequest;
-    metadataRequest.end = vi.fn(() => {
-      if (respond === undefined) throw new Error("Missing response callback");
-      respond(response);
-      return metadataRequest;
+    const response = Object.assign(
+      Readable.from([Buffer.from('{"client_name":"Oracle"}')]),
+      {
+        statusCode: 200,
+        statusMessage: "OK",
+        headers: {
+          "content-type": "application/json",
+          "set-cookie": ["first=1", "second=2"],
+        },
+      },
+    );
+    let respond: ((response: MetadataResponse) => void) | undefined;
+    const metadataRequest = Object.assign(new EventEmitter(), {
+      end: vi.fn(() => {
+        if (respond === undefined) throw new Error("Missing response callback");
+        respond(response);
+        return metadataRequest;
+      }),
     });
     const requestMetadataResource = vi.fn(
       (
         _url: URL,
         _options: ReturnType<typeof metadataRequestOptions>,
-        onResponse: (response: IncomingMessage) => void,
+        onResponse: (response: MetadataResponse) => void,
       ) => {
         respond = onResponse;
         return metadataRequest;
@@ -77,10 +80,11 @@ describe("CIMD metadata transport", () => {
   });
 
   it("propagates pinned transport failures", async () => {
-    const metadataRequest = new EventEmitter() as ClientRequest;
-    metadataRequest.end = vi.fn(() => {
-      metadataRequest.emit("error", new Error("transport failed"));
-      return metadataRequest;
+    const metadataRequest = Object.assign(new EventEmitter(), {
+      end: vi.fn(() => {
+        metadataRequest.emit("error", new Error("transport failed"));
+        return metadataRequest;
+      }),
     });
     const fetchMetadata = makeClientMetadataResourceFetch(
       vi.fn(async () => [PUBLIC_IPV4]),

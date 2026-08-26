@@ -2,11 +2,7 @@ import { isPublicRoutableHost } from "@better-auth/core/utils/host";
 import type { ClientMetadataResourceFetch } from "@better-auth/oauth-provider";
 import type { LookupAddress, LookupOptions } from "node:dns";
 import { lookup } from "node:dns/promises";
-import type {
-  ClientRequest,
-  IncomingHttpHeaders,
-  IncomingMessage,
-} from "node:http";
+import type { IncomingHttpHeaders } from "node:http";
 import { request } from "node:https";
 import type { LookupFunction } from "node:net";
 import { isIP } from "node:net";
@@ -20,14 +16,28 @@ type MetadataLookup = (
 type MetadataRequest = (
   url: URL,
   options: ReturnType<typeof metadataRequestOptions>,
-  response: (response: IncomingMessage) => void,
-) => ClientRequest;
+  response: (response: MetadataResponse) => void,
+) => MetadataRequestHandle;
+
+type MetadataRequestHandle = {
+  readonly once: (event: "error", listener: (error: Error) => void) => unknown;
+  readonly end: () => unknown;
+};
+
+export type MetadataResponse = Readable & {
+  readonly headers: IncomingHttpHeaders;
+  readonly statusCode?: number | undefined;
+  readonly statusMessage?: string | undefined;
+};
 
 const JSON_CONTENT_TYPE = /^application\/(?:[-\w.]+\+)?json\s*(?:;|$)/iu;
 
+const nodeMetadataRequest: MetadataRequest = (url, options, response) =>
+  request(url, options, response);
+
 export function makeClientMetadataResourceFetch(
   lookupMetadataHost: MetadataLookup = lookup,
-  requestMetadataResource: MetadataRequest = request,
+  requestMetadataResource: MetadataRequest = nodeMetadataRequest,
 ): ClientMetadataResourceFetch {
   return async (input, init) => {
     const webRequest = new Request(input, init);
