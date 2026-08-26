@@ -107,6 +107,12 @@ const currentGitSha = execFileSync("git", ["rev-parse", "HEAD"], {
   cwd: repoRoot,
   encoding: "utf8",
 }).trim();
+// These outer Vitest budgets cover process-heavy boundary fixtures on a shared
+// host. The trusted phase's native supervisor owns launched process-tree
+// cleanup; the fixtures' assertions are unchanged.
+const DIRECT_SDK_INVALID_ARGUMENTS_OUTER_TIMEOUT_MS = 3 * 60_000;
+const STARTED_AT_HANDOFF_OUTER_TIMEOUT_MS = 10 * 60_000;
+const CONTEXT_AUTHORITY_DELIVERY_OUTER_TIMEOUT_MS = 3 * 60_000;
 const modelLaneLockDirectory = mkdtempSync(
   resolve(tmpdir(), "dnd-runner-model-lane-"),
 );
@@ -4164,7 +4170,7 @@ test("package imports", () => expect(value).toBe("development"));
     (_label, args) => {
       expect(() => run(sdkPlayerLauncher, args)).toThrow();
     },
-    60_000,
+    DIRECT_SDK_INVALID_ARGUMENTS_OUTER_TIMEOUT_MS,
   );
 
   test("rejects read and prospective output paths through an escaping symlink", () => {
@@ -4904,6 +4910,9 @@ esac
     }
   }, 15_000);
 
+  // Vitest otherwise reindents this long process fixture when its named
+  // timeout replaces the numeric literal.
+  // prettier-ignore
   test("retains one runner-owned startedAt across execution and supervisor handoff", async () => {
     const outputRoot = mkdtempSync(
       resolve(repoRoot, "scripts/raw-swarm/out/runner-started-at-"),
@@ -5049,7 +5058,7 @@ printf '%s\n' 'Synthetic deterministic player evidence.' > evidence/agent-final.
       rmSync(canonicalStagePlanPath, { force: true });
       rmSync(canonicalStagePlanFindingsPath, { force: true });
     }
-  }, 300_000);
+  }, STARTED_AT_HANDOFF_OUTER_TIMEOUT_MS);
 
   test("rejects an implementation revision that is not the current clean revision", () => {
     const mismatchedGitSha = `${currentGitSha[0] === "a" ? "b" : "a"}${currentGitSha.slice(1)}`;
@@ -5092,6 +5101,7 @@ esac
     }
   }, 30_000);
 
+  // prettier-ignore
   test("delivers a context authority inline while retaining its path and byte hash", () => {
     const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
     const commandRoot = mkdtempSync(resolve(tmpdir(), "dnd-review-command-"));
@@ -5217,7 +5227,7 @@ printf '%s' '{"scenarioId":"synthetic-review","gitSha":"aaaaaaaaaaaaaaaaaaaaaaaa
       rmSync(testRoot, { recursive: true, force: true });
       rmSync(commandRoot, { recursive: true, force: true });
     }
-  }, 30_000);
+  }, CONTEXT_AUTHORITY_DELIVERY_OUTER_TIMEOUT_MS);
 
   test("keeps the legacy document authority out of initial input and records command-read policy", () => {
     const testRoot = mkdtempSync(resolve(repoRoot, "scripts/raw-swarm/out/"));
