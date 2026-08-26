@@ -236,7 +236,7 @@ function validateArtifactIndex(
   }
 }
 
-function rejectUncheckpointedWal(absolute: string): void {
+function rejectUncheckpointedWal(absolute: string, displayPath: string): void {
   const walPath = `${absolute}-wal`;
   // A header-only WAL has no frames, so immutable mode cannot miss committed
   // rows.
@@ -245,7 +245,7 @@ function rejectUncheckpointedWal(absolute: string): void {
     statSync(walPath).size > SQLITE_WAL_HEADER_BYTE_LENGTH
   ) {
     fail(
-      `Raw Swarm index has a non-empty WAL sidecar; checkpoint ${walPath} before using a read-only report command.`,
+      `Raw Swarm index ${displayPath} has a non-empty WAL sidecar; checkpoint ${walPath} before using a read-only report command.`,
     );
   }
 }
@@ -454,11 +454,21 @@ export function openArtifactIndex(path: string): DatabaseSync {
 }
 
 export function openArtifactIndexReadOnly(path: string): DatabaseSync {
-  const absolute = resolve(repoRoot, path);
-  if (!existsSync(absolute)) {
+  const lexical = resolve(repoRoot, path);
+  if (!existsSync(lexical)) {
     return fail(`Raw Swarm index does not exist: ${path}`);
   }
-  rejectUncheckpointedWal(absolute);
+  const canonical = canonicalRepositoryReadPath(repoRoot, lexical);
+  if (Either.isLeft(canonical)) {
+    if (canonical.left.includes("ENOENT")) {
+      return fail(`Raw Swarm index does not exist: ${path}`);
+    }
+    return fail(
+      `Raw Swarm index is not repository-owned: ${path}: ${canonical.left}`,
+    );
+  }
+  const absolute = canonical.right;
+  rejectUncheckpointedWal(absolute, path);
   const db = new DatabaseSync(`${pathToFileURL(absolute).href}?immutable=1`, {
     readOnly: true,
   });
