@@ -1,6 +1,12 @@
 import { Schema } from "effect";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
-import { StatBlockId, UnitId, type ClassName } from "@dnd/shared/game-facts";
+import {
+  ALIGNMENT_MORALITIES,
+  ALIGNMENT_ORDERS,
+  StatBlockId,
+  UnitId,
+  type ClassName,
+} from "@dnd/shared/game-facts";
 import {
   AbilitySchema,
   AmmunitionKindSchema,
@@ -4804,11 +4810,13 @@ export const AnchoredTriggerMechanicsSchema = Schema.extend(
   }),
 );
 
+export const StatBlockLiteralValueSchema = Schema.Struct({
+  kind: Schema.Literal("literal"),
+  value: Schema.Number,
+});
+
 export const StatBlockValueSchema = Schema.Union(
-  Schema.Struct({
-    kind: Schema.Literal("literal"),
-    value: Schema.Number,
-  }),
+  StatBlockLiteralValueSchema,
   LinearPerLevelNumberSchema,
   Schema.Struct({
     kind: Schema.Literal("caster_derived"),
@@ -4853,10 +4861,16 @@ export const CreatureVulnerabilityListSchema = Schema.Struct({
   damageTypes: nonEmpty(DamageTypeSchema),
 });
 
-export const CreatureImmunityListSchema = Schema.Struct({
-  damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
-  conditions: optionalExact(nonEmpty(ConditionSchema)),
-});
+export const CreatureImmunityListSchema = Schema.Union(
+  Schema.Struct({
+    damageTypes: nonEmpty(DamageTypeSchema),
+    conditions: optionalExact(nonEmpty(ConditionSchema)),
+  }),
+  Schema.Struct({
+    damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
+    conditions: nonEmpty(ConditionSchema),
+  }),
+);
 
 export const CreatureSenseSchema = Schema.Struct({
   kind: Schema.Literal("darkvision", "blindsight", "tremorsense", "truesight"),
@@ -5545,7 +5559,190 @@ export const CreatureSkillModifierSchema = Schema.Struct({
   modifier: Schema.Number.pipe(Schema.int()),
 });
 
-export const CreatureStatBlockSchema = Schema.Struct({
+const StatBlockAlignmentPairSchema = Schema.Struct({
+  order: Schema.Literal(...ALIGNMENT_ORDERS),
+  morality: Schema.Literal(...ALIGNMENT_MORALITIES),
+});
+
+/**
+ * The alignment line in a standalone Stat Block is descriptive source data.
+ * Unaligned is a distinct source value, rather than an absent alignment.
+ */
+export const StatBlockAlignmentSchema = Schema.Union(
+  StatBlockAlignmentPairSchema,
+  Schema.Literal("unaligned"),
+);
+
+export const StandaloneStatBlockSizeSchema = Schema.Union(
+  SizeSchema,
+  Schema.Struct({
+    kind: Schema.Literal("alternatives"),
+    options: nonEmpty(SizeSchema),
+  }).pipe(
+    Schema.filter(
+      ({ options }) =>
+        options.length >= 2 && new Set(options).size === options.length,
+      {
+        message: () =>
+          "Standalone Stat Block size alternatives must contain at least two distinct sizes.",
+      },
+    ),
+  ),
+);
+
+const StandalonePositiveStatBlockValueSchema = StatBlockLiteralValueSchema.pipe(
+  Schema.filter(({ value }) => Number.isInteger(value) && value >= 1, {
+    message: () => "Standalone Stat Block values must be positive integers.",
+  }),
+);
+
+/** A standalone SRD value is authored as a positive fixed integer. */
+export const StandaloneStatBlockValueSchema =
+  StandalonePositiveStatBlockValueSchema;
+
+/**
+ * UBIQUITOUS_LANGUAGE and the SRD bound authored ability scores to integral
+ * values from 1 through 30. Runtime projections intentionally remain broad
+ * because their values can be supplied by another rules source.
+ */
+const StandaloneStatBlockAbilityScoreSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 30),
+);
+
+export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
+  str: StandaloneStatBlockAbilityScoreSchema,
+  dex: StandaloneStatBlockAbilityScoreSchema,
+  con: StandaloneStatBlockAbilityScoreSchema,
+  int: StandaloneStatBlockAbilityScoreSchema,
+  wis: StandaloneStatBlockAbilityScoreSchema,
+  cha: StandaloneStatBlockAbilityScoreSchema,
+});
+
+/**
+ * Authored special-sense ranges are positive integral feet values. Keep the
+ * authored boundary strict while leaving CreatureSenseSchema unchanged for
+ * reusable runtime projections.
+ */
+const StandaloneStatBlockSenseRangeFeetSchema = PositiveIntegerSchema;
+
+export const StandaloneCreatureSenseSchema = Schema.Struct({
+  kind: CreatureSenseSchema.fields.kind,
+  rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
+});
+
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+
+export const StatBlockInitiativeModifierSchema = Schema.Number.pipe(
+  Schema.int(),
+);
+
+/**
+ * RAW authors both values: some monsters add Proficiency Bonus to the
+ * modifier, so the printed score cannot be derived from that modifier.
+ */
+export const StatBlockInitiativeSchema = Schema.Struct({
+  modifier: StatBlockInitiativeModifierSchema,
+  score: NonNegativeIntegerSchema,
+});
+
+const StandaloneCreatureSpeedSchema = Schema.Struct({
+  kind: CreatureSpeedSchema.fields.kind,
+  feet: StandaloneStatBlockValueSchema,
+});
+
+export const StatBlockArmorClassSchema = Schema.Struct({
+  value: StandaloneStatBlockValueSchema,
+  annotations: optionalExact(
+    nonEmpty(surfaceExactProse(Schema.NonEmptyTrimmedString)),
+  ),
+});
+
+export const StatBlockGearEntrySchema = Schema.Struct({
+  item: surfaceIdentity(Schema.NonEmptyTrimmedString, "label"),
+  quantity: optionalExact(PositiveIntegerSchema),
+});
+
+const RESERVED_STAT_BLOCK_LANGUAGE_NAMES = ["all", "none"] as const;
+
+/** Compare reserved labels after trimming and lower-casing, while preserving
+ * the authored spelling of every non-reserved language label. */
+const StatBlockLanguageNameSchema = surfaceIdentity(
+  Schema.NonEmptyTrimmedString.pipe(
+    Schema.filter(
+      (language) =>
+        !RESERVED_STAT_BLOCK_LANGUAGE_NAMES.some(
+          (reserved) => reserved === language.trim().toLowerCase(),
+        ),
+      {
+        message: () =>
+          "Named Stat Block languages must not use the reserved All or None values.",
+      },
+    ),
+  ),
+  "label",
+);
+
+export const StatBlockLanguageSetSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("named"),
+    languages: nonEmpty(StatBlockLanguageNameSchema),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("all"),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("named_plus_other_languages"),
+    languages: nonEmpty(StatBlockLanguageNameSchema),
+    additionalLanguages: PositiveIntegerSchema,
+  }),
+);
+
+const StatBlockSpeechRestrictionSchema = Schema.Struct({
+  kind: Schema.Literal("cannot_speak_in_forms"),
+  forms: nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")),
+});
+
+export const StatBlockTelepathySchema = Schema.Struct({
+  rangeFeet: PositiveIntegerSchema,
+  /** Omitting response means that the receiving creature can respond. */
+  response: optionalExact(Schema.Literal("receiving_creature_cannot_respond")),
+  requiresLanguageUnderstanding: optionalExact(StatBlockLanguageSetSchema),
+});
+
+const StatBlockCommunicationTelepathyFields = {
+  telepathy: optionalExact(StatBlockTelepathySchema),
+} as const;
+
+export const StatBlockCommunicationSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("none"),
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("spoken_and_understood"),
+    languages: StatBlockLanguageSetSchema,
+    additionallyUnderstoodButCannotSpeak: optionalExact(
+      StatBlockLanguageSetSchema,
+    ),
+    speechRestriction: optionalExact(StatBlockSpeechRestrictionSchema),
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("understood_but_cannot_speak"),
+    languages: StatBlockLanguageSetSchema,
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("understands_commands_only"),
+    ...StatBlockCommunicationTelepathyFields,
+  }),
+);
+
+const CreatureStatBlockProjectionFields = {
   displayName: surfaceIdentity(Schema.String, "displayName"),
   size: Schema.Union(SizeSchema, CastTimeChoiceSizeSchema),
   creatureType: Schema.Union(
@@ -5556,7 +5753,7 @@ export const CreatureStatBlockSchema = Schema.Struct({
   hp: StatBlockValueSchema,
   speeds: nonEmpty(CreatureSpeedSchema),
   abilityScores: SixAbilityScoresSchema,
-  initiativeModifier: optionalExact(Schema.Number.pipe(Schema.int())),
+  initiativeModifier: optionalExact(StatBlockInitiativeModifierSchema),
   savingThrowModifiers: optionalExact(
     nonEmpty(CreatureSavingThrowModifierSchema),
   ),
@@ -5577,6 +5774,47 @@ export const CreatureStatBlockSchema = Schema.Struct({
   reactions: optionalExact(CreatureActionsSchema),
   legendaryActions: optionalExact(CreatureLegendaryActionsSchema),
   traits: optionalExact(nonEmpty(CreatureTraitSchema)),
+} as const;
+
+/** Facts needed by spawned and parameterized creature/runtime consumers. */
+export const CreatureStatBlockProjectionSchema = Schema.Struct(
+  CreatureStatBlockProjectionFields,
+);
+
+/**
+ * The existing creature shape is retained as the projection contract while
+ * the standalone catalog records migrate to the authored shape in #341.
+ */
+export const CreatureStatBlockSchema = CreatureStatBlockProjectionSchema;
+
+/**
+ * Standalone authored Stat Block facts. This shape owns source-descriptive
+ * facts that a spawned/runtime projection intentionally does not carry.
+ * Hit Dice notation is deliberately not represented here yet.
+ */
+export const StandaloneStatBlockSchema = Schema.Struct({
+  size: StandaloneStatBlockSizeSchema,
+  creatureType: CreatureTypeSchema,
+  creatureTypeTags: optionalExact(
+    nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")),
+  ),
+  alignment: StatBlockAlignmentSchema,
+  ac: StatBlockArmorClassSchema,
+  hp: StandaloneStatBlockValueSchema,
+  speeds: nonEmpty(StandaloneCreatureSpeedSchema),
+  abilityScores: StandaloneStatBlockAbilityScoresSchema,
+  initiative: StatBlockInitiativeSchema,
+  savingThrowModifiers: CreatureStatBlockProjectionFields.savingThrowModifiers,
+  skillModifiers: CreatureStatBlockProjectionFields.skillModifiers,
+  saveProficiencies: CreatureStatBlockProjectionFields.saveProficiencies,
+  vulnerabilities: CreatureStatBlockProjectionFields.vulnerabilities,
+  resistances: CreatureStatBlockProjectionFields.resistances,
+  immunities: CreatureStatBlockProjectionFields.immunities,
+  senses: optionalExact(nonEmpty(StandaloneCreatureSenseSchema)),
+  passivePerception: NonNegativeIntegerSchema,
+  gear: optionalExact(nonEmpty(StatBlockGearEntrySchema)),
+  communication: StatBlockCommunicationSchema,
+  traits: CreatureStatBlockProjectionFields.traits,
 });
 
 export const CreatureStatBlockOverridesSchema = Schema.Struct({
