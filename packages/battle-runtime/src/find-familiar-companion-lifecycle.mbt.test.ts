@@ -81,6 +81,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import { statBlockCatalog } from "./unit-profile-admission-catalog.test-support.ts";
 import { statBlockProcedurePresentations } from "./stat-block-presentation.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 
 const FAMILIAR_STATUSES = ["none", "present"] as const;
@@ -913,7 +914,11 @@ function pactScratchSubject(
     throw new Error("Expected the committed familiar Stat Block admission.");
   }
   const procedureRef = statBlockProcedurePresentations({
-    statBlock: statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+    presentation: Either.getOrThrow(
+      projectAuthoredStatBlock(
+        statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+      ),
+    ).presentation,
     execution: familiar.origin.execution,
   }).find(
     (presentation) =>
