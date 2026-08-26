@@ -3,6 +3,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -19,8 +20,13 @@ import {
   retentionRevisionMatches,
   ScenarioCampaignConfigSchema,
   ScenarioRawReviewSchema,
+  classifyScenarioReviewOutputSchema,
+  scenarioCompositeReviewSchemaForIntents,
   verifyFinalScenarioReview,
   type ScenarioCampaignAgents,
+  type ScenarioCampaignConfig,
+  type ScenarioGenerationInput,
+  type ScenarioStageFacts,
 } from "./scenario-campaign.ts";
 import {
   GitShaSchema,
@@ -35,6 +41,7 @@ import {
   rollbackScenarioRejectionBundle,
   publishScenarioRejectionBundle,
   retainCodexInvocationArtifacts,
+  generationPreamble,
 } from "./generate-scenario.ts";
 import { openArtifactIndex } from "./artifact-index.ts";
 import {
@@ -392,7 +399,7 @@ const config = {
   admitReviewedUnsupported: false,
 };
 
-const stageFacts = {
+const stageFacts: ScenarioStageFacts = {
   schemaVersion: 1 as const,
   characterRequirement: {
     tag: "characterSheetsRequired" as const,
@@ -404,7 +411,7 @@ const stageFacts = {
   },
 };
 
-const candidate = (prose: string, facts = stageFacts) => ({
+const candidate = (prose: string, facts: ScenarioStageFacts = stageFacts) => ({
   prose,
   stageFacts: facts,
 });
@@ -417,6 +424,24 @@ const readyQuality = {
 };
 
 describe("scenario generation campaign", () => {
+  test("generation prompt names the resolved HP boundary", () => {
+    const prompt = generationPreamble(
+      ["Synthetic Skeleton"],
+      "availableOnly",
+      "supportedOnly",
+      "bounded capability context",
+    );
+    expect(prompt).toContain(
+      "battleCreatureInitFromStatBlock accepts a resolved currentHp",
+    );
+    expect(prompt).toContain(
+      "does not surface the Table's fixed-vs-rolled monster Hit Points selection or roll workflow",
+    );
+    expect(prompt).toContain(
+      "For supportedOnly generation and review, a Candidate requiring an absent public-SDK operation must be classified as unsupported and needsRevision, never marked ready",
+    );
+  });
+
   test("retains a settled failed-invocation sidecar beside the Campaign event stream", () => {
     const root = mkdtempSync(resolve(tmpdir(), "scenario-retained-sidecar-"));
     const sourceDirectory = resolve(root, "source");
@@ -486,13 +511,24 @@ describe("scenario generation campaign", () => {
   });
 
   test("decodes every checked-in campaign configuration strictly", () => {
-    for (const path of [
-      "scripts/raw-swarm/scenario-campaign.example.json",
-      "scripts/raw-swarm/scenario-campaign-open-grid-wolf-skeleton-pursuit.json",
-    ]) {
+    const campaignDirectory = resolve(repoRoot, "scripts/raw-swarm");
+    const campaignConfigurationNames = readdirSync(campaignDirectory).filter(
+      (name) => name.startsWith("scenario-campaign") && name.endsWith(".json"),
+    );
+    expect(campaignConfigurationNames).toEqual(
+      expect.arrayContaining([
+        "scenario-campaign-48h-causeway-recovery.json",
+        "scenario-campaign-48h-riverstone-relief.json",
+        "scenario-campaign-48h-watchfire-rotation.json",
+      ]),
+    );
+    const paths = campaignConfigurationNames.map((name) =>
+      resolve(campaignDirectory, name),
+    );
+    for (const path of paths) {
       const decoded = Schema.decodeUnknownEither(ScenarioCampaignConfigSchema, {
         onExcessProperty: "error",
-      })(JSON.parse(readFileSync(resolve(repoRoot, path), "utf8")));
+      })(JSON.parse(readFileSync(path, "utf8")));
       expect(Either.isRight(decoded), path).toBe(true);
     }
   });
@@ -713,9 +749,9 @@ describe("scenario generation campaign", () => {
                 ? {
                     classification: "needsRevision" as const,
                     evidence:
-                      "The first revision lacks an objective-bearing setup.",
+                      "The first revision contains conflicting numeric spatial authorities.",
                     critique:
-                      "Give every combatant a strategy-bearing objective.",
+                      "Reconcile every quantity, position, and derived distance before ready classification.",
                   }
                 : readyQuality.scenarioQuality,
           };
@@ -727,9 +763,95 @@ describe("scenario generation campaign", () => {
     expect(reviewCount).toBe(2);
     expect(generationInputs[1]).toMatchObject({
       priorRevision: {
-        critiques: ["Give every combatant a strategy-bearing objective."],
+        critiques: [
+          "Reconcile every quantity, position, and derived distance before ready classification.",
+        ],
       },
     });
+  });
+
+  test("gives quality review the configured purpose and Candidate facts", async () => {
+    const scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"] =
+      "Explore delegated Character Sheet choices during a synthetic rescue.";
+    const reviewInputs: Array<{
+      readonly scenarioPurpose: ScenarioCampaignConfig["scenarioPurpose"];
+      readonly characterRequirement: ScenarioStageFacts["characterRequirement"]["tag"];
+    }> = [];
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        scenarioPurpose,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      {
+        generate: async (input) => ({
+          candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+            candidate(`purpose mismatch ${input.iteration}-${index}`, {
+              ...stageFacts,
+              characterRequirement: {
+                tag: "statBlocksOnly" as const,
+                evidence: "The Candidate uses only canonical stat blocks.",
+              },
+            }),
+          ),
+        }),
+        reviewScenario: async (input) => {
+          reviewInputs.push({
+            scenarioPurpose: input.scenarioPurpose,
+            characterRequirement: input.stageFacts.characterRequirement.tag,
+          });
+          const purposeContradiction =
+            input.scenarioPurpose === scenarioPurpose &&
+            input.stageFacts.characterRequirement.tag === "statBlocksOnly";
+          return {
+            raw: {
+              classification: "supported" as const,
+              evidence: "Synthetic RAW evidence.",
+            },
+            contentAvailability: {
+              classification: "supplied" as const,
+              evidence: "Synthetic content evidence.",
+            },
+            sdkCapability: {
+              classification: "supported" as const,
+              evidence: "Synthetic SDK evidence.",
+            },
+            artifactPolicy: {
+              classification: "safe" as const,
+              evidence: "Synthetic policy evidence.",
+            },
+            scenarioQuality: purposeContradiction
+              ? {
+                  classification: "needsRevision" as const,
+                  evidence:
+                    "The typed Candidate facts contradict the configured purpose.",
+                  critique:
+                    "Use Character Sheets when the configured purpose delegates Character Sheet choices.",
+                }
+              : readyQuality.scenarioQuality,
+          };
+        },
+      },
+      { select: () => 0 },
+    );
+
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(finalScenarioDisposition(result.right)).toBe("rejected");
+      expect(result.right.scenarioQuality.classification).toBe("needsRevision");
+    }
+    expect(reviewInputs).toEqual([
+      {
+        scenarioPurpose,
+        characterRequirement: "statBlocksOnly",
+      },
+      {
+        scenarioPurpose,
+        characterRequirement: "statBlocksOnly",
+      },
+    ]);
   });
 
   test("rejects invalid bounds and batches while preserving rejected final reviews", async () => {
@@ -1055,6 +1177,237 @@ describe("scenario generation campaign", () => {
     });
   });
 
+  test("restricts model-facing review classifications to both campaign intents", () => {
+    const review = (input: {
+      readonly contentAvailability: object;
+      readonly sdkCapability: object;
+    }) => ({
+      raw: {
+        classification: "supported" as const,
+        evidence: "Synthetic RAW evidence.",
+      },
+      contentAvailability: input.contentAvailability,
+      sdkCapability: input.sdkCapability,
+      artifactPolicy: {
+        classification: "safe" as const,
+        evidence: "Synthetic policy evidence.",
+      },
+      scenarioQuality: {
+        classification: "ready" as const,
+        evidence: "Synthetic quality evidence.",
+      },
+    });
+    const supportedContent = {
+      classification: "supplied" as const,
+      evidence: "The selected records are available.",
+    };
+    const unavailableProbeContent = {
+      classification: "explicitUnavailableProbe" as const,
+      evidence: "The unavailable record is the declared probe.",
+    };
+    const supportedSdk = {
+      classification: "supported" as const,
+      evidence: "The required operations are documented.",
+    };
+    const unsupportedProbeSdk = {
+      classification: "explicitUnsupportedProbe" as const,
+      evidence: "The undocumented operation is the declared probe.",
+    };
+    const decode = (
+      contentAvailabilityIntent: "availableOnly" | "probeUnavailableContent",
+      sdkCapabilityIntent: "supportedOnly" | "probeUnsupportedCapability",
+      value: unknown,
+    ) =>
+      Schema.decodeUnknownEither(
+        scenarioCompositeReviewSchemaForIntents({
+          contentAvailabilityIntent,
+          sdkCapabilityIntent,
+        }),
+        { onExcessProperty: "error" },
+      )(value);
+
+    expect(
+      Either.isRight(
+        decode("availableOnly", "supportedOnly", {
+          ...review({
+            contentAvailability: supportedContent,
+            sdkCapability: supportedSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("availableOnly", "supportedOnly", {
+          ...review({
+            contentAvailability: unavailableProbeContent,
+            sdkCapability: supportedSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("availableOnly", "supportedOnly", {
+          ...review({
+            contentAvailability: supportedContent,
+            sdkCapability: {
+              classification: "missingUnsupportedProbe",
+              evidence: "The capability is absent.",
+              critique: "Declare the unsupported capability probe.",
+            },
+          }),
+        }),
+      ),
+    ).toBe(true);
+
+    expect(
+      Either.isRight(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: unavailableProbeContent,
+            sdkCapability: unsupportedProbeSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isRight(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: {
+              classification: "missingUnavailableProbe",
+              evidence: "The unavailable selection was not named as the probe.",
+              critique: "Name the unavailable content probe.",
+            },
+            sdkCapability: {
+              classification: "missingUnsupportedProbe",
+              evidence: "The unsupported operation was not named as the probe.",
+              critique: "Name the unsupported capability probe.",
+            },
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: supportedContent,
+            sdkCapability: unsupportedProbeSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        decode("probeUnavailableContent", "probeUnsupportedCapability", {
+          ...review({
+            contentAvailability: unavailableProbeContent,
+            sdkCapability: supportedSdk,
+          }),
+        }),
+      ),
+    ).toBe(true);
+
+    for (const contentAvailabilityIntent of [
+      "availableOnly",
+      "probeUnavailableContent",
+    ] as const) {
+      for (const sdkCapabilityIntent of [
+        "supportedOnly",
+        "probeUnsupportedCapability",
+      ] as const) {
+        const schema = scenarioCompositeReviewSchemaForIntents({
+          contentAvailabilityIntent,
+          sdkCapabilityIntent,
+        });
+        expect(
+          Either.isRight(
+            classifyScenarioReviewOutputSchema({
+              schemaVersion: 3,
+              outputJsonSchema: codexOutputJsonSchema(schema),
+            }),
+          ),
+        ).toBe(true);
+      }
+    }
+    const strictOutputJsonSchema = codexOutputJsonSchema(
+      scenarioCompositeReviewSchemaForIntents({
+        contentAvailabilityIntent: "availableOnly",
+        sdkCapabilityIntent: "supportedOnly",
+      }),
+    );
+    const strictCurrent = classifyScenarioReviewOutputSchema({
+      schemaVersion: 3,
+      outputJsonSchema: strictOutputJsonSchema,
+    });
+    expect(Either.isRight(strictCurrent)).toBe(true);
+    if (Either.isRight(strictCurrent)) {
+      expect(strictCurrent.right.tag).toBe("intentSpecificCurrent");
+    }
+    expect(
+      Either.isLeft(
+        classifyScenarioReviewOutputSchema({
+          schemaVersion: 2,
+          outputJsonSchema: strictOutputJsonSchema,
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test("rejects a cross-intent reviewer result at the campaign boundary", async () => {
+    const invalidReview = {
+      raw: {
+        classification: "supported" as const,
+        evidence: "Synthetic RAW evidence.",
+      },
+      contentAvailability: {
+        classification: "supplied" as const,
+        evidence: "Synthetic content evidence.",
+      },
+      sdkCapability: {
+        classification: "missingUnsupportedProbe" as const,
+        evidence: "The operation is not documented.",
+        critique: "Declare the unsupported capability probe.",
+      },
+      artifactPolicy: {
+        classification: "safe" as const,
+        evidence: "Synthetic policy evidence.",
+      },
+      scenarioQuality: {
+        classification: "ready" as const,
+        evidence: "Synthetic quality evidence.",
+      },
+    };
+    const maliciousAgents = {
+      generate: async (input: ScenarioGenerationInput) => ({
+        candidates: Array.from({ length: input.candidateCount }, (_, index) =>
+          candidate(`cross-intent ${input.iteration}-${index}`),
+        ),
+      }),
+      // This cast models an untrusted test double bypassing the production
+      // model-output decoder; the campaign must still reject its result.
+      reviewScenario: (async () => invalidReview) as unknown,
+    } as ScenarioCampaignAgents;
+    const result = await runScenarioCampaign(
+      {
+        ...config,
+        minimumIterations: 1,
+        maximumIterations: 2,
+        reviewMilestone: 1,
+      },
+      maliciousAgents,
+      { select: () => 0 },
+    );
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(result.left).toBe(
+        "Scenario SDK capability reviewer returned a result inconsistent with the campaign intent.",
+      );
+    }
+  });
+
   test("rejects malformed reviews and mismatched retained artifact identity", () => {
     expect(codexOutputJsonSchema(ScenarioRawReviewSchema)).toMatchObject({
       type: "object",
@@ -1280,13 +1633,17 @@ describe("scenario generation campaign", () => {
       .fn()
       .mockResolvedValueOnce({
         classification: "unsupported",
-        evidence: "The current public SDK cannot represent elevation.",
-        critique: "Remove elevation-dependent mechanics.",
+        evidence:
+          "The public SDK accepts resolved currentHp but does not surface the Table's fixed-vs-rolled monster Hit Points choice or roll workflow.",
+        critique:
+          "Remove the absent fixed-vs-rolled monster Hit Points operation from this supportedOnly Candidate.",
       })
       .mockResolvedValue({
         classification: "unsupported",
-        evidence: "The current public SDK cannot represent elevation.",
-        critique: "Remove elevation-dependent mechanics.",
+        evidence:
+          "The public SDK accepts resolved currentHp but does not surface the Table's fixed-vs-rolled monster Hit Points choice or roll workflow.",
+        critique:
+          "Remove the absent fixed-vs-rolled monster Hit Points operation from this supportedOnly Candidate.",
       });
     const result = await runScenarioCampaign(
       {
@@ -1327,7 +1684,11 @@ describe("scenario generation campaign", () => {
     );
 
     expect(generationInputs[1]).toMatchObject({
-      priorRevision: { critiques: ["Remove elevation-dependent mechanics."] },
+      priorRevision: {
+        critiques: [
+          "Remove the absent fixed-vs-rolled monster Hit Points operation from this supportedOnly Candidate.",
+        ],
+      },
     });
     expect(Either.isRight(result)).toBe(true);
     if (Either.isRight(result)) {

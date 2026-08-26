@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-disengage-crossing-001",
+  "scenarioSha256": "46d14b8921ba3ec8bb218eb39ca771abacd8beb8635032162e9cbd8e9925d8d5",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The scenario uses only canonical Skeleton, Wolf, and Goblin Warrior stat blocks and requires no Character Sheets."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Exact placements, reach exits, route movement, corner distances, and changing target priority are all resolvable in the obstacle-free geometry-derived arena."
+    }
+  }
+}

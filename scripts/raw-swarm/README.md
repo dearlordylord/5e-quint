@@ -165,6 +165,9 @@ These terms have one package-wide meaning:
   Scenario.
 - A **Scenario** is one immutable, admitted authored input with a semantic
   identity, title, purpose, retained review, and retained stage authorities.
+- A **Contained Scenario authority** is an immutable admitted Scenario retained
+  for historical relationship validation but excluded from future authoring
+  and live catalogue comparison.
 - An **Execution** is one externally identified attempt to exercise exactly
   one admitted Scenario through the public SDK, whether it reaches the first
   SDK call or is obstructed during character or setup authoring.
@@ -193,15 +196,18 @@ prototype commands and existing MCP/direct-SDK evidence procedures. Read the
 role protocol first; it owns the procedure for that role. Role protocols link
 back here for vocabulary and must not redefine these terms.
 
-Render the one-entry-per-admitted-Scenario catalogue before authoring:
+Render the live, one-entry-per-admitted-Scenario catalogue before authoring:
 
 ```sh
 mise exec -- pnpm raw-swarm:catalogue -- --json
 ```
 
-The command reads the canonical admission records and their referenced
-authorities. It fails on unreadable, mismatched, dangling, or incomplete
-evidence; do not replace a failed read with a sample or a hand-maintained list.
+The command emits the live admitted Scenario projection from direct
+`.scenario.json` records. Contained Scenario authorities (see the vocabulary
+above) remain available for historical relationship validation but are excluded
+from the authoring projection and live catalogue comparison. It fails on
+unreadable, mismatched, dangling, or incomplete evidence; do not replace a
+failed read with a sample or a hand-maintained list.
 
 Scenario generation is instructions-first. Do not add a novelty score,
 embedding index, retrieval service, Campaign mode, scenario DSL, or automated

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-dash-extended-route-001",
+  "scenarioSha256": "af9fa6838dffd902bfdbcca1e69eeabb3985e54678bb6f03e785f6d31e8852d6",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The encounter uses only the canonical Skeleton and Wolf stat blocks, with no player-character build or Character Sheet facts."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "Geometry establishes the 50-foot objective distance, validates the chosen route against the Dash-extended budget, and confirms that neither creature’s reach is entered."
+    }
+  }
+}

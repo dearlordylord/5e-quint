@@ -106,7 +106,7 @@ describe("whole-path performance evidence", () => {
       const timingBytes = readFileSync(reportingTiming);
       writeFileSync(
         reportingManifest,
-        `${JSON.stringify({ schemaVersion: 1, index: { sha256: indexSha256 }, artifacts: [{ path: "reporting-timing.json", sha256: sha256Text(timingBytes.toString("utf8")), byteLength: timingBytes.byteLength }] })}\n`,
+        `${JSON.stringify({ schemaVersion: 2, index: { path: "index.sqlite", sha256: indexSha256, byteLength: 0 }, artifacts: [], controlledAttachments: [{ tag: "controlledReportingTiming", path: "reporting-timing.json", sha256: sha256Text(timingBytes.toString("utf8")), byteLength: timingBytes.byteLength }] })}\n`,
       );
     };
     writeReportingTiming(50);
@@ -143,6 +143,31 @@ describe("whole-path performance evidence", () => {
       perCallMilliseconds: 50,
       replayCacheDecision: { admitted: false },
     });
+    const alternateReportingTiming = resolve(
+      directory,
+      "alternate-reporting-timing.json",
+    );
+    writeFileSync(alternateReportingTiming, readFileSync(reportingTiming));
+    writeFileSync(
+      reportingManifest,
+      readFileSync(reportingManifest, "utf8").replace(
+        "reporting-timing.json",
+        "alternate-reporting-timing.json",
+      ),
+    );
+    expect(() =>
+      summarizeControlledExecution({
+        schemaVersion: 1,
+        reviewInvocationEvidencePath: fixture.manifestPath,
+        continuationObservationPath: observations,
+        supervisorTimingPath: timings,
+        reportingTimingPath: reportingTiming,
+        reportingManifestPath: reportingManifest,
+      }),
+    ).toThrow(
+      /Controlled reporting timing does not match its execution artifacts/,
+    );
+    writeReportingTiming(50);
     writeSupervisorTimings("f".repeat(64));
     expect(() =>
       summarizeControlledExecution({

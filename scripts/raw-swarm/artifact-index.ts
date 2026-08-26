@@ -5,10 +5,13 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  realpathSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, extname, relative, resolve } from "node:path";
+import { basename, dirname, extname, relative, resolve, sep } from "node:path";
 import { DatabaseSync } from "node:sqlite";
+import { pathToFileURL } from "node:url";
 import { Either, Schema } from "effect";
 
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
@@ -29,6 +32,7 @@ import {
 } from "./repository-path.ts";
 
 const INDEX_SCHEMA_VERSION = 3;
+const SQLITE_WAL_HEADER_BYTE_LENGTH = 32;
 
 const IndexedExecutionRecordSchema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
@@ -140,6 +144,309 @@ function sha256(bytes: Uint8Array): string {
   return createHash("sha256").update(bytes).digest("hex");
 }
 
+type ArtifactIndexLockMode = "reader" | "writer";
+
+/** Fixed absolute roots keep the cross-process lock identity independent of TMPDIR. */
+export const ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES = [
+  "/tmp/raw-swarm-artifact-index-locks-a",
+  "/var/tmp/raw-swarm-artifact-index-locks-b",
+] as const;
+
+function isSqliteBusy(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    /SQLITE_BUSY|database is locked|database table is locked/i.test(
+      error.message,
+    )
+  );
+}
+
+function artifactIndexLockIdentity(absolute: string): string {
+  try {
+    return realpathSync(absolute);
+  } catch {
+    try {
+      return resolve(realpathSync(dirname(absolute)), basename(absolute));
+    } catch {
+      return absolute;
+    }
+  }
+}
+
+function canonicalArtifactIndexDirectory(absolute: string): string {
+  try {
+    return realpathSync(dirname(artifactIndexLockIdentity(absolute)));
+  } catch (error) {
+    return fail(
+      `Raw Swarm index parent directory is unreadable: ${dirname(absolute)}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function canonicalArtifactIndexLockRootCandidate(candidate: string): string {
+  let unresolved = resolve(candidate);
+  const missingSegments: string[] = [];
+  while (true) {
+    try {
+      const canonical = realpathSync(unresolved);
+      return missingSegments.reduceRight(
+        (parent, segment) => resolve(parent, segment),
+        canonical,
+      );
+    } catch (error) {
+      if (
+        typeof error !== "object" ||
+        error === null ||
+        !("code" in error) ||
+        error.code !== "ENOENT"
+      ) {
+        return fail(
+          `Raw Swarm artifact-index lock root is unavailable: ${candidate}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+      const parent = dirname(unresolved);
+      if (parent === unresolved) {
+        return fail(
+          `Raw Swarm artifact-index lock root is unavailable: ${candidate}: no existing ancestor`,
+        );
+      }
+      missingSegments.push(basename(unresolved));
+      unresolved = parent;
+    }
+  }
+}
+
+function createCanonicalArtifactIndexLockRoot(candidate: string): string {
+  try {
+    mkdirSync(candidate, { recursive: true });
+    return realpathSync(candidate);
+  } catch (error) {
+    return fail(
+      `Raw Swarm artifact-index lock root is unavailable: ${candidate}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function pathIsContained(root: string, candidate: string): boolean {
+  const relativePath = relative(root, candidate);
+  return (
+    relativePath === "" ||
+    (!relativePath.startsWith(`..${sep}`) &&
+      relativePath !== ".." &&
+      !relativePath.startsWith(sep))
+  );
+}
+
+function lockRootOverlapsSource(
+  sourceDirectory: string,
+  lockRoot: string,
+): boolean {
+  return (
+    pathIsContained(sourceDirectory, lockRoot) ||
+    pathIsContained(lockRoot, sourceDirectory)
+  );
+}
+
+export function artifactIndexLockRootForSource(absolute: string): string {
+  const sourceDirectory = canonicalArtifactIndexDirectory(absolute);
+  const selectedCandidate = ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES.map(
+    (candidate) => ({
+      candidate,
+      canonical: canonicalArtifactIndexLockRootCandidate(candidate),
+    }),
+  ).find(
+    ({ canonical }) => !lockRootOverlapsSource(sourceDirectory, canonical),
+  );
+  if (selectedCandidate === undefined) {
+    return fail(
+      `Raw Swarm artifact-index lock roots cannot be separated from the source directory tree: ${sourceDirectory}`,
+    );
+  }
+  const selected = createCanonicalArtifactIndexLockRoot(
+    selectedCandidate.candidate,
+  );
+  if (lockRootOverlapsSource(sourceDirectory, selected)) {
+    return fail(
+      `Raw Swarm artifact-index lock root entered the source directory tree: ${sourceDirectory}`,
+    );
+  }
+  return selected;
+}
+
+function artifactIndexLockPath(absolute: string): string {
+  const identity = artifactIndexLockIdentity(absolute);
+  const digest = createHash("sha256").update(identity).digest("hex");
+  return resolve(
+    artifactIndexLockRootForSource(absolute),
+    `${digest}.lock.sqlite`,
+  );
+}
+
+function artifactIndexLockFailure(
+  mode: ArtifactIndexLockMode,
+  absolute: string,
+): never {
+  return fail(
+    mode === "reader"
+      ? `Raw Swarm index cannot be opened for read-only reporting while another operation is active: ${absolute}`
+      : `Raw Swarm index cannot be opened for writing while another operation is active: ${absolute}`,
+  );
+}
+
+function rejectHardLinkedArtifactIndex(
+  absolute: string,
+  displayPath: string,
+): void {
+  const links = (() => {
+    try {
+      return statSync(absolute).nlink;
+    } catch (error) {
+      return fail(
+        `Raw Swarm index is unreadable: ${displayPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  if (links > 1) {
+    fail(
+      `Raw Swarm index ${displayPath} has multiple hard links; refusing an ambiguous WAL/lock identity.`,
+    );
+  }
+}
+
+function acquireArtifactIndexLock(
+  absolute: string,
+  mode: ArtifactIndexLockMode,
+): { readonly release: () => void } {
+  const lockDb = new DatabaseSync(artifactIndexLockPath(absolute));
+  try {
+    // Initialization may race with another process creating this lock file;
+    // only that short setup phase may wait. Once the row exists, all lease
+    // acquisition is deliberately non-blocking.
+    lockDb.exec("PRAGMA busy_timeout = 1000");
+    const table = lockDb
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'artifactIndexLock'",
+      )
+      .get();
+    if (table === undefined) {
+      lockDb.exec("BEGIN IMMEDIATE");
+      lockDb.exec(`
+        CREATE TABLE IF NOT EXISTS artifactIndexLock(
+          id INTEGER PRIMARY KEY CHECK(id = 1)
+        ) STRICT;
+        INSERT OR IGNORE INTO artifactIndexLock(id) VALUES (1);
+        COMMIT;
+      `);
+    } else {
+      const row = lockDb
+        .prepare("SELECT id FROM artifactIndexLock WHERE id = 1")
+        .get();
+      if (row === undefined) {
+        lockDb.exec("BEGIN IMMEDIATE");
+        lockDb.exec(
+          "INSERT OR IGNORE INTO artifactIndexLock(id) VALUES (1); COMMIT;",
+        );
+      }
+    }
+    lockDb.exec("PRAGMA busy_timeout = 0");
+    lockDb.exec(mode === "reader" ? "BEGIN" : "BEGIN EXCLUSIVE");
+    lockDb.prepare("SELECT id FROM artifactIndexLock WHERE id = 1").get();
+  } catch (error) {
+    try {
+      lockDb.close();
+    } catch {
+      // The lock acquisition failure remains the actionable error.
+    }
+    if (isSqliteBusy(error)) artifactIndexLockFailure(mode, absolute);
+    throw error;
+  }
+
+  let released = false;
+  const release = (): void => {
+    if (released) return;
+    released = true;
+    process.removeListener("exit", releaseOnExit);
+    try {
+      lockDb.exec("ROLLBACK");
+    } catch {
+      // Closing the SQLite connection still releases the OS lock.
+    }
+    try {
+      lockDb.close();
+    } catch {
+      // The lease is already marked released and cannot be acquired again.
+    }
+  };
+  const releaseOnExit = (): void => {
+    release();
+  };
+  process.once("exit", releaseOnExit);
+  return { release };
+}
+
+function bindArtifactIndexLock(
+  db: DatabaseSync,
+  lease: { readonly release: () => void },
+): DatabaseSync {
+  const close = db.close.bind(db);
+  const dispose = db[Symbol.dispose].bind(db);
+  let closed = false;
+  const closeWithLease = (operation: () => void): void => {
+    if (closed) return;
+    closed = true;
+    try {
+      operation();
+    } finally {
+      lease.release();
+    }
+  };
+  Object.defineProperty(db, "close", {
+    configurable: true,
+    writable: true,
+    value: (): void => closeWithLease(close),
+  });
+  Object.defineProperty(db, Symbol.dispose, {
+    configurable: true,
+    writable: true,
+    value: (): void => closeWithLease(dispose),
+  });
+  Object.defineProperty(db, "open", {
+    configurable: true,
+    writable: true,
+    value: (): never =>
+      fail(
+        "Raw Swarm index connections are managed and cannot be reopened; acquire a new connection instead.",
+      ),
+  });
+  return db;
+}
+
+function openManagedArtifactIndex(
+  lease: { readonly release: () => void },
+  open: () => DatabaseSync,
+  initialize: (db: DatabaseSync) => void,
+): DatabaseSync {
+  const db = (() => {
+    try {
+      return open();
+    } catch (error) {
+      lease.release();
+      throw error;
+    }
+  })();
+  try {
+    initialize(db);
+    return bindArtifactIndexLock(db, lease);
+  } catch (error) {
+    try {
+      db.close();
+    } finally {
+      lease.release();
+    }
+    throw error;
+  }
+}
+
 function requiredCurrentExecutionAuthorityPath(
   evidenceSetDirectory: string,
   path: string,
@@ -194,42 +501,73 @@ function jsonLines(path: string): readonly unknown[] {
     .map((line): unknown => JSON.parse(line));
 }
 
-export function openArtifactIndex(path: string): DatabaseSync {
-  const absolute = resolve(repoRoot, path);
-  mkdirSync(dirname(absolute), { recursive: true });
-  const db = new DatabaseSync(absolute);
-  const existingMetadata = db
-    .prepare(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'indexMetadata'",
-    )
-    .get();
-  if (existingMetadata !== undefined) {
-    const version = db.prepare("SELECT schemaVersion FROM indexMetadata").get();
-    if (
-      !isJsonRecord(version) ||
-      version.schemaVersion !== INDEX_SCHEMA_VERSION
-    ) {
-      db.close();
-      return fail(
-        `Raw Swarm index schema is not version ${String(INDEX_SCHEMA_VERSION)}; inventory and rebuild the database before using this command.`,
-      );
-    }
-  }
+function validateArtifactIndex(
+  db: DatabaseSync,
+  requireCurrentSchema: boolean,
+): void {
   const legacySteps = db
     .prepare(
       "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'steps'",
     )
     .get();
   if (legacySteps !== undefined) {
-    db.close();
-    return fail(
+    fail(
       "Legacy Raw Swarm database must be inventoried and rebuilt before use.",
     );
   }
-  db.exec("PRAGMA foreign_keys = ON");
-  db.exec("PRAGMA journal_mode = WAL");
-  db.exec("PRAGMA busy_timeout = 5000");
-  db.exec(`
+
+  const existingMetadata = db
+    .prepare(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'indexMetadata'",
+    )
+    .get();
+  if (existingMetadata === undefined) {
+    if (requireCurrentSchema) {
+      fail(
+        "Raw Swarm index is not initialized; use a write command before a read-only report command.",
+      );
+    }
+  } else {
+    const version = db.prepare("SELECT schemaVersion FROM indexMetadata").get();
+    if (
+      !isJsonRecord(version) ||
+      version.schemaVersion !== INDEX_SCHEMA_VERSION
+    ) {
+      fail(
+        `Raw Swarm index schema is not version ${String(INDEX_SCHEMA_VERSION)}; inventory and rebuild the database before using this command.`,
+      );
+    }
+  }
+}
+
+function rejectUncheckpointedWal(absolute: string, displayPath: string): void {
+  const walPath = `${absolute}-wal`;
+  // A header-only WAL has no frames, so immutable mode cannot miss committed
+  // rows.
+  if (
+    existsSync(walPath) &&
+    statSync(walPath).size > SQLITE_WAL_HEADER_BYTE_LENGTH
+  ) {
+    fail(
+      `Raw Swarm index ${displayPath} has a non-empty WAL sidecar; checkpoint ${walPath} before using a read-only report command.`,
+    );
+  }
+}
+
+export function openArtifactIndex(path: string): DatabaseSync {
+  const absolute = resolve(repoRoot, path);
+  mkdirSync(dirname(absolute), { recursive: true });
+  if (existsSync(absolute)) rejectHardLinkedArtifactIndex(absolute, path);
+  const lease = acquireArtifactIndexLock(absolute, "writer");
+  return openManagedArtifactIndex(
+    lease,
+    () => new DatabaseSync(absolute),
+    (db) => {
+      validateArtifactIndex(db, false);
+      db.exec("PRAGMA foreign_keys = ON");
+      db.exec("PRAGMA journal_mode = WAL");
+      db.exec("PRAGMA busy_timeout = 5000");
+      db.exec(`
     CREATE TABLE IF NOT EXISTS indexMetadata(
       schemaVersion INTEGER PRIMARY KEY CHECK(schemaVersion = ${INDEX_SCHEMA_VERSION})
     ) STRICT;
@@ -415,8 +753,47 @@ export function openArtifactIndex(path: string): DatabaseSync {
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_campaign ON scenarioCampaignFindings(scenarioCampaignRowId);
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_category ON scenarioCampaignFindings(category);
     CREATE INDEX IF NOT EXISTS scenarioCampaignFindings_fingerprint ON scenarioCampaignFindings(fingerprint);
-  `);
-  return db;
+    `);
+    },
+  );
+}
+
+export function openArtifactIndexReadOnly(path: string): DatabaseSync {
+  const lexical = resolve(repoRoot, path);
+  if (!existsSync(lexical)) {
+    return fail(`Raw Swarm index does not exist: ${path}`);
+  }
+  const absolute = (() => {
+    try {
+      return realpathSync(lexical);
+    } catch (error) {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "code" in error &&
+        error.code === "ENOENT"
+      ) {
+        return fail(`Raw Swarm index does not exist: ${path}`);
+      }
+      return fail(
+        `Raw Swarm index is unreadable: ${path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  rejectHardLinkedArtifactIndex(absolute, path);
+  const lease = acquireArtifactIndexLock(absolute, "reader");
+  return openManagedArtifactIndex(
+    lease,
+    () => {
+      rejectUncheckpointedWal(absolute, path);
+      return new DatabaseSync(`${pathToFileURL(absolute).href}?immutable=1`, {
+        readOnly: true,
+      });
+    },
+    (db) => {
+      validateArtifactIndex(db, true);
+    },
+  );
 }
 
 function registerArtifact(
@@ -1987,19 +2364,53 @@ export function rebuildLegacyArtifactIndex(input: {
   return { inventory };
 }
 
-export type PortableManifest = {
-  readonly schemaVersion: 1;
-  readonly index: {
-    readonly path: string;
-    readonly sha256: string;
-    readonly byteLength: number;
-  };
-  readonly artifacts: readonly {
-    readonly path: string;
-    readonly sha256: string;
-    readonly byteLength: number;
-  }[];
-};
+const PortableManifestSha256Schema = Schema.String.pipe(
+  Schema.pattern(/^[0-9a-f]{64}$/),
+);
+const PortableManifestByteLengthSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.greaterThanOrEqualTo(0),
+);
+const PORTABLE_MANIFEST_SCHEMA_VERSION = 2;
+
+export const PortableManifestArtifactSchema = Schema.Struct({
+  path: Schema.String,
+  sha256: PortableManifestSha256Schema,
+  byteLength: PortableManifestByteLengthSchema,
+});
+export type PortableManifestArtifact = Schema.Schema.Type<
+  typeof PortableManifestArtifactSchema
+>;
+
+export const PortableControlledAttachmentSchema = Schema.Struct({
+  tag: Schema.Literal("controlledReportingTiming"),
+  ...PortableManifestArtifactSchema.fields,
+});
+export type PortableControlledAttachment = Schema.Schema.Type<
+  typeof PortableControlledAttachmentSchema
+>;
+
+const PortableControlledAttachmentsSchema = Schema.Union(
+  Schema.Tuple(),
+  Schema.Tuple(PortableControlledAttachmentSchema),
+);
+export type PortableControlledAttachments = Schema.Schema.Type<
+  typeof PortableControlledAttachmentsSchema
+>;
+
+export const PortableManifestSchema = Schema.Struct({
+  schemaVersion: Schema.Literal(PORTABLE_MANIFEST_SCHEMA_VERSION),
+  index: Schema.Struct({
+    path: Schema.Literal("index.sqlite"),
+    sha256: PortableManifestSha256Schema,
+    byteLength: PortableManifestByteLengthSchema,
+  }),
+  artifacts: Schema.Array(PortableManifestArtifactSchema),
+  controlledAttachments: PortableControlledAttachmentsSchema,
+});
+export type PortableManifest = Schema.Schema.Type<
+  typeof PortableManifestSchema
+>;
 
 export function exportArtifactIndex(input: {
   readonly dbPath: string;
@@ -2008,7 +2419,7 @@ export function exportArtifactIndex(input: {
   const destination = resolve(input.destination);
   if (existsSync(destination)) fail("Refusing to overwrite portable export.");
   mkdirSync(destination, { recursive: true });
-  const source = openArtifactIndex(input.dbPath);
+  const source = openArtifactIndexReadOnly(input.dbPath);
   const snapshot = resolve(destination, "index.sqlite");
   try {
     source.exec(`VACUUM INTO '${snapshot.replaceAll("'", "''")}'`);
@@ -2017,23 +2428,7 @@ export function exportArtifactIndex(input: {
   }
   const snapshotDb = new DatabaseSync(snapshot);
   const artifactRows = snapshotDb
-    .prepare(
-      `SELECT DISTINCT artifacts.sha256, artifacts.byteLength, artifacts.path
-       FROM artifacts
-       WHERE artifacts.sha256 IN (
-         SELECT transcriptSha256 FROM runs
-         UNION SELECT artifactSha256 FROM runArtifacts
-         UNION SELECT artifactSha256 FROM reviews
-         UNION SELECT auditSha256 FROM reviews WHERE auditSha256 IS NOT NULL
-         UNION SELECT invocationLedgerSha256 FROM reviews WHERE invocationLedgerSha256 IS NOT NULL
-         UNION SELECT extractionArtifactSha256 FROM reviewDrilldowns
-         UNION SELECT provenanceSha256 FROM reviewDrilldowns
-         UNION SELECT evidenceSha256 FROM legacyInventory WHERE evidenceSha256 IS NOT NULL
-         UNION SELECT artifactSha256 FROM scenarioCampaignArtifacts
-         UNION SELECT artifactSha256 FROM scenarioCampaignFindings
-       )
-       ORDER BY artifacts.sha256`,
-    )
+    .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
     .all();
   const updatePortablePath = snapshotDb.prepare(
     "UPDATE artifacts SET path = ? WHERE sha256 = ?",
@@ -2074,13 +2469,14 @@ export function exportArtifactIndex(input: {
   snapshotDb.close();
   const indexBytes = readFileSync(snapshot);
   const manifest: PortableManifest = {
-    schemaVersion: 1,
+    schemaVersion: PORTABLE_MANIFEST_SCHEMA_VERSION,
     index: {
       path: "index.sqlite",
       sha256: sha256(indexBytes),
       byteLength: indexBytes.byteLength,
     },
     artifacts,
+    controlledAttachments: [],
   };
   writeFileSync(
     resolve(destination, "manifest.json"),

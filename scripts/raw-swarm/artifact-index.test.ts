@@ -1,25 +1,33 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import {
   existsSync,
+  linkSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, relative, resolve } from "node:path";
+import { basename, dirname, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import { DatabaseSync } from "node:sqlite";
+import { pathToFileURL } from "node:url";
 
 import { afterEach, describe, expect, test } from "vitest";
 
 import {
+  ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES,
+  artifactIndexLockRootForSource,
   exportArtifactIndex,
   ingestArtifactRun,
   ingestArtifactRunWithArtifacts,
   inventoryLegacyDatabase,
   openArtifactIndex,
+  openArtifactIndexReadOnly,
   rebuildLegacyArtifactIndex,
   registerIndexArtifact,
 } from "./artifact-index.ts";
@@ -40,6 +48,18 @@ function temporaryDirectory(): string {
   const directory = rawSwarmTestOutputDirectory("index-test-");
   temporaryDirectories.push(directory);
   return directory;
+}
+
+function directoryTreeEntries(root: string): readonly string[] {
+  if (!existsSync(root)) return [];
+  return readdirSync(root, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = resolve(root, entry.name);
+      return entry.isDirectory()
+        ? [path, ...directoryTreeEntries(path)]
+        : [path];
+    })
+    .sort();
 }
 
 afterEach(() => {
@@ -916,6 +936,386 @@ describe("Raw Swarm artifact index", () => {
         dbPath: relative(repoRoot, resolve(directory, "index.sqlite")),
       }),
     ).toThrow("do not match the parsed transcript source");
+  });
+
+  test("rejects a non-empty WAL before opening a read-only index", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "uncheckpointed.sqlite");
+    const wal = (() => {
+      const writer = new DatabaseSync(dbPath);
+      try {
+        writer.exec(
+          "PRAGMA journal_mode=WAL; CREATE TABLE committed(value INTEGER); INSERT INTO committed VALUES (1);",
+        );
+        expect(existsSync(`${dbPath}-wal`)).toBe(true);
+        return readFileSync(`${dbPath}-wal`);
+      } finally {
+        writer.close();
+      }
+    })();
+    expect(wal.byteLength).toBeGreaterThan(32);
+    writeFileSync(`${dbPath}-wal`, wal);
+    expect(() => openArtifactIndexReadOnly(relative(repoRoot, dbPath))).toThrow(
+      /non-empty WAL sidecar; checkpoint .* before using a read-only report command/,
+    );
+  });
+
+  test("rejects a symlink to a non-empty WAL before opening a read-only index", () => {
+    const directory = temporaryDirectory();
+    const targetPath = resolve(directory, "target.sqlite");
+    const linkPath = resolve(directory, "linked.sqlite");
+    const wal = (() => {
+      const writer = openArtifactIndex(relative(repoRoot, targetPath));
+      try {
+        writer.exec(
+          "CREATE TABLE walProbe(value INTEGER); INSERT INTO walProbe VALUES (1);",
+        );
+        return readFileSync(`${targetPath}-wal`);
+      } finally {
+        writer.close();
+      }
+    })();
+    expect(wal.byteLength).toBeGreaterThan(32);
+    writeFileSync(`${targetPath}-wal`, wal);
+    symlinkSync(targetPath, linkPath);
+    expect(existsSync(`${linkPath}-wal`)).toBe(false);
+    expect(() =>
+      openArtifactIndexReadOnly(relative(repoRoot, linkPath)),
+    ).toThrow(
+      /non-empty WAL sidecar; checkpoint .* before using a read-only report command/,
+    );
+  });
+
+  test("rejects hard-linked index aliases before lock or WAL checks", () => {
+    const directory = temporaryDirectory();
+    const targetPath = resolve(directory, "target.sqlite");
+    const aliasPath = resolve(directory, "alias.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, targetPath));
+    initial.close();
+    linkSync(targetPath, aliasPath);
+
+    expect(() => openArtifactIndex(relative(repoRoot, aliasPath))).toThrow(
+      /has multiple hard links; refusing an ambiguous WAL\/lock identity/,
+    );
+    expect(() =>
+      openArtifactIndexReadOnly(relative(repoRoot, aliasPath)),
+    ).toThrow(
+      /has multiple hard links; refusing an ambiguous WAL\/lock identity/,
+    );
+  });
+
+  test("holds the read lease for the full read-only connection lifetime", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "lifetime.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+
+    const reader = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    expect(() => openArtifactIndex(relative(repoRoot, dbPath))).toThrow(
+      /cannot be opened for writing while another operation is active/,
+    );
+    reader.close();
+
+    const writer = openArtifactIndex(relative(repoRoot, dbPath));
+    writer.close();
+  });
+
+  test("releases leases through close and Symbol.dispose idempotently", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "dispose-lifetime.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+
+    const disposed = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    expect(() => disposed.open()).toThrow(
+      /connections are managed and cannot be reopened/,
+    );
+    disposed[Symbol.dispose]();
+    expect(() => disposed.close()).not.toThrow();
+    expect(() => disposed.open()).toThrow(
+      /connections are managed and cannot be reopened/,
+    );
+    const writerAfterDispose = openArtifactIndex(relative(repoRoot, dbPath));
+    writerAfterDispose.close();
+
+    const closed = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    closed.close();
+    expect(() => closed[Symbol.dispose]()).not.toThrow();
+    expect(() => closed.open()).toThrow(
+      /connections are managed and cannot be reopened/,
+    );
+  });
+
+  test("uses a neutral contention diagnostic for a second writer", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "writer-contention.sqlite");
+    const first = openArtifactIndex(relative(repoRoot, dbPath));
+    try {
+      expect(() => openArtifactIndex(relative(repoRoot, dbPath))).toThrow(
+        /cannot be opened for writing while another operation is active/,
+      );
+    } finally {
+      first.close();
+    }
+  });
+
+  test("releases a reader lease after its process is terminated", async () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "terminated-reader.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+    const artifactIndexModule = pathToFileURL(
+      resolve(repoRoot, "scripts/raw-swarm/artifact-index.ts"),
+    ).href;
+    const child = spawn(
+      process.execPath,
+      [
+        "--experimental-strip-types",
+        "--input-type=module",
+        "--eval",
+        `import { openArtifactIndexReadOnly } from ${JSON.stringify(artifactIndexModule)};
+openArtifactIndexReadOnly(process.argv[1]);
+process.stdout.write("ready");
+setInterval(() => {}, 1000);`,
+        relative(repoRoot, dbPath),
+      ],
+      {
+        cwd: repoRoot,
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+    const waitForExit = (): Promise<{
+      readonly code: number | null;
+      readonly signal: NodeJS.Signals | null;
+    }> =>
+      new Promise((resolveExit, rejectExit) => {
+        child.once("error", rejectExit);
+        child.once("close", (code, signal) => resolveExit({ code, signal }));
+      });
+    try {
+      await new Promise<void>((resolveReady, rejectReady) => {
+        const timeout = setTimeout(
+          () => rejectReady(new Error("Reader child did not become ready.")),
+          15_000,
+        );
+        child.once("error", (error) => {
+          clearTimeout(timeout);
+          rejectReady(error);
+        });
+        child.stdout?.on("data", (chunk: Buffer) => {
+          if (chunk.toString().includes("ready")) {
+            clearTimeout(timeout);
+            resolveReady();
+          }
+        });
+      });
+      child.kill("SIGKILL");
+      const exit = await waitForExit();
+      expect(exit.code).toBeNull();
+      expect(exit.signal).toBe("SIGKILL");
+    } finally {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill("SIGKILL");
+        await waitForExit().catch(() => undefined);
+      }
+    }
+
+    const writer = openArtifactIndex(relative(repoRoot, dbPath));
+    writer.close();
+  }, 30_000);
+
+  test("blocks a cross-process writer until the read-only connection closes", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "cross-process-lifetime.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+    const entriesBefore = readdirSync(directory).sort();
+    const reader = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    const artifactIndexModule = pathToFileURL(
+      resolve(repoRoot, "scripts/raw-swarm/artifact-index.ts"),
+    ).href;
+    const child = spawnSync(
+      process.execPath,
+      [
+        "--experimental-strip-types",
+        "--input-type=module",
+        "--eval",
+        `import { openArtifactIndex } from ${JSON.stringify(artifactIndexModule)};
+const dbPath = process.argv[1];
+try {
+  const db = openArtifactIndex(dbPath);
+  db.close();
+  process.stdout.write("opened");
+} catch (error) {
+  process.stdout.write(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+}`,
+        relative(repoRoot, dbPath),
+      ],
+      {
+        cwd: repoRoot,
+        encoding: "utf8",
+        timeout: 15_000,
+      },
+    );
+    try {
+      const readerChild = spawnSync(
+        process.execPath,
+        [
+          "--experimental-strip-types",
+          "--input-type=module",
+          "--eval",
+          `import { openArtifactIndexReadOnly } from ${JSON.stringify(artifactIndexModule)};
+const db = openArtifactIndexReadOnly(process.argv[1]);
+db.close();
+process.stdout.write("opened");`,
+          relative(repoRoot, dbPath),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          timeout: 15_000,
+        },
+      );
+      expect(readerChild.error).toBeUndefined();
+      expect(readerChild.status).toBe(0);
+      expect(`${readerChild.stdout}${readerChild.stderr}`).toContain("opened");
+      expect(child.error).toBeUndefined();
+      expect(child.status).toBe(1);
+      expect(`${child.stdout}${child.stderr}`).toMatch(
+        /cannot be opened for writing while another operation is active/,
+      );
+      expect(readdirSync(directory).sort()).toEqual(entriesBefore);
+    } finally {
+      reader.close();
+    }
+
+    const writer = openArtifactIndex(relative(repoRoot, dbPath));
+    writer.close();
+  });
+
+  test("keeps a directly temporary index free of lock artifacts", () => {
+    const dbPath = resolve(
+      tmpdir(),
+      `raw-swarm-direct-index-${randomUUID()}.sqlite`,
+    );
+    const entriesBefore = new Set(readdirSync(tmpdir()));
+    const inTreeLockCandidate = ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES[0];
+    const inTreeCandidateEntriesBefore =
+      directoryTreeEntries(inTreeLockCandidate);
+    const lockDirectory = artifactIndexLockRootForSource(dbPath);
+    expect(lockDirectory).not.toBe(realpathSync(dirname(dbPath)));
+    expect(lockDirectory).toBe(
+      realpathSync(ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES[1]),
+    );
+    try {
+      const db = openArtifactIndex(dbPath);
+      db.close();
+      const entriesAfter = readdirSync(tmpdir());
+      const dbName = basename(dbPath);
+      const sourceFiles = new Set([dbName, `${dbName}-wal`, `${dbName}-shm`]);
+      expect(
+        entriesAfter.filter(
+          (entry) => !entriesBefore.has(entry) && !sourceFiles.has(entry),
+        ),
+      ).toEqual([]);
+      expect(
+        directoryTreeEntries(inTreeLockCandidate).filter(
+          (entry) => !inTreeCandidateEntriesBefore.includes(entry),
+        ),
+      ).toEqual([]);
+    } finally {
+      rmSync(dbPath, { force: true });
+      rmSync(`${dbPath}-wal`, { force: true });
+      rmSync(`${dbPath}-shm`, { force: true });
+    }
+  });
+
+  test.each(ARTIFACT_INDEX_LOCK_ROOT_CANDIDATES)(
+    "keeps an index in lock-root candidate %s free of lock artifacts",
+    (candidate) => {
+      mkdirSync(candidate, { recursive: true });
+      const dbPath = resolve(
+        candidate,
+        `raw-swarm-candidate-index-${randomUUID()}.sqlite`,
+      );
+      const entriesBefore = directoryTreeEntries(candidate);
+      const selectedLockRoot = artifactIndexLockRootForSource(dbPath);
+      expect(selectedLockRoot).not.toBe(realpathSync(candidate));
+      try {
+        const db = openArtifactIndex(dbPath);
+        db.close();
+        expect(
+          directoryTreeEntries(candidate).filter(
+            (entry) =>
+              !entriesBefore.includes(entry) &&
+              entry !== dbPath &&
+              entry !== `${dbPath}-wal` &&
+              entry !== `${dbPath}-shm`,
+          ),
+        ).toEqual([]);
+      } finally {
+        rmSync(dbPath, { force: true });
+        rmSync(`${dbPath}-wal`, { force: true });
+        rmSync(`${dbPath}-shm`, { force: true });
+      }
+    },
+  );
+
+  test("rejects a source root when no lock-root candidate is outside it", () => {
+    expect(() =>
+      artifactIndexLockRootForSource("/raw-swarm-root-source.sqlite"),
+    ).toThrow(/cannot be separated from the source directory tree: \/$/);
+  });
+
+  test("keeps lock identity stable when a child process changes TMPDIR", () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "tmpdir-variance.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+    const reader = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    const alternateTmpdir = mkdtempSync(
+      resolve(tmpdir(), "raw-swarm-alternate-tmpdir-"),
+    );
+    temporaryExternalDirectories.push(alternateTmpdir);
+    const artifactIndexModule = pathToFileURL(
+      resolve(repoRoot, "scripts/raw-swarm/artifact-index.ts"),
+    ).href;
+    try {
+      const child = spawnSync(
+        process.execPath,
+        [
+          "--experimental-strip-types",
+          "--input-type=module",
+          "--eval",
+          `import { openArtifactIndex } from ${JSON.stringify(artifactIndexModule)};
+try {
+  const db = openArtifactIndex(process.argv[1]);
+  db.close();
+  process.stdout.write("opened");
+} catch (error) {
+  process.stdout.write(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+}`,
+          relative(repoRoot, dbPath),
+        ],
+        {
+          cwd: repoRoot,
+          encoding: "utf8",
+          env: { ...process.env, TMPDIR: alternateTmpdir },
+          timeout: 15_000,
+        },
+      );
+      expect(child.error).toBeUndefined();
+      expect(child.status).toBe(1);
+      expect(`${child.stdout}${child.stderr}`).toMatch(
+        /cannot be opened for writing while another operation is active/,
+      );
+    } finally {
+      reader.close();
+    }
+    const writer = openArtifactIndex(relative(repoRoot, dbPath));
+    writer.close();
   });
 
   test("registers controlled attachments in the transcript transaction", () => {
