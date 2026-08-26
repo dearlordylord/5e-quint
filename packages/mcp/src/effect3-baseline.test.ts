@@ -1,5 +1,13 @@
+import { randomUUID } from "node:crypto";
 import { fileURLToPath } from "node:url";
-import { readFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { join } from "node:path";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -87,6 +95,24 @@ describe("Effect 3 migration baseline", () => {
       "malformedOperations",
       "saved",
     ]);
+    const malformedOperations = record(
+      recordField(
+        record(recordField(persistence, "fixtures")),
+        "malformedOperations",
+      ),
+    );
+    expect(
+      recordField(record(recordField(malformedOperations, "value")), "message"),
+    ).toBe("malformedOperationsJson");
+    const manifestPolicy = record(
+      recordField(baseline, "artifactManifestPolicy"),
+    );
+    expect(manifestPolicy).toMatchObject({
+      acceptedFileType: "regular-file",
+      ordering: "Unicode-code-point",
+      pathFormat: "POSIX",
+      source: "git-tracked-index",
+    });
     const surface = record(recordField(baseline, "surface"));
     expect(array(recordField(surface, "publication"))).toHaveLength(2);
     expect(array(recordField(surface, "content"))).toHaveLength(1_215);
@@ -99,5 +125,29 @@ describe("Effect 3 migration baseline", () => {
     );
     const rawSwarm = record(recordField(baseline, "rawSwarm"));
     expect(array(recordField(rawSwarm, "artifacts"))).toHaveLength(76);
+  }, 60_000);
+
+  test("ignores dirty generated Raw Swarm output", () => {
+    const certificatePath = fileURLToPath(
+      new URL(`../../../${EFFECT3_BASELINE_PATH}`, import.meta.url),
+    );
+    const generatedRoot = fileURLToPath(
+      new URL("../../../scripts/raw-swarm/out/", import.meta.url),
+    );
+    const dirtyArtifact = join(
+      generatedRoot,
+      `.effect3-baseline-dirty-${randomUUID()}.json`,
+    );
+    const generatedRootExisted = existsSync(generatedRoot);
+    mkdirSync(generatedRoot, { recursive: true });
+    try {
+      writeFileSync(dirtyArtifact, '{"generated":true}\n', "utf8");
+      expect(renderEffect3Baseline(captureEffect3Baseline())).toBe(
+        readFileSync(certificatePath, "utf8"),
+      );
+    } finally {
+      rmSync(dirtyArtifact, { force: true });
+      if (!generatedRootExisted) rmSync(generatedRoot, { recursive: true });
+    }
   }, 60_000);
 });

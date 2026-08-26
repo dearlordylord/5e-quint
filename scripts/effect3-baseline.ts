@@ -1,13 +1,18 @@
-import { createHash } from "node:crypto";
-import { fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
+import { createHash, randomUUID } from "node:crypto";
+import { constants } from "node:fs";
 import {
-  existsSync,
-  readdirSync,
+  closeSync,
+  fsyncSync,
+  lstatSync,
+  openSync,
   readFileSync,
+  renameSync,
+  rmSync,
   writeFileSync,
-  type Dirent,
 } from "node:fs";
-import { dirname, extname, join, relative, resolve } from "node:path";
+import { dirname, extname, join, posix, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { Either } from "effect";
 import {
@@ -42,6 +47,9 @@ export const EFFECT3_BASELINE_REPLACEMENT_FLAG = "--replace-reviewed-baseline";
 
 const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const JSON_INDENT_SPACES = 2;
+const SURFACE_PUBLICATION_ROOT = "packages/surface/publication";
+const SURFACE_CONTENT_ROOT = "packages/surface/content";
+const RAW_SWARM_ROOT = "scripts/raw-swarm";
 const RAW_SWARM_ARTIFACT_EXTENSIONS = new Set([
   ".json",
   ".jsonl",
@@ -49,6 +57,14 @@ const RAW_SWARM_ARTIFACT_EXTENSIONS = new Set([
   ".sqlite",
   ".txt",
 ]);
+const ARTIFACT_MANIFEST_POLICY = {
+  source: "git-tracked-index",
+  acceptedFileType: "regular-file",
+  pathFormat: "POSIX",
+  ordering: "Unicode-code-point",
+  surfaceRoots: [SURFACE_PUBLICATION_ROOT, SURFACE_CONTENT_ROOT],
+  rawSwarmRoot: RAW_SWARM_ROOT,
+} as const;
 
 export type BaselineJsonValue =
   | null
@@ -65,6 +81,23 @@ type ArtifactAuthority = {
 };
 
 type ToolDefinitionSnapshot = ProtocolToolDefinition;
+
+function compareCodePointStrings(left: string, right: string): number {
+  const leftCodePoints = Array.from(left, (character) =>
+    character.codePointAt(0),
+  );
+  const rightCodePoints = Array.from(right, (character) =>
+    character.codePointAt(0),
+  );
+  const sharedLength = Math.min(leftCodePoints.length, rightCodePoints.length);
+  for (let index = 0; index < sharedLength; index += 1) {
+    const leftCodePoint = leftCodePoints[index];
+    const rightCodePoint = rightCodePoints[index];
+    if (leftCodePoint === rightCodePoint) continue;
+    return leftCodePoint! < rightCodePoint! ? -1 : 1;
+  }
+  return leftCodePoints.length - rightCodePoints.length;
+}
 
 function isPlainRecord(value: object): value is Record<string, unknown> {
   const prototype = Object.getPrototypeOf(value);
@@ -89,7 +122,7 @@ function normalizeObject(
     return Object.fromEntries(
       keys
         .filter((key): key is string => typeof key === "string")
-        .sort()
+        .sort(compareCodePointStrings)
         .map((key) => {
           const descriptor = Object.getOwnPropertyDescriptor(value, key);
           if (
@@ -158,33 +191,114 @@ function sha256(value: Uint8Array | string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function artifactAuthority(path: string): ArtifactAuthority {
-  const bytes = readFileSync(resolve(REPOSITORY_ROOT, path));
-  return { path, byteLength: bytes.byteLength, sha256: sha256(bytes) };
+function repositoryPathFor(path: string): string {
+  if (
+    path.length === 0 ||
+    path.includes("\0") ||
+    path.includes("\\") ||
+    posix.isAbsolute(path) ||
+    posix.normalize(path) !== path ||
+    path.split("/").some((segment) => segment.length === 0)
+  ) {
+    throw new Error(`Artifact path is not canonical POSIX: ${path}`);
+  }
+  return path;
 }
 
-function filesUnder(
-  root: string,
-  include: (path: string, entry: Dirent) => boolean,
-): readonly string[] {
-  const absoluteRoot = resolve(REPOSITORY_ROOT, root);
-  const visit = (directory: string): readonly string[] =>
-    readdirSync(directory, { withFileTypes: true })
-      .sort((left, right) => left.name.localeCompare(right.name))
-      .flatMap((entry) => {
-        const absolutePath = join(directory, entry.name);
-        const repositoryPath = relative(REPOSITORY_ROOT, absolutePath);
-        if (entry.isDirectory()) return visit(absolutePath);
-        return include(repositoryPath, entry) ? [repositoryPath] : [];
-      });
-  return visit(absoluteRoot);
+function absoluteRepositoryPath(path: string): string {
+  const canonicalPath = repositoryPathFor(path);
+  return resolve(REPOSITORY_ROOT, ...canonicalPath.split("/"));
+}
+
+function assertNoSymlinkInRepositoryPath(path: string): void {
+  const canonicalPath = repositoryPathFor(path);
+  let current = REPOSITORY_ROOT;
+  for (const segment of canonicalPath.split("/")) {
+    current = join(current, segment);
+    const status = lstatSync(current);
+    if (status.isSymbolicLink()) {
+      throw new Error(`Artifact path contains a symlink: ${canonicalPath}`);
+    }
+  }
+}
+
+function readRegularRepositoryFile(path: string): Uint8Array {
+  const canonicalPath = repositoryPathFor(path);
+  assertNoSymlinkInRepositoryPath(canonicalPath);
+  const descriptor = openSync(
+    absoluteRepositoryPath(canonicalPath),
+    constants.O_RDONLY | constants.O_NOFOLLOW,
+  );
+  try {
+    return readFileSync(descriptor);
+  } finally {
+    closeSync(descriptor);
+  }
+}
+
+function artifactAuthority(path: string): ArtifactAuthority {
+  const canonicalPath = repositoryPathFor(path);
+  const status = lstatSync(absoluteRepositoryPath(canonicalPath));
+  if (!status.isFile() || status.isSymbolicLink()) {
+    throw new Error(
+      `Artifact path is not a tracked regular file: ${canonicalPath}`,
+    );
+  }
+  const bytes = readRegularRepositoryFile(canonicalPath);
+  return {
+    path: canonicalPath,
+    byteLength: bytes.byteLength,
+    sha256: sha256(bytes),
+  };
+}
+
+type GitTrackedArtifact = {
+  readonly mode: string;
+  readonly path: string;
+};
+
+function gitTrackedArtifacts(root: string): readonly GitTrackedArtifact[] {
+  const canonicalRoot = repositoryPathFor(root);
+  const output = execFileSync(
+    "git",
+    ["ls-files", "--stage", "-z", "--", canonicalRoot],
+    { cwd: REPOSITORY_ROOT },
+  ).toString("utf8");
+  return output
+    .split("\0")
+    .filter((record) => record.length > 0)
+    .map((record) => {
+      const separator = record.indexOf("\t");
+      if (separator < 0) {
+        throw new Error(`Git tracked artifact record is malformed: ${record}`);
+      }
+      const metadata = record.slice(0, separator).split(" ");
+      const mode = metadata[0];
+      const path = repositoryPathFor(record.slice(separator + 1));
+      if (mode !== "100644" && mode !== "100755") {
+        throw new Error(
+          `Git tracked artifact is not a regular file: ${path} (${mode}).`,
+        );
+      }
+      if (!path.startsWith(`${canonicalRoot}/`)) {
+        throw new Error(
+          `Git tracked artifact escapes ${canonicalRoot}: ${path}`,
+        );
+      }
+      assertNoSymlinkInRepositoryPath(path);
+      return { mode, path };
+    })
+    .sort((left, right) => compareCodePointStrings(left.path, right.path));
 }
 
 function artifactManifest(
   root: string,
-  include: (path: string, entry: Dirent) => boolean,
+  include: (path: string) => boolean,
 ): readonly ArtifactAuthority[] {
-  return filesUnder(root, include).map(artifactAuthority);
+  return gitTrackedArtifacts(root)
+    .map(({ path }) => path)
+    .filter(include)
+    .map(artifactAuthority);
 }
 
 function snapshotToolDefinition(
@@ -227,6 +341,23 @@ function eitherSnapshot(value: Either.Either<unknown, unknown>): unknown {
     : { tag: "left", value: value.left };
 }
 
+function persistedSessionSnapshot(
+  value: Either.Either<unknown, unknown>,
+  stableFailureReason?: "malformedOperationsJson",
+): unknown {
+  if (Either.isRight(value) || stableFailureReason === undefined) {
+    return eitherSnapshot(value);
+  }
+  return {
+    tag: "left",
+    value: {
+      tag: "playSessionRepositoryIssue",
+      reason: "invalidStoredRecord",
+      message: stableFailureReason,
+    },
+  };
+}
+
 function requirePlaySessionId(value: string) {
   const decoded = decodePlaySessionId(value);
   if (Either.isLeft(decoded)) {
@@ -240,8 +371,12 @@ function requirePlaySessionId(value: string) {
 function decodePersistedSessionFixture(
   row: Readonly<Record<string, unknown>>,
   playSessionId: ReturnType<typeof requirePlaySessionId>,
+  stableFailureReason?: "malformedOperationsJson",
 ): unknown {
-  return eitherSnapshot(decodeStoredPlaySessionRecord(row, playSessionId));
+  return persistedSessionSnapshot(
+    decodeStoredPlaySessionRecord(row, playSessionId),
+    stableFailureReason,
+  );
 }
 
 function capturePersistedSessionFixtures(): Readonly<Record<string, unknown>> {
@@ -300,6 +435,7 @@ function capturePersistedSessionFixtures(): Readonly<Record<string, unknown>> {
         principal_id: null,
       },
       playSessionId,
+      "malformedOperationsJson",
     ),
   };
 }
@@ -385,9 +521,11 @@ export function captureEffect3Baseline(): Readonly<Record<string, unknown>> {
     formatVersion: 1,
     normalization: {
       versionBearingPaths: [],
+      persistedJsonFailureReason: "malformedOperationsJson",
       policy:
-        "No version-bearing MCP response field is captured. If a future capture adds one, it must name the exact path here before normalization.",
+        "No version-bearing MCP response field is captured. Malformed persisted operations JSON uses a stable typed reason instead of parser prose. If a future capture adds a version-bearing field, it must name the exact path here before normalization.",
     },
+    artifactManifestPolicy: ARTIFACT_MANIFEST_POLICY,
     mcp: {
       registeredOrder: registeredDefinitions.map(({ name }) => name),
       registered: snapshotDefinitions(registeredDefinitions),
@@ -396,8 +534,8 @@ export function captureEffect3Baseline(): Readonly<Record<string, unknown>> {
       modelFacingOutputSchemas: modelFacingSchemas,
     },
     surface: {
-      publication: artifactManifest("packages/surface/publication", () => true),
-      content: artifactManifest("packages/surface/content", () => true),
+      publication: artifactManifest(SURFACE_PUBLICATION_ROOT, () => true),
+      content: artifactManifest(SURFACE_CONTENT_ROOT, () => true),
     },
     persistence: {
       formatVersion: 2,
@@ -405,7 +543,7 @@ export function captureEffect3Baseline(): Readonly<Record<string, unknown>> {
     },
     reducers: captureReducerFixtures(),
     rawSwarm: {
-      artifacts: artifactManifest("scripts/raw-swarm", (path) =>
+      artifacts: artifactManifest(RAW_SWARM_ROOT, (path) =>
         RAW_SWARM_ARTIFACT_EXTENSIONS.has(extname(path)),
       ),
     },
@@ -419,29 +557,111 @@ export function renderEffect3Baseline(
 }
 
 function baselinePath(): string {
-  return resolve(REPOSITORY_ROOT, EFFECT3_BASELINE_PATH);
+  return absoluteRepositoryPath(EFFECT3_BASELINE_PATH);
+}
+
+function isMissingPathError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === "ENOENT"
+  );
+}
+
+function certificateTarget(path: string): "missing" | "regular" {
+  const canonicalPath = repositoryPathFor(path);
+  assertNoSymlinkInRepositoryPath(posix.dirname(canonicalPath));
+  try {
+    const status = lstatSync(absoluteRepositoryPath(canonicalPath));
+    if (status.isSymbolicLink()) {
+      throw new Error(`Refusing to follow certificate symlink: ${path}`);
+    }
+    if (!status.isFile()) {
+      throw new Error(`Certificate path is not a regular file: ${path}`);
+    }
+    return "regular";
+  } catch (error) {
+    if (isMissingPathError(error)) return "missing";
+    throw error;
+  }
+}
+
+function writeCertificateExclusively(path: string, content: string): void {
+  const descriptor = openSync(
+    path,
+    constants.O_CREAT |
+      constants.O_EXCL |
+      constants.O_NOFOLLOW |
+      constants.O_WRONLY,
+    0o644,
+  );
+  try {
+    writeFileSync(descriptor, content, "utf8");
+    fsyncSync(descriptor);
+  } catch (error) {
+    closeSync(descriptor);
+    rmSync(path, { force: true });
+    throw error;
+  }
+  closeSync(descriptor);
+}
+
+function writeCertificateReplacement(path: string, content: string): void {
+  const temporaryPath = `${path}.${randomUUID()}.next`;
+  const descriptor = openSync(
+    temporaryPath,
+    constants.O_CREAT |
+      constants.O_EXCL |
+      constants.O_NOFOLLOW |
+      constants.O_WRONLY,
+    0o600,
+  );
+  try {
+    writeFileSync(descriptor, content, "utf8");
+    fsyncSync(descriptor);
+    closeSync(descriptor);
+  } catch (error) {
+    closeSync(descriptor);
+    rmSync(temporaryPath, { force: true });
+    throw error;
+  }
+  try {
+    renameSync(temporaryPath, path);
+  } catch (error) {
+    rmSync(temporaryPath, { force: true });
+    throw error;
+  }
 }
 
 function capture(replaceReviewedBaseline: boolean): void {
+  const relativePath = repositoryPathFor(EFFECT3_BASELINE_PATH);
   const path = baselinePath();
-  if (existsSync(path) && !replaceReviewedBaseline) {
+  const target = certificateTarget(relativePath);
+  if (target === "regular" && !replaceReviewedBaseline) {
     throw new Error(
       `Refusing to replace ${EFFECT3_BASELINE_PATH}. Pass ${EFFECT3_BASELINE_REPLACEMENT_FLAG} only for an explicitly reviewed baseline replacement.`,
     );
   }
   const content = renderEffect3Baseline(captureEffect3Baseline());
-  writeFileSync(path, content, "utf8");
+  if (target === "missing") {
+    writeCertificateExclusively(path, content);
+  } else {
+    writeCertificateReplacement(path, content);
+  }
   console.log(
     `Captured Effect 3 baseline: ${EFFECT3_BASELINE_PATH} (${sha256(content)})`,
   );
 }
 
 function verify(): void {
-  const path = baselinePath();
-  if (!existsSync(path)) {
+  const relativePath = repositoryPathFor(EFFECT3_BASELINE_PATH);
+  if (certificateTarget(relativePath) === "missing") {
     throw new Error(`Missing Effect 3 baseline: ${EFFECT3_BASELINE_PATH}`);
   }
-  const expected = readFileSync(path, "utf8");
+  const expected = new TextDecoder().decode(
+    readRegularRepositoryFile(relativePath),
+  );
   JSON.parse(expected);
   const actual = renderEffect3Baseline(captureEffect3Baseline());
   if (actual !== expected) {

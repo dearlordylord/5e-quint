@@ -1,4 +1,15 @@
 {
+  "artifactManifestPolicy": {
+    "acceptedFileType": "regular-file",
+    "ordering": "Unicode-code-point",
+    "pathFormat": "POSIX",
+    "rawSwarmRoot": "scripts/raw-swarm",
+    "source": "git-tracked-index",
+    "surfaceRoots": [
+      "packages/surface/publication",
+      "packages/surface/content"
+    ]
+  },
   "formatVersion": 1,
   "mcp": {
     "advertised": {
@@ -176620,7 +176631,8 @@
     ]
   },
   "normalization": {
-    "policy": "No version-bearing MCP response field is captured. If a future capture adds one, it must name the exact path here before normalization.",
+    "persistedJsonFailureReason": "malformedOperationsJson",
+    "policy": "No version-bearing MCP response field is captured. Malformed persisted operations JSON uses a stable typed reason instead of parser prose. If a future capture adds a version-bearing field, it must name the exact path here before normalization.",
     "versionBearingPaths": []
   },
   "persistence": {
@@ -176663,7 +176675,7 @@
       "malformedOperations": {
         "tag": "left",
         "value": {
-          "message": "SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)",
+          "message": "malformedOperationsJson",
           "reason": "invalidStoredRecord",
           "tag": "playSessionRepositoryIssue"
         }
@@ -176706,16 +176718,6 @@
         "sha256": "22df56c3b820c2f6ef49f541144874d4e6f4b0328e579e896c7389994251c346"
       },
       {
-        "byteLength": 2664,
-        "path": "scripts/raw-swarm/examples/clean-sqlite-execution-row-2-player-example.md",
-        "sha256": "63883c7aa59b2b9f600cbb671fa002a6091d39fd3ef3963dac80b44fd4b79d2a"
-      },
-      {
-        "byteLength": 500,
-        "path": "scripts/raw-swarm/freeplay/freeplay-001-goblin-warrior-vs-skeleton.prompt.txt",
-        "sha256": "1dfdb2f498d13685e178c70b8e4fec058a2d4232d17cf484c45b954f717b782b"
-      },
-      {
         "byteLength": 68382,
         "path": "scripts/raw-swarm/OPERATIONS.md",
         "sha256": "5eb897b1bce2e9f944e85fe01e58c28f8d0801bb4085907ecc44ded4ee9eeb12"
@@ -176726,16 +176728,6 @@
         "sha256": "0934fc4b6995a05e5c13fded02d3b6aaf2ee87901725a1c2f57d047babb106cd"
       },
       {
-        "byteLength": 1507,
-        "path": "scripts/raw-swarm/reviews/freeplay-001-goblin-warrior-vs-skeleton.prompt.txt",
-        "sha256": "1fd866f8450fa839b37edba3507bc45c4ace6b5cb606677a969445f3e9562975"
-      },
-      {
-        "byteLength": 4991,
-        "path": "scripts/raw-swarm/reviews/sdk-player.prompt.txt",
-        "sha256": "eef49e1d1502c556e231d5671a4de754f7243dd870648f6773d03b1f5bf78059"
-      },
-      {
         "byteLength": 10421,
         "path": "scripts/raw-swarm/SCENARIO_AUTHORING.md",
         "sha256": "9f1f2601ab4245b53162ae16c44feba30c248c6fedf52728cafa3d66dd6547bd"
@@ -176744,6 +176736,26 @@
         "byteLength": 4025,
         "path": "scripts/raw-swarm/SCENARIO_EXECUTION.md",
         "sha256": "ebc34f7c7f9c02f6e73d319ec36486224deb3a4604b3ec1240157588bc326121"
+      },
+      {
+        "byteLength": 2664,
+        "path": "scripts/raw-swarm/examples/clean-sqlite-execution-row-2-player-example.md",
+        "sha256": "63883c7aa59b2b9f600cbb671fa002a6091d39fd3ef3963dac80b44fd4b79d2a"
+      },
+      {
+        "byteLength": 500,
+        "path": "scripts/raw-swarm/freeplay/freeplay-001-goblin-warrior-vs-skeleton.prompt.txt",
+        "sha256": "1dfdb2f498d13685e178c70b8e4fec058a2d4232d17cf484c45b954f717b782b"
+      },
+      {
+        "byteLength": 1507,
+        "path": "scripts/raw-swarm/reviews/freeplay-001-goblin-warrior-vs-skeleton.prompt.txt",
+        "sha256": "1fd866f8450fa839b37edba3507bc45c4ace6b5cb606677a969445f3e9562975"
+      },
+      {
+        "byteLength": 4991,
+        "path": "scripts/raw-swarm/reviews/sdk-player.prompt.txt",
+        "sha256": "eef49e1d1502c556e231d5671a4de754f7243dd870648f6773d03b1f5bf78059"
       },
       {
         "byteLength": 1320,
@@ -176786,11 +176798,6 @@
         "sha256": "f4b1133ad030cec25a0541211a7097162be16308829490e21b23e80657764f83"
       },
       {
-        "byteLength": 1462,
-        "path": "scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
-        "sha256": "5a1794b004fc42913ebf8243f64e61601894b10106de89fa847d73aaf9ec049d"
-      },
-      {
         "byteLength": 11577,
         "path": "scripts/raw-swarm/sdk-player/PLAYER.md",
         "sha256": "73b2071b2c0ec611d53cfbd2d47ae4a940ab53a6d7c76d7b54ab4e3c94bd6012"
@@ -176801,14 +176808,19 @@
         "sha256": "af2f2b8f4cfe5bfdfe87ed61bcf0d9bab9b43b80f62613fc821071c43c53a944"
       },
       {
+        "byteLength": 6320,
+        "path": "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md",
+        "sha256": "eac30d42e115607a7761a79cb76ffefbafcc81c9e7d4bfa8a63301ed067c6a5e"
+      },
+      {
         "byteLength": 2439,
         "path": "scripts/raw-swarm/sdk-player/SCENARIO_SETUP_CONTROLLER.md",
         "sha256": "59d49f01045fc2ba47615a5066e5644303b6b1048bb4943a0c65ea1032f9e9ff"
       },
       {
-        "byteLength": 6320,
-        "path": "scripts/raw-swarm/sdk-player/SCENARIO_SETUP.md",
-        "sha256": "eac30d42e115607a7761a79cb76ffefbafcc81c9e7d4bfa8a63301ed067c6a5e"
+        "byteLength": 1462,
+        "path": "scripts/raw-swarm/sdk-player/declarations.tsconfig.json",
+        "sha256": "5a1794b004fc42913ebf8243f64e61601894b10106de89fa847d73aaf9ec049d"
       },
       {
         "byteLength": 3006,
@@ -178396,16 +178408,6 @@
         "sha256": "651be25d604a46ab9a35bc834a94ec8c379c441f3da949e88e0faa30e5ddcee4"
       },
       {
-        "byteLength": 878,
-        "path": "packages/surface/content/commune_with_nature.dhall",
-        "sha256": "e8962881127d981ecab3f12af18fd263e9034ebeb30d0bee5856a692be4496b5"
-      },
-      {
-        "byteLength": 764,
-        "path": "packages/surface/content/commune_with_nature.json",
-        "sha256": "185aa234f2a4b542bde85b69a1d280795fbf73a15c184163df4c8c7e092b970d"
-      },
-      {
         "byteLength": 847,
         "path": "packages/surface/content/commune.dhall",
         "sha256": "7958620eb8dbd4954a7f694a5315fbe9793770c237ce711ad80c742a5cf60e91"
@@ -178414,6 +178416,16 @@
         "byteLength": 796,
         "path": "packages/surface/content/commune.json",
         "sha256": "508a0588fd2bca6b7a1fb7add4e7e88b0a3ed6c2f7e4e5dfafa7a0bf23b07dec"
+      },
+      {
+        "byteLength": 878,
+        "path": "packages/surface/content/commune_with_nature.dhall",
+        "sha256": "e8962881127d981ecab3f12af18fd263e9034ebeb30d0bee5856a692be4496b5"
+      },
+      {
+        "byteLength": 764,
+        "path": "packages/surface/content/commune_with_nature.json",
+        "sha256": "185aa234f2a4b542bde85b69a1d280795fbf73a15c184163df4c8c7e092b970d"
       },
       {
         "byteLength": 1760,
@@ -178586,16 +178598,6 @@
         "sha256": "13ee078cd876d458948483fb548372ea9e624a0d037ba47b5af815de58106576"
       },
       {
-        "byteLength": 764,
-        "path": "packages/surface/content/darkvision_elf.dhall",
-        "sha256": "519f7354d37838db91c982e61f853bb2b0403b9518ea25a3cde4ff2a9b27a500"
-      },
-      {
-        "byteLength": 377,
-        "path": "packages/surface/content/darkvision_elf.json",
-        "sha256": "f76065ac02b6d6d140087f7daaa3c1ea724a8a725e5aa902255b6f7173ef033d"
-      },
-      {
         "byteLength": 2004,
         "path": "packages/surface/content/darkvision.dhall",
         "sha256": "19a77fe5564ad9c97693bf7afef0b0fc2efbb9306f8b945a9934b1336f116918"
@@ -178604,6 +178606,16 @@
         "byteLength": 1170,
         "path": "packages/surface/content/darkvision.json",
         "sha256": "b343f8e5785e0a80bcffce5370a515a1df041c9f0f8e9d05d21adfac32ace5ea"
+      },
+      {
+        "byteLength": 764,
+        "path": "packages/surface/content/darkvision_elf.dhall",
+        "sha256": "519f7354d37838db91c982e61f853bb2b0403b9518ea25a3cde4ff2a9b27a500"
+      },
+      {
+        "byteLength": 377,
+        "path": "packages/surface/content/darkvision_elf.json",
+        "sha256": "f76065ac02b6d6d140087f7daaa3c1ea724a8a725e5aa902255b6f7173ef033d"
       },
       {
         "byteLength": 3010,
@@ -181836,16 +181848,6 @@
         "sha256": "d01b49315867d6dca3ade4b71d57dd0a40c4d1412b8c8bb8190299c12ff4ee3f"
       },
       {
-        "byteLength": 2106,
-        "path": "packages/surface/content/shield_of_faith.dhall",
-        "sha256": "8214e43cc0e28b228862be6e7dcd809f821e67251cf5ae941185cb7897ff45ba"
-      },
-      {
-        "byteLength": 1260,
-        "path": "packages/surface/content/shield_of_faith.json",
-        "sha256": "a0690f5b4949a737d96f3ffcd9f77b881677809f9007b3b9ed8a6f7bf20b0643"
-      },
-      {
         "byteLength": 2527,
         "path": "packages/surface/content/shield.dhall",
         "sha256": "fddef72005d518489a3ae519bc3c7aae952ee6c33b66a2db12e7fada10eb57b2"
@@ -181854,6 +181856,16 @@
         "byteLength": 1353,
         "path": "packages/surface/content/shield.json",
         "sha256": "d17ef51b3ee72de9e902e987f213a958325cfca79d5ea91ed3c77517728e9b38"
+      },
+      {
+        "byteLength": 2106,
+        "path": "packages/surface/content/shield_of_faith.dhall",
+        "sha256": "8214e43cc0e28b228862be6e7dcd809f821e67251cf5ae941185cb7897ff45ba"
+      },
+      {
+        "byteLength": 1260,
+        "path": "packages/surface/content/shield_of_faith.json",
+        "sha256": "a0690f5b4949a737d96f3ffcd9f77b881677809f9007b3b9ed8a6f7bf20b0643"
       },
       {
         "byteLength": 3924,
@@ -182056,6 +182068,16 @@
         "sha256": "28462bb58d3bbc4b663c7d7a40b9f7245981c6156faed1c93465dc717cdc7a14"
       },
       {
+        "byteLength": 1636,
+        "path": "packages/surface/content/species_dragonborn.dhall",
+        "sha256": "f6e1adc0fa87e9f0b7263069cd8052cc548cfc45a6afeff2f0ad28d94f564068"
+      },
+      {
+        "byteLength": 1877,
+        "path": "packages/surface/content/species_dragonborn.json",
+        "sha256": "711317c7eeb1b72e9998dae4e7374101a2e595a5c8a02f3b37128e7f7298c1fc"
+      },
+      {
         "byteLength": 3907,
         "path": "packages/surface/content/species_dragonborn_breath_weapon.dhall",
         "sha256": "854e86728c79e3429ba2ae37b2f22b77bc2ff917a426b0d857ce6126462b5691"
@@ -182086,14 +182108,14 @@
         "sha256": "a3763884615e724fc8c637889377a5412f57cbb82fd3afba20826257847d136a"
       },
       {
-        "byteLength": 1636,
-        "path": "packages/surface/content/species_dragonborn.dhall",
-        "sha256": "f6e1adc0fa87e9f0b7263069cd8052cc548cfc45a6afeff2f0ad28d94f564068"
+        "byteLength": 569,
+        "path": "packages/surface/content/species_dwarf.dhall",
+        "sha256": "1e8f53112cfae4a88e833d83a02f4d387c7e887e04554194194703f837f50cd6"
       },
       {
-        "byteLength": 1877,
-        "path": "packages/surface/content/species_dragonborn.json",
-        "sha256": "711317c7eeb1b72e9998dae4e7374101a2e595a5c8a02f3b37128e7f7298c1fc"
+        "byteLength": 499,
+        "path": "packages/surface/content/species_dwarf.json",
+        "sha256": "b6822212079c3c718c9f48e18f17d3b20d4d4704acf34a531fd4b1fb032c4e1b"
       },
       {
         "byteLength": 772,
@@ -182126,16 +182148,6 @@
         "sha256": "f29252f1ca53fc39390fa41e314215314fdd937ac767e27aa3cb3a78af323689"
       },
       {
-        "byteLength": 569,
-        "path": "packages/surface/content/species_dwarf.dhall",
-        "sha256": "1e8f53112cfae4a88e833d83a02f4d387c7e887e04554194194703f837f50cd6"
-      },
-      {
-        "byteLength": 499,
-        "path": "packages/surface/content/species_dwarf.json",
-        "sha256": "b6822212079c3c718c9f48e18f17d3b20d4d4704acf34a531fd4b1fb032c4e1b"
-      },
-      {
         "byteLength": 429,
         "path": "packages/surface/content/species_elf.dhall",
         "sha256": "224937ff06f8fcf86dc0e8860ab6d158aae13263fe1a83c84e4680b7ddeb8c48"
@@ -182144,6 +182156,16 @@
         "byteLength": 387,
         "path": "packages/surface/content/species_elf.json",
         "sha256": "04a40d48a031ac62308ed357937aca9a4497c7eae6d6296e6bfa1c0a6b6f431a"
+      },
+      {
+        "byteLength": 582,
+        "path": "packages/surface/content/species_gnome.dhall",
+        "sha256": "c39495fa53e4b6024161bee287359e9df04ac6f6066f9bb0c23803c150123f34"
+      },
+      {
+        "byteLength": 512,
+        "path": "packages/surface/content/species_gnome.json",
+        "sha256": "8f5427f7f0a0d095fcaea6bd85c9390092597a8ad648a405a244d1be6031a469"
       },
       {
         "byteLength": 501,
@@ -182176,14 +182198,14 @@
         "sha256": "79882f31a3d8bd2a994b2aecd5d1dc393c46bff8abd36c1eb48e06c93da1cdc1"
       },
       {
-        "byteLength": 582,
-        "path": "packages/surface/content/species_gnome.dhall",
-        "sha256": "c39495fa53e4b6024161bee287359e9df04ac6f6066f9bb0c23803c150123f34"
+        "byteLength": 468,
+        "path": "packages/surface/content/species_goliath.dhall",
+        "sha256": "24b12350079a8fd3f5d8a5e7ba2ab20b073e7fe7c486f76a6d051a87fef2a931"
       },
       {
-        "byteLength": 512,
-        "path": "packages/surface/content/species_gnome.json",
-        "sha256": "8f5427f7f0a0d095fcaea6bd85c9390092597a8ad648a405a244d1be6031a469"
+        "byteLength": 418,
+        "path": "packages/surface/content/species_goliath.json",
+        "sha256": "ec943e7e8aa2fa2713d3d20addae0ade707460930853bed47d3bea3830eae19a"
       },
       {
         "byteLength": 1212,
@@ -182196,14 +182218,14 @@
         "sha256": "2fa5989e038b80438530ce4e9bb8d7069d8246aaac9d9fe38243813c3de625b1"
       },
       {
-        "byteLength": 468,
-        "path": "packages/surface/content/species_goliath.dhall",
-        "sha256": "24b12350079a8fd3f5d8a5e7ba2ab20b073e7fe7c486f76a6d051a87fef2a931"
+        "byteLength": 642,
+        "path": "packages/surface/content/species_halfling.dhall",
+        "sha256": "773af79006d9f5ee75f6f86eeb950a1bf5a86277ae07fb4c94822a29caf3591d"
       },
       {
-        "byteLength": 418,
-        "path": "packages/surface/content/species_goliath.json",
-        "sha256": "ec943e7e8aa2fa2713d3d20addae0ade707460930853bed47d3bea3830eae19a"
+        "byteLength": 562,
+        "path": "packages/surface/content/species_halfling.json",
+        "sha256": "7575c51ff8e722a44a9a2569edc9e3be2f1849099682c03c846ed0f52aea738d"
       },
       {
         "byteLength": 562,
@@ -182246,14 +182268,14 @@
         "sha256": "803f83ea214693efe1558af3288cb636e493acde32ef4568fcbd1a4d735fdaca"
       },
       {
-        "byteLength": 642,
-        "path": "packages/surface/content/species_halfling.dhall",
-        "sha256": "773af79006d9f5ee75f6f86eeb950a1bf5a86277ae07fb4c94822a29caf3591d"
+        "byteLength": 578,
+        "path": "packages/surface/content/species_human.dhall",
+        "sha256": "957e7740b6ff52b4b9f12837f69d401cfad233686fe65f1b1d6ce9a7472e8016"
       },
       {
-        "byteLength": 562,
-        "path": "packages/surface/content/species_halfling.json",
-        "sha256": "7575c51ff8e722a44a9a2569edc9e3be2f1849099682c03c846ed0f52aea738d"
+        "byteLength": 524,
+        "path": "packages/surface/content/species_human.json",
+        "sha256": "262f23c0d1b5db9aa6bc43a5d70553c5f29b7d4288d0fdbe86941ffc3c828fd7"
       },
       {
         "byteLength": 489,
@@ -182286,14 +182308,14 @@
         "sha256": "a4968eb8d82f8b1b3db2c7380b4f3320d010f483beac2611466de0ed7998e5e3"
       },
       {
-        "byteLength": 578,
-        "path": "packages/surface/content/species_human.dhall",
-        "sha256": "957e7740b6ff52b4b9f12837f69d401cfad233686fe65f1b1d6ce9a7472e8016"
+        "byteLength": 553,
+        "path": "packages/surface/content/species_orc.dhall",
+        "sha256": "ed534c333f4e84befdba41ba2b929df0e3400b97dbc761a73f4eb2a051d7134c"
       },
       {
-        "byteLength": 524,
-        "path": "packages/surface/content/species_human.json",
-        "sha256": "262f23c0d1b5db9aa6bc43a5d70553c5f29b7d4288d0fdbe86941ffc3c828fd7"
+        "byteLength": 487,
+        "path": "packages/surface/content/species_orc.json",
+        "sha256": "16abe702e855ba186187a8cff3d88ee7afc317c71654c65cabc30b785d04031f"
       },
       {
         "byteLength": 514,
@@ -182306,14 +182328,14 @@
         "sha256": "b5b7f1c9cba03ce2c411c12db6962b68717888e6f06f9ddd3b6229dc22870c6a"
       },
       {
-        "byteLength": 553,
-        "path": "packages/surface/content/species_orc.dhall",
-        "sha256": "ed534c333f4e84befdba41ba2b929df0e3400b97dbc761a73f4eb2a051d7134c"
+        "byteLength": 484,
+        "path": "packages/surface/content/species_tiefling.dhall",
+        "sha256": "83302110f87258707a9454f62a1c6aa468c894297fe0392ec49c2fc9f1cb7419"
       },
       {
-        "byteLength": 487,
-        "path": "packages/surface/content/species_orc.json",
-        "sha256": "16abe702e855ba186187a8cff3d88ee7afc317c71654c65cabc30b785d04031f"
+        "byteLength": 448,
+        "path": "packages/surface/content/species_tiefling.json",
+        "sha256": "349f7a7d279d48938a7922a56459b5a8b2cf0fee19f5819f36ee7593c40e4047"
       },
       {
         "byteLength": 904,
@@ -182324,16 +182346,6 @@
         "byteLength": 381,
         "path": "packages/surface/content/species_tiefling_darkvision.json",
         "sha256": "2a9031b7c6e0fd7b259d568c8d3157fd902fe07bb40d4e08385dfb9475db8b87"
-      },
-      {
-        "byteLength": 484,
-        "path": "packages/surface/content/species_tiefling.dhall",
-        "sha256": "83302110f87258707a9454f62a1c6aa468c894297fe0392ec49c2fc9f1cb7419"
-      },
-      {
-        "byteLength": 448,
-        "path": "packages/surface/content/species_tiefling.json",
-        "sha256": "349f7a7d279d48938a7922a56459b5a8b2cf0fee19f5819f36ee7593c40e4047"
       },
       {
         "byteLength": 2911,
