@@ -260,7 +260,6 @@ function artifactAuthority(path: string): ArtifactAuthority {
 }
 
 type GitTrackedArtifact = {
-  readonly mode: string;
   readonly path: string;
 };
 
@@ -293,7 +292,7 @@ function gitTrackedArtifacts(root: string): readonly GitTrackedArtifact[] {
         );
       }
       assertNoSymlinkInRepositoryPath(path);
-      return { mode, path };
+      return { path };
     })
     .sort((left, right) => compareCodePointStrings(left.path, right.path));
 }
