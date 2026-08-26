@@ -1,4 +1,4 @@
-import { execFileSync, spawnSync } from "node:child_process";
+import { execFileSync, spawn, spawnSync } from "node:child_process";
 import {
   existsSync,
   linkSync,
@@ -925,18 +925,18 @@ describe("Raw Swarm artifact index", () => {
   test("rejects a non-empty WAL before opening a read-only index", () => {
     const directory = temporaryDirectory();
     const dbPath = resolve(directory, "uncheckpointed.sqlite");
-    const writer = new DatabaseSync(dbPath);
-    let wal: Buffer | undefined;
-    try {
-      writer.exec(
-        "PRAGMA journal_mode=WAL; CREATE TABLE committed(value INTEGER); INSERT INTO committed VALUES (1);",
-      );
-      expect(existsSync(`${dbPath}-wal`)).toBe(true);
-      wal = readFileSync(`${dbPath}-wal`);
-    } finally {
-      writer.close();
-    }
-    if (wal === undefined) throw new Error("WAL fixture was not created.");
+    const wal = (() => {
+      const writer = new DatabaseSync(dbPath);
+      try {
+        writer.exec(
+          "PRAGMA journal_mode=WAL; CREATE TABLE committed(value INTEGER); INSERT INTO committed VALUES (1);",
+        );
+        expect(existsSync(`${dbPath}-wal`)).toBe(true);
+        return readFileSync(`${dbPath}-wal`);
+      } finally {
+        writer.close();
+      }
+    })();
     expect(wal.byteLength).toBeGreaterThan(32);
     writeFileSync(`${dbPath}-wal`, wal);
     expect(() => openArtifactIndexReadOnly(relative(repoRoot, dbPath))).toThrow(
@@ -948,17 +948,17 @@ describe("Raw Swarm artifact index", () => {
     const directory = temporaryDirectory();
     const targetPath = resolve(directory, "target.sqlite");
     const linkPath = resolve(directory, "linked.sqlite");
-    const writer = openArtifactIndex(relative(repoRoot, targetPath));
-    let wal: Buffer | undefined;
-    try {
-      writer.exec(
-        "CREATE TABLE walProbe(value INTEGER); INSERT INTO walProbe VALUES (1);",
-      );
-      wal = readFileSync(`${targetPath}-wal`);
-    } finally {
-      writer.close();
-    }
-    if (wal === undefined) throw new Error("WAL fixture was not created.");
+    const wal = (() => {
+      const writer = openArtifactIndex(relative(repoRoot, targetPath));
+      try {
+        writer.exec(
+          "CREATE TABLE walProbe(value INTEGER); INSERT INTO walProbe VALUES (1);",
+        );
+        return readFileSync(`${targetPath}-wal`);
+      } finally {
+        writer.close();
+      }
+    })();
     expect(wal.byteLength).toBeGreaterThan(32);
     writeFileSync(`${targetPath}-wal`, wal);
     symlinkSync(targetPath, linkPath);
@@ -1011,14 +1011,23 @@ describe("Raw Swarm artifact index", () => {
     initial.close();
 
     const disposed = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
+    expect(() => disposed.open()).toThrow(
+      /connections are managed and cannot be reopened/,
+    );
     disposed[Symbol.dispose]();
     expect(() => disposed.close()).not.toThrow();
+    expect(() => disposed.open()).toThrow(
+      /connections are managed and cannot be reopened/,
+    );
     const writerAfterDispose = openArtifactIndex(relative(repoRoot, dbPath));
     writerAfterDispose.close();
 
     const closed = openArtifactIndexReadOnly(relative(repoRoot, dbPath));
     closed.close();
     expect(() => closed[Symbol.dispose]()).not.toThrow();
+    expect(() => closed.open()).toThrow(
+      /connections are managed and cannot be reopened/,
+    );
   });
 
   test("uses a neutral contention diagnostic for a second writer", () => {
@@ -1033,6 +1042,71 @@ describe("Raw Swarm artifact index", () => {
       first.close();
     }
   });
+
+  test("releases a reader lease after its process is terminated", async () => {
+    const directory = temporaryDirectory();
+    const dbPath = resolve(directory, "terminated-reader.sqlite");
+    const initial = openArtifactIndex(relative(repoRoot, dbPath));
+    initial.close();
+    const artifactIndexModule = pathToFileURL(
+      resolve(repoRoot, "scripts/raw-swarm/artifact-index.ts"),
+    ).href;
+    const child = spawn(
+      process.execPath,
+      [
+        "--experimental-strip-types",
+        "--input-type=module",
+        "--eval",
+        `import { openArtifactIndexReadOnly } from ${JSON.stringify(artifactIndexModule)};
+openArtifactIndexReadOnly(process.argv[1]);
+process.stdout.write("ready");
+setInterval(() => {}, 1000);`,
+        relative(repoRoot, dbPath),
+      ],
+      {
+        cwd: repoRoot,
+        stdio: ["ignore", "pipe", "pipe"],
+      },
+    );
+    const waitForExit = (): Promise<{
+      readonly code: number | null;
+      readonly signal: NodeJS.Signals | null;
+    }> =>
+      new Promise((resolveExit, rejectExit) => {
+        child.once("error", rejectExit);
+        child.once("close", (code, signal) => resolveExit({ code, signal }));
+      });
+    try {
+      await new Promise<void>((resolveReady, rejectReady) => {
+        const timeout = setTimeout(
+          () => rejectReady(new Error("Reader child did not become ready.")),
+          15_000,
+        );
+        child.once("error", (error) => {
+          clearTimeout(timeout);
+          rejectReady(error);
+        });
+        child.stdout?.on("data", (chunk: Buffer) => {
+          if (chunk.toString().includes("ready")) {
+            clearTimeout(timeout);
+            resolveReady();
+          }
+        });
+      });
+      child.kill("SIGKILL");
+      const exit = await waitForExit();
+      expect(exit.code).toBeNull();
+      expect(exit.signal).toBe("SIGKILL");
+    } finally {
+      if (child.exitCode === null && child.signalCode === null) {
+        child.kill("SIGKILL");
+        await waitForExit().catch(() => undefined);
+      }
+    }
+
+    const writer = openArtifactIndex(relative(repoRoot, dbPath));
+    writer.close();
+  }, 30_000);
 
   test("blocks a cross-process writer until the read-only connection closes", () => {
     const directory = temporaryDirectory();
