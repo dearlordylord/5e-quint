@@ -35,8 +35,9 @@ type FixturePaths = {
 
 function withFixture(
   mutate: (paths: FixturePaths) => void,
+  options: { readonly repoRoot?: string } = {},
 ): ReturnType<typeof verifySurfacePublicationDelta> {
-  const fixtureRoot = mkdtempSync(join(repositoryRoot, "surface-delta-test-"));
+  const fixtureRoot = mkdtempSync("/tmp/surface-delta-test-");
   const publicationDir = join(fixtureRoot, "publication");
   const fixtureCertificatePath = join(fixtureRoot, "certificate.json");
   mkdirSync(publicationDir, { recursive: true });
@@ -55,7 +56,7 @@ function withFixture(
       certificatePath: fixtureCertificatePath,
     });
     return verifySurfacePublicationDelta({
-      repoRoot: repositoryRoot,
+      repoRoot: options.repoRoot ?? repositoryRoot,
       publicationDir,
       certificatePath: fixtureCertificatePath,
     });
@@ -74,12 +75,31 @@ function issueKinds(
 
 describe("Surface publication delta verifier", () => {
   test("verifies the reviewed certificate against the immutable baseline", () => {
-    expect(verifySurfacePublicationDelta({ repoRoot: repositoryRoot })).toEqual(
-      {
-        tag: "verified",
-        baselineCommit: "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
-      },
-    );
+    const result = verifySurfacePublicationDelta({ repoRoot: repositoryRoot });
+
+    expect(result.tag).toBe("verified");
+    if (result.tag === "verified") {
+      expect(result.baselineCommit).toMatch(/^[0-9a-f]{40}$/u);
+    }
+  }, 180_000);
+
+  test("reports when the baseline commit is unavailable in checkout history", () => {
+    const fixtureRoot = mkdtempSync("/tmp/surface-delta-history-test-");
+    try {
+      const result = withFixture(() => undefined, { repoRoot: fixtureRoot });
+
+      expect(result.tag).toBe("invalid");
+      expect(issueKinds(result)).toContain("baseline-history-unavailable");
+      if (result.tag === "invalid") {
+        expect(
+          result.issues.find(
+            (issue) => issue.kind === "baseline-history-unavailable",
+          )?.message,
+        ).toContain("baseline commit");
+      }
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true });
+    }
   }, 180_000);
 
   test("rejects an arbitrary aggregate artifact mutation", () => {
@@ -102,7 +122,7 @@ describe("Surface publication delta verifier", () => {
     });
 
     expect(result.tag).toBe("invalid");
-    expect(issueKinds(result)).toContain("certificate-contract-mismatch");
+    expect(issueKinds(result)).toContain("certificate-digest-mismatch");
   }, 180_000);
 
   test("rejects a certificate hash mutation", () => {
@@ -118,7 +138,7 @@ describe("Surface publication delta verifier", () => {
     });
 
     expect(result.tag).toBe("invalid");
-    expect(issueKinds(result)).toContain("certificate-contract-mismatch");
+    expect(issueKinds(result)).toContain("certificate-digest-mismatch");
   }, 180_000);
 
   test("rejects aggregate membership mutation", () => {
@@ -162,5 +182,24 @@ describe("Surface publication delta verifier", () => {
     expect(result.tag).toBe("invalid");
     expect(issueKinds(result)).toContain("candidate-hash-mismatch");
     expect(issueKinds(result)).toContain("schema-compile-failed");
+  }, 180_000);
+
+  test("rejects a valid-compiling schema mutation as unauthenticated graph evidence", () => {
+    const result = withFixture(({ publicationDir }) => {
+      const path = join(publicationDir, "srd-surface.schema.json");
+      const schema = readFileSync(path, "utf8");
+      writeFileSync(
+        path,
+        schema.replace(
+          '{"$schema":"https://json-schema.org/draft/2020-12/schema"',
+          '{"description":"finite cross-validation fixture","$schema":"https://json-schema.org/draft/2020-12/schema"',
+        ),
+      );
+    });
+
+    expect(result.tag).toBe("invalid");
+    expect(issueKinds(result)).toContain("candidate-hash-mismatch");
+    expect(issueKinds(result)).toContain("schema-evidence-mismatch");
+    expect(issueKinds(result)).not.toContain("schema-compile-failed");
   }, 180_000);
 });

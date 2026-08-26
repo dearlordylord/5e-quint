@@ -46,9 +46,9 @@
     },
     "schema": {
       "path": "packages/surface/publication/srd-surface.schema.json",
-      "semanticClass": "schema-definition-graph-regenerated",
-      "cause": "Effect 4 schema encoding regenerated the local definition graph with renamed and deduplicated definitions while preserving the published aggregate contract.",
-      "issue": "The schema bytes and local definition/reference graph changed; both graphs must remain complete and cross-validate both aggregate snapshots.",
+      "semanticClass": "reviewed-regenerated-v4-schema-graph",
+      "cause": "Effect 4 schema encoding regenerated the reviewed v4 local definition graph with renamed and deduplicated definitions. Its byte hashes authenticate that reviewed graph; they do not establish schema-language equivalence.",
+      "issue": "The schema bytes and local definition/reference graph changed; local reference closure and finite AJV cross-validation of the two canonical aggregate snapshots must remain as recorded.",
       "baseline": {
         "byteLength": 927510,
         "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
@@ -85,6 +85,7 @@
     "hashAlgorithm": "SHA-256",
     "canonicalJson": "JSON object keys are sorted recursively; array order is retained.",
     "orderedIdHash": "SHA-256(JSON.stringify(ordered IDs)) for each aggregate family and their concatenation.",
-    "schemaReferences": "Every $ref is a local #/$defs reference whose definition exists."
+    "schemaReferences": "Every $ref is a local #/$defs reference whose definition exists.",
+    "schemaCrossValidation": "Finite AJV checks validate each canonical baseline and candidate aggregate snapshot against each reviewed schema snapshot; this does not prove schema-language equivalence."
   }
 }

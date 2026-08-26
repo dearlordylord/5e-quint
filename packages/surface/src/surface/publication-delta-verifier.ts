@@ -1,7 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { basename, join } from "node:path";
 
 import Ajv2020 from "ajv/dist/2020.js";
 import { Result, Schema } from "effect";
@@ -14,117 +14,100 @@ import {
 export const SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH =
   "docs/migrations/effect-4/surface-publication-delta-certificate.json";
 
-const SURFACE_PUBLICATION_ROOT = "packages/surface/publication";
-const BASELINE_COMMIT = "76d9abaf0ec9c8369d5f95f603c5cce88704d26e";
-const AGGREGATE_PATH = `${SURFACE_PUBLICATION_ROOT}/srd-surface.json`;
-const SCHEMA_PATH = `${SURFACE_PUBLICATION_ROOT}/srd-surface.schema.json`;
-const PUBLICATION_PATHS = [AGGREGATE_PATH, SCHEMA_PATH] as const;
+const CERTIFICATE_SHA256 =
+  "6fe51712e4014a34c9aa4e8ff1fc6aee821e4457450d1c06d2e4ea44a6b1ebdf";
+const CERTIFICATE_FORMAT_VERSION = 1;
 
-const EXPECTED_CERTIFICATE = {
-  formatVersion: 1,
-  issue: {
-    number: 373,
-    kind: "effect-4-surface-publication-delta",
-    statement:
-      "Certify the Effect 4 Surface publication delta against the immutable Effect 3 baseline.",
-  },
-  baseline: {
-    commit: BASELINE_COMMIT,
-    readAuthority: "git-show-commit-path",
-    paths: PUBLICATION_PATHS,
-  },
-  artifacts: {
-    aggregate: {
-      path: AGGREGATE_PATH,
-      semanticClass: "byte-order-only",
-      cause:
-        "Effect 4 publication encoding changed the key order of the anchored-trigger mechanics object for one record while retaining the same values.",
-      issue:
-        "The aggregate bytes changed, but recursively key-sorted content and the ordered record identity projection remain equal.",
-      baseline: {
-        byteLength: 943445,
-        sha256:
-          "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474",
-      },
-      candidate: {
-        byteLength: 943445,
-        sha256:
-          "e3b743d94a01f0fed0db4f895a53bb873ed864eef47db5ebb130f681a409e105",
-      },
-      evidence: {
-        baselineCanonicalJsonSha256:
-          "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        candidateCanonicalJsonSha256:
-          "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
-        keyOrderDifferenceCount: 1,
-        valueDifferenceCount: 0,
-        recordCounts: {
-          units: 399,
-          statBlocks: 21,
-          total: 420,
-        },
-        orderedIdSha256: {
-          units:
-            "bc200b3061654b6a3ca19aa5d64195daba6f2dbe2977a6a7dd15e84733849b22",
-          statBlocks:
-            "367c1236b838d3265f1b87f3c297642f6906c72bee951d496fdd4ee996322e4e",
-          all: "1ba47988d91731d46927a075f3d75707a33c83571a81d2075884ec3005f15a92",
-        },
-      },
-    },
-    schema: {
-      path: SCHEMA_PATH,
-      semanticClass: "schema-definition-graph-regenerated",
-      cause:
-        "Effect 4 schema encoding regenerated the local definition graph with renamed and deduplicated definitions while preserving the published aggregate contract.",
-      issue:
-        "The schema bytes and local definition/reference graph changed; both graphs must remain complete and cross-validate both aggregate snapshots.",
-      baseline: {
-        byteLength: 927510,
-        sha256:
-          "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2",
-      },
-      candidate: {
-        byteLength: 1375908,
-        sha256:
-          "b7b6ab07de16590f1f731bc0abe4171a4d4e36241d595221f9a9a57f51d46110",
-      },
-      evidence: {
-        baselineCanonicalJsonSha256:
-          "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
-        candidateCanonicalJsonSha256:
-          "5696bbda8ab69b3d6612a8c047abda5c9342d744bf643cee4b4bf810fc98c7fb",
-        definitions: {
-          baseline: 1305,
-          candidate: 1075,
-        },
-        references: {
-          baseline: 8778,
-          candidate: 7290,
-        },
-        localReferencesComplete: {
-          baseline: true,
-          candidate: true,
-        },
-        crossValidation: [
-          "baseline-schema/baseline-aggregate",
-          "baseline-schema/candidate-aggregate",
-          "candidate-schema/baseline-aggregate",
-          "candidate-schema/candidate-aggregate",
-        ],
-      },
-    },
-  },
-  verification: {
-    hashAlgorithm: "SHA-256",
-    canonicalJson:
-      "JSON object keys are sorted recursively; array order is retained.",
-    orderedIdHash:
-      "SHA-256(JSON.stringify(ordered IDs)) for each aggregate family and their concatenation.",
-    schemaReferences:
-      "Every $ref is a local #/$defs reference whose definition exists.",
-  },
-} as const;
+const HashSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{64}$/u)),
+);
+const CommitSchema = Schema.String.pipe(
+  Schema.check(Schema.isPattern(/^[0-9a-f]{40}$/u)),
+);
+const NonNegativeIntegerSchema = Schema.Number.pipe(
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+);
+const ArtifactDigestSchema = Schema.Struct({
+  byteLength: NonNegativeIntegerSchema,
+  sha256: HashSchema,
+});
+const AggregateCertificateSchema = Schema.Struct({
+  path: Schema.String,
+  semanticClass: Schema.String,
+  cause: Schema.String,
+  issue: Schema.String,
+  baseline: ArtifactDigestSchema,
+  candidate: ArtifactDigestSchema,
+  evidence: Schema.Struct({
+    baselineCanonicalJsonSha256: HashSchema,
+    candidateCanonicalJsonSha256: HashSchema,
+    keyOrderDifferenceCount: NonNegativeIntegerSchema,
+    valueDifferenceCount: NonNegativeIntegerSchema,
+    recordCounts: Schema.Struct({
+      units: NonNegativeIntegerSchema,
+      statBlocks: NonNegativeIntegerSchema,
+      total: NonNegativeIntegerSchema,
+    }),
+    orderedIdSha256: Schema.Struct({
+      units: HashSchema,
+      statBlocks: HashSchema,
+      all: HashSchema,
+    }),
+  }),
+});
+const SchemaCertificateSchema = Schema.Struct({
+  path: Schema.String,
+  semanticClass: Schema.String,
+  cause: Schema.String,
+  issue: Schema.String,
+  baseline: ArtifactDigestSchema,
+  candidate: ArtifactDigestSchema,
+  evidence: Schema.Struct({
+    baselineCanonicalJsonSha256: HashSchema,
+    candidateCanonicalJsonSha256: HashSchema,
+    definitions: Schema.Struct({
+      baseline: NonNegativeIntegerSchema,
+      candidate: NonNegativeIntegerSchema,
+    }),
+    references: Schema.Struct({
+      baseline: NonNegativeIntegerSchema,
+      candidate: NonNegativeIntegerSchema,
+    }),
+    localReferencesComplete: Schema.Struct({
+      baseline: Schema.Boolean,
+      candidate: Schema.Boolean,
+    }),
+    crossValidation: Schema.Array(Schema.String),
+  }),
+});
+const SurfacePublicationDeltaCertificateSchema = Schema.Struct({
+  formatVersion: Schema.Literal(CERTIFICATE_FORMAT_VERSION),
+  issue: Schema.Struct({
+    number: NonNegativeIntegerSchema,
+    kind: Schema.String,
+    statement: Schema.String,
+  }),
+  baseline: Schema.Struct({
+    commit: CommitSchema,
+    readAuthority: Schema.String,
+    paths: Schema.Array(Schema.String),
+  }),
+  artifacts: Schema.Struct({
+    aggregate: AggregateCertificateSchema,
+    schema: SchemaCertificateSchema,
+  }),
+  verification: Schema.Struct({
+    hashAlgorithm: Schema.String,
+    canonicalJson: Schema.String,
+    orderedIdHash: Schema.String,
+    schemaReferences: Schema.String,
+    schemaCrossValidation: Schema.String,
+  }),
+});
+
+type SurfacePublicationDeltaCertificate = Schema.Schema.Type<
+  typeof SurfacePublicationDeltaCertificateSchema
+>;
 
 type JsonValue =
   | null
@@ -136,23 +119,29 @@ type JsonValue =
 
 type JsonObject = { readonly [key: string]: JsonValue };
 
+type PublicationDeltaVerificationIssueKind =
+  | "certificate-unreadable"
+  | "certificate-digest-mismatch"
+  | "certificate-invalid-json"
+  | "certificate-invalid"
+  | "baseline-history-unavailable"
+  | "baseline-unreadable"
+  | "baseline-hash-mismatch"
+  | "candidate-unreadable"
+  | "candidate-hash-mismatch"
+  | "aggregate-invalid"
+  | "aggregate-semantic-mismatch"
+  | "aggregate-record-mismatch"
+  | "aggregate-evidence-mismatch"
+  | "schema-invalid"
+  | "schema-evidence-mismatch"
+  | "schema-reference-mismatch"
+  | "schema-cross-validation-mismatch"
+  | "schema-compile-failed"
+  | "schema-validation-failed";
+
 type PublicationDeltaVerificationIssue = {
-  readonly kind:
-    | "certificate-unreadable"
-    | "certificate-invalid-json"
-    | "certificate-contract-mismatch"
-    | "baseline-unreadable"
-    | "baseline-hash-mismatch"
-    | "candidate-unreadable"
-    | "candidate-hash-mismatch"
-    | "aggregate-invalid"
-    | "aggregate-semantic-mismatch"
-    | "aggregate-record-mismatch"
-    | "aggregate-evidence-mismatch"
-    | "schema-invalid"
-    | "schema-reference-mismatch"
-    | "schema-compile-failed"
-    | "schema-validation-failed";
+  readonly kind: PublicationDeltaVerificationIssueKind;
   readonly message: string;
 };
 
@@ -174,16 +163,27 @@ export type SurfacePublicationDeltaVerificationOptions = {
 
 type ArtifactBytes =
   | { readonly tag: "ok"; readonly bytes: Buffer }
-  | { readonly tag: "invalid"; readonly message: string };
+  | {
+      readonly tag: "invalid";
+      readonly kind:
+        | "baseline-history-unavailable"
+        | "baseline-unreadable"
+        | "candidate-unreadable";
+      readonly message: string;
+    };
 
 type ParsedArtifact =
-  | { readonly tag: "ok"; readonly bytes: Buffer; readonly value: JsonValue }
+  | { readonly tag: "ok"; readonly value: JsonValue }
   | { readonly tag: "invalid"; readonly message: string };
 
 type SchemaReferenceEvidence = {
   readonly definitions: number;
   readonly references: number;
   readonly localReferencesComplete: boolean;
+};
+
+type SchemaEvidence = SchemaReferenceEvidence & {
+  readonly canonicalJsonSha256: string;
 };
 
 type AggregateEvidence = {
@@ -211,6 +211,16 @@ type SchemaDocument = JsonObject & {
   readonly $defs: JsonObject;
 };
 
+const SCHEMA_LABELS = ["baseline-schema", "candidate-schema"] as const;
+type SchemaLabel = (typeof SCHEMA_LABELS)[number];
+
+const AGGREGATE_LABELS = ["baseline-aggregate", "candidate-aggregate"] as const;
+type AggregateLabel = (typeof AGGREGATE_LABELS)[number];
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
 function isJsonValue(value: unknown): value is JsonValue {
   if (
     value === null ||
@@ -230,33 +240,84 @@ function isJsonObject(value: JsonValue): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function parseJsonBytes(bytes: Buffer): ParsedArtifact {
-  try {
-    const parsed: unknown = JSON.parse(bytes.toString("utf8"));
-    return isJsonValue(parsed)
-      ? { tag: "ok", bytes, value: parsed }
-      : { tag: "invalid", message: "JSON value is not a finite JSON value" };
-  } catch (error) {
-    return {
-      tag: "invalid",
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
+function sha256(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
 }
 
-function readBytes(filePath: string): ArtifactBytes {
+function readBytes(
+  filePath: string,
+  unreadableKind: "baseline-unreadable" | "candidate-unreadable",
+): ArtifactBytes {
   try {
     return { tag: "ok", bytes: readFileSync(filePath) };
   } catch (error) {
     return {
       tag: "invalid",
-      message: error instanceof Error ? error.message : String(error),
+      kind: unreadableKind,
+      message: errorMessage(error),
     };
   }
 }
 
-function sha256(bytes: Uint8Array): string {
-  return createHash("sha256").update(bytes).digest("hex");
+function parseJsonBytes(bytes: Buffer): ParsedArtifact {
+  try {
+    const parsed: unknown = JSON.parse(bytes.toString("utf8"));
+    return isJsonValue(parsed)
+      ? { tag: "ok", value: parsed }
+      : { tag: "invalid", message: "JSON value is not a finite JSON value" };
+  } catch (error) {
+    return { tag: "invalid", message: errorMessage(error) };
+  }
+}
+
+function readCertificate(certificatePath: string):
+  | { readonly tag: "ok"; readonly value: SurfacePublicationDeltaCertificate }
+  | {
+      readonly tag: "invalid";
+      readonly kind:
+        | "certificate-unreadable"
+        | "certificate-digest-mismatch"
+        | "certificate-invalid-json"
+        | "certificate-invalid";
+      readonly message: string;
+    } {
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(certificatePath);
+  } catch (error) {
+    return {
+      tag: "invalid",
+      kind: "certificate-unreadable",
+      message: errorMessage(error),
+    };
+  }
+  const observedSha256 = sha256(bytes);
+  if (observedSha256 !== CERTIFICATE_SHA256) {
+    return {
+      tag: "invalid",
+      kind: "certificate-digest-mismatch",
+      message: `certificate bytes have SHA-256 ${observedSha256}; expected the reviewed certificate digest ${CERTIFICATE_SHA256}.`,
+    };
+  }
+  const parsed = parseJsonBytes(bytes);
+  if (parsed.tag === "invalid") {
+    return {
+      tag: "invalid",
+      kind: "certificate-invalid-json",
+      message: parsed.message,
+    };
+  }
+  const decoded = Schema.decodeUnknownResult(
+    SurfacePublicationDeltaCertificateSchema,
+    { onExcessProperty: "error" },
+  )(parsed.value);
+  return Result.isSuccess(decoded)
+    ? { tag: "ok", value: decoded.success }
+    : {
+        tag: "invalid",
+        kind: "certificate-invalid",
+        message: String(decoded.failure),
+      };
 }
 
 function compareCodePointStrings(left: string, right: string): number {
@@ -290,11 +351,27 @@ function canonicalJson(value: JsonValue): string {
   return JSON.stringify(canonicalizeJson(value));
 }
 
-function readBaselineArtifact(repoRoot: string, path: string): ArtifactBytes {
+function readBaselineArtifact(
+  repoRoot: string,
+  baselineCommit: string,
+  path: string,
+): ArtifactBytes {
+  try {
+    execFileSync("git", ["cat-file", "-e", `${baselineCommit}^{commit}`], {
+      cwd: repoRoot,
+      stdio: ["ignore", "ignore", "ignore"],
+    });
+  } catch (error) {
+    return {
+      tag: "invalid",
+      kind: "baseline-history-unavailable",
+      message: `baseline commit ${baselineCommit} is unavailable in the checkout history: ${errorMessage(error)}`,
+    };
+  }
   try {
     return {
       tag: "ok",
-      bytes: execFileSync("git", ["show", `${BASELINE_COMMIT}:${path}`], {
+      bytes: execFileSync("git", ["show", `${baselineCommit}:${path}`], {
         cwd: repoRoot,
         encoding: "buffer",
         stdio: ["ignore", "pipe", "pipe"],
@@ -303,13 +380,16 @@ function readBaselineArtifact(repoRoot: string, path: string): ArtifactBytes {
   } catch (error) {
     return {
       tag: "invalid",
-      message: error instanceof Error ? error.message : String(error),
+      kind: "baseline-unreadable",
+      message: `git show ${baselineCommit}:${path} failed: ${errorMessage(error)}`,
     };
   }
 }
 
-function certificateContractMatches(value: JsonValue): boolean {
-  return canonicalJson(value) === canonicalJson(EXPECTED_CERTIFICATE);
+function parseArtifact(bytes: ArtifactBytes): ParsedArtifact {
+  return bytes.tag === "ok"
+    ? parseJsonBytes(bytes.bytes)
+    : { tag: "invalid", message: bytes.message };
 }
 
 function schemaDocument(
@@ -362,6 +442,13 @@ function schemaReferences(schema: SchemaDocument): SchemaReferenceEvidence {
     definitions: definitionNames.size,
     references,
     localReferencesComplete,
+  };
+}
+
+function schemaEvidence(schema: SchemaDocument): SchemaEvidence {
+  return {
+    ...schemaReferences(schema),
+    canonicalJsonSha256: sha256(Buffer.from(canonicalJson(schema), "utf8")),
   };
 }
 
@@ -474,12 +561,11 @@ function aggregateDifferences(
   return aggregatePairDifferences(baseline, candidate);
 }
 
-function aggregateRecordDecode(value: JsonValue):
+function aggregateRecordDecode(
+  value: JsonValue,
+):
   | { readonly tag: "ok"; readonly value: PublishedSrdSurface }
-  | {
-      readonly tag: "invalid";
-      readonly message: string;
-    } {
+  | { readonly tag: "invalid"; readonly message: string } {
   const decoded = Schema.decodeUnknownResult(PublishedSrdSurfaceSchema, {
     onExcessProperty: "error",
   })(value);
@@ -506,15 +592,15 @@ function compareAggregateRecordEvidence(
   issues: PublicationDeltaVerificationIssue[],
   label: "baseline" | "candidate",
   evidence: AggregateEvidence,
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["aggregate"]["evidence"],
 ): void {
-  const expected = EXPECTED_CERTIFICATE.artifacts.aggregate.evidence;
   if (
     JSON.stringify(evidence.recordCounts) !==
     JSON.stringify(expected.recordCounts)
   ) {
     issues.push({
       kind: "aggregate-record-mismatch",
-      message: `${label} aggregate record counts do not match the pinned certificate.`,
+      message: `${label} aggregate record counts do not match the reviewed certificate evidence.`,
     });
   }
   if (
@@ -523,7 +609,7 @@ function compareAggregateRecordEvidence(
   ) {
     issues.push({
       kind: "aggregate-record-mismatch",
-      message: `${label} aggregate ordered ID hashes do not match the pinned certificate.`,
+      message: `${label} aggregate ordered ID hashes do not match the reviewed certificate evidence.`,
     });
   }
 }
@@ -532,8 +618,8 @@ function compareAggregateCanonicalEvidence(
   issues: PublicationDeltaVerificationIssue[],
   baseline: AggregateEvidence,
   candidate: AggregateEvidence,
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["aggregate"]["evidence"],
 ): void {
-  const expected = EXPECTED_CERTIFICATE.artifacts.aggregate.evidence;
   if (
     baseline.canonicalJsonSha256 !== expected.baselineCanonicalJsonSha256 ||
     candidate.canonicalJsonSha256 !== expected.candidateCanonicalJsonSha256
@@ -541,7 +627,7 @@ function compareAggregateCanonicalEvidence(
     issues.push({
       kind: "aggregate-evidence-mismatch",
       message:
-        "Aggregate canonical JSON hashes do not match the pinned certificate.",
+        "Aggregate canonical JSON hashes do not match the reviewed certificate evidence.",
     });
   }
 }
@@ -549,8 +635,8 @@ function compareAggregateCanonicalEvidence(
 function compareAggregateDifferenceEvidence(
   issues: PublicationDeltaVerificationIssue[],
   differences: AggregateDifferenceEvidence,
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["aggregate"]["evidence"],
 ): void {
-  const expected = EXPECTED_CERTIFICATE.artifacts.aggregate.evidence;
   if (
     differences.keyOrderDifferenceCount !== expected.keyOrderDifferenceCount ||
     differences.valueDifferenceCount !== expected.valueDifferenceCount
@@ -558,52 +644,76 @@ function compareAggregateDifferenceEvidence(
     issues.push({
       kind: "aggregate-evidence-mismatch",
       message:
-        "Aggregate key-order/value difference counts do not match the pinned certificate.",
+        "Aggregate key-order/value difference counts do not match the reviewed certificate evidence.",
     });
   }
 }
 
 function compareAggregateSnapshots(
   issues: PublicationDeltaVerificationIssue[],
-  baseline: JsonValue,
-  candidate: JsonValue,
+  baseline: ParsedArtifact,
+  candidate: ParsedArtifact,
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["aggregate"]["evidence"],
 ): void {
-  const baselineDecoded = aggregateRecordDecode(baseline);
-  const candidateDecoded = aggregateRecordDecode(candidate);
+  if (baseline.tag === "invalid" || candidate.tag === "invalid") {
+    if (baseline.tag === "invalid") {
+      issues.push({
+        kind: "aggregate-invalid",
+        message: `Baseline aggregate is unavailable or invalid: ${baseline.message}`,
+      });
+    }
+    if (candidate.tag === "invalid") {
+      issues.push({
+        kind: "aggregate-invalid",
+        message: `Candidate aggregate is unavailable or invalid: ${candidate.message}`,
+      });
+    }
+    return;
+  }
+  const baselineDecoded = aggregateRecordDecode(baseline.value);
+  const candidateDecoded = aggregateRecordDecode(candidate.value);
   appendAggregateDecodeIssue(issues, "baseline", baselineDecoded);
   appendAggregateDecodeIssue(issues, "candidate", candidateDecoded);
   if (baselineDecoded.tag === "invalid" || candidateDecoded.tag === "invalid") {
     return;
   }
-
-  const differences = aggregateDifferences(baseline, candidate);
+  const differences = aggregateDifferences(baseline.value, candidate.value);
   const baselineEvidence = aggregateEvidence(
-    baseline,
+    baseline.value,
     baselineDecoded.value,
     differences,
   );
   const candidateEvidence = aggregateEvidence(
-    candidate,
+    candidate.value,
     candidateDecoded.value,
     differences,
   );
-  const baselineCanonical = canonicalJson(baseline);
-  const candidateCanonical = canonicalJson(candidate);
-  if (baselineCanonical !== candidateCanonical) {
+  if (canonicalJson(baseline.value) !== canonicalJson(candidate.value)) {
     issues.push({
       kind: "aggregate-semantic-mismatch",
       message:
         "Baseline and candidate aggregates differ after recursive key sorting.",
     });
   }
-  compareAggregateRecordEvidence(issues, "baseline", baselineEvidence);
-  compareAggregateRecordEvidence(issues, "candidate", candidateEvidence);
+  compareAggregateRecordEvidence(
+    issues,
+    "baseline",
+    baselineEvidence,
+    expected,
+  );
+  compareAggregateRecordEvidence(
+    issues,
+    "candidate",
+    candidateEvidence,
+    expected,
+  );
   compareAggregateCanonicalEvidence(
     issues,
     baselineEvidence,
     candidateEvidence,
+    expected,
   );
-  compareAggregateDifferenceEvidence(issues, differences);
+  compareAggregateDifferenceEvidence(issues, differences, expected);
 }
 
 type ParsedSchemaPair = {
@@ -611,91 +721,130 @@ type ParsedSchemaPair = {
   readonly candidate: SchemaDocument;
 };
 
+function parseSchemaArtifact(
+  issues: PublicationDeltaVerificationIssue[],
+  label: "baseline" | "candidate",
+  artifact: ParsedArtifact,
+): SchemaDocument | undefined {
+  if (artifact.tag === "invalid") {
+    issues.push({
+      kind: "schema-invalid",
+      message: `${label[0].toUpperCase()}${label.slice(1)} schema is unavailable or invalid: ${artifact.message}`,
+    });
+    return undefined;
+  }
+  const document = schemaDocument(artifact.value);
+  if (document.tag === "invalid") {
+    issues.push({
+      kind: "schema-invalid",
+      message: `${label[0].toUpperCase()}${label.slice(1)} schema: ${document.message}`,
+    });
+    return undefined;
+  }
+  return document.value;
+}
+
 function parseSchemaPair(
   issues: PublicationDeltaVerificationIssue[],
-  baseline: JsonValue,
-  candidate: JsonValue,
+  baseline: ParsedArtifact,
+  candidate: ParsedArtifact,
 ): ParsedSchemaPair | undefined {
-  const baselineDocument = schemaDocument(baseline);
-  const candidateDocument = schemaDocument(candidate);
-  if (baselineDocument.tag === "invalid") {
-    issues.push({
-      kind: "schema-invalid",
-      message: `Baseline schema: ${baselineDocument.message}`,
-    });
-  }
-  if (candidateDocument.tag === "invalid") {
-    issues.push({
-      kind: "schema-invalid",
-      message: `Candidate schema: ${candidateDocument.message}`,
-    });
-  }
-  if (
-    baselineDocument.tag === "invalid" ||
-    candidateDocument.tag === "invalid"
-  ) {
+  const baselineDocument = parseSchemaArtifact(issues, "baseline", baseline);
+  const candidateDocument = parseSchemaArtifact(issues, "candidate", candidate);
+  if (baselineDocument === undefined || candidateDocument === undefined) {
     return undefined;
   }
   return {
-    baseline: baselineDocument.value,
-    candidate: candidateDocument.value,
+    baseline: baselineDocument,
+    candidate: candidateDocument,
   };
+}
+
+function expectedSchemaEvidence(
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["schema"]["evidence"],
+  label: "baseline" | "candidate",
+): SchemaEvidence {
+  return label === "baseline"
+    ? {
+        canonicalJsonSha256: expected.baselineCanonicalJsonSha256,
+        definitions: expected.definitions.baseline,
+        references: expected.references.baseline,
+        localReferencesComplete: expected.localReferencesComplete.baseline,
+      }
+    : {
+        canonicalJsonSha256: expected.candidateCanonicalJsonSha256,
+        definitions: expected.definitions.candidate,
+        references: expected.references.candidate,
+        localReferencesComplete: expected.localReferencesComplete.candidate,
+      };
+}
+
+function compareSchemaSnapshotEvidence(
+  issues: PublicationDeltaVerificationIssue[],
+  label: "baseline" | "candidate",
+  actual: SchemaEvidence,
+  expected: SchemaEvidence,
+): void {
+  if (actual.canonicalJsonSha256 !== expected.canonicalJsonSha256) {
+    issues.push({
+      kind: "schema-evidence-mismatch",
+      message: `${label} schema canonical JSON hash does not match the reviewed regenerated schema graph evidence.`,
+    });
+  }
+  if (
+    actual.definitions !== expected.definitions ||
+    actual.references !== expected.references
+  ) {
+    issues.push({
+      kind: "schema-evidence-mismatch",
+      message: `${label} schema definition/reference evidence does not match the reviewed regenerated schema graph.`,
+    });
+  }
+  if (
+    !actual.localReferencesComplete ||
+    actual.localReferencesComplete !== expected.localReferencesComplete
+  ) {
+    issues.push({
+      kind: "schema-reference-mismatch",
+      message: `${label} schema contains a non-local or missing $ref definition; local reference closure is required.`,
+    });
+  }
 }
 
 function compareSchemaEvidence(
   issues: PublicationDeltaVerificationIssue[],
-  baseline: SchemaDocument,
-  candidate: SchemaDocument,
+  schemas: ParsedSchemaPair,
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["schema"]["evidence"],
 ): void {
-  const expected = EXPECTED_CERTIFICATE.artifacts.schema.evidence;
-  const baselineReferences = schemaReferences(baseline);
-  const candidateReferences = schemaReferences(candidate);
-  const baselineCanonicalJsonSha256 = sha256(
-    Buffer.from(canonicalJson(baseline), "utf8"),
-  );
-  const candidateCanonicalJsonSha256 = sha256(
-    Buffer.from(canonicalJson(candidate), "utf8"),
-  );
-  if (
-    baselineCanonicalJsonSha256 !== expected.baselineCanonicalJsonSha256 ||
-    candidateCanonicalJsonSha256 !== expected.candidateCanonicalJsonSha256
-  ) {
-    issues.push({
-      kind: "schema-reference-mismatch",
-      message:
-        "Schema canonical JSON hashes do not match the pinned certificate.",
-    });
-  }
-  if (
-    baselineReferences.definitions !== expected.definitions.baseline ||
-    candidateReferences.definitions !== expected.definitions.candidate ||
-    baselineReferences.references !== expected.references.baseline ||
-    candidateReferences.references !== expected.references.candidate ||
-    !baselineReferences.localReferencesComplete ||
-    !candidateReferences.localReferencesComplete
-  ) {
-    issues.push({
-      kind: "schema-reference-mismatch",
-      message:
-        "Schema definition/reference counts or local reference closure changed.",
-    });
+  for (const [label, schema] of [
+    ["baseline", schemas.baseline],
+    ["candidate", schemas.candidate],
+  ] as const) {
+    compareSchemaSnapshotEvidence(
+      issues,
+      label,
+      schemaEvidence(schema),
+      expectedSchemaEvidence(expected, label),
+    );
   }
 }
 
+type CompiledSchemaValidator = ReturnType<Ajv2020["compile"]>;
 type CompiledSchemaValidators = ReadonlyMap<
-  string,
-  ReturnType<Ajv2020["compile"]>
+  SchemaLabel,
+  CompiledSchemaValidator
 >;
 
 function compileSchemaPair(
   issues: PublicationDeltaVerificationIssue[],
   schemas: ParsedSchemaPair,
 ): CompiledSchemaValidators {
-  const validators = new Map<string, ReturnType<Ajv2020["compile"]>>();
-  for (const [label, document] of [
-    ["baseline-schema", schemas.baseline],
-    ["candidate-schema", schemas.candidate],
-  ] as const) {
+  const validators = new Map<SchemaLabel, CompiledSchemaValidator>();
+  const documents: ReadonlyArray<readonly [SchemaLabel, SchemaDocument]> = [
+    [SCHEMA_LABELS[0], schemas.baseline],
+    [SCHEMA_LABELS[1], schemas.candidate],
+  ];
+  for (const [label, document] of documents) {
     try {
       const validator = new Ajv2020({
         strict: false,
@@ -706,11 +855,35 @@ function compileSchemaPair(
     } catch (error) {
       issues.push({
         kind: "schema-compile-failed",
-        message: `${label} failed to compile: ${error instanceof Error ? error.message : String(error)}`,
+        message: `${label} failed to compile: ${errorMessage(error)}`,
       });
     }
   }
   return validators;
+}
+
+function expectedCrossValidationLabels(): readonly string[] {
+  return SCHEMA_LABELS.flatMap((schemaLabel) =>
+    AGGREGATE_LABELS.map(
+      (aggregateLabel) => `${schemaLabel}/${aggregateLabel}`,
+    ),
+  );
+}
+
+function compareCrossValidationEvidence(
+  issues: PublicationDeltaVerificationIssue[],
+  expected: SurfacePublicationDeltaCertificate["artifacts"]["schema"]["evidence"],
+): void {
+  if (
+    JSON.stringify(expected.crossValidation) !==
+    JSON.stringify(expectedCrossValidationLabels())
+  ) {
+    issues.push({
+      kind: "schema-cross-validation-mismatch",
+      message:
+        "The certificate cross-validation matrix does not describe both schema snapshots against both canonical aggregate snapshots.",
+    });
+  }
 }
 
 function validateAggregatePair(
@@ -719,53 +892,60 @@ function validateAggregatePair(
   baselineAggregate: JsonValue,
   candidateAggregate: JsonValue,
 ): void {
-  const validationCases = [
-    ["baseline-schema", "baseline-aggregate", baselineAggregate],
-    ["baseline-schema", "candidate-aggregate", candidateAggregate],
-    ["candidate-schema", "baseline-aggregate", baselineAggregate],
-    ["candidate-schema", "candidate-aggregate", candidateAggregate],
-  ] as const;
-  for (const [schemaLabel, aggregateLabel, aggregate] of validationCases) {
+  const aggregates = new Map<AggregateLabel, JsonValue>([
+    [AGGREGATE_LABELS[0], baselineAggregate],
+    [AGGREGATE_LABELS[1], candidateAggregate],
+  ]);
+  for (const schemaLabel of SCHEMA_LABELS) {
     const validator = validators.get(schemaLabel);
-    if (validator === undefined || validator(aggregate)) continue;
-    issues.push({
-      kind: "schema-validation-failed",
-      message: `${schemaLabel} rejected ${aggregateLabel}: ${JSON.stringify(validator.errors?.slice(0, 3) ?? [])}`,
-    });
+    if (validator === undefined) continue;
+    for (const aggregateLabel of AGGREGATE_LABELS) {
+      const aggregate = aggregates.get(aggregateLabel);
+      if (aggregate === undefined || validator(aggregate)) continue;
+      issues.push({
+        kind: "schema-validation-failed",
+        message: `${schemaLabel} rejected ${aggregateLabel}: ${JSON.stringify(validator.errors?.slice(0, 3) ?? [])}`,
+      });
+    }
   }
 }
 
 function validateSchemaPair(
   issues: PublicationDeltaVerificationIssue[],
-  baselineSchema: JsonValue,
-  candidateSchema: JsonValue,
-  baselineAggregate: JsonValue,
-  candidateAggregate: JsonValue,
+  certificate: SurfacePublicationDeltaCertificate,
+  baselineSchema: ParsedArtifact,
+  candidateSchema: ParsedArtifact,
+  baselineAggregate: ParsedArtifact,
+  candidateAggregate: ParsedArtifact,
 ): void {
   const schemas = parseSchemaPair(issues, baselineSchema, candidateSchema);
-  if (schemas === undefined) return;
-  compareSchemaEvidence(issues, schemas.baseline, schemas.candidate);
+  if (
+    schemas === undefined ||
+    baselineAggregate.tag === "invalid" ||
+    candidateAggregate.tag === "invalid"
+  ) {
+    return;
+  }
+  const expected = certificate.artifacts.schema.evidence;
+  compareSchemaEvidence(issues, schemas, expected);
+  compareCrossValidationEvidence(issues, expected);
   const validators = compileSchemaPair(issues, schemas);
   validateAggregatePair(
     issues,
     validators,
-    baselineAggregate,
-    candidateAggregate,
+    canonicalizeJson(baselineAggregate.value),
+    canonicalizeJson(candidateAggregate.value),
   );
 }
 
 function verifyArtifactBytes(
   issues: PublicationDeltaVerificationIssue[],
-  label: "baseline" | "candidate",
   bytes: ArtifactBytes,
   expected: { readonly byteLength: number; readonly sha256: string },
+  hashMismatchKind: "baseline-hash-mismatch" | "candidate-hash-mismatch",
 ): void {
   if (bytes.tag === "invalid") {
-    issues.push({
-      kind:
-        label === "baseline" ? "baseline-unreadable" : "candidate-unreadable",
-      message: `${label} artifact is unreadable: ${bytes.message}`,
-    });
+    issues.push({ kind: bytes.kind, message: bytes.message });
     return;
   }
   if (
@@ -773,184 +953,108 @@ function verifyArtifactBytes(
     sha256(bytes.bytes) !== expected.sha256
   ) {
     issues.push({
-      kind:
-        label === "baseline"
-          ? "baseline-hash-mismatch"
-          : "candidate-hash-mismatch",
-      message: `${label} artifact bytes do not match the pinned length and SHA-256.`,
+      kind: hashMismatchKind,
+      message:
+        "Artifact bytes do not match the reviewed certificate length and SHA-256 evidence.",
     });
   }
 }
 
-function artifactPath(publicationDir: string, path: string): string {
-  return join(
-    publicationDir,
-    path.slice(`${SURFACE_PUBLICATION_ROOT}/`.length),
-  );
-}
-
-function readCertificate(certificatePath: string):
-  | { readonly tag: "ok"; readonly value: JsonValue }
-  | {
-      readonly tag: "invalid";
-      readonly kind: "certificate-unreadable" | "certificate-invalid-json";
-      readonly message: string;
-    } {
-  let bytes: Buffer;
-  try {
-    bytes = readFileSync(certificatePath);
-  } catch (error) {
-    return {
-      tag: "invalid",
-      kind: "certificate-unreadable",
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
-  try {
-    const parsed: unknown = JSON.parse(bytes.toString("utf8"));
-    return isJsonValue(parsed)
-      ? { tag: "ok", value: parsed }
-      : {
-          tag: "invalid",
-          kind: "certificate-invalid-json",
-          message: "certificate JSON is not a finite JSON value",
-        };
-  } catch (error) {
-    return {
-      tag: "invalid",
-      kind: "certificate-invalid-json",
-      message: error instanceof Error ? error.message : String(error),
-    };
-  }
+function invalidCertificateResult(
+  certificate: Exclude<
+    ReturnType<typeof readCertificate>,
+    { readonly tag: "ok" }
+  >,
+): SurfacePublicationDeltaVerificationResult {
+  return {
+    tag: "invalid",
+    issues: [
+      {
+        kind: certificate.kind,
+        message: `Surface publication delta certificate: ${certificate.message}`,
+      },
+    ],
+  };
 }
 
 export function verifySurfacePublicationDelta(
   options: SurfacePublicationDeltaVerificationOptions,
 ): SurfacePublicationDeltaVerificationResult {
   const publicationDir =
-    options.publicationDir ?? join(options.repoRoot, SURFACE_PUBLICATION_ROOT);
+    options.publicationDir ??
+    join(options.repoRoot, "packages/surface/publication");
   const certificatePath =
     options.certificatePath ??
     join(options.repoRoot, SURFACE_PUBLICATION_DELTA_CERTIFICATE_PATH);
-  const issues: PublicationDeltaVerificationIssue[] = [];
-
   const certificate = readCertificate(certificatePath);
-  if (certificate.tag === "invalid") {
-    issues.push({
-      kind: certificate.kind,
-      message: `Surface publication delta certificate: ${certificate.message}`,
-    });
-  } else if (!certificateContractMatches(certificate.value)) {
-    issues.push({
-      kind: "certificate-contract-mismatch",
-      message:
-        "Surface publication delta certificate does not match the pinned issue contract.",
-    });
-  }
+  if (certificate.tag === "invalid")
+    return invalidCertificateResult(certificate);
 
+  const expected = certificate.value;
   const baselineAggregateBytes = readBaselineArtifact(
     options.repoRoot,
-    AGGREGATE_PATH,
+    expected.baseline.commit,
+    expected.artifacts.aggregate.path,
   );
   const candidateAggregateBytes = readBytes(
-    artifactPath(publicationDir, AGGREGATE_PATH),
+    join(publicationDir, basename(expected.artifacts.aggregate.path)),
+    "candidate-unreadable",
   );
   const baselineSchemaBytes = readBaselineArtifact(
     options.repoRoot,
-    SCHEMA_PATH,
+    expected.baseline.commit,
+    expected.artifacts.schema.path,
   );
   const candidateSchemaBytes = readBytes(
-    artifactPath(publicationDir, SCHEMA_PATH),
+    join(publicationDir, basename(expected.artifacts.schema.path)),
+    "candidate-unreadable",
   );
+  const issues: PublicationDeltaVerificationIssue[] = [];
   verifyArtifactBytes(
     issues,
-    "baseline",
     baselineAggregateBytes,
-    EXPECTED_CERTIFICATE.artifacts.aggregate.baseline,
+    expected.artifacts.aggregate.baseline,
+    "baseline-hash-mismatch",
   );
   verifyArtifactBytes(
     issues,
-    "candidate",
     candidateAggregateBytes,
-    EXPECTED_CERTIFICATE.artifacts.aggregate.candidate,
+    expected.artifacts.aggregate.candidate,
+    "candidate-hash-mismatch",
   );
   verifyArtifactBytes(
     issues,
-    "baseline",
     baselineSchemaBytes,
-    EXPECTED_CERTIFICATE.artifacts.schema.baseline,
+    expected.artifacts.schema.baseline,
+    "baseline-hash-mismatch",
   );
   verifyArtifactBytes(
     issues,
-    "candidate",
     candidateSchemaBytes,
-    EXPECTED_CERTIFICATE.artifacts.schema.candidate,
+    expected.artifacts.schema.candidate,
+    "candidate-hash-mismatch",
   );
 
-  const baselineAggregate =
-    baselineAggregateBytes.tag === "ok"
-      ? parseJsonBytes(baselineAggregateBytes.bytes)
-      : {
-          tag: "invalid" as const,
-          message: "baseline aggregate bytes are unavailable",
-        };
-  const candidateAggregate =
-    candidateAggregateBytes.tag === "ok"
-      ? parseJsonBytes(candidateAggregateBytes.bytes)
-      : {
-          tag: "invalid" as const,
-          message: "candidate aggregate bytes are unavailable",
-        };
-  const baselineSchema =
-    baselineSchemaBytes.tag === "ok"
-      ? parseJsonBytes(baselineSchemaBytes.bytes)
-      : {
-          tag: "invalid" as const,
-          message: "baseline schema bytes are unavailable",
-        };
-  const candidateSchema =
-    candidateSchemaBytes.tag === "ok"
-      ? parseJsonBytes(candidateSchemaBytes.bytes)
-      : {
-          tag: "invalid" as const,
-          message: "candidate schema bytes are unavailable",
-        };
-
-  if (baselineAggregate.tag === "ok" && candidateAggregate.tag === "ok") {
-    compareAggregateSnapshots(
-      issues,
-      baselineAggregate.value,
-      candidateAggregate.value,
-    );
-  } else {
-    issues.push({
-      kind: "aggregate-invalid",
-      message: "Unable to parse both aggregate snapshots.",
-    });
-  }
-
-  if (
-    baselineSchema.tag === "ok" &&
-    candidateSchema.tag === "ok" &&
-    baselineAggregate.tag === "ok" &&
-    candidateAggregate.tag === "ok"
-  ) {
-    validateSchemaPair(
-      issues,
-      baselineSchema.value,
-      candidateSchema.value,
-      baselineAggregate.value,
-      candidateAggregate.value,
-    );
-  } else {
-    issues.push({
-      kind: "schema-invalid",
-      message: "Unable to parse both schema snapshots and aggregates.",
-    });
-  }
-
+  const baselineAggregate = parseArtifact(baselineAggregateBytes);
+  const candidateAggregate = parseArtifact(candidateAggregateBytes);
+  const baselineSchema = parseArtifact(baselineSchemaBytes);
+  const candidateSchema = parseArtifact(candidateSchemaBytes);
+  compareAggregateSnapshots(
+    issues,
+    baselineAggregate,
+    candidateAggregate,
+    expected.artifacts.aggregate.evidence,
+  );
+  validateSchemaPair(
+    issues,
+    expected,
+    baselineSchema,
+    candidateSchema,
+    baselineAggregate,
+    candidateAggregate,
+  );
   return issues.length === 0
-    ? { tag: "verified", baselineCommit: BASELINE_COMMIT }
+    ? { tag: "verified", baselineCommit: expected.baseline.commit }
     : { tag: "invalid", issues };
 }
 
