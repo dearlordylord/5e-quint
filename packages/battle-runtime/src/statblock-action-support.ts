@@ -6,6 +6,7 @@ import type {
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
 import { CONDITIONS } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
@@ -243,51 +244,52 @@ function wildShapeFormActionSurfaceCategories(
         categories.add("statBlockSpecialAction");
         continue;
       }
-      switch (entry.procedure.kind) {
-        case "multiattack":
-          categories.add("statBlockActionMultiattack");
-          break;
-        case "save":
-          categories.add("statBlockActionSaveGate");
-          break;
-        case "support":
-          categories.add("statBlockActionSupport");
-          break;
-        case "action_option":
-          categories.add("statBlockActionOption");
-          break;
-        case "spellcasting":
-          categories.add("statBlockSpecialAction");
-          break;
-        case "attack_roll": {
-          const damageEffects = entry.procedure.onHit.filter(
-            (effect) => effect.kind === "damage",
-          );
-          if (damageEffects.length === 1) {
-            categories.add("simpleLiteralAttackSingleDamage");
-          } else if (damageEffects.length > 1) {
-            categories.add("multiDamageComponentsOnHit");
-          }
-          for (const effect of entry.procedure.onHit) {
-            if (effect.kind === "apply_condition_if_target_size_at_most") {
-              categories.add("attackHitTargetSizeConditionRider");
-            } else if (effect.kind !== "damage") {
-              categories.add("attackHitOtherRider");
+      Match.value(entry.procedure).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          multiattack: () => {
+            categories.add("statBlockActionMultiattack");
+          },
+          save: () => {
+            categories.add("statBlockActionSaveGate");
+          },
+          support: () => {
+            categories.add("statBlockActionSupport");
+          },
+          action_option: () => {
+            categories.add("statBlockActionOption");
+          },
+          spellcasting: () => {
+            categories.add("statBlockSpecialAction");
+          },
+          attack_roll: (procedure) => {
+            const damageEffects = procedure.onHit.filter(
+              (effect) => effect.kind === "damage",
+            );
+            if (damageEffects.length === 1) {
+              categories.add("simpleLiteralAttackSingleDamage");
+            } else if (damageEffects.length > 1) {
+              categories.add("multiDamageComponentsOnHit");
             }
-          }
-          if (
-            "description" in entry.procedure &&
-            entry.procedure.description !== undefined
-          ) {
-            for (const category of attackHitDescriptionRiderCategories(
-              entry.procedure.description,
-            )) {
-              categories.add(category);
+            for (const effect of procedure.onHit) {
+              if (effect.kind === "apply_condition_if_target_size_at_most") {
+                categories.add("attackHitTargetSizeConditionRider");
+              } else if (effect.kind !== "damage") {
+                categories.add("attackHitOtherRider");
+              }
             }
-          }
-          break;
-        }
-      }
+            if (
+              "description" in procedure &&
+              procedure.description !== undefined
+            ) {
+              for (const category of attackHitDescriptionRiderCategories(
+                procedure.description,
+              )) {
+                categories.add(category);
+              }
+            }
+          },
+        }),
+      );
     }
   }
 
