@@ -92,9 +92,10 @@ Prepare or repair the current memory-constrained Dokku host once with:
 pnpm configure:mcp:dokku-memory
 ```
 
-This idempotently provisions a 2 GiB `/swapfile` with low swappiness and
-disables zero-downtime overlap only for the staging and production Oracle web
-processes. It does not stop unrelated applications.
+This idempotently provisions a 2 GiB `/swapfile` with low swappiness, disables
+zero-downtime overlap only for the staging and production Oracle web processes,
+and clears legacy application-Dockerfile overrides so Dokku can release the
+already-built image. It does not stop unrelated applications.
 
 The commands trigger `.github/workflows/public-mcp-image.yml` for the exact
 release, wait for its production-only OCI image artifact, and stream that

@@ -49,9 +49,14 @@ describe("public MCP deployment operations", () => {
     expect(deployDokku).toContain("minimum_available_memory_kib");
     expect(deployDokku).toContain("minimum_available_swap_kib");
     expect(deployDokku).toContain("git:load-image");
+    expect(deployDokku).toContain("rollback_image");
+    expect(deployDokku).toContain("docker image tag");
     expect(deployDokku).not.toContain("git push");
     expect(memorySafety).toContain("fallocate -l 2G");
     expect(memorySafety).toContain('checks:disable "$app" web');
+    expect(memorySafety).toContain(
+      'builder-dockerfile:set "$app" dockerfile-path',
+    );
     expect(imageWorkflow).toContain("Build deployable image off-host");
     expect(imageWorkflow).toContain("name: dnd-oracle-image");
     expect(imageWorkflow).toContain("docker image save");

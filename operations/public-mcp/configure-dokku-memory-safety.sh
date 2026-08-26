@@ -28,11 +28,13 @@ sysctl vm.swappiness=10 >/dev/null
 for app in "$@"; do
   dokku apps:exists "$app" >/dev/null
   dokku checks:disable "$app" web >/dev/null
+  dokku builder-dockerfile:set "$app" dockerfile-path >/dev/null
 done
 
 free -h
 swapon --show
 for app in "$@"; do
   dokku checks:report "$app"
+  dokku builder-dockerfile:report "$app"
 done
 REMOTE

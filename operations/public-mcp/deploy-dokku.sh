@@ -53,6 +53,17 @@ disabled_checks="$(ssh "dokku@$dokku_host" checks:report "$dokku_app" --checks-d
   echo "$dokku_app must stop its old web process before starting a release" >&2
   exit 65
 }
+configured_dockerfile_path="$(
+  ssh "dokku@$dokku_host" \
+    builder-dockerfile:report \
+    "$dokku_app" \
+    --builder-dockerfile-dockerfile-path
+)"
+[[ -z "$configured_dockerfile_path" ]] || {
+  echo "$dokku_app must not override the generated image deployment Dockerfile" >&2
+  echo "Run pnpm configure:mcp:dokku-memory to clear the stale override" >&2
+  exit 65
+}
 configured_storage_mount="$(ssh "dokku@$dokku_host" storage:report "$dokku_app" --storage-deploy-mounts)"
 [[ "$configured_storage_mount" == "$expected_storage_mount" ]] || {
   echo "$dokku_app storage mount differs from $expected_storage_mount" >&2
@@ -160,6 +171,15 @@ previous_image="$(
   echo "$dokku_app has no immutable image available for rollback" >&2
   exit 65
 }
+rollback_image="dnd-oracle-rollback-$dokku_app:$previous_release"
+ssh "root@$dokku_host" \
+  docker image tag \
+  "dokku/$dokku_app:latest" \
+  "$rollback_image"
+[[ "$(ssh "root@$dokku_host" docker image inspect --format '{{.Id}}' "$rollback_image")" == "$previous_image" ]] || {
+  echo "$dokku_app rollback tag does not identify the serving image" >&2
+  exit 65
+}
 ssh "dokku@$dokku_host" config:set --no-restart "$dokku_app" "DND_MCP_RELEASE=$release" >/dev/null
 
 if ! ssh "dokku@$dokku_host" \
@@ -173,11 +193,14 @@ if ! ssh "dokku@$dokku_host" \
   ssh "dokku@$dokku_host" \
     git:from-image \
     "$dokku_app" \
-    "$previous_image" \
+    "$rollback_image" \
     "5e Quint rollback" \
     "deployment@localhost" >/dev/null
+  ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null
   exit 1
 fi
+
+ssh "root@$dokku_host" docker image rm "$rollback_image" >/dev/null
 
 DND_MCP_PUBLISHER_NAME="$publisher_name" \
   DND_MCP_PUBLICATION_MODE="$publication_mode" \
