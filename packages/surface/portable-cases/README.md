@@ -8,7 +8,11 @@ language-neutral authority in `srd-surface-dependency-contract.json`. Contract
 paths are record-relative dotted paths; `[]` denotes any array element, and
 each role names its source and target record family. The production schema
 walker is cross-checked against that contract, but it does not generate the
-independent expected results.
+independent expected results. Those results are retained in the separately
+authored `srd-surface-independent-expectations.json` snapshot. The generator
+checks that snapshot's schema, dependency-contract, and case-input digests
+before joining it to the generated cases; missing or incompatible independent
+data fails generation.
 
 Each case's `expected.production` describes the typed result from the
 production Surface boundary. `expected.independent` describes the

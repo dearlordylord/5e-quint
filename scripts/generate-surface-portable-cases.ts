@@ -1,11 +1,21 @@
+import { createHash } from "node:crypto";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
+import { Match } from "effect";
+
 import {
-  PortableSurfaceOracle,
+  decodePortableSrdSurface,
+  decodePortableSrdSurfaceText,
+  type PortableSrdSurfaceIssue,
+} from "../packages/surface/src/surface/portable-surface.ts";
+import {
+  PORTABLE_CASE_ISSUE_CODES,
+  type PortableCaseIssue,
   type PortableCaseInput,
   type PortableCaseOutcome,
   type PortableDependencyRole,
+  type PortableIssueList,
 } from "./surface-portable-case-oracle.ts";
 
 type JsonObject = Record<string, unknown>;
@@ -24,6 +34,19 @@ type PortableCaseDocument = {
   readonly cases: readonly PortableCase[];
 };
 
+type IndependentExpectationCase = {
+  readonly name: string;
+  readonly inputSha256: string;
+  readonly expected: PortableCaseOutcome;
+};
+
+type IndependentExpectationDocument = {
+  readonly version: 1;
+  readonly schemaSha256: string;
+  readonly dependencyContractSha256: string;
+  readonly cases: readonly IndependentExpectationCase[];
+};
+
 function isObject(value: unknown): value is JsonObject {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -34,6 +57,22 @@ function readJson(path: string): unknown {
   } catch (error) {
     throw new Error(`Could not read JSON ${path}: ${String(error)}`);
   }
+}
+
+function sha256Text(value: string): string {
+  return createHash("sha256").update(value, "utf8").digest("hex");
+}
+
+function jsonFingerprint(value: unknown): string {
+  return sha256Text(JSON.stringify(value));
+}
+
+function inputFingerprint(input: PortableCaseInput): string {
+  return jsonFingerprint(
+    "input" in input
+      ? { representation: "value", value: input.input }
+      : { representation: "text", value: input.inputText },
+  );
 }
 
 function requireObject(value: unknown, context: string): JsonObject {
@@ -51,6 +90,203 @@ function requireNonEmptyString(value: unknown, context: string): string {
     throw new Error(`${context} must be a non-empty string`);
   }
   return value;
+}
+
+function requireSha256(value: unknown, context: string): string {
+  const hash = requireNonEmptyString(value, context);
+  if (!/^[0-9a-f]{64}$/.test(hash)) {
+    throw new Error(`${context} must be a lowercase SHA-256 digest`);
+  }
+  return hash;
+}
+
+function requireOneOf<T extends string>(
+  value: unknown,
+  values: readonly T[],
+  context: string,
+): T {
+  const candidate = requireNonEmptyString(value, context);
+  const matched = values.find((entry) => entry === candidate);
+  if (matched === undefined) {
+    throw new Error(`${context} is unsupported: ${candidate}`);
+  }
+  return matched;
+}
+
+function requireNonEmptyIssues(
+  issues: readonly PortableCaseIssue[],
+  context: string,
+): PortableIssueList {
+  const [first, ...rest] = issues;
+  if (first === undefined) {
+    throw new Error(`${context} must be non-empty`);
+  }
+  return [first, ...rest];
+}
+
+function requireIssue(value: unknown, context: string): PortableCaseIssue {
+  const issue = requireObject(value, context);
+  const code = requireOneOf(
+    issue.code,
+    PORTABLE_CASE_ISSUE_CODES,
+    `${context}.code`,
+  );
+  const path = requireNonEmptyString(issue.path, `${context}.path`);
+  return Match.value(code).pipe(
+    Match.when("json", (): PortableCaseIssue => ({ code: "json", path })),
+    Match.when("shape", (): PortableCaseIssue => ({ code: "shape", path })),
+    Match.when("schema", (): PortableCaseIssue => ({ code: "schema", path })),
+    Match.when(
+      "duplicate-json-member",
+      (): PortableCaseIssue => ({
+        code: "duplicate-json-member",
+        path,
+        memberName: requireNonEmptyString(
+          issue.memberName,
+          `${context}.memberName`,
+        ),
+      }),
+    ),
+    Match.when(
+      "duplicate-authored-identity",
+      (): PortableCaseIssue => ({
+        code: "duplicate-authored-identity",
+        path,
+        targetKind: requireOneOf(
+          issue.targetKind,
+          ["unit", "statBlock"],
+          `${context}.targetKind`,
+        ),
+        targetId: requireNonEmptyString(issue.targetId, `${context}.targetId`),
+        priorPath: requireNonEmptyString(
+          issue.priorPath,
+          `${context}.priorPath`,
+        ),
+      }),
+    ),
+    Match.when(
+      "dangling-authored-dependency",
+      (): PortableCaseIssue => ({
+        code: "dangling-authored-dependency",
+        path,
+        targetKind: requireOneOf(
+          issue.targetKind,
+          ["unit", "statBlock"],
+          `${context}.targetKind`,
+        ),
+        targetId: requireNonEmptyString(issue.targetId, `${context}.targetId`),
+        relation: requireNonEmptyString(issue.relation, `${context}.relation`),
+      }),
+    ),
+    Match.when(
+      "unsupported-schema-node",
+      (): PortableCaseIssue => ({
+        code: "unsupported-schema-node",
+        path,
+        astTag: requireNonEmptyString(issue.astTag, `${context}.astTag`),
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function requireOutcome(value: unknown, context: string): PortableCaseOutcome {
+  const outcome = requireObject(value, context);
+  const tag = requireOneOf(
+    outcome.tag,
+    ["accepted", "rejected"],
+    `${context}.tag`,
+  );
+  return Match.value(tag).pipe(
+    Match.when("accepted", () => ({ tag: "accepted" as const })),
+    Match.when("rejected", () => {
+      const issues = requireArray(outcome.issues, `${context}.issues`).map(
+        (issue, index) => requireIssue(issue, `${context}.issues[${index}]`),
+      );
+      return {
+        tag: "rejected" as const,
+        issues: requireNonEmptyIssues(issues, `${context}.issues`),
+      };
+    }),
+    Match.exhaustive,
+  );
+}
+
+function readIndependentExpectationDocument(
+  path: string,
+): IndependentExpectationDocument {
+  const document = requireObject(readJson(path), "independent expectations");
+  if (document.version !== 1) {
+    throw new Error("independent expectations version must be 1");
+  }
+  const cases = requireArray(
+    document.cases,
+    "independent expectations cases",
+  ).map((entry, index) => {
+    const expectation = requireObject(
+      entry,
+      `independent expectations case ${index}`,
+    );
+    return {
+      name: requireNonEmptyString(
+        expectation.name,
+        `independent expectations case ${index}.name`,
+      ),
+      inputSha256: requireSha256(
+        expectation.inputSha256,
+        `independent expectations case ${index}.inputSha256`,
+      ),
+      expected: requireOutcome(
+        expectation.expected,
+        `independent expectations case ${index}.expected`,
+      ),
+    } satisfies IndependentExpectationCase;
+  });
+  const schemaSha256 = requireSha256(
+    document.schemaSha256,
+    "independent expectations schemaSha256",
+  );
+  const dependencyContractSha256 = requireSha256(
+    document.dependencyContractSha256,
+    "independent expectations dependencyContractSha256",
+  );
+  return {
+    version: 1,
+    schemaSha256,
+    dependencyContractSha256,
+    cases,
+  };
+}
+
+export function readSrdSurfaceIndependentExpectations(
+  path: string,
+  schema: unknown,
+  contract: readonly PortableDependencyRole[],
+): ReadonlyMap<string, IndependentExpectationCase> {
+  const document = readIndependentExpectationDocument(path);
+  if (document.schemaSha256 !== jsonFingerprint(schema)) {
+    throw new Error(
+      "Independent expectations were authored for a different Surface schema",
+    );
+  }
+  if (document.dependencyContractSha256 !== jsonFingerprint(contract)) {
+    throw new Error(
+      "Independent expectations were authored for a different dependency contract",
+    );
+  }
+  const expectations = new Map<string, IndependentExpectationCase>();
+  for (const expectation of document.cases) {
+    if (expectations.has(expectation.name)) {
+      throw new Error(
+        `Independent expectations contain duplicate case name: ${expectation.name}`,
+      );
+    }
+    expectations.set(expectation.name, expectation);
+  }
+  if (expectations.size === 0) {
+    throw new Error("Independent expectations must contain at least one case");
+  }
+  return expectations;
 }
 
 function readDependencyContract(
@@ -233,28 +469,103 @@ function dependencyRoleFailureInput(
       };
 }
 
-function expectedOutcome(
-  oracle: PortableSurfaceOracle,
+function productionOutcome(input: PortableCaseInput): PortableCaseOutcome {
+  const result =
+    "inputText" in input
+      ? decodePortableSrdSurfaceText(input.inputText)
+      : decodePortableSrdSurface(input.input);
+  if (result.tag === "accepted") return { tag: "accepted" };
+  const issues = result.issues.map((issue) => portableCaseIssue(issue));
+  return {
+    tag: "rejected",
+    issues: requireNonEmptyIssues(issues, "production outcome issues"),
+  };
+}
+
+function portableCaseIssue(issue: PortableSrdSurfaceIssue): PortableCaseIssue {
+  return Match.value(issue).pipe(
+    Match.when(
+      { code: "json" },
+      ({ path }): PortableCaseIssue => ({ code: "json", path }),
+    ),
+    Match.when(
+      { code: "shape" },
+      ({ path }): PortableCaseIssue => ({ code: "shape", path }),
+    ),
+    Match.when(
+      { code: "schema" },
+      ({ path }): PortableCaseIssue => ({ code: "schema", path }),
+    ),
+    Match.when(
+      { code: "duplicate-json-member" },
+      ({ path, memberName }): PortableCaseIssue => ({
+        code: "duplicate-json-member",
+        path,
+        memberName,
+      }),
+    ),
+    Match.when(
+      { code: "duplicate-authored-identity" },
+      ({ path, targetKind, targetId, priorPath }): PortableCaseIssue => ({
+        code: "duplicate-authored-identity",
+        path,
+        targetKind,
+        targetId,
+        priorPath,
+      }),
+    ),
+    Match.when(
+      { code: "dangling-authored-dependency" },
+      ({ path, targetKind, targetId, relation }): PortableCaseIssue => ({
+        code: "dangling-authored-dependency",
+        path,
+        targetKind,
+        targetId,
+        relation,
+      }),
+    ),
+    Match.when(
+      { code: "unsupported-schema-node" },
+      ({ path, astTag }): PortableCaseIssue => ({
+        code: "unsupported-schema-node",
+        path,
+        astTag,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+export function independentOutcomeForCase(
+  expectations: ReadonlyMap<string, IndependentExpectationCase>,
+  name: string,
   input: PortableCaseInput,
-  contract: readonly PortableDependencyRole[],
 ): PortableCaseOutcome {
-  const result = oracle.evaluateInput(input, contract);
-  return result.tag === "accepted"
-    ? { tag: "accepted" }
-    : { tag: "rejected", issues: result.issues };
+  const expectation = expectations.get(name);
+  if (expectation === undefined) {
+    throw new Error(`Independent expectations are missing case: ${name}`);
+  }
+  const actualInputSha256 = inputFingerprint(input);
+  if (expectation.inputSha256 !== actualInputSha256) {
+    throw new Error(
+      `Independent expectations input mismatch for case ${name}: expected ${expectation.inputSha256}, received ${actualInputSha256}`,
+    );
+  }
+  return expectation.expected;
 }
 
 function makeCase(
-  oracle: PortableSurfaceOracle,
-  contract: readonly PortableDependencyRole[],
+  expectations: ReadonlyMap<string, IndependentExpectationCase>,
   name: string,
   input: PortableCaseInput,
 ): PortableCase {
-  const expected = expectedOutcome(oracle, input, contract);
   return {
     ...input,
     name,
-    expected: { production: expected, independent: expected },
+    expected: {
+      production: productionOutcome(input),
+      independent: independentOutcomeForCase(expectations, name, input),
+    },
   };
 }
 
@@ -285,7 +596,14 @@ function buildDocument(repositoryRoot: string): PortableCaseDocument {
       "packages/surface/portable-cases/srd-surface-dependency-contract.json",
     ),
   );
-  const oracle = new PortableSurfaceOracle(schema);
+  const independentExpectations = readSrdSurfaceIndependentExpectations(
+    join(
+      repositoryRoot,
+      "packages/surface/portable-cases/srd-surface-independent-expectations.json",
+    ),
+    schema,
+    contract,
+  );
   const units = records(publication, "units");
   const statBlocks = records(publication, "statBlocks");
   const firstUnit = units[0];
@@ -370,15 +688,15 @@ function buildDocument(repositoryRoot: string): PortableCaseDocument {
     "first stat block provenance",
   );
   const cases: readonly PortableCase[] = [
-    makeCase(oracle, contract, "valid published aggregate", {
+    makeCase(independentExpectations, "valid published aggregate", {
       input: publication,
     }),
-    makeCase(oracle, contract, "unknown field", {
+    makeCase(independentExpectations, "unknown field", {
       input: withRecord(compactPublication, "units", [
         { ...firstUnit, unknownField: true },
       ]),
     }),
-    makeCase(oracle, contract, "non-SRD provenance", {
+    makeCase(independentExpectations, "non-SRD provenance", {
       input: withRecord(compactPublication, "statBlocks", [
         {
           ...firstStatBlock,
@@ -386,71 +704,103 @@ function buildDocument(repositoryRoot: string): PortableCaseDocument {
         },
       ]),
     }),
-    makeCase(oracle, contract, "refinement violation", {
+    makeCase(independentExpectations, "refinement violation", {
       input: withRecord(compactPublication, "statBlocks", [
         { ...firstStatBlock, challengeRating: 99 },
       ]),
     }),
-    makeCase(oracle, contract, "empty collections", {
+    makeCase(independentExpectations, "empty collections", {
       input: { ...compactPublication, units: [], statBlocks: [] },
     }),
-    makeCase(oracle, contract, "duplicate JSON member", {
+    makeCase(independentExpectations, "duplicate JSON member", {
       inputText:
         '{"kind":"srd-5.2.1-surface-catalog","units":[],"units":[],"statBlocks":[]}',
     }),
-    makeCase(oracle, contract, "malformed JSON text", {
+    makeCase(independentExpectations, "malformed JSON text", {
       inputText: '{"kind":"srd-5.2.1-surface-catalog",',
     }),
-    makeCase(oracle, contract, "duplicate identity within one family", {
+    makeCase(independentExpectations, "duplicate identity within one family", {
       input: withRecord(compactPublication, "units", [firstUnit, firstUnit]),
     }),
-    makeCase(oracle, contract, "duplicate identity across record families", {
-      input: withRecord(compactPublication, "statBlocks", [
-        { ...firstStatBlock, id: dependencyFreeUnit.id },
-      ]),
-    }),
-    makeCase(oracle, contract, "dangling authored dependency", {
+    makeCase(
+      independentExpectations,
+      "duplicate identity across record families",
+      {
+        input: withRecord(compactPublication, "statBlocks", [
+          { ...firstStatBlock, id: dependencyFreeUnit.id },
+        ]),
+      },
+    ),
+    makeCase(independentExpectations, "dangling authored dependency", {
       input: danglingDependencyPublication,
     }),
     makeCase(
-      oracle,
-      contract,
+      independentExpectations,
       "schema-invalid dependency target accumulates dangling issue",
       {
         input: schemaInvalidDependencyTargetPublication,
       },
     ),
-    makeCase(oracle, contract, "independent record failures accumulate", {
-      input: withRecord(
-        withRecord(compactPublication, "units", [
-          { ...firstUnit, unknownUnitField: true },
-        ]),
-        "statBlocks",
-        [{ ...firstStatBlock, unknownStatBlockField: true }],
-      ),
-    }),
-    makeCase(oracle, contract, "schema and dependency failures accumulate", {
-      input: withRecord(
-        withRecord(danglingDependencyPublication, "units", [
-          { ...firstUnit, unknownUnitField: true },
-          dependencySourceUnit,
-        ]),
-        "statBlocks",
-        otherDependencyStatBlocks,
-      ),
-    }),
-    makeCase(oracle, contract, "all canonical dependency fields are checked", {
-      input: dependencyFailure,
-    }),
+    makeCase(
+      independentExpectations,
+      "independent record failures accumulate",
+      {
+        input: withRecord(
+          withRecord(compactPublication, "units", [
+            { ...firstUnit, unknownUnitField: true },
+          ]),
+          "statBlocks",
+          [{ ...firstStatBlock, unknownStatBlockField: true }],
+        ),
+      },
+    ),
+    makeCase(
+      independentExpectations,
+      "schema and dependency failures accumulate",
+      {
+        input: withRecord(
+          withRecord(danglingDependencyPublication, "units", [
+            { ...firstUnit, unknownUnitField: true },
+            dependencySourceUnit,
+          ]),
+          "statBlocks",
+          otherDependencyStatBlocks,
+        ),
+      },
+    ),
+    makeCase(
+      independentExpectations,
+      "all canonical dependency fields are checked",
+      {
+        input: dependencyFailure,
+      },
+    ),
     ...contract.map((role) =>
       makeCase(
-        oracle,
-        contract,
+        independentExpectations,
         `canonical dependency role: ${role.sourceKind}.${role.path}`,
         { input: dependencyRoleFailureInput(publication, role) },
       ),
     ),
   ];
+
+  const caseNames = new Set<string>();
+  for (const portableCase of cases) {
+    if (caseNames.has(portableCase.name)) {
+      throw new Error(
+        `Generated portable cases contain duplicate name: ${portableCase.name}`,
+      );
+    }
+    caseNames.add(portableCase.name);
+  }
+  const staleNames = [...independentExpectations.keys()].filter(
+    (name) => !caseNames.has(name),
+  );
+  if (staleNames.length > 0) {
+    throw new Error(
+      `Independent expectations contain cases not generated anymore: ${staleNames.join(", ")}`,
+    );
+  }
 
   return { version: 1, dependencyContract: contract, cases };
 }
