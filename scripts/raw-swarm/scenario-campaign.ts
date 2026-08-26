@@ -1,6 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
 import { Either, JSONSchema, Match, ParseResult, Schema } from "effect";
 
+import type { ArtifactSha256 } from "./artifact-authority-schema.ts";
+
 import {
   GitShaSchema,
   ScenarioIdSchema,
@@ -278,10 +280,18 @@ export type ScenarioCompositeReviewForIntents<
   readonly contentAvailability: ScenarioContentReviewForIntent<ContentIntent>;
   readonly sdkCapability: ScenarioSdkCapabilityReviewForIntent<SdkIntent>;
 };
-const ScenarioSha256Schema = Schema.String.pipe(
+export const ScenarioSha256Schema = Schema.String.pipe(
   Schema.pattern(/^[0-9a-f]{64}$/),
   Schema.brand("RawSwarmScenarioSha256"),
 );
+export type ScenarioSha256 = Schema.Schema.Type<typeof ScenarioSha256Schema>;
+
+export function scenarioSha256MatchesArtifact(input: {
+  readonly scenarioSha256: ScenarioSha256;
+  readonly artifactSha256: ArtifactSha256;
+}): boolean {
+  return input.scenarioSha256.localeCompare(input.artifactSha256) === 0;
+}
 
 const FinalScenarioIdentitySchema = Schema.Struct({
   scenarioId: ScenarioIdSchema,

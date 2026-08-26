@@ -10,6 +10,7 @@ import {
   readJsonLines,
   type ArtifactAuthority,
 } from "./artifact-authority.ts";
+import type { ArtifactSha256 } from "./artifact-authority-schema.ts";
 import {
   BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
   benchmarkModelInvocationEvidenceFromEvents,
@@ -53,6 +54,7 @@ import {
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   ScenarioQualityReviewSchema,
+  scenarioSha256MatchesArtifact,
 } from "./scenario-campaign.ts";
 export {
   codexOutputJsonSchema,
@@ -4026,9 +4028,9 @@ function currentAuthorityIssues(
     );
     return issues;
   }
-  const eventAuthorities = new Map<string, ArtifactAuthority>(
+  const eventAuthorities = new Map<ArtifactSha256, ArtifactAuthority>(
     measurement.invocationEvents.map((authority) => [
-      String(authority.sha256),
+      authority.sha256,
       authority,
     ]),
   );
@@ -5219,8 +5221,10 @@ function benchmarkAuthorityIssues(
   } else {
     if (
       decodedScenarioReview.right.scenarioId !== measurement.scenarioId ||
-      String(decodedScenarioReview.right.scenarioSha256) !==
-        String(bundle.scenario.sha256)
+      !scenarioSha256MatchesArtifact({
+        scenarioSha256: decodedScenarioReview.right.scenarioSha256,
+        artifactSha256: bundle.scenario.sha256,
+      })
     ) {
       issues.push(
         "Benchmark scenario-review authority is not bound to the scenario bundle identity.",
@@ -5403,9 +5407,9 @@ function benchmarkAuthorityIssues(
       "Each benchmark invocation must have exactly one retained event authority.",
     );
   }
-  const eventAuthorities = new Map<string, ArtifactAuthority>(
+  const eventAuthorities = new Map<ArtifactSha256, ArtifactAuthority>(
     measurement.invocationEvents.map((authority) => [
-      String(authority.sha256),
+      authority.sha256,
       authority,
     ]),
   );

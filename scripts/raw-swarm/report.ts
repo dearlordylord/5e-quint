@@ -7,14 +7,7 @@ import {
   realpathSync,
   writeFileSync,
 } from "node:fs";
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  relative,
-  resolve,
-  sep,
-} from "node:path";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
@@ -47,6 +40,7 @@ import {
   openArtifactIndexReadOnly,
   PortableManifestArtifactSchema,
   PortableManifestSchema,
+  PortableRelativePathSchema,
   registerIndexArtifact,
   rebuildLegacyArtifactIndex,
   type PortableManifest,
@@ -487,9 +481,6 @@ function portableReportBundle(
   const artifactPaths = new Set<string>();
   for (const [entryIndex, entry] of value.artifacts.entries()) {
     if (
-      entry.path.length === 0 ||
-      entry.path.includes("\0") ||
-      isAbsolute(entry.path) ||
       !pathIsContained(root, resolve(root, entry.path)) ||
       artifacts.has(entry.sha256) ||
       artifactPaths.has(entry.path)
@@ -508,9 +499,6 @@ function portableReportBundle(
   const controlledAttachments = value.controlledAttachments.map(
     (entry, entryIndex) => {
       if (
-        entry.path.length === 0 ||
-        entry.path.includes("\0") ||
-        isAbsolute(entry.path) ||
         !pathIsContained(root, resolve(root, entry.path)) ||
         artifacts.has(entry.sha256) ||
         artifactPaths.has(entry.path) ||
@@ -1338,13 +1326,13 @@ function controlledReporting(args: readonly string[]): void {
   }
   const absoluteDestination = resolve(repoRoot, destination);
   const absoluteTimingPath = resolve(repoRoot, timingPath);
-  const portableTimingPath = relative(absoluteDestination, absoluteTimingPath);
-  if (
-    portableTimingPath === ".." ||
-    portableTimingPath.startsWith(`..${sep}`)
-  ) {
+  const decodedPortableTimingPath = Schema.decodeUnknownEither(
+    PortableRelativePathSchema,
+  )(relative(absoluteDestination, absoluteTimingPath));
+  if (Either.isLeft(decodedPortableTimingPath)) {
     fail("Controlled reporting timing must be inside the portable export.");
   }
+  const portableTimingPath = decodedPortableTimingPath.right;
   if (existsSync(absoluteTimingPath)) {
     fail("Refusing to overwrite controlled reporting timing evidence.");
   }
@@ -1442,6 +1430,7 @@ function controlledReporting(args: readonly string[]): void {
   const timingAttachment = {
     tag: "controlledReportingTiming",
     ...timingArtifact,
+    path: portableTimingPath,
   } satisfies PortableControlledAttachment;
   if (manifest.controlledAttachments.length !== 0) {
     fail(

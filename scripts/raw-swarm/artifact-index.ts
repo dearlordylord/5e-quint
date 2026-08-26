@@ -9,7 +9,14 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { basename, dirname, extname, relative, resolve } from "node:path";
+import {
+  basename,
+  dirname,
+  extname,
+  isAbsolute,
+  relative,
+  resolve,
+} from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { pathToFileURL } from "node:url";
 import { Either, Schema } from "effect";
@@ -2361,8 +2368,23 @@ export function rebuildLegacyArtifactIndex(input: {
 
 const PORTABLE_MANIFEST_SCHEMA_VERSION = 2;
 
+export const PortableRelativePathSchema = Schema.NonEmptyTrimmedString.pipe(
+  Schema.filter(
+    (path) => {
+      if (path.includes("\0") || isAbsolute(path)) return false;
+      const withinPortableRoot = relativePathWithinRoot(
+        resolve("/"),
+        resolve("/", path),
+      );
+      return withinPortableRoot !== undefined && withinPortableRoot !== "";
+    },
+    { message: () => "Portable artifact path must remain below its root." },
+  ),
+  Schema.brand("PortableRelativePath"),
+);
+
 export const PortableManifestArtifactSchema = Schema.Struct({
-  path: Schema.String,
+  path: PortableRelativePathSchema,
   sha256: ArtifactSha256Schema,
   byteLength: ArtifactByteLengthSchema,
 });

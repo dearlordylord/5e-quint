@@ -46,7 +46,10 @@ import {
   type ScenarioCampaignManifest,
 } from "./evidence-manifests.ts";
 import { RejectedScenarioCandidateRecordSchema } from "./scenario-catalogue.ts";
-import { RejectedScenarioCandidateReviewSchema } from "./scenario-campaign.ts";
+import {
+  RejectedScenarioCandidateReviewSchema,
+  scenarioSha256MatchesArtifact,
+} from "./scenario-campaign.ts";
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
 import {
   codexRawRetentionEventFromEvents,
@@ -596,9 +599,13 @@ export function projectGenerationFindings(
       manifestIdentity.tag !== "scenarioCampaign" ||
       rejectionRecord === undefined ||
       Either.isLeft(rejectionRecord) ||
+      scenarioSha256 === undefined ||
       review.right.campaignId !== manifestIdentity.campaignId ||
       review.right.candidateId !== rejectionRecord.right.candidateId ||
-      String(review.right.candidateScenarioSha256) !== String(scenarioSha256) ||
+      !scenarioSha256MatchesArtifact({
+        scenarioSha256: review.right.candidateScenarioSha256,
+        artifactSha256: scenarioSha256,
+      }) ||
       review.right.gitSha !== manifestIdentity.gitSha
     ) {
       fail("Candidate review authority identity does not match generation.");
