@@ -1,4 +1,4 @@
-import { DatabaseSync } from "node:sqlite";
+import { DatabaseSync, type StatementSync } from "node:sqlite";
 
 import { Either, Schema } from "effect";
 
@@ -19,6 +19,124 @@ import {
   type RecoverablePlaySessionRecord,
 } from "./play-session-repository.ts";
 import { retireUnownedPlaySessionSchema } from "./sqlite-play-session-schema.ts";
+
+type RateLimitStatements = {
+  readonly select: StatementSync;
+  readonly insert: StatementSync;
+  readonly update: StatementSync;
+  readonly prune: StatementSync;
+};
+
+function runRateAdmission(
+  database: DatabaseSync,
+  statements: RateLimitStatements,
+  accessKeyDigest: Parameters<PlaySessionRepository["admitRequest"]>[0],
+  nowMs: Parameters<PlaySessionRepository["admitRequest"]>[1],
+  maximumRequestsPerWindow: Parameters<
+    PlaySessionRepository["admitRequest"]
+  >[2],
+): ReturnType<PlaySessionRepository["admitRequest"]> {
+  statements.prune.run(nowMs - PLAY_SESSION_RATE_LIMIT_WINDOW_MS);
+  const current = statements.select.get(accessKeyDigest);
+  if (current === undefined) {
+    statements.insert.run(accessKeyDigest, nowMs);
+    database.exec("COMMIT");
+    return Either.right({ tag: "admitted" });
+  }
+  const decoded = Schema.decodeUnknownEither(
+    Schema.Struct({
+      window_started_at_ms: Schema.NonNegativeInt,
+      request_count: Schema.Positive,
+    }),
+  )(current);
+  if (Either.isLeft(decoded)) {
+    database.exec("ROLLBACK");
+    return Either.left(invalidStoredRecordIssue(decoded.left.message));
+  }
+  const expired =
+    nowMs >=
+    decoded.right.window_started_at_ms + PLAY_SESSION_RATE_LIMIT_WINDOW_MS;
+  if (!expired && decoded.right.request_count >= maximumRequestsPerWindow) {
+    database.exec("COMMIT");
+    return Either.right({
+      tag: "rateExceeded",
+      retryAfterSeconds: Math.max(
+        1,
+        Math.ceil(
+          (decoded.right.window_started_at_ms +
+            PLAY_SESSION_RATE_LIMIT_WINDOW_MS -
+            nowMs) /
+            1_000,
+        ),
+      ),
+    });
+  }
+  statements.update.run(
+    expired ? nowMs : decoded.right.window_started_at_ms,
+    expired ? 1 : decoded.right.request_count + 1,
+    accessKeyDigest,
+  );
+  database.exec("COMMIT");
+  return Either.right({ tag: "admitted" });
+}
+
+function runSave(
+  save: StatementSync,
+  select: StatementSync,
+  listSaved: StatementSync,
+  record: Parameters<PlaySessionRepository["save"]>[0],
+  tenure: Parameters<PlaySessionRepository["save"]>[1],
+  maximumSavedSessionsPerPrincipal: Parameters<
+    PlaySessionRepository["save"]
+  >[2],
+): ReturnType<PlaySessionRepository["save"]> {
+  const result = save.run(
+    tenure.principalId,
+    tenure.lastActivityAtMs,
+    record.playSessionId,
+    record.revision,
+    tenure.principalId,
+    maximumSavedSessionsPerPrincipal,
+  );
+  if (result.changes !== 0) return Either.right({ tag: "saved" });
+  return resolveSaveConflict(
+    select,
+    listSaved,
+    record,
+    tenure,
+    maximumSavedSessionsPerPrincipal,
+  );
+}
+
+function resolveSaveConflict(
+  select: StatementSync,
+  listSaved: StatementSync,
+  record: Parameters<PlaySessionRepository["save"]>[0],
+  tenure: Parameters<PlaySessionRepository["save"]>[1],
+  maximumSavedSessionsPerPrincipal: Parameters<
+    PlaySessionRepository["save"]
+  >[2],
+): ReturnType<PlaySessionRepository["save"]> {
+  const current = select.get(record.playSessionId);
+  if (current === undefined) return Either.right({ tag: "revisionConflict" });
+  const decodedCurrent = decodeStoredPlaySessionRecord(
+    current,
+    record.playSessionId,
+  );
+  if (Either.isLeft(decodedCurrent)) return Either.left(decodedCurrent.left);
+  if (
+    decodedCurrent.right.revision !== record.revision ||
+    decodedCurrent.right.tenure.tag !== "guest"
+  ) {
+    return Either.right({ tag: "revisionConflict" });
+  }
+  const savedRecords = listSaved.all(tenure.principalId);
+  return Either.right(
+    savedRecords.length >= maximumSavedSessionsPerPrincipal
+      ? { tag: "savedSessionQuotaExceeded" }
+      : { tag: "revisionConflict" },
+  );
+}
 
 export function openSqlitePlaySessionRepository(
   databasePath: string,
@@ -237,39 +355,14 @@ function createSqlitePlaySessionRepository(
     save(record, tenure, maximumSavedSessionsPerPrincipal) {
       if (closed) return Either.left(closedRepositoryIssue());
       try {
-        const result = save.run(
-          tenure.principalId,
-          tenure.lastActivityAtMs,
-          record.playSessionId,
-          record.revision,
-          tenure.principalId,
+        return runSave(
+          save,
+          select,
+          listSaved,
+          record,
+          tenure,
           maximumSavedSessionsPerPrincipal,
         );
-        if (result.changes === 0) {
-          const current = select.get(record.playSessionId);
-          if (current === undefined) {
-            return Either.right({ tag: "revisionConflict" });
-          }
-          const decodedCurrent = decodeStoredPlaySessionRecord(
-            current,
-            record.playSessionId,
-          );
-          if (Either.isLeft(decodedCurrent)) {
-            return Either.left(decodedCurrent.left);
-          }
-          if (
-            decodedCurrent.right.revision !== record.revision ||
-            decodedCurrent.right.tenure.tag !== "guest"
-          ) {
-            return Either.right({ tag: "revisionConflict" });
-          }
-          const savedRecords = listSaved.all(tenure.principalId);
-          if (savedRecords.length >= maximumSavedSessionsPerPrincipal) {
-            return Either.right({ tag: "savedSessionQuotaExceeded" });
-          }
-          return Either.right({ tag: "revisionConflict" });
-        }
-        return Either.right({ tag: "saved" });
       } catch (cause) {
         return Either.left(unreadableRepositoryIssue(cause));
       }
@@ -341,52 +434,18 @@ function createSqlitePlaySessionRepository(
       if (closed) return Either.left(closedRepositoryIssue());
       try {
         database.exec("BEGIN IMMEDIATE");
-        pruneRateLimits.run(nowMs - PLAY_SESSION_RATE_LIMIT_WINDOW_MS);
-        const current = selectRateLimit.get(accessKeyDigest);
-        if (current === undefined) {
-          insertRateLimit.run(accessKeyDigest, nowMs);
-          database.exec("COMMIT");
-          return Either.right({ tag: "admitted" });
-        }
-        const decoded = Schema.decodeUnknownEither(
-          Schema.Struct({
-            window_started_at_ms: Schema.NonNegativeInt,
-            request_count: Schema.Positive,
-          }),
-        )(current);
-        if (Either.isLeft(decoded)) {
-          database.exec("ROLLBACK");
-          return Either.left(invalidStoredRecordIssue(decoded.left.message));
-        }
-        const expired =
-          nowMs >=
-          decoded.right.window_started_at_ms +
-            PLAY_SESSION_RATE_LIMIT_WINDOW_MS;
-        if (
-          !expired &&
-          decoded.right.request_count >= maximumRequestsPerWindow
-        ) {
-          database.exec("COMMIT");
-          return Either.right({
-            tag: "rateExceeded",
-            retryAfterSeconds: Math.max(
-              1,
-              Math.ceil(
-                (decoded.right.window_started_at_ms +
-                  PLAY_SESSION_RATE_LIMIT_WINDOW_MS -
-                  nowMs) /
-                  1_000,
-              ),
-            ),
-          });
-        }
-        updateRateLimit.run(
-          expired ? nowMs : decoded.right.window_started_at_ms,
-          expired ? 1 : decoded.right.request_count + 1,
+        return runRateAdmission(
+          database,
+          {
+            select: selectRateLimit,
+            insert: insertRateLimit,
+            update: updateRateLimit,
+            prune: pruneRateLimits,
+          },
           accessKeyDigest,
+          nowMs,
+          maximumRequestsPerWindow,
         );
-        database.exec("COMMIT");
-        return Either.right({ tag: "admitted" });
       } catch (cause) {
         try {
           database.exec("ROLLBACK");
