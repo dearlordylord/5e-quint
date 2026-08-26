@@ -6,7 +6,8 @@ const { compileTrustedCSource } = require("./deterministic-toolchain.cjs");
 const { createDeterministicRunner } = require("./deterministic-runner.cjs");
 
 const {
-  QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
+  DETERMINISTIC_TRUSTED_BOUNDARY_TESTS,
+  GUARDED_DETERMINISTIC_RAW_SWARM_TESTS,
 } = require("./lane-classification.cjs");
 
 const deterministicCapabilityGuard = resolve(
@@ -76,45 +77,79 @@ async function main() {
       ...process.env,
       PATH: `${resolve(__dirname, "deterministic-bin")}${delimiter}${process.env.PATH ?? ""}`,
       RAW_SWARM_EXECUTION_LANE: "deterministic",
-      NODE_OPTIONS: deterministicNodeOptions,
     };
-    runner = createDeterministicRunner({
+    delete deterministicEnvironment.NODE_OPTIONS;
+    const trustedBoundaryRunner = createDeterministicRunner({
       boundary: processSupervisor,
       environment: deterministicEnvironment,
+      superviseOnly: true,
+    });
+    const guardedRepositoryRunner = createDeterministicRunner({
+      boundary: processSupervisor,
+      environment: {
+        ...deterministicEnvironment,
+        NODE_OPTIONS: deterministicNodeOptions,
+      },
     });
 
-    for (const [command, args] of [
+    const vitestCommand = (tests) => [
+      "mise",
       [
+        "exec",
+        "--",
         "pnpm",
-        ["exec", "tsc", "-p", "scripts/raw-swarm/sdk-player/tsconfig.json"],
+        "exec",
+        resolve(__dirname, "../../node_modules/.bin/vitest"),
+        "run",
+        ...tests,
+        "--pool=threads",
+        "--maxWorkers=1",
       ],
-      [
-        "mise",
-        [
-          "exec",
-          "--",
-          "pnpm",
-          "exec",
-          resolve(__dirname, "../../node_modules/.bin/vitest"),
-          "run",
-          ...QUALITY_OWNED_DETERMINISTIC_RAW_SWARM_TESTS,
-          "--pool=threads",
-          "--maxWorkers=1",
-        ],
-      ],
-    ]) {
-      const result = await runner.run(command, args);
+    ];
+    const runPhase = async (phaseName, phaseRunner, command, args) => {
+      runner = phaseRunner;
+      const result = await phaseRunner.run(command, args);
       if (result.signal !== null) {
         process.stderr.write(
-          `Raw Swarm deterministic verification stopped by ${result.signal}.\n`,
+          `Raw Swarm deterministic ${phaseName} phase stopped by ${result.signal}.\n`,
         );
         process.exitCode = 1;
-        return;
+        return false;
       }
       if (result.status !== 0) {
         process.exitCode = result.status ?? 1;
-        return;
+        return false;
       }
+      return true;
+    };
+
+    if (
+      !(await runPhase("guarded typecheck", guardedRepositoryRunner, "pnpm", [
+        "exec",
+        "tsc",
+        "-p",
+        "scripts/raw-swarm/sdk-player/tsconfig.json",
+      ]))
+    ) {
+      return;
+    }
+    if (
+      !(await runPhase(
+        "trusted boundary",
+        trustedBoundaryRunner,
+        ...vitestCommand(DETERMINISTIC_TRUSTED_BOUNDARY_TESTS),
+      ))
+    ) {
+      return;
+    }
+    if (
+      !(await runPhase(
+        "guarded repository",
+        guardedRepositoryRunner,
+        ...vitestCommand(GUARDED_DETERMINISTIC_RAW_SWARM_TESTS),
+      ))
+    ) {
+      return;
     }
   } catch (error) {
     process.stderr.write(

@@ -40,6 +40,7 @@ export const GuestAccessGrantSchema = Schema.String.pipe(
   Schema.brand("GuestAccessGrant"),
 );
 export type GuestAccessGrant = typeof GuestAccessGrantSchema.Type;
+export type GuestAccessGrantFactory = () => GuestAccessGrant;
 
 export const GuestAccessGrantDigestSchema = Schema.String.pipe(
   Schema.pattern(/^[0-9a-f]{64}$/u),

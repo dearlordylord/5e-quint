@@ -24,6 +24,7 @@ import {
   guestAccessGrantMatchesDigest,
   playSessionRateLimitKeyDigest,
   type EpochMilliseconds,
+  type GuestAccessGrantFactory,
   type PlaySessionCaller,
   type PrincipalId,
   type StoredPlaySessionTenure,
@@ -190,6 +191,7 @@ export function callerAuthorizes(
 export function initialTenure(
   caller: Extract<PlaySessionCaller, { tag: "anonymous" | "authenticated" }>,
   nowMs: EpochMilliseconds,
+  guestAccessGrantFactory: GuestAccessGrantFactory = generatedGuestAccessGrant,
 ):
   | {
       readonly tag: "guest";
@@ -210,7 +212,7 @@ export function initialTenure(
       },
     };
   }
-  const guestAccessGrant = generatedGuestAccessGrant();
+  const guestAccessGrant = guestAccessGrantFactory();
   return {
     tag: "guest",
     guestAccessGrant,

@@ -15,6 +15,7 @@ import {
   playSessionIsExpired,
   projectPlaySessionTenure,
   type GuestAccessGrant,
+  type GuestAccessGrantFactory,
   type EpochMilliseconds,
   type PlaySessionCaller,
   type PlaySessionTenureProjection,
@@ -176,11 +177,14 @@ const MAX_PLAY_SESSION_ID_ATTEMPTS = 16;
 export function createPlaySessionRegistry(input: {
   readonly createRoot: (playSessionId: PlaySessionId) => McpPlaySessionRoot;
   readonly playSessionIdFactory?: PlaySessionIdFactory;
+  readonly guestAccessGrantFactory?: GuestAccessGrantFactory;
   readonly now?: () => EpochMilliseconds;
 }): PlaySessionRegistry {
   const liveSessions = new Map<PlaySessionId, LivePlaySession>();
   const playSessionIdFactory =
     input.playSessionIdFactory ?? generatedPlaySessionId;
+  const guestAccessGrantFactory =
+    input.guestAccessGrantFactory ?? generatedGuestAccessGrant;
   const now = input.now ?? currentEpochMilliseconds;
 
   return {
@@ -190,7 +194,7 @@ export function createPlaySessionRegistry(input: {
         (playSessionId) => {
           const root = input.createRoot(playSessionId);
           if (caller.tag === "anonymous") {
-            const guestAccessGrant = generatedGuestAccessGrant();
+            const guestAccessGrant = guestAccessGrantFactory();
             const tenure = {
               tag: "guest",
               guestAccessGrantDigest: guestAccessGrantDigest(guestAccessGrant),
