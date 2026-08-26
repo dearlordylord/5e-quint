@@ -29,6 +29,7 @@ import {
   evidenceSetDirectory,
   ScenarioIdSchema,
 } from "./raw-swarm-identities.ts";
+import { isCurrentAdmittedScenarioRecord } from "./scenario-admission.ts";
 import {
   findAdmittedScenarioInCatalogue,
   projectRawSwarmCatalogue,
@@ -1407,19 +1408,19 @@ describe("Raw Swarm scenario catalogue", () => {
       repoRoot,
       "scripts/raw-swarm/sdk-player/scenarios",
     );
-    const records = readdirSync(scenarioDirectory)
-      .filter((name) => name.endsWith(".scenario.json"))
-      .map((name) =>
-        JSON.parse(readFileSync(resolve(scenarioDirectory, name), "utf8")),
-      );
+    const catalogue = readRawSwarmCatalogue({
+      repositoryRoot: repoRoot,
+      scenarioDirectory,
+      evidenceDirectory: resolve(repoRoot, "scripts/raw-swarm/out"),
+    });
+    expect(Either.isRight(catalogue)).toBe(true);
+    if (Either.isLeft(catalogue)) return;
     const liveScenarioIds = new Set(
-      records.map(
-        ({ scenarioId }: { readonly scenarioId: string }) => scenarioId,
-      ),
+      catalogue.right.scenarios.map(({ scenarioId }) => scenarioId),
     );
 
-    for (const record of records) {
-      if (record.schemaVersion !== 2) continue;
+    for (const record of catalogue.right.scenarios) {
+      if (!isCurrentAdmittedScenarioRecord(record)) continue;
       expect(
         record.predecessorScenarioIds.every((scenarioId: string) =>
           liveScenarioIds.has(scenarioId),

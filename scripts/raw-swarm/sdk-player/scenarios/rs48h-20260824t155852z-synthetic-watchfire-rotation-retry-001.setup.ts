@@ -3,6 +3,7 @@ import type {
   ScenarioSetup,
   ScenarioSpatialSetupInput,
 } from "@dnd/scenario-setup-sdk";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 type GeometrySpatialSetup = Extract<
   ScenarioSpatialSetupInput,
@@ -97,18 +98,30 @@ export const setupScenario: ScenarioSetup = (context) => {
     },
   ] as const;
 
-  const statBlockLookups = combatantInputs.map((input) => ({
-    input,
-    statBlock: context.statBlockCatalog.getStatBlock(input.statBlockId),
-  }));
   const requiredStatBlockIds = combatantInputs.map(
     ({ statBlockId }) => statBlockId,
   );
-  const missingStatBlockIds = statBlockLookups.flatMap(
-    ({ input, statBlock }) =>
-      statBlock._tag === "None" ? [input.statBlockId] : [],
-  );
-  if (missingStatBlockIds.length > 0) {
+  const statBlockResolution = (() => {
+    const statBlocks: {
+      readonly input: (typeof combatantInputs)[number];
+      readonly statBlock: StatBlockRecord;
+    }[] = [];
+    const missingStatBlockIds: string[] = [];
+    for (const input of combatantInputs) {
+      const statBlock = context.statBlockCatalog.getStatBlock(
+        input.statBlockId,
+      );
+      if (statBlock._tag === "None") {
+        missingStatBlockIds.push(input.statBlockId);
+      } else {
+        statBlocks.push({ input, statBlock: statBlock.value });
+      }
+    }
+    return missingStatBlockIds.length > 0
+      ? { tag: "missing" as const, missingStatBlockIds }
+      : { tag: "ready" as const, statBlocks };
+  })();
+  if (statBlockResolution.tag === "missing") {
     return {
       kind: "obstructed",
       obstruction:
@@ -117,20 +130,16 @@ export const setupScenario: ScenarioSetup = (context) => {
         scenarioId: SCENARIO_ID,
         blockedOperation: "battleCreatureInitFromStatBlock",
         requiredStatBlockIds,
-        missingStatBlockIds,
+        missingStatBlockIds: statBlockResolution.missingStatBlockIds,
       },
     };
   }
 
   const combatants = [];
-  for (const { input, statBlock } of statBlockLookups) {
-    if (statBlock._tag === "None") {
-      continue;
-    }
-
+  for (const { input, statBlock } of statBlockResolution.statBlocks) {
     const initialized = context.sdk.battleCreatureInitFromStatBlock({
       combatantId: input.combatantId,
-      statBlock: statBlock.value,
+      statBlock,
       initiative: context.sdk.initiativeScore(input.initiative),
       ammunitionStocks: input.ammunitionStocks,
       conditions: [],
