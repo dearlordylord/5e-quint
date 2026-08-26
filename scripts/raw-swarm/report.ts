@@ -50,6 +50,7 @@ import {
   registerIndexArtifact,
   rebuildLegacyArtifactIndex,
   type PortableManifest,
+  type PortableControlledAttachment,
 } from "./artifact-index.ts";
 import {
   extractSdkTranscriptSequences,
@@ -375,6 +376,7 @@ type IndexedReportArtifact = Readonly<{
 type PortableReportBundle = Readonly<{
   readonly root: string;
   readonly artifacts: ReadonlyMap<string, IndexedReportArtifact>;
+  readonly controlledAttachments: readonly PortableControlledAttachment[];
 }>;
 
 const SHA256_PATTERN = /^[0-9a-f]{64}$/;
@@ -520,16 +522,39 @@ function portableReportBundle(
     });
     artifactPaths.add(entry.path);
   }
-  return { root, artifacts };
+  const controlledAttachments = value.controlledAttachments.map(
+    (entry, entryIndex) => {
+      if (
+        entry.path.length === 0 ||
+        entry.path.includes("\0") ||
+        isAbsolute(entry.path) ||
+        !pathIsContained(root, resolve(root, entry.path)) ||
+        artifacts.has(entry.sha256) ||
+        artifactPaths.has(entry.path) ||
+        value.controlledAttachments.some(
+          (candidate, candidateIndex) =>
+            candidateIndex < entryIndex &&
+            (candidate.sha256 === entry.sha256 ||
+              candidate.path === entry.path),
+        )
+      ) {
+        return fail(
+          `Portable report controlled attachment ${String(entryIndex + 1)} is invalid: ${manifestPath}`,
+        );
+      }
+      return entry;
+    },
+  );
+  return { root, artifacts, controlledAttachments };
 }
 
 function validatePortableArtifactInventory(
   bundle: PortableReportBundle,
   indexed: readonly IndexedReportArtifact[],
 ): void {
-  if (indexed.length > bundle.artifacts.size) {
+  if (bundle.artifacts.size !== indexed.length) {
     fail(
-      `Portable report artifact inventory does not match its manifest: expected at least ${String(indexed.length)} entries, found ${String(bundle.artifacts.size)}.`,
+      `Portable report artifact inventory does not match its manifest: expected ${String(indexed.length)} entries, found ${String(bundle.artifacts.size)}.`,
     );
   }
   for (const artifact of indexed) {
@@ -547,22 +572,15 @@ function validatePortableArtifactInventory(
   for (const artifact of bundle.artifacts.values()) {
     portableReportArtifactBytes(bundle, artifact);
   }
+  for (const attachment of bundle.controlledAttachments) {
+    portableReportArtifactBytes(bundle, attachment);
+  }
 }
 
 function portableReportArtifactBytes(
   bundle: PortableReportBundle,
   indexed: IndexedReportArtifact,
 ): Buffer {
-  const manifestArtifact = bundle.artifacts.get(indexed.sha256);
-  if (
-    manifestArtifact === undefined ||
-    manifestArtifact.byteLength !== indexed.byteLength ||
-    manifestArtifact.path !== indexed.path
-  ) {
-    return fail(
-      `Portable report artifact ${indexed.sha256} is not consistently indexed by its manifest.`,
-    );
-  }
   if (
     indexed.path.includes("\0") ||
     indexed.path.length === 0 ||
@@ -1373,14 +1391,19 @@ function controlledReporting(args: readonly string[]): void {
     portableTimingPath,
     readFileSync(absoluteTimingPath),
   );
+  const timingAttachment = {
+    tag: "controlledReportingTiming",
+    ...timingArtifact,
+  } satisfies PortableControlledAttachment;
   writeFileSync(
     resolve(absoluteDestination, "manifest.json"),
     `${JSON.stringify(
       {
         ...manifest,
-        artifacts: [...manifest.artifacts, timingArtifact].sort((left, right) =>
-          left.sha256.localeCompare(right.sha256),
-        ),
+        controlledAttachments: [
+          ...manifest.controlledAttachments,
+          timingAttachment,
+        ].sort((left, right) => left.sha256.localeCompare(right.sha256)),
       },
       null,
       2,

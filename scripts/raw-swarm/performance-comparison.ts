@@ -45,6 +45,7 @@ import {
   type BenchmarkContextRole,
 } from "./benchmark-context.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
+import { PortableManifestSchema } from "./artifact-index.ts";
 import {
   codexOutputJsonSchema,
   classifyScenarioReviewOutputSchema,
@@ -429,22 +430,21 @@ export function summarizeControlledExecution(
   const reportingManifestAuthority = artifactAuthority(
     input.reportingManifestPath,
   );
-  const reportingManifest: unknown = JSON.parse(
-    readFileSync(resolve(repoRoot, input.reportingManifestPath), "utf8"),
+  const reportingManifest = decode(
+    PortableManifestSchema,
+    input.reportingManifestPath,
+  );
+  const timingAttachment = reportingManifest.controlledAttachments.find(
+    ({ tag, sha256, byteLength }) =>
+      tag === "controlledReportingTiming" &&
+      sha256 === reportingTimingAuthority.sha256 &&
+      byteLength === reportingTimingAuthority.byteLength,
   );
   if (
     reportingTiming.transcriptSha256 !== transcriptAuthority.sha256 ||
     reportingTiming.reviewSha256 !== reviewAuthority.sha256 ||
-    !isJsonRecord(reportingManifest) ||
-    !isJsonRecord(reportingManifest.index) ||
     reportingManifest.index.sha256 !== reportingTiming.indexSha256 ||
-    !Array.isArray(reportingManifest.artifacts) ||
-    !reportingManifest.artifacts.some(
-      (artifact) =>
-        isJsonRecord(artifact) &&
-        artifact.sha256 === reportingTimingAuthority.sha256 &&
-        artifact.byteLength === reportingTimingAuthority.byteLength,
-    )
+    timingAttachment === undefined
   ) {
     fail("Controlled reporting timing does not match its execution artifacts.");
   }
