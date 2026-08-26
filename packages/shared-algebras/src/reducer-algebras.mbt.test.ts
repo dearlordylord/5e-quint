@@ -2,8 +2,12 @@ import * as path from "node:path";
 
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
 
-import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Brand, Either, Option, Schema } from "effect";
+import {
+  defineDriver,
+  quintRun,
+  stateCheck,
+} from "@firfi/quint-connect/effect";
+import { Brand, Effect, Option, Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import type { ActionRestriction } from "@dnd/surface/surface/types";
@@ -173,39 +177,43 @@ function createActionEconomyDriver() {
         sourceProcedureRef,
         magicExcludedRestriction,
       );
-      if (Either.isRight(result)) {
-        state = result.right;
+      if (Result.isSuccess(result)) {
+        state = result.success;
       }
     }
 
     function spendActionIfAllowed(action: "attack" | "magic"): void {
       const result = spendAction(state, action);
-      if (Either.isRight(result)) {
-        state = result.right;
+      if (Result.isSuccess(result)) {
+        state = result.success;
       }
     }
 
     return {
-      init: reset,
-      doSpendAttackAction: () => spendActionIfAllowed("attack"),
-      doSpendMagicAction: () => spendActionIfAllowed("magic"),
-      doGrantRestrictedUnitActionA: () => grantUnitAction(unitActionA),
-      doGrantRestrictedUnitActionB: () => grantUnitAction(unitActionB),
-      doSpendBonusAction: () => {
+      init: () => Effect.sync(reset),
+      doSpendAttackAction: () =>
+        Effect.sync(() => spendActionIfAllowed("attack")),
+      doSpendMagicAction: () =>
+        Effect.sync(() => spendActionIfAllowed("magic")),
+      doGrantRestrictedUnitActionA: () =>
+        Effect.sync(() => grantUnitAction(unitActionA)),
+      doGrantRestrictedUnitActionB: () =>
+        Effect.sync(() => grantUnitAction(unitActionB)),
+      doSpendBonusAction: () => Effect.sync(() => {
         const result = spendActivationResource(state, { kind: "bonusAction" });
-        if (Either.isRight(result)) {
-          state = result.right;
+        if (Result.isSuccess(result)) {
+          state = result.success;
         }
-      },
-      doSpendFreeAction: () => {
+      }),
+      doSpendFreeAction: () => Effect.sync(() => {
         const result = spendActivationResource(state, { kind: "free" });
-        if (Either.isRight(result)) {
-          state = result.right;
+        if (Result.isSuccess(result)) {
+          state = result.success;
         }
-      },
-      doResetTurn: reset,
-      step: () => {},
-      getState: () => projectActionEconomy(state),
+      }),
+      doResetTurn: () => Effect.sync(reset),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectActionEconomy(state)),
     };
   });
 }
@@ -219,39 +227,39 @@ function createConditionsDriver() {
     }
 
     return {
-      init: reset,
-      doApplyBlinded: () => {
+      init: () => Effect.sync(reset),
+      doApplyBlinded: () => Effect.sync(() => {
         state = applyCondition(state, "blinded");
-      },
-      doRemoveBlinded: () => {
+      }),
+      doRemoveBlinded: () => Effect.sync(() => {
         state = removeCondition(state, "blinded");
-      },
-      doApplyProne: () => {
+      }),
+      doApplyProne: () => Effect.sync(() => {
         state = applyCondition(state, "prone");
-      },
-      doRemoveProne: () => {
+      }),
+      doRemoveProne: () => Effect.sync(() => {
         state = removeCondition(state, "prone");
-      },
-      doApplyParalyzed: () => {
+      }),
+      doApplyParalyzed: () => Effect.sync(() => {
         state = applyCondition(state, "paralyzed");
-      },
-      doRemoveParalyzed: () => {
+      }),
+      doRemoveParalyzed: () => Effect.sync(() => {
         state = removeCondition(state, "paralyzed");
-      },
-      doApplyUnconscious: () => {
+      }),
+      doApplyUnconscious: () => Effect.sync(() => {
         state = applyCondition(state, "unconscious");
-      },
-      doRemoveUnconscious: () => {
+      }),
+      doRemoveUnconscious: () => Effect.sync(() => {
         state = removeCondition(state, "unconscious");
-      },
-      doApplyDirectIncapacitated: () => {
+      }),
+      doApplyDirectIncapacitated: () => Effect.sync(() => {
         state = applyCondition(state, "incapacitated");
-      },
-      doRemoveDirectIncapacitated: () => {
+      }),
+      doRemoveDirectIncapacitated: () => Effect.sync(() => {
         state = removeCondition(state, "incapacitated");
-      },
-      step: () => {},
-      getState: () => projectConditions(state),
+      }),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectConditions(state)),
     };
   });
 }
@@ -265,27 +273,27 @@ function createDeathSavesDriver() {
     }
 
     return {
-      init: reset,
-      doRollFail: () => {
+      init: () => Effect.sync(reset),
+      doRollFail: () => Effect.sync(() => {
         state = resolveDeathSavingThrow(state, 5);
-      },
-      doRollNat1: () => {
+      }),
+      doRollNat1: () => Effect.sync(() => {
         state = resolveDeathSavingThrow(state, 1);
-      },
-      doRollSuccess: () => {
+      }),
+      doRollSuccess: () => Effect.sync(() => {
         state = resolveDeathSavingThrow(state, 10);
-      },
-      doRollNat20: () => {
+      }),
+      doRollNat20: () => Effect.sync(() => {
         state = resolveDeathSavingThrow(state, 20);
-      },
-      doDamageFailure: () => {
+      }),
+      doDamageFailure: () => Effect.sync(() => {
         state = addDeathFailures(state, 1);
-      },
-      doCriticalDamageFailure: () => {
+      }),
+      doCriticalDamageFailure: () => Effect.sync(() => {
         state = addDeathFailures(state, 2);
-      },
-      step: () => {},
-      getState: () => projectDeathSaves(state),
+      }),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectDeathSaves(state)),
     };
   });
 }
@@ -331,106 +339,116 @@ function createInitiativeDriver() {
     }
 
     return {
-      init: reset,
-      doNext: () => {
+      init: () => Effect.sync(reset),
+      doNext: () => Effect.sync(() => {
         stack = nextInitiative(stack);
-      },
-      doRemoveC1: () => removeCreature("c1"),
-      doRemoveC2: () => removeCreature("c2"),
-      doInsertC3NoDecision: () => insertCreature("c3", 3),
-      doInsertCxTieNoDecision: () => insertCreature("cx", 2),
-      doInsertCxTieDecision: () => insertCreature("cx", 2, [["c2", "c2b"], 1]),
-      doInsertC3WrongDecision: () => insertCreature("c3", 3, [["c1"], 0]),
-      step: () => {},
-      getState: () => projectInitiative(stack, lastInsert),
+      }),
+      doRemoveC1: () => Effect.sync(() => removeCreature("c1")),
+      doRemoveC2: () => Effect.sync(() => removeCreature("c2")),
+      doInsertC3NoDecision: () => Effect.sync(() => insertCreature("c3", 3)),
+      doInsertCxTieNoDecision: () => Effect.sync(() => insertCreature("cx", 2)),
+      doInsertCxTieDecision: () =>
+        Effect.sync(() => insertCreature("cx", 2, [["c2", "c2b"], 1])),
+      doInsertC3WrongDecision: () =>
+        Effect.sync(() => insertCreature("c3", 3, [["c1"], 0])),
+      step: () => Effect.void,
+      getState: () => Effect.succeed(projectInitiative(stack, lastInsert)),
     };
   });
 }
 
 const actionEconomyStateCheck = stateCheck(
-  normalizeActionEconomySpecState,
+  (raw) => Effect.sync(() => normalizeActionEconomySpecState(raw)),
   compareState,
 );
 const conditionsStateCheck = stateCheck(
-  normalizeConditionsSpecState,
+  (raw) => Effect.sync(() => normalizeConditionsSpecState(raw)),
   compareState,
 );
 const deathSavesStateCheck = stateCheck(
-  normalizeDeathSavesSpecState,
+  (raw) => Effect.sync(() => normalizeDeathSavesSpecState(raw)),
   compareState,
 );
 const initiativeStateCheck = stateCheck(
-  normalizeInitiativeSpecState,
+  (raw) => Effect.sync(() => normalizeInitiativeSpecState(raw)),
   compareState,
 );
 
 describe("shared reducer algebra MBT", () => {
   it("replays action economy traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/action-economy-algebra-inductive.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createActionEconomyDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: actionEconomyStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/action-economy-algebra-inductive.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createActionEconomyDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: actionEconomyStateCheck,
+      }),
+    );
   }, 120_000);
 
   it("replays condition traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/conditions-algebra-inductive.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createConditionsDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: conditionsStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/conditions-algebra-inductive.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createConditionsDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: conditionsStateCheck,
+      }),
+    );
   }, 120_000);
 
   it("replays death save traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/death-saves-algebra-inductive.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createDeathSavesDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: deathSavesStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/death-saves-algebra-inductive.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createDeathSavesDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: deathSavesStateCheck,
+      }),
+    );
   }, 120_000);
 
   it("replays initiative traces against the TypeScript reducer", async () => {
-    await run({
-      spec: path.resolve(
-        import.meta.dirname,
-        "../proofs/initiative-algebra-invariant.qnt",
-      ),
-      init: "init",
-      step: "step",
-      driver: createInitiativeDriver(),
-      backend: "typescript",
-      nTraces: Number(process.env["MBT_TRACES"] ?? 1),
-      maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
-      invariants: ["invariant"],
-      stateCheck: initiativeStateCheck,
-    });
+    await Effect.runPromise(
+      quintRun({
+        spec: path.resolve(
+          import.meta.dirname,
+          "../proofs/initiative-algebra-invariant.qnt",
+        ),
+        init: "init",
+        step: "step",
+        driverFactory: createInitiativeDriver(),
+        backend: "typescript",
+        nTraces: Number(process.env["MBT_TRACES"] ?? 1),
+        maxSteps: Number(process.env["MBT_STEPS"] ?? 12),
+        invariants: ["invariant"],
+        stateCheck: initiativeStateCheck,
+      }),
+    );
   }, 120_000);
 });
 
