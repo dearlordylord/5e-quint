@@ -105,6 +105,7 @@ import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-actio
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
+  statBlockMultiattackResourcesAvailable,
   statBlockProcedureResourcesAvailable,
   statBlockAttackActionOptions,
 } from "../stat-block-execution-state.ts";
@@ -1732,11 +1733,7 @@ export function statBlockMultiattackActs(
   }
   const origin = actor.origin;
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
-    if (
-      !binding.procedure.dispatchProcedureRefs.every((procedureRef) =>
-        statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
-      )
-    ) {
+    if (!statBlockMultiattackResourcesAvailable(origin.execution, binding)) {
       return [];
     }
     return [

@@ -1815,25 +1815,19 @@ describe("battle runtime: Stat Block actions", () => {
       }),
     ).state;
     const multiattackSubject = unavailableMultiattackSubject(goblinTurn);
-    expect(discoverStatBlockActs(goblinTurn)).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ subject: multiattackSubject }),
-      ]),
-    );
-    const afterMultiattack = requireResolved(
+    expect(
+      discoverStatBlockActs(goblinTurn).map((act) => act.subject),
+    ).not.toContainEqual(multiattackSubject);
+    expect(
       resolveBattleSubject({
         state: goblinTurn,
         subject: multiattackSubject,
         fills: [],
       }),
-    ).state;
-    expect(
-      discoverStatBlockActs(afterMultiattack).map((act) => act.subject),
-    ).not.toContainEqual({
-      tag: "action",
-      actorId: goblinId,
-      action: "attack",
-      procedureRef: procedureRefForAttack(afterMultiattack, 2),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Multiattack Stat Block resources are no longer available.",
     });
   });
 

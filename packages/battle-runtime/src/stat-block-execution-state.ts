@@ -367,6 +367,44 @@ export function statBlockProcedureResourcesAvailable(
   );
 }
 
+/**
+ * A Multiattack consumes each dispatched procedure in order.  A shared or
+ * binary limited-use pool therefore has to cover every occurrence, rather
+ * than merely being available for each distinct procedure reference.
+ */
+export function statBlockMultiattackResourcesAvailable(
+  execution: StatBlockExecutionState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+): boolean {
+  if (!statBlockProcedureResourcesAvailable(execution, binding.procedureRef)) {
+    return false;
+  }
+
+  const requiredUsesByPool = new Map<BattleResourcePoolExecutionRef, number>();
+  for (const procedureRef of binding.procedure.dispatchProcedureRefs) {
+    const dispatchBinding = statBlockProcedureBinding(execution, procedureRef);
+    if (dispatchBinding === undefined) return false;
+    for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
+      requiredUsesByPool.set(
+        resourcePoolRef,
+        (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+      );
+    }
+  }
+
+  return [...requiredUsesByPool].every(([resourcePoolRef, requiredUses]) => {
+    const pool = statBlockResourcePool(execution, resourcePoolRef);
+    if (pool === undefined) return false;
+    const availableUses =
+      pool.kind === "daily" || pool.kind === "legendaryActions"
+        ? Number(pool.usesRemaining)
+        : pool.available
+          ? 1
+          : 0;
+    return availableUses >= requiredUses;
+  });
+}
+
 export function spendStatBlockProcedureResources(
   execution: StatBlockExecutionState,
   procedureRef: BattleStatBlockProcedureExecutionRef,

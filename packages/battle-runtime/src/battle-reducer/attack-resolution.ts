@@ -162,7 +162,7 @@ import {
   statBlockAttackProcedureSection,
   updateStatBlockActorResources,
 } from "./statblock.ts";
-import { statBlockProcedureResourcesAvailable } from "../stat-block-execution-state.ts";
+import { statBlockMultiattackResourcesAvailable } from "../stat-block-execution-state.ts";
 import type {
   StatBlockBonusActionOptionProcedure,
   StatBlockMultiattackProcedure,
@@ -991,8 +991,9 @@ export function resolveMultiattack(
   const origin = actor.origin;
   const multiattackBinding = input.multiattackBinding;
   if (
-    !multiattackBinding.procedure.dispatchProcedureRefs.every((procedureRef) =>
-      statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
+    !statBlockMultiattackResourcesAvailable(
+      origin.execution,
+      multiattackBinding,
     )
   ) {
     return invalidResult(
