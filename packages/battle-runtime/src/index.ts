@@ -564,6 +564,7 @@ export {
   requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup,
+  type BattleStartInput,
   type InitialInitiativeSetup,
   type InitiativeSwapCandidateWitness,
 } from "./battle-reducer/api-lifecycle.ts";
@@ -606,6 +607,7 @@ export {
 } from "./battle-reducer/damage-apply.ts";
 export { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
 export {
+  battleStateInitIssueLeaves,
   battleStateInitIssueMessage,
   concentrationSavingThrowDc,
   scoreModifier,

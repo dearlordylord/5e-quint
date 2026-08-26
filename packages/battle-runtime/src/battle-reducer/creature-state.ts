@@ -471,7 +471,6 @@ export function battleCreatureStateAdmissionFromInit(
       origin: {
         kind: "character",
         characterId: creatureInit.characterId,
-        displayName: input.displayName,
         execution: execution.right.execution,
         classLevels,
         knownLanguages: creatureInit.knownLanguages,

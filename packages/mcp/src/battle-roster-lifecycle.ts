@@ -68,9 +68,9 @@ function addCombatant(
     McpBattleRosterOperation,
     { readonly kind: "addCharacter" | "addStatBlock" }
   > =
-    projection.right.tag === "characterSession"
-      ? { kind: "addCharacter", combatant: projection.right.creatureInit }
-      : { kind: "addStatBlock", combatant: projection.right.creatureInit };
+    projection.right.kind === "characterSheet"
+      ? { kind: "addCharacter", combatant: projection.right.combatant }
+      : { kind: "addStatBlock", combatant: projection.right.combatant };
   const planned = root.sessionStore.planActiveBattleRosterTransition(operation);
   if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
 

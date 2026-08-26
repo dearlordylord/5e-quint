@@ -1,7 +1,4 @@
-import {
-  battleStateInitIssueMessage,
-  startBattleWithInitialInitiativeSetup,
-} from "@dnd/battle-runtime";
+import { startBattleWithInitialInitiativeSetup } from "@dnd/battle-runtime";
 import { Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -12,6 +9,11 @@ import type { StartableBattleCombatants } from "./start-battle-tool.ts";
 import { schemaJsonContent } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
+import {
+  battleRuntimeIssuePayload,
+  battleStartIssuesContent,
+  characterBattleRosterIssuePayload,
+} from "./battle-start-failure.ts";
 
 export function startInitialInitiativeSetup(
   root: McpPlaySessionRoot,
@@ -27,15 +29,28 @@ export function startInitialInitiativeSetup(
     );
   }
 
+  if (combatants.creatureInits.length === 0) {
+    return battleStartIssuesContent(
+      combatants.issues.flatMap(characterBattleRosterIssuePayload),
+    );
+  }
+
   const setup = startBattleWithInitialInitiativeSetup({
     battleId: input.battleId,
     combatants: combatants.creatureInits,
+    ownerPathForCombatant: (combatant) =>
+      combatants.ownerPaths.get(combatant.combatantId) ?? ["initialCombatants"],
   });
   if (Either.isLeft(setup)) {
-    return errorContent("Battle session start failed.", {
-      code: "BATTLE_START_FAILED",
-      message: battleStateInitIssueMessage(setup.left),
-    });
+    return battleStartIssuesContent([
+      ...combatants.issues.flatMap(characterBattleRosterIssuePayload),
+      ...battleRuntimeIssuePayload(setup.left),
+    ]);
+  }
+  if (combatants.issues.length > 0) {
+    return battleStartIssuesContent(
+      combatants.issues.flatMap(characterBattleRosterIssuePayload),
+    );
   }
 
   return completeBattleStateTransition({

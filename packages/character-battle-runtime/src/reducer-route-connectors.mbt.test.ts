@@ -10,6 +10,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
+  type BattleStateInitIssue,
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   combatantId,
@@ -104,7 +105,7 @@ import {
   settleBattleToCharacterSheetRoute as settleBattleToCharacterSheet,
   characterSheetBattleInitWithRoute,
   settleCharacterSheetFromBattle,
-  startBattleFromCharacterSheetAndStatBlock,
+  composeCharacterBattleRoster,
   characterBattleRuntimeIssueMessage,
   type CharacterBattleFeatureResourceRouteObservation,
   type CharacterBattleEncounterCompositionRouteAction,
@@ -135,6 +136,60 @@ function battleCreatureInitFromStatBlock(
       conditions: [],
     }),
   );
+}
+
+type RouteCharacterBattleRuntimeEntry = {
+  readonly session: BattleRuntimeSession;
+  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
+};
+
+type RouteCharacterBattleRuntimeEntryIssue = {
+  readonly issue: BattleStateInitIssue;
+  readonly routeEvents: readonly [];
+};
+
+function startBattleFromCharacterSheetAndStatBlock(input: {
+  readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
+  readonly character: Parameters<typeof characterSheetBattleInit>[0];
+  readonly statBlockBattleInput: Parameters<
+    typeof parseBattleCreatureInitFromStatBlock
+  >[0];
+}): Either.Either<
+  RouteCharacterBattleRuntimeEntry,
+  RouteCharacterBattleRuntimeEntryIssue
+> {
+  const roster = composeCharacterBattleRoster([
+    {
+      kind: "characterSheet",
+      source: { kind: "available", input: input.character },
+    },
+    {
+      kind: "statBlock",
+      source: { kind: "available", input: input.statBlockBattleInput },
+    },
+  ]);
+  if (roster.issues.length > 0) {
+    return Either.left({
+      issue: {
+        tag: "battleStateInitIssue" as const,
+        message: `Roster admission failed: ${roster.issues[0]?.kind}`,
+      },
+      routeEvents: [],
+    });
+  }
+  const session = startBattle({
+    battleId: input.battleId,
+    combatants: roster.admissions.map((admission) => admission.combatant),
+  });
+  if (Either.isLeft(session)) {
+    return Either.left({ issue: session.left, routeEvents: [] });
+  }
+  return Either.right({
+    session: session.right,
+    initProjectionRouteEvents: roster.admissions.flatMap((admission) =>
+      admission.kind === "characterSheet" ? admission.routeEvents : [],
+    ),
+  });
 }
 
 const MBT_TEST_TIMEOUT_MS = 120_000;

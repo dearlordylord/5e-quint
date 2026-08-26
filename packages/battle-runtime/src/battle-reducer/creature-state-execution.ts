@@ -205,18 +205,15 @@ export function combatantSnapshot(
     movement: battleMovementBudgetForActor(state, combatant.combatantId),
     ammunitionStocks: combatant.ammunitionStocks,
   };
-  const origin = combatantOriginSnapshot(combatant);
-  if (origin.kind === "character") {
-    const { displayName, ...mechanicalOrigin } = origin;
-    return { ...common, displayName, origin: mechanicalOrigin };
-  }
-  return { ...common, origin };
+  return Match.value(combatantOriginSnapshot(combatant)).pipe(
+    Match.when({ kind: "character" }, (origin) => ({ ...common, origin })),
+    Match.when({ kind: "statBlock" }, (origin) => ({ ...common, origin })),
+    Match.exhaustive,
+  );
 }
 
 type BattleCreatureOriginProjection =
-  | (Extract<BattleCreatureOriginSnapshot, { readonly kind: "character" }> & {
-      readonly displayName: string;
-    })
+  | Extract<BattleCreatureOriginSnapshot, { readonly kind: "character" }>
   | Extract<BattleCreatureOriginSnapshot, { readonly kind: "statBlock" }>;
 
 export function combatantOriginSnapshot(
@@ -226,7 +223,6 @@ export function combatantOriginSnapshot(
     Match.when({ kind: "character" }, (origin) => ({
       kind: "character" as const,
       characterId: origin.characterId,
-      displayName: origin.displayName,
       execution: {
         scopeRef: origin.execution.scopeRef,
         nextProcedureOrdinal: origin.execution.nextProcedureOrdinal,
