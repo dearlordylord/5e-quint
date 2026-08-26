@@ -283,8 +283,19 @@ const canonicalFindingAuthoritySnapshotValues = new WeakMap<
 
 export type CanonicalFindingAuthoritySnapshot = Readonly<{
   readonly path: string;
+  readonly scope: "repository";
   readonly [canonicalFindingAuthoritySnapshotBrand]: true;
 }>;
+
+export type PortableFindingAuthoritySnapshot = Readonly<{
+  readonly path: string;
+  readonly scope: "bundle";
+  readonly [canonicalFindingAuthoritySnapshotBrand]: true;
+}>;
+
+export type FindingAuthoritySnapshot =
+  | CanonicalFindingAuthoritySnapshot
+  | PortableFindingAuthoritySnapshot;
 
 export function canonicalFindingAuthoritySnapshotForBytes(
   authority: FindingAuthority,
@@ -318,8 +329,44 @@ export function canonicalFindingAuthoritySnapshotForBytes(
   }
   const snapshot = {
     path: authority.path,
+    scope: "repository" as const,
     [canonicalFindingAuthoritySnapshotBrand]: true,
   } as const satisfies CanonicalFindingAuthoritySnapshot;
+  canonicalFindingAuthoritySnapshots.add(snapshot);
+  canonicalFindingAuthoritySnapshotValues.set(snapshot, {
+    authority: {
+      role: authority.role,
+      path: authority.path,
+      byteLength: authority.byteLength,
+      sha256: authority.sha256,
+    },
+    bytes: Uint8Array.from(bytes),
+  });
+  return Either.right(snapshot);
+}
+
+/**
+ * Capture a hash-checked authority read from a relocated portable bundle.
+ * The bundle resolver owns path containment; this value carries only the
+ * already-resolved bytes into projection validation.
+ */
+export function portableFindingAuthoritySnapshotForBytes(
+  authority: FindingAuthority,
+  bytes: Uint8Array,
+): Either.Either<PortableFindingAuthoritySnapshot, string> {
+  if (
+    bytes.byteLength !== authority.byteLength ||
+    createHash("sha256").update(bytes).digest("hex") !== authority.sha256
+  ) {
+    return Either.left(
+      `Finding authority bytes do not match ${authority.path}.`,
+    );
+  }
+  const snapshot = {
+    path: authority.path,
+    scope: "bundle" as const,
+    [canonicalFindingAuthoritySnapshotBrand]: true,
+  } as const satisfies PortableFindingAuthoritySnapshot;
   canonicalFindingAuthoritySnapshots.add(snapshot);
   canonicalFindingAuthoritySnapshotValues.set(snapshot, {
     authority: {
@@ -600,6 +647,65 @@ export function readSourceRecord(path: string): unknown {
   }
 }
 
+function findingAuthoritySnapshotForPath(
+  path: string,
+  snapshots: readonly FindingAuthoritySnapshot[],
+): FindingAuthoritySnapshot | undefined {
+  return snapshots.find((snapshot) => snapshot.path === path);
+}
+
+function findingAuthoritySnapshotBytes(
+  snapshot: FindingAuthoritySnapshot,
+  authority: FindingAuthority,
+): Either.Either<Uint8Array, string> {
+  if (!canonicalFindingAuthoritySnapshots.has(snapshot)) {
+    return Either.left(
+      `Finding authority snapshot is not canonical: ${authority.path}.`,
+    );
+  }
+  const captured = canonicalFindingAuthoritySnapshotValues.get(snapshot);
+  if (
+    captured === undefined ||
+    captured.authority.byteLength !== authority.byteLength ||
+    captured.authority.sha256 !== authority.sha256
+  ) {
+    return Either.left(
+      `Finding authority snapshot does not match ${authority.path}.`,
+    );
+  }
+  return Either.right(captured.bytes);
+}
+
+function findingAuthoritySnapshotBytesForPath(
+  path: string,
+  snapshots: readonly FindingAuthoritySnapshot[],
+): Either.Either<Uint8Array, string> | undefined {
+  const snapshot = findingAuthoritySnapshotForPath(path, snapshots);
+  if (snapshot === undefined) return undefined;
+  if (!canonicalFindingAuthoritySnapshots.has(snapshot)) {
+    return Either.left(`Finding authority snapshot is not canonical: ${path}.`);
+  }
+  const captured = canonicalFindingAuthoritySnapshotValues.get(snapshot);
+  return captured === undefined
+    ? Either.left(`Finding authority snapshot is unavailable: ${path}.`)
+    : Either.right(captured.bytes);
+}
+
+function readFindingAuthorityRecord(
+  path: string,
+  snapshots: readonly FindingAuthoritySnapshot[],
+): unknown {
+  const snapshot = findingAuthoritySnapshotForPath(path, snapshots);
+  if (snapshot === undefined) return readSourceRecord(path);
+  const captured = canonicalFindingAuthoritySnapshotValues.get(snapshot);
+  if (captured === undefined) return undefined;
+  try {
+    return JSON.parse(Buffer.from(captured.bytes).toString("utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
 type RetainedScenarioReviewInputRead = Readonly<{
   readonly input: Schema.Schema.Type<typeof RetainedScenarioReviewInputSchema>;
   readonly bytes: Buffer;
@@ -644,10 +750,29 @@ function readRetainedScenarioReviewInputOnce(
   });
 }
 
-function parseRun(transcriptPath: string): Either.Either<ParsedRun, string> {
-  const canonicalTranscriptPath = sourcePath(transcriptPath);
+function parseRun(
+  transcriptPath: string,
+  snapshots: readonly FindingAuthoritySnapshot[] = [],
+): Either.Either<ParsedRun, string> {
+  const snapshotBytes = findingAuthoritySnapshotBytesForPath(
+    transcriptPath,
+    snapshots,
+  );
   const records = (() => {
     try {
+      if (snapshotBytes !== undefined && Either.isLeft(snapshotBytes)) {
+        return Either.left(snapshotBytes.left);
+      }
+      if (snapshotBytes !== undefined) {
+        return Either.right(
+          Buffer.from(snapshotBytes.right)
+            .toString("utf8")
+            .split("\n")
+            .filter((line) => line.trim().length > 0)
+            .map((line): unknown => JSON.parse(line)),
+        );
+      }
+      const canonicalTranscriptPath = sourcePath(transcriptPath);
       return Either.right(readJsonLines(canonicalTranscriptPath));
     } catch (error) {
       return Either.left(
@@ -660,9 +785,15 @@ function parseRun(transcriptPath: string): Either.Either<ParsedRun, string> {
   if (Either.isLeft(records)) {
     return Either.left(records.left);
   }
-  const transcriptSha256 = createHash("sha256")
-    .update(readFileSync(resolve(repoRoot, canonicalTranscriptPath)))
-    .digest("hex");
+  if (snapshotBytes !== undefined && Either.isLeft(snapshotBytes)) {
+    return Either.left(snapshotBytes.left);
+  }
+  const transcriptSha256 =
+    snapshotBytes !== undefined
+      ? createHash("sha256").update(snapshotBytes.right).digest("hex")
+      : createHash("sha256")
+          .update(readFileSync(resolve(repoRoot, sourcePath(transcriptPath))))
+          .digest("hex");
   const sdk = parseSdkTranscript(records.right);
   if (sdk.tag === "valid") {
     const header = sdk.value.header;
@@ -1678,6 +1809,7 @@ export function deduplicateFindings(
 
 function subjectAuthorityBindingError(
   projection: FindingsProjection,
+  snapshots: readonly FindingAuthoritySnapshot[],
 ): string | undefined {
   const expectedRole =
     projection.subject.tag === "scenarioCampaign"
@@ -1694,7 +1826,7 @@ function subjectAuthorityBindingError(
   if (projection.subject.tag === "scenarioCampaign") {
     const decoded = Schema.decodeUnknownEither(ScenarioCampaignManifestSchema, {
       onExcessProperty: "error",
-    })(readSourceRecord(authority.path));
+    })(readFindingAuthorityRecord(authority.path, snapshots));
     if (Either.isLeft(decoded)) {
       return `Campaign authority does not decode as a campaign manifest: ${authority.path}`;
     }
@@ -1709,7 +1841,7 @@ function subjectAuthorityBindingError(
   }
   const decoded = Schema.decodeUnknownEither(ExecutionStartRecordSchema, {
     onExcessProperty: "error",
-  })(readSourceRecord(authority.path));
+  })(readFindingAuthorityRecord(authority.path, snapshots));
   if (Either.isLeft(decoded)) {
     return `Execution authority does not decode as an execution-start manifest: ${authority.path}`;
   }
@@ -1725,7 +1857,7 @@ function subjectAuthorityBindingError(
 
 function validateDecodedProjection(
   projection: FindingsProjection,
-  snapshots: readonly CanonicalFindingAuthoritySnapshot[],
+  snapshots: readonly FindingAuthoritySnapshot[],
 ): FindingsProjectionResult {
   if (projection.subjectIdentity !== sha256Canonical(projection.subject)) {
     return {
@@ -1750,66 +1882,64 @@ function validateDecodedProjection(
       };
     }
     paths.add(authority.path);
-    const canonicalPath = (() => {
-      try {
-        return Either.right(sourcePath(authority.path));
-      } catch (error) {
+    const bytes: Either.Either<Uint8Array, string> = ((): Either.Either<
+      Uint8Array,
+      string
+    > => {
+      const snapshot = findingAuthoritySnapshotForPath(
+        authority.path,
+        snapshots,
+      );
+      if (
+        snapshots.some((candidate) => candidate.scope === "bundle") &&
+        snapshot === undefined
+      ) {
         return Either.left(
-          error instanceof Error
-            ? error.message
-            : `Finding authority path is invalid: ${authority.path}.`,
+          `Finding authority snapshot is missing from the portable bundle: ${authority.path}.`,
         );
       }
-    })();
-    if (Either.isLeft(canonicalPath)) {
-      return {
-        tag: "invalid",
-        message: canonicalPath.left,
-      };
-    }
-    if (canonicalPath.right !== authority.path) {
-      return {
-        tag: "invalid",
-        message: `Finding authority path is not repository-relative: ${authority.path}.`,
-      };
-    }
-    const canonicalAuthority = canonicalRepositoryReadPath(
-      repoRoot,
-      authority.path,
-    );
-    if (Either.isLeft(canonicalAuthority)) {
-      return {
-        tag: "invalid",
-        message: `Finding authority is not a canonical repository path: ${authority.path}.`,
-      };
-    }
-    if (relative(repoRoot, canonicalAuthority.right) !== authority.path) {
-      return {
-        tag: "invalid",
-        message: `Finding authority is not a canonical repository path: ${authority.path}.`,
-      };
-    }
-    const snapshot = snapshots.find(
-      (candidate) => candidate.path === authority.path,
-    );
-    const bytes = (() => {
+      if (snapshot?.scope === "bundle") {
+        return findingAuthoritySnapshotBytes(snapshot, authority);
+      }
+
+      const canonicalPath: Either.Either<string, string> = ((): Either.Either<
+        string,
+        string
+      > => {
+        try {
+          return Either.right(sourcePath(authority.path));
+        } catch (error) {
+          return Either.left(
+            error instanceof Error
+              ? error.message
+              : `Finding authority path is invalid: ${authority.path}.`,
+          );
+        }
+      })();
+      if (Either.isLeft(canonicalPath)) {
+        return Either.left(canonicalPath.left);
+      }
+      if (canonicalPath.right !== authority.path) {
+        return Either.left(
+          `Finding authority path is not repository-relative: ${authority.path}.`,
+        );
+      }
+      const canonicalAuthority = canonicalRepositoryReadPath(
+        repoRoot,
+        authority.path,
+      );
+      if (Either.isLeft(canonicalAuthority)) {
+        return Either.left(
+          `Finding authority is not a canonical repository path: ${authority.path}.`,
+        );
+      }
+      if (relative(repoRoot, canonicalAuthority.right) !== authority.path) {
+        return Either.left(
+          `Finding authority is not a canonical repository path: ${authority.path}.`,
+        );
+      }
       if (snapshot !== undefined) {
-        if (!canonicalFindingAuthoritySnapshots.has(snapshot)) {
-          return Either.left(
-            `Finding authority snapshot is not canonical: ${authority.path}.`,
-          );
-        }
-        const captured = canonicalFindingAuthoritySnapshotValues.get(snapshot);
-        if (
-          captured === undefined ||
-          captured.authority.byteLength !== authority.byteLength ||
-          captured.authority.sha256 !== authority.sha256
-        ) {
-          return Either.left(
-            `Finding authority snapshot does not match ${authority.path}.`,
-          );
-        }
-        return Either.right(captured.bytes);
+        return findingAuthoritySnapshotBytes(snapshot, authority);
       }
       try {
         return Either.right(readFileSync(canonicalAuthority.right));
@@ -1833,7 +1963,10 @@ function validateDecodedProjection(
       };
     }
   }
-  const subjectBindingError = subjectAuthorityBindingError(projection);
+  const subjectBindingError = subjectAuthorityBindingError(
+    projection,
+    snapshots,
+  );
   if (subjectBindingError !== undefined) {
     return { tag: "invalid", message: subjectBindingError };
   }
@@ -1870,7 +2003,7 @@ function validateDecodedProjection(
           "An execution transcript hash requires a transcript authority.",
       };
     }
-    const parsedTranscript = parseRun(transcript.path);
+    const parsedTranscript = parseRun(transcript.path, snapshots);
     if (Either.isLeft(parsedTranscript)) {
       return {
         tag: "invalid",
@@ -1962,7 +2095,17 @@ function validateDecodedProjection(
       finding.pointer.kind === "artifact" &&
       finding.pointer.line !== undefined
     ) {
-      const contents = readFileSync(resolve(repoRoot, pointerPath), "utf8");
+      const pointerBytes = findingAuthoritySnapshotBytesForPath(
+        pointerPath,
+        snapshots,
+      );
+      if (pointerBytes !== undefined && Either.isLeft(pointerBytes)) {
+        return { tag: "invalid", message: pointerBytes.left };
+      }
+      const contents =
+        pointerBytes === undefined
+          ? readFileSync(resolve(repoRoot, pointerPath), "utf8")
+          : Buffer.from(pointerBytes.right).toString("utf8");
       const lineCount =
         contents.length === 0
           ? 0
@@ -1977,7 +2120,7 @@ function validateDecodedProjection(
     if (finding.pointer.kind === "reviewVerdict") {
       const reviewed = Schema.decodeUnknownEither(ReviewOutputSchema, {
         onExcessProperty: "error",
-      })(readSourceRecord(pointerPath));
+      })(readFindingAuthorityRecord(pointerPath, snapshots));
       if (
         Either.isLeft(reviewed) ||
         finding.pointer.verdictIndex > reviewed.right.verdicts.length
@@ -2011,7 +2154,7 @@ function validateDecodedProjection(
 
 export function validateFindingsProjection(
   value: unknown,
-  snapshots: readonly CanonicalFindingAuthoritySnapshot[] = [],
+  snapshots: readonly FindingAuthoritySnapshot[] = [],
 ): FindingsProjectionResult {
   const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
     onExcessProperty: "error",
