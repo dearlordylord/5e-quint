@@ -10,6 +10,10 @@ import { RECOVERABLE_PLAY_SESSION_FORMAT_VERSION } from "./play-session-reposito
 import type { PublicMcpOAuth } from "./public-oauth.ts";
 import type { PlaySessionRequestIdentity } from "./play-session-protocol.ts";
 import {
+  PUBLIC_PLUGIN_DEMO_PATH,
+  publicPluginDemoResponse,
+} from "./public-plugin-demo.ts";
+import {
   isPublicPublisherSitePath,
   publicPublisherSiteResponse,
 } from "./public-publisher-site.ts";
@@ -70,6 +74,7 @@ const PUBLIC_ROUTE_LABELS: ReadonlyMap<string, string> = new Map([
   ["/health", "/health"],
   ["/version", "/version"],
   ["/metrics", "/metrics"],
+  [PUBLIC_PLUGIN_DEMO_PATH, "plugin-demo"],
 ] as const);
 
 async function handleFixedPublicRoute(
@@ -78,6 +83,8 @@ async function handleFixedPublicRoute(
 ): Promise<PublicHttpRequestObservation | undefined> {
   const publisherSite = await handlePublisherSiteRoute(input, pathname);
   if (publisherSite !== undefined) return publisherSite;
+  const pluginDemo = await handlePluginDemoRoute(input, pathname);
+  if (pluginDemo !== undefined) return pluginDemo;
   const health = await handleHealthRoute(input, pathname);
   if (health !== undefined) return health;
   const version = await handleVersionRoute(input, pathname);
@@ -94,6 +101,27 @@ async function handleFixedPublicRoute(
     new Response("Not found", { status: 404 }),
   );
   return { status: 404, outcome: "rejected" };
+}
+
+async function handlePluginDemoRoute(
+  input: PublicHttpRequestInput,
+  pathname: string,
+): Promise<PublicHttpRequestObservation | undefined> {
+  const response = await publicPluginDemoResponse(
+    pathname,
+    input.incoming.method,
+  );
+  if (response === undefined) return undefined;
+  await writePublicHttpResponse(input.outgoing, response);
+  return {
+    status: response.status,
+    outcome:
+      response.status < 400
+        ? "accepted"
+        : response.status === 503
+          ? "failed"
+          : "rejected",
+  };
 }
 
 async function handlePublisherSiteRoute(

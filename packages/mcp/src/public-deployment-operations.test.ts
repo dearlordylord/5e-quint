@@ -74,7 +74,7 @@ describe("public MCP deployment operations", () => {
     mkdirSync(caddyDirectory);
     try {
       installFakeCommand(binaryDirectory, "docker", commandLog);
-      installFakeCommand(binaryDirectory, "curl", commandLog, "{}");
+      installFakeCommand(binaryDirectory, "curl", commandLog, "video/mp4");
       installFakeCommand(binaryDirectory, "jq", commandLog, "2", true);
       installFakeCommand(binaryDirectory, "pnpm", commandLog);
       installFakeCommand(binaryDirectory, "stat", commandLog, "1000");
@@ -537,6 +537,7 @@ function installDokkuPublicationCurl(
       '  */api/auth/.well-known/oauth-authorization-server) value=\'{"issuer":"https://dnd-oracle.apps.loskutoff.com/api/auth","authorization_endpoint":"https://dnd-oracle.apps.loskutoff.com/api/auth/oauth2/authorize","token_endpoint":"https://dnd-oracle.apps.loskutoff.com/api/auth/oauth2/token","registration_endpoint":"https://dnd-oracle.apps.loskutoff.com/api/auth/oauth2/register","jwks_uri":"https://dnd-oracle.apps.loskutoff.com/api/auth/jwks","code_challenge_methods_supported":["S256"],"token_endpoint_auth_methods_supported":["none"],"scopes_supported":["play-sessions"],"client_id_metadata_document_supported":true}\' ;;',
       '  */api/auth/jwks) value=\'{"keys":[{"kty":"RSA"}]}\' ;;',
       "  */.well-known/openai-apps-challenge) value='synthetic-domain-challenge' ;;",
+      "  */plugin-demo.mp4) value='video/mp4' ;;",
       "  */|*/support|*/privacy|*/terms) value='<html></html>' ;;",
       "  *) exit 22 ;;",
       "esac",
