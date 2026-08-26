@@ -11,6 +11,9 @@ const {
   UnitRecordSchema,
 } = require("../packages/surface/src/surface/schema.ts");
 const {
+  srdSurface,
+} = require("../packages/surface/src/surface/surface-catalog.ts");
+const {
   CLASS_NAMES,
   SURFACE_SCHEMA_ROLE_ANNOTATION,
   isSurfaceSchemaRole,
@@ -2612,6 +2615,13 @@ function canonicalProjectionOfPublishedRecord(record) {
   );
 }
 
+function canonicalRedistributableRecordKeys() {
+  return [
+    ...srdSurface.units.map((record) => ["unit", record.id]),
+    ...srdSurface.statBlocks.map((record) => ["statBlock", record.id]),
+  ];
+}
+
 function publishedSurfaceMembership(workspaceRoot, records, publication) {
   const issues = [];
   const loaded = loadPublishedSurface(workspaceRoot, publication);
@@ -2689,6 +2699,24 @@ function publishedSurfaceMembership(workspaceRoot, records, publication) {
         });
       }
     }
+  }
+
+  const canonicalRecordsByIdentity = new Map(
+    records.map((record) => [recordIdentityKey(record), record]),
+  );
+  for (const [family, id] of canonicalRedistributableRecordKeys()) {
+    if (unitIds.has(id) && family === "unit") continue;
+    if (statBlockIds.has(id) && family === "statBlock") continue;
+    const canonical = canonicalRecordsByIdentity.get(`${family}:${id}`);
+    issues.push({
+      code: "canonical-record-missing-from-publication",
+      contentPath:
+        canonical?.contentPath ??
+        "packages/surface/publication/srd-surface.json",
+      recordId: id,
+      recordKind: family,
+      message: `Canonical ${family} ${id} is missing from the published Surface catalog`,
+    });
   }
 
   return { unitIds, statBlockIds, issues };

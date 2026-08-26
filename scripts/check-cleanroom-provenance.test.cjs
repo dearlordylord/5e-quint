@@ -431,10 +431,24 @@ test("publication membership rejects malformed or divergent records", () => {
   };
   const divergent = structuredClone(publishedSurface);
   divergent.units[0].name = "Divergent synthetic name";
+  const extra = structuredClone(publishedSurface);
+  extra.units.push({
+    ...extra.units[0],
+    id: "synthetic_extra_published_unit",
+  });
+  const omittedUnit = {
+    ...publishedSurface,
+    units: publishedSurface.units.slice(1),
+  };
+  const omittedStatBlock = {
+    ...publishedSurface,
+    statBlocks: publishedSurface.statBlocks.slice(1),
+  };
 
   for (const [publication, expectedCode] of [
     [malformed, "published-surface-invalid"],
     [divergent, "published-record-differs-from-corpus"],
+    [extra, "published-record-missing-from-corpus"],
   ]) {
     const result = auditModule.auditCorpus(
       auditModule.createAuditContext({ records, publication }),
@@ -445,6 +459,35 @@ test("publication membership rejects malformed or divergent records", () => {
       JSON.stringify(result.issues, null, 2),
     );
   }
+
+  const omittedUnitResult = auditModule.auditCorpus(
+    auditModule.createAuditContext({ records, publication: omittedUnit }),
+  );
+  assert.ok(
+    omittedUnitResult.issues.some(
+      (issue) =>
+        issue.code === "canonical-record-missing-from-publication" &&
+        issue.recordId === publishedSurface.units[0].id &&
+        issue.recordKind === "unit",
+    ),
+    JSON.stringify(omittedUnitResult.issues, null, 2),
+  );
+
+  const omittedStatBlockResult = auditModule.auditCorpus(
+    auditModule.createAuditContext({
+      records,
+      publication: omittedStatBlock,
+    }),
+  );
+  assert.ok(
+    omittedStatBlockResult.issues.some(
+      (issue) =>
+        issue.code === "canonical-record-missing-from-publication" &&
+        issue.recordId === publishedSurface.statBlocks[0].id &&
+        issue.recordKind === "statBlock",
+    ),
+    JSON.stringify(omittedStatBlockResult.issues, null, 2),
+  );
 });
 
 test("delta records cannot supply their own source resolutions", () => {
