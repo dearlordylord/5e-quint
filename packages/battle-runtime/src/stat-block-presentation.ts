@@ -26,7 +26,8 @@ export type StatBlockProcedurePresentation =
 
 export type StatBlockPresentationAdmission = {
   readonly execution: StatBlockExecutionState;
-  readonly presentation: BattleStatBlockPresentationSource;
+  /** Missing authored context is a valid boundary state with no labels to join. */
+  readonly presentation?: BattleStatBlockPresentationSource;
 };
 
 export function statBlockProjectionIssuesForActor(
@@ -149,6 +150,7 @@ export function battleCreaturePresentationDisplayName(
 export function statBlockProcedurePresentations(
   admission: StatBlockPresentationAdmission,
 ): readonly StatBlockProcedurePresentation[] {
+  if (admission.presentation === undefined) return [];
   const labels = new Map(
     admission.presentation.orderedProcedures.map((entry) => [
       `${entry.section}:${entry.procedureOrdinal}`,
