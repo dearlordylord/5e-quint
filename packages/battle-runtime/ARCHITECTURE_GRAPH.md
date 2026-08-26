@@ -96,6 +96,9 @@ Familiar its Reaction is already committed, so a caller cannot forge that
 state and later holes cannot bypass or double-spend it. Legendary-action window
 consumption and closure are centralized in
 `battle-reducer/legendary-action-window.ts` for every delegated procedure.
+The authored Stat Block lookup needed for familiar reappearance is owned by
+`find-familiar-stat-block-catalog.ts`; admission and presentation consume this
+narrow capability, while Battle State retains only projected execution facts.
 
 Post-cast persistent spatial spell procedures are owned by
 `battle-reducer/persistent-spatial-spell-procedures.ts`. It owns the admitted

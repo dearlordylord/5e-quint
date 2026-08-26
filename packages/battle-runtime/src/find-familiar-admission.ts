@@ -2,10 +2,8 @@ import { Brand } from "effect";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 
-import type {
-  BattleStatBlockExecutionCatalog,
-  BattleState,
-} from "./battle-state-execution.ts";
+import type { BattleState } from "./battle-state-execution.ts";
+import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
 import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
 import {
   findCompanionEntryByOwner,
@@ -30,7 +28,7 @@ const AdmittedFindFamiliarReappearance =
 export function admitFindFamiliarReappearance(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly catalog: BattleStatBlockExecutionCatalog;
+  readonly catalog: FindFamiliarStatBlockCatalog;
 }): Either.Either<
   {
     readonly mechanics: AdmittedFindFamiliarReappearance;
@@ -112,7 +110,7 @@ export function admitFindFamiliarReappearance(input: {
 }
 
 function resolveStoredFindFamiliarReappearanceForm(input: {
-  readonly catalog: BattleStatBlockExecutionCatalog;
+  readonly catalog: FindFamiliarStatBlockCatalog;
   readonly storedForm: BattleCompanionStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
 }): Either.Either<

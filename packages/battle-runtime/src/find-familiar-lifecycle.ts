@@ -61,12 +61,12 @@ import {
 } from "./battle-reducer/domain-helpers.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
-import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
+import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
 
 export type FindFamiliarReappearanceInput = {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly catalog: BattleStatBlockExecutionCatalog;
+  readonly catalog: FindFamiliarStatBlockCatalog;
   readonly initiative: InitiativeScore;
   readonly placement: Extract<
     import("./companion-state.ts").BattleCompanionPlacement,

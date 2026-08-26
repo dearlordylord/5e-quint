@@ -48,6 +48,9 @@ New procedure owners live under `src/procedure-admission/`,
 `battle-state-execution.ts` owns state-only dispatch;
 `battle-execution-composition.ts` supplies the authored-free procedure registry.
 The registry is an operation dependency, never Battle State or session state.
+Find Familiar's authored Stat Block lookup is owned by
+`find-familiar-stat-block-catalog.ts` and is threaded only through admission
+and presentation; it does not enter Battle State.
 
 Canonical mechanical vocabulary may still come from Surface or shared owners.
 Do not duplicate abilities, damage types, dice, ranges, or durations merely to

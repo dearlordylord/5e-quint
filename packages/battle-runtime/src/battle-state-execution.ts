@@ -179,7 +179,6 @@ import type {
   SpellMechanics,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import type * as Option from "effect/Option";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
@@ -231,14 +230,7 @@ import type {
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution-state.ts";
-import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
-
-export type BattleStatBlockExecutionCatalog = {
-  readonly getStatBlock: (
-    statBlockId: StatBlockId,
-  ) => Option.Option<StatBlockRecord>;
-};
+import type { UnitId } from "@dnd/shared/game-facts";
 import {
   type BattleInterruptTrigger,
   type BattleReadiedSpellTrigger,
