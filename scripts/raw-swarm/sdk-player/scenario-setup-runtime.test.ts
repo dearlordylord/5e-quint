@@ -203,6 +203,88 @@ describe("scenario setup public-SDK boundary", () => {
     ]);
   });
 
+  test("reports every missing Watchfire stat block from partial and empty catalogs", async () => {
+    const directory = mkdtempSync(resolve(tmpdir(), "dnd-watchfire-catalog-"));
+    const watchfireSetupPath = resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001.setup.ts",
+    );
+    const writeCatalogVariant = (filename: string, lookup: string): string => {
+      const setupPath = resolve(directory, filename);
+      writeFileSync(
+        setupPath,
+        `import { Option } from "effect";
+import { setupScenario as watchfireSetup } from ${JSON.stringify(watchfireSetupPath)};
+
+export const setupScenario = (context) =>
+  watchfireSetup({
+    ...context,
+    statBlockCatalog: {
+      ...context.statBlockCatalog,
+      getStatBlock: (id) => ${lookup},
+    },
+  });
+`,
+      );
+      return setupPath;
+    };
+    try {
+      const partial = await evaluateScenarioSetup(
+        writeCatalogVariant(
+          "partial.setup.ts",
+          `id === "stat_block_goblin_warrior"
+        ? context.statBlockCatalog.getStatBlock(id)
+        : Option.none()`,
+        ),
+        [],
+      );
+      const empty = await evaluateScenarioSetup(
+        writeCatalogVariant("empty.setup.ts", "Option.none()"),
+        [],
+      );
+      const expectedPrefix = {
+        scenarioId:
+          "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+        blockedOperation: "battleCreatureInitFromStatBlock",
+        requiredStatBlockIds: [
+          "stat_block_goblin_warrior",
+          "stat_block_wolf",
+          "stat_block_skeleton",
+          "stat_block_riding_horse",
+        ],
+      };
+      expect(partial).toEqual({
+        tag: "obstructed",
+        obstruction:
+          "The supplied canonical SRD stat-block catalog is missing one or more scenario-fixed combatant records.",
+        observation: {
+          ...expectedPrefix,
+          missingStatBlockIds: [
+            "stat_block_wolf",
+            "stat_block_skeleton",
+            "stat_block_riding_horse",
+          ],
+        },
+      });
+      expect(empty).toEqual({
+        tag: "obstructed",
+        obstruction:
+          "The supplied canonical SRD stat-block catalog is missing one or more scenario-fixed combatant records.",
+        observation: {
+          ...expectedPrefix,
+          missingStatBlockIds: [
+            "stat_block_goblin_warrior",
+            "stat_block_wolf",
+            "stat_block_skeleton",
+            "stat_block_riding_horse",
+          ],
+        },
+      });
+    } finally {
+      rmSync(directory, { recursive: true });
+    }
+  });
+
   test("passes controller-authored Character Sheets into neutral setup", async () => {
     const directory = mkdtempSync(
       resolve(tmpdir(), "dnd-scenario-characters-"),

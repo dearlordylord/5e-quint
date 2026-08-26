@@ -1402,6 +1402,32 @@ describe("Raw Swarm scenario catalogue", () => {
     );
   }, 15_000);
 
+  test("keeps every current admission predecessor within the live catalogue", () => {
+    const scenarioDirectory = resolve(
+      repoRoot,
+      "scripts/raw-swarm/sdk-player/scenarios",
+    );
+    const records = readdirSync(scenarioDirectory)
+      .filter((name) => name.endsWith(".scenario.json"))
+      .map((name) =>
+        JSON.parse(readFileSync(resolve(scenarioDirectory, name), "utf8")),
+      );
+    const liveScenarioIds = new Set(
+      records.map(
+        ({ scenarioId }: { readonly scenarioId: string }) => scenarioId,
+      ),
+    );
+
+    for (const record of records) {
+      if (record.schemaVersion !== 2) continue;
+      expect(
+        record.predecessorScenarioIds.every((scenarioId: string) =>
+          liveScenarioIds.has(scenarioId),
+        ),
+      ).toBe(true);
+    }
+  });
+
   test("identity parsers reject traversal and opaque generated scenario ids", () => {
     for (const decode of [
       decodeScenarioCampaignId,

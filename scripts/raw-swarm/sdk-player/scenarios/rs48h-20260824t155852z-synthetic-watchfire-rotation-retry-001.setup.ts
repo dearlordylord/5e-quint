@@ -14,6 +14,8 @@ const COURTYARD_X_MIN = -6;
 const COURTYARD_X_MAX = 5;
 const COURTYARD_Y_MIN = -4;
 const COURTYARD_Y_MAX = 3;
+const SCENARIO_ID =
+  "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001";
 
 const courtyardCoordinates = (): readonly {
   readonly x: number;
@@ -95,18 +97,35 @@ export const setupScenario: ScenarioSetup = (context) => {
     },
   ] as const;
 
+  const statBlockLookups = combatantInputs.map((input) => ({
+    input,
+    statBlock: context.statBlockCatalog.getStatBlock(input.statBlockId),
+  }));
+  const requiredStatBlockIds = combatantInputs.map(
+    ({ statBlockId }) => statBlockId,
+  );
+  const missingStatBlockIds = statBlockLookups.flatMap(
+    ({ input, statBlock }) =>
+      statBlock._tag === "None" ? [input.statBlockId] : [],
+  );
+  if (missingStatBlockIds.length > 0) {
+    return {
+      kind: "obstructed",
+      obstruction:
+        "The supplied canonical SRD stat-block catalog is missing one or more scenario-fixed combatant records.",
+      observation: {
+        scenarioId: SCENARIO_ID,
+        blockedOperation: "battleCreatureInitFromStatBlock",
+        requiredStatBlockIds,
+        missingStatBlockIds,
+      },
+    };
+  }
+
   const combatants = [];
-  for (const input of combatantInputs) {
-    const statBlock = context.statBlockCatalog.getStatBlock(input.statBlockId);
+  for (const { input, statBlock } of statBlockLookups) {
     if (statBlock._tag === "None") {
-      return {
-        kind: "obstructed",
-        obstruction: `The supplied public stat-block catalog does not contain ${input.statBlockId}.`,
-        observation: {
-          setup: "stat-block-catalog-lookup",
-          statBlockId: input.statBlockId,
-        },
-      };
+      continue;
     }
 
     const initialized = context.sdk.battleCreatureInitFromStatBlock({
@@ -130,9 +149,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   }
 
   const battle = context.sdk.startBattle({
-    battleId: context.sdk.battleId(
-      "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
-    ),
+    battleId: context.sdk.battleId(SCENARIO_ID),
     combatants,
   });
   if (context.sdk.isLeft(battle)) {
