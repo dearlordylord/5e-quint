@@ -12,7 +12,6 @@ import { Match } from "effect";
 import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 export {
   creatureActionSectionIsSupported,
   creatureAttackRollMechanicsAreSupported,
@@ -21,18 +20,6 @@ export {
   statBlockTraitsAreSupported,
   supportedStatBlockTraitAttackRollModes,
 } from "./statblock-action-execution-support.ts";
-
-/** Generic runtime gate after authored procedure projection. */
-export function runtimeStatBlockActionSurfaceIsSupported(
-  source: BattleStatBlockExecutionSource,
-): boolean {
-  return source.procedures.every(
-    (procedure) =>
-      procedure.kind === "attack" ||
-      procedure.kind === "multiattack" ||
-      procedure.kind === "bonusActionOption",
-  );
-}
 
 const WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES = [
   "simpleLiteralAttackSingleDamage",

@@ -64,10 +64,7 @@ import {
   type BattleStatBlockCombatantSource,
 } from "./stat-block-combatant-admission.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
-import {
-  runtimeStatBlockActionSurfaceIsSupported,
-  statBlockTraitsAreSupported,
-} from "./statblock-action-support.ts";
+import { statBlockTraitsAreSupported } from "./statblock-action-support.ts";
 import {
   wildShapeKnownFormEligibilityIssue,
   type WildShapeKnownFormEligibilityIssueCode,
@@ -180,9 +177,6 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
     }
     const projected = battleDruidWildShapeFormProjectionStatBlock(form);
     if (Either.isLeft(projected)) return Either.left(projected.left);
-    if (!runtimeStatBlockActionSurfaceIsSupported(projected.right)) {
-      continue;
-    }
     parsed.push(battleDruidWildShapeKnownForm(projected.right));
   }
   return Either.right(parsed);
@@ -440,9 +434,14 @@ export function authoredStatBlockBattleInitIssueMessage(
     Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
     Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) => {
       const location =
-        failure.section === undefined
-          ? ""
-          : ` in ${failure.section} procedure ${String(failure.procedureOrdinal ?? "unknown")}`;
+        failure.reason === "unsupportedProcedureBinding"
+          ? ` in ${failure.issues
+              .map(
+                ({ section, procedureOrdinal }) =>
+                  `${section} procedure ${String(procedureOrdinal)}`,
+              )
+              .join(", ")}`
+          : "";
       return `Stat Block authored projection failed${location}: ${statBlockProjectionFailureMessage(failure)}.`;
     }),
     Match.exhaustive,

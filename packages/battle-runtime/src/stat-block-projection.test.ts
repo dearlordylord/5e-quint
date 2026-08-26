@@ -4,9 +4,9 @@ import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { statBlockId } from "@dnd/shared/game-facts";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { StatBlockProcedureOrdinalSchema } from "@dnd/surface/surface/schema";
 import type {
+  StatBlockProcedureEntry,
   StandaloneStatBlock,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
@@ -20,14 +20,13 @@ import {
   combatantId,
   discoverBattleActsWithStatBlockProjectionIssues,
   initiativeScore,
-  statBlockProjectionIssuesForActor,
   projectAuthoredStatBlock,
   startBattle,
   statBlockProcedurePresentations,
-  type StatBlockProjectionIssue,
 } from "./index.ts";
 import {
   statBlockCatalog,
+  monsterMultiattackStatBlock,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
@@ -87,12 +86,6 @@ function mechanicalProjection(session: ReturnType<typeof startedStatBlock>) {
     mechanics: actor.origin.mechanics,
     execution: actor.origin.execution,
   };
-}
-
-function firstProjectionIssue(
-  issues: ReadonlyNonEmptyArray<StatBlockProjectionIssue>,
-): StatBlockProjectionIssue {
-  return issues[0];
 }
 
 describe("generic Stat Block projection", () => {
@@ -406,7 +399,7 @@ describe("generic Stat Block projection", () => {
     ).toEqual([]);
   });
 
-  test("does not admit a reused action attack in another action section", () => {
+  test("rejects every unsupported executable section binding", () => {
     const source = statBlockRecord();
     const actionAttack = source.statBlock.actions?.find(
       (entry) =>
@@ -420,69 +413,109 @@ describe("generic Stat Block projection", () => {
       id: statBlockId("synthetic-reused-action-attack"),
       statBlock: {
         ...source.statBlock,
-        bonusActions: [actionAttack],
-      },
-    };
-
-    const discovery = discoverBattleActsWithStatBlockProjectionIssues(
-      startedStatBlock(reusedAcrossSections),
-    );
-    expect(discovery.statBlockProjectionIssues[0]?.issues).toContainEqual({
-      tag: "statBlockProjectionIssue",
-      source: {
-        kind: "action",
-        section: "bonusActions",
-        shape: "attack",
-        nonExecutableReason: "unsupportedActionShape",
-      },
-    });
-  });
-
-  test("reports a represented unsupported action shape as a typed issue", () => {
-    const source = statBlockRecord();
-    const attack = source.statBlock.actions?.find(
-      (entry) =>
-        entry.kind === "executable" && entry.procedure.kind === "attack_roll",
-    );
-    if (attack === undefined) throw new Error("Expected a fixture attack.");
-    const unsupported: StatBlockRecord = {
-      ...source,
-      statBlock: {
-        ...source.statBlock,
-        bonusActions: [attack],
-      },
-    };
-
-    const session = startedStatBlock(unsupported);
-    const actorId = combatantId("stat-block-projection-actor");
-    const discovery = discoverBattleActsWithStatBlockProjectionIssues(session);
-    for (const group of discovery.statBlockProjectionIssues) {
-      expect(firstProjectionIssue(group.issues).tag).toBe(
-        "statBlockProjectionIssue",
-      );
-    }
-    expect(
-      statBlockProjectionIssuesForActor(
-        session.state,
-        session.context,
-        actorId,
-      ),
-    ).toEqual(discovery.statBlockProjectionIssues[0]?.issues ?? null);
-    expect(discovery.statBlockProjectionIssues).toEqual([
-      {
-        combatantId: actorId,
-        issues: [
+        bonusActions: [
+          actionAttack,
           {
-            tag: "statBlockProjectionIssue",
-            source: {
-              kind: "action",
-              section: "bonusActions",
-              shape: "attack",
-              nonExecutableReason: "unsupportedActionShape",
+            kind: "executable",
+            procedureOrdinal: authoredOrdinal(2),
+            procedure: {
+              kind: "action_option",
+              name: "Synthetic Unsupported Bonus Action",
+              options: ["dash"],
             },
+            resourceRefs: { kind: "none" },
           },
         ],
       },
+    };
+
+    const projected = projectAuthoredStatBlock(reusedAcrossSections);
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(projected.left.reason).toBe("unsupportedProcedureBinding");
+    if (projected.left.reason !== "unsupportedProcedureBinding") return;
+    expect(projected.left.issues).toEqual([
+      {
+        section: "bonusActions",
+        procedureOrdinal: actionAttack.procedureOrdinal,
+      },
+      {
+        section: "bonusActions",
+        procedureOrdinal: authoredOrdinal(2),
+      },
     ]);
+  });
+
+  test("keeps text-only procedures in presentation without runtime admission failure", () => {
+    const source = statBlockRecord();
+    const textOnly: Extract<
+      StatBlockProcedureEntry,
+      { readonly kind: "textOnly" }
+    > = {
+      kind: "textOnly",
+      procedureOrdinal: authoredOrdinal(99),
+      name: "Synthetic Unresolved Action",
+      description: "The creature uses an unresolved action.",
+      reason: "required_table_adjudication",
+      resourceRefs: { kind: "none" },
+    };
+    const projected = projectAuthoredStatBlock({
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        actions: [...(source.statBlock.actions ?? []), textOnly],
+      },
+    });
+    expect(Either.isRight(projected)).toBe(true);
+    if (Either.isLeft(projected)) return;
+    expect(projected.right.runtime.procedures).not.toContainEqual(
+      expect.objectContaining({ procedureOrdinal: textOnly.procedureOrdinal }),
+    );
+    expect(projected.right.presentation.orderedProcedures).toContainEqual({
+      section: "actions",
+      procedureOrdinal: textOnly.procedureOrdinal,
+      name: textOnly.name,
+      description: textOnly.description,
+      kind: "textOnly",
+      reason: textOnly.reason,
+      resourceRefs: [],
+    });
+  });
+
+  test("projects supported attack, Multiattack, and Bonus Action paths", () => {
+    const source = monsterMultiattackStatBlock();
+    const supportedBonusAction: Extract<
+      StatBlockProcedureEntry,
+      { readonly kind: "executable" }
+    > = {
+      kind: "executable",
+      procedureOrdinal: authoredOrdinal(4),
+      procedure: {
+        kind: "action_option",
+        name: "Synthetic Disengage",
+        options: ["disengage"],
+      },
+      resourceRefs: { kind: "none" },
+    };
+    const projected = projectAuthoredStatBlock({
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        bonusActions: [supportedBonusAction],
+      },
+    });
+    expect(Either.isRight(projected)).toBe(true);
+    if (Either.isLeft(projected)) return;
+    expect(projected.right.runtime.procedures).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "attack" }),
+        expect.objectContaining({ kind: "multiattack" }),
+        expect.objectContaining({
+          kind: "bonusActionOption",
+          procedureOrdinal: supportedBonusAction.procedureOrdinal,
+          standardActions: ["disengage"],
+        }),
+      ]),
+    );
   });
 });

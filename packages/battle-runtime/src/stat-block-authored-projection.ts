@@ -4,6 +4,8 @@ import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
 import type {
   CreatureAttackRollMechanics,
   StatBlockProcedureEntry,
+  StatBlockProcedureOrdinal,
+  StatBlockProcedureResourceOrdinal,
   StatBlockRecord,
   StandaloneStatBlock,
 } from "@dnd/surface/surface/types";
@@ -30,17 +32,31 @@ import type {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 
-export type BattleStatBlockProjectionFailure = {
-  readonly tag: "battleStatBlockProjectionFailure";
-  readonly reason:
-    | "nonLiteralSize"
-    | "nonLiteralArmorClass"
-    | "nonLiteralHitPoints"
-    | "nonLiteralSpeed"
-    | "unsupportedProcedureBinding";
-  readonly procedureOrdinal?: number;
-  readonly section?: StatBlockActionProjectionSection;
+type BattleStatBlockProjectionScalarFailureReason =
+  | "nonLiteralSize"
+  | "nonLiteralArmorClass"
+  | "nonLiteralHitPoints"
+  | "nonLiteralSpeed";
+
+export type BattleStatBlockUnsupportedProcedureBinding = {
+  readonly section: StatBlockActionProjectionSection;
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
 };
+
+export type BattleStatBlockProjectionFailure =
+  | {
+      readonly tag: "battleStatBlockProjectionFailure";
+      readonly reason: BattleStatBlockProjectionScalarFailureReason;
+      readonly procedureOrdinal?: never;
+      readonly section?: never;
+    }
+  | {
+      readonly tag: "battleStatBlockProjectionFailure";
+      readonly reason: "unsupportedProcedureBinding";
+      readonly issues: ReadonlyNonEmptyArray<BattleStatBlockUnsupportedProcedureBinding>;
+      readonly procedureOrdinal?: never;
+      readonly section?: never;
+    };
 
 export type AuthoredStatBlockProjection = {
   readonly runtime: BattleStatBlockExecutionSource;
@@ -72,12 +88,17 @@ export function projectAuthoredStatBlock(
     return Either.left(failure("nonLiteralSpeed"));
   }
   const runtimeProcedures = runtimeProcedureBindings(source);
+  if (Either.isLeft(runtimeProcedures)) {
+    return Either.left(
+      unsupportedProcedureBindingFailure(runtimeProcedures.left),
+    );
+  }
   const runtime = runtimeProjection(
     record,
     source,
     size,
     nonEmptyRuntimeValues(speeds),
-    runtimeProcedures,
+    runtimeProcedures.right,
   );
   return Either.right({
     runtime,
@@ -168,28 +189,51 @@ export function projectAuthoredStatBlockWithCreatureType(
 
 function runtimeProcedureBindings(
   source: StandaloneStatBlock,
-): readonly BattleStatBlockRuntimeProcedure[] {
+): Either.Either<
+  readonly BattleStatBlockRuntimeProcedure[],
+  ReadonlyNonEmptyArray<BattleStatBlockUnsupportedProcedureBinding>
+> {
   const supportedActionAttackOrdinals = supportedAttackOrdinals(source.actions);
-  const sections: readonly [
-    StatBlockActionProjectionSection,
-    readonly StatBlockProcedureEntry[] | undefined,
-  ][] = [
-    ["actions", source.actions],
-    ["bonusActions", source.bonusActions],
-    ["reactions", source.reactions],
-    ["legendaryActions", source.legendaryActions?.entries],
-  ];
-
-  return sections.flatMap(([section, entries]) =>
-    (entries ?? []).flatMap((entry) =>
-      runtimeProcedureBinding(
+  const procedures: BattleStatBlockRuntimeProcedure[] = [];
+  const issues: BattleStatBlockUnsupportedProcedureBinding[] = [];
+  for (const { section, entries } of authoredProcedureSections(source)) {
+    for (const entry of entries ?? []) {
+      const projected = runtimeProcedureBinding(
         source,
         section,
         entry,
         supportedActionAttackOrdinals,
-      ),
-    ),
-  );
+      );
+      if (Either.isLeft(projected)) {
+        issues.push(projected.left);
+      } else {
+        procedures.push(...projected.right);
+      }
+    }
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  return firstIssue === undefined
+    ? Either.right(procedures)
+    : Either.left([firstIssue, ...remainingIssues]);
+}
+
+type AuthoredProcedureSection = {
+  readonly section: StatBlockActionProjectionSection;
+  readonly entries: readonly StatBlockProcedureEntry[] | undefined;
+};
+
+function authoredProcedureSections(
+  source: StandaloneStatBlock,
+): readonly AuthoredProcedureSection[] {
+  return [
+    { section: "actions", entries: source.actions },
+    { section: "bonusActions", entries: source.bonusActions },
+    { section: "reactions", entries: source.reactions },
+    {
+      section: "legendaryActions",
+      entries: source.legendaryActions?.entries,
+    },
+  ];
 }
 
 function supportedAttackOrdinals(
@@ -213,25 +257,43 @@ function runtimeProcedureBinding(
   section: StatBlockActionProjectionSection,
   entry: StatBlockProcedureEntry,
   supportedActionAttackOrdinals: ReadonlySet<number>,
-): readonly BattleStatBlockRuntimeProcedure[] {
-  if (entry.kind !== "executable") return [];
+): Either.Either<
+  readonly BattleStatBlockRuntimeProcedure[],
+  BattleStatBlockUnsupportedProcedureBinding
+> {
+  if (entry.kind !== "executable") return Either.right([]);
   const procedure = entry.procedure;
-  if (procedure.kind === "attack_roll") {
-    return runtimeAttackBinding(source, section, entry, procedure);
-  }
-  if (procedure.kind === "multiattack" && section === "actions") {
-    return [
-      runtimeMultiattackBinding(
-        entry,
-        procedure,
-        supportedActionAttackOrdinals,
-      ),
-    ];
-  }
-  if (procedure.kind === "action_option" && section === "bonusActions") {
-    return runtimeBonusActionBinding(entry, procedure);
-  }
-  return [];
+  return Match.value(procedure).pipe(
+    Match.when({ kind: "attack_roll" }, (attack) =>
+      runtimeAttackBinding(source, section, entry, attack),
+    ),
+    Match.when({ kind: "multiattack" }, (multiattack) =>
+      section === "actions"
+        ? Either.right([
+            runtimeMultiattackBinding(
+              entry,
+              multiattack,
+              supportedActionAttackOrdinals,
+            ),
+          ])
+        : Either.left(procedureBindingIssue(section, entry.procedureOrdinal)),
+    ),
+    Match.when({ kind: "action_option" }, (actionOption) =>
+      section === "bonusActions"
+        ? runtimeBonusActionBinding(entry, actionOption)
+        : Either.left(procedureBindingIssue(section, entry.procedureOrdinal)),
+    ),
+    Match.when({ kind: "save" }, () =>
+      Either.left(procedureBindingIssue(section, entry.procedureOrdinal)),
+    ),
+    Match.when({ kind: "support" }, () =>
+      Either.left(procedureBindingIssue(section, entry.procedureOrdinal)),
+    ),
+    Match.when({ kind: "spellcasting" }, () =>
+      Either.left(procedureBindingIssue(section, entry.procedureOrdinal)),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function runtimeAttackBinding(
@@ -239,14 +301,17 @@ function runtimeAttackBinding(
   section: StatBlockActionProjectionSection,
   entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
   procedure: Extract<typeof entry.procedure, { readonly kind: "attack_roll" }>,
-): readonly BattleStatBlockRuntimeProcedure[] {
+): Either.Either<
+  readonly BattleStatBlockRuntimeProcedure[],
+  BattleStatBlockUnsupportedProcedureBinding
+> {
   const attack = authoredAttackMechanics(procedure);
   if (
     (section !== "actions" && section !== "legendaryActions") ||
     !creatureAttackRollMechanicsAreSupported(attack)
   )
-    return [];
-  return [
+    return Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
+  return Either.right([
     {
       kind: "attack",
       section,
@@ -255,7 +320,7 @@ function runtimeAttackBinding(
       resourceRefs: procedureResourceRefs(entry),
       ...traitModes(source),
     },
-  ];
+  ]);
 }
 
 function runtimeMultiattackBinding(
@@ -288,10 +353,13 @@ function runtimeBonusActionBinding(
     typeof entry.procedure,
     { readonly kind: "action_option" }
   >,
-): readonly BattleStatBlockRuntimeProcedure[] {
+): Either.Either<
+  readonly BattleStatBlockRuntimeProcedure[],
+  BattleStatBlockUnsupportedProcedureBinding
+> {
   const options = procedure.options.filter(isSupportedBonusAction);
   return options.length === procedure.options.length
-    ? [
+    ? Either.right([
         {
           kind: "bonusActionOption",
           section: "bonusActions",
@@ -299,8 +367,10 @@ function runtimeBonusActionBinding(
           standardActions: nonEmptyRuntimeValues(options),
           resourceRefs: procedureResourceRefs(entry),
         },
-      ]
-    : [];
+      ])
+    : Either.left(
+        procedureBindingIssue("bonusActions", entry.procedureOrdinal),
+      );
 }
 
 function presentationProjection(
@@ -316,16 +386,7 @@ function presentationProjection(
 function authoredProcedurePresentations(
   source: StandaloneStatBlock,
 ): readonly BattleStatBlockAuthoredProcedurePresentation[] {
-  const sections: readonly [
-    StatBlockActionProjectionSection,
-    readonly StatBlockProcedureEntry[] | undefined,
-  ][] = [
-    ["actions", source.actions],
-    ["bonusActions", source.bonusActions],
-    ["reactions", source.reactions],
-    ["legendaryActions", source.legendaryActions?.entries],
-  ];
-  return sections.flatMap(([section, entries]) =>
+  return authoredProcedureSections(source).flatMap(({ section, entries }) =>
     (entries ?? []).map((entry) => {
       if (entry.kind === "textOnly") {
         return {
@@ -373,7 +434,7 @@ function authoredAttackMechanics(
 
 function procedureResourceRefs(
   entry: StatBlockProcedureEntry,
-): readonly number[] {
+): readonly StatBlockProcedureResourceOrdinal[] {
   const refs =
     entry.resourceRefs.kind === "none" ? [] : [...entry.resourceRefs.ordinals];
   if (entry.kind === "executable" && entry.procedure.kind === "spellcasting") {
@@ -468,7 +529,24 @@ function nonEmptyRuntimeValues<T>(
 }
 
 function failure(
-  reason: BattleStatBlockProjectionFailure["reason"],
+  reason: BattleStatBlockProjectionScalarFailureReason,
 ): BattleStatBlockProjectionFailure {
   return { tag: "battleStatBlockProjectionFailure", reason };
+}
+
+function procedureBindingIssue(
+  section: StatBlockActionProjectionSection,
+  procedureOrdinal: StatBlockProcedureOrdinal,
+): BattleStatBlockUnsupportedProcedureBinding {
+  return { section, procedureOrdinal };
+}
+
+function unsupportedProcedureBindingFailure(
+  issues: ReadonlyNonEmptyArray<BattleStatBlockUnsupportedProcedureBinding>,
+): BattleStatBlockProjectionFailure {
+  return {
+    tag: "battleStatBlockProjectionFailure",
+    reason: "unsupportedProcedureBinding",
+    issues,
+  };
 }

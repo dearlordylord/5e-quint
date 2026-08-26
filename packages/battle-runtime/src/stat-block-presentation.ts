@@ -169,61 +169,46 @@ export function statBlockProcedurePresentations(
     labels.get(procedurePresentationKey(section, ordinal))?.name ??
     "Unsupported Stat Block procedure";
   return admission.execution.procedureBindings.flatMap(
-    (binding): readonly StatBlockProcedurePresentation[] => {
-      if (binding.procedure.kind === "unarmedStrike") {
-        return [
+    (binding): readonly StatBlockProcedurePresentation[] =>
+      Match.value(binding.procedure).pipe(
+        Match.when({ kind: "unarmedStrike" }, () => [
           {
             procedureRef: binding.procedureRef,
             kind: "attack" as const,
             name: UNARMED_STRIKE_NAME,
           },
-        ];
-      }
-      if (binding.procedure.kind === "attack") {
-        return [
+        ]),
+        Match.when({ kind: "attack" }, (procedure) => [
           {
             procedureRef: binding.procedureRef,
             kind: "attack" as const,
-            name: labelFor(
-              binding.procedure.section,
-              binding.procedure.procedureOrdinal,
-            ),
+            name: labelFor(procedure.section, procedure.procedureOrdinal),
           },
-        ];
-      }
-      if (binding.procedure.kind === "multiattack") {
-        return [
+        ]),
+        Match.when({ kind: "multiattack" }, (procedure) => [
           {
             procedureRef: binding.procedureRef,
             kind: "multiattack" as const,
-            label: labelFor("actions", binding.procedure.procedureOrdinal),
+            label: labelFor("actions", procedure.procedureOrdinal),
           },
-        ];
-      }
-      if (binding.procedure.kind === "unsupported") {
-        return [
+        ]),
+        Match.when({ kind: "bonusActionOption" }, (procedure) => [
+          {
+            procedureRef: binding.procedureRef,
+            kind: "bonusActionOption" as const,
+            label: labelFor("bonusActions", procedure.procedureOrdinal),
+          },
+        ]),
+        Match.when({ kind: "unsupported" }, (procedure) => [
           {
             procedureRef: binding.procedureRef,
             kind: "unsupported" as const,
-            label: labelFor(
-              binding.procedure.section,
-              binding.procedure.procedureOrdinal,
-            ),
-            reason: binding.procedure.reason,
+            label: labelFor(procedure.section, procedure.procedureOrdinal),
+            reason: procedure.reason,
           },
-        ];
-      }
-      if (binding.procedure.kind !== "bonusActionOption") {
-        return [];
-      }
-      return [
-        {
-          procedureRef: binding.procedureRef,
-          kind: "bonusActionOption" as const,
-          label: labelFor("bonusActions", binding.procedure.procedureOrdinal),
-        },
-      ];
-    },
+        ]),
+        Match.exhaustive,
+      ),
   );
 }
 
