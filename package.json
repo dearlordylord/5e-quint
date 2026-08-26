@@ -19,6 +19,7 @@
     "check:battle-runtime-test-support-boundary": "node scripts/check-battle-runtime-test-support-boundary.cjs",
     "check:character-sheet-runtime-split": "node scripts/audit-character-sheet-runtime-split.mjs",
     "check:surface-content-publication": "node scripts/check-surface-content-json-sync.cjs",
+    "check:surface-publication-delta": "pnpm exec tsx scripts/verify-surface-publication-delta.ts",
     "capture:effect3-baseline": "pnpm exec tsx scripts/effect3-baseline.ts capture",
     "verify:effect3-baseline": "pnpm exec tsx scripts/effect3-baseline.ts verify",
     "check:effect4-cohort:self-test": "node scripts/check-effect4-cohort.mjs --self-test",

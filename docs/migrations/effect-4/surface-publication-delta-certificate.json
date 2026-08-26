@@ -1,0 +1,90 @@
+{
+  "formatVersion": 1,
+  "issue": {
+    "number": 373,
+    "kind": "effect-4-surface-publication-delta",
+    "statement": "Certify the Effect 4 Surface publication delta against the immutable Effect 3 baseline."
+  },
+  "baseline": {
+    "commit": "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
+    "readAuthority": "git-show-commit-path",
+    "paths": [
+      "packages/surface/publication/srd-surface.json",
+      "packages/surface/publication/srd-surface.schema.json"
+    ]
+  },
+  "artifacts": {
+    "aggregate": {
+      "path": "packages/surface/publication/srd-surface.json",
+      "semanticClass": "byte-order-only",
+      "cause": "Effect 4 publication encoding changed the key order of the anchored-trigger mechanics object for one record while retaining the same values.",
+      "issue": "The aggregate bytes changed, but recursively key-sorted content and the ordered record identity projection remain equal.",
+      "baseline": {
+        "byteLength": 943445,
+        "sha256": "4c94c310b97069b3e2665f25986ffc87377053e341c30f3df3cf7a81465a1474"
+      },
+      "candidate": {
+        "byteLength": 943445,
+        "sha256": "e3b743d94a01f0fed0db4f895a53bb873ed864eef47db5ebb130f681a409e105"
+      },
+      "evidence": {
+        "baselineCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
+        "candidateCanonicalJsonSha256": "7363b6663f9669bb450fac48528090fd93b500ecd1db8cf95cc54580246bf4f4",
+        "keyOrderDifferenceCount": 1,
+        "valueDifferenceCount": 0,
+        "recordCounts": {
+          "units": 399,
+          "statBlocks": 21,
+          "total": 420
+        },
+        "orderedIdSha256": {
+          "units": "bc200b3061654b6a3ca19aa5d64195daba6f2dbe2977a6a7dd15e84733849b22",
+          "statBlocks": "367c1236b838d3265f1b87f3c297642f6906c72bee951d496fdd4ee996322e4e",
+          "all": "1ba47988d91731d46927a075f3d75707a33c83571a81d2075884ec3005f15a92"
+        }
+      }
+    },
+    "schema": {
+      "path": "packages/surface/publication/srd-surface.schema.json",
+      "semanticClass": "schema-definition-graph-regenerated",
+      "cause": "Effect 4 schema encoding regenerated the local definition graph with renamed and deduplicated definitions while preserving the published aggregate contract.",
+      "issue": "The schema bytes and local definition/reference graph changed; both graphs must remain complete and cross-validate both aggregate snapshots.",
+      "baseline": {
+        "byteLength": 927510,
+        "sha256": "a7dbfc51903fe2653a5b65e857cbe1a1e5eb29fa365f4c71bb0bbf216a1e62b2"
+      },
+      "candidate": {
+        "byteLength": 1375908,
+        "sha256": "b7b6ab07de16590f1f731bc0abe4171a4d4e36241d595221f9a9a57f51d46110"
+      },
+      "evidence": {
+        "baselineCanonicalJsonSha256": "9c11f7e18ab8baf9762617d74142ca7dfc45a38fe4ee625b72e7d69d439cb08f",
+        "candidateCanonicalJsonSha256": "5696bbda8ab69b3d6612a8c047abda5c9342d744bf643cee4b4bf810fc98c7fb",
+        "definitions": {
+          "baseline": 1305,
+          "candidate": 1075
+        },
+        "references": {
+          "baseline": 8778,
+          "candidate": 7290
+        },
+        "localReferencesComplete": {
+          "baseline": true,
+          "candidate": true
+        },
+        "crossValidation": [
+          "baseline-schema/baseline-aggregate",
+          "baseline-schema/candidate-aggregate",
+          "candidate-schema/baseline-aggregate",
+          "candidate-schema/candidate-aggregate"
+        ]
+      }
+    }
+  },
+  "verification": {
+    "hashAlgorithm": "SHA-256",
+    "canonicalJson": "JSON object keys are sorted recursively; array order is retained.",
+    "orderedIdHash": "SHA-256(JSON.stringify(ordered IDs)) for each aggregate family and their concatenation.",
+    "schemaReferences": "Every $ref is a local #/$defs reference whose definition exists."
+  }
+}
