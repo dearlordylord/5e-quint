@@ -76,13 +76,22 @@ function statBlockProjectionFailureContent(
   statBlockId: string,
   failure: BattleStatBlockProjectionFailure,
 ) {
+  const details = Match.value(failure).pipe(
+    Match.when(
+      { reason: "unsupportedProcedureBinding" },
+      ({ reason, issues }) => ({ reason, issues }),
+    ),
+    Match.when({ reason: "nonLiteralSize" }, ({ reason }) => ({ reason })),
+    Match.when({ reason: "nonLiteralArmorClass" }, ({ reason }) => ({
+      reason,
+    })),
+    Match.when({ reason: "nonLiteralHitPoints" }, ({ reason }) => ({ reason })),
+    Match.when({ reason: "nonLiteralSpeed" }, ({ reason }) => ({ reason })),
+    Match.exhaustive,
+  );
   return errorContent("Stat Block projection failed.", {
     code: "STAT_BLOCK_BATTLE_INIT_INVALID",
     statBlockId,
-    reason: failure.reason,
-    ...(failure.procedureOrdinal === undefined
-      ? {}
-      : { procedureOrdinal: failure.procedureOrdinal }),
-    ...(failure.section === undefined ? {} : { section: failure.section }),
+    ...details,
   });
 }

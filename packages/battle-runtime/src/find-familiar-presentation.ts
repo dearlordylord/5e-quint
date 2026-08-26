@@ -10,7 +10,10 @@ import type { BattleStateInitIssue } from "./battle-state-execution.ts";
 import type { BattleResolutionResult } from "./battle-state-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlock,
+} from "./stat-block-authored-projection.ts";
 import {
   admitCompanionToBattle,
   castResolvedFindFamiliar,
@@ -185,7 +188,10 @@ export function castRetainedFindFamiliarRuntime(
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
-      message: `Find Familiar form projection failed: ${projected.left.reason}.`,
+      message: battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
       snapshot: snapshotBattle(input.session.state),
     };
   }
@@ -257,7 +263,10 @@ function companionPresentationFromCatalog(input: {
   if (Either.isLeft(projected)) {
     return Either.left({
       tag: "battleStateInitIssue",
-      message: `Find Familiar form projection failed: ${projected.left.reason}.`,
+      message: battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
     });
   }
   return companionPresentationFromSource({

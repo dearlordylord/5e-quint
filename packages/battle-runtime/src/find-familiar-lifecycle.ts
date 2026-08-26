@@ -32,8 +32,10 @@ import {
   withFindFamiliarCombatant,
 } from "./find-familiar-lifecycle-execution.ts";
 import {
+  battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlockWithCreatureType,
   type AuthoredStatBlockProjection,
+  type BattleStatBlockProjectionFailure,
 } from "./stat-block-authored-projection.ts";
 import { findFamiliarDisappearedAtZeroHitPointsState } from "./companion-state.ts";
 
@@ -390,7 +392,10 @@ export function castResolvedFindFamiliar(
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      projected.left,
+      battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
     );
   }
   const nextFamiliar = findFamiliarPresentState({
@@ -532,7 +537,10 @@ export function castWildCompanion(
     return invalidFindFamiliarResult(
       spent.state,
       "invalidFill",
-      projected.left,
+      battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
     );
   }
   const prior = findFamiliarCastPrior(
@@ -686,7 +694,12 @@ export function admitCompanionToBattle(
   /* v8 ignore stop -- @preserve */
   const projected = projectFamiliarStatBlock(resolvedForm.form);
   if (Either.isLeft(projected)) {
-    return battleStateInitIssue(projected.left);
+    return battleStateInitIssue(
+      battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
+    );
   }
   const nextCompanion = findFamiliarPresentState({
     form: { formAccess: input.manifestation.storedForm.formAccess },
@@ -935,15 +948,16 @@ function hitPointsForAdoptedFamiliarForm(input: {
 
 function projectFamiliarStatBlock(
   form: FindFamiliarResolvedForm,
-): Either.Either<AuthoredStatBlockProjection, string> {
+): Either.Either<
+  AuthoredStatBlockProjection,
+  BattleStatBlockProjectionFailure
+> {
   const projected = projectAuthoredStatBlockWithCreatureType(
     form.statBlock,
     form.creatureTypeOverride,
   );
   return Either.isLeft(projected)
-    ? Either.left(
-        `Find Familiar form projection failed: ${projected.left.reason}.`,
-      )
+    ? Either.left(projected.left)
     : Either.right(projected.right);
 }
 

@@ -40,6 +40,7 @@ import type {
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import {
+  battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlock,
   type BattleStatBlockProjectionFailure,
 } from "./stat-block-authored-projection.ts";
@@ -432,45 +433,8 @@ export function authoredStatBlockBattleInitIssueMessage(
 ): string {
   return Match.value(issue).pipe(
     Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
-    Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) => {
-      const location =
-        failure.reason === "unsupportedProcedureBinding"
-          ? ` in ${failure.issues
-              .map(
-                ({ section, procedureOrdinal }) =>
-                  `${section} procedure ${String(procedureOrdinal)}`,
-              )
-              .join(", ")}`
-          : "";
-      return `Stat Block authored projection failed${location}: ${statBlockProjectionFailureMessage(failure)}.`;
-    }),
-    Match.exhaustive,
-  );
-}
-
-function statBlockProjectionFailureMessage(
-  failure: BattleStatBlockProjectionFailure,
-): string {
-  return Match.value(failure.reason).pipe(
-    Match.when(
-      "nonLiteralSize",
-      () => "battle initialization requires a concrete Size",
-    ),
-    Match.when(
-      "nonLiteralArmorClass",
-      () => "battle initialization requires literal Armor Class",
-    ),
-    Match.when(
-      "nonLiteralHitPoints",
-      () => "battle initialization requires literal maximum Hit Points",
-    ),
-    Match.when(
-      "nonLiteralSpeed",
-      () => "battle initialization requires unconditional literal Speeds",
-    ),
-    Match.when(
-      "unsupportedProcedureBinding",
-      () => "the procedure binding is not supported by battle execution",
+    Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
+      battleStatBlockProjectionFailureMessage(failure),
     ),
     Match.exhaustive,
   );

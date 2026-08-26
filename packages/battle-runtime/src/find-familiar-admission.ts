@@ -19,7 +19,10 @@ import {
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
-import { projectAuthoredStatBlockWithCreatureType } from "./stat-block-authored-projection.ts";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlockWithCreatureType,
+} from "./stat-block-authored-projection.ts";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 const AdmittedFindFamiliarReappearance =
@@ -74,7 +77,10 @@ export function admitFindFamiliarReappearance(input: {
   if (Either.isLeft(projected)) {
     return issue(
       input.state,
-      `Find Familiar form projection failed: ${projected.left.reason}.`,
+      battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
     );
   }
   const statBlock: BattleStatBlockExecutionSource = projected.right.runtime;
