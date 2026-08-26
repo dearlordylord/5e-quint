@@ -2,7 +2,10 @@ import {
   unitId as parseSharedUnitId,
   statBlockId as parseSharedStatBlockId,
 } from "@dnd/shared/game-facts";
-import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import {
+  battleRuntimeContextForTest,
+  battleRuntimeSessionForTest,
+} from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-D20-STAT-PROJECTION druid_wild_shape
@@ -12,7 +15,10 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-ATTACK-HIT-RIDERS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-NON-ATTACK-ACTIONS druid_wild_shape
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActSpellPresentation,
+  battleSubjectPresentation,
+} from "./battle-act-composition.ts";
 import {
   armorClass,
   armorClassDelta,
@@ -168,6 +174,7 @@ const syntheticNonLiteralSizeFormId = "synthetic_non_literal_size_form";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
 const syntheticProseProneFormId = "synthetic_prose_prone_form";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
+const syntheticSupportedNonAttackFormId = "synthetic_supported_non_attack_form";
 const syntheticTypedRidersFormId = "synthetic_typed_riders_form";
 const packAllyId = combatantId("wild-shape-pack-ally");
 const druidGroundPositionId = battleTablePositionId(
@@ -3288,6 +3295,214 @@ function syntheticActionSectionForm(): StatBlockRecord {
     },
   };
 }
+
+function syntheticSupportedNonAttackForm(): StatBlockRecord {
+  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const hooves = base.statBlock.actions?.find(
+    (entry): entry is AttackProcedureEntry =>
+      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+  );
+  if (hooves === undefined) {
+    throw new Error("Expected Riding Horse Hooves fixture.");
+  }
+  return {
+    ...base,
+    id: parseSharedStatBlockId(syntheticSupportedNonAttackFormId),
+    name: "Synthetic Supported Non-Attack Form",
+    provenance: {
+      kind: "synthetic-test",
+      section: "synthetic-supported-non-attack-form",
+    },
+    statBlock: {
+      ...base.statBlock,
+      actions: [
+        hooves,
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(2),
+          procedure: {
+            kind: "multiattack",
+            name: "Synthetic Multiattack",
+            dispatches: [
+              {
+                procedureOrdinal: hooves.procedureOrdinal,
+                count: { kind: "literal", value: 1 },
+              },
+            ],
+          },
+          resourceRefs: { kind: "none" },
+        },
+      ],
+      bonusActions: [
+        {
+          kind: "executable",
+          procedureOrdinal: testProcedureOrdinal(1),
+          procedure: {
+            kind: "action_option",
+            name: "Synthetic Quick Option",
+            options: ["disengage", "hide"],
+          },
+          resourceRefs: { kind: "none" },
+        },
+      ],
+    },
+  };
+}
+
+test("surfaces active Wild Shape non-attack presentation join issues", () => {
+  const initial = startBattleSessionRight({
+    battleId: battleId("battle-druid-wild-shape-presentation-join"),
+    combatants: [
+      druidWildShapeCreatureInit({
+        knownForms: [syntheticSupportedNonAttackForm()],
+      }),
+      statBlockCreatureInit({ initiative: 10 }),
+    ],
+  });
+  const assumed = requireResolved(
+    resolveDruidWildShapeWithoutLoadoutEquipment(
+      initial.state,
+      wildShapeSubject(initial.state, {
+        action: "assumeForm",
+        formStatBlockId: syntheticSupportedNonAttackFormId,
+      }),
+    ),
+  );
+  const activeDruid = requireCharacter(assumed.state, druidId);
+  const activeForm = activeDruidWildShape(activeDruid);
+  if (activeForm === null) {
+    throw new Error("Expected active Wild Shape form.");
+  }
+  const druidContext = initial.context.characters.get(druidId);
+  if (druidContext === undefined) {
+    throw new Error("Expected Druid presentation context.");
+  }
+  const formPresentations = druidContext.druidWildShapeFormPresentations;
+  if (formPresentations === undefined) {
+    throw new Error("Expected Wild Shape form presentations.");
+  }
+  const source = formPresentations.get(activeForm.admission.execution.scopeRef);
+  if (source === undefined) {
+    throw new Error("Expected active Wild Shape presentation source.");
+  }
+
+  for (const joinMode of ["missing", "mismatch"] as const) {
+    for (const procedureCase of [
+      {
+        action: "multiattack",
+        presentationKind: "multiattack",
+        executionKind: "multiattack",
+      },
+      {
+        action: "statBlockActionOption",
+        presentationKind: "bonusActionOption",
+        executionKind: "bonusActionOption",
+      },
+    ] as const) {
+      const binding = activeForm.admission.execution.procedureBindings.find(
+        ({ procedure }) => procedure.kind === procedureCase.executionKind,
+      );
+      if (binding === undefined || !("procedureOrdinal" in binding.procedure)) {
+        throw new Error(
+          `Expected active Wild Shape ${procedureCase.executionKind} binding.`,
+        );
+      }
+      const subject =
+        procedureCase.action === "multiattack"
+          ? {
+              tag: "action" as const,
+              actorId: druidId,
+              action: "multiattack" as const,
+              procedureRef: binding.procedureRef,
+            }
+          : binding.procedure.kind === "bonusActionOption"
+            ? {
+                tag: "bonusAction" as const,
+                actorId: druidId,
+                action: "statBlockActionOption" as const,
+                procedureRef: binding.procedureRef,
+                standardAction: binding.procedure.standardActions[0],
+              }
+            : (() => {
+                throw new Error(
+                  "Expected the active Wild Shape bonus action option binding.",
+                );
+              })();
+      const selectedPresentation = source.orderedProcedures.find(
+        ({ kind }) => kind === procedureCase.presentationKind,
+      );
+      if (selectedPresentation === undefined) {
+        throw new Error(
+          `Expected ${procedureCase.presentationKind} presentation.`,
+        );
+      }
+      const executionProcedureOrdinal = binding.procedure.procedureOrdinal;
+      const orderedProcedures = source.orderedProcedures.map((procedure) => {
+        if (procedure !== selectedPresentation) return procedure;
+        if (joinMode === "missing") {
+          return {
+            ...procedure,
+            procedureOrdinal: testProcedureOrdinal(
+              procedure.procedureOrdinal + 100,
+            ),
+          };
+        }
+        return {
+          section: procedure.section,
+          procedureOrdinal: procedure.procedureOrdinal,
+          name: `Synthetic ${procedureCase.presentationKind} mismatch`,
+          description: "Synthetic text-only presentation mismatch.",
+          kind: "textOnly" as const,
+          reason: "required_table_adjudication" as const,
+          resourceRefs: procedure.resourceRefs,
+        };
+      });
+      const formPresentationsWithIssue = new Map(formPresentations).set(
+        activeForm.admission.execution.scopeRef,
+        { ...source, orderedProcedures },
+      );
+      const contextWithIssue = battleRuntimeContextForTest(
+        new Map(initial.context.characters).set(druidId, {
+          ...druidContext,
+          druidWildShapeFormPresentations: formPresentationsWithIssue,
+        }),
+        initial.context.statBlocks,
+      );
+      const presentation = battleSubjectPresentation(
+        battleRuntimeSessionForTest({
+          state: assumed.state,
+          context: contextWithIssue,
+        }),
+        subject,
+      );
+      const issue =
+        joinMode === "missing"
+          ? {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "missingPresentation" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+            }
+          : {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "presentationKindMismatch" as const,
+              section: selectedPresentation.section,
+              procedureOrdinal: executionProcedureOrdinal,
+              executionKind: procedureCase.executionKind,
+              presentationKind: "textOnly" as const,
+            };
+      expect(presentation).toEqual({
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+          issues: [issue],
+        },
+      });
+    }
+  }
+});
 
 test("projects automatic reversion when Wild Shape ends from Incapacitated", () => {
   const initial = druidWildShapeBattle();

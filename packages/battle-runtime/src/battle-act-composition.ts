@@ -356,23 +356,20 @@ function intrinsicSubjectPresentation(
     (subject.tag === "bonusAction" &&
       subject.action === "statBlockActionOption")
   ) {
-    const actor = state.combatants.get(subject.actorId);
-    if (actor?.origin.kind === "statBlock") {
-      const presentations = statBlockProcedurePresentationsForActor(
-        state,
-        context,
-        subject.actorId,
-      );
-      if (presentations !== null && Either.isLeft(presentations)) {
-        return {
-          kind: "presentationIssue",
-          issue: {
-            tag: "attackPresentationJoinIssue",
-            reason: "statBlockProcedurePresentationJoin",
-            issues: presentations.left,
-          },
-        };
-      }
+    const presentations = statBlockProcedurePresentationsForActor(
+      state,
+      context,
+      subject.actorId,
+    );
+    if (presentations !== null && Either.isLeft(presentations)) {
+      return {
+        kind: "presentationIssue",
+        issue: {
+          tag: "attackPresentationJoinIssue",
+          reason: "statBlockProcedurePresentationJoin",
+          issues: presentations.left,
+        },
+      };
     }
   }
   return { kind: "intrinsic" };
@@ -432,25 +429,22 @@ function intrinsicActPresentationText(
     (subject.tag === "bonusAction" &&
       subject.action === "statBlockActionOption")
   ) {
-    const actor = state.combatants.get(subject.actorId);
-    if (actor?.origin.kind === "statBlock") {
-      const presentations = statBlockProcedurePresentationsForActor(
-        state,
-        context,
-        subject.actorId,
-      );
-      const presentation =
-        presentations === null || Either.isLeft(presentations)
-          ? undefined
-          : presentations.right.find(
-              (candidate) => candidate.procedureRef === subject.procedureRef,
-            );
-      if (presentation !== undefined && presentation.kind !== "attack") {
-        return {
-          label: presentation.label,
-          summary: `Use ${presentation.label}.`,
-        };
-      }
+    const presentations = statBlockProcedurePresentationsForActor(
+      state,
+      context,
+      subject.actorId,
+    );
+    const presentation =
+      presentations === null || Either.isLeft(presentations)
+        ? undefined
+        : presentations.right.find(
+            (candidate) => candidate.procedureRef === subject.procedureRef,
+          );
+    if (presentation !== undefined && presentation.kind !== "attack") {
+      return {
+        label: presentation.label,
+        summary: `Use ${presentation.label}.`,
+      };
     }
   }
   const label = intrinsicActPresentationLabel(subject);
