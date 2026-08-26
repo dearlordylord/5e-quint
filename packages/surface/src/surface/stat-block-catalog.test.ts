@@ -218,7 +218,7 @@ const srdFieldCorrespondence = {
     passivePerception: 11,
     actions: [
       [1, "executable", "Sting"],
-      [2, "executable", "Invisibility"],
+      [2, "textOnly", "Invisibility"],
       [3, "textOnly", "Shape-Shift"],
     ],
     bonusActions: [],
@@ -250,7 +250,7 @@ const srdFieldCorrespondence = {
     passivePerception: 10,
     actions: [
       [1, "textOnly", "Rend"],
-      [2, "executable", "Invisibility"],
+      [2, "textOnly", "Invisibility"],
       [3, "textOnly", "Scare"],
       [4, "textOnly", "Shape-Shift"],
     ],
@@ -269,7 +269,7 @@ const srdFieldCorrespondence = {
       [1, "executable", "Needle Sword"],
       [2, "textOnly", "Enchanting Bow"],
       [3, "textOnly", "Heart Sight"],
-      [4, "executable", "Invisibility"],
+      [4, "textOnly", "Invisibility"],
     ],
     bonusActions: [],
     reactions: [],
@@ -682,11 +682,11 @@ describe("Stat Block catalog boundary", () => {
         ),
       ).toEqual(["Sting", "Invisibility", "Shape-Shift"]);
       expect(imp.statBlock.actions?.[1]).toMatchObject({
-        kind: "executable",
-        procedure: {
-          kind: "spellcasting",
-          groups: [{ kind: "at_will", resourceRefs: { kind: "none" } }],
-        },
+        kind: "textOnly",
+        name: "Invisibility",
+        description:
+          "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+        reason: "unsupported_procedure_family",
       });
 
       const pseudodragon = valid.catalog.requireStatBlock(
@@ -719,6 +719,13 @@ describe("Stat Block catalog boundary", () => {
         description: expect.stringContaining(
           "Hit: 5 (1d4 + 3) Slashing damage",
         ),
+      });
+      expect(quasit.statBlock.actions?.[1]).toMatchObject({
+        kind: "textOnly",
+        name: "Invisibility",
+        description:
+          "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+        reason: "unsupported_procedure_family",
       });
 
       const sphinxOfWonder = valid.catalog.requireStatBlock(
@@ -759,8 +766,11 @@ describe("Stat Block catalog boundary", () => {
         description: expect.stringContaining("Hit: 1 Piercing damage"),
       });
       expect(sprite.statBlock.actions?.[3]).toMatchObject({
-        kind: "executable",
-        procedure: { kind: "spellcasting" },
+        kind: "textOnly",
+        name: "Invisibility",
+        description:
+          "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+        reason: "unsupported_procedure_family",
       });
     }
   });

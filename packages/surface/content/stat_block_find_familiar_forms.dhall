@@ -1459,52 +1459,55 @@
         , reason = None Text
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
-      , { description = None Text
-        , kind = "executable"
-        , name = None Text
-        , procedure = Some
-          { ability = Some "cha"
-          , attackAbility = None Text
-          , attackBonus = None { kind : Text, value : Natural }
-          , attackType = None Text
-          , components = Some { m = False, s = False, v = False }
-          , dispatches =
-              None
-                ( List
-                    { count : { kind : Text, value : Natural }
-                    , procedureOrdinal : Natural
-                    }
-                )
-          , groups = Some
-            [ { kind = "at_will"
-              , resourceRefs.kind = "none"
-              , spells =
-                [ { restriction = "on itself", spellId = "invisibility" } ]
-              }
-            ]
-          , kind = "spellcasting"
-          , name = "Invisibility"
-          , onHit =
-              None
-                ( List
-                    { amount :
-                        { expr :
-                            Optional
-                              { dice : Natural
-                              , dieSize : Natural
-                              , flat : Optional Natural
-                              }
-                        , kind : Text
-                        , static : Natural
+      , { description = Some
+            "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+        , kind = "textOnly"
+        , name = Some "Invisibility"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
                         }
-                    , damageType : Text
-                    , kind : Text
-                    }
-                )
-          , reachFeet = None Natural
-          }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
         , procedureOrdinal = 2
-        , reason = None Text
+        , reason = Some "unsupported_procedure_family"
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       , { description = Some
@@ -1913,52 +1916,55 @@
         , reason = Some "unsupported_action_shape"
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
-      , { description = None Text
-        , kind = "executable"
-        , name = None Text
-        , procedure = Some
-          { ability = Some "cha"
-          , attackAbility = None Text
-          , attackBonus = None { kind : Text, value : Natural }
-          , attackType = None Text
-          , components = Some { m = False, s = False, v = False }
-          , dispatches =
-              None
-                ( List
-                    { count : { kind : Text, value : Natural }
-                    , procedureOrdinal : Natural
-                    }
-                )
-          , groups = Some
-            [ { kind = "at_will"
-              , resourceRefs.kind = "none"
-              , spells =
-                [ { restriction = "on itself", spellId = "invisibility" } ]
-              }
-            ]
-          , kind = "spellcasting"
-          , name = "Invisibility"
-          , onHit =
-              None
-                ( List
-                    { amount :
-                        { expr :
-                            Optional
-                              { dice : Natural
-                              , dieSize : Natural
-                              , flat : Optional Natural
-                              }
-                        , kind : Text
-                        , static : Natural
+      , { description = Some
+            "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+        , kind = "textOnly"
+        , name = Some "Invisibility"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
                         }
-                    , damageType : Text
-                    , kind : Text
-                    }
-                )
-          , reachFeet = None Natural
-          }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
         , procedureOrdinal = 2
-        , reason = None Text
+        , reason = Some "unsupported_procedure_family"
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       , { description = Some
@@ -2279,52 +2285,55 @@
         , reason = Some "unsupported_action_shape"
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
-      , { description = None Text
-        , kind = "executable"
-        , name = None Text
-        , procedure = Some
-          { ability = Some "cha"
-          , attackAbility = None Text
-          , attackBonus = None { kind : Text, value : Natural }
-          , attackType = None Text
-          , components = Some { m = False, s = False, v = False }
-          , dispatches =
-              None
-                ( List
-                    { count : { kind : Text, value : Natural }
-                    , procedureOrdinal : Natural
-                    }
-                )
-          , groups = Some
-            [ { kind = "at_will"
-              , resourceRefs.kind = "none"
-              , spells =
-                [ { restriction = "on itself", spellId = "invisibility" } ]
-              }
-            ]
-          , kind = "spellcasting"
-          , name = "Invisibility"
-          , onHit =
-              None
-                ( List
-                    { amount :
-                        { expr :
-                            Optional
-                              { dice : Natural
-                              , dieSize : Natural
-                              , flat : Optional Natural
-                              }
-                        , kind : Text
-                        , static : Natural
+      , { description = Some
+            "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+        , kind = "textOnly"
+        , name = Some "Invisibility"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
                         }
-                    , damageType : Text
-                    , kind : Text
-                    }
-                )
-          , reachFeet = None Natural
-          }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
         , procedureOrdinal = 4
-        , reason = None Text
+        , reason = Some "unsupported_procedure_family"
         , resourceRefs = { kind = "none", ordinals = None (List Natural) }
         }
       ]

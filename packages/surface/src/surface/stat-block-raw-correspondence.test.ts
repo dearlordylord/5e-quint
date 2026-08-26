@@ -1,7 +1,6 @@
 import { Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { UnitId } from "@dnd/shared/game-facts";
 import {
   AuthoredExecutableProcedureSchema,
   CreatureTraitSchema,
@@ -216,23 +215,6 @@ const multiattack = (
       {
         procedureOrdinal: dispatchProcedureOrdinal,
         count: literal(count),
-      },
-    ],
-  });
-
-const invisibility = (procedureOrdinal: number) =>
-  executable(procedureOrdinal, {
-    kind: "spellcasting",
-    name: "Invisibility",
-    ability: "cha",
-    components: { v: false, s: false, m: false },
-    groups: [
-      {
-        kind: "at_will",
-        resourceRefs: noResourceRefs,
-        spells: [
-          { spellId: UnitId.make("invisibility"), restriction: "on itself" },
-        ],
       },
     ],
   });
@@ -923,7 +905,12 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
             damage("poison", 7, dice(2, 6)),
           ],
         }),
-        invisibility(2),
+        textOnly(
+          2,
+          "Invisibility",
+          "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "unsupported_procedure_family",
+        ),
         textOnly(
           3,
           "Shape-Shift",
@@ -1021,7 +1008,12 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
           "Melee Attack Roll: +5, reach 5 ft. Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn.",
           "unsupported_action_shape",
         ),
-        invisibility(2),
+        textOnly(
+          2,
+          "Invisibility",
+          "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "unsupported_procedure_family",
+        ),
         textOnly(
           3,
           "Scare",
@@ -1086,7 +1078,12 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
           "Charisma Saving Throw: DC 10, one creature within 5 feet the sprite can see (Celestials, Fiends, and Undead automatically fail the save). Failure: The sprite knows the target's emotions and alignment.",
           "unsupported_action_shape",
         ),
-        invisibility(4),
+        textOnly(
+          4,
+          "Invisibility",
+          "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+          "unsupported_procedure_family",
+        ),
       ],
     }),
   }),

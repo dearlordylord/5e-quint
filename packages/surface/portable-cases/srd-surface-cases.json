@@ -31715,32 +31715,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "spellcasting",
-                    "name": "Invisibility",
-                    "ability": "cha",
-                    "components": {
-                      "v": false,
-                      "s": false,
-                      "m": false
-                    },
-                    "groups": [
-                      {
-                        "kind": "at_will",
-                        "resourceRefs": {
-                          "kind": "none"
-                        },
-                        "spells": [
-                          {
-                            "spellId": "invisibility",
-                            "restriction": "on itself"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                  "name": "Invisibility",
+                  "description": "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+                  "reason": "unsupported_procedure_family",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -32035,32 +32014,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "spellcasting",
-                    "name": "Invisibility",
-                    "ability": "cha",
-                    "components": {
-                      "v": false,
-                      "s": false,
-                      "m": false
-                    },
-                    "groups": [
-                      {
-                        "kind": "at_will",
-                        "resourceRefs": {
-                          "kind": "none"
-                        },
-                        "spells": [
-                          {
-                            "spellId": "invisibility",
-                            "restriction": "on itself"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                  "name": "Invisibility",
+                  "description": "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+                  "reason": "unsupported_procedure_family",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -32229,32 +32187,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 4,
-                  "procedure": {
-                    "kind": "spellcasting",
-                    "name": "Invisibility",
-                    "ability": "cha",
-                    "components": {
-                      "v": false,
-                      "s": false,
-                      "m": false
-                    },
-                    "groups": [
-                      {
-                        "kind": "at_will",
-                        "resourceRefs": {
-                          "kind": "none"
-                        },
-                        "spells": [
-                          {
-                            "spellId": "invisibility",
-                            "restriction": "on itself"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                  "name": "Invisibility",
+                  "description": "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+                  "reason": "unsupported_procedure_family",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -49248,32 +49185,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "spellcasting",
-                    "name": "Invisibility",
-                    "ability": "cha",
-                    "components": {
-                      "v": false,
-                      "s": false,
-                      "m": false
-                    },
-                    "groups": [
-                      {
-                        "kind": "at_will",
-                        "resourceRefs": {
-                          "kind": "none"
-                        },
-                        "spells": [
-                          {
-                            "spellId": "invisibility",
-                            "restriction": "on itself"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                  "name": "Invisibility",
+                  "description": "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+                  "reason": "unsupported_procedure_family",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -49568,32 +49484,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 2,
-                  "procedure": {
-                    "kind": "spellcasting",
-                    "name": "Invisibility",
-                    "ability": "cha",
-                    "components": {
-                      "v": false,
-                      "s": false,
-                      "m": false
-                    },
-                    "groups": [
-                      {
-                        "kind": "at_will",
-                        "resourceRefs": {
-                          "kind": "none"
-                        },
-                        "spells": [
-                          {
-                            "spellId": "invisibility",
-                            "restriction": "on itself"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                  "name": "Invisibility",
+                  "description": "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+                  "reason": "unsupported_procedure_family",
                   "resourceRefs": {
                     "kind": "none"
                   }
@@ -49762,32 +49657,11 @@
                   }
                 },
                 {
-                  "kind": "executable",
+                  "kind": "textOnly",
                   "procedureOrdinal": 4,
-                  "procedure": {
-                    "kind": "spellcasting",
-                    "name": "Invisibility",
-                    "ability": "cha",
-                    "components": {
-                      "v": false,
-                      "s": false,
-                      "m": false
-                    },
-                    "groups": [
-                      {
-                        "kind": "at_will",
-                        "resourceRefs": {
-                          "kind": "none"
-                        },
-                        "spells": [
-                          {
-                            "spellId": "invisibility",
-                            "restriction": "on itself"
-                          }
-                        ]
-                      }
-                    ]
-                  },
+                  "name": "Invisibility",
+                  "description": "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability.",
+                  "reason": "unsupported_procedure_family",
                   "resourceRefs": {
                     "kind": "none"
                   }
