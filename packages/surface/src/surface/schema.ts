@@ -545,9 +545,13 @@ const assignFieldsPreservingChecks = <NewFields extends Schema.Struct.Fields>(
   fields: NewFields,
 ) =>
   Struct.lambda<AssignFieldsPreservingChecks<NewFields>>((struct) =>
-    struct.mapFields((existing) => ({ ...existing, ...fields }), {
-      unsafePreserveChecks: true,
-    }),
+    struct.mapFields(
+      (existing) => {
+        const { provenance: _provenance, ...withoutProvenance } = existing;
+        return { ...withoutProvenance, ...fields };
+      },
+      { unsafePreserveChecks: true },
+    ),
   );
 
 const specializeUnitRecordSchema = <Fields extends Schema.Struct.Fields>(
@@ -564,11 +568,16 @@ const specializeUnitRecordSchema = <Fields extends Schema.Struct.Fields>(
 const specializeStatBlockRecordSchema = <Fields extends Schema.Struct.Fields>(
   fields: Schema.Struct<Fields>,
   identifier: string,
-) =>
-  StatBlockRecordSchema.mapFields(
-    (existing) => ({ ...existing, ...fields.fields }),
+) => {
+  const specialized = StatBlockRecordSchema.mapFields(
+    (existing) => {
+      const { provenance: _provenance, ...withoutProvenance } = existing;
+      return { ...withoutProvenance, ...fields.fields };
+    },
     { unsafePreserveChecks: true },
-  ).pipe(Schema.annotate({ identifier }));
+  );
+  return specialized.pipe(Schema.annotate({ identifier }));
+};
 
 type EncodedPublicationFactorState = {
   readonly nextId: { value: number };
