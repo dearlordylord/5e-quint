@@ -2691,8 +2691,9 @@ describe("battle boundary admission owners", () => {
           (candidate) => candidate.procedureRef === subject.procedureRef,
         );
         return (
-          binding?.procedure.kind === "attack" &&
-          binding.procedure.section === "actions"
+          binding?.procedure.section === "actions" &&
+          (binding.procedure.kind === "attack" ||
+            binding.procedure.kind === "unarmedStrike")
         );
       }),
     ).toBe(true);
