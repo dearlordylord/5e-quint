@@ -19,6 +19,14 @@ const requiredSelectedPackages = [
   "@effect/platform-node",
   "@effect/vitest",
 ];
+const requiredPublishedVersions = new Map([
+  ["@firfi/quint-connect", "2.0.2-effect4.2"],
+]);
+// The native TypeScript alias is intentionally a second toolchain package;
+// its version is outside the selected direct TypeScript cohort.
+const allowedAdditionalLockVersions = new Map([
+  ["typescript", new Set(["7.0.2"])],
+]);
 const removedDirectPackages = new Set([
   "@effect/cli",
   "@effect/platform",
@@ -60,6 +68,31 @@ const allowedBareEffectContexts = new Set([
 ]);
 
 const readJson = async (path) => JSON.parse(await readFile(path, "utf8"));
+
+const hasWorkspaceManifest = async (project) => {
+  try {
+    await readFile(resolve(project, "pnpm-workspace.yaml"), "utf8");
+    return true;
+  } catch (error) {
+    if (error.code === "ENOENT") return false;
+    throw error;
+  }
+};
+
+const readCatalogVersion = async (project, packageName) => {
+  const workspaceManifest = await readFile(
+    resolve(project, "pnpm-workspace.yaml"),
+    "utf8",
+  );
+  const quotedName = packageName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const match = workspaceManifest.match(
+    new RegExp(
+      `^\\s*(?:"${quotedName}"|'${quotedName}'|${quotedName}):\\s*(?:"([^"]+)"|'([^']+)'|([^\\s#]+))\\s*$`,
+      "m",
+    ),
+  );
+  return match?.[1] ?? match?.[2] ?? match?.[3];
+};
 
 const parsePnpmVersion = (packageManager) => {
   const match = /^pnpm@([^\s+]+)$/.exec(packageManager ?? "");
@@ -388,6 +421,7 @@ const addLockPackageVersion = (packages, name, version) => {
 const parseLockPackages = (lockfile) => {
   const packages = new Map();
   const packageSectionPackages = new Map();
+  const snapshotSectionPackages = new Map();
   const importerEffectPackages = new Set();
   const packageEffectDependencies = new Set();
   const resolutionEntries = [];
@@ -478,6 +512,13 @@ const parseLockPackages = (lockfile) => {
           parsed.version,
         );
       }
+      if (section === "snapshots" && directPackageEntry) {
+        addLockPackageVersion(
+          snapshotSectionPackages,
+          parsed.name,
+          parsed.version,
+        );
+      }
       if (inImporterDependencies && isEffectPackageName(parsed.name)) {
         importerEffectPackages.add(parsed.name);
       }
@@ -557,6 +598,7 @@ const parseLockPackages = (lockfile) => {
   return {
     packages,
     packageSectionPackages,
+    snapshotSectionPackages,
     importerEffectPackages,
     packageEffectDependencies,
     resolutionEntries,
@@ -658,6 +700,9 @@ const loadCohort = async () => {
   const platformVersion = selectedVersions.get("@effect/platform-node");
   const lockVersions = new Map(exactVersions);
   lockVersions.set("@effect/platform-node-shared", platformVersion);
+  for (const [packageName, version] of requiredPublishedVersions) {
+    lockVersions.set(packageName, version);
+  }
   return {
     pnpmVersion,
     selectedVersions,
@@ -668,9 +713,16 @@ const loadCohort = async () => {
 
 const inspectProject = async (project, cohort, options = {}) => {
   const errors = [];
+  // The standalone cohort probe has no published D&D workspace dependency;
+  // the repository workspace and any other pnpm workspace must have one.
+  const isWorkspaceProject =
+    project === repositoryRoot || (await hasWorkspaceManifest(project));
+  const validatePublished =
+    options.validatePublished !== false && isWorkspaceProject;
   const pnpm = await resolvePnpmInvocation();
   const manifests = await workspaceManifestPaths(project, pnpm);
   const observedSelectedPackages = new Set();
+  const observedPublishedConsumers = new Set();
   const manifestRecords = [];
   for (const manifestPath of manifests) {
     const manifest = await readJson(manifestPath);
@@ -686,6 +738,20 @@ const inspectProject = async (project, cohort, options = {}) => {
       }
       if (cohort.selectedVersions.has(name)) {
         observedSelectedPackages.add(name);
+      }
+      const publishedVersion = requiredPublishedVersions.get(name);
+      if (publishedVersion !== undefined) {
+        observedPublishedConsumers.add(name);
+      }
+      if (
+        validatePublished &&
+        publishedVersion !== undefined &&
+        version !== "catalog:" &&
+        version !== publishedVersion
+      ) {
+        errors.push(
+          `${location}: ${name} must be exactly ${publishedVersion} or use the repository catalog; found ${version}`,
+        );
       }
       const expected = cohort.exactVersions.get(name);
       if (expected !== undefined && version !== expected) {
@@ -707,9 +773,29 @@ const inspectProject = async (project, cohort, options = {}) => {
       }
     }
   }
+  for (const packageName of requiredPublishedVersions.keys()) {
+    if (!validatePublished) continue;
+    const usesCatalog = manifestRecords.some(
+      ({ entries }) => entries.get(packageName) === "catalog:",
+    );
+    if (!usesCatalog) continue;
+    const catalogVersion = await readCatalogVersion(project, packageName);
+    const expected = requiredPublishedVersions.get(packageName);
+    if (catalogVersion !== expected) {
+      errors.push(
+        `${relative(project, resolve(project, "pnpm-workspace.yaml"))}: catalog ${packageName} must be exactly ${expected}; found ${catalogVersion ?? "<missing>"}`,
+      );
+    }
+  }
   for (const packageName of requiredSelectedPackages) {
     if (!observedSelectedPackages.has(packageName)) {
       errors.push(`workspace does not declare selected package ${packageName}`);
+    }
+  }
+  for (const packageName of requiredPublishedVersions.keys()) {
+    if (!validatePublished) continue;
+    if (!observedPublishedConsumers.has(packageName)) {
+      errors.push(`workspace has no manifest consumer of ${packageName}`);
     }
   }
 
@@ -720,6 +806,7 @@ const inspectProject = async (project, cohort, options = {}) => {
   const {
     packages: lockPackages,
     packageSectionPackages,
+    snapshotSectionPackages,
     importerEffectPackages,
     packageEffectDependencies,
     resolutionEntries,
@@ -728,15 +815,27 @@ const inspectProject = async (project, cohort, options = {}) => {
   validateEffectReferences(effectReferences, cohort, errors);
   validateResolutionEntries(resolutionEntries, cohort, errors);
   for (const [packageName, expected] of cohort.lockVersions) {
-    const versions = packageSectionPackages.get(packageName) ?? new Set();
-    if (versions.size === 0) {
-      errors.push(`lockfile does not contain ${packageName}`);
+    if (!validatePublished && requiredPublishedVersions.has(packageName)) {
+      continue;
     }
-    for (const version of versions) {
-      if (version !== expected) {
+    const allowedAdditionalVersions =
+      allowedAdditionalLockVersions.get(packageName) ?? new Set();
+    for (const [section, sectionPackages] of [
+      ["packages", packageSectionPackages],
+      ["snapshots", snapshotSectionPackages],
+    ]) {
+      const versions = sectionPackages.get(packageName) ?? new Set();
+      if (versions.size === 0) {
         errors.push(
-          `lockfile contains ${packageName}@${version}; expected only ${packageName}@${expected}`,
+          `lockfile ${section} section does not contain ${packageName}`,
         );
+      }
+      for (const version of versions) {
+        if (version !== expected && !allowedAdditionalVersions.has(version)) {
+          errors.push(
+            `lockfile ${section} contains ${packageName}@${version}; expected only ${packageName}@${expected}`,
+          );
+        }
       }
     }
   }
@@ -860,12 +959,16 @@ const runSelfTests = async () => {
           "@effect/platform-node",
         ),
         "@effect/vitest": cohort.selectedVersions.get("@effect/vitest"),
+        "@firfi/quint-connect": "catalog:",
         vitest: cohort.lockVersions.get("vitest"),
       },
     };
     await writeProjectManifest(temporaryProject, "package.json", rootManifest);
     const workspacePath = resolve(temporaryProject, "pnpm-workspace.yaml");
-    await writeFile(workspacePath, 'packages: ["packages/*"]\n');
+    await writeFile(
+      workspacePath,
+      'packages: ["packages/*"]\ncatalog:\n  "@firfi/quint-connect": "2.0.2-effect4.2"\n',
+    );
     await writeProjectManifest(
       temporaryProject,
       "packages/drifting/package.json",
@@ -874,10 +977,19 @@ const runSelfTests = async () => {
         dependencies: { effect: cohort.selectedVersions.get("effect") },
       },
     );
-    const canonicalLockfile = await readFile(
+    const probeLockfile = await readFile(
       resolve(dirname(canonicalManifestPath), "pnpm-lock.yaml"),
       "utf8",
     );
+    const canonicalLockfile = probeLockfile
+      .replace(
+        "packages:\n\n",
+        "packages:\n\n  '@firfi/quint-connect@2.0.2-effect4.2':\n    resolution: {integrity: sha512-synthetic}\n\n",
+      )
+      .replace(
+        "snapshots:\n\n",
+        "snapshots:\n\n  '@firfi/quint-connect@2.0.2-effect4.2(effect@4.0.0-rc.112)(vitest@4.1.11)(zod@4.3.6)':\n    dependencies:\n      effect: 4.0.0-rc.112\n\n",
+      );
     await writeFile(
       resolve(temporaryProject, "pnpm-lock.yaml"),
       canonicalLockfile,
@@ -886,6 +998,146 @@ const runSelfTests = async () => {
     assert(
       valid.errors.length === 0,
       `valid nested workspace rejected: ${valid.errors.join("; ")}`,
+    );
+
+    await writeFile(
+      workspacePath,
+      'packages: ["packages/*"]\ncatalog:\n  "@firfi/quint-connect": "^2.0.2-effect4.2"\n',
+    );
+    const catalogDrift = await inspectSelfTestProject(temporaryProject, cohort);
+    assert(
+      catalogDrift.errors.some((error) =>
+        error.includes("catalog @firfi/quint-connect must be exactly"),
+      ),
+      "Quint Connect catalog drift was not rejected",
+    );
+    await writeFile(
+      workspacePath,
+      'packages: ["packages/*"]\ncatalog:\n  "@firfi/quint-connect": "2.0.2-effect4.2"\n',
+    );
+
+    const rootWithoutQuintConnect = {
+      ...rootManifest,
+      dependencies: Object.fromEntries(
+        Object.entries(rootManifest.dependencies).filter(
+          ([name]) => name !== "@firfi/quint-connect",
+        ),
+      ),
+    };
+    await writeProjectManifest(
+      temporaryProject,
+      "package.json",
+      rootWithoutQuintConnect,
+    );
+    const missingQuintConnectConsumer = await inspectSelfTestProject(
+      temporaryProject,
+      cohort,
+    );
+    assert(
+      missingQuintConnectConsumer.errors.some((error) =>
+        error.includes(
+          "workspace has no manifest consumer of @firfi/quint-connect",
+        ),
+      ),
+      "workspace without a Quint Connect manifest consumer was accepted",
+    );
+    await writeProjectManifest(temporaryProject, "package.json", rootManifest);
+
+    await writeProjectManifest(
+      temporaryProject,
+      "packages/drifting/package.json",
+      {
+        name: "drifting",
+        dependencies: {
+          effect: cohort.selectedVersions.get("effect"),
+          "@firfi/quint-connect": "2.0.2-effect4.1",
+        },
+      },
+    );
+    const publishedVersionDrift = await inspectSelfTestProject(
+      temporaryProject,
+      cohort,
+    );
+    assert(
+      publishedVersionDrift.errors.some(
+        (error) =>
+          error.includes("@firfi/quint-connect must be exactly") &&
+          error.includes("2.0.2-effect4.2"),
+      ),
+      "Quint Connect published version drift was not rejected",
+    );
+    await writeProjectManifest(
+      temporaryProject,
+      "packages/drifting/package.json",
+      {
+        name: "drifting",
+        dependencies: { effect: cohort.selectedVersions.get("effect") },
+      },
+    );
+
+    const quintConnectSnapshotDrift = canonicalLockfile.replace(
+      "'@firfi/quint-connect@2.0.2-effect4.2(effect@4.0.0-rc.112)(vitest@4.1.11)(zod@4.3.6)':",
+      "'@firfi/quint-connect@2.0.2-effect4.1(effect@4.0.0-rc.112)(vitest@4.1.11)(zod@4.3.6)':",
+    );
+    await writeFile(
+      resolve(temporaryProject, "pnpm-lock.yaml"),
+      quintConnectSnapshotDrift,
+    );
+    const driftedQuintConnectSnapshot = await inspectSelfTestProject(
+      temporaryProject,
+      cohort,
+    );
+    assert(
+      driftedQuintConnectSnapshot.errors.some(
+        (error) =>
+          error.includes("lockfile snapshots contains") &&
+          error.includes("@firfi/quint-connect@2.0.2-effect4.1"),
+      ),
+      "Quint Connect snapshot version drift was not rejected",
+    );
+    await writeFile(
+      resolve(temporaryProject, "pnpm-lock.yaml"),
+      canonicalLockfile,
+    );
+
+    const nativeTypeScriptLockfile = canonicalLockfile.replace(
+      "packages:\n\n",
+      "packages:\n\n  'typescript@7.0.2': {}\n\n",
+    );
+    await writeFile(
+      resolve(temporaryProject, "pnpm-lock.yaml"),
+      nativeTypeScriptLockfile,
+    );
+    const nativeTypeScript = await inspectSelfTestProject(
+      temporaryProject,
+      cohort,
+    );
+    assert(
+      nativeTypeScript.errors.length === 0,
+      `documented TypeScript native alias rejected: ${nativeTypeScript.errors.join("; ")}`,
+    );
+    const unsupportedNativeTypeScriptLockfile =
+      nativeTypeScriptLockfile.replace(
+        "'typescript@7.0.2': {}",
+        "'typescript@7.0.3': {}",
+      );
+    await writeFile(
+      resolve(temporaryProject, "pnpm-lock.yaml"),
+      unsupportedNativeTypeScriptLockfile,
+    );
+    const unsupportedNativeTypeScript = await inspectSelfTestProject(
+      temporaryProject,
+      cohort,
+    );
+    assert(
+      unsupportedNativeTypeScript.errors.some((error) =>
+        error.includes("typescript@7.0.3"),
+      ),
+      "unsupported TypeScript native alias was not rejected",
+    );
+    await writeFile(
+      resolve(temporaryProject, "pnpm-lock.yaml"),
+      canonicalLockfile,
     );
 
     await writeProjectManifest(

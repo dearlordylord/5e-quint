@@ -25,17 +25,18 @@
     "@dnd/shared": "workspace:*",
     "@dnd/shared-algebras": "workspace:*",
     "@dnd/surface": "workspace:*",
-    "@effect/platform-node": "^0.106.0",
+    "@effect/platform-node": "4.0.0-rc.112",
     "@modelcontextprotocol/sdk": "^1.30.0",
-    "effect": "^3.21.0",
+    "effect": "4.0.0-rc.112",
+    "redis": "6.2.1",
     "jose": "^6.2.2"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
     "fast-check": "3.23.2",
     "tsx": "^4.19.2",
-    "typescript": "^5.9.3",
+    "typescript": "5.9.3",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "4.1.11"
   }

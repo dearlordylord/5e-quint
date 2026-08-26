@@ -1,17 +1,17 @@
-FROM node:22-alpine AS build
+FROM node:22.19.0-alpine AS build
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.29.3 --activate
 
 WORKDIR /workspace
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY app/package.json app/
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --strict-peer-dependencies
 
 COPY app/ app/
 RUN pnpm --filter app run build
 
-FROM node:22-alpine
+FROM node:22.19.0-alpine
 
 RUN npm install -g serve
 
