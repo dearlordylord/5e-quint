@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   chmodSync,
   existsSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -61,6 +62,36 @@ function query(dbPath: string, sql: string): unknown {
   } finally {
     db.close();
   }
+}
+
+function snapshotDirectory(directory: string) {
+  const entries = readdirSync(directory).sort();
+  const files = entries.map((name) => {
+    const bytes = readFileSync(resolve(directory, name));
+    return {
+      name,
+      bytes,
+      sha256: createHash("sha256").update(bytes).digest("hex"),
+    };
+  });
+  return { entries, files };
+}
+
+function expectDirectoryUnchanged(
+  directory: string,
+  before: ReturnType<typeof snapshotDirectory>,
+): void {
+  const after = snapshotDirectory(directory);
+  expect(after.entries).toEqual(before.entries);
+  expect(after.files.map(({ name }) => name)).toEqual(
+    before.files.map(({ name }) => name),
+  );
+  expect(after.files.map(({ sha256 }) => sha256)).toEqual(
+    before.files.map(({ sha256 }) => sha256),
+  );
+  expect(after.files.map(({ bytes }) => bytes)).toEqual(
+    before.files.map(({ bytes }) => bytes),
+  );
 }
 
 describe("RAW swarm artifact report index", () => {
@@ -130,12 +161,13 @@ describe("RAW swarm artifact report index", () => {
     ).toThrow(/--review-replay-milestone requires a value/);
   });
 
-  test("keeps a portable index byte-stable across read-only report commands", () => {
+  test("keeps the source directory and portable export stable across read-only report commands", () => {
     const directory = temporaryDirectory();
-    const dbPath = resolve(directory, "source.sqlite");
+    const sourceDirectory = resolve(directory, "source");
+    const dbPath = resolve(sourceDirectory, "source.sqlite");
     const source = openArtifactIndex(relative(repoRoot, dbPath));
     source.close();
-    const sourceIndexBefore = readFileSync(dbPath);
+    const sourceDirectoryBefore = snapshotDirectory(sourceDirectory);
     const destination = resolve(directory, "portable");
     report([
       "export",
@@ -147,14 +179,14 @@ describe("RAW swarm artifact report index", () => {
 
     const portableIndexPath = resolve(destination, "index.sqlite");
     const portableIndexBefore = readFileSync(portableIndexPath);
-    expect(readFileSync(dbPath)).toEqual(sourceIndexBefore);
-    expect(
-      report(["summary", "--db", relative(repoRoot, portableIndexPath)]),
-    ).toContain("Executions: 0");
+    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
+    expect(report(["summary", "--db", relative(repoRoot, dbPath)])).toContain(
+      "Executions: 0",
+    );
+    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
     expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
-    expect(
-      report(["issues", "--db", relative(repoRoot, portableIndexPath)]),
-    ).toBe("");
+    expect(report(["issues", "--db", relative(repoRoot, dbPath)])).toBe("");
+    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
     expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
     expect(() =>
       report([
@@ -162,9 +194,10 @@ describe("RAW swarm artifact report index", () => {
         "--execution-row",
         "1",
         "--db",
-        relative(repoRoot, portableIndexPath),
+        relative(repoRoot, dbPath),
       ]),
     ).toThrow(/no indexed findings artifact/);
+    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
     expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
     expect(() =>
       report([
@@ -172,9 +205,10 @@ describe("RAW swarm artifact report index", () => {
         "--campaign-row",
         "1",
         "--db",
-        relative(repoRoot, portableIndexPath),
+        relative(repoRoot, dbPath),
       ]),
     ).toThrow(/no indexed findings artifact/);
+    expectDirectoryUnchanged(sourceDirectory, sourceDirectoryBefore);
     expect(readFileSync(portableIndexPath)).toEqual(portableIndexBefore);
   }, 30_000);
 
