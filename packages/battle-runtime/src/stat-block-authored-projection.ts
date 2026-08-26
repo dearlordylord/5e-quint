@@ -1,4 +1,5 @@
 import * as Either from "effect/Either";
+import { Match } from "effect";
 import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
 import type {
   CreatureAttackRollMechanics,
@@ -331,27 +332,22 @@ function runtimePresentationKind(
     { readonly kind: "executable" }
   >["procedure"]["kind"],
 ): Exclude<BattleStatBlockAuthoredProcedurePresentation["kind"], "textOnly"> {
-  switch (kind) {
-    case "attack_roll":
-      return "attack";
-    case "multiattack":
-      return "multiattack";
-    case "action_option":
-      return "bonusActionOption";
-    case "save":
-      return "save";
-    case "support":
-      return "support";
-    case "spellcasting":
-      return "spellcasting";
-  }
+  return Match.value(kind).pipe(
+    Match.when("attack_roll", () => "attack" as const),
+    Match.when("multiattack", () => "multiattack" as const),
+    Match.when("action_option", () => "bonusActionOption" as const),
+    Match.when("save", () => "save" as const),
+    Match.when("support", () => "support" as const),
+    Match.when("spellcasting", () => "spellcasting" as const),
+    Match.exhaustive,
+  );
 }
 
 function isSupportedBonusAction(
   option: string,
 ): option is SupportedStatBlockBonusActionStandardAction {
-  return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.includes(
-    option as SupportedStatBlockBonusActionStandardAction,
+  return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
+    (supportedOption) => supportedOption === option,
   );
 }
 
