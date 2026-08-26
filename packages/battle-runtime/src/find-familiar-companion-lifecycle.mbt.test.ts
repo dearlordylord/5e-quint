@@ -1,6 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { isDeepStrictEqual } from "node:util";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
 // KERNEL-COVERAGE: parity-witness BATTLE.COMPOSITION.REDUCER_ROUTE_CONNECTOR
@@ -1147,20 +1148,10 @@ function findFamiliarCompanionLastResult(raw: unknown): LastResult {
 }
 
 function compareFindFamiliarCompanionStates(
-  runtime: FindFamiliarCompanionProjection,
-  quint: FindFamiliarCompanionProjection,
+  spec: FindFamiliarCompanionProjection,
+  impl: FindFamiliarCompanionProjection,
 ): boolean {
-  try {
-    expect(runtime).toEqual(quint);
-  } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(
-        `${error.message}\n${JSON.stringify({ runtime, quint }, null, 2)}`,
-      );
-    }
-    throw error;
-  }
-  return true;
+  return isDeepStrictEqual(spec, impl);
 }
 
 function familiarFormForWitness(
