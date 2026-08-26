@@ -81,6 +81,12 @@ Local SRD corpus + ASSUMPTIONS.md + UBIQUITOUS_LANGUAGE.md
 | - character -> battle-init       | /
 +----------------------------------+
 
++----------------------------------+
+| @dnd/opaque-oracle               |
+| - strict Case/Trace contract     |
+| - creation -> fresh-sheet eval   |
++----------------------------------+
+
 @dnd/shared and @dnd/shared-algebras (incl. rule-core slices) sit below all
 runtime packages.
 
@@ -177,6 +183,17 @@ content language between Surface and runtime.
 drafts, holes, batch fills, finalization, and the finalized `CharacterBuild`.
 Character-creation terms live in
 `packages/character-creation-runtime/VOCABULARY.md`.
+
+`@dnd/opaque-oracle` owns the language-neutral, strict Case/Trace boundary for
+call-local production evaluation. Its current increment composes the
+Character Creation reducer through `CharacterBuild` and the fresh
+Character Sheet constructor. It supplies deterministic call-local identities,
+projects only presentation-free owner facts, and returns typed workflow
+rejections for creation-input exhaustion or surplus. It does not own sessions,
+caches, transport envelopes, Battle state, or MCP composition. A later
+integration may extend this same authority across the existing
+`@dnd/character-battle-runtime` handoff without publishing a second Battle
+contract here.
 
 `@dnd/battle-runtime` owns the battle reducer state:
 `BattleState`, `BattleCreatureState`, battle subjects, replay-from-root holes

@@ -100,6 +100,18 @@ const PACKAGE_POLICIES = {
     circularBaseline: 0,
     duplicationCeiling: 2,
   },
+  "opaque-oracle": {
+    // Initial contract coverage ratchet; raise toward issue #227's 99% target
+    // as the later battle and fixture increments add their focused cases.
+    coverage: {
+      lines: 68.18,
+      statements: 61.87,
+      functions: 69.08,
+      branches: 47.9,
+    },
+    circularBaseline: 0,
+    duplicationCeiling: 2,
+  },
   shared: {
     coverage: {
       lines: 98.16,

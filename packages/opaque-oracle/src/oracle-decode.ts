@@ -1,0 +1,325 @@
+import { Either, ParseResult, Schema } from "effect";
+
+export type OracleDecodeIssueCode =
+  | "invalidJson"
+  | "wrongType"
+  | "missingMember"
+  | "unknownMember"
+  | "unknownVariant"
+  | "outOfRange"
+  | "emptyValue"
+  | "emptyCollection"
+  | "duplicateMember"
+  | "duplicateCollectionMember"
+  | "nonCanonicalDomainValue"
+  | "invalidLifecycle";
+
+export const ORACLE_DECODE_ISSUE_CODES = [
+  "invalidJson",
+  "duplicateMember",
+  "wrongType",
+  "missingMember",
+  "unknownMember",
+  "unknownVariant",
+  "outOfRange",
+  "emptyValue",
+  "emptyCollection",
+  "duplicateCollectionMember",
+  "nonCanonicalDomainValue",
+  "invalidLifecycle",
+] as const satisfies readonly OracleDecodeIssueCode[];
+
+export type OracleDecodeIssue = {
+  readonly path: string;
+  readonly code: OracleDecodeIssueCode;
+};
+
+export function decodeWithSchema<A, I>(
+  schema: Schema.Schema<A, I, never>,
+  input: unknown,
+): Either.Either<A, readonly OracleDecodeIssue[]> {
+  const decoded = Schema.decodeUnknownEither(schema, {
+    errors: "all",
+    onExcessProperty: "error",
+  })(input);
+  if (Either.isRight(decoded)) return Either.right(decoded.right);
+
+  const issues: OracleDecodeIssue[] = [];
+  collectParseIssues(decoded.left.issue, "", issues);
+  return Either.left(
+    sortIssues(
+      uniqueIssues(
+        issues.length === 0 ? [{ path: "", code: "wrongType" }] : issues,
+      ),
+    ),
+  );
+}
+
+function collectParseIssues(
+  issue: ParseResult.ParseIssue,
+  path: string,
+  output: OracleDecodeIssue[],
+): void {
+  switch (issue._tag) {
+    case "Pointer": {
+      const pointerPath: readonly PropertyKey[] =
+        typeof issue.path === "string" ||
+        typeof issue.path === "number" ||
+        typeof issue.path === "symbol"
+          ? [issue.path]
+          : issue.path;
+      collectParseIssues(
+        issue.issue,
+        pointerPath.reduce<string>(
+          (currentPath, segment) => appendPath(currentPath, segment),
+          path,
+        ),
+        output,
+      );
+      return;
+    }
+    case "Composite": {
+      const children = Array.isArray(issue.issues)
+        ? issue.issues
+        : [issue.issues];
+      for (const child of children) {
+        collectParseIssues(child, path, output);
+      }
+      return;
+    }
+    case "Unexpected":
+      output.push({ path, code: "unknownMember" });
+      return;
+    case "Missing":
+      output.push({ path, code: "missingMember" });
+      return;
+    case "Refinement":
+      if (issue.issue._tag === "Composite" || issue.issue._tag === "Pointer") {
+        collectParseIssues(issue.issue, path, output);
+        return;
+      }
+      output.push({
+        path,
+        code: refinementCode(
+          ParseResult.TreeFormatter.formatIssueSync(issue),
+          issue.actual,
+        ),
+      });
+      return;
+    case "Transformation":
+      collectParseIssues(issue.issue, path, output);
+      return;
+    case "Type":
+      output.push({
+        path,
+        code:
+          typeof issue.actual === "string" &&
+          /\/(?:tag|kind|code|reasonCode)$/u.test(path)
+            ? "unknownVariant"
+            : "wrongType",
+      });
+      return;
+  }
+}
+
+function refinementCode(
+  rendered: string,
+  actual: unknown,
+): Exclude<
+  OracleDecodeIssueCode,
+  | "invalidJson"
+  | "wrongType"
+  | "unknownMember"
+  | "missingMember"
+  | "unknownVariant"
+  | "duplicateMember"
+  | "invalidLifecycle"
+> {
+  const message = rendered.toLowerCase();
+  if (message.includes("duplicate")) return "duplicateCollectionMember";
+  if (typeof actual === "string") {
+    if (actual.length === 0) return "emptyValue";
+    if (actual.trim() !== actual) return "nonCanonicalDomainValue";
+  }
+  if (Array.isArray(actual) && actual.length === 0) return "emptyCollection";
+  if (
+    message.includes("greater than") ||
+    message.includes("less than") ||
+    message.includes("range")
+  ) {
+    return "outOfRange";
+  }
+  if (message.includes("empty") || message.includes("nonempty")) {
+    return Array.isArray(actual) ? "emptyCollection" : "emptyValue";
+  }
+  return "nonCanonicalDomainValue";
+}
+
+function uniqueIssues(
+  issues: readonly OracleDecodeIssue[],
+): readonly OracleDecodeIssue[] {
+  const seen = new Set<string>();
+  return issues.filter((issue) => {
+    const key = `${issue.path}|${issue.code}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function sortIssues(
+  issues: readonly OracleDecodeIssue[],
+): readonly OracleDecodeIssue[] {
+  return [...issues].sort((left, right) =>
+    left.path === right.path
+      ? ORACLE_DECODE_ISSUE_CODES.indexOf(left.code) -
+        ORACLE_DECODE_ISSUE_CODES.indexOf(right.code)
+      : compareCodePoints(left.path, right.path),
+  );
+}
+
+function compareCodePoints(left: string, right: string): number {
+  const leftPoints = [...left].map((value) => value.codePointAt(0) ?? 0);
+  const rightPoints = [...right].map((value) => value.codePointAt(0) ?? 0);
+  for (
+    let index = 0;
+    index < Math.min(leftPoints.length, rightPoints.length);
+    index += 1
+  ) {
+    const difference = leftPoints[index]! - rightPoints[index]!;
+    if (difference !== 0) return difference;
+  }
+  return leftPoints.length - rightPoints.length;
+}
+
+function appendPath(path: string, segment: PropertyKey): string {
+  return typeof segment === "number"
+    ? `${path}/${segment}`
+    : `${path}/${String(segment).replaceAll("~", "~0").replaceAll("/", "~1")}`;
+}
+
+type ParsedJson = { readonly value: unknown; readonly end: number };
+
+export function parseJsonWithDuplicateDetection(
+  text: string,
+): Either.Either<unknown, readonly OracleDecodeIssue[]> {
+  const duplicates: string[] = [];
+  const parsed = scanJsonValue(text, skipWhitespace(text, 0), "", duplicates);
+  if (
+    parsed === undefined ||
+    text.slice(skipWhitespace(text, parsed.end)).length > 0
+  ) {
+    return Either.left([{ path: "", code: "invalidJson" }]);
+  }
+  if (duplicates.length > 0) {
+    return Either.left(
+      sortIssues(
+        duplicates.map((path) => ({ path, code: "duplicateMember" as const })),
+      ),
+    );
+  }
+  try {
+    return Either.right(JSON.parse(text) as unknown);
+  } catch {
+    return Either.left([{ path: "", code: "invalidJson" }]);
+  }
+}
+
+function scanJsonValue(
+  text: string,
+  start: number,
+  path: string,
+  duplicates: string[],
+): ParsedJson | undefined {
+  const char = text[start];
+  if (char === "{") return scanJsonObject(text, start, path, duplicates);
+  if (char === "[") return scanJsonArray(text, start, path, duplicates);
+  if (char === '"') return scanJsonString(text, start);
+  if (text.startsWith("true", start)) return { value: true, end: start + 4 };
+  if (text.startsWith("false", start)) return { value: false, end: start + 5 };
+  if (text.startsWith("null", start)) return { value: null, end: start + 4 };
+  const number = text
+    .slice(start)
+    .match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/u);
+  return number === null
+    ? undefined
+    : { value: Number(number[0]), end: start + number[0].length };
+}
+
+function scanJsonObject(
+  text: string,
+  start: number,
+  path: string,
+  duplicates: string[],
+): ParsedJson | undefined {
+  let cursor = skipWhitespace(text, start + 1);
+  const keys = new Set<string>();
+  const output: Record<string, unknown> = {};
+  if (text[cursor] === "}") return { value: output, end: cursor + 1 };
+  while (cursor < text.length) {
+    const key = scanJsonString(text, cursor);
+    if (key === undefined || typeof key.value !== "string") return undefined;
+    cursor = skipWhitespace(text, key.end);
+    if (text[cursor] !== ":") return undefined;
+    cursor = skipWhitespace(text, cursor + 1);
+    const memberPath = appendPath(path, key.value);
+    const member = scanJsonValue(text, cursor, memberPath, duplicates);
+    if (member === undefined) return undefined;
+    if (keys.has(key.value)) duplicates.push(memberPath);
+    keys.add(key.value);
+    output[key.value] = member.value;
+    cursor = skipWhitespace(text, member.end);
+    if (text[cursor] === "}") return { value: output, end: cursor + 1 };
+    if (text[cursor] !== ",") return undefined;
+    cursor = skipWhitespace(text, cursor + 1);
+  }
+  return undefined;
+}
+
+function scanJsonArray(
+  text: string,
+  start: number,
+  path: string,
+  duplicates: string[],
+): ParsedJson | undefined {
+  let cursor = skipWhitespace(text, start + 1);
+  const output: unknown[] = [];
+  if (text[cursor] === "]") return { value: output, end: cursor + 1 };
+  while (cursor < text.length) {
+    const item = scanJsonValue(
+      text,
+      cursor,
+      appendPath(path, output.length),
+      duplicates,
+    );
+    if (item === undefined) return undefined;
+    output.push(item.value);
+    cursor = skipWhitespace(text, item.end);
+    if (text[cursor] === "]") return { value: output, end: cursor + 1 };
+    if (text[cursor] !== ",") return undefined;
+    cursor = skipWhitespace(text, cursor + 1);
+  }
+  return undefined;
+}
+
+function scanJsonString(text: string, start: number): ParsedJson | undefined {
+  let cursor = start + 1;
+  while (cursor < text.length) {
+    if (text[cursor] === "\\") cursor += 2;
+    else if (text[cursor] === '"') {
+      const raw = text.slice(start, cursor + 1);
+      try {
+        return { value: JSON.parse(raw) as unknown, end: cursor + 1 };
+      } catch {
+        return undefined;
+      }
+    } else cursor += 1;
+  }
+  return undefined;
+}
+
+function skipWhitespace(text: string, start: number): number {
+  let cursor = start;
+  while (/\s/u.test(text[cursor] ?? "")) cursor += 1;
+  return cursor;
+}
