@@ -266,38 +266,39 @@ describe("battle runtime: setup and discovery", () => {
     });
   });
 
-  // Rules-Glossary.md — Bonus Action: a creature can take a Bonus Action only
-  // when a rule explicitly grants one. Monsters/Overview.md says a monster's
-  // Bonus Actions section supplies those grants.
-  test("snapshot Bonus Action availability follows surfaced rule grants", () => {
-    const skeletonBattle = startBattleRight({
+  // Rules-Glossary.md — Bonus Action: the turn reset restores the per-turn
+  // Bonus Action quota for every creature. That quota is an economy resource,
+  // not evidence that Act discovery found a usable Bonus Action; a creature
+  // can have an unspent quota while its surfaced Bonus Action grants are empty.
+  test("snapshot Bonus Action quota is distinct from surfaced Bonus Action grants", () => {
+    const skeletonBattle = startBattleSessionRight({
       battleId: battleId("battle-skeleton-bonus-action-availability"),
       combatants: [
         skeletonCreatureInit({ initiative: 20 }),
         characterSeed({ initiative: 10 }),
       ],
     });
-    const skeletonSnapshot = snapshotBattle(skeletonBattle);
+    const skeletonSnapshot = snapshotBattle(skeletonBattle.state);
+    const skeletonActs = discoverBattleActs(skeletonBattle);
 
-    expect(skeletonSnapshot.turn.bonusActionQuotaAvailable).toBe(false);
+    expect(skeletonSnapshot.turn.bonusActionQuotaAvailable).toBe(true);
     expect(
-      skeletonSnapshot.acts.some(
-        ({ subject }) => subject.tag === "bonusAction",
-      ),
+      skeletonActs.some(({ subject }) => subject.tag === "bonusAction"),
     ).toBe(false);
 
-    const goblinBattle = startBattleRight({
+    const goblinBattle = startBattleSessionRight({
       battleId: battleId("battle-goblin-bonus-action-availability"),
       combatants: [
         statBlockCreatureInit({ initiative: 20 }),
         characterSeed({ initiative: 10 }),
       ],
     });
-    const goblinSnapshot = snapshotBattle(goblinBattle);
+    const goblinSnapshot = snapshotBattle(goblinBattle.state);
+    const goblinActs = discoverBattleActs(goblinBattle);
 
     expect(goblinSnapshot.turn.bonusActionQuotaAvailable).toBe(true);
     expect(
-      goblinSnapshot.acts.some(({ subject }) => subject.tag === "bonusAction"),
+      goblinActs.some(({ subject }) => subject.tag === "bonusAction"),
     ).toBe(true);
   });
 
