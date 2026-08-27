@@ -23,8 +23,11 @@ import {
   decodeOracleTrace,
   decodeOracleTraceJson,
   evaluateOracleCase,
+  oracleLifecycleTraceSchema,
   oracleCaseJsonSchema,
+  oracleTraceSchema,
   oracleTraceJsonSchema,
+  OracleTraceSchema,
 } from "./index.ts";
 import {
   buildUnitCatalog,
@@ -372,6 +375,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     });
     const rejection = rejected.steps.at(-1);
     expect(rejection?.tag).toBe("battleEntryRejected");
+    expect(Either.isRight(decodeOracleTrace(rejected))).toBe(true);
     if (rejection?.tag === "battleEntryRejected") {
       expect(rejection.issues).toHaveLength(1);
       const projectionIssues = rejection.issues[0];
@@ -424,6 +428,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
   it("keeps JSON Schema uniqueness on optionIds arrays and shares Trace authority", () => {
     const schema: unknown = JSON.parse(JSON.stringify(oracleCaseJsonSchema()));
     expect(countUniqueArrayAnnotations(schema)).toBeGreaterThanOrEqual(2);
+    expect(oracleTraceSchema).toBe(OracleTraceSchema);
+    expect(oracleLifecycleTraceSchema).toBe(OracleTraceSchema);
     const traceSchema = oracleTraceJsonSchema();
     expect(JSON.stringify(traceSchema)).toContain('"prefixItems"');
     expect(

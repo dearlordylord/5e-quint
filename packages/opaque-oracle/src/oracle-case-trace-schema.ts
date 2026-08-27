@@ -26,6 +26,7 @@ import {
 import {
   AmmunitionKindSchema,
   StatBlockId as StatBlockIdSchema,
+  UnitId as UnitIdSchema,
 } from "@dnd/shared/game-facts";
 import { Index } from "@dnd/shared/types";
 import { CombatantId } from "@dnd/battle-runtime";
@@ -154,9 +155,37 @@ const SheetConstructionRejectionSchema = Schema.Struct({
   issues: Schema.NonEmptyArray(CharacterSheetConstructionIssueSchema),
 });
 
-const BattleCreatureProjectionIssueSchema = Schema.Struct({
+const CharacterBattleSpellAccessProjectionIssueSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("characterBattleSpellAccessProjectionIssue"),
+    message: Schema.String,
+    accessIndex: NonNegativeIntegerSchema,
+    featUnitId: UnitIdSchema,
+    cause: Schema.Literal(
+      "missingSourceUnit",
+      "unsupportedSourceUnit",
+      "missingSpellListSource",
+      "invalidSpellSelection",
+    ),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("characterBattleSpellAccessProjectionIssue"),
+    message: Schema.String,
+    issueIndex: NonNegativeIntegerSchema,
+    cause: Schema.Literal("invalidBuildSpellAccess"),
+  }),
+);
+
+const CharacterBattleCreatureInitIssueSchema = Schema.Struct({
   tag: Schema.Literal("battleCreatureInitIssue"),
   message: Schema.String,
+  spellAccessIssues: Schema.optional(
+    Schema.Array(CharacterBattleSpellAccessProjectionIssueSchema).pipe(
+      Schema.filter((issues) => issues.length > 0, {
+        message: () => "spellAccessIssues must contain at least one issue",
+      }),
+    ),
+  ),
 });
 const BattleStateInitLeafIssueSchema = Schema.Union(
   Schema.Struct({
@@ -182,17 +211,25 @@ const BattleStateInitIssueSchema = Schema.Union(
 
 const BattleProjectionIssueSchema = Schema.Struct({
   tag: Schema.Literal("characterBattleEncounterProjectionIssue"),
-  origin: Schema.Literal("characterSheet", "statBlock"),
+  origin: Schema.Literal("characterSheet"),
   combatantId: CombatantId,
-  issue: Schema.Union(
-    BattleCreatureProjectionIssueSchema,
-    BattleStateInitIssueSchema,
-  ),
+  issue: CharacterBattleCreatureInitIssueSchema,
+});
+const StatBlockBattleProjectionIssueSchema = Schema.Struct({
+  tag: Schema.Literal("characterBattleEncounterProjectionIssue"),
+  origin: Schema.Literal("statBlock"),
+  combatantId: CombatantId,
+  issue: BattleStateInitIssueSchema,
 });
 
 const BattleProjectionIssuesSchema = Schema.Struct({
   tag: Schema.Literal("characterBattleEncounterProjectionIssues"),
-  issues: Schema.NonEmptyArray(BattleProjectionIssueSchema),
+  issues: Schema.NonEmptyArray(
+    Schema.Union(
+      BattleProjectionIssueSchema,
+      StatBlockBattleProjectionIssueSchema,
+    ),
+  ),
 });
 
 const BattleEntryIssueSchema = Schema.Union(
@@ -202,7 +239,7 @@ const BattleEntryIssueSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("battleCreatureInitRejected"),
-    issue: BattleCreatureProjectionIssueSchema,
+    issue: CharacterBattleCreatureInitIssueSchema,
   }),
   BattleProjectionIssuesSchema,
   Schema.Struct({
@@ -307,6 +344,7 @@ export const OracleTraceSchema = OracleTraceShapeSchema.pipe(
   Schema.filter(validOracleTraceLifecycle, {
     message: () => "trace steps do not form a valid Oracle lifecycle",
   }),
+  Schema.brand("OracleTrace"),
 );
 export type OracleTrace = Schema.Schema.Type<typeof OracleTraceSchema>;
 

@@ -7,4 +7,3 @@ export {
   canonicalizeBatchInput,
   canonicalizeTraceInput,
 } from "./oracle-input-canonical.ts";
-export { validOracleTraceLifecycle } from "./oracle-lifecycle.ts";

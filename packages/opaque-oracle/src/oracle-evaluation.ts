@@ -36,6 +36,7 @@ import { Either, Option } from "effect";
 
 import { canonicalizeStringSet } from "./oracle-canonical.ts";
 import {
+  OracleTraceSchema,
   type FreshSheetInput,
   type OracleBattleCheckpoint,
   type OracleBattleEntryRejection,
@@ -414,5 +415,5 @@ function stripStatBlockBattleCreatureSnapshot(
 function oracleTrace(
   steps: [OracleTraceStep, ...OracleTraceStep[]],
 ): OracleTrace {
-  return { steps };
+  return OracleTraceSchema.make({ steps });
 }
