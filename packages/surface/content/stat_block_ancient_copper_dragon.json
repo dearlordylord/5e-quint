@@ -1,0 +1,365 @@
+{
+  "challengeRating": 21,
+  "id": "stat_block_ancient_copper_dragon",
+  "kind": "statBlock",
+  "name": "Ancient Copper Dragon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:429-475"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 22,
+      "con": 25,
+      "dex": 12,
+      "int": 20,
+      "str": 27,
+      "wis": 17
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 21
+      }
+    },
+    "actions": [
+      {
+        "description": "The dragon makes three Rend attacks. It can replace one attack with a use of (A) Slowing Breath or (B) Spellcasting to cast Mind Spike (level 5 version).",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 15
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10,
+                  "flat": 8
+                },
+                "kind": "fixed",
+                "static": 19
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "acid",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 15
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "line",
+            "lengthFeet": 90,
+            "widthFeet": 10
+          },
+          "dc": {
+            "dc": 22,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Acid Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 14,
+                "dieSize": 8
+              },
+              "kind": "fixed",
+              "static": 63
+            },
+            "damageType": "acid",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      },
+      {
+        "description": "Constitution Saving Throw: DC 22, each creature in a 90-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.",
+        "kind": "textOnly",
+        "name": "Slowing Breath",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "castAtLevel": 5,
+                  "spellId": "mind_spike"
+                },
+                {
+                  "spellId": "minor_illusion"
+                },
+                {
+                  "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                  "spellId": "shapechange"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "greater_restoration"
+                },
+                {
+                  "spellId": "major_image"
+                },
+                {
+                  "spellId": "project_image"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 21,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 5,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            2
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "metallic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 367
+    },
+    "immunities": {
+      "damageTypes": [
+        "acid"
+      ]
+    },
+    "initiative": {
+      "modifier": 15,
+      "score": 25
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "Charisma Saving Throw: DC 21, one creature the dragon can see within 120 feet. Failure: 31 (9d6) Psychic damage. Until the end of its next turn, the target rolls 1d8 whenever it makes an ability check or attack roll and subtracts the number rolled from the D20 Test. Failure or Success: The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Giggling Magic",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon uses Spellcasting to cast Mind Spike (level 5 version). The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Mind Jolt",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon moves up to half its Speed, and it makes one Rend attack.",
+          "kind": "textOnly",
+          "name": "Pounce",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": 3
+    },
+    "passivePerception": 27,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 8
+      },
+      {
+        "ability": "dex",
+        "modifier": 8
+      },
+      {
+        "ability": "con",
+        "modifier": 7
+      },
+      {
+        "ability": "int",
+        "modifier": 5
+      },
+      {
+        "ability": "wis",
+        "modifier": 10
+      },
+      {
+        "ability": "cha",
+        "modifier": 6
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "gargantuan",
+    "skillModifiers": [
+      {
+        "modifier": 13,
+        "skill": "deception"
+      },
+      {
+        "modifier": 17,
+        "skill": "perception"
+      },
+      {
+        "modifier": 8,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "climb"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the dragon fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (4/Day, or 5/Day in Lair)"
+      }
+    ]
+  }
+}

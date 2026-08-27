@@ -1,0 +1,183 @@
+{
+  "challengeRating": 4,
+  "id": "stat_block_chuul",
+  "kind": "statBlock",
+  "name": "Chuul",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:111-142"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 16,
+      "dex": 10,
+      "int": 5,
+      "str": 19,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 16
+      }
+    },
+    "actions": [
+      {
+        "description": "The chuul makes two Pincer attacks and uses Paralyzing Tentacles.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "description": "If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two pincers.",
+          "kind": "attack_roll",
+          "name": "Pincer",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 10,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "condition": "grappled",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Constitution Saving Throw: DC 13, one creature Grappled by the chuul. Failure: The target has the Poisoned condition and repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically. While Poisoned, the target has the Paralyzed condition.",
+        "kind": "textOnly",
+        "name": "Paralyzing Tentacles",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Deep Speech"
+        ]
+      }
+    },
+    "creatureType": "aberration",
+    "hp": {
+      "kind": "literal",
+      "value": 76
+    },
+    "immunities": {
+      "conditions": [
+        "poisoned"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 0,
+      "score": 10
+    },
+    "passivePerception": 14,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": -3
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 4,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The chuul can breathe air and water.",
+        "name": "Amphibious"
+      },
+      {
+        "description": "The chuul senses magic within 120 feet of itself. This trait otherwise works like the Detect Magic spell but isn't itself magical.",
+        "name": "Sense Magic"
+      }
+    ]
+  }
+}

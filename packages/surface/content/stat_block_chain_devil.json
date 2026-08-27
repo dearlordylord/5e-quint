@@ -1,0 +1,199 @@
+{
+  "challengeRating": 8,
+  "id": "stat_block_chain_devil",
+  "kind": "statBlock",
+  "name": "Chain Devil",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:40-75"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 14,
+      "con": 18,
+      "dex": 15,
+      "int": 11,
+      "str": 18,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "description": "The devil makes two Chain attacks and uses Conjure Infernal Chain.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "description": "If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two chains, and it has the Restrained condition until the grapple ends.",
+          "kind": "attack_roll",
+          "name": "Chain",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 11
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "condition": "grappled",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "The devil conjures a fiery chain to bind a creature. Dexterity Saving Throw: DC 15, one creature the devil can see within 60 feet. Failure: 9 (2d4 + 4) Fire damage, and the target has the Restrained condition until the end of the devil's next turn, at which point the chain disappears. If the target is Large or smaller, the devil moves the target up to 30 feet straight toward itself. Success: The chain disappears.",
+        "kind": "textOnly",
+        "name": "Conjure Infernal Chain",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Infernal"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "fiend",
+    "creatureTypeTags": [
+      "devil"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 85
+    },
+    "immunities": {
+      "conditions": [
+        "poisoned"
+      ],
+      "damageTypes": [
+        "fire",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 5,
+      "score": 15
+    },
+    "passivePerception": 11,
+    "reactions": [
+      {
+        "description": "Trigger: A creature the devil can see starts its turn within 30 feet of the devil and can see the devil. Response—Wisdom Saving Throw: DC 15, the triggering creature. Failure: The target has the Frightened condition until the end of its turn. Success: The target is immune to this devil's Unnerving Gaze for 24 hours.",
+        "kind": "textOnly",
+        "name": "Unnerving Gaze",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "resistances": {
+      "damageTypes": [
+        "bludgeoning",
+        "cold",
+        "piercing",
+        "slashing"
+      ],
+      "kind": "fixed"
+    },
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 7
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 4
+      },
+      {
+        "ability": "cha",
+        "modifier": 2
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "qualifier": "unimpeded_by_magical_darkness",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "medium",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.",
+        "name": "Diabolical Restoration"
+      },
+      {
+        "description": "The devil has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}
