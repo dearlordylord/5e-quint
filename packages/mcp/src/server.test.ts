@@ -122,6 +122,7 @@ import {
 import {
   decodeStatBlockRecordSync,
   decodeUnitRecordSync,
+  StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
@@ -351,6 +352,146 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 
 describe("MCP server route", () => {
+  test("preserves accumulated Wild Shape resource diagnostics in start_battle errors", () => {
+    const baseRoot = createMcpPlaySessionRoot();
+    const source = baseRoot.statBlockCatalog.requireStatBlock("stat_block_rat");
+    const action = source.statBlock.actions?.[0];
+    if (action === undefined) throw new Error("Expected a synthetic action.");
+    const invalidLimitId = statBlockId("synthetic_mcp_invalid_limit_form");
+    const graphFailureId = statBlockId("synthetic_mcp_graph_failure_form");
+    const resource = {
+      ordinal: Schema.decodeUnknownSync(
+        StatBlockProcedureResourceOrdinalSchema,
+      )(1),
+      ownership: "each" as const,
+      limit: { kind: "daily" as const, uses: 0 },
+    };
+    const missingOrdinal = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(99);
+    const forms = [
+      {
+        ...source,
+        id: invalidLimitId,
+        name: "Synthetic Invalid Limit Form",
+        provenance: {
+          kind: "synthetic-test" as const,
+          section: "mcp-wild-shape",
+        },
+        statBlock: {
+          ...source.statBlock,
+          creatureType: "beast",
+          resources: [resource] as const,
+        },
+      },
+      {
+        ...source,
+        id: graphFailureId,
+        name: "Synthetic Graph Failure Form",
+        provenance: {
+          kind: "synthetic-test" as const,
+          section: "mcp-wild-shape",
+        },
+        statBlock: {
+          ...source.statBlock,
+          creatureType: "beast",
+          resources: [
+            { ...resource, limit: { kind: "daily" as const, uses: 1 } },
+          ] as const,
+          actions: [
+            {
+              ...action,
+              resourceRefs: {
+                kind: "some" as const,
+                ordinals: [missingOrdinal],
+              },
+            },
+          ],
+        },
+      },
+    ];
+    const catalog = {
+      ...baseRoot.statBlockCatalog,
+      getStatBlock: (id: string) =>
+        id === invalidLimitId
+          ? Option.some(forms[0]!)
+          : id === graphFailureId
+            ? Option.some(forms[1]!)
+            : baseRoot.statBlockCatalog.getStatBlock(id),
+    } as unknown as typeof baseRoot.statBlockCatalog;
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: catalog,
+      sessionStore: createMcpSessionStore({
+        statBlockCatalog: catalog,
+        unitLibrary: baseRoot.unitLibrary,
+      }),
+    };
+    const build = createFinalizedDruidSheet(
+      root,
+      "draft:mcp-wild-shape-diagnostics",
+    );
+    const characterId = testCharacterId("draft:mcp-wild-shape-diagnostics");
+    root.sessionStore.characters.set(
+      availableCharacterSessionRight({
+        build,
+        characterId,
+        currentHp: Hp(characterBuildMaximumHp(build, root.unitLibrary)),
+        tempHp: Hp(0),
+        hitPointMaximumReduction: Hp(0),
+        unitLibrary: root.unitLibrary,
+        druidWildShapeKnownFormStatBlockIds: [invalidLimitId, graphFailureId],
+      }),
+    );
+    const output = readPayload(
+      handleToolCall(root, "start_battle", {
+        battleId: "battle:mcp-wild-shape-diagnostics",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId,
+            combatantId: "druid",
+            initiative: 10,
+          },
+        ],
+      }),
+    );
+    expect(output).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            details: {
+              code: "CHARACTER_BATTLE_INIT_INVALID",
+              wildShapeIssues: [
+                {
+                  tag: "battleDruidWildShapeKnownFormIssue",
+                  statBlockId: invalidLimitId,
+                  reason: "invalidResourceLimit",
+                  issues: [{ ordinal: 1, reason: "invalidDailyUses" }],
+                },
+                {
+                  tag: "battleDruidWildShapeKnownFormIssue",
+                  statBlockId: graphFailureId,
+                  reason: "resourceGraph",
+                  issues: [
+                    {
+                      kind: "missingResourceDeclaration",
+                      ordinal: missingOrdinal,
+                    },
+                  ],
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+  });
+
   test("falls back to canonical ids when optional authored display records are absent", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);

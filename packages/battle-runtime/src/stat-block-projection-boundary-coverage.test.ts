@@ -481,6 +481,7 @@ describe("Stat Block projection boundary coverage", () => {
       id: statBlockId("synthetic_wild_shape_invalid_limit_form"),
       statBlock: {
         ...source.statBlock,
+        creatureType: "beast",
         resources: (() => {
           const mapped = resources.map((resource) =>
             resource.ordinal === daily.ordinal
@@ -499,6 +500,7 @@ describe("Stat Block projection boundary coverage", () => {
       id: statBlockId("synthetic_wild_shape_graph_failure_form"),
       statBlock: {
         ...source.statBlock,
+        creatureType: "beast",
         actions: [
           {
             ...firstAction,
