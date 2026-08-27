@@ -190,6 +190,7 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
     )
     .pipe(
+      byBattleHoleKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleHoleKind(
         "hitPointHealingDistribution",
         () => "hitPointHealingDistribution" as const,

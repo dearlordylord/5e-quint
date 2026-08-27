@@ -146,6 +146,7 @@ import {
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
+import { areaWindStrengthHole } from "./area-wind-strength.ts";
 import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -1578,11 +1579,11 @@ function cloudkillStrongWindDispersalActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [...state.combatants.values()].flatMap((combatant) =>
+  return [...state.combatants].flatMap(([effectOwnerId, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] =>
         effect.kind === "cloudkillAreaHazard"
-          ? [cloudkillStrongWindDispersalAct(actorId, effect)]
+          ? [cloudkillStrongWindDispersalAct(actorId, effectOwnerId, effect)]
           : [],
     ),
   );
@@ -1590,6 +1591,7 @@ function cloudkillStrongWindDispersalActs(
 
 function cloudkillStrongWindDispersalAct(
   actorId: CombatantId,
+  effectOwnerId: CombatantId,
   effect: CloudkillAreaHazardEffect,
 ): BattleActDiscoveryCandidate {
   return {
@@ -1597,9 +1599,15 @@ function cloudkillStrongWindDispersalAct(
       tag: "runtimeCommand",
       actorId,
       command: "disperseCloudkill",
-      areaId: effect.areaId,
+      effectOwnerId,
+      effectRef: spellActiveEffectExecutionRef(effect),
     },
-    initialHoles: [],
+    initialHoles: [
+      areaWindStrengthHole(
+        effect.areaId,
+        spellActiveEffectExecutionRef(effect),
+      ),
+    ],
   };
 }
 

@@ -17,6 +17,7 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
     .pipe(
       byBattleFillKind("abilityCheck", () => "abilityCheck" as const),
       byBattleFillKind("abilityChoice", () => "abilityChoice" as const),
+      byBattleFillKind("areaWindStrength", () => "areaWindStrength" as const),
       byBattleFillKind(
         "attackDamageDisposition",
         () => "attackDamageDisposition" as const,

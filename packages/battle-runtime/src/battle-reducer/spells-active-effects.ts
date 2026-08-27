@@ -2342,11 +2342,23 @@ export function applyCloudkillAreaHazardCastEffect(input: {
     { readonly procedure: "cloudkillAreaHazard" }
   >;
 }): BattleState {
+  const caster = input.state.combatants.get(input.actorId);
+  if (caster === undefined) {
+    return input.state;
+  }
+  const allocation = allocateBattleActiveEffectRefForCreature({
+    owner: caster,
+  });
+  const combatants = new Map(input.state.combatants).set(
+    input.actorId,
+    allocation.owner,
+  );
   return battleStateAfterReplacingCasterActiveEffect({
-    state: input.state,
+    state: { ...input.state, combatants },
     actorId: input.actorId,
     activeEffect: {
       kind: "cloudkillAreaHazard" as const,
+      effectRef: allocation.effectRef,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
       areaId: input.areaId,
