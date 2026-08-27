@@ -98,7 +98,10 @@ import type {
   CombatantId,
   InitiativeScore,
 } from "./identity.ts";
-import { battleExecutionScopeInitialOrNextOrdinal } from "./identity.ts";
+import {
+  battleCompanionFormId,
+  battleExecutionScopeInitialOrNextOrdinal,
+} from "./identity.ts";
 import {
   companionEntries,
   findCompanionByOwner,
@@ -1185,7 +1188,7 @@ function selectedStoredFormStatBlockId(input: {
         facts: {
           kind: "companionFormSpecialFormUnknown",
           formAccess: "pactOfTheChain",
-          formId: selection.formId,
+          formId: battleCompanionFormId(selection.formId),
         },
       };
     }
@@ -1202,7 +1205,7 @@ function selectedStoredFormStatBlockId(input: {
       facts: {
         kind: "companionFormNormalFormIneligible",
         formAccess: input.storedForm.formAccess,
-        formId: selection.formId,
+        formId: battleCompanionFormId(selection.formId),
       },
     };
   }

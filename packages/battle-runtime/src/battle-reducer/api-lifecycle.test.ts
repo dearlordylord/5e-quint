@@ -3,7 +3,12 @@ import { statBlockId, unitId } from "@dnd/shared/game-facts";
 import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
-import { battleId, battleObjectId, combatantId } from "../identity.ts";
+import {
+  battleCompanionFormId,
+  battleId,
+  battleObjectId,
+  combatantId,
+} from "../identity.ts";
 import {
   characterSeed,
   startBattleRight,
@@ -288,12 +293,12 @@ describe("battle lifecycle admission issue aggregation", () => {
       {
         kind: "companionFormSpecialFormUnknown",
         formAccess: "pactOfTheChain",
-        formId: "initialization-fact-special-form",
+        formId: battleCompanionFormId("initialization-fact-special-form"),
       },
       {
         kind: "companionFormNormalFormIneligible",
         formAccess: "findFamiliar",
-        formId: "initialization-fact-normal-form",
+        formId: battleCompanionFormId("initialization-fact-normal-form"),
       },
       {
         kind: "companionCombatantAdmissionInvalid",

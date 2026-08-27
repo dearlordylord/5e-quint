@@ -380,6 +380,7 @@ import type {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
+  BattleCompanionFormId,
   BattleDancingLightId,
   BattleExecutionScopeCursor,
   BattleLineDirectionId,
@@ -4403,12 +4404,12 @@ export type BattleInitializationIssueFacts =
   | {
       readonly kind: "companionFormSpecialFormUnknown";
       readonly formAccess: "pactOfTheChain";
-      readonly formId: string;
+      readonly formId: BattleCompanionFormId;
     }
   | {
       readonly kind: "companionFormNormalFormIneligible";
       readonly formAccess: "findFamiliar" | "pactOfTheChain";
-      readonly formId: string;
+      readonly formId: BattleCompanionFormId;
     }
   | {
       readonly kind: "companionCombatantAdmissionInvalid";

@@ -30,6 +30,13 @@ export type BattleTablePositionId = typeof BattleTablePositionId.Type;
 export const battleTablePositionId: (value: string) => BattleTablePositionId =
   BattleTablePositionId.make;
 
+export const BattleCompanionFormId = Schema.NonEmptyTrimmedString.pipe(
+  Schema.brand("BattleCompanionFormId"),
+);
+export type BattleCompanionFormId = typeof BattleCompanionFormId.Type;
+export const battleCompanionFormId: (value: string) => BattleCompanionFormId =
+  BattleCompanionFormId.make;
+
 export const BattleLineDirectionId = Schema.NonEmptyTrimmedString.pipe(
   Schema.brand("BattleLineDirectionId"),
 );

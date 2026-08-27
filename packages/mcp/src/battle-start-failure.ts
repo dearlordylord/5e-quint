@@ -214,36 +214,23 @@ function statBlockProjectionIssuePayload(
   issue: Extract<BattleRosterIssue, { kind: "statBlockProjection" }>,
   ownerPath: OwnerPath,
 ): Record<string, unknown> {
-  return Match.value(issue).pipe(
-    Match.when({ issueTag: "battleStateInitIssue" }, (matched) => ({
-      kind: issue.kind,
-      ownerPath,
-      code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-      combatantId: matched.combatantId,
-      issueTag: matched.issueTag,
-      ...(() => {
-        const {
-          kind: _kind,
-          index: _index,
-          issueTag: _issueTag,
-          message: _message,
-          combatantId: _combatantId,
-          ...facts
-        } = matched;
-        return facts;
-      })(),
-      message: matched.message,
-    })),
-    Match.when({ issueTag: "weaponLoadoutMismatch" }, (matched) => ({
-      kind: issue.kind,
-      ownerPath,
-      code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-      combatantId: matched.combatantId,
-      issueTag: matched.issueTag,
-      slot: matched.slot,
-    })),
-    Match.exhaustive,
-  );
+  const {
+    kind: _kind,
+    index: _index,
+    issueTag: _issueTag,
+    message: _message,
+    combatantId,
+    ...fields
+  } = issue;
+  return {
+    kind: issue.kind,
+    ownerPath,
+    code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+    combatantId,
+    issueTag: issue.issueTag,
+    ...fields,
+    message: issue.message,
+  };
 }
 
 export function battleCompanionRosterIssuePayload(
