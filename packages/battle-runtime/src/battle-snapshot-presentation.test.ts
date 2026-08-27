@@ -8,11 +8,14 @@ import {
   characterSeed,
   fighterId,
   goblinId,
+  holeId,
+  holeInstanceKey,
   startBattleSessionRight,
   statBlockCreatureInit,
 } from "./battle-runtime.test-support.ts";
 import type { BattleInterruptProcedureChoice } from "./battle-state-execution.ts";
 import { currentBattleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
+import { battleReplayStackDepth } from "./identity.ts";
 import {
   BattlePresentedCheckpointFrontierEnvelopeSchema,
   battlePresentedCheckpointFrontierEnvelope,
@@ -96,6 +99,156 @@ describe("battle snapshot frontier presentation", () => {
     expect(Either.isRight(result)).toBe(true);
     if (Either.isLeft(result)) return;
     expect(result.right).toEqual([{ choice }]);
+  });
+
+  test("round-trips a modifier-only interrupt choice without presentation", () => {
+    const choice = {
+      kind: "reactionRollOrDamageReduction",
+      reactorId: fighterId,
+      choice: {
+        kind: "attackDamageReduction",
+        procedureRef: battleProcedureExecutionRefForTest(
+          "snapshot-presentation-modifier-codec",
+        ),
+        reduction: { kind: "halfDamage" },
+      },
+      initialHoles: [],
+    } as const satisfies BattleInterruptProcedureChoice;
+    const presented = battlePresentedCheckpointFrontierEnvelope(session);
+    if (Either.isLeft(presented)) {
+      throw new Error("Expected a presented checkpoint frontier envelope.");
+    }
+    const envelope = {
+      checkpoint: presented.right.checkpoint,
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          holeInstanceKey: holeInstanceKey(
+            "battle:snapshot-presentation:modifier",
+          ),
+          holeId: holeId("battle:snapshot-presentation:modifier"),
+          kind: "interruptDecision",
+          label: "Reduce damage",
+          trigger: "afterDamage",
+          eligibleResponders: [fighterId],
+        },
+        choices: [{ choice }],
+        stackDepth: battleReplayStackDepth(1),
+      },
+    } as const;
+
+    const encoded = Schema.encodeSync(
+      BattlePresentedCheckpointFrontierEnvelopeSchema,
+    )(envelope);
+    if (encoded.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected an encoded interrupt-decision frontier.");
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(
+          BattlePresentedCheckpointFrontierEnvelopeSchema,
+        )({
+          ...encoded,
+          frontier: { ...encoded.frontier, choices: [] },
+        }),
+      ),
+    ).toBe(true);
+
+    const decoded = Schema.decodeUnknownSync(
+      BattlePresentedCheckpointFrontierEnvelopeSchema,
+    )(encoded);
+    if (decoded.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected a decoded interrupt-decision frontier.");
+    }
+    expect({
+      trigger: decoded.frontier.trigger,
+      decisionHole: decoded.frontier.decisionHole,
+      stackDepth: decoded.frontier.stackDepth,
+    }).toEqual({
+      trigger: envelope.frontier.trigger,
+      decisionHole: envelope.frontier.decisionHole,
+      stackDepth: envelope.frontier.stackDepth,
+    });
+    expect(decoded.frontier.choices).toHaveLength(1);
+    expect(decoded.frontier.choices[0]).toEqual({ choice });
+    expect(decoded.frontier.choices[0]).not.toHaveProperty("presentation");
+  });
+
+  test("requires and round-trips presentation for a subject-bearing interrupt choice", () => {
+    const choice = {
+      kind: "releaseReadiedAction",
+      reactorId: fighterId,
+      initialHoles: [],
+      subject: {
+        tag: "runtimeCommand",
+        actorId: goblinId,
+        command: "releaseReadiedAction",
+        reactorId: fighterId,
+      },
+    } as const satisfies BattleInterruptProcedureChoice;
+    const presentation = { kind: "intrinsic" } as const;
+    const presented = battlePresentedCheckpointFrontierEnvelope(session);
+    if (Either.isLeft(presented)) {
+      throw new Error("Expected a presented checkpoint frontier envelope.");
+    }
+    const envelope = {
+      checkpoint: presented.right.checkpoint,
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "reportedReadyTrigger",
+        decisionHole: {
+          holeInstanceKey: holeInstanceKey(
+            "battle:snapshot-presentation:readied-action",
+          ),
+          holeId: holeId("battle:snapshot-presentation:readied-action"),
+          kind: "interruptDecision",
+          label: "Release readied action",
+          trigger: "reportedReadyTrigger",
+          eligibleResponders: [fighterId],
+        },
+        choices: [{ choice, presentation }],
+        stackDepth: battleReplayStackDepth(1),
+      },
+    } as const;
+
+    const encoded = Schema.encodeSync(
+      BattlePresentedCheckpointFrontierEnvelopeSchema,
+    )(envelope);
+    if (encoded.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected an encoded interrupt-decision frontier.");
+    }
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(
+          BattlePresentedCheckpointFrontierEnvelopeSchema,
+        )({
+          ...encoded,
+          frontier: {
+            ...encoded.frontier,
+            choices: encoded.frontier.choices.map(({ choice }) => ({ choice })),
+          },
+        }),
+      ),
+    ).toBe(true);
+
+    const decoded = Schema.decodeUnknownSync(
+      BattlePresentedCheckpointFrontierEnvelopeSchema,
+    )(encoded);
+    if (decoded.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected a decoded interrupt-decision frontier.");
+    }
+    expect({
+      trigger: decoded.frontier.trigger,
+      decisionHole: decoded.frontier.decisionHole,
+      stackDepth: decoded.frontier.stackDepth,
+    }).toEqual({
+      trigger: envelope.frontier.trigger,
+      decisionHole: envelope.frontier.decisionHole,
+      stackDepth: envelope.frontier.stackDepth,
+    });
+    expect(decoded.frontier.choices).toHaveLength(1);
+    expect(decoded.frontier.choices[0]).toEqual({ choice, presentation });
   });
 
   test("returns a typed failure instead of dropping a choice without presentation", () => {
