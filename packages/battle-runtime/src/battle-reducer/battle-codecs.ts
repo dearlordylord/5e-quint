@@ -6473,6 +6473,10 @@ type EncodedBattleReadiedSpellSnapshot =
 type EncodedBattleReadiedResponseSnapshot =
   typeof BattleReadiedResponseSnapshotSchema.Type;
 type EncodedBattleSubject = typeof BattleSubjectSchema.Type;
+type EncodedRuntimeCommandBattleSubject = Extract<
+  EncodedBattleSubject,
+  { readonly tag: "runtimeCommand" }
+>;
 type EncodedBattleHole = typeof BattleHolePayloadUnionSchema.Type;
 type EncodedBattleActDiscoveryCandidate =
   typeof BattleActDiscoveryCandidateSchema.Type;
@@ -6481,9 +6485,119 @@ type EncodedBattleInterruptProcedureChoice =
 
 type SerializedExecutionReferenceOwnership = {
   readonly ref: string;
-  readonly ownerId: string | undefined;
+  readonly ownerId: CombatantId | undefined;
   readonly subjectProcedure: boolean;
 };
+
+type SerializedRuntimeCommandReferencePolicy =
+  | {
+      readonly kind: "combatantOwned";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "targetedCombatantOwned";
+      readonly ownerId: CombatantId;
+      readonly targetId: CombatantId;
+    }
+  | {
+      readonly kind: "readiedAttackOwned";
+      readonly ownerId: CombatantId;
+      readonly targetId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+    }
+  | {
+      readonly kind: "readiedSpellOwned";
+      readonly ownerId: CombatantId;
+      readonly procedureRef: BattleProcedureExecutionRef;
+    };
+
+function serializedRuntimeCommandReferencePolicy(
+  subject: EncodedRuntimeCommandBattleSubject,
+): SerializedRuntimeCommandReferencePolicy {
+  const combatantOwned = (
+    ownerId: CombatantId,
+  ): SerializedRuntimeCommandReferencePolicy => ({
+    kind: "combatantOwned",
+    ownerId,
+  });
+  const actorOwned = (
+    command: EncodedRuntimeCommandBattleSubject,
+  ): SerializedRuntimeCommandReferencePolicy => combatantOwned(command.actorId);
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      castAttackHitBonusActionSpell: (command) =>
+        combatantOwned(command.casterId),
+      castTriggeredReactionSpell: (command) =>
+        combatantOwned(command.reactorId),
+      cloudkillAreaHazardSave: actorOwned,
+      commandApproach: actorOwned,
+      commandDrop: actorOwned,
+      commandFlee: actorOwned,
+      commandGrovel: actorOwned,
+      creatureFalls: actorOwned,
+      creatureTypeProtectionConditionAttempt: actorOwned,
+      creatureTypeProtectionPossessionAttempt: actorOwned,
+      disperseCloudkill: actorOwned,
+      disperseFogCloud: actorOwned,
+      dragonsBreathExhale: actorOwned,
+      endConcentration: actorOwned,
+      endTurn: actorOwned,
+      greaseGroundHazardSave: actorOwned,
+      gustOfWindLineDirectionChange: actorOwned,
+      gustOfWindLineSave: actorOwned,
+      insectPlagueAreaHazardSave: actorOwned,
+      jumpMovementReplacement: actorOwned,
+      levitateAltitudeControl: actorOwned,
+      moonbeamCylinderExit: actorOwned,
+      movableZoneRam: actorOwned,
+      movableZoneReposition: actorOwned,
+      movableZoneSave: actorOwned,
+      move: actorOwned,
+      opportunityAttack: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "targetedCombatantOwned",
+        ownerId: command.reactorId,
+        targetId: command.targetId,
+      }),
+      protectionRelevantEffectSave: actorOwned,
+      releaseGrapple: actorOwned,
+      releaseReadiedAction: actorOwned,
+      releaseReadiedAttack: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "readiedAttackOwned",
+        ownerId: command.reactorId,
+        targetId: command.targetId,
+        procedureRef: command.procedureRef,
+      }),
+      releaseReadiedMovement: actorOwned,
+      releaseReadiedSpell: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "readiedSpellOwned",
+        ownerId: command.readiedSpellCasterId,
+        procedureRef: command.procedureRef,
+      }),
+      releaseSpellCreatedHeldObject: actorOwned,
+      replaceSelfTransformationMode: actorOwned,
+      reportReadyTrigger: actorOwned,
+      retaliationAttack: (
+        command,
+      ): SerializedRuntimeCommandReferencePolicy => ({
+        kind: "targetedCombatantOwned",
+        ownerId: command.reactorId,
+        targetId: command.targetId,
+      }),
+      sleetStormAreaHazardSave: actorOwned,
+      standFromProne: actorOwned,
+      wardingBondSeparation: actorOwned,
+      webAreaRemoved: actorOwned,
+      webRestrainedNoLongerInArea: actorOwned,
+      webRestraintSave: actorOwned,
+    }),
+  );
+}
 
 function serializedStatBlockAuthoritativeExecutionReferences(
   execution: Schema.Schema.Type<typeof StatBlockExecutionSnapshotSchema>,
@@ -6710,54 +6824,92 @@ function serializedBattleSubjectOwnsBoundProcedure(
 ): boolean {
   const procedureRefs = battleSubjectProcedureRefs(subject);
   if (procedureRefs.length === 0) return true;
-  const procedureRefsBelongToOwner = (
-    ownedSubject: EncodedBattleSubject,
-  ): boolean =>
-    serializedBattleSubjectProcedureRefsBelongToOwner(
-      ownedSubject,
+  const actorOwnsProcedureRefs = (ownedSubject: {
+    readonly actorId: CombatantId;
+  }): boolean =>
+    serializedProcedureRefsBelongToCombatant(
+      ownedSubject.actorId,
       procedureRefs,
       combatants,
     );
 
   return Match.value(subject).pipe(
-    Match.when(
-      { tag: "runtimeCommand", command: "releaseReadiedSpell" },
-      (release) =>
-        readiedSpells.some(
-          (readied) =>
-            readied.casterId === release.readiedSpellCasterId &&
-            readied.procedureRef === release.procedureRef,
+    Match.discriminatorsExhaustive("tag")({
+      action: actorOwnsProcedureRefs,
+      actionSpell: actorOwnsProcedureRefs,
+      bonusAction: actorOwnsProcedureRefs,
+      bonusActionDashSpell: actorOwnsProcedureRefs,
+      bonusActionSpell: actorOwnsProcedureRefs,
+      bonusActionStandardAction: actorOwnsProcedureRefs,
+      companionLifecycle: actorOwnsProcedureRefs,
+      druidWildShape: actorOwnsProcedureRefs,
+      findFamiliarSharedSenses: actorOwnsProcedureRefs,
+      findFamiliarTouchSpell: actorOwnsProcedureRefs,
+      monkFocusFlurryOfBlowsStrike: (strike) =>
+        serializedMonkFocusStrikeOwnsBoundProcedures(strike, combatants),
+      monkFocusOption: actorOwnsProcedureRefs,
+      pactOfTheChainFamiliarAttack: (attack) =>
+        serializedProcedureRefsBelongToCombatant(
+          attack.familiarId,
+          procedureRefs,
+          combatants,
         ),
-    ),
-    Match.when(
-      { tag: "runtimeCommand", command: "releaseReadiedAttack" },
-      (release) =>
+      runtimeCommand: (command) =>
+        serializedRuntimeCommandOwnsBoundProcedure({
+          command,
+          procedureRefs,
+          combatants,
+          readiedSpells,
+          readiedResponses,
+        }),
+      unitFeature: actorOwnsProcedureRefs,
+      unitFeatureHeldWeaponActivation: actorOwnsProcedureRefs,
+    }),
+  );
+}
+
+function serializedRuntimeCommandOwnsBoundProcedure(input: {
+  readonly command: EncodedRuntimeCommandBattleSubject;
+  readonly procedureRefs: readonly BattleProcedureExecutionRef[];
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
+  readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
+}): boolean {
+  const {
+    command,
+    procedureRefs,
+    combatants,
+    readiedSpells,
+    readiedResponses,
+  } = input;
+  const policy = serializedRuntimeCommandReferencePolicy(command);
+  return Match.value(policy).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      combatantOwned: ({ ownerId }) =>
+        serializedProcedureRefsBelongToCombatant(
+          ownerId,
+          procedureRefs,
+          combatants,
+        ),
+      targetedCombatantOwned: ({ ownerId }) =>
+        serializedProcedureRefsBelongToCombatant(
+          ownerId,
+          procedureRefs,
+          combatants,
+        ),
+      readiedAttackOwned: ({ ownerId, procedureRef }) =>
         readiedResponses.some(
           (readied) =>
-            readied.actorId === release.reactorId &&
+            readied.actorId === ownerId &&
             readied.response.kind === "attack" &&
-            readied.response.procedureRef === release.procedureRef,
+            readied.response.procedureRef === procedureRef,
         ),
-    ),
-    Match.when({ tag: "monkFocusFlurryOfBlowsStrike" }, (strike) =>
-      serializedMonkFocusStrikeOwnsBoundProcedures(strike, combatants),
-    ),
-    Match.discriminatorsExhaustive("tag")({
-      action: procedureRefsBelongToOwner,
-      actionSpell: procedureRefsBelongToOwner,
-      bonusAction: procedureRefsBelongToOwner,
-      bonusActionDashSpell: procedureRefsBelongToOwner,
-      bonusActionSpell: procedureRefsBelongToOwner,
-      bonusActionStandardAction: procedureRefsBelongToOwner,
-      companionLifecycle: procedureRefsBelongToOwner,
-      druidWildShape: procedureRefsBelongToOwner,
-      findFamiliarSharedSenses: procedureRefsBelongToOwner,
-      findFamiliarTouchSpell: procedureRefsBelongToOwner,
-      monkFocusOption: procedureRefsBelongToOwner,
-      pactOfTheChainFamiliarAttack: procedureRefsBelongToOwner,
-      runtimeCommand: procedureRefsBelongToOwner,
-      unitFeature: procedureRefsBelongToOwner,
-      unitFeatureHeldWeaponActivation: procedureRefsBelongToOwner,
+      readiedSpellOwned: ({ ownerId, procedureRef }) =>
+        readiedSpells.some(
+          (readied) =>
+            readied.casterId === ownerId &&
+            readied.procedureRef === procedureRef,
+        ),
     }),
   );
 }
@@ -6788,56 +6940,11 @@ function serializedMonkFocusStrikeOwnsBoundProcedures(
   );
 }
 
-function serializedBattleSubjectProcedureOwnerId(
-  subject: EncodedBattleSubject,
-): CombatantId {
-  return Match.value(subject).pipe(
-    Match.when(
-      { tag: "pactOfTheChainFamiliarAttack" },
-      (attack) => attack.familiarId,
-    ),
-    Match.when(
-      { tag: "runtimeCommand", command: "opportunityAttack" },
-      (command) => command.reactorId,
-    ),
-    Match.when(
-      { tag: "runtimeCommand", command: "retaliationAttack" },
-      (command) => command.reactorId,
-    ),
-    Match.when(
-      { tag: "runtimeCommand", command: "castTriggeredReactionSpell" },
-      (command) => command.reactorId,
-    ),
-    Match.when(
-      { tag: "runtimeCommand", command: "castAttackHitBonusActionSpell" },
-      (command) => command.casterId,
-    ),
-    Match.discriminatorsExhaustive("tag")({
-      action: (ownedSubject) => ownedSubject.actorId,
-      actionSpell: (ownedSubject) => ownedSubject.actorId,
-      bonusAction: (ownedSubject) => ownedSubject.actorId,
-      bonusActionDashSpell: (ownedSubject) => ownedSubject.actorId,
-      bonusActionSpell: (ownedSubject) => ownedSubject.actorId,
-      bonusActionStandardAction: (ownedSubject) => ownedSubject.actorId,
-      companionLifecycle: (ownedSubject) => ownedSubject.actorId,
-      druidWildShape: (ownedSubject) => ownedSubject.actorId,
-      findFamiliarSharedSenses: (ownedSubject) => ownedSubject.actorId,
-      findFamiliarTouchSpell: (ownedSubject) => ownedSubject.actorId,
-      monkFocusFlurryOfBlowsStrike: (ownedSubject) => ownedSubject.actorId,
-      monkFocusOption: (ownedSubject) => ownedSubject.actorId,
-      runtimeCommand: (ownedSubject) => ownedSubject.actorId,
-      unitFeature: (ownedSubject) => ownedSubject.actorId,
-      unitFeatureHeldWeaponActivation: (ownedSubject) => ownedSubject.actorId,
-    }),
-  );
-}
-
-function serializedBattleSubjectProcedureRefsBelongToOwner(
-  subject: EncodedBattleSubject,
+function serializedProcedureRefsBelongToCombatant(
+  ownerId: CombatantId,
   procedureRefs: readonly BattleProcedureExecutionRef[],
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
-  const ownerId = serializedBattleSubjectProcedureOwnerId(subject);
   const owner = combatants.find(
     (combatant) => combatant.combatantId === ownerId,
   );
@@ -6873,7 +6980,7 @@ function serializedExecutionReferenceFieldName(key: string): boolean {
 function serializedExecutionReferenceOwnerId(
   fields: object,
   referenceKey: string,
-): string | undefined {
+): CombatantId | undefined {
   const ownerKeys = referenceKey.startsWith("source")
     ? ["sourceCombatantId", "sourceOwnerId"]
     : referenceKey.startsWith("triggering")
@@ -6891,7 +6998,7 @@ function serializedExecutionReferenceOwnerId(
   const entries = Object.entries(fields);
   for (const key of ownerKeys) {
     const ownerEntry = entries.find(([fieldName]) => fieldName === key);
-    if (ownerEntry !== undefined && typeof ownerEntry[1] === "string") {
+    if (ownerEntry !== undefined && Schema.is(CombatantId)(ownerEntry[1])) {
       return ownerEntry[1];
     }
   }
@@ -6901,7 +7008,7 @@ function serializedExecutionReferenceOwnerId(
 function serializedExecutionReferenceIsSubjectProcedure(
   depth: number,
   key: string,
-  ownerId: string | undefined,
+  ownerId: CombatantId | undefined,
 ): boolean {
   return (
     depth === 0 &&
@@ -7383,27 +7490,6 @@ function serializedInterruptChoiceTargetIsLive(
 ): boolean {
   if (subject === undefined) return true;
   return Match.value(subject).pipe(
-    Match.when(
-      { tag: "runtimeCommand", command: "releaseReadiedAttack" },
-      (targeted) =>
-        combatants.some(
-          (combatant) => combatant.combatantId === targeted.targetId,
-        ),
-    ),
-    Match.when(
-      { tag: "runtimeCommand", command: "opportunityAttack" },
-      (targeted) =>
-        combatants.some(
-          (combatant) => combatant.combatantId === targeted.targetId,
-        ),
-    ),
-    Match.when(
-      { tag: "runtimeCommand", command: "retaliationAttack" },
-      (targeted) =>
-        combatants.some(
-          (combatant) => combatant.combatantId === targeted.targetId,
-        ),
-    ),
     Match.discriminatorsExhaustive("tag")({
       action: () => true,
       actionSpell: () => true,
@@ -7418,9 +7504,26 @@ function serializedInterruptChoiceTargetIsLive(
       monkFocusFlurryOfBlowsStrike: () => true,
       monkFocusOption: () => true,
       pactOfTheChainFamiliarAttack: () => true,
-      runtimeCommand: () => true,
+      runtimeCommand: (command) =>
+        serializedRuntimeCommandTargetIsLive(command, combatants),
       unitFeature: () => true,
       unitFeatureHeldWeaponActivation: () => true,
+    }),
+  );
+}
+
+function serializedRuntimeCommandTargetIsLive(
+  command: EncodedRuntimeCommandBattleSubject,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const targetIsLive = (targetId: CombatantId): boolean =>
+    combatants.some((combatant) => combatant.combatantId === targetId);
+  return Match.value(serializedRuntimeCommandReferencePolicy(command)).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      combatantOwned: () => true,
+      readiedAttackOwned: ({ targetId }) => targetIsLive(targetId),
+      readiedSpellOwned: () => true,
+      targetedCombatantOwned: ({ targetId }) => targetIsLive(targetId),
     }),
   );
 }
