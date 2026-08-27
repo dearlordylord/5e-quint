@@ -2,19 +2,23 @@ import { Either, Match, Schema } from "effect";
 
 import {
   BattleFillSchema,
-  BattleMechanicalHoleSchema,
+  BattleMechanicalHoleSchema as BattleMechanicalHoleCodecSchema,
   BattleMechanicalInterruptProcedureChoiceSchema,
 } from "./battle-reducer/battle-codecs.ts";
 import { battleHoleFamilyKind } from "./battle-reducer/hole-helpers.ts";
 import type {
   BattleHole,
-  BattleInterruptDecisionHole,
   BattleInterruptProcedureChoice,
   BattleFill,
   BattleResolutionResult,
 } from "./battle-state-execution.ts";
 import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+
+export const BattleMechanicalHoleSchema =
+  BattleMechanicalHoleCodecSchema.annotations({
+    parseOptions: { onExcessProperty: "error" },
+  });
 
 export type BattleMechanicalHole = typeof BattleMechanicalHoleSchema.Type;
 
@@ -48,7 +52,9 @@ export type BattleMechanicalFrontierIssue =
   | { readonly tag: "interruptFrontierChoiceSetEmpty" };
 
 export const BattleMechanicalInterruptChoiceSchema =
-  BattleMechanicalInterruptProcedureChoiceSchema;
+  BattleMechanicalInterruptProcedureChoiceSchema.annotations({
+    parseOptions: { onExcessProperty: "error" },
+  });
 
 export const BattleMechanicalFrontierSchema = Schema.Union(
   Schema.Struct({
@@ -144,10 +150,10 @@ function projectMechanicalChoices(
 
 function projectMechanicalInterruptHole(
   hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
-): DistributiveOmit<BattleInterruptDecisionHole, "label"> {
+): Extract<BattleMechanicalHole, { readonly kind: "interruptDecision" }> {
   return Match.value(hole).pipe(
     Match.discriminatorsExhaustive("kind")({
-      interruptDecision: removeHoleLabel,
+      interruptDecision: (value) => projectHoleWithoutPresentationLabel(value),
     }),
   );
 }
@@ -155,62 +161,110 @@ function projectMechanicalInterruptHole(
 function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
   return Match.value(hole).pipe(
     Match.discriminatorsExhaustive("kind")({
-      abilityCheck: removeHoleLabel,
-      abilityChoice: removeHoleLabel,
-      attackDamageDisposition: removeHoleLabel,
-      attackRoll: removeHoleLabel,
-      commandOptionChoice: removeHoleLabel,
-      companionReappearanceInitiative: removeHoleLabel,
-      companionReappearancePlacement: removeHoleLabel,
-      concentrationSavingThrow: removeHoleLabel,
-      conditionChoice: removeHoleLabel,
-      cunningStrikeEndTurnCoverFacts: removeHoleLabel,
-      damageRelationshipDecisions: removeHoleLabel,
-      damageTypeChoice: removeHoleLabel,
-      dancingLightsPlacement: removeHoleLabel,
-      deathSavingThrow: removeHoleLabel,
-      findFamiliarConnection: removeHoleLabel,
-      grappleOutcome: removeHoleLabel,
-      gustOfWindLineDirectionChoice: removeHoleLabel,
-      heldObjectFacts: removeHoleLabel,
-      helpAttackAllyDecision: removeHoleLabel,
-      helpAttackEnemyDecision: removeHoleLabel,
-      hitPointHealingDistribution: removeHoleLabel,
-      interruptDecision: removeHoleLabel,
-      levitateAltitudeChange: removeHoleLabel,
-      levitateInitialRise: removeHoleLabel,
-      magicWeaponTargetItem: removeHoleLabel,
-      movableZoneRamMovement: removeHoleLabel,
-      movableZoneRepositionMovement: removeHoleLabel,
-      readyDeclaration: removeHoleLabel,
-      movement: removeHoleLabel,
-      objectContactTargets: removeHoleLabel,
-      objectDropResolution: removeHoleLabel,
-      objectTargetChoice: removeHoleLabel,
-      ongoingSpellTargetChoice: removeHoleLabel,
-      rolledDice: removeHoleLabel,
-      sanctuaryInterdictionOutcome: removeHoleLabel,
-      savingThrowOutcome: removeHoleLabel,
-      selfTransformationModeChoice: removeHoleLabel,
-      slowSomaticSpellFailureOutcome: removeHoleLabel,
-      shoveOutcome: removeHoleLabel,
-      skillChoice: removeHoleLabel,
-      spellAreaChoice: removeHoleLabel,
-      spellTargetAllocation: removeHoleLabel,
-      spellTargetList: removeHoleLabel,
-      spellcastingAbilityCheck: removeHoleLabel,
-      spiritualWeaponForcePosition: removeHoleLabel,
-      statBlockRechargeRoll: removeHoleLabel,
-      targetAbilityChoices: removeHoleLabel,
-      targetChoice: removeHoleLabel,
-      targetSpatialFacts: removeHoleLabel,
-      teleportDestination: removeHoleLabel,
-      thaumaturgyActiveOneMinuteEffectCount: removeHoleLabel,
-      toolPossessionFacts: removeHoleLabel,
-      unitFeatureDecision: removeHoleLabel,
-      wildShapeEquipmentDisposition: removeHoleLabel,
+      abilityCheck: (value) => projectHoleWithoutPresentationLabel(value),
+      abilityChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      attackDamageDisposition: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      attackRoll: (value) => projectHoleWithoutPresentationLabel(value),
+      commandOptionChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      companionReappearanceInitiative: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      companionReappearancePlacement: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      concentrationSavingThrow: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      conditionChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      cunningStrikeEndTurnCoverFacts: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      damageRelationshipDecisions: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      damageTypeChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      dancingLightsPlacement: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      deathSavingThrow: (value) => projectHoleWithoutPresentationLabel(value),
+      findFamiliarConnection: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
+      gustOfWindLineDirectionChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      heldObjectFacts: (value) => projectHoleWithoutPresentationLabel(value),
+      helpAttackAllyDecision: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      helpAttackEnemyDecision: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      hitPointHealingDistribution: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      interruptDecision: (value) => projectHoleWithoutPresentationLabel(value),
+      levitateAltitudeChange: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      levitateInitialRise: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      magicWeaponTargetItem: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      movableZoneRamMovement: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      movableZoneRepositionMovement: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      readyDeclaration: (value) => projectHoleWithoutPresentationLabel(value),
+      movement: (value) => projectHoleWithoutPresentationLabel(value),
+      objectContactTargets: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      objectDropResolution: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      objectTargetChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      ongoingSpellTargetChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      rolledDice: (value) => projectHoleWithoutPresentationLabel(value),
+      sanctuaryInterdictionOutcome: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      savingThrowOutcome: (value) => projectHoleWithoutPresentationLabel(value),
+      selfTransformationModeChoice: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      slowSomaticSpellFailureOutcome: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      shoveOutcome: (value) => projectHoleWithoutPresentationLabel(value),
+      skillChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      spellAreaChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      spellTargetAllocation: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      spellTargetList: (value) => projectHoleWithoutPresentationLabel(value),
+      spellcastingAbilityCheck: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      spiritualWeaponForcePosition: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      statBlockRechargeRoll: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      targetAbilityChoices: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      targetChoice: (value) => projectHoleWithoutPresentationLabel(value),
+      targetSpatialFacts: (value) => projectHoleWithoutPresentationLabel(value),
+      teleportDestination: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      thaumaturgyActiveOneMinuteEffectCount: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      toolPossessionFacts: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      unitFeatureDecision: (value) =>
+        projectHoleWithoutPresentationLabel(value),
+      wildShapeEquipmentDisposition: (value) =>
+        projectHoleWithoutPresentationLabel(value),
     }),
   );
+}
+
+type MechanicalHoleProjection<Hole extends { readonly label: string }> =
+  Hole extends unknown ? Omit<Hole, "label"> : never;
+
+function projectHoleWithoutPresentationLabel<
+  Hole extends { readonly label: string },
+>(hole: Hole): MechanicalHoleProjection<Hole>;
+function projectHoleWithoutPresentationLabel<
+  Hole extends { readonly label: string },
+>(hole: Hole) {
+  const { label, ...mechanical } = hole;
+  void label;
+  return mechanical;
 }
 
 function projectMechanicalInterruptChoice(
@@ -218,22 +272,26 @@ function projectMechanicalInterruptChoice(
 ): BattleMechanicalInterruptChoice {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      releaseReadiedSpell: projectChoiceWithInitialHoles,
-      releaseReadiedMovement: projectChoiceWithInitialHoles,
-      releaseReadiedAction: projectChoiceWithInitialHoles,
-      releaseReadiedAttack: projectChoiceWithInitialHoles,
-      castTriggeredReactionSpell: projectChoiceWithInitialHoles,
-      castAttackHitBonusActionSpell: projectChoiceWithInitialHoles,
-      opportunityAttack: projectChoiceWithInitialHoles,
-      retaliationAttack: projectChoiceWithInitialHoles,
-      reactionRollOrDamageReduction: projectChoiceWithInitialHoles,
+      releaseReadiedSpell: (value) => projectChoiceWithMechanicalHoles(value),
+      releaseReadiedMovement: (value) =>
+        projectChoiceWithMechanicalHoles(value),
+      releaseReadiedAction: (value) => projectChoiceWithMechanicalHoles(value),
+      releaseReadiedAttack: (value) => projectChoiceWithMechanicalHoles(value),
+      castTriggeredReactionSpell: (value) =>
+        projectChoiceWithMechanicalHoles(value),
+      castAttackHitBonusActionSpell: (value) =>
+        projectChoiceWithMechanicalHoles(value),
+      opportunityAttack: (value) => projectChoiceWithMechanicalHoles(value),
+      retaliationAttack: (value) => projectChoiceWithMechanicalHoles(value),
+      reactionRollOrDamageReduction: (value) =>
+        projectChoiceWithMechanicalHoles(value),
     }),
   );
 }
 
-function projectChoiceWithInitialHoles<
+function projectChoiceWithMechanicalHoles<
   T extends BattleInterruptProcedureChoice,
->(choice: T): BattleMechanicalInterruptChoice {
+>(choice: T) {
   const { initialHoles, ...mechanical } = choice;
   return {
     ...mechanical,
