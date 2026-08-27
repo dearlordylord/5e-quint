@@ -66,6 +66,7 @@ import {
   resolveBattleSubject,
   spendCharacterPointPoolResource,
   startBattle,
+  battleTablePositionId,
 } from "@dnd/battle-runtime";
 import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
 import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-support.ts";
@@ -78,6 +79,7 @@ import {
   characterEquipmentItemUnitId,
   classUnitId,
   copperPieceAmount,
+  creationChoiceOptionId,
   eldritchInvocationId,
   MONK_MONKS_FOCUS_UNIT_ID,
   sorcererMetamagicOptionId,
@@ -159,6 +161,9 @@ import {
   characterBattleRuntimeIssueMessage,
   characterBattleInitIssueFactFields,
   characterBattleInitIssueReasonFromFact,
+  battleCreatureInitIssuesFromMessages,
+  battleCreatureInitIssueLeaves,
+  type CharacterBattleInitIssueReason,
 } from "./index.ts";
 import type { BattleRosterIssue } from "./index.ts";
 import {
@@ -176,6 +181,10 @@ import {
 } from "./battle-support-profiles.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
+import {
+  characterSheetBattleHandoffIssuesFromStateInit,
+  type CharacterSheetBattleHandoffIssue,
+} from "./battle-handoff-issue.ts";
 
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
 
@@ -302,17 +311,10 @@ function testIssueForBattleRosterIssue(
             }),
           },
     ),
-    Match.when({ kind: "statBlockProjection" }, (matched) =>
-      matched.issueTag === "weaponLoadoutMismatch"
-        ? {
-            tag: "battleStateInitIssue" as const,
-            message: `Weapon loadout mismatch in ${matched.slot}.`,
-          }
-        : {
-            tag: "battleStateInitIssue" as const,
-            message: matched.message,
-          },
-    ),
+    Match.when({ kind: "statBlockProjection" }, (matched) => ({
+      tag: "battleStateInitIssue" as const,
+      message: matched.message,
+    })),
     Match.when({ kind: "duplicateCombatantId" }, ({ combatantId }) => ({
       tag: "battleStateInitIssue" as const,
       message: `Duplicate combatant id: ${combatantId}`,
@@ -434,6 +436,24 @@ function rebuildCharacterSheetFixture(input: CharacterSheetTestInput) {
 }
 
 describe("Character Sheet battle handoff", () => {
+  test("projects every State init leaf into a structured handoff fact", () => {
+    expect(
+      characterSheetBattleHandoffIssuesFromStateInit({
+        tag: "weaponLoadoutMismatch",
+        slot: "off-hand",
+      }),
+    ).toEqual([
+      {
+        tag: "characterSheetBattleHandoffIssue",
+        message:
+          "Character battle init off-hand weapon attack must match the selected loadout weapon.",
+        handoffReason: "battleInitializationUnavailable",
+        initializationTag: "weaponLoadoutMismatch",
+        slot: "off-hand",
+      },
+    ]);
+  });
+
   test("projects Magic Initiate for a non-class caster without inventing slots", () => {
     const magicInitiateMonk = magicInitiateMonkBuild();
     const projection = expectRight(
@@ -642,6 +662,20 @@ describe("Character Sheet battle handoff", () => {
         message: "Synthetic battle-state issue.",
       }),
     ).toBe("Synthetic battle-state issue.");
+
+    const combined = battleCreatureInitIssuesFromMessages(
+      ["first projection issue", "second projection issue"],
+      (issueIndex) => ({
+        kind: "characterBattleResourceProjection",
+        issueIndex,
+      }),
+    );
+    expect(Either.isLeft(combined)).toBe(true);
+    if (Either.isLeft(combined)) {
+      expect(characterBattleRuntimeIssueMessage(combined.left)).toBe(
+        "first projection issue; second projection issue",
+      );
+    }
   });
 
   test("reports unreadable Origin feat selected-reference sources", () => {
@@ -1196,6 +1230,7 @@ describe("Character Sheet battle handoff", () => {
       requests: [
         {
           ownerCharacterId: characterSheetId("character:missing-owner"),
+          companionCombatantId: combatantId("companion:missing-owner"),
           ammunitionStocks: [],
         },
       ],
@@ -1211,6 +1246,7 @@ describe("Character Sheet battle handoff", () => {
           reason: "ownerNotInRoster",
           index: 0,
           ownerCharacterId: characterSheetId("character:missing-owner"),
+          companionCombatantId: combatantId("companion:missing-owner"),
         },
       ],
     });
@@ -1254,6 +1290,7 @@ describe("Character Sheet battle handoff", () => {
       requests: [
         {
           ownerCharacterId: sheet.right.characterId,
+          positionId: battleTablePositionId("companion-composition-position"),
           ammunitionStocks: [],
         },
       ],
@@ -1358,6 +1395,101 @@ describe("Character Sheet battle handoff", () => {
         },
       ],
     });
+
+    const duplicateRequestCompanionId = combatantId(
+      "companion:duplicate-request",
+    );
+    const duplicateRequests = composeBattleCompanionRoster({
+      session: session.right,
+      owners: [
+        {
+          index: 0,
+          characterId: retained.characterId,
+          combatantId: init.right.combatantId,
+          sheet: retained,
+        },
+      ],
+      requests: [
+        {
+          ownerCharacterId: retained.characterId,
+          companionCombatantId: duplicateRequestCompanionId,
+          initiative: initiativeScore(14),
+          ammunitionStocks: [],
+        },
+        {
+          ownerCharacterId: retained.characterId,
+          companionCombatantId: duplicateRequestCompanionId,
+          initiative: initiativeScore(13),
+          ammunitionStocks: [],
+        },
+      ],
+      unitLibrary,
+      initialCombatantOrder: new Map([
+        [init.right.combatantId, 0],
+        [duplicateRequestCompanionId, 1],
+      ]),
+      statBlockCatalog,
+    });
+    expect(duplicateRequests).toEqual({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "duplicateCompanionOwner",
+          reason: "duplicateOwner",
+          index: 1,
+          ownerCharacterId: retained.characterId,
+          firstIndex: 0,
+        },
+        {
+          kind: "duplicateCompanionCombatantId",
+          reason: "duplicateCombatantId",
+          index: 1,
+          companionCombatantId: duplicateRequestCompanionId,
+          firstIndex: 0,
+        },
+      ],
+    });
+
+    expect(
+      composeBattleCompanionRoster({
+        session: undefined,
+        owners: [
+          {
+            index: 0,
+            characterId: retained.characterId,
+            combatantId: init.right.combatantId,
+            sheet: retained,
+          },
+        ],
+        requests: [
+          {
+            ownerCharacterId: retained.characterId,
+            ammunitionStocks: [],
+          },
+        ],
+        unitLibrary,
+        initialCombatantOrder: new Map(),
+        statBlockCatalog,
+      }),
+    ).toEqual({ tag: "dependentUnavailable", issues: [] });
+
+    expect(
+      composeBattleCompanionRoster({
+        session: session.right,
+        owners: [
+          {
+            index: 0,
+            characterId: sheet.right.characterId,
+            combatantId: init.right.combatantId,
+            sheet: sheet.right,
+          },
+        ],
+        requests: [],
+        unitLibrary,
+        initialCombatantOrder: new Map([[init.right.combatantId, 0]]),
+        statBlockCatalog,
+      }),
+    ).toEqual({ tag: "admitted", session: session.right });
   });
 
   test("reports durable companion identity collisions between distinct owners", () => {
@@ -1541,6 +1673,100 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
+  test("retains every unavailable mixed-roster source with its input identity", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:roster-source-facts"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const availableInput = {
+      sheet,
+      unitLibrary,
+      statBlockCatalog,
+      combatantId: combatantId("combatant:roster-source-available"),
+      displayName: "Available Character",
+      initiative: initiativeScore(20),
+      ammunitionStocks: [],
+    } as const;
+    const composition = composeBattleRoster([
+      {
+        kind: "characterSheet",
+        source: { kind: "available", input: availableInput },
+      },
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "available",
+          input: {
+            ...availableInput,
+            combatantId: combatantId("combatant:roster-source-duplicate"),
+          },
+        },
+      },
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "missing",
+          characterId: characterSheetId("character:roster-source-missing"),
+          combatantId: combatantId("combatant:roster-source-missing"),
+        },
+      },
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "inBattle",
+          characterId: characterSheetId("character:roster-source-in-battle"),
+          combatantId: combatantId("combatant:roster-source-in-battle"),
+          battleId: battleId("battle:roster-source-existing"),
+        },
+      },
+      {
+        kind: "statBlock",
+        source: {
+          kind: "missing",
+          statBlockId: authoredStatBlockId("stat_block_skeleton"),
+          combatantId: combatantId("combatant:roster-source-stat-block"),
+        },
+      },
+    ]);
+
+    expect(composition).toMatchObject({
+      tag: "rejected",
+      admissions: [{ kind: "characterSheet", index: 0 }],
+      issues: [
+        {
+          kind: "duplicateCharacterId",
+          index: 1,
+          characterId: sheet.characterId,
+          firstIndex: 0,
+        },
+        {
+          kind: "characterSheetSourceUnavailable",
+          index: 2,
+          characterId: characterSheetId("character:roster-source-missing"),
+          reason: "missing",
+        },
+        {
+          kind: "characterSheetSourceUnavailable",
+          index: 3,
+          characterId: characterSheetId("character:roster-source-in-battle"),
+          reason: "inBattle",
+          battleId: battleId("battle:roster-source-existing"),
+        },
+        {
+          kind: "statBlockSourceUnavailable",
+          index: 4,
+          statBlockId: authoredStatBlockId("stat_block_skeleton"),
+          combatantId: combatantId("combatant:roster-source-stat-block"),
+        },
+      ],
+    });
+  });
+
   test("retains every Character Build HP projection cause in a Character Sheet roster leaf", () => {
     const sheet = expectRight(
       rebuildCharacterSheetFixture({
@@ -1604,6 +1830,49 @@ describe("Character Sheet battle handoff", () => {
         ],
       },
     });
+
+    const rosterProjection = composeBattleRoster([
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "available",
+          input: {
+            sheet: malformedSheet,
+            unitLibrary: unitCatalogWithoutUnitIds(
+              sheet.build.species,
+              missingFeatureUnitId,
+            ),
+            statBlockCatalog,
+            combatantId: combatantId("combatant:roster-hp-projection-causes"),
+            displayName: "Broken Character",
+            initiative: initiativeScore(20),
+            ammunitionStocks: [],
+          },
+        },
+      },
+    ]);
+    expect(rosterProjection).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: sheet.characterId,
+          issueTag: "battleCreatureInitIssue",
+          cause: "unknownUnit",
+          role: "species",
+          unitId: sheet.build.species,
+        },
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: sheet.characterId,
+          issueTag: "battleCreatureInitIssue",
+          cause: "missingHitPointMaximumGrantSourceUnit",
+          sourceUnitId: missingFeatureUnitId,
+        },
+      ],
+    });
   });
 
   test("routes Character Sheet initialization failures from caller catalog drift", () => {
@@ -1664,6 +1933,113 @@ describe("Character Sheet battle handoff", () => {
       left: {
         message: expect.stringContaining("readable background Origin feat"),
       },
+    });
+  });
+
+  test("projects a malformed retained HP reduction as a battle issue", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:malformed-hp-reduction"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const projection = characterSheetBattleInitWithRoute({
+      sheet: { ...sheet, hitPointMaximumReduction: Hp(1000) },
+      unitLibrary,
+      statBlockCatalog,
+      combatantId: combatantId("combatant:malformed-hp-reduction"),
+      displayName: "Malformed HP reduction",
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+    });
+
+    expect(projection).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "hitPoints",
+        message:
+          "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
+      },
+    });
+  });
+
+  test("projects every Character Sheet spell-access failure in roster order", () => {
+    const spellAccessSheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:roster-spell-access-facts"),
+        build: magicInitiateMonkBuild(),
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const malformedSpellAccessSheet = forgeCharacterSheetBuildForBoundaryTest({
+      sheet: spellAccessSheet,
+      build: {
+        ...spellAccessSheet.build,
+        magicInitiateSpellAccesses: [
+          {
+            ...spellAccessSheet.build.magicInitiateSpellAccesses[0],
+            featUnitId: authoredUnitId("class_fighter"),
+          },
+        ],
+      },
+    });
+    const projection = composeBattleRoster([
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "available",
+          input: {
+            sheet: malformedSpellAccessSheet,
+            unitLibrary,
+            statBlockCatalog,
+            combatantId: combatantId("combatant:roster-spell-access-facts"),
+            displayName: "Broken Spell Access",
+            initiative: initiativeScore(10),
+            ammunitionStocks: [],
+          },
+        },
+      },
+    ]);
+
+    expect(projection).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: spellAccessSheet.characterId,
+          issueTag: "characterBattleSpellAccessProjectionIssue",
+          cause: "invalidSpellSelection",
+          accessIndex: 0,
+          featUnitId: authoredUnitId("class_fighter"),
+          issueIndex: 0,
+        },
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: spellAccessSheet.characterId,
+          issueTag: "characterBattleSpellAccessProjectionIssue",
+          cause: "invalidSpellSelection",
+          accessIndex: 0,
+          featUnitId: authoredUnitId("class_fighter"),
+          issueIndex: 1,
+        },
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: spellAccessSheet.characterId,
+          issueTag: "characterBattleSpellAccessProjectionIssue",
+          cause: "invalidBuildSpellAccess",
+          issueIndex: 2,
+        },
+      ],
     });
   });
 
@@ -7122,6 +7498,115 @@ describe("Character Sheet battle handoff", () => {
 });
 
 describe("Character Build battle projection", () => {
+  test("round-trips every structured character battle issue reason", () => {
+    const reasons = [
+      {
+        kind: "characterBuildProjection",
+        phase: "derivedState",
+        cause: "invalidChoiceOption",
+        optionId: creationChoiceOptionId("synthetic:option"),
+        causeReason: { tag: "unsupportedAbility" },
+      },
+      {
+        kind: "characterBattleInput",
+        field: "initiative",
+        constraint: "integer",
+      },
+      {
+        kind: "characterBattleInvariant",
+        invariant: "characterOriginRequired",
+      },
+      {
+        kind: "characterBattleResourceProjection",
+        issueIndex: 0,
+      },
+      {
+        kind: "characterBattleSupportProjection",
+        issueIndex: 1,
+      },
+      {
+        kind: "characterBattleClassLevelsProjection",
+        issueIndex: 2,
+      },
+      {
+        kind: "characterBattleSpellProjection",
+        issueIndex: 3,
+      },
+    ] as const satisfies readonly CharacterBattleInitIssueReason[];
+
+    for (const reason of reasons) {
+      const fact = characterBattleInitIssueFactFields(reason);
+      expect(characterBattleInitIssueReasonFromFact(fact)).toEqual(reason);
+    }
+  });
+
+  test("retains all message-derived initialization leaves", () => {
+    const projection = battleCreatureInitIssuesFromMessages(
+      ["first projection issue", "second projection issue"],
+      (issueIndex) => ({
+        kind: "characterBattleResourceProjection",
+        issueIndex,
+      }),
+    );
+    expect(projection).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssues",
+        message: "first projection issue; second projection issue",
+        issues: [
+          {
+            tag: "battleCreatureInitIssue",
+            message: "first projection issue",
+            reason: "characterBattleResourceProjection",
+            issueIndex: 0,
+          },
+          {
+            tag: "battleCreatureInitIssue",
+            message: "second projection issue",
+            reason: "characterBattleResourceProjection",
+            issueIndex: 1,
+          },
+        ],
+      },
+    });
+    expect(
+      battleCreatureInitIssueLeaves(
+        projection._tag === "Left" ? projection.left : projection.right,
+      ),
+    ).toEqual([
+      {
+        tag: "battleCreatureInitIssue",
+        message: "first projection issue",
+        reason: "characterBattleResourceProjection",
+        issueIndex: 0,
+      },
+      {
+        tag: "battleCreatureInitIssue",
+        message: "second projection issue",
+        reason: "characterBattleResourceProjection",
+        issueIndex: 1,
+      },
+    ]);
+
+    expect(
+      battleCreatureInitIssuesFromMessages([], () => ({
+        kind: "characterBattleInput",
+        field: "initiative",
+        constraint: "integer",
+      })),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssue",
+        message:
+          "Character battle initialization produced no projection issue facts.",
+        reason: "characterBattleInput",
+        field: "initiative",
+        constraint: "integer",
+      },
+    });
+  });
+
   test("reports invalid build-to-battle creature boundary facts", () => {
     const init = {
       combatantId: combatantId("invalid-build-boundary"),
@@ -7645,6 +8130,89 @@ describe("Character Build battle projection", () => {
           ]),
         );
       }
+    }
+  });
+
+  test("retains defensive spell-access projection causes in a roster", () => {
+    const sourceId = authoredUnitId("feat_magic_initiate_wizard");
+    const classWizardId = authoredUnitId("class_wizard");
+    const testBuild = magicInitiateMonkBuild();
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:explore-roster-source"),
+        build: testBuild,
+        currentHp: Hp(8),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    for (const mode of ["missing", "unsupported", "spellList"] as const) {
+      let sourceLookups = 0;
+      let listLookups = 0;
+      const dynamicLibrary: UnitCatalog = {
+        getUnit: (id) => {
+          if (id === sourceId) {
+            sourceLookups += 1;
+            if (mode === "missing" && sourceLookups > 4) {
+              return Option.none();
+            }
+            if (mode === "unsupported" && sourceLookups > 4) {
+              return unitLibrary.getUnit("class_fighter");
+            }
+          }
+          return unitLibrary.getUnit(id);
+        },
+        // This deliberately models a catalog changing between the parser and
+        // the battle projection. The stable-catalog path is covered by the
+        // ordinary Magic Initiate roster tests; these defensive branches must
+        // still retain their typed cause if the lookup changes at the seam.
+        listUnits: () => {
+          listLookups += 1;
+          const units = unitLibrary.listUnits();
+          return mode === "spellList" && listLookups > 1
+            ? units.filter((unit) => unit.id !== classWizardId)
+            : units;
+        },
+        requireUnit: (id) => unitLibrary.requireUnit(id),
+      };
+      const result = composeBattleRoster([
+        {
+          kind: "characterSheet",
+          source: {
+            kind: "available",
+            input: {
+              sheet,
+              unitLibrary: dynamicLibrary,
+              statBlockCatalog,
+              combatantId: combatantId(`combatant:roster-${mode}-source`),
+              displayName: "Defensive projection",
+              initiative: initiativeScore(10),
+              ammunitionStocks: [],
+            },
+          },
+        },
+      ]);
+      const cause =
+        mode === "missing"
+          ? "missingSourceUnit"
+          : mode === "unsupported"
+            ? "unsupportedSourceUnit"
+            : "missingSpellListSource";
+      expect(result).toMatchObject({
+        tag: "rejected",
+        issues: [
+          {
+            kind: "characterSheetProjection",
+            index: 0,
+            characterId: sheet.characterId,
+            issueTag: "characterBattleSpellAccessProjectionIssue",
+            accessIndex: 0,
+            featUnitId: sourceId,
+            cause,
+          },
+        ],
+      });
+      if (result.tag === "rejected") expect(result.issues).toHaveLength(1);
     }
   });
 
@@ -8181,6 +8749,67 @@ describe("Character Build battle projection", () => {
     ).toMatchObject({
       _tag: "Left",
       left: { message: "Expected class Unit: class_fighter" },
+    });
+  });
+
+  test("rejects a species projection whose late catalog record is not a Species", () => {
+    const speciesId = build.species;
+    const species = unitLibrary.requireUnit(speciesId);
+    const classUnit = unitLibrary.requireUnit("class_fighter");
+    if (species.kind !== "species" || classUnit.kind !== "class") {
+      throw new Error("Expected Species and Class battle fixtures.");
+    }
+    const classAtSpeciesId = {
+      ...classUnit,
+      id: speciesId,
+      name: "Synthetic Class at Species Id",
+    } satisfies UnitRecord;
+    let lateSpeciesRecord:
+      | Either.Either<BattleCreatureInit, BattleCreatureInitIssue>
+      | undefined;
+
+    for (
+      let validSpeciesLookups = 1;
+      validSpeciesLookups <= 32;
+      validSpeciesLookups += 1
+    ) {
+      let speciesLookups = 0;
+      const changingCatalog: UnitCatalog = {
+        getUnit: (id) => {
+          if (id === speciesId) {
+            speciesLookups += 1;
+            return Option.some(
+              speciesLookups <= validSpeciesLookups
+                ? species
+                : classAtSpeciesId,
+            );
+          }
+          return unitLibrary.getUnit(id);
+        },
+        listUnits: () => unitLibrary.listUnits(),
+        requireUnit: (id) => unitLibrary.requireUnit(id),
+      };
+      const result = battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("late-species-kind-mismatch"),
+        characterId: characterId("character:late-species-kind-mismatch"),
+        displayName: "Late Species Kind Mismatch",
+        build,
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+        unitLibrary: changingCatalog,
+      });
+      if (
+        Either.isLeft(result) &&
+        result.left.message === `Expected species Unit: ${speciesId}`
+      ) {
+        lateSpeciesRecord = result;
+        break;
+      }
+    }
+
+    expect(lateSpeciesRecord).toMatchObject({
+      _tag: "Left",
+      left: { message: `Expected species Unit: ${speciesId}` },
     });
   });
 
@@ -10533,6 +11162,62 @@ describe("Character battle runtime boundary coverage", () => {
     });
   });
 
+  test("retains a late background lookup failure as a proficiency fact", () => {
+    const backgroundId = build.background;
+    let lateFailure:
+      | Either.Either<BattleCreatureInit, BattleCreatureInitIssue>
+      | undefined;
+
+    for (
+      let validBackgroundLookups = 1;
+      validBackgroundLookups <= 32;
+      validBackgroundLookups += 1
+    ) {
+      let backgroundLookups = 0;
+      const changingCatalog: UnitCatalog = {
+        getUnit: (id) => {
+          if (id === backgroundId) {
+            backgroundLookups += 1;
+            return backgroundLookups <= validBackgroundLookups
+              ? unitLibrary.getUnit(id)
+              : Option.none();
+          }
+          return unitLibrary.getUnit(id);
+        },
+        listUnits: () => unitLibrary.listUnits(),
+        requireUnit: (id) => unitLibrary.requireUnit(id),
+      };
+      const result = battleCreatureInitFromCharacterBuild({
+        combatantId: combatantId("late-proficiencies-background"),
+        characterId: characterId("character:late-proficiencies-background"),
+        displayName: "Late Proficiencies Background",
+        build,
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+        unitLibrary: changingCatalog,
+      });
+      if (
+        Either.isLeft(result) &&
+        result.left.message.includes("Cannot find background Unit")
+      ) {
+        lateFailure = result;
+        break;
+      }
+    }
+
+    expect(lateFailure).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "proficiencies",
+        cause: "unknownUnit",
+        role: "background",
+        unitId: backgroundId,
+      },
+    });
+  });
+
   test("rejects an over-cap Magic Initiate free-cast expenditure during init", () => {
     const result = characterBattleResourceInitsFromBuild(
       magicInitiateMonkBuild(),
@@ -10553,6 +11238,37 @@ describe("Character battle runtime boundary coverage", () => {
         message: expect.stringContaining(
           "Spell Access free-cast expenditure exceeds its battle resource cap",
         ),
+      },
+    });
+  });
+
+  test("retains a missing Magic Initiate free-cast source during init", () => {
+    const sourceUnitId = authoredUnitId("feat_magic_initiate_wizard");
+    let sourceLookups = 0;
+    const changingCatalog: UnitCatalog = {
+      getUnit: (id) => {
+        if (id === sourceUnitId) {
+          sourceLookups += 1;
+          return sourceLookups === 1 ? unitLibrary.getUnit(id) : Option.none();
+        }
+        return unitLibrary.getUnit(id);
+      },
+      listUnits: () => unitLibrary.listUnits(),
+      requireUnit: (id) => unitLibrary.requireUnit(id),
+    };
+    const result = characterBattleResourceInitsFromBuild(
+      magicInitiateMonkBuild(),
+      changingCatalog,
+      [],
+    );
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssue",
+        reason: "characterBattleResourceProjection",
+        issueIndex: 0,
+        message: "Spell Access free-cast source Unit must exist.",
       },
     });
   });
@@ -10735,6 +11451,108 @@ describe("Character battle runtime boundary coverage", () => {
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Cannot derive Hit Point maximum without grant source Unit: sorcerer_font_of_magic.",
+        handoffReason: "delegatedCharacterSheetIssue",
+        delegatedIssueTag: "characterSheetIssue",
+      }),
+    );
+  });
+
+  test("retains a Character Sheet resource catalog failure during settlement", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:settlement-resource-catalog"),
+        build: sorcererMetamagicBuild(),
+        currentHp: Hp(24),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const resourceUnitId = authoredUnitId("sorcerer_font_of_magic");
+    let resourceFailure:
+      | Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue>
+      | undefined;
+
+    for (
+      let validResourceLookups = 1;
+      validResourceLookups <= 32;
+      validResourceLookups += 1
+    ) {
+      let resourceLookups = 0;
+      const changingCatalog: UnitCatalog = {
+        getUnit: (id) => {
+          if (id === resourceUnitId) {
+            resourceLookups += 1;
+            return resourceLookups <= validResourceLookups
+              ? unitLibrary.getUnit(id)
+              : Option.none();
+          }
+          return unitLibrary.getUnit(id);
+        },
+        listUnits: () => unitLibrary.listUnits(),
+        requireUnit: (id) => unitLibrary.requireUnit(id),
+      };
+      const result = settleHandoffBranchToCharacterSheet({
+        sheet,
+        unitLibrary: changingCatalog,
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:settlement-resource-catalog"),
+          },
+          hp: Hp(24),
+          maxHp: sheetMaximumHp(sheet),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      });
+      if (
+        Either.isLeft(result) &&
+        result.left.message === `Unknown Unit id: ${resourceUnitId}`
+      ) {
+        resourceFailure = result;
+        break;
+      }
+    }
+
+    expect(resourceFailure).toEqual(
+      Either.left({
+        tag: "characterSheetBattleHandoffIssue",
+        message: `Unknown Unit id: ${resourceUnitId}`,
+        handoffReason: "delegatedCharacterSheetIssue",
+        delegatedIssueTag: "characterSheetIssue",
+      }),
+    );
+  });
+
+  test("retains a Character Sheet rebuild failure at settlement", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:settlement-rebuild-failure"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const handoff = settleHandoffBranchToCharacterSheet({
+      sheet,
+      unitLibrary,
+      combatant: handoffBranchCombatant({
+        origin: {
+          kind: "character",
+          characterId: characterId("character:settlement-rebuild-failure"),
+        },
+        hp: Hp(10),
+        maxHp: sheetMaximumHp(sheet),
+        tempHp: forgeHpForBoundaryTest(-1),
+        positiveHpUnconscious: null,
+      }),
+    });
+
+    expect(handoff).toEqual(
+      Either.left({
+        tag: "characterSheetBattleHandoffIssue",
+        message: "Character Sheet Temporary Hit Points must be nonnegative.",
         handoffReason: "delegatedCharacterSheetIssue",
         delegatedIssueTag: "characterSheetIssue",
       }),
@@ -12613,6 +13431,12 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   }
   expect(Either.isRight(result)).toBe(true);
   return result.right;
+}
+
+function forgeHpForBoundaryTest(value: number): ReturnType<typeof Hp> {
+  // This fixture intentionally bypasses the branded HP constructor to exercise
+  // settlement's handling of malformed runtime state.
+  return value as ReturnType<typeof Hp>;
 }
 
 function forgeCharacterSheetBuildForBoundaryTest(input: {

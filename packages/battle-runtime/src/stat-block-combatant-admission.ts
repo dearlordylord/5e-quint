@@ -7,7 +7,7 @@ import * as Either from "effect/Either";
 
 import type {
   BattleInitializationIssueFacts,
-  BattleStateInitLeafIssue,
+  BattleStatBlockInitializationIssue,
 } from "./battle-state-execution.ts";
 import {
   battleExecutionScopeCursor,
@@ -45,7 +45,7 @@ export function statBlockInitialConditionImmunityIssue(
   source: BattleStatBlockCombatantSource,
   conditions: readonly Condition[],
   combatantId: CombatantId,
-): BattleStateInitLeafIssue | null {
+): BattleStatBlockInitializationIssue | null {
   const immuneInitialCondition = conditions.find((condition) =>
     source.statBlock.immunities?.conditions?.includes(condition),
   );
@@ -65,7 +65,10 @@ export function admitBattleStatBlockCombatant(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
+}): Either.Either<
+  AdmittedBattleStatBlockCombatant,
+  BattleStatBlockInitializationIssue
+> {
   const source = battleStatBlockCombatantSource(input.statBlock);
   if (Either.isLeft(source)) return Either.left(source.left);
   return admitBattleStatBlockCombatantSource({
@@ -81,7 +84,10 @@ export function admitBattleStatBlockCombatantSource(input: {
   readonly combatantId: CombatantId;
   readonly source: BattleStatBlockCombatantSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
+}): Either.Either<
+  AdmittedBattleStatBlockCombatant,
+  BattleStatBlockInitializationIssue
+> {
   const statBlock = input.source;
   if (typeof statBlock.statBlock.creatureType !== "string") {
     return issue("Battle runtime requires a concrete creature type.", {
@@ -147,7 +153,10 @@ export function admitBattleStatBlockCombatantSource(input: {
 
 export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSource,
-): Either.Either<BattleStatBlockCombatantSource, BattleStateInitLeafIssue> {
+): Either.Either<
+  BattleStatBlockCombatantSource,
+  BattleStatBlockInitializationIssue
+> {
   if (statBlock.statBlock.ac.kind !== "literal") {
     return issue("Battle runtime requires literal Stat Block Armor Class.", {
       kind: "statBlockSourceInvalid",
@@ -198,7 +207,7 @@ export function battleStatBlockCombatantSource(
 function issue(
   message: string,
   facts: BattleInitializationIssueFacts,
-): Either.Either<never, BattleStateInitLeafIssue> {
+): Either.Either<never, BattleStatBlockInitializationIssue> {
   return Either.left({
     tag: "battleStateInitIssue",
     message,
