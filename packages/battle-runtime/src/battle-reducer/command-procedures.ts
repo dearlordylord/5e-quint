@@ -10,7 +10,7 @@ import type {
   BattleFill,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
-  BattleReplayParentPosition,
+  BattleCloudkillMovementSequenceResumeCheckpoint,
   BattleResolvedMovement,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -76,7 +76,7 @@ type CommandFollowUpSubject = Extract<
 
 type CommandReplayRoute = {
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  readonly replayParentPosition?: BattleReplayParentPosition;
+  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
 };
 
 export function isCommandFollowUpSubject(
@@ -95,6 +95,17 @@ export function resolveCommandFollowUp(
     readonly subject: CommandFollowUpSubject;
   } & CommandReplayRoute,
 ): BattleResolutionResult {
+  if (input.replayParentPosition !== undefined) {
+    return resolveDelegatedEndTurnCommand(input, {
+      state: input.state,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: input.subject.actorId,
+        command: "endTurn",
+      },
+      fills: input.fills.filter((fill) => isEndTurnFillKind(fill.kind)),
+    });
+  }
   return Match.value(input.subject).pipe(
     Match.when({ command: "commandGrovel" }, (subject) =>
       resolveCommandGrovelCommand({ ...input, subject }),
@@ -539,7 +550,7 @@ function resolveCommandApproachAfterMovement(input: {
   readonly movedWithinFiveFeetOfCaster: boolean;
   readonly parentFills: readonly BattleFill[];
   readonly endTurnFills: readonly BattleFill[];
-  readonly replayParentPosition?: BattleReplayParentPosition;
+  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
 }): BattleResolutionResult {
   const effect = commandPendingEffectForSubject(
     input.state,
@@ -759,7 +770,7 @@ function resolveCommandFleeAfterMovement(input: {
   readonly movement: BattleResolvedMovement;
   readonly parentFills: readonly BattleFill[];
   readonly endTurnFills: readonly BattleFill[];
-  readonly replayParentPosition?: BattleReplayParentPosition;
+  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
 }): BattleResolutionResult {
   const effect = commandPendingEffectForSubject(
     input.state,

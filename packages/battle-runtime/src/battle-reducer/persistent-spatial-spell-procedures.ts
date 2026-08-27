@@ -38,7 +38,7 @@ import type {
   BattleResolutionInput,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
-  BattleReplayParentPosition,
+  BattleCloudkillMovementSequenceResumeCheckpoint,
   BattleSavingThrowOutcome,
   BattleSavingThrowOutcomeValue,
   BattleSpellAreaChoice,
@@ -146,7 +146,7 @@ type PersistentSpatialReplayRoute = {
     BattleHandledInterruptOccurrence,
     { readonly trigger: "saveFailed" }
   >;
-  readonly replayParentPosition?: BattleReplayParentPosition;
+  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
 };
 
 type PersistentSpatialSpellProcedureSubject = Extract<
@@ -200,7 +200,9 @@ function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
         { readonly trigger: "saveFailed" }
       >
     | undefined;
-  readonly replayParentPosition: BattleReplayParentPosition | undefined;
+  readonly replayParentPosition:
+    | BattleCloudkillMovementSequenceResumeCheckpoint
+    | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
   if (input.outcome.succeeded) {
     return null;

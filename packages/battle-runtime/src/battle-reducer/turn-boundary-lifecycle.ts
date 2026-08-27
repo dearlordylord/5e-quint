@@ -65,7 +65,7 @@ import type {
   BattleHoleId,
   BattleResolutionInput,
   BattleResolutionResult,
-  BattleReplayParentPosition,
+  BattleCloudkillMovementSequenceResumeCheckpoint,
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowOutcomeValue,
   BattleSavingThrowRollModeProjection,
@@ -260,10 +260,9 @@ function cloudkillStartTurnMovementEffects(
 }
 
 function cloudkillStartTurnMovementHole(
-  state: BattleState,
+  sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
   effect: CloudkillAreaHazardEffect,
 ): BattleCloudkillMovementHole {
-  const sourceTurn = nextInitiative(state.initiative);
   const key = `battle:cloudkill-start-turn-movement:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${Number(sourceTurn.round)}`;
   return {
     kind: "cloudkillMovement",
@@ -292,6 +291,70 @@ type CloudkillMovementBoundary = {
 type CloudkillMovementBoundaryRequest = CloudkillMovementBoundary & {
   readonly fill: CloudkillMovementFill;
 };
+
+type CloudkillMovementBoundaryMatch =
+  | { readonly tag: "invalid" }
+  | {
+      readonly tag: "incomplete";
+      readonly holes: readonly BattleCloudkillMovementHole[];
+    }
+  | {
+      readonly tag: "matched";
+      readonly requests: readonly CloudkillMovementBoundaryRequest[];
+    };
+
+function matchCloudkillMovementBoundaries(
+  boundaries: readonly CloudkillMovementBoundary[],
+  fills: readonly CloudkillMovementFill[],
+): CloudkillMovementBoundaryMatch {
+  const boundaryHoleIds = new Set(boundaries.map(({ hole }) => hole.holeId));
+  if (
+    fills.some((fill) => !boundaryHoleIds.has(fill.holeId)) ||
+    boundaries.some(
+      ({ hole }) =>
+        fills.filter((fill) => fill.holeId === hole.holeId).length > 1,
+    )
+  ) {
+    return { tag: "invalid" };
+  }
+  const holes = boundaries.flatMap(({ hole }) =>
+    fills.some((fill) => fill.holeId === hole.holeId) ? [] : [hole],
+  );
+  if (holes.length > 0) {
+    return { tag: "incomplete", holes };
+  }
+  const requests = boundaries.flatMap(
+    ({ effect, hole }): readonly CloudkillMovementBoundaryRequest[] => {
+      const fill = fills.find((candidate) => candidate.holeId === hole.holeId);
+      return fill === undefined ? [] : [{ effect, hole, fill }];
+    },
+  );
+  return requests.length === boundaries.length
+    ? { tag: "matched", requests }
+    : { tag: "invalid" };
+}
+
+function cloudkillMovementAffectedCombatantIssue(
+  state: BattleState,
+  fills: readonly CloudkillMovementFill[],
+): "duplicate" | "missing" | null {
+  if (
+    fills.some(
+      (fill) =>
+        new Set(fill.value.affectedCombatantIds).size !==
+        fill.value.affectedCombatantIds.length,
+    )
+  ) {
+    return "duplicate";
+  }
+  return fills.some((fill) =>
+    fill.value.affectedCombatantIds.some(
+      (combatantId) => !state.combatants.has(combatantId),
+    ),
+  )
+    ? "missing"
+    : null;
+}
 
 type CloudkillMovementSaveSubject = Extract<
   BattleSubject,
@@ -331,6 +394,142 @@ function cloudkillMovementSaveDamageRequests(
         subject: cloudkillMovementSaveSubject(targetId, effect),
       }));
   });
+}
+
+function cloudkillMovementCheckpointMatchesRequest(
+  checkpoint: BattleCloudkillMovementSequenceResumeCheckpoint,
+  request: CloudkillMovementSaveDamageRequest,
+): boolean {
+  return (
+    request.parentHoleId === checkpoint.occurrence.movementHoleId &&
+    request.effect.areaId === checkpoint.occurrence.areaId &&
+    request.effect.sourceProcedureRef ===
+      checkpoint.occurrence.sourceProcedureRef &&
+    request.subject.actorId === checkpoint.occurrence.targetId
+  );
+}
+
+function resolveCloudkillMovementSequenceResume(input: {
+  readonly resolution: EndTurnResolutionInput;
+  readonly parent: ReplayParentContinuation;
+  readonly checkpoint: BattleCloudkillMovementSequenceResumeCheckpoint;
+}): BattleResolutionResult {
+  const { checkpoint, resolution } = input;
+  if (
+    currentActorId(resolution.state) !== checkpoint.sourceTurn.actorId ||
+    resolution.state.initiative.round !== checkpoint.sourceTurn.round
+  ) {
+    return invalidResult(
+      resolution.state,
+      "staleSubject",
+      "Cloudkill movement continuation no longer matches its source turn.",
+    );
+  }
+
+  const boundaries = cloudkillStartTurnMovementEffects(
+    resolution.state,
+    checkpoint.sourceTurn.actorId,
+  ).map(
+    (effect): CloudkillMovementBoundary => ({
+      effect,
+      hole: cloudkillStartTurnMovementHole(checkpoint.sourceTurn, effect),
+    }),
+  );
+  const movementFills = resolution.fills.filter(
+    (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
+  );
+  const checkpointEffectStillActive = boundaries.some(
+    ({ effect, hole }) =>
+      hole.holeId === checkpoint.occurrence.movementHoleId &&
+      effect.areaId === checkpoint.occurrence.areaId &&
+      effect.sourceProcedureRef === checkpoint.occurrence.sourceProcedureRef,
+  );
+  if (!checkpointEffectStillActive) {
+    return {
+      tag: "resolved",
+      state: resolution.state,
+      snapshot: snapshotBattle(resolution.state),
+    };
+  }
+  const boundaryMatch = matchCloudkillMovementBoundaries(
+    boundaries,
+    movementFills,
+  );
+  if (boundaryMatch.tag !== "matched") {
+    return invalidResult(
+      resolution.state,
+      "staleSubject",
+      "Cloudkill movement continuation no longer has its exact movement facts.",
+    );
+  }
+  const affectedCombatantIssue = cloudkillMovementAffectedCombatantIssue(
+    resolution.state,
+    movementFills,
+  );
+  if (affectedCombatantIssue !== null) {
+    return invalidResult(
+      resolution.state,
+      "invalidFill",
+      affectedCombatantIssue === "duplicate"
+        ? "Cloudkill movement affected combatants must be unique."
+        : "Cloudkill movement affected combatants must exist in the battle.",
+    );
+  }
+  const requests = cloudkillMovementSaveDamageRequests(
+    resolution.state,
+    boundaryMatch.requests,
+  );
+  const checkpointIndex = requests.findIndex((request) =>
+    cloudkillMovementCheckpointMatchesRequest(checkpoint, request),
+  );
+  if (checkpointIndex === -1) {
+    return invalidResult(
+      resolution.state,
+      "staleSubject",
+      "Cloudkill movement continuation no longer has its exact affected occurrence.",
+    );
+  }
+  const pendingRequests = requests
+    .slice(checkpointIndex)
+    .filter(
+      (request) =>
+        !request.effect.savedThisTurn.includes(request.subject.actorId),
+    );
+  if (pendingRequests.length === 0) {
+    return {
+      tag: "resolved",
+      state: resolution.state,
+      snapshot: snapshotBattle(resolution.state),
+    };
+  }
+  const firstPendingRequest = pendingRequests[0];
+  if (firstPendingRequest === undefined) {
+    return invalidResult(
+      resolution.state,
+      "staleSubject",
+      "Cloudkill movement continuation lost its pending occurrence.",
+    );
+  }
+  const checkpointRequestPending = cloudkillMovementCheckpointMatchesRequest(
+    checkpoint,
+    firstPendingRequest,
+  );
+  const resumed = resolveCloudkillMovementSaveDamageSequence({
+    advancedState: resolution.state,
+    parent: input.parent,
+    requests: pendingRequests,
+    sourceTurn: checkpoint.sourceTurn,
+    continuation: checkpointRequestPending
+      ? { kind: "advancedPrefixAtCheckpoint", checkpoint }
+      : { kind: "advancedPrefixAfterCheckpoint" },
+  });
+  return resumed.tag === "result"
+    ? resumed.result
+    : {
+        tag: "resolved",
+        state: resumed.state,
+        snapshot: snapshotBattle(resumed.state),
+      };
 }
 
 function resolveEndTurn({
@@ -2702,38 +2901,38 @@ function expireOngoingFeatures(
 
 type EndTurnResolutionInput = BattleResolutionInput & {
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  readonly replayParentPosition?: BattleReplayParentPosition;
+  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
 };
 
 export function resolveEndTurnCommand(
   input: EndTurnResolutionInput,
 ): BattleResolutionResult {
   const parent = replayParentContinuationFor(input);
-  return projectReplayChildResult(
-    parent,
-    resolveEndTurnCommandForParent(input, parent),
-  );
+  const result = resolveEndTurnCommandForParent(input, parent);
+  return input.replayParentPosition === undefined
+    ? projectReplayChildResult(parent, result)
+    : result;
 }
 
 export function resolveDelegatedEndTurnCommand(
   parentInput: BattleResolutionInput & {
-    readonly replayParentPosition?: BattleReplayParentPosition;
+    readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
   },
   endTurnInput: BattleResolutionInput,
 ): BattleResolutionResult {
   const parent = replayParentContinuationFor(parentInput);
-  return projectReplayChildResult(
+  const result = resolveEndTurnCommandForParent(
+    {
+      ...endTurnInput,
+      ...(parentInput.replayParentPosition === undefined
+        ? {}
+        : { replayParentPosition: parentInput.replayParentPosition }),
+    },
     parent,
-    resolveEndTurnCommandForParent(
-      {
-        ...endTurnInput,
-        ...(parentInput.replayParentPosition === undefined
-          ? {}
-          : { replayParentPosition: parentInput.replayParentPosition }),
-      },
-      parent,
-    ),
   );
+  return parentInput.replayParentPosition === undefined
+    ? projectReplayChildResult(parent, result)
+    : result;
 }
 
 function resolveEndTurnCommandForParent(
@@ -2752,6 +2951,14 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
+
+  if (input.replayParentPosition !== undefined) {
+    return resolveCloudkillMovementSequenceResume({
+      resolution: input,
+      parent,
+      checkpoint: input.replayParentPosition,
+    });
+  }
 
   const initiative = nextInitiative(input.state.initiative);
   const nextActorId = currentActing(initiative);
@@ -3659,44 +3866,24 @@ function resolveEndTurnCommandForParent(
   ).map(
     (effect): CloudkillMovementBoundary => ({
       effect,
-      hole: cloudkillStartTurnMovementHole(input.state, effect),
+      hole: cloudkillStartTurnMovementHole(
+        {
+          actorId: nextActorId,
+          round: advancedTurn.state.initiative.round,
+        },
+        effect,
+      ),
     }),
   );
   const cloudkillMovementFills = input.fills.filter(
     (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
   );
-  const cloudkillMovementHoleIds = new Set(
-    cloudkillMovementBoundaries.map(({ hole }) => hole.holeId),
+  const cloudkillMovementBoundaryMatch = matchCloudkillMovementBoundaries(
+    cloudkillMovementBoundaries,
+    cloudkillMovementFills,
   );
-  const resumedMovementBoundary =
-    input.replayParentPosition === undefined
-      ? undefined
-      : cloudkillMovementBoundaries.find(
-          ({ effect, hole }) =>
-            hole.holeId === input.replayParentPosition?.parentHoleId &&
-            effect.areaId === input.replayParentPosition.areaId &&
-            effect.sourceProcedureRef ===
-              input.replayParentPosition.sourceProcedureRef,
-        );
-  const canceledMovementPosition =
-    input.replayParentPosition !== undefined &&
-    resumedMovementBoundary === undefined
-      ? input.replayParentPosition
-      : undefined;
-  if (canceledMovementPosition !== undefined) {
-    cloudkillMovementHoleIds.add(canceledMovementPosition.parentHoleId);
-  }
   /* v8 ignore start -- @preserve -- Malformed resolution input: a movement fill can answer only a Cloudkill movement hole discovered for this exact source-turn boundary. */
-  if (
-    cloudkillMovementFills.some(
-      (fill) => !cloudkillMovementHoleIds.has(fill.holeId),
-    ) ||
-    cloudkillMovementBoundaries.some(
-      ({ hole }) =>
-        cloudkillMovementFills.filter((fill) => fill.holeId === hole.holeId)
-          .length > 1,
-    )
-  ) {
+  if (cloudkillMovementBoundaryMatch.tag === "invalid") {
     return invalidResult(
       input.state,
       "invalidFill",
@@ -3704,82 +3891,39 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingCloudkillMovementHoles = cloudkillMovementBoundaries.flatMap(
-    ({ hole }) =>
-      !cloudkillMovementFills.some((fill) => fill.holeId === hole.holeId)
-        ? [hole]
-        : [],
-  );
-  if (missingCloudkillMovementHoles.length > 0) {
+  if (cloudkillMovementBoundaryMatch.tag === "incomplete") {
     return needsHolesResult(
       input.state,
       input.subject,
-      missingCloudkillMovementHoles,
+      cloudkillMovementBoundaryMatch.holes,
     );
   }
-  for (const fill of cloudkillMovementFills) {
-    if (
-      new Set(fill.value.affectedCombatantIds).size !==
-      fill.value.affectedCombatantIds.length
-    ) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Cloudkill movement affected combatants must be unique.",
-      );
-    }
-    const missingAffectedCombatant = fill.value.affectedCombatantIds.find(
-      (combatantId) => !advancedTurn.state.combatants.has(combatantId),
-    );
-    if (missingAffectedCombatant !== undefined) {
-      return invalidResult(
-        input.state,
-        "invalidFill",
-        "Cloudkill movement affected combatants must exist in the battle.",
-      );
-    }
-  }
-  if (
-    canceledMovementPosition !== undefined &&
-    !cloudkillMovementFills.some(
-      (fill) => fill.holeId === canceledMovementPosition.parentHoleId,
-    )
-  ) {
-    return invalidResult(
-      input.state,
-      "staleSubject",
-      "Cloudkill movement interruption no longer matches its parent movement fill.",
-    );
-  }
-  const cloudkillMovementRequests = cloudkillMovementBoundaries.flatMap(
-    ({ effect, hole }): readonly CloudkillMovementBoundaryRequest[] => {
-      const fill = cloudkillMovementFills.find(
-        (candidate) => candidate.holeId === hole.holeId,
-      );
-      return fill === undefined ? [] : [{ effect, hole, fill }];
-    },
+  const affectedCombatantIssue = cloudkillMovementAffectedCombatantIssue(
+    advancedTurn.state,
+    cloudkillMovementFills,
   );
-  /* v8 ignore start -- @preserve -- The exact movement-fill validation above proves that every discovered movement effect has one matching hole and fill. */
-  if (cloudkillMovementRequests.length !== cloudkillMovementBoundaries.length) {
+  if (affectedCombatantIssue !== null) {
     return invalidResult(
       input.state,
-      "staleSubject",
-      "Cloudkill movement could not continue from its current source-turn boundary.",
+      "invalidFill",
+      affectedCombatantIssue === "duplicate"
+        ? "Cloudkill movement affected combatants must be unique."
+        : "Cloudkill movement affected combatants must exist in the battle.",
     );
   }
-  /* v8 ignore stop -- @preserve */
   const movementAffectedResolution = resolveCloudkillMovementSaveDamageSequence(
     {
       advancedState: advancedTurn.state,
       parent,
       requests: cloudkillMovementSaveDamageRequests(
         advancedTurn.state,
-        cloudkillMovementRequests,
+        cloudkillMovementBoundaryMatch.requests,
       ),
-      parentPosition:
-        canceledMovementPosition === undefined
-          ? input.replayParentPosition
-          : undefined,
+      sourceTurn: {
+        actorId: nextActorId,
+        round: advancedTurn.state.initiative.round,
+      },
+      continuation: { kind: "turnBoundaryReplay" },
     },
   );
   if (movementAffectedResolution.tag === "result") {
@@ -3791,7 +3935,6 @@ function resolveEndTurnCommandForParent(
     savingThrowOutcomeFills.some(
       (fill) =>
         !savingThrowOutcomeHoleIds.has(fill.holeId) &&
-        fill.holeId !== canceledMovementPosition?.saveHoleId &&
         !movementAffectedResolution.saveHoleIds.has(fill.holeId),
     ) ||
     input.fills.some(

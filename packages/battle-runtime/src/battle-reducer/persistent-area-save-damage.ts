@@ -17,6 +17,7 @@ import type {
   BattleCloudkillAreaHazardDamageRollHole,
   BattleCloudkillAreaHazardSavingThrowOutcomeHole,
   BattleCloudkillAreaHazardTrigger,
+  BattleCloudkillMovementSequenceResumeCheckpoint,
   BattleCreatureState,
   BattleFill,
   BattleHandledInterruptOccurrence,
@@ -26,7 +27,6 @@ import type {
   BattleInsectPlagueAreaHazardTrigger,
   BattleResolutionInput,
   BattleResolutionResult,
-  BattleReplayParentPosition,
   BattleSavingThrowOutcome,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -45,6 +45,7 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import {
   projectReplayChildResult,
+  replayParentContinuationFor,
   replayParentProcedureAt,
   type ReplayParentContinuation,
 } from "./replay-continuation.ts";
@@ -87,8 +88,14 @@ type PersistentAreaResolutionContext =
   | {
       readonly kind: "replayParent";
       readonly parent: ReplayParentContinuation;
-      readonly occurrence: Omit<BattleReplayParentPosition, "kind" | "saveHoleId">;
-      readonly handledPosition: BattleReplayParentPosition | undefined;
+      readonly sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"];
+      readonly occurrence: Omit<
+        BattleCloudkillMovementSequenceResumeCheckpoint["occurrence"],
+        "saveHoleId"
+      >;
+      readonly handledPosition:
+        | BattleCloudkillMovementSequenceResumeCheckpoint
+        | undefined;
     };
 
 type PersistentAreaSaveDamageStep =
@@ -115,6 +122,14 @@ export type CloudkillMovementSaveDamageSequenceResult =
       readonly tag: "result";
       readonly result: BattleResolutionResult;
     };
+
+type CloudkillMovementSequenceContinuation =
+  | { readonly kind: "turnBoundaryReplay" }
+  | {
+      readonly kind: "advancedPrefixAtCheckpoint";
+      readonly checkpoint: BattleCloudkillMovementSequenceResumeCheckpoint;
+    }
+  | { readonly kind: "advancedPrefixAfterCheckpoint" };
 
 type InsectPlagueResolutionInput = BattleResolutionInput & {
   readonly subject: Extract<
@@ -274,15 +289,28 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
   readonly advancedState: BattleState;
   readonly parent: ReplayParentContinuation;
   readonly requests: readonly CloudkillMovementSaveDamageRequest[];
-  readonly parentPosition: BattleReplayParentPosition | undefined;
+  readonly sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"];
+  readonly continuation: CloudkillMovementSequenceContinuation;
 }): CloudkillMovementSaveDamageSequenceResult {
   const saveHoleIds = new Set<BattleHoleId>();
   const damageHoleIds = new Set<BattleHoleId>();
   const concentrationHoleIds = new Set<BattleHoleId>();
-  let parentPositionMatched = input.parentPosition === undefined;
+  const handledCheckpoint =
+    input.continuation.kind === "advancedPrefixAtCheckpoint"
+      ? input.continuation.checkpoint
+      : undefined;
+  let parentPositionMatched = handledCheckpoint === undefined;
   let state = input.advancedState;
 
   for (const request of input.requests) {
+    const requestParent =
+      input.continuation.kind === "turnBoundaryReplay"
+        ? input.parent
+        : replayParentContinuationFor({
+            state,
+            subject: input.parent.subject,
+            fills: input.parent.fills,
+          });
     const parsed = parsePersistentAreaSaveDamageProcedure({
       kind: "cloudkill",
       resolution: {
@@ -305,21 +333,22 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
     if (parsed.tag === "invalid") {
       return {
         tag: "result",
-        result: projectReplayChildResult(input.parent, parsed.result),
+        result: projectReplayChildResult(requestParent, parsed.result),
       };
     }
     const step = resolvePersistentAreaSaveDamageStep({
       procedure: parsed.procedure,
       context: {
         kind: "replayParent",
-        parent: input.parent,
+        parent: requestParent,
+        sourceTurn: input.sourceTurn,
         occurrence: {
-          parentHoleId: request.parentHoleId,
+          movementHoleId: request.parentHoleId,
           areaId: request.effect.areaId,
           sourceProcedureRef: request.effect.sourceProcedureRef,
           targetId: request.subject.actorId,
         },
-        handledPosition: input.parentPosition,
+        handledPosition: handledCheckpoint,
       },
     });
     if (step.tag === "result") {
@@ -347,16 +376,19 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
 }
 
 function sameCloudkillMovementSaveDamagePosition(
-  left: BattleReplayParentPosition,
-  right: BattleReplayParentPosition,
+  left: BattleCloudkillMovementSequenceResumeCheckpoint,
+  right: BattleCloudkillMovementSequenceResumeCheckpoint,
 ): boolean {
   return (
     left.kind === right.kind &&
-    left.parentHoleId === right.parentHoleId &&
-    left.saveHoleId === right.saveHoleId &&
-    left.areaId === right.areaId &&
-    left.sourceProcedureRef === right.sourceProcedureRef &&
-    left.targetId === right.targetId
+    left.sourceTurn.actorId === right.sourceTurn.actorId &&
+    left.sourceTurn.round === right.sourceTurn.round &&
+    left.occurrence.movementHoleId === right.occurrence.movementHoleId &&
+    left.occurrence.saveHoleId === right.occurrence.saveHoleId &&
+    left.occurrence.areaId === right.occurrence.areaId &&
+    left.occurrence.sourceProcedureRef ===
+      right.occurrence.sourceProcedureRef &&
+    left.occurrence.targetId === right.occurrence.targetId
   );
 }
 
@@ -542,7 +574,7 @@ function resolvePersistentAreaSaveDamageStep(input: {
     persistentAreaHandledPositionMatches(context, replayPosition);
   if (!saveOutcome.succeeded) {
     const saveFailedReactionWindow = maybeOpenInterruptWindow(
-      persistentAreaInterruptState(context, resolution.state),
+      resolution.state,
       {
         trigger: "saveFailed",
         targetId: resolution.subject.actorId,
@@ -638,8 +670,7 @@ function resolvePersistentAreaSaveDamageStep(input: {
   const holeIds = {
     save: saveHole.holeId,
     damage: damageHole.holeId,
-    concentration:
-      concentrationHole === null ? null : concentrationHole.holeId,
+    concentration: concentrationHole === null ? null : concentrationHole.holeId,
   } satisfies PersistentAreaResolvedHoleIds;
   const consumedHoleIds = new Set(
     holeIds.concentration === null
@@ -702,15 +733,15 @@ function persistentAreaStepResult(
 function persistentAreaReplayPosition(
   context: PersistentAreaResolutionContext,
   saveHoleId: BattleHoleId,
-): BattleReplayParentPosition | undefined {
+): BattleCloudkillMovementSequenceResumeCheckpoint | undefined {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => undefined),
     byPersistentAreaResolutionContextKind(
       "replayParent",
-      ({ occurrence }) => ({
-        kind: "persistentAreaSaveDamage" as const,
-        saveHoleId,
-        ...occurrence,
+      ({ occurrence, sourceTurn }) => ({
+        kind: "cloudkillMovementSaveDamageSequence" as const,
+        sourceTurn,
+        occurrence: { ...occurrence, saveHoleId },
       }),
     ),
     Match.exhaustive,
@@ -719,7 +750,7 @@ function persistentAreaReplayPosition(
 
 function persistentAreaHandledPositionMatches(
   context: PersistentAreaResolutionContext,
-  position: BattleReplayParentPosition,
+  position: BattleCloudkillMovementSequenceResumeCheckpoint,
 ): boolean {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => false),
@@ -733,24 +764,10 @@ function persistentAreaHandledPositionMatches(
   );
 }
 
-function persistentAreaInterruptState(
-  context: PersistentAreaResolutionContext,
-  state: BattleState,
-): BattleState {
-  return Match.value(context).pipe(
-    byPersistentAreaResolutionContextKind("standalone", () => state),
-    byPersistentAreaResolutionContextKind(
-      "replayParent",
-      ({ parent }) => parent.state,
-    ),
-    Match.exhaustive,
-  );
-}
-
 function persistentAreaInterruptContinuation(
   context: PersistentAreaResolutionContext,
   resolution: InsectPlagueResolutionInput | CloudkillResolutionInput,
-  replayPosition: BattleReplayParentPosition | undefined,
+  replayPosition: BattleCloudkillMovementSequenceResumeCheckpoint | undefined,
 ) {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => ({
@@ -785,13 +802,11 @@ function persistentAreaHandledInterruptTrigger(
   matchedHandledPosition: boolean,
 ): BattleInterruptTrigger | undefined {
   return Match.value(context).pipe(
-    byPersistentAreaResolutionContextKind(
-      "standalone",
-      () =>
-        standaloneHandledOccurrence?.targetId === targetId &&
-        standaloneHandledOccurrence.sourceProcedureRef === sourceProcedureRef
-          ? "saveFailed"
-          : undefined,
+    byPersistentAreaResolutionContextKind("standalone", () =>
+      standaloneHandledOccurrence?.targetId === targetId &&
+      standaloneHandledOccurrence.sourceProcedureRef === sourceProcedureRef
+        ? "saveFailed"
+        : undefined,
     ),
     byPersistentAreaResolutionContextKind("replayParent", () =>
       matchedHandledPosition ? "saveFailed" : undefined,

@@ -418,9 +418,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       ? handledInterruptOccurrence?.trigger
       : interruptRouteOptions.handledInterruptTrigger;
   const handledInterruptRouteOption =
-    handledInterruptTrigger === undefined
-      ? {}
-      : { handledInterruptTrigger };
+    handledInterruptTrigger === undefined ? {} : { handledInterruptTrigger };
   const replayParentRouteOption =
     interruptRouteOptions.replayParentPosition === undefined
       ? {}
@@ -445,6 +443,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
   if (
     actorId !== currentActorId(input.state) &&
     actorId !== options.readiedActionActorId &&
+    interruptRouteOptions.replayParentPosition === undefined &&
     !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
     !persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(

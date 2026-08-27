@@ -516,7 +516,7 @@ describe("Cloudkill source-turn movement", () => {
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
       snapshot: {
-        currentActorId: spellTargetId,
+        currentActorId: spellCasterId,
         pendingInterrupt: { trigger: "saveFailed" },
       },
     });
@@ -536,7 +536,7 @@ describe("Cloudkill source-turn movement", () => {
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
       snapshot: {
-        currentActorId: spellTargetId,
+        currentActorId: spellCasterId,
         pendingInterrupt: null,
       },
     });
@@ -552,7 +552,7 @@ describe("Cloudkill source-turn movement", () => {
       tag: "needsHoles",
       holes: [{ kind: "concentrationSavingThrow" }],
       snapshot: {
-        currentActorId: spellTargetId,
+        currentActorId: spellCasterId,
         pendingInterrupt: null,
       },
     });
@@ -714,6 +714,123 @@ describe("Cloudkill source-turn movement", () => {
     });
   });
 
+  test("later movement saves use the prefix state after an earlier target loses its readied spell", () => {
+    const cast = castCloudkill({
+      targetCanReadyRayOfFrost: true,
+      extraTargetIds: [cloudkillSecondaryTargetId],
+    });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the first affected target's turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const secondaryTurn = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+    });
+    if (secondaryTurn.tag !== "resolved") {
+      throw new Error("Expected the second affected target's turn to start.");
+    }
+    const movementFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+    });
+    const movementFill = cloudkillMovementFill(
+      requireResultHole(movementFrontier, "cloudkillMovement"),
+      [spellTargetId, cloudkillSecondaryTargetId],
+    );
+    const firstSaveFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [movementFill],
+    });
+    const firstSaveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(firstSaveFrontier, "savingThrowOutcome"),
+      spellTargetId,
+      false,
+    );
+    const firstInterrupted = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [movementFill, firstSaveFill],
+    });
+    const firstDecision = requireResultHole(
+      firstInterrupted,
+      "interruptDecision",
+    );
+    if (firstInterrupted.tag !== "needsHoles") {
+      throw new Error(
+        "Expected the first affected target's failed-save window.",
+      );
+    }
+    const firstDeclined = resolveBattleInterrupt({
+      state: firstInterrupted.state,
+      fill: interruptDecisionFill(firstDecision, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    const firstDamageFill = damageRollFillWithGroups(
+      requireResultHole(firstDeclined, "rolledDice"),
+      [[1, 1, 1, 1, 1]],
+    );
+    if (firstDeclined.tag !== "needsHoles") {
+      throw new Error("Expected the first affected target's damage frontier.");
+    }
+    const concentrationFrontier = resolveBattleSubject({
+      state: firstDeclined.state,
+      subject: firstDeclined.subject,
+      fills: [movementFill, firstSaveFill, firstDamageFill],
+    });
+    const concentrationFill = concentrationSavingThrowFill(
+      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+      false,
+    );
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error(
+        "Expected the first affected target's Concentration save.",
+      );
+    }
+    const secondSaveFrontier = resolveBattleSubject({
+      state: concentrationFrontier.state,
+      subject: concentrationFrontier.subject,
+      fills: [movementFill, firstSaveFill, firstDamageFill, concentrationFill],
+    });
+    if (secondSaveFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the second affected target's save frontier.");
+    }
+    expect(secondSaveFrontier.state.readiedSpells.has(spellTargetId)).toBe(
+      false,
+    );
+    const secondSaveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(secondSaveFrontier, "savingThrowOutcome"),
+      cloudkillSecondaryTargetId,
+      false,
+    );
+    const secondDamageFrontier = resolveBattleSubject({
+      state: secondSaveFrontier.state,
+      subject: secondSaveFrontier.subject,
+      fills: [
+        movementFill,
+        firstSaveFill,
+        firstDamageFill,
+        concentrationFill,
+        secondSaveFill,
+      ],
+    });
+
+    expect(secondDamageFrontier).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "rolledDice" }],
+      snapshot: { pendingInterrupt: null },
+    });
+  });
+
   test("preserves and resolves movement interrupt replay through delegated Command End Turn", () => {
     const cast = castCloudkill({
       targetCanReadyRayOfFrost: true,
@@ -785,8 +902,8 @@ describe("Cloudkill source-turn movement", () => {
                 kind: "replay",
                 subject,
                 parentPosition: {
-                  kind: "persistentAreaSaveDamage",
-                  targetId: cloudkillSecondaryTargetId,
+                  kind: "cloudkillMovementSaveDamageSequence",
+                  occurrence: { targetId: cloudkillSecondaryTargetId },
                 },
               },
             },
@@ -820,8 +937,8 @@ describe("Cloudkill source-turn movement", () => {
               kind: "replay",
               subject,
               parentPosition: {
-                kind: "persistentAreaSaveDamage",
-                targetId: cloudkillSecondaryTargetId,
+                kind: "cloudkillMovementSaveDamageSequence",
+                occurrence: { targetId: cloudkillSecondaryTargetId },
               },
             },
           },
@@ -883,8 +1000,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const greaseSaveHole = combinedFrontier.holes.find(
       (hole) =>
-        hole.kind === "savingThrowOutcome" &&
-        "greaseGroundHazard" in hole,
+        hole.kind === "savingThrowOutcome" && "greaseGroundHazard" in hole,
     );
     if (greaseSaveHole?.kind !== "savingThrowOutcome") {
       throw new Error("Expected the Grease end-turn save frontier.");
@@ -909,8 +1025,7 @@ describe("Cloudkill source-turn movement", () => {
     }
     const cloudkillSaveHole = cloudkillSaveFrontier.holes.find(
       (hole) =>
-        hole.kind === "savingThrowOutcome" &&
-        "cloudkillAreaHazard" in hole,
+        hole.kind === "savingThrowOutcome" && "cloudkillAreaHazard" in hole,
     );
     if (cloudkillSaveHole?.kind !== "savingThrowOutcome") {
       throw new Error("Expected the Cloudkill movement save hole.");
@@ -979,7 +1094,7 @@ describe("Cloudkill source-turn movement", () => {
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
       snapshot: {
-        currentActorId: spellTargetId,
+        currentActorId: spellCasterId,
         pendingInterrupt: { trigger: "saveFailed" },
       },
     });

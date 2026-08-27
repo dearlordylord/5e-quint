@@ -736,13 +736,19 @@ export type BattleAttackDamageInterruptionFrame = {
   readonly phase: "attackDamage";
   readonly continuation: BattleAttackDamageInterruptionContinuation;
 };
-export type BattleReplayParentPosition = {
-  readonly kind: "persistentAreaSaveDamage";
-  readonly parentHoleId: BattleHoleId;
-  readonly saveHoleId: BattleHoleId;
-  readonly areaId: BattleAreaId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly targetId: CombatantId;
+export type BattleCloudkillMovementSequenceResumeCheckpoint = {
+  readonly kind: "cloudkillMovementSaveDamageSequence";
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
+  readonly occurrence: {
+    readonly movementHoleId: BattleHoleId;
+    readonly saveHoleId: BattleHoleId;
+    readonly areaId: BattleAreaId;
+    readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly targetId: CombatantId;
+  };
 };
 export type BattleInterruptedProcedure =
   | {
@@ -759,7 +765,7 @@ export type BattleInterruptedProcedure =
       readonly kind: "replay";
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
-      readonly parentPosition: BattleReplayParentPosition;
+      readonly parentPosition: BattleCloudkillMovementSequenceResumeCheckpoint;
       readonly glyphStoredSpellReleaseReplay?: never;
       readonly attackDamageReductions?: never;
       readonly attackDamageAdditions?: never;
@@ -6854,7 +6860,7 @@ export type BattleInterruptRouteOptions =
     }
   | (BattleHandledInterruptRouteProjection & {
       readonly replayingInterruptedProcedure: true;
-      readonly replayParentPosition?: BattleReplayParentPosition;
+      readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
     });
