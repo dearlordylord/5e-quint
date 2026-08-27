@@ -17,8 +17,7 @@ import {
   statBlockPresentationAllocation,
   type StatBlockExecutionAdmission,
 } from "./stat-block-execution.ts";
-import * as Either from "effect/Either";
-import { Match } from "effect";
+import { Match, Result } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
 
 export type StatBlockProcedurePresentation =
@@ -104,14 +103,14 @@ export function attackActionOptionPresentationName(
   context: BattleRuntimeContext,
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
-): Either.Either<string, AttackPresentationJoinIssue> {
+): Result.Result<string, AttackPresentationJoinIssue> {
   if (attack.kind === "unarmedStrike") {
-    return Either.right(attackActionOptionName(attack));
+    return Result.succeed(attackActionOptionName(attack));
   }
   if (attack.kind === "weapon") {
     const characterContext = context.characters.get(actorId);
     if (characterContext === undefined) {
-      return Either.left({
+      return Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "characterContextMissing",
       });
@@ -120,8 +119,8 @@ export function attackActionOptionPresentationName(
       characterContext,
       attack.weapon.weaponUnitId,
     );
-    if (Either.isLeft(source)) {
-      return Either.left({
+    if (Result.isFailure(source)) {
+      return Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "weaponPresentationMissing",
       });
@@ -135,21 +134,21 @@ export function attackActionOptionPresentationName(
           : actor.origin.offHandAttack
         : undefined;
     const suffixes = [
-      ...(baseAttack !== undefined && baseAttack.ability !== attack.ability
+      ...(baseAttack != null && baseAttack.ability !== attack.ability
         ? [abilityPresentationName(attack.ability)]
         : []),
       ...(attack.weapon.damage.kind === "dice" &&
       (baseAttack?.damageTypeChoices !== undefined ||
         attack.damageTypeChoices !== undefined ||
-        (source.right.damage.kind === "dice" &&
-          source.right.damage.damageType !== attack.weapon.damage.damageType))
+        (source.success.damage.kind === "dice" &&
+          source.success.damage.damageType !== attack.weapon.damage.damageType))
         ? [attack.weapon.damage.damageType]
         : []),
     ];
-    return Either.right(
+    return Result.succeed(
       suffixes.length === 0
-        ? source.right.name
-        : `${source.right.name} (${suffixes.join(", ")})`,
+        ? source.success.name
+        : `${source.success.name} (${suffixes.join(", ")})`,
     );
   }
   const presentations = statBlockProcedurePresentationsForActor(
@@ -158,7 +157,7 @@ export function attackActionOptionPresentationName(
     actorId,
   );
   if (presentations === null) {
-    return Either.left({
+    return Result.fail({
       tag: "attackPresentationJoinIssue",
       reason: "statBlockAdmissionMissing",
     });
@@ -169,8 +168,8 @@ export function attackActionOptionPresentationName(
       candidate.procedureRef === attack.procedureRef,
   );
   return presentation?.kind === "attack"
-    ? Either.right(presentation.name)
-    : Either.left({
+    ? Result.succeed(presentation.name)
+    : Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockPresentationMissing",
       });

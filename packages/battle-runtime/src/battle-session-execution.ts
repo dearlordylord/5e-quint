@@ -1,8 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 // KERNEL-COVERAGE: runtime-owner BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 import { optionalProperty } from "./optional-property.ts";
-import { Match } from "effect";
-import * as Either from "effect/Either";
+import { Match, Result } from "effect";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
@@ -151,24 +150,24 @@ export function resolveBattleRuntimeSubject(
       casterId: input.subject.actorId,
       catalog: input.statBlockCatalog,
     });
-    if (Either.isLeft(admission)) {
+    if (Result.isFailure(admission)) {
       return {
         tag: "invalid",
         session: input.session,
         reason: "invalidFill",
-        message: admission.left.message,
+        message: admission.failure.message,
         snapshot: snapshotBattle(input.session.state),
       };
     }
     const result = resolveAdmittedFindFamiliarReappearanceSubject({
       fills: input.fills,
-      admission: admission.right.mechanics,
+      admission: admission.success.mechanics,
     });
     return battleRuntimeResolutionWithFamiliarPresentation(
       input.session,
       result,
-      admission.right.mechanics.combatantAdmission.combatantId,
-      admission.right.presentation,
+      admission.success.mechanics.combatantAdmission.combatantId,
+      admission.success.presentation,
     );
   }
   return battleRuntimeResolutionFromMechanical(
@@ -286,14 +285,14 @@ export function resolveBattleRuntimeSubjectWithTableD20TestCircumstances(
     requests,
     decisions: input.tableD20TestCircumstanceDecisions,
   });
-  if (Either.isLeft(admission)) {
+  if (Result.isFailure(admission)) {
     return {
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
-      message: admission.left.issues.map(({ message }) => message).join(" "),
+      message: admission.failure.issues.map(({ message }) => message).join(" "),
       snapshot: snapshotBattle(input.session.state),
-      tableD20TestCircumstanceDecisionIssue: admission.left,
+      tableD20TestCircumstanceDecisionIssue: admission.failure,
     };
   }
   const result = resolveBattleRuntimeSubject({
@@ -430,14 +429,14 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
     requests,
     decisions: input.tableD20TestCircumstanceDecisions,
   });
-  if (Either.isLeft(admission)) {
+  if (Result.isFailure(admission)) {
     return {
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
-      message: admission.left.issues.map(({ message }) => message).join(" "),
+      message: admission.failure.issues.map(({ message }) => message).join(" "),
       snapshot: snapshotBattle(input.session.state),
-      tableD20TestCircumstanceDecisionIssue: admission.left,
+      tableD20TestCircumstanceDecisionIssue: admission.failure,
     };
   }
   const result = endBattleRuntimeTurn(input);

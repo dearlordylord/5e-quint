@@ -6,8 +6,7 @@ import type {
   BattleFill,
   BattleHole,
 } from "./battle-state-execution.ts";
-import * as Either from "effect/Either";
-import { Brand } from "effect";
+import { Brand, Result } from "effect";
 import { PRONE_ATTACK_ADVANTAGE_DISTANCE_FEET } from "./battle-reducer/domain-constants.ts";
 import type { MovementFeet } from "@dnd/shared/types";
 
@@ -444,7 +443,7 @@ export function battleD20TestCircumstanceRequests(input: {
 export function admitTableD20TestCircumstanceDecisions(input: {
   readonly requests: readonly BattleD20TestCircumstanceRequest[];
   readonly decisions: readonly TableD20TestCircumstanceDecision[];
-}): Either.Either<
+}): Result.Result<
   ReadonlyMap<BattleD20TestRequestRef, TableD20TestCircumstanceDecision>,
   TableD20TestCircumstanceDecisionAdmissionIssue
 > {
@@ -492,12 +491,12 @@ export function admitTableD20TestCircumstanceDecisions(input: {
   }
   const firstIssue = issues[0];
   if (firstIssue !== undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "invalid-table-d20-test-circumstance-decisions",
       issues: [firstIssue, ...issues.slice(1)],
     });
   }
-  return Either.right(admitted);
+  return Result.succeed(admitted);
 }
 
 export function effectiveD20TestRollMode(input: {
