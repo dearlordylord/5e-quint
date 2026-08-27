@@ -1,0 +1,356 @@
+{
+  "challengeRating": 14,
+  "id": "stat_block_adult_black_dragon",
+  "kind": "statBlock",
+  "name": "Adult Black Dragon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:724-772"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 19,
+      "con": 21,
+      "dex": 14,
+      "int": 14,
+      "str": 23,
+      "wis": 13
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 19
+      }
+    },
+    "actions": [
+      {
+        "description": "The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Acid Arrow (level 3 version).",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 11
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6,
+                  "flat": 6
+                },
+                "kind": "fixed",
+                "static": 13
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8
+                },
+                "kind": "fixed",
+                "static": 4
+              },
+              "damageType": "acid",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "line",
+            "lengthFeet": 60,
+            "widthFeet": 5
+          },
+          "dc": {
+            "dc": 18,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Acid Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 12,
+                "dieSize": 8
+              },
+              "kind": "fixed",
+              "static": 54
+            },
+            "damageType": "acid",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "castAtLevel": 3,
+                  "spellId": "acid_arrow"
+                },
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "fear"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "speak_with_dead"
+                },
+                {
+                  "spellId": "vitriolic_sphere"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellAttackBonus": {
+            "kind": "literal",
+            "value": 9
+          },
+          "spellSaveDc": {
+            "dc": 17,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            2
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "chromatic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 195
+    },
+    "immunities": {
+      "damageTypes": [
+        "acid"
+      ]
+    },
+    "initiative": {
+      "modifier": 12,
+      "score": 22
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "Dexterity Saving Throw: DC 17, one creature the dragon can see within 120 feet. Failure: 22 (4d10) Poison damage, and the target has Disadvantage on saving throws to maintain Concentration until the end of its next turn. Failure or Success: The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Cloud of Insects",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon uses Spellcasting to cast Fear. The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Frightful Presence",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon moves up to half its Speed, and it makes one Rend attack.",
+          "kind": "textOnly",
+          "name": "Pounce",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 21,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 6
+      },
+      {
+        "ability": "dex",
+        "modifier": 7
+      },
+      {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
+        "ability": "int",
+        "modifier": 2
+      },
+      {
+        "ability": "wis",
+        "modifier": 6
+      },
+      {
+        "ability": "cha",
+        "modifier": 4
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 11,
+        "skill": "perception"
+      },
+      {
+        "modifier": 7,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "fly"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The dragon can breathe air and water.",
+        "name": "Amphibious"
+      },
+      {
+        "description": "If the dragon fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (3/Day, or 4/Day in Lair)"
+      }
+    ]
+  }
+}

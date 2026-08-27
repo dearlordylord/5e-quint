@@ -1,0 +1,167 @@
+{
+  "challengeRating": 3,
+  "id": "stat_block_bugbear_stalker",
+  "kind": "statBlock",
+  "name": "Bugbear Stalker",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:1456-1491"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 11,
+      "con": 14,
+      "dex": 14,
+      "int": 11,
+      "str": 17,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "description": "The bugbear makes two Javelin or Morningstar attacks.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee or Ranged Attack Roll: +5, reach 10 ft. or range 30/120 ft. Hit: 13 (3d6 + 3) Piercing damage.",
+        "kind": "textOnly",
+        "name": "Javelin",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +5 (with Advantage if the target is Grappled by the bugbear), reach 10 ft. Hit: 12 (2d8 + 3) Piercing damage.",
+        "kind": "textOnly",
+        "name": "Morningstar",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "bonusActions": [
+      {
+        "description": "Dexterity Saving Throw: DC 13, one Medium or smaller creature the bugbear can see within 10 feet. Failure: The target has the Grappled condition (escape DC 13).",
+        "kind": "textOnly",
+        "name": "Quick Grapple",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Goblin"
+        ]
+      }
+    },
+    "creatureType": "fey",
+    "creatureTypeTags": [
+      "goblinoid"
+    ],
+    "gear": [
+      {
+        "item": "Chain Shirt"
+      },
+      {
+        "item": "Javelins",
+        "quantity": 6
+      },
+      {
+        "item": "Morningstar"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 65
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 11,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 4
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 3
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 6,
+        "skill": "stealth"
+      },
+      {
+        "modifier": 3,
+        "skill": "survival"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The bugbear needn't spend extra movement to move a creature it is grappling.",
+        "name": "Abduct"
+      }
+    ]
+  }
+}

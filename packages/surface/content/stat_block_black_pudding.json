@@ -1,0 +1,144 @@
+{
+  "challengeRating": 4,
+  "id": "stat_block_black_pudding",
+  "kind": "statBlock",
+  "name": "Black Pudding",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:828-864"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 1,
+      "con": 16,
+      "dex": 5,
+      "int": 1,
+      "str": 16,
+      "wis": 6
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 7
+      }
+    },
+    "actions": [
+      {
+        "description": "Melee Attack Roll: +5, reach 10 ft. Hit: 17 (4d6 + 3) Acid damage. Nonmagical armor worn by the target takes a −1 penalty to the AC it offers. The armor is destroyed if the penalty reduces its AC to 10. The penalty can be removed by casting the Mending spell on the armor.",
+        "kind": "textOnly",
+        "name": "Dissolving Pseudopod",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "ooze",
+    "hp": {
+      "kind": "literal",
+      "value": 68
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "deafened",
+        "exhaustion",
+        "frightened",
+        "grappled",
+        "prone",
+        "restrained"
+      ],
+      "damageTypes": [
+        "acid",
+        "cold",
+        "lightning",
+        "slashing"
+      ]
+    },
+    "initiative": {
+      "modifier": -3,
+      "score": 7
+    },
+    "passivePerception": 8,
+    "reactions": [
+      {
+        "description": "Trigger: While the pudding is Large or Medium and has 10+ Hit Points, it becomes Bloodied or is subjected to Lightning or Slashing damage. Response: The pudding splits into two new Black Puddings. Each new pudding is one size smaller than the original pudding and acts on its Initiative. The original pudding's Hit Points are divided evenly between the new puddings (round down).",
+        "kind": "textOnly",
+        "name": "Split",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": -3
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "wis",
+        "modifier": -2
+      },
+      {
+        "ability": "cha",
+        "modifier": -5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "climb"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The pudding can move through a space as narrow as 1 inch without expending extra movement to do so.",
+        "name": "Amorphous"
+      },
+      {
+        "description": "A creature that hits the pudding with a melee attack roll takes 4 (1d8) Acid damage. Nonmagical ammunition is destroyed immediately after hitting the pudding and dealing any damage. Any nonmagical weapon takes a cumulative −1 penalty to attack rolls immediately after dealing damage to the pudding and coming into contact with it. The weapon is destroyed if the penalty reaches −5. The penalty can be removed by casting the Mending spell on the weapon. In 1 minute, the pudding can eat through 2 feet of nonmagical wood or metal.",
+        "name": "Corrosive Form"
+      },
+      {
+        "description": "The pudding can climb difficult surfaces, including along ceilings, without needing to make an ability check.",
+        "name": "Spider Climb"
+      }
+    ]
+  }
+}

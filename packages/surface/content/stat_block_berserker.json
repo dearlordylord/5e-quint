@@ -1,0 +1,140 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_berserker",
+  "kind": "statBlock",
+  "name": "Berserker",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:622-648"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 9,
+      "con": 17,
+      "dex": 12,
+      "int": 9,
+      "str": 16,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Greataxe",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 12,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "gear": [
+      {
+        "item": "Greataxe"
+      },
+      {
+        "item": "Hide Armor"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 67
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 10,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": -1
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -1
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "While Bloodied, the berserker has Advantage on attack rolls and saving throws.",
+        "name": "Bloodied Frenzy"
+      }
+    ]
+  }
+}
