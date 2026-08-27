@@ -64,8 +64,8 @@ export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
   ) => BattleResolutionResult;
 };
 
-export function spellProcedureExecutionSchema<
-  S extends Schema.Schema.AnyNoContext,
->(schema: S & (0 extends 1 & S["Type"] ? never : unknown)): S {
+export function spellProcedureExecutionSchema<S extends Schema.Schema<unknown>>(
+  schema: S & (0 extends 1 & S["Type"] ? never : unknown),
+): S {
   return schema;
 }
