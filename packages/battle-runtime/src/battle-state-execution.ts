@@ -4464,6 +4464,12 @@ export type BattleStateInitLeafIssue =
       readonly ownerPath?: readonly (string | number)[];
     };
 
+/** Initialization issues emitted while admitting a Stat Block combatant. */
+export type BattleStatBlockInitializationIssue = Extract<
+  BattleStateInitLeafIssue,
+  { readonly tag: "battleStateInitIssue" }
+>;
+
 export type BattleInitializationLeafIssue =
   | ({
       readonly tag: "battleStateInitIssue";

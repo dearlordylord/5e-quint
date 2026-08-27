@@ -12,12 +12,11 @@ import {
   parseSupportedUnitFeatureProfile,
   battleCreatureInitFromStatBlock,
   battleInitializationIssueFactFields,
-  battleStateInitIssueLeaves,
   type BattleCreatureInit,
   type BattleId,
   type BattleCreatureState,
   type BattleStateInitIssue,
-  type BattleStateInitLeafIssue,
+  type BattleStatBlockInitializationIssue,
   type BattleInitializationIssueFacts,
   type BattleState,
   type BattleRuntimeContext,
@@ -83,6 +82,7 @@ import { isNonEmptyReadonlyArray } from "effect/Array";
 import {
   CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
   battleCreatureInitFromCharacterBuild,
+  type CharacterBattleCreatureInitResult,
   type CharacterBuildCreatureInput,
 } from "./battle-creature-init.ts";
 import {
@@ -340,21 +340,13 @@ type BattleRosterCharacterProjectionIssue = {
   readonly message: string;
 } & CharacterBattleInitIssueFact;
 
-type BattleRosterStatBlockProjectionIssue =
-  | ({
-      readonly kind: "statBlockProjection";
-      readonly index: number;
-      readonly combatantId: BattleCreatureInit["combatantId"];
-      readonly issueTag: "battleStateInitIssue";
-      readonly message: string;
-    } & BattleRosterStatBlockProjectionFact)
-  | {
-      readonly kind: "statBlockProjection";
-      readonly index: number;
-      readonly combatantId: BattleCreatureInit["combatantId"];
-      readonly issueTag: "weaponLoadoutMismatch";
-      readonly slot: "main-hand" | "off-hand";
-    };
+type BattleRosterStatBlockProjectionIssue = {
+  readonly kind: "statBlockProjection";
+  readonly index: number;
+  readonly combatantId: BattleCreatureInit["combatantId"];
+  readonly issueTag: "battleStateInitIssue";
+  readonly message: string;
+} & BattleRosterStatBlockProjectionFact;
 
 export type BattleRosterAdmission =
   | {
@@ -455,31 +447,14 @@ export type BattleRosterComposition =
       readonly issues: ReadonlyNonEmptyArray<BattleRosterIssue>;
     };
 
-function isBattleRosterCharacterCombatant(
-  input: BattleCreatureInit,
-): input is BattleRosterCharacterCombatant {
-  return input.creatureInit.kind === "character";
-}
-
 function characterBattleInitProjectionFromInit(
-  init: BattleCreatureInit,
+  init: CharacterBattleCreatureInitResult,
   routeEvents: readonly CharacterBattleRouteEvent[],
 ): Either.Either<
   CharacterBattleInitProjection,
   CharacterBattleInitProjectionIssue
 > {
-  if (isBattleRosterCharacterCombatant(init)) {
-    return Either.right({ init, routeEvents });
-  }
-  return Either.left({
-    tag: "battleCreatureInitIssue",
-    message: "Character battle initialization produced a Stat Block combatant.",
-    ...characterBattleInitIssueFactFields({
-      kind: "characterBattleInvariant",
-      invariant: "characterOriginRequired",
-    }),
-    routeEvents,
-  });
+  return Either.right({ init, routeEvents });
 }
 
 type CharacterBattleCreatureState = BattleCreatureState & {
@@ -595,19 +570,16 @@ function characterBattleHitPointMaximumIssue(
   issue: CharacterSheetHitPointMaximumProjectionIssue,
 ): BattleCreatureInitIssue {
   if (isCharacterBuildProjectionIssues(issue)) {
-    const projected = battleCreatureInitIssuesFromCharacterBuildProjection(
-      issue,
-      "hitPoints",
+    return Either.merge(
+      battleCreatureInitIssuesFromCharacterBuildProjection(issue, "hitPoints"),
     );
-    if (Either.isLeft(projected)) return projected.left;
-    return projected.right;
   }
-  const projected = battleCreatureInitIssue(issue.message, {
-    kind: "characterBuildProjection",
-    phase: "hitPoints",
-  });
-  if (Either.isLeft(projected)) return projected.left;
-  return projected.right;
+  return Either.merge(
+    battleCreatureInitIssue(issue.message, {
+      kind: "characterBuildProjection",
+      phase: "hitPoints",
+    }),
+  );
 }
 
 function isCharacterBuildProjectionIssues(
@@ -905,57 +877,41 @@ function battleRosterCharacterSpellAccessProjectionIssue(input: {
 function battleRosterStatBlockProjectionIssue(input: {
   readonly index: number;
   readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issue: BattleStateInitLeafIssue;
+  readonly issue: BattleStatBlockInitializationIssue;
   readonly issueIndex: number;
 }): Extract<BattleRosterIssue, { kind: "statBlockProjection" }> {
-  return Match.value(input.issue).pipe(
-    Match.when({ tag: "battleStateInitIssue" }, (issue) => {
-      const { message, ...fields } = issue;
-      return {
-        kind: "statBlockProjection" as const,
-        index: input.index,
-        combatantId: input.combatantId,
-        issueTag: "battleStateInitIssue" as const,
-        ...battleInitializationIssueFactFields(
-          "kind" in fields
-            ? fields
-            : {
-                kind: "runtimeAdmissionInvalid" as const,
-                combatantId: input.combatantId,
-                origin: "statBlock" as const,
-                issueIndex: input.issueIndex,
-              },
-        ),
-        message,
-      };
-    }),
-    Match.when({ tag: "weaponLoadoutMismatch" }, ({ slot }) => ({
-      kind: "statBlockProjection" as const,
-      index: input.index,
-      combatantId: input.combatantId,
-      issueTag: "weaponLoadoutMismatch" as const,
-      slot,
-    })),
-    Match.exhaustive,
-  );
+  const { message, ...fields } = input.issue;
+  return {
+    kind: "statBlockProjection" as const,
+    index: input.index,
+    combatantId: input.combatantId,
+    issueTag: "battleStateInitIssue" as const,
+    ...battleInitializationIssueFactFields(
+      "kind" in fields
+        ? fields
+        : {
+            kind: "runtimeAdmissionInvalid" as const,
+            combatantId: input.combatantId,
+            origin: "statBlock" as const,
+            issueIndex: input.issueIndex,
+          },
+    ),
+    message,
+  };
 }
 
 function battleRosterStatBlockProjectionIssues(input: {
   readonly index: number;
   readonly combatantId: BattleCreatureInit["combatantId"];
-  readonly issue: BattleStateInitIssue;
+  readonly issue: BattleStatBlockInitializationIssue;
 }): ReadonlyNonEmptyArray<BattleRosterIssue> {
-  const [firstIssue, ...restIssues] = battleStateInitIssueLeaves(input.issue);
-  const project = (issue: BattleStateInitLeafIssue, issueIndex: number) =>
+  return [
     battleRosterStatBlockProjectionIssue({
       index: input.index,
       combatantId: input.combatantId,
-      issue,
-      issueIndex,
-    });
-  return [
-    project(firstIssue, 0),
-    ...restIssues.map((issue, offset) => project(issue, offset + 1)),
+      issue: input.issue,
+      issueIndex: 0,
+    }),
   ];
 }
 
@@ -1036,37 +992,12 @@ function projectBattleRosterEntry(
               }),
             );
           }
-          const creatureInit = projection.right.creatureInit;
-          return Match.value(creatureInit).pipe(
-            Match.when({ kind: "statBlock" }, (statBlockCreatureInit) =>
-              Either.right({
-                kind: "statBlock" as const,
-                index,
-                combatant: {
-                  ...projection.right,
-                  creatureInit: statBlockCreatureInit,
-                },
-                routeEvents: [] as const,
-              }),
-            ),
-            Match.when({ kind: "character" }, () =>
-              Either.left(
-                battleRosterIssueList(
-                  battleRosterStatBlockProjectionIssue({
-                    index,
-                    combatantId: source.input.combatantId,
-                    issueIndex: 0,
-                    issue: {
-                      tag: "battleStateInitIssue" as const,
-                      message:
-                        "Stat Block battle initialization produced a character combatant.",
-                    },
-                  }),
-                ),
-              ),
-            ),
-            Match.exhaustive,
-          );
+          return Either.right({
+            kind: "statBlock" as const,
+            index,
+            combatant: projection.right,
+            routeEvents: [] as const,
+          });
         }),
         Match.exhaustive,
       );

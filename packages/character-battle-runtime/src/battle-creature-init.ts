@@ -60,7 +60,6 @@ import type {
 import { supportedClassFeatureSpellFreeCastGrantsForUnit } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
-import { isNonEmptyReadonlyArray } from "effect/Array";
 import {
   battleCreatureInitIssue,
   battleCreatureInitIssueMessage,
@@ -124,6 +123,17 @@ export type CharacterBuildCreatureInput = {
     | NonNullable<
         CharacterBuild["equipment"]["loadout"]["offHandWeapon"]
       >["itemId"];
+};
+
+/** Character-build projection cannot admit a Stat Block creature. */
+export type CharacterBattleCreatureInitResult = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >;
 };
 
 export const CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE =
@@ -195,7 +205,7 @@ export function battleCreatureInitFromCharacterBuild(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
-): Either.Either<BattleCreatureInit, BattleCreatureInitIssue> {
+): Either.Either<CharacterBattleCreatureInitResult, BattleCreatureInitIssue> {
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
   if (Either.isLeft(hitPoints)) {
     return battleCreatureInitIssuesFromCharacterBuildProjection(
@@ -742,16 +752,10 @@ function characterBattleResourceInits(
     ...spellAccessResourceProjection.issues,
   ];
   if (issues.length > 0) {
-    if (isNonEmptyReadonlyArray(issues)) {
-      return battleCreatureInitIssuesFromMessages(issues, (issueIndex) => ({
-        kind: "characterBattleResourceProjection",
-        issueIndex,
-      }));
-    }
-    return battleCreatureInitIssue(
-      "Character battle resource projection failed.",
-      { kind: "characterBuildProjection", phase: "resources" },
-    );
+    return battleCreatureInitIssuesFromMessages(issues, (issueIndex) => ({
+      kind: "characterBattleResourceProjection",
+      issueIndex,
+    }));
   }
   return Either.right([
     ...admittedResourceProjection.resources,

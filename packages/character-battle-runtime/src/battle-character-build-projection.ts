@@ -179,13 +179,7 @@ export function characterBattleInitIssueFactFields(
     Match.discriminatorsExhaustive("kind")({
       characterBuildProjection: (matched) => {
         const { kind, ...fields } = matched;
-        return "reason" in fields
-          ? {
-              ...fields,
-              reason: kind,
-              causeReason: fields.reason,
-            }
-          : { ...fields, reason: kind };
+        return { ...fields, reason: kind };
       },
       characterBattleInput: ({ kind, field, constraint }) => ({
         reason: kind,
@@ -223,14 +217,6 @@ export function characterBattleInitIssueReasonFromFact(
     Match.discriminatorsExhaustive("reason")({
       characterBuildProjection: (matched) => {
         const { reason, ...fields } = matched;
-        if ("causeReason" in fields) {
-          const { causeReason, ...causeFields } = fields;
-          return {
-            kind: reason,
-            ...causeFields,
-            reason: causeReason,
-          };
-        }
         return { kind: reason, ...fields };
       },
       characterBattleInput: ({ reason, field, constraint }) => ({
