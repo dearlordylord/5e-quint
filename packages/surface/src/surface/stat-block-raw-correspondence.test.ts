@@ -16,6 +16,7 @@ import {
   StatBlockTextOnlyReasonSchema,
 } from "./schema.ts";
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+import { bindRawCorrespondence } from "./stat-block-raw-correspondence-binding.test-support.ts";
 
 /*
  * This is an independent source oracle for the installed pilot records. The
@@ -24,7 +25,9 @@ import { srdStatBlockCollection } from "./stat-block-catalog.ts";
  * Dhall peer. The general section vocabulary and procedure facts are bounded
  * by Monsters/Overview.md:205-265. Hit Dice is the one explicitly deferred
  * authored fact. XP and Proficiency Bonus are printed source facts derived
- * from Challenge Rating, but have no authored field in this schema.
+ * from Challenge Rating, but have no authored field in this schema. Each
+ * `rawSpanSha256` is an integrity binding to the cited local text, not a
+ * semantic parser or a second source of authored facts.
  */
 
 type NonEmpty<T> = readonly [T, ...T[]];
@@ -395,28 +398,36 @@ type SourceRecordInput = Omit<
   "kind" | "provenance" | "statBlock"
 > & {
   readonly source: string;
+  readonly rawSpanSha256: string;
   readonly statBlock: EncodedStandaloneStatBlock;
+};
+
+type SourceCorrespondenceExpectation = {
+  readonly record: Schema.Schema.Type<typeof SrdStatBlockRecordSchema>;
+  readonly rawSpanSha256: string;
 };
 
 const sourceRecord = (
   input: SourceRecordInput,
-): Schema.Schema.Type<typeof SrdStatBlockRecordSchema> =>
-  decode(SrdStatBlockRecordSchema, {
+): SourceCorrespondenceExpectation => ({
+  record: decode(SrdStatBlockRecordSchema, {
     id: input.id,
     kind: "statBlock",
     name: input.name,
     challengeRating: input.challengeRating,
     statBlock: input.statBlock,
     provenance: { kind: "srd-5.2.1", section: input.source },
-  });
+  }),
+  rawSpanSha256: input.rawSpanSha256,
+});
 
-const sourceCorrespondence: readonly Schema.Schema.Type<
-  typeof SrdStatBlockRecordSchema
->[] = [
+const sourceCorrespondence: readonly SourceCorrespondenceExpectation[] = [
   sourceRecord({
     id: "stat_block_bat",
     name: "Bat",
     source: "Animals.md:164-185",
+    rawSpanSha256:
+      "defb04cbbc415a30faa363f9b875d44655475fd9b89195848a438828775cfae2",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -447,6 +458,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_cat",
     name: "Cat",
     source: "Animals.md:319-344",
+    rawSpanSha256:
+      "07603956e98e94c4f4686b11a923a090d9ed1db5a5ac8437399b593e05b768fb",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -488,6 +501,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_frog",
     name: "Frog",
     source: "Animals.md:612-638",
+    rawSpanSha256:
+      "43edacb8ef705e64d60a62d9739631423f901b4ab7da8b8588f93347c467edf0",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -529,6 +544,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_hawk",
     name: "Hawk",
     source: "Animals.md:1454-1475",
+    rawSpanSha256:
+      "729125ac5d094dade73f79cceb8c66d3de2d933dbb0c0290f18786bac8e4a030",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -559,6 +576,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_lizard",
     name: "Lizard",
     source: "Animals.md:1650-1676",
+    rawSpanSha256:
+      "e718d52398e8c6e45f4017175012854176d2a693c9eb0b379918e2612668ed87",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -595,6 +614,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_octopus",
     name: "Octopus",
     source: "Animals.md:1757-1788",
+    rawSpanSha256:
+      "a42bfd3a264eac2141e1bda9aae95ebdbb1825bea8c00f796458e9ddf45e0f05",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "small",
@@ -646,6 +667,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_owl",
     name: "Owl",
     source: "Animals.md:1791-1818",
+    rawSpanSha256:
+      "e56c258210c346d32e8818185c82e47c22f963e6df1abf32b9f78e473b208ad0",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -686,6 +709,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_rat",
     name: "Rat",
     source: "Animals.md:1980-2005",
+    rawSpanSha256:
+      "2756f354f144644f7a2fe503ea35abc9403adb2079fe3493cb1aa724e4b6a6b9",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -723,6 +748,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_raven",
     name: "Raven",
     source: "Animals.md:2008-2035",
+    rawSpanSha256:
+      "84dfd8d386304960c5e4799fd0299b9cc92247adb27469cf4f6ffde4a9892d18",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -759,6 +786,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_spider",
     name: "Spider",
     source: "Animals.md:2197-2223",
+    rawSpanSha256:
+      "42224977c15d6ed2fe53ab28cc287a7daa391095b12be1b9e5c5ba93dfb9f7ed",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -800,6 +829,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_weasel",
     name: "Weasel",
     source: "Animals.md:2563-2583",
+    rawSpanSha256:
+      "e0a05b7f98653149470fa07c95386a05a3b6528625c3e5add56efd310c834144",
     challengeRating: 0,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -835,6 +866,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_venomous_snake",
     name: "Venomous Snake",
     source: "Animals.md:2489-2510",
+    rawSpanSha256:
+      "18232e057b67cdd0e453a4812dbda872f9a810cb19714fad20160f5296e6d1a3",
     challengeRating: 0.125,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -868,6 +901,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_imp",
     name: "Imp",
     source: "Monsters/Monsters-H-L.md:386-415",
+    rawSpanSha256:
+      "63d98014dc7bdd76ffdf9b16fd18677a166fcd47e52fecf5f84338c2729da71c",
     challengeRating: 1,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -930,6 +965,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_pseudodragon",
     name: "Pseudodragon",
     source: "Monsters/Monsters-P-S.md:292-319",
+    rawSpanSha256:
+      "fa45a6bda52866b5cd33f91f9e411a07632d1d7204f63cf0b762cedb6c389b1f",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -977,6 +1014,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_quasit",
     name: "Quasit",
     source: "Monsters/Monsters-P-S.md:359-390",
+    rawSpanSha256:
+      "e53deb1bf50b2555d681ede33da74c9cd27c38fb7aa1c02e980b1c70f25191cd",
     challengeRating: 1,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1040,6 +1079,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_sprite",
     name: "Sprite",
     source: "Monsters/Monsters-P-S.md:1484-1512",
+    rawSpanSha256:
+      "dcc42b743c451462b50214f6e2168a58f19390191eecd3056cd62d60493d00d6",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1091,6 +1132,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_riding_horse",
     name: "Riding Horse",
     source: "Animals.md:2089-2108",
+    rawSpanSha256:
+      "7fa2e0ae5c68c747e3a4d8a103bcac5322004372cabce475999d97dc9053256c",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "large",
@@ -1120,6 +1163,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_wolf",
     name: "Wolf",
     source: "Animals.md:2587-2611",
+    rawSpanSha256:
+      "92b20c99b4236b5b0830199bed3f085c0df89eb3efd595ab4c42476bd4790501",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "medium",
@@ -1166,6 +1211,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_goblin_warrior",
     name: "Goblin Warrior",
     source: "Monsters/Monsters-E-G.md:721-748",
+    rawSpanSha256:
+      "4ed5cffa73cf3c2edbd548fa7227c554a6033d0e8dcc702b8f82a1cd4addb4d2",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "small",
@@ -1222,6 +1269,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_skeleton",
     name: "Skeleton",
     source: "Monsters/Monsters-P-S.md:1152-1175",
+    rawSpanSha256:
+      "244bab47d6f295b53ddcceae5764da8e41b4070fbb8bcd5e2f150ee2dbf58b82",
     challengeRating: 0.25,
     statBlock: standaloneStatBlock({
       size: "medium",
@@ -1283,6 +1332,8 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
     id: "stat_block_sphinx_of_wonder",
     name: "Sphinx of Wonder",
     source: "Monsters/Monsters-P-S.md:1316-1344",
+    rawSpanSha256:
+      "2cab70057b217442b9292dcfe03fb5640414891ad7a66e502bc25807c7097875",
     challengeRating: 1,
     statBlock: standaloneStatBlock({
       size: "tiny",
@@ -1340,9 +1391,83 @@ const sourceCorrespondence: readonly Schema.Schema.Type<
 ] as const;
 
 describe("SRD Stat Block source correspondence", () => {
+  test("binds every expectation to its cited local SRD span", () => {
+    for (const expectation of sourceCorrespondence) {
+      const { record, rawSpanSha256 } = expectation;
+      const source = record.provenance.section;
+      expect(
+        bindRawCorrespondence({
+          source,
+          expectedName: record.name,
+          expectedSha256: rawSpanSha256,
+        }),
+        `Invalid local RAW binding for ${record.id} (${source})`,
+      ).toMatchObject({
+        tag: "bound",
+        source,
+        sha256: rawSpanSha256,
+      });
+    }
+  });
+
+  test("rejects synthetic span and digest drift", () => {
+    const source = "Animals.md:1-2";
+    const syntheticSpan = "## Synthetic Fixture\n\nBody.\n";
+    const readFile = () => syntheticSpan;
+    const expectedSha256 =
+      "02f510e3c65a71089ac2a2f456600fba9ac7a172761e0b171418cc3015140b3d";
+
+    expect(
+      bindRawCorrespondence({
+        source,
+        expectedName: "Synthetic Fixture",
+        expectedSha256,
+        readFile,
+      }),
+    ).toMatchObject({ tag: "bound", source, sha256: expectedSha256 });
+
+    expect(
+      bindRawCorrespondence({
+        source: "Animals.md:1-1",
+        expectedName: "Synthetic Fixture",
+        expectedSha256,
+        readFile,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "digest-mismatch" });
+
+    expect(
+      bindRawCorrespondence({
+        source: "Monsters/Monsters-A-B.md:1-2",
+        expectedName: "Synthetic Fixture",
+        expectedSha256,
+        readFile,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "digest-mismatch" });
+
+    expect(
+      bindRawCorrespondence({
+        source: "Animals.md:1-3",
+        expectedName: "Synthetic Fixture",
+        expectedSha256:
+          "816b2803df931cf808c7c6973b3a85516a4f3d870e086cff87302f75deebff88",
+        readFile: () => "## Synthetic Fixture\n\nChanged.\n",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "digest-mismatch" });
+
+    expect(
+      bindRawCorrespondence({
+        source,
+        expectedName: "Synthetic Fixture",
+        expectedSha256:
+          "0000000000000000000000000000000000000000000000000000000000000000",
+        readFile,
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "digest-mismatch" });
+  });
+
   test("matches every installed record against the independent all-facts matrix", () => {
     const expectedById = new Map(
-      sourceCorrespondence.map((record) => [record.id, record]),
+      sourceCorrespondence.map(({ record }) => [record.id, record]),
     );
     const actualIds = srdStatBlockCollection.statBlocks.map(
       (record) => record.id,
