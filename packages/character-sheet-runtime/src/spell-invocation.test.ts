@@ -92,20 +92,19 @@ describe("Character Sheet runtime / spell invocation", () => {
       );
 
     expect(
-      characterSheetSpellInvocation({
-        sheet: bookSheet("onPerson"),
-        unitLibrary,
-        spellId: authoredUnitId("detect_magic"),
-        invocation: { kind: "ritual" },
-      }),
+      requireRight(
+        characterSheetSpellInvocation({
+          sheet: bookSheet("onPerson"),
+          unitLibrary,
+          spellId: authoredUnitId("detect_magic"),
+          invocation: { kind: "ritual" },
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        tag: "bookOfShadowsRitual",
-        spellId: "detect_magic",
-        requiredSpellAccess: "bookOfShadows",
-        requiresBookOfShadowsOnPerson: true,
-      },
+      tag: "bookOfShadowsRitual",
+      spellId: "detect_magic",
+      requiredSpellAccess: "bookOfShadows",
+      requiresBookOfShadowsOnPerson: true,
     });
     expect(
       characterSheetSpellInvocation({
@@ -129,26 +128,25 @@ describe("Character Sheet runtime / spell invocation", () => {
     });
 
     expect(
-      characterSheetSpellInvocation({
-        sheet,
-        unitLibrary,
-        spellId: authoredUnitId("detect_magic"),
-        invocation: { kind: "ritual" },
-      }),
+      requireRight(
+        characterSheetSpellInvocation({
+          sheet,
+          unitLibrary,
+          spellId: authoredUnitId("detect_magic"),
+          invocation: { kind: "ritual" },
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        tag: "spellbookRitual",
-        spellId: "detect_magic",
-        spellLevel: 1,
-        spellcastingSourceUnitId: "class_wizard",
-        featureUnitId: "wizard_ritual_adept",
-        spellSlotCost: { kind: "none" },
-        preparationRequirement: "not_required",
-        requiredSpellAccess: "spellbook",
-        additionalCastingTimeMinutes: 10,
-        requiresReadingSpellbook: true,
-      },
+      tag: "spellbookRitual",
+      spellId: "detect_magic",
+      spellLevel: 1,
+      spellcastingSourceUnitId: "class_wizard",
+      featureUnitId: "wizard_ritual_adept",
+      spellSlotCost: { kind: "none" },
+      preparationRequirement: "not_required",
+      requiredSpellAccess: "spellbook",
+      additionalCastingTimeMinutes: 10,
+      requiresReadingSpellbook: true,
     });
     expect(characterSheetSpellSlots(sheet)).toEqual([
       { spellLevel: 1, count: 2, expended: 0 },

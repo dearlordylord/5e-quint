@@ -164,14 +164,13 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireRight(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        damageResistances: ["fire"],
-        fiendishResilience: {
-          damageType: "fire",
-        },
+      damageResistances: ["fire"],
+      fiendishResilience: {
+        damageType: "fire",
       },
     });
     expect(
@@ -252,12 +251,9 @@ describe("Character Sheet runtime / passive defenses", () => {
       },
     });
 
-    expect(parseStoredFiendishResilience({ damageType: "cold" })).toMatchObject(
-      {
-        _tag: "Success",
-        value: { damageType: "cold" },
-      },
-    );
+    expect(
+      requireRight(parseStoredFiendishResilience({ damageType: "cold" })),
+    ).toMatchObject({ damageType: "cold" });
   });
 
   test(naturesWardPassiveDefenseProjectionTestName, () => {
@@ -281,19 +277,18 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireRight(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        damageResistances: ["lightning"],
+      damageResistances: ["lightning"],
+      conditionImmunities: ["poisoned"],
+      naturesWard: {
+        sourceUnitId: authoredUnitId("druid_natures_ward"),
         conditionImmunities: ["poisoned"],
-        naturesWard: {
-          sourceUnitId: authoredUnitId("druid_natures_ward"),
-          conditionImmunities: ["poisoned"],
-          resistance: {
-            land: "temperate",
-            damageType: "lightning",
-          },
+        resistance: {
+          land: "temperate",
+          damageType: "lightning",
         },
       },
     });
@@ -307,17 +302,19 @@ describe("Character Sheet runtime / passive defenses", () => {
       }),
     );
     expect(
-      characterSheetPassiveDefenseProjection({ sheet: rested, unitLibrary }),
+      requireRight(
+        characterSheetPassiveDefenseProjection({
+          sheet: rested,
+          unitLibrary,
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        damageResistances: ["fire"],
-        conditionImmunities: ["poisoned"],
-        naturesWard: {
-          resistance: {
-            land: "arid",
-            damageType: "fire",
-          },
+      damageResistances: ["fire"],
+      conditionImmunities: ["poisoned"],
+      naturesWard: {
+        resistance: {
+          land: "arid",
+          damageType: "fire",
         },
       },
     });
@@ -335,18 +332,17 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireRight(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
+      conditionImmunities: ["frightened"],
+      auraOfCourage: {
+        sourceUnitId: authoredUnitId("paladin_aura_of_courage"),
         conditionImmunities: ["frightened"],
-        auraOfCourage: {
-          sourceUnitId: authoredUnitId("paladin_aura_of_courage"),
-          conditionImmunities: ["frightened"],
-          auraMembershipSource: {
-            kind: "auraOfProtection",
-            condition: "frightened",
-          },
+        auraMembershipSource: {
+          kind: "auraOfProtection",
+          condition: "frightened",
         },
       },
     });
@@ -365,15 +361,14 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireRight(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        selfRestoration: {
-          sourceUnitId: authoredUnitId("monk_self_restoration"),
-          turnEndRemovableConditions: ["charmed", "frightened", "poisoned"],
-          foodAndDrinkExhaustionPrevented: true,
-        },
+      selfRestoration: {
+        sourceUnitId: authoredUnitId("monk_self_restoration"),
+        turnEndRemovableConditions: ["charmed", "frightened", "poisoned"],
+        foodAndDrinkExhaustionPrevented: true,
       },
     });
 
@@ -414,21 +409,20 @@ describe("Character Sheet runtime / passive defenses", () => {
     const fireball = spellRecord("fireball");
 
     expect(
-      empoweredEvocationDamageRollModifier({
-        sheet,
-        unitLibrary,
-        spell: fireball,
-        spellSourceUnitId: authoredUnitId("class_wizard"),
-      }),
+      requireRight(
+        empoweredEvocationDamageRollModifier({
+          sheet,
+          unitLibrary,
+          spell: fireball,
+          spellSourceUnitId: authoredUnitId("class_wizard"),
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        sourceUnitId: authoredUnitId("wizard_empowered_evocation"),
-        spellSourceUnitId: "class_wizard",
-        school: "evocation",
-        damageRollAbility: "int",
-        damageRollModifier: 4,
-      },
+      sourceUnitId: authoredUnitId("wizard_empowered_evocation"),
+      spellSourceUnitId: "class_wizard",
+      school: "evocation",
+      damageRollAbility: "int",
+      damageRollModifier: 4,
     });
 
     expect(

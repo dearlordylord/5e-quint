@@ -176,10 +176,11 @@ describe("Character Sheet runtime / companions", () => {
     );
 
     expect(characterSheetCompanion(sheet)).toEqual({ tag: "none" });
-    expect(parseCharacterSheet(sheet, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: { companion: { tag: "none" } },
-    });
+    expect(requireRight(parseCharacterSheet(sheet, unitLibrary))).toMatchObject(
+      {
+        companion: { tag: "none" },
+      },
+    );
   });
 
   test("retains one familiar-like companion with resolved form proof", () => {

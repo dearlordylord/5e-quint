@@ -169,9 +169,8 @@ describe("Character Sheet runtime / Contact Patron", () => {
         },
       ]),
     );
-    expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(sheet, unitLibrary))).toEqual(
+      expect.arrayContaining([
         {
           sourceUnitId: authoredUnitId("warlock_contact_patron"),
           spellId: authoredUnitId("contact_other_plane"),
@@ -180,7 +179,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
           expended: 0,
         },
       ]),
-    });
+    );
 
     const result = requireRight(castContactPatron({ sheet, unitLibrary }));
 

@@ -534,34 +534,32 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: [
-        {
-          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
-          spellId: authoredUnitId("hunters_mark"),
-          count: 2,
-          expended: 1,
-        },
-      ],
-    });
+    expect(
+      requireRight(characterSheetResources(spent, unitLibrary)),
+    ).toMatchObject([
+      {
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("hunters_mark"),
+        count: 2,
+        expended: 1,
+      },
+    ]);
 
     const rested = requireRight(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: [
-        {
-          sourceUnitId: authoredUnitId("ranger_favored_enemy"),
-          spellId: authoredUnitId("hunters_mark"),
-          count: 2,
-          expended: 0,
-        },
-      ],
-    });
+    expect(
+      requireRight(characterSheetResources(rested, unitLibrary)),
+    ).toMatchObject([
+      {
+        sourceUnitId: authoredUnitId("ranger_favored_enemy"),
+        spellId: authoredUnitId("hunters_mark"),
+        count: 2,
+        expended: 0,
+      },
+    ]);
   });
 
   test("Long Rest restores the Paladin's Smite Divine Smite free-cast pool", () => {
@@ -586,9 +584,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
           spellId: authoredUnitId("divine_smite"),
@@ -596,16 +593,15 @@ describe("Character Sheet runtime / resources", () => {
           expended: 1,
         }),
       ]),
-    });
+    );
 
     const rested = requireRight(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(rested, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
           spellId: authoredUnitId("divine_smite"),
@@ -613,7 +609,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(monksFocusShortRestRecoveryTestName, () => {
@@ -647,9 +643,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -658,19 +653,22 @@ describe("Character Sheet runtime / resources", () => {
           resetCadence: { kind: "short_or_long_rest" },
         }),
       ]),
-    });
-    expect(characterSheetMonksFocusSaveDc(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: { unitId: MONK_MONKS_FOCUS_UNIT_ID, dc: 13 },
+    );
+    expect(
+      requireRight(characterSheetMonksFocusSaveDc(spent, unitLibrary)),
+    ).toMatchObject({
+      unitId: MONK_MONKS_FOCUS_UNIT_ID,
+      dc: 13,
     });
 
     const shortRested = requireRight(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
 
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -678,16 +676,17 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
 
     const longRested = requireRight(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -695,7 +694,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererFontOfMagicLongRestRecoveryTestName, () => {
@@ -729,9 +728,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -744,16 +742,17 @@ describe("Character Sheet runtime / resources", () => {
           resetCadence: { kind: "long_rest" },
         }),
       ]),
-    });
+    );
 
     const longRested = requireRight(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -761,7 +760,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererSorcerousRestorationShortRestRecoveryTestName, () => {
@@ -787,9 +786,8 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -798,7 +796,7 @@ describe("Character Sheet runtime / resources", () => {
           resetCadence: { kind: "long_rest" },
         }),
       ]),
-    });
+    );
 
     const shortRested = requireRight(
       completeShortRest({
@@ -824,9 +822,10 @@ describe("Character Sheet runtime / resources", () => {
       requireRight(parseCharacterSheet(shortRested, unitLibrary))
         .restFeatureUses,
     ).toEqual(shortRested.restFeatureUses);
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -834,7 +833,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 2,
         }),
       ]),
-    });
+    );
 
     expect(
       completeShortRest({
@@ -907,9 +906,10 @@ describe("Character Sheet runtime / resources", () => {
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(longRested.restFeatureUses).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -917,7 +917,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(uncannyMetabolismLongRestUseStateTestName, () => {
@@ -949,35 +949,33 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(
-      characterSheetMonkUncannyMetabolismUseState(spent, unitLibrary),
+      requireRight(
+        characterSheetMonkUncannyMetabolismUseState(spent, unitLibrary),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
-        trigger: "roll_initiative",
-        optional: true,
-        oncePerLongRestUse: {
-          resetCadence: { kind: "long_rest" },
-        },
-        focusRecovery: {
-          resourceUnitId: MONK_MONKS_FOCUS_UNIT_ID,
-          recoversAllExpended: true,
-        },
-        healing: {
-          target: "self",
-          martialArtsDieSourceUnitId: MONK_MARTIAL_ARTS_UNIT_ID,
-          martialArtsDie: {
-            dice: 1,
-            dieSize: 6,
-          },
-          monkLevelBonus: 2,
-        },
-        usedSinceLongRest: true,
+      unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
+      trigger: "roll_initiative",
+      optional: true,
+      oncePerLongRestUse: {
+        resetCadence: { kind: "long_rest" },
       },
+      focusRecovery: {
+        resourceUnitId: MONK_MONKS_FOCUS_UNIT_ID,
+        recoversAllExpended: true,
+      },
+      healing: {
+        target: "self",
+        martialArtsDieSourceUnitId: MONK_MARTIAL_ARTS_UNIT_ID,
+        martialArtsDie: {
+          dice: 1,
+          dieSize: 6,
+        },
+        monkLevelBonus: 2,
+      },
+      usedSinceLongRest: true,
     });
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -985,7 +983,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 2,
         }),
       ]),
-    });
+    );
 
     const shortRested = requireRight(
       completeShortRest({ sheet: spent, unitLibrary }),
@@ -994,16 +992,17 @@ describe("Character Sheet runtime / resources", () => {
     expect(shortRested.restFeatureUses).toEqual([
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
     ]);
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
           expended: 0,
         }),
       ]),
-    });
+    );
 
     const longRested = requireRight(
       completeLongRest({ sheet: shortRested, unitLibrary }),
@@ -1011,13 +1010,12 @@ describe("Character Sheet runtime / resources", () => {
 
     expect(longRested.restFeatureUses).toEqual([]);
     expect(
-      characterSheetMonkUncannyMetabolismUseState(longRested, unitLibrary),
+      requireRight(
+        characterSheetMonkUncannyMetabolismUseState(longRested, unitLibrary),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
-        usedSinceLongRest: false,
-      },
+      unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
+      usedSinceLongRest: false,
     });
   });
 
@@ -1058,20 +1056,20 @@ describe("Character Sheet runtime / resources", () => {
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
     ]);
     expect(
-      characterSheetMonkUncannyMetabolismUseState(recovered, unitLibrary),
+      requireRight(
+        characterSheetMonkUncannyMetabolismUseState(recovered, unitLibrary),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        healing: {
-          martialArtsDie: { dice: 1, dieSize: 8 },
-          monkLevelBonus: 5,
-        },
-        usedSinceLongRest: true,
+      healing: {
+        martialArtsDie: { dice: 1, dieSize: 8 },
+        monkLevelBonus: 5,
       },
+      usedSinceLongRest: true,
     });
-    expect(characterSheetResources(recovered, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(recovered, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -1079,7 +1077,7 @@ describe("Character Sheet runtime / resources", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
 
     const nearMaximum = requireRight(
       rebuildCharacterSheetFixture({

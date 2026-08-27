@@ -183,9 +183,10 @@ describe("Character Sheet Spell Access free casts", () => {
       completeLongRest({ sheet: shortRested, unitLibrary }),
     );
     expect(longRested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "spellAccessFreeCast",
           sourceUnitId: magicInitiateSourceUnitId,
@@ -194,7 +195,7 @@ describe("Character Sheet Spell Access free casts", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test("stored sheets round-trip the mandatory access and reject invalid access or expenditure keys", () => {
@@ -209,8 +210,10 @@ describe("Character Sheet Spell Access free casts", () => {
       }),
     );
     expect(
-      parseCharacterSheet(JSON.parse(JSON.stringify(spent)), unitLibrary),
-    ).toMatchObject({ _tag: "Success", value: spent });
+      requireRight(
+        parseCharacterSheet(JSON.parse(JSON.stringify(spent)), unitLibrary),
+      ),
+    ).toEqual(spent);
 
     const missingAccess = JSON.parse(JSON.stringify(spent));
     delete missingAccess.build.magicInitiateSpellAccesses;

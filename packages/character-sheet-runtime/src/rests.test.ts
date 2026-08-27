@@ -105,12 +105,9 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    expect(startShortRest({ sheet })).toMatchObject({
-      _tag: "Success",
-      value: {
-        tag: "shortRestStarted",
-        requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
-      },
+    expect(requireRight(startShortRest({ sheet }))).toMatchObject({
+      tag: "shortRestStarted",
+      requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
     });
     const shortRest = requireRight(startShortRest({ sheet }));
     expect(
@@ -172,20 +169,19 @@ describe("Character Sheet runtime / rests", () => {
       },
     });
     expect(
-      startLongRest({
-        sheet,
-        timing: {
-          tag: "elapsedSinceLastLongRest",
-          elapsedTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
-        },
-      }),
+      requireRight(
+        startLongRest({
+          sheet,
+          timing: {
+            tag: "elapsedSinceLastLongRest",
+            elapsedTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+          },
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        tag: "longRestStarted",
-        requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
-        nextLongRestStartWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
-      },
+      tag: "longRestStarted",
+      requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
+      nextLongRestStartWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
     });
     const longRest = requireRight(
       startLongRest({

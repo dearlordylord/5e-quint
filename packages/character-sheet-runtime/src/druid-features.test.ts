@@ -49,18 +49,17 @@ describe("Character Sheet runtime / druid features", () => {
     );
 
     expect(
-      characterSheetDruidCircleLandPreparedSpellAccess({
-        sheet,
-        unitLibrary,
-      }),
+      requireRight(
+        characterSheetDruidCircleLandPreparedSpellAccess({
+          sheet,
+          unitLibrary,
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        land: "temperate",
-        druidLevel: 5,
-        spellcastingSourceUnitId: "class_druid",
-        spellIds: ["misty_step", "shocking_grasp", "sleep", "lightning_bolt"],
-      },
+      land: "temperate",
+      druidLevel: 5,
+      spellcastingSourceUnitId: "class_druid",
+      spellIds: ["misty_step", "shocking_grasp", "sleep", "lightning_bolt"],
     });
 
     const rested = requireRight(
@@ -73,16 +72,15 @@ describe("Character Sheet runtime / druid features", () => {
 
     expect(rested.druidCircleLand).toEqual({ land: "arid" });
     expect(
-      characterSheetDruidCircleLandPreparedSpellAccess({
-        sheet: rested,
-        unitLibrary,
-      }),
+      requireRight(
+        characterSheetDruidCircleLandPreparedSpellAccess({
+          sheet: rested,
+          unitLibrary,
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Success",
-      value: {
-        land: "arid",
-        spellIds: ["blur", "burning_hands", "fire_bolt", "fireball"],
-      },
+      land: "arid",
+      spellIds: ["blur", "burning_hands", "fire_bolt", "fireball"],
     });
   });
 
@@ -247,9 +245,8 @@ describe("Character Sheet runtime / druid features", () => {
     expect(characterSheetDruidWildShapeKnownForms(spent)).toEqual({
       statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
     });
-    expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: DRUID_WILD_SHAPE_UNIT_ID,
@@ -258,7 +255,7 @@ describe("Character Sheet runtime / druid features", () => {
           resetCadence: { kind: "partial_short_full_long", shortRestRefill: 1 },
         }),
       ]),
-    });
+    );
 
     const shortRested = requireRight(
       completeShortRest({ sheet: spent, unitLibrary }),
@@ -267,9 +264,10 @@ describe("Character Sheet runtime / druid features", () => {
     expect(characterSheetDruidWildShapeKnownForms(shortRested)).toEqual({
       statBlockIds: druidWildShapeFixtureKnownFormStatBlockIds,
     });
-    expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(shortRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: DRUID_WILD_SHAPE_UNIT_ID,
@@ -277,7 +275,7 @@ describe("Character Sheet runtime / druid features", () => {
           expended: 1,
         }),
       ]),
-    });
+    );
 
     const longRested = requireRight(
       completeLongRest({
@@ -299,9 +297,10 @@ describe("Character Sheet runtime / druid features", () => {
         "stat_block_wolf",
       ],
     });
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: DRUID_WILD_SHAPE_UNIT_ID,
@@ -309,6 +308,6 @@ describe("Character Sheet runtime / druid features", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 });

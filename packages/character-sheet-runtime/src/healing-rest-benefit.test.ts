@@ -106,16 +106,17 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       tempHp: 0,
     });
     expect(result.target.conditions).toEqual([]);
-    expect(characterSheetResources(result.source, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(result.source, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           unitId: authoredUnitId("paladin_lay_on_hands"),
           count: 10,
           expended: 7,
         }),
       ]),
-    });
+    );
   });
 
   test("Lay On Hands can spend only for Poisoned removal without restoring HP", () => {
@@ -265,16 +266,13 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: [
-        {
-          unitId: authoredUnitId("paladin_lay_on_hands"),
-          count: 5,
-          expended: 0,
-        },
-      ],
-    });
+    expect(requireRight(characterSheetResources(rested, unitLibrary))).toEqual([
+      expect.objectContaining({
+        unitId: authoredUnitId("paladin_lay_on_hands"),
+        count: 5,
+        expended: 0,
+      }),
+    ]);
   });
 
   test(prayerOfHealingRestBenefitApplicationTestName, () => {
@@ -395,17 +393,16 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     ]);
     expect(characterSheetCurrentHp(result.recipients[1])).toBe(19);
     expect(
-      characterSheetResources(result.recipients[1], unitLibrary),
-    ).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+      requireRight(characterSheetResources(result.recipients[1], unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
           expended: 2,
         }),
       ]),
-    });
+    );
     expect(characterSheetCurrentHp(result.recipients[2])).toBe(11);
     expect(
       result.recipients.map((recipient) => recipient.restFeatureUses),

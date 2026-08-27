@@ -241,9 +241,10 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 1, count: 4, expended: 0 },
       { spellLevel: 2, count: 2, expended: 2 },
     ]);
-    expect(characterSheetResources(converted, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(converted, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -251,7 +252,7 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 1,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererFontOfMagicSlotConversionGateTestName, () => {
@@ -387,9 +388,8 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 2, count: 3, expended: 0 },
       { spellLevel: 3, count: 3, expended: 0 },
     ]);
-    expect(characterSheetResources(created, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(requireRight(characterSheetResources(created, unitLibrary))).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -397,7 +397,7 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 5,
         }),
       ]),
-    });
+    );
 
     expect(
       convertFontOfMagicSpellSlotToSorceryPoints({
@@ -431,10 +431,9 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 3, count: 3, expended: 1 },
     ]);
     expect(
-      characterSheetResources(createdSlotConverted, unitLibrary),
-    ).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+      requireRight(characterSheetResources(createdSlotConverted, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -442,7 +441,7 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 2,
         }),
       ]),
-    });
+    );
 
     if (
       !("spellSlotExpenditures" in created) ||
@@ -492,9 +491,10 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 2, count: 3, expended: 0 },
       { spellLevel: 3, count: 2, expended: 0 },
     ]);
-    expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: expect.arrayContaining([
+    expect(
+      requireRight(characterSheetResources(longRested, unitLibrary)),
+    ).toEqual(
+      expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -502,7 +502,7 @@ describe("Character Sheet runtime / spell slots", () => {
           expended: 0,
         }),
       ]),
-    });
+    );
   });
 
   test(sorcererFontOfMagicSlotCreationGateTestName, () => {

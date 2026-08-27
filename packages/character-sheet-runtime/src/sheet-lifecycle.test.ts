@@ -145,8 +145,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       value: { tag: "positive", currentHp: 2, tempHp: "not-hp" },
       expectedTag: "Failure",
     },
-    { value: { tag: "positive", currentHp: 2 }, expectedTag: "Right" },
-    { value: { tag: "knockedOut", tempHp: 1 }, expectedTag: "Right" },
+    { value: { tag: "positive", currentHp: 2 }, expectedTag: "Success" },
+    { value: { tag: "knockedOut", tempHp: 1 }, expectedTag: "Success" },
     { value: { tag: "zero", lifecycle: null }, expectedTag: "Failure" },
     {
       value: {
@@ -159,7 +159,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           },
         },
       },
-      expectedTag: "Right",
+      expectedTag: "Success",
     },
     {
       value: {
@@ -186,7 +186,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           recovery: { kind: "regains1HpAfter", remaining: 1 },
         },
       },
-      expectedTag: "Right",
+      expectedTag: "Success",
     },
     {
       value: {
@@ -196,7 +196,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           deathSaves: { successes: 1, failures: 2 },
         },
       },
-      expectedTag: "Right",
+      expectedTag: "Success",
     },
     {
       value: {
