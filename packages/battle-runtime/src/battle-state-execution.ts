@@ -7051,13 +7051,14 @@ export type BattleSnapshot = {
 };
 
 /**
- * A continuation frontier owned by the interrupt/replay layer.
+ * The mechanical frontier for choosing an interrupt procedure.
  *
  * This is intentionally not part of BattleSnapshot: a frontier describes an
  * open decision in an in-flight execution, while BattleSnapshot is the
  * durable committed mechanical checkpoint callers can persist.
  */
-export type BattlePendingInterruptSnapshot = {
+export type BattleInterruptDecisionFrontier = {
+  readonly kind: "interruptDecision";
   readonly trigger: BattleInterruptTrigger;
   readonly decisionHole: BattleInterruptDecisionHole;
   readonly choices: readonly BattleInterruptProcedureChoice[];

@@ -6,6 +6,7 @@ import * as Either from "effect/Either";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import { battleReducerRouteForResolution } from "./battle-reducer/reducer-route.ts";
 import {
+  discoverBattleActCandidates,
   endTurn,
   openCreatureFallsInterruptWindow,
   resolveAdmittedBattleSubject,
@@ -22,10 +23,16 @@ import {
 } from "./battle-runtime-context.ts";
 import type { CombatantId } from "./identity.ts";
 import { sameBattleSubject, type BattleSubject } from "./battle-subjects.ts";
+import {
+  currentInterruptFrame,
+  interruptDecisionFrontier,
+} from "./battle-reducer/battle-snapshot.ts";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
+  BattleActDiscoveryCandidate,
   BattleFill,
   BattleHole,
-  BattleResolutionCheckpointBoundary,
+  BattleInterruptDecisionFrontier,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSnapshot,
@@ -54,20 +61,40 @@ type ResolvedBattleResult = Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
 >;
-type NeedsHolesBattleResult = Extract<
-  BattleResolutionResult,
-  { readonly tag: "needsHoles" }
->;
+export type BattleCheckpointFrontierEnvelope = {
+  readonly checkpoint: BattleSnapshot;
+  readonly frontier:
+    | {
+        readonly kind: "acts";
+        readonly acts: readonly BattleActDiscoveryCandidate[];
+      }
+    | {
+        readonly kind: "holes";
+        readonly subject: BattleSubject;
+        readonly holes: ReadonlyNonEmptyArray<BattleHole>;
+        readonly continuation:
+          | { readonly kind: "ordinaryReplay" }
+          | { readonly kind: "runtimeOwnedInterrupt" };
+      }
+    | BattleInterruptDecisionFrontier;
+};
 
-export type BattleRuntimeCheckpointBoundary =
-  | BattleResolutionCheckpointBoundary
-  | { readonly kind: "ordinaryReplay" };
+type BattleHolesFrontier = Extract<
+  BattleCheckpointFrontierEnvelope["frontier"],
+  { readonly kind: "holes" }
+>;
+type BattleNeedsHolesEnvelope = Omit<
+  BattleCheckpointFrontierEnvelope,
+  "frontier"
+> & {
+  readonly frontier: BattleHolesFrontier | BattleInterruptDecisionFrontier;
+};
 
 export type BattleRuntimeResolutionResult =
   | {
       readonly tag: "resolved";
       readonly session: BattleRuntimeSession;
-      readonly snapshot: ResolvedBattleResult["snapshot"];
+      readonly envelope: BattleCheckpointFrontierEnvelope;
       readonly routeEvents?: BattleReducerRouteEvents;
       readonly objectDamages?: ResolvedBattleResult["objectDamages"];
       readonly objectIgnitions?: ResolvedBattleResult["objectIgnitions"];
@@ -79,10 +106,7 @@ export type BattleRuntimeResolutionResult =
   | {
       readonly tag: "needsHoles";
       readonly session: BattleRuntimeSession;
-      readonly subject: NeedsHolesBattleResult["subject"];
-      readonly holes: NeedsHolesBattleResult["holes"];
-      readonly snapshot: NeedsHolesBattleResult["snapshot"];
-      readonly checkpointBoundary: BattleRuntimeCheckpointBoundary;
+      readonly envelope: BattleNeedsHolesEnvelope;
       readonly routeEvents?: BattleReducerRouteEvents;
     }
   | {
@@ -93,7 +117,7 @@ export type BattleRuntimeResolutionResult =
         { readonly tag: "invalid" }
       >["reason"];
       readonly message: string;
-      readonly snapshot: BattleSnapshot;
+      readonly envelope: BattleCheckpointFrontierEnvelope;
       readonly routeEvents?: BattleReducerRouteEvents;
     };
 
@@ -111,6 +135,143 @@ export type BattleRuntimeTableD20TestResolutionResult =
       ));
 
 const byBattleResolutionTag = Match.discriminator("tag");
+
+function battleActsEnvelope(
+  state: BattleRuntimeSession["state"],
+): BattleCheckpointFrontierEnvelope {
+  return {
+    checkpoint: snapshotBattle(state),
+    frontier: {
+      kind: "acts",
+      acts: discoverBattleActCandidates(state),
+    },
+  };
+}
+
+function battleCurrentFrontierEnvelope(
+  state: BattleRuntimeSession["state"],
+): BattleCheckpointFrontierEnvelope {
+  const interruptFrontier = interruptDecisionFrontier(state);
+  if (interruptFrontier !== null) {
+    return {
+      checkpoint: snapshotBattle(state),
+      frontier: interruptFrontier,
+    };
+  }
+  const continuation = battleCurrentContinuation(state);
+  if (continuation !== null) {
+    const pending = resolveBattleSubject({
+      state,
+      subject: continuation.subject,
+      fills: continuation.fills,
+    });
+    if (pending.tag === "needsHoles") {
+      const envelope = battleHolesEnvelope(
+        state,
+        pending.subject,
+        pending.holes,
+        "runtimeOwnedInterrupt",
+      );
+      if (envelope !== null) return envelope;
+    }
+  }
+  return battleActsEnvelope(state);
+}
+
+function battleCurrentContinuation(state: BattleRuntimeSession["state"]): {
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+} | null {
+  const frame = currentInterruptFrame(state);
+  if (frame === null) return null;
+  return Match.value(frame).pipe(
+    Match.when({ kind: "interruptCheckpoint" }, ({ frame: checkpoint }) => {
+      const activeInterrupt = checkpoint.activeInterrupt;
+      return activeInterrupt === undefined
+        ? null
+        : {
+            subject: activeInterrupt.subject,
+            fills: activeInterrupt.fills,
+          };
+    }),
+    Match.when({ kind: "replayContinuation" }, ({ continuation }) => ({
+      subject: continuation.subject,
+      fills: continuation.fills,
+    })),
+    Match.when(
+      { kind: "attackDamageContinuationConcentration" },
+      ({ continuation }) => ({
+        subject: continuation.participant,
+        fills: [],
+      }),
+    ),
+    Match.when(
+      { kind: "attackDamageContinuationCunningStrike" },
+      ({ continuation }) => ({
+        subject: continuation.participant,
+        fills: [],
+      }),
+    ),
+    Match.when({ kind: "flySpeedGrantEndFallCleanup" }, () => null),
+    Match.when({ kind: "fallDamageLandingMitigation" }, () => null),
+    Match.exhaustive,
+  );
+}
+
+function battleHolesEnvelope(
+  state: BattleRuntimeSession["state"],
+  subject: BattleSubject,
+  holes: readonly BattleHole[],
+  continuation: "ordinaryReplay" | "runtimeOwnedInterrupt",
+): BattleNeedsHolesEnvelope | null {
+  const firstHole = holes[0];
+  if (firstHole === undefined) return null;
+  const nonEmptyHoles: ReadonlyNonEmptyArray<BattleHole> = [
+    firstHole,
+    ...holes.slice(1),
+  ];
+  return {
+    checkpoint: snapshotBattle(state),
+    frontier: {
+      kind: "holes",
+      subject,
+      holes: nonEmptyHoles,
+      continuation: { kind: continuation },
+    },
+  };
+}
+
+function precedingBattleFrontierEnvelope(
+  input: BattleRuntimeResolutionInput,
+): BattleCheckpointFrontierEnvelope {
+  if (input.fills.length === 0) {
+    return battleCurrentFrontierEnvelope(input.session.state);
+  }
+  const preceding = resolveBattleRuntimeSubject({
+    ...input,
+    fills: input.fills.slice(0, -1),
+  });
+  return preceding.tag === "resolved"
+    ? battleActsEnvelope(input.session.state)
+    : preceding.envelope;
+}
+
+function invalidBattleRuntimeResult(
+  input: BattleRuntimeResolutionInput,
+  reason: Extract<
+    BattleResolutionResult,
+    { readonly tag: "invalid" }
+  >["reason"],
+  message: string,
+): Extract<BattleRuntimeResolutionResult, { readonly tag: "invalid" }> {
+  return {
+    tag: "invalid",
+    session: input.session,
+    reason,
+    message,
+    envelope: precedingBattleFrontierEnvelope(input),
+  };
+}
 
 function rolledD20TestRequests(
   requests: readonly BattleD20TestCircumstanceRequest[],
@@ -144,13 +305,11 @@ export function resolveBattleRuntimeSubject(
     input.subject.action === "reappear"
   ) {
     if (input.statBlockCatalog === undefined) {
-      return {
-        tag: "invalid",
-        session: input.session,
-        reason: "invalidFill",
-        message: "Familiar reappearance requires a Stat Block catalog.",
-        snapshot: snapshotBattle(input.session.state),
-      };
+      return invalidBattleRuntimeResult(
+        input,
+        "invalidFill",
+        "Familiar reappearance requires a Stat Block catalog.",
+      );
     }
     const admission = admitFindFamiliarReappearance({
       state: input.session.state,
@@ -158,13 +317,11 @@ export function resolveBattleRuntimeSubject(
       catalog: input.statBlockCatalog,
     });
     if (Either.isLeft(admission)) {
-      return {
-        tag: "invalid",
-        session: input.session,
-        reason: "invalidFill",
-        message: admission.left.message,
-        snapshot: snapshotBattle(input.session.state),
-      };
+      return invalidBattleRuntimeResult(
+        input,
+        "invalidFill",
+        admission.left.message,
+      );
     }
     const result = resolveAdmittedFindFamiliarReappearanceSubject({
       fills: input.fills,
@@ -175,6 +332,7 @@ export function resolveBattleRuntimeSubject(
       result,
       admission.right.mechanics.combatantAdmission.combatantId,
       admission.right.presentation,
+      input,
     );
   }
   return battleRuntimeResolutionFromMechanical(
@@ -185,6 +343,7 @@ export function resolveBattleRuntimeSubject(
       fills: input.fills,
     }),
     "ordinary",
+    input,
   );
 }
 
@@ -243,11 +402,12 @@ function subjectD20TestRequests(input: {
       fills: input.fills.slice(0, fillIndex),
     });
     if (frontier.tag !== "needsHoles") continue;
+    if (frontier.envelope.frontier.kind !== "holes") continue;
     const fill = input.fills[fillIndex];
     const frontierRequests = rolledD20TestRequests(
       battleD20TestCircumstanceRequests({
         resolutionId: input.resolutionId,
-        holes: frontier.holes,
+        holes: frontier.envelope.frontier.holes,
         resolvedFills: input.fills.slice(0, fillIndex),
       }),
       fill,
@@ -255,7 +415,7 @@ function subjectD20TestRequests(input: {
     appendUnseenD20TestRequests(requests, frontierRequests);
     retainAttackRollTableSourceForFrontier({
       fill,
-      holes: frontier.holes,
+      holes: frontier.envelope.frontier.holes,
       requests: frontierRequests,
       decisions: input.decisions,
     });
@@ -295,11 +455,11 @@ export function resolveBattleRuntimeSubjectWithTableD20TestCircumstances(
   });
   if (Either.isLeft(admission)) {
     return {
-      tag: "invalid",
-      session: input.session,
-      reason: "invalidFill",
-      message: admission.left.issues.map(({ message }) => message).join(" "),
-      snapshot: snapshotBattle(input.session.state),
+      ...invalidBattleRuntimeResult(
+        input,
+        "invalidFill",
+        admission.left.issues.map(({ message }) => message).join(" "),
+      ),
       tableD20TestCircumstanceDecisionIssue: admission.left,
     };
   }
@@ -310,11 +470,14 @@ export function resolveBattleRuntimeSubjectWithTableD20TestCircumstances(
   return result.tag === "needsHoles"
     ? {
         ...result,
-        d20TestCircumstanceRequests: battleD20TestCircumstanceRequests({
-          resolutionId: input.d20TestResolutionId,
-          holes: result.holes,
-          resolvedFills: fills,
-        }),
+        d20TestCircumstanceRequests:
+          result.envelope.frontier.kind === "holes"
+            ? battleD20TestCircumstanceRequests({
+                resolutionId: input.d20TestResolutionId,
+                holes: result.envelope.frontier.holes,
+                resolvedFills: fills,
+              })
+            : [],
       }
     : result;
 }
@@ -324,25 +487,28 @@ function battleRuntimeResolutionWithFamiliarPresentation(
   result: BattleResolutionResult,
   combatantId: CombatantId,
   presentation: BattleStatBlockPresentationSource,
+  retryInput: BattleRuntimeResolutionInput,
 ): BattleRuntimeResolutionResult {
   if (result.tag !== "resolved") {
-    return battleRuntimeResolutionFromMechanical(session, result, "ordinary");
+    return battleRuntimeResolutionFromMechanical(
+      session,
+      result,
+      "ordinary",
+      retryInput,
+    );
   }
   const combatant = result.state.combatants.get(combatantId);
   if (combatant === undefined) {
-    return {
-      tag: "invalid",
-      session,
-      reason: "invalidFill",
-      message:
-        "Resolved familiar reappearance did not create its admitted combatant.",
-      snapshot: snapshotBattle(session.state),
-    };
+    return invalidBattleRuntimeResult(
+      retryInput,
+      "invalidFill",
+      "Resolved familiar reappearance did not create its admitted combatant.",
+    );
   }
-  const { state: _state, ...outcome } = result;
+  const { state: _state, snapshot: _snapshot, ...outcome } = result;
   return {
     ...outcome,
-    snapshot: snapshotBattle(result.state),
+    envelope: battleActsEnvelope(result.state),
     session: battleRuntimeSessionWithStatBlockPresentation(
       session,
       result.state,
@@ -356,48 +522,75 @@ function battleRuntimeResolutionFromMechanical(
   session: BattleRuntimeSession,
   result: BattleResolutionResult,
   checkpointMode: "ordinary" | "interrupt",
+  retryInput?: BattleRuntimeResolutionInput,
 ): BattleRuntimeResolutionResult {
   return Match.value(result).pipe(
-    byBattleResolutionTag("resolved", ({ state, ...outcome }) => ({
-      ...outcome,
-      session: battleRuntimeSessionWithState(session, state),
-    })),
-    byBattleResolutionTag("needsHoles", ({ state, ...outcome }) => {
-      if (outcome.holes.length === 0) {
+    byBattleResolutionTag(
+      "resolved",
+      ({ state, snapshot: _snapshot, ...outcome }) => ({
+        ...outcome,
+        envelope: battleActsEnvelope(state),
+        session: battleRuntimeSessionWithState(session, state),
+      }),
+    ),
+    byBattleResolutionTag(
+      "needsHoles",
+      ({
+        state,
+        snapshot: _snapshot,
+        checkpointBoundary: _checkpointBoundary,
+        ...outcome
+      }) => {
+        const runtimeOwnedInterrupt =
+          checkpointMode === "interrupt" ||
+          _checkpointBoundary !== undefined ||
+          session.state.interruptStack.length > 0 ||
+          state.interruptStack.length > 0;
+        const checkpointState = runtimeOwnedInterrupt ? state : session.state;
+        const checkpointSession = runtimeOwnedInterrupt
+          ? battleRuntimeSessionWithState(session, state)
+          : session;
+        const interruptFrontier = interruptDecisionFrontier(state);
+        const envelope =
+          interruptFrontier === null
+            ? battleHolesEnvelope(
+                checkpointState,
+                outcome.subject,
+                outcome.holes,
+                runtimeOwnedInterrupt
+                  ? "runtimeOwnedInterrupt"
+                  : "ordinaryReplay",
+              )
+            : {
+                checkpoint: snapshotBattle(state),
+                frontier: interruptFrontier,
+              };
+        if (envelope === null) {
+          return {
+            tag: "invalid" as const,
+            session,
+            reason: "invalidFill" as const,
+            message: "Battle continuation requires a non-empty Hole frontier.",
+            envelope: retryInput
+              ? precedingBattleFrontierEnvelope(retryInput)
+              : battleCurrentFrontierEnvelope(session.state),
+            ...optionalProperty("routeEvents", outcome.routeEvents),
+          };
+        }
         return {
-          tag: "invalid" as const,
-          session,
-          reason: "invalidFill" as const,
-          message: "Battle continuation requires a non-empty Hole frontier.",
-          snapshot: snapshotBattle(session.state),
+          tag: "needsHoles" as const,
+          session: checkpointSession,
+          envelope,
           ...optionalProperty("routeEvents", outcome.routeEvents),
         };
-      }
-      const checkpointBoundary =
-        outcome.checkpointBoundary ??
-        (checkpointMode === "interrupt"
-          ? { kind: "durableInterruptCheckpoint" as const }
-          : { kind: "ordinaryReplay" as const });
-      const checkpointSession = Match.value(checkpointBoundary.kind).pipe(
-        Match.when("ordinaryReplay", () => session),
-        Match.when("durableInterruptCheckpoint", () =>
-          battleRuntimeSessionWithState(session, state),
-        ),
-        Match.when("durableContinuationCheckpoint", () =>
-          battleRuntimeSessionWithState(session, state),
-        ),
-        Match.exhaustive,
-      );
-      return {
-        ...outcome,
-        session: checkpointSession,
-        snapshot: snapshotBattle(checkpointSession.state),
-        checkpointBoundary,
-      };
-    }),
-    byBattleResolutionTag("invalid", (outcome) => ({
+      },
+    ),
+    byBattleResolutionTag("invalid", ({ snapshot: _snapshot, ...outcome }) => ({
       ...outcome,
       session,
+      envelope: retryInput
+        ? precedingBattleFrontierEnvelope(retryInput)
+        : battleCurrentFrontierEnvelope(session.state),
     })),
     Match.exhaustive,
   );
@@ -445,11 +638,12 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
       fills: input.fills.slice(0, fillIndex),
     });
     if (frontier.tag !== "needsHoles") continue;
+    if (frontier.envelope.frontier.kind !== "holes") continue;
     const fill = input.fills[fillIndex];
     const frontierRequests = rolledD20TestRequests(
       battleD20TestCircumstanceRequests({
         resolutionId: input.d20TestResolutionId,
-        holes: frontier.holes,
+        holes: frontier.envelope.frontier.holes,
         resolvedFills: input.fills.slice(0, fillIndex),
       }),
       fill,
@@ -470,12 +664,20 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
     decisions: input.tableD20TestCircumstanceDecisions,
   });
   if (Either.isLeft(admission)) {
+    const retry = endBattleRuntimeTurn({
+      session: input.session,
+      actorId: input.actorId,
+      fills: input.fills,
+    });
     return {
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
       message: admission.left.issues.map(({ message }) => message).join(" "),
-      snapshot: snapshotBattle(input.session.state),
+      envelope:
+        retry.tag === "resolved"
+          ? battleActsEnvelope(input.session.state)
+          : retry.envelope,
       tableD20TestCircumstanceDecisionIssue: admission.left,
     };
   }
@@ -483,11 +685,14 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
   return result.tag === "needsHoles"
     ? {
         ...result,
-        d20TestCircumstanceRequests: battleD20TestCircumstanceRequests({
-          resolutionId: input.d20TestResolutionId,
-          holes: result.holes,
-          resolvedFills: input.fills,
-        }),
+        d20TestCircumstanceRequests:
+          result.envelope.frontier.kind === "holes"
+            ? battleD20TestCircumstanceRequests({
+                resolutionId: input.d20TestResolutionId,
+                holes: result.envelope.frontier.holes,
+                resolvedFills: input.fills,
+              })
+            : [],
       }
     : result;
 }

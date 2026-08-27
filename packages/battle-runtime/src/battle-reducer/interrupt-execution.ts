@@ -50,7 +50,7 @@ export {
   currentInterruptFrame,
   interruptDecisionHole,
   interruptTriggerLabel,
-  pendingInterruptSnapshot,
+  interruptDecisionFrontier,
   snapshotBattle,
   unofferedEligibleResponders,
 } from "./battle-snapshot.ts";

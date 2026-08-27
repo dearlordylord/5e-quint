@@ -3793,13 +3793,19 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingPlacement).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({ kind: "companionReappearancePlacement" }),
-      ],
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({ kind: "companionReappearancePlacement" }),
+          ],
+        },
+      },
     });
     if (awaitingPlacement.tag !== "needsHoles") return;
+    if (awaitingPlacement.envelope.frontier.kind !== "holes") return;
     const placementHole = requireHole(
-      awaitingPlacement.holes,
+      awaitingPlacement.envelope.frontier.holes,
       "companionReappearancePlacement",
     );
     const placementFill = companionReappearancePlacementFill(placementHole);
@@ -3831,11 +3837,19 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingInitiative).toMatchObject({
       tag: "needsHoles",
-      holes: [
-        expect.objectContaining({ kind: "companionReappearanceInitiative" }),
-      ],
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({
+              kind: "companionReappearanceInitiative",
+            }),
+          ],
+        },
+      },
     });
     if (awaitingInitiative.tag !== "needsHoles") return;
+    if (awaitingInitiative.envelope.frontier.kind !== "holes") return;
 
     const reappeared = resolveBattleRuntimeSubject({
       session: reappearanceSession,
@@ -3844,7 +3858,7 @@ describe("Find Familiar lifecycle", () => {
         placementFill,
         companionReappearanceInitiativeFill(
           requireHole(
-            awaitingInitiative.holes,
+            awaitingInitiative.envelope.frontier.holes,
             "companionReappearanceInitiative",
           ),
         ),
@@ -3866,7 +3880,7 @@ describe("Find Familiar lifecycle", () => {
       reappeared.session.state.combatants.get(familiarId),
     ).not.toHaveProperty("displayName");
     expect(
-      reappeared.snapshot.combatants.find(
+      reappeared.envelope.checkpoint.combatants.find(
         (combatant) => combatant.combatantId === familiarId,
       ),
     ).not.toHaveProperty("displayName");
