@@ -234,14 +234,21 @@ export type CharacterBattleEncounterParticipant =
     });
 
 export type CharacterBattleEncounterRoster =
-  ReadonlyNonEmptyArray<CharacterBattleEncounterParticipant>;
+  readonly CharacterBattleEncounterParticipant[];
 
-export type CharacterBattleEncounterProjectionIssue = {
-  readonly tag: "characterBattleEncounterProjectionIssue";
-  readonly origin: CharacterBattleEncounterParticipant["origin"];
-  readonly combatantId: CombatantId;
-  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
-};
+export type CharacterBattleEncounterProjectionIssue =
+  | {
+      readonly tag: "characterBattleEncounterProjectionIssue";
+      readonly origin: "characterSheet";
+      readonly combatantId: CombatantId;
+      readonly issue: BattleCreatureInitIssue;
+    }
+  | {
+      readonly tag: "characterBattleEncounterProjectionIssue";
+      readonly origin: "statBlock";
+      readonly combatantId: CombatantId;
+      readonly issue: BattleStateInitIssue;
+    };
 
 export type CharacterBattleEncounterProjectionIssues = {
   readonly tag: "characterBattleEncounterProjectionIssues";
@@ -268,10 +275,17 @@ export type CharacterBattleEncounterComposition = {
   readonly encounterCompositionRouteEvents: readonly CharacterBattleRouteEvent[];
 };
 
-type CharacterBattleEncounterParticipantProjectionIssue = {
-  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
-  readonly routeEvents: readonly CharacterBattleRouteEvent[];
-};
+type CharacterBattleEncounterParticipantProjectionIssue =
+  | {
+      readonly origin: "characterSheet";
+      readonly issue: BattleCreatureInitIssue;
+      readonly routeEvents: readonly CharacterBattleRouteEvent[];
+    }
+  | {
+      readonly origin: "statBlock";
+      readonly issue: BattleStateInitIssue;
+      readonly routeEvents: readonly CharacterBattleRouteEvent[];
+    };
 
 export type CharacterBattleInitProjection = {
   readonly init: BattleCreatureInit;
@@ -440,10 +454,11 @@ function characterBuildInitIssueRoute(
 }
 
 /**
- * Projects an arbitrary non-empty mixed-origin roster once. Callers that own
- * transport or session lookup should resolve those facts into this explicit
- * roster, then consume the returned creature initializations and character
- * participants without reproducing source-specific projection.
+ * Projects an arbitrary mixed-origin roster once. Callers that own transport
+ * or session lookup should resolve those facts into this explicit roster,
+ * then consume the returned creature initializations and character
+ * participants without reproducing source-specific projection. An empty
+ * roster is rejected as a typed composition failure.
  */
 export function composeCharacterBattleEncounter(input: {
   readonly roster: CharacterBattleEncounterRoster;
@@ -453,14 +468,6 @@ export function composeCharacterBattleEncounter(input: {
   CharacterBattleEncounterComposition,
   CharacterBattleEncounterCompositionIssue
 > {
-  if (input.roster.length === 0) {
-    return Either.left({
-      issue: { tag: "characterBattleEncounterEmptyRoster" },
-      initProjectionRouteEvents: [],
-      encounterCompositionRouteEvents: [],
-    });
-  }
-
   const initProjectionRouteEvents: CharacterBattleRouteEvent[] = [];
   const projections = traverseValidation(input.roster, (participant) => {
     const projected = projectCharacterBattleEncounterParticipant({
@@ -470,12 +477,21 @@ export function composeCharacterBattleEncounter(input: {
     });
     if (Either.isLeft(projected)) {
       initProjectionRouteEvents.push(...projected.left.routeEvents);
-      return Either.left({
-        tag: "characterBattleEncounterProjectionIssue" as const,
-        origin: participant.origin,
-        combatantId: participant.combatantId,
-        issue: projected.left.issue,
-      });
+      return Either.left(
+        projected.left.origin === "characterSheet"
+          ? {
+              tag: "characterBattleEncounterProjectionIssue" as const,
+              origin: "characterSheet" as const,
+              combatantId: participant.combatantId,
+              issue: projected.left.issue,
+            }
+          : {
+              tag: "characterBattleEncounterProjectionIssue" as const,
+              origin: "statBlock" as const,
+              combatantId: participant.combatantId,
+              issue: projected.left.issue,
+            },
+      );
     }
     initProjectionRouteEvents.push(...projected.right.routeEvents);
     return Either.right(projected.right.init);
@@ -561,27 +577,28 @@ function projectCharacterBattleEncounterParticipant(input: {
   CharacterBattleInitProjection,
   CharacterBattleEncounterParticipantProjectionIssue
 > {
-  return input.participant.origin === "characterSheet"
-    ? characterSheetBattleInitWithRoute({
-        ...input.participant,
-        unitLibrary: input.unitLibrary,
-        statBlockCatalog: input.statBlockCatalog,
-      })
-    : statBlockBattleInitProjection(input.participant);
-}
+  if (input.participant.origin === "characterSheet") {
+    const projection = characterSheetBattleInitWithRoute({
+      ...input.participant,
+      unitLibrary: input.unitLibrary,
+      statBlockCatalog: input.statBlockCatalog,
+    });
+    return Either.isLeft(projection)
+      ? Either.left({
+          origin: "characterSheet",
+          issue: projection.left.issue,
+          routeEvents: projection.left.routeEvents,
+        })
+      : Either.right(projection.right);
+  }
 
-function statBlockBattleInitProjection(
-  participant: Extract<
-    CharacterBattleEncounterParticipant,
-    { readonly origin: "statBlock" }
-  >,
-): Either.Either<
-  CharacterBattleInitProjection,
-  CharacterBattleEncounterParticipantProjectionIssue
-> {
-  const init = battleCreatureInitFromStatBlock(participant);
+  const init = battleCreatureInitFromStatBlock(input.participant);
   return Either.isLeft(init)
-    ? Either.left({ issue: init.left, routeEvents: [] })
+    ? Either.left({
+        origin: "statBlock",
+        issue: init.left,
+        routeEvents: [],
+      })
     : Either.right({ init: init.right, routeEvents: [] });
 }
 

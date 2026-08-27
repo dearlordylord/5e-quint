@@ -1072,6 +1072,23 @@ describe("Character Sheet battle handoff", () => {
     ]);
   });
 
+  test("rejects an empty roster as a typed composition failure", () => {
+    const composition = composeCharacterBattleEncounter({
+      roster: [],
+      unitLibrary,
+      statBlockCatalog,
+    });
+
+    expect(composition).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: { tag: "characterBattleEncounterEmptyRoster" },
+        initProjectionRouteEvents: [],
+        encounterCompositionRouteEvents: [],
+      },
+    });
+  });
+
   test("accumulates independent projection issues for every roster participant", () => {
     const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
     const unsupportedStatBlock = {
@@ -1127,6 +1144,81 @@ describe("Character Sheet battle handoff", () => {
     ).toEqual([
       { origin: "statBlock", combatantId: firstCombatantId },
       { origin: "statBlock", combatantId: secondCombatantId },
+    ]);
+  });
+
+  test("correlates each accumulated projection issue with its source origin", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:invalid-roster-origin"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+    const unsupportedStatBlock = {
+      ...skeleton,
+      statBlock: {
+        ...skeleton.statBlock,
+        hp: {
+          kind: "caster_derived" as const,
+          source: "proficiency_bonus" as const,
+        },
+      },
+    };
+    const missingUnitLibrary: UnitCatalog = {
+      ...unitLibrary,
+      getUnit: () => Option.none(),
+    };
+    const characterCombatantId = combatantId("invalid-character-origin");
+    const statBlockCombatantId = combatantId("invalid-stat-block-origin");
+
+    const composition = composeCharacterBattleEncounter({
+      roster: [
+        {
+          origin: "characterSheet" as const,
+          sheet,
+          combatantId: characterCombatantId,
+          displayName: "Invalid Character",
+          initiative: initiativeScore(20),
+          ammunitionStocks: [],
+        },
+        {
+          origin: "statBlock" as const,
+          statBlock: unsupportedStatBlock,
+          combatantId: statBlockCombatantId,
+          initiative: initiativeScore(10),
+          ammunitionStocks: [],
+          conditions: [],
+        },
+      ],
+      unitLibrary: missingUnitLibrary,
+      statBlockCatalog,
+    });
+
+    expect(Either.isLeft(composition)).toBe(true);
+    if (Either.isRight(composition)) return;
+    expect(composition.left.issue.tag).toBe(
+      "characterBattleEncounterProjectionIssues",
+    );
+    if (
+      composition.left.issue.tag !== "characterBattleEncounterProjectionIssues"
+    ) {
+      return;
+    }
+    expect(composition.left.issue.issues).toEqual([
+      expect.objectContaining({
+        origin: "characterSheet",
+        combatantId: characterCombatantId,
+        issue: expect.objectContaining({ tag: "battleCreatureInitIssue" }),
+      }),
+      expect.objectContaining({
+        origin: "statBlock",
+        combatantId: statBlockCombatantId,
+        issue: expect.objectContaining({ tag: "battleStateInitIssue" }),
+      }),
     ]);
   });
 

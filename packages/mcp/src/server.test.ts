@@ -3626,6 +3626,22 @@ describe("MCP server route", () => {
     const secondDraftId = "draft:mcp-runtime-owner-invalid-second";
     createFinalizedFighterSheet(root, firstDraftId);
     createFinalizedFighterSheet(root, secondDraftId);
+    const baseStatBlock = root.statBlockCatalog.requireStatBlock(
+      "stat_block_skeleton",
+    );
+    const unsupportedStatBlock = {
+      ...baseStatBlock,
+      id: statBlockId("stat_block_mcp_runtime_owner_invalid"),
+      name: "Synthetic MCP Runtime Owner Invalid Stat Block",
+      statBlock: {
+        ...baseStatBlock.statBlock,
+        displayName: "Synthetic MCP Runtime Owner Invalid Stat Block",
+        hp: {
+          kind: "caster_derived" as const,
+          source: "proficiency_bonus" as const,
+        },
+      },
+    } satisfies StatBlockRecord;
     const incompleteUnitLibrary = {
       getUnit: () => Option.none(),
       listUnits: () => root.unitLibrary.listUnits(),
@@ -3634,6 +3650,10 @@ describe("MCP server route", () => {
     const invalidRoot = {
       ...root,
       unitLibrary: incompleteUnitLibrary,
+      statBlockCatalog: {
+        ...root.statBlockCatalog,
+        getStatBlock: () => Option.some(unsupportedStatBlock),
+      },
     };
 
     const rejected = readPayload(
@@ -3650,6 +3670,14 @@ describe("MCP server route", () => {
             initiative: 18,
           },
           {
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: unsupportedStatBlock.id,
+            combatantId: "invalid-stat-block",
+            initiative: 15,
+            admissionSource: { kind: "encounterParticipant" },
+          },
+          {
             kind: "characterSession",
             ammunitionStocks: [],
             characterId: testCharacterId(secondDraftId),
@@ -3664,8 +3692,24 @@ describe("MCP server route", () => {
       details: {
         code: "INVALID_BATTLE_COMBATANTS",
         issues: [
-          { details: { code: "CHARACTER_BATTLE_INIT_INVALID" } },
-          { details: { code: "CHARACTER_BATTLE_INIT_INVALID" } },
+          {
+            details: {
+              code: "CHARACTER_BATTLE_INIT_INVALID",
+              combatantId: "invalid-first",
+            },
+          },
+          {
+            details: {
+              code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+              combatantId: "invalid-stat-block",
+            },
+          },
+          {
+            details: {
+              code: "CHARACTER_BATTLE_INIT_INVALID",
+              combatantId: "invalid-second",
+            },
+          },
         ],
       },
     });
