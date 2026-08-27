@@ -36,6 +36,7 @@ import type {
   BattleResolutionInput,
   BattleResolutionResult,
   BattleSnapshot,
+  BattleState,
   BattleTargetSpatialFact,
 } from "./battle-state-execution.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
@@ -131,6 +132,51 @@ export type BattleRuntimeResolutionResult =
       readonly envelope: BattleCheckpointFrontierEnvelope;
       readonly routeEvents?: BattleReducerRouteEvents;
     };
+
+/**
+ * Read the single runtime-owned checkpoint/frontier envelope for the current
+ * state.  Consumers must use this boundary instead of projecting reducer
+ * state fields independently.
+ */
+export function currentBattleCheckpointFrontierEnvelope(
+  session: BattleRuntimeSession,
+): BattleCheckpointFrontierEnvelope {
+  return battleCheckpointFrontierEnvelope(session.state);
+}
+
+/** Project the runtime-owned checkpoint and continuation frontier from state. */
+export function battleCheckpointFrontierEnvelope(
+  state: BattleState,
+): BattleCheckpointFrontierEnvelope {
+  return battleCurrentFrontierEnvelope(state);
+}
+
+export function battleFrontierHoles(
+  envelope: BattleCheckpointFrontierEnvelope,
+): BattleHolesFrontier | null {
+  return Match.value(envelope.frontier).pipe(
+    Match.when({ kind: "holes" }, (frontier) => frontier),
+    Match.orElse(() => null),
+  );
+}
+
+export function battleFrontierInterruptDecision(
+  envelope: BattleCheckpointFrontierEnvelope,
+): BattleInterruptDecisionFrontier | null {
+  return Match.value(envelope.frontier).pipe(
+    Match.when({ kind: "interruptDecision" }, (frontier) => frontier),
+    Match.orElse(() => null),
+  );
+}
+
+/** Read interrupt choices from a live reducer state through its public frontier. */
+export function battleFrontierInterruptDecisionForState(
+  state: BattleState,
+): BattleInterruptDecisionFrontier | null {
+  return battleFrontierInterruptDecision(
+    battleCheckpointFrontierEnvelope(state),
+  );
+}
 
 export type BattleRuntimeTableD20TestResolutionResult =
   | Extract<BattleRuntimeResolutionResult, { readonly tag: "resolved" }>

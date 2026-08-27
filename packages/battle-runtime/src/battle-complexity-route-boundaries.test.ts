@@ -7,6 +7,7 @@ import {
   attackInitialTargetHole,
   attackRollHoleAfterTarget,
   battleId,
+  battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
   characterSeed,
@@ -88,7 +89,9 @@ function startFighterOpportunityAttackAfterMovement(
   if (awaitingOpportunity.tag !== "needsHoles") {
     throw new Error("Expected fighter Opportunity Attack interrupt.");
   }
-  const pendingInterrupt = awaitingOpportunity.snapshot.pendingInterrupt;
+  const pendingInterrupt = battleFrontierInterruptDecisionForState(
+    awaitingOpportunity.state,
+  );
   if (pendingInterrupt === null) {
     throw new Error("Expected pending fighter Opportunity Attack interrupt.");
   }

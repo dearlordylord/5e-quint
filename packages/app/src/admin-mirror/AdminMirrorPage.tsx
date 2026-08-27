@@ -157,12 +157,12 @@ function SessionDetail({ session }: { readonly session: AdminMirrorSessionState 
           ) : (
             <div className="mt-4 space-y-4">
               <div className="grid gap-3 sm:grid-cols-3">
-                <Metric label="Battle" value={battle.battleId} />
-                <Metric label="Round" value={String(battle.round)} />
-                <Metric label="Current Actor" value={battle.currentActorId} />
+                <Metric label="Battle" value={battle.checkpoint.battleId} />
+                <Metric label="Round" value={String(battle.checkpoint.round)} />
+                <Metric label="Current Actor" value={battle.checkpoint.currentActorId} />
               </div>
               <div className="grid gap-2 md:grid-cols-2">
-                {battle.combatants.map((combatant) => (
+                {battle.checkpoint.combatants.map((combatant) => (
                   <div key={combatant.combatantId} className="rounded-md border border-gray-800 bg-black/20 p-3">
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-gray-100">{combatant.displayName}</p>

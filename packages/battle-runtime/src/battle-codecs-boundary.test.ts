@@ -5,6 +5,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleSnapshotSchema,
   attackTargetDistanceSpatialFact,
   battleId,
@@ -33,12 +34,15 @@ import {
   attackRollFill,
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierInterruptDecisionForState,
   skeletonId,
   statBlockCreatureInit,
   resolveBattleSubject,
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { BattleInterruptDecisionFrontierSchema } from "./battle-reducer/battle-codecs.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
@@ -49,8 +53,14 @@ import {
 } from "./identity.ts";
 
 type EncodedHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
-type EncodedSnapshot = Schema.Schema.Encoded<typeof BattleSnapshotSchema>;
-type EncodedAct = EncodedSnapshot["acts"][number];
+type EncodedEnvelope = Schema.Schema.Encoded<
+  typeof BattleCheckpointFrontierEnvelopeSchema
+>;
+type EncodedActsFrontier = Extract<
+  EncodedEnvelope["frontier"],
+  { readonly kind: "acts" }
+>;
+type EncodedAct = EncodedActsFrontier["acts"][number];
 type CodecCase = {
   readonly name: string;
   readonly expected: "Right" | "Left";
@@ -71,11 +81,14 @@ const hole = (name: string, input: object): EncodedHole =>
   encodeHole({ ...baseHole(name), ...input });
 
 function replaceActHole(
-  snapshot: EncodedSnapshot,
+  envelope: EncodedEnvelope,
   procedureRef: string,
   replacement: EncodedHole,
-): EncodedSnapshot {
-  const ownerIndices = snapshot.acts.flatMap((act, index) =>
+): EncodedEnvelope {
+  if (envelope.frontier.kind !== "acts") {
+    throw new Error("Expected an Acts frontier.");
+  }
+  const ownerIndices = envelope.frontier.acts.flatMap((act, index) =>
     "procedureRef" in act.subject &&
     act.subject.procedureRef === procedureRef &&
     act.subject.tag === "actionSpell" &&
@@ -89,18 +102,24 @@ function replaceActHole(
     );
   }
   const ownerIndex = ownerIndices[0]!;
-  const acts = snapshot.acts.map((act, index) =>
+  const acts = envelope.frontier.acts.map((act, index) =>
     index === ownerIndex ? { ...act, initialHoles: [replacement] } : act,
   );
-  return { ...snapshot, acts };
+  return {
+    ...envelope,
+    frontier: { ...envelope.frontier, acts },
+  };
 }
 
 function replaceActSubject(
-  snapshot: EncodedSnapshot,
+  envelope: EncodedEnvelope,
   predicate: (act: EncodedAct) => boolean,
   replace: (act: EncodedAct) => EncodedAct,
-): EncodedSnapshot {
-  const matches = snapshot.acts
+): EncodedEnvelope {
+  if (envelope.frontier.kind !== "acts") {
+    throw new Error("Expected an Acts frontier.");
+  }
+  const matches = envelope.frontier.acts
     .map((act, index) => (predicate(act) ? index : -1))
     .filter((index) => index >= 0);
   if (matches.length !== 1) {
@@ -110,30 +129,38 @@ function replaceActSubject(
   }
   const match = matches[0]!;
   return {
-    ...snapshot,
-    acts: snapshot.acts.map((act, index) =>
-      index === match ? replace(act) : act,
-    ),
+    ...envelope,
+    frontier: {
+      ...envelope.frontier,
+      acts: envelope.frontier.acts.map((act, index) =>
+        index === match ? replace(act) : act,
+      ),
+    },
   };
 }
 
 function replaceActOwner(
-  snapshot: EncodedSnapshot,
+  envelope: EncodedEnvelope,
   predicate: (act: EncodedAct) => boolean,
   actorId: ReturnType<typeof combatantId>,
-): EncodedSnapshot {
-  return replaceActSubject(snapshot, predicate, (act) => ({
+): EncodedEnvelope {
+  return replaceActSubject(envelope, predicate, (act) => ({
     ...act,
     subject: { ...act.subject, actorId },
   }));
 }
 
-const encodedSnapshotFromState = (
+const encodedEnvelopeFromState = (
   state: Parameters<typeof snapshotBattle>[0],
-) => Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(state));
+) =>
+  Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+    battleCheckpointFrontierEnvelope(state),
+  );
 
-function expectSnapshotDecodeLeft(snapshot: EncodedSnapshot): void {
-  const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(snapshot);
+function expectEnvelopeDecodeLeft(envelope: EncodedEnvelope): void {
+  const decoded = Schema.decodeUnknownEither(
+    BattleCheckpointFrontierEnvelopeSchema,
+  )(envelope);
   expect(Either.isLeft(decoded)).toBe(true);
 }
 
@@ -150,10 +177,15 @@ function codecFixture() {
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
-  const snapshot = Schema.encodeSync(BattleSnapshotSchema)(
-    snapshotBattle(session.state),
+  const envelope = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+    battleCheckpointFrontierEnvelope(session.state),
   );
-  const wizard = snapshot.combatants.find((c) => c.combatantId === wizardId);
+  if (envelope.frontier.kind !== "acts") {
+    throw new Error("Expected an Acts frontier.");
+  }
+  const wizard = envelope.checkpoint.combatants.find(
+    (c) => c.combatantId === wizardId,
+  );
   if (wizard?.origin.kind !== "character")
     throw new Error("Expected character spell fixture.");
   const characterContext = session.context.characters.get(wizardId);
@@ -177,7 +209,7 @@ function codecFixture() {
   if (sourceBinding === undefined)
     throw new Error("Expected the save-gated source to be bound.");
   return {
-    snapshot,
+    envelope,
     sourceProcedureRef: sourceBinding.procedureRef,
     effectRef: battleActiveEffectExecutionRefForTest("codec-marked-rider"),
   };
@@ -613,10 +645,32 @@ const cases: readonly CodecCase[] = [
 
 describe("battle codec execution-reference boundaries", () => {
   test.each(cases)("$expected $name", ({ expected, hole: replacement }) => {
-    const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(
-      replaceActHole(fixture.snapshot, fixture.sourceProcedureRef, replacement),
+    const decoded = Schema.decodeUnknownEither(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(
+      replaceActHole(fixture.envelope, fixture.sourceProcedureRef, replacement),
     );
     expect(Either.isRight(decoded)).toBe(expected === "Right");
+  });
+
+  test("rejects an empty interrupt decision choice frontier", () => {
+    const decoded = Schema.decodeUnknownEither(
+      BattleInterruptDecisionFrontierSchema,
+    )({
+      kind: "interruptDecision",
+      trigger: "attackHit",
+      decisionHole: {
+        holeInstanceKey: "battle:codec:interrupt",
+        holeId: "battle:codec:interrupt",
+        kind: "interruptDecision",
+        label: "Respond",
+        trigger: "attackHit",
+        eligibleResponders: ["wizard"],
+      },
+      choices: [],
+      stackDepth: 0,
+    });
+    expect(Either.isLeft(decoded)).toBe(true);
   });
 });
 
@@ -730,7 +784,9 @@ describe("battle codec act ownership boundaries", () => {
     if (reported.tag !== "needsHoles") {
       throw new Error("Expected a reported Ready trigger interrupt.");
     }
-    const choice = reported.snapshot.pendingInterrupt?.choices.find(
+    const choice = battleFrontierInterruptDecisionForState(
+      reported.state,
+    )?.choices.find(
       (candidate) =>
         candidate.kind === "releaseReadiedAttack" &&
         candidate.subject.targetId === fighterId,
@@ -857,7 +913,7 @@ describe("battle codec act ownership boundaries", () => {
   });
   test("rejects an action spell act with an unknown owner", () => {
     const malformed = replaceActOwner(
-      fixture.snapshot,
+      fixture.envelope,
       (act) =>
         act.subject.tag === "actionSpell" &&
         act.subject.mode.tag === "cast" &&
@@ -865,7 +921,7 @@ describe("battle codec act ownership boundaries", () => {
         act.subject.actorId === wizardId,
       combatantId("codec-unknown"),
     );
-    expectSnapshotDecodeLeft(malformed);
+    expectEnvelopeDecodeLeft(malformed);
   });
   test("rejects a stat-block multiattack owned by a character", () => {
     const session = startBattleSessionRight({
@@ -889,14 +945,14 @@ describe("battle codec act ownership boundaries", () => {
       throw new Error(`Expected resolved End Turn, got ${turn.tag}.`);
     }
     const malformed = replaceActOwner(
-      encodedSnapshotFromState(turn.state),
+      encodedEnvelopeFromState(turn.state),
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "multiattack" &&
         act.subject.actorId === skeletonId,
       wizardId,
     );
-    expectSnapshotDecodeLeft(malformed);
+    expectEnvelopeDecodeLeft(malformed);
   });
   test("rejects a character off-hand attack owned by a stat block", () => {
     const session = startBattleSessionRight({
@@ -945,13 +1001,13 @@ describe("battle codec act ownership boundaries", () => {
       throw new Error(`Expected resolved attack, got ${result.tag}.`);
     }
     const malformed = replaceActOwner(
-      encodedSnapshotFromState(result.state),
+      encodedEnvelopeFromState(result.state),
       (act) =>
         act.subject.tag === "bonusAction" &&
         act.subject.action === "offHandAttack" &&
         act.subject.actorId === wizardId,
       skeletonId,
     );
-    expectSnapshotDecodeLeft(malformed);
+    expectEnvelopeDecodeLeft(malformed);
   });
 });

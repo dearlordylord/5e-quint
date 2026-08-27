@@ -11,6 +11,7 @@ import {
 } from "./index.ts";
 import {
   characterBattleFeatureInitForTest,
+  battleFrontierInterruptDecisionForState,
   battleId,
   characterSeed,
   combatantId,
@@ -174,7 +175,7 @@ function resolveSlowFallReaction(state: BattleState): BattleState {
     throw new Error("Expected Slow Fall falling-trigger Reaction window.");
   }
   const choice = reactionModifierChoice(
-    awaitingReaction.snapshot.pendingInterrupt!.choices,
+    battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
     slowFallUnitId,
     "fallDamageReduction",
   );

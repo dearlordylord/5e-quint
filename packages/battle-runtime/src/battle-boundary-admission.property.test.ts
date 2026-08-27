@@ -9,6 +9,7 @@ import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleHoleSchema,
   BattleFillSchema,
   BattleSnapshotSchema,
@@ -170,6 +171,8 @@ import {
   wizardSpellcasting,
   spellRecord,
   battleProcedureExecutionRefForTest,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierInterruptDecisionForState,
   unitLibrary,
   KNOCKED_OUT_UNCONSCIOUS,
   discoverBattleActCandidates,
@@ -225,24 +228,30 @@ describe("battle boundary admission owners", () => {
     if (attackResult.tag !== "needsHoles") {
       throw new Error("Expected canonical attack discovery holes.");
     }
-    const attackSnapshotEncoded = Schema.encodeSync(BattleSnapshotSchema)(
-      attackResult.snapshot,
-    );
+    const attackEnvelopeEncoded = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(attackResult.state));
     expect(
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(attackSnapshotEncoded),
-    ).toEqual(attackResult.snapshot);
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        attackEnvelopeEncoded,
+      ),
+    ).toEqual(battleCheckpointFrontierEnvelope(attackResult.state));
     const act = {
       subject,
       initialHoles: [attackInitialTargetHole(state, subject)],
     };
     const withAct = {
-      ...snapshot,
-      acts: [act],
+      checkpoint: snapshot,
+      frontier: { kind: "acts" as const, acts: [act] },
     };
-    const actEncoded = Schema.encodeSync(BattleSnapshotSchema)(withAct);
-    expect(Schema.decodeUnknownSync(BattleSnapshotSchema)(actEncoded)).toEqual(
-      withAct,
-    );
+    const actEncoded = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(withAct);
+    expect(
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        actEncoded,
+      ),
+    ).toEqual(withAct);
 
     const readySubject = {
       tag: "action" as const,
@@ -291,32 +300,40 @@ describe("battle boundary admission owners", () => {
     if (reported.tag !== "needsHoles") {
       throw new Error("Expected a pending readied Attack interrupt.");
     }
-    const readiedAttackEncoded = Schema.encodeSync(BattleSnapshotSchema)(
-      reported.snapshot,
-    );
+    const readiedAttackEncoded = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )(battleCheckpointFrontierEnvelope(reported.state));
     expect(
-      Schema.decodeUnknownSync(BattleSnapshotSchema)(readiedAttackEncoded),
-    ).toEqual(reported.snapshot);
-    const encodedPendingInterrupt = readiedAttackEncoded.pendingInterrupt;
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)(
+        readiedAttackEncoded,
+      ),
+    ).toEqual(battleCheckpointFrontierEnvelope(reported.state));
+    const encodedPendingInterrupt =
+      readiedAttackEncoded.frontier.kind === "interruptDecision"
+        ? readiedAttackEncoded.frontier
+        : null;
     if (encodedPendingInterrupt === null) {
       throw new Error("Expected the encoded readied Attack interrupt.");
     }
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
         ...readiedAttackEncoded,
-        readiedResponses: {
-          ...readiedAttackEncoded.readiedResponses,
-          actionsOrMovements:
-            readiedAttackEncoded.readiedResponses.actionsOrMovements.map(
-              (entry) => ({ ...entry, actorId: "missing-combatant" }),
-            ),
+        checkpoint: {
+          ...readiedAttackEncoded.checkpoint,
+          readiedResponses: {
+            ...readiedAttackEncoded.checkpoint.readiedResponses,
+            actionsOrMovements:
+              readiedAttackEncoded.checkpoint.readiedResponses.actionsOrMovements.map(
+                (entry) => ({ ...entry, actorId: "missing-combatant" }),
+              ),
+          },
         },
       }),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
         ...readiedAttackEncoded,
-        pendingInterrupt: {
+        frontier: {
           ...encodedPendingInterrupt,
           choices: encodedPendingInterrupt.choices.map((choice) =>
             choice.kind === "releaseReadiedAttack" &&
@@ -332,9 +349,9 @@ describe("battle boundary admission owners", () => {
       }),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
         ...readiedAttackEncoded,
-        pendingInterrupt: {
+        frontier: {
           ...encodedPendingInterrupt,
           choices: encodedPendingInterrupt.choices.map((choice) =>
             choice.kind === "releaseReadiedAttack" &&
@@ -353,35 +370,41 @@ describe("battle boundary admission owners", () => {
       }),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
         ...readiedAttackEncoded,
-        readiedResponses: {
-          ...readiedAttackEncoded.readiedResponses,
-          actionsOrMovements:
-            readiedAttackEncoded.readiedResponses.actionsOrMovements.map(
-              (entry) =>
-                entry.response.kind === "attack"
-                  ? {
-                      ...entry,
-                      response: {
-                        ...entry.response,
-                        procedureRef: "forged-procedure-ref",
-                      },
-                    }
-                  : entry,
-            ),
+        checkpoint: {
+          ...readiedAttackEncoded.checkpoint,
+          readiedResponses: {
+            ...readiedAttackEncoded.checkpoint.readiedResponses,
+            actionsOrMovements:
+              readiedAttackEncoded.checkpoint.readiedResponses.actionsOrMovements.map(
+                (entry) =>
+                  entry.response.kind === "attack"
+                    ? {
+                        ...entry,
+                        response: {
+                          ...entry.response,
+                          procedureRef: "forged-procedure-ref",
+                        },
+                      }
+                    : entry,
+              ),
+          },
         },
       }),
     ).toThrow();
     expect(() =>
-      Schema.decodeUnknownSync(BattleSnapshotSchema)({
+      Schema.decodeUnknownSync(BattleCheckpointFrontierEnvelopeSchema)({
         ...readiedAttackEncoded,
-        readiedResponses: {
-          ...readiedAttackEncoded.readiedResponses,
-          actionsOrMovements:
-            readiedAttackEncoded.readiedResponses.actionsOrMovements.map(
-              (entry) => ({ ...entry, response: { kind: "movement" } }),
-            ),
+        checkpoint: {
+          ...readiedAttackEncoded.checkpoint,
+          readiedResponses: {
+            ...readiedAttackEncoded.checkpoint.readiedResponses,
+            actionsOrMovements:
+              readiedAttackEncoded.checkpoint.readiedResponses.actionsOrMovements.map(
+                (entry) => ({ ...entry, response: { kind: "movement" } }),
+              ),
+          },
         },
       }),
     ).toThrow();
@@ -412,26 +435,34 @@ describe("battle boundary admission owners", () => {
 
     const forged = {
       ...actEncoded,
-      acts: actEncoded.acts.map((candidate) => ({
-        ...candidate,
-        initialHoles: candidate.initialHoles.map((hole) => ({
-          ...hole,
-          ...(hole.kind === "targetChoice" && hole.attack !== undefined
-            ? {
-                attack: {
-                  ...hole.attack,
-                  selection: {
-                    ...hole.attack.selection,
-                    procedureRef: "forged-procedure-ref",
-                  },
-                },
-              }
-            : {}),
-        })),
-      })),
+      frontier:
+        actEncoded.frontier.kind === "acts"
+          ? {
+              ...actEncoded.frontier,
+              acts: actEncoded.frontier.acts.map((candidate) => ({
+                ...candidate,
+                initialHoles: candidate.initialHoles.map((hole) => ({
+                  ...hole,
+                  ...(hole.kind === "targetChoice" && hole.attack !== undefined
+                    ? {
+                        attack: {
+                          ...hole.attack,
+                          selection: {
+                            ...hole.attack.selection,
+                            procedureRef: "forged-procedure-ref",
+                          },
+                        },
+                      }
+                    : {}),
+                })),
+              })),
+            }
+          : actEncoded.frontier,
     };
     expect(() =>
-      Schema.encodeSync(BattleSnapshotSchema)(forged as never),
+      Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+        forged as never,
+      ),
     ).toThrow();
 
     const movement = simpleMovementFill(moveHole(state, fighterId));
@@ -455,9 +486,11 @@ describe("battle boundary admission owners", () => {
     if (codecAct.subject.tag !== "actionSpell") {
       throw new Error("Expected action-spell codec act.");
     }
-    const codecSnapshot = Schema.encodeSync(BattleSnapshotSchema)({
-      ...snapshotBattle(codecSession.state),
-      acts: [codecAct],
+    const codecSnapshot = Schema.encodeSync(
+      BattleCheckpointFrontierEnvelopeSchema,
+    )({
+      checkpoint: snapshotBattle(codecSession.state),
+      frontier: { kind: "acts", acts: [codecAct] },
     });
     type EncodedCodecHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
     const encodedCodecHole = (value: unknown): EncodedCodecHole =>
@@ -626,14 +659,22 @@ describe("battle boundary admission owners", () => {
     for (const replacement of codecHoles) {
       const candidate = {
         ...codecSnapshot,
-        acts: codecSnapshot.acts.map((candidateAct) => ({
-          ...candidateAct,
-          initialHoles: [replacement],
-        })),
+        frontier:
+          codecSnapshot.frontier.kind === "acts"
+            ? {
+                ...codecSnapshot.frontier,
+                acts: codecSnapshot.frontier.acts.map((candidateAct) => ({
+                  ...candidateAct,
+                  initialHoles: [replacement],
+                })),
+              }
+            : codecSnapshot.frontier,
       };
       expect(
         Either.isRight(
-          Schema.decodeUnknownEither(BattleSnapshotSchema)(candidate),
+          Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+            candidate,
+          ),
         ),
       ).toBe(true);
     }
@@ -1100,7 +1141,9 @@ describe("battle boundary admission owners", () => {
     if (setup.result.tag !== "needsHoles") {
       throw new Error("Expected reaction roll frontier.");
     }
-    const pendingInterrupt = setup.result.snapshot.pendingInterrupt;
+    const pendingInterrupt = battleFrontierInterruptDecisionForState(
+      setup.result.state,
+    );
     if (pendingInterrupt === null) {
       throw new Error("Expected reaction interrupt choices.");
     }
@@ -1373,7 +1416,9 @@ describe("battle boundary admission owners", () => {
     if (monkSetup.result.tag !== "needsHoles") {
       throw new Error("Expected Monk redirect interrupt checkpoint.");
     }
-    const monkPendingInterrupt = monkSetup.result.snapshot.pendingInterrupt;
+    const monkPendingInterrupt = battleFrontierInterruptDecisionForState(
+      monkSetup.result.state,
+    );
     if (monkPendingInterrupt === null) {
       throw new Error("Expected Monk redirect choices.");
     }

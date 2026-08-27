@@ -64,6 +64,7 @@ import {
   type CoverType,
   type Hp,
   type MovementFeet,
+  type ReadonlyNonEmptyArray,
 } from "../../../packages/shared/src/types.ts";
 import {
   arenaSnapshot,
@@ -906,7 +907,11 @@ export function scenarioBattleResultWithD20TestCircumstances(input: {
   readonly result: BattleRuntimeTableD20TestResolutionResult;
   readonly decisions: readonly TableD20TestCircumstanceDecision[];
 }): BattleRuntimeTableD20TestResolutionResult {
-  if (input.result.tag !== "needsHoles") return input.result;
+  if (
+    input.result.tag !== "needsHoles" ||
+    input.result.envelope.frontier.kind !== "holes"
+  )
+    return input.result;
   const currentDecisionRefs = new Set(
     input.result.d20TestCircumstanceRequests.map(
       ({ requestRef }) => requestRef,
@@ -920,13 +925,25 @@ export function scenarioBattleResultWithD20TestCircumstances(input: {
     decisions: currentDecisions,
   });
   if (Either.isLeft(admitted)) return input.result;
+  const projectedHoles = battleHolesWithTableD20TestCircumstances({
+    holes: input.result.envelope.frontier.holes,
+    requests: input.result.d20TestCircumstanceRequests,
+    admitted: admitted.right,
+  });
+  const firstHole = projectedHoles[0];
+  if (firstHole === undefined) return input.result;
   return {
     ...input.result,
-    holes: battleHolesWithTableD20TestCircumstances({
-      holes: input.result.holes,
-      requests: input.result.d20TestCircumstanceRequests,
-      admitted: admitted.right,
-    }),
+    envelope: {
+      ...input.result.envelope,
+      frontier: {
+        ...input.result.envelope.frontier,
+        holes: [
+          firstHole,
+          ...projectedHoles.slice(1),
+        ] as ReadonlyNonEmptyArray<BattleHole>,
+      },
+    },
   };
 }
 
@@ -1812,8 +1829,10 @@ export function planScenarioMovement(input: {
     fills: [],
   });
   const movementHole =
-    frontier.tag === "needsHoles"
-      ? frontier.holes.find((hole) => hole.kind === "movement")
+    frontier.tag === "needsHoles" && frontier.envelope.frontier.kind === "holes"
+      ? frontier.envelope.frontier.holes.find(
+          (hole) => hole.kind === "movement",
+        )
       : undefined;
   if (movementHole?.kind !== "movement") {
     return Either.left({
@@ -2260,11 +2279,14 @@ export function scenarioCreatureSpellTargetFills(input: {
       subject: input.subject,
       fills: projectedFills,
     });
-    if (frontier.tag !== "needsHoles") {
+    if (
+      frontier.tag !== "needsHoles" ||
+      frontier.envelope.frontier.kind !== "holes"
+    ) {
       projectedFills.push(fill);
       continue;
     }
-    const hole = frontier.holes.find(
+    const hole = frontier.envelope.frontier.holes.find(
       (candidate) =>
         candidate.holeId === fill.holeId && candidate.kind === fill.kind,
     );
@@ -2565,6 +2587,7 @@ export function scenarioTableSpatialFactFills(input: {
     if (fill.kind === "helpAttackEnemyDecision") {
       if (
         frontier.tag !== "needsHoles" ||
+        frontier.envelope.frontier.kind !== "holes" ||
         input.subject.tag !== "action" ||
         input.subject.action !== "helpAttack"
       ) {
@@ -2589,7 +2612,10 @@ export function scenarioTableSpatialFactFills(input: {
       continue;
     }
 
-    if (frontier.tag !== "needsHoles") {
+    if (
+      frontier.tag !== "needsHoles" ||
+      frontier.envelope.frontier.kind !== "holes"
+    ) {
       projectedFills.push(fill);
       continue;
     }
@@ -2619,7 +2645,7 @@ export function scenarioTableSpatialFactFills(input: {
       projectedFills.push(fill);
       continue;
     }
-    const targetHole = frontier.holes.find(
+    const targetHole = frontier.envelope.frontier.holes.find(
       (hole) => hole.kind === "targetChoice" && hole.holeId === fill.holeId,
     );
     if (targetHole?.kind !== "targetChoice") {
@@ -2769,11 +2795,15 @@ export function scenarioAttackTargetFills(input: {
       subject: input.subject,
       fills: projectedFills,
     });
-    if (frontier.tag !== "needsHoles" || fill.kind !== "targetChoice") {
+    if (
+      frontier.tag !== "needsHoles" ||
+      frontier.envelope.frontier.kind !== "holes" ||
+      fill.kind !== "targetChoice"
+    ) {
       projectedFills.push(fill);
       continue;
     }
-    const targetHole = frontier.holes.find(
+    const targetHole = frontier.envelope.frontier.holes.find(
       (hole) =>
         hole.kind === "targetChoice" &&
         hole.holeId === fill.holeId &&
@@ -2865,8 +2895,8 @@ export function scenarioObjectAttackFills(input: {
     fills: [],
   });
   const targetHole =
-    frontier.tag === "needsHoles"
-      ? frontier.holes.find(
+    frontier.tag === "needsHoles" && frontier.envelope.frontier.kind === "holes"
+      ? frontier.envelope.frontier.holes.find(
           (hole) =>
             hole.kind === "targetChoice" &&
             hole.holeId === objectTargetFill.holeId &&

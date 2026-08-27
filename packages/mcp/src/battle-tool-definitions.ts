@@ -63,7 +63,7 @@ export const battleToolDefinitions = [
     name: battleToolNames.readBattleState,
     title: "Read Battle State",
     description:
-      "Return the current battle-runtime snapshot, including discoverable battle acts, and the MCP session summary.",
+      "Return the current battle-runtime checkpoint/frontier envelope and MCP session summary.",
     inputSchema: readBattleStateInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
@@ -72,7 +72,7 @@ export const battleToolDefinitions = [
     name: battleToolNames.discoverBattleActs,
     title: "Discover Battle Acts",
     description:
-      "Return the current battle snapshot and runtime-discovered available acts for the current combatant.",
+      "Return the current checkpoint/frontier envelope with runtime-discovered acts for the current combatant.",
     inputSchema: discoverBattleActsInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
@@ -81,7 +81,7 @@ export const battleToolDefinitions = [
     name: battleToolNames.fillBattleHole,
     title: "Fill Battle Hole",
     description:
-      "Fill one hole for a selected battle act subject. MCP stores transient fills until the battle runtime has enough table facts to resolve the act.",
+      "Fill one hole for a selected battle act subject. MCP retains the base session, subject, and accepted fills while the battle runtime advances the checkpoint/frontier envelope.",
     inputSchema: fillBattleHoleInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
     outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),

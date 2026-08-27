@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -284,7 +284,7 @@ describe("Ray of Enfeeblement D20 lifecycle profile admission", () => {
     if (repeatSaveRequest.tag !== "needsHoles") {
       throw new Error("Expected Ray of Enfeeblement repeat save.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: repeatSaveRequest.snapshot,
       subject: repeatSaveRequest.subject,
       holes: repeatSaveRequest.holes,

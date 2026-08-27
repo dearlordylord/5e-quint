@@ -1,7 +1,4 @@
 import {
-  battlePresentedSnapshot,
-  battleAdmittedSpellPresentations,
-  discoverBattleActs,
   battleCreatureInitFromStatBlock,
   startBattle,
   battleStateInitIssueMessage,
@@ -34,7 +31,10 @@ import { StartBattleOutputSchema } from "./battle-tool-output.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
-import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
+import {
+  battlePresentationEnvelopeForSession,
+  battlePresentationIssueContent,
+} from "./battle-tool-payloads.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
 
@@ -119,11 +119,6 @@ export function handleStartBattleToolCall(
   if (Either.isLeft(admittedState)) return admittedState.left;
 
   const admittedSession = admittedState.right;
-  const snapshot = battlePresentedSnapshot(admittedSession);
-  if (Either.isLeft(snapshot)) {
-    return battleSnapshotPresentationIssueContent(snapshot.left);
-  }
-
   return completeBattleStateTransition({
     root,
     transition: root.sessionStore.commitBattleStart({
@@ -138,13 +133,19 @@ export function handleStartBattleToolCall(
       if (battleState.tag !== "activeBattle") {
         throw new Error("Battle start payload requires owned active state.");
       }
+      const activeSession = root.sessionStore.battleSession;
+      if (activeSession === null) {
+        throw new Error("Battle start payload requires an active session.");
+      }
+      const envelope = battlePresentationEnvelopeForSession(
+        root,
+        activeSession,
+      );
+      if (Either.isLeft(envelope)) {
+        return battlePresentationIssueContent(envelope.left);
+      }
       return schemaJsonContent(StartBattleOutputSchema, {
-        battleState,
-        snapshot: snapshot.right,
-        availableActs: discoverBattleActs(admittedSession),
-        admittedSpellPresentations:
-          battleAdmittedSpellPresentations(admittedSession),
-        presentedInterruptChoices: [],
+        envelope: envelope.right,
         session: { ...mcpSessionSummary(session), battleState },
       });
     },

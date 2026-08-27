@@ -50,6 +50,7 @@ import {
 } from "./battle-subjects.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
+  battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
@@ -102,7 +103,6 @@ describe("Counterspell Reaction spell", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -142,9 +142,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: {
-        pendingInterrupt: null,
-      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Counterspell to resolve.");
@@ -287,7 +284,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected source-scoped Counterspell to resolve.");
@@ -343,7 +339,6 @@ describe("Counterspell Reaction spell", () => {
     expect(incomplete).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "savingThrowOutcome" }],
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -391,7 +386,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Counterspell to close the spell-cast window.");
@@ -441,7 +435,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Magic Missile to continue to damage.");
@@ -605,9 +598,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: {
-        pendingInterrupt: null,
-      },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected failed save Counterspell to resolve.");
@@ -695,7 +685,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingSecondCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingSecondCounterspell.tag !== "needsHoles") {
       throw new Error("Expected nested Counterspell Reaction window.");
@@ -720,7 +709,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterSecondCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterSecondCounterspell.tag !== "needsHoles") {
       throw new Error("Expected original spell to resume after Counterspell.");
@@ -811,7 +799,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Counterspell to interrupt Shield casting.");
@@ -840,7 +827,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterCounterspell.tag !== "needsHoles") {
       throw new Error(
@@ -924,7 +910,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingCounterspell).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingCounterspell.tag !== "needsHoles") {
       throw new Error("Expected Counterspell to interrupt Shield casting.");
@@ -945,7 +930,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(afterDecline).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (afterDecline.tag !== "needsHoles") {
       throw new Error("Expected Shield to replay after Counterspell decline.");
@@ -1016,7 +1000,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(
@@ -1044,7 +1027,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Counterspell to end Acid Splash.");
@@ -1096,7 +1078,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error(
@@ -1125,7 +1106,6 @@ describe("Counterspell Reaction spell", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         turn: { bonusActionQuotaAvailable: false, dashMovementBonusFeet: 0 },
       },
     });
@@ -1173,7 +1153,6 @@ describe("Counterspell Reaction spell", () => {
       }),
     ).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
   });
 
@@ -1202,7 +1181,6 @@ describe("Counterspell Reaction spell", () => {
     });
     expect(declined).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: null },
     });
     if (declined.tag !== "needsHoles") {
       throw new Error(
@@ -1221,7 +1199,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -1276,7 +1253,6 @@ describe("Counterspell Reaction spell", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") {
       throw new Error(
@@ -1642,7 +1618,6 @@ function startMagicMissile(input: {
   });
   expect(result).toMatchObject({
     tag: "needsHoles",
-    snapshot: { pendingInterrupt: { trigger: "spellCast" } },
   });
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Magic Missile spell-cast Reaction window.");
@@ -1817,7 +1792,9 @@ function requireTriggeredReactionSpellChoice(input: {
   { readonly kind: "castTriggeredReactionSpell" }
 > {
   const expectedFreeCastResource = input.resource;
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

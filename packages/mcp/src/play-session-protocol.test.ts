@@ -184,7 +184,7 @@ describe("Play Session operation projection", () => {
     if (Either.isLeft(unresolved)) return;
     expect(unresolved.right.length).toBeGreaterThan(0);
     expect(unresolved.right[0]?.sourcePath).toMatch(
-      /^\$\.availableActs\[\d+\]\.initialHoles$/u,
+      /^\$\.envelope\.frontier\.acts\[\d+\]\.initialHoles$/u,
     );
     expect(
       nextOperationsFrom(
@@ -207,7 +207,6 @@ function activeBattleSummary(): McpSessionSummary | undefined {
       battleId: "battle:unrelated",
       currentActorId: "unrelated-actor",
     },
-    pendingBattleHoles: null,
   });
   expect(Either.isRight(decoded)).toBe(true);
   return Either.isRight(decoded) ? decoded.right : undefined;
@@ -220,10 +219,6 @@ function sessionSummary(root: ReturnType<typeof createMcpPlaySessionRoot>) {
     characterIds: snapshot.characterIds,
     selectedStatBlockId: snapshot.selectedStatBlockId,
     battleState: snapshot.battleState,
-    pendingBattleHoles:
-      snapshot.transientBattleFills === null
-        ? null
-        : snapshot.transientBattleFills.holes,
   });
   if (Either.isLeft(decoded)) {
     throw new Error(decoded.left.message);

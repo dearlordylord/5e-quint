@@ -1,8 +1,3 @@
-import {
-  battleAdmittedSpellPresentations,
-  battlePresentedSnapshot,
-  discoverBattleActs,
-} from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -12,7 +7,8 @@ import {
   handleActiveBattleRosterOperation,
 } from "./battle-roster-lifecycle.ts";
 import {
-  battleSnapshotPresentationIssueContent,
+  battlePresentationEnvelopeForSession,
+  battlePresentationIssueContent,
   initialInitiativeSetupStartPayload,
 } from "./battle-tool-payloads.ts";
 import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
@@ -123,19 +119,24 @@ function finalizeSetup(root: McpPlaySessionRoot) {
           { code: "BATTLE_FINALIZATION_STATE_INVALID" },
         );
       }
-      const snapshot = battlePresentedSnapshot(state.session);
-      if (Either.isLeft(snapshot)) {
-        return battleSnapshotPresentationIssueContent(snapshot.left);
+      const envelope = battlePresentationEnvelopeForSession(
+        root,
+        state.session,
+      );
+      if (Either.isLeft(envelope)) {
+        return battlePresentationIssueContent(envelope.left);
       }
-      const battleState = battleStateSnapshot(state);
+      const battleState = battleStateSnapshot(root.sessionStore.battleState);
+      if (battleState.tag !== "activeBattle") {
+        return errorContent(
+          "Battle finalization did not produce an active session.",
+          {
+            code: "BATTLE_FINALIZATION_STATE_INVALID",
+          },
+        );
+      }
       return schemaJsonContent(BattleLifecycleOutputSchema, {
-        battleState,
-        snapshot: snapshot.right,
-        availableActs: discoverBattleActs(state.session),
-        admittedSpellPresentations: battleAdmittedSpellPresentations(
-          state.session,
-        ),
-        presentedInterruptChoices: [],
+        envelope: envelope.right,
         session: {
           ...mcpSessionSummary(root.sessionStore.snapshot()),
           battleState,

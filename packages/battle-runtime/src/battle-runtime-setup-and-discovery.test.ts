@@ -31,6 +31,7 @@ import {
   BattleHoleSchema,
   battleId,
   BattleSnapshotSchema,
+  discoverBattleActCandidates,
   discoverBattleActs,
   Either,
   initiativeScore,
@@ -135,7 +136,6 @@ describe("battle runtime: setup and discovery", () => {
         },
         {
           combatantId: fighterId,
-          displayName: "Fighter",
           hp: 12,
           maxHp: 12,
           tempHp: 0,
@@ -149,19 +149,9 @@ describe("battle runtime: setup and discovery", () => {
           conditions: [],
         },
       ],
-      acts: [
-        {
-          subject: {
-            tag: "runtimeCommand",
-            actorId: goblinId,
-            command: "endTurn",
-          },
-          initialHoles: [],
-        },
-      ],
       turn: {
         actionResources: [{ kind: "action", source: "turn" }],
-        bonusActionQuotaAvailable: false,
+        bonusActionQuotaAvailable: true,
         spellSlotUsesThisTurn: [],
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
@@ -262,7 +252,6 @@ describe("battle runtime: setup and discovery", () => {
       readiedResponses: { spells: [], actionsOrMovements: [] },
       obscurementZones: [],
       helpAttackMarkers: [],
-      pendingInterrupt: null,
     });
   });
 
@@ -320,8 +309,7 @@ describe("battle runtime: setup and discovery", () => {
       throw new Error("Expected the Attack target frontier.");
     }
 
-    expect(attack.snapshot.acts).toEqual([]);
-    expect(snapshotBattle(attack.state).acts).toEqual([]);
+    expect(attack.holes[0]?.kind).toBe("targetChoice");
     expect(
       resolveBattleSubject({
         state: attack.state,
@@ -361,7 +349,7 @@ describe("battle runtime: setup and discovery", () => {
       );
 
     expect(unarmedStrike).toBeDefined();
-    const attackAct = snapshotBattle(session.state).acts.find(
+    const attackAct = discoverBattleActs(session).find(
       ({ subject }) =>
         subject.tag === "action" &&
         subject.action === "attack" &&
@@ -406,7 +394,7 @@ describe("battle runtime: setup and discovery", () => {
     expect(damaged.state.combatants.get(goblinId)?.hp).toBe(9);
 
     const grappleSession = makeSession("grapple");
-    const grappleAct = snapshotBattle(grappleSession.state).acts.find(
+    const grappleAct = discoverBattleActs(grappleSession).find(
       ({ subject }) => subject.tag === "action" && subject.action === "grapple",
     );
     if (
@@ -460,7 +448,7 @@ describe("battle runtime: setup and discovery", () => {
     ]);
 
     const shoveSession = makeSession("shove");
-    const shoveAct = snapshotBattle(shoveSession.state).acts.find(
+    const shoveAct = discoverBattleActs(shoveSession).find(
       ({ subject }) => subject.tag === "action" && subject.action === "shove",
     );
     if (
@@ -1012,6 +1000,6 @@ describe("battle runtime: setup and discovery", () => {
     expect(removed.subjectResolutionPhase).toEqual({
       kind: "subjectSelection",
     });
-    expect(snapshotBattle(removed).acts.length).toBeGreaterThan(0);
+    expect(discoverBattleActCandidates(removed).length).toBeGreaterThan(0);
   });
 });

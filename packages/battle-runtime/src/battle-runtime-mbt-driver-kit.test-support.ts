@@ -101,6 +101,7 @@ import {
   BATTLE_INVALID_REASON_CODES,
   battleAmmunitionStock,
   battleId,
+  battleFrontierInterruptDecisionForState,
   battleObjectId,
   battleReducerStartRouteEvent,
   battleUnitRefWithSupportProfiles,
@@ -9782,7 +9783,8 @@ export function createInterruptStackResumeRouteDriver() {
         }
         appendInterruptRouteEvents(awaitingAttackReaction);
         const releaseChoice = interruptReactionChoiceWithSubject(
-          awaitingAttackReaction.snapshot.pendingInterrupt!.choices,
+          battleFrontierInterruptDecisionForState(awaitingAttackReaction.state)!
+            .choices,
         );
         if (
           releaseChoice.subject.tag !== "runtimeCommand" ||
@@ -9793,7 +9795,9 @@ export function createInterruptStackResumeRouteDriver() {
         const released = resolveBattleInterrupt({
           state: awaitingAttackReaction.state,
           fill: interruptDecisionFillSupport(
-            awaitingAttackReaction.snapshot.pendingInterrupt!.decisionHole,
+            battleFrontierInterruptDecisionForState(
+              awaitingAttackReaction.state,
+            )!.decisionHole,
             {
               kind: "resolve",
               responderId: interruptWizardId,
@@ -9827,7 +9831,7 @@ export function createInterruptStackResumeRouteDriver() {
         const declinedNested = resolveBattleInterrupt({
           state: nested.state,
           fill: interruptDecisionFillSupport(
-            nested.snapshot.pendingInterrupt!.decisionHole,
+            battleFrontierInterruptDecisionForState(nested.state)!.decisionHole,
             {
               kind: "decline",
               responderId: interruptSecondWizardId,
@@ -9876,7 +9880,8 @@ export function createInterruptStackResumeRouteDriver() {
         const resolved = resolveBattleInterrupt({
           state: awaitingReaction.state,
           fill: interruptDecisionFillSupport(
-            awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+            battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+              .decisionHole,
             {
               kind: "resolve",
               responderId: interruptShieldCasterId,
@@ -9960,7 +9965,7 @@ function publicReplayContinuationAfterAttackDeclines(): {
     result.tag === "needsHoles" &&
     result.holes.some((hole) => hole.kind === "interruptDecision")
   ) {
-    const pending = result.snapshot.pendingInterrupt;
+    const pending = battleFrontierInterruptDecisionForState(result.state);
     const responderId = pending?.choices[0]?.reactorId;
     if (pending == null || responderId === undefined) {
       throw new Error("Expected public interrupt decision responder.");
@@ -16222,7 +16227,9 @@ function requireInterruptShieldReactionChoice(
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

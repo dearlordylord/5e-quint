@@ -1,6 +1,9 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { expect } from "vitest";
-import { characterSpellInvocationRefForProcedureRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  characterSpellInvocationRefForProcedureRefForTest,
+} from "./battle-runtime.test-support.ts";
 
 import { SHINING_SMITE_BRIGHT_LIGHT_RADIUS_FEET } from "./battle-reducer/spells-active-effects.ts";
 import {
@@ -82,24 +85,23 @@ export const shiningSmiteSelectedIdentityReplay = {
             if (awaitingReaction.tag !== "needsHoles") {
               throw new Error("Expected Shining Smite attack-hit window.");
             }
-            const choice =
-              awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-                (candidate) => {
-                  if (candidate.kind !== "castAttackHitBonusActionSpell") {
-                    return false;
-                  }
-                  return (
-                    characterSpellInvocationRefForProcedureRefForTest(
-                      battleRuntimeSessionForTest({
-                        state: awaitingReaction.state,
-                        context: state.context,
-                      }),
-                      candidate.reactorId,
-                      candidate.subject.procedureRef,
-                    ).spellId === shiningSmiteUnitId
-                  );
-                },
+            const choice = battleFrontierInterruptDecisionForState(
+              awaitingReaction.state,
+            )?.choices.find((candidate) => {
+              if (candidate.kind !== "castAttackHitBonusActionSpell") {
+                return false;
+              }
+              return (
+                characterSpellInvocationRefForProcedureRefForTest(
+                  battleRuntimeSessionForTest({
+                    state: awaitingReaction.state,
+                    context: state.context,
+                  }),
+                  candidate.reactorId,
+                  candidate.subject.procedureRef,
+                ).spellId === shiningSmiteUnitId
               );
+            });
             if (
               choice === undefined ||
               choice.kind !== "castAttackHitBonusActionSpell"

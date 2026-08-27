@@ -709,12 +709,12 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): W
     })
   }
 
-  const savingThrow = requireHole(spellReady.holes, "savingThrowOutcome")
+  const savingThrow = requireResultHole(spellReady, "savingThrowOutcome")
   const saveFill = savingThrowFillForPlan(savingThrow, plan)
   const damageRoll = requireResultHole(
     resolveBattleRuntimeSubject({
       session: spellReady.session,
-      subject: spellReady.subject,
+      subject: act.subject,
       fills: [saveFill]
     }),
     "rolledDice"
@@ -728,7 +728,7 @@ function castAreaSpell(builder: WizardBattleDemoBuilder, plan: AreaSpellPlan): W
 
   const resolved = resolveBattleRuntimeSubject({
     session: spellReady.session,
-    subject: spellReady.subject,
+    subject: act.subject,
     fills: [saveFill, damageRollFillWithGroups(damageRoll, [plan.spell.damageRollResults])]
   })
   /* v8 ignore next -- @preserve -- the fixture supplies every hole exposed by the preceding resolution */
@@ -808,7 +808,7 @@ function resolveCounterspellChain(
     const reactionResult = resolveBattleRuntimeInterrupt({
       session: pendingInterrupt.session,
       fill: interruptDecisionFill(
-        requireHole(pendingInterrupt.holes, "interruptDecision"),
+        requireResultHole(pendingInterrupt, "interruptDecision"),
         counterspellDecision(
           link.reactorId,
           choice,
@@ -883,7 +883,7 @@ function resolveDeclinedCounterspell(
   const declined = resolveBattleRuntimeInterrupt({
     session: result.session,
     fill: interruptDecisionFill(
-      requireHole(result.holes, "interruptDecision"),
+      requireResultHole(result, "interruptDecision"),
       declineInterruptDecision(decline.reactorId)
     )
   })
@@ -926,14 +926,18 @@ function passCurrentTurn(
     }
   }
   requireNeedsHoles(result, "Expected End Turn to resolve or ask for a Death Saving Throw.")
-  const deathSavingThrow = requireHole(result.holes, "deathSavingThrow")
+  if (result.envelope.frontier.kind !== "holes") {
+    throw new Error("Expected End Turn to expose a Runtime Hole frontier.")
+  }
+  const endTurnSubject = result.envelope.frontier.subject
+  const deathSavingThrow = requireResultHole(result, "deathSavingThrow")
   /* v8 ignore next -- @preserve -- scripted death-save identity follows the immediately exposed typed hole */
   if (deathSave === undefined || deathSavingThrow.combatantId !== deathSave.targetId) {
     throw new Error("Unexpected Death Saving Throw hole while advancing the wizard battle demo.")
   }
   const resolved = resolveBattleRuntimeSubject({
     session: result.session,
-    subject: result.subject,
+    subject: endTurnSubject,
     fills: [deathSavingThrowFill(deathSavingThrow, deathSave.roll)]
   })
   /* v8 ignore next -- @preserve -- the immediately exposed death-save hole is filled above */

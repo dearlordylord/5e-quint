@@ -11,6 +11,7 @@ import {
 import { characterToolNames } from "./character-tool-input.ts";
 import { diceToolNames } from "./dice-tool-input.ts";
 import {
+  BattlePresentationEnvelopeSchema,
   BattleLifecycleOutputSchema,
   BattleResolutionOutputSchema,
   BattleSessionOutputSchema,
@@ -18,6 +19,7 @@ import {
 } from "./battle-tool-output.ts";
 import { playSessionToolNames } from "./play-session-tool-contract.ts";
 import type { PlaySessionOperationName } from "./play-session-tool-contract.ts";
+import { PlaySessionIdSchema } from "./play-session.ts";
 
 export type UnresolvedInputGroup = {
   readonly sourcePath: string;
@@ -28,6 +30,12 @@ export type OperationProjectionIssue = {
   readonly tag: "operationProjectionDecodeIssue";
   readonly message: string;
 };
+
+const PlaySessionReadOperationResultSchema = Schema.Struct({
+  tag: Schema.Literal("playSessionResumed"),
+  playSessionId: PlaySessionIdSchema,
+  battleEnvelope: Schema.Union(Schema.Null, BattlePresentationEnvelopeSchema),
+});
 
 /**
  * Project only operation-owned executable inputs into the envelope.
@@ -79,8 +87,27 @@ export function unresolvedInputsFrom(
     Match.when(battleToolNames.endTurn, () =>
       battleResolutionUnresolvedInputs(value),
     ),
+    Match.when(playSessionToolNames.read, () =>
+      readPlaySessionUnresolvedInputs(value),
+    ),
     Match.when(isNoHoleOperationName, () => Either.right([])),
     Match.exhaustive,
+  );
+}
+
+export function unresolvedInputsFromBattleEnvelope(
+  value: unknown,
+  envelopePath = "$.envelope",
+): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownEither(BattlePresentationEnvelopeSchema)(
+    value,
+  );
+  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
+  return Either.right(
+    battlePresentationUnresolvedInputsFrom(
+      { envelope: decoded.right },
+      envelopePath,
+    ),
   );
 }
 
@@ -161,26 +188,50 @@ function battleSessionUnresolvedInputs(
 ): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   const decoded = Schema.decodeUnknownEither(BattleSessionOutputSchema)(value);
   if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  const pending = decoded.right.session.transientBattleFills;
-  if (pending !== null) {
-    return Either.right(
-      nonEmptyInputGroup("$.session.transientBattleFills.holes", pending.holes),
-    );
-  }
   return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
 }
 
-function battlePresentationUnresolvedInputsFrom(value: {
-  readonly availableActs: readonly {
-    readonly initialHoles: readonly unknown[];
-  }[];
-}): readonly UnresolvedInputGroup[] {
-  return value.availableActs.flatMap((act, index) =>
-    nonEmptyInputGroup(
-      `$.availableActs[${index}].initialHoles`,
-      act.initialHoles,
-    ),
-  );
+function battlePresentationUnresolvedInputsFrom(
+  value: {
+    readonly envelope: {
+      readonly frontier:
+        | {
+            readonly kind: "acts";
+            readonly acts: readonly {
+              readonly initialHoles: readonly unknown[];
+            }[];
+          }
+        | {
+            readonly kind: "holes";
+            readonly holes: readonly unknown[];
+          }
+        | {
+            readonly kind: "interruptDecision";
+            readonly decisionHole: unknown;
+          };
+    } | null;
+  },
+  envelopePath = "$.envelope",
+): readonly UnresolvedInputGroup[] {
+  if (value.envelope === null) return [];
+  const frontier = value.envelope.frontier;
+  if (frontier.kind === "acts") {
+    return frontier.acts.flatMap((act, index) =>
+      nonEmptyInputGroup(
+        `${envelopePath}.frontier.acts[${index}].initialHoles`,
+        act.initialHoles,
+      ),
+    );
+  }
+  if (frontier.kind === "holes") {
+    return nonEmptyInputGroup(`${envelopePath}.frontier.holes`, frontier.holes);
+  }
+  return [
+    {
+      sourcePath: `${envelopePath}.frontier.decisionHole`,
+      inputs: [frontier.decisionHole],
+    },
+  ];
 }
 
 function battleResolutionUnresolvedInputs(
@@ -190,19 +241,25 @@ function battleResolutionUnresolvedInputs(
     value,
   );
   if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
+  return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
+}
+
+function readPlaySessionUnresolvedInputs(
+  value: unknown,
+): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  const decoded = Schema.decodeUnknownEither(
+    PlaySessionReadOperationResultSchema,
+  )(value);
+  if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
   return Either.right(
-    Match.value(decoded.right.result).pipe(
-      Match.when({ tag: "needsHoles" }, (needsHoles) =>
-        nonEmptyInputGroup("$.result.holes", needsHoles.holes),
-      ),
-      Match.when({ tag: "resolved" }, () =>
-        battlePresentationUnresolvedInputsFrom(decoded.right),
-      ),
-      Match.when({ tag: "invalid" }, () =>
-        battlePresentationUnresolvedInputsFrom(decoded.right),
-      ),
-      Match.exhaustive,
-    ),
+    decoded.right.battleEnvelope === null
+      ? []
+      : battlePresentationUnresolvedInputsFrom(
+          {
+            envelope: decoded.right.battleEnvelope,
+          },
+          "$.battleEnvelope",
+        ),
   );
 }
 
@@ -239,7 +296,6 @@ type NoHoleOperationName =
   | typeof characterToolNames.queryCharacterSession
   | typeof diceToolNames.rollDice
   | typeof playSessionToolNames.create
-  | typeof playSessionToolNames.read
   | typeof playSessionToolNames.save
   | typeof playSessionToolNames.listSaved
   | typeof playSessionToolNames.deleteSaved;
@@ -252,7 +308,6 @@ const NO_HOLE_OPERATION_NAMES = [
   characterToolNames.queryCharacterSession,
   diceToolNames.rollDice,
   playSessionToolNames.create,
-  playSessionToolNames.read,
   playSessionToolNames.save,
   playSessionToolNames.listSaved,
   playSessionToolNames.deleteSaved,

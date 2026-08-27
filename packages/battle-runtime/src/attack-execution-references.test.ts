@@ -7,9 +7,11 @@ import { describe, expect, test } from "vitest";
 
 import {
   BattleFillSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleSnapshotSchema,
   BattleSubjectSchema,
   discoverBattleActs,
+  battleCheckpointFrontierEnvelope,
   emptyBattleRuntimeContext,
   snapshotBattle,
   startBattle,
@@ -370,9 +372,12 @@ describe("character attack execution references", () => {
 
   test("rejects snapshot Acts whose attack holes use another combatant's bound procedure", () => {
     const state = identicalDaggerBattle();
-    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
-      snapshotBattle(state),
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(state),
     );
+    if (encoded.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier.");
+    }
     const goblin = state.combatants.get(goblinId);
     const wrongOwnerProcedureRef =
       goblin?.origin.kind === "statBlock"
@@ -383,7 +388,7 @@ describe("character attack execution references", () => {
     if (wrongOwnerProcedureRef === undefined) {
       throw new Error("Expected the other combatant's attack procedure ref.");
     }
-    const actWithHole = encoded.acts.find((act) =>
+    const actWithHole = encoded.frontier.acts.find((act) =>
       act.initialHoles.some(
         (hole) => hole.kind === "targetChoice" && hole.attack !== undefined,
       ),
@@ -393,31 +398,38 @@ describe("character attack execution references", () => {
     }
     const forged = {
       ...encoded,
-      acts: encoded.acts.map((act) =>
-        act !== actWithHole
-          ? act
-          : {
-              ...act,
-              initialHoles: act.initialHoles.map((hole) =>
-                hole.kind !== "targetChoice" || hole.attack === undefined
-                  ? hole
-                  : {
-                      ...hole,
-                      attack: {
-                        ...hole.attack,
-                        selection: {
-                          ...hole.attack.selection,
-                          procedureRef: wrongOwnerProcedureRef,
+      frontier: {
+        ...encoded.frontier,
+        acts: encoded.frontier.acts.map((act) =>
+          act !== actWithHole
+            ? act
+            : {
+                ...act,
+                initialHoles: act.initialHoles.map((hole) =>
+                  hole.kind !== "targetChoice" || hole.attack === undefined
+                    ? hole
+                    : {
+                        ...hole,
+                        attack: {
+                          ...hole.attack,
+                          selection: {
+                            ...hole.attack.selection,
+                            procedureRef: wrongOwnerProcedureRef,
+                          },
                         },
                       },
-                    },
-              ),
-            },
-      ),
+                ),
+              },
+        ),
+      },
     };
 
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(BattleSnapshotSchema)(forged)),
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          forged,
+        ),
+      ),
     ).toBe(true);
   });
 

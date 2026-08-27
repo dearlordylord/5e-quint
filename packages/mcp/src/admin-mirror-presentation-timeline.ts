@@ -5,6 +5,7 @@ import type {
   AdminMirrorProjectionEnvelope,
   AdminSessionProjection,
 } from "./admin-mirror-contract.ts";
+import type { BattleSubject } from "@dnd/battle-runtime";
 type EventAction = {
   readonly detail: string;
   readonly summary: string;
@@ -22,11 +23,11 @@ export function createAdminMirrorPresentationTimelineEntry(
   return {
     actionDetail: action?.detail ?? null,
     actionSummary: action?.summary ?? null,
-    battleId: battle?.battleId ?? null,
-    battleRound: battle?.round ?? null,
+    battleId: battle?.checkpoint.battleId ?? null,
+    battleRound: battle?.checkpoint.round ?? null,
     characterCount: envelope.projection.characters.length,
     currentActorDisplayName: currentActorDisplayName(envelope.projection),
-    currentActorId: battle?.currentActorId ?? null,
+    currentActorId: battle?.checkpoint.currentActorId ?? null,
     debug: eventDebug(previousProjection, envelope.projection, action, changes),
     draftCount: envelope.projection.session.draftIds.length,
     hpChanges: changes,
@@ -44,15 +45,13 @@ function eventDebug(
   action: EventAction | null,
   changes: readonly AdminMirrorBattleHpChange[],
 ): AdminMirrorEventDebug | null {
-  const currentPending = projection.session.transientBattleFills;
+  const currentPending = pendingBattleFrontier(projection);
   if (currentPending !== null) {
     return {
       derivedInput: {
-        fills: currentPending.fills,
         subject: currentPending.subject,
       },
       derivedOutcome: eventDerivedOutcome(action, {
-        pendingFillCount: currentPending.fills.length,
         resultTag: "needsHoles",
       }),
       eventKind: "pendingBattleFills",
@@ -61,7 +60,10 @@ function eventDebug(
     };
   }
 
-  const previousPending = previousProjection?.session.transientBattleFills;
+  const previousPending =
+    previousProjection === undefined
+      ? null
+      : pendingBattleFrontier(previousProjection);
   if (
     previousProjection !== undefined &&
     previousPending !== undefined &&
@@ -69,7 +71,6 @@ function eventDebug(
   ) {
     return {
       derivedInput: {
-        fills: previousPending.fills,
         subject: previousPending.subject,
       },
       derivedOutcome: eventDerivedOutcome(action, {
@@ -98,15 +99,15 @@ function eventDebug(
     previousProjection?.battle !== undefined &&
     previousProjection.battle !== null &&
     projection.battle !== null &&
-    previousProjection.battle.currentActorId !==
-      projection.battle.currentActorId
+    previousProjection.battle.checkpoint.currentActorId !==
+      projection.battle.checkpoint.currentActorId
   ) {
     return {
       derivedInput: {
-        actorId: previousProjection.battle.currentActorId,
+        actorId: previousProjection.battle.checkpoint.currentActorId,
         command: "endTurn",
         subject: {
-          actorId: previousProjection.battle.currentActorId,
+          actorId: previousProjection.battle.checkpoint.currentActorId,
           command: "endTurn",
           tag: "runtimeCommand",
         },
@@ -149,12 +150,15 @@ function eventAction(
 ): EventAction | null {
   const previousProjection = previousEnvelope?.projection;
   const projection = envelope.projection;
-  const currentPending = projection.session.transientBattleFills;
+  const currentPending = pendingBattleFrontier(projection);
   if (currentPending !== null) {
     return pendingAction(currentPending, projection);
   }
 
-  const previousPending = previousProjection?.session.transientBattleFills;
+  const previousPending =
+    previousProjection === undefined
+      ? null
+      : pendingBattleFrontier(previousProjection);
   if (
     previousProjection !== undefined &&
     previousPending !== undefined &&
@@ -166,10 +170,10 @@ function eventAction(
   if (previousProjection?.battle === null && projection.battle !== null) {
     const actor = displayNameForCombatant(
       projection,
-      projection.battle.currentActorId,
+      projection.battle.checkpoint.currentActorId,
     );
     return {
-      detail: `${projection.battle.battleId} started in round ${projection.battle.round}.`,
+      detail: `${projection.battle.checkpoint.battleId} started in round ${projection.battle.checkpoint.round}.`,
       summary: `Battle started: ${actor}'s turn`,
     };
   }
@@ -178,16 +182,16 @@ function eventAction(
     previousProjection?.battle !== undefined &&
     previousProjection.battle !== null &&
     projection.battle !== null &&
-    previousProjection.battle.currentActorId !==
-      projection.battle.currentActorId
+    previousProjection.battle.checkpoint.currentActorId !==
+      projection.battle.checkpoint.currentActorId
   ) {
     const actor = displayNameForCombatant(
       projection,
-      projection.battle.currentActorId,
+      projection.battle.checkpoint.currentActorId,
     );
     return {
-      detail: `Turn advanced from ${previousProjection.battle.currentActorId} to ${projection.battle.currentActorId}.`,
-      summary: `Round ${projection.battle.round}: ${actor}'s turn`,
+      detail: `Turn advanced from ${previousProjection.battle.checkpoint.currentActorId} to ${projection.battle.checkpoint.currentActorId}.`,
+      summary: `Round ${projection.battle.checkpoint.round}: ${actor}'s turn`,
     };
   }
 
@@ -195,9 +199,7 @@ function eventAction(
 }
 
 function pendingAction(
-  pending: NonNullable<
-    AdminSessionProjection["session"]["transientBattleFills"]
-  >,
+  pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
   projection: AdminSessionProjection,
 ): EventAction | null {
   const subject = pending.subject;
@@ -209,9 +211,7 @@ function pendingAction(
 }
 
 function resolvedAction(
-  pending: NonNullable<
-    AdminSessionProjection["session"]["transientBattleFills"]
-  >,
+  pending: NonNullable<ReturnType<typeof pendingBattleFrontier>>,
   projection: AdminSessionProjection,
 ): EventAction | null {
   const subject = pending.subject;
@@ -225,7 +225,7 @@ function resolvedAction(
 function currentActorDisplayName(
   projection: AdminSessionProjection,
 ): string | null {
-  const currentActorId = projection.battle?.currentActorId;
+  const currentActorId = projection.battle?.checkpoint.currentActorId;
   if (currentActorId === undefined) return null;
   return displayNameForCombatant(projection, currentActorId);
 }
@@ -242,12 +242,12 @@ function hpChanges(
     return [];
   }
   const previousCombatants = new Map(
-    previousProjection.battle.combatants.map((combatant) => [
+    previousProjection.battle.checkpoint.combatants.map((combatant) => [
       combatant.combatantId,
       combatant,
     ]),
   );
-  return projection.battle.combatants.flatMap((combatant) => {
+  return projection.battle.checkpoint.combatants.flatMap((combatant) => {
     const previous = previousCombatants.get(combatant.combatantId);
     if (previous === undefined || previous.hp === combatant.hp) return [];
     return [
@@ -267,7 +267,7 @@ function displayNameForCombatant(
   combatantId: string,
 ): string {
   return (
-    projection.battle?.combatants.find(
+    projection.battle?.checkpoint.combatants.find(
       (combatant) => combatant.combatantId === combatantId,
     )?.displayName ?? combatantId
   );
@@ -278,19 +278,12 @@ function battleSummary(
 ): Record<string, unknown> | null {
   const battle = projection?.battle;
   if (battle === undefined || battle === null) return null;
-  return {
-    battleId: battle.battleId,
-    combatants: battle.combatants.map((combatant) => ({
-      combatantId: combatant.combatantId,
-      conditions: combatant.conditions,
-      displayName: combatant.displayName,
-      hp: combatant.hp,
-      maxHp: combatant.maxHp,
-      tempHp: combatant.tempHp,
-    })),
-    currentActorId: battle.currentActorId,
-    pendingInterrupt: battle.pendingInterrupt,
-    round: battle.round,
-    turnOrder: battle.turnOrder,
-  };
+  return battle;
+}
+
+function pendingBattleFrontier(projection: AdminSessionProjection): {
+  readonly subject: BattleSubject;
+} | null {
+  const frontier = projection.battle?.frontier;
+  return frontier?.kind === "holes" ? { subject: frontier.subject } : null;
 }

@@ -73,6 +73,7 @@ import {
   attackExecutionSelectionForSubjectForTest,
   attackRollFill,
   battleProcedureExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
   characterBattleFeatureInitForTest,
   characterAttackSubjectForTest,
   characterBonusAttackSubjectForTest,
@@ -1881,12 +1882,13 @@ function startOpportunityAttack(state: BattleState, attackName: string) {
     throw new Error("Expected Opportunity Attack interrupt.");
   }
   const choice = reactionChoiceWithSubject(
-    awaitingReaction.snapshot.pendingInterrupt!.choices,
+    battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
   );
   const startedReaction = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+        .decisionHole,
       {
         kind: "resolve",
         responderId: goblinId,

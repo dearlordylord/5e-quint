@@ -12,7 +12,7 @@ import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 
 import {
   applyBattleHitPointDamage,
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   attackRollFill,
   battleId,
   characterBattleFeatureInitForTest,
@@ -169,7 +169,7 @@ describe("Dark One's Blessing zero-HP Temporary Hit Points", () => {
     if (relationship.kind !== "damageRelationshipDecisions") {
       throw new Error("Expected a damage relationship hole.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: awaitingRelationship.snapshot,
       subject: act.subject,
       holes: awaitingRelationship.holes,

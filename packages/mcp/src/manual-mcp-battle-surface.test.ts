@@ -9,6 +9,7 @@ import {
   WEAPON_MASTERY_TOPPLE_SUPPORT_PROFILE,
   battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
+  battleAdmittedSpellPresentations,
   battleId,
   battleObjectId,
   admitCharacterWeaponAttackExecutionWeapon,
@@ -18,6 +19,7 @@ import {
   startBattle,
   battleStateInitIssueMessage,
   type BattleCreatureInit,
+  type BattlePresentedCheckpointFrontierEnvelope,
   type BattleRuntimeSession,
   type BattleUnitRef,
   type CharacterBattleClassLevelInits,
@@ -117,11 +119,13 @@ describe("manual MCP battle surface coverage", () => {
       },
     });
 
-    expect(afterGrant.result).toMatchObject({
-      tag: "resolved",
-      snapshot: { turn: { bonusActionQuotaAvailable: false } },
+    expect(afterGrant).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: { turn: { bonusActionQuotaAvailable: false } },
+      },
     });
-    expect(afterGrant.result.snapshot.combatants).toEqual(
+    expect(afterGrant.envelope.checkpoint.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: "fighter",
@@ -183,9 +187,11 @@ describe("manual MCP battle surface coverage", () => {
     const afterInnate = call(root, "resolve_battle_act", {
       subject: innate.subject,
     });
-    expect(afterInnate.result).toMatchObject({
-      tag: "resolved",
-      snapshot: { turn: { bonusActionQuotaAvailable: false } },
+    expect(afterInnate).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: { turn: { bonusActionQuotaAvailable: false } },
+      },
     });
 
     const burst = requireSpellAct(root, "sorcerous_burst");
@@ -209,11 +215,19 @@ describe("manual MCP battle surface coverage", () => {
       ),
     });
 
-    expect(afterTarget.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [
-        expect.objectContaining({ kind: "attackRoll", rollMode: "advantage" }),
-      ],
+    expect(afterTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({
+              kind: "attackRoll",
+              rollMode: "advantage",
+            }),
+          ],
+        },
+      },
     });
   });
 
@@ -260,7 +274,7 @@ describe("manual MCP battle surface coverage", () => {
       ),
     });
     const attackRoll = requireHole(
-      requireNeedsHoles(afterTarget).holes,
+      requireBattleHoles(afterTarget).holes,
       "attackRoll",
     );
     const afterRoll = call(root, "fill_battle_hole", {
@@ -268,7 +282,7 @@ describe("manual MCP battle surface coverage", () => {
       fill: attackRollFill(attackRoll.holeId, 18, 12, attackRoll.rollMode),
     });
     const damage = requireHole(
-      requireNeedsHoles(afterRoll).holes,
+      requireBattleHoles(afterRoll).holes,
       "rolledDice",
     );
     const afterDamage = call(root, "fill_battle_hole", {
@@ -276,14 +290,16 @@ describe("manual MCP battle surface coverage", () => {
       fill: rolledDiceFill(damage.holeId, [[4]]),
     });
 
-    expect(afterDamage.result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          expect.objectContaining({ combatantId: "fighter" }),
-          expect.objectContaining({ combatantId: "goblin", hp: 3 }),
-        ],
-        turn: { bonusActionQuotaAvailable: false },
+    expect(afterDamage).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            expect.objectContaining({ combatantId: "fighter" }),
+            expect.objectContaining({ combatantId: "goblin", hp: 3 }),
+          ],
+          turn: { bonusActionQuotaAvailable: false },
+        },
       },
     });
   });
@@ -320,14 +336,19 @@ describe("manual MCP battle surface coverage", () => {
         goblinAttack.subject,
       ),
     });
-    expect(afterGoblinTarget.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          rollMode: "disadvantage",
-        }),
-      ],
+    expect(afterGoblinTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({
+              kind: "attackRoll",
+              rollMode: "disadvantage",
+            }),
+          ],
+        },
+      },
     });
 
     const toppleRoot = createMcpPlaySessionRoot();
@@ -364,9 +385,14 @@ describe("manual MCP battle surface coverage", () => {
       18,
       12,
     );
-    expect(afterToppleRoll.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+    expect(afterToppleRoll).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [expect.objectContaining({ kind: "savingThrowOutcome" })],
+        },
+      },
     });
   });
 
@@ -416,11 +442,11 @@ describe("manual MCP battle surface coverage", () => {
       },
     );
     const cleaveDecision = requireHole(
-      requireNeedsHoles(afterDamage).holes,
+      requireBattleHoles(afterDamage).holes,
       "unitFeatureDecision",
     );
     const afterCleaveDecision = call(root, "fill_battle_hole", {
-      subject: requireNeedsHoles(afterDamage).subject,
+      subject: requireBattleHoles(afterDamage).subject,
       fill: {
         kind: "unitFeatureDecision",
         holeId: cleaveDecision.holeId,
@@ -432,28 +458,33 @@ describe("manual MCP battle surface coverage", () => {
     }
     expect(afterCleaveDecision.result).toMatchObject({ tag: "needsHoles" });
     const secondTarget = requireHole(
-      requireNeedsHoles(afterCleaveDecision).holes,
+      requireBattleHoles(afterCleaveDecision).holes,
       "targetChoice",
     );
     const afterSecondTarget = call(root, "fill_battle_hole", {
-      subject: requireNeedsHoles(afterDamage).subject,
+      subject: requireBattleHoles(afterDamage).subject,
       fill: attackTargetFill(
         secondTarget.holeId,
         "fighter",
         "ally",
-        requireProcedureSubject(requireNeedsHoles(afterDamage).subject),
+        requireProcedureSubject(requireBattleHoles(afterDamage).subject),
         undefined,
         { firstTargetId: "goblin" },
       ),
     });
-    expect(afterSecondTarget.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [
-        expect.objectContaining({
-          kind: "attackRoll",
-          label: "Cleave attack roll",
-        }),
-      ],
+    expect(afterSecondTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [
+            expect.objectContaining({
+              kind: "attackRoll",
+              label: "Cleave attack roll",
+            }),
+          ],
+        },
+      },
     });
   });
 
@@ -499,11 +530,13 @@ describe("manual MCP battle surface coverage", () => {
       ),
     });
 
-    expect(afterTarget.result).toMatchObject({
-      tag: "resolved",
-      snapshot: { turn: { spellSlotUsesThisTurn: [] } },
+    expect(afterTarget).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: { turn: { spellSlotUsesThisTurn: [] } },
+      },
     });
-    expect(afterTarget.result.snapshot.combatants).toEqual(
+    expect(afterTarget.envelope.checkpoint.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: "fighter", armorClass: 15 }),
       ]),
@@ -548,7 +581,7 @@ describe("manual MCP battle surface coverage", () => {
       ),
     });
     const attackRoll = requireHole(
-      requireNeedsHoles(afterTarget).holes,
+      requireBattleHoles(afterTarget).holes,
       "attackRoll",
     );
     const afterAttackRoll = call(root, "fill_battle_hole", {
@@ -556,15 +589,17 @@ describe("manual MCP battle surface coverage", () => {
       fill: attackRollFill(attackRoll.holeId, 14, 10, attackRoll.rollMode),
     });
 
-    expect(afterAttackRoll.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "interruptDecision" })],
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
+    expect(afterAttackRoll).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "interruptDecision",
+          trigger: "attackHit",
+        },
+      },
     });
-    const reactionHole = requireHole(
-      requireNeedsHoles(afterAttackRoll).holes,
-      "interruptDecision",
-    );
+    const reactionHole =
+      requireBattleInterruptFrontier(afterAttackRoll).decisionHole;
     const shieldChoice = requireTriggeredSpellChoice(
       afterAttackRoll,
       "fighter",
@@ -588,24 +623,26 @@ describe("manual MCP battle surface coverage", () => {
       },
     });
 
-    expect(afterShield.result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          expect.objectContaining({ combatantId: "goblin" }),
-          expect.objectContaining({
-            combatantId: "fighter",
-            armorClass: 15,
-            hp: 12,
-            reactionAvailable: false,
-            origin: expect.objectContaining({
-              kind: "character",
-              spellcasting: expect.objectContaining({
-                spellSlots: [{ spellLevel: 1, count: 1, expended: 1 }],
+    expect(afterShield).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            expect.objectContaining({ combatantId: "goblin" }),
+            expect.objectContaining({
+              combatantId: "fighter",
+              armorClass: 15,
+              hp: 12,
+              reactionAvailable: false,
+              origin: expect.objectContaining({
+                kind: "character",
+                spellcasting: expect.objectContaining({
+                  spellSlots: [{ spellLevel: 1, count: 1, expended: 1 }],
+                }),
               }),
             }),
-          }),
-        ],
+          ],
+        },
       },
     });
   });
@@ -665,7 +702,7 @@ describe("manual MCP battle surface coverage", () => {
       },
     });
     const attackRoll = requireHole(
-      requireNeedsHoles(afterTarget).holes,
+      requireBattleHoles(afterTarget).holes,
       "attackRoll",
     );
     const afterAttackRoll = call(root, "fill_battle_hole", {
@@ -673,7 +710,7 @@ describe("manual MCP battle surface coverage", () => {
       fill: attackRollFill(attackRoll.holeId, 18, 12, attackRoll.rollMode),
     });
     const attackDamage = requireHole(
-      requireNeedsHoles(afterAttackRoll).holes,
+      requireBattleHoles(afterAttackRoll).holes,
       "rolledDice",
     );
     const afterDamage = call(root, "fill_battle_hole", {
@@ -681,10 +718,14 @@ describe("manual MCP battle surface coverage", () => {
       fill: rolledDiceFill(attackDamage.holeId, [[1]]),
     });
 
-    expect(afterDamage.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "interruptDecision" })],
-      snapshot: { pendingInterrupt: { trigger: "afterDamage" } },
+    expect(afterDamage).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "interruptDecision",
+          trigger: "afterDamage",
+        },
+      },
     });
     const hellishChoice = requireTriggeredSpellChoice(
       afterDamage,
@@ -694,12 +735,10 @@ describe("manual MCP battle surface coverage", () => {
     );
     const save = requireHole(hellishChoice.initialHoles, "savingThrowOutcome");
     const damage = requireHole(hellishChoice.initialHoles, "rolledDice");
-    const reactionHole = requireHole(
-      requireNeedsHoles(afterDamage).holes,
-      "interruptDecision",
-    );
+    const reactionHole =
+      requireBattleInterruptFrontier(afterDamage).decisionHole;
     const afterHellishRebuke = call(root, "fill_battle_hole", {
-      subject: requireNeedsHoles(afterDamage).subject,
+      subject: goblinAttack.subject,
       fill: {
         kind: "interruptDecision",
         holeId: reactionHole.holeId,
@@ -725,17 +764,19 @@ describe("manual MCP battle surface coverage", () => {
       throw new Error(JSON.stringify(afterHellishRebuke.result));
     }
 
-    expect(afterHellishRebuke.result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          expect.objectContaining({ combatantId: "goblin", hp: 7 }),
-          expect.objectContaining({
-            combatantId: "fighter",
-            hp: 9,
-            reactionAvailable: false,
-          }),
-        ],
+    expect(afterHellishRebuke).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            expect.objectContaining({ combatantId: "goblin", hp: 7 }),
+            expect.objectContaining({
+              combatantId: "fighter",
+              hp: 9,
+              reactionAvailable: false,
+            }),
+          ],
+        },
       },
     });
   });
@@ -769,13 +810,14 @@ describe("manual MCP battle surface coverage", () => {
       fighterId,
       "feather_fall",
     );
+    const fallingSubject = {
+      tag: "runtimeCommand",
+      actorId: "fighter",
+      command: "creatureFalls",
+      fallingCreatureId: "ally",
+    } as const;
     const falling = call(root, "resolve_battle_act", {
-      subject: {
-        tag: "runtimeCommand",
-        actorId: "fighter",
-        command: "creatureFalls",
-        fallingCreatureId: "ally",
-      },
+      subject: fallingSubject,
       reactionSpellTargetFacts: [
         {
           kind: "featherFallTriggerSelfOrVisibleCreatureWithinRange",
@@ -787,10 +829,14 @@ describe("manual MCP battle surface coverage", () => {
       ],
     });
 
-    expect(falling.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "interruptDecision" })],
-      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
+    expect(falling).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "interruptDecision",
+          trigger: "creatureFalls",
+        },
+      },
     });
     const featherFallChoice = requireTriggeredSpellChoice(
       falling,
@@ -801,12 +847,9 @@ describe("manual MCP battle surface coverage", () => {
       featherFallChoice.initialHoles,
       "spellTargetList",
     );
-    const reactionHole = requireHole(
-      requireNeedsHoles(falling).holes,
-      "interruptDecision",
-    );
+    const reactionHole = requireBattleInterruptFrontier(falling).decisionHole;
     const resolved = call(root, "fill_battle_hole", {
-      subject: requireNeedsHoles(falling).subject,
+      subject: fallingSubject,
       fill: {
         kind: "interruptDecision",
         holeId: reactionHole.holeId,
@@ -836,16 +879,18 @@ describe("manual MCP battle surface coverage", () => {
         },
       },
     });
-    expect(resolved.result).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        combatants: [
-          expect.objectContaining({
-            combatantId: "fighter",
-            reactionAvailable: false,
-          }),
-          expect.objectContaining({ combatantId: "ally" }),
-        ],
+    expect(resolved).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: {
+          combatants: [
+            expect.objectContaining({
+              combatantId: "fighter",
+              reactionAvailable: false,
+            }),
+            expect.objectContaining({ combatantId: "ally" }),
+          ],
+        },
       },
     });
     expect(
@@ -892,9 +937,9 @@ describe("manual MCP battle surface coverage", () => {
       }),
     ]);
     expect(
-      call(chainRoot, "discover_battle_acts", {}).availableActs.some((act) =>
-        act.summary.includes("Find Familiar"),
-      ),
+      requireBattleActFrontier(
+        call(chainRoot, "discover_battle_acts", {}),
+      ).acts.some((act) => act.summary.includes("Find Familiar")),
     ).toBe(false);
 
     const tomeRoot = createMcpPlaySessionRoot();
@@ -935,9 +980,14 @@ describe("manual MCP battle surface coverage", () => {
         fireBolt.subject.procedureRef,
       ),
     });
-    expect(afterTarget.result).toMatchObject({
-      tag: "needsHoles",
-      holes: [expect.objectContaining({ kind: "attackRoll" })],
+    expect(afterTarget).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: {
+        frontier: {
+          kind: "holes",
+          holes: [expect.objectContaining({ kind: "attackRoll" })],
+        },
+      },
     });
   });
 
@@ -987,9 +1037,11 @@ describe("manual MCP battle surface coverage", () => {
       ),
     });
 
-    expect(afterTarget.result).toMatchObject({
-      tag: "resolved",
-      snapshot: { turn: { spellSlotUsesThisTurn: [] } },
+    expect(afterTarget).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: {
+        checkpoint: { turn: { spellSlotUsesThisTurn: [] } },
+      },
     });
     const ranger =
       root.sessionStore.battleSession?.state.combatants.get(fighterId);
@@ -1092,7 +1144,7 @@ describe("manual MCP battle surface coverage", () => {
 
     const discovered = call(root, "discover_battle_acts", {});
     const discoveredSpellIds = new Set(
-      discovered.availableActs.flatMap((candidate) => {
+      requireBattleActFrontier(discovered).acts.flatMap((candidate) => {
         const spellId =
           candidate.presentation?.kind === "spell"
             ? candidate.presentation.invocation?.spellId
@@ -1116,18 +1168,19 @@ type BattleResolutionOutput = Schema.Schema.Type<
   typeof BattleResolutionOutputSchema
 >;
 type BattleSessionOutput = Schema.Schema.Type<typeof BattleSessionOutputSchema>;
-type BattlePresentationOutput = Pick<
-  BattleResolutionOutput,
-  "presentedInterruptChoices"
->;
 type BattleToolOutputByName = {
   readonly discover_battle_acts: BattleSessionOutput;
   readonly end_turn: BattleResolutionOutput;
   readonly fill_battle_hole: BattleResolutionOutput;
   readonly resolve_battle_act: BattleResolutionOutput;
 };
-type PresentedInterruptChoice =
-  BattlePresentationOutput["presentedInterruptChoices"][number];
+type BattleFrontier = BattlePresentedCheckpointFrontierEnvelope["frontier"];
+type BattleHolesFrontier = Extract<BattleFrontier, { readonly kind: "holes" }>;
+type BattleInterruptFrontier = Extract<
+  BattleFrontier,
+  { readonly kind: "interruptDecision" }
+>;
+type PresentedInterruptChoice = BattleInterruptFrontier["choices"][number];
 type TriggeredSpellChoiceBase = Extract<
   PresentedInterruptChoice["choice"],
   { readonly kind: "castTriggeredReactionSpell" }
@@ -1142,8 +1195,11 @@ type NeedsHolesResult = Extract<
   BattleResolutionOutput["result"],
   { readonly tag: "needsHoles" }
 >;
-type AvailableBattleAct = BattleSessionOutput["availableActs"][number];
-type BattleHole = NeedsHolesResult["holes"][number];
+type AvailableBattleAct = Extract<
+  BattleFrontier,
+  { readonly kind: "acts" }
+>["acts"][number];
+type BattleHole = BattleHolesFrontier["holes"][number];
 type ProcedureSubject = Extract<
   AvailableBattleAct["subject"],
   { readonly procedureRef: unknown }
@@ -1162,30 +1218,35 @@ type BattleSpell = NonNullable<
 >["cantrips"][number];
 
 function requireTriggeredSpellChoice(
-  response: BattlePresentationOutput,
+  response: BattleResolutionOutput,
   reactorId: string,
   spellId: string,
   slotLevel?: number,
 ): TriggeredSpellChoice {
-  const matchingChoices = response.presentedInterruptChoices.filter(
-    (presented) => {
-      const choice = presented.choice;
-      if (
-        choice.kind !== "castTriggeredReactionSpell" ||
-        choice.reactorId !== reactorId
-      ) {
-        return false;
-      }
-      if (presented.presentation?.kind !== "spell") return false;
-      const invocation = presented.presentation.invocation;
-      return (
-        invocation?.spellId === spellId &&
-        (slotLevel === undefined ||
-          (invocation.tag === "spellSlot" &&
-            Number(invocation.slotLevel) === slotLevel))
-      );
-    },
-  );
+  const matchingChoices = requireBattleInterruptFrontier(
+    response,
+  ).choices.filter((presented) => {
+    const choice = presented.choice;
+    if (
+      choice.kind !== "castTriggeredReactionSpell" ||
+      choice.reactorId !== reactorId
+    ) {
+      return false;
+    }
+    if (
+      !("presentation" in presented) ||
+      presented.presentation.kind !== "spell"
+    ) {
+      return false;
+    }
+    const invocation = presented.presentation.invocation;
+    return (
+      invocation?.spellId === spellId &&
+      (slotLevel === undefined ||
+        (invocation.tag === "spellSlot" &&
+          Number(invocation.slotLevel) === slotLevel))
+    );
+  });
   const [presented] = matchingChoices;
   if (matchingChoices.length !== 1 || presented === undefined) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
@@ -1206,6 +1267,45 @@ function requireNeedsHoles(response: BattleResolutionOutput): NeedsHolesResult {
     );
   }
   return response.result;
+}
+
+function requireBattleHoles(
+  response: BattleResolutionOutput,
+): BattleHolesFrontier {
+  requireNeedsHoles(response);
+  if (response.envelope.frontier.kind !== "holes") {
+    throw new Error(
+      `Expected unresolved battle holes, got ${response.envelope.frontier.kind}.`,
+    );
+  }
+  return response.envelope.frontier as unknown as BattleHolesFrontier;
+}
+
+function requireBattleInterruptFrontier(
+  response: BattleResolutionOutput,
+): BattleInterruptFrontier {
+  requireNeedsHoles(response);
+  if (response.envelope.frontier.kind !== "interruptDecision") {
+    throw new Error(
+      `Expected an interrupt decision frontier, got ${response.envelope.frontier.kind}.`,
+    );
+  }
+  return response.envelope.frontier as unknown as BattleInterruptFrontier;
+}
+
+function requireBattleActFrontier(
+  response: BattleSessionOutput,
+): Extract<BattleFrontier, { readonly kind: "acts" }> {
+  if (
+    response.envelope === null ||
+    response.envelope.frontier.kind !== "acts"
+  ) {
+    throw new Error("Expected an active battle act frontier.");
+  }
+  return response.envelope.frontier as unknown as Extract<
+    BattleFrontier,
+    { readonly kind: "acts" }
+  >;
 }
 
 function call<const Name extends keyof BattleToolOutputByName>(
@@ -1560,7 +1660,7 @@ function requireAct(
   attackName?: string,
 ): ExecutableBattleAct {
   const discovered = call(root, "discover_battle_acts", {});
-  const matchingActs = discovered.availableActs.filter(
+  const matchingActs = requireBattleActFrontier(discovered).acts.filter(
     (candidate) =>
       candidate.label === label &&
       (attackName === undefined ||
@@ -1580,7 +1680,7 @@ function requireAct(
 
 function requireSpellAct(root: Root, spellId: string): SpellBattleAct {
   const discovered = call(root, "discover_battle_acts", {});
-  const act = discovered.availableActs.find(
+  const act = requireBattleActFrontier(discovered).acts.find(
     (candidate) =>
       candidate.presentation?.kind === "spell" &&
       candidate.presentation.invocation?.spellId === spellId,
@@ -1601,7 +1701,7 @@ function requireSpellActWithInvocationTag(
   invocationTag: SpellBattleAct["presentation"]["invocation"]["tag"],
 ): SpellBattleAct {
   const discovered = call(root, "discover_battle_acts", {});
-  const act = discovered.availableActs.find(
+  const act = requireBattleActFrontier(discovered).acts.find(
     (candidate) =>
       candidate.presentation?.kind === "spell" &&
       candidate.presentation.invocation?.spellId === spellId &&
@@ -1621,7 +1721,7 @@ function requireSpellActWithInvocationTag(
 
 function requireUnitAct(root: Root, unitId: string): ExecutableBattleAct {
   const discovered = call(root, "discover_battle_acts", {});
-  const act = discovered.availableActs.find(
+  const act = requireBattleActFrontier(discovered).acts.find(
     (candidate) =>
       candidate.presentation?.kind === "unit" &&
       candidate.presentation.unitId === unitId,
@@ -1638,7 +1738,7 @@ function requireMechanicalAct(
   action: string,
 ): ExecutableBattleAct {
   const discovered = call(root, "discover_battle_acts", {});
-  const act = discovered.availableActs.find(
+  const act = requireBattleActFrontier(discovered).acts.find(
     (candidate) =>
       candidate.subject?.tag === tag &&
       "action" in candidate.subject &&
@@ -1671,22 +1771,22 @@ function spellProcedureRef(
   spellId: string,
   slotLevel?: number,
 ): string {
-  const actor = root.sessionStore.battleSession?.state.combatants.get(actorId);
+  const session = root.sessionStore.battleSession;
+  if (session === null) {
+    throw new Error("Expected an active battle session.");
+  }
+  const actor = session.state.combatants.get(actorId);
   if (actor?.origin.kind !== "character") {
     throw new Error(`Expected character spell owner: ${actorId}`);
   }
-  const presentation = call(
-    root,
-    "discover_battle_acts",
-    {},
-  ).admittedSpellPresentations.find(
+  const presentation = battleAdmittedSpellPresentations(session).find(
     (candidate) =>
-      candidate.invocation?.spellId === spellId &&
+      candidate.invocation.spellId === spellId &&
       (slotLevel === undefined ||
         (candidate.invocation.tag === "spellSlot" &&
           Number(candidate.invocation.slotLevel) === slotLevel)),
   );
-  if (presentation?.procedureRef === undefined) {
+  if (presentation === undefined) {
     throw new Error(`Expected admitted spell procedure: ${spellId}`);
   }
   return presentation.procedureRef;
@@ -1855,7 +1955,7 @@ function resolveAttackThroughRoll(
     ),
   });
   const attackRoll = requireHole(
-    requireNeedsHoles(afterTarget).holes,
+    requireBattleHoles(afterTarget).holes,
     "attackRoll",
   );
   return call(root, "fill_battle_hole", {
@@ -1886,9 +1986,9 @@ function resolveAttack(
     naturalD20,
     options,
   );
-  const damage = requireHole(requireNeedsHoles(afterRoll).holes, "rolledDice");
+  const damage = requireHole(requireBattleHoles(afterRoll).holes, "rolledDice");
   return call(root, "fill_battle_hole", {
-    subject: requireNeedsHoles(afterRoll).subject,
+    subject: requireBattleHoles(afterRoll).subject,
     fill: rolledDiceFill(damage.holeId, damageGroups),
   });
 }

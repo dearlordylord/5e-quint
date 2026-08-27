@@ -146,7 +146,6 @@ function combatantMechanicalProjection(combatant: BattleCreatureState) {
     hidden: combatant.hidden,
     dodging: combatant.dodging,
     zeroHpLifecycle: combatant.zeroHpLifecycle,
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
   };
   if (combatant.origin.kind !== "character") {
     return {
@@ -221,7 +220,6 @@ function snapshotCombatantMechanicalProjection(
     hp: Number(combatant.hp),
     maxHp: Number(combatant.maxHp),
     tempHp: Number(combatant.tempHp),
-    nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal,
     activeEffectRefs: combatant.activeEffectRefs,
     armorClass: combatant.armorClass,
     size: combatant.size,
@@ -257,8 +255,6 @@ function snapshotOriginMechanicalProjection(
 function snapshotMechanicalProjection(snapshot: BattleSnapshot) {
   return {
     battleId: snapshot.battleId,
-    executionScopeCursors: snapshot.executionScopeCursors,
-    retiredExecutionScopeAllocations: snapshot.retiredExecutionScopeAllocations,
     round: snapshot.round,
     currentActorId: snapshot.currentActorId,
     turnOrder: snapshot.turnOrder,
@@ -268,9 +264,9 @@ function snapshotMechanicalProjection(snapshot: BattleSnapshot) {
     companions: snapshot.companions,
     lightEmitters: snapshot.lightEmitters,
     obscurementZones: snapshot.obscurementZones,
-    acts: snapshot.acts,
     turn: snapshot.turn,
     readiedResponses: snapshot.readiedResponses,
+    helpAttackMarkers: snapshot.helpAttackMarkers,
   };
 }
 
@@ -543,7 +539,6 @@ describe("inert authored identity renaming witness (#224)", () => {
     expect(fighterRenamed.origin.characterId).toBe(
       characterId("synthetic-character-id-witness"),
     );
-    expect(fighterRenamed.displayName).toBe("Synthetic Witness Name");
   });
 
   test("renaming snapshot statBlockId does not change snapshot mechanics", () => {

@@ -99,6 +99,7 @@ import {
   characterBattleFeatureInitForTest,
   readyDeclarationFillForTest,
   requireCharacterSpellProcedureRefForTest,
+  battleFrontierInterruptDecisionForState,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import { spellSlotInvocationRef } from "./battle-subjects.ts";
@@ -3231,7 +3232,6 @@ describe("Find Familiar lifecycle", () => {
       subject: {
         tag: "findFamiliarTouchSpell",
       },
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (interrupted.tag !== "needsHoles") return;
     expect(
@@ -3251,7 +3251,6 @@ describe("Find Familiar lifecycle", () => {
       subject: {
         tag: "findFamiliarTouchSpell",
       },
-      snapshot: { pendingInterrupt: null },
     });
     if (resumed.tag !== "needsHoles") return;
     const completed = resolveBattleSubject({
@@ -3321,7 +3320,6 @@ describe("Find Familiar lifecycle", () => {
     expect(interrupted).toMatchObject({
       tag: "needsHoles",
       subject: { tag: "findFamiliarTouchSpell" },
-      snapshot: { pendingInterrupt: { trigger: "spellCast" } },
     });
     if (interrupted.tag !== "needsHoles") return;
     expect(
@@ -3338,7 +3336,6 @@ describe("Find Familiar lifecycle", () => {
     expect(resumed).toMatchObject({
       tag: "needsHoles",
       subject: { tag: "findFamiliarTouchSpell" },
-      snapshot: { pendingInterrupt: null },
     });
     if (resumed.tag !== "needsHoles") return;
     const completed = resolveBattleSubject({
@@ -4264,7 +4261,6 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (awaitingReaction.tag !== "needsHoles") return;
     expect(
@@ -4280,10 +4276,9 @@ describe("Find Familiar lifecycle", () => {
         owner: "battleAttackRoll",
       }),
     ]);
-    const shieldChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "castTriggeredReactionSpell",
-      );
+    const shieldChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find((choice) => choice.kind === "castTriggeredReactionSpell");
     expect(shieldChoice).toMatchObject({
       kind: "castTriggeredReactionSpell",
       reactorId: enemyId,
@@ -4312,7 +4307,6 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
     if (resolved.tag !== "resolved") return;
     expect(resolved.state.currentTurnResources.actionResources).toEqual([]);
@@ -4418,7 +4412,6 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(pendingInterrupt).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "attackHit" } },
     });
     if (pendingInterrupt.tag !== "needsHoles") return;
     const blockedByInterrupt = resolveBattleSubject({

@@ -24,6 +24,7 @@ import {
   readyTriggerDescription,
   resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
+  type BattleRuntimeResolutionResult,
 } from "../../../packages/battle-runtime/src/index.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
@@ -90,6 +91,18 @@ import type {
 } from "./scenario-session.ts";
 
 const TRACER_SCENARIO_ID = "goblin-warrior-skeleton-tracer";
+
+function requireBattleHoles(
+  result: Extract<
+    BattleRuntimeResolutionResult,
+    { readonly tag: "needsHoles" }
+  >,
+) {
+  if (result.envelope.frontier.kind !== "holes") {
+    throw new Error("Expected a Battle Hole frontier.");
+  }
+  return result.envelope.frontier.holes;
+}
 
 const spatialFactBoundaryCases: readonly {
   readonly name: string;
@@ -296,7 +309,7 @@ describe("scenario setup public-SDK boundary", () => {
       });
       expect(enemyFrontier.tag).toBe("needsHoles");
       if (enemyFrontier.tag !== "needsHoles") continue;
-      const enemyHole = enemyFrontier.holes.find(
+      const enemyHole = requireBattleHoles(enemyFrontier).find(
         (hole) => hole.kind === "helpAttackEnemyDecision",
       );
       expect(enemyHole?.kind).toBe("helpAttackEnemyDecision");
@@ -614,7 +627,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(frontier.tag).toBe("needsHoles");
     if (frontier.tag !== "needsHoles") return;
-    const targetHole = frontier.holes.find(
+    const targetHole = requireBattleHoles(frontier).find(
       (hole) => hole.kind === "targetChoice",
     );
     expect(targetHole?.kind).toBe("targetChoice");
@@ -1072,7 +1085,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(projected.tag).toBe("needsHoles");
     if (projected.tag !== "needsHoles") return;
-    const attackRoll = projected.holes.find(
+    const attackRoll = requireBattleHoles(projected).find(
       (hole) => hole.kind === "attackRoll",
     );
     expect(attackRoll).toMatchObject({
@@ -1101,9 +1114,9 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(rolled.tag).toBe("needsHoles");
     if (rolled.tag === "needsHoles") {
-      expect(rolled.holes.some((hole) => hole.kind === "rolledDice")).toBe(
-        true,
-      );
+      expect(
+        requireBattleHoles(rolled).some((hole) => hole.kind === "rolledDice"),
+      ).toBe(true);
     }
   }, 120_000);
 
@@ -1232,7 +1245,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(attackFrontier.tag).toBe("needsHoles");
     if (attackFrontier.tag !== "needsHoles") return;
-    const attackTargetHole = attackFrontier.holes.find(
+    const attackTargetHole = requireBattleHoles(attackFrontier).find(
       (hole) => hole.kind === "targetChoice" && hole.attack !== undefined,
     );
     expect(attackTargetHole?.kind).toBe("targetChoice");
@@ -2292,16 +2305,22 @@ describe("scenario setup public-SDK boundary", () => {
           subject: staticPlan.right.subject,
           fills: staticPlan.right.fills,
         });
-        expect(staticResolution.snapshot.pendingInterrupt?.choices).toEqual(
-          expect.arrayContaining([
-            expect.objectContaining({
-              kind: "opportunityAttack",
-              subject: expect.objectContaining({
-                statBlockDamageNotation: "static",
-              }),
-            }),
-          ]),
-        );
+        expect(staticResolution).toMatchObject({
+          tag: "needsHoles",
+          envelope: {
+            frontier: {
+              kind: "interruptDecision",
+              choices: expect.arrayContaining([
+                expect.objectContaining({
+                  kind: "opportunityAttack",
+                  subject: expect.objectContaining({
+                    statBlockDamageNotation: "static",
+                  }),
+                }),
+              ]),
+            },
+          },
+        });
       }
     }
     expect(planned).toMatchObject({
@@ -2325,17 +2344,24 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(resolution).toMatchObject({
       tag: "needsHoles",
-      snapshot: {
-        pendingInterrupt: {
+      envelope: {
+        frontier: {
+          kind: "interruptDecision",
           trigger: "opportunityAttack",
         },
       },
     });
-    expect(resolution.snapshot.pendingInterrupt?.choices).toHaveLength(
+    if (
+      resolution.tag !== "needsHoles" ||
+      resolution.envelope.frontier.kind !== "interruptDecision"
+    ) {
+      throw new Error("Expected Opportunity Attack decision frontier.");
+    }
+    expect(resolution.envelope.frontier.choices).toHaveLength(
       expectedThreats.length,
     );
     expect(
-      resolution.snapshot.pendingInterrupt?.choices.map(
+      resolution.envelope.frontier.choices.map(
         ({ reactorId: choiceReactorId, kind }) => ({
           reactorId: choiceReactorId,
           kind,
@@ -2653,7 +2679,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(frontier.tag).toBe("needsHoles");
     if (frontier.tag !== "needsHoles") return;
-    const targetHole = frontier.holes.find(
+    const targetHole = requireBattleHoles(frontier).find(
       (hole) =>
         hole.kind === "targetChoice" &&
         hole.attack?.acceptsObjectTarget === true,
@@ -2812,7 +2838,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(magicMissileFrontier.tag).toBe("needsHoles");
     if (magicMissileFrontier.tag !== "needsHoles") return;
-    const allocationHole = magicMissileFrontier.holes.find(
+    const allocationHole = requireBattleHoles(magicMissileFrontier).find(
       (hole) => hole.kind === "spellTargetAllocation",
     );
     expect(allocationHole?.kind).toBe("spellTargetAllocation");
@@ -2911,7 +2937,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(scalarFrontier.tag).toBe("needsHoles");
     if (scalarFrontier.tag !== "needsHoles") return;
-    const scalarTargetHole = scalarFrontier.holes.find(
+    const scalarTargetHole = requireBattleHoles(scalarFrontier).find(
       (hole) => hole.kind === "targetChoice",
     );
     expect(scalarTargetHole?.kind).toBe("targetChoice");
@@ -2936,7 +2962,7 @@ describe("scenario setup public-SDK boundary", () => {
     expect(pointOriginFrontier.tag).toBe("needsHoles");
     if (pointOriginFrontier.tag !== "needsHoles") return;
     expect(
-      pointOriginFrontier.holes.some(
+      requireBattleHoles(pointOriginFrontier).some(
         (hole) => "spellTargetSpatialFactRequest" in hole,
       ),
     ).toBe(false);
@@ -2955,9 +2981,9 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(ordinarySpellAttackFrontier.tag).toBe("needsHoles");
     if (ordinarySpellAttackFrontier.tag !== "needsHoles") return;
-    const ordinaryTargetHole = ordinarySpellAttackFrontier.holes.find(
-      (hole) => hole.kind === "targetChoice",
-    );
+    const ordinaryTargetHole = requireBattleHoles(
+      ordinarySpellAttackFrontier,
+    ).find((hole) => hole.kind === "targetChoice");
     expect(ordinaryTargetHole?.kind).toBe("targetChoice");
     if (
       ordinaryTargetHole?.kind !== "targetChoice" ||
@@ -3888,7 +3914,7 @@ describe("scenario setup public-SDK boundary", () => {
           fills: [],
         });
         if (frontier.tag !== "needsHoles") return undefined;
-        const hole = frontier.holes.find(
+        const hole = requireBattleHoles(frontier).find(
           (candidate) =>
             candidate.kind === "targetChoice" &&
             candidate.attack !== undefined &&
@@ -3927,7 +3953,7 @@ describe("scenario setup public-SDK boundary", () => {
           fills: [],
         });
         if (frontier.tag !== "needsHoles") return undefined;
-        const hole = frontier.holes.find(
+        const hole = requireBattleHoles(frontier).find(
           (candidate) =>
             candidate.kind === "targetChoice" &&
             candidate.attack?.acceptsObjectTarget === true,
@@ -3963,7 +3989,7 @@ describe("scenario setup public-SDK boundary", () => {
     });
     expect(ordinarySpellFrontier.tag).toBe("needsHoles");
     if (ordinarySpellFrontier.tag !== "needsHoles") return;
-    const ordinarySpellHole = ordinarySpellFrontier.holes.find(
+    const ordinarySpellHole = requireBattleHoles(ordinarySpellFrontier).find(
       (candidate) => candidate.kind === "targetChoice",
     );
     expect(ordinarySpellHole?.kind).toBe("targetChoice");
@@ -4025,10 +4051,10 @@ describe("scenario setup public-SDK boundary", () => {
       shoveFrontier.tag !== "needsHoles"
     )
       return;
-    const closeTargetForFact = grappleFrontier.holes.find(
+    const closeTargetForFact = requireBattleHoles(grappleFrontier).find(
       (hole) => hole.kind === "targetChoice",
     )?.choices[0];
-    const shoveTargetForFact = shoveFrontier.holes.find(
+    const shoveTargetForFact = requireBattleHoles(shoveFrontier).find(
       (hole) => hole.kind === "targetChoice",
     )?.choices[0];
     expect(closeTargetForFact).toBeDefined();
@@ -4154,10 +4180,10 @@ describe("scenario setup public-SDK boundary", () => {
       tableShoveFrontier.tag !== "needsHoles"
     )
       return;
-    const grappleHole = tableGrappleFrontier.holes.find(
+    const grappleHole = requireBattleHoles(tableGrappleFrontier).find(
       (hole) => hole.kind === "targetChoice",
     );
-    const shoveHole = tableShoveFrontier.holes.find(
+    const shoveHole = requireBattleHoles(tableShoveFrontier).find(
       (hole) => hole.kind === "targetChoice",
     );
     expect(grappleHole?.kind).toBe("targetChoice");

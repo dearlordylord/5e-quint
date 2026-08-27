@@ -11,6 +11,7 @@ import {
   attackDamageDispositionFill,
   attackRollFill,
   battleAbilityModifier,
+  battleFrontierInterruptDecisionForState,
   battleId,
   characterBattleFeatureInitForTest,
   characterSeed,
@@ -302,7 +303,9 @@ function startRetaliationAfterSkeletonOpportunityAttack(
   if (awaitingOpportunity.tag !== "needsHoles") {
     throw new Error("Expected Skeleton Opportunity Attack interrupt.");
   }
-  const pendingInterrupt = awaitingOpportunity.snapshot.pendingInterrupt;
+  const pendingInterrupt = battleFrontierInterruptDecisionForState(
+    awaitingOpportunity.state,
+  );
   if (pendingInterrupt === null) {
     throw new Error("Expected pending Opportunity Attack interrupt.");
   }
@@ -359,7 +362,9 @@ function startRetaliationAfterSkeletonOpportunityAttack(
       `Expected after-damage Retaliation interrupt, got ${JSON.stringify(awaitingRetaliation)}.`,
     );
   }
-  const retaliationInterrupt = awaitingRetaliation.snapshot.pendingInterrupt;
+  const retaliationInterrupt = battleFrontierInterruptDecisionForState(
+    awaitingRetaliation.state,
+  );
   if (retaliationInterrupt === null) {
     throw new Error("Expected pending Retaliation interrupt.");
   }
@@ -448,7 +453,9 @@ function startFighterOpportunityAttackAfterMovement(
   if (awaitingOpportunity.tag !== "needsHoles") {
     throw new Error("Expected fighter Opportunity Attack interrupt.");
   }
-  const pendingInterrupt = awaitingOpportunity.snapshot.pendingInterrupt;
+  const pendingInterrupt = battleFrontierInterruptDecisionForState(
+    awaitingOpportunity.state,
+  );
   if (pendingInterrupt === null) {
     throw new Error("Expected pending fighter Opportunity Attack interrupt.");
   }

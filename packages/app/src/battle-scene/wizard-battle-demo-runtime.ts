@@ -3,6 +3,7 @@ import {
   battleActSpellSlotPresentation,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptDecisionHole,
   type BattleInterruptProcedureChoice,
   type BattleObjectDamageDisposition,
   type BattleObjectId,
@@ -60,21 +61,23 @@ export function requireCounterspellChoice(
     readonly spellId: string
   }
 ): CounterspellReactionChoice {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is CounterspellReactionChoice => {
-      if (candidate.kind !== "castTriggeredReactionSpell" || candidate.reactorId !== input.reactorId) {
-        return false
-      }
-      const presentation = battleSubjectPresentation(result.session, candidate.subject)
-      return (
-        presentation?.kind === "spell" &&
-        presentation.invocation.tag === "spellSlot" &&
-        presentation.invocation.procedure === "counterspell" &&
-        presentation.invocation.spellId === input.spellId &&
-        Number(presentation.invocation.slotLevel) === input.slotLevel
-      )
-    }
-  )
+  const frontier = result.envelope.frontier
+  const choice =
+    frontier.kind === "interruptDecision"
+      ? frontier.choices.find((candidate): candidate is CounterspellReactionChoice => {
+          if (candidate.kind !== "castTriggeredReactionSpell" || candidate.reactorId !== input.reactorId) {
+            return false
+          }
+          const presentation = battleSubjectPresentation(result.session, candidate.subject)
+          return (
+            presentation?.kind === "spell" &&
+            presentation.invocation.tag === "spellSlot" &&
+            presentation.invocation.procedure === "counterspell" &&
+            presentation.invocation.spellId === input.spellId &&
+            Number(presentation.invocation.slotLevel) === input.slotLevel
+          )
+        })
+      : undefined
   /* v8 ignore next -- @preserve -- defensive failure after the pending interrupt narrows available choices */
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.")
@@ -271,7 +274,7 @@ export function requireNeedsReaction(
 ): asserts result is Extract<BattleRuntimeResolutionResult, { readonly tag: "needsHoles" }> {
   requireNeedsHoles(result, message)
   /* v8 ignore next -- @preserve -- callers establish the reaction trigger before using this assertion */
-  if (result.snapshot.pendingInterrupt?.trigger !== "spellCast") {
+  if (result.envelope.frontier.kind !== "interruptDecision" || result.envelope.frontier.trigger !== "spellCast") {
     throw new Error(message)
   }
 }
@@ -286,12 +289,26 @@ export function requireNeedsHoles(
   }
 }
 
-export function requireResultHole<K extends BattleHole["kind"]>(
+export function requireResultHole(
+  result: BattleRuntimeResolutionResult,
+  kind: "interruptDecision"
+): BattleInterruptDecisionHole
+export function requireResultHole<K extends Exclude<BattleHole["kind"], "interruptDecision">>(
   result: BattleRuntimeResolutionResult,
   kind: K
-): Extract<BattleHole, { readonly kind: K }> {
+): Extract<BattleHole, { readonly kind: K }>
+export function requireResultHole(result: BattleRuntimeResolutionResult, kind: BattleHole["kind"]): BattleHole {
   requireNeedsHoles(result, `Expected ${kind} hole.`)
-  return requireHole(result.holes, kind)
+  if (kind === "interruptDecision") {
+    if (result.envelope.frontier.kind !== "interruptDecision") {
+      throw new Error(`Expected ${kind} hole.`)
+    }
+    return result.envelope.frontier.decisionHole
+  }
+  if (result.envelope.frontier.kind !== "holes") {
+    throw new Error(`Expected ${kind} hole.`)
+  }
+  return requireHole(result.envelope.frontier.holes, kind)
 }
 
 export function requireHole<K extends BattleHole["kind"]>(

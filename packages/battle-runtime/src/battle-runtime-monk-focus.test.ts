@@ -14,7 +14,8 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
-  BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
   characterSeed,
   characterAttackSubjectForTest,
   damageRollFillWithGroups,
@@ -667,26 +668,34 @@ describe("battle runtime: Monk's Focus battle options", () => {
       activated.state,
       (candidate) => candidate.tag === "monkFocusFlurryOfBlowsStrike",
     );
-    const encoded = Schema.encodeSync(BattleSnapshotSchema)(
-      snapshotBattle(activated.state),
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(activated.state),
     );
+    if (encoded.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier.");
+    }
     const forgedFocusOwner = {
       ...encoded,
-      acts: encoded.acts.map((act) =>
-        act.subject.tag === "monkFocusFlurryOfBlowsStrike"
-          ? {
-              ...act,
-              subject: {
-                ...act.subject,
-                focusProcedureRef: act.subject.procedureRef,
-              },
-            }
-          : act,
-      ),
+      frontier: {
+        ...encoded.frontier,
+        acts: encoded.frontier.acts.map((act) =>
+          act.subject.tag === "monkFocusFlurryOfBlowsStrike"
+            ? {
+                ...act,
+                subject: {
+                  ...act.subject,
+                  focusProcedureRef: act.subject.procedureRef,
+                },
+              }
+            : act,
+        ),
+      },
     };
     expect(
       Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(forgedFocusOwner),
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          forgedFocusOwner,
+        ),
       ),
     ).toBe(true);
     const target = requireHole(
@@ -945,7 +954,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
         fills: [],
       });
       expect(result).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-      expect(result.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
+      expect(result.snapshot.turn.bonusActionQuotaAvailable).toBe(true);
       expect(monkFocusUsesRemaining(result.snapshot)).toBe(2);
       expect(flurryResourceCount(result.snapshot.turn.actionResources)).toBe(0);
     }

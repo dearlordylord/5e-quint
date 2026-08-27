@@ -1,7 +1,10 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
 import { Either, Match, Schema } from "effect";
-import { BattleHoleSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
+import {
+  BattleHoleSchema,
+  BattleInterruptDecisionFrontierSchema,
+} from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
 import {
   BattleId,
   BattleObjectId,
@@ -12,15 +15,22 @@ import {
   type BattleHole,
   type BattleInvalidReasonCode,
 } from "../../../packages/battle-runtime/src/battle-state-execution.ts";
-import { Hp, ResourceCount } from "../../../packages/shared/src/types.ts";
+import {
+  Hp,
+  ResourceCount,
+  type ReadonlyNonEmptyArray,
+} from "../../../packages/shared/src/types.ts";
 import {
   CreatureRechargeMinimumRollSchema,
   PointPoolResourceSchema,
   UseCountResourceSchema,
 } from "../../../packages/surface/src/surface/schema.ts";
 import type { JsonValue } from "./continuation-contract.ts";
-import { isJsonValue } from "./json-value.ts";
-import type { SdkCallRecord } from "./sdk-transcript.ts";
+import { isJsonValue, jsonValue } from "./json-value.ts";
+import {
+  battleEnvelopeMatchesSessionIdentity,
+  type SdkCallRecord,
+} from "./sdk-transcript.ts";
 
 export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
 export const PLAYER_TACTICAL_NOTE_MAX_BYTES = 4 * 1024;
@@ -389,11 +399,11 @@ export type PlayerCurrentTurnProjection = {
         readonly subject: PlayerSubjectProjection;
         readonly holes: readonly PlayerHoleOccurrence[];
       }
+    | PlayerInterruptDecisionProjection
     | {
         readonly kind: "rejected";
         readonly rejection: PlayerRejectionProjection;
-      }
-    | { readonly kind: "none" };
+      };
   readonly changes: readonly PlayerEntityChange[];
 };
 
@@ -1134,6 +1144,102 @@ function holeOccurrences(
     : undefined;
 }
 
+type PlayerInterruptDecisionProjection = {
+  readonly kind: "interruptDecision";
+  readonly trigger: string;
+  readonly decisionHole: JsonValue;
+  readonly choices: ReadonlyNonEmptyArray<JsonValue>;
+  readonly stackDepth: number;
+};
+
+function projectEnvelopeFrontier(
+  value: JsonValue | undefined,
+  source: PlayerHoleEvidenceSource,
+): PlayerCurrentTurnProjection["frontier"] | undefined {
+  if (!isJsonObject(value) || !isJsonObject(value.frontier)) return undefined;
+  const frontier = value.frontier;
+  if (frontier.kind === "acts") {
+    const projectedActs = projectPlayerActsFromEvidence(frontier.acts, source);
+    return projectedActs === undefined
+      ? undefined
+      : { kind: "acts", acts: projectedActs };
+  }
+  if (frontier.kind === "holes") {
+    if (
+      frontier.subject === undefined ||
+      !Array.isArray(frontier.holes) ||
+      frontier.holes.length === 0
+    )
+      return undefined;
+    const subject = projectPlayerSubject(frontier.subject);
+    if (subject === undefined) return undefined;
+    const projectedHoles = holeOccurrences(subject, frontier.holes, source);
+    return projectedHoles === undefined
+      ? undefined
+      : {
+          kind: "holes",
+          subjectRef: stableRef("subject", subject),
+          subject,
+          holes: projectedHoles,
+        };
+  }
+  if (frontier.kind !== "interruptDecision") return undefined;
+  const decoded = Schema.decodeUnknownEither(
+    BattleInterruptDecisionFrontierSchema,
+    {
+      onExcessProperty:
+        source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
+    },
+  )(frontier);
+  if (Either.isLeft(decoded)) return undefined;
+  const [firstChoice, ...remainingChoices] = decoded.right.choices;
+  return {
+    kind: "interruptDecision",
+    trigger: decoded.right.trigger,
+    decisionHole: jsonValue(decoded.right.decisionHole),
+    choices: [jsonValue(firstChoice), ...remainingChoices.map(jsonValue)],
+    stackDepth: decoded.right.stackDepth,
+  };
+}
+
+function resolutionEnvelopeForTag(
+  result: JsonObject,
+  tag: string,
+): JsonValue | undefined {
+  if (!isJsonObject(result.envelope) || !isJsonObject(result.envelope.frontier))
+    return undefined;
+  const frontier = result.envelope.frontier;
+  if (tag === "resolved") {
+    return frontier.kind === "acts" || frontier.kind === "interruptDecision"
+      ? result.envelope
+      : undefined;
+  }
+  if (tag === "needsHoles") {
+    if (frontier.kind === "interruptDecision") return result.envelope;
+    return frontier.kind === "holes" &&
+      Array.isArray(frontier.holes) &&
+      frontier.holes.length > 0
+      ? result.envelope
+      : undefined;
+  }
+  if (tag === "invalid") {
+    if (frontier.kind === "acts") {
+      return Array.isArray(frontier.acts) ? result.envelope : undefined;
+    }
+    if (frontier.kind === "holes") {
+      return Array.isArray(frontier.holes) && frontier.holes.length > 0
+        ? result.envelope
+        : undefined;
+    }
+    return frontier.kind === "interruptDecision" &&
+      Array.isArray(frontier.choices) &&
+      frontier.choices.length > 0
+      ? result.envelope
+      : undefined;
+  }
+  return undefined;
+}
+
 export function projectPlayerActs(
   value: unknown,
 ): readonly PlayerActProjection[] | undefined {
@@ -1177,6 +1283,8 @@ function acts(
 function frontier(
   calls: readonly SdkCallRecord[],
   source: PlayerHoleEvidenceSource,
+  beforeSession: JsonValue,
+  afterSession: JsonValue,
 ): PlayerCurrentTurnProjection["frontier"] | undefined {
   type FrontierDecision =
     | {
@@ -1192,32 +1300,41 @@ function frontier(
     if (!isJsonObject(result) || typeof result.tag !== "string") {
       return { tag: "invalid" };
     }
-    if (result.tag === "needsHoles") {
-      if (result.subject === undefined) return { tag: "invalid" };
-      const subject = projectPlayerSubject(result.subject);
-      if (subject === undefined) return { tag: "invalid" };
-      const projectedHoles = holeOccurrences(subject, result.holes, source);
-      if (projectedHoles === undefined) return { tag: "invalid" };
-      return {
-        tag: "frontier",
-        frontier: {
-          kind: "holes",
-          subjectRef: stableRef("subject", subject),
-          subject,
-          holes: projectedHoles,
-        },
-      };
-    }
     const rejection = playerRejectionProjection(result);
-    if (rejection !== undefined) {
+    if (isPlayerRejectionTag(result.tag) && rejection === undefined) {
+      return { tag: "invalid" };
+    }
+    if (rejection !== undefined && rejection.tag !== "invalid") {
+      if (result.envelope !== undefined) return { tag: "invalid" };
       return {
         tag: "frontier",
         frontier: { kind: "rejected", rejection },
       };
     }
-    return result.tag === "resolved"
-      ? { tag: "frontier", frontier: { kind: "none" } }
-      : { tag: "invalid" };
+    const envelope = resolutionEnvelopeForTag(result, result.tag);
+    if (envelope === undefined) return { tag: "invalid" };
+    if (
+      !battleEnvelopeMatchesSessionIdentity(envelope, call.inputSession, {
+        kind: "battleOnly",
+      }) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, result.session) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, call.outputSession) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, beforeSession, {
+        kind: "battleOnly",
+      }) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, afterSession)
+    ) {
+      return { tag: "invalid" };
+    }
+    const projected = projectEnvelopeFrontier(envelope, source);
+    if (projected === undefined) return { tag: "invalid" };
+    if (rejection?.tag === "invalid") {
+      return {
+        tag: "frontier",
+        frontier: { kind: "rejected", rejection },
+      };
+    }
+    return { tag: "frontier", frontier: projected };
   };
   for (const call of [...calls].reverse()) {
     if (call.outcome !== "returned") continue;
@@ -1256,7 +1373,7 @@ function frontier(
     if (decision.tag === "invalid") return undefined;
     if (decision.tag === "frontier") return decision.frontier;
   }
-  return { kind: "none" };
+  return undefined;
 }
 
 export function reprojectSdkTranscriptTurns(input: {
@@ -1422,7 +1539,12 @@ function playerCurrentTurnProjectionFromEvidence(input: {
     };
   }
   const projectedTurn = turn(input.afterSession);
-  const projectedFrontier = frontier(input.calls, input.holeEvidenceSource);
+  const projectedFrontier = frontier(
+    input.calls,
+    input.holeEvidenceSource,
+    input.beforeSession,
+    input.afterSession,
+  );
   const beforeCombatants = combatants(input.beforeSession);
   const afterCombatants = combatants(input.afterSession);
   const beforePositions = positions(input.beforeSession);

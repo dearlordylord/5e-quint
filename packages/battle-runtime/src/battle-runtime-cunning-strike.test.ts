@@ -10,7 +10,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-A13-ROGUE-CUNNING-STRIKE-BATTLE-RUNTIME rogue_cunning_strike
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19D-08-ROGUE-SUPREME-SNEAK rogue_supreme_sneak
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -34,6 +34,7 @@ import {
   attackRollFill,
   attackRollHoleAfterTarget,
   attackTargetFill,
+  battleFrontierInterruptDecisionForState,
   battleId,
   characterBattleFeatureInitForTest,
   characterBonusAttackSubjectForTest,
@@ -744,7 +745,7 @@ describe("battle runtime: Cunning Strike", () => {
     if (repeatSaveRequest.tag !== "needsHoles") {
       throw new Error("Expected Cunning Strike Poison repeat save.");
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: repeatSaveRequest.snapshot,
       subject: repeatSaveRequest.subject,
       holes: repeatSaveRequest.holes,
@@ -1105,12 +1106,13 @@ function cunningStrikeOpportunityAttackDamageWindow(
     throw new Error("Expected Cunning Strike Opportunity Attack interrupt.");
   }
   const choice = reactionChoiceWithSubject(
-    awaitingReaction.snapshot.pendingInterrupt!.choices,
+    battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
   );
   const startedReaction = resolveBattleInterrupt({
     state: awaitingReaction.state,
     fill: interruptDecisionFill(
-      awaitingReaction.snapshot.pendingInterrupt!.decisionHole,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!
+        .decisionHole,
       {
         kind: "resolve",
         responderId: fighterId,

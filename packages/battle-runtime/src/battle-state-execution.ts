@@ -7061,7 +7061,7 @@ export type BattleInterruptDecisionFrontier = {
   readonly kind: "interruptDecision";
   readonly trigger: BattleInterruptTrigger;
   readonly decisionHole: BattleInterruptDecisionHole;
-  readonly choices: readonly BattleInterruptProcedureChoice[];
+  readonly choices: ReadonlyNonEmptyArray<BattleInterruptProcedureChoice>;
   readonly stackDepth: BattleReplayStackDepth;
 };
 
@@ -7127,8 +7127,29 @@ export type BattleSnapshotPresentationIssue = {
   readonly combatantId: CombatantId;
 };
 
+export type BattleInterruptChoicePresentationIssue = {
+  readonly tag: "battleInterruptChoicePresentationIssue";
+  readonly reason: "missingSubjectPresentation";
+  readonly reactorId: CombatantId;
+  readonly choiceKind: Exclude<
+    BattleInterruptProcedureChoice,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >["kind"];
+  readonly subject: BattleSubject;
+};
+
+export type BattlePresentationIssue =
+  | BattleSnapshotPresentationIssue
+  | BattleInterruptChoicePresentationIssue;
+
 export type BattleSnapshotPresentationIssues =
   ReadonlyNonEmptyArray<BattleSnapshotPresentationIssue>;
+
+export type BattleInterruptChoicePresentationIssues =
+  ReadonlyNonEmptyArray<BattleInterruptChoicePresentationIssue>;
+
+export type BattlePresentationIssues =
+  ReadonlyNonEmptyArray<BattlePresentationIssue>;
 
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];

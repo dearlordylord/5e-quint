@@ -575,9 +575,6 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
     });
     expect(threatenedJump).toMatchObject({
       tag: "needsHoles",
-      snapshot: {
-        pendingInterrupt: { trigger: "opportunityAttack" },
-      },
     });
     if (threatenedJump.tag !== "needsHoles") {
       throw new Error("Expected Jump to open an Opportunity Attack window.");

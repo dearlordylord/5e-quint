@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   battleActiveEffectExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -400,7 +400,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       spellTargetId,
       "startsTurnInArea",
     );
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: snapshotBattle(targetTurn.state),
       subject: entryAct.subject,
       holes: entryAct.initialHoles,

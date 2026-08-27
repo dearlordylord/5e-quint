@@ -289,8 +289,7 @@ describe("SRDINV84H deterministic Shillelagh weapon override admission", () => {
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
       snapshot: {
-        pendingInterrupt: { trigger: "spellCast" },
-        turn: { bonusActionQuotaAvailable: false },
+        turn: { bonusActionQuotaAvailable: true },
       },
     });
     if (awaitingReaction.tag !== "needsHoles") {

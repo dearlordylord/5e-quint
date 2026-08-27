@@ -6,6 +6,7 @@ import {
   characterAttackSubjectForTest,
   opportunityAttackProcedureSelectionForTest,
   reactionChoiceWithSubject,
+  battleFrontierInterruptDecisionForState,
 } from "./battle-runtime.test-support.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import {
@@ -263,7 +264,9 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     expect(awaitingEndTurnSave.snapshot).toEqual(
       snapshotBattle(awaitingEndTurnSave.state),
     );
-    expect(awaitingEndTurnSave.snapshot.acts).toEqual([]);
+    expect(snapshotBattle(awaitingEndTurnSave.state)).not.toHaveProperty(
+      "acts",
+    );
     const endTurnSave = requireResultHole(
       awaitingEndTurnSave,
       "savingThrowOutcome",
@@ -779,7 +782,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
       throw new Error("Expected Command Flee End Turn save after decline.");
     }
     expect(afterDecline.snapshot).toEqual(snapshotBattle(afterDecline.state));
-    expect(afterDecline.snapshot.acts).toEqual([]);
+    expect(snapshotBattle(afterDecline.state)).not.toHaveProperty("acts");
     expect(afterDecline.state.interruptStack).toEqual([
       {
         kind: "replayContinuation",
@@ -847,7 +850,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     });
 
     const choice = reactionChoiceWithSubject(
-      fled.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(fled.state)!.choices,
     );
     const startedReaction = resolveBattleInterrupt({
       state: fled.state,
