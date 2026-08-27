@@ -5,7 +5,7 @@ import {
   insertAtOrderIndex,
 } from "@dnd/shared-algebras/initiative-algebra";
 import { movementFeet, type Hp } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import {
   battleActiveEffectExecutionOrdinal,
@@ -45,7 +45,7 @@ export function addBattleStatBlockCombatant(input: {
     readonly ammunitionStocks: readonly BattleAmmunitionStock[];
     readonly reactionAvailable: boolean;
   };
-}): Either.Either<BattleState, BattleStateInitIssue> {
+}): Result.Result<BattleState, BattleStateInitIssue> {
   const { combatant } = input;
   const identityIssue = statBlockCombatantIdentityIssue(input);
   if (identityIssue !== null) return battleStateInitIssue(identityIssue);
@@ -114,7 +114,7 @@ export function addBattleStatBlockCombatant(input: {
       combatant.admission.cursorTransition.to,
     ),
   });
-  return Either.right({
+  return Result.succeed({
     ...input.state,
     initiative: insertAtOrderIndex(input.state.initiative, insertionIndex, {
       creature: combatant.combatantId,

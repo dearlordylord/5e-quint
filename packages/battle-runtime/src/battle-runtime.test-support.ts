@@ -16,8 +16,7 @@ import {
   resolveFindFamiliarForm,
   resolvePactOfTheChainFindFamiliarForm,
 } from "@dnd/surface/surface/find-familiar-forms";
-import { Match, Schema } from "effect";
-import * as Either from "effect/Either";
+import { Match, Result, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
   battleAmmunitionStock,
@@ -740,32 +739,32 @@ export function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  registerStatBlockPresentationsForTest(result.right);
-  return result.right.state;
+  registerStatBlockPresentationsForTest(result.success);
+  return result.success.state;
 }
 
 export function startBattleSessionRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleRuntimeSession {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  registerStatBlockPresentationsForTest(result.right);
-  return result.right;
+  registerStatBlockPresentationsForTest(result.success);
+  return result.success;
 }
 
 function parseCharacterBattleClassLevelsRight(
   classLevels: Parameters<typeof parseCharacterBattleClassLevels>[0],
 ): CharacterBattleClassLevels {
   const result = parseCharacterBattleClassLevels(classLevels);
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.messages.join("; "));
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.messages.join("; "));
   }
-  return result.right;
+  return result.success;
 }
 
 export const ROGUE_CUNNING_ACTION_SUPPORT_PROFILE = {
@@ -796,20 +795,20 @@ export function addBattleCombatantRight(
   input: Parameters<typeof addBattleCombatant>[0],
 ): BattleState {
   const result = addBattleCombatant(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 export function removeBattleCombatantsRight(
   input: Parameters<typeof removeBattleCombatants>[0],
 ): BattleState {
   const result = removeBattleCombatants(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 export const fighterId = combatantId("fighter");
 export const goblinId = combatantId("goblin");
@@ -834,10 +833,20 @@ const statBlockCatalogResult = buildStatBlockCatalog({
 
 export function requireElapsedHours(hours: number) {
   const parsed = elapsedTimeTicksFromHours(hours);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(`invalid test elapsed hours: ${hours}`);
   }
-  return parsed.right;
+  return parsed.success;
+}
+
+function requireBattleStatBlockCombatantSource(
+  statBlock: Parameters<typeof battleStatBlockCombatantSource>[0],
+) {
+  const source = battleStatBlockCombatantSource(statBlock);
+  if (Result.isFailure(source)) {
+    throw new Error(battleStateInitIssueMessage(source.failure));
+  }
+  return source.success;
 }
 
 if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
@@ -1210,13 +1219,13 @@ export function grapplerUnitRefs(): Extract<
   const supportProfiles = battleUnitSupportProfilesForUnit({
     unit: grapplerUnit,
   });
-  if (Either.isLeft(supportProfiles)) {
-    throw new Error(supportProfiles.left.message);
+  if (Result.isFailure(supportProfiles)) {
+    throw new Error(supportProfiles.failure.message);
   }
   return [
     {
       unit: unitLibrary.requireUnit("feat_grappler"),
-      supportProfiles: supportProfiles.right,
+      supportProfiles: supportProfiles.success,
     },
   ];
 }
@@ -1229,13 +1238,13 @@ export function halflingNimblenessUnitRefs(): Extract<
   const supportProfiles = battleUnitSupportProfilesForUnit({
     unit,
   });
-  if (Either.isLeft(supportProfiles)) {
-    throw new Error(supportProfiles.left.message);
+  if (Result.isFailure(supportProfiles)) {
+    throw new Error(supportProfiles.failure.message);
   }
   return [
     {
       unit: unitLibrary.requireUnit("species_halfling_nimbleness"),
-      supportProfiles: supportProfiles.right,
+      supportProfiles: supportProfiles.success,
     },
   ];
 }
@@ -2269,19 +2278,20 @@ function resolveBattleSubjectWithOptionalFamiliarAdmission(
     casterId: input.subject.actorId,
     catalog,
   });
-  if (Either.isRight(admission)) {
+  if (Result.isSuccess(admission)) {
     statBlockPresentationsByExecutionScopeForTest.set(
       String(
-        admission.right.mechanics.combatantAdmission.origin.execution.scopeRef,
+        admission.success.mechanics.combatantAdmission.origin.execution
+          .scopeRef,
       ),
-      admission.right.presentation,
+      admission.success.presentation,
     );
   }
-  return Either.isLeft(admission)
+  return Result.isFailure(admission)
     ? resolveBattleSubjectRuntime(input)
     : resolveAdmittedFindFamiliarReappearanceSubject({
         fills: input.fills,
-        admission: admission.right.mechanics,
+        admission: admission.success.mechanics,
       });
 }
 
@@ -3655,23 +3665,23 @@ export function characterSeed(input: {
         });
   if (
     druidWildShapeAvailableForms !== undefined &&
-    Either.isLeft(druidWildShapeAvailableForms)
+    Result.isFailure(druidWildShapeAvailableForms)
   ) {
-    throw new Error(druidWildShapeAvailableForms.left.message);
+    throw new Error(druidWildShapeAvailableForms.failure.message);
   }
   const parsedDruidWildShapeAvailableForms =
     druidWildShapeAvailableForms === undefined
       ? undefined
-      : druidWildShapeAvailableForms.right;
+      : druidWildShapeAvailableForms.success;
   const resourceUnitRefs = (input.resources ?? []).map((resource) => {
     const supportProfiles = battleUnitSupportProfilesForUnit({
       unit: resource.unit,
       classLevels: parseCharacterBattleClassLevelsRight(classLevels),
     });
-    if (Either.isLeft(supportProfiles)) {
-      throw new Error(supportProfiles.left.message);
+    if (Result.isFailure(supportProfiles)) {
+      throw new Error(supportProfiles.failure.message);
     }
-    return { unit: resource.unit, supportProfiles: supportProfiles.right };
+    return { unit: resource.unit, supportProfiles: supportProfiles.success };
   });
   const weaponPresentationUnitRefs = [attack, input.offHandAttack].flatMap(
     (candidate) => {
@@ -4024,7 +4034,7 @@ export function statBlockCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
+      source: requireBattleStatBlockCombatantSource(statBlock),
       currentHp: Hp(input.currentHp ?? maxHp),
       tempHp: Hp(input.tempHp ?? 0),
       ammunitionStocks,
@@ -4198,10 +4208,8 @@ export function skeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource(
-          statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-        ),
+      source: requireBattleStatBlockCombatantSource(
+        statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
@@ -4226,17 +4234,15 @@ export function resistantSkeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource({
-          id: statBlockId("stat_block_slashing_resistant_skeleton"),
-          challengeRating: skeleton.challengeRating,
-          statBlock: {
-            ...statBlockWithoutDamageModifiers,
-            displayName: "Slashing Resistant Skeleton",
-            resistances: { kind: "fixed", damageTypes: ["slashing"] },
-          },
-        }),
-      ),
+      source: requireBattleStatBlockCombatantSource({
+        id: statBlockId("stat_block_slashing_resistant_skeleton"),
+        challengeRating: skeleton.challengeRating,
+        statBlock: {
+          ...statBlockWithoutDamageModifiers,
+          displayName: "Slashing Resistant Skeleton",
+          resistances: { kind: "fixed", damageTypes: ["slashing"] },
+        },
+      }),
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
@@ -4289,12 +4295,12 @@ export function resource(input?: {
 
 export function supportedBattleUnitRef(unit: UnitRecord): BattleUnitRef {
   const profiles = battleUnitSupportProfilesForUnit({ unit });
-  if (Either.isLeft(profiles)) {
-    throw new Error(profiles.left.message);
+  if (Result.isFailure(profiles)) {
+    throw new Error(profiles.failure.message);
   }
   return {
     unit,
-    supportProfiles: profiles.right,
+    supportProfiles: profiles.success,
   };
 }
 
@@ -5951,7 +5957,7 @@ export {
   difficultyClass,
   discoverBattleActCandidates,
   discoverBattleActs,
-  Either,
+  Result,
   elapsedTimeTicks,
   endTurn,
   findFamiliarFormEligibilityForSpell,

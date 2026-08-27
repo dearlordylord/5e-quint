@@ -20,7 +20,7 @@ import {
   ITFTuple,
   ITFVariant,
 } from "@firfi/quint-connect/effect";
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema, SchemaGetter } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -214,19 +214,20 @@ export type BattleResolutionRecorderSnapshot<
   readonly state: BattleState;
 };
 
-const QuintIntAsNumber = Schema.transform(
-  Schema.BigIntFromSelf,
-  Schema.Number,
-  { strict: true, decode: (n) => Number(n), encode: (n) => BigInt(n) },
+const QuintIntAsNumber = Schema.BigInt.pipe(
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform<number, bigint>((n) => Number(n)),
+    encode: SchemaGetter.transform<bigint, number>((n) => BigInt(n)),
+  }),
 );
 
 export const mbtPickSchemas = {
-  int: Schema.standardSchemaV1(QuintIntAsNumber),
-  bool: Schema.standardSchemaV1(Schema.Boolean),
-  unknown: Schema.standardSchemaV1(Schema.Unknown),
+  int: Schema.toStandardSchemaV1(QuintIntAsNumber),
+  bool: Schema.toStandardSchemaV1(Schema.Boolean),
+  unknown: Schema.toStandardSchemaV1(Schema.Unknown),
   stringLiteral: <const Values extends readonly [string, ...string[]]>(
     ...values: Values
-  ) => Schema.standardSchemaV1(Schema.Literal(...values)),
+  ) => Schema.toStandardSchemaV1(Schema.Literals(values)),
 } as const;
 
 export function mbtTraceCount(): number {
@@ -1788,10 +1789,20 @@ function startBattleSessionRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleRuntimeSession {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
+}
+
+function requireBattleStatBlockCombatantSource(
+  statBlock: Parameters<typeof battleStatBlockCombatantSource>[0],
+) {
+  const source = battleStatBlockCombatantSource(statBlock);
+  if (Result.isFailure(source)) {
+    throw new Error(battleStateInitIssueMessage(source.failure));
+  }
+  return source.success;
 }
 
 export function reducerRouteStartBattle(
@@ -17859,17 +17870,17 @@ function preserveLifeUnitRef(
     unit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   if (
-    !unitRef.right.supportProfiles.some(
+    !unitRef.success.supportProfiles.some(
       (candidate) => JSON.stringify(candidate) === JSON.stringify(support),
     )
   ) {
     throw new Error("Expected Preserve Life healing-pool support profile.");
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function extraAttackUnitRef(
@@ -17882,10 +17893,10 @@ function extraAttackUnitRef(
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function adrenalineRushUnitRef(
@@ -17898,10 +17909,10 @@ function adrenalineRushUnitRef(
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function activeFeatureSpellBenefitUnit(): Extract<
@@ -17929,10 +17940,10 @@ function unitRefWithSupportProfilesForMbt(
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function rogueSteadyAimUnitRef(
@@ -17946,10 +17957,10 @@ function rogueSteadyAimUnitRef(
     unit,
     classLevels: [{ className: "rogue", level: 3 }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function resourceUsesRemaining(
@@ -18026,8 +18037,8 @@ function skeletonCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource(skeletonMultiattackStatBlock()),
+      source: requireBattleStatBlockCombatantSource(
+        skeletonMultiattackStatBlock(),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
