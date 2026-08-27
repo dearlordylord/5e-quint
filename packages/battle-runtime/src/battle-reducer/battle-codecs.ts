@@ -6711,61 +6711,99 @@ function serializedBattleSubjectOwnsBoundProcedure(
   const procedureRefs = battleSubjectProcedureRefs(subject);
   if (procedureRefs.length === 0) return true;
 
-  if (
-    subject.tag === "runtimeCommand" &&
-    subject.command === "releaseReadiedSpell"
-  ) {
-    return readiedSpells.some(
-      (readied) =>
-        readied.casterId === subject.readiedSpellCasterId &&
-        readied.procedureRef === subject.procedureRef,
-    );
-  }
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "runtimeCommand", command: "releaseReadiedSpell" },
+      (release) =>
+        readiedSpells.some(
+          (readied) =>
+            readied.casterId === release.readiedSpellCasterId &&
+            readied.procedureRef === release.procedureRef,
+        ),
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "releaseReadiedAttack" },
+      (release) =>
+        readiedResponses.some(
+          (readied) =>
+            readied.actorId === release.reactorId &&
+            readied.response.kind === "attack" &&
+            readied.response.procedureRef === release.procedureRef,
+        ),
+    ),
+    Match.when({ tag: "monkFocusFlurryOfBlowsStrike" }, (strike) =>
+      serializedMonkFocusStrikeOwnsBoundProcedures(strike, combatants),
+    ),
+    Match.orElse((ownedSubject) =>
+      serializedBattleSubjectProcedureRefsBelongToOwner(
+        ownedSubject,
+        procedureRefs,
+        combatants,
+      ),
+    ),
+  );
+}
 
-  if (
-    subject.tag === "runtimeCommand" &&
-    subject.command === "releaseReadiedAttack"
-  ) {
-    return readiedResponses.some(
-      (readied) =>
-        readied.actorId === subject.reactorId &&
-        readied.response.kind === "attack" &&
-        readied.response.procedureRef === subject.procedureRef,
-    );
-  }
+function serializedMonkFocusStrikeOwnsBoundProcedures(
+  subject: Extract<
+    EncodedBattleSubject,
+    { readonly tag: "monkFocusFlurryOfBlowsStrike" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const owner = combatants.find(
+    (combatant) => combatant.combatantId === subject.actorId,
+  );
+  if (owner?.origin.kind !== "character") return false;
+  const focusBinding = owner.origin.execution.procedureBindings.find(
+    (binding) => binding.procedureRef === subject.focusProcedureRef,
+  );
+  return (
+    owner.origin.attackExecution.unarmedStrikeProcedureRef ===
+      subject.procedureRef &&
+    focusBinding !== undefined &&
+    focusBinding.procedure.kind === "unitSupportProfile" &&
+    (typeof focusBinding.procedure.execution === "string"
+      ? focusBinding.procedure.execution
+      : focusBinding.procedure.execution.kind) ===
+      MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE
+  );
+}
 
-  if (subject.tag === "monkFocusFlurryOfBlowsStrike") {
-    const owner = combatants.find(
-      (combatant) => combatant.combatantId === subject.actorId,
-    );
-    if (owner?.origin.kind !== "character") return false;
-    const focusBinding = owner.origin.execution.procedureBindings.find(
-      (binding) => binding.procedureRef === subject.focusProcedureRef,
-    );
-    return (
-      owner.origin.attackExecution.unarmedStrikeProcedureRef ===
-        subject.procedureRef &&
-      focusBinding !== undefined &&
-      focusBinding.procedure.kind === "unitSupportProfile" &&
-      (typeof focusBinding.procedure.execution === "string"
-        ? focusBinding.procedure.execution
-        : focusBinding.procedure.execution.kind) ===
-        MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE
-    );
-  }
+function serializedBattleSubjectProcedureOwnerId(
+  subject: EncodedBattleSubject,
+): CombatantId {
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "pactOfTheChainFamiliarAttack" },
+      (attack) => attack.familiarId,
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "opportunityAttack" },
+      (command) => command.reactorId,
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "retaliationAttack" },
+      (command) => command.reactorId,
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "castTriggeredReactionSpell" },
+      (command) => command.reactorId,
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "castAttackHitBonusActionSpell" },
+      (command) => command.casterId,
+    ),
+    Match.orElse((ownedSubject) => ownedSubject.actorId),
+  );
+}
 
-  const ownerId =
-    subject.tag === "pactOfTheChainFamiliarAttack"
-      ? subject.familiarId
-      : subject.tag === "runtimeCommand" &&
-          (subject.command === "opportunityAttack" ||
-            subject.command === "retaliationAttack" ||
-            subject.command === "castTriggeredReactionSpell")
-        ? subject.reactorId
-        : subject.tag === "runtimeCommand" &&
-            subject.command === "castAttackHitBonusActionSpell"
-          ? subject.casterId
-          : subject.actorId;
+function serializedBattleSubjectProcedureRefsBelongToOwner(
+  subject: EncodedBattleSubject,
+  procedureRefs: readonly BattleProcedureExecutionRef[],
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const ownerId = serializedBattleSubjectProcedureOwnerId(subject);
   const owner = combatants.find(
     (combatant) => combatant.combatantId === ownerId,
   );
@@ -6798,64 +6836,100 @@ function serializedExecutionReferenceFieldName(key: string): boolean {
   );
 }
 
+function serializedExecutionReferenceOwnerId(
+  fields: Readonly<Record<string, unknown>>,
+  referenceKey: string,
+): CombatantId | undefined {
+  const ownerKeys = referenceKey.startsWith("source")
+    ? ["sourceCombatantId", "sourceOwnerId"]
+    : referenceKey.startsWith("triggering")
+      ? ["triggeringCombatantId"]
+      : referenceKey === "formExecutionRef"
+        ? ["actorId", "combatantId", "ownerId"]
+        : [
+            "actorId",
+            "casterId",
+            "attackerId",
+            "combatantId",
+            "ownerId",
+            "beneficiaryId",
+          ];
+  for (const key of ownerKeys) {
+    const value = fields[key];
+    // Holes are already schema-decoded; these named owner fields carry CombatantId values.
+    if (typeof value === "string") return value as CombatantId;
+  }
+  return undefined;
+}
+
+function serializedExecutionReferenceIsSubjectProcedure(
+  depth: number,
+  key: string,
+  ownerId: CombatantId | undefined,
+): boolean {
+  return (
+    depth === 0 &&
+    (key === "procedureRef" ||
+      (key === "sourceProcedureRef" && ownerId === undefined))
+  );
+}
+
+function appendSerializedExecutionReferences(input: {
+  readonly references: SerializedExecutionReferenceOwnership[];
+  readonly fields: Readonly<Record<string, unknown>>;
+  readonly key: string;
+  readonly field: unknown;
+  readonly depth: number;
+}): void {
+  const { references, fields, key, field, depth } = input;
+  if (!serializedExecutionReferenceFieldName(key)) return;
+  if (key === "effectRef" && fields.kind === "spellMarkedDamageRider") return;
+  const ownerId = serializedExecutionReferenceOwnerId(fields, key);
+  const values = Array.isArray(field) ? field : [field];
+  for (const reference of values) {
+    if (typeof reference !== "string") continue;
+    references.push({
+      ref: reference,
+      ownerId,
+      subjectProcedure: serializedExecutionReferenceIsSubjectProcedure(
+        depth,
+        key,
+        ownerId,
+      ),
+    });
+  }
+}
+
+function visitSerializedExecutionReferences(
+  value: unknown,
+  depth: number,
+  references: SerializedExecutionReferenceOwnership[],
+): void {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      visitSerializedExecutionReferences(item, depth + 1, references);
+    }
+    return;
+  }
+  if (value === null || typeof value !== "object") return;
+  const fields = value as Readonly<Record<string, unknown>>;
+  for (const [key, field] of Object.entries(fields)) {
+    appendSerializedExecutionReferences({
+      references,
+      fields,
+      key,
+      field,
+      depth,
+    });
+    visitSerializedExecutionReferences(field, depth + 1, references);
+  }
+}
+
 function serializedBattleHoleExecutionReferences(
   hole: object,
 ): readonly SerializedExecutionReferenceOwnership[] {
   const references: SerializedExecutionReferenceOwnership[] = [];
-  const ownerIdFor = (
-    fields: Readonly<Record<string, unknown>>,
-    referenceKey: string,
-  ): CombatantId | undefined => {
-    const ownerKeys = referenceKey.startsWith("source")
-      ? ["sourceCombatantId", "sourceOwnerId"]
-      : referenceKey.startsWith("triggering")
-        ? ["triggeringCombatantId"]
-        : referenceKey === "formExecutionRef"
-          ? ["actorId", "combatantId", "ownerId"]
-          : [
-              "actorId",
-              "casterId",
-              "attackerId",
-              "combatantId",
-              "ownerId",
-              "beneficiaryId",
-            ];
-    for (const key of ownerKeys) {
-      const value = fields[key];
-      if (typeof value === "string") return value as CombatantId;
-    }
-    return undefined;
-  };
-  const visit = (value: unknown, depth: number): void => {
-    if (Array.isArray(value)) {
-      for (const item of value) visit(item, depth + 1);
-      return;
-    }
-    if (value === null || typeof value !== "object") return;
-    const fields = value as Readonly<Record<string, unknown>>;
-    for (const [key, field] of Object.entries(fields)) {
-      if (
-        serializedExecutionReferenceFieldName(key) &&
-        !(key === "effectRef" && fields.kind === "spellMarkedDamageRider")
-      ) {
-        const localOwnerId = ownerIdFor(fields, key);
-        const values = Array.isArray(field) ? field : [field];
-        for (const reference of values) {
-          if (typeof reference !== "string") continue;
-          references.push({
-            ref: reference,
-            ownerId: localOwnerId,
-            subjectProcedure:
-              depth === 0 &&
-              (key === "procedureRef" ||
-                (key === "sourceProcedureRef" && localOwnerId === undefined)),
-          });
-        }
-      }
-      visit(field, depth + 1);
-    }
-  };
-  visit(hole, 0);
+  visitSerializedExecutionReferences(hole, 0, references);
   return references;
 }
 
@@ -6898,65 +6972,111 @@ function serializedInterruptChoiceOwnsBoundProcedure(input: {
   readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
 }): boolean {
   const { choice, combatants, readiedSpells, readiedResponses } = input;
-  if (choice.kind === "reactionRollOrDamageReduction") {
-    const reactor = combatants.find(
-      (combatant) => combatant.combatantId === choice.reactorId,
-    );
-    if (reactor?.origin.kind !== "character") return false;
-    const binding = reactor.origin.execution.procedureBindings.find(
-      (candidate) => candidate.procedureRef === choice.choice.procedureRef,
-    );
-    return (
-      binding !== undefined &&
-      (binding.procedure.kind === "unitFeature" ||
-        binding.procedure.kind === "unitSupportProfile") &&
-      (typeof binding.procedure.execution === "string"
-        ? binding.procedure.execution
-        : binding.procedure.execution.kind) ===
-        REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
-    );
-  }
+  return Match.value(choice).pipe(
+    Match.when({ kind: "reactionRollOrDamageReduction" }, (reaction) =>
+      serializedReactionReductionChoiceOwnsBoundProcedure(reaction, combatants),
+    ),
+    Match.orElse(
+      (subjectChoice) =>
+        serializedBattleSubjectOwnsBoundProcedure(
+          subjectChoice.subject,
+          combatants,
+          readiedSpells,
+          readiedResponses,
+        ) &&
+        serializedReadiedInterruptChoiceOwnsResponse(
+          subjectChoice,
+          readiedResponses,
+        ),
+    ),
+  );
+}
+
+function serializedReactionReductionChoiceOwnsBoundProcedure(
+  choice: Extract<
+    EncodedBattleInterruptProcedureChoice,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  const reactor = combatants.find(
+    (combatant) => combatant.combatantId === choice.reactorId,
+  );
+  if (reactor?.origin.kind !== "character") return false;
+  const binding = reactor.origin.execution.procedureBindings.find(
+    (candidate) => candidate.procedureRef === choice.choice.procedureRef,
+  );
+  return (
+    binding !== undefined &&
+    (binding.procedure.kind === "unitFeature" ||
+      binding.procedure.kind === "unitSupportProfile") &&
+    (typeof binding.procedure.execution === "string"
+      ? binding.procedure.execution
+      : binding.procedure.execution.kind) ===
+      REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE
+  );
+}
+
+type EncodedBattleSubjectInterruptProcedureChoice = Exclude<
+  EncodedBattleInterruptProcedureChoice,
+  { readonly kind: "reactionRollOrDamageReduction" }
+>;
+
+function serializedReadiedInterruptChoiceOwnsResponse(
+  choice: EncodedBattleSubjectInterruptProcedureChoice,
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  return Match.value(choice).pipe(
+    Match.when({ kind: "releaseReadiedMovement" }, (release) =>
+      serializedReadiedMovementChoiceOwnsResponse(release, readiedResponses),
+    ),
+    Match.when({ kind: "releaseReadiedAction" }, (release) =>
+      serializedReadiedActionChoiceOwnsResponse(release, readiedResponses),
+    ),
+    Match.orElse(() => true),
+  );
+}
+
+function serializedReadiedMovementChoiceOwnsResponse(
+  choice: Extract<
+    EncodedBattleInterruptProcedureChoice,
+    { readonly kind: "releaseReadiedMovement" }
+  >,
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  const subject = choice.subject;
   if (
-    !serializedBattleSubjectOwnsBoundProcedure(
-      choice.subject,
-      combatants,
-      readiedSpells,
-      readiedResponses,
-    )
+    subject.tag !== "runtimeCommand" ||
+    subject.command !== "releaseReadiedMovement"
   ) {
     return false;
   }
-  return choice.kind === "releaseReadiedMovement"
-    ? (() => {
-        const subject = choice.subject;
-        if (
-          subject.tag !== "runtimeCommand" ||
-          subject.command !== "releaseReadiedMovement"
-        ) {
-          return false;
-        }
-        return readiedResponses.some(
-          (readied) =>
-            readied.actorId === subject.readiedMovementActorId &&
-            readied.response.kind === "movement",
-        );
-      })()
-    : choice.kind === "releaseReadiedAction"
-      ? (() => {
-          const subject = choice.subject;
-          if (
-            subject.tag !== "runtimeCommand" ||
-            subject.command !== "releaseReadiedAction"
-          ) {
-            return false;
-          }
-          return readiedResponses.some(
-            (readied) =>
-              readied.actorId === subject.reactorId &&
-              readied.response.kind === "action",
-          );
-        })()
-      : true;
+  return readiedResponses.some(
+    (readied) =>
+      readied.actorId === subject.readiedMovementActorId &&
+      readied.response.kind === "movement",
+  );
+}
+
+function serializedReadiedActionChoiceOwnsResponse(
+  choice: Extract<
+    EncodedBattleInterruptProcedureChoice,
+    { readonly kind: "releaseReadiedAction" }
+  >,
+  readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
+): boolean {
+  const subject = choice.subject;
+  if (
+    subject.tag !== "runtimeCommand" ||
+    subject.command !== "releaseReadiedAction"
+  ) {
+    return false;
+  }
+  return readiedResponses.some(
+    (readied) =>
+      readied.actorId === subject.reactorId &&
+      readied.response.kind === "action",
+  );
 }
 
 const BattleSnapshotCommonFields = {
@@ -7180,6 +7300,91 @@ function serializedExecutionReferencesAreBound(input: {
   });
 }
 
+function serializedInterruptChoiceSubject(
+  choice: EncodedBattleInterruptProcedureChoice,
+): EncodedBattleSubject | undefined {
+  return Match.value(choice).pipe(
+    Match.when({ kind: "reactionRollOrDamageReduction" }, () => undefined),
+    Match.orElse((subjectChoice) => subjectChoice.subject),
+  );
+}
+
+function serializedInterruptChoiceTargetIsLive(
+  subject: EncodedBattleSubject | undefined,
+  combatants: readonly EncodedBattleCreatureSnapshot[],
+): boolean {
+  if (subject === undefined) return true;
+  return Match.value(subject).pipe(
+    Match.when(
+      { tag: "runtimeCommand", command: "releaseReadiedAttack" },
+      (targeted) =>
+        combatants.some(
+          (combatant) => combatant.combatantId === targeted.targetId,
+        ),
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "opportunityAttack" },
+      (targeted) =>
+        combatants.some(
+          (combatant) => combatant.combatantId === targeted.targetId,
+        ),
+    ),
+    Match.when(
+      { tag: "runtimeCommand", command: "retaliationAttack" },
+      (targeted) =>
+        combatants.some(
+          (combatant) => combatant.combatantId === targeted.targetId,
+        ),
+    ),
+    Match.orElse(() => true),
+  );
+}
+
+function serializedInterruptChoiceExpectedProcedureRefs(
+  choice: EncodedBattleInterruptProcedureChoice,
+): ReadonlySet<BattleProcedureExecutionRef> {
+  return Match.value(choice).pipe(
+    Match.when(
+      { kind: "reactionRollOrDamageReduction" },
+      (reaction) => new Set([reaction.choice.procedureRef]),
+    ),
+    Match.orElse(
+      (subjectChoice) =>
+        new Set(battleSubjectProcedureRefs(subjectChoice.subject)),
+    ),
+  );
+}
+
+function serializedInterruptChoiceInvariantsHold(input: {
+  readonly choice: EncodedBattleInterruptProcedureChoice;
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[];
+  readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
+  readonly subjectIsBound: (subject: EncodedBattleSubject) => boolean;
+  readonly holesAreBound: (
+    holes: readonly EncodedBattleHole[],
+    expectedProcedureRefs: ReadonlySet<BattleProcedureExecutionRef>,
+  ) => boolean;
+}): boolean {
+  const { choice, combatants, readiedSpells, readiedResponses } = input;
+  const subject = serializedInterruptChoiceSubject(choice);
+  const subjectIsBound = subject === undefined || input.subjectIsBound(subject);
+  return (
+    serializedInterruptChoiceTargetIsLive(subject, combatants) &&
+    subjectIsBound &&
+    serializedInterruptChoiceOwnsBoundProcedure({
+      choice,
+      combatants,
+      readiedSpells,
+      readiedResponses,
+    }) &&
+    input.holesAreBound(
+      choice.initialHoles,
+      serializedInterruptChoiceExpectedProcedureRefs(choice),
+    )
+  );
+}
+
 function battleCheckpointFrontierInvariantsHold(
   envelope: EncodedBattleCheckpointFrontierEnvelope,
 ): boolean {
@@ -7241,38 +7446,16 @@ function battleCheckpointFrontierInvariantsHold(
         });
         return (
           decisionHoleIsBound &&
-          value.choices.every((choice) => {
-            const choiceSubject =
-              choice.kind === "reactionRollOrDamageReduction"
-                ? undefined
-                : choice.subject;
-            const choiceTargetIsLive =
-              choiceSubject === undefined ||
-              choiceSubject.tag !== "runtimeCommand" ||
-              (choiceSubject.command !== "releaseReadiedAttack" &&
-                choiceSubject.command !== "opportunityAttack" &&
-                choiceSubject.command !== "retaliationAttack") ||
-              checkpoint.combatants.some(
-                (combatant) => combatant.combatantId === choiceSubject.targetId,
-              );
-            const subjectBound =
-              choiceSubject === undefined || subjectIsBound(choiceSubject);
-            const expectedProcedureRefs =
-              choice.kind === "reactionRollOrDamageReduction"
-                ? new Set([choice.choice.procedureRef])
-                : new Set(battleSubjectProcedureRefs(choice.subject));
-            return (
-              choiceTargetIsLive &&
-              subjectBound &&
-              serializedInterruptChoiceOwnsBoundProcedure({
-                choice,
-                combatants: checkpoint.combatants,
-                readiedSpells,
-                readiedResponses,
-              }) &&
-              holesAreBound(choice.initialHoles, expectedProcedureRefs)
-            );
-          })
+          value.choices.every((choice) =>
+            serializedInterruptChoiceInvariantsHold({
+              choice,
+              combatants: checkpoint.combatants,
+              readiedSpells,
+              readiedResponses,
+              subjectIsBound,
+              holesAreBound,
+            }),
+          )
         );
       },
     }),

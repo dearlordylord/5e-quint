@@ -103,11 +103,7 @@
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
     },
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
-      "module/binding:battleCheckpointFrontierInvariantsHold/owner:call:Match.value(frontier).pipe:argument-0/owner:call:Match.discriminatorsExhaustive(\"kind\"):argument-0/owner:object:anonymous/binding:interruptDecision/call:value.choices.every:argument-0": 12,
       "module/binding:battleCreatureSnapshotInvariantsHold": 13,
-      "module/binding:serializedBattleHoleExecutionReferences/binding:visit": 15,
-      "module/binding:serializedBattleSubjectOwnsBoundProcedure": 21,
-      "module/binding:serializedInterruptChoiceOwnsBoundProcedure": 11,
       "module/binding:statBlockExecutionSnapshotGraphIsValid": 12,
       "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 19
     },
