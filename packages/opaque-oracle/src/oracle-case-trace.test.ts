@@ -312,12 +312,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
       sheet: { tag: "ordinary" as const },
       battle: statBlockBattle,
     };
-    const first = evaluateOracleCase({
+    const first = evaluateDecodedCase({
       case: oracleCase,
       unitLibrary,
       statBlockCatalog,
     });
-    const second = evaluateOracleCase({
+    const second = evaluateDecodedCase({
       case: oracleCase,
       unitLibrary,
       statBlockCatalog,
@@ -332,7 +332,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
 
   it("projects a production creation completion into a fresh Character Sheet", () => {
     const fillBatches = completeCreationFillBatches();
-    const trace = evaluateOracleCase({
+    const trace = evaluateDecodedCase({
       case: {
         creation: { fillBatches },
         sheet: { tag: "ordinary" },
@@ -361,7 +361,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     const firstFill = firstBatch[0];
     if (firstFill === undefined)
       throw new Error("test batch must be non-empty");
-    const surplus = evaluateOracleCase({
+    const surplus = evaluateDecodedCase({
       case: {
         creation: {
           fillBatches: [...fillBatches, [firstFill]],
@@ -382,7 +382,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
   });
 
   it("projects mixed origins into one stripped checkpoint and one Acts frontier", () => {
-    const trace = evaluateOracleCase({
+    const trace = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
@@ -438,7 +438,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
   });
 
   it("keeps successful Acts non-vacuous and reports an empty roster as typed Battle rejection", () => {
-    const successful = evaluateOracleCase({
+    const successful = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
@@ -459,7 +459,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ).toBe(true);
     }
 
-    const empty = evaluateOracleCase({
+    const empty = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
@@ -476,7 +476,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
   });
 
   it("rejects stripped checkpoints with impossible identity or turn references", () => {
-    const trace = evaluateOracleCase({
+    const trace = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
@@ -519,6 +519,34 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ],
     };
     expect(Either.isLeft(decodeOracleTrace(crossReference))).toBe(true);
+
+    const unreachableFrontier = {
+      ...trace,
+      steps: [
+        ...trace.steps.slice(0, -1),
+        {
+          ...entered,
+          frontier: {
+            acts: [
+              {
+                ...entered.frontier.acts[0],
+                actorId: combatantId("oracle:not-a-live-combatant"),
+              },
+            ],
+          },
+        },
+      ],
+    };
+    expect(Either.isLeft(decodeOracleTrace(unreachableFrontier))).toBe(true);
+
+    const emptyFrontier = {
+      ...trace,
+      steps: [
+        ...trace.steps.slice(0, -1),
+        { ...entered, frontier: { acts: [] } },
+      ],
+    };
+    expect(Either.isLeft(decodeOracleTrace(emptyFrontier))).toBe(true);
   });
 
   it("isolates A/B/A batch evaluation from singleton evaluation", () => {
@@ -532,12 +560,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
       sheet: { tag: "ordinary" as const },
       battle: statBlockBattle,
     };
-    const singletonA = evaluateOracleCase({
+    const singletonA = evaluateDecodedCase({
       case: caseA,
       unitLibrary,
       statBlockCatalog,
     });
-    const batch = evaluateOracleBatch({
+    const batch = evaluateDecodedBatch({
       batch: { cases: [caseA, caseB, caseA] },
       services: { unitLibrary, statBlockCatalog },
     });
@@ -573,7 +601,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         },
       ] as const,
     };
-    const rejected = evaluateOracleCase({
+    const rejected = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
@@ -594,6 +622,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       if (
         projectionIssues?.tag === "characterBattleEncounterProjectionIssues"
       ) {
+        expect(JSON.stringify(projectionIssues)).not.toContain("message");
         expect(projectionIssues.issues).toHaveLength(2);
         expect(
           projectionIssues.issues.map((issue) => issue.combatantId),
@@ -604,7 +633,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       }
     }
 
-    const missing = evaluateOracleCase({
+    const missing = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
@@ -653,7 +682,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
   });
 
   it("returns a production fill rejection as a terminal Trace step", () => {
-    const trace = evaluateOracleCase({
+    const trace = evaluateDecodedCase({
       case: {
         creation: {
           fillBatches: [
@@ -749,6 +778,35 @@ function acceptedFillForHole(
     }
   }
   throw new Error(`no accepted test fill for ${hole.holeId}`);
+}
+
+type EvaluationServices = Omit<
+  Parameters<typeof evaluateOracleCase>[0],
+  "case"
+>;
+
+function evaluateDecodedCase(
+  input: EvaluationServices & { readonly case: unknown },
+) {
+  const decoded = decodeOracleCase(input.case);
+  if (Either.isLeft(decoded)) throw new Error("test Case must decode");
+  return evaluateOracleCase({ ...input, case: decoded.right });
+}
+
+function evaluateDecodedBatch(input: {
+  readonly batch: { readonly cases: readonly unknown[] };
+  readonly services: EvaluationServices;
+}) {
+  const cases = input.batch.cases.map((candidate) => {
+    const decoded = decodeOracleCase(candidate);
+    if (Either.isLeft(decoded)) throw new Error("test Case must decode");
+    return decoded.right;
+  });
+  if (cases.length === 0) throw new Error("test batch must be non-empty");
+  return evaluateOracleBatch({
+    services: input.services,
+    batch: { cases: [cases[0], ...cases.slice(1)] },
+  });
 }
 
 function choiceCombinations(

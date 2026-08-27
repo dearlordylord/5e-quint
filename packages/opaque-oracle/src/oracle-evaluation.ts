@@ -11,6 +11,8 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   startBattleFromCharacterBattleRoster,
+  type BattleCreatureInitIssue,
+  type CharacterBattleSpellAccessProjectionIssue,
   type CharacterBattleEncounterParticipant,
   type CharacterBattleRuntimeEntryIssue,
 } from "@dnd/character-battle-runtime";
@@ -19,6 +21,7 @@ import {
   discoverBattleActs,
   initiativeScore,
   snapshotBattle,
+  type BattleStateInitIssue,
 } from "@dnd/battle-runtime";
 import {
   characterSheetId,
@@ -36,8 +39,12 @@ import {
   OracleTraceSchema,
   type FreshSheetInput,
   type OracleBattleCheckpoint,
+  type OracleBattleCreatureInitIssue,
   type OracleBattleEntryRejection,
+  type OracleBattleProjectionIssue,
   type OracleBattleRosterEntry,
+  type OracleBattleStateInitLeafIssue,
+  type OracleBattleStateInitIssue,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleTrace,
@@ -224,13 +231,17 @@ function appendFreshSheetAndBattleSteps(
   }
 
   const snapshot = snapshotBattle(entry.right.session.state);
+  const acts = discoverBattleActs(entry.right.session).map(
+    ({ subject }) => subject,
+  );
+  const [firstAct, ...remainingActs] = acts;
+  if (firstAct === undefined)
+    return defect("Battle act discovery produced an empty frontier");
   steps.push({
     tag: "battleEntered",
     checkpoint: strippedBattleCheckpoint(snapshot),
     frontier: {
-      acts: discoverBattleActs(entry.right.session).map(
-        ({ subject }) => subject,
-      ),
+      acts: [firstAct, ...remainingActs],
     },
   });
   return oracleTrace(steps);
@@ -304,7 +315,20 @@ function battleEntryRejection(
 ): OracleBattleEntryRejection {
   const issue = entry.issue;
   if (issue.tag === "characterBattleEncounterProjectionIssues") {
-    return { tag: "battleEntryRejected", issues: [issue] };
+    const projectionIssues = issue.issues.map(stripBattleProjectionIssue);
+    const [firstProjectionIssue, ...remainingProjectionIssues] =
+      projectionIssues;
+    if (firstProjectionIssue === undefined)
+      return defect("Battle projection issue accumulation was empty");
+    return {
+      tag: "battleEntryRejected",
+      issues: [
+        {
+          tag: "characterBattleEncounterProjectionIssues",
+          issues: [firstProjectionIssue, ...remainingProjectionIssues],
+        },
+      ],
+    };
   }
   if (issue.tag === "characterBattleEncounterEmptyRoster") {
     return { tag: "battleEntryRejected", issues: [issue] };
@@ -315,15 +339,89 @@ function battleEntryRejection(
       issues: [
         {
           tag: "battleCreatureInitRejected",
-          issue,
+          issue: stripBattleCreatureInitIssue(issue),
         },
       ],
     };
   }
   return {
     tag: "battleEntryRejected",
-    issues: [{ tag: "battleStateInitRejected", issue }],
+    issues: [
+      {
+        tag: "battleStateInitRejected",
+        issue: stripBattleStateInitIssue(issue),
+      },
+    ],
   };
+}
+
+function stripBattleProjectionIssue(
+  projection: Extract<
+    CharacterBattleRuntimeEntryIssue["issue"],
+    { readonly tag: "characterBattleEncounterProjectionIssues" }
+  >["issues"][number],
+): OracleBattleProjectionIssue {
+  if (projection.origin === "characterSheet") {
+    return {
+      tag: "characterBattleEncounterProjectionIssue",
+      origin: "characterSheet",
+      combatantId: projection.combatantId,
+      issue: stripBattleCreatureInitIssue(projection.issue),
+    };
+  }
+  return {
+    tag: "characterBattleEncounterProjectionIssue",
+    origin: "statBlock",
+    combatantId: projection.combatantId,
+    issue: stripBattleStateInitIssue(projection.issue),
+  };
+}
+
+function stripBattleCreatureInitIssue(
+  issue: BattleCreatureInitIssue,
+): OracleBattleCreatureInitIssue {
+  return {
+    tag: "battleCreatureInitIssue" as const,
+    ...(issue.spellAccessIssues === undefined
+      ? {}
+      : {
+          spellAccessIssues: issue.spellAccessIssues.map(
+            stripSpellAccessProjectionIssue,
+          ),
+        }),
+  };
+}
+
+function stripSpellAccessProjectionIssue(
+  issue: CharacterBattleSpellAccessProjectionIssue,
+) {
+  const { message: _message, ...stableIssue } = issue;
+  void _message;
+  return stableIssue;
+}
+
+function stripBattleStateInitIssue(
+  issue: BattleStateInitIssue,
+): OracleBattleStateInitIssue {
+  if (issue.tag === "battleStateInitIssues") {
+    return {
+      tag: "battleStateInitIssues" as const,
+      issues: issue.issues.map(stripBattleStateInitLeafIssue),
+    };
+  }
+  if (issue.tag === "weaponLoadoutMismatch") return issue;
+  return { tag: "battleStateInitIssue" as const };
+}
+
+function stripBattleStateInitLeafIssue(
+  issue: Extract<
+    BattleStateInitIssue,
+    | { readonly tag: "battleStateInitIssue" }
+    | { readonly tag: "weaponLoadoutMismatch" }
+  >,
+): OracleBattleStateInitLeafIssue {
+  if (issue.tag === "weaponLoadoutMismatch") return issue;
+  return { tag: "battleStateInitIssue" };
 }
 
 function strippedBattleCheckpoint(

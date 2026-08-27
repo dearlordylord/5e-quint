@@ -11,7 +11,7 @@ import {
   type CreationFinalizationRejectionFact,
   type CreationFrontierFact,
 } from "@dnd/character-creation-runtime";
-import { BattleSubjectSchema } from "@dnd/battle-runtime";
+import { BattleSubjectSchema, type BattleSubject } from "@dnd/battle-runtime";
 import {
   CharacterSheetConstructionIssueSchema,
   FreshCharacterSheetProjectionSchema,
@@ -133,13 +133,16 @@ export type OracleBattleInput = Schema.Schema.Type<
   typeof OracleBattleInputSchema
 >;
 
-export const OracleCaseSchema = Schema.Struct({
+const OracleCaseShapeSchema = Schema.Struct({
   creation: Schema.Struct({
     fillBatches: Schema.Array(CreationFillBatchSchema),
   }),
   sheet: FreshSheetInputSchema,
   battle: OracleBattleInputSchema,
 });
+export const OracleCaseSchema = OracleCaseShapeSchema.pipe(
+  Schema.brand("OracleCase"),
+);
 export type OracleCase = Schema.Schema.Type<typeof OracleCaseSchema>;
 
 export const OracleEvaluationBatchSchema = Schema.Struct({
@@ -167,7 +170,6 @@ const SheetConstructionRejectionSchema = Schema.Struct({
 const CharacterBattleSpellAccessProjectionIssueSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("characterBattleSpellAccessProjectionIssue"),
-    message: Schema.String,
     accessIndex: NonNegativeIntegerSchema,
     featUnitId: UnitIdSchema,
     cause: Schema.Literal(
@@ -179,7 +181,6 @@ const CharacterBattleSpellAccessProjectionIssueSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("characterBattleSpellAccessProjectionIssue"),
-    message: Schema.String,
     issueIndex: NonNegativeIntegerSchema,
     cause: Schema.Literal("invalidBuildSpellAccess"),
   }),
@@ -187,7 +188,6 @@ const CharacterBattleSpellAccessProjectionIssueSchema = Schema.Union(
 
 const CharacterBattleCreatureInitIssueSchema = Schema.Struct({
   tag: Schema.Literal("battleCreatureInitIssue"),
-  message: Schema.String,
   spellAccessIssues: Schema.optional(
     Schema.Array(CharacterBattleSpellAccessProjectionIssueSchema).pipe(
       Schema.filter((issues) => issues.length > 0, {
@@ -196,16 +196,21 @@ const CharacterBattleCreatureInitIssueSchema = Schema.Struct({
     ),
   ),
 });
+export type OracleBattleCreatureInitIssue = Schema.Schema.Type<
+  typeof CharacterBattleCreatureInitIssueSchema
+>;
 const BattleStateInitLeafIssueSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("battleStateInitIssue"),
-    message: Schema.String,
   }),
   Schema.Struct({
     tag: Schema.Literal("weaponLoadoutMismatch"),
     slot: Schema.Literal("main-hand", "off-hand"),
   }),
 );
+export type OracleBattleStateInitLeafIssue = Schema.Schema.Type<
+  typeof BattleStateInitLeafIssueSchema
+>;
 const BattleStateInitIssueSchema = Schema.Union(
   BattleStateInitLeafIssueSchema,
   Schema.Struct({
@@ -217,6 +222,9 @@ const BattleStateInitIssueSchema = Schema.Union(
     ),
   }),
 );
+export type OracleBattleStateInitIssue = Schema.Schema.Type<
+  typeof BattleStateInitIssueSchema
+>;
 
 const BattleProjectionIssueSchema = Schema.Struct({
   tag: Schema.Literal("characterBattleEncounterProjectionIssue"),
@@ -240,6 +248,9 @@ const BattleProjectionIssuesSchema = Schema.Struct({
     ),
   ),
 });
+export type OracleBattleProjectionIssue = Schema.Schema.Type<
+  typeof BattleProjectionIssuesSchema
+>["issues"][number];
 
 const BattleEntryIssueSchema = Schema.Union(
   Schema.Struct({
@@ -285,14 +296,19 @@ const OracleBattleCreatureSnapshotSchema = Schema.Struct({
   tempHp: NonNegativeIntegerSchema,
   armorClass: Schema.Number,
   size: Schema.String,
-  conditions: Schema.Array(Schema.Literal(...CONDITIONS)),
+  conditions: Schema.Array(Schema.Literal(...CONDITIONS)).pipe(
+    Schema.filter(
+      (conditions) => new Set(conditions).size === conditions.length,
+      { message: () => "conditions must not contain duplicate members" },
+    ),
+  ),
 });
 export type OracleBattleCreatureSnapshot = Schema.Schema.Type<
   typeof OracleBattleCreatureSnapshotSchema
 >;
 
 const OracleBattleCheckpointShapeSchema = Schema.Struct({
-  round: NonNegativeIntegerSchema,
+  round: NonNegativeIntegerSchema.pipe(Schema.greaterThan(0)),
   currentActorId: CombatantId,
   turnOrder: Schema.Array(CombatantId),
   combatants: Schema.NonEmptyArray(OracleBattleCreatureSnapshotSchema),
@@ -311,17 +327,23 @@ export type OracleBattleCheckpoint = Schema.Schema.Type<
 
 /** Available Battle subjects, without presentation or Runtime Hole details. */
 export const OracleBattleActsFrontierSchema = Schema.Struct({
-  acts: Schema.Array(BattleSubjectSchema),
+  acts: Schema.NonEmptyArray(BattleSubjectSchema),
 });
 export type OracleBattleActsFrontier = Schema.Schema.Type<
   typeof OracleBattleActsFrontierSchema
 >;
 
-export const OracleBattleEnteredSchema = Schema.Struct({
+const OracleBattleEnteredShapeSchema = Schema.Struct({
   tag: Schema.Literal("battleEntered"),
   checkpoint: OracleBattleCheckpointSchema,
   frontier: OracleBattleActsFrontierSchema,
 });
+export const OracleBattleEnteredSchema = OracleBattleEnteredShapeSchema.pipe(
+  Schema.filter(oracleBattleEnteredInvariantsHold, {
+    message: () =>
+      "Battle frontier subjects must reference combatants in the checkpoint.",
+  }),
+);
 export type OracleBattleEntered = Schema.Schema.Type<
   typeof OracleBattleEnteredSchema
 >;
@@ -374,7 +396,6 @@ export type OracleCreationFrontier = CreationFrontierFact;
 export type OracleCharacterBuild = CharacterBuildFact;
 export type OracleCreationFill = CreationFillFact;
 export type OracleCreationFinalizationIssue = CreationFinalizationRejectionFact;
-export type OracleTraceFrontier = CreationFrontierFact;
 export type OracleFreshSheetProjection = Schema.Schema.Type<
   typeof FreshCharacterSheetProjectionSchema
 >;
@@ -407,4 +428,60 @@ function oracleBattleCheckpointInvariantsHold(checkpoint: {
 
 function uniqueValues(values: readonly string[]): boolean {
   return new Set(values).size === values.length;
+}
+
+const BATTLE_SUBJECT_REFERENCE_PROPERTIES = new Set([
+  "actorId",
+  "allyId",
+  "attackerId",
+  "carriedCreatureId",
+  "carrierId",
+  "casterId",
+  "companionId",
+  "currentActorId",
+  "damagedId",
+  "fallingCreatureId",
+  "familiarId",
+  "grapplerId",
+  "helperId",
+  "moverId",
+  "observerId",
+  "occupantId",
+  "ownerId",
+  "previousTargetId",
+  "reactorId",
+  "readiedActorId",
+  "readiedMovementActorId",
+  "readiedSpellCasterId",
+  "responderId",
+  "shoverId",
+  "sourceCombatantId",
+  "targetEnemyId",
+  "targetId",
+  "triggeringCombatantId",
+  "wardedCombatantId",
+]);
+
+function oracleBattleEnteredInvariantsHold(entered: {
+  readonly checkpoint: {
+    readonly combatants: readonly { readonly combatantId: string }[];
+  };
+  readonly frontier: { readonly acts: readonly BattleSubject[] };
+}): boolean {
+  const liveCombatantIds = new Set(
+    entered.checkpoint.combatants.map(({ combatantId }) => combatantId),
+  );
+  return entered.frontier.acts.every((subject) =>
+    battleSubjectReferencesAreLive(subject, liveCombatantIds),
+  );
+}
+
+function battleSubjectReferencesAreLive(
+  subject: BattleSubject,
+  liveCombatantIds: ReadonlySet<string>,
+): boolean {
+  return Object.entries(subject).every(([property, value]) => {
+    if (!BATTLE_SUBJECT_REFERENCE_PROPERTIES.has(property)) return true;
+    return typeof value === "string" && liveCombatantIds.has(value);
+  });
 }
