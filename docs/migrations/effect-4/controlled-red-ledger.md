@@ -440,6 +440,7 @@ because package-index and test-support closures still reach the later-owner
 | `pnpm check:effect4-cohort:self-test`                                                                                                                                                                                                               | pass                                                                                                                                                                                      |
 | `pnpm check:effect4-cohort`                                                                                                                                                                                                                         | pass                                                                                                                                                                                      |
 | `pnpm exec vitest run packages/battle-runtime/src/battle-reducer/domain-helpers.test.ts packages/battle-runtime/src/character-execution-profile-projection.test.ts packages/battle-runtime/src/battle-fill-equality-focused.test.ts --reporter=dot` | pass; 3 suites, 14/14 tests                                                                                                                                                               |
+| `pnpm exec vitest run packages/battle-runtime/src/character-weapon-execution-schema-focused.test.ts --reporter=dot`                                                                                                                                 | pass; 1 suite, 2/2 tests; isolated native Effect 4 codec acceptance                                                                                                                       |
 | `pnpm --filter @dnd/battle-runtime typecheck`                                                                                                                                                                                                       | controlled red; exit 1, 364 diagnostics (604 output lines)                                                                                                                                |
 | `pnpm --filter @dnd/mcp typecheck --pretty false > /tmp/gh377-final-mcp-typecheck.txt 2>&1`; `grep -c 'error TS' /tmp/gh377-final-mcp-typecheck.txt`                                                                                                | controlled red; exit 1, 1,504 diagnostics (2,044 output lines); repaired lifecycle/roster/initiative callers are no longer reported, while later-owner schema/input migration remains red |
 | `. scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm --dir packages/battle-runtime exec quint test battle-runtime-reaction-continuation-tests.qnt --verbosity 1`                                             | pass; `battleRuntimeReactionContinuationTests`                                                                                                                                            |
@@ -454,9 +455,10 @@ does not waive the package-wide controlled-red inventory or closure conditions
 above.
 
 The focused equality suite directly covers ordered prefix accumulation and
-rejection of reordered, changed, and truncated fills. The locked QNT suites
-cover reaction continuation, replay equivalence, and public trace protocol.
-Codec boundary suites collect but remain blocked before test execution by the
+rejection of reordered, changed, and truncated fills. The isolated native
+Effect 4 codec suite passes 2/2 tests. The locked QNT suites cover reaction
+continuation, replay equivalence, and public trace protocol. Broad codec
+boundary suites collect but remain blocked before test execution by the
 excluded `druid-wild-shape.ts` Effect 3 import; no test-only import workaround
 or duplicate production algorithm was added.
 
