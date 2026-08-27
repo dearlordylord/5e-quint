@@ -272,6 +272,30 @@ describe("battle lifecycle admission issue aggregation", () => {
     );
   });
 
+  test("startBattle accumulates admission and presentation issues across stages", () => {
+    const result = startBattle({
+      battleId: battleId("aggregate-admission-and-presentation"),
+      combatants: [
+        mismatchedMainHandCombatant("loadout-mismatch"),
+        missingWeaponPresentationCombatant("missing-source", 16),
+      ],
+    });
+
+    expect(result).toEqual(
+      Result.fail({
+        tag: "battleStateInitIssues",
+        issues: [
+          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+          {
+            tag: "battleStateInitIssue",
+            message:
+              "Character missing-source weapon weapon_longsword has missing authored presentation source.",
+          },
+        ],
+      }),
+    );
+  });
+
   test("addBattleCombatant follows the same leaf/aggregate contract as startBattle", () => {
     const state = startBattleRight({
       battleId: battleId("add-combatant"),

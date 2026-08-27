@@ -290,6 +290,33 @@ export function startBattle(
       nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
     });
   }
+  for (const [combatantId, combatant] of combatants) {
+    if (!isCharacterBattleCreatureState(combatant)) continue;
+    const characterContext = characterContexts.get(combatantId);
+    if (characterContext === undefined) {
+      initializationIssues.push({
+        tag: "battleStateInitIssue",
+        message: `Character ${combatantId} is missing its runtime context.`,
+      });
+      continue;
+    }
+    for (const attack of [
+      combatant.origin.attack,
+      combatant.origin.offHandAttack,
+    ]) {
+      if (attack == null) continue;
+      const presentationSource = characterWeaponPresentationSource(
+        characterContext,
+        attack.weapon.weaponUnitId,
+      );
+      if (Result.isFailure(presentationSource)) {
+        initializationIssues.push({
+          tag: "battleStateInitIssue",
+          message: `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
+        });
+      }
+    }
+  }
   if (isNonEmptyReadonlyArray(initializationIssues)) {
     return battleStateInitIssueFromAdmissionIssues(initializationIssues);
   }
@@ -324,36 +351,6 @@ export function startBattle(
     legendaryActionWindow: null,
   };
   const combatantsWithCharacterExecutions = new Map(state.combatants);
-  for (const [combatantId, combatant] of state.combatants) {
-    if (!isCharacterBattleCreatureState(combatant)) continue;
-    const characterContext = characterContexts.get(combatantId);
-    if (characterContext === undefined) {
-      initializationIssues.push({
-        tag: "battleStateInitIssue",
-        message: `Character ${combatantId} is missing its runtime context.`,
-      });
-      continue;
-    }
-    for (const attack of [
-      combatant.origin.attack,
-      combatant.origin.offHandAttack,
-    ]) {
-      if (attack == null) continue;
-      const presentationSource = characterWeaponPresentationSource(
-        characterContext,
-        attack.weapon.weaponUnitId,
-      );
-      if (Result.isFailure(presentationSource)) {
-        initializationIssues.push({
-          tag: "battleStateInitIssue",
-          message: `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
-        });
-      }
-    }
-  }
-  if (isNonEmptyReadonlyArray(initializationIssues)) {
-    return battleStateInitIssueFromAdmissionIssues(initializationIssues);
-  }
   for (const [combatantId, combatant] of state.combatants) {
     if (!isCharacterBattleCreatureState(combatant)) continue;
     const characterContext = characterContexts.get(combatantId);
