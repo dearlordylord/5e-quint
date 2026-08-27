@@ -6237,56 +6237,9 @@ const [
   FirstBattleInterruptProcedureChoiceMember,
   ...RemainingBattleInterruptProcedureChoiceMembers
 ] = BattleInterruptProcedureChoiceMembers;
-export const BattleInterruptProcedureChoiceSchema = Schema.Union(
+const BattleInterruptProcedureChoiceUnfilteredSchema = Schema.Union(
   FirstBattleInterruptProcedureChoiceMember,
   ...RemainingBattleInterruptProcedureChoiceMembers,
-).pipe(
-  Schema.filter(
-    (choice) =>
-      Match.value(choice).pipe(
-        Match.discriminatorsExhaustive("kind")({
-          releaseReadiedSpell: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedSpell" &&
-            value.reactorId === value.readiedSpellCasterId &&
-            value.reactorId === value.subject.readiedSpellCasterId,
-          releaseReadiedMovement: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedMovement" &&
-            value.reactorId === value.readiedMovementActorId &&
-            value.reactorId === value.subject.readiedMovementActorId,
-          releaseReadiedAction: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedAction" &&
-            value.reactorId === value.subject.reactorId,
-          releaseReadiedAttack: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedAttack" &&
-            value.reactorId === value.subject.reactorId,
-          castTriggeredReactionSpell: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "castTriggeredReactionSpell" &&
-            value.reactorId === value.subject.reactorId,
-          castAttackHitBonusActionSpell: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "castAttackHitBonusActionSpell" &&
-            value.reactorId === value.subject.casterId,
-          opportunityAttack: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "opportunityAttack" &&
-            value.reactorId === value.subject.reactorId,
-          retaliationAttack: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "retaliationAttack" &&
-            value.reactorId === value.subject.reactorId,
-          reactionRollOrDamageReduction: () => true,
-        }),
-      ),
-    {
-      message: () =>
-        "Interrupt choices must own the matching reference-bearing runtime subject.",
-    },
-  ),
 );
 
 const MechanicalBattleInterruptChoiceMembers =
@@ -6299,22 +6252,34 @@ const MechanicalBattleInterruptChoiceMembers =
       ),
     ),
   );
-export const BattleMechanicalInterruptProcedureChoiceSchema = Schema.Union(
+const BattleMechanicalInterruptProcedureChoiceUnfilteredSchema = Schema.Union(
   Schema.omit("initialHoles")(FirstBattleInterruptProcedureChoiceMember).pipe(
     Schema.extend(
       Schema.Struct({ initialHoles: Schema.Array(BattleMechanicalHoleSchema) }),
     ),
   ),
   ...MechanicalBattleInterruptChoiceMembers,
-).pipe(
-  Schema.filter(isOwnedInterruptProcedureChoice, {
-    message: () =>
-      "Interrupt choices must own the matching reference-bearing runtime subject.",
-  }),
 );
 
+const interruptChoiceOwnershipMessage = () =>
+  "Interrupt choices must own the matching reference-bearing runtime subject.";
+export const BattleInterruptProcedureChoiceSchema =
+  BattleInterruptProcedureChoiceUnfilteredSchema.pipe(
+    Schema.filter(isOwnedInterruptProcedureChoice, {
+      message: interruptChoiceOwnershipMessage,
+    }),
+  );
+export const BattleMechanicalInterruptProcedureChoiceSchema =
+  BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.pipe(
+    Schema.filter(isOwnedInterruptProcedureChoice, {
+      message: interruptChoiceOwnershipMessage,
+    }),
+  );
+
 function isOwnedInterruptProcedureChoice(
-  choice: typeof BattleInterruptProcedureChoiceSchema.Type,
+  choice:
+    | typeof BattleInterruptProcedureChoiceUnfilteredSchema.Type
+    | typeof BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.Type,
 ): boolean {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
