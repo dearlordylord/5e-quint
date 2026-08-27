@@ -52,7 +52,7 @@ import {
 import {
   battleCreatureStateAdmissionFromInit,
   combatantInitiativeInsertionIndex,
-  hidePrerequisitesReferenceCombatantsIssue,
+  hidePrerequisitesReferenceCombatantsIssues,
   isCharacterBattleCreatureState,
   positiveHpUnconsciousInitIssue,
 } from "./creature-state.ts";
@@ -333,15 +333,18 @@ export function startBattle(
       nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
     });
   }
-  const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
+  const hidePrerequisiteIssues = hidePrerequisitesReferenceCombatantsIssues(
     input.hidePrerequisites ?? new Map(),
     combatants,
   );
-  if (hidePrerequisiteIssue !== null && Either.isLeft(hidePrerequisiteIssue)) {
-    initializationIssues.push(
-      ...battleStateInitIssueLeaves(hidePrerequisiteIssue.left),
-    );
-  }
+  initializationIssues.push(
+    ...hidePrerequisiteIssues.map(({ combatantId, issue }) =>
+      battleStateInitIssueWithOwnerPath(
+        issue,
+        ownerPathForAdmittedCombatant(input, combatantId),
+      ),
+    ),
+  );
 
   const initiative = createInitialInitiativeForCombatants({
     combatants: [...combatants.values()],

@@ -5,8 +5,8 @@ import type {
   CombatantId,
 } from "@dnd/battle-runtime";
 import type {
-  CharacterBattleRosterCharacterCombatant,
-  CharacterBattleRosterStatBlockCombatant,
+  BattleRosterCharacterCombatant,
+  BattleRosterStatBlockCombatant,
 } from "@dnd/character-battle-runtime";
 import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 
@@ -19,20 +19,14 @@ import type {
 
 type CharacterId = CharacterSheetId;
 
-export type CharacterBattleRosterCombatant =
-  CharacterBattleRosterCharacterCombatant;
-
-export type StatBlockBattleRosterCombatant =
-  CharacterBattleRosterStatBlockCombatant;
-
 export type McpBattleRosterOperation =
   | {
       readonly kind: "addCharacter";
-      readonly combatant: CharacterBattleRosterCombatant;
+      readonly combatant: BattleRosterCharacterCombatant;
     }
   | {
       readonly kind: "addStatBlock";
-      readonly combatant: StatBlockBattleRosterCombatant;
+      readonly combatant: BattleRosterStatBlockCombatant;
     }
   | {
       readonly kind: "remove";

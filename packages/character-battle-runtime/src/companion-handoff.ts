@@ -15,6 +15,7 @@ import {
   type BattleState,
   type BattleRuntimeSession,
   type RetainedCompanionBattleSelection,
+  type BattleTablePositionId,
   type CombatantId,
   type InitiativeScore,
   battleStateInitIssueMessage,
@@ -69,6 +70,155 @@ export type CharacterSheetCompanionBattleRuntimeAdmissionInput = Omit<
 > & {
   readonly session: BattleRuntimeSession;
 };
+
+export type BattleCompanionRosterOwner = {
+  readonly characterId: CharacterSheet["characterId"];
+  readonly combatantId: CombatantId;
+  readonly sheet: CharacterSheet;
+};
+
+export type BattleCompanionRosterRequest = {
+  readonly ownerCharacterId: CharacterSheet["characterId"];
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+  readonly companionCombatantId?: CombatantId;
+  readonly initiative?: InitiativeScore;
+  readonly positionId?: BattleTablePositionId;
+};
+
+export type BattleCompanionRosterIssue =
+  | {
+      readonly kind: "duplicateCompanionOwner";
+      readonly index: number;
+      readonly ownerCharacterId: CharacterSheet["characterId"];
+      readonly firstIndex: number;
+    }
+  | {
+      readonly kind: "duplicateCompanionCombatantId";
+      readonly index: number;
+      readonly companionCombatantId: CombatantId;
+      readonly firstIndex: number;
+    }
+  | {
+      readonly kind: "companionOwnerUnavailable";
+      readonly index: number;
+      readonly ownerCharacterId: CharacterSheet["characterId"];
+      readonly companionCombatantId?: CombatantId;
+    }
+  | {
+      readonly kind: "companionAdmission";
+      readonly index: number;
+      readonly ownerCharacterId: CharacterSheet["characterId"];
+      readonly companionCombatantId?: CombatantId;
+      readonly issueTag: CharacterSheetBattleHandoffIssue["tag"];
+      readonly message: string;
+    };
+
+export type BattleCompanionRosterComposition = {
+  readonly session: BattleRuntimeSession | undefined;
+  readonly issues: readonly BattleCompanionRosterIssue[];
+};
+
+export function composeBattleCompanionRoster(input: {
+  readonly session: BattleRuntimeSession | undefined;
+  readonly owners: readonly BattleCompanionRosterOwner[];
+  readonly requests: readonly BattleCompanionRosterRequest[];
+  readonly unitLibrary: UnitCatalog;
+  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
+  readonly statBlockCatalog: StatBlockCatalog;
+}): BattleCompanionRosterComposition {
+  const owners = new Map(
+    input.owners.map((owner) => [owner.characterId, owner] as const),
+  );
+  const ownerIndexes = new Map<CharacterSheet["characterId"], number>();
+  const companionIndexes = new Map<CombatantId, number>();
+  const issues: BattleCompanionRosterIssue[] = [];
+  let session = input.session;
+
+  for (const [index, request] of input.requests.entries()) {
+    const firstOwnerIndex = ownerIndexes.get(request.ownerCharacterId);
+    const duplicateOwner = firstOwnerIndex !== undefined;
+    if (duplicateOwner) {
+      issues.push({
+        kind: "duplicateCompanionOwner",
+        index,
+        ownerCharacterId: request.ownerCharacterId,
+        firstIndex: firstOwnerIndex,
+      });
+    } else {
+      ownerIndexes.set(request.ownerCharacterId, index);
+    }
+
+    const companionCombatantId = request.companionCombatantId;
+    const firstCompanionIndex =
+      companionCombatantId === undefined
+        ? undefined
+        : companionIndexes.get(companionCombatantId);
+    const duplicateCompanionCombatant = firstCompanionIndex !== undefined;
+    if (duplicateCompanionCombatant && companionCombatantId !== undefined) {
+      issues.push({
+        kind: "duplicateCompanionCombatantId",
+        index,
+        companionCombatantId,
+        firstIndex: firstCompanionIndex,
+      });
+    } else if (companionCombatantId !== undefined) {
+      companionIndexes.set(companionCombatantId, index);
+    }
+
+    const owner = owners.get(request.ownerCharacterId);
+    if (owner === undefined) {
+      issues.push({
+        kind: "companionOwnerUnavailable",
+        index,
+        ownerCharacterId: request.ownerCharacterId,
+        ...(companionCombatantId === undefined ? {} : { companionCombatantId }),
+      });
+      continue;
+    }
+    if (
+      duplicateOwner ||
+      duplicateCompanionCombatant ||
+      session === undefined
+    ) {
+      continue;
+    }
+
+    const admitted = admitCharacterSheetCompanionToBattle({
+      session,
+      sheet: owner.sheet,
+      unitLibrary: input.unitLibrary,
+      ownerCombatantId: owner.combatantId,
+      ammunitionStocks: request.ammunitionStocks,
+      ...(companionCombatantId === undefined ? {} : { companionCombatantId }),
+      ...(request.initiative === undefined
+        ? {}
+        : { initiative: request.initiative }),
+      placement:
+        request.positionId === undefined
+          ? { kind: "unoccupiedSpaceWithinSpellRange" as const }
+          : {
+              kind: "unoccupiedSpaceWithinSpellRange" as const,
+              positionId: request.positionId,
+            },
+      initialCombatantOrder: input.initialCombatantOrder,
+      statBlockCatalog: input.statBlockCatalog,
+    });
+    if (Either.isLeft(admitted)) {
+      issues.push({
+        kind: "companionAdmission",
+        index,
+        ownerCharacterId: request.ownerCharacterId,
+        ...(companionCombatantId === undefined ? {} : { companionCombatantId }),
+        issueTag: admitted.left.tag,
+        message: admitted.left.message,
+      });
+      continue;
+    }
+    session = admitted.right;
+  }
+
+  return { session: issues.length === 0 ? session : undefined, issues };
+}
 
 export function admitCharacterSheetCompanionToBattle(
   input: CharacterSheetCompanionBattleAdmissionInput,

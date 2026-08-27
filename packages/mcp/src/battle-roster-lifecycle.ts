@@ -59,7 +59,11 @@ function addCombatant(
     { readonly kind: "addCombatant" }
   >["combatant"],
 ) {
-  const projection = projectBattleCombatant({ root, combatant });
+  const projection = projectBattleCombatant({
+    root,
+    combatant,
+    ownerPath: ["operation", "combatant"],
+  });
   if (Either.isLeft(projection)) {
     return lifecycleFailureFromToolError(projection.left);
   }

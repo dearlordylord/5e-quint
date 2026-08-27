@@ -12,7 +12,7 @@ import { completeBattleStateTransition } from "./battle-state-transition.ts";
 import {
   battleRuntimeIssuePayload,
   battleStartIssuesContent,
-  characterBattleRosterIssuePayload,
+  battleRosterIssuePayload,
 } from "./battle-start-failure.ts";
 
 export function startInitialInitiativeSetup(
@@ -20,37 +20,51 @@ export function startInitialInitiativeSetup(
   input: StartBattleToolInput,
   combatants: StartableBattleCombatants,
 ) {
+  const rosterIssues = combatants.issues.flatMap((issue) =>
+    battleRosterIssuePayload(issue),
+  );
   if (input.companionAdmissions.length > 0) {
     return errorContent(
       "Initial Initiative setup does not support companion admissions.",
       {
         code: "INITIAL_INITIATIVE_SETUP_COMPANIONS_UNSUPPORTED",
+        issues: [
+          ...rosterIssues,
+          ...input.companionAdmissions.map((admission, index) => ({
+            kind: "companionAdmissionUnsupported",
+            ownerPath: ["companionAdmissions", index],
+            code: "INITIAL_INITIATIVE_SETUP_COMPANIONS_UNSUPPORTED",
+            ownerCharacterId: admission.ownerCharacterId,
+            ...(admission.companionCombatantId === undefined
+              ? {}
+              : { companionCombatantId: admission.companionCombatantId }),
+            reason: "initialSetupDoesNotAdmitCompanions",
+          })),
+        ],
       },
     );
   }
 
   if (combatants.creatureInits.length === 0) {
-    return battleStartIssuesContent(
-      combatants.issues.flatMap(characterBattleRosterIssuePayload),
-    );
+    return battleStartIssuesContent(rosterIssues);
   }
 
   const setup = startBattleWithInitialInitiativeSetup({
     battleId: input.battleId,
     combatants: combatants.creatureInits,
     ownerPathForCombatant: (combatant) =>
-      combatants.ownerPaths.get(combatant.combatantId) ?? ["initialCombatants"],
+      combatants.ownerPaths.get(combatant.combatantId) ?? [
+        "battleInitialization",
+      ],
   });
   if (Either.isLeft(setup)) {
     return battleStartIssuesContent([
-      ...combatants.issues.flatMap(characterBattleRosterIssuePayload),
+      ...rosterIssues,
       ...battleRuntimeIssuePayload(setup.left),
     ]);
   }
   if (combatants.issues.length > 0) {
-    return battleStartIssuesContent(
-      combatants.issues.flatMap(characterBattleRosterIssuePayload),
-    );
+    return battleStartIssuesContent(rosterIssues);
   }
 
   return completeBattleStateTransition({

@@ -20,9 +20,11 @@ import {
   startBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
+  type BattleCreatureInit,
   type BattleSubject,
   type BattleRuntimeSession,
   type BattleState,
+  type BattleStateInitIssue,
 } from "@dnd/battle-runtime";
 import {
   battleRuntimeContextForTest,
@@ -82,7 +84,7 @@ import {
   battleCreatureInitFromCharacterBuild,
   characterBattleSupportProjection,
   characterBattleRuntimeIssueMessage,
-  type CharacterBuildCreatureInput,
+  type BattleCreatureInitIssue,
 } from "@dnd/character-battle-runtime";
 import {
   availableCharacterSession,
@@ -159,43 +161,28 @@ function testBattleCreatureStateWithoutKnockOut(
   };
 }
 
-function startBattleFromCharacterBuildAndStatBlockRight(input: {
+type TestBattleRosterProjection = Either.Either<
+  BattleCreatureInit,
+  BattleCreatureInitIssue | BattleStateInitIssue
+>;
+
+function startBattleFromProjectedRosterFixture(input: {
   readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
-  readonly character: Omit<
-    CharacterBuildCreatureInput,
-    "ammunitionStocks" | "resourceExpenditures"
-  > & {
-    readonly ammunitionStocks?: CharacterBuildCreatureInput["ammunitionStocks"];
-    readonly resourceExpenditures?: CharacterBuildCreatureInput["resourceExpenditures"];
-  };
-  readonly statBlockBattleInput: Omit<
-    Parameters<typeof battleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >;
-  readonly unitLibrary: Parameters<
-    typeof battleCreatureInitFromCharacterBuild
-  >[0]["unitLibrary"];
+  readonly projections: readonly [
+    TestBattleRosterProjection,
+    ...TestBattleRosterProjection[],
+  ];
 }): BattleRuntimeSession {
-  const characterInit = battleCreatureInitFromCharacterBuild({
-    ...input.character,
-    ammunitionStocks: input.character.ammunitionStocks ?? [],
-    resourceExpenditures: input.character.resourceExpenditures ?? [],
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(characterInit)) {
-    throw new Error(characterBattleRuntimeIssueMessage(characterInit.left));
-  }
-  const statBlockInit = battleCreatureInitFromStatBlock({
-    ...input.statBlockBattleInput,
-    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-    conditions: [],
-  });
-  if (Either.isLeft(statBlockInit)) {
-    throw new Error(characterBattleRuntimeIssueMessage(statBlockInit.left));
+  const combatants: BattleCreatureInit[] = [];
+  for (const projection of input.projections) {
+    if (Either.isLeft(projection)) {
+      throw new Error(JSON.stringify(projection.left));
+    }
+    combatants.push(projection.right);
   }
   const result = startBattle({
     battleId: input.battleId,
-    combatants: [characterInit.right, statBlockInit.right],
+    combatants,
   });
   if (Either.isLeft(result)) {
     throw new Error(characterBattleRuntimeIssueMessage(result.left));
@@ -1177,24 +1164,33 @@ describe("MCP server route", () => {
 
   test("starts battle from Character Build at the MCP composition boundary", () => {
     const root = createMcpPlaySessionRoot();
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Orc Soldier Fighter",
-        build: fighterCharacterBuild(root.unitLibrary),
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: root.unitLibrary,
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Orc Soldier Fighter",
+            build: fighterCharacterBuild(root.unitLibrary),
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     root.sessionStore.storeActiveBattle(
@@ -1273,24 +1269,33 @@ describe("MCP server route", () => {
       },
     };
 
-    const { state } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-multiclass"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-wizard-character"),
-        displayName: "Orc Soldier Fighter / Wizard",
-        build: multiclassBuild,
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: root.unitLibrary,
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-wizard-character"),
+            displayName: "Orc Soldier Fighter / Wizard",
+            build: multiclassBuild,
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(state.combatants.get(fighterId)?.origin).toMatchObject({
@@ -1305,37 +1310,46 @@ describe("MCP server route", () => {
   test("derives base Unarmed Strike when no weapon is selected", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-unarmed"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Orc Soldier Fighter",
-        build: {
-          ...build,
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              ...(build.equipment.loadout.armor === undefined
-                ? {}
-                : { armor: build.equipment.loadout.armor }),
-              ...(build.equipment.loadout.shield === undefined
-                ? {}
-                : { shield: build.equipment.loadout.shield }),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Orc Soldier Fighter",
+            build: {
+              ...build,
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  ...(build.equipment.loadout.armor === undefined
+                    ? {}
+                    : { armor: build.equipment.loadout.armor }),
+                  ...(build.equipment.loadout.shield === undefined
+                    ? {}
+                    : { shield: build.equipment.loadout.shield }),
+                },
+              },
             },
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
           },
-        },
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
     const combatant = state.combatants.get(fighterId);
 
@@ -1377,24 +1391,33 @@ describe("MCP server route", () => {
       supportedLibrary,
       improvedCriticalUnit.acquiredAtLevel,
     );
-    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-supported-critical-range"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Champion Fighter",
-        build: supportedBuild,
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: supportedLibrary,
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Champion Fighter",
+            build: supportedBuild,
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: supportedLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(
@@ -1431,24 +1454,33 @@ describe("MCP server route", () => {
       unsupportedCriticalRangeUnit.acquiredAtLevel,
     );
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle-unsupported-critical-range"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("fighter-character"),
-          displayName: "Unsupported Critical Range Fighter",
-          build: unsupportedBuild,
-          initiative: initiativeScore(12),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(11),
-        },
-        unitLibrary: unsupportedLibrary,
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("fighter-character"),
+              displayName: "Unsupported Critical Range Fighter",
+              build: unsupportedBuild,
+              initiative: initiativeScore(12),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: unsupportedLibrary,
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(11),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     ).toThrow(
       `Unsupported battle critical-range Unit hook: ${unsupportedCriticalRangeUnit.id}.`,
@@ -1459,24 +1491,33 @@ describe("MCP server route", () => {
     const root = createMcpPlaySessionRoot();
     const rogueBuild = rogueCharacterBuild(root.unitLibrary);
     const supportedLibrary = rogueBattleUnitLibrary(root);
-    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-supported-attack-damage-rider"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("rogue-character"),
-        displayName: "Orc Soldier Rogue",
-        build: rogueBuild,
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: supportedLibrary,
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("rogue-character"),
+            displayName: "Orc Soldier Rogue",
+            build: rogueBuild,
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: supportedLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(
@@ -1504,24 +1545,33 @@ describe("MCP server route", () => {
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 2,
     });
-    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-supported-cunning-action"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("rogue-character"),
-        displayName: "Orc Soldier Rogue",
-        build: rogueBuild,
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: rogueBattleUnitLibrary(root),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("rogue-character"),
+            displayName: "Orc Soldier Rogue",
+            build: rogueBuild,
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: rogueBattleUnitLibrary(root),
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(
@@ -1545,26 +1595,34 @@ describe("MCP server route", () => {
 
   test("does not infer Cunning Action support from Rogue class name or level", () => {
     const root = createMcpPlaySessionRoot();
-    const { context: rogueOneContext } =
-      startBattleFromCharacterBuildAndStatBlockRight({
-        battleId: battleId("battle-rogue-one-no-cunning-action"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("rogue-character"),
-          displayName: "Orc Soldier Rogue",
-          build: rogueCharacterBuild(root.unitLibrary),
-          initiative: initiativeScore(12),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(11),
-        },
-        unitLibrary: rogueBattleUnitLibrary(root),
-      });
+    const { context: rogueOneContext } = startBattleFromProjectedRosterFixture({
+      battleId: battleId("battle-rogue-one-no-cunning-action"),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("rogue-character"),
+            displayName: "Orc Soldier Rogue",
+            build: rogueCharacterBuild(root.unitLibrary),
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: rogueBattleUnitLibrary(root),
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
+    });
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 2,
     });
@@ -1576,24 +1634,33 @@ describe("MCP server route", () => {
           feature.unitId !== "rogue_cunning_action",
       ),
     };
-    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-no-inferred-cunning-action"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("rogue-character"),
-        displayName: "Orc Soldier Rogue",
-        build: buildWithoutCunningAction,
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: rogueBattleUnitLibrary(root),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("rogue-character"),
+            displayName: "Orc Soldier Rogue",
+            build: buildWithoutCunningAction,
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: rogueBattleUnitLibrary(root),
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(
@@ -1611,24 +1678,33 @@ describe("MCP server route", () => {
     const evasionBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 7,
     });
-    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-supported-save-damage-replacement"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("rogue-character"),
-        displayName: "Orc Soldier Rogue",
-        build: evasionBuild,
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: rogueBattleUnitLibrary(root),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("rogue-character"),
+            displayName: "Orc Soldier Rogue",
+            build: evasionBuild,
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: rogueBattleUnitLibrary(root),
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(characterUnitRef(context, fighterId, "rogue_evasion")).toMatchObject(
@@ -1656,26 +1732,35 @@ describe("MCP server route", () => {
     };
 
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle-unsupported-save-damage-replacement"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("rogue-character"),
-          displayName: "Unsupported Evasion Rogue",
-          build: evasionBuild,
-          initiative: initiativeScore(12),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(11),
-        },
-        unitLibrary: rogueBattleUnitLibrary(root, {
-          evasionUnit: unsupportedEvasionUnit,
-        }),
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("rogue-character"),
+              displayName: "Unsupported Evasion Rogue",
+              build: evasionBuild,
+              initiative: initiativeScore(12),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: rogueBattleUnitLibrary(root, {
+              evasionUnit: unsupportedEvasionUnit,
+            }),
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(11),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     ).toThrow("Unsupported battle save-damage replacement Unit hook");
   });
@@ -1685,24 +1770,33 @@ describe("MCP server route", () => {
     const rogueBuild = rogueCharacterBuild(root.unitLibrary, {
       level: 5,
     });
-    const { context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-supported-reaction-modifier"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("rogue-character"),
-        displayName: "Orc Soldier Rogue",
-        build: rogueBuild,
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: rogueBattleUnitLibrary(root),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("rogue-character"),
+            displayName: "Orc Soldier Rogue",
+            build: rogueBuild,
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: rogueBattleUnitLibrary(root),
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(
@@ -1746,26 +1840,35 @@ describe("MCP server route", () => {
       features: rogueBuild.features,
     };
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle-unsupported-reaction-modifier"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("rogue-character"),
-          displayName: "Unsupported Rogue",
-          build: unsupportedBuild,
-          initiative: initiativeScore(12),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(11),
-        },
-        unitLibrary: rogueBattleUnitLibrary(root, {
-          uncannyDodgeUnit: unsupportedUnit,
-        }),
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("rogue-character"),
+              displayName: "Unsupported Rogue",
+              build: unsupportedBuild,
+              initiative: initiativeScore(12),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: rogueBattleUnitLibrary(root, {
+              uncannyDodgeUnit: unsupportedUnit,
+            }),
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(11),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     ).toThrow("Unsupported battle reaction roll or damage reduction Unit hook");
   });
@@ -1803,24 +1906,33 @@ describe("MCP server route", () => {
 
   test("carries finalized Fighter 2 Action Surge resources into battle discovery", () => {
     const root = createMcpPlaySessionRoot();
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-fighter-two"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Orc Soldier Fighter 2",
-        build: fighterTwoCharacterBuild(root.unitLibrary),
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: root.unitLibrary,
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Orc Soldier Fighter 2",
+            build: fighterTwoCharacterBuild(root.unitLibrary),
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(
@@ -1845,22 +1957,31 @@ describe("MCP server route", () => {
   test("discovers Stat Block Multiattack and Bonus Action subjects through battle runtime", () => {
     const root = createMcpPlaySessionRoot();
     const { state: fighterTurn, context } =
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle-root-stat-block-procedures"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("fighter-character"),
-          displayName: "Orc Soldier Fighter",
-          build: fighterCharacterBuild(root.unitLibrary),
-          initiative: initiativeScore(12),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: goblinWarriorMultiattackStatBlock(root),
-          initiative: initiativeScore(11),
-        },
-        unitLibrary: root.unitLibrary,
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("fighter-character"),
+              displayName: "Orc Soldier Fighter",
+              build: fighterCharacterBuild(root.unitLibrary),
+              initiative: initiativeScore(12),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: root.unitLibrary,
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: goblinWarriorMultiattackStatBlock(root),
+              initiative: initiativeScore(11),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       });
     const goblinTurn = resolvedState(
       endTurn({ state: fighterTurn, actorId: fighterId }),
@@ -1891,24 +2012,33 @@ describe("MCP server route", () => {
 
   test("starts battle from a CharacterBuild with two Light weapons for the off-hand runtime path", () => {
     const root = createMcpPlaySessionRoot();
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-off-hand"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Orc Soldier Fighter",
-        build: fighterTwoLightWeaponBuild(root.unitLibrary),
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(11),
-      },
-      unitLibrary: root.unitLibrary,
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Orc Soldier Fighter",
+            build: fighterTwoLightWeaponBuild(root.unitLibrary),
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+          },
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(11),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(
@@ -3150,24 +3280,33 @@ describe("MCP server route", () => {
   test("replays long-range attack target facts into a Disadvantage attack-roll hole", () => {
     const root = createMcpPlaySessionRoot();
     root.sessionStore.storeActiveBattle(
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle:mcp-long-range-attack"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("fighter-character"),
-          displayName: "Orc Soldier Fighter",
-          build: fighterCharacterBuild(root.unitLibrary),
-          initiative: initiativeScore(7),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(18),
-        },
-        unitLibrary: root.unitLibrary,
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("fighter-character"),
+              displayName: "Orc Soldier Fighter",
+              build: fighterCharacterBuild(root.unitLibrary),
+              initiative: initiativeScore(7),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: root.unitLibrary,
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(18),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     );
     root.sessionStore.pendingBattleFills = null;
@@ -3225,24 +3364,33 @@ describe("MCP server route", () => {
   test("rejects contradictory long-range and normal-range attack target facts", () => {
     const root = createMcpPlaySessionRoot();
     root.sessionStore.storeActiveBattle(
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle:mcp-contradictory-range-attack"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("fighter-character"),
-          displayName: "Orc Soldier Fighter",
-          build: fighterCharacterBuild(root.unitLibrary),
-          initiative: initiativeScore(7),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(18),
-        },
-        unitLibrary: root.unitLibrary,
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("fighter-character"),
+              displayName: "Orc Soldier Fighter",
+              build: fighterCharacterBuild(root.unitLibrary),
+              initiative: initiativeScore(7),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: root.unitLibrary,
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(18),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     );
     root.sessionStore.pendingBattleFills = null;
@@ -3295,24 +3443,33 @@ describe("MCP server route", () => {
   test("replays visible Sneak Attack rider hole and fill shape through MCP battle tools", () => {
     const root = createMcpPlaySessionRoot();
     root.sessionStore.storeActiveBattle(
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle:mcp-sneak-attack-rider"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("rogue-character"),
-          displayName: "Orc Soldier Rogue",
-          build: rogueCharacterBuild(root.unitLibrary),
-          initiative: initiativeScore(18),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(7),
-        },
-        unitLibrary: rogueBattleUnitLibrary(root),
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("rogue-character"),
+              displayName: "Orc Soldier Rogue",
+              build: rogueCharacterBuild(root.unitLibrary),
+              initiative: initiativeScore(18),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: rogueBattleUnitLibrary(root),
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(7),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     );
     const allyId = combatantId("sneak-attack-ally");
@@ -4232,23 +4389,32 @@ describe("MCP server route", () => {
             kind: "duplicateCombatantId",
             ownerPath: ["initialCombatants", 2],
             firstOwnerPath: ["initialCombatants", 1],
+            combatantId: "mixed-goblin-missing-ammunition",
           },
           {
             kind: "characterSheetProjection",
             ownerPath: ["initialCombatants", 3],
+            characterId: invalidCharacterId,
+            issueTag: "battleCreatureInitIssue",
+            message: expect.stringContaining("species_elf"),
           },
           {
             kind: "statBlockProjection",
             ownerPath: ["initialCombatants", 4],
+            combatantId: "mixed-invalid-stat-block",
+            issueTag: "battleStateInitIssue",
+            message: "Battle runtime requires literal Stat Block maximum HP.",
           },
           {
             kind: "battleInitialization",
             ownerPath: ["initialCombatants", 1],
             issueTag: "battleStateInitIssue",
+            message: expect.stringContaining("explicit arrow ammunition stock"),
           },
         ],
       },
     });
+    expect(rejected.details.issues).toHaveLength(4);
     expect(root.sessionStore.battleSession).toBeNull();
 
     const repaired = readPayload(
@@ -4512,7 +4678,27 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({
-      details: { code: "DUPLICATE_BATTLE_COMPANION_OWNER" },
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "companionOwnerUnavailable",
+            ownerPath: ["companionAdmissions", 0],
+            ownerCharacterId: "character:owner",
+          },
+          {
+            kind: "duplicateCompanionOwner",
+            ownerPath: ["companionAdmissions", 1],
+            firstOwnerPath: ["companionAdmissions", 0],
+            ownerCharacterId: "character:owner",
+          },
+          {
+            kind: "companionOwnerUnavailable",
+            ownerPath: ["companionAdmissions", 1],
+            ownerCharacterId: "character:owner",
+          },
+        ],
+      },
     });
 
     const unknownStatBlockRoot = createMcpPlaySessionRoot();
@@ -4618,7 +4804,19 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({
-      details: { code: "COMPANION_ADMISSION_FAILED" },
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "companionAdmission",
+            ownerPath: ["companionAdmissions", 0],
+            ownerCharacterId: testCharacterId(draftId),
+            companionCombatantId: "missing-retained-companion",
+            issueTag: "characterSheetBattleHandoffIssue",
+            message: expect.stringContaining("retained companion"),
+          },
+        ],
+      },
     });
 
     const defaultCompanionIdRoot = createMcpPlaySessionRoot();
@@ -4655,10 +4853,17 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       details: {
-        code: "COMPANION_ADMISSION_FAILED",
-        characterId: testCharacterId(
-          "draft:start-without-retained-companion-default-id",
-        ),
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "companionAdmission",
+            ownerPath: ["companionAdmissions", 0],
+            ownerCharacterId: testCharacterId(
+              "draft:start-without-retained-companion-default-id",
+            ),
+            issueTag: "characterSheetBattleHandoffIssue",
+          },
+        ],
       },
     });
 
@@ -6279,9 +6484,15 @@ describe("MCP server route", () => {
 
     expect(rejected).toMatchObject({
       details: {
-        code: "COMPANION_OWNER_NOT_IN_ROSTER",
-        companionCombatantId: "orphan-familiar",
-        characterId: "missing-wizard",
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "companionOwnerUnavailable",
+            ownerPath: ["companionAdmissions", 0],
+            companionCombatantId: "orphan-familiar",
+            ownerCharacterId: "missing-wizard",
+          },
+        ],
       },
     });
     expect(root.sessionStore.battleSession).toBeNull();
@@ -6309,8 +6520,14 @@ describe("MCP server route", () => {
       ),
     ).toMatchObject({
       details: {
-        code: "COMPANION_OWNER_NOT_IN_ROSTER",
-        characterId: "missing-wizard",
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "companionOwnerUnavailable",
+            ownerPath: ["companionAdmissions", 0],
+            ownerCharacterId: "missing-wizard",
+          },
+        ],
       },
     });
   });
@@ -7023,24 +7240,33 @@ describe("MCP server route", () => {
   test("returns Shove push outcomes through MCP battle resolution output", () => {
     const root = createMcpPlaySessionRoot();
     root.sessionStore.storeActiveBattle(
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle:mcp-shove-push-outcome"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("fighter-character"),
-          displayName: "Orc Soldier Fighter",
-          build: fighterCharacterBuild(root.unitLibrary),
-          initiative: initiativeScore(18),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(7),
-        },
-        unitLibrary: root.unitLibrary,
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("fighter-character"),
+              displayName: "Orc Soldier Fighter",
+              build: fighterCharacterBuild(root.unitLibrary),
+              initiative: initiativeScore(18),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: root.unitLibrary,
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(7),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     );
 
@@ -8048,42 +8274,51 @@ describe("MCP server route", () => {
   test("does not apply Defense Fighting Style when no armor is worn", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-unarmored"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Orc Soldier Fighter",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: testCharacterEquipmentItemId(
-                "shield",
-                "equipment_shield",
-              ),
-              weapon: {
-                itemId: testCharacterEquipmentItemId(
-                  "main",
-                  "weapon_longsword",
-                ),
-                grip: "one_handed",
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Orc Soldier Fighter",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  shield: testCharacterEquipmentItemId(
+                    "shield",
+                    "equipment_shield",
+                  ),
+                  weapon: {
+                    itemId: testCharacterEquipmentItemId(
+                      "main",
+                      "weapon_longsword",
+                    ),
+                    grip: "one_handed",
+                  },
+                },
               },
             },
           },
-        },
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     expect(snapshotBattle(state).combatants[0]).toMatchObject({
@@ -8095,39 +8330,48 @@ describe("MCP server route", () => {
   test("keeps spell slots but suppresses action-time spell acts when armor training blocks casting", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-armored-spellcaster"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Armored Spellcaster",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          progression: wizardProgression(root),
-          spellcasting: testWizardSpellcasting({
-            cantrips: ["ray_of_frost"],
-            preparedSpells: ["magic_missile"],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
-        },
-        spellSlots: [
-          {
-            spellLevel: spellSlotLevel(1),
-            count: resourceCount(2),
-            expended: resourceCount(1),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Armored Spellcaster",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              progression: wizardProgression(root),
+              spellcasting: testWizardSpellcasting({
+                cantrips: ["ray_of_frost"],
+                preparedSpells: ["magic_missile"],
+                spellSlots: [{ spellLevel: 1, count: 2 }],
+              }),
+            },
+            spellSlots: [
+              {
+                spellLevel: spellSlotLevel(1),
+                count: resourceCount(2),
+                expended: resourceCount(1),
+              },
+            ],
           },
-        ],
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     const actor = state.combatants.get(fighterId);
@@ -8147,41 +8391,50 @@ describe("MCP server route", () => {
   test("keeps spell acts when only shield training is missing", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-shield-spellcaster"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Shield Spellcaster",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          progression: wizardProgression(root),
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: testCharacterEquipmentItemId(
-                "shield",
-                "equipment_shield",
-              ),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Shield Spellcaster",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              progression: wizardProgression(root),
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  shield: testCharacterEquipmentItemId(
+                    "shield",
+                    "equipment_shield",
+                  ),
+                },
+              },
+              spellcasting: testWizardSpellcasting({
+                cantrips: ["ray_of_frost"],
+                preparedSpells: ["magic_missile"],
+                spellSlots: [{ spellLevel: 1, count: 2 }],
+              }),
             },
           },
-          spellcasting: testWizardSpellcasting({
-            cantrips: ["ray_of_frost"],
-            preparedSpells: ["magic_missile"],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
-        },
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
 
     const actor = state.combatants.get(fighterId);
@@ -8200,41 +8453,50 @@ describe("MCP server route", () => {
   test("replays Acid Splash save-gate damage through MCP battle fills", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-acid-splash"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Acid Splash Spellcaster",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          progression: wizardProgression(root),
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: testCharacterEquipmentItemId(
-                "shield",
-                "equipment_shield",
-              ),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Acid Splash Spellcaster",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              progression: wizardProgression(root),
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  shield: testCharacterEquipmentItemId(
+                    "shield",
+                    "equipment_shield",
+                  ),
+                },
+              },
+              spellcasting: testWizardSpellcasting({
+                cantrips: ["acid_splash"],
+                preparedSpells: ["magic_missile"],
+                spellSlots: [{ spellLevel: 1, count: 2 }],
+              }),
             },
           },
-          spellcasting: testWizardSpellcasting({
-            cantrips: ["acid_splash"],
-            preparedSpells: ["magic_missile"],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
-        },
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
     root.sessionStore.storeActiveBattle(
       battleRuntimeSessionForTest({
@@ -8334,41 +8596,50 @@ describe("MCP server route", () => {
   test("returns Fire Bolt object damage and ignition through MCP battle fills", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-fire-bolt-object"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Fire Bolt Spellcaster",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          progression: wizardProgression(root),
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: testCharacterEquipmentItemId(
-                "shield",
-                "equipment_shield",
-              ),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Fire Bolt Spellcaster",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              progression: wizardProgression(root),
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  shield: testCharacterEquipmentItemId(
+                    "shield",
+                    "equipment_shield",
+                  ),
+                },
+              },
+              spellcasting: testWizardSpellcasting({
+                cantrips: ["fire_bolt"],
+                preparedSpells: [],
+                spellSlots: [{ spellLevel: 1, count: 2 }],
+              }),
             },
           },
-          spellcasting: testWizardSpellcasting({
-            cantrips: ["fire_bolt"],
-            preparedSpells: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
-        },
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
     root.sessionStore.storeActiveBattle(
       battleRuntimeSessionForTest({
@@ -8497,68 +8768,77 @@ describe("MCP server route", () => {
     if (sorcerer.kind !== "class") {
       throw new Error("Expected Sorcerer class Unit.");
     }
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-sorcerous-burst"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Sorcerous Burst Spellcaster",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          progression: characterBuildForClassProgression({
-            base: build,
-            classUnit: sorcerer,
-            level: 5,
-            keepClassChoices: false,
-          }).progression,
-          // A level-5 Sorcerer knows two Metamagic options; the build is
-          // invalid without them (Metamagic known option count must match the
-          // Sorcerer level).
-          features: [
-            ...build.features,
-            {
-              kind: "selectedSorcererMetamagicOption" as const,
-              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
-              optionId: expectRight(
-                sorcererMetamagicOptionId("sorcerer_quickened_spell"),
-              ),
-            },
-            {
-              kind: "selectedSorcererMetamagicOption" as const,
-              selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
-              optionId: expectRight(
-                sorcererMetamagicOptionId("sorcerer_careful_spell"),
-              ),
-            },
-          ],
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: testCharacterEquipmentItemId(
-                "shield",
-                "equipment_shield",
-              ),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Sorcerous Burst Spellcaster",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              progression: characterBuildForClassProgression({
+                base: build,
+                classUnit: sorcerer,
+                level: 5,
+                keepClassChoices: false,
+              }).progression,
+              // A level-5 Sorcerer knows two Metamagic options; the build is
+              // invalid without them (Metamagic known option count must match the
+              // Sorcerer level).
+              features: [
+                ...build.features,
+                {
+                  kind: "selectedSorcererMetamagicOption" as const,
+                  selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+                  optionId: expectRight(
+                    sorcererMetamagicOptionId("sorcerer_quickened_spell"),
+                  ),
+                },
+                {
+                  kind: "selectedSorcererMetamagicOption" as const,
+                  selectedFromUnitId: SORCERER_METAMAGIC_UNIT_ID,
+                  optionId: expectRight(
+                    sorcererMetamagicOptionId("sorcerer_careful_spell"),
+                  ),
+                },
+              ],
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  shield: testCharacterEquipmentItemId(
+                    "shield",
+                    "equipment_shield",
+                  ),
+                },
+              },
+              spellcasting: testWizardSpellcasting({
+                sourceUnitId: "class_sorcerer",
+                spellcastingAbility: "cha",
+                cantrips: ["sorcerous_burst"],
+                preparedSpells: [],
+                spellSlots: [{ spellLevel: 1, count: 2 }],
+              }),
             },
           },
-          spellcasting: testWizardSpellcasting({
-            sourceUnitId: "class_sorcerer",
-            spellcastingAbility: "cha",
-            cantrips: ["sorcerous_burst"],
-            preparedSpells: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
-        },
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
     root.sessionStore.storeActiveBattle(
       battleRuntimeSessionForTest({
@@ -8861,41 +9141,50 @@ describe("MCP server route", () => {
   test("returns Starry Wisp object damage through MCP battle fills", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-starry-wisp-object"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Starry Wisp Spellcaster",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          progression: wizardProgression(root),
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: testCharacterEquipmentItemId(
-                "shield",
-                "equipment_shield",
-              ),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Starry Wisp Spellcaster",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              progression: wizardProgression(root),
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  shield: testCharacterEquipmentItemId(
+                    "shield",
+                    "equipment_shield",
+                  ),
+                },
+              },
+              spellcasting: testWizardSpellcasting({
+                cantrips: ["starry_wisp"],
+                preparedSpells: [],
+                spellSlots: [{ spellLevel: 1, count: 2 }],
+              }),
             },
           },
-          spellcasting: testWizardSpellcasting({
-            cantrips: ["starry_wisp"],
-            preparedSpells: [],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
-        },
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
     root.sessionStore.storeActiveBattle(
       battleRuntimeSessionForTest({
@@ -9005,41 +9294,50 @@ describe("MCP server route", () => {
   test("preserves pending reaction state while MCP replays a readied spell procedure", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);
-    const { state, context } = startBattleFromCharacterBuildAndStatBlockRight({
+    const { state, context } = startBattleFromProjectedRosterFixture({
       battleId: battleId("battle-root-reaction-replay"),
-      character: {
-        combatantId: fighterId,
-        characterId: characterId("fighter-character"),
-        displayName: "Readied Spell Fighter",
-        initiative: initiativeScore(12),
-        resourceExpenditures: [],
-        build: {
-          ...build,
-          progression: wizardProgression(root),
-          equipment: {
-            ...build.equipment,
-            loadout: {
-              shield: testCharacterEquipmentItemId(
-                "shield",
-                "equipment_shield",
-              ),
+      projections: [
+        battleCreatureInitFromCharacterBuild({
+          ...{
+            combatantId: fighterId,
+            characterId: characterId("fighter-character"),
+            displayName: "Readied Spell Fighter",
+            initiative: initiativeScore(12),
+            resourceExpenditures: [],
+            build: {
+              ...build,
+              progression: wizardProgression(root),
+              equipment: {
+                ...build.equipment,
+                loadout: {
+                  shield: testCharacterEquipmentItemId(
+                    "shield",
+                    "equipment_shield",
+                  ),
+                },
+              },
+              spellcasting: testWizardSpellcasting({
+                cantrips: ["ray_of_frost"],
+                preparedSpells: ["magic_missile"],
+                spellSlots: [{ spellLevel: 1, count: 2 }],
+              }),
             },
           },
-          spellcasting: testWizardSpellcasting({
-            cantrips: ["ray_of_frost"],
-            preparedSpells: ["magic_missile"],
-            spellSlots: [{ spellLevel: 1, count: 2 }],
-          }),
-        },
-      },
-      statBlockBattleInput: {
-        combatantId: goblinId,
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
-        ),
-        initiative: initiativeScore(10),
-      },
-      unitLibrary: root.unitLibrary,
+          ammunitionStocks: [],
+          unitLibrary: root.unitLibrary,
+        }),
+        battleCreatureInitFromStatBlock({
+          ...{
+            combatantId: goblinId,
+            statBlock: root.statBlockCatalog.requireStatBlock(
+              "stat_block_goblin_warrior",
+            ),
+            initiative: initiativeScore(10),
+          },
+          ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+          conditions: [],
+        }),
+      ],
     });
     root.sessionStore.storeActiveBattle(
       battleRuntimeSessionForTest({
@@ -9275,25 +9573,34 @@ describe("MCP server route", () => {
     const root = createMcpPlaySessionRoot();
 
     expect(() =>
-      startBattleFromCharacterBuildAndStatBlockRight({
+      startBattleFromProjectedRosterFixture({
         battleId: battleId("battle-root-overmax-hp"),
-        character: {
-          combatantId: fighterId,
-          characterId: characterId("fighter-character"),
-          displayName: "Orc Soldier Fighter",
-          build: fighterCharacterBuild(root.unitLibrary),
-          initiative: initiativeScore(12),
-          currentHp: Hp(13),
-          resourceExpenditures: [],
-        },
-        statBlockBattleInput: {
-          combatantId: goblinId,
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
-          ),
-          initiative: initiativeScore(10),
-        },
-        unitLibrary: root.unitLibrary,
+        projections: [
+          battleCreatureInitFromCharacterBuild({
+            ...{
+              combatantId: fighterId,
+              characterId: characterId("fighter-character"),
+              displayName: "Orc Soldier Fighter",
+              build: fighterCharacterBuild(root.unitLibrary),
+              initiative: initiativeScore(12),
+              currentHp: Hp(13),
+              resourceExpenditures: [],
+            },
+            ammunitionStocks: [],
+            unitLibrary: root.unitLibrary,
+          }),
+          battleCreatureInitFromStatBlock({
+            ...{
+              combatantId: goblinId,
+              statBlock: root.statBlockCatalog.requireStatBlock(
+                "stat_block_goblin_warrior",
+              ),
+              initiative: initiativeScore(10),
+            },
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          }),
+        ],
       }),
     ).toThrow("Character battle initialization current HP exceeds max HP.");
   });

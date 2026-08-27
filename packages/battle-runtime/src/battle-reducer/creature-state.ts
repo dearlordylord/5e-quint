@@ -598,31 +598,46 @@ function initialConditionImmunityIssueForCreatureInit(
   );
 }
 
-export function hidePrerequisitesReferenceCombatantsIssue(
+export type HidePrerequisiteReferenceCombatantsIssue = {
+  readonly combatantId: CombatantId;
+  readonly issue: BattleStateInitLeafIssue;
+};
+
+export function hidePrerequisitesReferenceCombatantsIssues(
   hidePrerequisites: ReadonlyMap<CombatantId, BattleHidePrerequisite>,
   combatants: ReadonlyMap<CombatantId, BattleCreatureState>,
-): Either.Either<never, BattleStateInitIssue> | null {
+): readonly HidePrerequisiteReferenceCombatantsIssue[] {
+  const issues: HidePrerequisiteReferenceCombatantsIssue[] = [];
   for (const [combatantId, prerequisite] of hidePrerequisites) {
     for (const referencedId of hidePrerequisiteReferencedCombatantIds(
       combatantId,
       prerequisite,
     )) {
       if (!combatants.has(referencedId)) {
-        return battleStateInitIssue(
-          "Hide prerequisite references unknown combatant.",
-        );
+        issues.push({
+          combatantId,
+          issue: {
+            tag: "battleStateInitIssue",
+            message: "Hide prerequisite references unknown combatant.",
+          },
+        });
       }
     }
     if (
       prerequisite.kind === "obscuredOnlyByCreatureOutOfEnemyLineOfSight" &&
       prerequisite.obscuringCreatureId === combatantId
     ) {
-      return battleStateInitIssue(
-        "Creature-obscurement Hide prerequisite cannot name the hiding combatant as the obscuring creature.",
-      );
+      issues.push({
+        combatantId,
+        issue: {
+          tag: "battleStateInitIssue",
+          message:
+            "Creature-obscurement Hide prerequisite cannot name the hiding combatant as the obscuring creature.",
+        },
+      });
     }
   }
-  return null;
+  return issues;
 }
 
 export function hidePrerequisiteReferencedCombatantIds(
