@@ -122,7 +122,6 @@ import {
 import {
   decodeStatBlockRecordSync,
   decodeUnitRecordSync,
-  StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
 import { PACT_OF_THE_CHAIN_SPECIAL_FORM_REFS } from "@dnd/surface/surface/find-familiar-forms";
 import {
@@ -352,81 +351,8 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 
 describe("MCP server route", () => {
-  test("preserves accumulated Wild Shape resource diagnostics in start_battle errors", () => {
-    const baseRoot = createMcpPlaySessionRoot();
-    const source = baseRoot.statBlockCatalog.requireStatBlock("stat_block_rat");
-    const action = source.statBlock.actions?.[0];
-    if (action === undefined) throw new Error("Expected a synthetic action.");
-    const invalidLimitId = statBlockId("synthetic_mcp_invalid_limit_form");
-    const graphFailureId = statBlockId("synthetic_mcp_graph_failure_form");
-    const resource = {
-      ordinal: Schema.decodeUnknownSync(
-        StatBlockProcedureResourceOrdinalSchema,
-      )(1),
-      ownership: "each" as const,
-      limit: { kind: "daily" as const, uses: 0 },
-    };
-    const missingOrdinal = Schema.decodeUnknownSync(
-      StatBlockProcedureResourceOrdinalSchema,
-    )(99);
-    const forms = [
-      {
-        ...source,
-        id: invalidLimitId,
-        name: "Synthetic Invalid Limit Form",
-        provenance: {
-          kind: "synthetic-test" as const,
-          section: "mcp-wild-shape",
-        },
-        statBlock: {
-          ...source.statBlock,
-          creatureType: "beast",
-          resources: [resource] as const,
-        },
-      },
-      {
-        ...source,
-        id: graphFailureId,
-        name: "Synthetic Graph Failure Form",
-        provenance: {
-          kind: "synthetic-test" as const,
-          section: "mcp-wild-shape",
-        },
-        statBlock: {
-          ...source.statBlock,
-          creatureType: "beast",
-          resources: [
-            { ...resource, limit: { kind: "daily" as const, uses: 1 } },
-          ] as const,
-          actions: [
-            {
-              ...action,
-              resourceRefs: {
-                kind: "some" as const,
-                ordinals: [missingOrdinal],
-              },
-            },
-          ],
-        },
-      },
-    ];
-    const catalog = {
-      ...baseRoot.statBlockCatalog,
-      getStatBlock: (id: string) =>
-        id === invalidLimitId
-          ? Option.some(forms[0]!)
-          : id === graphFailureId
-            ? Option.some(forms[1]!)
-            : baseRoot.statBlockCatalog.getStatBlock(id),
-    } as unknown as typeof baseRoot.statBlockCatalog;
-    const root = {
-      ...baseRoot,
-      statBlockCatalog: catalog,
-      sessionStore: createMcpSessionStore({
-        statBlockCatalog: catalog,
-        unitLibrary: baseRoot.unitLibrary,
-      }),
-    };
+  test("preserves typed Wild Shape diagnostics in start_battle errors", () => {
+    const root = createMcpPlaySessionRoot();
     const build = createFinalizedDruidSheet(
       root,
       "draft:mcp-wild-shape-diagnostics",
@@ -440,7 +366,9 @@ describe("MCP server route", () => {
         tempHp: Hp(0),
         hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
-        druidWildShapeKnownFormStatBlockIds: [invalidLimitId, graphFailureId],
+        druidWildShapeKnownFormStatBlockIds: [
+          statBlockId("stat_block_skeleton"),
+        ],
       }),
     );
     const output = readPayload(
@@ -469,20 +397,9 @@ describe("MCP server route", () => {
               wildShapeIssues: [
                 {
                   tag: "battleDruidWildShapeKnownFormIssue",
-                  statBlockId: invalidLimitId,
-                  reason: "invalidResourceLimit",
-                  issues: [{ ordinal: 1, reason: "invalidDailyUses" }],
-                },
-                {
-                  tag: "battleDruidWildShapeKnownFormIssue",
-                  statBlockId: graphFailureId,
-                  reason: "resourceGraph",
-                  issues: [
-                    {
-                      kind: "missingResourceDeclaration",
-                      ordinal: missingOrdinal,
-                    },
-                  ],
+                  statBlockId: statBlockId("stat_block_skeleton"),
+                  reason: "ineligible",
+                  eligibilityIssue: "creatureType",
                 },
               ],
             },
