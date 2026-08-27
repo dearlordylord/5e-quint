@@ -16,6 +16,11 @@ import { basename, dirname, resolve } from "node:path";
 import { Either, Match, Option, ParseResult, Schema } from "effect";
 
 import {
+  ArtifactSha256Schema,
+  type ArtifactSha256,
+} from "./artifact-authority-schema.ts";
+
+import {
   canonicalJson,
   GitShaSchema,
   isJsonRecord,
@@ -403,7 +408,7 @@ const ModelInvocationLedgerEntryV1Schema = Schema.Struct({
   schemaVersion: Schema.Literal(1),
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
-  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  eventsSha256: ArtifactSha256Schema,
   phase: Schema.Literal(...HISTORICAL_MODEL_INVOCATION_PHASES),
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
@@ -416,7 +421,7 @@ const ModelInvocationLedgerEntryV2Schema = Schema.Struct({
   schemaVersion: Schema.Literal(2),
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
-  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  eventsSha256: ArtifactSha256Schema,
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
   stagePlanReason: Schema.NonEmptyTrimmedString,
   startedAt: Schema.NonEmptyString,
@@ -435,7 +440,7 @@ const CurrentModelInvocationLedgerEntryV4SchemaInternal = Schema.Struct({
   subject: CurrentModelInvocationSubjectSchema,
   ...ModelInvocationOperationFields,
   gitSha: GitShaSchema,
-  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  eventsSha256: ArtifactSha256Schema,
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
   stagePlanReason: Schema.NonEmptyTrimmedString,
   startedAt: StartedAtSchema,
@@ -457,7 +462,7 @@ const CurrentModelInvocationLedgerEntryV5SchemaInternal = Schema.Struct({
   subject: CurrentModelInvocationSubjectSchema,
   ...ModelInvocationOperationFields,
   gitSha: GitShaSchema,
-  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  eventsSha256: ArtifactSha256Schema,
   phase: Schema.Literal(...MODEL_INVOCATION_PHASES),
   stagePlanReason: Schema.NonEmptyTrimmedString,
   startedAt: StartedAtSchema,
@@ -645,7 +650,7 @@ const BenchmarkAuxiliaryInvocationCommonFields = {
   profile: Schema.Literal("documentDeclarationSet"),
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
-  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  eventsSha256: ArtifactSha256Schema,
   stagePlanReason: Schema.NonEmptyTrimmedString,
   startedAt: Schema.NonEmptyString,
   elapsedMilliseconds: NonNegativeIntegerSchema,
@@ -659,7 +664,7 @@ const BenchmarkAuxiliaryInvocationCurrentCommonFields = {
   profile: Schema.Literal("documentDeclarationSet"),
   ...HistoricalModelInvocationIdentityFields,
   gitSha: GitShaSchema,
-  eventsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  eventsSha256: ArtifactSha256Schema,
   stagePlanReason: Schema.NonEmptyTrimmedString,
   startedAt: StartedAtSchema,
   elapsedMilliseconds: NonNegativeIntegerSchema,
@@ -1980,11 +1985,13 @@ function codexInvocationArgsForOperation(
   ]);
 }
 
-function sha256Bytes(contents: Uint8Array): string {
-  return createHash("sha256").update(contents).digest("hex");
+function sha256Bytes(contents: Uint8Array): ArtifactSha256 {
+  return Schema.decodeUnknownSync(ArtifactSha256Schema)(
+    createHash("sha256").update(contents).digest("hex"),
+  );
 }
 
-export function invocationEventsSha256(path: string): string {
+export function invocationEventsSha256(path: string): ArtifactSha256 {
   return sha256Bytes(readFileSync(path));
 }
 
@@ -2956,7 +2963,7 @@ type RunCodexProcessResult<A, E extends object> = Readonly<{
   /** Parsed once after the child settles; callers must use this evidence. */
   readonly evidence: E;
   /** Hash of the exact event bytes, including the runner completion record. */
-  readonly eventsSha256: string;
+  readonly eventsSha256: ArtifactSha256;
 }>;
 
 async function runCodexProcess<A, E extends object>(input: {
@@ -3196,7 +3203,7 @@ async function runCodexProcess<A, E extends object>(input: {
 function appendInvocationEvidenceLedger(input: {
   readonly ledgerPath: string;
   readonly entry: object;
-  readonly eventsSha256: string;
+  readonly eventsSha256: ArtifactSha256;
 }): void {
   appendFileSync(
     input.ledgerPath,

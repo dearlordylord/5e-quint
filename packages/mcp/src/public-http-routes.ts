@@ -81,26 +81,29 @@ async function handleFixedPublicRoute(
   input: PublicHttpRequestInput,
   pathname: string,
 ): Promise<PublicHttpRequestObservation | undefined> {
-  const publisherSite = await handlePublisherSiteRoute(input, pathname);
-  if (publisherSite !== undefined) return publisherSite;
-  const pluginDemo = await handlePluginDemoRoute(input, pathname);
-  if (pluginDemo !== undefined) return pluginDemo;
-  const health = await handleHealthRoute(input, pathname);
-  if (health !== undefined) return health;
-  const version = await handleVersionRoute(input, pathname);
-  if (version !== undefined) return version;
-  const challenge = await handleAppsChallengeRoute(input, pathname);
-  if (challenge !== undefined) return challenge;
-  const metrics = await handleMetricsRoute(input, pathname);
-  if (metrics !== undefined) return metrics;
-  const oauth = await handleProtectedResourceRoute(input, pathname);
-  if (oauth !== undefined) return oauth;
+  const observation = await resolveFixedPublicRoute(input, pathname);
+  if (observation !== undefined) return observation;
   if (pathname === "/mcp") return undefined;
   await writePublicHttpResponse(
     input.outgoing,
     new Response("Not found", { status: 404 }),
   );
   return { status: 404, outcome: "rejected" };
+}
+
+async function resolveFixedPublicRoute(
+  input: PublicHttpRequestInput,
+  pathname: string,
+): Promise<PublicHttpRequestObservation | undefined> {
+  return (
+    (await handlePublisherSiteRoute(input, pathname)) ??
+    (await handlePluginDemoRoute(input, pathname)) ??
+    (await handleHealthRoute(input, pathname)) ??
+    (await handleVersionRoute(input, pathname)) ??
+    (await handleAppsChallengeRoute(input, pathname)) ??
+    (await handleMetricsRoute(input, pathname)) ??
+    (await handleProtectedResourceRoute(input, pathname))
+  );
 }
 
 async function handlePluginDemoRoute(

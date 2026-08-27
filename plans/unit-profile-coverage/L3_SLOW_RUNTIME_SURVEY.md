@@ -113,6 +113,6 @@ parity tests.
 
 Task 6 changes Surface catalog admission, Surface schema, and Unit coverage
 inputs. The appropriate verification is Surface typecheck, focused Surface unit
-catalog tests, unit-profile coverage check, `pnpm quality`, and whitespace
+catalog tests, unit-profile coverage check, `pnpm quality:milestone`, and whitespace
 checking. It does not change runtime reducers or promoted Quint behavior, so MBT
 is not appropriate for this task.

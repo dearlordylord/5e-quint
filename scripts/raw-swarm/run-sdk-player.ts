@@ -89,7 +89,7 @@ import {
   decodeExecutionId,
 } from "./raw-swarm-identities.ts";
 import {
-  findAdmittedScenarioInCatalogue,
+  findAuthorableScenarioInCatalogue,
   readRawSwarmCatalogue,
   ScenarioExecutionRecordSchema,
 } from "./scenario-catalogue.ts";
@@ -691,7 +691,7 @@ async function main(args: readonly string[]): Promise<void> {
       `Scenario admission catalogue is invalid: ${JSON.stringify(catalogue.left)}`,
     );
   }
-  const admittedCatalogueScenario = findAdmittedScenarioInCatalogue({
+  const admittedCatalogueScenario = findAuthorableScenarioInCatalogue({
     catalogue: catalogue.right,
     scenarioId: acceptedScenarioId,
   });

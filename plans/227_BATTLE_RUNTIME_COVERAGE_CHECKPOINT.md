@@ -59,5 +59,5 @@ Recompute the 99% gaps after every production-denominator change.
    reasonable findings remain.
 4. Run public root `pnpm coverage` and update only this current baseline.
 5. After every executable package reaches 99% on all four metrics, complete
-   issue #254, run public root `pnpm quality`, record durable issue evidence,
-   and delete this temporary checkpoint.
+   issue #254, run public root `pnpm quality:milestone`, record durable issue
+   evidence, and delete this temporary checkpoint.

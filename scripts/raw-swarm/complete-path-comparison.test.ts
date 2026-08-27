@@ -14,7 +14,6 @@ import {
   assembleCompletePathMeasurement,
   BenchmarkContextSourceManifestDocumentSchema,
   codexOutputJsonSchema,
-  CurrentScenarioCompositeReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   compareCompleteEquivalentPaths,
   deriveBenchmarkPathOutcome,
@@ -34,7 +33,11 @@ import {
   benchmarkModelInvocationStartedEvent,
   BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
 } from "./model-telemetry.ts";
-import { ScenarioQualityReviewSchema } from "./scenario-campaign.ts";
+import {
+  CurrentScenarioCompositeReviewSchema,
+  ScenarioQualityReviewSchema,
+  scenarioCompositeReviewSchemaForIntents,
+} from "./scenario-campaign.ts";
 import { capabilityContextSizeEstimate } from "./capability-context-size-estimate.ts";
 import {
   BENCHMARK_CONTEXT_ROLES,
@@ -522,10 +525,9 @@ function findingsProjection(
     reviewStage: "milestone" | "final",
     invocationId: string,
   ) => ({
-    schemaVersion: 2 as const,
+    schemaVersion: 3 as const,
     phase: "scenarioCompositeReview" as const,
     reviewStage,
-    scenarioId,
     sourceGitSha: gitSha,
     invocationId,
     model: "gpt-5.6-luna" as const,
@@ -535,6 +537,14 @@ function findingsProjection(
       CurrentScenarioCompositeReviewSchema,
     ),
     result: compositeReview,
+    subject: {
+      tag: "scenarioCandidate" as const,
+      campaignId: "synthetic-complete-path-campaign",
+      evidenceSetId: "synthetic-complete-path-evidence",
+      candidateId: "synthetic-complete-path-candidate",
+      candidateScenarioSha256: scenarioSha256,
+      plannedScenarioId: scenarioId,
+    },
   });
   const replayMilestone = writeAuthority(
     root,
@@ -1040,6 +1050,10 @@ function benchmarkMeasurement(
     profile === "documentDeclarationSet"
       ? historicalCompositeReview()
       : syntheticCompositeReview();
+  const benchmarkId =
+    profile === "documentDeclarationSet"
+      ? "synthetic-document-benchmark"
+      : "synthetic-bounded-benchmark";
   const benchmarkEntries = source.invocations
     .filter(
       (entry) =>
@@ -1047,10 +1061,24 @@ function benchmarkMeasurement(
         entry.invocationId !== "composite-milestone",
     )
     .map((entry) =>
-      profile === "boundedCapabilityProjection" &&
-      (entry.phase === "scenarioCompositeReview" ||
-        entry.phase === "postPlayReview")
-        ? { ...entry, reasoningEffort: "medium" as const }
+      profile === "boundedCapabilityProjection"
+        ? {
+            ...entry,
+            ...(entry.phase === "scenarioCompositeReview"
+              ? {
+                  subject: {
+                    tag: "benchmark" as const,
+                    benchmarkId,
+                    profile,
+                    scenarioId,
+                  },
+                }
+              : {}),
+            ...(entry.phase === "scenarioCompositeReview" ||
+            entry.phase === "postPlayReview"
+              ? { reasoningEffort: "medium" as const }
+              : {}),
+          }
         : entry,
     );
   const readinessResultValue = {
@@ -1142,23 +1170,45 @@ function benchmarkMeasurement(
   >();
   for (const reviewStage of reviewStages) {
     const invocationId = `composite-${reviewStage}`;
-    const retainedInput = {
-      schemaVersion: 2 as const,
-      phase: "scenarioCompositeReview" as const,
-      reviewStage,
-      scenarioId,
-      sourceGitSha: implementationGitSha,
-      invocationId,
-      model: "gpt-5.6-luna" as const,
-      reasoningEffort: requiredComposite(reviewStage).entry.reasoningEffort,
-      prompt: `Synthetic ${reviewStage} review prompt.`,
-      outputJsonSchema: codexOutputJsonSchema(
-        profile === "documentDeclarationSet"
-          ? HistoricalScenarioCompositeReviewSchema
-          : CurrentScenarioCompositeReviewSchema,
-      ),
-      result: compositeReview,
-    };
+    const retainedInput =
+      profile === "documentDeclarationSet"
+        ? {
+            schemaVersion: 2 as const,
+            phase: "scenarioCompositeReview" as const,
+            reviewStage,
+            scenarioId,
+            sourceGitSha: implementationGitSha,
+            invocationId,
+            model: "gpt-5.6-luna" as const,
+            reasoningEffort:
+              requiredComposite(reviewStage).entry.reasoningEffort,
+            prompt: `Synthetic ${reviewStage} review prompt.`,
+            outputJsonSchema: codexOutputJsonSchema(
+              HistoricalScenarioCompositeReviewSchema,
+            ),
+            result: compositeReview,
+          }
+        : {
+            schemaVersion: 3 as const,
+            phase: "scenarioCompositeReview" as const,
+            reviewStage,
+            sourceGitSha: implementationGitSha,
+            invocationId,
+            model: "gpt-5.6-luna" as const,
+            reasoningEffort:
+              requiredComposite(reviewStage).entry.reasoningEffort,
+            prompt: `Synthetic ${reviewStage} review prompt.`,
+            outputJsonSchema: codexOutputJsonSchema(
+              CurrentScenarioCompositeReviewSchema,
+            ),
+            result: compositeReview,
+            subject: {
+              tag: "benchmark" as const,
+              benchmarkId,
+              profile,
+              scenarioId,
+            },
+          };
     retainedReplayByStage.set(
       reviewStage,
       writeAuthority(
@@ -3467,6 +3517,52 @@ describe("complete Raw Swarm path comparison", () => {
     expect(Either.isLeft(malformed)).toBe(true);
     if (Either.isRight(malformed)) return;
     expect(malformed.left).toContain("Findings authority");
+  });
+
+  test("rejects an incident-shaped classification under a strict current replay schema", () => {
+    const source = measurement();
+    const replay = source.findings.authorities.find(
+      ({ role }) => role === "replay-final",
+    );
+    if (replay === undefined) {
+      throw new Error("Synthetic final replay authority is missing.");
+    }
+    const retained = parseJsonRecord(
+      readFileSync(resolve(repoRoot, replay.path), "utf8"),
+    );
+    const incidentResult = {
+      ...(retained.result as Record<string, unknown>),
+      sdkCapability: {
+        classification: "missingUnsupportedProbe",
+        evidence: "The synthetic scenario requires an unsupported capability.",
+        critique: "Declare the unsupported capability probe.",
+      },
+    };
+    const strictSchema = codexOutputJsonSchema(
+      scenarioCompositeReviewSchemaForIntents({
+        contentAvailabilityIntent: "availableOnly",
+        sdkCapabilityIntent: "supportedOnly",
+      }),
+    );
+    const strictReplay = replaceJsonAuthority(replay, {
+      ...retained,
+      outputJsonSchema: strictSchema,
+      result: incidentResult,
+    });
+    const findings = {
+      ...source.findings,
+      authorities: source.findings.authorities.map((authority) =>
+        authority.role === replay.role ? strictReplay : authority,
+      ),
+    };
+    const validation = validateCompletePathMeasurement(
+      withRetainedFindings(source, findings),
+    );
+    expect(Either.isLeft(validation)).toBe(true);
+    if (Either.isRight(validation)) return;
+    expect(validation.left).toContain(
+      "Replay authority replay-final is not bound to a current scenario review schema",
+    );
   });
 
   test("retains a revised Candidate milestone while final replay binds admission", () => {

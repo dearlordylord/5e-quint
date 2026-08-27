@@ -170,7 +170,8 @@ Task 32 changes only this planning artifact. Appropriate verification is:
   runtime dispatch.
 - Run `git diff --check`.
 
-Broad `pnpm quality` is not necessary for this documentation-only decision file.
+Broad `pnpm quality:milestone` is not necessary for this documentation-only
+decision file.
 Downstream implementation tasks should run their focused MCP acceptance tests and
 then the plan-specified verification lane for their code changes.
 

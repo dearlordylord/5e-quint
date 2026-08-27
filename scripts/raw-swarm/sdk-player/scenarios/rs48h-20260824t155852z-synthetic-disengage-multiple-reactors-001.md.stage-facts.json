@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-disengage-multiple-reactors-001",
+  "scenarioSha256": "c9def26f36c764178f3207a9b9fd7cb14f880d4dfc73f239fcf53b16ddc835e0",
+  "source": "scenarioGenerationCandidate",
+  "facts": {
+    "schemaVersion": 1,
+    "characterRequirement": {
+      "tag": "statBlocksOnly",
+      "evidence": "The Wolf, Skeleton, and Goblin Warrior are canonical stat-block combatants directed by the GM, so no Character Sheets are required."
+    },
+    "spatialRequirement": {
+      "tag": "geometryAssisted",
+      "evidence": "A single obstacle-free geometry-derived arena can determine both initial melee reaches, their exits, the selected route, and the distance to the den entrance."
+    }
+  }
+}

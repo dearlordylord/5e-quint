@@ -31,16 +31,16 @@ the procedure can thread `actionCostOverride: "bonusAction"` and
 profile-subset-supported claim. The promoted `bonusActionRewrite` procedures in
 `REGISTERED_SPELL_PROCEDURE_PROFILES` are:
 
-| Procedure | Current evidence |
-|---|---|
-| `directHitPointRestoration` | Quickened Cure Wounds runtime and governor MBT coverage |
-| `scalarBuff` | Quickened False Life runtime and governor MBT coverage |
-| `saveGatedDamage` | Quickened Burning Hands runtime coverage; core support already marks this admitted |
-| `saveGatedCondition` | Quickened Color Spray governor MBT coverage |
-| `saveGatedConditionImmunity` | Quickened Calm Emotions governor MBT coverage |
-| `directCondition` | Quickened Invisibility governor MBT coverage |
-| `rollModifier` | Quickened Bless governor MBT coverage |
-| `spellAttackDamage` | Quickened Ray of Frost runtime and selected-identity replay coverage |
+| Procedure                    | Current evidence                                                                   |
+| ---------------------------- | ---------------------------------------------------------------------------------- |
+| `directHitPointRestoration`  | Quickened Cure Wounds runtime and governor MBT coverage                            |
+| `scalarBuff`                 | Quickened False Life runtime and governor MBT coverage                             |
+| `saveGatedDamage`            | Quickened Burning Hands runtime coverage; core support already marks this admitted |
+| `saveGatedCondition`         | Quickened Color Spray governor MBT coverage                                        |
+| `saveGatedConditionImmunity` | Quickened Calm Emotions governor MBT coverage                                      |
+| `directCondition`            | Quickened Invisibility governor MBT coverage                                       |
+| `rollModifier`               | Quickened Bless governor MBT coverage                                              |
+| `spellAttackDamage`          | Quickened Ray of Frost runtime and selected-identity replay coverage               |
 
 Small evidence note: `unit-feature-quickened-action-spell-procedure-support-core.qnt`
 admits `QuickenedSaveGatedDamageProcedure`, but
@@ -57,11 +57,11 @@ blocked from Quickened discovery by
 
 ### Closest Procedure Slices
 
-| Procedure | Why it is close | Main Task 7 risk |
-|---|---|---|
-| `spellAttackSequence` | Already accepts `actionCostOverride` and `metamagicApplications`, resolves through `spendSpellCastResources`, has deterministic admission coverage for Eldritch Blast and Scorching Ray, and has focused Eldritch Blast MBT coverage. | Need selected-identity/governor witness for indexed attack-sequence fills and same-turn Quickened lock across cantrip and slot paths. |
-| `attackBurstSaveDamage` | Already accepts `actionCostOverride` and `metamagicApplications`. | It combines an attack and burst save damage, so the first slice would exercise both attack and save fill families at once. |
-| `chainedSpellAttackDamage` | Already accepts `actionCostOverride` and `metamagicApplications`. | Cast-local damage-type choice plus chained replay makes it larger than a first remaining Quickened slice. |
+| Procedure                  | Why it is close                                                                                                                                                                                                                       | Main Task 7 risk                                                                                                                      |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `spellAttackSequence`      | Already accepts `actionCostOverride` and `metamagicApplications`, resolves through `spendSpellCastResources`, has deterministic admission coverage for Eldritch Blast and Scorching Ray, and has focused Eldritch Blast MBT coverage. | Need selected-identity/governor witness for indexed attack-sequence fills and same-turn Quickened lock across cantrip and slot paths. |
+| `attackBurstSaveDamage`    | Already accepts `actionCostOverride` and `metamagicApplications`.                                                                                                                                                                     | It combines an attack and burst save damage, so the first slice would exercise both attack and save fill families at once.            |
+| `chainedSpellAttackDamage` | Already accepts `actionCostOverride` and `metamagicApplications`.                                                                                                                                                                     | Cast-local damage-type choice plus chained replay makes it larger than a first remaining Quickened slice.                             |
 
 ### Save Or Control Lifecycles
 
@@ -172,4 +172,4 @@ Task 7 should verify the implementation with:
 - `pnpm unit-profile-coverage:check`
 - `pnpm rules-kernel-coverage:check -- --write`
 - `pnpm rules-kernel-coverage:check`
-- `pnpm quality`
+- `pnpm quality:milestone`

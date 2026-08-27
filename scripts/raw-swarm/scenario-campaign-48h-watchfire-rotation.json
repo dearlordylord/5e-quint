@@ -1,0 +1,15 @@
+{
+  "campaignId": "watchfire-rotation-48h-authoring",
+  "plannedScenarioId": "synthetic-watchfire-rotation",
+  "scenarioTitle": "Synthetic Watchfire rotation",
+  "scenarioPurpose": "Explore materially distinct supported target-priority changes across several stat-block turns with movement, reactions, and serious individual objectives.",
+  "evidenceSetId": "watchfire-rotation-48h-authoring-evidence",
+  "distributionPreference": "Create a compact available-content stat-block scenario with a materially distinct tactical question. Exercise supported target-priority changes, movement, reactions, attacks, and turn completion across several turns while every combatant pursues a concrete objective. Use the complete admitted catalogue comparison to reject repeated purposes and wording-only or spatial-only novelty. Let the supplied capability projection determine representability; do not invent operations, prescribe an expected winner, create an encounter side, or give the player ownership of Table facts.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": false
+}

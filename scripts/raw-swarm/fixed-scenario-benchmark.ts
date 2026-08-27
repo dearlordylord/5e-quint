@@ -30,6 +30,7 @@ import {
   type BenchmarkContextRole,
 } from "./benchmark-context.ts";
 import {
+  classifyScenarioReviewOutputSchema,
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
   FinalScenarioReviewSchema,
@@ -117,6 +118,14 @@ import { BenchmarkRecordSchema } from "./scenario-catalogue.ts";
 export const FIXED_SCENARIO_ID = "open-grid-wolf-skeleton-pursuit" as const;
 export const FIXED_BENCHMARK_PROFILES = BENCHMARK_IMPLEMENTATION_PROFILES;
 export type FixedBenchmarkProfile = BenchmarkImplementationProfile;
+
+function benchmarkReviewSchemaVersion(profile: FixedBenchmarkProfile): 2 | 3 {
+  return Match.value(profile).pipe(
+    Match.when("documentDeclarationSet", () => 2 as const),
+    Match.when("boundedCapabilityProjection", () => 3 as const),
+    Match.exhaustive,
+  );
+}
 
 const FIXED_BENCHMARK_ROOT = "scripts/raw-swarm/out/fixed-scenario-benchmark";
 export const FIXED_BENCHMARK_CONTEXT_ROLES = BENCHMARK_CONTEXT_ROLES;
@@ -1378,6 +1387,7 @@ const GenerationPreparationSchema = Schema.Struct({
 export function validateBenchmarkReviewAuthority(input: {
   readonly profile: FixedBenchmarkProfile;
   readonly reviewStage: "milestone" | "final";
+  readonly schemaVersion: 2 | 3;
   readonly result: unknown;
   readonly outputJsonSchema: unknown;
 }): Either.Either<void, string> {
@@ -1389,25 +1399,26 @@ export function validateBenchmarkReviewAuthority(input: {
       "The bounded capability-projection benchmark retains only its final composite review.",
     );
   }
-  const parsed =
-    input.profile === "documentDeclarationSet"
-      ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(input.result)
-      : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(input.result);
-  if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
-  const expectedOutputJsonSchema =
-    input.profile === "documentDeclarationSet"
-      ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
-      : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
-  if (
-    sha256Canonical(input.outputJsonSchema) !==
-    sha256Canonical(expectedOutputJsonSchema)
-  ) {
+  const expectedSchemaVersion = benchmarkReviewSchemaVersion(input.profile);
+  if (input.schemaVersion !== expectedSchemaVersion) {
+    return Either.left(
+      `Benchmark ${input.profile} review must use schema version ${String(expectedSchemaVersion)}.`,
+    );
+  }
+  const compatibility = classifyScenarioReviewOutputSchema({
+    schemaVersion: input.schemaVersion,
+    outputJsonSchema: input.outputJsonSchema,
+  });
+  const expectedTag =
+    input.profile === "documentDeclarationSet" ? "historical" : "legacyCurrent";
+  if (Either.isLeft(compatibility)) {
+    return Either.left(compatibility.left);
+  }
+  if (compatibility.right.tag !== expectedTag) {
     return Either.left("Benchmark review retained the wrong output schema.");
   }
+  const parsed = compatibility.right.decodeResult(input.result);
+  if (Either.isLeft(parsed)) return Either.left(parsed.left.message);
   if (
     input.profile === "documentDeclarationSet" &&
     "scenarioQuality" in parsed.right
@@ -1591,6 +1602,7 @@ function retainReviewEnvelope(input: {
   const valid = validateBenchmarkReviewAuthority({
     profile: input.profile,
     reviewStage: input.stage,
+    schemaVersion: benchmarkReviewSchemaVersion(input.profile),
     result: input.result,
     outputJsonSchema,
   });
@@ -1598,7 +1610,7 @@ function retainReviewEnvelope(input: {
   const envelope =
     input.profile === "documentDeclarationSet"
       ? {
-          schemaVersion: 2 as const,
+          schemaVersion: benchmarkReviewSchemaVersion(input.profile),
           phase: "scenarioCompositeReview" as const,
           reviewStage: input.stage,
           scenarioId: fixedScenarioId(),
@@ -1611,7 +1623,7 @@ function retainReviewEnvelope(input: {
           result: input.result,
         }
       : {
-          schemaVersion: 3 as const,
+          schemaVersion: benchmarkReviewSchemaVersion(input.profile),
           phase: "scenarioCompositeReview" as const,
           reviewStage: input.stage,
           sourceGitSha: input.entry.gitSha,
@@ -2261,6 +2273,7 @@ function validateRetainedReviewAuthority(
   const valid = validateBenchmarkReviewAuthority({
     profile,
     reviewStage: stage,
+    schemaVersion: parsed.right.schemaVersion,
     result: parsed.right.result,
     outputJsonSchema: parsed.right.outputJsonSchema,
   });

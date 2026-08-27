@@ -16,8 +16,7 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 import { statBlockCombatant } from "../test-support/mcp-acceptance-scenarios.ts";
-
-const BATTLE_DEMO_VERTICAL_TEST_TIMEOUT_MS = 10_000;
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../../scripts/shared-host-test-policy.mjs";
 
 describe("end-user MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {
@@ -1065,7 +1064,7 @@ describe("end-user MCP vertical", () => {
         expect.objectContaining({ combatantId: "wizard", hp: 8 }),
       ]),
     );
-  }, BATTLE_DEMO_VERTICAL_TEST_TIMEOUT_MS);
+  }, SHARED_HOST_TEST_TIMEOUT_MILLISECONDS);
 
   test("threads selected Light identity from MCP character creation into battle output", () => {
     const root = createMcpPlaySessionRoot();

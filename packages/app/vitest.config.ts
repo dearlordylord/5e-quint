@@ -1,11 +1,14 @@
 import { defineConfig } from "vitest/config"
 import tsconfigPaths from "vite-tsconfig-paths"
 
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../scripts/shared-host-test-policy.mjs"
+
 export default defineConfig({
   plugins: [tsconfigPaths({ projects: ["./tsconfig.json"] })],
   test: {
     globals: true,
     include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
+    testTimeout: SHARED_HOST_TEST_TIMEOUT_MILLISECONDS,
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
