@@ -173,11 +173,10 @@ export function mcpModelOutputJsonSchema<A, I>(
   return identified;
 }
 
-export function schemaJsonContent<A, I>(
-  schema: Schema.Codec<A, I, never>,
-  value: A,
-) {
-  const encoded = jsonSerializablePayload(Schema.encodeSync(schema)(value));
+export function schemaJsonContent<A>(schema: Schema.Constraint, value: A) {
+  const encoded = jsonSerializablePayload(
+    Schema.encodeSync(Schema.toType(schema))(value),
+  );
   return {
     ...jsonContent(encoded),
     structuredContent: encoded,
