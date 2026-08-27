@@ -64,7 +64,7 @@ let spikeGrowth =
                         , amount = Some
                             (    T.defaultDiceAmount
                               // { kind = "fixed"
-                                 , expr = Some { dice = 2, dieSize = 4 }
+                                 , expr = Some { dice = 2, dieSize = 4, flat = None Integer }
                                  }
                             )
                         }

@@ -1,0 +1,66 @@
+let S = ./_stat_block_types.dhall
+
+in  { challengeRating = 0.25
+    , id = "stat_block_swarm_of_rats"
+    , kind = "statBlock"
+    , name = "Swarm of Rats"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2318-2343" }
+    , statBlock =
+      { abilityScores =
+        { cha = 3, con = 9, dex = 11, int = 2, str = 9, wis = 10 }
+      , ac.value = { kind = "literal", value = 10 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Bites"
+            , description =
+                "*Melee Attack Roll:* +2, reach 5 ft. *Hit:* 5 (2d4) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , creatureTypeTags = [ "swarm of tiny beasts" ]
+      , hp = { kind = "literal", value = 14 }
+      , immunities.conditions
+        =
+        [ "charmed"
+        , "frightened"
+        , "grappled"
+        , "paralyzed"
+        , "petrified"
+        , "prone"
+        , "restrained"
+        , "stunned"
+        ]
+      , initiative = { modifier = +0, score = 10 }
+      , passivePerception = 10
+      , resistances =
+        { damageTypes = [ "bludgeoning", "piercing", "slashing" ]
+        , kind = "fixed"
+        }
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = -1 }
+        , { ability = "dex", modifier = +2 }
+        , { ability = "con", modifier = -1 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = -4 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 30 } ]
+      , size = "medium"
+      , speeds =
+        [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Swarm"
+            , description =
+                "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny rat. The swarm can't regain Hit Points or gain Temporary Hit Points."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }
