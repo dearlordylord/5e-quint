@@ -2248,7 +2248,8 @@ function projectRuleCoreSpellState(input: {
   }
   return withRuleCoreComponentRoute(componentOwner, {
     actionAvailable: snapshot.turn.actionResources.length > 0,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable:
+      input.state.currentTurnResources.currentHasBonusAction,
     casterReactionAvailable: caster.reactionAvailable,
     casterHp: caster.hp,
     targetHp: target.hp,
