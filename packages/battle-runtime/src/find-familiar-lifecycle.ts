@@ -46,6 +46,7 @@ import type {
   BattleState,
   BattleStateInitIssue,
 } from "./battle-state-execution.ts";
+import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 import {
   resourceHasUsesRemaining,
@@ -335,6 +336,24 @@ export type ResolvedFindFamiliarCastInput = Omit<
   readonly retainedTransition: "reject" | "sessionOwned";
 };
 
+export type FindFamiliarCastWithPresentation =
+  | {
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "resolved" }
+      >;
+      readonly presentation: {
+        readonly combatantId: CombatantId;
+        readonly source: BattleStatBlockPresentationSource;
+      };
+    }
+  | {
+      readonly result: Extract<
+        BattleResolutionResult,
+        { readonly tag: "invalid" }
+      >;
+    };
+
 function retainedFindFamiliarCastIssue(input: {
   readonly prior: FindFamiliarCastPrior;
   readonly retainedTransition: ResolvedFindFamiliarCastInput["retainedTransition"];
@@ -349,15 +368,25 @@ function retainedFindFamiliarCastIssue(input: {
   return undefined;
 }
 
-export function castResolvedFindFamiliar(
+type FindFamiliarCastPreparation = {
+  readonly prior: FindFamiliarCastPrior;
+  readonly familiarId: CombatantId;
+};
+
+function prepareFindFamiliarCast(
   input: ResolvedFindFamiliarCastInput,
-): BattleResolutionResult {
+): Either.Either<
+  FindFamiliarCastPreparation,
+  Extract<BattleResolutionResult, { readonly tag: "invalid" }>
+> {
   /* v8 ignore start -- @preserve -- Stale direct call: discovered Find Familiar acts retain a caster already present in the same battle state. */
   if (!input.state.combatants.has(input.casterId)) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "missingCombatant",
-      "Find Familiar caster is not in this battle.",
+    return Either.left(
+      invalidFindFamiliarResult(
+        input.state,
+        "missingCombatant",
+        "Find Familiar caster is not in this battle.",
+      ),
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -370,10 +399,8 @@ export function castResolvedFindFamiliar(
     retainedTransition: input.retainedTransition,
   });
   if (retainedCastIssue !== undefined) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      retainedCastIssue,
+    return Either.left(
+      invalidFindFamiliarResult(input.state, "invalidFill", retainedCastIssue),
     );
   }
   const familiarId =
@@ -384,19 +411,40 @@ export function castResolvedFindFamiliar(
     familiarId,
   );
   if (identityIssue !== null) {
-    return invalidFindFamiliarResult(input.state, "invalidFill", identityIssue);
+    return Either.left(
+      invalidFindFamiliarResult(input.state, "invalidFill", identityIssue),
+    );
   }
+  return Either.right({ prior, familiarId });
+}
+
+export function castResolvedFindFamiliar(
+  input: ResolvedFindFamiliarCastInput,
+): BattleResolutionResult {
+  return castResolvedFindFamiliarWithPresentation(input).result;
+}
+
+export function castResolvedFindFamiliarWithPresentation(
+  input: ResolvedFindFamiliarCastInput,
+): FindFamiliarCastWithPresentation {
+  const preparation = prepareFindFamiliarCast(input);
+  if (Either.isLeft(preparation)) {
+    return { result: preparation.left };
+  }
+  const { familiarId, prior } = preparation.right;
   const resolvedForm = input.resolvedForm;
   const projected = projectFamiliarStatBlock(resolvedForm);
   if (Either.isLeft(projected)) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      battleStatBlockProjectionFailureMessage(
-        projected.left,
-        "Find Familiar form projection failed",
+    return {
+      result: invalidFindFamiliarResult(
+        input.state,
+        "invalidFill",
+        battleStatBlockProjectionFailureMessage(
+          projected.left,
+          "Find Familiar form projection failed",
+        ),
       ),
-    );
+    };
   }
   const nextFamiliar = findFamiliarPresentState({
     form: {
@@ -417,11 +465,13 @@ export function castResolvedFindFamiliar(
   });
   /* v8 ignore start -- @preserve -- Corrupt retained state: admitted present/dismissed companions carry positive HP and a resolvable literal familiar maximum. */
   if (typeof preservedHitPoints === "string") {
-    return invalidFindFamiliarResult(
-      input.state,
-      "invalidFill",
-      preservedHitPoints,
-    );
+    return {
+      result: invalidFindFamiliarResult(
+        input.state,
+        "invalidFill",
+        preservedHitPoints,
+      ),
+    };
   }
   /* v8 ignore stop -- @preserve */
   const reactionAvailable = reactionAvailableForFindFamiliarCast({
@@ -430,11 +480,13 @@ export function castResolvedFindFamiliar(
   });
   /* v8 ignore start -- @preserve -- A stale present companion can retain identity after its live combatant is missing. */
   if (Either.isLeft(reactionAvailable)) {
-    return invalidFindFamiliarResult(
-      input.state,
-      "missingCombatant",
-      reactionAvailable.left.message,
-    );
+    return {
+      result: invalidFindFamiliarResult(
+        input.state,
+        "missingCombatant",
+        reactionAvailable.left.message,
+      ),
+    };
   }
   /* v8 ignore stop -- @preserve */
   const nextState = withAdmittedFindFamiliarCombatant({
@@ -455,14 +507,20 @@ export function castResolvedFindFamiliar(
   });
   /* v8 ignore start -- @preserve -- The resolved catalog form and collision-checked combatant identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
   if (nextState.tag === "invalid") {
-    return nextState;
+    return { result: nextState };
   }
   /* v8 ignore stop -- @preserve */
-  return resolvedFindFamiliarResult(
-    nextState.state,
-    [],
-    findFamiliarCompanionLifecycleRouteEvents(),
-  );
+  return {
+    result: resolvedFindFamiliarResult(
+      nextState.state,
+      [],
+      findFamiliarCompanionLifecycleRouteEvents(),
+    ),
+    presentation: {
+      combatantId: familiarId,
+      source: projected.right.presentation,
+    },
+  };
 }
 
 type WildCompanionCasterAdmissionIssue = {
@@ -658,14 +716,42 @@ function companionAdmissionInitialIssue(
 export function admitCompanionToBattle(
   input: CompanionBattleAdmissionInput,
 ): Either.Either<BattleState, BattleStateInitIssue> {
+  return Either.map(
+    admitCompanionToBattleWithPresentation(input),
+    (admitted) => admitted.state,
+  );
+}
+
+export type CompanionBattleAdmissionWithPresentation =
+  | {
+      readonly tag: "embodiedOutsideBattle";
+      readonly state: BattleState;
+      readonly companionId: CombatantId;
+      readonly presentation: BattleStatBlockPresentationSource;
+    }
+  | {
+      readonly tag: "stored";
+      readonly state: BattleState;
+    };
+
+export function admitCompanionToBattleWithPresentation(
+  input: CompanionBattleAdmissionInput,
+): Either.Either<
+  CompanionBattleAdmissionWithPresentation,
+  BattleStateInitIssue
+> {
   const initialIssue = companionAdmissionInitialIssue(input);
   if (initialIssue !== undefined) {
     return battleStateInitIssue(initialIssue);
   }
   if (!("companionId" in input)) {
-    return admitAbsentCompanionToBattle({
+    const admitted = admitAbsentCompanionToBattle({
       ...input,
     });
+    return Either.map(admitted, (state) => ({
+      tag: "stored" as const,
+      state,
+    }));
   }
   /* v8 ignore start -- @preserve -- Type-level invariant: the companionId branch of CompanionBattleAdmissionInput requires an embodied manifestation. */
   if (input.manifestation.tag !== "embodiedOutsideBattle") {
@@ -727,10 +813,37 @@ export function admitCompanionToBattle(
     return battleStateInitIssue(nextState.message);
   }
   /* v8 ignore stop -- @preserve */
-  return withInitialInitiativeOrder(
-    nextState.state,
+  return admitEmbodiedCompanionWithInitialOrder({
+    companionId: input.companionId,
+    state: nextState.state,
+    initialCombatantOrder: input.initialCombatantOrder,
+    presentation: projected.right.presentation,
+  });
+}
+
+function admitEmbodiedCompanionWithInitialOrder(input: {
+  readonly companionId: CombatantId;
+  readonly state: BattleState;
+  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
+  readonly presentation: BattleStatBlockPresentationSource;
+}): Either.Either<
+  Extract<
+    CompanionBattleAdmissionWithPresentation,
+    { readonly tag: "embodiedOutsideBattle" }
+  >,
+  BattleStateInitIssue
+> {
+  const state = withInitialInitiativeOrder(
+    input.state,
     input.initialCombatantOrder,
   );
+  if (Either.isLeft(state)) return Either.left(state.left);
+  return Either.right({
+    tag: "embodiedOutsideBattle" as const,
+    state: state.right,
+    companionId: input.companionId,
+    presentation: input.presentation,
+  });
 }
 
 function withAdmittedFindFamiliarCombatant(

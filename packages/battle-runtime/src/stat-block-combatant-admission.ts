@@ -47,6 +47,11 @@ type StatBlockCombatantAdmissionIssue = Extract<
   | { readonly tag: "statBlockResourceGraphIssue" }
 >;
 
+type StatBlockInitialConditionAdmissionIssue = Extract<
+  BattleStateInitLeafIssue,
+  { readonly tag: "battleStateInitIssue" }
+>;
+
 export type StatBlockResourceGraphCombatantAdmissionIssue = Extract<
   StatBlockCombatantAdmissionIssue,
   { readonly tag: "statBlockResourceGraphIssue" }
@@ -55,7 +60,7 @@ export type StatBlockResourceGraphCombatantAdmissionIssue = Extract<
 export function statBlockInitialConditionImmunityIssue(
   source: BattleStatBlockCombatantSource,
   conditions: readonly Condition[],
-): StatBlockCombatantAdmissionIssue | null {
+): StatBlockInitialConditionAdmissionIssue | null {
   const immuneInitialCondition = conditions.find((condition) =>
     source.statBlock.immunities?.conditions?.includes(condition),
   );

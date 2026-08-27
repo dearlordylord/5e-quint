@@ -70,6 +70,7 @@ import {
   battleStatBlockCombatantSource,
   statBlockInitialConditionImmunityIssue,
   type BattleStatBlockCombatantSource,
+  type StatBlockResourceGraphCombatantAdmissionIssue,
 } from "./stat-block-combatant-admission.ts";
 import type { CharacterZeroHpLifecycleInit } from "./zero-hp-lifecycle.ts";
 import { statBlockTraitsAreSupported } from "./statblock-action-support.ts";
@@ -528,6 +529,7 @@ export type AuthoredStatBlockBattleInitInput = {
 
 export type AuthoredStatBlockBattleInitIssue =
   | StatBlockBattleInitIssue
+  | StatBlockResourceGraphCombatantAdmissionIssue
   | {
       readonly tag: "statBlockProjectionFailure";
       readonly failure: BattleStatBlockProjectionFailure;
@@ -535,9 +537,7 @@ export type AuthoredStatBlockBattleInitIssue =
 
 export type StatBlockBattleInitIssue = Extract<
   BattleStateInitLeafIssue,
-  {
-    readonly tag: "battleStateInitIssue" | "statBlockResourceGraphIssue";
-  }
+  { readonly tag: "battleStateInitIssue" }
 >;
 
 type RuntimeStatBlockBattleInitInput = {

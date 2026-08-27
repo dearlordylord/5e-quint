@@ -1,6 +1,11 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import * as Either from "effect/Either";
 import { Match } from "effect";
+import {
+  Integer,
+  NonNegativeInteger,
+  PositiveInteger,
+} from "@dnd/shared/types";
 import type { StandardActionKind } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
 import type {
@@ -201,9 +206,9 @@ function runtimeStatBlockProjection(
     hp: source.hp,
     speeds,
     abilityScores: source.abilityScores,
-    initiativeModifier: source.initiative.modifier,
-    initiativeScore: source.initiative.score,
-    passivePerception: source.passivePerception,
+    initiativeModifier: Integer(source.initiative.modifier),
+    initiativeScore: NonNegativeInteger(source.initiative.score),
+    passivePerception: NonNegativeInteger(source.passivePerception),
     ...(source.savingThrowModifiers === undefined
       ? {}
       : { savingThrowModifiers: source.savingThrowModifiers }),
@@ -717,7 +722,7 @@ function runtimeSense(
 ): BattleStatBlockRuntimeSense {
   return {
     kind: sense.kind,
-    rangeFeet: sense.rangeFeet,
+    rangeFeet: PositiveInteger(sense.rangeFeet),
     ...(sense.kind === "darkvision" && sense.qualifier !== undefined
       ? { qualifier: sense.qualifier }
       : {}),

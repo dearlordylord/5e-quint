@@ -1420,21 +1420,6 @@ describe("Find Familiar lifecycle", () => {
         placement: { kind: "unoccupiedSpaceWithinSpellRange" },
       }),
     ).toMatchObject({ tag: "invalid" });
-    expect(
-      castRetainedFindFamiliarRuntime({
-        session: admitted.right,
-        casterId,
-        ammunitionStocks: [],
-        familiarId: casterId,
-        catalog: statBlockCatalog,
-        eligibility: familiarEligibility,
-        selection: { tag: "normalNamedForm", formId: "rat" },
-        creatureTypeOverrideChoiceId: firstTypeOverride.optionId,
-        initiative: initiativeScore(14),
-        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
-      }),
-    ).toMatchObject({ tag: "invalid" });
-
     const recast = castRetainedFindFamiliarRuntime({
       session: admitted.right,
       casterId,

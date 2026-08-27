@@ -16,10 +16,11 @@ import type {
   BattleId,
   CombatantId,
 } from "./identity.ts";
-import type { StatBlockExecutionState } from "./stat-block-execution-state.ts";
 import type {
+  BattleStatBlockRuntimeFacts,
   BattleStatBlockRuntimeSense,
   BattleStatBlockRuntimeSpeed,
+  StatBlockExecutionState,
 } from "./stat-block-execution-state.ts";
 
 /** Authored-free mechanical facts queried after a Stat Block combatant commits. */
@@ -36,9 +37,9 @@ export type BattleStatBlockCombatantMechanics = {
     readonly conditions: readonly SurfaceCondition[];
   };
   readonly specialSenses: readonly BattleStatBlockRuntimeSense[];
-  readonly initiativeModifier: number;
-  readonly initiativeScore: number;
-  readonly passivePerception: number;
+  readonly initiativeModifier: BattleStatBlockRuntimeFacts["initiativeModifier"];
+  readonly initiativeScore: BattleStatBlockRuntimeFacts["initiativeScore"];
+  readonly passivePerception: BattleStatBlockRuntimeFacts["passivePerception"];
 };
 
 /** Durable Stat Block battle projection retained after admission is consumed. */

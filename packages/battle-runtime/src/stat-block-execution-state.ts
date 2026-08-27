@@ -3,6 +3,8 @@ import {
   PositiveInteger,
   resourceCount,
   type DieRollResult,
+  type Integer as IntegerType,
+  type NonNegativeInteger as NonNegativeIntegerType,
   type PositiveInteger as PositiveIntegerType,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
@@ -338,9 +340,9 @@ export type BattleStatBlockRuntimeFacts = {
   readonly hp: StatBlockLiteralValue;
   readonly speeds: readonly BattleStatBlockRuntimeSpeed[];
   readonly abilityScores: SixAbilityScores;
-  readonly initiativeModifier: number;
-  readonly initiativeScore: number;
-  readonly passivePerception: number;
+  readonly initiativeModifier: IntegerType;
+  readonly initiativeScore: NonNegativeIntegerType;
+  readonly passivePerception: NonNegativeIntegerType;
   readonly savingThrowModifiers?: readonly CreatureSavingThrowModifier[];
   readonly skillModifiers?: readonly CreatureSkillModifier[];
   readonly saveProficiencies?: readonly Ability[];
@@ -367,7 +369,7 @@ export type BattleStatBlockRuntimeSpeed = {
 
 export type BattleStatBlockRuntimeSense = {
   readonly kind: CreatureSense["kind"];
-  readonly rangeFeet: number;
+  readonly rangeFeet: PositiveIntegerType;
   readonly qualifier?: "unimpeded_by_magical_darkness";
 };
 

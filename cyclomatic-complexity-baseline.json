@@ -856,7 +856,6 @@
       "module/binding:withFindFamiliarCombatant": 11
     },
     "packages/battle-runtime/src/find-familiar-lifecycle.ts": {
-      "module/binding:castResolvedFindFamiliar": 12,
       "module/binding:castWildCompanion": 13,
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10

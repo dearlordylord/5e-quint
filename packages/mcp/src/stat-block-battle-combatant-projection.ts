@@ -64,14 +64,6 @@ export function projectStatBlockBattleCombatant(input: {
       ),
     );
   }
-  if (creatureInit.right.creatureInit.kind !== "statBlock") {
-    return Either.left(
-      errorContent(
-        "Stat Block battle initialization produced a character combatant.",
-        { code: "STAT_BLOCK_BATTLE_INIT_INVALID" },
-      ),
-    );
-  }
   return Either.right({
     tag: "encounterCombatant" as const,
     creatureInit: {
