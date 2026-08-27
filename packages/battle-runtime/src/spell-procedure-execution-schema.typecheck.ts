@@ -2,6 +2,8 @@
 // *.test.ts; run it through typecheck:spell-procedure-execution-schema.
 import { Context, Effect, Schema, SchemaGetter } from "effect";
 import { spellProcedureExecutionSchema } from "./battle-reducer/spell-procedure-profiles/execution-profile.ts";
+import { spellProcedureExecutionFor } from "./battle-reducer/spell-procedure-profiles/execution-registry.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 
 type Equal<Left, Right> =
   (<T>() => T extends Left ? 1 : 2) extends <T>() => T extends Right ? 1 : 2
@@ -57,3 +59,17 @@ void invalidEncoded;
 spellProcedureExecutionSchema(Schema.Any);
 // @ts-expect-error Execution schemas are property-only and cannot require services.
 spellProcedureExecutionSchema(contextfulSchema);
+
+const registeredExecution = spellProcedureExecutionFor(
+  spellProcedureExecutionRegistry(),
+  "saveGatedDamage",
+);
+void registeredExecution;
+type RegisteredDecodingServices = Schema.Codec.DecodingServices<
+  typeof registeredExecution.executionSchema
+>;
+type _RegisteredExecutionIsNoContext = Assert<
+  Equal<RegisteredDecodingServices, never>
+>;
+const registeredExecutionTypeCheck: _RegisteredExecutionIsNoContext = true;
+void registeredExecutionTypeCheck;

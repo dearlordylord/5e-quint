@@ -55,14 +55,20 @@ export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
       SpellProcedureExecutionByProcedure[P]
     >,
   ) => readonly BattleActDiscoveryCandidate[];
-  readonly executionSchema: {
-    readonly Type: SpellProcedureExecutionByProcedure[P];
-  };
+  readonly executionSchema: SpellProcedureExecutionCodec<P>;
   readonly resolve: (
     input: SpellProcedureDeclarationResolution<P>,
     executionRegistry: SpellProcedureExecutionRegistry,
   ) => BattleResolutionResult;
 };
+
+export type SpellProcedureExecutionCodec<P extends SpellProcedureKey> =
+  Schema.ConstraintCodec<
+    SpellProcedureExecutionByProcedure[P],
+    unknown,
+    never,
+    never
+  >;
 
 export function spellProcedureExecutionSchema<
   S extends Schema.ConstraintCodec<unknown, unknown, never, never>,

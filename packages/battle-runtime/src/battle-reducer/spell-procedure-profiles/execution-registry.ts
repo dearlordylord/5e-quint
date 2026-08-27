@@ -9,6 +9,7 @@ import type {
   SpellProcedureKey,
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
+import type { SpellProcedureExecutionCodec } from "./execution-profile.ts";
 import type {
   SpellProcedureExecutionResolution,
   StoredGlyphSpellProcedureResolution,
@@ -21,9 +22,7 @@ export type RegisteredSpellProcedureExecution<
   Procedure extends RegisteredSpellProcedure,
 > = {
   readonly procedure: Procedure;
-  readonly executionSchema: {
-    readonly Type: SpellProcedureExecutionByProcedure[Procedure];
-  };
+  readonly executionSchema: SpellProcedureExecutionCodec<Procedure>;
   readonly discoverCastAct: (
     state: BattleState,
     actorId: CombatantId,

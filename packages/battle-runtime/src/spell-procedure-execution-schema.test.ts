@@ -1,6 +1,8 @@
 import { Result, Schema } from "effect";
 import { spellProcedureExecutionSchema } from "./battle-reducer/spell-procedure-profiles/execution-profile.ts";
 import { SaveGatedDamageInvocationSchema } from "./battle-reducer/spell-procedure-profiles/save-gated-damage.ts";
+import { spellProcedureExecutionFor } from "./battle-reducer/spell-procedure-profiles/execution-registry.ts";
+import { spellProcedureExecutionRegistry } from "./battle-reducer/spell-procedure-profiles/execution-composition.ts";
 import {
   spellAct,
   spellHoleInvocation,
@@ -70,6 +72,22 @@ describe("spell procedure execution schema constraint", () => {
     });
     expect(
       Schema.encodeSync(SaveGatedDamageInvocationSchema)(decoded.success),
+    ).toEqual(execution);
+
+    const registeredExecution = spellProcedureExecutionFor(
+      spellProcedureExecutionRegistry(),
+      "saveGatedDamage",
+    );
+    const registeredDecoded = Schema.decodeUnknownResult(
+      registeredExecution.executionSchema,
+    )(execution);
+    if (Result.isFailure(registeredDecoded)) {
+      throw new Error(String(registeredDecoded.failure));
+    }
+    expect(
+      Schema.encodeSync(registeredExecution.executionSchema)(
+        registeredDecoded.success,
+      ),
     ).toEqual(execution);
 
     const { postSaveAreaEffect: _postSaveAreaEffect, ...withoutOptional } =
