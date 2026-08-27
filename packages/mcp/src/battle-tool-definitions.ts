@@ -18,6 +18,7 @@ import {
   SelectStatBlockOutputSchema,
   StartBattleOutputSchema,
 } from "./battle-tool-output.ts";
+import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
   mcpModelOutputJsonSchema,
   mcpOutputJsonSchema,
@@ -31,7 +32,9 @@ import {
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
-const BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS = { maxDepth: 5 } as const;
+const BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS = {
+  maxDepth: MODEL_OUTPUT_SCHEMA_MAX_DEPTH,
+} as const;
 
 export const battleToolDefinitions = [
   {

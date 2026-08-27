@@ -2,6 +2,7 @@ import fc from "fast-check";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { MODEL_OUTPUT_SCHEMA_MAX_DEPTH } from "./model-output-json-schema.ts";
 import {
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
@@ -230,7 +231,9 @@ describe("MCP model output JSON Schema", () => {
     });
 
     const defaultProjection = mcpModelOutputJsonSchema(codec);
-    const battleProjection = mcpModelOutputJsonSchema(codec, { maxDepth: 5 });
+    const battleProjection = mcpModelOutputJsonSchema(codec, {
+      maxDepth: MODEL_OUTPUT_SCHEMA_MAX_DEPTH,
+    });
 
     expect(defaultProjection).toMatchObject({
       properties: {
@@ -272,8 +275,10 @@ describe("MCP model output JSON Schema", () => {
     );
     expect(battleProjection).not.toBe(defaultProjection);
     expect(mcpModelOutputJsonSchema(codec)).toBe(defaultProjection);
-    expect(mcpModelOutputJsonSchema(codec, { maxDepth: 5 })).toBe(
-      battleProjection,
-    );
+    expect(
+      mcpModelOutputJsonSchema(codec, {
+        maxDepth: MODEL_OUTPUT_SCHEMA_MAX_DEPTH,
+      }),
+    ).toBe(battleProjection);
   });
 });
