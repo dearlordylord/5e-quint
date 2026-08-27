@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castDream,
@@ -16,7 +16,7 @@ import {
   characterSheetId,
   completedDreamCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -97,7 +97,7 @@ describe("Character Sheet runtime / Dream", () => {
   test("Dream spends a level-5 prepared spell slot and returns a table-owned conversation contract", () => {
     const target = dreamTarget();
     const messenger = dreamMessenger();
-    const result = requireRight(
+    const result = requireSuccess(
       castDream({
         sheet: dreamWizardSheet({ preparedSpells: ["dream"], slots: 1 }),
         unitLibrary,
@@ -147,7 +147,7 @@ describe("Character Sheet runtime / Dream", () => {
   });
 
   test("Dream nightmare records the Wisdom save, no-rest-benefit, and wakeup Psychic damage contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castDream({
         sheet: dreamWizardSheet({ preparedSpells: ["dream"], slots: 1 }),
         unitLibrary,
@@ -184,7 +184,7 @@ describe("Character Sheet runtime / Dream", () => {
   });
 
   test("Dream nightmare successful saves do not deny rest benefits or apply damage", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castDream({
         sheet: dreamWizardSheet({ preparedSpells: ["dream"], slots: 1 }),
         unitLibrary,
@@ -220,9 +220,9 @@ describe("Character Sheet runtime / Dream", () => {
       },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Dream nightmare message must be one to ten words.",
       );
     }
@@ -239,9 +239,9 @@ describe("Character Sheet runtime / Dream", () => {
       mode: { tag: "conversation" },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Dream requires prepared class Spell Access.",
       );
     }
@@ -250,7 +250,7 @@ describe("Character Sheet runtime / Dream", () => {
 
 const dreamSelectedIdentityActions = {
   doCastDream: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castDream({
         sheet: dreamWizardSheet({ preparedSpells: ["dream"], slots: 1 }),
         unitLibrary,
@@ -311,7 +311,7 @@ function expectedDreamProjection(): DreamSelectedIdentityProjection {
 
 function dreamTarget(): CharacterSheetDreamTarget {
   return {
-    targetId: requireRight(characterSheetDreamTargetId("dream-target:known")),
+    targetId: requireSuccess(characterSheetDreamTargetId("dream-target:known")),
     knownByCaster: true,
     plane: "same_plane_as_caster",
     sleepStateOwner: "table",
@@ -321,7 +321,7 @@ function dreamTarget(): CharacterSheetDreamTarget {
 function dreamMessenger(): CharacterSheetDreamMessenger {
   return {
     tag: "willingTouchedCreature",
-    messengerId: requireRight(
+    messengerId: requireSuccess(
       characterSheetDreamMessengerId("dream-messenger:willing-ally"),
     ),
     willing: true,
@@ -346,7 +346,7 @@ function dreamWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:dream-wizard-9"),
       build: {

@@ -2,7 +2,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   characterSheetClassFeaturePreparedSpellAccessesForBuild,
@@ -10,7 +10,7 @@ import {
   characterSheetId,
   parseCharacterSheet,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   storedAvailableSheetInput,
   subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName,
   subclassPreparedSpellAccessProgressionTestName,
@@ -19,7 +19,7 @@ import {
 
 describe("Character Sheet runtime / class feature prepared spells", () => {
   test("projects retained class-feature selected references through the public route", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:class-feature-references"),
         build: armorClassBuild({
@@ -128,9 +128,9 @@ describe("Character Sheet runtime / class feature prepared spells", () => {
       unitLibrary,
     );
 
-    expect(Either.isLeft(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) {
-      expect(sheet.left.message).toBe(
+    expect(Result.isFailure(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) {
+      expect(sheet.failure.message).toBe(
         "Character Build Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
       );
     }

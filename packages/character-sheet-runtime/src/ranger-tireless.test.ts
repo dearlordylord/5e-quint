@@ -13,7 +13,7 @@ import {
   completeShortRest,
   rebuildCharacterSheetFixture,
   armorClassBuild,
-  requireRight,
+  requireSuccess,
   resourceCount,
   unitLibrary,
   useRangerTirelessTemporaryHitPoints,
@@ -90,7 +90,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
   });
 
   test(rangerTirelessTemporaryHitPointsTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-tireless"),
         build: rangerTirelessBuild(),
@@ -102,7 +102,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
       }),
     );
 
-    const used = requireRight(
+    const used = requireSuccess(
       useRangerTirelessTemporaryHitPoints({
         sheet,
         unitLibrary,
@@ -124,13 +124,13 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
         tirelessRoll: DieRollResult(9),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Tireless roll must be within d8." },
+      _tag: "Failure",
+      failure: { message: "Tireless roll must be within d8." },
     });
   });
 
   test(rangerTirelessRestRecoveryTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-tireless-rest"),
         build: rangerTirelessBuild(),
@@ -150,7 +150,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
       }),
     );
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({
         sheet,
         unitLibrary,
@@ -164,7 +164,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
       expended: resourceCount(3),
     });
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({
         sheet: shortRested,
         timing: { tag: "noPriorLongRest" },
@@ -184,7 +184,7 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
 
 const rangerTirelessSelectedIdentityActions = {
   doUseRangerTireless: (): RangerTirelessSelectedIdentityProjection => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-tireless-replay"),
         build: rangerTirelessBuild(),
@@ -196,14 +196,14 @@ const rangerTirelessSelectedIdentityActions = {
         unitLibrary,
       }),
     );
-    const used = requireRight(
+    const used = requireSuccess(
       useRangerTirelessTemporaryHitPoints({
         sheet,
         unitLibrary,
         tirelessRoll: DieRollResult(1),
       }),
     );
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeShortRest({ sheet: used, unitLibrary }),
     );
     return {

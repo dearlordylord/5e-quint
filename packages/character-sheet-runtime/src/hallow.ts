@@ -4,7 +4,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   HALLOW_MATERIAL_COMPONENTS,
@@ -34,7 +34,7 @@ export function castHallow(input: {
   readonly area: CharacterSheetHallowArea;
   readonly wardCreatureTypes: CharacterSheetHallowCreatureTypes;
   readonly extraEffect: CharacterSheetHallowExtraEffect;
-}): Either.Either<CharacterSheetHallowResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetHallowResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -151,7 +151,7 @@ function hallowInvocationFromSpell(input: {
   readonly area: CharacterSheetHallowArea;
   readonly wardCreatureTypes: CharacterSheetHallowCreatureTypes;
   readonly extraEffect: CharacterSheetHallowExtraEffect;
-}): Either.Either<CharacterSheetHallowInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetHallowInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Hallow support profile required by this projector. */
   if (
@@ -194,7 +194,7 @@ function hallowInvocationFromSpell(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "hallow",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,

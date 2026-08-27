@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -35,7 +35,7 @@ export function castTelekinesis(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly target: CharacterSheetTelekinesisTarget;
-}): Either.Either<CharacterSheetTelekinesisResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetTelekinesisResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -70,7 +70,7 @@ function telekinesisTargetIssue(
 function telekinesisInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly target: CharacterSheetTelekinesisTarget;
-}): Either.Either<CharacterSheetTelekinesisInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetTelekinesisInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Telekinesis support profile required by this projector. */
   if (
@@ -103,12 +103,12 @@ function telekinesisInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Telekinesis requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "telekinesis",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -120,7 +120,7 @@ function telekinesisInvocationFromSpell(input: {
     requiredSpellAccess: "class_prepared",
     castingTime: { kind: "action" },
     rangeFeet: TELEKINESIS_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     target: input.target,
     savingThrow: {

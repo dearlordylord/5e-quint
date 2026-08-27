@@ -7,10 +7,10 @@ Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
 Status: the dependency cutover is complete and the cohort gate is green. The
 repository remains intentionally controlled-red for downstream Effect 4 API
-migration: the current owner sweep records five failing package owners, while
-`@dnd/shared-algebras` is at zero diagnostics after #374 and `@dnd/surface` is
-at zero after #373. This ledger is evidence, not a waiver, and does not claim
-product or rule behavior is green.
+migration: the current owner sweep records four failing package owners and nine
+green owners, including `@dnd/shared-algebras` at zero diagnostics after #374
+and `@dnd/surface` at zero after #373. This ledger is evidence, not a waiver,
+and does not claim product or rule behavior is green.
 
 ## Scope and ownership
 
@@ -93,7 +93,7 @@ Quint Connect manifest consumer, and missing lockfile sections.
 The following is the initial post-cutover snapshot, retained as historical
 evidence from before the #372 and #373 downstream source migrations. Each
 public workspace command acquired and released the repository broad lock
-through its own documented wrapper. The current owner status is recorded in
+through its own documented wrapper. The historical owner status is recorded in
 the regenerated inventory below.
 
 | Command          | Result       | Controlled-red classification                                                                                                                                                                                                                                    |
@@ -103,10 +103,14 @@ the regenerated inventory below.
 | `pnpm test`      | fail, exit 1 | `@dnd/tactical-space` passed 1 file/53 tests. `@dnd/shared` then stopped the lane with two failed suites and zero collected tests: `Schema.int is not a function` and missing `effect/Either`.                                                                   |
 
 The build and test failures are intentionally recorded at their first public
-stop point in that historical snapshot. The owner sweep below is the current
-regenerated inventory and was run separately under the repository broad lock.
+stop point in that historical snapshot. The owner sweep below is also retained
+as historical #375 evidence; the current #376 regenerated inventory is recorded
+in the later Issue #376 evidence snapshot.
 
-## Exhaustive typecheck inventory
+## Exhaustive typecheck inventory (historical #375 snapshot)
+
+The owner sweep, totals, and tables in this subsection are retained historical
+#375 evidence and are not the current #376 counts.
 
 The canonical regeneration command is
 `pnpm regenerate:effect4-controlled-red`. Its public script acquires the
@@ -383,6 +387,41 @@ oracle remain controlled-red.
 The independent Standards and Spec reviews found no actionable findings. The
 #375 reviewer loop therefore converged.
 
+## Issue #376 evidence snapshot
+
+Source HEAD: `ff94d74a1973dc58f7bab4b5504c981d67b2e83a`. The public controlled-red
+regeneration was run directly with `pnpm regenerate:effect4-controlled-red`.
+The generated inventory is [`controlled-red-inventory.json`](./controlled-red-inventory.json),
+SHA-256 `95ab10a086c4607ec1eba2d1727933cfdb5c10b552cda12c8fce07b8f2be2000`.
+
+The Character Sheet owner is green: typecheck exit 0 with zero diagnostics.
+The four remaining failing owners are `@dnd/app` (4,335 raw diagnostics),
+`@dnd/battle-runtime` (7,723), `@dnd/character-battle-runtime` (5,140), and
+`@dnd/mcp` (5,387). Inventory totals are exactly 22,585 raw and 10,108
+deduplicated diagnostics. The diagnostic code/family/raw/deduplicated records
+are authoritative in the generated inventory; the codes are TS1360, TS18046,
+TS18047, TS18048, TS2305, TS2307, TS2314, TS2322, TS2339, TS2344, TS2345,
+TS2352, TS2353, TS2367, TS2488, TS2551, TS2554, TS2556, TS2560, TS2571,
+TS2638, TS2694, TS2698, TS2700, TS2724, TS2739, TS2740, TS2741, TS2749,
+TS2769, TS7006, TS7031, and TS7053.
+
+| Evidence                                                 | Result                        |
+| -------------------------------------------------------- | ----------------------------- |
+| `pnpm --filter @dnd/character-sheet-runtime typecheck`   | pass; zero diagnostics        |
+| `pnpm --filter @dnd/character-sheet-runtime audit:split` | pass; 225/225 exports         |
+| `pnpm --filter @dnd/character-sheet-runtime test`        | pass; 47 files, 479/479 tests |
+| `test:mbt:weapon-mastery-class-level-reselection`        | pass; 3/3                     |
+| `test:mbt:spell-access-free-cast`                        | pass; 1/1                     |
+| Certified Effect 3 parser at `76d9abaf0`                 | pass; 9/9 fixed-point cases   |
+| Candidate fixed-point replay                             | pass; 9/9 cases               |
+| Focused ESLint and Prettier                              | pass                          |
+
+The global Effect 3 oracle is unchanged. Full workspace verification and the
+baseline verifier remain deferred because Battle is controlled-red. The #376
+review loop converged across standards, specification, domain/architecture,
+connascence, and code-review passes; this snapshot makes no workspace or Battle
+green claim.
+
 ## Closure conditions
 
 Close this controlled-red interval only when all of the following are true:
@@ -391,7 +430,7 @@ Close this controlled-red interval only when all of the following are true:
    with the exact values in this ledger, and the lockfile still contains one
    `effect` version (`4.0.0-rc.112`) with no removed or unsupported Effect
    packages.
-2. The five currently affected workspace owners and `scripts/effect3-baseline.ts` have
+2. The four currently affected workspace owners and `scripts/effect3-baseline.ts` have
    zero deduplicated diagnostics. The code-count table is regenerated rather
    than manually decremented.
 3. Direct `pnpm build`, `pnpm typecheck`, and `pnpm test` pass under the public

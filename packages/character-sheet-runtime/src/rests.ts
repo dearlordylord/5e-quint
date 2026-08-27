@@ -40,7 +40,7 @@ import {
   readClassCreationFacts,
   readSpeciesCreationFacts,
 } from "@dnd/surface/surface/character-creation-readers";
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 
 import { companionAfterLongRest } from "./companions.ts";
 import {
@@ -135,13 +135,13 @@ const RANGER_TIRELESS_UNIT_ID = "ranger_tireless" as const;
 
 export function startShortRest(
   input: CharacterSheetShortRestStartInput,
-): Either.Either<CharacterSheetShortRestStart, CharacterSheetIssue> {
+): Result.Result<CharacterSheetShortRestStart, CharacterSheetIssue> {
   if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
     return characterSheetIssue(
       "Short Rest requires the Character Sheet to have at least 1 HP.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     tag: "shortRestStarted",
     sheet: input.sheet,
     requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
@@ -151,13 +151,13 @@ export function startShortRest(
 
 export function finishShortRest(
   input: CharacterSheetShortRestCompletionInput,
-): Either.Either<CharacterSheetShortRestCompletion, CharacterSheetIssue> {
+): Result.Result<CharacterSheetShortRestCompletion, CharacterSheetIssue> {
   if (Number(input.restedTicks) < Number(input.rest.requiredRestTicks)) {
     return characterSheetIssue(
       "Short Rest requires 1 hour before benefits can be received.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     tag: "shortRestCompleted",
     startedRest: input.rest,
     restedTicks: input.restedTicks,
@@ -177,7 +177,7 @@ export function interruptShortRest(
 
 export function completeShortRest(
   input: CharacterSheetShortRestInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const sheet = completeShortRestBenefits({
     sheet: input.completion.startedRest.sheet,
     unitLibrary: input.unitLibrary,
@@ -186,20 +186,20 @@ export function completeShortRest(
     arcaneRecovery: input.arcaneRecovery,
     sorcerousRestoration: input.sorcerousRestoration,
   });
-  if (Either.isLeft(sheet)) return Either.left(sheet.left);
+  if (Result.isFailure(sheet)) return Result.fail(sheet.failure);
   const fiendishResilience = fiendishResilienceAfterShortRest({ input });
-  if (Either.isLeft(fiendishResilience)) {
-    return Either.left(fiendishResilience.left);
+  if (Result.isFailure(fiendishResilience)) {
+    return Result.fail(fiendishResilience.failure);
   }
-  return Either.right({
-    ...sheet.right,
+  return Result.succeed({
+    ...sheet.success,
     exhaustionLevel: shortRestExhaustionLevelAfterTireless({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary: input.unitLibrary,
     }),
-    ...(fiendishResilience.right === undefined
+    ...(fiendishResilience.success === undefined
       ? {}
-      : { fiendishResilience: fiendishResilience.right }),
+      : { fiendishResilience: fiendishResilience.success }),
   });
 }
 
@@ -288,7 +288,7 @@ export function characterSheetLongRestCalendarGate(
 
 export function startLongRest(
   input: CharacterSheetLongRestStartInput,
-): Either.Either<CharacterSheetLongRestStart, CharacterSheetIssue> {
+): Result.Result<CharacterSheetLongRestStart, CharacterSheetIssue> {
   if (characterSheetCurrentHp(input.sheet) < Hp(1)) {
     return characterSheetIssue(
       "Long Rest requires the Character Sheet to have at least 1 HP.",
@@ -300,7 +300,7 @@ export function startLongRest(
       "Long Rest requires waiting 16 hours after finishing the previous Long Rest.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     tag: "longRestStarted",
     sheet: input.sheet,
     requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
@@ -311,13 +311,13 @@ export function startLongRest(
 
 export function finishLongRest(
   input: CharacterSheetLongRestCompletionInput,
-): Either.Either<CharacterSheetLongRestCompletion, CharacterSheetIssue> {
+): Result.Result<CharacterSheetLongRestCompletion, CharacterSheetIssue> {
   if (Number(input.restedTicks) < Number(input.rest.requiredRestTicks)) {
     return characterSheetIssue(
       "Long Rest requires the full required duration before benefits can be received.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     tag: "longRestCompleted",
     startedRest: input.rest,
     restedTicks: input.restedTicks,
@@ -327,7 +327,7 @@ export function finishLongRest(
 
 export function completeLongRest(
   input: CharacterSheetLongRestInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const sheet = input.completion.startedRest.sheet;
   /* v8 ignore start -- @preserve -- Malformed Long Rest input: a rest cannot complete while the character has zero HP. */
   if (characterSheetCurrentHp(sheet) < Hp(1)) {
@@ -342,64 +342,64 @@ export function completeLongRest(
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: Long Rest reprojects Heroic Inspiration only from class units admitted when the build was created. */
-  if (Either.isLeft(heroicInspiration)) {
-    return Either.left(heroicInspiration.left);
+  if (Result.isFailure(heroicInspiration)) {
+    return Result.fail(heroicInspiration.failure);
   }
   /* v8 ignore stop -- @preserve */
   if (isCharacterSheetWithSpellSlots(sheet)) {
     const build = characterSheetLongRestBuild(input, sheet.build);
     /* v8 ignore next -- @preserve -- Malformed Long Rest input: weapon-mastery reselections are parsed against this admitted build before completion. */
-    if (Either.isLeft(build)) return Either.left(build.left);
+    if (Result.isFailure(build)) return Result.fail(build.failure);
     const hitPoints = characterSheetLongRestHitPoints({
-      build: build.right,
+      build: build.success,
       unitLibrary: input.unitLibrary,
     });
     /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
-    if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+    if (Result.isFailure(hitPoints)) return Result.fail(hitPoints.failure);
     const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
       input,
-      build: build.right,
+      build: build.success,
     });
     /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Druid state cannot be reprojected from its admitted spellcasting build. */
-    if (Either.isLeft(druidWildShapeKnownForms)) {
-      return Either.left(druidWildShapeKnownForms.left);
+    if (Result.isFailure(druidWildShapeKnownForms)) {
+      return Result.fail(druidWildShapeKnownForms.failure);
     }
     /* v8 ignore stop -- @preserve */
     const druidCircleLand = druidCircleLandAfterLongRest({
       input,
-      build: build.right,
+      build: build.success,
     });
     /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Circle of the Land state cannot be reprojected from its admitted spellcasting build. */
-    if (Either.isLeft(druidCircleLand)) {
-      return Either.left(druidCircleLand.left);
+    if (Result.isFailure(druidCircleLand)) {
+      return Result.fail(druidCircleLand.failure);
     }
     /* v8 ignore stop -- @preserve */
     const fiendishResilience = fiendishResilienceAfterLongRest({ input });
     /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Fiendish Resilience cannot be reprojected from its admitted build. */
-    if (Either.isLeft(fiendishResilience)) {
-      return Either.left(fiendishResilience.left);
+    if (Result.isFailure(fiendishResilience)) {
+      return Result.fail(fiendishResilience.failure);
     }
     /* v8 ignore stop -- @preserve */
-    return Either.right({
+    return Result.succeed({
       ...sheet,
-      build: build.right,
+      build: build.success,
       hitPointMaximumReduction: Hp(0),
       exhaustionLevel: decreaseExhaustionLevel(sheet.exhaustionLevel),
-      hitPoints: hitPoints.right,
+      hitPoints: hitPoints.success,
       spentHitDice: [],
       restFeatureUses: [],
       resourceExpenditures: [],
-      heroicInspiration: heroicInspiration.right,
+      heroicInspiration: heroicInspiration.success,
       companion,
-      ...(druidWildShapeKnownForms.right === undefined
+      ...(druidWildShapeKnownForms.success === undefined
         ? {}
-        : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
-      ...(druidCircleLand.right === undefined
+        : { druidWildShapeKnownForms: druidWildShapeKnownForms.success }),
+      ...(druidCircleLand.success === undefined
         ? {}
-        : { druidCircleLand: druidCircleLand.right }),
-      ...(fiendishResilience.right === undefined
+        : { druidCircleLand: druidCircleLand.success }),
+      ...(fiendishResilience.success === undefined
         ? {}
-        : { fiendishResilience: fiendishResilience.right }),
+        : { fiendishResilience: fiendishResilience.success }),
       spellSlotExpenditures: [],
       createdSpellSlots: [],
       pactSlotExpenditure: undefined,
@@ -407,57 +407,57 @@ export function completeLongRest(
   }
   const build = characterSheetLongRestBuild(input, sheet.build);
   /* v8 ignore next -- @preserve -- Malformed Long Rest input: weapon-mastery reselections are parsed against this admitted build before completion. */
-  if (Either.isLeft(build)) return Either.left(build.left);
+  if (Result.isFailure(build)) return Result.fail(build.failure);
   const hitPoints = characterSheetLongRestHitPoints({
-    build: build.right,
+    build: build.success,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  if (Result.isFailure(hitPoints)) return Result.fail(hitPoints.failure);
   const druidWildShapeKnownForms = druidWildShapeKnownFormsAfterLongRest({
     input,
-    build: build.right,
+    build: build.success,
   });
   /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Druid state cannot be reprojected from its admitted non-spellcasting build. */
-  if (Either.isLeft(druidWildShapeKnownForms)) {
-    return Either.left(druidWildShapeKnownForms.left);
+  if (Result.isFailure(druidWildShapeKnownForms)) {
+    return Result.fail(druidWildShapeKnownForms.failure);
   }
   /* v8 ignore stop -- @preserve */
   const druidCircleLand = druidCircleLandAfterLongRest({
     input,
-    build: build.right,
+    build: build.success,
   });
   /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Circle of the Land state cannot be reprojected from its admitted non-spellcasting build. */
-  if (Either.isLeft(druidCircleLand)) {
-    return Either.left(druidCircleLand.left);
+  if (Result.isFailure(druidCircleLand)) {
+    return Result.fail(druidCircleLand.failure);
   }
   /* v8 ignore stop -- @preserve */
   const fiendishResilience = fiendishResilienceAfterLongRest({ input });
   /* v8 ignore start -- @preserve -- Malformed sheet/catalog correlation: retained Fiendish Resilience cannot be reprojected from its admitted non-spellcasting build. */
-  if (Either.isLeft(fiendishResilience)) {
-    return Either.left(fiendishResilience.left);
+  if (Result.isFailure(fiendishResilience)) {
+    return Result.fail(fiendishResilience.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     ...sheet,
-    build: build.right,
+    build: build.success,
     hitPointMaximumReduction: Hp(0),
     exhaustionLevel: decreaseExhaustionLevel(sheet.exhaustionLevel),
-    hitPoints: hitPoints.right,
+    hitPoints: hitPoints.success,
     spentHitDice: [],
     restFeatureUses: [],
     resourceExpenditures: [],
-    heroicInspiration: heroicInspiration.right,
+    heroicInspiration: heroicInspiration.success,
     companion,
-    ...(druidWildShapeKnownForms.right === undefined
+    ...(druidWildShapeKnownForms.success === undefined
       ? {}
-      : { druidWildShapeKnownForms: druidWildShapeKnownForms.right }),
-    ...(druidCircleLand.right === undefined
+      : { druidWildShapeKnownForms: druidWildShapeKnownForms.success }),
+    ...(druidCircleLand.success === undefined
       ? {}
-      : { druidCircleLand: druidCircleLand.right }),
-    ...(fiendishResilience.right === undefined
+      : { druidCircleLand: druidCircleLand.success }),
+    ...(fiendishResilience.success === undefined
       ? {}
-      : { fiendishResilience: fiendishResilience.right }),
+      : { fiendishResilience: fiendishResilience.success }),
   });
 }
 
@@ -471,26 +471,26 @@ export function completeLongRestArcaneRecoveryResetWithRoute(
       (use) => use.tag === ARCANE_RECOVERY_REST_FEATURE_TAG,
     );
   const result = completeLongRest(input);
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     if (!resetsArcaneRecovery) {
       return {
         tag: "accepted",
         route: "none",
-        sheet: result.right,
+        sheet: result.success,
         qRoute: [],
       };
     }
     return {
       tag: "accepted",
       route: "arcaneRecovery",
-      sheet: result.right,
+      sheet: result.success,
       qRoute: [completeArcaneRecoverySpellSlotRestRouteEvent()],
     };
   }
   return {
     tag: "rejected",
     route: "none",
-    issue: result.left,
+    issue: result.failure,
     qRoute: [],
   };
 }
@@ -504,27 +504,27 @@ export function completeLongRestWeaponMasteryReselectionWithRoute(
 ): CharacterSheetWeaponMasteryReselectionRouteResult {
   const sheet = input.completion.startedRest.sheet;
   const reselectionBuild = characterSheetLongRestBuild(input, sheet.build);
-  if (Either.isLeft(reselectionBuild)) {
+  if (Result.isFailure(reselectionBuild)) {
     return {
       tag: "rejected",
       route: "weaponMastery",
-      issue: reselectionBuild.left,
+      issue: reselectionBuild.failure,
       qRoute: rejectedWeaponMasteryReselectionRoute(),
     };
   }
   const result = completeLongRest(input);
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     return {
       tag: "accepted",
       route: "weaponMastery",
-      sheet: result.right,
+      sheet: result.success,
       qRoute: acceptedWeaponMasteryReselectionRoute(),
     };
   }
   return {
     tag: "rejected",
     route: "none",
-    issue: result.left,
+    issue: result.failure,
     qRoute: [],
   };
 }
@@ -532,7 +532,7 @@ export function completeLongRestWeaponMasteryReselectionWithRoute(
 function characterSheetLongRestHitPoints(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheet["hitPoints"], CharacterSheetIssue> {
+}): Result.Result<CharacterSheet["hitPoints"], CharacterSheetIssue> {
   const hitPointMaximum = characterSheetHitPointMaximum({
     sheet: {
       build: input.build,
@@ -541,9 +541,10 @@ function characterSheetLongRestHitPoints(input: {
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Malformed sheet/catalog correlation: an admitted build and its unit catalog must still yield a hit-point maximum. */
-  if (Either.isLeft(hitPointMaximum)) return Either.left(hitPointMaximum.left);
+  if (Result.isFailure(hitPointMaximum))
+    return Result.fail(hitPointMaximum.failure);
   return characterSheetHitPoints({
-    currentHp: hitPointMaximum.right,
+    currentHp: hitPointMaximum.success,
     tempHp: Hp(0),
   });
 }
@@ -551,14 +552,14 @@ function characterSheetLongRestHitPoints(input: {
 function heroicInspirationAfterLongRest(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetHeroicInspiration, CharacterSheetIssue> {
   const grantsHeroicInspiration =
     characterSheetHasLongRestHeroicInspirationGrant(input);
-  if (Either.isLeft(grantsHeroicInspiration)) {
-    return Either.left(grantsHeroicInspiration.left);
+  if (Result.isFailure(grantsHeroicInspiration)) {
+    return Result.fail(grantsHeroicInspiration.failure);
   }
-  return Either.right(
-    grantsHeroicInspiration.right
+  return Result.succeed(
+    grantsHeroicInspiration.success
       ? CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE
       : input.sheet.heroicInspiration,
   );
@@ -567,15 +568,15 @@ function heroicInspirationAfterLongRest(input: {
 function characterSheetHasLongRestHeroicInspirationGrant(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<boolean, CharacterSheetIssue> {
+}): Result.Result<boolean, CharacterSheetIssue> {
   const species = getRequiredUnit(input.unitLibrary, input.sheet.build.species);
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: the retained species is missing or has unreadable creation facts. */
-  if (Either.isLeft(species)) {
-    return Either.left(species.left);
+  if (Result.isFailure(species)) {
+    return Result.fail(species.failure);
   }
-  const speciesFacts = readSpeciesCreationFacts(species.right);
+  const speciesFacts = readSpeciesCreationFacts(species.success);
   if (speciesFacts.tag !== "readable") {
-    return Either.right(false);
+    return Result.succeed(false);
   }
   /* v8 ignore stop -- @preserve */
   for (const traitUnitId of Object.values(speciesFacts.value.traits)) {
@@ -583,14 +584,14 @@ function characterSheetHasLongRestHeroicInspirationGrant(input: {
       input.unitLibrary,
       authoredUnitId(traitUnitId),
     );
-    if (Either.isLeft(trait)) {
-      return Either.left(trait.left);
+    if (Result.isFailure(trait)) {
+      return Result.fail(trait.failure);
     }
-    if (isLongRestHeroicInspirationFeature(trait.right)) {
-      return Either.right(true);
+    if (isLongRestHeroicInspirationFeature(trait.success)) {
+      return Result.succeed(true);
     }
   }
-  return Either.right(false);
+  return Result.succeed(false);
 }
 
 function isLongRestHeroicInspirationFeature(
@@ -658,7 +659,7 @@ function rejectArcaneRecoveryRouteEvent(
 
 export function interruptLongRest(
   input: CharacterSheetLongRestInterruptionInput,
-): Either.Either<
+): Result.Result<
   CharacterSheetLongRestInterruptionOutcome,
   CharacterSheetIssue
 > {
@@ -697,7 +698,7 @@ export function interruptLongRest(
         "Interrupted Long Rest before 1 hour cannot receive Short Rest benefit inputs.",
       );
     }
-    return Either.right({
+    return Result.succeed({
       tag: "longRestInterruptedNoBenefit",
       rest: resumedRest,
       interruption: input.interruption,
@@ -713,13 +714,13 @@ export function interruptLongRest(
     sorcerousRestoration: input.sorcerousRestoration,
   });
   /* v8 ignore next -- @preserve -- Malformed interruption benefit input: Short Rest options are parsed against the retained sheet before the interrupted Long Rest resumes. */
-  if (Either.isLeft(shortRest)) return Either.left(shortRest.left);
+  if (Result.isFailure(shortRest)) return Result.fail(shortRest.failure);
   const resumedRestWithBenefits = characterSheetLongRestAfterInterruption({
     rest: input.rest,
-    sheet: shortRest.right,
+    sheet: shortRest.success,
     requiredRestTicks: requiredLongRestTicks,
   });
-  return Either.right({
+  return Result.succeed({
     tag: "longRestInterruptedWithShortRestBenefits",
     rest: resumedRestWithBenefits,
     interruption: input.interruption,
@@ -753,7 +754,7 @@ function characterSheetLongRestAfterInterruption(input: {
 
 export function completeMagicalCunningRite(
   input: CharacterSheetMagicalCunningInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const pactSlots = characterSheetPactSlots(input.sheet);
   /* v8 ignore start -- @preserve -- Malformed Magical Cunning input: the sheet lacks Pact Slot state. */
   if (pactSlots === undefined) {
@@ -767,7 +768,7 @@ export function completeMagicalCunningRite(
     input.sheet.build,
     input.unitLibrary,
   );
-  if (Either.isLeft(profile)) return Either.left(profile.left);
+  if (Result.isFailure(profile)) return Result.fail(profile.failure);
   if (
     input.sheet.restFeatureUses.some(
       (use) => use.tag === MAGICAL_CUNNING_REST_FEATURE_TAG,
@@ -786,12 +787,12 @@ export function completeMagicalCunningRite(
   /* v8 ignore stop -- @preserve */
   const recovered = magicalCunningRecoveredPactSlots({
     pactSlots,
-    profile: profile.right,
+    profile: profile.success,
   });
   const expendedAfterRecovery = resourceCount(
     Math.max(0, pactSlots.expended - recovered),
   );
-  return Either.right({
+  return Result.succeed({
     ...input.sheet,
     pactSlotExpenditure:
       expendedAfterRecovery === resourceCount(0)
@@ -822,13 +823,13 @@ export function magicalCunningRecoveredPactSlots(input: {
 export function pactSlotRecoveryProfileForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterSheetPactSlotRecoveryProfile, CharacterSheetIssue> {
+): Result.Result<CharacterSheetPactSlotRecoveryProfile, CharacterSheetIssue> {
   const profiles: CharacterSheetPactSlotRecoveryProfile[] = [];
   for (const classUnitId of progressionClassUnitIds(build.progression)) {
     const unit = getRequiredUnit(unitLibrary, classUnitId);
     /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: every class id in an admitted progression must resolve in its retained unit catalog. */
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    const facts = readClassCreationFacts(unit.right);
+    if (Result.isFailure(unit)) return Result.fail(unit.failure);
+    const facts = readClassCreationFacts(unit.success);
     /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: every Unit admitted as a progression class must expose readable class-creation facts. */
     if (facts.tag !== "readable") continue;
     /* v8 ignore stop -- @preserve */
@@ -839,8 +840,8 @@ export function pactSlotRecoveryProfileForBuild(
       if (
         Option.isSome(feature) &&
         isPactSlotRecoveryFeature(feature.value) &&
-        unit.right.kind === "class" &&
-        unit.right.className === feature.value.className
+        unit.success.kind === "class" &&
+        unit.success.className === feature.value.className
       ) {
         profiles.push({ feature: feature.value, classUnitId });
       }
@@ -866,7 +867,7 @@ export function pactSlotRecoveryProfileForBuild(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(profile);
+  return Result.succeed(profile);
 }
 
 function isPactSlotRecoveryFeature(
@@ -887,9 +888,9 @@ function isPactSlotRecoveryFeature(
 function characterSheetLongRestBuild<TBuild extends CharacterBuild>(
   input: CharacterSheetLongRestInput,
   build: TBuild,
-): Either.Either<TBuild, CharacterSheetIssue> {
+): Result.Result<TBuild, CharacterSheetIssue> {
   if (input.weaponMasteryReselections === undefined) {
-    return Either.right(build);
+    return Result.succeed(build);
   }
   return characterBuildWithWeaponMasteryReselections({
     build,
@@ -904,7 +905,7 @@ function characterBuildWithWeaponMasteryReselections<
   readonly build: TBuild;
   readonly unitLibrary: UnitCatalog;
   readonly reselections: ReadonlyNonEmptyArray<CharacterSheetWeaponMasteryReselection>;
-}): Either.Either<TBuild, CharacterSheetIssue> {
+}): Result.Result<TBuild, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- The ReadonlyNonEmptyArray reselection type makes an empty batch an internal malformed-call invariant. */
   if (input.reselections.length === 0) {
     return characterSheetIssue(
@@ -938,16 +939,16 @@ function characterBuildWithWeaponMasteryReselections<
       unitLibrary: input.unitLibrary,
       reselection,
     });
-    if (Either.isLeft(selectedWeaponUnitIds)) {
-      return Either.left(selectedWeaponUnitIds.left);
+    if (Result.isFailure(selectedWeaponUnitIds)) {
+      return Result.fail(selectedWeaponUnitIds.failure);
     }
     reselectedWeaponUnitIdsByFeature.set(
       reselection.featureUnitId,
-      selectedWeaponUnitIds.right,
+      selectedWeaponUnitIds.success,
     );
   }
 
-  return Either.right({
+  return Result.succeed({
     ...input.build,
     features: characterBuildFeaturesWithWeaponMasteryReselections(
       input.build.features,
@@ -960,7 +961,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly reselection: CharacterSheetWeaponMasteryReselection;
-}): Either.Either<readonly UnitRecord["id"][], CharacterSheetIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterSheetIssue> {
   const profile = weaponMasteryChoiceProfileForFeature({
     featureUnitId: input.reselection.featureUnitId,
     unitLibrary: input.unitLibrary,
@@ -1037,7 +1038,7 @@ function selectedWeaponMasteryUnitIdsForLongRest(input: {
     );
   }
 
-  return Either.right([...selectedWeaponUnitIds]);
+  return Result.succeed([...selectedWeaponUnitIds]);
 }
 
 function selectedWeaponMasteryUnitIds(

@@ -81,7 +81,7 @@ import type {
   SpellRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import { featurePreparedSpellIdsForBuild } from "./class-feature-spells.ts";
 import { isDruidCircleLandChoice } from "./druid-features.ts";
@@ -136,22 +136,25 @@ type ParsedStoredHitPoints = {
 
 export function parseStoredHitPoints(
   value: unknown,
-): Either.Either<ParsedStoredHitPoints, CharacterSheetIssue> {
+): Result.Result<ParsedStoredHitPoints, CharacterSheetIssue> {
   if (!isRecord(value))
     return characterSheetIssue("Expected Character Sheet hit points.");
   const tempHp =
-    value.tempHp === undefined ? Either.right(Hp(0)) : parseHp(value.tempHp);
-  if (Either.isLeft(tempHp)) return Either.left(tempHp.left);
+    value.tempHp === undefined ? Result.succeed(Hp(0)) : parseHp(value.tempHp);
+  if (Result.isFailure(tempHp)) return Result.fail(tempHp.failure);
   if (value.tag === "positive") {
     const currentHp = parseHp(value.currentHp);
-    return Either.isLeft(currentHp)
-      ? Either.left(currentHp.left)
-      : Either.right({ currentHp: currentHp.right, tempHp: tempHp.right });
+    return Result.isFailure(currentHp)
+      ? Result.fail(currentHp.failure)
+      : Result.succeed({
+          currentHp: currentHp.success,
+          tempHp: tempHp.success,
+        });
   }
   if (value.tag === "knockedOut") {
-    return Either.right({
+    return Result.succeed({
       currentHp: Hp(1),
-      tempHp: tempHp.right,
+      tempHp: tempHp.success,
       positiveHpUnconscious: CHARACTER_SHEET_KNOCKED_OUT_UNCONSCIOUS,
     });
   }
@@ -159,38 +162,38 @@ export function parseStoredHitPoints(
     return characterSheetIssue("Expected Character Sheet hit point state.");
   }
   const lifecycle = parseStoredZeroHpLifecycle(value.lifecycle);
-  return Either.isLeft(lifecycle)
-    ? Either.left(lifecycle.left)
-    : Either.right({
+  return Result.isFailure(lifecycle)
+    ? Result.fail(lifecycle.failure)
+    : Result.succeed({
         currentHp: Hp(0),
-        tempHp: tempHp.right,
-        zeroHpLifecycle: lifecycle.right,
+        tempHp: tempHp.success,
+        zeroHpLifecycle: lifecycle.success,
       });
 }
 
 function parseStoredZeroHpLifecycle(
   value: unknown,
-): Either.Either<CharacterSheetZeroHpLifecycleInput, CharacterSheetIssue> {
+): Result.Result<CharacterSheetZeroHpLifecycleInput, CharacterSheetIssue> {
   if (!isRecord(value))
     return characterSheetIssue("Expected zero-HP lifecycle.");
   if (value.tag === "stable") {
     const recovery = parseStoredStableRecovery(value.recovery);
-    return Either.isLeft(recovery)
-      ? Either.left(recovery.left)
-      : Either.right({ tag: "stable", recovery: recovery.right });
+    return Result.isFailure(recovery)
+      ? Result.fail(recovery.failure)
+      : Result.succeed({ tag: "stable", recovery: recovery.success });
   }
   if (value.tag !== "unstable" && value.tag !== "dead") {
     return characterSheetIssue("Expected zero-HP lifecycle state.");
   }
   const deathSaves = parseStoredDeathSaves(value.deathSaves);
-  return Either.isLeft(deathSaves)
-    ? Either.left(deathSaves.left)
-    : Either.right({ tag: value.tag, deathSaves: deathSaves.right });
+  return Result.isFailure(deathSaves)
+    ? Result.fail(deathSaves.failure)
+    : Result.succeed({ tag: value.tag, deathSaves: deathSaves.success });
 }
 
 function parseStoredStableRecovery(
   value: unknown,
-): Either.Either<CharacterSheetStableRecovery, CharacterSheetIssue> {
+): Result.Result<CharacterSheetStableRecovery, CharacterSheetIssue> {
   if (!isRecord(value)) {
     return characterSheetIssue("Expected Stable recovery state.");
   }
@@ -203,13 +206,13 @@ function parseStoredStableRecovery(
     const elapsedBeforeRecoveryRoll = parseElapsedTimeTicks(
       value.elapsedBeforeRecoveryRoll,
     );
-    return Either.isLeft(elapsedBeforeRecoveryRoll)
+    return Result.isFailure(elapsedBeforeRecoveryRoll)
       ? characterSheetIssue(
           "Stable recovery elapsed time must be elapsed-time ticks.",
         )
-      : Either.right({
+      : Result.succeed({
           kind: "regains1HpAfter1d4Hours",
-          elapsedBeforeRecoveryRoll: elapsedBeforeRecoveryRoll.right,
+          elapsedBeforeRecoveryRoll: elapsedBeforeRecoveryRoll.success,
         });
   }
   if (value.kind !== "regains1HpAfter") {
@@ -221,28 +224,31 @@ function parseStoredStableRecovery(
     );
   }
   const remaining = parsePositiveElapsedTimeTicks(value.remaining);
-  return Either.isLeft(remaining)
+  return Result.isFailure(remaining)
     ? characterSheetIssue(
         "Stable recovery remaining time must be positive elapsed-time ticks.",
       )
-    : Either.right({ kind: "regains1HpAfter", remaining: remaining.right });
+    : Result.succeed({ kind: "regains1HpAfter", remaining: remaining.success });
 }
 
 function parseStoredDeathSaves(
   value: unknown,
-): Either.Either<DeathSaves, CharacterSheetIssue> {
+): Result.Result<DeathSaves, CharacterSheetIssue> {
   if (!isRecord(value)) return characterSheetIssue("Expected death saves.");
   if (!isDeathSaveCount(value.successes) || !isDeathSaveCount(value.failures)) {
     return characterSheetIssue("Death saves must be counts from 0 to 3.");
   }
-  return Either.right({ successes: value.successes, failures: value.failures });
+  return Result.succeed({
+    successes: value.successes,
+    failures: value.failures,
+  });
 }
 
 export function parseStoredSpellSlots(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   value: Readonly<Record<string, unknown>>,
-): Either.Either<
+): Result.Result<
   CharacterSheetSpellSlotSourceState | undefined,
   CharacterSheetIssue
 > {
@@ -254,7 +260,7 @@ export function parseStoredSpellSlots(
   if (!isSpellcastingBuild(build)) {
     return value.spellSlotExpenditures === undefined &&
       value.createdSpellSlots === undefined
-      ? Either.right(undefined)
+      ? Result.succeed(undefined)
       : characterSheetIssue(
           "Non-spellcasting Character Sheet cannot carry Spell Slot state.",
         );
@@ -279,55 +285,55 @@ export function parseStoredSpellSlots(
     }
     const spellLevel = parseSpellSlotLevel(expenditure.spellLevel);
     const expended = parseResourceCount(expenditure.expended);
-    if (Either.isLeft(spellLevel)) return Either.left(spellLevel.left);
-    if (Either.isLeft(expended)) return Either.left(expended.left);
-    if (expenditureLevels.has(spellLevel.right)) {
+    if (Result.isFailure(spellLevel)) return Result.fail(spellLevel.failure);
+    if (Result.isFailure(expended)) return Result.fail(expended.failure);
+    if (expenditureLevels.has(spellLevel.success)) {
       return characterSheetIssue(
         "Spell Slot state must not duplicate spell levels.",
       );
     }
-    expenditureLevels.add(spellLevel.right);
+    expenditureLevels.add(spellLevel.success);
     const capacity = buildSlots.find(
-      (slot) => slot.spellLevel === spellLevel.right,
+      (slot) => slot.spellLevel === spellLevel.success,
     );
     if (capacity === undefined) {
       return characterSheetIssue(
         "Spell Slot state does not match build capacity.",
       );
     }
-    if (expended.right > capacity.count) {
+    if (expended.success > capacity.count) {
       return characterSheetIssue(
         `Spell Slot state does not match build capacity for level ${capacity.spellLevel}.`,
       );
     }
     spellSlotExpenditures.push({
-      spellLevel: spellLevel.right,
-      expended: expended.right,
+      spellLevel: spellLevel.success,
+      expended: expended.success,
     });
   }
   const createdSpellSlots = parseStoredCreatedSpellSlots(
     value.createdSpellSlots,
   );
-  if (Either.isLeft(createdSpellSlots)) {
-    return Either.left(createdSpellSlots.left);
+  if (Result.isFailure(createdSpellSlots)) {
+    return Result.fail(createdSpellSlots.failure);
   }
   return validateSpellSlotSourceState({
     build,
     unitLibrary,
     spellSlotState: {
       ordinarySpellSlotExpenditures: spellSlotExpenditures,
-      createdSpellSlots: createdSpellSlots.right,
+      createdSpellSlots: createdSpellSlots.success,
     },
   });
 }
 
 function parseStoredCreatedSpellSlots(
   value: unknown,
-): Either.Either<
+): Result.Result<
   readonly CharacterSheetCreatedSpellSlotState[],
   CharacterSheetIssue
 > {
-  if (value === undefined) return Either.right([]);
+  if (value === undefined) return Result.succeed([]);
   if (!Array.isArray(value)) {
     return characterSheetIssue("Created Spell Slot state must be a list.");
   }
@@ -345,33 +351,33 @@ function parseStoredCreatedSpellSlots(
     const spellLevel = parseSpellSlotLevel(slot.spellLevel);
     const count = parsePositiveResourceCount(slot.count);
     const expended = parseResourceCount(slot.expended);
-    if (Either.isLeft(spellLevel)) return Either.left(spellLevel.left);
-    if (Either.isLeft(count)) return Either.left(count.left);
-    if (Either.isLeft(expended)) return Either.left(expended.left);
-    if (levels.has(spellLevel.right)) {
+    if (Result.isFailure(spellLevel)) return Result.fail(spellLevel.failure);
+    if (Result.isFailure(count)) return Result.fail(count.failure);
+    if (Result.isFailure(expended)) return Result.fail(expended.failure);
+    if (levels.has(spellLevel.success)) {
       return characterSheetIssue(
         "Created Spell Slot state must not duplicate spell levels.",
       );
     }
-    levels.add(spellLevel.right);
-    if (expended.right > count.right) {
+    levels.add(spellLevel.success);
+    if (expended.success > count.success) {
       return characterSheetIssue(
         "Created Spell Slot expenditure cannot exceed count.",
       );
     }
     slots.push({
-      spellLevel: spellLevel.right,
-      count: count.right,
-      expended: expended.right,
+      spellLevel: spellLevel.success,
+      count: count.success,
+      expended: expended.success,
     });
   }
-  return Either.right(slots);
+  return Result.succeed(slots);
 }
 
 export function parseStoredPactSlots(
   build: CharacterBuild,
   value: Readonly<Record<string, unknown>>,
-): Either.Either<
+): Result.Result<
   CharacterPactSlotExpenditure | undefined,
   CharacterSheetIssue
 > {
@@ -383,13 +389,13 @@ export function parseStoredPactSlots(
   const pactMagic = characterBuildPactSlotCapacity(build);
   if (pactMagic === undefined) {
     return value.pactSlotExpenditure === undefined
-      ? Either.right(undefined)
+      ? Result.succeed(undefined)
       : characterSheetIssue(
           "Character Sheet without Pact Magic cannot carry Pact Slot state.",
         );
   }
   if (value.pactSlotExpenditure === undefined) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   if (!isRecord(value.pactSlotExpenditure)) {
     return characterSheetIssue(
@@ -402,22 +408,22 @@ export function parseStoredPactSlots(
     );
   }
   const expended = parseResourceCount(value.pactSlotExpenditure.expended);
-  if (Either.isLeft(expended)) return Either.left(expended.left);
-  if (expended.right > pactMagic.count) {
+  if (Result.isFailure(expended)) return Result.fail(expended.failure);
+  if (expended.success > pactMagic.count) {
     return characterSheetIssue(
       "Pact Slot state must match Pact Magic build capacity.",
     );
   }
-  return expended.right === resourceCount(0)
-    ? Either.right(undefined)
-    : Either.right({
-        expended: expended.right,
+  return expended.success === resourceCount(0)
+    ? Result.succeed(undefined)
+    : Result.succeed({
+        expended: expended.success,
       });
 }
 
 export function parseStoredResourceExpenditures(
   value: unknown,
-): Either.Either<
+): Result.Result<
   readonly CharacterSheetResourceExpenditure[],
   CharacterSheetIssue
 > {
@@ -429,15 +435,15 @@ export function parseStoredResourceExpenditures(
   const expenditures: CharacterSheetResourceExpenditure[] = [];
   for (const expenditure of value) {
     const parsed = parseStoredResourceExpenditure(expenditure);
-    if (Either.isLeft(parsed)) return Either.left(parsed.left);
-    expenditures.push(parsed.right);
+    if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
+    expenditures.push(parsed.success);
   }
-  return Either.right(expenditures);
+  return Result.succeed(expenditures);
 }
 
 function parseStoredResourceExpenditure(
   value: unknown,
-): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+): Result.Result<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
   if (!isRecord(value)) {
     return characterSheetIssue(
       "Expected Character Sheet resource expenditure.",
@@ -461,45 +467,45 @@ function parseStoredResourceExpenditure(
 
 function parseStoredUseCountResourceExpenditure(
   value: Readonly<Record<string, unknown>>,
-): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+): Result.Result<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
   if (!recordHasExactKeys(value, ["tag", "unitId", "expended"])) {
     return characterSheetIssue(
       "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
     );
   }
   const expended = parseResourceCount(value.expended);
-  if (Either.isLeft(expended)) return Either.left(expended.left);
+  if (Result.isFailure(expended)) return Result.fail(expended.failure);
   const unitId = parseUseCountResourceExpenditureUnitId(value);
-  if (Either.isLeft(unitId)) return Either.left(unitId.left);
-  return Either.right({
+  if (Result.isFailure(unitId)) return Result.fail(unitId.failure);
+  return Result.succeed({
     tag: "useCountResource",
-    unitId: unitId.right,
-    expended: expended.right,
+    unitId: unitId.success,
+    expended: expended.success,
   });
 }
 
 function parseStoredPointPoolResourceExpenditure(
   value: Readonly<Record<string, unknown>>,
-): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+): Result.Result<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
   if (!recordHasExactKeys(value, ["tag", "unitId", "expended"])) {
     return characterSheetIssue(
       "Character Sheet keyed resource expenditure must contain exactly tag, Unit id, and expended count.",
     );
   }
   const expended = parseResourceCount(value.expended);
-  if (Either.isLeft(expended)) return Either.left(expended.left);
+  if (Result.isFailure(expended)) return Result.fail(expended.failure);
   const unitId = parsePointPoolResourceExpenditureUnitId(value);
-  if (Either.isLeft(unitId)) return Either.left(unitId.left);
-  return Either.right({
+  if (Result.isFailure(unitId)) return Result.fail(unitId.failure);
+  return Result.succeed({
     tag: "pointPoolResource",
-    unitId: unitId.right,
-    expended: expended.right,
+    unitId: unitId.success,
+    expended: expended.success,
   });
 }
 
 function parseStoredSpellAccessFreeCastExpenditure(
   value: Readonly<Record<string, unknown>>,
-): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+): Result.Result<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
   if (
     !recordHasExactKeys(value, [
       "tag",
@@ -515,38 +521,38 @@ function parseStoredSpellAccessFreeCastExpenditure(
     );
   }
   const expended = parseResourceCount(value.expended);
-  if (Either.isLeft(expended)) return Either.left(expended.left);
-  return Either.right({
+  if (Result.isFailure(expended)) return Result.fail(expended.failure);
+  return Result.succeed({
     tag: "spellAccessFreeCast",
     sourceUnitId: authoredUnitId(value.sourceUnitId),
     spellId: authoredUnitId(value.spellId),
-    expended: expended.right,
+    expended: expended.success,
   });
 }
 
 function parseStoredLayOnHandsResourceExpenditure(
   value: Readonly<Record<string, unknown>>,
-): Either.Either<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
+): Result.Result<CharacterSheetResourceExpenditure, CharacterSheetIssue> {
   if (!recordHasExactKeys(value, ["tag", "expended"])) {
     return characterSheetIssue(
       "Character Sheet tagged resource expenditure must contain exactly tag and expended count.",
     );
   }
   const expended = parseResourceCount(value.expended);
-  if (Either.isLeft(expended)) return Either.left(expended.left);
-  return Either.right({
+  if (Result.isFailure(expended)) return Result.fail(expended.failure);
+  return Result.succeed({
     tag: "layOnHandsHealingPool",
-    expended: expended.right,
+    expended: expended.success,
   });
 }
 
 export function parseStoredDruidWildShapeKnownForms(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterSheetDruidWildShapeKnownForms | undefined,
   CharacterSheetIssue
 > {
-  if (value === undefined) return Either.right(undefined);
+  if (value === undefined) return Result.succeed(undefined);
   if (
     !isRecord(value) ||
     !Array.isArray(value.statBlockIds) ||
@@ -554,40 +560,40 @@ export function parseStoredDruidWildShapeKnownForms(
   ) {
     return characterSheetIssue("Expected Wild Shape known-form state.");
   }
-  return Either.right({
+  return Result.succeed({
     statBlockIds: value.statBlockIds,
   });
 }
 
 export function parseStoredDruidCircleLand(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterSheetDruidCircleLand | undefined,
   CharacterSheetIssue
 > {
-  if (value === undefined) return Either.right(undefined);
+  if (value === undefined) return Result.succeed(undefined);
   if (!isRecord(value) || !isDruidCircleLandChoice(value.land)) {
     return characterSheetIssue(
       "Expected Circle of the Land selected land state.",
     );
   }
-  return Either.right({ land: value.land });
+  return Result.succeed({ land: value.land });
 }
 
 function parseUseCountResourceExpenditureUnitId(
   expenditure: Record<string, unknown>,
-): Either.Either<UnitRecord["id"], CharacterSheetIssue> {
+): Result.Result<UnitRecord["id"], CharacterSheetIssue> {
   if (typeof expenditure.unitId !== "string") {
     return characterSheetIssue(
       "Character Sheet use-count expenditure requires a supported class feature Unit id.",
     );
   }
-  return Either.right(authoredUnitId(expenditure.unitId));
+  return Result.succeed(authoredUnitId(expenditure.unitId));
 }
 
 function parsePointPoolResourceExpenditureUnitId(
   expenditure: Record<string, unknown>,
-): Either.Either<CharacterSheetPointPoolResourceUnitId, CharacterSheetIssue> {
+): Result.Result<CharacterSheetPointPoolResourceUnitId, CharacterSheetIssue> {
   if (
     typeof expenditure.unitId !== "string" ||
     !isCharacterSheetPointPoolResourceUnitId(authoredUnitId(expenditure.unitId))
@@ -596,40 +602,40 @@ function parsePointPoolResourceExpenditureUnitId(
       "Character Sheet point-pool expenditure requires a supported class feature Unit id.",
     );
   }
-  return Either.right(authoredUnitId(expenditure.unitId));
+  return Result.succeed(authoredUnitId(expenditure.unitId));
 }
 
 export function parseResourceCount(
   value: unknown,
-): Either.Either<ResourceCount, CharacterSheetIssue> {
+): Result.Result<ResourceCount, CharacterSheetIssue> {
   return isNonNegativeInteger(value)
-    ? Either.right(resourceCount(value))
+    ? Result.succeed(resourceCount(value))
     : characterSheetIssue("Expected nonnegative resource count.");
 }
 
 function parsePositiveResourceCount(
   value: unknown,
-): Either.Either<ResourceCount, CharacterSheetIssue> {
+): Result.Result<ResourceCount, CharacterSheetIssue> {
   return isPositiveInteger(value)
-    ? Either.right(resourceCount(value))
+    ? Result.succeed(resourceCount(value))
     : characterSheetIssue("Expected positive resource count.");
 }
 
 function parseSpellSlotLevel(
   value: unknown,
-): Either.Either<SpellSlotLevel, CharacterSheetIssue> {
+): Result.Result<SpellSlotLevel, CharacterSheetIssue> {
   return isPositiveInteger(value)
-    ? Either.right(spellSlotLevel(value))
+    ? Result.succeed(spellSlotLevel(value))
     : characterSheetIssue("Expected positive Spell Slot level.");
 }
 
 export function parseCharacterBuild(
   value: unknown,
   unitLibrary: UnitCatalog,
-): Either.Either<CharacterBuild, CharacterSheetIssue> {
+): Result.Result<CharacterBuild, CharacterSheetIssue> {
   if (!isRecord(value)) return characterSheetIssue("Expected Character Build.");
   const progression = parseStoredProgression(value.progression);
-  if (Either.isLeft(progression)) return Either.left(progression.left);
+  if (Result.isFailure(progression)) return Result.fail(progression.failure);
   if (typeof value.background !== "string") {
     return characterSheetIssue("Character Build requires background Unit id.");
   }
@@ -637,47 +643,49 @@ export function parseCharacterBuild(
     return characterSheetIssue("Character Build requires species Unit id.");
   }
   const originLanguages = parseStoredOriginLanguages(value.originLanguages);
-  if (Either.isLeft(originLanguages)) return Either.left(originLanguages.left);
+  if (Result.isFailure(originLanguages))
+    return Result.fail(originLanguages.failure);
   const alignment = parseStoredAlignment(value.alignment);
-  if (Either.isLeft(alignment)) return Either.left(alignment.left);
+  if (Result.isFailure(alignment)) return Result.fail(alignment.failure);
   const abilityScores = parseStoredAbilityScores(value.abilityScores);
-  if (Either.isLeft(abilityScores)) return Either.left(abilityScores.left);
+  if (Result.isFailure(abilityScores))
+    return Result.fail(abilityScores.failure);
   const proficiencyChoices = parseStoredProficiencyChoices(
     value.proficiencyChoices,
   );
-  if (Either.isLeft(proficiencyChoices)) {
-    return Either.left(proficiencyChoices.left);
+  if (Result.isFailure(proficiencyChoices)) {
+    return Result.fail(proficiencyChoices.failure);
   }
   const speciesChoiceFacts = parseStoredSpeciesChoiceFacts(
     authoredUnitId(value.species),
     value.speciesChoiceFacts,
     unitLibrary,
   );
-  if (Either.isLeft(speciesChoiceFacts)) {
-    return Either.left(speciesChoiceFacts.left);
+  if (Result.isFailure(speciesChoiceFacts)) {
+    return Result.fail(speciesChoiceFacts.failure);
   }
   const features = parseStoredFeatures(value.features, unitLibrary);
-  if (Either.isLeft(features)) return Either.left(features.left);
+  if (Result.isFailure(features)) return Result.fail(features.failure);
   const classFeatureLanguages = parseStoredClassFeatureLanguages({
     value: value.classFeatureLanguages,
-    originLanguages: originLanguages.right,
-    build: { progression: progression.right },
+    originLanguages: originLanguages.success,
+    build: { progression: progression.success },
     unitLibrary,
   });
-  if (Either.isLeft(classFeatureLanguages)) {
-    return Either.left(classFeatureLanguages.left);
+  if (Result.isFailure(classFeatureLanguages)) {
+    return Result.fail(classFeatureLanguages.failure);
   }
   const spellcasting =
     value.spellcasting === undefined
       ? undefined
       : parseStoredSpellcasting(value.spellcasting);
   /* v8 ignore start -- @preserve -- Malformed stored build: the optional spellcasting object failed its boundary parser. */
-  if (spellcasting !== undefined && Either.isLeft(spellcasting)) {
-    return Either.left(spellcasting.left);
+  if (spellcasting !== undefined && Result.isFailure(spellcasting)) {
+    return Result.fail(spellcasting.failure);
   }
   /* v8 ignore stop -- @preserve */
   const equipment = parseStoredEquipment(value.equipment);
-  if (Either.isLeft(equipment)) return Either.left(equipment.left);
+  if (Result.isFailure(equipment)) return Result.fail(equipment.failure);
 
   const magicInitiateSpellAccesses =
     parseCharacterBuildMagicInitiateSpellAccesses({
@@ -685,62 +693,66 @@ export function parseCharacterBuild(
       build: {
         background: authoredUnitId(value.background),
         species: authoredUnitId(value.species),
-        features: features.right,
+        features: features.success,
       },
       unitLibrary,
     });
-  if (Either.isLeft(magicInitiateSpellAccesses)) {
+  if (Result.isFailure(magicInitiateSpellAccesses)) {
     return characterSheetIssue(
-      magicInitiateSpellAccesses.left.map((issue) => issue.message).join(" "),
+      magicInitiateSpellAccesses.failure
+        .map((issue) => issue.message)
+        .join(" "),
     );
   }
 
   const build: CharacterBuild = {
-    progression: progression.right,
+    progression: progression.success,
     background: authoredUnitId(value.background),
     species: authoredUnitId(value.species),
-    originLanguages: originLanguages.right,
-    classFeatureLanguages: classFeatureLanguages.right,
-    alignment: alignment.right,
-    abilityScores: abilityScores.right,
-    proficiencyChoices: proficiencyChoices.right,
-    ...(speciesChoiceFacts.right === undefined
+    originLanguages: originLanguages.success,
+    classFeatureLanguages: classFeatureLanguages.success,
+    alignment: alignment.success,
+    abilityScores: abilityScores.success,
+    proficiencyChoices: proficiencyChoices.success,
+    ...(speciesChoiceFacts.success === undefined
       ? {}
-      : { speciesChoiceFacts: speciesChoiceFacts.right }),
-    features: features.right,
-    ...(spellcasting === undefined ? {} : { spellcasting: spellcasting.right }),
-    magicInitiateSpellAccesses: magicInitiateSpellAccesses.right,
-    equipment: equipment.right,
+      : { speciesChoiceFacts: speciesChoiceFacts.success }),
+    features: features.success,
+    ...(spellcasting === undefined
+      ? {}
+      : { spellcasting: spellcasting.success }),
+    magicInitiateSpellAccesses: magicInitiateSpellAccesses.success,
+    equipment: equipment.success,
   };
   const validation = validateParsedCharacterBuild(build, unitLibrary);
-  return Either.isLeft(validation)
-    ? Either.left(validation.left)
-    : Either.right(build);
+  return Result.isFailure(validation)
+    ? Result.fail(validation.failure)
+    : Result.succeed(build);
 }
 
 function validateParsedCharacterBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<void, CharacterSheetIssue> {
+): Result.Result<void, CharacterSheetIssue> {
   const bookOfShadowsIssue = storedBookOfShadowsSelectionIssue(
     build,
     unitLibrary,
   );
-  if (Either.isLeft(bookOfShadowsIssue)) {
-    return Either.left(bookOfShadowsIssue.left);
+  if (Result.isFailure(bookOfShadowsIssue)) {
+    return Result.fail(bookOfShadowsIssue.failure);
   }
   const eldritchInvocationIssue =
     storedEldritchInvocationKnownCantripSelectionIssue(build, unitLibrary);
-  if (Either.isLeft(eldritchInvocationIssue)) {
-    return Either.left(eldritchInvocationIssue.left);
+  if (Result.isFailure(eldritchInvocationIssue)) {
+    return Result.fail(eldritchInvocationIssue.failure);
   }
   const sorcererMetamagicIssue = storedSorcererMetamagicSelectionIssue(
     build,
     unitLibrary,
   );
-  return Either.isLeft(sorcererMetamagicIssue)
-    ? Either.left(sorcererMetamagicIssue.left)
-    : Either.right(undefined);
+  return Result.isFailure(sorcererMetamagicIssue)
+    ? Result.fail(sorcererMetamagicIssue.failure)
+    : Result.succeed(undefined);
 }
 
 type DraconicAncestryDamageTypeSource =
@@ -750,16 +762,16 @@ function parseStoredSpeciesChoiceFacts(
   speciesId: UnitRecord["id"],
   value: unknown,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   CharacterBuildSpeciesChoiceFacts | undefined,
   CharacterSheetIssue
 > {
   const source = storedDraconicAncestryDamageTypeSource(speciesId, unitLibrary);
-  if (Either.isLeft(source)) return Either.left(source.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
   if (value === undefined) {
     /* v8 ignore start -- @preserve -- Malformed stored build: a species with an authored Draconic Ancestry source omitted its required selected ancestry fact. */
-    return source.right === undefined
-      ? Either.right(undefined)
+    return source.success === undefined
+      ? Result.succeed(undefined)
       : characterSheetIssue(
           "Character Build requires selected Draconic Ancestry fact for species with a Draconic Ancestry source.",
         );
@@ -778,24 +790,24 @@ function parseStoredSpeciesChoiceFacts(
       "Character Build species choice facts must contain exactly supported species choice facts.",
     );
   }
-  if (source.right === undefined) {
+  if (source.success === undefined) {
     return characterSheetIssue(
       "Character Build cannot carry Draconic Ancestry fact for species without a Draconic Ancestry source.",
     );
   }
   const draconicAncestry = parseStoredDraconicAncestryFact(
     value.draconicAncestry,
-    source.right,
+    source.success,
   );
-  return Either.isLeft(draconicAncestry)
-    ? Either.left(draconicAncestry.left)
-    : Either.right({ draconicAncestry: draconicAncestry.right });
+  return Result.isFailure(draconicAncestry)
+    ? Result.fail(draconicAncestry.failure)
+    : Result.succeed({ draconicAncestry: draconicAncestry.success });
 }
 
 function storedDraconicAncestryDamageTypeSource(
   speciesId: UnitRecord["id"],
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   DraconicAncestryDamageTypeSource | undefined,
   CharacterSheetIssue
 > {
@@ -808,7 +820,7 @@ function storedDraconicAncestryDamageTypeSource(
       "Character Build species Unit id must reference a species Unit.",
     );
   }
-  return Either.right(
+  return Result.succeed(
     "draconicAncestry" in speciesUnit.value
       ? speciesUnit.value.draconicAncestry.damageType
       : undefined,
@@ -818,7 +830,7 @@ function storedDraconicAncestryDamageTypeSource(
 function parseStoredDraconicAncestryFact(
   value: unknown,
   source: DraconicAncestryDamageTypeSource,
-): Either.Either<
+): Result.Result<
   NonNullable<CharacterBuildSpeciesChoiceFacts["draconicAncestry"]>,
   CharacterSheetIssue
 > {
@@ -844,7 +856,7 @@ function parseStoredDraconicAncestryFact(
       "Character Build Draconic Ancestry fact must reference the selected species source table.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     kind: "draconicAncestry",
     ancestorId: characterDraconicAncestrySelection(value.ancestorId),
   });
@@ -853,17 +865,17 @@ function parseStoredDraconicAncestryFact(
 function storedSorcererMetamagicSelectionIssue(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<void, CharacterSheetIssue> {
+): Result.Result<void, CharacterSheetIssue> {
   const facts = characterBuildSorcererMetamagicFacts({ build, unitLibrary });
-  return Either.isLeft(facts)
-    ? characterSheetIssue(facts.left.message)
-    : Either.right(undefined);
+  return Result.isFailure(facts)
+    ? characterSheetIssue(facts.failure.message)
+    : Result.succeed(undefined);
 }
 
 function storedEldritchInvocationKnownCantripSelectionIssue(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<void, CharacterSheetIssue> {
+): Result.Result<void, CharacterSheetIssue> {
   const knownWarlockCantrips = knownWarlockCantripIdsForStoredBuild(
     build,
     unitLibrary,
@@ -884,7 +896,7 @@ function storedEldritchInvocationKnownCantripSelectionIssue(
       );
     }
   }
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 function knownWarlockCantripIdsForStoredBuild(
@@ -897,7 +909,10 @@ function knownWarlockCantripIdsForStoredBuild(
       unitLibrary,
       classUnitId: source.sourceUnitId,
     });
-    if (Either.isLeft(sourceClassName) || sourceClassName.right !== "warlock") {
+    if (
+      Result.isFailure(sourceClassName) ||
+      sourceClassName.success !== "warlock"
+    ) {
       continue;
     }
     for (const cantripId of source.cantrips) {
@@ -917,7 +932,7 @@ function knownWarlockCantripIdsForStoredBuild(
 
 function parseStoredProgression(
   value: unknown,
-): Either.Either<CharacterBuild["progression"], CharacterSheetIssue> {
+): Result.Result<CharacterBuild["progression"], CharacterSheetIssue> {
   if (!isRecord(value) || typeof value.startingClass !== "string") {
     return characterSheetIssue("Character Build requires progression.");
   }
@@ -947,7 +962,7 @@ function parseStoredProgression(
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === totalLevel)) {
     return characterSheetIssue("Character Build progression is invalid.");
   }
-  return Either.right({
+  return Result.succeed({
     startingClass: classUnitId(authoredUnitId(value.startingClass)),
     advancements,
   });
@@ -956,13 +971,13 @@ function parseStoredProgression(
 function storedBookOfShadowsSelectionIssue(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<void, CharacterSheetIssue> {
+): Result.Result<void, CharacterSheetIssue> {
   const sources =
     build.spellcasting?.sources.filter(
       (source) => source.bookOfShadows !== undefined,
     ) ?? [];
   if (sources.length === 0) {
-    return Either.right(undefined);
+    return Result.succeed(undefined);
   }
   /* v8 ignore start -- @preserve -- Malformed stored build: Book of Shadows access disagrees with its single admitted Pact-of-the-Tome Warlock source or selected spell roster. */
   if (sources.length !== 1) {
@@ -983,12 +998,12 @@ function storedBookOfShadowsSelectionIssue(
     );
   }
   const sourceUnit = getRequiredUnit(unitLibrary, source.sourceUnitId);
-  if (Either.isLeft(sourceUnit)) {
-    return Either.left(sourceUnit.left);
+  if (Result.isFailure(sourceUnit)) {
+    return Result.fail(sourceUnit.failure);
   }
   if (
-    sourceUnit.right.kind !== "class" ||
-    sourceUnit.right.className !== "warlock"
+    sourceUnit.success.kind !== "class" ||
+    sourceUnit.success.className !== "warlock"
   ) {
     return characterSheetIssue(
       "Character Build Book of Shadows Spell Access requires the Warlock spellcasting source.",
@@ -1034,20 +1049,20 @@ function storedBookOfShadowsSelectionIssue(
     );
   }
   const cantrips = spellRecordsForIds(unitLibrary, access.cantrips);
-  if (Either.isLeft(cantrips)) {
-    return Either.left(cantrips.left);
+  if (Result.isFailure(cantrips)) {
+    return Result.fail(cantrips.failure);
   }
   const ritualSpells = spellRecordsForIds(unitLibrary, access.ritualSpells);
-  if (Either.isLeft(ritualSpells)) {
-    return Either.left(ritualSpells.left);
+  if (Result.isFailure(ritualSpells)) {
+    return Result.fail(ritualSpells.failure);
   }
-  if (cantrips.right.some((spell) => spell.mechanics.level !== 0)) {
+  if (cantrips.success.some((spell) => spell.mechanics.level !== 0)) {
     return characterSheetIssue(
       "Character Build Book of Shadows cantrip selections must be cantrip Spell Definitions.",
     );
   }
   if (
-    ritualSpells.right.some(
+    ritualSpells.success.some(
       (spell) =>
         spell.mechanics.level !== 1 || !spellHasTopLevelRitualTag(spell),
     )
@@ -1057,7 +1072,7 @@ function storedBookOfShadowsSelectionIssue(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 function hasSelectedWarlockEldritchInvocation(
@@ -1091,23 +1106,23 @@ function hasSelectedWarlockEldritchInvocation(
 function spellRecordsForIds(
   unitLibrary: UnitCatalog,
   spellIds: readonly UnitRecord["id"][],
-): Either.Either<readonly SpellRecord[], CharacterSheetIssue> {
+): Result.Result<readonly SpellRecord[], CharacterSheetIssue> {
   const spells: SpellRecord[] = [];
   for (const spellId of spellIds) {
     const spell = getRequiredUnit(unitLibrary, spellId);
     /* v8 ignore start -- @preserve -- Malformed stored build: an admitted Book of Shadows selection references a missing or non-spell Unit. */
-    if (Either.isLeft(spell)) {
-      return Either.left(spell.left);
+    if (Result.isFailure(spell)) {
+      return Result.fail(spell.failure);
     }
-    if (!isSpellRecord(spell.right)) {
+    if (!isSpellRecord(spell.success)) {
       return characterSheetIssue(
         `Character Build Book of Shadows selection must reference Spell Definitions: ${spellId}`,
       );
     }
     /* v8 ignore stop -- @preserve */
-    spells.push(spell.right);
+    spells.push(spell.success);
   }
-  return Either.right(spells);
+  return Result.succeed(spells);
 }
 
 function isSpellRecord(unit: UnitRecord): unit is SpellRecord {
@@ -1116,7 +1131,7 @@ function isSpellRecord(unit: UnitRecord): unit is SpellRecord {
 
 function parseStoredOriginLanguages(
   value: unknown,
-): Either.Either<CharacterBuild["originLanguages"], CharacterSheetIssue> {
+): Result.Result<CharacterBuild["originLanguages"], CharacterSheetIssue> {
   if (
     !Array.isArray(value) ||
     value.length !== 3 ||
@@ -1128,7 +1143,7 @@ function parseStoredOriginLanguages(
   }
   /* v8 ignore start -- @preserve -- Malformed stored build: origin-language data passed structural checks but failed the narrowed starting-language tuple guard. */
   return isCharacterStartingLanguages(value)
-    ? Either.right(value)
+    ? Result.succeed(value)
     : characterSheetIssue("Character Build requires origin languages.");
   /* v8 ignore stop -- @preserve */
 }
@@ -1138,7 +1153,7 @@ function parseStoredClassFeatureLanguages(input: {
   readonly originLanguages: CharacterBuild["originLanguages"];
   readonly build: Pick<CharacterBuild, "progression">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBuild["classFeatureLanguages"],
   CharacterSheetIssue
 > {
@@ -1160,8 +1175,8 @@ function parseStoredClassFeatureLanguages(input: {
     unitLibrary,
   });
   /* v8 ignore start -- @preserve -- Malformed catalog correlation: an owned class-feature language source cannot be projected from its installed Unit facts. */
-  if (Either.isLeft(expectedProjection)) {
-    return Either.left(expectedProjection.left);
+  if (Result.isFailure(expectedProjection)) {
+    return Result.fail(expectedProjection.failure);
   }
   /* v8 ignore stop -- @preserve */
   const choiceCountsBySourceUnitId = new Map<UnitRecord["id"], number>();
@@ -1204,7 +1219,7 @@ function parseStoredClassFeatureLanguages(input: {
     /* v8 ignore stop -- @preserve */
     if (
       languageFact.kind === "classFeatureLanguageChoice" &&
-      expectedProjection.right.fixedLanguages.has(languageFact.language)
+      expectedProjection.success.fixedLanguages.has(languageFact.language)
     ) {
       return characterSheetIssue(
         `Duplicate Character Build language ${languageFact.language}.`,
@@ -1215,8 +1230,8 @@ function parseStoredClassFeatureLanguages(input: {
       unitLibrary,
     });
     /* v8 ignore start -- @preserve -- Malformed stored build: a retained class-feature language does not match its installed source Unit grant. */
-    if (Either.isLeft(sourceMatch)) {
-      return Either.left(sourceMatch.left);
+    if (Result.isFailure(sourceMatch)) {
+      return Result.fail(sourceMatch.failure);
     }
     /* v8 ignore stop -- @preserve */
     if (languageFact.kind === "classFeatureLanguageChoice") {
@@ -1239,7 +1254,7 @@ function parseStoredClassFeatureLanguages(input: {
     classFeatureLanguages.push(languageFact);
   }
 
-  for (const [sourceUnitId, expectedLanguages] of expectedProjection.right
+  for (const [sourceUnitId, expectedLanguages] of expectedProjection.success
     .fixedLanguagesBySourceUnitId) {
     const storedLanguages =
       fixedLanguagesBySourceUnitId.get(sourceUnitId) ??
@@ -1253,7 +1268,7 @@ function parseStoredClassFeatureLanguages(input: {
     }
   }
 
-  for (const [sourceUnitId, expectedCount] of expectedProjection.right
+  for (const [sourceUnitId, expectedCount] of expectedProjection.success
     .choiceCountsBySourceUnitId) {
     const selectedCount = choiceCountsBySourceUnitId.get(sourceUnitId) ?? 0;
     if (selectedCount !== expectedCount) {
@@ -1263,7 +1278,7 @@ function parseStoredClassFeatureLanguages(input: {
     }
   }
 
-  return Either.right(classFeatureLanguages);
+  return Result.succeed(classFeatureLanguages);
 }
 
 function storedClassFeatureLanguageSourceUnitIds(
@@ -1289,7 +1304,7 @@ function storedClassFeatureLanguageSourceUnitIds(
 function storedClassFeatureLanguageMatchesSourceUnit(input: {
   readonly languageFact: StoredClassFeatureLanguageFact;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<void, CharacterSheetIssue> {
+}): Result.Result<void, CharacterSheetIssue> {
   const sourceUnit = input.unitLibrary.getUnit(input.languageFact.sourceUnitId);
   /* v8 ignore start -- @preserve -- Malformed stored build: a class-feature language fact must reference its admitted passive class-feature Unit. */
   if (
@@ -1310,7 +1325,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
       ? characterSheetIssue(
           `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
         )
-      : Either.right(undefined);
+      : Result.succeed(undefined);
     /* v8 ignore stop -- @preserve */
   }
 
@@ -1318,12 +1333,13 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
     if (grant.kind !== "grant_language") return false;
     const language = languageFromSurfaceLanguageId(grant.languageId);
     return (
-      Either.isRight(language) && language.right === input.languageFact.language
+      Result.isSuccess(language) &&
+      language.success === input.languageFact.language
     );
   });
   /* v8 ignore start -- @preserve -- Malformed stored build: a fixed language fact is absent from the installed source Unit's fixed grants. */
   return matches
-    ? Either.right(undefined)
+    ? Result.succeed(undefined)
     : characterSheetIssue(
         `Character Build class-feature language does not match source Unit ${input.languageFact.sourceUnitId}.`,
       );
@@ -1333,7 +1349,7 @@ function storedClassFeatureLanguageMatchesSourceUnit(input: {
 function storedClassFeatureLanguageProjection(input: {
   readonly ownedClassFeatureUnitIds: ReadonlySet<UnitRecord["id"]>;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<StoredClassFeatureLanguageProjection, CharacterSheetIssue> {
+}): Result.Result<StoredClassFeatureLanguageProjection, CharacterSheetIssue> {
   const fixedLanguagesBySourceUnitId = new Map<
     UnitRecord["id"],
     Set<StoredClassFeatureLanguage>
@@ -1359,7 +1375,7 @@ function storedClassFeatureLanguageProjection(input: {
       if (grant.kind !== "grant_language") continue;
       const language = languageFromSurfaceLanguageId(grant.languageId);
       /* v8 ignore start -- @preserve -- Malformed installed content: a supported fixed-language grant carries an id outside the shared language codec. */
-      if (Either.isLeft(language)) {
+      if (Result.isFailure(language)) {
         return characterSheetIssue(
           `Unsupported class-feature language id ${grant.languageId} on Unit ${sourceUnitId}.`,
         );
@@ -1368,12 +1384,12 @@ function storedClassFeatureLanguageProjection(input: {
       const sourceLanguages =
         fixedLanguagesBySourceUnitId.get(sourceUnitId) ??
         new Set<StoredClassFeatureLanguage>();
-      sourceLanguages.add(language.right);
+      sourceLanguages.add(language.success);
       fixedLanguagesBySourceUnitId.set(sourceUnitId, sourceLanguages);
-      fixedLanguages.add(language.right);
+      fixedLanguages.add(language.success);
     }
   }
-  return Either.right({
+  return Result.succeed({
     fixedLanguagesBySourceUnitId,
     fixedLanguages,
     choiceCountsBySourceUnitId,
@@ -1404,7 +1420,7 @@ function storedClassFeatureLanguageChoiceGrantCount(
 
 function parseStoredAlignment(
   value: unknown,
-): Either.Either<CharacterBuild["alignment"], CharacterSheetIssue> {
+): Result.Result<CharacterBuild["alignment"], CharacterSheetIssue> {
   if (
     !isRecord(value) ||
     !ALIGNMENT_ORDERS.some((order) => order === value.order) ||
@@ -1412,12 +1428,12 @@ function parseStoredAlignment(
   ) {
     return characterSheetIssue("Character Build requires alignment.");
   }
-  return Either.right(value as CharacterBuild["alignment"]);
+  return Result.succeed(value as CharacterBuild["alignment"]);
 }
 
 function parseStoredAbilityScores(
   value: unknown,
-): Either.Either<CharacterBuild["abilityScores"], CharacterSheetIssue> {
+): Result.Result<CharacterBuild["abilityScores"], CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed stored build: ability scores are not represented by the required record. */
   if (!isRecord(value)) {
     return characterSheetIssue("Character Build requires ability scores.");
@@ -1427,14 +1443,14 @@ function parseStoredAbilityScores(
     ABILITIES.map((ability) => [ability, value[ability]]),
   );
   const parsed = abilityScoreAssignment(scores);
-  return Either.isLeft(parsed)
+  return Result.isFailure(parsed)
     ? characterSheetIssue("Character Build ability scores are invalid.")
-    : Either.right(parsed.right);
+    : Result.succeed(parsed.success);
 }
 
 function parseStoredProficiencyChoices(
   value: unknown,
-): Either.Either<
+): Result.Result<
   readonly CharacterBuildProficiencyChoiceSubject[],
   CharacterSheetIssue
 > {
@@ -1477,7 +1493,7 @@ function parseStoredProficiencyChoices(
       );
     }
   }
-  return Either.right(choices);
+  return Result.succeed(choices);
 }
 
 type CharacterBuildSkill = Extract<
@@ -1514,7 +1530,7 @@ function isArmorTrainingCategory(
 function parseStoredFeatures(
   value: unknown,
   unitLibrary: UnitCatalog,
-): Either.Either<readonly CharacterBuildFeature[], CharacterSheetIssue> {
+): Result.Result<readonly CharacterBuildFeature[], CharacterSheetIssue> {
   if (!Array.isArray(value)) {
     return characterSheetIssue("Character Build requires features.");
   }
@@ -1540,12 +1556,12 @@ function parseStoredFeatures(
         feature.selection,
         unitLibrary,
       );
-      if (Either.isLeft(selection)) {
-        return Either.left(selection.left);
+      if (Result.isFailure(selection)) {
+        return Result.fail(selection.failure);
       }
       features.push({
         kind: "selectedEldritchInvocation" as const,
-        selection: selection.right,
+        selection: selection.success,
         selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
       });
     } else if (
@@ -1554,7 +1570,7 @@ function parseStoredFeatures(
     ) {
       const optionId = sorcererMetamagicOptionId(feature.optionId);
       /* v8 ignore start -- @preserve -- Malformed stored build: a selected Metamagic option id is outside the installed closed option roster. */
-      if (Either.isLeft(optionId)) {
+      if (Result.isFailure(optionId)) {
         return characterSheetIssue(
           "Character Build Sorcerer Metamagic option selection is invalid.",
         );
@@ -1562,7 +1578,7 @@ function parseStoredFeatures(
       /* v8 ignore stop -- @preserve */
       features.push({
         kind: "selectedSorcererMetamagicOption" as const,
-        optionId: optionId.right,
+        optionId: optionId.success,
         selectedFromUnitId: authoredUnitId(feature.selectedFromUnitId),
       });
     } else if (feature.kind === "abilityCheckBonus") {
@@ -1570,21 +1586,21 @@ function parseStoredFeatures(
         feature,
         selectedFromUnitId: feature.selectedFromUnitId,
       });
-      if (Either.isLeft(abilityCheckBonus)) {
-        return Either.left(abilityCheckBonus.left);
+      if (Result.isFailure(abilityCheckBonus)) {
+        return Result.fail(abilityCheckBonus.failure);
       }
-      features.push(abilityCheckBonus.right);
+      features.push(abilityCheckBonus.success);
     } else {
       return characterSheetIssue("Character Build feature is invalid.");
     }
   }
-  return Either.right(features);
+  return Result.succeed(features);
 }
 
 function parseStoredEldritchInvocationSelection(
   value: Readonly<Record<string, unknown>>,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   Extract<
     CharacterBuildFeature,
     { readonly kind: "selectedEldritchInvocation" }
@@ -1607,7 +1623,7 @@ function parseStoredEldritchInvocationSelection(
   /* v8 ignore stop -- @preserve */
   if (option.repeatability.kind === "once") {
     return value.kind === "nonRepeatable"
-      ? Either.right({ kind: "nonRepeatable", invocationId })
+      ? Result.succeed({ kind: "nonRepeatable", invocationId })
       : characterSheetIssue(
           "Character Build Eldritch Invocation selection is invalid.",
         );
@@ -1622,19 +1638,19 @@ function parseStoredEldritchInvocationSelection(
   const repeatableChoice = parseStoredEldritchInvocationRepeatableChoice(
     repeatableChoiceInput,
   );
-  if (Either.isLeft(repeatableChoice)) {
-    return Either.left(repeatableChoice.left);
+  if (Result.isFailure(repeatableChoice)) {
+    return Result.fail(repeatableChoice.failure);
   }
 
   return eldritchInvocationRepeatableChoiceSatisfiesRule({
     unitLibrary,
     choiceRule: option.repeatability.choice,
-    repeatableChoice: repeatableChoice.right,
+    repeatableChoice: repeatableChoice.success,
   })
-    ? Either.right({
+    ? Result.succeed({
         kind: "repeatable",
         invocationId,
-        repeatableChoice: repeatableChoice.right,
+        repeatableChoice: repeatableChoice.success,
       })
     : characterSheetIssue(
         "Character Build Eldritch Invocation repeatable choice is invalid.",
@@ -1643,7 +1659,7 @@ function parseStoredEldritchInvocationSelection(
 
 function parseStoredEldritchInvocationRepeatableChoice(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterBuildEldritchInvocationRepeatableChoice,
   CharacterSheetIssue
 > {
@@ -1658,13 +1674,13 @@ function parseStoredEldritchInvocationRepeatableChoice(
     value.kind === "knownWarlockCantrip" &&
     typeof value.cantripId === "string"
   ) {
-    return Either.right({
+    return Result.succeed({
       kind: "knownWarlockCantrip",
       cantripId: authoredUnitId(value.cantripId),
     });
   }
   if (value.kind === "originFeat" && typeof value.featUnitId === "string") {
-    return Either.right({
+    return Result.succeed({
       kind: "originFeat",
       featUnitId: authoredUnitId(value.featUnitId),
     });
@@ -1677,7 +1693,7 @@ function parseStoredEldritchInvocationRepeatableChoice(
 function parseStoredAbilityCheckBonusFeature(input: {
   readonly feature: Readonly<Record<string, unknown>>;
   readonly selectedFromUnitId: string;
-}): Either.Either<CharacterBuildFeature, CharacterSheetIssue> {
+}): Result.Result<CharacterBuildFeature, CharacterSheetIssue> {
   const { feature } = input;
   if (
     !Array.isArray(feature.skills) ||
@@ -1691,7 +1707,7 @@ function parseStoredAbilityCheckBonusFeature(input: {
     return characterSheetIssue("Character Build feature is invalid.");
   }
 
-  return Either.right({
+  return Result.succeed({
     kind: "abilityCheckBonus" as const,
     ability: feature.ability,
     skills: feature.skills,
@@ -1706,7 +1722,7 @@ function parseStoredAbilityCheckBonusFeature(input: {
 
 function parseStoredSpellcasting(
   value: unknown,
-): Either.Either<CharacterBuildSpellcasting, CharacterSheetIssue> {
+): Result.Result<CharacterBuildSpellcasting, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed stored build: spellcasting omits its required nonempty source list. */
   if (
     !isRecord(value) ||
@@ -1719,15 +1735,15 @@ function parseStoredSpellcasting(
   }
   /* v8 ignore stop -- @preserve */
   const sources = value.sources.map(parseStoredSpellcastingSource);
-  const firstIssue = sources.find(Either.isLeft);
+  const firstIssue = sources.find(Result.isFailure);
   /* v8 ignore next -- @preserve -- Malformed stored build: every raw spellcasting source is parsed before a CharacterBuildSpellcasting value is constructed. */
-  if (firstIssue !== undefined) return Either.left(firstIssue.left);
+  if (firstIssue !== undefined) return Result.fail(firstIssue.failure);
   const slotPools = parseStoredSpellSlotPools(value.slotPools);
   /* v8 ignore next -- @preserve -- Malformed stored build: raw spell-slot pools are parsed before a CharacterBuildSpellcasting value is constructed. */
-  if (Either.isLeft(slotPools)) return Either.left(slotPools.left);
+  if (Result.isFailure(slotPools)) return Result.fail(slotPools.failure);
   const parsedSources = sources
-    .filter(Either.isRight)
-    .map((source) => source.right);
+    .filter(Result.isSuccess)
+    .map((source) => source.success);
   const [firstSource, ...remainingSources] = parsedSources;
   /* v8 ignore start -- @preserve -- The nonempty source-list check above makes an absent first parsed source an internal impossibility. */
   if (firstSource === undefined) {
@@ -1736,15 +1752,15 @@ function parseStoredSpellcasting(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     sources: [firstSource, ...remainingSources],
-    slotPools: slotPools.right,
+    slotPools: slotPools.success,
   });
 }
 
 function parseStoredSpellcastingSource(
   value: unknown,
-): Either.Either<CharacterBuildSpellcastingSource, CharacterSheetIssue> {
+): Result.Result<CharacterBuildSpellcastingSource, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed stored build: a spellcasting source fails its required scalar and list field shape. */
   if (
     !isRecord(value) ||
@@ -1765,11 +1781,11 @@ function parseStoredSpellcastingSource(
       ? undefined
       : parseStoredBookOfShadowsSpellAccess(value.bookOfShadows);
   /* v8 ignore start -- @preserve -- Malformed stored build: the optional Book of Shadows access object failed its boundary parser. */
-  if (bookOfShadows !== undefined && Either.isLeft(bookOfShadows)) {
-    return Either.left(bookOfShadows.left);
+  if (bookOfShadows !== undefined && Result.isFailure(bookOfShadows)) {
+    return Result.fail(bookOfShadows.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     sourceUnitId: authoredUnitId(value.sourceUnitId),
     spellcastingAbility: value.spellcastingAbility,
     cantrips: value.cantrips.map(authoredUnitId),
@@ -1779,13 +1795,13 @@ function parseStoredSpellcastingSource(
       value.spellcastingFocuses as readonly CharacterBuildSpellcastingFocus[],
     ...(bookOfShadows === undefined
       ? {}
-      : { bookOfShadows: bookOfShadows.right }),
+      : { bookOfShadows: bookOfShadows.success }),
   });
 }
 
 function parseStoredBookOfShadowsSpellAccess(
   value: unknown,
-): Either.Either<CharacterBuildBookOfShadowsSpellAccess, CharacterSheetIssue> {
+): Result.Result<CharacterBuildBookOfShadowsSpellAccess, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed stored build: Book of Shadows access fails its exact tagged-record shape. */
   if (
     !isRecord(value) ||
@@ -1799,22 +1815,22 @@ function parseStoredBookOfShadowsSpellAccess(
   /* v8 ignore stop -- @preserve */
   const cantrips = parseStoredBookOfShadowsCantripIds(value.cantrips);
   /* v8 ignore start -- @preserve -- Malformed stored build: the Book of Shadows cantrip roster failed its exact-cardinality parser. */
-  if (Either.isLeft(cantrips)) {
-    return Either.left(cantrips.left);
+  if (Result.isFailure(cantrips)) {
+    return Result.fail(cantrips.failure);
   }
   /* v8 ignore stop -- @preserve */
   const ritualSpells = parseStoredBookOfShadowsRitualSpellIds(
     value.ritualSpells,
   );
   /* v8 ignore start -- @preserve -- Malformed stored build: the Book of Shadows ritual roster failed its exact-cardinality parser. */
-  if (Either.isLeft(ritualSpells)) {
-    return Either.left(ritualSpells.left);
+  if (Result.isFailure(ritualSpells)) {
+    return Result.fail(ritualSpells.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     tag: value.tag,
-    cantrips: cantrips.right,
-    ritualSpells: ritualSpells.right,
+    cantrips: cantrips.success,
+    ritualSpells: ritualSpells.success,
     spellcastingFocus: value.spellcastingFocus,
   });
 }
@@ -1822,13 +1838,13 @@ function parseStoredBookOfShadowsSpellAccess(
 export function parseStoredCharacterSheetBookOfShadowsPresence(
   build: CharacterBuild,
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterSheetBookOfShadowsPresence | undefined,
   CharacterSheetIssue
 > {
   if (!characterBuildHasBookOfShadows(build)) {
     return value === undefined
-      ? Either.right(undefined)
+      ? Result.succeed(undefined)
       : characterSheetIssue(
           "Character Sheet Book of Shadows presence requires Book of Shadows selection.",
         );
@@ -1841,12 +1857,12 @@ export function parseStoredCharacterSheetBookOfShadowsPresence(
       "Character Sheet Book of Shadows presence is invalid.",
     );
   }
-  return Either.right({ tag: value.tag });
+  return Result.succeed({ tag: value.tag });
 }
 
 function parseStoredBookOfShadowsCantripIds(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterBuildBookOfShadowsSpellAccess["cantrips"],
   CharacterSheetIssue
 > {
@@ -1868,7 +1884,7 @@ function parseStoredBookOfShadowsCantripIds(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right([
+  return Result.succeed([
     authoredUnitId(first),
     authoredUnitId(second),
     authoredUnitId(third),
@@ -1877,7 +1893,7 @@ function parseStoredBookOfShadowsCantripIds(
 
 function parseStoredBookOfShadowsRitualSpellIds(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterBuildBookOfShadowsSpellAccess["ritualSpells"],
   CharacterSheetIssue
 > {
@@ -1894,12 +1910,12 @@ function parseStoredBookOfShadowsRitualSpellIds(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right([authoredUnitId(first), authoredUnitId(second)]);
+  return Result.succeed([authoredUnitId(first), authoredUnitId(second)]);
 }
 
 function parseStoredSpellSlotPools(
   value: unknown,
-): Either.Either<CharacterBuildSpellcasting["slotPools"], CharacterSheetIssue> {
+): Result.Result<CharacterBuildSpellcasting["slotPools"], CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Malformed stored build: spellcasting slot pools are absent or not a record. */
   if (!isRecord(value)) {
     return characterSheetIssue(
@@ -1912,8 +1928,8 @@ function parseStoredSpellSlotPools(
       ? undefined
       : parseStoredSpellcastingSlotPool(value.spellcasting);
   /* v8 ignore start -- @preserve -- Malformed stored build: the optional ordinary Spell Slot pool failed its boundary parser. */
-  if (spellcasting !== undefined && Either.isLeft(spellcasting)) {
-    return Either.left(spellcasting.left);
+  if (spellcasting !== undefined && Result.isFailure(spellcasting)) {
+    return Result.fail(spellcasting.failure);
   }
   /* v8 ignore stop -- @preserve */
   const pactMagic =
@@ -1921,19 +1937,21 @@ function parseStoredSpellSlotPools(
       ? undefined
       : parseStoredPactMagicSlotPool(value.pactMagic);
   /* v8 ignore start -- @preserve -- Malformed stored build: the optional Pact Magic pool failed its boundary parser. */
-  if (pactMagic !== undefined && Either.isLeft(pactMagic)) {
-    return Either.left(pactMagic.left);
+  if (pactMagic !== undefined && Result.isFailure(pactMagic)) {
+    return Result.fail(pactMagic.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
-    ...(spellcasting === undefined ? {} : { spellcasting: spellcasting.right }),
-    ...(pactMagic === undefined ? {} : { pactMagic: pactMagic.right }),
+  return Result.succeed({
+    ...(spellcasting === undefined
+      ? {}
+      : { spellcasting: spellcasting.success }),
+    ...(pactMagic === undefined ? {} : { pactMagic: pactMagic.success }),
   });
 }
 
 function parseStoredSpellcastingSlotPool(
   value: unknown,
-): Either.Either<
+): Result.Result<
   NonNullable<CharacterBuildSpellcasting["slotPools"]["spellcasting"]>,
   CharacterSheetIssue
 > {
@@ -1961,12 +1979,12 @@ function parseStoredSpellcastingSlotPool(
     /* v8 ignore stop -- @preserve */
     slots.push({ spellLevel: slot.spellLevel, count: slot.count });
   }
-  return Either.right({ kind: "spellcasting", slots });
+  return Result.succeed({ kind: "spellcasting", slots });
 }
 
 function parseStoredPactMagicSlotPool(
   value: unknown,
-): Either.Either<
+): Result.Result<
   NonNullable<CharacterBuildSpellcasting["slotPools"]["pactMagic"]>,
   CharacterSheetIssue
 > {
@@ -1982,7 +2000,7 @@ function parseStoredPactMagicSlotPool(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     kind: "pactMagic",
     slotLevel: value.slotLevel,
     count: value.count,
@@ -1991,7 +2009,7 @@ function parseStoredPactMagicSlotPool(
 
 function parseStoredEquipment(
   value: unknown,
-): Either.Either<CharacterBuildEquipment, CharacterSheetIssue> {
+): Result.Result<CharacterBuildEquipment, CharacterSheetIssue> {
   if (
     !isRecord(value) ||
     !Array.isArray(value.owned) ||
@@ -2003,58 +2021,58 @@ function parseStoredEquipment(
     parseStoredStartingEquipmentCurrencyRemainderCp(
       value.startingEquipmentCurrencyRemainderCp,
     );
-  if (Either.isLeft(startingEquipmentCurrencyRemainderCp)) {
-    return Either.left(startingEquipmentCurrencyRemainderCp.left);
+  if (Result.isFailure(startingEquipmentCurrencyRemainderCp)) {
+    return Result.fail(startingEquipmentCurrencyRemainderCp.failure);
   }
   const owned = parseStoredOwnedEquipment(value.owned);
-  if (Either.isLeft(owned)) return Either.left(owned.left);
+  if (Result.isFailure(owned)) return Result.fail(owned.failure);
   const loadout = parseStoredLoadout(value.loadout);
   /* v8 ignore next -- @preserve -- Malformed stored build: raw loadout fields are parsed before CharacterBuildEquipment is constructed. */
-  if (Either.isLeft(loadout)) return Either.left(loadout.left);
+  if (Result.isFailure(loadout)) return Result.fail(loadout.failure);
   const ownedItemIds = new Set(
-    owned.right.flatMap((item) =>
+    owned.success.flatMap((item) =>
       item.kind === "catalogItem" || item.kind === "authoredCatalogItem"
         ? [item.itemId]
         : [],
     ),
   );
   const selectedItemIds = [
-    loadout.right.armor,
-    loadout.right.shield,
-    loadout.right.weapon?.itemId,
-    loadout.right.offHandWeapon?.itemId,
+    loadout.success.armor,
+    loadout.success.shield,
+    loadout.success.weapon?.itemId,
+    loadout.success.offHandWeapon?.itemId,
   ].filter((itemId) => itemId !== undefined);
   if (selectedItemIds.some((itemId) => !ownedItemIds.has(itemId))) {
     return characterSheetIssue(
       "Character Build loadout must reference owned catalog equipment.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     startingEquipmentCurrencyRemainderCp:
-      startingEquipmentCurrencyRemainderCp.right,
-    owned: owned.right,
-    loadout: loadout.right,
+      startingEquipmentCurrencyRemainderCp.success,
+    owned: owned.success,
+    loadout: loadout.success,
   });
 }
 
 function parseStoredOwnedEquipment(
   value: readonly unknown[],
-): Either.Either<
+): Result.Result<
   readonly CharacterBuildEquipment["owned"][number][],
   CharacterSheetIssue
 > {
   const owned: CharacterBuildEquipment["owned"][number][] = [];
   for (const item of value) {
     const parsed = parseStoredOwnedEquipmentItem(item);
-    if (Either.isLeft(parsed)) return Either.left(parsed.left);
-    owned.push(parsed.right);
+    if (Result.isFailure(parsed)) return Result.fail(parsed.failure);
+    owned.push(parsed.success);
   }
-  return Either.right(owned);
+  return Result.succeed(owned);
 }
 
 function parseStoredOwnedEquipmentItem(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterBuildEquipment["owned"][number],
   CharacterSheetIssue
 > {
@@ -2084,7 +2102,7 @@ function parseStoredOwnedEquipmentItem(
 function parseStoredAuthoredStartingEquipmentItem(
   value: Readonly<Record<string, unknown>>,
   quantity: number,
-): Either.Either<
+): Result.Result<
   CharacterBuildEquipment["owned"][number],
   CharacterSheetIssue
 > {
@@ -2093,7 +2111,7 @@ function parseStoredAuthoredStartingEquipmentItem(
       "Character Build authored starting equipment item is invalid.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     kind: "authoredStartingItem",
     itemName: value.itemName,
     quantity: PositiveInteger(quantity),
@@ -2103,7 +2121,7 @@ function parseStoredAuthoredStartingEquipmentItem(
 function parseStoredSelectedToolEquipmentItem(
   value: Readonly<Record<string, unknown>>,
   quantity: number,
-): Either.Either<
+): Result.Result<
   CharacterBuildEquipment["owned"][number],
   CharacterSheetIssue
 > {
@@ -2115,7 +2133,7 @@ function parseStoredSelectedToolEquipmentItem(
       "Character Build selected-tool equipment item is invalid.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     kind: "selectedToolItem",
     toolProficiencyId: toolProficiencyId(value.toolProficiencyId),
     quantity: PositiveInteger(quantity),
@@ -2125,7 +2143,7 @@ function parseStoredSelectedToolEquipmentItem(
 function parseStoredAuthoredCatalogEquipmentItem(
   value: Readonly<Record<string, unknown>>,
   quantity: number,
-): Either.Either<
+): Result.Result<
   CharacterBuildEquipment["owned"][number],
   CharacterSheetIssue
 > {
@@ -2140,14 +2158,14 @@ function parseStoredAuthoredCatalogEquipmentItem(
     );
   }
   const parsedItemId = parseCharacterEquipmentItemId(value.itemId);
-  if (Either.isLeft(parsedItemId)) {
+  if (Result.isFailure(parsedItemId)) {
     return characterSheetIssue(
       "Character Build authored catalog equipment item id is invalid.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     kind: "authoredCatalogItem",
-    itemId: characterEquipmentItemId(parsedItemId.right),
+    itemId: characterEquipmentItemId(parsedItemId.success),
     authoredItemId: value.authoredItemId,
     spellcastingFocusKind: "arcane",
     quantity: PositiveInteger(quantity),
@@ -2157,7 +2175,7 @@ function parseStoredAuthoredCatalogEquipmentItem(
 function parseStoredCatalogEquipmentItem(
   value: Readonly<Record<string, unknown>>,
   quantity: number,
-): Either.Either<
+): Result.Result<
   CharacterBuildEquipment["owned"][number],
   CharacterSheetIssue
 > {
@@ -2167,28 +2185,28 @@ function parseStoredCatalogEquipmentItem(
     );
   }
   const parsedItemId = parseCharacterEquipmentItemId(value.itemId);
-  if (Either.isLeft(parsedItemId)) {
+  if (Result.isFailure(parsedItemId)) {
     return characterSheetIssue(
       "Character Build owned equipment item id is invalid.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     kind: "catalogItem",
-    itemId: characterEquipmentItemId(parsedItemId.right),
+    itemId: characterEquipmentItemId(parsedItemId.success),
     quantity: PositiveInteger(quantity),
   });
 }
 
 function parseStoredStartingEquipmentCurrencyRemainderCp(
   value: unknown,
-): Either.Either<CopperPieceAmount, CharacterSheetIssue> {
+): Result.Result<CopperPieceAmount, CharacterSheetIssue> {
   if (value === undefined) {
     return characterSheetIssue(
       "Character Build starting-equipment currency remainder is required.",
     );
   }
   return isCopperPieceAmount(value)
-    ? Either.right(copperPieceAmount(value))
+    ? Result.succeed(copperPieceAmount(value))
     : characterSheetIssue(
         "Character Build starting-equipment currency remainder is invalid.",
       );
@@ -2196,62 +2214,63 @@ function parseStoredStartingEquipmentCurrencyRemainderCp(
 
 function parseStoredLoadout(
   value: Readonly<Record<string, unknown>>,
-): Either.Either<CharacterBuildEquipment["loadout"], CharacterSheetIssue> {
+): Result.Result<CharacterBuildEquipment["loadout"], CharacterSheetIssue> {
   const armor = parseOptionalEquipmentItemId(value.armor, "armor");
   /* v8 ignore next -- @preserve -- Malformed stored loadout: a present armor item id must parse at this raw-storage boundary. */
-  if (Either.isLeft(armor)) return Either.left(armor.left);
+  if (Result.isFailure(armor)) return Result.fail(armor.failure);
   const shield = parseOptionalEquipmentItemId(value.shield, "shield");
   /* v8 ignore next -- @preserve -- Malformed stored loadout: a present shield item id must parse at this raw-storage boundary. */
-  if (Either.isLeft(shield)) return Either.left(shield.left);
+  if (Result.isFailure(shield)) return Result.fail(shield.failure);
   const weapon = parseStoredMainWeapon(value.weapon);
   /* v8 ignore next -- @preserve -- Malformed stored loadout: a present main-weapon record must parse at this raw-storage boundary. */
-  if (Either.isLeft(weapon)) return Either.left(weapon.left);
+  if (Result.isFailure(weapon)) return Result.fail(weapon.failure);
   const offHandWeapon = parseStoredOffHandWeapon(value.offHandWeapon);
   /* v8 ignore next -- @preserve -- Malformed stored loadout: a present off-hand weapon record must parse at this raw-storage boundary. */
-  if (Either.isLeft(offHandWeapon)) return Either.left(offHandWeapon.left);
-  return Either.right({
-    ...(armor.right === undefined ? {} : { armor: armor.right }),
-    ...(shield.right === undefined ? {} : { shield: shield.right }),
-    ...(weapon.right === undefined ? {} : { weapon: weapon.right }),
-    ...(offHandWeapon.right === undefined
+  if (Result.isFailure(offHandWeapon))
+    return Result.fail(offHandWeapon.failure);
+  return Result.succeed({
+    ...(armor.success === undefined ? {} : { armor: armor.success }),
+    ...(shield.success === undefined ? {} : { shield: shield.success }),
+    ...(weapon.success === undefined ? {} : { weapon: weapon.success }),
+    ...(offHandWeapon.success === undefined
       ? {}
-      : { offHandWeapon: offHandWeapon.right }),
+      : { offHandWeapon: offHandWeapon.success }),
   } as CharacterBuildEquipment["loadout"]);
 }
 
 function parseStoredMainWeapon(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterBuildEquipment["loadout"]["weapon"],
   CharacterSheetIssue
 > {
-  if (value === undefined) return Either.right(undefined);
+  if (value === undefined) return Result.succeed(undefined);
   /* v8 ignore start -- @preserve -- Malformed stored build: a main-hand weapon loadout is not a one-handed item record with a valid main-slot item id. */
   if (!isRecord(value) || value.grip !== "one_handed") {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
   const itemId = parseOptionalEquipmentItemId(value.itemId, "main");
-  if (Either.isLeft(itemId)) return Either.left(itemId.left);
-  if (itemId.right === undefined) {
+  if (Result.isFailure(itemId)) return Result.fail(itemId.failure);
+  if (itemId.success === undefined) {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
   /* v8 ignore stop -- @preserve */
-  const parsedItemId = itemId.right as NonNullable<
+  const parsedItemId = itemId.success as NonNullable<
     CharacterBuildEquipment["loadout"]["weapon"]
   >["itemId"];
   if (Object.keys(value).some((key) => key !== "itemId" && key !== "grip")) {
     return characterSheetIssue("Character Build weapon loadout is invalid.");
   }
-  return Either.right({ itemId: parsedItemId, grip: "one_handed" });
+  return Result.succeed({ itemId: parsedItemId, grip: "one_handed" });
 }
 
 function parseStoredOffHandWeapon(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterBuildEquipment["loadout"]["offHandWeapon"],
   CharacterSheetIssue
 > {
-  if (value === undefined) return Either.right(undefined);
+  if (value === undefined) return Result.succeed(undefined);
   /* v8 ignore start -- @preserve -- Malformed stored build: an off-hand weapon loadout is not an item record with a valid off-slot item id. */
   if (!isRecord(value)) {
     return characterSheetIssue(
@@ -2259,15 +2278,15 @@ function parseStoredOffHandWeapon(
     );
   }
   const itemId = parseOptionalEquipmentItemId(value.itemId, "off");
-  if (Either.isLeft(itemId)) return Either.left(itemId.left);
-  if (itemId.right === undefined) {
+  if (Result.isFailure(itemId)) return Result.fail(itemId.failure);
+  if (itemId.success === undefined) {
     return characterSheetIssue(
       "Character Build off-hand weapon loadout is invalid.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
-    itemId: itemId.right as NonNullable<
+  return Result.succeed({
+    itemId: itemId.success as NonNullable<
       CharacterBuildEquipment["loadout"]["offHandWeapon"]
     >["itemId"],
   });
@@ -2276,20 +2295,20 @@ function parseStoredOffHandWeapon(
 function parseOptionalEquipmentItemId(
   value: unknown,
   slot: "armor" | "shield" | "main" | "off",
-): Either.Either<CharacterEquipmentItemId | undefined, CharacterSheetIssue> {
-  if (value === undefined) return Either.right(undefined);
+): Result.Result<CharacterEquipmentItemId | undefined, CharacterSheetIssue> {
+  if (value === undefined) return Result.succeed(undefined);
   /* v8 ignore start -- @preserve -- Malformed stored build: an equipment item id is non-string, unparseable, or belongs to a different loadout slot. */
   if (typeof value !== "string") {
     return characterSheetIssue("Character Build equipment item id is invalid.");
   }
   const parsed = parseCharacterEquipmentItemId(value);
-  if (Either.isLeft(parsed) || parsed.right.slot !== slot) {
+  if (Result.isFailure(parsed) || parsed.success.slot !== slot) {
     return characterSheetIssue(
       "Character Build equipment item slot is invalid.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(characterEquipmentItemId(parsed.right));
+  return Result.succeed(characterEquipmentItemId(parsed.success));
 }
 
 function isAbility(value: unknown): value is Ability {

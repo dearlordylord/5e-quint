@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   TELEPORTATION_CIRCLE_MATERIAL_COMPONENTS,
@@ -28,7 +28,7 @@ export function castTeleportationCircle(input: {
   readonly unitLibrary: UnitCatalog;
   readonly destination: CharacterSheetTeleportationCircleDestination;
   readonly casting: CharacterSheetTeleportationCircleCasting;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetTeleportationCircleResult,
   CharacterSheetIssue
 > {
@@ -52,7 +52,7 @@ function teleportationCircleInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly destination: CharacterSheetTeleportationCircleDestination;
   readonly casting: CharacterSheetTeleportationCircleCasting;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetTeleportationCircleInvocation,
   CharacterSheetIssue
 > {
@@ -79,7 +79,7 @@ function teleportationCircleInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.value);
   /* v8 ignore start -- @preserve -- The authored one-round duration is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue(
       "Teleportation Circle requires a supported duration.",
     );
@@ -117,7 +117,7 @@ function teleportationCircleInvocationFromSpell(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "teleportationCircle",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -130,7 +130,7 @@ function teleportationCircleInvocationFromSpell(input: {
     castingTime: { kind: "minutes", amount: 1 },
     rangeFeet: 10,
     drawnCircleRadiusFeet: 5,
-    duration: duration.right,
+    duration: duration.success,
     materialComponents: input.casting.materialComponents,
     destination: input.destination,
     portal: {

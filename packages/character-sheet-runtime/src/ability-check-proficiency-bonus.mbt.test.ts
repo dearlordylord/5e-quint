@@ -14,7 +14,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { Skill } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -189,7 +189,7 @@ function projectAbilityCheckProficiencyBonus(input: {
   readonly replayIndex: number;
 }): AbilityCheckProficiencyBonusProjection {
   const skill = "performance";
-  const result = requireRight(
+  const result = requireSuccess(
     characterSheetAbilityCheckProficiencyBonus({
       build: input.build,
       unitLibrary,
@@ -244,7 +244,7 @@ function baseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -368,16 +368,16 @@ function numberFromQuintInt(raw: unknown, field: string): number {
   throw new Error(`Expected Quint integer field ${field}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireSuccess<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const failure = result.failure;
   if (
-    left !== null &&
-    typeof left === "object" &&
-    "message" in left &&
-    typeof left.message === "string"
+    failure !== null &&
+    typeof failure === "object" &&
+    "message" in failure &&
+    typeof failure.message === "string"
   ) {
-    throw new Error(left.message);
+    throw new Error(failure.message);
   }
-  throw new Error(JSON.stringify(left));
+  throw new Error(JSON.stringify(failure));
 }

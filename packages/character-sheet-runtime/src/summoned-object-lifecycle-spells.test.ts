@@ -16,7 +16,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castAnimateObjects,
@@ -27,7 +27,7 @@ import {
   characterSheetSpellLifecycleCreatureId,
   characterSheetSpellLifecycleObjectId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -167,7 +167,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
   });
 
   test("Animate Objects returns object stat and companion-control contracts", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castAnimateObjects({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["animate_objects"],
@@ -224,12 +224,12 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
       spellcastingAbilityModifier: 2,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
     expect(sheet.spellSlotExpenditures).toEqual([]);
   });
 
   test("Conjure Elemental returns elemental hazard and restrained-save contracts", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castConjureElemental({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["conjure_elemental"],
@@ -259,7 +259,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
   });
 
   test("Summon Dragon returns Draconic Spirit stat and action contracts", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castSummonDragon({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["summon_dragon"],
@@ -302,7 +302,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
   });
 
   test("Planar Binding returns success/failure command contracts and spends consumed components", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castPlanarBinding({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["planar_binding"],
@@ -335,7 +335,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
 
   test("projects every valid object, elemental, save, and upcast duration variant", () => {
     const hugeObject = {
-      objectId: requireRight(
+      objectId: requireSuccess(
         characterSheetSpellLifecycleObjectId("object:synthetic-statue"),
       ),
       size: "huge",
@@ -344,7 +344,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
       notWornOrCarried: true,
       notFixedToSurface: true,
     } as const satisfies CharacterSheetAnimateObjectsTarget;
-    const animated = requireRight(
+    const animated = requireSuccess(
       castAnimateObjects({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["animate_objects"],
@@ -366,13 +366,13 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
 
     const waterSpirit = {
       ...elementalSpirit,
-      spiritId: requireRight(
+      spiritId: requireSuccess(
         characterSheetSpellLifecycleCreatureId("spirit:synthetic-water"),
       ),
       element: "water",
     } as const satisfies CharacterSheetConjureElementalSpirit;
     expect(
-      requireRight(
+      requireSuccess(
         castConjureElemental({
           sheet: lifecycleWizardSheet({
             preparedSpells: ["conjure_elemental"],
@@ -389,7 +389,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
       ["earth", "thunder"],
     ] as const) {
       expect(
-        requireRight(
+        requireSuccess(
           castConjureElemental({
             sheet: lifecycleWizardSheet({
               preparedSpells: ["conjure_elemental"],
@@ -398,7 +398,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
             unitLibrary,
             spirit: {
               ...elementalSpirit,
-              spiritId: requireRight(
+              spiritId: requireSuccess(
                 characterSheetSpellLifecycleCreatureId(
                   `spirit:synthetic-${element}`,
                 ),
@@ -418,7 +418,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
       [9, { kind: "timeSpan", unit: "day", amount: 366 }],
     ] as const;
     for (const [level, duration] of expectedDurations) {
-      const result = requireRight(
+      const result = requireSuccess(
         castPlanarBinding({
           sheet: lifecycleWizardSheet({
             preparedSpells: ["planar_binding"],
@@ -444,7 +444,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
 
 const lifecycleSelectedIdentityActions = {
   doCastAnimateObjects: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castAnimateObjects({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["animate_objects"],
@@ -464,7 +464,7 @@ const lifecycleSelectedIdentityActions = {
     };
   },
   doCastConjureElemental: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castConjureElemental({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["conjure_elemental"],
@@ -483,7 +483,7 @@ const lifecycleSelectedIdentityActions = {
     };
   },
   doCastSummonDragon: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castSummonDragon({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["summon_dragon"],
@@ -502,7 +502,7 @@ const lifecycleSelectedIdentityActions = {
     };
   },
   doCastPlanarBinding: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castPlanarBinding({
         sheet: lifecycleWizardSheet({
           preparedSpells: ["planar_binding"],
@@ -527,7 +527,7 @@ const lifecycleSelectedIdentityActions = {
 
 const animateObjectsTargets = [
   {
-    objectId: requireRight(
+    objectId: requireSuccess(
       characterSheetSpellLifecycleObjectId("object:chair"),
     ),
     size: "large",
@@ -537,7 +537,9 @@ const animateObjectsTargets = [
     notFixedToSurface: true,
   },
   {
-    objectId: requireRight(characterSheetSpellLifecycleObjectId("object:cup")),
+    objectId: requireSuccess(
+      characterSheetSpellLifecycleObjectId("object:cup"),
+    ),
     size: "medium_or_smaller",
     nonmagical: true,
     withinRange: true,
@@ -547,13 +549,15 @@ const animateObjectsTargets = [
 ] as const satisfies readonly CharacterSheetAnimateObjectsTarget[];
 
 const elementalSpirit = {
-  spiritId: requireRight(characterSheetSpellLifecycleCreatureId("spirit:fire")),
+  spiritId: requireSuccess(
+    characterSheetSpellLifecycleCreatureId("spirit:fire"),
+  ),
   element: "fire",
   unoccupiedSpaceWithinRange: true,
 } as const satisfies CharacterSheetConjureElementalSpirit;
 
 const dragonSpirit = {
-  spiritId: requireRight(
+  spiritId: requireSuccess(
     characterSheetSpellLifecycleCreatureId("spirit:dragon"),
   ),
   damageType: "fire",
@@ -562,7 +566,7 @@ const dragonSpirit = {
 } as const satisfies CharacterSheetSummonDragonSpirit;
 
 const planarBindingTarget = {
-  creatureId: requireRight(
+  creatureId: requireSuccess(
     characterSheetSpellLifecycleCreatureId("fiend:bound"),
   ),
   creatureType: "fiend",
@@ -591,7 +595,7 @@ function lifecycleWizardSheet(input: {
   readonly slotLevel?: number;
 }) {
   const slotLevel = input.slotLevel ?? 5;
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId(
         `character:lifecycle-wizard-slot-${slotLevel}`,

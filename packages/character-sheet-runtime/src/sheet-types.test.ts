@@ -55,7 +55,7 @@ describe("Character Sheet invocation identity parsers", () => {
     ] as const;
 
     for (const parseIdentity of parsers) {
-      expect(parseIdentity("")).toMatchObject({ _tag: "Left" });
+      expect(parseIdentity("")).toMatchObject({ _tag: "Failure" });
     }
   });
 });

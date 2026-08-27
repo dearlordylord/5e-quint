@@ -11,7 +11,7 @@
       "manifest": "packages/app/package.json",
       "command": "pnpm --filter @dnd/app run typecheck --pretty false",
       "exitCode": 1,
-      "rawDiagnostics": 4426
+      "rawDiagnostics": 4335
     },
     {
       "package": "@dnd/battle-runtime",
@@ -25,7 +25,7 @@
       "manifest": "packages/character-battle-runtime/package.json",
       "command": "pnpm --filter @dnd/character-battle-runtime run typecheck --pretty false",
       "exitCode": 1,
-      "rawDiagnostics": 5169
+      "rawDiagnostics": 5140
     },
     {
       "package": "@dnd/character-creation-runtime",
@@ -38,15 +38,15 @@
       "package": "@dnd/character-sheet-runtime",
       "manifest": "packages/character-sheet-runtime/package.json",
       "command": "pnpm --filter @dnd/character-sheet-runtime run typecheck --pretty false",
-      "exitCode": 1,
-      "rawDiagnostics": 1365
+      "exitCode": 0,
+      "rawDiagnostics": 0
     },
     {
       "package": "@dnd/mcp",
       "manifest": "packages/mcp/package.json",
       "command": "pnpm --filter @dnd/mcp run typecheck --pretty false",
       "exitCode": 1,
-      "rawDiagnostics": 5373
+      "rawDiagnostics": 5387
     },
     {
       "package": "@dnd/shared",
@@ -98,17 +98,17 @@
       "rawDiagnostics": 0
     }
   ],
-  "totals": { "raw": 24056, "deduplicated": 11169 },
+  "totals": { "raw": 22585, "deduplicated": 10108 },
   "families": {
     "removed-module-entrypoints": {
       "codes": ["TS2305", "TS2307"],
-      "raw": 731,
-      "deduplicated": 357
+      "raw": 586,
+      "deduplicated": 292
     },
     "removed-renamed-effect-api-members": {
       "codes": ["TS2551", "TS2694", "TS2724"],
-      "raw": 1797,
-      "deduplicated": 692
+      "raw": 1742,
+      "deduplicated": 676
     },
     "changed-schema-type-signatures": {
       "codes": [
@@ -124,13 +124,13 @@
         "TS2749",
         "TS2769"
       ],
-      "raw": 2060,
-      "deduplicated": 671
+      "raw": 2024,
+      "deduplicated": 662
     },
     "downstream-type-inference-cascade": {
       "codes": "all remaining TypeScript codes",
-      "raw": 19468,
-      "deduplicated": 9449
+      "raw": 18233,
+      "deduplicated": 8478
     }
   },
   "codes": {
@@ -141,13 +141,13 @@
     },
     "TS18046": {
       "family": "downstream-type-inference-cascade",
-      "raw": 5122,
-      "deduplicated": 3346
+      "raw": 4505,
+      "deduplicated": 2732
     },
     "TS18047": {
       "family": "downstream-type-inference-cascade",
-      "raw": 341,
-      "deduplicated": 113
+      "raw": 321,
+      "deduplicated": 108
     },
     "TS18048": {
       "family": "downstream-type-inference-cascade",
@@ -156,8 +156,8 @@
     },
     "TS2305": {
       "family": "removed-module-entrypoints",
-      "raw": 543,
-      "deduplicated": 271
+      "raw": 398,
+      "deduplicated": 206
     },
     "TS2307": {
       "family": "removed-module-entrypoints",
@@ -171,13 +171,13 @@
     },
     "TS2322": {
       "family": "downstream-type-inference-cascade",
-      "raw": 2584,
-      "deduplicated": 1214
+      "raw": 2255,
+      "deduplicated": 898
     },
     "TS2339": {
       "family": "downstream-type-inference-cascade",
-      "raw": 7436,
-      "deduplicated": 2718
+      "raw": 7438,
+      "deduplicated": 2868
     },
     "TS2344": {
       "family": "changed-schema-type-signatures",
@@ -186,8 +186,8 @@
     },
     "TS2345": {
       "family": "downstream-type-inference-cascade",
-      "raw": 1580,
-      "deduplicated": 717
+      "raw": 1459,
+      "deduplicated": 602
     },
     "TS2352": {
       "family": "downstream-type-inference-cascade",
@@ -196,38 +196,28 @@
     },
     "TS2353": {
       "family": "downstream-type-inference-cascade",
-      "raw": 331,
-      "deduplicated": 94
+      "raw": 345,
+      "deduplicated": 108
     },
     "TS2367": {
       "family": "downstream-type-inference-cascade",
-      "raw": 5,
-      "deduplicated": 2
-    },
-    "TS2375": {
-      "family": "downstream-type-inference-cascade",
-      "raw": 2,
-      "deduplicated": 2
-    },
-    "TS2379": {
-      "family": "downstream-type-inference-cascade",
-      "raw": 8,
-      "deduplicated": 2
+      "raw": 9,
+      "deduplicated": 6
     },
     "TS2488": {
       "family": "downstream-type-inference-cascade",
-      "raw": 6,
-      "deduplicated": 3
+      "raw": 7,
+      "deduplicated": 4
     },
     "TS2551": {
       "family": "removed-renamed-effect-api-members",
-      "raw": 1734,
-      "deduplicated": 665
+      "raw": 1679,
+      "deduplicated": 649
     },
     "TS2554": {
       "family": "changed-schema-type-signatures",
-      "raw": 1331,
-      "deduplicated": 385
+      "raw": 1311,
+      "deduplicated": 380
     },
     "TS2556": {
       "family": "changed-schema-type-signatures",
@@ -241,8 +231,8 @@
     },
     "TS2571": {
       "family": "downstream-type-inference-cascade",
-      "raw": 358,
-      "deduplicated": 349
+      "raw": 344,
+      "deduplicated": 335
     },
     "TS2638": {
       "family": "downstream-type-inference-cascade",
@@ -256,8 +246,8 @@
     },
     "TS2698": {
       "family": "downstream-type-inference-cascade",
-      "raw": 322,
-      "deduplicated": 268
+      "raw": 318,
+      "deduplicated": 264
     },
     "TS2700": {
       "family": "downstream-type-inference-cascade",
@@ -276,8 +266,8 @@
     },
     "TS2740": {
       "family": "changed-schema-type-signatures",
-      "raw": 537,
-      "deduplicated": 161
+      "raw": 521,
+      "deduplicated": 157
     },
     "TS2741": {
       "family": "changed-schema-type-signatures",
@@ -296,8 +286,8 @@
     },
     "TS7006": {
       "family": "downstream-type-inference-cascade",
-      "raw": 1181,
-      "deduplicated": 542
+      "raw": 1052,
+      "deduplicated": 477
     },
     "TS7031": {
       "family": "downstream-type-inference-cascade",
@@ -306,8 +296,8 @@
     },
     "TS7053": {
       "family": "downstream-type-inference-cascade",
-      "raw": 43,
-      "deduplicated": 11
+      "raw": 31,
+      "deduplicated": 8
     }
   }
 }
