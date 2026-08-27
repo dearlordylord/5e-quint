@@ -685,6 +685,7 @@ export {
   resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
   type BattleCheckpointFrontierEnvelope,
+  type BattleResolvedCheckpointFrontierEnvelope,
   resolveBattleSubject,
   type BattleRuntimeResolutionInput,
   type BattleRuntimeResolutionResult,

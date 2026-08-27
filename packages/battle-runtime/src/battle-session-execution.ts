@@ -79,6 +79,17 @@ export type BattleCheckpointFrontierEnvelope = {
     | BattleInterruptDecisionFrontier;
 };
 
+type BattleActsFrontier = Extract<
+  BattleCheckpointFrontierEnvelope["frontier"],
+  { readonly kind: "acts" }
+>;
+export type BattleResolvedCheckpointFrontierEnvelope = Omit<
+  BattleCheckpointFrontierEnvelope,
+  "frontier"
+> & {
+  readonly frontier: BattleActsFrontier | BattleInterruptDecisionFrontier;
+};
+
 type BattleHolesFrontier = Extract<
   BattleCheckpointFrontierEnvelope["frontier"],
   { readonly kind: "holes" }
@@ -94,7 +105,7 @@ export type BattleRuntimeResolutionResult =
   | {
       readonly tag: "resolved";
       readonly session: BattleRuntimeSession;
-      readonly envelope: BattleCheckpointFrontierEnvelope;
+      readonly envelope: BattleResolvedCheckpointFrontierEnvelope;
       readonly routeEvents?: BattleReducerRouteEvents;
       readonly objectDamages?: ResolvedBattleResult["objectDamages"];
       readonly objectIgnitions?: ResolvedBattleResult["objectIgnitions"];
@@ -138,7 +149,7 @@ const byBattleResolutionTag = Match.discriminator("tag");
 
 function battleActsEnvelope(
   state: BattleRuntimeSession["state"],
-): BattleCheckpointFrontierEnvelope {
+): BattleResolvedCheckpointFrontierEnvelope {
   return {
     checkpoint: snapshotBattle(state),
     frontier: {
@@ -146,6 +157,18 @@ function battleActsEnvelope(
       acts: discoverBattleActCandidates(state),
     },
   };
+}
+
+function battleResolvedFrontierEnvelope(
+  state: BattleRuntimeSession["state"],
+): BattleResolvedCheckpointFrontierEnvelope {
+  const interruptFrontier = interruptDecisionFrontier(state);
+  return interruptFrontier === null
+    ? battleActsEnvelope(state)
+    : {
+        checkpoint: snapshotBattle(state),
+        frontier: interruptFrontier,
+      };
 }
 
 function battleCurrentFrontierEnvelope(
@@ -252,7 +275,7 @@ function precedingBattleFrontierEnvelope(
     fills: input.fills.slice(0, -1),
   });
   return preceding.tag === "resolved"
-    ? battleActsEnvelope(input.session.state)
+    ? battleResolvedFrontierEnvelope(input.session.state)
     : preceding.envelope;
 }
 
@@ -508,7 +531,7 @@ function battleRuntimeResolutionWithFamiliarPresentation(
   const { state: _state, snapshot: _snapshot, ...outcome } = result;
   return {
     ...outcome,
-    envelope: battleActsEnvelope(result.state),
+    envelope: battleResolvedFrontierEnvelope(result.state),
     session: battleRuntimeSessionWithStatBlockPresentation(
       session,
       result.state,
@@ -529,7 +552,7 @@ function battleRuntimeResolutionFromMechanical(
       "resolved",
       ({ state, snapshot: _snapshot, ...outcome }) => ({
         ...outcome,
-        envelope: battleActsEnvelope(state),
+        envelope: battleResolvedFrontierEnvelope(state),
         session: battleRuntimeSessionWithState(session, state),
       }),
     ),
@@ -676,7 +699,7 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
       message: admission.left.issues.map(({ message }) => message).join(" "),
       envelope:
         retry.tag === "resolved"
-          ? battleActsEnvelope(input.session.state)
+          ? battleResolvedFrontierEnvelope(input.session.state)
           : retry.envelope,
       tableD20TestCircumstanceDecisionIssue: admission.left,
     };
