@@ -71,6 +71,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(result.left).toEqual({
         tag: "weaponLoadoutMismatch",
         slot: "main-hand",
+        ownerPath: ["initialCombatants", 0],
       });
     }
   });
@@ -151,8 +152,16 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(result.left).toEqual({
         tag: "battleStateInitIssues",
         issues: [
-          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
-          { tag: "weaponLoadoutMismatch", slot: "off-hand" },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "main-hand",
+            ownerPath: ["initialCombatants", 0],
+          },
+          {
+            tag: "weaponLoadoutMismatch",
+            slot: "off-hand",
+            ownerPath: ["initialCombatants", 0],
+          },
         ],
       });
     }

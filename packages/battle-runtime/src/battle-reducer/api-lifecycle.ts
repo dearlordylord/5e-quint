@@ -519,22 +519,13 @@ export function startBattle(
     );
     if (admission.tag === "invalid") {
       initializationIssues.push(
-        ...admission.issues
-          .map((issue, issueIndex) =>
-            battleInitializationLeafIssueFromStateIssue(
-              admissionIssueToInitIssue(issue),
-              battleInitializationFactsForAdmission(
-                combatant,
-                issue,
-                issueIndex,
-              ),
-            ),
-          )
-          .map((issue) =>
-            issue.tag === "weaponLoadoutMismatch" || ownerPath === undefined
-              ? issue
-              : { ...issue, ownerPath },
+        ...admission.issues.map((issue, issueIndex) =>
+          battleInitializationLeafIssueFromStateIssue(
+            admissionIssueToInitIssue(issue),
+            battleInitializationFactsForAdmission(combatant, issue, issueIndex),
+            ownerPath,
           ),
+        ),
       );
       continue;
     }
@@ -730,7 +721,7 @@ function ownerPathForAdmittedCombatant(
   );
   const combatant = input.combatants[index];
   return combatant === undefined
-    ? (["battleInitialization", "combatant"] as const)
+    ? (["battleInitialization", "hidePrerequisite"] as const)
     : (input.ownerPathForCombatant?.(combatant, index) ??
         (["initialCombatants", index] as const));
 }

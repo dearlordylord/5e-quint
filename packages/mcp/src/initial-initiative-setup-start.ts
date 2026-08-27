@@ -31,11 +31,14 @@ export function startInitialInitiativeSetup(
   );
   const companionValidation = composeBattleCompanionRoster({
     session: undefined,
-    owners: combatants.characterSessions.map(({ character, session }) => ({
-      characterId: character.characterId,
-      combatantId: character.combatantId,
-      sheet: session,
-    })),
+    owners: combatants.characterSessions.map(
+      ({ index, character, session }) => ({
+        index,
+        characterId: character.characterId,
+        combatantId: character.combatantId,
+        sheet: session,
+      }),
+    ),
     requests: input.companionAdmissions,
     unitLibrary: root.unitLibrary,
     initialCombatantOrder: combatants.initialCombatantOrder,
@@ -85,7 +88,7 @@ export function startInitialInitiativeSetup(
     ownerPathForCombatant: (combatant) =>
       combatants.ownerPaths.get(combatant.combatantId) ?? [
         "battleInitialization",
-        "combatant",
+        "global",
       ],
   });
   if (Either.isLeft(setup)) {

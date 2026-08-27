@@ -40,6 +40,8 @@ import {
   eldritchInvocationId,
   type CharacterBuild,
   type CharacterBuildMagicInitiateSpellAccessIssue,
+  type CharacterBuildProjectionCause,
+  type CharacterBuildProjectionIssue,
   type CharacterEquipmentItemId,
   type CharacterBuildSpellcastingSource,
   type NonEmptyReadonlyArray,
@@ -92,23 +94,39 @@ import {
   type ClassSpellChoiceKind,
 } from "./class-spell-choice-projection.ts";
 
+type CharacterBattleBuildProjectionPhase =
+  | "derivedState"
+  | "hitPoints"
+  | "proficiencies"
+  | "classLevels"
+  | "supportProfiles"
+  | "resources"
+  | "spellcasting"
+  | "species"
+  | "armorClass"
+  | "equipment"
+  | "druidWildShape"
+  | "metamagic";
+
+type CharacterBattleBuildProjectionReasonFor<
+  Cause extends CharacterBuildProjectionCause = CharacterBuildProjectionCause,
+> = Cause extends CharacterBuildProjectionCause
+  ? {
+      readonly kind: "characterBuildProjection";
+      readonly phase: CharacterBattleBuildProjectionPhase;
+      readonly cause: Cause["tag"];
+    } & Omit<Cause, "tag" | "reason"> &
+      (Cause extends { readonly reason: infer CauseReason }
+        ? { readonly causeReason: CauseReason }
+        : {})
+  : never;
+
 export type CharacterBattleInitIssueReason =
   | {
       readonly kind: "characterBuildProjection";
-      readonly phase:
-        | "derivedState"
-        | "hitPoints"
-        | "proficiencies"
-        | "classLevels"
-        | "supportProfiles"
-        | "resources"
-        | "spellcasting"
-        | "species"
-        | "armorClass"
-        | "equipment"
-        | "druidWildShape"
-        | "metamagic";
+      readonly phase: CharacterBattleBuildProjectionPhase;
     }
+  | CharacterBattleBuildProjectionReasonFor
   | {
       readonly kind: "characterBattleInput";
       readonly field: "initiative" | "hitPointMaximum" | "currentHp";
@@ -144,22 +162,30 @@ export type CharacterBattleInitIssueReason =
       readonly issueIndex: number;
     };
 
-export type CharacterBattleInitIssueFact = {
-  [K in CharacterBattleInitIssueReason["kind"]]: Omit<
-    Extract<CharacterBattleInitIssueReason, { readonly kind: K }>,
-    "kind"
-  > & { readonly reason: K };
-}[CharacterBattleInitIssueReason["kind"]];
+type CharacterBattleInitIssueFactFor<
+  Reason extends CharacterBattleInitIssueReason =
+    CharacterBattleInitIssueReason,
+> = Reason extends CharacterBattleInitIssueReason
+  ? Omit<Reason, "kind"> & { readonly reason: Reason["kind"] }
+  : never;
+
+export type CharacterBattleInitIssueFact = CharacterBattleInitIssueFactFor;
 
 export function characterBattleInitIssueFactFields(
   reason: CharacterBattleInitIssueReason,
 ): CharacterBattleInitIssueFact {
   return Match.value(reason).pipe(
     Match.discriminatorsExhaustive("kind")({
-      characterBuildProjection: ({ kind, phase }) => ({
-        reason: kind,
-        phase,
-      }),
+      characterBuildProjection: (matched) => {
+        const { kind, ...fields } = matched;
+        return "reason" in fields
+          ? {
+              ...fields,
+              reason: kind,
+              causeReason: fields.reason,
+            }
+          : { ...fields, reason: kind };
+      },
       characterBattleInput: ({ kind, field, constraint }) => ({
         reason: kind,
         field,
@@ -194,10 +220,18 @@ export function characterBattleInitIssueReasonFromFact(
 ): CharacterBattleInitIssueReason {
   return Match.value(fact).pipe(
     Match.discriminatorsExhaustive("reason")({
-      characterBuildProjection: ({ reason, phase }) => ({
-        kind: reason,
-        phase,
-      }),
+      characterBuildProjection: (matched) => {
+        const { reason, ...fields } = matched;
+        if ("causeReason" in fields) {
+          const { causeReason, ...causeFields } = fields;
+          return {
+            kind: reason,
+            ...causeFields,
+            reason: causeReason,
+          };
+        }
+        return { kind: reason, ...fields };
+      },
       characterBattleInput: ({ reason, field, constraint }) => ({
         kind: reason,
         field,
@@ -288,6 +322,46 @@ export function battleCreatureInitIssue(
   });
 }
 
+export function battleCreatureInitIssueFromCharacterBuildProjection(
+  issue: CharacterBuildProjectionIssue,
+  phase: CharacterBattleBuildProjectionPhase,
+): BattleCreatureInitLeafIssue {
+  const { tag: cause, ...causeFields } = issue.cause;
+  const reason =
+    issue.cause.tag === "invalidChoiceOption"
+      ? {
+          kind: "characterBuildProjection" as const,
+          phase,
+          cause,
+          causeReason: issue.cause.reason,
+          optionId: issue.cause.optionId,
+        }
+      : {
+          kind: "characterBuildProjection" as const,
+          phase,
+          cause,
+          ...causeFields,
+        };
+  return {
+    tag: "battleCreatureInitIssue",
+    message: characterCreationIssueMessage(issue),
+    ...characterBattleInitIssueFactFields(reason),
+  };
+}
+
+export function battleCreatureInitIssuesFromCharacterBuildProjection(
+  issues: ReadonlyNonEmptyArray<CharacterBuildProjectionIssue>,
+  phase: CharacterBattleBuildProjectionPhase,
+): Either.Either<never, BattleCreatureInitIssue> {
+  const [first, ...rest] = issues;
+  return battleCreatureInitIssueFromLeaves([
+    battleCreatureInitIssueFromCharacterBuildProjection(first, phase),
+    ...rest.map((issue) =>
+      battleCreatureInitIssueFromCharacterBuildProjection(issue, phase),
+    ),
+  ]);
+}
+
 export function battleCreatureInitIssues(
   first: BattleCreatureInitIssueLeaf,
   second: BattleCreatureInitIssueLeaf,
@@ -334,10 +408,11 @@ export function battleCreatureInitIssuesFromMessages(
 
 export function battleCreatureInitIssueLeaves(
   issue: BattleCreatureInitIssue,
-): readonly BattleCreatureInitIssueLeaf[] {
-  return issue.tag === "battleCreatureInitIssues"
-    ? issue.issues.flatMap(battleCreatureInitIssueLeaves)
-    : [issue];
+): ReadonlyNonEmptyArray<BattleCreatureInitIssueLeaf> {
+  if (issue.tag !== "battleCreatureInitIssues") return [issue];
+  const [firstIssue, ...restIssues] = issue.issues;
+  const firstLeaves = battleCreatureInitIssueLeaves(firstIssue);
+  return [...firstLeaves, ...restIssues.flatMap(battleCreatureInitIssueLeaves)];
 }
 
 export function battleCreatureInitIssueMessage(

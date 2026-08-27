@@ -4237,7 +4237,7 @@ export type BattleInitializationIssueFacts =
   | {
       readonly kind: "ammunitionStockInvalid";
       readonly combatantId: CombatantId;
-      readonly ammunition: string;
+      readonly ammunition: BattleAmmunitionKind;
     }
   | {
       readonly kind: "currentHpExceedsMaximum";
@@ -4262,7 +4262,7 @@ export type BattleInitializationIssueFacts =
     }
   | {
       readonly kind: "statBlockSourceInvalid";
-      readonly statBlockId: string;
+      readonly statBlockId: StatBlockId;
       readonly constraint:
         | "literalArmorClassRequired"
         | "literalMaximumHitPointsRequired"
@@ -4322,7 +4322,7 @@ export type BattleInitializationIssueFacts =
   | {
       readonly kind: "weaponPresentationUnavailable";
       readonly combatantId: CombatantId;
-      readonly weaponUnitId: string;
+      readonly weaponUnitId: UnitId;
       readonly availability: "missing" | "ambiguous";
     }
   | {

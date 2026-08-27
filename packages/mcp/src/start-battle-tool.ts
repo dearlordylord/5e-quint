@@ -96,7 +96,7 @@ export function handleStartBattleToolCall(
           combatants: admissions.map(({ combatant }) => combatant),
           ownerPathForCombatant: (combatant) => {
             const ownerPath = combatants.ownerPaths.get(combatant.combatantId);
-            return ownerPath ?? ["battleInitialization", "combatant"];
+            return ownerPath ?? ["battleInitialization", "global"];
           },
         });
   const companionRoster = composeBattleCompanionRoster({
@@ -105,7 +105,8 @@ export function handleStartBattleToolCall(
         ? session.right
         : undefined,
     owners: combatants.characterSessions.map(
-      ({ character, session: characterSession }) => ({
+      ({ index, character, session: characterSession }) => ({
+        index,
         characterId: character.characterId,
         combatantId: character.combatantId,
         sheet: characterSession,

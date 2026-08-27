@@ -4398,6 +4398,9 @@ describe("MCP server route", () => {
             issueTag: "battleCreatureInitIssue",
             reason: "characterBuildProjection",
             phase: "hitPoints",
+            cause: "unknownUnit",
+            role: "species",
+            unitId: "species_elf",
             message: expect.stringContaining("species_elf"),
           },
           {
