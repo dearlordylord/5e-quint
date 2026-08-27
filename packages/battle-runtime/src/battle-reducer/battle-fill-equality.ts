@@ -9,7 +9,7 @@ import type {
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 import { Match } from "effect";
 import { sameMultisetBy } from "../mechanical-equality.ts";
-import { opportunityAttackThreatEqual } from "./movement-speed.ts";
+import { opportunityAttackThreatEqual } from "./opportunity-attack-equality.ts";
 
 export type BattleContinuationComparableFill = Extract<
   BattleFill,

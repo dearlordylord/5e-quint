@@ -717,10 +717,13 @@ export {
 export {
   opportunityAttackExecutionCandidates,
   opportunityAttackLeavesReach,
-  opportunityAttackThreatIdentityEqual,
-  opportunityAttackThreatEqual,
   type BattleOpportunityAttackExecutionCandidate,
 } from "./battle-reducer/movement-speed.ts";
+
+export {
+  opportunityAttackThreatIdentityEqual,
+  opportunityAttackThreatEqual,
+} from "./battle-reducer/opportunity-attack-equality.ts";
 
 export { zeroHpLifecycleIsTerminal } from "./battle-reducer/creature-state-leaves.ts";
 
