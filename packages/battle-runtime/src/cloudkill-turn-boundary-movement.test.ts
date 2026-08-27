@@ -1713,6 +1713,198 @@ describe("Cloudkill source-turn movement", () => {
     );
   });
 
+  test("applies deferred source-start effects once when a movement reaction ends Cloudkill", () => {
+    const cast = castCloudkill({
+      targetCanReadyRayOfFrost: true,
+      extraTargetIds: [cloudkillSecondaryTargetId],
+    });
+    const targetTurn = endTurn({
+      state: withSourceStartTurnDamage(cast.state),
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const secondaryTurn = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+    });
+    if (secondaryTurn.tag !== "resolved") {
+      throw new Error("Expected the secondary target's turn to start.");
+    }
+    const sourceHpBeforeStartTurn =
+      secondaryTurn.state.combatants.get(spellCasterId)?.hp;
+    if (sourceHpBeforeStartTurn === undefined) {
+      throw new Error("Expected the Cloudkill source.");
+    }
+
+    const orderFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+    });
+    const orderFill = cloudkillStartTurnOrderFill(
+      requireResultHole(orderFrontier, "cloudkillStartTurnOrder"),
+      "cloudkillMovement",
+    );
+    const startDamageFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [orderFill],
+    });
+    const startDamageFill = damageRollFillWithGroups(
+      requireResultHole(startDamageFrontier, "rolledDice"),
+      [[3]],
+    );
+    const startSaveFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [orderFill, startDamageFill],
+    });
+    const startSaveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(startSaveFrontier, "savingThrowOutcome"),
+      spellCasterId,
+      false,
+    );
+    const startConcentrationFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [orderFill, startDamageFill, startSaveFill],
+    });
+    const startConcentrationFill = concentrationSavingThrowFill(
+      requireResultHole(
+        startConcentrationFrontier,
+        "concentrationSavingThrow",
+      ),
+      true,
+    );
+    const startTurnFills = [
+      orderFill,
+      startDamageFill,
+      startSaveFill,
+      startConcentrationFill,
+    ];
+    const movementFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: startTurnFills,
+    });
+    const movementFill = cloudkillMovementFill(
+      requireResultHole(movementFrontier, "cloudkillMovement"),
+      [cloudkillSecondaryTargetId],
+    );
+    const saveFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [...startTurnFills, movementFill],
+    });
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      cloudkillSecondaryTargetId,
+      false,
+    );
+    const interrupted = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [...startTurnFills, movementFill, saveFill],
+    });
+    if (interrupted.tag !== "needsHoles") {
+      throw new Error("Expected the failed-save reaction window.");
+    }
+    const pending = interrupted.snapshot.pendingInterrupt;
+    if (pending === null) {
+      throw new Error("Expected a pending failed-save interrupt.");
+    }
+    const choice = reactionChoiceWithSubject(pending.choices);
+    if (
+      choice.kind !== "releaseReadiedSpell" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected the readied Ray of Frost choice.");
+    }
+    const released = resolveBattleInterrupt({
+      state: interrupted.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "resolve",
+        responderId: spellTargetId,
+        choice: {
+          kind: "releaseReadiedSpell",
+          readiedSpellCasterId: spellTargetId,
+          procedureRef: choice.subject.procedureRef,
+          fills: [],
+        },
+      }),
+    });
+    if (released.tag !== "needsHoles") {
+      throw new Error("Expected the readied spell target frontier.");
+    }
+    const reactionTargetFill = targetFill(
+      requireResultHole(released, "targetChoice"),
+      spellCasterId,
+    );
+    const attackFrontier = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [reactionTargetFill],
+    });
+    const attackFill = attackRollFill(
+      requireResultHole(attackFrontier, "attackRoll"),
+      { total: 20, naturalD20: 15 },
+    );
+    const damageFrontier = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [reactionTargetFill, attackFill],
+    });
+    const damageFill = damageRollFill(
+      requireResultHole(damageFrontier, "rolledDice"),
+      4,
+    );
+    const concentrationFrontier = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [reactionTargetFill, attackFill, damageFill],
+    });
+    const reactionConcentrationFill = concentrationSavingThrowFill(
+      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+      false,
+    );
+    const resumed = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [
+        reactionTargetFill,
+        attackFill,
+        damageFill,
+        reactionConcentrationFill,
+      ],
+    });
+
+    expect(resumed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        round: 2,
+        currentActorId: spellCasterId,
+        pendingInterrupt: null,
+      },
+    });
+    if (resumed.tag !== "resolved") return;
+    expect(resumed.state.combatants.get(spellCasterId)?.hp).toBe(
+      sourceHpBeforeStartTurn - 7,
+    );
+    expect(
+      [...resumed.state.combatants.values()].flatMap(
+        (combatant) => combatant.activeEffects,
+      ),
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "cloudkillAreaHazard" }),
+      ]),
+    );
+  });
+
   test("rejects the former anytime movement-save command", () => {
     const { state } = castCloudkill();
 

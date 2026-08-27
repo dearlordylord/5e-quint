@@ -449,6 +449,29 @@ function cloudkillMovementCheckpointMatchesRequest(
   );
 }
 
+function completeCloudkillMovementSequenceResume(
+  state: BattleState,
+  fills: readonly BattleFill[],
+  checkpoint: BattleCloudkillMovementSequenceResumeCheckpoint,
+): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  const completedState = cloudkillMovementWasChosenBeforeStartTurnEffects(
+    fills,
+    checkpoint.sourceTurn,
+    checkpoint.occurrence,
+  )
+    ? applyDeferredStartTurnSpellDamage(
+        state,
+        checkpoint.sourceTurn.actorId,
+        fills,
+      )
+    : state;
+  return {
+    tag: "resolved",
+    state: completedState,
+    snapshot: snapshotBattle(completedState),
+  };
+}
+
 function resolveCloudkillMovementSequenceResume(input: {
   readonly resolution: EndTurnResolutionInput;
   readonly parent: ReplayParentContinuation;
@@ -484,11 +507,11 @@ function resolveCloudkillMovementSequenceResume(input: {
       effect.sourceProcedureRef === checkpoint.occurrence.sourceProcedureRef,
   );
   if (!checkpointEffectStillActive) {
-    return {
-      tag: "resolved",
-      state: resolution.state,
-      snapshot: snapshotBattle(resolution.state),
-    };
+    return completeCloudkillMovementSequenceResume(
+      resolution.state,
+      resolution.fills,
+      checkpoint,
+    );
   }
   const boundaryMatch = matchCloudkillMovementBoundaries(
     boundaries,
@@ -535,11 +558,11 @@ function resolveCloudkillMovementSequenceResume(input: {
         !request.effect.savedThisTurn.includes(request.subject.actorId),
     );
   if (pendingRequests.length === 0) {
-    return {
-      tag: "resolved",
-      state: resolution.state,
-      snapshot: snapshotBattle(resolution.state),
-    };
+    return completeCloudkillMovementSequenceResume(
+      resolution.state,
+      resolution.fills,
+      checkpoint,
+    );
   }
   const firstPendingRequest = pendingRequests[0];
   if (firstPendingRequest === undefined) {
@@ -565,22 +588,11 @@ function resolveCloudkillMovementSequenceResume(input: {
   if (resumed.tag === "result") {
     return resumed.result;
   }
-  const finalizedState = cloudkillMovementWasChosenBeforeStartTurnEffects(
+  return completeCloudkillMovementSequenceResume(
+    resumed.state,
     resolution.fills,
-    checkpoint.sourceTurn,
-    checkpoint.occurrence,
-  )
-    ? applyDeferredStartTurnSpellDamage(
-        resumed.state,
-        checkpoint.sourceTurn.actorId,
-        resolution.fills,
-      )
-    : resumed.state;
-  return {
-    tag: "resolved",
-    state: finalizedState,
-    snapshot: snapshotBattle(finalizedState),
-  };
+    checkpoint,
+  );
 }
 
 function resolveEndTurn({
