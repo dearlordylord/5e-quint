@@ -38,6 +38,7 @@ import {
   CombatantId,
   BattleStatBlockProcedureExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  battleProcedureExecutionRefBelongsToCombatant,
   SpellId,
   spellId as makeSpellId,
 } from "./identity.ts";
@@ -1356,6 +1357,39 @@ export function battleSubjectProcedureRefs(
       findFamiliarTouchSpell: (value) => [value.procedureRef],
       runtimeCommand: battleRuntimeCommandProcedureRefs,
     }),
+  );
+}
+
+export function battleSubjectProcedureRefsBelongToOwners(
+  subject: BattleSubject,
+): boolean {
+  const ownerId = Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      action: (value) => value.actorId,
+      pactOfTheChainFamiliarAttack: (value) => value.familiarId,
+      bonusAction: (value) => value.actorId,
+      bonusActionStandardAction: (value) => value.actorId,
+      monkFocusOption: (value) => value.actorId,
+      monkFocusFlurryOfBlowsStrike: (value) => value.actorId,
+      actionSpell: (value) => value.actorId,
+      bonusActionSpell: (value) => value.actorId,
+      bonusActionDashSpell: (value) => value.actorId,
+      unitFeature: (value) => value.actorId,
+      unitFeatureHeldWeaponActivation: (value) => value.actorId,
+      druidWildShape: (value) => value.actorId,
+      companionLifecycle: (value) => value.actorId,
+      findFamiliarSharedSenses: (value) => value.actorId,
+      findFamiliarTouchSpell: (value) => value.actorId,
+      runtimeCommand: (value) =>
+        "readiedSpellCasterId" in value
+          ? value.readiedSpellCasterId
+          : "reactorId" in value
+            ? value.reactorId
+            : value.actorId,
+    }),
+  );
+  return battleSubjectProcedureRefs(subject).every((procedureRef) =>
+    battleProcedureExecutionRefBelongsToCombatant(procedureRef, ownerId),
   );
 }
 

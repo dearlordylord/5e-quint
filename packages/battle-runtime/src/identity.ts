@@ -469,6 +469,35 @@ export function battleProcedureExecutionRefBelongsToScope(
   return executionReferenceBelongsToScope(procedureRef, "procedure", scopeRef);
 }
 
+export function battleProcedureExecutionRefBelongsToCombatant(
+  procedureRef: BattleProcedureExecutionRef,
+  combatantId: CombatantId,
+): boolean {
+  const decoded = parseExecutionReference(procedureRef);
+  if (
+    decoded === null ||
+    !hasExactKeys(decoded, ["scopeRef", "kind", "ordinal"]) ||
+    decoded.kind !== "procedure"
+  ) {
+    return false;
+  }
+  const scopeRef = decoded.scopeRef;
+  return (
+    (Schema.is(BattleAttackExecutionScopeRef)(scopeRef) &&
+      battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
+      battleAttackExecutionScopeRefBelongsToCombatant(scopeRef, combatantId)) ||
+    (Schema.is(BattleStatBlockExecutionScopeRef)(scopeRef) &&
+      battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
+      battleStatBlockExecutionScopeRefBelongsToCombatant(
+        scopeRef,
+        combatantId,
+      )) ||
+    (Schema.is(BattleCharacterExecutionScopeRef)(scopeRef) &&
+      battleProcedureExecutionRefBelongsToScope(procedureRef, scopeRef) &&
+      battleCharacterExecutionScopeRefBelongsToCombatant(scopeRef, combatantId))
+  );
+}
+
 export function battleProcedureExecutionRefIsAtOrdinal(
   procedureRef: BattleProcedureExecutionRef,
   scopeRef: BattleExecutionScopeRef,

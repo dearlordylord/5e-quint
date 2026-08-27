@@ -13,7 +13,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   BattleSubjectSchema,
-  type BattleProcedureExecutionRef,
+  battleSubjectProcedureRefsBelongToOwners,
   type BattleSubject,
 } from "@dnd/battle-runtime";
 import {
@@ -482,54 +482,21 @@ function oracleBattleEnteredInvariantsHold(entered: {
   return entered.frontier.acts.every(
     (subject) =>
       entered.checkpoint.currentActorId === entered.checkpoint.turnOrder[0] &&
+      battleSubjectBelongsToCurrentActor(
+        subject,
+        entered.checkpoint.currentActorId,
+      ) &&
       battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
-      battleSubjectProcedureRefsBelongToActor(subject),
+      battleSubjectProcedureRefsBelongToOwners(subject),
   );
 }
 
-const ProcedureEnvelopeSchema = Schema.parseJson(
-  Schema.Struct({ scopeRef: Schema.String }),
-);
-const ProcedureScopeSchema = Schema.parseJson(
-  Schema.Struct({ combatantId: CombatantId }),
-);
-
-function battleSubjectProcedureRefsBelongToActor(
+function battleSubjectBelongsToCurrentActor(
   subject: BattleSubject,
+  currentActorId: string,
 ): boolean {
-  if (!("actorId" in subject)) return true;
-  return Object.entries(subject).every(([property, value]) => {
-    if (!(property in BATTLE_SUBJECT_PROCEDURE_REFERENCE_PROPERTIES)) {
-      return true;
-    }
-    if (typeof value !== "string") return false;
-    const envelope = Schema.decodeUnknownEither(ProcedureEnvelopeSchema)(value);
-    if (envelope._tag === "Left") return false;
-    const scope = Schema.decodeUnknownEither(ProcedureScopeSchema)(
-      envelope.right.scopeRef,
-    );
-    return (
-      scope._tag === "Right" && scope.right.combatantId === subject.actorId
-    );
-  });
+  return !("actorId" in subject) || subject.actorId === currentActorId;
 }
-
-type ProcedureReferenceProperty<Value> = Value extends unknown
-  ? {
-      [Property in keyof Value]-?: [NonNullable<Value[Property]>] extends [
-        never,
-      ]
-        ? never
-        : NonNullable<Value[Property]> extends BattleProcedureExecutionRef
-          ? Property
-          : never;
-    }[keyof Value]
-  : never;
-
-const BATTLE_SUBJECT_PROCEDURE_REFERENCE_PROPERTIES = {
-  procedureRef: true,
-  focusProcedureRef: true,
-} satisfies Record<ProcedureReferenceProperty<BattleSubject>, true>;
 
 function battleSubjectReferencesAreLive(
   subject: BattleSubject,

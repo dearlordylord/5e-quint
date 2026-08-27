@@ -582,7 +582,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
             frontier: {
               acts: entered.frontier.acts.map((subject) =>
                 subject === ownerAct
-                  ? { ...subject, procedureRef: forgedProcedureRef }
+                  ? {
+                      ...subject,
+                      actorId: foreignOwnerId,
+                      procedureRef: forgedProcedureRef,
+                    }
                   : subject,
               ),
             },
