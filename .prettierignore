@@ -1,6 +1,7 @@
 # Generated publication bytes are owned by their source generators.
 packages/surface/content/*.json
 packages/surface/publication/*.json
+packages/opaque-oracle/publication/*.json
 
 # Local coverage-report scratch directories contain generated reporter assets.
 **/coverage_tmp*/**
