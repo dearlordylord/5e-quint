@@ -4803,14 +4803,7 @@ describe("Find Familiar lifecycle", () => {
           : combatant,
       ),
     });
-    expect(Either.isRight(authoredNameInMechanicalSnapshot)).toBe(true);
-    if (Either.isRight(authoredNameInMechanicalSnapshot)) {
-      expect(
-        authoredNameInMechanicalSnapshot.right.combatants.find(
-          (combatant) => combatant.combatantId === familiarId,
-        ),
-      ).not.toHaveProperty("displayName");
-    }
+    expect(Either.isLeft(authoredNameInMechanicalSnapshot)).toBe(true);
     const invalid = Schema.decodeUnknownEither(BattleSnapshotSchema)({
       ...encoded,
       companions: [{ status: "present" }],
