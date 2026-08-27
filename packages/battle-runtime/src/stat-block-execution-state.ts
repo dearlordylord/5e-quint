@@ -71,6 +71,70 @@ export type BattleStatBlockExecutionSourceInput = Omit<
   readonly legendaryActionUses?: number;
 };
 
+export type StatBlockResourceGraphAdmissionFailure =
+  | {
+      readonly kind: "duplicateResourceOrdinal";
+      readonly ordinal: StatBlockProcedureResourceOrdinal;
+    }
+  | {
+      readonly kind: "missingResourceDeclaration";
+      readonly ordinal: StatBlockProcedureResourceOrdinal;
+    };
+
+/**
+ * A source whose procedure resource references have been closed over its
+ * declarations. The source boundary owns this fact before execution
+ * allocation can consume the resource graph.
+ */
+export type BattleStatBlockClosedResourceGraph<
+  TSource extends Pick<
+    BattleStatBlockExecutionSource,
+    "procedures" | "resources"
+  > = BattleStatBlockExecutionSource,
+> = Omit<TSource, "resources"> & {
+  readonly resources: readonly BattleStatBlockRuntimeResource[];
+};
+
+export function admitStatBlockResourceGraph<
+  TSource extends Pick<
+    BattleStatBlockExecutionSource,
+    "procedures" | "resources"
+  >,
+>(
+  source: TSource,
+): Either.Either<
+  BattleStatBlockClosedResourceGraph<TSource>,
+  StatBlockResourceGraphAdmissionFailure
+> {
+  const resources = source.resources ?? [];
+  const resourceOrdinals = new Set(
+    resources.map((resource) => resource.ordinal),
+  );
+  const duplicateOrdinal = resources.find(
+    (resource, index) =>
+      resources.findIndex(
+        (candidate) => candidate.ordinal === resource.ordinal,
+      ) !== index,
+  )?.ordinal;
+  if (duplicateOrdinal !== undefined) {
+    return Either.left({
+      kind: "duplicateResourceOrdinal",
+      ordinal: duplicateOrdinal,
+    });
+  }
+  const missingResourceOrdinal = source.procedures
+    .flatMap((procedure) => procedure.resourceRefs)
+    .find((ordinal) => !resourceOrdinals.has(ordinal));
+  if (missingResourceOrdinal !== undefined) {
+    return Either.left({
+      kind: "missingResourceDeclaration",
+      ordinal: missingResourceOrdinal,
+    });
+  }
+  const { resources: _resources, ...sourceWithoutResources } = source;
+  return Either.right({ ...sourceWithoutResources, resources });
+}
+
 export type StatBlockLegendaryActionUsesParseFailure = "invalidPositiveInteger";
 
 /**

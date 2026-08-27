@@ -14,7 +14,10 @@ import {
   combatantId,
   initiativeScore,
 } from "./identity.ts";
-import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
+import {
+  admitBattleStatBlockCombatant,
+  battleStatBlockCombatantSource,
+} from "./stat-block-combatant-admission.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { startBattle } from "./battle-reducer/api-lifecycle.ts";
 import {
@@ -22,6 +25,7 @@ import {
   fighterId,
   removeBattleCombatantsRight,
   startBattleRight,
+  monsterResourceStatBlock,
   statBlockCreatureInit,
   statBlockRecord,
   projectedStatBlockRuntimeSource,
@@ -118,6 +122,61 @@ describe("Stat Block combatant admission capability", () => {
         : "admitted",
     ).toBe(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
+    );
+  });
+
+  test("normalizes omitted Stat Block resources at the source admission boundary", () => {
+    const source = projectedStatBlockRuntimeSource(statBlockRecord());
+    const admitted = battleStatBlockCombatantSource(source);
+
+    expect(Either.isRight(admitted)).toBe(true);
+    if (Either.isLeft(admitted)) return;
+    expect(admitted.right.resources).toEqual([]);
+  });
+
+  test("rejects a procedure resource reference without a declaration", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const resources = source.resources;
+    if (resources === undefined) {
+      throw new Error("Expected the resource-backed Stat Block fixture.");
+    }
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: resources.slice(1),
+    });
+
+    expect(admitted).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        message:
+          "Battle runtime requires Stat Block procedure resource reference 1 to match a declared resource.",
+      }),
+    );
+  });
+
+  test("rejects duplicate Stat Block resource declaration ordinals", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const resources = source.resources;
+    if (resources === undefined) {
+      throw new Error("Expected the resource-backed Stat Block fixture.");
+    }
+    const [firstResource, ...remainingResources] = resources;
+    if (firstResource === undefined) {
+      throw new Error("Expected the first resource declaration.");
+    }
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: [firstResource, firstResource, ...remainingResources],
+    });
+
+    expect(admitted).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        message:
+          "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.",
+      }),
     );
   });
 

@@ -64,10 +64,13 @@ describe("Stat Block Legendary Action use-count boundaries", () => {
     if (Either.isLeft(projected)) return;
 
     const source = projected.right.runtime;
+    const admittedSource = Either.getOrThrow(
+      battleStatBlockCombatantSource(source),
+    );
     const execution = statBlockExecutionAdmissionCohort(
       battleId("legendary-use-count-boundary"),
       combatantId("legendary-use-count-boundary"),
-      [source],
+      [admittedSource],
       battleExecutionScopeOrdinal(0),
     ).admissions[0];
     expect(execution).toBeDefined();

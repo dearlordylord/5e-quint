@@ -31,6 +31,7 @@ import {
   type BattleState,
 } from "./index.ts";
 import {
+  admittedStatBlockSource,
   resolveBattleSubject,
   battleId,
   characterSeed,
@@ -94,7 +95,7 @@ function isolatedStatBlockAdmissions(
   return statBlockExecutionAdmissionCohort(
     isolatedExecutionBattleId,
     actorId,
-    statBlocks.map(projectedStatBlockRuntimeSource),
+    statBlocks.map(admittedStatBlockSource),
     battleExecutionScopeOrdinal(0),
   ).admissions;
 }

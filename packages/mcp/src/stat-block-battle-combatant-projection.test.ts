@@ -1,6 +1,9 @@
 import { combatantId, initiativeScore } from "@dnd/battle-runtime";
 import { statBlockId } from "@dnd/shared/game-facts";
-import { StatBlockProcedureOrdinalSchema } from "@dnd/surface/surface/schema";
+import {
+  StatBlockProcedureOrdinalSchema,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 import type {
   StatBlockProcedureEntry,
   StatBlockRecord,
@@ -127,6 +130,53 @@ describe("MCP Stat Block battle combatant projection", () => {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
         statBlockId: invalid.id,
         reason: "nonLiteralSize",
+      },
+    });
+  });
+
+  test("maps invalid resource limits to a precise projection failure", () => {
+    const baseRoot = createMcpPlaySessionRoot();
+    const base = baseRoot.statBlockCatalog.requireStatBlock(
+      "stat_block_goblin_warrior",
+    );
+    const invalid = {
+      ...base,
+      id: statBlockId("stat_block_synthetic_mcp_invalid_resource_limit"),
+      name: "Synthetic MCP Invalid Resource Limit",
+      statBlock: {
+        ...base.statBlock,
+        resources: [
+          {
+            ordinal: Schema.decodeUnknownSync(
+              StatBlockProcedureResourceOrdinalSchema,
+            )(1),
+            ownership: "each" as const,
+            limit: { kind: "daily" as const, uses: 0 },
+          },
+        ],
+      },
+    } satisfies StatBlockRecord;
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: {
+        ...baseRoot.statBlockCatalog,
+        getStatBlock: () => Option.some(invalid),
+      },
+    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+
+    const projected = projectStatBlockBattleCombatant({
+      root,
+      combatant: statBlockCombatant(invalid),
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(jsonContentPayload(projected.left)).toEqual({
+      error: "Stat Block projection failed.",
+      details: {
+        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+        statBlockId: invalid.id,
+        reason: "invalidResourceLimit",
       },
     });
   });

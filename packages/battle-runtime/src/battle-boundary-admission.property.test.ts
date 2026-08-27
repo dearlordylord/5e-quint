@@ -1738,10 +1738,13 @@ describe("battle boundary admission owners", () => {
     const executionSource = projectedStatBlockRuntimeSource(
       monsterResourceStatBlock(),
     );
+    const admittedExecutionSource = Either.getOrThrow(
+      battleStatBlockCombatantSource(executionSource),
+    );
     const cohort = statBlockExecutionAdmissionCohort(
       battleId("boundary-stat-execution"),
       combatantId("boundary-stat-execution"),
-      [executionSource],
+      [admittedExecutionSource],
       battleExecutionScopeOrdinal(0),
     );
     const admission = cohort.admissions[0];
@@ -1776,10 +1779,18 @@ describe("battle boundary admission owners", () => {
       battleId("boundary-stat-sections"),
       combatantId("boundary-stat-sections"),
       [
-        monsterResourceStatBlock(),
-        monsterMultiattackStatBlock(),
-        monsterResourceStatBlockWithTwoRechargeActions(),
-      ].map(projectedStatBlockRuntimeSource),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(monsterResourceStatBlock()),
+        ),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(monsterMultiattackStatBlock()),
+        ),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(
+            monsterResourceStatBlockWithTwoRechargeActions(),
+          ),
+        ),
+      ].map(Either.getOrThrow),
       battleExecutionScopeOrdinal(0),
     );
     expect(sectionAdmissions.admissions).toHaveLength(3);

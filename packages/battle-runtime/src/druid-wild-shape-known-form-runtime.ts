@@ -29,17 +29,20 @@ export type BattleDruidWildShapeFormSpeeds = readonly [
 declare const battleDruidWildShapeKnownFormBrand: unique symbol;
 
 /** Mechanical known-form facts retained by battle execution. */
-export type BattleDruidWildShapeKnownFormExecutionFacts =
-  BattleStatBlockExecutionSource & {
-    readonly statBlock: Omit<
-      BattleStatBlockExecutionSource["statBlock"],
-      "ac" | "size" | "speeds"
-    > & {
-      readonly ac: LiteralStatBlockValue;
-      readonly size: Size;
-      readonly speeds: BattleDruidWildShapeFormSpeeds;
-    };
+export type BattleDruidWildShapeKnownFormExecutionFacts = Omit<
+  BattleStatBlockExecutionSource,
+  "resources"
+> & {
+  readonly resources: NonNullable<BattleStatBlockExecutionSource["resources"]>;
+  readonly statBlock: Omit<
+    BattleStatBlockExecutionSource["statBlock"],
+    "ac" | "size" | "speeds"
+  > & {
+    readonly ac: LiteralStatBlockValue;
+    readonly size: Size;
+    readonly speeds: BattleDruidWildShapeFormSpeeds;
   };
+};
 
 /** Source-free form retained by durable battle execution state. */
 export type BattleDruidWildShapeKnownFormRuntime =

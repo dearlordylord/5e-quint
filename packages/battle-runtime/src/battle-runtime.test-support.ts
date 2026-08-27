@@ -18,7 +18,10 @@ import {
 } from "@dnd/surface/surface/find-familiar-forms";
 import { Match, Schema } from "effect";
 import * as Either from "effect/Either";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import {
+  battleStatBlockCombatantSource,
+  type BattleStatBlockCombatantSource,
+} from "./stat-block-combatant-admission.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
@@ -4068,6 +4071,14 @@ export function projectedStatBlockRuntimeSource(
     );
   }
   return projected.right.runtime;
+}
+
+export function admittedStatBlockSource(
+  record: StatBlockRecord = statBlockRecord(),
+): BattleStatBlockCombatantSource {
+  return Either.getOrThrow(
+    battleStatBlockCombatantSource(projectedStatBlockRuntimeSource(record)),
+  );
 }
 
 type AuthoredExecutableProcedureEntry = Extract<

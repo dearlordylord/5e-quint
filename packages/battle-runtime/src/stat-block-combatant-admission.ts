@@ -1,7 +1,7 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Condition } from "@dnd/shared/game-facts";
 import { Hp, SIZES } from "@dnd/shared/types";
-import { Brand } from "effect";
+import { Brand, Match } from "effect";
 import * as Either from "effect/Either";
 
 import { optionalProperty } from "./optional-property.ts";
@@ -16,10 +16,12 @@ import {
   parseStatBlockLiteralValue,
   parseStatBlockLegendaryActionUses,
   parseStatBlockPositiveIntegerLiteral,
+  admitStatBlockResourceGraph,
   type BattleStatBlockCombatantFacts,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockExecutionSourceInput,
   type BattleStatBlockRuntimeResource,
+  type StatBlockResourceGraphAdmissionFailure,
 } from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
@@ -33,7 +35,7 @@ export type BattleStatBlockCombatantSource = {
   readonly challengeRating: BattleStatBlockExecutionSource["challengeRating"];
   readonly statBlock: BattleStatBlockCombatantFacts;
   readonly procedures: BattleStatBlockExecutionSource["procedures"];
-  readonly resources?: readonly BattleStatBlockRuntimeResource[];
+  readonly resources: readonly BattleStatBlockRuntimeResource[];
   readonly legendaryActionUses?: NonNullable<
     BattleStatBlockExecutionSource["legendaryActionUses"]
   >;
@@ -170,6 +172,10 @@ export function battleStatBlockCombatantSource(
       "Battle runtime requires Stat Block Legendary Action uses to be a positive integer.",
     );
   }
+  const resourceGraph = admitStatBlockResourceGraph(statBlock);
+  if (Either.isLeft(resourceGraph)) {
+    return issue(resourceGraphAdmissionIssueMessage(resourceGraph.left));
+  }
   const {
     legendaryActionUses: _unbrandedLegendaryActionUses,
     ...sourceWithoutLegendaryActionUses
@@ -178,6 +184,7 @@ export function battleStatBlockCombatantSource(
     BattleStatBlockCombatantSource({
       ...sourceWithoutLegendaryActionUses,
       ...optionalProperty("legendaryActionUses", legendaryActionUses.right),
+      resources: resourceGraph.right.resources,
       statBlock: {
         ...statBlock.statBlock,
         ac: ac.right,
@@ -185,6 +192,24 @@ export function battleStatBlockCombatantSource(
         size: statBlock.statBlock.size,
       },
     }),
+  );
+}
+
+function resourceGraphAdmissionIssueMessage(
+  failure: StatBlockResourceGraphAdmissionFailure,
+): string {
+  return Match.value(failure).pipe(
+    Match.when(
+      { kind: "duplicateResourceOrdinal" },
+      ({ ordinal }) =>
+        `Battle runtime requires Stat Block resource declaration ordinal ${String(ordinal)} to be unique.`,
+    ),
+    Match.when(
+      { kind: "missingResourceDeclaration" },
+      ({ ordinal }) =>
+        `Battle runtime requires Stat Block procedure resource reference ${String(ordinal)} to match a declared resource.`,
+    ),
+    Match.exhaustive,
   );
 }
 

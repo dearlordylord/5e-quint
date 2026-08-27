@@ -11,6 +11,8 @@ import {
 import { Brand, Match } from "effect";
 import * as Either from "effect/Either";
 import type { SupportedStatBlockBonusActionStandardAction } from "./battle-reducer/battle-runtime-protocol.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";
+import type { BattleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
   type BattleStatBlockProcedureExecutionRef,
   type BattleId,
@@ -26,8 +28,10 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import {
+  admitStatBlockResourceGraph,
   admittedStatBlockExecutionState,
   parseStatBlockLegendaryActionUses,
+  type BattleStatBlockClosedResourceGraph,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
   type BattleStatBlockRuntimeResource,
@@ -40,6 +44,10 @@ import {
 } from "./stat-block-execution-state.ts";
 import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
 export * from "./stat-block-execution-state.ts";
+
+type BattleStatBlockClosedExecutionSource =
+  | BattleStatBlockCombatantSource
+  | BattleDruidWildShapeKnownFormRuntime;
 
 export type StatBlockExecutionRestoreIssue = {
   readonly tag: "invalidStatBlockExecutionSnapshot";
@@ -148,7 +156,7 @@ type AdmittedStatBlock = {
 };
 
 export function statBlockExecutionAdmissionCohort<
-  TStatBlock extends BattleStatBlockExecutionSource,
+  TStatBlock extends BattleStatBlockClosedExecutionSource,
 >(
   battleId: BattleId,
   combatantId: CombatantId,
@@ -160,7 +168,7 @@ export function statBlockExecutionAdmissionCohort<
 };
 
 export function statBlockExecutionAdmissionCohort<
-  TStatBlock extends BattleStatBlockExecutionSource,
+  TStatBlock extends BattleStatBlockClosedExecutionSource,
 >(
   battleId: BattleId,
   combatantId: CombatantId,
@@ -172,7 +180,7 @@ export function statBlockExecutionAdmissionCohort<
 };
 
 export function statBlockExecutionAdmissionCohort<
-  TStatBlock extends BattleStatBlockExecutionSource,
+  TStatBlock extends BattleStatBlockClosedExecutionSource,
 >(
   battleId: BattleId,
   combatantId: CombatantId,
@@ -205,7 +213,7 @@ export function statBlockExecutionAdmissionCohort<
 
 function admitStatBlock(
   statBlock: Pick<
-    BattleStatBlockExecutionSource,
+    BattleStatBlockClosedResourceGraph,
     | "challengeRating"
     | "statBlock"
     | "procedures"
@@ -278,7 +286,7 @@ function admitStatBlock(
       unarmedStrike: admittedUnarmedStrike(statBlock),
       multiattacks,
       bonusActions,
-      resources: statBlock.resources ?? [],
+      resources: statBlock.resources,
     },
   };
 }
@@ -527,8 +535,13 @@ export type StatBlockPresentationAllocation = {
   readonly procedureRefs: AllocatedStatBlockExecution["procedureRefs"];
 };
 
-export function statBlockPresentationAllocation(
-  admission: Pick<StatBlockExecutionAdmission, "statBlock" | "execution">,
+export function statBlockPresentationAllocation<
+  TStatBlock extends BattleStatBlockClosedExecutionSource,
+>(
+  admission: Pick<
+    StatBlockExecutionAdmission<TStatBlock>,
+    "statBlock" | "execution"
+  >,
 ): StatBlockPresentationAllocation {
   const admitted = admitStatBlock(admission.statBlock);
   const allocated = allocateStatBlockExecution(
@@ -646,7 +659,25 @@ export function restoreStatBlockExecutionAdmissions<
       continue;
     }
     restoredScopeRefs.add(snapshot.scopeRef);
-    const admitted = admitStatBlock(restoration.statBlock);
+    const source = admitStatBlockResourceGraph(restoration.statBlock);
+    if (Either.isLeft(source)) {
+      issues.push(
+        statBlockExecutionRestoreIssue(
+          restorationIndex,
+          snapshot.scopeRef,
+          "procedureBindingsMismatch",
+        ),
+      );
+      continue;
+    }
+    const {
+      legendaryActionUses: _sourceLegendaryActionUses,
+      ...sourceWithoutLegendaryActionUses
+    } = source.right;
+    const admitted = admitStatBlock({
+      ...sourceWithoutLegendaryActionUses,
+      ...optionalProperty("legendaryActionUses", legendaryActionUses.right),
+    });
     const allocated = allocateStatBlockExecution(
       executionReferenceAllocator(snapshot.scopeRef),
       admitted.occurrences,
@@ -917,7 +948,11 @@ function allocateProcedureResourcePools(
     const declaration = resources.find(
       (resource) => resource.ordinal === resourceOrdinal,
     );
-    if (declaration === undefined) continue;
+    if (declaration === undefined) {
+      throw new Error(
+        `Stat Block execution admission invariant violated: resource reference ${String(resourceOrdinal)} has no declaration.`,
+      );
+    }
     if (declaration.ownership === "shared") {
       const existing = sharedResourcePools.get(resourceOrdinal);
       if (existing !== undefined) {

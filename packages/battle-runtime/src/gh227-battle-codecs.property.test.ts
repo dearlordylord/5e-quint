@@ -14,6 +14,7 @@ import {
   combatantId,
 } from "./identity.ts";
 import {
+  admittedStatBlockSource,
   attackRollFill,
   battleProcedureExecutionRefForTest,
   fighterAttackSubject,
@@ -25,7 +26,6 @@ import {
   movementFill,
   monsterResourceStatBlock,
   monsterResourceStatBlockWithSharedResource,
-  projectedStatBlockRuntimeSource,
   requireHole,
   resolveBattleSubject,
   snapshotBattle,
@@ -123,7 +123,7 @@ function encodedStatBlockSnapshots() {
   const admission = statBlockExecutionAdmissionCohort(
     battleId("gh227-codec-stat-block"),
     combatantId("gh227-codec-stat-block"),
-    [projectedStatBlockRuntimeSource(monsterResourceStatBlock())],
+    [admittedStatBlockSource(monsterResourceStatBlock())],
     battleExecutionScopeOrdinal(0),
   ).admissions[0];
   if (admission === undefined) {
@@ -138,11 +138,7 @@ function encodedSharedResourceStatBlockSnapshot() {
   const admission = statBlockExecutionAdmissionCohort(
     battleId("gh227-codec-shared-resource-stat-block"),
     combatantId("gh227-codec-shared-resource-stat-block"),
-    [
-      projectedStatBlockRuntimeSource(
-        monsterResourceStatBlockWithSharedResource(),
-      ),
-    ],
+    [admittedStatBlockSource(monsterResourceStatBlockWithSharedResource())],
     battleExecutionScopeOrdinal(0),
   ).admissions[0];
   if (admission === undefined) {

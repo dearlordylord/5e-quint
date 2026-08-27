@@ -16,8 +16,8 @@ import {
   type StatBlockExecutionState,
 } from "./stat-block-execution.ts";
 import {
+  admittedStatBlockSource,
   monsterMultiattackStatBlock,
-  projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 
 const referenceGuardBattleId = battleId(
@@ -28,7 +28,7 @@ function admittedExecution(actorName: string): StatBlockExecutionState {
   const [admission] = statBlockExecutionAdmissionCohort(
     referenceGuardBattleId,
     combatantId(actorName),
-    [projectedStatBlockRuntimeSource(monsterMultiattackStatBlock())],
+    [admittedStatBlockSource(monsterMultiattackStatBlock())],
     battleExecutionScopeOrdinal(0),
   ).admissions;
   if (admission === undefined) {

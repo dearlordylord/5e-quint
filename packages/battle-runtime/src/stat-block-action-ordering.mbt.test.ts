@@ -45,6 +45,7 @@ import { battleExecutionScopeOrdinal } from "./identity.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import {
   DieRollResult,
+  admittedStatBlockSource,
   attackRollFill,
   attackTargetFill,
   battleId,
@@ -58,7 +59,6 @@ import {
   goblinId,
   monsterMultiattackStatBlock,
   monsterResourceStatBlock,
-  projectedStatBlockRuntimeSource,
   requireHole,
   requireNeedsHoles,
   requireResolved,
@@ -182,7 +182,7 @@ function admittedAttackOption(
   const admission = statBlockExecutionAdmissionCohort(
     battleId("stat-block-action-ordering-isolated-admission"),
     goblinId,
-    [projectedStatBlockRuntimeSource(statBlock)],
+    [admittedStatBlockSource(statBlock)],
     battleExecutionScopeOrdinal(0),
   ).admissions[0];
   if (admission === undefined) {

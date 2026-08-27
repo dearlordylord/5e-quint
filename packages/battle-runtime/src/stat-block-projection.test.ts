@@ -24,6 +24,7 @@ import {
   startBattle,
 } from "./index.ts";
 import {
+  admittedStatBlockSource,
   statBlockCatalog,
   monsterMultiattackStatBlock,
   statBlockRecord,
@@ -215,7 +216,7 @@ describe("generic Stat Block projection", () => {
     const [admission] = statBlockExecutionAdmissionCohort(
       battleId("static-only-authored-damage"),
       combatantId("static-only-authored-damage"),
-      [projected.right.runtime],
+      [admittedStatBlockSource(cat)],
       battleExecutionScopeOrdinal(0),
     ).admissions;
     const scratchBinding = admission.execution.procedureBindings.find(

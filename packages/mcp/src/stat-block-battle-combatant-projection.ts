@@ -82,11 +82,9 @@ function statBlockProjectionFailureContent(
       ({ reason, issues }) => ({ reason, issues }),
     ),
     Match.when({ reason: "nonLiteralSize" }, ({ reason }) => ({ reason })),
-    Match.when({ reason: "nonLiteralArmorClass" }, ({ reason }) => ({
+    Match.when({ reason: "invalidResourceLimit" }, ({ reason }) => ({
       reason,
     })),
-    Match.when({ reason: "nonLiteralHitPoints" }, ({ reason }) => ({ reason })),
-    Match.when({ reason: "nonLiteralSpeed" }, ({ reason }) => ({ reason })),
     Match.when({ reason: "invalidLegendaryActionUses" }, ({ reason }) => ({
       reason,
     })),
