@@ -1,4 +1,15 @@
 export {
+  BattleMechanicalFrontierSchema,
+  BattleMechanicalHoleSchema,
+  BattleMechanicalInterruptChoiceSchema,
+  battleMechanicalFrontier,
+  type BattleMechanicalFrontier,
+  type BattleMechanicalFrontierIssue,
+  type BattleMechanicalHole,
+  type BattleMechanicalInterruptChoice,
+} from "./battle-mechanical-frontier.ts";
+
+export {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
