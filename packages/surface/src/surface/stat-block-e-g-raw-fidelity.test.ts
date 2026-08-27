@@ -239,6 +239,26 @@ describe("Monsters E-G local RAW fidelity", () => {
       "executable",
       "executable",
     ]);
+    for (const [index, damageType] of ["slashing", "piercing"].entries()) {
+      expect(goblin?.statBlock.actions?.[index]).toMatchObject({
+        kind: "executable",
+        procedure: {
+          kind: "attack_roll",
+          onHit: expect.arrayContaining([
+            {
+              kind: "conditional_bonus_damage",
+              damageType,
+              amount: {
+                kind: "fixed",
+                expr: { dice: 1, dieSize: 4 },
+                static: 2,
+              },
+              when: { kind: "attack_roll_had_advantage" },
+            },
+          ]),
+        },
+      });
+    }
     expect(goblin?.statBlock.bonusActions?.[0]).toMatchObject({
       kind: "executable",
       procedure: { kind: "action_option", options: ["disengage", "hide"] },
