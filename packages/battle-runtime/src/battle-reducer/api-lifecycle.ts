@@ -237,15 +237,33 @@ class InitialInitiativeSetupWorkflow {
 
 export function battleInitializationIssueLeaves(
   issue: BattleInitializationIssue,
-): readonly BattleInitializationLeafIssue[] {
+): ReadonlyNonEmptyArray<BattleInitializationLeafIssue> {
   return Match.value(issue).pipe(
-    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) =>
-      issues.flatMap(battleInitializationIssueLeaves),
-    ),
-    Match.when({ tag: "battleStateInitIssue" }, (leaf) => [leaf]),
-    Match.when({ tag: "weaponLoadoutMismatch" }, (leaf) => [leaf]),
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) => {
+      const [firstIssue, ...restIssues] = issues;
+      return prependBattleInitializationLeaves(
+        battleInitializationIssueLeaves(firstIssue),
+        restIssues.flatMap(battleInitializationIssueLeaves),
+      );
+    }),
+    Match.when({ tag: "battleStateInitIssue" }, battleInitializationLeafList),
+    Match.when({ tag: "weaponLoadoutMismatch" }, battleInitializationLeafList),
     Match.exhaustive,
   );
+}
+
+function battleInitializationLeafList(
+  leaf: BattleInitializationLeafIssue,
+): ReadonlyNonEmptyArray<BattleInitializationLeafIssue> {
+  return [leaf];
+}
+
+function prependBattleInitializationLeaves(
+  first: ReadonlyNonEmptyArray<BattleInitializationLeafIssue>,
+  rest: readonly BattleInitializationLeafIssue[],
+): ReadonlyNonEmptyArray<BattleInitializationLeafIssue> {
+  const [firstLeaf, ...restLeaves] = first;
+  return [firstLeaf, ...restLeaves, ...rest];
 }
 
 export function battleInitializationIssueFactFields(
@@ -384,6 +402,115 @@ export function battleInitializationIssueFactFields(
         combatantId,
         origin,
         issueIndex,
+      }),
+      companionOwnerMissing: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionDurableIdentityMissing: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionOwnerAlreadyHasCompanion: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionDurableIdentityInUse: ({
+        kind,
+        ownerId,
+        durableCompanionId,
+        existingOwnerId,
+      }) => ({
+        reason: kind,
+        ownerId,
+        durableCompanionId,
+        existingOwnerId,
+      }),
+      companionManifestationInvalid: ({ kind, ownerId, requirement }) => ({
+        reason: kind,
+        ownerId,
+        requirement,
+      }),
+      companionFormStatBlockMissing: ({
+        kind,
+        formAccess,
+        resolvedStatBlockId,
+      }) => ({
+        reason: kind,
+        formAccess,
+        resolvedStatBlockId,
+      }),
+      companionFormAccessMismatch: ({
+        kind,
+        storedFormAccess,
+        eligibilityFormAccess,
+      }) => ({
+        reason: kind,
+        storedFormAccess,
+        eligibilityFormAccess,
+      }),
+      companionFormResolvedStatBlockMismatch: ({
+        kind,
+        formAccess,
+        expectedStatBlockId,
+        resolvedStatBlockId,
+      }) => ({
+        reason: kind,
+        formAccess,
+        expectedStatBlockId,
+        resolvedStatBlockId,
+      }),
+      companionFormSelectionStatBlockMissing: ({
+        kind,
+        formAccess,
+        selectedStatBlockId,
+      }) => ({
+        reason: kind,
+        formAccess,
+        selectedStatBlockId,
+      }),
+      companionFormSelectionStatBlockInvalid: ({
+        kind,
+        formAccess,
+        selectedStatBlockId,
+        expectedCreatureType,
+        expectedChallengeRating,
+      }) => ({
+        reason: kind,
+        formAccess,
+        selectedStatBlockId,
+        expectedCreatureType,
+        expectedChallengeRating,
+      }),
+      companionFormSpecialFormUnknown: ({ kind, formAccess, formId }) => ({
+        reason: kind,
+        formAccess,
+        formId,
+      }),
+      companionFormNormalFormIneligible: ({ kind, formAccess, formId }) => ({
+        reason: kind,
+        formAccess,
+        formId,
+      }),
+      companionCombatantAdmissionInvalid: ({
+        kind,
+        ownerId,
+        companionCombatantId,
+      }) => ({
+        reason: kind,
+        ownerId,
+        companionCombatantId,
+      }),
+      companionInitialInitiativeInvalid: ({
+        kind,
+        ownerId,
+        companionCombatantId,
+        requirement,
+      }) => ({
+        reason: kind,
+        ownerId,
+        companionCombatantId,
+        requirement,
       }),
     }),
   );

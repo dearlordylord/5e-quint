@@ -1500,6 +1500,13 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(collision)).toBe(true);
     if (Either.isRight(collision)) return;
+    expect(collision.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionDurableIdentityInUse",
+      ownerId: otherOwnerId,
+      durableCompanionId: "durable:first",
+      existingOwnerId: casterId,
+    });
     expect(battleStateInitIssueMessage(collision.left)).toBe(
       "Companion admission identity is already used by another companion.",
     );
@@ -1613,6 +1620,11 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
+    expect(admitted.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionDurableIdentityMissing",
+      ownerId: casterId,
+    });
     expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Companion admission requires durable id.",
     );
@@ -1659,6 +1671,13 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
+    expect(admitted.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionFormResolvedStatBlockMismatch",
+      formAccess: "findFamiliar",
+      expectedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
+      resolvedStatBlockId: parseSharedStatBlockId("stat_block_owl"),
+    });
     expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Retained familiar form proof resolved Stat Block mismatch: stat_block_owl.",
     );
@@ -1710,6 +1729,16 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
+    expect(admitted.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionFormSelectionStatBlockInvalid",
+      formAccess: "findFamiliar",
+      selectedStatBlockId: parseSharedStatBlockId(
+        "stat_block_goblin_warrior",
+      ),
+      expectedCreatureType: "beast",
+      expectedChallengeRating: 0,
+    });
     expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Retained familiar Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block: stat_block_goblin_warrior.",
     );

@@ -1360,6 +1360,116 @@ describe("Character Sheet battle handoff", () => {
     });
   });
 
+  test("reports durable companion identity collisions between distinct owners", () => {
+    const sharedDurableCompanionId = "companion:shared-durable-identity";
+    const firstSheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:shared-durable-owner-one",
+      companionIdValue: sharedDurableCompanionId,
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const secondSheet = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:shared-durable-owner-two",
+      companionIdValue: sharedDurableCompanionId,
+      selectedForm: { tag: "normalNamedForm", formId: "owl" },
+      currentHp: Hp(3),
+      tempHp: Hp(0),
+    });
+    const firstInit = expectRight(
+      characterSheetBattleInit({
+        sheet: firstSheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("combatant:shared-durable-owner-one"),
+        displayName: "First Owner",
+        initiative: initiativeScore(20),
+        ammunitionStocks: [],
+      }),
+    );
+    const secondInit = expectRight(
+      characterSheetBattleInit({
+        sheet: secondSheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("combatant:shared-durable-owner-two"),
+        displayName: "Second Owner",
+        initiative: initiativeScore(19),
+        ammunitionStocks: [],
+      }),
+    );
+    const session = expectRight(
+      startBattle({
+        battleId: battleId("battle:shared-durable-identity"),
+        combatants: [firstInit, secondInit],
+      }),
+    );
+
+    const result = composeBattleCompanionRoster({
+      session,
+      owners: [
+        {
+          index: 0,
+          characterId: firstSheet.characterId,
+          combatantId: firstInit.combatantId,
+          sheet: firstSheet,
+        },
+        {
+          index: 1,
+          characterId: secondSheet.characterId,
+          combatantId: secondInit.combatantId,
+          sheet: secondSheet,
+        },
+      ],
+      requests: [
+        {
+          ownerCharacterId: firstSheet.characterId,
+          companionCombatantId: combatantId(
+            "combatant:shared-durable-companion-one",
+          ),
+          initiative: initiativeScore(14),
+          ammunitionStocks: [],
+        },
+        {
+          ownerCharacterId: secondSheet.characterId,
+          companionCombatantId: combatantId(
+            "combatant:shared-durable-companion-two",
+          ),
+          initiative: initiativeScore(13),
+          ammunitionStocks: [],
+        },
+      ],
+      unitLibrary,
+      initialCombatantOrder: new Map([
+        [firstInit.combatantId, 0],
+        [secondInit.combatantId, 1],
+        [combatantId("combatant:shared-durable-companion-one"), 2],
+        [combatantId("combatant:shared-durable-companion-two"), 3],
+      ]),
+      statBlockCatalog,
+    });
+
+    expect(result).toMatchObject({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "companionAdmission",
+          admissionReason: "admissionRejected",
+          index: 1,
+          ownerCharacterId: secondSheet.characterId,
+          companionCombatantId: combatantId(
+            "combatant:shared-durable-companion-two",
+          ),
+          handoffReason: "battleInitialization",
+          reason: "companionDurableIdentityInUse",
+          ownerId: secondInit.combatantId,
+          durableCompanionId: sharedDurableCompanionId,
+          existingOwnerId: firstInit.combatantId,
+        },
+      ],
+    });
+  });
+
   test("accumulates later identity failures after an initial projection failure", () => {
     const sheet = expectRight(
       rebuildCharacterSheetFixture({
