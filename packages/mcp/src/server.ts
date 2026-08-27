@@ -24,7 +24,7 @@ import type {
   McpPlaySessionRoot,
 } from "./composition-root.ts";
 import { errorContent } from "./tool-content.ts";
-import { Either } from "effect";
+import { Either, Result } from "effect";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 
 export {
@@ -99,9 +99,9 @@ export function handleToolCall(
 
   if (isBattleToolName(name)) {
     const decoded = decodeBattleToolCall({ name, args });
-    return Either.isLeft(decoded)
-      ? decoded.left
-      : handleBattleToolCall(root, decoded.right);
+    return Result.isFailure(decoded)
+      ? decoded.failure
+      : handleBattleToolCall(root, decoded.success);
   }
 
   if (isDiceToolName(name)) {

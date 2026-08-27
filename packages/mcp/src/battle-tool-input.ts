@@ -13,14 +13,14 @@ import {
   StatBlockId,
   type StatBlockId as StatBlockIdType,
 } from "@dnd/shared/game-facts";
-import { Either, Match, Result, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 
 import {
-  decodeToolArgs,
   mcpObjectJsonSchema,
   mcpObjectJsonSchemaWithCopiedObjects,
-  type ToolInputResult,
+  type ToolError,
 } from "./schema-codec.ts";
+import { errorContent } from "./tool-content.ts";
 import {
   decodeStartBattleArgs,
   type StartBattleToolInput,
@@ -31,13 +31,17 @@ import {
 } from "./battle-lifecycle-tool-input.ts";
 
 const EmptyArgsSchema = Schema.Struct({});
-const CombatantIdTextSchema = Schema.NonEmptyTrimmedString.annotations({
-  description: "Combatant id from the current battle snapshot.",
-});
-const SelectStatBlockArgsSchema = Schema.Struct({
-  statBlockId: StatBlockId.annotations({
-    description: "SRD Stat Block id from list_stat_blocks.",
+const CombatantIdTextSchema = Schema.Trimmed.check(Schema.isNonEmpty()).pipe(
+  Schema.annotate({
+    description: "Combatant id from the current battle snapshot.",
   }),
+);
+const SelectStatBlockArgsSchema = Schema.Struct({
+  statBlockId: StatBlockId.pipe(
+    Schema.annotate({
+      description: "SRD Stat Block id from list_stat_blocks.",
+    }),
+  ),
 });
 const FillBattleHoleArgsSchema = Schema.Struct({
   subject: BattleSubjectSchema,
@@ -45,7 +49,7 @@ const FillBattleHoleArgsSchema = Schema.Struct({
 });
 const ResolveBattleActArgsSchema = Schema.Struct({
   subject: BattleSubjectSchema,
-  reactionSpellTargetFacts: Schema.optionalWith(
+  reactionSpellTargetFacts: Schema.optionalKey(
     Schema.Array(
       Schema.Struct({
         kind: Schema.Literal(
@@ -54,14 +58,18 @@ const ResolveBattleActArgsSchema = Schema.Struct({
         reactorId: CombatantIdTextSchema,
         fallingCreatureId: CombatantIdTextSchema,
         sourceProcedureRef: BattleProcedureExecutionRef,
-        rangeFeet: Schema.Number.pipe(Schema.int(), Schema.positive()),
+        rangeFeet: Schema.Number.pipe(
+          Schema.check(Schema.isInt()),
+          Schema.check(Schema.isGreaterThan(0)),
+        ),
       }),
     ),
-    { exact: true },
-  ).annotations({
-    description:
-      "Table-supplied reaction spell facts for runtime commands that open a reaction window, currently creatureFalls for Feather Fall.",
-  }),
+  ).pipe(
+    Schema.annotate({
+      description:
+        "Table-supplied reaction spell facts for runtime commands that open a reaction window, currently creatureFalls for Feather Fall.",
+    }),
+  ),
 });
 const EndTurnArgsSchema = Schema.Struct({ actorId: CombatantIdTextSchema });
 
@@ -174,16 +182,16 @@ export type BattleToolCall =
 export function decodeBattleToolCall(input: {
   readonly name: BattleToolName;
   readonly args: unknown;
-}): ToolInputResult<BattleToolCall> {
+}): Result.Result<BattleToolCall, ToolError> {
   return Match.value(input.name).pipe(
     Match.when(battleToolNames.selectStatBlock, () =>
-      Either.map(decodeSelectStatBlockArgs(input.args), (args) => ({
+      Result.map(decodeSelectStatBlockArgs(input.args), (args) => ({
         name: battleToolNames.selectStatBlock,
         args,
       })),
     ),
     Match.when(battleToolNames.startBattle, () =>
-      Either.map(decodeStartBattleArgs(input.args), (args) => ({
+      Result.map(decodeStartBattleArgs(input.args), (args) => ({
         name: battleToolNames.startBattle,
         args,
       })),
@@ -195,7 +203,7 @@ export function decodeBattleToolCall(input: {
       })),
     ),
     Match.when(battleToolNames.readBattleState, () =>
-      Either.map(
+      Result.map(
         decodeEmptyArgs(input.args, battleToolNames.readBattleState),
         (args) => ({
           name: battleToolNames.readBattleState,
@@ -204,7 +212,7 @@ export function decodeBattleToolCall(input: {
       ),
     ),
     Match.when(battleToolNames.discoverBattleActs, () =>
-      Either.map(
+      Result.map(
         decodeEmptyArgs(input.args, battleToolNames.discoverBattleActs),
         (args) => ({
           name: battleToolNames.discoverBattleActs,
@@ -213,25 +221,25 @@ export function decodeBattleToolCall(input: {
       ),
     ),
     Match.when(battleToolNames.fillBattleHole, () =>
-      Either.map(decodeFillBattleHoleArgs(input.args), (args) => ({
+      Result.map(decodeFillBattleHoleArgs(input.args), (args) => ({
         name: battleToolNames.fillBattleHole,
         args,
       })),
     ),
     Match.when(battleToolNames.resolveBattleAct, () =>
-      Either.map(decodeResolveBattleActArgs(input.args), (args) => ({
+      Result.map(decodeResolveBattleActArgs(input.args), (args) => ({
         name: battleToolNames.resolveBattleAct,
         args,
       })),
     ),
     Match.when(battleToolNames.endTurn, () =>
-      Either.map(decodeEndTurnArgs(input.args), (args) => ({
+      Result.map(decodeEndTurnArgs(input.args), (args) => ({
         name: battleToolNames.endTurn,
         args,
       })),
     ),
     Match.when(battleToolNames.endBattle, () =>
-      Either.map(
+      Result.map(
         decodeEmptyArgs(input.args, battleToolNames.endBattle),
         (args) => ({
           name: battleToolNames.endBattle,
@@ -245,62 +253,62 @@ export function decodeBattleToolCall(input: {
 
 function decodeSelectStatBlockArgs(
   args: unknown,
-): ToolInputResult<SelectStatBlockToolInput> {
-  const record = decodeToolArgs(
+): Result.Result<SelectStatBlockToolInput, ToolError> {
+  const record = decodeBattleToolArgs(
     SelectStatBlockArgsSchema,
     args,
     battleToolNames.selectStatBlock,
   );
-  return Either.map(record, (value) => ({
+  return Result.map(record, (value) => ({
     statBlockId: value.statBlockId,
   }));
 }
 
 function decodeFillBattleHoleArgs(
   args: unknown,
-): ToolInputResult<FillBattleHoleToolInput> {
-  const record = decodeToolArgs(
+): Result.Result<FillBattleHoleToolInput, ToolError> {
+  const record = decodeBattleToolArgs(
     FillBattleHoleArgsSchema,
     args,
     battleToolNames.fillBattleHole,
   );
-  if (Either.isLeft(record)) return Either.left(record.left);
+  if (Result.isFailure(record)) return Result.fail(record.failure);
 
-  return Either.right(record.right);
+  return Result.succeed(record.success);
 }
 
 function decodeResolveBattleActArgs(
   args: unknown,
-): ToolInputResult<ResolveBattleActToolInput> {
-  const record = decodeToolArgs(
+): Result.Result<ResolveBattleActToolInput, ToolError> {
+  const record = decodeBattleToolArgs(
     ResolveBattleActArgsSchema,
     args,
     battleToolNames.resolveBattleAct,
   );
-  if (Either.isLeft(record)) return Either.left(record.left);
-  return Either.right({
-    subject: record.right.subject,
-    reactionSpellTargetFacts: (record.right.reactionSpellTargetFacts ?? []).map(
-      (fact) => ({
-        kind: fact.kind,
-        reactorId: combatantId(fact.reactorId),
-        fallingCreatureId: combatantId(fact.fallingCreatureId),
-        sourceProcedureRef: fact.sourceProcedureRef,
-        rangeFeet: movementFeet(fact.rangeFeet),
-      }),
-    ),
+  if (Result.isFailure(record)) return Result.fail(record.failure);
+  return Result.succeed({
+    subject: record.success.subject,
+    reactionSpellTargetFacts: (
+      record.success.reactionSpellTargetFacts ?? []
+    ).map((fact) => ({
+      kind: fact.kind,
+      reactorId: combatantId(fact.reactorId),
+      fallingCreatureId: combatantId(fact.fallingCreatureId),
+      sourceProcedureRef: fact.sourceProcedureRef,
+      rangeFeet: movementFeet(fact.rangeFeet),
+    })),
   });
 }
 
 function decodeEndTurnArgs(
   args: unknown,
-): ToolInputResult<BattleActorToolInput> {
-  const record = decodeToolArgs(
+): Result.Result<BattleActorToolInput, ToolError> {
+  const record = decodeBattleToolArgs(
     EndTurnArgsSchema,
     args,
     battleToolNames.endTurn,
   );
-  return Either.map(record, (value) => ({
+  return Result.map(record, (value) => ({
     actorId: combatantId(value.actorId),
   }));
 }
@@ -313,7 +321,25 @@ type EmptyBattleToolName =
 function decodeEmptyArgs(
   args: unknown,
   toolName: EmptyBattleToolName,
-): ToolInputResult<EmptyToolInput> {
-  const decoded = decodeToolArgs(EmptyArgsSchema, args, toolName);
-  return Either.map(decoded, () => ({}));
+): Result.Result<EmptyToolInput, ToolError> {
+  const decoded = decodeBattleToolArgs(EmptyArgsSchema, args, toolName);
+  return Result.map(decoded, () => ({}));
+}
+
+function decodeBattleToolArgs<A>(
+  schema: Schema.Codec<A, unknown, never>,
+  args: unknown,
+  toolName: string,
+): Result.Result<A, ToolError> {
+  const decoded = Schema.decodeUnknownResult(Schema.toType(schema), {
+    onExcessProperty: "error",
+  })(args === undefined ? {} : args);
+  return Result.isFailure(decoded)
+    ? Result.fail(
+        errorContent(`${toolName} expects valid arguments.`, {
+          code: "INVALID_ARGUMENTS",
+          message: decoded.failure.message,
+        }),
+      )
+    : Result.succeed(decoded.success);
 }
