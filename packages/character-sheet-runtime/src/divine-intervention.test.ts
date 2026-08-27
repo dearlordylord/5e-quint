@@ -9,7 +9,7 @@ import { describe, expect, it, test } from "vitest";
 import { classSpellListPreparedSpellLevel } from "@dnd/surface/surface/unit-catalog";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castDivineIntervention,
@@ -18,7 +18,7 @@ import {
   characterSheetSpellSlots,
   completeLongRest,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -104,7 +104,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
   test("casts an action-time Cleric spell through Divine Intervention without slots or Material components", () => {
     const sheet = divineInterventionClericSheet();
 
-    expect(requireRight(characterSheetResources(sheet, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(sheet, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           unitId: authoredUnitId("cleric_divine_intervention"),
@@ -115,7 +115,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       ]),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       castDivineIntervention({
         sheet,
         unitLibrary,
@@ -155,19 +155,19 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       unitLibrary,
       spellId: authoredUnitId("flame_strike"),
     });
-    expect(Either.isLeft(secondUse)).toBe(true);
-    if (Either.isLeft(secondUse)) {
-      expect(secondUse.left.message).toBe(
+    expect(Result.isFailure(secondUse)).toBe(true);
+    if (Result.isFailure(secondUse)) {
+      expect(secondUse.failure.message).toBe(
         "Divine Intervention cannot be used again until a Long Rest.",
       );
     }
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: result.sheet, unitLibrary }),
     );
     expect(rested.resourceExpenditures).toEqual([]);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         castDivineIntervention({
           sheet: rested,
           unitLibrary,
@@ -186,7 +186,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       }),
     ).toBe(5);
 
-    const invocation = requireRight(
+    const invocation = requireSuccess(
       castDivineIntervention({
         sheet: divineInterventionClericSheet(),
         unitLibrary,
@@ -202,7 +202,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
   });
 
   test("admits an action-time Cleric cantrip without a Spell Slot", () => {
-    const invocation = requireRight(
+    const invocation = requireSuccess(
       castDivineIntervention({
         sheet: divineInterventionClericSheet(),
         unitLibrary,
@@ -225,9 +225,9 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       unitLibrary,
       spellId: authoredUnitId("raise_dead"),
     });
-    expect(Either.isLeft(nonActionClericSpell)).toBe(true);
-    if (Either.isLeft(nonActionClericSpell)) {
-      expect(nonActionClericSpell.left.message).toBe(
+    expect(Result.isFailure(nonActionClericSpell)).toBe(true);
+    if (Result.isFailure(nonActionClericSpell)) {
+      expect(nonActionClericSpell.failure.message).toBe(
         "Divine Intervention session handoff supports action-time Cleric spells.",
       );
     }
@@ -237,16 +237,16 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       unitLibrary,
       spellId: authoredUnitId("counterspell"),
     });
-    expect(Either.isLeft(nonClericReactionSpell)).toBe(true);
-    if (Either.isLeft(nonClericReactionSpell)) {
-      expect(nonClericReactionSpell.left.message).toBe(
+    expect(Result.isFailure(nonClericReactionSpell)).toBe(true);
+    if (Result.isFailure(nonClericReactionSpell)) {
+      expect(nonClericReactionSpell.failure.message).toBe(
         "Divine Intervention requires a Cleric spell of level 5 or lower.",
       );
     }
   });
 
   test("rejects a sheet without the Divine Intervention feature", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-no-divine-intervention",
@@ -264,9 +264,9 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       spellId: authoredUnitId("sacred_flame"),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Divine Intervention requires the Cleric Divine Intervention feature.",
       );
     }
@@ -283,7 +283,7 @@ const divineInterventionSelectedIdentityActions = {
 >;
 
 function projectDivineInterventionInvocation(): DivineInterventionSelectedIdentityProjection {
-  const result = requireRight(
+  const result = requireSuccess(
     castDivineIntervention({
       sheet: divineInterventionClericSheet(),
       unitLibrary,
@@ -319,7 +319,7 @@ function expectedDivineInterventionProjection(): DivineInterventionSelectedIdent
 }
 
 function divineInterventionClericSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:divine-intervention-cleric-10"),
       build: {

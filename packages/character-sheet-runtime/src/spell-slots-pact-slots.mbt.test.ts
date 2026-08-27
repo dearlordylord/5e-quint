@@ -23,7 +23,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -264,13 +264,13 @@ function rejectMismatchedOrdinarySpellSlotCapacityProjection(): SlotProjection {
       },
     ],
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected ordinary Spell Slot capacity mismatch.");
   }
   return projectFromParts({
     outcome: "ordinary-capacity-mismatch-rejected",
     accepted: false,
-    message: result.left[0].code,
+    message: result.failure[0].code,
     ordinaryLevel1Capacity: 3,
     replayIndex: 1,
   });
@@ -289,13 +289,13 @@ function rejectPactSlotExpenditureOverCapacityProjection(): SlotProjection {
     unitLibrary,
     pactSlots: { expended: resourceCount(3) },
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Pact Slot expenditure over capacity.");
   }
   return projectFromParts({
     outcome: "pact-expenditure-over-capacity-rejected",
     accepted: false,
-    message: result.left[0].code,
+    message: result.failure[0].code,
     pactSlotLevel: 1,
     pactSlotCapacity: 2,
     pactSlotExpended: 3,
@@ -305,7 +305,7 @@ function rejectPactSlotExpenditureOverCapacityProjection(): SlotProjection {
 
 function shortRestRestoresPactSlotsOnlyProjection(): SlotProjection {
   const sheet = wizardWarlockSpentSheet("character:short-rest-pact");
-  const rested = requireRight(completeShortRestForSheet({ sheet }));
+  const rested = requireSuccess(completeShortRestForSheet({ sheet }));
   return projectAccepted({
     outcome: "short-rest-restores-pact-slots-only",
     sheet: rested,
@@ -319,7 +319,7 @@ function shortRestArcaneRecoveryRefundsOrdinarySpellSlotProjection(): SlotProjec
     secondLevelExpended: 1,
     pactExpended: 1,
   });
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeShortRestForSheet({
       sheet,
       arcaneRecovery: {
@@ -337,14 +337,14 @@ function shortRestArcaneRecoveryRefundsOrdinarySpellSlotProjection(): SlotProjec
 }
 
 function completeLongRestRestoresOrdinaryPactAndClearsCreatedSlotsProjection(): SlotProjection {
-  const sheet = requireRight(
+  const sheet = requireSuccess(
     convertFontOfMagicSorceryPointsToSpellSlot({
       sheet: sorcererWarlockLongRestSheet(),
       unitLibrary,
       spellLevel: spellSlotLevel(1),
     }),
   );
-  const rested = requireRight(completeLongRestForSheet(sheet));
+  const rested = requireSuccess(completeLongRestForSheet(sheet));
   return projectAccepted({
     outcome: "long-rest-restores-ordinary-pact-and-clears-created-slots",
     sheet: rested,
@@ -355,7 +355,7 @@ function completeLongRestRestoresOrdinaryPactAndClearsCreatedSlotsProjection(): 
 function interruptShortRestNoSlotBenefitProjection(): SlotProjection {
   const sheet = wizardWarlockSpentSheet("character:short-rest-interrupt");
   const interrupted = interruptShortRest({
-    rest: requireRight(startShortRest({ sheet })),
+    rest: requireSuccess(startShortRest({ sheet })),
     interruption: "takeDamage",
   });
   return projectAccepted({
@@ -367,9 +367,9 @@ function interruptShortRestNoSlotBenefitProjection(): SlotProjection {
 
 function interruptLongRestBeforeOneHourNoSlotBenefitProjection(): SlotProjection {
   const sheet = wizardWarlockSpentSheet("character:long-rest-early-interrupt");
-  const interrupted = requireRight(
+  const interrupted = requireSuccess(
     interruptLongRest({
-      rest: requireRight(
+      rest: requireSuccess(
         startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
       ),
       unitLibrary,
@@ -393,9 +393,9 @@ function interruptLongRestBeforeOneHourNoSlotBenefitProjection(): SlotProjection
 
 function interruptLongRestWithShortRestSlotBenefitsProjection(): SlotProjection {
   const sheet = wizardWarlockSpentSheet("character:long-rest-short-benefit");
-  const interrupted = requireRight(
+  const interrupted = requireSuccess(
     interruptLongRest({
-      rest: requireRight(
+      rest: requireSuccess(
         startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
       ),
       unitLibrary,
@@ -419,7 +419,7 @@ function magicalCunningRecoversPactSlotsProjection(): SlotProjection {
     warlockAdvancements: 1,
     pactExpended: 2,
   });
-  const recovered = requireRight(
+  const recovered = requireSuccess(
     completeMagicalCunningRite({ sheet, unitLibrary }),
   );
   return projectAccepted({
@@ -436,12 +436,12 @@ function rejectMagicalCunningWithoutExpendedPactSlotsProjection(): SlotProjectio
     pactExpended: 0,
   });
   const result = completeMagicalCunningRite({ sheet, unitLibrary });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Magical Cunning to reject fresh Pact Slots.");
   }
   return projectRejected({
     outcome: "magical-cunning-no-expended-pact-slots-rejected",
-    message: result.left.message,
+    message: result.failure.message,
     sheet,
     replayIndex: 10,
   });
@@ -461,12 +461,12 @@ function rejectArcaneRecoveryPactSlotRefundProjection(): SlotProjection {
       ],
     },
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Arcane Recovery to reject Pact Slot recovery.");
   }
   return projectRejected({
     outcome: "arcane-recovery-pact-slot-refund-rejected",
-    message: result.left.message,
+    message: result.failure.message,
     sheet,
     replayIndex: 11,
   });
@@ -480,8 +480,8 @@ function completeShortRestForSheet(input: {
       }
     | undefined;
 }) {
-  const rest = requireRight(startShortRest({ sheet: input.sheet }));
-  const completion = requireRight(
+  const rest = requireSuccess(startShortRest({ sheet: input.sheet }));
+  const completion = requireSuccess(
     finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
   );
   return completeShortRest({
@@ -494,17 +494,17 @@ function completeShortRestForSheet(input: {
 }
 
 function completeLongRestForSheet(sheet: CharacterSheet) {
-  const rest = requireRight(
+  const rest = requireSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({ rest, restedTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS }),
   );
   return completeLongRest({ completion, unitLibrary });
 }
 
 function wizardWarlockSpentSheet(characterIdText: string): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId(characterIdText),
       build: wizardWarlockSlotBuild(),
@@ -530,7 +530,7 @@ function arcaneRecoveryPactSheet(input: {
   readonly secondLevelExpended: number;
   readonly pactExpended: number;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId("character:arcane-recovery-pact"),
       build: wizard4BuildWithPactSlots(),
@@ -556,7 +556,7 @@ function arcaneRecoveryPactSheet(input: {
 }
 
 function sorcererWarlockLongRestSheet(): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId("character:long-rest-created-slot"),
       build: sorcererWarlockSlotBuild(),
@@ -582,7 +582,7 @@ function warlockMagicalCunningSheet(input: {
   readonly warlockAdvancements: number;
   readonly pactExpended: number;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: warlockMagicalCunningBuild({
@@ -809,7 +809,7 @@ function baseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1170,9 +1170,11 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+function requireSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isSuccess(result)) return result.success;
+  throw new Error(
+    `Expected Result success, got ${JSON.stringify(result.failure)}.`,
+  );
 }
 
 function recordField(

@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castHallow,
@@ -15,7 +15,7 @@ import {
   characterSheetId,
   completedHallowCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -93,7 +93,7 @@ describe("Character Sheet runtime / Hallow", () => {
   });
 
   test("Hallow spends a level-5 prepared spell slot and returns a durable area contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castHallow({
         sheet: hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 }),
         unitLibrary,
@@ -143,9 +143,9 @@ describe("Character Sheet runtime / Hallow", () => {
       extraEffect: resistanceEffect,
     });
 
-    expect(Either.isLeft(oversized)).toBe(true);
-    if (Either.isLeft(oversized)) {
-      expect(oversized.left.message).toBe(
+    expect(Result.isFailure(oversized)).toBe(true);
+    if (Result.isFailure(oversized)) {
+      expect(oversized.failure.message).toBe(
         "Hallow area radius must be at most 60 feet.",
       );
     }
@@ -167,9 +167,9 @@ describe("Character Sheet runtime / Hallow", () => {
       extraEffect: resistanceEffect,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Hallow creature type choices must be unique.",
       );
     }
@@ -186,16 +186,16 @@ describe("Character Sheet runtime / Hallow", () => {
       extraEffect: resistanceEffect,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Hallow requires prepared class Spell Access.",
       );
     }
   });
 
   test("Hallow accepts an extra effect with no creature-type selection", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castHallow({
         sheet: hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 }),
         unitLibrary,
@@ -212,7 +212,7 @@ describe("Character Sheet runtime / Hallow", () => {
 
 const hallowSelectedIdentityActions = {
   doCastHallow: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castHallow({
         sheet: hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 }),
         unitLibrary,
@@ -254,7 +254,7 @@ const hallowSelectedIdentityActions = {
 >;
 
 const hallowArea = {
-  areaId: requireRight(characterSheetHallowAreaId("area:hallowed-sanctum")),
+  areaId: requireSuccess(characterSheetHallowAreaId("area:hallowed-sanctum")),
   radiusFeet: 60,
   touchedPointWithinReach: true,
   areaAlreadyHallowed: false,
@@ -292,7 +292,7 @@ function hallowClericSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:hallow-cleric-9"),
       build: {

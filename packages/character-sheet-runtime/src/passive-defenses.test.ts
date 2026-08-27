@@ -24,7 +24,7 @@ import {
   druidWildShapeFixtureKnownFormStatBlockIds,
   empoweredEvocationDamageRollModifier,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   removeSelfRestorationConditionAtTurnEnd,
   unitLibrary,
   warlockMagicalCunningBuild,
@@ -150,7 +150,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(fiendishResiliencePassiveDefenseProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fiendish-resilience"),
         build: fiendWarlockLevelTenBuild(),
@@ -164,21 +164,21 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireSuccess(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        damageResistances: ["fire"],
-        fiendishResilience: {
-          damageType: "fire",
-        },
+      damageResistances: ["fire"],
+      fiendishResilience: {
+        damageType: "fire",
       },
     });
     expect(
-      requireRight(parseCharacterSheet(sheet, unitLibrary)).fiendishResilience,
+      requireSuccess(parseCharacterSheet(sheet, unitLibrary))
+        .fiendishResilience,
     ).toEqual({ damageType: "fire" });
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({
         sheet,
         unitLibrary,
@@ -189,7 +189,7 @@ describe("Character Sheet runtime / passive defenses", () => {
       damageType: "cold",
     });
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({
         sheet: shortRested,
         unitLibrary,
@@ -202,7 +202,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(fiendishResiliencePassiveDefenseGateTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fiendish-resilience-force"),
         build: fiendWarlockLevelTenBuild(),
@@ -222,8 +222,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         fiendishResilienceDamageType: "force",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Fiendish Resilience damage type must be a non-Force damage type.",
       },
@@ -245,23 +245,20 @@ describe("Character Sheet runtime / passive defenses", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Fiendish Resilience selection requires the Fiendish Resilience feature.",
       },
     });
 
-    expect(parseStoredFiendishResilience({ damageType: "cold" })).toMatchObject(
-      {
-        _tag: "Right",
-        right: { damageType: "cold" },
-      },
-    );
+    expect(
+      requireSuccess(parseStoredFiendishResilience({ damageType: "cold" })),
+    ).toMatchObject({ damageType: "cold" });
   });
 
   test(naturesWardPassiveDefenseProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:natures-ward-temperate"),
         build: druidCircleLandBuild({ druidLevel: 10 }),
@@ -281,24 +278,23 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireSuccess(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        damageResistances: ["lightning"],
+      damageResistances: ["lightning"],
+      conditionImmunities: ["poisoned"],
+      naturesWard: {
+        sourceUnitId: authoredUnitId("druid_natures_ward"),
         conditionImmunities: ["poisoned"],
-        naturesWard: {
-          sourceUnitId: authoredUnitId("druid_natures_ward"),
-          conditionImmunities: ["poisoned"],
-          resistance: {
-            land: "temperate",
-            damageType: "lightning",
-          },
+        resistance: {
+          land: "temperate",
+          damageType: "lightning",
         },
       },
     });
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({
         sheet,
         unitLibrary,
@@ -307,24 +303,26 @@ describe("Character Sheet runtime / passive defenses", () => {
       }),
     );
     expect(
-      characterSheetPassiveDefenseProjection({ sheet: rested, unitLibrary }),
+      requireSuccess(
+        characterSheetPassiveDefenseProjection({
+          sheet: rested,
+          unitLibrary,
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        damageResistances: ["fire"],
-        conditionImmunities: ["poisoned"],
-        naturesWard: {
-          resistance: {
-            land: "arid",
-            damageType: "fire",
-          },
+      damageResistances: ["fire"],
+      conditionImmunities: ["poisoned"],
+      naturesWard: {
+        resistance: {
+          land: "arid",
+          damageType: "fire",
         },
       },
     });
   });
 
   test(auraOfCouragePassiveDefenseProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:aura-of-courage"),
         build: paladinLevelTenBuild(),
@@ -335,25 +333,24 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireSuccess(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      conditionImmunities: ["frightened"],
+      auraOfCourage: {
+        sourceUnitId: authoredUnitId("paladin_aura_of_courage"),
         conditionImmunities: ["frightened"],
-        auraOfCourage: {
-          sourceUnitId: authoredUnitId("paladin_aura_of_courage"),
-          conditionImmunities: ["frightened"],
-          auraMembershipSource: {
-            kind: "auraOfProtection",
-            condition: "frightened",
-          },
+        auraMembershipSource: {
+          kind: "auraOfProtection",
+          condition: "frightened",
         },
       },
     });
   });
 
   test(selfRestorationConditionCleanupTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:self-restoration"),
         build: monkLevelTenBuild(),
@@ -365,19 +362,18 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      requireSuccess(
+        characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        selfRestoration: {
-          sourceUnitId: authoredUnitId("monk_self_restoration"),
-          turnEndRemovableConditions: ["charmed", "frightened", "poisoned"],
-          foodAndDrinkExhaustionPrevented: true,
-        },
+      selfRestoration: {
+        sourceUnitId: authoredUnitId("monk_self_restoration"),
+        turnEndRemovableConditions: ["charmed", "frightened", "poisoned"],
+        foodAndDrinkExhaustionPrevented: true,
       },
     });
 
-    const restored = requireRight(
+    const restored = requireSuccess(
       removeSelfRestorationConditionAtTurnEnd({
         sheet,
         unitLibrary,
@@ -393,8 +389,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         condition: "frightened",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Self-Restoration requires the chosen condition to be present.",
       },
@@ -402,7 +398,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(empoweredEvocationDamageModifierProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:empowered-evocation"),
         build: wizardEvokerLevelTenBuild(),
@@ -414,21 +410,20 @@ describe("Character Sheet runtime / passive defenses", () => {
     const fireball = spellRecord("fireball");
 
     expect(
-      empoweredEvocationDamageRollModifier({
-        sheet,
-        unitLibrary,
-        spell: fireball,
-        spellSourceUnitId: authoredUnitId("class_wizard"),
-      }),
+      requireSuccess(
+        empoweredEvocationDamageRollModifier({
+          sheet,
+          unitLibrary,
+          spell: fireball,
+          spellSourceUnitId: authoredUnitId("class_wizard"),
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        sourceUnitId: authoredUnitId("wizard_empowered_evocation"),
-        spellSourceUnitId: "class_wizard",
-        school: "evocation",
-        damageRollAbility: "int",
-        damageRollModifier: 4,
-      },
+      sourceUnitId: authoredUnitId("wizard_empowered_evocation"),
+      spellSourceUnitId: "class_wizard",
+      school: "evocation",
+      damageRollAbility: "int",
+      damageRollModifier: 4,
     });
 
     expect(
@@ -439,8 +434,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         spellSourceUnitId: authoredUnitId("class_wizard"),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Empowered Evocation requires an Evocation Spell Definition.",
       },
     });
@@ -453,8 +448,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         spellSourceUnitId: authoredUnitId("class_sorcerer"),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Empowered Evocation requires Wizard Spell Access.",
       },
     });
@@ -507,7 +502,7 @@ function wizardEvokerLevelTenBuild(): CharacterBuild {
         },
       ],
     }),
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 8,
         dex: 14,
@@ -560,7 +555,7 @@ function spellRecord(unitId: string) {
 
 const passiveDefenseSelectedIdentityActions = {
   doProjectDruidNaturesWard: (): PassiveDefenseSelectedIdentityProjection => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:natures-ward-replay"),
         build: druidCircleLandBuild({ druidLevel: 10 }),
@@ -578,10 +573,10 @@ const passiveDefenseSelectedIdentityActions = {
         statBlockCatalog,
       }),
     );
-    const projection = requireRight(
+    const projection = requireSuccess(
       characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
     );
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({
         sheet,
         unitLibrary,
@@ -589,7 +584,7 @@ const passiveDefenseSelectedIdentityActions = {
         statBlockCatalog,
       }),
     );
-    const restedProjection = requireRight(
+    const restedProjection = requireSuccess(
       characterSheetPassiveDefenseProjection({ sheet: rested, unitLibrary }),
     );
     if (restedProjection.naturesWard?.resistance.land !== "arid") {
@@ -604,7 +599,7 @@ const passiveDefenseSelectedIdentityActions = {
   },
   doSelectWarlockFiendishResilience:
     (): PassiveDefenseSelectedIdentityProjection => {
-      const sheet = requireRight(
+      const sheet = requireSuccess(
         rebuildCharacterSheetFixture({
           characterId: characterSheetId("character:fiendish-resilience-replay"),
           build: fiendWarlockLevelTenBuild(),
@@ -616,17 +611,17 @@ const passiveDefenseSelectedIdentityActions = {
           },
         }),
       );
-      const projection = requireRight(
+      const projection = requireSuccess(
         characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
       );
-      const shortRested = requireRight(
+      const shortRested = requireSuccess(
         completeShortRest({
           sheet,
           unitLibrary,
           fiendishResilienceDamageType: "cold",
         }),
       );
-      const longRested = requireRight(
+      const longRested = requireSuccess(
         completeLongRest({
           sheet: shortRested,
           unitLibrary,

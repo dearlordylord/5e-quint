@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castTeleportationCircle,
@@ -15,7 +15,7 @@ import {
   characterSheetTeleportationCircleSigilSequenceId,
   completedTeleportationCircleCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -91,7 +91,7 @@ describe("Character Sheet runtime / Teleportation Circle", () => {
   });
 
   test("Teleportation Circle spends a level-5 prepared spell slot and returns a same-plane portal contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTeleportationCircle({
         sheet: teleportationCircleBardSheet({
           preparedSpells: ["teleportation_circle"],
@@ -138,9 +138,9 @@ describe("Character Sheet runtime / Teleportation Circle", () => {
       destination: destinationCircle,
       casting: completedTeleportationCircleCasting,
     });
-    expect(Either.isLeft(second)).toBe(true);
-    if (Either.isLeft(second)) {
-      expect(second.left.message).toBe(
+    expect(Result.isFailure(second)).toBe(true);
+    if (Result.isFailure(second)) {
+      expect(second.failure.message).toBe(
         "Spell Slot spend requires an unexpended ordinary Spell Slot.",
       );
     }
@@ -154,9 +154,9 @@ describe("Character Sheet runtime / Teleportation Circle", () => {
       casting: completedTeleportationCircleCasting,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Teleportation Circle requires prepared class Spell Access.",
       );
     }
@@ -165,7 +165,7 @@ describe("Character Sheet runtime / Teleportation Circle", () => {
 
 const teleportationCircleSelectedIdentityActions = {
   doCastTeleportationCircle: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTeleportationCircle({
         sheet: teleportationCircleBardSheet({
           preparedSpells: ["teleportation_circle"],
@@ -200,7 +200,7 @@ const teleportationCircleSelectedIdentityActions = {
 >;
 
 const destinationCircle = {
-  sigilSequenceId: requireRight(
+  sigilSequenceId: requireSuccess(
     characterSheetTeleportationCircleSigilSequenceId(
       "sigil-sequence:material-plane-temple",
     ),
@@ -229,7 +229,7 @@ function teleportationCircleBardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:teleportation-circle-bard-9"),
       build: {

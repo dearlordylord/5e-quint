@@ -7,14 +7,14 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castSeeming,
   characterSheetId,
   characterSheetSeemingTargetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -113,7 +113,7 @@ describe("Character Sheet runtime / Seeming", () => {
         apparentWeightChange: "unchanged",
       },
     );
-    const result = requireRight(
+    const result = requireSuccess(
       castSeeming({
         sheet: seemingWizardSheet({ preparedSpells: ["seeming"], slots: 1 }),
         unitLibrary,
@@ -202,9 +202,11 @@ describe("Character Sheet runtime / Seeming", () => {
       targets: [duplicateA, duplicateB],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe("Seeming requires unique target ids.");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
+        "Seeming requires unique target ids.",
+      );
     }
     expect(sheet.spellSlotExpenditures).toEqual([]);
   });
@@ -221,9 +223,9 @@ describe("Character Sheet runtime / Seeming", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Seeming requires prepared class Spell Access.",
       );
     }
@@ -232,7 +234,7 @@ describe("Character Sheet runtime / Seeming", () => {
 
 const seemingSelectedIdentityActions = {
   doCastSeeming: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castSeeming({
         sheet: seemingWizardSheet({ preparedSpells: ["seeming"], slots: 1 }),
         unitLibrary,
@@ -318,7 +320,7 @@ function seemingWillingTarget(
   },
 ): CharacterSheetSeemingWillingTarget {
   return {
-    targetId: requireRight(characterSheetSeemingTargetId(targetId)),
+    targetId: requireSuccess(characterSheetSeemingTargetId(targetId)),
     willingness: "willing",
     visibleByCaster: true,
     withinRangeFeet: 30,
@@ -335,7 +337,7 @@ function seemingUnwillingTarget(
   },
 ): CharacterSheetSeemingUnwillingTarget {
   return {
-    targetId: requireRight(characterSheetSeemingTargetId(targetId)),
+    targetId: requireSuccess(characterSheetSeemingTargetId(targetId)),
     willingness: "unwilling",
     visibleByCaster: true,
     withinRangeFeet: 30,
@@ -361,7 +363,7 @@ function seemingWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:seeming-wizard-9"),
       build: {

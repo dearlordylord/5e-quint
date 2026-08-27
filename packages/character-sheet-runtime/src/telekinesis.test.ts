@@ -7,14 +7,14 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castTelekinesis,
   characterSheetId,
   characterSheetTelekinesisTargetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -85,7 +85,7 @@ describe("Character Sheet runtime / Telekinesis", () => {
   });
 
   test("Telekinesis spends a prepared level-5 spell slot and returns creature control facts", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTelekinesis({
         sheet: telekinesisWizardSheet({
           preparedSpells: ["telekinesis"],
@@ -139,7 +139,7 @@ describe("Character Sheet runtime / Telekinesis", () => {
   });
 
   test("Telekinesis returns table-owned object movement and fine-control contracts", () => {
-    const unattended = requireRight(
+    const unattended = requireSuccess(
       castTelekinesis({
         sheet: telekinesisWizardSheet({
           preparedSpells: ["telekinesis"],
@@ -155,7 +155,7 @@ describe("Character Sheet runtime / Telekinesis", () => {
       tableObjectOwner: "table",
     });
 
-    const fineControl = requireRight(
+    const fineControl = requireSuccess(
       castTelekinesis({
         sheet: unattended.sheet,
         unitLibrary,
@@ -172,7 +172,7 @@ describe("Character Sheet runtime / Telekinesis", () => {
   });
 
   test("Telekinesis projects successful saves and both worn-object outcomes", () => {
-    const creatureSave = requireRight(
+    const creatureSave = requireSuccess(
       castTelekinesis({
         sheet: telekinesisWizardSheet({
           preparedSpells: ["telekinesis"],
@@ -190,7 +190,7 @@ describe("Character Sheet runtime / Telekinesis", () => {
       affected: false,
     });
 
-    const wornSave = requireRight(
+    const wornSave = requireSuccess(
       castTelekinesis({
         sheet: creatureSave.sheet,
         unitLibrary,
@@ -202,7 +202,7 @@ describe("Character Sheet runtime / Telekinesis", () => {
       affected: false,
     });
 
-    const wornFailure = requireRight(
+    const wornFailure = requireSuccess(
       castTelekinesis({
         sheet: wornSave.sheet,
         unitLibrary,
@@ -231,9 +231,9 @@ describe("Character Sheet runtime / Telekinesis", () => {
       },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Telekinesis target must be visible within 60 feet.",
       );
     }
@@ -247,9 +247,9 @@ describe("Character Sheet runtime / Telekinesis", () => {
       target: failedCreatureTarget,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Telekinesis requires prepared class Spell Access.",
       );
     }
@@ -258,7 +258,7 @@ describe("Character Sheet runtime / Telekinesis", () => {
 
 const telekinesisSelectedIdentityActions = {
   doCastTelekinesis: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTelekinesis({
         sheet: telekinesisWizardSheet({
           preparedSpells: ["telekinesis"],
@@ -289,7 +289,7 @@ const telekinesisSelectedIdentityActions = {
 
 const failedCreatureTarget = {
   tag: "creature",
-  targetId: requireRight(
+  targetId: requireSuccess(
     characterSheetTelekinesisTargetId("creature:huge-or-smaller"),
   ),
   visibleWithinRange: true,
@@ -299,14 +299,14 @@ const failedCreatureTarget = {
 
 const unattendedObjectTarget = {
   tag: "unattendedObject",
-  objectId: requireRight(characterSheetTelekinesisTargetId("object:statue")),
+  objectId: requireSuccess(characterSheetTelekinesisTargetId("object:statue")),
   visibleWithinRange: true,
   hugeOrSmaller: true,
 } as const satisfies CharacterSheetTelekinesisTarget;
 
 const fineObjectTarget = {
   tag: "fineObjectControl",
-  objectId: requireRight(characterSheetTelekinesisTargetId("object:lock")),
+  objectId: requireSuccess(characterSheetTelekinesisTargetId("object:lock")),
   visibleWithinRange: true,
 } as const satisfies CharacterSheetTelekinesisTarget;
 
@@ -315,10 +315,10 @@ function wornObjectTarget(
 ): CharacterSheetTelekinesisTarget {
   return {
     tag: "wornOrCarriedObject",
-    objectId: requireRight(
+    objectId: requireSuccess(
       characterSheetTelekinesisTargetId("object:synthetic-carried-token"),
     ),
-    carrierId: requireRight(
+    carrierId: requireSuccess(
       characterSheetTelekinesisTargetId("creature:synthetic-carrier"),
     ),
     visibleWithinRange: true,
@@ -344,7 +344,7 @@ function telekinesisWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:telekinesis-wizard-9"),
       build: {

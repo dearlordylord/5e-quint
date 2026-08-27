@@ -22,7 +22,7 @@ import {
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -238,10 +238,10 @@ function completeLongRest(
   },
 ) {
   const { sheet, ...benefits } = input;
-  const rest = requireRight(
+  const rest = requireSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
   );
   return completeLongRestCore({ ...benefits, completion });
@@ -356,7 +356,7 @@ describe("Character Sheet Weapon Mastery container selected identity replay", ()
         profile.selectedWeaponUnitIds,
       );
 
-      const rested = requireRight(
+      const rested = requireSuccess(
         completeLongRest({
           sheet,
           unitLibrary,
@@ -556,7 +556,7 @@ function reselectedWeaponMasteryProjection(
     featureUnitId: profile.featureUnitId,
     selectedWeaponUnitIds: profile.reselectedWeaponUnitIds,
   } satisfies CharacterSheetWeaponMasteryReselection;
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeLongRest({
       sheet,
       unitLibrary,
@@ -707,7 +707,7 @@ function weaponMasterySheet(input: {
   readonly featureUnitId: WeaponMasteryContainerFeatureUnitId;
   readonly selectedWeaponUnitIds: WeaponMasteryWeaponPair;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(
         `character:${input.featureUnitId}:selected-identity`,
@@ -737,7 +737,7 @@ function weaponMasteryBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 15,
         dex: 14,
@@ -875,18 +875,18 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireSuccess<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const failure = result.failure;
   if (
-    left !== null &&
-    typeof left === "object" &&
-    "message" in left &&
-    typeof left.message === "string"
+    failure !== null &&
+    typeof failure === "object" &&
+    "message" in failure &&
+    typeof failure.message === "string"
   ) {
-    throw new Error(left.message);
+    throw new Error(failure.message);
   }
-  throw new Error(JSON.stringify(left));
+  throw new Error(JSON.stringify(failure));
 }
 
 function normalizeWeaponMasteryContainerSelectedIdentityQuintState(

@@ -9,7 +9,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castContactPatron,
@@ -19,7 +19,7 @@ import {
   completeLongRest,
   contactPatronSessionInvocationTestName,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   unitLibrary,
 } from "./test-support.test-support.ts";
 
@@ -100,7 +100,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
   });
 
   test(contactPatronSessionInvocationTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:contact-patron-warlock-9"),
         build: {
@@ -169,9 +169,8 @@ describe("Character Sheet runtime / Contact Patron", () => {
         },
       ]),
     );
-    expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+    expect(requireSuccess(characterSheetResources(sheet, unitLibrary))).toEqual(
+      expect.arrayContaining([
         {
           sourceUnitId: authoredUnitId("warlock_contact_patron"),
           spellId: authoredUnitId("contact_other_plane"),
@@ -180,9 +179,9 @@ describe("Character Sheet runtime / Contact Patron", () => {
           expended: 0,
         },
       ]),
-    });
+    );
 
-    const result = requireRight(castContactPatron({ sheet, unitLibrary }));
+    const result = requireSuccess(castContactPatron({ sheet, unitLibrary }));
 
     expect(result.invocation).toMatchObject({
       tag: "contactPatron",
@@ -221,19 +220,19 @@ describe("Character Sheet runtime / Contact Patron", () => {
       sheet: result.sheet,
       unitLibrary,
     });
-    expect(Either.isLeft(secondUse)).toBe(true);
-    if (Either.isLeft(secondUse)) {
-      expect(secondUse.left.message).toBe(
+    expect(Result.isFailure(secondUse)).toBe(true);
+    if (Result.isFailure(secondUse)) {
+      expect(secondUse.failure.message).toBe(
         "Contact Patron cannot be used again until a Long Rest.",
       );
     }
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: result.sheet, unitLibrary }),
     );
     expect(rested.resourceExpenditures).toEqual([]);
     expect(
-      Either.isRight(castContactPatron({ sheet: rested, unitLibrary })),
+      Result.isSuccess(castContactPatron({ sheet: rested, unitLibrary })),
     ).toBe(true);
   });
 });
@@ -247,7 +246,7 @@ const contactPatronSelectedIdentityActions = {
 >;
 
 function projectContactPatronInvocation(): ContactPatronSelectedIdentityProjection {
-  const result = requireRight(
+  const result = requireSuccess(
     castContactPatron({
       sheet: contactPatronWarlockSheet(),
       unitLibrary,
@@ -282,7 +281,7 @@ function expectedContactPatronProjection(): ContactPatronSelectedIdentityProject
 }
 
 function contactPatronWarlockSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:contact-patron-warlock-9"),
       build: {

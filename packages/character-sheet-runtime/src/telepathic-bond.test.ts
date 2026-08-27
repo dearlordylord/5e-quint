@@ -7,14 +7,14 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castTelepathicBond,
   characterSheetId,
   characterSheetTelepathicBondTargetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -86,7 +86,7 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
   });
 
   test("Telepathic Bond spends a level-5 prepared spell slot and returns a same-plane communication link contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTelepathicBond({
         sheet: telepathicBondBardSheet({
           preparedSpells: ["telepathic_bond"],
@@ -127,9 +127,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       slots: 1,
     });
     const empty = castTelepathicBond({ sheet, unitLibrary, targets: [] });
-    expect(Either.isLeft(empty)).toBe(true);
-    if (Either.isLeft(empty)) {
-      expect(empty.left.message).toBe(
+    expect(Result.isFailure(empty)).toBe(true);
+    if (Result.isFailure(empty)) {
+      expect(empty.failure.message).toBe(
         "Telepathic Bond requires at least one target.",
       );
     }
@@ -139,9 +139,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       unitLibrary,
       targets: telepathicBondTargets(9),
     });
-    expect(Either.isLeft(overLimit)).toBe(true);
-    if (Either.isLeft(overLimit)) {
-      expect(overLimit.left.message).toBe(
+    expect(Result.isFailure(overLimit)).toBe(true);
+    if (Result.isFailure(overLimit)) {
+      expect(overLimit.failure.message).toBe(
         "Telepathic Bond supports up to eight willing targets.",
       );
     }
@@ -152,9 +152,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       unitLibrary,
       targets: [duplicateTarget, duplicateTarget],
     });
-    expect(Either.isLeft(duplicate)).toBe(true);
-    if (Either.isLeft(duplicate)) {
-      expect(duplicate.left.message).toBe(
+    expect(Result.isFailure(duplicate)).toBe(true);
+    if (Result.isFailure(duplicate)) {
+      expect(duplicate.failure.message).toBe(
         "Telepathic Bond requires unique target ids.",
       );
     }
@@ -168,9 +168,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       targets: telepathicBondTargets(2),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Telepathic Bond requires prepared class Spell Access.",
       );
     }
@@ -179,7 +179,7 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
 
 const telepathicBondSelectedIdentityActions = {
   doCastTelepathicBond: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTelepathicBond({
         sheet: telepathicBondBardSheet({
           preparedSpells: ["telepathic_bond"],
@@ -231,7 +231,7 @@ function telepathicBondTargets(
     { length: count },
     (_, index) =>
       ({
-        targetId: requireRight(
+        targetId: requireSuccess(
           characterSheetTelepathicBondTargetId(
             `telepathic-bond-target:${index + 1}`,
           ),
@@ -248,7 +248,7 @@ function telepathicBondBardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:telepathic-bond-bard-9"),
       build: {

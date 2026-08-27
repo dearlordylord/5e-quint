@@ -7,14 +7,14 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castLegendLore,
   characterSheetId,
   completedLegendLoreCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -88,7 +88,7 @@ describe("Character Sheet runtime / Legend Lore", () => {
       preparedSpells: ["legend_lore"],
       slots: 1,
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castLegendLore({
         sheet,
         unitLibrary,
@@ -129,16 +129,16 @@ describe("Character Sheet runtime / Legend Lore", () => {
       subject: famousLegendLoreSubject,
       casting: completedLegendLoreCasting,
     });
-    expect(Either.isLeft(second)).toBe(true);
-    if (Either.isLeft(second)) {
-      expect(second.left.message).toBe(
+    expect(Result.isFailure(second)).toBe(true);
+    if (Result.isFailure(second)) {
+      expect(second.failure.message).toBe(
         "Spell Slot spend requires an unexpended ordinary Spell Slot.",
       );
     }
   });
 
   test("Legend Lore returns the not-famous failure outcome after spending the spell slot", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castLegendLore({
         sheet: legendLoreClericSheet({
           preparedSpells: ["legend_lore"],
@@ -175,9 +175,9 @@ describe("Character Sheet runtime / Legend Lore", () => {
       casting: completedLegendLoreCasting,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Legend Lore requires prepared class Spell Access.",
       );
     }
@@ -186,7 +186,7 @@ describe("Character Sheet runtime / Legend Lore", () => {
 
 const legendLoreSelectedIdentityActions = {
   doCastLegendLore: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castLegendLore({
         sheet: legendLoreClericSheet({
           preparedSpells: ["legend_lore"],
@@ -243,7 +243,7 @@ function legendLoreClericSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:legend-lore-cleric-9"),
       build: {

@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { OngoingEffect, SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -34,7 +34,7 @@ export function castWallOfForce(input: {
   readonly unitLibrary: UnitCatalog;
   readonly placement: CharacterSheetWallOfForcePlacement;
   readonly shape: CharacterSheetWallOfForceShape;
-}): Either.Either<CharacterSheetWallOfForceResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetWallOfForceResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -89,7 +89,7 @@ function wallOfForceInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly placement: CharacterSheetWallOfForcePlacement;
   readonly shape: CharacterSheetWallOfForceShape;
-}): Either.Either<CharacterSheetWallOfForceInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetWallOfForceInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Wall of Force support profile required by this projector. */
   if (
@@ -127,12 +127,12 @@ function wallOfForceInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact ten-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Wall of Force requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "wallOfForce",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -144,7 +144,7 @@ function wallOfForceInvocationFromSpell(input: {
     requiredSpellAccess: "class_prepared",
     castingTime: { kind: "action" },
     rangeFeet: WALL_OF_FORCE_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     placement: input.placement,
     shape: input.shape,

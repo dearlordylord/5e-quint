@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -31,7 +31,7 @@ export function castPasswall(input: {
   readonly unitLibrary: UnitCatalog;
   readonly surface: CharacterSheetPasswallSurface;
   readonly dimensions: CharacterSheetPasswallDimensions;
-}): Either.Either<CharacterSheetPasswallResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetPasswallResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -78,7 +78,7 @@ function passwallInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly surface: CharacterSheetPasswallSurface;
   readonly dimensions: CharacterSheetPasswallDimensions;
-}): Either.Either<CharacterSheetPasswallInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetPasswallInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Passwall support profile required by this projector. */
   if (
@@ -98,7 +98,7 @@ function passwallInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.value);
   /* v8 ignore start -- @preserve -- The authored Passwall duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Passwall requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
@@ -119,7 +119,7 @@ function passwallInvocationFromSpell(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "passwall",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -130,7 +130,7 @@ function passwallInvocationFromSpell(input: {
     preparationRequirement: "prepared",
     requiredSpellAccess: "class_prepared",
     rangeFeet: PASSWALL_RANGE_FEET,
-    duration: duration.right,
+    duration: duration.success,
     surface: input.surface,
     dimensions: input.dimensions,
     passage: {

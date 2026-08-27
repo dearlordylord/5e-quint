@@ -42,7 +42,7 @@ import type {
   StatBlockRecord,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import { characterSheetResources } from "./resources.ts";
 import { characterSheetSpellInvocation } from "./spell-invocation.ts";
@@ -109,8 +109,8 @@ export function characterSheetCompanion(
 export function replaceCharacterSheetCompanion(input: {
   readonly sheet: CharacterSheet;
   readonly companion: CharacterSheetCompanion;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
-  return Either.right({ ...input.sheet, companion: input.companion });
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
+  return Result.succeed({ ...input.sheet, companion: input.companion });
 }
 
 export function companionAfterLongRest(
@@ -129,16 +129,16 @@ export function companionAfterLongRest(
 
 export function createRetainedFamiliarLikeCompanion(
   input: CharacterSheetRetainedCompanionCreationInput,
-): Either.Either<CharacterSheet, CharacterSheetIssue> {
+): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const source = retainedCompanionCreationSource(input);
-  if (Either.isLeft(source)) return Either.left(source.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
   const resolved = retainedCompanionResolvedForm({
-    source: source.right,
+    source: source.success,
     selectedForm: input.selectedForm,
     statBlockCatalog: input.statBlockCatalog,
     creatureTypeOverrideChoiceId: input.creatureTypeOverrideChoiceId,
   });
-  if (Either.isLeft(resolved)) return Either.left(resolved.left);
+  if (Result.isFailure(resolved)) return Result.fail(resolved.failure);
 
   const existing = characterSheetCompanion(input.sheet);
   if (
@@ -156,33 +156,33 @@ export function createRetainedFamiliarLikeCompanion(
   const hitPoints =
     existing.tag === "retainedOneAtATime"
       ? retainedCompanionRecastHitPoints({
-          statBlock: resolved.right.statBlock,
+          statBlock: resolved.success.statBlock,
           manifestation: existing.companion.manifestation,
         })
       : retainedCompanionCreationHitPoints({
-          statBlock: resolved.right.statBlock,
+          statBlock: resolved.success.statBlock,
         });
-  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
+  if (Result.isFailure(hitPoints)) return Result.fail(hitPoints.failure);
   const spentSheet = spendRetainedCompanionCreationSourceCost({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
-    source: source.right,
+    source: source.success,
   });
-  if (Either.isLeft(spentSheet)) return Either.left(spentSheet.left);
+  if (Result.isFailure(spentSheet)) return Result.fail(spentSheet.failure);
 
   return replaceCharacterSheetCompanion({
-    sheet: spentSheet.right,
+    sheet: spentSheet.success,
     companion: {
       tag: "retainedOneAtATime",
       companion: {
         companionId,
-        protocol: source.right.protocol,
+        protocol: source.success.protocol,
         manifestation: {
           tag: "embodiedOutsideBattle",
           selectedForm: input.selectedForm,
-          creatureTypeOverride: resolved.right.creatureTypeOverride,
-          resolvedStatBlockId: resolved.right.statBlock.id,
-          hitPoints: hitPoints.right,
+          creatureTypeOverride: resolved.success.creatureTypeOverride,
+          resolvedStatBlockId: resolved.success.statBlock.id,
+          hitPoints: hitPoints.success,
         },
       },
     },
@@ -191,9 +191,9 @@ export function createRetainedFamiliarLikeCompanion(
 
 export function companionFromInput(
   companion: CharacterSheetCompanion,
-): Either.Either<CharacterSheetCompanion, CharacterSheetIssue> {
+): Result.Result<CharacterSheetCompanion, CharacterSheetIssue> {
   if (companion.tag === "none") {
-    return Either.right({ tag: "none" });
+    return Result.succeed({ tag: "none" });
   }
   const hitPointsIssue = retainedCompanionHitPointsIssue(
     companion.companion.manifestation,
@@ -201,16 +201,16 @@ export function companionFromInput(
   if (hitPointsIssue !== null) return characterSheetIssue(hitPointsIssue);
   const protocolIssue = retainedCompanionProtocolIssue(companion.companion);
   if (protocolIssue !== null) return characterSheetIssue(protocolIssue);
-  return Either.right(companion);
+  return Result.succeed(companion);
 }
 
 export function parseStoredCharacterSheetCompanion(
   value: unknown,
-): Either.Either<CharacterSheetCompanion, CharacterSheetIssue> {
+): Result.Result<CharacterSheetCompanion, CharacterSheetIssue> {
   if (!isRecord(value)) {
     return characterSheetIssue("Expected Character Sheet companion state.");
   }
-  if (value.tag === "none") return Either.right({ tag: "none" });
+  if (value.tag === "none") return Result.succeed({ tag: "none" });
   if (value.tag !== "retainedOneAtATime" || !isRecord(value.companion)) {
     return characterSheetIssue("Expected Character Sheet companion state.");
   }
@@ -221,19 +221,20 @@ export function parseStoredCharacterSheetCompanion(
   const companionId = parseCharacterSheetRetainedCompanionId(
     companion.companionId,
   );
-  if (Either.isLeft(companionId)) return Either.left(companionId.left);
+  if (Result.isFailure(companionId)) return Result.fail(companionId.failure);
   const protocol = parseStoredRetainedCompanionProtocol(companion.protocol);
-  if (Either.isLeft(protocol)) return Either.left(protocol.left);
+  if (Result.isFailure(protocol)) return Result.fail(protocol.failure);
   const manifestation = parseStoredRetainedCompanionManifestation(
     companion.manifestation,
   );
-  if (Either.isLeft(manifestation)) return Either.left(manifestation.left);
-  return Either.right({
+  if (Result.isFailure(manifestation))
+    return Result.fail(manifestation.failure);
+  return Result.succeed({
     tag: "retainedOneAtATime",
     companion: {
-      companionId: companionId.right,
-      protocol: protocol.right,
-      manifestation: manifestation.right,
+      companionId: companionId.success,
+      protocol: protocol.success,
+      manifestation: manifestation.success,
     },
   });
 }
@@ -267,19 +268,19 @@ function retainedCompanionProtocolIssue(
 
 function parseStoredRetainedCompanionProtocol(
   value: unknown,
-): Either.Either<CharacterSheetRetainedCompanionProtocol, CharacterSheetIssue> {
+): Result.Result<CharacterSheetRetainedCompanionProtocol, CharacterSheetIssue> {
   if (!isRecord(value)) {
     return characterSheetIssue("Expected retained companion protocol.");
   }
   if (!isRetainedCompanionProtocolTag(value.tag)) {
     return characterSheetIssue("Expected retained companion protocol tag.");
   }
-  return Either.right({ tag: value.tag });
+  return Result.succeed({ tag: value.tag });
 }
 
 function parseStoredRetainedCompanionManifestation(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterSheetRetainedCompanionManifestation,
   CharacterSheetIssue
 > {
@@ -296,7 +297,7 @@ function parseStoredRetainedCompanionManifestation(
   const selectedForm = parseStoredRetainedCompanionFormSelection(
     value.selectedForm,
   );
-  if (Either.isLeft(selectedForm)) return Either.left(selectedForm.left);
+  if (Result.isFailure(selectedForm)) return Result.fail(selectedForm.failure);
   if (
     !isCharacterSheetCompanionCreatureTypeOverride(value.creatureTypeOverride)
   ) {
@@ -310,33 +311,37 @@ function parseStoredRetainedCompanionManifestation(
     );
   }
   const proof = {
-    selectedForm: selectedForm.right,
+    selectedForm: selectedForm.success,
     creatureTypeOverride: value.creatureTypeOverride,
     resolvedStatBlockId: authoredStatBlockId(value.resolvedStatBlockId),
   };
   if (value.tag === "disappearedAtZeroHitPoints") {
-    return Either.right({ tag: "disappearedAtZeroHitPoints", ...proof });
+    return Result.succeed({ tag: "disappearedAtZeroHitPoints", ...proof });
   }
   const hitPoints = parseStoredRetainedCompanionHitPoints(value.hitPoints);
-  return Either.isLeft(hitPoints)
-    ? Either.left(hitPoints.left)
-    : Either.right({ tag: value.tag, ...proof, hitPoints: hitPoints.right });
+  return Result.isFailure(hitPoints)
+    ? Result.fail(hitPoints.failure)
+    : Result.succeed({
+        tag: value.tag,
+        ...proof,
+        hitPoints: hitPoints.success,
+      });
 }
 
 function parseStoredRetainedCompanionFormSelection(
   value: unknown,
-): Either.Either<CharacterSheetCompanionFormSelection, CharacterSheetIssue> {
+): Result.Result<CharacterSheetCompanionFormSelection, CharacterSheetIssue> {
   if (!isRecord(value)) {
     return characterSheetIssue("Expected retained companion form selection.");
   }
   if (value.tag === "normalNamedForm") {
     return typeof value.formId === "string" && value.formId.length > 0
-      ? Either.right({ tag: "normalNamedForm", formId: value.formId })
+      ? Result.succeed({ tag: "normalNamedForm", formId: value.formId })
       : characterSheetIssue("Retained companion normal form requires form id.");
   }
   if (value.tag === "challengeRatingZeroBeast") {
     return typeof value.statBlockId === "string" && value.statBlockId.length > 0
-      ? Either.right({
+      ? Result.succeed({
           tag: "challengeRatingZeroBeast",
           statBlockId: authoredStatBlockId(value.statBlockId),
         })
@@ -350,7 +355,7 @@ function parseStoredRetainedCompanionFormSelection(
     );
     return specialForm === undefined
       ? characterSheetIssue("Retained companion special form requires form id.")
-      : Either.right({
+      : Result.succeed({
           tag: "pactOfTheChainSpecialForm",
           formId: specialForm.formId,
         });
@@ -360,7 +365,7 @@ function parseStoredRetainedCompanionFormSelection(
 
 function parseStoredRetainedCompanionHitPoints(
   value: unknown,
-): Either.Either<
+): Result.Result<
   CharacterSheetRetainedCompanionHitPoints,
   CharacterSheetIssue
 > {
@@ -369,26 +374,26 @@ function parseStoredRetainedCompanionHitPoints(
   }
   const currentHp = parseHp(value.currentHp);
   /* v8 ignore next -- @preserve -- Malformed stored companion state: current HP must parse as a nonnegative HP value at this raw boundary. */
-  if (Either.isLeft(currentHp)) return Either.left(currentHp.left);
+  if (Result.isFailure(currentHp)) return Result.fail(currentHp.failure);
   const positiveCurrentHp =
-    parseCharacterSheetRetainedCompanionCurrentHitPoints(currentHp.right);
+    parseCharacterSheetRetainedCompanionCurrentHitPoints(currentHp.success);
   /* v8 ignore start -- @preserve -- Malformed stored companion state: retained companions require positive current HP. */
-  if (Either.isLeft(positiveCurrentHp))
-    return Either.left(positiveCurrentHp.left);
+  if (Result.isFailure(positiveCurrentHp))
+    return Result.fail(positiveCurrentHp.failure);
   /* v8 ignore stop -- @preserve */
   const tempHp = parseHp(value.tempHp);
   /* v8 ignore next -- @preserve -- Malformed stored companion state: temporary HP must parse as a nonnegative HP value at this raw boundary. */
-  return Either.isLeft(tempHp)
-    ? Either.left(tempHp.left)
-    : Either.right({
-        currentHp: positiveCurrentHp.right,
-        tempHp: tempHp.right,
+  return Result.isFailure(tempHp)
+    ? Result.fail(tempHp.failure)
+    : Result.succeed({
+        currentHp: positiveCurrentHp.success,
+        tempHp: tempHp.success,
       });
 }
 
 function retainedCompanionCreationSource(
   input: CharacterSheetRetainedCompanionCreationInput,
-): Either.Either<RetainedCompanionCreationSourceFacts, CharacterSheetIssue> {
+): Result.Result<RetainedCompanionCreationSourceFacts, CharacterSheetIssue> {
   const source = input.source;
   if (source.tag === "spellSlotSpellCast") {
     const spell = retainedCompanionPreparedSpell({
@@ -396,18 +401,18 @@ function retainedCompanionCreationSource(
       unitLibrary: input.unitLibrary,
       spellId: source.spellId,
     });
-    if (Either.isLeft(spell)) return Either.left(spell.left);
-    if (source.spellLevel < spell.right.mechanics.level) {
+    if (Result.isFailure(spell)) return Result.fail(spell.failure);
+    if (source.spellLevel < spell.success.mechanics.level) {
       return characterSheetIssue(
         "Retained companion spell-slot source requires a slot at least as high as the selected spell level.",
       );
     }
-    const eligibility = findFamiliarFormEligibilityForSpell(spell.right);
+    const eligibility = findFamiliarFormEligibilityForSpell(spell.success);
     return eligibility === null
       ? characterSheetIssue(
           "Retained companion spell-slot source must provide familiar form eligibility.",
         )
-      : Either.right({
+      : Result.succeed({
           tag: "ordinaryFamiliarLike",
           eligibility,
           protocol: ordinaryFamiliarLikeProtocol(),
@@ -422,19 +427,19 @@ function retainedCompanionCreationSource(
       invocation: { kind: "ritual" },
     });
     /* v8 ignore next -- @preserve -- Malformed retained companion request: a ritual source must pass the spell-access invocation boundary that admitted it. */
-    if (Either.isLeft(invocation)) return Either.left(invocation.left);
+    if (Result.isFailure(invocation)) return Result.fail(invocation.failure);
     const spell = requiredSpellRecord(
       input.unitLibrary,
-      invocation.right.spellId,
+      invocation.success.spellId,
     );
     /* v8 ignore next -- @preserve -- Malformed support catalog: the admitted retained-companion ritual spell id must resolve to its Spell Unit. */
-    if (Either.isLeft(spell)) return Either.left(spell.left);
-    const eligibility = findFamiliarFormEligibilityForSpell(spell.right);
+    if (Result.isFailure(spell)) return Result.fail(spell.failure);
+    const eligibility = findFamiliarFormEligibilityForSpell(spell.success);
     return eligibility === null
       ? characterSheetIssue(
           "Retained companion ritual source must provide familiar form eligibility.",
         )
-      : Either.right({
+      : Result.succeed({
           tag: "ordinaryFamiliarLike",
           eligibility,
           protocol: ordinaryFamiliarLikeProtocol(),
@@ -447,15 +452,15 @@ function retainedCompanionCreationSource(
       unitLibrary: input.unitLibrary,
       spellId: source.spellId,
     });
-    if (Either.isLeft(spell)) return Either.left(spell.left);
+    if (Result.isFailure(spell)) return Result.fail(spell.failure);
     const eligibility = pactOfTheChainFindFamiliarFormEligibilityForSpell(
-      spell.right,
+      spell.success,
     );
     return eligibility === null
       ? characterSheetIssue(
           "Retained companion invocation source must provide familiar form catalog references.",
         )
-      : Either.right({
+      : Result.succeed({
           tag: "pactFamiliarLike",
           eligibility,
           protocol: pactFamiliarLikeProtocol(),
@@ -464,29 +469,29 @@ function retainedCompanionCreationSource(
   }
 
   const feature = retainedCompanionSpellCastFeature({ ...input, source });
-  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (Result.isFailure(feature)) return Result.fail(feature.failure);
   const spendIssue = retainedCompanionFeatureSpendIssue({
-    feature: feature.right,
+    feature: feature.success,
     spend: source.spend,
   });
   if (spendIssue !== null) return characterSheetIssue(spendIssue);
   const spell = requiredSpellRecord(
     input.unitLibrary,
-    authoredUnitId(feature.right.mechanics.spellId),
+    authoredUnitId(feature.success.mechanics.spellId),
   );
   /* v8 ignore next -- @preserve -- Malformed support catalog: the admitted retained-companion feature spell id must resolve to its Spell Unit. */
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-  const eligibility = findFamiliarFormEligibilityForSpell(spell.right);
+  if (Result.isFailure(spell)) return Result.fail(spell.failure);
+  const eligibility = findFamiliarFormEligibilityForSpell(spell.success);
   return eligibility === null
     ? characterSheetIssue(
         "Retained companion class-feature spell source must provide familiar form eligibility.",
       )
-    : Either.right({
+    : Result.succeed({
         tag: "ownerLongRestExpiringFamiliarLike",
         eligibility,
         protocol: ownerLongRestExpiringFamiliarLikeProtocol(),
         fixedCreatureTypeOverrideChoiceId:
-          feature.right.mechanics.spellModeOverride.optionId,
+          feature.success.mechanics.spellModeOverride.optionId,
         spend: source.spend,
       });
 }
@@ -495,7 +500,7 @@ function retainedCompanionPreparedSpell(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
-}): Either.Either<SpellRecord, CharacterSheetIssue> {
+}): Result.Result<SpellRecord, CharacterSheetIssue> {
   if (!isSpellcastingBuild(input.sheet.build)) {
     return characterSheetIssue(
       "Retained companion spell-slot source requires the selected spell prepared or otherwise effective as prepared.",
@@ -521,7 +526,7 @@ function retainedCompanionInvocationSpell(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
-}): Either.Either<SpellRecord, CharacterSheetIssue> {
+}): Result.Result<SpellRecord, CharacterSheetIssue> {
   if (
     input.spellId !== PACT_OF_THE_CHAIN_SPELL_ID ||
     !hasSelectedEldritchInvocation(
@@ -553,7 +558,7 @@ function retainedCompanionSpellCastFeature(
       { readonly tag: "classFeatureSpellCast" }
     >;
   },
-): Either.Either<RetainedCompanionSpellCastFeature, CharacterSheetIssue> {
+): Result.Result<RetainedCompanionSpellCastFeature, CharacterSheetIssue> {
   if (
     !characterBuildFeatureUnitIds(
       input.sheet.build,
@@ -575,7 +580,7 @@ function retainedCompanionSpellCastFeature(
       "Retained companion class-feature spell source must match the supported familiar-like spell-cast profile.",
     );
   }
-  return Either.right(unit.value);
+  return Result.succeed(unit.value);
 }
 
 function isSupportedRetainedCompanionSpellCastFeature(
@@ -623,7 +628,7 @@ function retainedCompanionResolvedForm(input: {
   readonly creatureTypeOverrideChoiceId:
     | FindFamiliarCreatureTypeOverrideChoice["optionId"]
     | undefined;
-}): Either.Either<
+}): Result.Result<
   {
     readonly statBlock: StatBlockRecord;
     readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
@@ -660,14 +665,14 @@ function retainedCompanionResolvedForm(input: {
           });
   return resolved.tag === "issue"
     ? characterSheetIssue(resolved.message)
-    : Either.right(resolved.form);
+    : Result.succeed(resolved.form);
 }
 
 function spendRetainedCompanionCreationSourceCost(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly source: RetainedCompanionCreationSourceFacts;
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   if (input.source.spend.tag === "spellSlot") {
     return spendCharacterSheetSpellSlot({
       sheet: input.sheet,
@@ -676,7 +681,7 @@ function spendRetainedCompanionCreationSourceCost(input: {
     });
   }
   if (input.source.tag !== "ownerLongRestExpiringFamiliarLike") {
-    return Either.right(input.sheet);
+    return Result.succeed(input.sheet);
   }
   return spendRetainedCompanionUseCountResource({
     sheet: input.sheet,
@@ -689,11 +694,11 @@ function spendRetainedCompanionUseCountResource(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly resourceUnitId: UnitRecord["id"];
-}): Either.Either<CharacterSheet, CharacterSheetIssue> {
+}): Result.Result<CharacterSheet, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: retained-companion spending reuses the resource projection admitted for this sheet. */
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right.find(
+  if (Result.isFailure(resources)) return Result.fail(resources.failure);
+  const resource = resources.success.find(
     (
       candidate,
     ): candidate is Extract<
@@ -725,7 +730,7 @@ function spendRetainedCompanionUseCountResource(input: {
     unitId: input.resourceUnitId,
     expended: resourceCount(resource.expended + 1),
   });
-  return Either.right({
+  return Result.succeed({
     ...input.sheet,
     resourceExpenditures: nextExpenditures,
   });
@@ -734,7 +739,7 @@ function spendRetainedCompanionUseCountResource(input: {
 function retainedCompanionRecastHitPoints(input: {
   readonly statBlock: StatBlockRecord;
   readonly manifestation: CharacterSheetRetainedCompanionManifestation;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetRetainedCompanionHitPoints,
   CharacterSheetIssue
 > {
@@ -754,18 +759,18 @@ function retainedCompanionRecastHitPoints(input: {
   );
   const carriedCurrentHp =
     parseCharacterSheetRetainedCompanionCurrentHitPoints(clampedCurrentHp);
-  if (Either.isLeft(carriedCurrentHp)) {
-    return Either.left(carriedCurrentHp.left);
+  if (Result.isFailure(carriedCurrentHp)) {
+    return Result.fail(carriedCurrentHp.failure);
   }
-  return Either.right({
-    currentHp: carriedCurrentHp.right,
+  return Result.succeed({
+    currentHp: carriedCurrentHp.success,
     tempHp: input.manifestation.hitPoints.tempHp,
   });
 }
 
 function retainedCompanionCreationHitPoints(input: {
   readonly statBlock: StatBlockRecord;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetRetainedCompanionHitPoints,
   CharacterSheetIssue
 > {
@@ -782,7 +787,7 @@ function retainedCompanionCreationHitPoints(input: {
       "Retained companion current HP must be positive.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     // Cast evidence: Hp proves non-negative integer HP, and the guard above
     // proves the retained companion positive-current-HP alias.
     currentHp:
@@ -800,13 +805,13 @@ function statBlockLiteralHp(statBlock: StatBlockRecord): HpType | null {
 function requiredSpellRecord(
   unitLibrary: UnitCatalog,
   spellId: UnitRecord["id"],
-): Either.Either<SpellRecord, CharacterSheetIssue> {
+): Result.Result<SpellRecord, CharacterSheetIssue> {
   const unit = unitLibrary.getUnit(spellId);
   if (Option.isNone(unit)) {
     return characterSheetIssue(`Unknown Spell Unit id: ${spellId}`);
   }
   return unit.value.kind === "spell"
-    ? Either.right(unit.value)
+    ? Result.succeed(unit.value)
     : characterSheetIssue(
         "Retained companion source must reference a Spell record.",
       );
@@ -825,7 +830,7 @@ function hasSelectedEldritchInvocation(
 
 export function parseCharacterSheetRetainedCompanionCurrentHitPoints(
   hp: HpType,
-): Either.Either<
+): Result.Result<
   CharacterSheetRetainedCompanionCurrentHitPoints,
   CharacterSheetIssue
 > {
@@ -836,7 +841,7 @@ export function parseCharacterSheetRetainedCompanionCurrentHitPoints(
   }
   // Cast evidence: Hp proves a non-negative integer, and the branch above
   // proves the positive-integer part of retained companion current HP.
-  return Either.right(hp as CharacterSheetRetainedCompanionCurrentHitPoints);
+  return Result.succeed(hp as CharacterSheetRetainedCompanionCurrentHitPoints);
 }
 
 function isCharacterSheetCompanionCreatureTypeOverride(

@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   DREAM_MATERIAL_COMPONENTS,
@@ -37,7 +37,7 @@ export function castDream(input: {
   readonly target: CharacterSheetDreamTarget;
   readonly messenger: CharacterSheetDreamMessenger;
   readonly mode: CharacterSheetDreamMode;
-}): Either.Either<CharacterSheetDreamResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetDreamResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -106,7 +106,7 @@ function dreamInvocationFromSpell(input: {
   readonly target: CharacterSheetDreamTarget;
   readonly messenger: CharacterSheetDreamMessenger;
   readonly mode: CharacterSheetDreamMode;
-}): Either.Either<CharacterSheetDreamInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetDreamInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Dream support profile required by this projector. */
   if (
@@ -144,12 +144,12 @@ function dreamInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.value);
   /* v8 ignore start -- @preserve -- The exact eight-hour duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Dream requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "dream",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -164,7 +164,7 @@ function dreamInvocationFromSpell(input: {
       amount: DREAM_CASTING_TIME_MINUTES,
     },
     range: "special",
-    duration: duration.right,
+    duration: duration.success,
     materialComponents: input.casting.materialComponents,
     target: input.target,
     messenger: input.messenger,

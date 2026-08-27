@@ -35,13 +35,13 @@ import {
   completeShortRestArcaneRecoveryWithRoute,
   rebuildCharacterSheetFixture,
   elapsedTimeTicks,
-  expectRight,
+  expectSuccess,
   finishLongRest,
   finishShortRest,
   interruptLongRest,
   interruptShortRest,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   resourceCount,
   selectedClassChoiceUnitIds,
   spellSlotLevel,
@@ -87,7 +87,7 @@ function unitLibraryWithoutResourcefulHumanTrait() {
 
 describe("Character Sheet runtime / rests", () => {
   test("rest start gates keep calendar wait separate from rest benefits", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rest-start"),
         build,
@@ -95,7 +95,7 @@ describe("Character Sheet runtime / rests", () => {
         unitLibrary,
       }),
     );
-    const zeroHp = requireRight(
+    const zeroHp = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rest-start-zero"),
         build,
@@ -105,14 +105,11 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    expect(startShortRest({ sheet })).toMatchObject({
-      _tag: "Right",
-      right: {
-        tag: "shortRestStarted",
-        requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
-      },
+    expect(requireSuccess(startShortRest({ sheet }))).toMatchObject({
+      tag: "shortRestStarted",
+      requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
     });
-    const shortRest = requireRight(startShortRest({ sheet }));
+    const shortRest = requireSuccess(startShortRest({ sheet }));
     expect(
       finishShortRest({
         rest: shortRest,
@@ -121,14 +118,14 @@ describe("Character Sheet runtime / rests", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Short Rest requires 1 hour before benefits can be received.",
       },
     });
     expect(startShortRest({ sheet: zeroHp })).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Short Rest requires the Character Sheet to have at least 1 HP.",
       },
@@ -136,8 +133,8 @@ describe("Character Sheet runtime / rests", () => {
     expect(
       startLongRest({ sheet: zeroHp, timing: { tag: "noPriorLongRest" } }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest requires the Character Sheet to have at least 1 HP.",
       },
@@ -165,29 +162,28 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest requires waiting 16 hours after finishing the previous Long Rest.",
       },
     });
     expect(
-      startLongRest({
-        sheet,
-        timing: {
-          tag: "elapsedSinceLastLongRest",
-          elapsedTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
-        },
-      }),
+      requireSuccess(
+        startLongRest({
+          sheet,
+          timing: {
+            tag: "elapsedSinceLastLongRest",
+            elapsedTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
+          },
+        }),
+      ),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
-        tag: "longRestStarted",
-        requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
-        nextLongRestStartWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
-      },
+      tag: "longRestStarted",
+      requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
+      nextLongRestStartWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
     });
-    const longRest = requireRight(
+    const longRest = requireSuccess(
       startLongRest({
         sheet,
         timing: {
@@ -204,8 +200,8 @@ describe("Character Sheet runtime / rests", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest requires the full required duration before benefits can be received.",
       },
@@ -213,7 +209,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Long Rest restores HP, Hit Point Dice, maximum reduction, Spell Slots, Pact Slots, and Arcane Recovery use", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:long-rest"),
         build: wizardWarlockBuild(),
@@ -240,7 +236,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+    const rested = requireSuccess(completeLongRest({ sheet, unitLibrary }));
 
     expect(rested.hitPoints).toEqual({
       tag: "positive",
@@ -248,7 +244,7 @@ describe("Character Sheet runtime / rests", () => {
       tempHp: 0,
     });
     expect(rested.hitPointMaximumReduction).toBe(0);
-    expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
+    expect(requireSuccess(characterSheetHitDice(rested, unitLibrary))).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 1, spent: 0 },
     ]);
     expect(characterSheetSpellSlots(rested)).toEqual([
@@ -273,7 +269,7 @@ describe("Character Sheet runtime / rests", () => {
       CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
       CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
     ] as const) {
-      const sheet = requireRight(
+      const sheet = requireSuccess(
         rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             `character:resourceful:${initialHeroicInspiration.tag}`,
@@ -286,7 +282,7 @@ describe("Character Sheet runtime / rests", () => {
         }),
       );
 
-      const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+      const rested = requireSuccess(completeLongRest({ sheet, unitLibrary }));
 
       expect(rested.heroicInspiration).toEqual(
         CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
@@ -299,7 +295,7 @@ describe("Character Sheet runtime / rests", () => {
       CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
       CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
     ] as const) {
-      const sheet = requireRight(
+      const sheet = requireSuccess(
         rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             `character:no-resourceful:${initialHeroicInspiration.tag}`,
@@ -312,7 +308,7 @@ describe("Character Sheet runtime / rests", () => {
         }),
       );
 
-      const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+      const rested = requireSuccess(completeLongRest({ sheet, unitLibrary }));
 
       expect(rested.heroicInspiration).toEqual(initialHeroicInspiration);
     }
@@ -324,7 +320,7 @@ describe("Character Sheet runtime / rests", () => {
       species: authoredUnitId("species_human"),
       speciesSize: "medium",
     };
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:resourceful-missing-unit"),
         build: humanBuild,
@@ -339,8 +335,8 @@ describe("Character Sheet runtime / rests", () => {
     expect(
       completeLongRest({ sheet, unitLibrary: missingResourcefulUnitLibrary }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Unknown Unit id: species_human_resourceful" },
+      _tag: "Failure",
+      failure: { message: "Unknown Unit id: species_human_resourceful" },
     });
   });
 
@@ -358,7 +354,7 @@ describe("Character Sheet runtime / rests", () => {
       species: authoredUnitId("species_human"),
       speciesSize: "medium",
     };
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:resourceful-missing-unit-weapon-mastery-route",
@@ -430,7 +426,7 @@ describe("Character Sheet runtime / rests", () => {
     ] as const;
 
     for (const testCase of cases) {
-      const sheet = requireRight(
+      const sheet = requireSuccess(
         rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             `character:${testCase.featureUnitId}:long-rest`,
@@ -490,7 +486,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("rejects Weapon Mastery Long Rest reselection above the Surface change count", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fighter-mastery-reject"),
         build: weaponMasteryBuild({
@@ -553,7 +549,7 @@ describe("Character Sheet runtime / rests", () => {
         "weapon_shortbow",
       ],
     });
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fighter-level-4-mastery"),
         build: {
@@ -573,7 +569,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({
         sheet,
         unitLibrary,
@@ -605,7 +601,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Short Rest restores Pact Slots without touching ordinary Spell Slots", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-pact"),
         build: wizardWarlockBuild(),
@@ -618,7 +614,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const rested = requireRight(completeShortRest({ sheet, unitLibrary }));
+    const rested = requireSuccess(completeShortRest({ sheet, unitLibrary }));
 
     expect(characterSheetSpellSlots(rested)).toEqual([
       { spellLevel: 1, count: 2, expended: 1 },
@@ -631,7 +627,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Short Rest spends Hit Dice to restore HP without touching Spell Slots", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-hit-dice"),
         build: wizardBuild({ wizardAdvancements: 1 }),
@@ -650,7 +646,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeShortRest({
         sheet,
         unitLibrary,
@@ -668,7 +664,7 @@ describe("Character Sheet runtime / rests", () => {
       currentHp: characterSheetHitPointMaximum(rested),
       tempHp: 2,
     });
-    expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
+    expect(requireSuccess(characterSheetHitDice(rested, unitLibrary))).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 2 },
     ]);
     expect(characterSheetSpellSlots(rested)).toEqual([
@@ -677,7 +673,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("rest interruptions apply only the RAW rest benefits they grant", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rest-interruption"),
         build: wizardBuild({ wizardAdvancements: 1 }),
@@ -696,7 +692,7 @@ describe("Character Sheet runtime / rests", () => {
       interruption: "takeDamage",
     });
 
-    const earlyLongRestInterruption = requireRight(
+    const earlyLongRestInterruption = requireSuccess(
       interruptLongRest({
         sheet,
         unitLibrary,
@@ -737,8 +733,8 @@ describe("Character Sheet runtime / rests", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Interrupted Long Rest before 1 hour cannot receive Short Rest benefit inputs.",
       },
@@ -756,8 +752,8 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest physical exertion interruption requires at least 1 hour.",
       },
@@ -775,15 +771,15 @@ describe("Character Sheet runtime / rests", () => {
           interruptionsIncludingThisOne: resourceCount(1),
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message:
             "Long Rest interruption requires rested time before the required Long Rest duration.",
         },
       });
     }
 
-    const lateLongRestInterruption = requireRight(
+    const lateLongRestInterruption = requireSuccess(
       interruptLongRest({
         sheet,
         unitLibrary,
@@ -821,7 +817,7 @@ describe("Character Sheet runtime / rests", () => {
       12,
     );
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetHitDice(lateLongRestInterruption.rest.sheet, unitLibrary),
       ),
     ).toEqual([
@@ -835,7 +831,7 @@ describe("Character Sheet runtime / rests", () => {
   test("Short Rest applies minimum healing to each spent Hit Die", () => {
     const lowConWizardBuild: CharacterBuild = {
       ...wizardBuild({ wizardAdvancements: 1 }),
-      abilityScores: expectRight(
+      abilityScores: expectSuccess(
         abilityScoreAssignment({
           str: 13,
           dex: 14,
@@ -846,7 +842,7 @@ describe("Character Sheet runtime / rests", () => {
         }),
       ),
     };
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-minimum-hit-dice"),
         build: lowConWizardBuild,
@@ -856,7 +852,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeShortRest({
         sheet,
         unitLibrary,
@@ -878,13 +874,13 @@ describe("Character Sheet runtime / rests", () => {
       currentHp: characterSheetHitPointMaximum(rested),
       tempHp: 0,
     });
-    expect(requireRight(characterSheetHitDice(rested, unitLibrary))).toEqual([
+    expect(requireSuccess(characterSheetHitDice(rested, unitLibrary))).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 2, spent: 2 },
     ]);
   });
 
   test("Short Rest rejects spending more Hit Dice than remain", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:short-rest-spent-hit-dice"),
         build: wizardBuild({ wizardAdvancements: 0 }),
@@ -912,13 +908,15 @@ describe("Character Sheet runtime / rests", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Short Rest cannot spend more Hit Dice than remain." },
+      _tag: "Failure",
+      failure: {
+        message: "Short Rest cannot spend more Hit Dice than remain.",
+      },
     });
   });
 
   test("Arcane Recovery refunds expended ordinary Spell Slots once per Long Rest", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:arcane-recovery"),
         build: wizardBuild({ wizardAdvancements: 3 }),
@@ -976,15 +974,15 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Arcane Recovery cannot be used again until a Long Rest.",
       },
     });
   });
 
   test("Arcane Recovery route wrapper reports Feature Resource owner for use lockout rejection", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:arcane-recovery-route-lockout",
@@ -1028,7 +1026,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Long Rest Arcane Recovery route wrapper omits qRoute when no Arcane Recovery reset occurred", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:arcane-recovery-route-none"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -1050,7 +1048,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Long Rest Arcane Recovery route reports both reset and rejected completion outcomes", () => {
-    const wizard = requireRight(
+    const wizard = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-arcane-recovery-reset-route",
@@ -1099,7 +1097,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Arcane Recovery rejects refunds above its level budget", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:arcane-recovery-budget"),
         build: wizardBuild({ wizardAdvancements: 1 }),
@@ -1122,8 +1120,8 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Arcane Recovery refund exceeds half Wizard level rounded up.",
       },
     });
@@ -1163,7 +1161,7 @@ describe("Character Sheet runtime / rests", () => {
         },
       },
     };
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-arcane-recovery-pact-boundary",
@@ -1211,8 +1209,8 @@ describe("Character Sheet runtime / rests", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Arcane Recovery rest feature use requires the Wizard Arcane Recovery feature.",
       },
@@ -1220,7 +1218,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test(magicalCunningPactSlotRecoveryTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:magical-cunning"),
         build: warlockMagicalCunningBuild({
@@ -1234,7 +1232,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const recovered = requireRight(
+    const recovered = requireSuccess(
       completeMagicalCunningRite({ sheet, unitLibrary }),
     );
 
@@ -1247,18 +1245,19 @@ describe("Character Sheet runtime / rests", () => {
       { tag: "magicalCunning", usedSinceLongRest: true },
     ]);
     expect(
-      requireRight(parseCharacterSheet(recovered, unitLibrary)).restFeatureUses,
+      requireSuccess(parseCharacterSheet(recovered, unitLibrary))
+        .restFeatureUses,
     ).toEqual(recovered.restFeatureUses);
     expect(
       completeMagicalCunningRite({ sheet: recovered, unitLibrary }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Magical Cunning cannot be used again until a Long Rest.",
       },
     });
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: recovered, unitLibrary }),
     );
 
@@ -1271,7 +1270,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test(magicalCunningRoundUpTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:magical-cunning-round-up"),
         build: warlockMagicalCunningBuild({
@@ -1285,7 +1284,7 @@ describe("Character Sheet runtime / rests", () => {
       }),
     );
 
-    const recovered = requireRight(
+    const recovered = requireSuccess(
       completeMagicalCunningRite({ sheet, unitLibrary }),
     );
 
@@ -1297,7 +1296,7 @@ describe("Character Sheet runtime / rests", () => {
   });
 
   test("Magical Cunning omits Pact Slot expenditure after recovering the only slot", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-magical-cunning-full-recovery",
@@ -1314,13 +1313,13 @@ describe("Character Sheet runtime / rests", () => {
     );
 
     expect(
-      requireRight(completeMagicalCunningRite({ sheet, unitLibrary }))
+      requireSuccess(completeMagicalCunningRite({ sheet, unitLibrary }))
         .pactSlotExpenditure,
     ).toBeUndefined();
   });
 
   test(magicalCunningFeatureOwnershipTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:magical-cunning-level-one"),
         build: warlockMagicalCunningBuild({
@@ -1335,8 +1334,8 @@ describe("Character Sheet runtime / rests", () => {
     );
 
     expect(completeMagicalCunningRite({ sheet, unitLibrary })).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Magical Cunning requires the Warlock Magical Cunning feature.",
       },

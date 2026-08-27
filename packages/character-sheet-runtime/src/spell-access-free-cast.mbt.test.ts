@@ -15,7 +15,7 @@ import {
   completeLongRest,
   completeShortRest,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   unitLibrary,
   wizardBuild,
 } from "./test-support.test-support.ts";
@@ -30,7 +30,7 @@ type ReplayState = {
 };
 
 function freshSheet(): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:synthetic-magic-initiate-mbt"),
       build: {
@@ -88,7 +88,7 @@ function createDriver() {
         replayIndex = 0;
       },
       spendFreeCast: () => {
-        sheet = requireRight(
+        sheet = requireSuccess(
           spendCharacterSheetSpellAccessFreeCast({
             sheet,
             unitLibrary,
@@ -98,11 +98,11 @@ function createDriver() {
         replayIndex = 1;
       },
       completeShortRest: () => {
-        sheet = requireRight(completeShortRest({ sheet, unitLibrary }));
+        sheet = requireSuccess(completeShortRest({ sheet, unitLibrary }));
         replayIndex = 2;
       },
       completeLongRest: () => {
-        sheet = requireRight(completeLongRest({ sheet, unitLibrary }));
+        sheet = requireSuccess(completeLongRest({ sheet, unitLibrary }));
         replayIndex = 3;
       },
       step: () => {},
