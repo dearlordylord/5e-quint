@@ -28,6 +28,7 @@ export {
   OracleBattleAttemptSchema,
   OracleBattleAttemptRejectionReasonSchema,
   OracleBattleAttemptSegmentSchema,
+  OracleBattleInitiativeEntrySchema,
   OracleBattleCheckpointSchema,
   OracleBattleContinuationSchema,
   OracleBattleEnteredSchema,
@@ -36,7 +37,7 @@ export {
   OracleBattleInterruptAttemptSchema,
   OracleBattleOrdinaryAttemptSchema,
   OracleBattleInputSchema,
-  OracleBattleRosterEntrySchema,
+  OracleBattleRosterSchema,
   OracleCaseSchema,
   OracleCreationOutcomeSchema,
   OracleCreationTraceSchema,
@@ -51,13 +52,21 @@ export {
   type OracleBattleAttemptRejectionReason,
   type OracleBattleAttemptSegment,
   type OracleBattleContinuation,
+  type OracleBattleInitiativeEntry,
   type OracleBattleInterruptDecisionFill,
   type OracleBattleNonterminalFrontier,
+  type OracleBattleRoster,
+  type OracleBattleCharacterSheetRosterEntry,
+  type OracleBattleStatBlockRosterEntry,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleTrace,
 } from "./oracle-case-trace-schema.ts";
-export { canonicalizeStringSet } from "./oracle-canonical.ts";
+export {
+  canonicalizeStringSet,
+  canonicalStructuralKey,
+  hasDuplicateStructuralValues,
+} from "./oracle-canonical.ts";
 export {
   type OracleDecodeIssue,
   type OracleDecodeIssueCode,

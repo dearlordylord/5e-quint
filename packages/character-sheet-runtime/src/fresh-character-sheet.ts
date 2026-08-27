@@ -42,9 +42,15 @@ const CommonFreshCharacterSheetProjectionFields = {
   druidWildShapeKnownForms: Schema.optionalWith(
     Schema.Struct({
       statBlockIds: Schema.Array(Schema.NonEmptyTrimmedString).pipe(
-        Schema.filter((values) => values.length > 0, {
-          jsonSchema: { minItems: 1 },
-        }),
+        Schema.filter(
+          (values) =>
+            values.length > 0 && new Set(values).size === values.length,
+          {
+            message: () =>
+              "druidWildShapeKnownForms.statBlockIds must be nonempty and must not contain duplicate members",
+            jsonSchema: { minItems: 1, uniqueItems: true },
+          },
+        ),
       ),
     }),
     { exact: true },

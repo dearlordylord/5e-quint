@@ -146,6 +146,15 @@ const CreationChoiceOptionFactSchema = Schema.Struct({
   unitRef: Schema.optionalWith(UnitRefSchema, { exact: true }),
 });
 
+const CreationFillOptionIdsSchema = Schema.Array(
+  CreationChoiceOptionIdSchema,
+).pipe(
+  Schema.filter((optionIds) => new Set(optionIds).size === optionIds.length, {
+    message: () => "choice optionIds must not contain duplicate members",
+    jsonSchema: { uniqueItems: true },
+  }),
+);
+
 export const CreationHoleFactSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("choice"),
@@ -183,7 +192,7 @@ export const CreationFillFactSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("choice"),
     holeId: CreationHoleIdSchema,
-    optionIds: Schema.Array(CreationChoiceOptionIdSchema),
+    optionIds: CreationFillOptionIdsSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("abilityScores"),

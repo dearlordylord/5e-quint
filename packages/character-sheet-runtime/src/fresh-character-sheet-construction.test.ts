@@ -266,6 +266,43 @@ describe("fresh Character Sheet construction", () => {
     });
   });
 
+  test("rejects empty or duplicate known-form ids at the projection boundary", () => {
+    const result = createFreshCharacterSheet({
+      characterId: characterSheetId("character:fresh-druid-schema-boundary"),
+      build: druidCircleLandBuild({ druidLevel: 5 }),
+      tempHp: Hp(0),
+      hitPointMaximumReduction: Hp(0),
+      conditions: [],
+      unitLibrary,
+      druidCircleLand: { land: "temperate" },
+      druidWildShapeKnownFormStatBlockIds:
+        druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
+    });
+    if (Either.isLeft(result)) {
+      throw new Error(
+        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.left)}`,
+      );
+    }
+    const projection = freshCharacterSheetProjection(result.right);
+    const knownForms = projection.druidWildShapeKnownForms;
+    expect(knownForms).toBeDefined();
+    if (knownForms === undefined) return;
+    const decodeProjection = (statBlockIds: readonly string[]) =>
+      Schema.decodeUnknownEither(FreshCharacterSheetProjectionSchema, {
+        onExcessProperty: "error",
+      })({
+        ...projection,
+        druidWildShapeKnownForms: { statBlockIds },
+      });
+    expect(Either.isLeft(decodeProjection([]))).toBe(true);
+    const firstKnownForm = knownForms.statBlockIds[0];
+    expect(firstKnownForm).toBeDefined();
+    if (firstKnownForm === undefined) return;
+    expect(
+      Either.isLeft(decodeProjection([firstKnownForm, firstKnownForm])),
+    ).toBe(true);
+  });
+
   test("returns one flat issue per independently invalid Wild Shape form", () => {
     const result = createFreshCharacterSheet({
       characterId: characterSheetId("character:invalid-known-forms"),

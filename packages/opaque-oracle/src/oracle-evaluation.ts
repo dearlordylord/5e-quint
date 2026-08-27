@@ -1,5 +1,6 @@
 import {
   characterCreationBatchFact,
+  characterBuildDisplayName,
   characterDraftId,
   createCharacterDraft,
   creationFrontierFact,
@@ -56,7 +57,9 @@ import {
   type OracleBattleAttemptRejectionReason,
   type OracleBattleNonterminalFrontier,
   type OracleBattleProjectionIssue,
-  type OracleBattleRosterEntry,
+  type OracleBattleRoster,
+  type OracleBattleStatBlockRosterEntry,
+  type OracleBattleCharacterSheetRosterEntry,
   type OracleBattleStateInitLeafIssue,
   type OracleBattleStateInitIssue,
   type OracleCase,
@@ -196,7 +199,7 @@ function characterCreationBatchFactOrDefect(
 function appendFreshSheetAndBattle(
   build: CharacterBuild,
   sheetInput: FreshSheetInput,
-  rosterInput: readonly OracleBattleRosterEntry[],
+  rosterInput: OracleBattleRoster,
   attemptsInput: readonly OracleBattleAttempt[],
   unitLibrary: UnitCatalog,
   statBlockCatalog: StatBlockCatalog,
@@ -225,6 +228,7 @@ function appendFreshSheetAndBattle(
   const roster = resolveBattleRoster({
     roster: rosterInput,
     sheet: freshSheet.right,
+    unitLibrary,
     statBlockCatalog,
   });
   if (Either.isLeft(roster)) {
@@ -486,9 +490,42 @@ function battleFrontierAfterResolution(
     : { kind: "acts", acts: [firstAct, ...remainingActs] };
 }
 
+type ResolvedOracleBattleRosterEntry =
+  | (OracleBattleCharacterSheetRosterEntry & {
+      readonly origin: "characterSheet";
+    })
+  | (OracleBattleStatBlockRosterEntry & { readonly origin: "statBlock" });
+
+function flattenOracleBattleRoster(
+  roster: OracleBattleRoster,
+): readonly ResolvedOracleBattleRosterEntry[] {
+  return Match.value(roster).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      statBlocks: ({ entries }) =>
+        entries.map((entry) => ({ ...entry, origin: "statBlock" as const })),
+      characterSheet: ({
+        precedingStatBlocks,
+        characterSheet,
+        followingStatBlocks,
+      }) => [
+        ...precedingStatBlocks.map((entry) => ({
+          ...entry,
+          origin: "statBlock" as const,
+        })),
+        { ...characterSheet, origin: "characterSheet" as const },
+        ...followingStatBlocks.map((entry) => ({
+          ...entry,
+          origin: "statBlock" as const,
+        })),
+      ],
+    }),
+  );
+}
+
 function resolveBattleRoster(input: {
-  readonly roster: readonly OracleBattleRosterEntry[];
+  readonly roster: OracleBattleRoster;
   readonly sheet: Parameters<typeof freshCharacterSheetProjection>[0];
+  readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
 }): Either.Either<
   readonly CharacterBattleEncounterParticipant[],
@@ -498,7 +535,7 @@ function resolveBattleRoster(input: {
   const missingStatBlocks: OracleBattleEntryIssue[] = [];
   const participants: CharacterBattleEncounterParticipant[] = [];
 
-  for (const entry of input.roster) {
+  for (const entry of flattenOracleBattleRoster(input.roster)) {
     const ammunitionStocks = entry.ammunitionStocks.map((stock) => ({
       ammunition: stock.ammunition,
       remaining: resourceCount(stock.remaining),
@@ -508,7 +545,10 @@ function resolveBattleRoster(input: {
         origin: "characterSheet",
         sheet: input.sheet,
         combatantId: entry.combatantId,
-        displayName: entry.displayName,
+        displayName: characterBuildDisplayName(
+          input.unitLibrary,
+          input.sheet.build,
+        ),
         initiative: initiativeScore(entry.initiative),
         ammunitionStocks,
       });
@@ -619,14 +659,18 @@ function stripBattleProjectionIssue(
 function stripBattleCreatureInitIssue(
   issue: BattleCreatureInitIssue,
 ): OracleBattleCreatureInitIssue {
+  const spellAccessIssues =
+    issue.spellAccessIssues?.map(stripSpellAccessProjectionIssue) ?? [];
+  const firstSpellAccessIssue = spellAccessIssues[0];
   return {
     tag: "battleCreatureInitIssue" as const,
-    ...(issue.spellAccessIssues === undefined
+    ...(firstSpellAccessIssue === undefined
       ? {}
       : {
-          spellAccessIssues: issue.spellAccessIssues.map(
-            stripSpellAccessProjectionIssue,
-          ),
+          spellAccessIssues: [
+            firstSpellAccessIssue,
+            ...spellAccessIssues.slice(1),
+          ],
         }),
   };
 }
@@ -666,25 +710,55 @@ function stripBattleStateInitLeafIssue(
 function strippedBattleCheckpoint(
   snapshot: ReturnType<typeof snapshotBattle>,
 ): OracleBattleCheckpoint {
-  const combatants = snapshot.combatants.map((combatant) => ({
-    combatantId: combatant.combatantId,
-    origin: { kind: combatant.origin.kind },
-    initiative: combatant.initiative,
-    hp: combatant.hp,
-    maxHp: combatant.maxHp,
-    tempHp: combatant.tempHp,
-    armorClass: combatant.armorClass,
-    size: combatant.size,
-    conditions: combatant.conditions,
-  }));
-  const [firstCombatant, ...remainingCombatants] = combatants;
-  if (firstCombatant === undefined)
-    return defect("Battle snapshot combatant projection was empty");
+  const combatantsById = new Map(
+    snapshot.combatants.map((combatant) => [combatant.combatantId, combatant]),
+  );
+  if (combatantsById.size !== snapshot.combatants.length) {
+    return defect("Battle snapshot contained duplicate combatant identities");
+  }
+  const orderedEntries = snapshot.turnOrder.map((combatantId) => {
+    const combatant = combatantsById.get(combatantId);
+    if (combatant === undefined) {
+      return defect(
+        `Battle turn order referenced missing combatant ${combatantId}`,
+      );
+    }
+    return {
+      creature: {
+        combatantId: combatant.combatantId,
+        origin: { kind: combatant.origin.kind },
+        hp: combatant.hp,
+        maxHp: combatant.maxHp,
+        tempHp: combatant.tempHp,
+        armorClass: combatant.armorClass,
+        size: combatant.size,
+        conditions: combatant.conditions,
+      },
+      initiative: combatant.initiative,
+    };
+  });
+  if (orderedEntries.length === 0) {
+    return defect("Battle snapshot initiative order was empty");
+  }
+  if (new Set(snapshot.turnOrder).size !== snapshot.turnOrder.length) {
+    return defect("Battle snapshot contained duplicate turn-order identities");
+  }
+  if (snapshot.combatants.length !== snapshot.turnOrder.length) {
+    return defect("Battle snapshot combatants and turn order diverged");
+  }
+  const currentActorIndex = snapshot.turnOrder.indexOf(snapshot.currentActorId);
+  if (currentActorIndex < 0) {
+    return defect("Battle snapshot current actor was not in turn order");
+  }
+  const stillToAct = orderedEntries.slice(currentActorIndex);
+  const [firstStillToAct, ...remainingStillToAct] = stillToAct;
+  if (firstStillToAct === undefined) {
+    return defect("Battle snapshot still-to-act initiative stack was empty");
+  }
   return OracleBattleCheckpointSchema.make({
     round: snapshot.round,
-    currentActorId: snapshot.currentActorId,
-    turnOrder: snapshot.turnOrder,
-    combatants: [firstCombatant, ...remainingCombatants],
+    alreadyActed: orderedEntries.slice(0, currentActorIndex),
+    stillToAct: [firstStillToAct, ...remainingStillToAct],
   });
 }
 

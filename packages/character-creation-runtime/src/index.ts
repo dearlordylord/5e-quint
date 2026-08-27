@@ -4,6 +4,7 @@ export {
   isPactMagicSpellcastingCreation,
   isWizardSpellcastingCreation,
 } from "./class-spellcasting.ts";
+export { characterBuildDisplayName } from "./character-display.ts";
 
 export {
   characterBuildSpeciesOriginFeatUnitIds,

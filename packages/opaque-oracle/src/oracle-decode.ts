@@ -1,7 +1,10 @@
 import { Either, ParseResult, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 
-import { compareCodePoints } from "./oracle-canonical.ts";
+import {
+  canonicalStructuralKey,
+  compareCodePoints,
+} from "./oracle-canonical.ts";
 
 export const ORACLE_DECODE_ISSUE_CODES = [
   "invalidJson",
@@ -15,11 +18,9 @@ export const ORACLE_DECODE_ISSUE_CODES = [
   "emptyCollection",
   "duplicateCollectionMember",
   "nonCanonicalDomainValue",
-  "invalidLifecycle",
 ] as const;
 
-export type OracleDecodeIssueCode =
-  (typeof ORACLE_DECODE_ISSUE_CODES)[number];
+export type OracleDecodeIssueCode = (typeof ORACLE_DECODE_ISSUE_CODES)[number];
 
 export type OracleDecodeIssue = {
   readonly path: string;
@@ -38,14 +39,23 @@ export function decodeWithSchema<A, I>(
   input: unknown,
   options: DecodeOptions = {},
 ): Either.Either<A, readonly OracleDecodeIssue[]> {
-  const decoded = Schema.decodeUnknownEither(schema, {
-    errors: "all",
-    onExcessProperty: "error",
-  })(input);
+  let decoded: Either.Either<A, ParseResult.ParseError>;
+  try {
+    decoded = Schema.decodeUnknownEither(schema, {
+      errors: "all",
+      onExcessProperty: "error",
+    })(input);
+  } catch {
+    return Either.left([{ path: "", code: "wrongType" }]);
+  }
   if (Either.isRight(decoded)) return Either.right(decoded.right);
 
   const issues: OracleDecodeIssue[] = [];
-  collectParseIssues(decoded.left.issue, "", issues, options);
+  try {
+    collectParseIssues(decoded.left.issue, "", issues, options);
+  } catch {
+    return Either.left([{ path: "", code: "wrongType" }]);
+  }
   return Either.left(
     sortIssues(
       uniqueIssues(
@@ -69,10 +79,15 @@ function collectParseIssues(
         typeof issue.path === "symbol"
           ? [issue.path]
           : issue.path;
-      collectParseIssues(issue.issue, pointerPath.reduce<string>(
-        (currentPath, segment) => appendPath(currentPath, segment),
-        path,
-      ), output, options);
+      collectParseIssues(
+        issue.issue,
+        pointerPath.reduce<string>(
+          (currentPath, segment) => appendPath(currentPath, segment),
+          path,
+        ),
+        output,
+        options,
+      );
       return;
     }
     case "Composite": {
@@ -117,7 +132,9 @@ function collectParseIssues(
   }
 }
 
-function refinementCode(actual: unknown): Exclude<
+function refinementCode(
+  actual: unknown,
+): Exclude<
   OracleDecodeIssueCode,
   | "invalidJson"
   | "wrongType"
@@ -125,7 +142,6 @@ function refinementCode(actual: unknown): Exclude<
   | "missingMember"
   | "unknownVariant"
   | "duplicateMember"
-  | "invalidLifecycle"
 > {
   if (containsDuplicateCollectionMember(actual)) {
     return "duplicateCollectionMember";
@@ -135,8 +151,10 @@ function refinementCode(actual: unknown): Exclude<
     if (actual.trim() !== actual) return "nonCanonicalDomainValue";
   }
   if (Array.isArray(actual) && actual.length === 0) return "emptyCollection";
-  if (typeof actual === "number" &&
-      (!Number.isFinite(actual) || !Number.isInteger(actual) || actual < 0)) {
+  if (
+    typeof actual === "number" &&
+    (!Number.isFinite(actual) || !Number.isInteger(actual) || actual < 0)
+  ) {
     return "outOfRange";
   }
   return "nonCanonicalDomainValue";
@@ -157,27 +175,47 @@ function literalStrings(ast: AST.AST): readonly string[] {
   }
 }
 
-function containsDuplicateCollectionMember(
-  value: unknown,
-  visited = new Set<object>(),
-): boolean {
-  if (Array.isArray(value)) {
-    const keys = new Set<string>();
-    for (const member of value) {
-      const key = JSON.stringify(member) ?? String(member);
-      if (keys.has(key) || containsDuplicateCollectionMember(member, visited)) {
-        return true;
-      }
-      keys.add(key);
+function containsDuplicateCollectionMember(value: unknown): boolean {
+  const visited = new Set<object>();
+  const pending: unknown[] = [value];
+
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined) continue;
+
+    let isArray: boolean;
+    try {
+      isArray = Array.isArray(current);
+    } catch {
+      continue;
     }
-    return false;
+    if (isArray) {
+      if (visited.has(current as object)) continue;
+      visited.add(current as object);
+      const keys = new Set<string>();
+      try {
+        for (const member of current as readonly unknown[]) {
+          const key = canonicalStructuralKey(member);
+          if (keys.has(key)) return true;
+          keys.add(key);
+          pending.push(member);
+        }
+      } catch {
+        continue;
+      }
+      continue;
+    }
+
+    if (typeof current !== "object" || current === null) continue;
+    if (visited.has(current)) continue;
+    visited.add(current);
+    try {
+      pending.push(...Object.values(current));
+    } catch {
+      continue;
+    }
   }
-  if (typeof value !== "object" || value === null) return false;
-  if (visited.has(value)) return false;
-  visited.add(value);
-  return Object.values(value).some((member) =>
-    containsDuplicateCollectionMember(member, visited),
-  );
+  return false;
 }
 
 function uniqueIssues(

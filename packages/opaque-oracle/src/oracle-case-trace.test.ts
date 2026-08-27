@@ -33,6 +33,7 @@ import {
   decodeOracleCaseJson,
   decodeOracleTrace,
   decodeOracleTraceJson,
+  canonicalStructuralKey,
   evaluateOracleBatch,
   evaluateOracleCase,
   ORACLE_BATTLE_ID,
@@ -100,55 +101,58 @@ const projectionFailureStatBlockCatalog: StatBlockCatalog = {
 };
 
 const statBlockBattle = {
-  roster: [
-    {
-      origin: "statBlock" as const,
-      combatantId: combatantId("oracle:stat-block"),
-      statBlockId: statBlockId("stat_block_skeleton"),
-      initiative: 0,
-      ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
-      conditions: [],
-      tempHp: 0,
-    },
-  ] as const,
+  roster: {
+    tag: "statBlocks" as const,
+    entries: [
+      {
+        combatantId: combatantId("oracle:stat-block"),
+        statBlockId: statBlockId("stat_block_skeleton"),
+        initiative: 0,
+        ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
+        conditions: [],
+        tempHp: 0,
+      },
+    ],
+  },
   attempts: [],
 };
 
 const twoSkeletonBattle = {
-  roster: [
-    {
-      origin: "statBlock" as const,
-      combatantId: combatantId("oracle:skeleton-a"),
-      statBlockId: statBlockId("stat_block_skeleton"),
-      initiative: 10,
-      ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
-      conditions: [],
-      tempHp: 0,
-    },
-    {
-      origin: "statBlock" as const,
-      combatantId: combatantId("oracle:skeleton-b"),
-      statBlockId: statBlockId("stat_block_skeleton"),
-      initiative: 0,
-      ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
-      conditions: [],
-      tempHp: 0,
-    },
-  ] as const,
+  roster: {
+    tag: "statBlocks" as const,
+    entries: [
+      {
+        combatantId: combatantId("oracle:skeleton-a"),
+        statBlockId: statBlockId("stat_block_skeleton"),
+        initiative: 10,
+        ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
+        conditions: [],
+        tempHp: 0,
+      },
+      {
+        combatantId: combatantId("oracle:skeleton-b"),
+        statBlockId: statBlockId("stat_block_skeleton"),
+        initiative: 0,
+        ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
+        conditions: [],
+        tempHp: 0,
+      },
+    ],
+  },
   attempts: [],
 };
 
 const mixedBattle = {
-  roster: [
-    {
-      origin: "characterSheet" as const,
+  roster: {
+    tag: "characterSheet" as const,
+    precedingStatBlocks: [],
+    characterSheet: {
       combatantId: combatantId("oracle:character"),
-      displayName: "Oracle Character",
       initiative: 1,
       ammunitionStocks: [],
     },
-    ...statBlockBattle.roster,
-  ] as const,
+    followingStatBlocks: statBlockBattle.roster.entries,
+  },
   attempts: [],
 };
 
@@ -269,6 +273,125 @@ describe("Opaque Oracle Case and Trace contract", () => {
     }
   });
 
+  it("sorts true sets without deduplicating them and preserves roster order", () => {
+    const reversedKnownForms = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: {
+        tag: "wildShapeKnownForms",
+        statBlockIds: [
+          statBlockId("stat_block_skeleton"),
+          statBlockId("stat_block_rat"),
+        ],
+      },
+      battle: statBlockBattle,
+    });
+    expect(Either.isRight(reversedKnownForms)).toBe(true);
+    if (Either.isRight(reversedKnownForms)) {
+      expect(reversedKnownForms.right.sheet).toEqual({
+        tag: "wildShapeKnownForms",
+        statBlockIds: [
+          statBlockId("stat_block_rat"),
+          statBlockId("stat_block_skeleton"),
+        ],
+      });
+    }
+
+    const duplicatedKnownForms = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: {
+        tag: "wildShapeKnownForms",
+        statBlockIds: [
+          statBlockId("stat_block_skeleton"),
+          statBlockId("stat_block_skeleton"),
+        ],
+      },
+      battle: statBlockBattle,
+    });
+    expect(Either.isLeft(duplicatedKnownForms)).toBe(true);
+
+    const ordered = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: {
+          tag: "statBlocks",
+          entries: [
+            {
+              ...twoSkeletonBattle.roster.entries[0],
+              initiative: 0,
+            },
+            {
+              ...twoSkeletonBattle.roster.entries[1],
+              initiative: 0,
+            },
+          ],
+        },
+        attempts: [],
+      },
+    });
+    const reversed = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: {
+          tag: "statBlocks",
+          entries: [
+            {
+              ...twoSkeletonBattle.roster.entries[1],
+              initiative: 0,
+            },
+            {
+              ...twoSkeletonBattle.roster.entries[0],
+              initiative: 0,
+            },
+          ],
+        },
+        attempts: [],
+      },
+    });
+    expect(Either.isRight(ordered)).toBe(true);
+    expect(Either.isRight(reversed)).toBe(true);
+    if (Either.isRight(ordered) && Either.isRight(reversed)) {
+      expect(ordered.right.battle.roster).not.toEqual(
+        reversed.right.battle.roster,
+      );
+    }
+  });
+
+  it("keeps hostile and cyclic unknown input total at the decode boundary", () => {
+    const cyclic: Record<string, unknown> = {
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: statBlockBattle,
+    };
+    cyclic.self = cyclic;
+    expect(canonicalStructuralKey({ a: 1, b: "two" })).toBe(
+      canonicalStructuralKey({ b: "two", a: 1 }),
+    );
+    expect(canonicalStructuralKey([1, 2])).not.toBe(
+      canonicalStructuralKey([2, 1]),
+    );
+    expect(canonicalStructuralKey([1])).not.toBe(canonicalStructuralKey(["1"]));
+    expect(canonicalStructuralKey(cyclic)).toContain("object:cycle");
+    expect(() => decodeOracleCase(cyclic)).not.toThrow();
+    expect(Either.isLeft(decodeOracleCase(cyclic))).toBe(true);
+
+    const hostile = new Proxy(
+      {
+        creation: { fillBatches: [] },
+        sheet: { tag: "ordinary" },
+        battle: statBlockBattle,
+      },
+      {
+        ownKeys: () => {
+          throw new Error("hostile ownKeys trap");
+        },
+      },
+    );
+    expect(() => decodeOracleCase(hostile)).not.toThrow();
+    expect(Either.isLeft(decodeOracleCase(hostile))).toBe(true);
+  });
+
   it("uses a concrete interrupt-decision fill member at the Case boundary", () => {
     const decline = Schema.decodeUnknownEither(
       OracleBattleInterruptDecisionFillSchema,
@@ -296,11 +419,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(Either.isLeft(ordinary)).toBe(true);
   });
 
-  it("admits empty or all-Stat-Block rosters but rejects a second fresh Sheet, duplicate conditions, and omitted temp HP", () => {
+  it("admits empty or all-Stat-Block rosters but rejects legacy multi-Sheet input, duplicate conditions, and omitted temp HP", () => {
     const empty = decodeOracleCase({
       creation: { fillBatches: [] },
       sheet: { tag: "ordinary" },
-      battle: { roster: [], attempts: [] },
+      battle: { roster: { tag: "statBlocks", entries: [] }, attempts: [] },
     });
     expect(Either.isRight(empty)).toBe(true);
 
@@ -310,16 +433,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
       battle: {
         roster: [
           {
-            origin: "characterSheet",
             combatantId: combatantId("oracle:character-one"),
-            displayName: "One",
             initiative: 1,
             ammunitionStocks: [],
           },
           {
-            origin: "characterSheet",
             combatantId: combatantId("oracle:character-two"),
-            displayName: "Two",
             initiative: 0,
             ammunitionStocks: [],
           },
@@ -333,19 +452,22 @@ describe("Opaque Oracle Case and Trace contract", () => {
       creation: { fillBatches: [] },
       sheet: { tag: "ordinary" },
       battle: {
-        roster: [
-          {
-            ...statBlockBattle.roster[0],
-            conditions: ["prone", "prone"],
-          },
-        ],
+        roster: {
+          tag: "statBlocks",
+          entries: [
+            {
+              ...statBlockBattle.roster.entries[0],
+              conditions: ["prone", "prone"],
+            },
+          ],
+        },
         attempts: [],
       },
     });
     expect(Either.isLeft(duplicateConditions)).toBe(true);
     if (Either.isLeft(duplicateConditions)) {
       expect(duplicateConditions.left).toContainEqual({
-        path: "/battle/roster/0/conditions",
+        path: "/battle/roster/entries/0/conditions",
         code: "duplicateCollectionMember",
       });
     }
@@ -354,23 +476,25 @@ describe("Opaque Oracle Case and Trace contract", () => {
       creation: { fillBatches: [] },
       sheet: { tag: "ordinary" },
       battle: {
-        roster: [
-          {
-            origin: "statBlock",
-            combatantId: combatantId("oracle:missing-temp-hp"),
-            statBlockId: statBlockId("stat_block_skeleton"),
-            initiative: 0,
-            ammunitionStocks: [],
-            conditions: [],
-          },
-        ],
+        roster: {
+          tag: "statBlocks",
+          entries: [
+            {
+              combatantId: combatantId("oracle:missing-temp-hp"),
+              statBlockId: statBlockId("stat_block_skeleton"),
+              initiative: 0,
+              ammunitionStocks: [],
+              conditions: [],
+            },
+          ],
+        },
         attempts: [],
       },
     });
     expect(Either.isLeft(omittedTempHp)).toBe(true);
     if (Either.isLeft(omittedTempHp)) {
       expect(omittedTempHp.left).toContainEqual({
-        path: "/battle/roster/0/tempHp",
+        path: "/battle/roster/entries/0/tempHp",
         code: "missingMember",
       });
     }
@@ -476,32 +600,29 @@ describe("Opaque Oracle Case and Trace contract", () => {
     });
     const battleStep = requireBattleEntered(trace);
     expect(Object.keys(battleStep.checkpoint).sort()).toEqual([
-      "combatants",
-      "currentActorId",
+      "alreadyActed",
       "round",
-      "turnOrder",
+      "stillToAct",
     ]);
-    expect(
-      Object.keys(battleStep.checkpoint.combatants[0] ?? {}).sort(),
-    ).toEqual([
+    const initiativeStack = [
+      ...battleStep.checkpoint.alreadyActed,
+      ...battleStep.checkpoint.stillToAct,
+    ];
+    expect(Object.keys(initiativeStack[0]?.creature ?? {}).sort()).toEqual([
       "armorClass",
       "combatantId",
       "conditions",
       "hp",
-      "initiative",
       "maxHp",
       "origin",
       "size",
       "tempHp",
     ]);
-    expect(
-      battleStep.checkpoint.combatants.map(
-        (combatant) => combatant.origin.kind,
-      ),
-    ).toEqual(["character", "statBlock"]);
-    expect(battleStep.checkpoint.combatants[0]).not.toHaveProperty(
-      "displayName",
+    expect(initiativeStack.map(({ creature }) => creature.origin.kind)).toEqual(
+      ["character", "statBlock"],
     );
+    expect(initiativeStack[0]).toHaveProperty("initiative");
+    expect(initiativeStack[0]?.creature).not.toHaveProperty("initiative");
     expect(battleStep.frontier.acts.length).toBeGreaterThan(0);
     expect(
       battleStep.frontier.acts.every(
@@ -536,7 +657,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
-        battle: { roster: [], attempts: [] },
+        battle: { roster: { tag: "statBlocks", entries: [] }, attempts: [] },
       },
       unitLibrary,
       statBlockCatalog,
@@ -910,10 +1031,14 @@ describe("Opaque Oracle Case and Trace contract", () => {
       );
       expect(resolvedStep.frontier.kind).toBe("acts");
       if (resolvedStep.frontier.kind !== "acts") return;
-      const defeated = resolvedStep.checkpoint.combatants.find(
-        ({ combatantId: id }) => id === combatantId("oracle:skeleton-a"),
+      const defeated = [
+        ...resolvedStep.checkpoint.alreadyActed,
+        ...resolvedStep.checkpoint.stillToAct,
+      ].find(
+        ({ creature }) =>
+          creature.combatantId === combatantId("oracle:skeleton-a"),
       );
-      expect(defeated?.hp).toBe(0);
+      expect(defeated?.creature.hp).toBe(0);
       expect(
         resolvedStep.frontier.acts.some(
           (subject) =>
@@ -970,14 +1095,20 @@ describe("Opaque Oracle Case and Trace contract", () => {
     });
     const entered = requireBattleEntered(trace);
 
-    const laterActor = entered.checkpoint.turnOrder[1];
+    const enteredStack = [
+      ...entered.checkpoint.alreadyActed,
+      ...entered.checkpoint.stillToAct,
+    ];
+    const laterEntry = enteredStack[1];
+    const laterActor = laterEntry?.creature.combatantId;
     expect(laterActor).toBeDefined();
-    if (laterActor !== undefined) {
+    if (laterEntry !== undefined && laterActor !== undefined) {
       expect(
         Either.isRight(
           Schema.decodeUnknownEither(OracleBattleCheckpointSchema)({
             ...entered.checkpoint,
-            currentActorId: laterActor,
+            alreadyActed: [enteredStack[0]],
+            stillToAct: enteredStack.slice(1),
           }),
         ),
       ).toBe(true);
@@ -987,7 +1118,16 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ...battle,
       checkpoint: {
         ...battle.checkpoint,
-        currentActorId: combatantId("oracle:not-in-turn-order"),
+        stillToAct: [
+          {
+            ...battle.checkpoint.stillToAct[0],
+            creature: {
+              ...battle.checkpoint.stillToAct[0]?.creature,
+              combatantId: combatantId("oracle:not-in-turn-order"),
+            },
+          },
+          ...battle.checkpoint.stillToAct.slice(1),
+        ],
       },
     }));
     const decoded = decodeOracleTrace(invalid);
@@ -1025,10 +1165,10 @@ describe("Opaque Oracle Case and Trace contract", () => {
     ): subject is typeof subject & SubjectWithProcedureRef =>
       "actorId" in subject && "procedureRef" in subject;
     const ownerAct = entered.frontier.acts.find(hasProcedureRef);
-    const foreignOwnerId = entered.checkpoint.combatants.find(
-      ({ combatantId }) =>
-        ownerAct !== undefined && combatantId !== ownerAct.actorId,
-    )?.combatantId;
+    const foreignOwnerId = enteredStack.find(
+      ({ creature: { combatantId: id } }) =>
+        ownerAct !== undefined && id !== ownerAct.actorId,
+    )?.creature.combatantId;
     expect(ownerAct).toBeDefined();
     expect(foreignOwnerId).toBeDefined();
     if (ownerAct !== undefined && foreignOwnerId !== undefined) {
@@ -1088,7 +1228,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
       statBlockCatalog,
     });
     const entered = requireBattleEntered(trace);
-    const laterActor = entered.checkpoint.turnOrder[1];
+    const enteredStack = [
+      ...entered.checkpoint.alreadyActed,
+      ...entered.checkpoint.stillToAct,
+    ];
+    const laterActor = enteredStack[1]?.creature.combatantId;
     expect(laterActor).toBeDefined();
     if (laterActor === undefined) return;
 
@@ -1097,7 +1241,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
     )({
       checkpoint: {
         ...entered.checkpoint,
-        currentActorId: laterActor,
+        alreadyActed: [enteredStack[0]],
+        stillToAct: enteredStack.slice(1),
       },
       frontier: {
         kind: "acts",
@@ -1122,7 +1267,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ...entered,
       checkpoint: {
         ...entered.checkpoint,
-        currentActorId: laterActor,
+        alreadyActed: [enteredStack[0]],
+        stillToAct: enteredStack.slice(1),
       },
       frontier: {
         kind: "acts",
@@ -1383,26 +1529,27 @@ describe("Opaque Oracle Case and Trace contract", () => {
 
   it("accumulates independent projection failures and reports missing records as typed entry data", () => {
     const projectionFailureBattle = {
-      roster: [
-        {
-          origin: "statBlock" as const,
-          combatantId: combatantId("oracle:broken-one"),
-          statBlockId: statBlockId("stat_block_skeleton"),
-          initiative: 1,
-          ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
-          conditions: ["prone"],
-          tempHp: 0,
-        },
-        {
-          origin: "statBlock" as const,
-          combatantId: combatantId("oracle:broken-two"),
-          statBlockId: statBlockId("stat_block_skeleton"),
-          initiative: 0,
-          ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
-          conditions: ["prone"],
-          tempHp: 0,
-        },
-      ] as const,
+      roster: {
+        tag: "statBlocks" as const,
+        entries: [
+          {
+            combatantId: combatantId("oracle:broken-one"),
+            statBlockId: statBlockId("stat_block_skeleton"),
+            initiative: 1,
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
+            conditions: ["prone"],
+            tempHp: 0,
+          },
+          {
+            combatantId: combatantId("oracle:broken-two"),
+            statBlockId: statBlockId("stat_block_skeleton"),
+            initiative: 0,
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
+            conditions: ["prone"],
+            tempHp: 0,
+          },
+        ],
+      },
       attempts: [],
     };
     const rejected = evaluateDecodedCase({
@@ -1447,17 +1594,19 @@ describe("Opaque Oracle Case and Trace contract", () => {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
         battle: {
-          roster: [
-            {
-              origin: "statBlock",
-              combatantId: combatantId("oracle:missing"),
-              statBlockId: statBlockId("stat_block_missing"),
-              initiative: 0,
-              ammunitionStocks: [],
-              conditions: [],
-              tempHp: 0,
-            },
-          ],
+          roster: {
+            tag: "statBlocks",
+            entries: [
+              {
+                combatantId: combatantId("oracle:missing"),
+                statBlockId: statBlockId("stat_block_missing"),
+                initiative: 0,
+                ammunitionStocks: [],
+                conditions: [],
+                tempHp: 0,
+              },
+            ],
+          },
           attempts: [],
         },
       },
@@ -1701,26 +1850,27 @@ function twoSkeletonBattleFor(
   firstInitiative: number,
   secondInitiative: number,
 ): OracleBattleInput {
-  const roster = [
-    {
-      origin: "statBlock" as const,
-      combatantId: combatantId(`${identityPrefix}:a`),
-      statBlockId: statBlockId("stat_block_skeleton"),
-      initiative: firstInitiative,
-      ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
-      conditions: [],
-      tempHp: 0,
-    },
-    {
-      origin: "statBlock" as const,
-      combatantId: combatantId(`${identityPrefix}:b`),
-      statBlockId: statBlockId("stat_block_skeleton"),
-      initiative: secondInitiative,
-      ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
-      conditions: [],
-      tempHp: 0,
-    },
-  ] satisfies OracleBattleInput["roster"];
+  const roster = {
+    tag: "statBlocks" as const,
+    entries: [
+      {
+        combatantId: combatantId(`${identityPrefix}:a`),
+        statBlockId: statBlockId("stat_block_skeleton"),
+        initiative: firstInitiative,
+        ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
+        conditions: [],
+        tempHp: 0,
+      },
+      {
+        combatantId: combatantId(`${identityPrefix}:b`),
+        statBlockId: statBlockId("stat_block_skeleton"),
+        initiative: secondInitiative,
+        ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
+        conditions: [],
+        tempHp: 0,
+      },
+    ],
+  } satisfies OracleBattleInput["roster"];
   return { roster, attempts: [] };
 }
 

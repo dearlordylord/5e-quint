@@ -1,5 +1,5 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either, ParseResult } from "effect";
+import { Either, ParseResult, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -21,6 +21,7 @@ import {
   characterEquipmentItemUnitId,
   creationChoiceOptionId,
   creationFillFact,
+  CreationFillFactSchema,
   creationFillIndex,
   creationFinalizationFact,
   creationFrontierFact,
@@ -945,6 +946,14 @@ describe("Character Creation owner facts", () => {
     expect(
       decodeCreationFillFact({ ...fact, label: "presentation" })._tag,
     ).toBe("Left");
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(CreationFillFactSchema)({
+          ...fact,
+          optionIds: [fact.optionIds[0], fact.optionIds[0]],
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("projects owner rejections without draft protocol state or prose", () => {
