@@ -87,7 +87,7 @@ const POSITIONAL_DAMAGE_DIE_IDENTITY_PATTERN =
   /BattleSpellDamageDieExecutionRef|groupOrdinal|dieOrdinal|selectedDieOrdinal/;
 const EXECUTION_SUBJECT_ATTACK_PRESENTATION_PATTERN = /subject\.attackName/;
 const REDUNDANT_SPELL_TARGET_LIST_PROCEDURE_PATTERN =
-  /kind:\s*Schema\.Literal\("spellTargetList"\)[\s\S]{0,160}procedure:(?!\s*Schema\.optionalWith\(Schema\.Never)/;
+  /kind:\s*Schema\.Literal\("spellTargetList"\)[\s\S]{0,160}procedure:(?!\s*(?:Schema\.optionalWith\(Schema\.Never|Schema\.optionalKey\(Schema\.Never\)))/;
 const REDUNDANT_SPELL_TARGET_LIST_TYPE_PROCEDURE_PATTERN =
   /type BattleSpellTargetListHole[\s\S]{0,500}\bprocedure:/;
 const POSITIONAL_DAMAGE_DIE_REROLL_FIELD_PATTERN =
@@ -346,7 +346,7 @@ function assertBattleReplayExecutionBoundary() {
         "packages/battle-runtime/src/battle-reducer/battle-codecs.ts",
       patterns: [
         /as unknown as Schema\.Schema<BattleHole>/,
-        /(?:spell|unit):(?!\s*Schema\.optionalWith\(Schema\.Never)/,
+        /(?:spell|unit):(?!\s*(?:Schema\.optionalWith\(Schema\.Never|Schema\.optionalKey\(Schema\.Never\)))/,
         /unitFeature:/,
       ],
       sliceStart: "const BattleHoleBaseSchema",
@@ -867,7 +867,7 @@ function unwrapExpression(node) {
 }
 
 function schemaNeverRejectsExpression(node) {
-  return /^Schema\.optionalWith\(Schema\.Never,\s*\{\s*exact:\s*true\s*\}\)$/.test(
+  return /^(?:Schema\.optionalWith\(Schema\.Never,\s*\{\s*exact:\s*true\s*\}\)|Schema\.optionalKey\(Schema\.Never\))$/.test(
     node.getText(),
   );
 }
@@ -1393,6 +1393,15 @@ function assertBattleReplayAstSelfTests() {
     )
     const fillCodec = Schema.Struct({ spellDamageReroll })
   `;
+  const nativeStrictSchemaFixture = `
+    const targetListCodec = Schema.Struct({
+      kind: Schema.Literal("spellTargetList"),
+      procedure: Schema.optionalKey(Schema.Never),
+    })
+    const rerollDieCodec = Schema.Struct({
+      dieRef: Schema.optionalKey(Schema.Never),
+    })
+  `;
   const violations = battleReplayAstViolations(
     fixture,
     "packages/battle-runtime/src/battle-reducer/metamagic.ts",
@@ -1446,6 +1455,14 @@ function assertBattleReplayAstSelfTests() {
     ),
     [],
     "Battle replay AST gate must follow extracted strict-rejection schemas.",
+  );
+  assert.deepEqual(
+    battleReplayAstViolations(
+      nativeStrictSchemaFixture,
+      "packages/battle-runtime/src/battle-reducer/native-strict-codecs.ts",
+    ),
+    [],
+    "Battle replay AST gate must recognize native v4 optionalKey Never rejection schemas.",
   );
   assert.ok(
     violations.filter((violation) =>

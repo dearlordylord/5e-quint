@@ -52,7 +52,7 @@ import {
   MONK_FOCUS_BATTLE_OPTIONS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
-import { Match, Schema, Tuple } from "effect";
+import { Match, Schema } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
@@ -79,6 +79,7 @@ import {
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
+  battleInterruptAttackExecutionSelectionWithFields,
   ReadyTriggerDescription,
   SpellInvocationRefSchema,
 } from "../battle-subjects.ts";
@@ -4171,22 +4172,10 @@ const BattleMovementFillValueCommonSchemaFields = {
   speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
   movementCostFeet: MovementFeet,
   provokedOpportunityAttacks: Schema.Array(
-    Schema.Union([
-      BattleInterruptAttackExecutionSelectionSchema.members[0].pipe(
-        Schema.fieldsAssign({
-          reactorId: CombatantId,
-          distanceFeet: MovementFeet,
-        }),
-      ),
-      BattleInterruptAttackExecutionSelectionSchema.members[1].mapMembers(
-        Tuple.map(
-          Schema.fieldsAssign({
-            reactorId: CombatantId,
-            distanceFeet: MovementFeet,
-          }),
-        ),
-      ),
-    ]),
+    battleInterruptAttackExecutionSelectionWithFields({
+      reactorId: CombatantId,
+      distanceFeet: MovementFeet,
+    }),
   ),
   acrobaticMovement: Schema.optionalKey(
     Schema.Struct({
@@ -7069,33 +7058,45 @@ function serializedReadiedResponseIsBound(
 }
 
 function serializedLightEmitterOwnsSource(
-  emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
+  emitter:
+    | {
+        readonly kind: "spellLightEmitter";
+        readonly sourceCombatantId: CombatantId;
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      }
+    | {
+        readonly kind: "unitFeatureLightEmitter";
+        readonly sourceCombatantId: CombatantId;
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      }
+    | {
+        readonly kind: "objectInvisibleRevealLightEmitter";
+        readonly sourceCombatantId: CombatantId;
+        readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      },
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
-  if (emitter.kind === "spellLightEmitter") {
-    return (
-      characterProcedureBindingKind(
-        combatants,
-        emitter.sourceCombatantId,
-        emitter.sourceProcedureRef,
-      ) === "spellInvocation"
-    );
-  }
-  if (emitter.kind === "unitFeatureLightEmitter") {
-    return (
-      characterProcedureBindingKind(
-        combatants,
-        emitter.sourceCombatantId,
-        emitter.sourceProcedureRef,
-      ) === "unitFeature"
-    );
-  }
-  return (
-    characterProcedureBindingKind(
-      combatants,
-      emitter.sourceCombatantId,
-      emitter.sourceProcedureRef,
-    ) === "spellInvocation"
+  return Match.value(emitter).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      spellLightEmitter: (source) =>
+        characterProcedureBindingKind(
+          combatants,
+          source.sourceCombatantId,
+          source.sourceProcedureRef,
+        ) === "spellInvocation",
+      unitFeatureLightEmitter: (source) =>
+        characterProcedureBindingKind(
+          combatants,
+          source.sourceCombatantId,
+          source.sourceProcedureRef,
+        ) === "unitFeature",
+      objectInvisibleRevealLightEmitter: (source) =>
+        characterProcedureBindingKind(
+          combatants,
+          source.sourceCombatantId,
+          source.sourceProcedureRef,
+        ) === "spellInvocation",
+    }),
   );
 }
 

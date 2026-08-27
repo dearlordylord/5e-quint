@@ -577,7 +577,7 @@ export const BattleInterruptAttackExecutionSelectionSchema = Schema.Union([
 export type BattleInterruptAttackExecutionSelection =
   typeof BattleInterruptAttackExecutionSelectionSchema.Type;
 
-const battleInterruptAttackExecutionSelectionWithFields = <
+export const battleInterruptAttackExecutionSelectionWithFields = <
   const Fields extends Schema.Struct.Fields,
 >(
   fields: Fields,
