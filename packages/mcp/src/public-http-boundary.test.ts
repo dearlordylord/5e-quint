@@ -234,6 +234,28 @@ describe("public HTTP boundary", () => {
     }
   });
 
+  test("rejects bearer authorization when OAuth is unavailable", async () => {
+    const repository = openRepository();
+    const server = createDndMcpHttpServer({
+      playSessionRepository: repository,
+    });
+    const endpoint = await listen(server);
+    try {
+      const unauthorized = await fetch(endpoint, {
+        method: "POST",
+        headers: { authorization: "Bearer unavailable-provider-token" },
+        body: "{}",
+      });
+      expect(unauthorized.status).toBe(401);
+      expect(unauthorized.headers.get("www-authenticate")).toBe(
+        'Bearer error="invalid_token", error_description="The OAuth access token is invalid"',
+      );
+    } finally {
+      await close(server);
+      repository.close();
+    }
+  });
+
   test("serves saved-session authorization through the public process", async () => {
     const repository = openRepository();
     const authorization: SavedSessionAuthorizationService = {
