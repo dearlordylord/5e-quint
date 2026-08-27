@@ -1,5 +1,3 @@
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { statBlockId } from "@dnd/shared/game-facts";
 import type {
   ScenarioSetup,
   ScenarioSetupOutcome,
@@ -74,14 +72,22 @@ export const setupScenario: ScenarioSetup = (context) => {
     );
   }
 
-  const wolf = assertStatBlockForTest(
-    context.statBlockCatalog,
-    statBlockId("stat_block_wolf"),
+  const wolf = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
   );
-  const goblin = assertStatBlockForTest(
-    context.statBlockCatalog,
-    statBlockId("stat_block_goblin_warrior"),
+  const goblin = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_goblin_warrior",
   );
+  if (wolf === undefined || goblin === undefined) {
+    return obstructed(
+      "The supplied Stat Block catalog is missing a required scenario combatant.",
+      {
+        code: "missing-required-stat-block",
+        wolfFound: wolf !== undefined,
+        goblinWarriorFound: goblin !== undefined,
+      },
+    );
+  }
   const sharedWolfInitiative = sdk.initiativeScore(12);
 
   const wolfAInit = sdk.battleCreatureInitFromStatBlock({

@@ -1,5 +1,3 @@
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { statBlockId } from "@dnd/shared/game-facts";
 import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
 export const setupScenario: ScenarioSetup = (context) => {
@@ -7,12 +5,28 @@ export const setupScenario: ScenarioSetup = (context) => {
   const ridingHorseId = sdk.combatantId("riding-horse");
   const wolfId = sdk.combatantId("wolf");
 
+  const ridingHorseStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_riding_horse",
+  );
+  const wolfStatBlock = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
+  );
+  if (ridingHorseStatBlock === undefined || wolfStatBlock === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction:
+        "The supplied Stat Block catalog is missing a required scenario combatant.",
+      observation: {
+        stage: "required-stat-block-selection",
+        ridingHorseFound: ridingHorseStatBlock !== undefined,
+        wolfFound: wolfStatBlock !== undefined,
+      },
+    };
+  }
+
   const ridingHorse = sdk.battleCreatureInitFromStatBlock({
     combatantId: ridingHorseId,
-    statBlock: assertStatBlockForTest(
-      context.statBlockCatalog,
-      statBlockId("stat_block_riding_horse"),
-    ),
+    statBlock: ridingHorseStatBlock,
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [],
     conditions: [],
@@ -29,10 +43,7 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const wolf = sdk.battleCreatureInitFromStatBlock({
     combatantId: wolfId,
-    statBlock: assertStatBlockForTest(
-      context.statBlockCatalog,
-      statBlockId("stat_block_wolf"),
-    ),
+    statBlock: wolfStatBlock,
     initiative: sdk.initiativeScore(13),
     ammunitionStocks: [],
     conditions: [],

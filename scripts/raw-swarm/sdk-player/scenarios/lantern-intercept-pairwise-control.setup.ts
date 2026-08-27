@@ -1,5 +1,3 @@
-import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-import { statBlockId } from "@dnd/shared/game-facts";
 import type { ScenarioPlacement, ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
 const scenarioId = "lantern-intercept-pairwise-control";
@@ -49,33 +47,48 @@ export const setupScenario: ScenarioSetup = (context) => {
   const skeletonId = sdk.combatantId("skeleton");
   const hawkId = sdk.combatantId("hawk");
 
+  const wolf = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
+  );
+  const hawk = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_hawk",
+  );
+  const skeleton = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_skeleton",
+  );
+  if (wolf === undefined || hawk === undefined || skeleton === undefined) {
+    return {
+      kind: "obstructed",
+      obstruction:
+        "The supplied Stat Block catalog is missing a required scenario combatant.",
+      observation: {
+        tag: "required-stat-block-missing",
+        scenarioId,
+        wolfFound: wolf !== undefined,
+        hawkFound: hawk !== undefined,
+        skeletonFound: skeleton !== undefined,
+      },
+    };
+  }
+
   const creatureInputs = [
     {
       combatantId: wolfId,
-      statBlock: assertStatBlockForTest(
-        context.statBlockCatalog,
-        statBlockId("stat_block_wolf"),
-      ),
+      statBlock: wolf,
       initiative: sdk.initiativeScore(15),
       ammunitionStocks: [],
       conditions: [],
     },
     {
       combatantId: hawkId,
-      statBlock: assertStatBlockForTest(
-        context.statBlockCatalog,
-        statBlockId("stat_block_hawk"),
-      ),
+      statBlock: hawk,
       initiative: sdk.initiativeScore(13),
       ammunitionStocks: [],
       conditions: [],
     },
     {
       combatantId: skeletonId,
-      statBlock: assertStatBlockForTest(
-        context.statBlockCatalog,
-        statBlockId("stat_block_skeleton"),
-      ),
+      statBlock: skeleton,
       initiative: sdk.initiativeScore(10),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
       conditions: [],
