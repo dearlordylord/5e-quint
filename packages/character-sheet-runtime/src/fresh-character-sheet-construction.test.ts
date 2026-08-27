@@ -1,5 +1,6 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
+import Ajv2020 from "ajv/dist/2020.js";
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -236,12 +237,49 @@ describe("fresh Character Sheet construction", () => {
     const ordinaryExpenditures: readonly [] =
       result.success.spellSlotExpenditures;
     const createdSlots: readonly [] = result.success.createdSpellSlots;
-    const pactExpenditure: undefined = result.success.pactSlotExpenditure;
-    expect([ordinaryExpenditures, createdSlots, pactExpenditure]).toEqual([
-      [],
-      [],
-      undefined,
-    ]);
+    expect([ordinaryExpenditures, createdSlots]).toEqual([[], []]);
+    expect(result.success.pactSlotExpenditure).toBeUndefined();
+
+    const projection = freshCharacterSheetProjection(result.success);
+    const serialized: unknown = JSON.parse(JSON.stringify(projection));
+    expect(serialized).not.toHaveProperty("bookOfShadowsPresence");
+    expect(serialized).not.toHaveProperty("pactSlotExpenditure");
+    const schema = Schema.toStandardJSONSchemaV1(
+      FreshCharacterSheetProjectionSchema,
+    )["~standard"].jsonSchema.output({ target: "draft-2020-12" });
+    const validate = new Ajv2020({ strict: false }).compile(schema);
+    expect(validate(serialized)).toBe(true);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
+          onExcessProperty: "error",
+        })(serialized),
+      ),
+    ).toBe(true);
+
+    const nullPresence: unknown = JSON.parse(
+      JSON.stringify({ ...projection, bookOfShadowsPresence: null }),
+    );
+    expect(validate(nullPresence)).toBe(false);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
+          onExcessProperty: "error",
+        })(nullPresence),
+      ),
+    ).toBe(true);
+
+    const nullPactExpenditure: unknown = JSON.parse(
+      JSON.stringify({ ...projection, pactSlotExpenditure: null }),
+    );
+    expect(validate(nullPactExpenditure)).toBe(false);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
+          onExcessProperty: "error",
+        })(nullPactExpenditure),
+      ),
+    ).toBe(true);
   });
 
   test("projects a valid fresh Druid roster through the nonempty schema", () => {

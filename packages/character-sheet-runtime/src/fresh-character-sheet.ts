@@ -61,7 +61,7 @@ const FreshNonSpellcastingCharacterSheetProjectionSchema = Schema.Struct(
 );
 const FreshSpellcastingCharacterSheetProjectionSchema = Schema.Struct({
   ...CommonFreshCharacterSheetProjectionFields,
-  bookOfShadowsPresence: Schema.UndefinedOr(
+  bookOfShadowsPresence: Schema.optionalKey(
     Schema.Union([
       Schema.Struct({ tag: Schema.Literal("onPerson") }),
       Schema.Struct({ tag: Schema.Literal("notOnPerson") }),
@@ -69,7 +69,6 @@ const FreshSpellcastingCharacterSheetProjectionSchema = Schema.Struct({
   ),
   spellSlotExpenditures: EmptySchema,
   createdSpellSlots: EmptySchema,
-  pactSlotExpenditure: Schema.Undefined,
 });
 
 export const FreshCharacterSheetProjectionSchema = Schema.Union([
@@ -165,10 +164,20 @@ export function freshCharacterSheetFromParsedState(
     );
   }
   if (isSpellcastingBuild(sheet.build)) {
+    const {
+      bookOfShadowsPresence: _bookOfShadowsPresence,
+      pactSlotExpenditure: _pactSlotExpenditure,
+      ...spellcastingFacts
+    } = facts;
     const decoded = Schema.decodeUnknownResult(
       FreshSpellcastingCharacterSheetProjectionSchema,
       { onExcessProperty: "error" },
-    )(facts);
+    )({
+      ...spellcastingFacts,
+      ...(sheet.bookOfShadowsPresence === undefined
+        ? {}
+        : { bookOfShadowsPresence: sheet.bookOfShadowsPresence }),
+    });
     if (Result.isFailure(decoded)) {
       return Result.fail(
         "Fresh Character Sheet requires unspent initial play state.",
@@ -191,6 +200,8 @@ export function freshCharacterSheetFromParsedState(
         ...(sheet.druidWildShapeKnownForms === undefined
           ? {}
           : { druidWildShapeKnownForms: sheet.druidWildShapeKnownForms }),
+        bookOfShadowsPresence: sheet.bookOfShadowsPresence,
+        pactSlotExpenditure: undefined,
       }),
     );
   }
@@ -224,7 +235,22 @@ export function freshCharacterSheetProjection(
     build: _build,
     ...facts
   } = sheet;
+  const projectionFacts = isSpellcastingBuild(sheet.build)
+    ? (() => {
+        const {
+          bookOfShadowsPresence: _bookOfShadowsPresence,
+          pactSlotExpenditure: _pactSlotExpenditure,
+          ...factsWithoutUndefinedSpellcastingAbsence
+        } = facts;
+        return {
+          ...factsWithoutUndefinedSpellcastingAbsence,
+          ...(sheet.bookOfShadowsPresence === undefined
+            ? {}
+            : { bookOfShadowsPresence: sheet.bookOfShadowsPresence }),
+        };
+      })()
+    : facts;
   return Schema.decodeUnknownSync(FreshCharacterSheetProjectionSchema, {
     onExcessProperty: "error",
-  })(facts);
+  })(projectionFacts);
 }

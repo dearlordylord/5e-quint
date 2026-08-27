@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@firfi/quint-connect": "catalog:",
+    "ajv": "^8.18.0",
     "@types/node": "22.19.15",
     "@typescript/native": "npm:typescript@^7.0.2",
     "fast-check": "3.23.2",
