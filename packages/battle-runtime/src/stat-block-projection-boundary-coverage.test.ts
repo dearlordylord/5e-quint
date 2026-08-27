@@ -267,6 +267,38 @@ describe("Stat Block projection boundary coverage", () => {
     );
   });
 
+  test("retains save proficiencies and admits a form without actions", () => {
+    const source = statBlockRecord();
+    const {
+      actions: _actions,
+      bonusActions: _bonusActions,
+      reactions: _reactions,
+      legendaryActions: _legendaryActions,
+      ...statBlockWithoutProcedures
+    } = source.statBlock;
+    const withSaveProficiency: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic_save_proficiency_form"),
+      provenance: {
+        kind: "synthetic-test",
+        section: "stat-block-projection-boundary-coverage",
+      },
+      statBlock: {
+        ...statBlockWithoutProcedures,
+        saveProficiencies: ["dex"],
+      },
+    };
+
+    const projected = projectAuthoredStatBlock(withSaveProficiency);
+    expect(Either.isRight(projected)).toBe(true);
+    if (Either.isRight(projected)) {
+      expect(projected.right.runtime.statBlock.saveProficiencies).toEqual([
+        "dex",
+      ]);
+      expect(projected.right.runtime.procedures).toEqual([]);
+    }
+  });
+
   test("rejects a non-positive authored Multiattack count before execution", () => {
     const source = monsterMultiattackStatBlock();
     const multiattack = source.statBlock.actions?.find(
