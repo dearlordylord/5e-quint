@@ -1,11 +1,4 @@
-import {
-  battlePresentedSnapshot,
-  battleAdmittedSpellPresentations,
-  discoverBattleActs,
-  startBattle,
-  type BattleRuntimeSession,
-  type CombatantId,
-} from "@dnd/battle-runtime";
+import { startBattle, type CombatantId } from "@dnd/battle-runtime";
 import {
   composeBattleRoster,
   composeBattleCompanionRoster,
@@ -20,25 +13,23 @@ import { Either, Match, Option } from "effect";
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { type AvailableCharacterSession } from "./session-store.ts";
-import { battleStateSnapshot } from "./battle-state-snapshot.ts";
 import {
   type BattleCombatantToolInput,
   type CharacterSessionCombatantToolInput,
   type StartBattleToolInput,
 } from "./start-battle-tool-input.ts";
-import { StartBattleOutputSchema } from "./battle-tool-output.ts";
-import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
-import { mcpSessionSummary } from "./session-snapshot-output.ts";
-import { errorContent } from "./tool-content.ts";
-import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
+import { type ToolError } from "./schema-codec.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
-import { completeBattleStateTransition } from "./battle-state-transition.ts";
 import {
   battleRuntimeIssuePayload,
   battleStartIssuesContent,
   battleCompanionRosterIssuePayload,
   battleRosterIssuePayload,
 } from "./battle-start-failure.ts";
+import {
+  activeBattleStartError,
+  commitActiveBattleStart,
+} from "./start-battle-lifecycle.ts";
 
 export type StartableCharacterSessionCombatant = {
   readonly index: number;
@@ -53,58 +44,34 @@ export type StartableBattleCombatants = {
   readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
 };
 
-export function handleStartBattleToolCall(
-  root: McpPlaySessionRoot,
+function battleRuntimeSessionForStart(
   input: StartBattleToolInput,
-) {
-  const battleState = root.sessionStore.battleState;
-  const activeBattleError = Match.value(battleState).pipe(
-    Match.when({ tag: "none" }, () => null),
-    Match.when({ tag: "initialInitiativeSetup" }, (matched) =>
-      errorContent("A battle session is already active.", {
-        code: "BATTLE_SESSION_ALREADY_ACTIVE",
-        battleId: matched.setup.state.battleId,
-      }),
-    ),
-    Match.when({ tag: "activeBattle" }, (matched) =>
-      errorContent("A battle session is already active.", {
-        code: "BATTLE_SESSION_ALREADY_ACTIVE",
-        battleId: matched.session.state.battleId,
-      }),
-    ),
-    Match.exhaustive,
-  );
-  if (activeBattleError !== null) return activeBattleError;
-
-  const combatants = startableBattleCombatants({
-    root,
-    initialCombatants: input.initialCombatants,
-    companionAdmissions: input.companionAdmissions,
-  });
-
-  if (input.initiativeMode === "initialSetup") {
-    return startInitialInitiativeSetup(root, input, combatants);
-  }
-
+  combatants: StartableBattleCombatants,
+): ReturnType<typeof startBattle> | undefined {
   const admissions = battleRosterAdmissions(combatants.composition);
-  const rosterIssues = battleRosterIssues(combatants.composition);
-  const session =
-    admissions.length === 0
-      ? undefined
-      : startBattle({
-          battleId: input.battleId,
-          combatants: admissions.map(({ combatant }) => combatant),
-          ownerPathForCombatant: (combatant) => {
-            const ownerPath = combatants.ownerPaths.get(combatant.combatantId);
-            return ownerPath ?? ["battleInitialization", "global"];
-          },
-        });
-  const companionRoster = composeBattleCompanionRoster({
+  if (admissions.length === 0) return undefined;
+  return startBattle({
+    battleId: input.battleId,
+    combatants: admissions.map(({ combatant }) => combatant),
+    ownerPathForCombatant: (combatant) => {
+      const ownerPath = combatants.ownerPaths.get(combatant.combatantId);
+      return ownerPath ?? ["battleInitialization", "global"];
+    },
+  });
+}
+
+function composeStartBattleCompanions(input: {
+  readonly root: McpPlaySessionRoot;
+  readonly startInput: StartBattleToolInput;
+  readonly combatants: StartableBattleCombatants;
+  readonly session: ReturnType<typeof startBattle> | undefined;
+}) {
+  return composeBattleCompanionRoster({
     session:
-      session !== undefined && Either.isRight(session)
-        ? session.right
+      input.session !== undefined && Either.isRight(input.session)
+        ? input.session.right
         : undefined,
-    owners: combatants.characterSessions.map(
+    owners: input.combatants.characterSessions.map(
       ({ index, character, session: characterSession }) => ({
         index,
         characterId: character.characterId,
@@ -112,13 +79,29 @@ export function handleStartBattleToolCall(
         sheet: characterSession,
       }),
     ),
-    requests: input.companionAdmissions,
-    unitLibrary: root.unitLibrary,
-    initialCombatantOrder: combatants.initialCombatantOrder,
-    statBlockCatalog: root.statBlockCatalog,
+    requests: input.startInput.companionAdmissions,
+    unitLibrary: input.root.unitLibrary,
+    initialCombatantOrder: input.combatants.initialCombatantOrder,
+    statBlockCatalog: input.root.statBlockCatalog,
+  });
+}
+
+function completeStartBattle(
+  root: McpPlaySessionRoot,
+  input: StartBattleToolInput,
+  combatants: StartableBattleCombatants,
+) {
+  const session = battleRuntimeSessionForStart(input, combatants);
+  const companionRoster = composeStartBattleCompanions({
+    root,
+    startInput: input,
+    combatants,
+    session,
   });
   const issues = [
-    ...rosterIssues.flatMap((issue) => battleRosterIssuePayload(issue)),
+    ...battleRosterIssues(combatants.composition).flatMap((issue) =>
+      battleRosterIssuePayload(issue),
+    ),
     ...(session !== undefined && Either.isLeft(session)
       ? battleRuntimeIssuePayload(session.left)
       : []),
@@ -127,12 +110,24 @@ export function handleStartBattleToolCall(
     ),
   ];
   if (issues.length > 0) return battleStartIssuesContent(issues);
-  return Match.value(companionRoster).pipe(
+  return completeAdmittedCompanionStart({
+    root,
+    combatants,
+    companionRoster,
+  });
+}
+
+function completeAdmittedCompanionStart(input: {
+  readonly root: McpPlaySessionRoot;
+  readonly combatants: StartableBattleCombatants;
+  readonly companionRoster: ReturnType<typeof composeBattleCompanionRoster>;
+}) {
+  return Match.value(input.companionRoster).pipe(
     Match.when({ tag: "admitted" }, ({ session: admittedSession }) =>
       commitActiveBattleStart({
-        root,
+        root: input.root,
         session: admittedSession,
-        characterSessions: combatants.characterSessions,
+        characterSessions: input.combatants.characterSessions,
       }),
     ),
     Match.when({ tag: "rejected" }, ({ issues: companionIssues }) =>
@@ -147,6 +142,27 @@ export function handleStartBattleToolCall(
     ),
     Match.exhaustive,
   );
+}
+
+export function handleStartBattleToolCall(
+  root: McpPlaySessionRoot,
+  input: StartBattleToolInput,
+) {
+  const activeBattleError = activeBattleStartError(
+    root.sessionStore.battleState,
+  );
+  if (activeBattleError !== null) return activeBattleError;
+
+  const combatants = startableBattleCombatants({
+    root,
+    initialCombatants: input.initialCombatants,
+    companionAdmissions: input.companionAdmissions,
+  });
+
+  if (input.initiativeMode === "initialSetup") {
+    return startInitialInitiativeSetup(root, input, combatants);
+  }
+  return completeStartBattle(root, input, combatants);
 }
 
 function startableBattleCombatants(input: {
@@ -240,43 +256,6 @@ function battleCompanionIssues(
     Match.when({ tag: "dependentUnavailable" }, ({ issues }) => issues),
     Match.exhaustive,
   );
-}
-
-function commitActiveBattleStart(input: {
-  readonly root: McpPlaySessionRoot;
-  readonly session: BattleRuntimeSession;
-  readonly characterSessions: readonly StartableCharacterSessionCombatant[];
-}) {
-  const snapshot = battlePresentedSnapshot(input.session);
-  if (Either.isLeft(snapshot)) {
-    return battleSnapshotPresentationIssueContent(snapshot.left);
-  }
-  return completeBattleStateTransition({
-    root: input.root,
-    transition: input.root.sessionStore.commitBattleStart({
-      nextBattleState: { tag: "activeBattle", session: input.session },
-      characterSessions: input.characterSessions.map(({ session }) => session),
-    }),
-    output: () => {
-      const session = input.root.sessionStore.snapshot();
-      const battleState = battleStateSnapshot(
-        input.root.sessionStore.battleState,
-      );
-      if (battleState.tag !== "activeBattle") {
-        throw new Error("Battle start payload requires owned active state.");
-      }
-      return schemaJsonContent(StartBattleOutputSchema, {
-        battleState,
-        snapshot: snapshot.right,
-        availableActs: discoverBattleActs(input.session),
-        admittedSpellPresentations: battleAdmittedSpellPresentations(
-          input.session,
-        ),
-        presentedInterruptChoices: [],
-        session: { ...mcpSessionSummary(session), battleState },
-      });
-    },
-  });
 }
 
 export function projectBattleCombatant(input: {
