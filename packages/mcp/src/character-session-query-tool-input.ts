@@ -1,6 +1,6 @@
 import { characterId, type CharacterId } from "@dnd/battle-runtime";
 import { ABILITIES, SURFACE_SKILLS, UnitId } from "@dnd/shared/game-facts";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   decodeToolArgs,
@@ -166,7 +166,7 @@ export const queryCharacterSessionInputSchema = mcpObjectJsonSchema(
 export function decodeQueryCharacterSessionArgs(
   args: unknown,
 ): ToolInputResult<QueryCharacterSessionToolInput> {
-  return Either.map(
+  return Result.map(
     decodeToolArgs(
       QueryCharacterSessionArgsSchema,
       args,

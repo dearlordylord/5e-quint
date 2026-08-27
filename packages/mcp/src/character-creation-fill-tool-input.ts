@@ -11,7 +11,7 @@ import {
   type DraftRevision,
 } from "@dnd/character-creation-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import {
@@ -113,15 +113,15 @@ export function decodeFillCreationHolesArgs(
   toolName: string,
 ): ToolInputResult<FillCreationHolesToolInput> {
   const record = decodeToolArgs(FillCreationHolesArgsSchema, args, toolName);
-  if (Either.isLeft(record)) return Either.left(record.left);
+  if (Result.isFailure(record)) return Result.fail(record.failure);
   const fills = traverseValidation(record.right.fills, (value, index) =>
     decodeCreationFill(value, index, toolName),
   );
-  if (Either.isLeft(fills)) {
-    return Either.left(invalidFillsContent(toolName, fills.left));
+  if (Result.isFailure(fills)) {
+    return Result.fail(invalidFillsContent(toolName, fills.failure));
   }
 
-  return Either.right({
+  return Result.succeed({
     draftId: characterDraftId(record.right.draftId),
     expectedRevision: draftRevision(record.right.expectedRevision),
     fills: fills.right,
@@ -146,7 +146,7 @@ function decodeChoiceFill(
   toolName: string,
 ): ToolInputResult<CreationFill> {
   const holeId = decodeCreationHoleId(holeIdText, index, toolName);
-  return Either.map(holeId, (decodedHoleId) => ({
+  return Result.map(holeId, (decodedHoleId) => ({
     kind: "choice",
     holeId: decodedHoleId,
     optionIds: value.optionIds.map(creationChoiceOptionId),
@@ -160,15 +160,15 @@ function decodeAbilityScoreFill(
   toolName: string,
 ): ToolInputResult<CreationFill> {
   const holeId = decodeCreationHoleId(holeIdText, index, toolName);
-  const scores = Either.mapLeft(abilityScoreAssignment(value.value), () =>
+  const scores = Result.mapError(abilityScoreAssignment(value.value), () =>
     invalidFieldContent(
       toolName,
       `fills[${index}].value`,
       "ability score assignment",
     ),
   );
-  return Either.map(
-    Either.all({ holeId, scores }),
+  return Result.map(
+    Result.all({ holeId, scores }),
     ({ holeId: decodedHoleId, scores: decodedScores }) => ({
       kind: "abilityScores",
       holeId: decodedHoleId,
@@ -185,7 +185,7 @@ function decodeCreationHoleId(
 ): ToolInputResult<CreationFill["holeId"]> {
   const holeId = parseCreationHoleId(holeIdText);
   if (holeId == null) {
-    return Either.left(
+    return Result.fail(
       invalidFieldContent(
         toolName,
         `fills[${index}].holeId`,
@@ -193,7 +193,7 @@ function decodeCreationHoleId(
       ),
     );
   }
-  return Either.right(holeId);
+  return Result.succeed(holeId);
 }
 
 function invalidFieldContent(

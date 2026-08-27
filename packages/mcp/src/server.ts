@@ -24,7 +24,7 @@ import type {
   McpPlaySessionRoot,
 } from "./composition-root.ts";
 import { errorContent } from "./tool-content.ts";
-import { Either, Result } from "effect";
+import { Result } from "effect";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 
 export {
@@ -88,9 +88,9 @@ export function handleToolCall(
 ) {
   if (isCharacterToolName(name)) {
     const decoded = decodeCharacterToolCall({ name, args });
-    return Either.isLeft(decoded)
-      ? decoded.left
-      : handleCharacterToolCall(root, decoded.right);
+    return Result.isFailure(decoded)
+      ? decoded.failure
+      : handleCharacterToolCall(root, decoded.success);
   }
 
   if (isContentToolName(name)) {
@@ -106,9 +106,9 @@ export function handleToolCall(
 
   if (isDiceToolName(name)) {
     const decoded = decodeDiceToolCall({ name, args });
-    return Either.isLeft(decoded)
-      ? decoded.left
-      : handleDiceToolCall(root, decoded.right);
+    return Result.isFailure(decoded)
+      ? decoded.failure
+      : handleDiceToolCall(root, decoded.success);
   }
 
   return errorContent(`Unknown MCP tool: ${name}`);

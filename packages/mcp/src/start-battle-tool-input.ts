@@ -18,7 +18,7 @@ import {
   StatBlockId,
   type StatBlockId as StatBlockIdType,
 } from "@dnd/shared/game-facts";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   decodeToolArgs,
@@ -200,30 +200,32 @@ export function decodeStartBattleArgs(
     args,
     "start_battle",
   );
-  if (Either.isLeft(record)) return Either.left(record.left);
+  if (Result.isFailure(record)) return Result.fail(record.failure);
 
-  return Either.right({
-    battleId: record.right.battleId,
-    initiativeMode: record.right.initiativeMode,
-    initialCombatants: decodeBattleCombatants(record.right.initialCombatants),
-    companionAdmissions: record.right.companionAdmissions.map((admission) => ({
-      ownerCharacterId: characterId(admission.ownerCharacterId),
-      ammunitionStocks: admission.ammunitionStocks.map(
-        ({ ammunition, remaining }) =>
-          battleAmmunitionStock(ammunition, remaining),
-      ),
-      ...(admission.companionCombatantId === undefined
-        ? {}
-        : {
-            companionCombatantId: combatantId(admission.companionCombatantId),
-          }),
-      ...(admission.initiative === undefined
-        ? {}
-        : { initiative: initiativeScore(admission.initiative) }),
-      ...(admission.positionId === undefined
-        ? {}
-        : { positionId: battleTablePositionId(admission.positionId) }),
-    })),
+  return Result.succeed({
+    battleId: record.success.battleId,
+    initiativeMode: record.success.initiativeMode,
+    initialCombatants: decodeBattleCombatants(record.success.initialCombatants),
+    companionAdmissions: record.success.companionAdmissions.map(
+      (admission) => ({
+        ownerCharacterId: characterId(admission.ownerCharacterId),
+        ammunitionStocks: admission.ammunitionStocks.map(
+          ({ ammunition, remaining }) =>
+            battleAmmunitionStock(ammunition, remaining),
+        ),
+        ...(admission.companionCombatantId === undefined
+          ? {}
+          : {
+              companionCombatantId: combatantId(admission.companionCombatantId),
+            }),
+        ...(admission.initiative === undefined
+          ? {}
+          : { initiative: initiativeScore(admission.initiative) }),
+        ...(admission.positionId === undefined
+          ? {}
+          : { positionId: battleTablePositionId(admission.positionId) }),
+      }),
+    ),
   });
 }
 

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { Either, JSONSchema, Schema } from "effect";
+import { JSONSchema, Result, Schema } from "effect";
 
 import {
   errorContent,
@@ -15,7 +15,7 @@ export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
 export type McpOutputSchema = Readonly<Record<string, unknown>>;
 
 export type ToolError = ReturnType<typeof errorContent>;
-export type ToolInputResult<A> = Either.Either<A, ToolError>;
+export type ToolInputResult<A> = Result.Result<A, ToolError>;
 
 const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
 const modelOutputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
@@ -26,15 +26,17 @@ export function decodeToolArgs<A, I>(
   toolName: string,
 ): ToolInputResult<A> {
   const input = args === undefined ? {} : args;
-  const decoded = Schema.decodeUnknownEither(schema, {
+  const decoded = Schema.decodeUnknownResult(Schema.toType(schema), {
     onExcessProperty: "error",
   })(input);
-  return Either.mapLeft(decoded, (error) =>
-    errorContent(`${toolName} expects valid arguments.`, {
-      code: "INVALID_ARGUMENTS",
-      message: error.message,
-    }),
-  );
+  return Result.isFailure(decoded)
+    ? Result.fail(
+        errorContent(`${toolName} expects valid arguments.`, {
+          code: "INVALID_ARGUMENTS",
+          message: decoded.failure.message,
+        }),
+      )
+    : Result.succeed(decoded.success);
 }
 
 export function mcpObjectJsonSchema<A, I>(
