@@ -584,11 +584,15 @@ as a runtime owner because it projects the composed direct-SDK movement and
 table-decision boundary. Its Effect 3 `Either` call chain is nevertheless owned
 by #385, whose scope is the repository scripts and Raw Swarm/SDK-player
 migration. It is therefore not a #379 source/pure migration path. The related
-`scenario-setup-runtime.test.ts` remains a required #379 parity witness, but
-both script paths are listed in the manifest's `deferredScriptPaths` and are
-excluded from the #379 Effect API audit. #385 must migrate that complete script
-call chain and its fixture together; this is an ownership boundary, not a
-compatibility waiver.
+`scenario-setup-runtime.test.ts` is downstream/deferred consumer evidence, not a
+required #379 parity witness: both script paths are listed in the manifest's
+`deferredScriptPaths` and are excluded from the #379 Effect API audit. The
+actual #379 parity witnesses are the focused Battle Runtime fixtures selected
+by each obligation below, including the movement, reactions, command-option,
+ordering, death-save, interrupt-stack, and turn-boundary fixtures, plus the
+direct Battle Runtime contract tests recorded in the evidence rows. #385 must
+migrate that complete script call chain and its fixture together; this is an
+ownership boundary, not a compatibility waiver.
 
 | Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -610,10 +614,26 @@ Short Rest, and Long Rest. They support the existing reducer contracts for
 initiative order and turn boundaries, movement budget and Difficult Terrain,
 reaction timing and continuation, Ready decline/release, condition effects,
 and rest/resource boundaries. The registry distinguishes semantic-core QNT
-owners from MBT parity fixtures. A representative, non-exhaustive enumeration
-of semantic-core owners for this audit is
-`battle-runtime-turn-advancement.qnt`, `battle-runtime-reaction-window.qnt`,
-`battle-runtime-command-ordering.qnt`, and `movement-spatial-grapple.qnt`.
+owners from MBT parity fixtures. The following manifest-backed accounting
+resolves every selected obligation through `qnt-owner-roles.jsonl` (33 unique
+semantic-core owners; repeated owners are intentionally shown under each
+obligation that selects them):
+
+- **BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND** — `packages/shared-algebras/proofs/rule-core/movement-spatial-grapple.qnt`
+- **BATTLE.MOVEMENT.ORDINARY_CREATURE_SPACE_TABLE_ROUTE** — `packages/shared-algebras/proofs/rule-core/ordinary-creature-space-route.qnt`
+- **BATTLE.REACTION.OFFER_DECLINE_RESUME** — `packages/battle-runtime/battle-runtime-reaction-window.qnt`, `packages/battle-runtime/battle-runtime-shield-reaction-decision.qnt`, `packages/battle-runtime/battle-runtime-direct-shield-reaction-resolution.qnt`, `packages/battle-runtime/battle-runtime-light-shield-reaction-resolution.qnt`, `packages/battle-runtime/battle-runtime-save-gated-shield-reaction-resolution.qnt`, `packages/battle-runtime/battle-runtime-weapon-shield-reaction-resolution.qnt`, `packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt`, `packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt`, `packages/shared-algebras/proofs/rule-core/reactions-continuations-concentration.qnt`, `packages/battle-runtime/battle-runtime-opportunity-attack.qnt`
+- **BATTLE.COMMAND.OPTION_AND_NEXT_TURN** — `packages/battle-runtime/battle-runtime-command-next-turn.qnt`, `packages/battle-runtime/battle-runtime-command-control-next-turn.qnt`, `packages/battle-runtime/battle-runtime-command-movement-next-turn.qnt`
+- **BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE** — `packages/battle-runtime/battle-runtime-hit-points.qnt`, `packages/battle-runtime/battle-runtime-turn-advancement-death-save.qnt`
+- **BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING** — `packages/battle-runtime/battle-runtime-weapon-attack-ordering.qnt`, `packages/battle-runtime/battle-runtime-save-gated-spell-ordering.qnt`, `packages/battle-runtime/battle-runtime-save-gated-spell-replay.qnt`, `packages/battle-runtime/battle-runtime-spell-attack-ordering.qnt`, `packages/battle-runtime/battle-runtime-hit-point-restoration-ordering.qnt`, `packages/battle-runtime/battle-runtime-command-ordering.qnt`, `packages/battle-runtime/battle-runtime-stat-block-action-ordering.qnt`
+- **BATTLE.PROTOCOL.INTERRUPT_STACK_RESUME_REPLAY** — `packages/battle-runtime/battle-runtime-reaction-window.qnt`, `packages/battle-runtime/battle-runtime-attack-damage-concentration-reaction.qnt`, `packages/battle-runtime/battle-runtime-triggered-reaction-resolution.qnt`, `packages/battle-runtime/battle-runtime-opportunity-attack.qnt`, `packages/battle-runtime/battle-runtime-hellish-rebuke-reaction.qnt`, `packages/battle-runtime/battle-runtime-counterspell-reaction-decision.qnt`, `packages/battle-runtime/battle-runtime-spell-cast-reaction-resolution.qnt`, `packages/battle-runtime/battle-runtime-weapon-counterspell-resolution.qnt`, `packages/battle-runtime/battle-runtime-save-gated-counterspell-resolution.qnt`, `packages/battle-runtime/battle-runtime-replay-equivalence.qnt`
+- **BATTLE.COMPOSITION.TURN_BOUNDARY_EFFECT_LIFECYCLE_ORDERING** — `packages/battle-runtime/battle-runtime-turn-advancement.qnt`, `packages/battle-runtime/battle-runtime-weapon-hit-turn-effects.qnt`, `packages/battle-runtime/battle-runtime-fighter-ongoing-feature-lifecycle.qnt`
+
+The owning public proof lane is
+`pnpm --filter @dnd/battle-runtime run test:qnt-proofs`; its passing result
+below is the semantic-core evidence for every discovered run-block owner in
+the Battle Runtime package. The shared rule-core owners are run through the
+same repository QNT proof lane recorded below. This mapping is exhaustive, not
+a representative subset.
 The separate bridge `battle-runtime-movement-bridge.qnt` only projects those
 movement facts into the Battle Runtime and is bridge/parity evidence, not a
 semantic authority. `battle-runtime-interrupt-stack-resume.mbt.qnt`,
