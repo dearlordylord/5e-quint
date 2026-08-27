@@ -34,21 +34,96 @@
         }
       },
       {
-        "description": "Melee Attack Roll: +7, reach 5 ft. Hit: 7 (1d6 + 4) Piercing damage plus 17 (5d6) Poison damage, and the target has the Poisoned condition until the start of the assassin's next turn.",
-        "kind": "textOnly",
-        "name": "Shortsword",
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "description": "Melee Attack Roll: +7, reach 5 ft. Hit: 7 (1d6 + 4) Piercing damage plus 17 (5d6) Poison damage, and the target has the Poisoned condition until the start of the assassin's next turn.",
+          "kind": "attack_roll",
+          "name": "Shortsword",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 5,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 17
+              },
+              "damageType": "poison",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
         "procedureOrdinal": 2,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "description": "Ranged Attack Roll: +7, range 80/320 ft. Hit: 8 (1d8 + 4) Piercing damage plus 21 (6d6) Poison damage.",
-        "kind": "textOnly",
-        "name": "Light Crossbow",
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "ranged",
+          "description": "Ranged Attack Roll: +7, range 80/320 ft. Hit: 8 (1d8 + 4) Piercing damage plus 21 (6d6) Poison damage.)",
+          "kind": "attack_roll",
+          "name": "Light Crossbow",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 8
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 6,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 21
+              },
+              "damageType": "poison",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 320,
+            "normal": 80
+          }
+        },
         "procedureOrdinal": 3,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

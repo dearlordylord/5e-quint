@@ -24,31 +24,120 @@
     },
     "actions": [
       {
-        "description": "The balor makes one Flame Whip attack and one Lightning Blade attack.",
-        "kind": "textOnly",
-        "name": "Multiattack",
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 1
+              },
+              "procedureOrdinal": 2
+            },
+            {
+              "count": {
+                "kind": "literal",
+                "value": 1
+              },
+              "procedureOrdinal": 3
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
         "procedureOrdinal": 1,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "description": "Melee Attack Roll: +14, reach 30 ft. Hit: 18 (3d6 + 8) Force damage plus 17 (5d6) Fire damage. If the target is a Huge or smaller creature, the balor pulls the target up to 25 feet straight toward itself, and the target has the Prone condition.",
-        "kind": "textOnly",
-        "name": "Flame Whip",
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 14
+          },
+          "attackType": "melee",
+          "description": "Melee Attack Roll: +14, reach 30 ft. Hit: 18 (3d6 + 8) Force damage plus 17 (5d6) Fire damage. If the target is a Huge or smaller creature, the balor pulls the target up to 25 feet straight toward itself, and the target has the Prone condition.",
+          "kind": "attack_roll",
+          "name": "Flame Whip",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6,
+                  "flat": 8
+                },
+                "kind": "fixed",
+                "static": 18
+              },
+              "damageType": "force",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 5,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 17
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 30
+        },
         "procedureOrdinal": 2,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "description": "Melee Attack Roll: +14, reach 10 ft. Hit: 21 (3d8 + 8) Force damage plus 22 (4d10) Lightning damage, and the target can't take Reactions until the start of the balor's next turn.",
-        "kind": "textOnly",
-        "name": "Lightning Blade",
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 14
+          },
+          "attackType": "melee",
+          "description": "Melee Attack Roll: +14, reach 10 ft. Hit: 21 (3d8 + 8) Force damage plus 22 (4d10) Lightning damage, and the target can't take Reactions until the start of the balor's next turn.",
+          "kind": "attack_roll",
+          "name": "Lightning Blade",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 8,
+                  "flat": 8
+                },
+                "kind": "fixed",
+                "static": 21
+              },
+              "damageType": "force",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 4,
+                  "dieSize": 10
+                },
+                "kind": "fixed",
+                "static": 22
+              },
+              "damageType": "lightning",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
         "procedureOrdinal": 3,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

@@ -34,21 +34,72 @@
         }
       },
       {
-        "description": "Melee Attack Roll: +5, reach 5 ft. Hit: 6 (1d6 + 3) Slashing damage.",
-        "kind": "textOnly",
-        "name": "Scimitar",
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "description": "Melee Attack Roll: +5, reach 5 ft. Hit: 6 (1d6 + 3) Slashing damage.",
+          "kind": "attack_roll",
+          "name": "Scimitar",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 6
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
         "procedureOrdinal": 2,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "description": "Ranged Attack Roll: +5, range 30/90 ft. Hit: 8 (1d10 + 3) Piercing damage.",
-        "kind": "textOnly",
-        "name": "Pistol",
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "ranged",
+          "description": "Ranged Attack Roll: +5, range 30/90 ft. Hit: 8 (1d10 + 3) Piercing damage.",
+          "kind": "attack_roll",
+          "name": "Pistol",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 10,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 8
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 90,
+            "normal": 30
+          }
+        },
         "procedureOrdinal": 3,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

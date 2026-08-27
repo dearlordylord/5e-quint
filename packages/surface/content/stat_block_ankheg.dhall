@@ -7,7 +7,57 @@
   { abilityScores = { cha = 6, con = 14, dex = 11, int = 1, str = 17, wis = 13 }
   , ac.value = { kind = "literal", value = 14 }
   , actions =
-    [ { description = "Bite. Melee Attack Roll: +5 (with Advantage if the target is Grappled by the ankheg), reach 5 ft. Hit: 10 (2d6 + 3) Slashing damage plus 3 (1d6) Acid damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13). Acid Spray (Recharge 6). Dexterity Saving Throw: DC 12, each creature in a 30-foot-long, 5-foot-wide Line. Failure: 14 (4d6) Acid damage. Success: Half damage.", kind = "textOnly", name = "Actions", procedureOrdinal = 1, reason = "unsupported_action_shape", resourceRefs = { kind = "some", ordinals = [ 1 ] } }
+    [ { kind = "executable"
+      , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "str"
+          , attackBonus = Some { kind = "literal", value = +5 }
+          , attackType = Some "melee"
+          , area = None { kind : Text, lengthFeet : Natural, widthFeet : Natural }
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dc = None { dc : Natural, kind : Text }
+          , description = Some "The ankheg has Advantage if the target is Grappled by the ankheg. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13)."
+          , dispatches = None (List { count : { kind : Text, value : Natural }, procedureOrdinal : Natural })
+          , groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) }, spells : List { restriction : Text, spellId : Text } })
+          , kind = "attack_roll"
+          , name = "Bite"
+          , onFail = None { amount : { expr : { abilityModifier : Optional Text, dice : Natural, dieSize : Natural, flat : Optional Integer, spellcastingMod : Optional Bool }, kind : Text, static : Natural }, damageType : Text, kind : Text }
+          , onHit = Some
+              [ { amount = { expr = { dice = 2, dieSize = 6, flat = Some +3 }, kind = "fixed", static = 10 }, damageType = "slashing", kind = "damage" }
+              , { amount = { expr = { dice = 1, dieSize = 6, flat = None Integer }, kind = "fixed", static = 3 }, damageType = "acid", kind = "damage" }
+              ]
+          , reachFeet = Some 5
+          , rangeFeet = None { long : Natural, normal : Natural }
+          , onSuccess = None { kind : Text }
+          , target = None { kind : Text, rangeFeet : Natural }
+          }
+      , procedureOrdinal = 1
+      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+      }
+    , { kind = "executable"
+      , procedure = Some
+          { ability = Some "dex"
+          , attackAbility = None Text
+          , attackBonus = None { kind : Text, value : Integer }
+          , attackType = None Text
+          , area = Some { kind = "line", lengthFeet = 30, widthFeet = 5 }
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , description = None Text
+          , dc = Some { dc = 12, kind = "fixed" }
+          , dispatches = None (List { count : { kind : Text, value : Natural }, procedureOrdinal : Natural })
+          , groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) }, spells : List { restriction : Text, spellId : Text } })
+          , kind = "save"
+          , name = "Acid Spray"
+          , onFail = Some { amount = { expr = { abilityModifier = None Text, dice = 4, dieSize = 6, flat = None Integer, spellcastingMod = None Bool }, kind = "fixed", static = 14 }, damageType = "acid", kind = "damage" }
+          , onHit = None (List { amount : { expr : { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text })
+          , onSuccess = Some { kind = "half_damage" }
+          , reachFeet = None Natural
+          , rangeFeet = None { long : Natural, normal : Natural }
+          , target = None { kind : Text, rangeFeet : Natural }
+          }
+      , procedureOrdinal = 2
+      , resourceRefs = { kind = "some", ordinals = Some [ 1 ] }
+      }
     ]
   , alignment = "unaligned"
   , communication = { kind = "none" }
