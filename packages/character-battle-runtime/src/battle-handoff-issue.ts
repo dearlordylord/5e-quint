@@ -1,12 +1,20 @@
 import {
   battleInitializationIssueFactFields,
+  battleStateInitIssueMessage,
   battleStateInitIssueLeaves,
   type BattleInitializationIssueFact,
   type BattleStateInitIssue,
+  type BattleStateInitLeafIssue,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import type { CharacterSheetIssue } from "@dnd/character-sheet-runtime";
-import type { SpellSlotLevel } from "@dnd/shared/types";
+import type { ReadonlyNonEmptyArray, SpellSlotLevel } from "@dnd/shared/types";
+import type { StatBlockId } from "@dnd/shared/game-facts";
+import type {
+  FindFamiliarNormalFormRef,
+  PactOfTheChainSpecialFormRef,
+} from "@dnd/surface/surface/find-familiar-forms";
+import { Match } from "effect";
 import { Either } from "effect";
 
 /** A named validation rule is the machine-readable handoff cause. */
@@ -70,7 +78,12 @@ export type CharacterSheetBattleHandoffFact =
     } & BattleInitializationIssueFact)
   | {
       readonly handoffReason: "battleInitializationUnavailable";
-      readonly initializationTag: BattleStateInitIssue["tag"];
+      readonly initializationTag: "battleStateInitIssue";
+    }
+  | {
+      readonly handoffReason: "battleInitializationUnavailable";
+      readonly initializationTag: "weaponLoadoutMismatch";
+      readonly slot: "main-hand" | "off-hand";
     }
   | {
       readonly handoffReason: "delegatedCharacterSheetIssue";
@@ -99,12 +112,21 @@ export type CharacterSheetBattleHandoffFact =
         | "challengeRatingZeroBeastSelectionMismatch"
         | "challengeRatingZeroBeastCatalogMissing"
         | "challengeRatingZeroBeastStatBlockMissing"
-        | "challengeRatingZeroBeastFactsMismatch"
-        | "specialFormSelectionMismatch"
-        | "normalFormNotEligible"
-        | "normalFormSelectionMismatch";
-      readonly formId: string;
-      readonly resolvedStatBlockId: string;
+        | "challengeRatingZeroBeastFactsMismatch";
+      readonly statBlockId: StatBlockId;
+      readonly resolvedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly handoffReason: "companionFormProof";
+      readonly check: "specialFormSelectionMismatch";
+      readonly formId: PactOfTheChainSpecialFormRef["formId"];
+      readonly resolvedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly handoffReason: "companionFormProof";
+      readonly check: "normalFormNotEligible" | "normalFormSelectionMismatch";
+      readonly formId: FindFamiliarNormalFormRef["formId"];
+      readonly resolvedStatBlockId: StatBlockId;
     }
   | {
       readonly handoffReason: "companionStoredForm";
@@ -114,7 +136,7 @@ export type CharacterSheetBattleHandoffFact =
   | {
       readonly handoffReason: "companionStoredForm";
       readonly check: "retainedSelectionMismatch";
-      readonly resolvedStatBlockId: string;
+      readonly resolvedStatBlockId: StatBlockId;
     };
 
 export type CharacterSheetBattleHandoffIssue =
@@ -128,26 +150,71 @@ export function characterSheetBattleHandoffIssue(
   fact: CharacterSheetBattleHandoffFact,
   message: string,
 ): Either.Either<never, CharacterSheetBattleHandoffIssue> {
-  return Either.left({
+  return Either.left(characterSheetBattleHandoffIssueValue(fact, message));
+}
+
+export function characterSheetBattleHandoffIssueValue(
+  fact: CharacterSheetBattleHandoffFact,
+  message: string,
+): CharacterSheetBattleHandoffIssue {
+  return {
     tag: "characterSheetBattleHandoffIssue",
     message,
     ...fact,
-  });
+  };
 }
 
-export function characterSheetBattleHandoffFactFromStateInit(
+export function characterSheetBattleHandoffFactsFromStateInit(
   issue: BattleStateInitIssue,
+): ReadonlyNonEmptyArray<CharacterSheetBattleHandoffFact> {
+  const [firstIssue, ...restIssues] = battleStateInitIssueLeaves(issue);
+  return [
+    characterSheetBattleHandoffFactFromStateInitLeaf(firstIssue),
+    ...restIssues.map(characterSheetBattleHandoffFactFromStateInitLeaf),
+  ];
+}
+
+export function characterSheetBattleHandoffIssuesFromStateInit(
+  issue: BattleStateInitIssue,
+): ReadonlyNonEmptyArray<CharacterSheetBattleHandoffIssue> {
+  const [firstIssue, ...restIssues] = battleStateInitIssueLeaves(issue);
+  return [
+    characterSheetBattleHandoffIssueFromStateInitLeaf(firstIssue),
+    ...restIssues.map(characterSheetBattleHandoffIssueFromStateInitLeaf),
+  ];
+}
+
+function characterSheetBattleHandoffFactFromStateInitLeaf(
+  issue: BattleStateInitLeafIssue,
 ): CharacterSheetBattleHandoffFact {
-  const [firstIssue] = battleStateInitIssueLeaves(issue);
-  return "kind" in firstIssue
-    ? {
-        handoffReason: "battleInitialization",
-        ...battleInitializationIssueFactFields(firstIssue),
-      }
-    : {
-        handoffReason: "battleInitializationUnavailable",
-        initializationTag: firstIssue.tag,
-      };
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssue" }, (matched) =>
+      "kind" in matched
+        ? {
+            handoffReason: "battleInitialization" as const,
+            ...battleInitializationIssueFactFields(matched),
+          }
+        : {
+            handoffReason: "battleInitializationUnavailable" as const,
+            initializationTag: "battleStateInitIssue" as const,
+          },
+    ),
+    Match.when({ tag: "weaponLoadoutMismatch" }, ({ slot }) => ({
+      handoffReason: "battleInitializationUnavailable" as const,
+      initializationTag: "weaponLoadoutMismatch" as const,
+      slot,
+    })),
+    Match.exhaustive,
+  );
+}
+
+function characterSheetBattleHandoffIssueFromStateInitLeaf(
+  issue: BattleStateInitLeafIssue,
+): CharacterSheetBattleHandoffIssue {
+  return characterSheetBattleHandoffIssueValue(
+    characterSheetBattleHandoffFactFromStateInitLeaf(issue),
+    battleStateInitIssueMessage(issue),
+  );
 }
 
 export function characterSheetBattleHandoffFactFromIssue(

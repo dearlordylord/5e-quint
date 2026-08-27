@@ -18,7 +18,6 @@ import {
   type BattleTablePositionId,
   type CombatantId,
   type InitiativeScore,
-  battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import {
   characterSheetCompanion,
@@ -39,16 +38,17 @@ import {
   type FindFamiliarFormSelection,
 } from "@dnd/surface/surface/find-familiar-forms";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { StatBlockId } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Either, Option } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 
 import {
   characterSheetBattleHandoffFactFromIssue,
-  characterSheetBattleHandoffFactFromStateInit,
   characterSheetBattleHandoffIssue,
+  characterSheetBattleHandoffIssueValue,
+  characterSheetBattleHandoffIssuesFromStateInit,
   type CharacterSheetBattleHandoffFact,
   type CharacterSheetBattleHandoffIssue,
 } from "./battle-handoff-issue.ts";
@@ -130,6 +130,9 @@ export type BattleCompanionRosterIssue =
       readonly companionCombatantId?: CombatantId;
       readonly message: string;
     } & CharacterSheetBattleHandoffFact);
+
+type CharacterSheetBattleHandoffIssues =
+  ReadonlyNonEmptyArray<CharacterSheetBattleHandoffIssue>;
 
 type BattleCompanionRosterDependentIssue = Exclude<
   BattleCompanionRosterIssue,
@@ -238,7 +241,7 @@ export function composeBattleCompanionRoster(input: {
       continue;
     }
 
-    const admitted = admitCharacterSheetCompanionToBattle({
+    const admitted = admitCharacterSheetCompanionToBattleWithIssues({
       session,
       sheet: owner.sheet,
       unitLibrary: input.unitLibrary,
@@ -259,16 +262,20 @@ export function composeBattleCompanionRoster(input: {
       statBlockCatalog: input.statBlockCatalog,
     });
     if (Either.isLeft(admitted)) {
-      addIssue({
-        kind: "companionAdmission",
-        admissionReason: "admissionRejected",
-        issueTag: admitted.left.tag,
-        index,
-        ownerCharacterId: request.ownerCharacterId,
-        ...(companionCombatantId === undefined ? {} : { companionCombatantId }),
-        ...characterSheetBattleHandoffFactFromIssue(admitted.left),
-        message: admitted.left.message,
-      });
+      for (const issue of admitted.left) {
+        addIssue({
+          kind: "companionAdmission",
+          admissionReason: "admissionRejected",
+          issueTag: issue.tag,
+          index,
+          ownerCharacterId: request.ownerCharacterId,
+          ...(companionCombatantId === undefined
+            ? {}
+            : { companionCombatantId }),
+          ...characterSheetBattleHandoffFactFromIssue(issue),
+          message: issue.message,
+        });
+      }
       continue;
     }
     session = admitted.right;
@@ -297,12 +304,43 @@ export function admitCharacterSheetCompanionToBattle(
   BattleState | BattleRuntimeSession,
   CharacterSheetBattleHandoffIssue
 > {
+  const admitted = admitCharacterSheetCompanionToBattleWithIssues(input);
+  if (Either.isLeft(admitted)) {
+    const [firstIssue] = admitted.left;
+    return Either.left(firstIssue);
+  }
+  return Either.right(admitted.right);
+}
+
+function admitCharacterSheetCompanionToBattleWithIssues(
+  input: CharacterSheetCompanionBattleAdmissionInput,
+): Either.Either<BattleState, CharacterSheetBattleHandoffIssues>;
+function admitCharacterSheetCompanionToBattleWithIssues(
+  input: CharacterSheetCompanionBattleRuntimeAdmissionInput,
+): Either.Either<BattleRuntimeSession, CharacterSheetBattleHandoffIssues>;
+function admitCharacterSheetCompanionToBattleWithIssues(
+  input:
+    | CharacterSheetCompanionBattleAdmissionInput
+    | CharacterSheetCompanionBattleRuntimeAdmissionInput,
+): Either.Either<
+  BattleState | BattleRuntimeSession,
+  CharacterSheetBattleHandoffIssues
+>;
+function admitCharacterSheetCompanionToBattleWithIssues(
+  input:
+    | CharacterSheetCompanionBattleAdmissionInput
+    | CharacterSheetCompanionBattleRuntimeAdmissionInput,
+): Either.Either<
+  BattleState | BattleRuntimeSession,
+  CharacterSheetBattleHandoffIssues
+> {
   const sheetCompanion = characterSheetCompanion(input.sheet);
   if (sheetCompanion.tag === "none") {
-    return characterSheetBattleHandoffIssue(
+    const issue = characterSheetBattleHandoffIssueValue(
       { handoffReason: "retainedCompanionUnavailable" },
       "Character Sheet has no retained companion to admit.",
     );
+    return Either.left([issue]);
   }
   const manifestation = companionAdmissionManifestation({
     companion: sheetCompanion.companion,
@@ -315,7 +353,7 @@ export function admitCharacterSheetCompanionToBattle(
     ...(input.initiative === undefined ? {} : { initiative: input.initiative }),
     ...(input.placement === undefined ? {} : { placement: input.placement }),
   });
-  if (Either.isLeft(manifestation)) return Either.left(manifestation.left);
+  if (Either.isLeft(manifestation)) return Either.left([manifestation.left]);
   const admissionBase = {
     ownerId: input.ownerCombatantId,
     identity: {
@@ -351,7 +389,7 @@ function admitProjectedCharacterSheetCompanion(
   admission: CompanionAdmissionWithoutState<CompanionBattleAdmissionInput>,
 ): Either.Either<
   BattleState | BattleRuntimeSession,
-  CharacterSheetBattleHandoffIssue
+  CharacterSheetBattleHandoffIssues
 > {
   if ("session" in input) {
     const admitted = admitCompanionToBattleRuntime({
@@ -359,9 +397,8 @@ function admitProjectedCharacterSheetCompanion(
       session: input.session,
     });
     return Either.isLeft(admitted)
-      ? characterSheetBattleHandoffIssue(
-          characterSheetBattleHandoffFactFromStateInit(admitted.left),
-          battleStateInitIssueMessage(admitted.left),
+      ? Either.left(
+          characterSheetBattleHandoffIssuesFromStateInit(admitted.left),
         )
       : Either.right(admitted.right);
   }
@@ -370,10 +407,7 @@ function admitProjectedCharacterSheetCompanion(
     state: input.state,
   });
   return Either.isLeft(admitted)
-    ? characterSheetBattleHandoffIssue(
-        characterSheetBattleHandoffFactFromStateInit(admitted.left),
-        battleStateInitIssueMessage(admitted.left),
-      )
+    ? Either.left(characterSheetBattleHandoffIssuesFromStateInit(admitted.left))
     : Either.right(admitted.right);
 }
 
@@ -567,7 +601,7 @@ function retainedCompanionResolvedFormProofIssue(input: {
   readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog?: StatBlockCatalog;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
-  readonly resolvedStatBlockId: StatBlockRecord["id"];
+  readonly resolvedStatBlockId: StatBlockId;
 }): {
   readonly fact: Extract<
     CharacterSheetBattleHandoffFact,
@@ -581,7 +615,7 @@ function retainedCompanionResolvedFormProofIssue(input: {
         fact: {
           handoffReason: "companionFormProof",
           check: "challengeRatingZeroBeastSelectionMismatch",
-          formId: input.selectedForm.statBlockId,
+          statBlockId: input.selectedForm.statBlockId,
           resolvedStatBlockId: input.resolvedStatBlockId,
         },
         message:
@@ -593,7 +627,7 @@ function retainedCompanionResolvedFormProofIssue(input: {
         fact: {
           handoffReason: "companionFormProof",
           check: "challengeRatingZeroBeastCatalogMissing",
-          formId: input.selectedForm.statBlockId,
+          statBlockId: input.selectedForm.statBlockId,
           resolvedStatBlockId: input.resolvedStatBlockId,
         },
         message:
@@ -608,7 +642,7 @@ function retainedCompanionResolvedFormProofIssue(input: {
         fact: {
           handoffReason: "companionFormProof",
           check: "challengeRatingZeroBeastStatBlockMissing",
-          formId: input.selectedForm.statBlockId,
+          statBlockId: input.selectedForm.statBlockId,
           resolvedStatBlockId: input.resolvedStatBlockId,
         },
         message:
@@ -622,7 +656,7 @@ function retainedCompanionResolvedFormProofIssue(input: {
           fact: {
             handoffReason: "companionFormProof",
             check: "challengeRatingZeroBeastFactsMismatch",
-            formId: input.selectedForm.statBlockId,
+            statBlockId: input.selectedForm.statBlockId,
             resolvedStatBlockId: input.resolvedStatBlockId,
           },
           message:
@@ -706,7 +740,7 @@ function retainedFamiliarLikeNormalFormProofIssue(input: {
     CharacterSheetCompanionFormSelection,
     { readonly tag: "normalNamedForm" }
   >;
-  readonly resolvedStatBlockId: StatBlockRecord["id"];
+  readonly resolvedStatBlockId: StatBlockId;
 }): {
   readonly fact: Extract<
     CharacterSheetBattleHandoffFact,

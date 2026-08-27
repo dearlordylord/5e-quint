@@ -22,6 +22,8 @@ import {
   familiarMaxHp,
   familiarStatBlockWithCreatureTypeOverride,
   findFamiliarCurrentHitPoints,
+  findFamiliarIdentityIssueFacts,
+  findFamiliarIdentityIssueMessage,
   findFamiliarIdentityIssue,
   findFamiliarPresentState,
   findFamiliarTemporarilyDismissedState,
@@ -605,12 +607,14 @@ export function admitCompanionToBattle(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const identityIssue = findFamiliarIdentityIssue(
+  const identityIssue = findFamiliarIdentityStateInitIssue(
     input.state,
     input.ownerId,
     input.companionId,
   );
-  if (identityIssue !== null) return battleStateInitIssue(identityIssue);
+  if (identityIssue !== null) {
+    return Either.left(identityIssue);
+  }
 
   const resolvedForm = resolveStoredFindFamiliarForm({
     catalog: input.catalog,
@@ -653,6 +657,25 @@ export function admitCompanionToBattle(
     nextState.state,
     input.initialCombatantOrder,
   );
+}
+
+function findFamiliarIdentityStateInitIssue(
+  state: BattleState,
+  ownerId: CombatantId,
+  companionId: CombatantId,
+): Extract<
+  BattleStateInitIssue,
+  { readonly tag: "battleStateInitIssue" }
+> | null {
+  const issue = findFamiliarIdentityIssueFacts(state, ownerId, companionId);
+  return issue === null
+    ? null
+    : {
+        tag: "battleStateInitIssue",
+        kind: "duplicateCombatantId",
+        combatantId: issue.familiarId,
+        message: findFamiliarIdentityIssueMessage(issue),
+      };
 }
 
 function withAdmittedFindFamiliarCombatant(
@@ -724,12 +747,14 @@ function admitAbsentCompanionToBattle(
     return battleStateInitIssue(resolvedForm.message);
   }
   if (input.manifestation.tag === "temporarilyDismissed") {
-    const identityIssue = findFamiliarIdentityIssue(
+    const identityIssue = findFamiliarIdentityStateInitIssue(
       input.state,
       input.ownerId,
       input.manifestation.reappearanceCombatantId,
     );
-    if (identityIssue !== null) return battleStateInitIssue(identityIssue);
+    if (identityIssue !== null) {
+      return Either.left(identityIssue);
+    }
   }
   const companion =
     input.manifestation.tag === "temporarilyDismissed"
