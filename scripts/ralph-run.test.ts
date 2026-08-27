@@ -945,9 +945,28 @@ describe("Ralph launcher boundaries", () => {
     );
     expect(packageJson.scripts["proof:qnt"]).toContain("with-mbt-lock.sh");
     expect(packageJson.scripts["proof:qnt:body"]).toContain("test:qnt-proofs");
-    expect(
-      packageJson.scripts["check:surface-publication-self-test"],
-    ).toContain("--maxWorkers=1");
+    const publicationSelfTest =
+      packageJson.scripts["check:surface-publication-self-test"];
+    const publicationSelfTestBody =
+      packageJson.scripts["check:surface-publication-self-test:body"];
+    expect(publicationSelfTest).toContain("scripts/resource-lock-owner.sh");
+    expect(publicationSelfTest).toContain("with_resource_lock_owner");
+    expect(publicationSelfTest).toContain(
+      "scripts/with-broad-workspace-lock.sh",
+    );
+    expect(publicationSelfTest).toContain(
+      "pnpm run check:surface-publication-self-test:body",
+    );
+    expect(publicationSelfTestBody).toContain(
+      "scripts/assert-resource-lock.sh broad",
+    );
+    expect(publicationSelfTestBody).toContain("--maxWorkers=1");
+    expect(packageJson.scripts["quality:body"]).toContain(
+      "pnpm run check:surface-publication-self-test:body",
+    );
+    expect(packageJson.scripts["quality:body"]).not.toContain(
+      "pnpm check:surface-publication-self-test",
+    );
 
     for (const pool of ["forks", "threads"] as const) {
       const resolved = await resolveConfig({

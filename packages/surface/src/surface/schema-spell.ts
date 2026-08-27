@@ -6407,6 +6407,18 @@ const StandaloneStatBlockProcedureFields = {
   legendaryActions: optionalExact(StatBlockLegendaryActionSectionSchema),
 } as const;
 
+const SWARM_STATUS_CREATURE_TYPE_TAGS = [
+  "swarm",
+  "swarm of tiny beasts",
+] as const;
+
+const encodesSwarmStatus = (tag: string): boolean => {
+  const normalizedTag = tag.trim().toLowerCase().replace(/\s+/g, " ");
+  return SWARM_STATUS_CREATURE_TYPE_TAGS.some(
+    (swarmStatusTag) => normalizedTag === swarmStatusTag,
+  );
+};
+
 /**
  * Standalone authored Stat Block facts. This shape owns source-descriptive
  * facts that a spawned/runtime projection intentionally does not carry.
@@ -6416,13 +6428,10 @@ const StandaloneStatBlockSharedSchema = Schema.Struct({
   creatureType: CreatureTypeSchema,
   creatureTypeTags: optionalExact(
     nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")).pipe(
-      Schema.filter(
-        (tags) => tags.every((tag) => tag.toLowerCase() !== "swarm"),
-        {
-          message: () =>
-            "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
-        },
-      ),
+      Schema.filter((tags) => tags.every((tag) => !encodesSwarmStatus(tag)), {
+        message: () =>
+          "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
+      }),
     ),
   ),
   alignment: StatBlockAlignmentSchema,
