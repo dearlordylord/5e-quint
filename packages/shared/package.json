@@ -7,6 +7,7 @@
   "exports": {
     "./elapsed-time": "./src/elapsed-time.ts",
     "./game-facts": "./src/game-facts.ts",
+    "./json-schema": "./src/json-schema.ts",
     "./types": "./src/types.ts",
     "./wild-shape": "./src/wild-shape.ts"
   },

@@ -4624,7 +4624,7 @@ export const BattleInterruptDecisionFillSchema = Schema.suspend(() =>
     identifier: "BattleInterruptDecisionFill",
     parseOptions: { onExcessProperty: "error" },
   }),
-);
+).annotations({ identifier: "BattleInterruptDecisionFill" });
 
 export const BattleFillSchema: Schema.Schema<
   BattleFill,

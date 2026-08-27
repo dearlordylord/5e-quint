@@ -127,11 +127,13 @@ export type OracleBattleRosterEntry = Schema.Schema.Type<
 >;
 
 const OracleBattleFillSchema = BattleFillSchema.annotations({
+  identifier: "BattleFill",
   parseOptions: { onExcessProperty: "error" },
 });
 
 export const OracleBattleInterruptDecisionFillSchema =
   BattleInterruptDecisionFillSchema.annotations({
+    identifier: "BattleInterruptDecisionFill",
     parseOptions: { onExcessProperty: "error" },
   });
 export type OracleBattleInterruptDecisionFill =
