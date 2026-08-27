@@ -1554,8 +1554,8 @@ describe("Character Sheet battle handoff", () => {
     const missingFeatureUnitId = authoredUnitId(
       "synthetic:missing-hit-point-grant",
     );
-    const malformedSheet = {
-      ...sheet,
+    const malformedSheet = forgeCharacterSheetBuildForBoundaryTest({
+      sheet,
       build: {
         ...sheet.build,
         features: [
@@ -1567,7 +1567,7 @@ describe("Character Sheet battle handoff", () => {
           },
         ],
       },
-    } as CharacterSheet;
+    });
     const projection = characterSheetBattleInitWithRoute({
       sheet: malformedSheet,
       unitLibrary: unitCatalogWithoutUnitIds(
@@ -12613,6 +12613,15 @@ function expectRight<T, E>(result: Either.Either<T, E>): T {
   }
   expect(Either.isRight(result)).toBe(true);
   return result.right;
+}
+
+function forgeCharacterSheetBuildForBoundaryTest(input: {
+  readonly sheet: CharacterSheet;
+  readonly build: CharacterSheet["build"];
+}): CharacterSheet {
+  // This fixture intentionally bypasses the Character Sheet parser to exercise
+  // the battle boundary's handling of malformed authored build references.
+  return { ...input.sheet, build: input.build } as CharacterSheet;
 }
 
 function sheetMaximumHp(sheet: CharacterSheet) {

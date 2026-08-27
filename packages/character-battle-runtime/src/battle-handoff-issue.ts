@@ -164,16 +164,6 @@ export function characterSheetBattleHandoffIssueValue(
   };
 }
 
-export function characterSheetBattleHandoffFactsFromStateInit(
-  issue: BattleStateInitIssue,
-): ReadonlyNonEmptyArray<CharacterSheetBattleHandoffFact> {
-  const [firstIssue, ...restIssues] = battleStateInitIssueLeaves(issue);
-  return [
-    characterSheetBattleHandoffFactFromStateInitLeaf(firstIssue),
-    ...restIssues.map(characterSheetBattleHandoffFactFromStateInitLeaf),
-  ];
-}
-
 export function characterSheetBattleHandoffIssuesFromStateInit(
   issue: BattleStateInitIssue,
 ): ReadonlyNonEmptyArray<CharacterSheetBattleHandoffIssue> {
