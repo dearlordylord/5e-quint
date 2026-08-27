@@ -424,9 +424,9 @@ green claim.
 
 ## Issue #377 foundation evidence snapshot
 
-Source HEAD: `2477da6698af5178acb8e0dbeedcc0c0ff781afd`. This entry records the
+Source HEAD: `d1bf2a326188a629d260895b517eeb85a7261f9d`. This entry records the
 #377 foundation lane after the Battle foundation, pure representation-codec,
-and immediate MCP Result caller tranches; it does not claim package-wide or
+immediate MCP Result caller and isolated equality evidence tranches; it does not claim package-wide or
 workspace-wide green status.
 
 The isolated executable lane uses foundation-owned suites that do not import
@@ -435,28 +435,30 @@ persistent-effect owners. The broader package test lane remains controlled-red
 because package-index and test-support closures still reach the later-owner
 `druid-wild-shape.ts`, which imports removed `effect/Either`.
 
-| Evidence                                                                                                                                                                           | Result                                                                                                                                                                                    |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm check:effect4-cohort:self-test`                                                                                                                                              | pass                                                                                                                                                                                      |
-| `pnpm check:effect4-cohort`                                                                                                                                                        | pass                                                                                                                                                                                      |
-| `pnpm exec vitest run packages/battle-runtime/src/battle-reducer/domain-helpers.test.ts packages/battle-runtime/src/character-execution-profile-projection.test.ts --reporter=dot` | pass; 2 suites, 12/12 tests                                                                                                                                                               |
-| `pnpm --filter @dnd/battle-runtime typecheck`                                                                                                                                      | controlled red; exit 1, 364 diagnostics (604 output lines)                                                                                                                                |
-| `pnpm --filter @dnd/mcp typecheck --pretty false > /tmp/gh377-final-mcp-typecheck.txt 2>&1`; `grep -c 'error TS' /tmp/gh377-final-mcp-typecheck.txt`                               | controlled red; exit 1, 1,504 diagnostics (2,044 output lines); repaired lifecycle/roster/initiative callers are no longer reported, while later-owner schema/input migration remains red |
-| Changed #377 foundation source attribution                                                                                                                                         | zero diagnostics in the changed foundation files; remaining diagnostics belong to later-owner callers/capabilities and stale Effect 3 test closures                                       |
+| Evidence                                                                                                                                                                                                                                            | Result                                                                                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check:effect4-cohort:self-test`                                                                                                                                                                                                               | pass                                                                                                                                                                                      |
+| `pnpm check:effect4-cohort`                                                                                                                                                                                                                         | pass                                                                                                                                                                                      |
+| `pnpm exec vitest run packages/battle-runtime/src/battle-reducer/domain-helpers.test.ts packages/battle-runtime/src/character-execution-profile-projection.test.ts packages/battle-runtime/src/battle-fill-equality-focused.test.ts --reporter=dot` | pass; 3 suites, 14/14 tests                                                                                                                                                               |
+| `pnpm --filter @dnd/battle-runtime typecheck`                                                                                                                                                                                                       | controlled red; exit 1, 364 diagnostics (604 output lines)                                                                                                                                |
+| `pnpm --filter @dnd/mcp typecheck --pretty false > /tmp/gh377-final-mcp-typecheck.txt 2>&1`; `grep -c 'error TS' /tmp/gh377-final-mcp-typecheck.txt`                                                                                                | controlled red; exit 1, 1,504 diagnostics (2,044 output lines); repaired lifecycle/roster/initiative callers are no longer reported, while later-owner schema/input migration remains red |
+| `. scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm --dir packages/battle-runtime exec quint test battle-runtime-reaction-continuation-tests.qnt --verbosity 1`                                             | pass; `battleRuntimeReactionContinuationTests`                                                                                                                                            |
+| `. scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm --dir packages/battle-runtime exec quint test battle-runtime-replay-equivalence.qnt --verbosity 1`                                                      | pass; `battleRuntimeReplayEquivalence`                                                                                                                                                    |
+| `. scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm --dir packages/battle-runtime exec quint test battle-runtime-public-trace-contract.qnt --verbosity 1`                                                   | pass; `battleRuntimePublicTraceContract`                                                                                                                                                  |
+| `pnpm exec vitest run packages/battle-runtime/src/battle-codecs-boundary.test.ts packages/battle-runtime/src/gh227-admission-codec-projections.test.ts --reporter=dot`                                                                              | controlled red; 2 suites collected, blocked before tests by excluded `druid-wild-shape.ts` → removed `effect/Either`                                                                      |
+| Changed #377 foundation source attribution                                                                                                                                                                                                          | zero diagnostics in the changed foundation files; remaining diagnostics belong to later-owner callers/capabilities and stale Effect 3 test closures                                       |
 
 The focused lane is acceptance evidence for deterministic foundation behavior,
 schema/domain helper behavior, and executable test collection. It intentionally
 does not waive the package-wide controlled-red inventory or closure conditions
 above.
 
-The requested direct continuation/equality leaf probe was evaluated against
-`battle-fill-equality.ts`, but its canonical implementation imports
-`movement-speed.ts` and then the later-owner `druid-wild-shape.ts`; executing a
-new test would therefore collect the excluded Effect 3 dependency. Existing
-foundation QNT and focused protocol/codec evidence remain the executable
-coverage for hole/fill ordering, equality, retry/rejection, codec, and
-continuation behavior; no duplicate production algorithm or test-only import
-workaround was added.
+The focused equality suite directly covers ordered prefix accumulation and
+rejection of reordered, changed, and truncated fills. The locked QNT suites
+cover reaction continuation, replay equivalence, and public trace protocol.
+Codec boundary suites collect but remain blocked before test execution by the
+excluded `druid-wild-shape.ts` Effect 3 import; no test-only import workaround
+or duplicate production algorithm was added.
 
 ## Closure conditions
 
