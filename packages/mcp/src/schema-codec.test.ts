@@ -267,6 +267,10 @@ describe("MCP model output JSON Schema", () => {
         },
       },
     });
+    expect(defaultProjection).not.toHaveProperty(
+      "properties.envelope.properties.frontier.properties.acts.items.properties",
+    );
+    expect(battleProjection).not.toBe(defaultProjection);
     expect(mcpModelOutputJsonSchema(codec)).toBe(defaultProjection);
     expect(mcpModelOutputJsonSchema(codec, { maxDepth: 5 })).toBe(
       battleProjection,
