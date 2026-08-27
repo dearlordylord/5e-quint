@@ -35,7 +35,12 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
-import { OracleBattleCheckpointSchema } from "./oracle-case-trace-schema.ts";
+import {
+  OracleBattleCheckpointSchema,
+  OracleBattleEnteredSchema,
+  OracleBattleInterruptDecisionFillSchema,
+  OracleBattleProgressedSchema,
+} from "./oracle-case-trace-schema.ts";
 
 const unitLibraryResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -215,6 +220,33 @@ describe("Opaque Oracle Case and Trace contract", () => {
         code: "wrongType",
       });
     }
+  });
+
+  it("uses a concrete interrupt-decision fill member at the Case boundary", () => {
+    const decline = Schema.decodeUnknownEither(
+      OracleBattleInterruptDecisionFillSchema,
+    )({
+      kind: "interruptDecision",
+      holeId: "oracle:interrupt",
+      value: {
+        kind: "decline",
+        responderId: combatantId("oracle:stat-block"),
+      },
+    });
+    expect(Either.isRight(decline)).toBe(true);
+
+    const ordinary = Schema.decodeUnknownEither(
+      OracleBattleInterruptDecisionFillSchema,
+    )({
+      kind: "movement",
+      holeId: "oracle:movement",
+      value: {
+        speedKind: "walk",
+        movementCostFeet: 5,
+        provokedOpportunityAttacks: [],
+      },
+    });
+    expect(Either.isLeft(ordinary)).toBe(true);
   });
 
   it("admits empty or all-Stat-Block rosters but rejects a second fresh Sheet, duplicate conditions, and omitted temp HP", () => {
@@ -660,6 +692,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         {
           ...entered,
           frontier: {
+            kind: "acts",
             acts: [
               {
                 ...entered.frontier.acts[0],
@@ -699,6 +732,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           {
             ...entered,
             frontier: {
+              kind: "acts",
               acts: entered.frontier.acts.map((subject) =>
                 subject === ownerAct
                   ? {
@@ -720,6 +754,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           {
             ...entered,
             frontier: {
+              kind: "acts",
               acts: entered.frontier.acts.map((subject) =>
                 subject === ownerAct
                   ? {
@@ -740,10 +775,111 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ...trace,
       steps: [
         ...trace.steps.slice(0, -1),
-        { ...entered, frontier: { acts: [] } },
+        { ...entered, frontier: { kind: "acts", acts: [] } },
       ],
     };
     expect(Either.isLeft(decodeOracleTrace(emptyFrontier))).toBe(true);
+  });
+
+  it("requires initial admission to start at the first initiative actor but permits progressed turns to advance", () => {
+    const trace = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: mixedBattle,
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const entered = trace.steps.at(-1);
+    expect(entered?.tag).toBe("battleEntered");
+    if (entered?.tag !== "battleEntered") return;
+    const laterActor = entered.checkpoint.turnOrder[1];
+    expect(laterActor).toBeDefined();
+    if (laterActor === undefined) return;
+
+    const progressed = Schema.decodeUnknownEither(OracleBattleProgressedSchema)(
+      {
+        tag: "battleProgressed",
+        checkpoint: {
+          ...entered.checkpoint,
+          currentActorId: laterActor,
+        },
+        frontier: {
+          kind: "acts",
+          acts: [
+            {
+              tag: "runtimeCommand",
+              actorId: laterActor,
+              command: "endTurn",
+            },
+          ],
+        },
+      },
+    );
+    expect(Either.isRight(progressed)).toBe(true);
+
+    const invalidAdmission = Schema.decodeUnknownEither(
+      OracleBattleEnteredSchema,
+    )({
+      ...entered,
+      checkpoint: {
+        ...entered.checkpoint,
+        currentActorId: laterActor,
+      },
+      frontier: {
+        kind: "acts",
+        acts: [
+          {
+            tag: "runtimeCommand",
+            actorId: laterActor,
+            command: "endTurn",
+          },
+        ],
+      },
+    });
+    expect(Either.isLeft(invalidAdmission)).toBe(true);
+  });
+
+  it("requires a terminal frontier witness on a resolved Battle step", () => {
+    const trace = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: mixedBattle,
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const entered = trace.steps.at(-1);
+    expect(entered?.tag).toBe("battleEntered");
+    if (entered?.tag !== "battleEntered") return;
+
+    const resolved = {
+      ...trace,
+      steps: [
+        ...trace.steps,
+        {
+          tag: "battleResolved" as const,
+          checkpoint: entered.checkpoint,
+          frontier: { kind: "terminal" as const, outcome: "resolved" as const },
+        },
+      ],
+    };
+    expect(Either.isRight(decodeOracleTrace(resolved))).toBe(true);
+
+    const missingFrontier = {
+      ...trace,
+      steps: [
+        ...trace.steps,
+        {
+          tag: "battleResolved" as const,
+          checkpoint: entered.checkpoint,
+          outcome: "resolved" as const,
+        },
+      ],
+    };
+    expect(Either.isLeft(decodeOracleTrace(missingFrontier))).toBe(true);
   });
 
   it("isolates A/B/A batch evaluation from singleton evaluation", () => {

@@ -1020,8 +1020,18 @@ export type BattleInterruptProcedureChoice =
       readonly initialHoles: readonly BattleHole[];
     };
 
+type BattleInterruptChoiceResponderInput =
+  | {
+      readonly kind: "nestedProcedure";
+      readonly subject: BattleInterruptSubject;
+    }
+  | {
+      readonly kind: "reactionModifier";
+      readonly responderId: CombatantId;
+    };
+
 export function interruptChoiceResponderId(
-  choice: BattleInterruptProcedureChoice,
+  choice: BattleInterruptChoiceResponderInput,
 ): CombatantId {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({

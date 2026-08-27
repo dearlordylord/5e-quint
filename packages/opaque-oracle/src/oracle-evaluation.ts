@@ -364,11 +364,11 @@ function appendBattleAttemptResult(input: {
               });
               return next;
             },
-            terminal: () => {
+            terminal: (frontier) => {
               input.steps.push({
                 tag: "battleResolved",
                 checkpoint: nextCheckpoint,
-                outcome: "resolved",
+                frontier,
               });
               return next;
             },

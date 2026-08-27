@@ -13,11 +13,12 @@ import {
 } from "@dnd/character-creation-runtime";
 import {
   BattleFillSchema,
+  BattleInterruptDecisionFillSchema,
   BattleMechanicalFrontierSchema,
   BattleSubjectSchema,
   battleProcedureExecutionRefBelongsToCombatant,
   battleSubjectProcedureRefsBelongToOwners,
-  type BattleFill,
+  interruptChoiceResponderId,
   type BattleInterruptSubject,
   type BattleMechanicalInterruptChoice,
   type BattleMechanicalFrontier,
@@ -129,18 +130,12 @@ const OracleBattleFillSchema = BattleFillSchema.annotations({
   parseOptions: { onExcessProperty: "error" },
 });
 
-const OracleBattleInterruptDecisionFillSchema = OracleBattleFillSchema.pipe(
-  Schema.filter(
-    (
-      fill,
-    ): fill is Extract<BattleFill, { readonly kind: "interruptDecision" }> =>
-      fill.kind === "interruptDecision",
-    {
-      message: () =>
-        "an interrupt attempt must carry an interruptDecision Battle fill",
-    },
-  ),
-).annotations({ parseOptions: { onExcessProperty: "error" } });
+export const OracleBattleInterruptDecisionFillSchema =
+  BattleInterruptDecisionFillSchema.annotations({
+    parseOptions: { onExcessProperty: "error" },
+  });
+export type OracleBattleInterruptDecisionFill =
+  typeof OracleBattleInterruptDecisionFillSchema.Type;
 
 export const OracleBattleOrdinaryAttemptSchema = Schema.Struct({
   kind: Schema.Literal("ordinarySubject"),
@@ -504,7 +499,7 @@ export type OracleBattleAttemptRejection = Schema.Schema.Type<
 export const OracleBattleResolvedSchema = Schema.Struct({
   tag: Schema.Literal("battleResolved"),
   checkpoint: OracleBattleCheckpointSchema,
-  outcome: Schema.Literal("resolved"),
+  frontier: OracleBattleTerminalFrontierSchema,
 }).annotations({
   identifier: "OracleBattleResolved",
   parseOptions: { onExcessProperty: "error" },
@@ -652,10 +647,13 @@ function oracleBattleEnteredInvariantsHold(entered: {
     readonly acts: readonly [BattleSubject, ...BattleSubject[]];
   };
 }): boolean {
-  return oracleBattleCheckpointFrontierInvariantsHold({
-    checkpoint: entered.checkpoint,
-    frontier: entered.frontier,
-  });
+  return (
+    entered.checkpoint.currentActorId === entered.checkpoint.turnOrder[0] &&
+    oracleBattleCheckpointFrontierInvariantsHold({
+      checkpoint: entered.checkpoint,
+      frontier: entered.frontier,
+    })
+  );
 }
 
 function oracleBattleCheckpointFrontierInvariantsHold(input: {
@@ -669,80 +667,62 @@ function oracleBattleCheckpointFrontierInvariantsHold(input: {
   const liveCombatantIds = new Set(
     input.checkpoint.combatants.map(({ combatantId }) => combatantId),
   );
-  if (
-    input.frontier.kind === "terminal" ||
-    input.frontier.kind === "interruptDecision"
-  ) {
-    return input.frontier.kind === "terminal"
-      ? true
-      : input.frontier.decisionHole.eligibleResponders.every((responderId) =>
+  return Match.value(input.frontier).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      terminal: () => true,
+      acts: ({ acts }) =>
+        acts.every(
+          (subject) =>
+            battleSubjectBelongsToCurrentActor(
+              subject,
+              input.checkpoint.currentActorId,
+            ) &&
+            battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
+            battleSubjectProcedureRefsBelongToOwners(subject),
+        ),
+      ordinaryHoles: ({ subject }) =>
+        battleSubjectBelongsToCurrentActor(
+          subject,
+          input.checkpoint.currentActorId,
+        ) &&
+        battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
+        battleSubjectProcedureRefsBelongToOwners(subject),
+      interruptDecision: ({ decisionHole, choices }) =>
+        decisionHole.eligibleResponders.every((responderId) =>
           liveCombatantIds.has(responderId),
         ) &&
-          input.frontier.choices.every((choice) =>
-            oracleBattleInterruptChoiceIsValid(choice, liveCombatantIds),
-          );
-  }
-
-  if (input.frontier.kind === "acts") {
-    return (
-      input.checkpoint.currentActorId === input.checkpoint.turnOrder[0] &&
-      input.frontier.acts.every(
-        (subject) =>
-          battleSubjectBelongsToCurrentActor(
-            subject,
+        choices.every((choice) =>
+          oracleBattleInterruptChoiceIsValid(
+            choice,
+            liveCombatantIds,
             input.checkpoint.currentActorId,
-          ) &&
-          battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
-          battleSubjectProcedureRefsBelongToOwners(subject),
-      )
-    );
-  }
-
-  return (
-    input.checkpoint.currentActorId === input.checkpoint.turnOrder[0] &&
-    battleSubjectBelongsToCurrentActor(
-      input.frontier.subject,
-      input.checkpoint.currentActorId,
-    ) &&
-    battleSubjectReferencesAreLive(input.frontier.subject, liveCombatantIds) &&
-    battleSubjectProcedureRefsBelongToOwners(input.frontier.subject)
+          ),
+        ),
+    }),
   );
 }
 
 function oracleBattleInterruptChoiceIsValid(
   choice: BattleMechanicalInterruptChoice,
   liveCombatantIds: ReadonlySet<string>,
+  currentActorId: string,
 ): boolean {
-  const responderId = oracleBattleInterruptChoiceResponderId(choice);
+  const responderId = interruptChoiceResponderId(choice);
   if (!liveCombatantIds.has(responderId)) return false;
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
       nestedProcedure: ({ subject }) =>
-        oracleBattleInterruptSubjectIsValid(subject, liveCombatantIds),
-      reactionModifier: () => true,
-    }),
-  );
-}
-
-function oracleBattleInterruptChoiceResponderId(
-  choice: BattleMechanicalInterruptChoice,
-): string {
-  return Match.value(choice).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      nestedProcedure: ({ subject }) =>
-        Match.value(subject).pipe(
-          Match.discriminatorsExhaustive("command")({
-            releaseReadiedSpell: (value) => value.readiedSpellCasterId,
-            releaseReadiedMovement: (value) => value.readiedMovementActorId,
-            releaseReadiedAction: (value) => value.reactorId,
-            releaseReadiedAttack: (value) => value.reactorId,
-            castTriggeredReactionSpell: (value) => value.reactorId,
-            castAttackHitBonusActionSpell: (value) => value.casterId,
-            opportunityAttack: (value) => value.reactorId,
-            retaliationAttack: (value) => value.reactorId,
-          }),
+        oracleBattleInterruptSubjectIsValid(
+          subject,
+          liveCombatantIds,
+          currentActorId,
         ),
-      reactionModifier: ({ responderId }) => responderId,
+      reactionModifier: ({ responderId: modifierResponderId, modifier }) =>
+        modifierResponderId === responderId &&
+        battleProcedureExecutionRefBelongsToCombatant(
+          modifier.procedureRef,
+          modifierResponderId,
+        ),
     }),
   );
 }
@@ -750,52 +730,15 @@ function oracleBattleInterruptChoiceResponderId(
 function oracleBattleInterruptSubjectIsValid(
   subject: BattleInterruptSubject,
   liveCombatantIds: ReadonlySet<string>,
+  currentActorId: string,
 ): boolean {
-  if (!battleSubjectReferencesAreLive(subject, liveCombatantIds)) {
+  if (
+    !battleSubjectBelongsToCurrentActor(subject, currentActorId) ||
+    !battleSubjectReferencesAreLive(subject, liveCombatantIds)
+  ) {
     return false;
   }
-  const procedureOwnerAndRefs = Match.value(subject).pipe(
-    Match.discriminatorsExhaustive("command")({
-      releaseReadiedSpell: (value) => ({
-        ownerId: value.readiedSpellCasterId,
-        procedureRefs: [value.procedureRef],
-      }),
-      releaseReadiedMovement: (value) => ({
-        ownerId: value.actorId,
-        procedureRefs: [],
-      }),
-      releaseReadiedAction: (value) => ({
-        ownerId: value.reactorId,
-        procedureRefs: [],
-      }),
-      releaseReadiedAttack: (value) => ({
-        ownerId: value.reactorId,
-        procedureRefs: [value.procedureRef],
-      }),
-      castTriggeredReactionSpell: (value) => ({
-        ownerId: value.reactorId,
-        procedureRefs: [value.procedureRef],
-      }),
-      castAttackHitBonusActionSpell: (value) => ({
-        ownerId: value.casterId,
-        procedureRefs: [value.procedureRef],
-      }),
-      opportunityAttack: (value) => ({
-        ownerId: value.reactorId,
-        procedureRefs: [value.procedureRef],
-      }),
-      retaliationAttack: (value) => ({
-        ownerId: value.reactorId,
-        procedureRefs: [value.procedureRef],
-      }),
-    }),
-  );
-  return procedureOwnerAndRefs.procedureRefs.every((procedureRef) =>
-    battleProcedureExecutionRefBelongsToCombatant(
-      procedureRef,
-      procedureOwnerAndRefs.ownerId,
-    ),
-  );
+  return battleSubjectProcedureRefsBelongToOwners(subject);
 }
 
 function battleSubjectBelongsToCurrentActor(

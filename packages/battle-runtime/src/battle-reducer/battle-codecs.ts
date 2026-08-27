@@ -4550,6 +4550,82 @@ const BattleMovementFillValueCommonSchema = Schema.Struct(
   BattleMovementFillValueCommonSchemaFields,
 );
 
+export const BattleInterruptDecisionFillSchema = Schema.suspend(() =>
+  Schema.Struct({
+    kind: Schema.Literal("interruptDecision"),
+    holeId: BattleHoleIdSchema,
+    value: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("decline"),
+        responderId: CombatantId,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("resolve"),
+        responderId: CombatantId,
+        choice: Schema.Union(
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedSpell"),
+            procedureRef: BattleProcedureExecutionRef,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedMovement"),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedAction"),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("releaseReadiedAttack"),
+            targetId: CombatantId,
+            procedureRef: Schema.Union(
+              BattleAttackProcedureExecutionRef,
+              BattleStatBlockProcedureExecutionRef,
+            ),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("castTriggeredReactionSpell"),
+            procedureRef: BattleProcedureExecutionRef,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("castAttackHitBonusActionSpell"),
+            procedureRef: BattleProcedureExecutionRef,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("opportunityAttack"),
+            selection: BattleInterruptAttackExecutionSelectionSchema,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("retaliationAttack"),
+            selection: BattleInterruptAttackExecutionSelectionSchema,
+            fills: Schema.Array(BattleFillSchema),
+          }),
+          Schema.Struct({
+            kind: Schema.Literal("reactionRollOrDamageReduction"),
+            procedureRef: BattleProcedureExecutionRef,
+            modifierKind: Schema.Literal(
+              "attackRollReduction",
+              "abilityCheckReduction",
+              "damageRollReduction",
+              "attackDamageReduction",
+              "fallDamageReduction",
+            ),
+            fills: Schema.Array(BattleFillSchema),
+          }),
+        ),
+      }),
+    ),
+  }).annotations({
+    identifier: "BattleInterruptDecisionFill",
+    parseOptions: { onExcessProperty: "error" },
+  }),
+);
+
 export const BattleFillSchema: Schema.Schema<
   BattleFill,
   BattleFillEncoded,
@@ -5242,76 +5318,7 @@ export const BattleFillSchema: Schema.Schema<
         }),
       ),
     }),
-    Schema.Struct({
-      kind: Schema.Literal("interruptDecision"),
-      holeId: BattleHoleIdSchema,
-      value: Schema.Union(
-        Schema.Struct({
-          kind: Schema.Literal("decline"),
-          responderId: CombatantId,
-        }),
-        Schema.Struct({
-          kind: Schema.Literal("resolve"),
-          responderId: CombatantId,
-          choice: Schema.Union(
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedSpell"),
-              procedureRef: BattleProcedureExecutionRef,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedMovement"),
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedAction"),
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("releaseReadiedAttack"),
-              targetId: CombatantId,
-              procedureRef: Schema.Union(
-                BattleAttackProcedureExecutionRef,
-                BattleStatBlockProcedureExecutionRef,
-              ),
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("castTriggeredReactionSpell"),
-              procedureRef: BattleProcedureExecutionRef,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("castAttackHitBonusActionSpell"),
-              procedureRef: BattleProcedureExecutionRef,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("opportunityAttack"),
-              selection: BattleInterruptAttackExecutionSelectionSchema,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("retaliationAttack"),
-              selection: BattleInterruptAttackExecutionSelectionSchema,
-              fills: Schema.Array(BattleFillSchema),
-            }),
-            Schema.Struct({
-              kind: Schema.Literal("reactionRollOrDamageReduction"),
-              procedureRef: BattleProcedureExecutionRef,
-              modifierKind: Schema.Literal(
-                "attackRollReduction",
-                "abilityCheckReduction",
-                "damageRollReduction",
-                "attackDamageReduction",
-                "fallDamageReduction",
-              ),
-              fills: Schema.Array(BattleFillSchema),
-            }),
-          ),
-        }),
-      ),
-    }),
+    BattleInterruptDecisionFillSchema,
     Schema.Struct({
       kind: Schema.Literal("movement"),
       holeId: BattleHoleIdSchema,
