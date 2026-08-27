@@ -10,7 +10,7 @@ import type {
   PointPoolResource,
 } from "@dnd/surface/surface/types";
 import type { ClassName } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import type { BattleResourcePoolExecutionRef } from "./identity.ts";
 import { SORCERER_METAMAGIC_EFFECT_KINDS } from "@dnd/surface/surface/schema";
@@ -100,29 +100,29 @@ export type CharacterBattlePointPoolSpendIssue = {
 export function spendCharacterPointPoolResource(input: {
   readonly resource: CharacterBattleResourceState;
   readonly points: ResourceCount;
-}): Either.Either<
+}): Result.Result<
   CharacterBattlePointPoolResourceState,
   CharacterBattlePointPoolSpendIssue
 > {
   if (!characterBattleResourceIsPointPool(input.resource)) {
-    return Either.left({
+    return Result.fail({
       tag: "characterBattlePointPoolSpendIssue",
       message: "Only point-pool character battle resources can spend points.",
     });
   }
   if (input.points <= 0) {
-    return Either.left({
+    return Result.fail({
       tag: "characterBattlePointPoolSpendIssue",
       message: "Point-pool spending requires a positive point cost.",
     });
   }
   if (input.resource.pointsRemaining < input.points) {
-    return Either.left({
+    return Result.fail({
       tag: "characterBattlePointPoolSpendIssue",
       message: "Point-pool resource has insufficient remaining points.",
     });
   }
-  return Either.right({
+  return Result.succeed({
     ...input.resource,
     pointsRemaining: resourceCount(
       Number(input.resource.pointsRemaining) - Number(input.points),
