@@ -81,10 +81,8 @@ async function handleFixedPublicRoute(
   input: PublicHttpRequestInput,
   pathname: string,
 ): Promise<PublicHttpRequestObservation | undefined> {
-  for (const handleRoute of FIXED_PUBLIC_ROUTE_HANDLERS) {
-    const observation = await handleRoute(input, pathname);
-    if (observation !== undefined) return observation;
-  }
+  const observation = await resolveFixedPublicRoute(input, pathname);
+  if (observation !== undefined) return observation;
   if (pathname === "/mcp") return undefined;
   await writePublicHttpResponse(
     input.outgoing,
@@ -93,15 +91,20 @@ async function handleFixedPublicRoute(
   return { status: 404, outcome: "rejected" };
 }
 
-const FIXED_PUBLIC_ROUTE_HANDLERS = [
-  handlePublisherSiteRoute,
-  handlePluginDemoRoute,
-  handleHealthRoute,
-  handleVersionRoute,
-  handleAppsChallengeRoute,
-  handleMetricsRoute,
-  handleProtectedResourceRoute,
-] as const;
+async function resolveFixedPublicRoute(
+  input: PublicHttpRequestInput,
+  pathname: string,
+): Promise<PublicHttpRequestObservation | undefined> {
+  return (
+    (await handlePublisherSiteRoute(input, pathname)) ??
+    (await handlePluginDemoRoute(input, pathname)) ??
+    (await handleHealthRoute(input, pathname)) ??
+    (await handleVersionRoute(input, pathname)) ??
+    (await handleAppsChallengeRoute(input, pathname)) ??
+    (await handleMetricsRoute(input, pathname)) ??
+    (await handleProtectedResourceRoute(input, pathname))
+  );
+}
 
 async function handlePluginDemoRoute(
   input: PublicHttpRequestInput,

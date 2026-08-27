@@ -16,6 +16,7 @@ import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../test-timeout.ts";
 import { ListCharactersOutputSchema } from "./character-tool-output.ts";
 import { AdminSessionProjectionSchema } from "./admin-mirror-contract.ts";
 import {
@@ -95,7 +96,6 @@ const presentation = {
 };
 
 describe("MCP session wire projections", () => {
-  const schemaValidationTimeoutMs = 120_000;
   test("keeps battle fill definitions out of the session summary schema", () => {
     expect(
       mcpOutputJsonSchema(McpSessionSummarySchema).properties,
@@ -174,7 +174,7 @@ describe("MCP session wire projections", () => {
         }).valid,
       ).toBe(false);
     },
-    schemaValidationTimeoutMs,
+    SHARED_HOST_TEST_TIMEOUT_MILLISECONDS,
   );
 
   test(
@@ -302,7 +302,7 @@ describe("MCP session wire projections", () => {
         }).valid,
       ).toBe(false);
     },
-    schemaValidationTimeoutMs,
+    SHARED_HOST_TEST_TIMEOUT_MILLISECONDS,
   );
 
   test("derives the session summary from the canonical snapshot", () => {
