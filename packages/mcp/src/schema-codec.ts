@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { Context, Effect, Result, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 import {
   errorContent,
@@ -173,17 +173,12 @@ export function mcpModelOutputJsonSchema<A, I>(
   return identified;
 }
 
-export function schemaJsonContent<S extends Schema.Constraint>(
-  schema: S,
-  value: S["Type"],
+export function schemaJsonContent<T, E, RD>(
+  schema: Schema.ConstraintCodec<T, E, RD, never>,
+  value: T,
 ) {
   const encoded = jsonSerializablePayload(
-    Effect.runSync(
-      Effect.provideContext(
-        Schema.encodeEffect(schema)(value),
-        Context.empty(),
-      ),
-    ),
+    Effect.runSync(Schema.encodeEffect(schema)(value)),
   );
   return {
     ...jsonContent(encoded),

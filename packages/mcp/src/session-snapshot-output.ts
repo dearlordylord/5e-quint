@@ -11,10 +11,10 @@ import type { McpSessionSnapshot } from "./session-store.ts";
 const McpInitialInitiativeCombatantSnapshotSchema = Schema.Struct({
   combatantId: CombatantId,
   initiative: Schema.Number,
-  rollMode: Schema.Literal("normal", "advantage", "disadvantage"),
+  rollMode: Schema.Literals(["normal", "advantage", "disadvantage"]),
 });
 
-export const McpBattleStateSnapshotSchema = Schema.Union(
+export const McpBattleStateSnapshotSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("none"),
   }),
@@ -28,7 +28,7 @@ export const McpBattleStateSnapshotSchema = Schema.Union(
     battleId: Schema.String,
     currentActorId: CombatantId,
   }),
-);
+]);
 
 export const McpNoneBattleStateSnapshotSchema = Schema.Struct({
   tag: Schema.Literal("none"),
@@ -47,7 +47,7 @@ export const McpActiveBattleStateSnapshotSchema = Schema.Struct({
 const McpSessionSummaryFields = {
   draftIds: Schema.Array(Schema.String),
   characterIds: Schema.Array(Schema.String),
-  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
+  selectedStatBlockId: Schema.Union([Schema.String, Schema.Null]),
   battleState: McpBattleStateSnapshotSchema,
 };
 
@@ -55,13 +55,13 @@ const McpTransientBattleFillsSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   fills: Schema.Array(BattleFillSchema),
   holes: Schema.NonEmptyArray(BattleHoleSchema),
-  presentation: Schema.optionalWith(Schema.Never, { exact: true }),
+  presentation: Schema.optionalKey(Schema.Never),
 });
 
-const McpPendingBattleHolesSchema = Schema.Union(
+const McpPendingBattleHolesSchema = Schema.Union([
   Schema.NonEmptyArray(Schema.Unknown),
   Schema.Null,
-);
+]);
 
 export const McpSessionSummarySchema = Schema.Struct({
   ...McpSessionSummaryFields,
@@ -70,21 +70,21 @@ export const McpSessionSummarySchema = Schema.Struct({
 
 export const McpSessionSnapshotSchema = Schema.Struct({
   ...McpSessionSummaryFields,
-  transientBattleFills: Schema.Union(
+  transientBattleFills: Schema.Union([
     McpTransientBattleFillsSchema,
     Schema.Null,
-  ),
+  ]),
 });
 
 export const McpActiveSessionSnapshotSchema = Schema.Struct({
   draftIds: Schema.Array(Schema.String),
   characterIds: Schema.Array(Schema.String),
-  selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
+  selectedStatBlockId: Schema.Union([Schema.String, Schema.Null]),
   battleState: McpActiveBattleStateSnapshotSchema,
-  transientBattleFills: Schema.Union(
+  transientBattleFills: Schema.Union([
     McpTransientBattleFillsSchema,
     Schema.Null,
-  ),
+  ]),
 });
 
 export type McpSessionSummary = typeof McpSessionSummarySchema.Type;
