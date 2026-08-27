@@ -1,4 +1,4 @@
-import { type BattleRuntimeSession } from "@dnd/battle-runtime";
+import { type BattleId, type BattleRuntimeSession } from "@dnd/battle-runtime";
 import { Match, Either } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -29,7 +29,7 @@ export function activeBattleStartError(
   );
 }
 
-function alreadyActiveBattleError(battleId: string) {
+function alreadyActiveBattleError(battleId: BattleId) {
   return errorContent("A battle session is already active.", {
     code: "BATTLE_SESSION_ALREADY_ACTIVE",
     battleId,
@@ -43,13 +43,14 @@ export function commitActiveBattleStart(input: {
     readonly session: AvailableCharacterSession;
   }[];
 }) {
-  const envelope = battlePresentationEnvelopeForSession(
+  const presentedEnvelope = battlePresentationEnvelopeForSession(
     input.root,
     input.session,
   );
-  if (Either.isLeft(envelope)) {
-    return battlePresentationIssueContent(envelope.left);
+  if (Either.isLeft(presentedEnvelope)) {
+    return battlePresentationIssueContent(presentedEnvelope.left);
   }
+  const envelope = presentedEnvelope.right;
   return completeBattleStateTransition({
     root: input.root,
     transition: input.root.sessionStore.commitBattleStart({
@@ -64,19 +65,8 @@ export function commitActiveBattleStart(input: {
       if (battleState.tag !== "activeBattle") {
         throw new Error("Battle start payload requires owned active state.");
       }
-      const activeSession = input.root.sessionStore.battleSession;
-      if (activeSession === null) {
-        throw new Error("Battle start payload requires an active session.");
-      }
-      const envelope = battlePresentationEnvelopeForSession(
-        input.root,
-        activeSession,
-      );
-      if (Either.isLeft(envelope)) {
-        return battlePresentationIssueContent(envelope.left);
-      }
       return schemaJsonContent(StartBattleOutputSchema, {
-        envelope: envelope.right,
+        envelope,
         session: { ...mcpSessionSummary(session), battleState },
       });
     },
