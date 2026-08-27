@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
-import { Either, Random, Schema } from "effect";
+import { Random, Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -33,8 +33,10 @@ const request = {
 describe("structured MCP bulk dice roller", () => {
   test("rejects empty groups and caller correlation/idempotency fields", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(RollDiceArgsSchema)({ groups: [] }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(RollDiceArgsSchema))({
+          groups: [],
+        }),
       ),
     ).toBe(true);
 
@@ -42,7 +44,7 @@ describe("structured MCP bulk dice roller", () => {
       name: "roll_dice",
       args: { ...request, correlationId: "caller-supplied" },
     });
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("enforces bounded per-group and aggregate work before allocation", () => {
@@ -54,7 +56,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(tooManyInOneGroup).valid).toBe(false);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: tooManyInOneGroup }),
       ),
     ).toBe(true);
@@ -64,7 +66,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(atPerGroupBoundary).valid).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeDiceToolCall({ name: "roll_dice", args: atPerGroupBoundary }),
       ),
     ).toBe(true);
@@ -76,7 +78,7 @@ describe("structured MCP bulk dice roller", () => {
       })),
     };
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeDiceToolCall({ name: "roll_dice", args: atAggregateBoundary }),
       ),
     ).toBe(true);
@@ -90,7 +92,7 @@ describe("structured MCP bulk dice roller", () => {
       ],
     };
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: overAggregateBoundary }),
       ),
     ).toBe(true);
@@ -102,7 +104,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(tooManyGroups).valid).toBe(false);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: tooManyGroups }),
       ),
     ).toBe(true);
@@ -133,7 +135,11 @@ describe("structured MCP bulk dice roller", () => {
       groups: [{ dieSize: 6, results: [1, 7] }],
     };
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(RollDiceOutputSchema)(invalid)),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(RollDiceOutputSchema))(
+          invalid,
+        ),
+      ),
     ).toBe(true);
 
     const validate = new AjvJsonSchemaValidator().getValidator(

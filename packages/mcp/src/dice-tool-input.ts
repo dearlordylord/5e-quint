@@ -18,7 +18,7 @@ export const MAX_TOTAL_DICE = 10_000;
 /** Maximum number of groups accepted before aggregate dice work is evaluated. */
 export const MAX_DICE_GROUPS_PER_CALL = MAX_TOTAL_DICE;
 const DiceCountSchema = PositiveIntegerSchema.pipe(
-  Schema.lessThanOrEqualTo(MAX_DICE_PER_GROUP),
+  Schema.check(Schema.isLessThanOrEqualTo(MAX_DICE_PER_GROUP)),
 ).pipe(
   Schema.annotate({
     description:
@@ -26,7 +26,7 @@ const DiceCountSchema = PositiveIntegerSchema.pipe(
   }),
 );
 const DieSizeSchema = PositiveIntegerSchema.pipe(
-  Schema.lessThanOrEqualTo(MAX_DIE_SIZE),
+  Schema.check(Schema.isLessThanOrEqualTo(MAX_DIE_SIZE)),
 ).pipe(
   Schema.annotate({
     description:
@@ -46,7 +46,7 @@ export const DiceRollGroupSchema = Schema.Struct({
 
 export const RollDiceArgsSchema = Schema.Struct({
   groups: Schema.NonEmptyArray(DiceRollGroupSchema).pipe(
-    Schema.maxItems(MAX_DICE_GROUPS_PER_CALL),
+    Schema.check(Schema.isMaxLength(MAX_DICE_GROUPS_PER_CALL)),
   ),
 }).pipe(
   Schema.annotate({
