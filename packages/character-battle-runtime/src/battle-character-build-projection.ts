@@ -42,6 +42,7 @@ import {
   type CharacterBuildMagicInitiateSpellAccessIssue,
   type CharacterBuildProjectionCause,
   type CharacterBuildProjectionIssue,
+  type CharacterBuildMagicInitiateSpellAccess,
   type CharacterEquipmentItemId,
   type CharacterBuildSpellcastingSource,
   type NonEmptyReadonlyArray,
@@ -1109,6 +1110,49 @@ function spellcastingAllowedByArmorTraining(
   );
 }
 
+function parseCharacterBattleMagicInitiateSpellAccesses(input: {
+  readonly build: CharacterBuild;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  readonly CharacterBuildMagicInitiateSpellAccess[],
+  BattleCreatureInitIssue
+> {
+  const parsed = parseCharacterBuildMagicInitiateSpellAccesses({
+    value: input.build.magicInitiateSpellAccesses,
+    build: input.build,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isRight(parsed)) return Either.right(parsed.right);
+  const spellAccessIssues = characterBattleSpellAccessProjectionIssues(
+    parsed.left,
+    input.build,
+  );
+  return isNonEmptyReadonlyArray(spellAccessIssues)
+    ? battleCreatureInitIssueFromLeaves(spellAccessIssues)
+    : battleCreatureInitIssue(
+        "Character Battle Spell Access projection contains invalid selections.",
+        { kind: "characterBuildProjection", phase: "spellcasting" },
+      );
+}
+
+function projectCharacterBattleMagicInitiateSpellAccessesForCasting(input: {
+  readonly build: CharacterBuild;
+  readonly accesses: readonly CharacterBuildMagicInitiateSpellAccess[];
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  readonly CharacterBattleSpellAccessInit[],
+  BattleCreatureInitIssue
+> {
+  const projected = projectCharacterBattleMagicInitiateSpellAccesses(input);
+  if (Either.isRight(projected)) return Either.right(projected.right);
+  return isNonEmptyReadonlyArray(projected.left)
+    ? battleCreatureInitIssueFromLeaves(projected.left)
+    : battleCreatureInitIssue(
+        "Character Battle Spell Access projection contains invalid selections.",
+        { kind: "characterBuildProjection", phase: "spellcasting" },
+      );
+}
+
 export function characterSpellcasting(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
@@ -1126,22 +1170,9 @@ export function characterSpellcasting(input: {
 > {
   const { build, unitLibrary } = input;
   const parsedMagicInitiateSpellAccesses =
-    parseCharacterBuildMagicInitiateSpellAccesses({
-      value: build.magicInitiateSpellAccesses,
-      build,
-      unitLibrary,
-    });
+    parseCharacterBattleMagicInitiateSpellAccesses({ build, unitLibrary });
   if (Either.isLeft(parsedMagicInitiateSpellAccesses)) {
-    const spellAccessIssues = characterBattleSpellAccessProjectionIssues(
-      parsedMagicInitiateSpellAccesses.left,
-      build,
-    );
-    return isNonEmptyReadonlyArray(spellAccessIssues)
-      ? battleCreatureInitIssueFromLeaves(spellAccessIssues)
-      : battleCreatureInitIssue(
-          "Character Battle Spell Access projection contains invalid selections.",
-          { kind: "characterBuildProjection", phase: "spellcasting" },
-        );
+    return Either.left(parsedMagicInitiateSpellAccesses.left);
   }
   const spellcasting = build.spellcasting;
   const canCastSpells = characterBattleSpellcastingCanCast(input);
@@ -1170,19 +1201,13 @@ export function characterSpellcasting(input: {
     return Either.left(spellRecords.left);
   }
   const projectedMagicInitiateSpellAccesses =
-    projectCharacterBattleMagicInitiateSpellAccesses({
+    projectCharacterBattleMagicInitiateSpellAccessesForCasting({
       build,
       accesses: parsedMagicInitiateSpellAccesses.right,
       unitLibrary,
     });
   if (Either.isLeft(projectedMagicInitiateSpellAccesses)) {
-    const spellAccessIssues = projectedMagicInitiateSpellAccesses.left;
-    return isNonEmptyReadonlyArray(spellAccessIssues)
-      ? battleCreatureInitIssueFromLeaves(spellAccessIssues)
-      : battleCreatureInitIssue(
-          "Character Battle Spell Access projection contains invalid selections.",
-          { kind: "characterBuildProjection", phase: "spellcasting" },
-        );
+    return Either.left(projectedMagicInitiateSpellAccesses.left);
   }
   const projectedSpellAccesses = projectedMagicInitiateSpellAccesses.right;
   const additionalSpellAccesses = characterBattleAdditionalSpellAccesses({

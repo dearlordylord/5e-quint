@@ -1267,13 +1267,11 @@ export function settleCharacterSheetFromBattle(input: {
   });
 }
 
-function settleBattleCombatantIntoCharacterSheet(input: {
+function validateBattleCombatantForCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog?: StatBlockCatalog;
-  readonly runtimeContext: CharacterBattleRuntimeContext;
-}): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
+}): Either.Either<number, CharacterSheetBattleHandoffIssue> {
   if (input.combatant.origin.characterId !== input.sheet.characterId) {
     return characterBattleHandoffValidationIssue(
       "characterIdentityMismatch",
@@ -1318,6 +1316,24 @@ function settleBattleCombatantIntoCharacterSheet(input: {
       "activeBattleLocalState",
       "Battle handoff while active battle effects or Concentration are present is blocked; end or resolve battle-local effects before Character Sheet handoff.",
     );
+  }
+  return Either.right(hitPointMaximum.right);
+}
+
+function settleBattleCombatantIntoCharacterSheet(input: {
+  readonly sheet: CharacterSheet;
+  readonly combatant: CharacterBattleCreatureState;
+  readonly unitLibrary: UnitCatalog;
+  readonly statBlockCatalog?: StatBlockCatalog;
+  readonly runtimeContext: CharacterBattleRuntimeContext;
+}): Either.Either<CharacterSheet, CharacterSheetBattleHandoffIssue> {
+  const validatedHitPointMaximum = validateBattleCombatantForCharacterSheet({
+    sheet: input.sheet,
+    combatant: input.combatant,
+    unitLibrary: input.unitLibrary,
+  });
+  if (Either.isLeft(validatedHitPointMaximum)) {
+    return Either.left(validatedHitPointMaximum.left);
   }
 
   const zeroHpLifecycle =

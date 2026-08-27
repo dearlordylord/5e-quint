@@ -603,22 +603,32 @@ function companionStateInitIssue<TFacts extends BattleInitializationIssueFacts>(
   Extract<BattleStateInitIssue, { readonly tag: "battleStateInitIssue" }> &
     TFacts
 > {
-  return Either.left({ tag: "battleStateInitIssue", message, ...facts });
+  return Either.left(companionStateInitIssueValue(facts, message));
 }
 
-export function admitCompanionToBattle(
+function companionStateInitIssueValue<
+  TFacts extends BattleInitializationIssueFacts,
+>(
+  facts: TFacts,
+  message: string,
+): Extract<BattleStateInitIssue, { readonly tag: "battleStateInitIssue" }> &
+  TFacts {
+  return { tag: "battleStateInitIssue", message, ...facts };
+}
+
+function companionAdmissionPreconditionIssue(
   input: CompanionBattleAdmissionInput,
-): Either.Either<BattleState, BattleStateInitIssue> {
+): BattleStateInitIssue | undefined {
   /* v8 ignore start -- @preserve -- Malformed handoff: character-battle admission supplies an owner from the battle roster it just created. */
   if (!input.state.combatants.has(input.ownerId)) {
-    return companionStateInitIssue(
+    return companionStateInitIssueValue(
       { kind: "companionOwnerMissing", ownerId: input.ownerId },
       "Companion admission owner is not in this battle.",
     );
   }
   /* v8 ignore stop -- @preserve */
   if (input.identity.durableCompanionId.length === 0) {
-    return companionStateInitIssue(
+    return companionStateInitIssueValue(
       {
         kind: "companionDurableIdentityMissing",
         ownerId: input.ownerId,
@@ -630,7 +640,7 @@ export function admitCompanionToBattle(
   if (
     findCompanionByOwner(input.state.companions, input.ownerId) !== undefined
   ) {
-    return companionStateInitIssue(
+    return companionStateInitIssueValue(
       {
         kind: "companionOwnerAlreadyHasCompanion",
         ownerId: input.ownerId,
@@ -644,7 +654,7 @@ export function admitCompanionToBattle(
     input.identity.durableCompanionId,
   );
   if (existingOwnerId !== undefined) {
-    return companionStateInitIssue(
+    return companionStateInitIssueValue(
       {
         kind: "companionDurableIdentityInUse",
         ownerId: input.ownerId,
@@ -654,6 +664,14 @@ export function admitCompanionToBattle(
       "Companion admission identity is already used by another companion.",
     );
   }
+  return undefined;
+}
+
+export function admitCompanionToBattle(
+  input: CompanionBattleAdmissionInput,
+): Either.Either<BattleState, BattleStateInitIssue> {
+  const preconditionIssue = companionAdmissionPreconditionIssue(input);
+  if (preconditionIssue !== undefined) return Either.left(preconditionIssue);
   if (!("companionId" in input)) {
     return admitAbsentCompanionToBattle({
       ...input,
