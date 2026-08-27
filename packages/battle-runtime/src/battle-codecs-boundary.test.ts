@@ -42,6 +42,7 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
+import { BattleInterruptDecisionFrontierSchema } from "./battle-reducer/battle-codecs.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
@@ -650,6 +651,26 @@ describe("battle codec execution-reference boundaries", () => {
       replaceActHole(fixture.envelope, fixture.sourceProcedureRef, replacement),
     );
     expect(Either.isRight(decoded)).toBe(expected === "Right");
+  });
+
+  test("rejects an empty interrupt decision choice frontier", () => {
+    const decoded = Schema.decodeUnknownEither(
+      BattleInterruptDecisionFrontierSchema,
+    )({
+      kind: "interruptDecision",
+      trigger: "attackHit",
+      decisionHole: {
+        holeInstanceKey: "battle:codec:interrupt",
+        holeId: "battle:codec:interrupt",
+        kind: "interruptDecision",
+        label: "Respond",
+        trigger: "attackHit",
+        eligibleResponders: ["wizard"],
+      },
+      choices: [],
+      stackDepth: 0,
+    });
+    expect(Either.isLeft(decoded)).toBe(true);
   });
 });
 

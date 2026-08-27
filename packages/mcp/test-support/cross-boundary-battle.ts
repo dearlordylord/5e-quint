@@ -49,8 +49,8 @@ export type ProductionBattleConsumerSeamCase = {
   readonly session: Schema.Schema.Type<typeof McpActiveSessionSnapshotSchema>;
   /** The runtime session that produced the boundary projection. */
   readonly runtimeSession: BattleRuntimeSession;
-  /** The runtime presentation encoded by the MCP public envelope codec. */
-  readonly runtimeEnvelope: PublishedBattleEnvelope;
+  /** The typed runtime presentation that produced the MCP wire envelope. */
+  readonly runtimeEnvelope: BattlePresentedCheckpointFrontierEnvelope;
 };
 
 /**
@@ -296,7 +296,7 @@ function seamCase(
     operationResult,
     envelope,
     session,
-    runtimeEnvelope: runtime.publishedEnvelope,
+    runtimeEnvelope: runtime.runtimeEnvelope,
     runtimeSession: runtime.session,
   };
 }
@@ -304,6 +304,7 @@ function seamCase(
 type RuntimeBattleProjection = {
   readonly session: BattleRuntimeSession;
   readonly publishedEnvelope: PublishedBattleEnvelope;
+  readonly runtimeEnvelope: BattlePresentedCheckpointFrontierEnvelope;
 };
 
 async function call(
@@ -369,5 +370,5 @@ async function runtimeProjection(
       envelope,
     ),
   );
-  return { session, publishedEnvelope };
+  return { session, publishedEnvelope, runtimeEnvelope: envelope };
 }

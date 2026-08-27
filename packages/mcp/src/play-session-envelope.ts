@@ -65,7 +65,7 @@ export function recoverableOperationResult(
     return {
       error: "Battle presentation context is incomplete.",
       details: {
-        code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE",
+        code: "BATTLE_PRESENTATION_INCOMPLETE",
         issues: battle.left,
         operationResult,
       },

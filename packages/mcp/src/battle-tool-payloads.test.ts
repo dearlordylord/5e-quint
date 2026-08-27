@@ -1,5 +1,9 @@
 import {
+  battleStatBlockExecutionScopeRef,
+  battleExecutionScopeOrdinal,
+  battleProcedureExecutionRef,
   battleReplayStackDepth,
+  battleId,
   currentBattleCheckpointFrontierEnvelope,
   combatantId,
   discoverBattleActs,
@@ -7,6 +11,7 @@ import {
   type BattleResolvedCheckpointFrontierEnvelope,
   type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
+import { NonNegativeInteger } from "@dnd/shared/types";
 import {
   holeId,
   holeInstanceKey,
@@ -87,7 +92,7 @@ describe("battle tool payload boundaries", () => {
       content: [
         {
           text: expect.stringContaining(
-            '"code": "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE"',
+            '"code": "BATTLE_PRESENTATION_INCOMPLETE"',
           ),
         },
       ],
@@ -192,7 +197,25 @@ describe("battle tool payload boundaries", () => {
             trigger: "attackHit" as const,
             eligibleResponders: [combatantId("goblin")],
           },
-          choices: [],
+          choices: [
+            {
+              kind: "reactionRollOrDamageReduction",
+              reactorId: combatantId("goblin"),
+              choice: {
+                kind: "attackDamageReduction",
+                procedureRef: battleProcedureExecutionRef(
+                  battleStatBlockExecutionScopeRef(
+                    battleId("battle:payload-boundaries"),
+                    combatantId("goblin"),
+                    battleExecutionScopeOrdinal(0),
+                  ),
+                  NonNegativeInteger(0),
+                ),
+                reduction: { kind: "halfDamage" },
+              },
+              initialHoles: [],
+            },
+          ],
           stackDepth: battleReplayStackDepth(0),
         },
       },

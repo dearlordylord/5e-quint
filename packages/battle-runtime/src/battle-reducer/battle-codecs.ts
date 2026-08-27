@@ -7100,7 +7100,7 @@ export const BattleInterruptDecisionFrontierSchema = Schema.Struct({
   kind: Schema.Literal("interruptDecision"),
   trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
   decisionHole: BattleInterruptDecisionHoleSchema,
-  choices: Schema.Array(BattleInterruptProcedureChoiceSchema),
+  choices: Schema.NonEmptyArray(BattleInterruptProcedureChoiceSchema),
   stackDepth: BattleReplayStackDepth,
 });
 
@@ -7361,7 +7361,7 @@ export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
       kind: Schema.Literal("interruptDecision"),
       trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
       decisionHole: BattleInterruptDecisionHoleSchema,
-      choices: Schema.Array(BattlePresentedInterruptChoiceSchema),
+      choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
       stackDepth: BattleReplayStackDepth,
     }),
   ),

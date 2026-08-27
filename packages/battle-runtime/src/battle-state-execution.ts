@@ -7061,7 +7061,7 @@ export type BattleInterruptDecisionFrontier = {
   readonly kind: "interruptDecision";
   readonly trigger: BattleInterruptTrigger;
   readonly decisionHole: BattleInterruptDecisionHole;
-  readonly choices: readonly BattleInterruptProcedureChoice[];
+  readonly choices: ReadonlyNonEmptyArray<BattleInterruptProcedureChoice>;
   readonly stackDepth: BattleReplayStackDepth;
 };
 

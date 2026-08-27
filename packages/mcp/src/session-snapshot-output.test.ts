@@ -304,7 +304,7 @@ describe("MCP session wire projections", () => {
         envelope: presented.right,
         session: activeSession,
       }),
-    ).toEqual(Either.left(expect.anything()));
+    ).toSatisfy((result) => Either.isRight(result));
 
     const forgedBattleIdEnvelope = {
       ...presented.right,

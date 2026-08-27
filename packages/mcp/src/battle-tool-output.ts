@@ -80,19 +80,6 @@ const BattleNeedsHolesPresentationEnvelopeSchema =
     ),
   );
 
-const BattleRetryPresentationEnvelopeSchema =
-  BattlePresentationEnvelopeSchema.pipe(
-    Schema.filter(
-      (envelope) =>
-        envelope.frontier.kind === "holes" ||
-        envelope.frontier.kind === "interruptDecision",
-      {
-        message: () =>
-          "An invalid Battle result must expose a retryable Holes or interrupt-decision frontier.",
-      },
-    ),
-  );
-
 const BattleActivePresentationBranchSchema = Schema.Struct({
   envelope: BattlePresentationEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
@@ -207,7 +194,7 @@ export const BattleResolutionOutputSchema = Schema.Union(
   ),
   Schema.Struct({
     result: BattleResolutionInvalidResultSchema,
-    envelope: BattleRetryPresentationEnvelopeSchema,
+    envelope: BattlePresentationEnvelopeSchema,
     session: McpActiveSessionSnapshotSchema,
   }).pipe(
     Schema.filter(

@@ -2341,12 +2341,12 @@ describe("MCP server route", () => {
     expect(
       readPayload(handleToolCall(root, "read_battle_state", {})),
     ).toMatchObject({
-      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+      details: { code: "BATTLE_PRESENTATION_INCOMPLETE" },
     });
     expect(
       readPayload(handleToolCall(root, "end_turn", { actorId: "goblin" })),
     ).toMatchObject({
-      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+      details: { code: "BATTLE_PRESENTATION_INCOMPLETE" },
     });
   });
 
@@ -3057,6 +3057,24 @@ describe("MCP server route", () => {
       ),
     ).toEqual(["Adrenaline Rush: Dash", "Second Wind", "Move", "End Turn"]);
     expect(root.sessionStore.pendingBattleFills).toBeNull();
+
+    const battleBeforeWrongActorEnd = root.sessionStore.battleSession;
+    const wrongActorEnd = handleToolCall(root, "end_turn", {
+      actorId: "goblin",
+    });
+    const wrongActorPayload = readPayload(wrongActorEnd);
+    expect(wrongActorPayload).toMatchObject({
+      result: {
+        tag: "invalid",
+        reason: "wrongActor",
+      },
+      envelope: {
+        frontier: { kind: "acts" },
+      },
+    });
+    expect("isError" in wrongActorEnd).toBe(false);
+    expect(root.sessionStore.battleSession).toBe(battleBeforeWrongActorEnd);
+    expect(wrongActorPayload.envelope).toEqual(afterDamage.envelope);
 
     const afterEndTurn = readPayload(
       handleToolCall(root, "end_turn", { actorId: "fighter" }),
@@ -4645,7 +4663,7 @@ describe("MCP server route", () => {
         }),
       ),
     ).toMatchObject({
-      details: { code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE" },
+      details: { code: "BATTLE_PRESENTATION_INCOMPLETE" },
     });
   });
 

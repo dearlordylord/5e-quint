@@ -14,6 +14,14 @@ function isNonEmptyReadonlyArray<T>(
 }
 
 export function traverseValidation<A, B, E>(
+  values: ReadonlyNonEmptyArray<A>,
+  validate: (value: A, index: number) => Either.Either<B, E>,
+): Either.Either<ReadonlyNonEmptyArray<B>, ReadonlyNonEmptyArray<E>>;
+export function traverseValidation<A, B, E>(
+  values: ReadonlyArray<A>,
+  validate: (value: A, index: number) => Either.Either<B, E>,
+): Either.Either<ReadonlyArray<B>, ReadonlyNonEmptyArray<E>>;
+export function traverseValidation<A, B, E>(
   values: ReadonlyArray<A>,
   validate: (value: A, index: number) => Either.Either<B, E>,
 ): Either.Either<ReadonlyArray<B>, ReadonlyNonEmptyArray<E>> {

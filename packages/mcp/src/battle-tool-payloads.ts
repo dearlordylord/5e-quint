@@ -221,7 +221,7 @@ export function battlePresentationIssueContent(
   issues: BattlePresentationIssues,
 ) {
   return errorContent("Battle presentation context is incomplete.", {
-    code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE",
+    code: "BATTLE_PRESENTATION_INCOMPLETE",
     issues,
   });
 }

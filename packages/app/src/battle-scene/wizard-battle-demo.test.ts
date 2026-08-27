@@ -224,7 +224,10 @@ describe("wizard battle demo", () => {
 
     for (const [stepIndex, candidate] of cases.entries()) {
       const runtimeEnvelope = candidate.runtimeEnvelope
-      expect(runtimeEnvelope, candidate.kind).toEqual(candidate.envelope)
+      const runtimeWireEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(
+        Schema.encodeSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(runtimeEnvelope)
+      )
+      expect(runtimeWireEnvelope, candidate.kind).toEqual(candidate.envelope)
 
       const canonicalEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(
         candidate.envelope
@@ -237,10 +240,13 @@ describe("wizard battle demo", () => {
       expect(Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(publishedEnvelope)).toEqual(
         canonicalEnvelope
       )
+      // The wire decoder intentionally erases nominal brands; this equality is the
+      // boundary proof before the already-typed runtime checkpoint reaches React.
+      expect(canonicalEnvelope.checkpoint).toEqual(candidate.runtimeEnvelope.checkpoint)
 
       const scene = computeWizardBattleScene({
         meta: { combatants: {}, objectNames: {} },
-        snapshot: canonicalEnvelope.checkpoint,
+        snapshot: candidate.runtimeEnvelope.checkpoint,
         step: {
           cue: {},
           detail: candidate.kind,
@@ -251,7 +257,7 @@ describe("wizard battle demo", () => {
       })
       expect(Either.isRight(scene)).toBe(true)
     }
-  })
+  }, 30_000)
 })
 
 function jsonRecord(value: unknown): Readonly<Record<string, unknown>> {

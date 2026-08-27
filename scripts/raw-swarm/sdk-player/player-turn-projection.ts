@@ -15,7 +15,11 @@ import {
   type BattleHole,
   type BattleInvalidReasonCode,
 } from "../../../packages/battle-runtime/src/battle-state-execution.ts";
-import { Hp, ResourceCount } from "../../../packages/shared/src/types.ts";
+import {
+  Hp,
+  ResourceCount,
+  type ReadonlyNonEmptyArray,
+} from "../../../packages/shared/src/types.ts";
 import {
   CreatureRechargeMinimumRollSchema,
   PointPoolResourceSchema,
@@ -1144,7 +1148,7 @@ type PlayerInterruptDecisionProjection = {
   readonly kind: "interruptDecision";
   readonly trigger: string;
   readonly decisionHole: JsonValue;
-  readonly choices: readonly JsonValue[];
+  readonly choices: ReadonlyNonEmptyArray<JsonValue>;
   readonly stackDepth: number;
 };
 
@@ -1188,11 +1192,12 @@ function projectEnvelopeFrontier(
     },
   )(frontier);
   if (Either.isLeft(decoded)) return undefined;
+  const [firstChoice, ...remainingChoices] = decoded.right.choices;
   return {
     kind: "interruptDecision",
     trigger: decoded.right.trigger,
     decisionHole: jsonValue(decoded.right.decisionHole),
-    choices: decoded.right.choices.map(jsonValue),
+    choices: [jsonValue(firstChoice), ...remainingChoices.map(jsonValue)],
     stackDepth: decoded.right.stackDepth,
   };
 }
@@ -1227,7 +1232,8 @@ function resolutionEnvelopeForTag(
         : undefined;
     }
     return frontier.kind === "interruptDecision" &&
-      Array.isArray(frontier.choices)
+      Array.isArray(frontier.choices) &&
+      frontier.choices.length > 0
       ? result.envelope
       : undefined;
   }

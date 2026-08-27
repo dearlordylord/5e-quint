@@ -1,6 +1,7 @@
 import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   AvailableBattleAct,
   BattleCreatureSnapshot,
@@ -52,7 +53,7 @@ export type BattlePresentedCheckpointFrontierEnvelope = {
       }
     | Extract<BattleCheckpointFrontierEnvelope["frontier"], { kind: "holes" }>
     | (Omit<BattleInterruptDecisionFrontier, "choices"> & {
-        readonly choices: readonly BattlePresentedInterruptChoice[];
+        readonly choices: ReadonlyNonEmptyArray<BattlePresentedInterruptChoice>;
       });
 };
 
@@ -132,9 +133,9 @@ function presentFrontier(
 
 export function presentBattleInterruptChoices(
   session: BattleRuntimeSession,
-  choices: readonly BattleInterruptProcedureChoice[],
+  choices: ReadonlyNonEmptyArray<BattleInterruptProcedureChoice>,
 ): Either.Either<
-  readonly BattlePresentedInterruptChoice[],
+  ReadonlyNonEmptyArray<BattlePresentedInterruptChoice>,
   BattleInterruptChoicePresentationIssues
 > {
   return traverseValidation(choices, (choice) =>

@@ -1188,6 +1188,16 @@ describe("player current-turn projection", () => {
       },
       {
         ...interruptResult,
+        envelope: {
+          ...interruptResult.envelope,
+          frontier: {
+            ...interruptResult.envelope.frontier,
+            choices: [],
+          },
+        },
+      },
+      {
+        ...interruptResult,
         tag: "invalid" as const,
         envelope: {
           ...interruptResult.envelope,
