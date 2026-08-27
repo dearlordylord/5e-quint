@@ -435,19 +435,28 @@ persistent-effect owners. The broader package test lane remains controlled-red
 because package-index and test-support closures still reach the later-owner
 `druid-wild-shape.ts`, which imports removed `effect/Either`.
 
-| Evidence                                                                                                                                                                           | Result                                                                                                                                                               |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm check:effect4-cohort:self-test`                                                                                                                                              | pass                                                                                                                                                                 |
-| `pnpm check:effect4-cohort`                                                                                                                                                        | pass                                                                                                                                                                 |
-| `pnpm exec vitest run packages/battle-runtime/src/battle-reducer/domain-helpers.test.ts packages/battle-runtime/src/character-execution-profile-projection.test.ts --reporter=dot` | pass; 2 suites, 12/12 tests                                                                                                                                          |
-| `pnpm --filter @dnd/battle-runtime typecheck`                                                                                                                                      | controlled red; exit 1, 364 diagnostics (604 output lines)                                                                                                           |
-| `pnpm --filter @dnd/mcp typecheck`                                                                                                                                                 | controlled red; exit 1, 1,209 diagnostics; repaired lifecycle/roster/initiative callers are no longer reported, while later-owner schema/input migration remains red |
-| Changed #377 foundation source attribution                                                                                                                                         | zero diagnostics in the changed foundation files; remaining diagnostics belong to later-owner callers/capabilities and stale Effect 3 test closures                  |
+| Evidence                                                                                                                                                                           | Result                                                                                                                                                                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check:effect4-cohort:self-test`                                                                                                                                              | pass                                                                                                                                                                                      |
+| `pnpm check:effect4-cohort`                                                                                                                                                        | pass                                                                                                                                                                                      |
+| `pnpm exec vitest run packages/battle-runtime/src/battle-reducer/domain-helpers.test.ts packages/battle-runtime/src/character-execution-profile-projection.test.ts --reporter=dot` | pass; 2 suites, 12/12 tests                                                                                                                                                               |
+| `pnpm --filter @dnd/battle-runtime typecheck`                                                                                                                                      | controlled red; exit 1, 364 diagnostics (604 output lines)                                                                                                                                |
+| `pnpm --filter @dnd/mcp typecheck --pretty false > /tmp/gh377-final-mcp-typecheck.txt 2>&1`; `grep -c 'error TS' /tmp/gh377-final-mcp-typecheck.txt`                               | controlled red; exit 1, 1,504 diagnostics (2,044 output lines); repaired lifecycle/roster/initiative callers are no longer reported, while later-owner schema/input migration remains red |
+| Changed #377 foundation source attribution                                                                                                                                         | zero diagnostics in the changed foundation files; remaining diagnostics belong to later-owner callers/capabilities and stale Effect 3 test closures                                       |
 
 The focused lane is acceptance evidence for deterministic foundation behavior,
 schema/domain helper behavior, and executable test collection. It intentionally
 does not waive the package-wide controlled-red inventory or closure conditions
 above.
+
+The requested direct continuation/equality leaf probe was evaluated against
+`battle-fill-equality.ts`, but its canonical implementation imports
+`movement-speed.ts` and then the later-owner `druid-wild-shape.ts`; executing a
+new test would therefore collect the excluded Effect 3 dependency. Existing
+foundation QNT and focused protocol/codec evidence remain the executable
+coverage for hole/fill ordering, equality, retry/rejection, codec, and
+continuation behavior; no duplicate production algorithm or test-only import
+workaround was added.
 
 ## Closure conditions
 
