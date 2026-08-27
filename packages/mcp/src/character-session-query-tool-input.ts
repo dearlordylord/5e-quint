@@ -25,14 +25,14 @@ export const CHARACTER_SESSION_QUERY_KIND_VALUES = [
 ] as const;
 export type CharacterSessionQueryKind =
   (typeof CHARACTER_SESSION_QUERY_KIND_VALUES)[number];
-export const CharacterSessionQueryKindSchema = Schema.Literal(
-  ...CHARACTER_SESSION_QUERY_KIND_VALUES,
+export const CharacterSessionQueryKindSchema = Schema.Literals(
+  CHARACTER_SESSION_QUERY_KIND_VALUES,
 );
 export const CharacterSessionQueryKindsSchema = Schema.NonEmptyArray(
   CharacterSessionQueryKindSchema,
 ).pipe(
-  Schema.filter(
-    (queryKinds) =>
+  Schema.refine(
+    (queryKinds): queryKinds is typeof CHARACTER_SESSION_QUERY_KIND_VALUES =>
       queryKinds.length === CHARACTER_SESSION_QUERY_KIND_VALUES.length &&
       queryKinds.every(
         (queryKind, index) =>
@@ -45,14 +45,14 @@ export const CharacterSessionQueryKindsSchema = Schema.NonEmptyArray(
   ),
 );
 
-const AbilitySchema = Schema.Literal(...ABILITIES);
-const SurfaceSkillSchema = Schema.Literal(...SURFACE_SKILLS);
+const AbilitySchema = Schema.Literals(ABILITIES);
+const SurfaceSkillSchema = Schema.Literals(SURFACE_SKILLS);
 const UnitIdArraySchema = Schema.Array(UnitId);
 
-const ArmorClassBaseChoiceSchema = Schema.Union(
+const ArmorClassBaseChoiceSchema = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("default_unarmored") }),
   Schema.Struct({ kind: Schema.Literal("class_feature"), unitId: UnitId }),
-);
+]);
 
 function querySchemaFor<
   const Kind extends CharacterSessionQueryKind,
@@ -64,87 +64,46 @@ function querySchemaFor<
   });
 }
 
-function querySchemaMap<
-  const Members extends Record<
-    CharacterSessionQueryKind,
-    Schema.Schema.AnyNoContext
-  >,
->(
-  members: Members & {
-    [Kind in CharacterSessionQueryKind]: Schema.Schema.Type<
-      Members[Kind]
-    > extends { readonly kind: Kind }
-      ? unknown
-      : never;
-  },
-): Members {
-  return members;
-}
-
-const CharacterSessionQuerySchemaByKind = querySchemaMap({
-  abilityCheckAbility: querySchemaFor("abilityCheckAbility", {
+export const CharacterSessionQuerySchema = Schema.Union([
+  querySchemaFor("abilityCheckAbility", {
     skill: SurfaceSkillSchema,
     defaultAbility: AbilitySchema,
     activeFeatureUnitIds: UnitIdArraySchema,
   }),
-  abilityCheckProficiencyBonus: querySchemaFor("abilityCheckProficiencyBonus", {
+  querySchemaFor("abilityCheckProficiencyBonus", {
     skill: SurfaceSkillSchema,
-    otherProficiencyBonus: Schema.Union(
+    otherProficiencyBonus: Schema.Union([
       Schema.Struct({
         tag: Schema.Literal("noOtherProficiencyBonus"),
       }),
       Schema.Struct({
         tag: Schema.Literal("otherProficiencyBonusApplies"),
       }),
-    ),
+    ]),
   }),
-  jumpDistanceAbility: querySchemaFor("jumpDistanceAbility", {
+  querySchemaFor("jumpDistanceAbility", {
     defaultAbility: AbilitySchema,
   }),
-  linkedSpeedGrants: querySchemaFor("linkedSpeedGrants", {}),
-  armorClass: querySchemaFor("armorClass", {
-    baseChoice: Schema.optionalWith(ArmorClassBaseChoiceSchema, {
-      exact: true,
-    }),
+  querySchemaFor("linkedSpeedGrants", {}),
+  querySchemaFor("armorClass", {
+    baseChoice: Schema.optionalKey(ArmorClassBaseChoiceSchema),
   }),
-  spellAccess: querySchemaFor("spellAccess", {}),
-  knownForms: querySchemaFor("knownForms", {}),
-  weaponMasterySelections: querySchemaFor("weaponMasterySelections", {
+  querySchemaFor("spellAccess", {}),
+  querySchemaFor("knownForms", {}),
+  querySchemaFor("weaponMasterySelections", {
     featureUnitId: UnitId,
   }),
-  spellbookRitualAccesses: querySchemaFor("spellbookRitualAccesses", {}),
-  spellbookRitualAccess: querySchemaFor("spellbookRitualAccess", {
+  querySchemaFor("spellbookRitualAccesses", {}),
+  querySchemaFor("spellbookRitualAccess", {
     spellId: UnitId,
   }),
-  spellInvocation: querySchemaFor("spellInvocation", {
+  querySchemaFor("spellInvocation", {
     spellId: UnitId,
     invocation: Schema.Struct({
       kind: Schema.Literal("ritual"),
     }),
   }),
-} as const satisfies Record<
-  CharacterSessionQueryKind,
-  Schema.Schema.AnyNoContext
->);
-
-function unionQuerySchemas<
-  const Members extends Record<
-    CharacterSessionQueryKind,
-    Schema.Schema.AnyNoContext
-  >,
->(
-  members: Members,
-): Schema.Schema<
-  Schema.Schema.Type<Members[keyof Members]>,
-  Schema.Schema.Encoded<Members[keyof Members]>,
-  Schema.Schema.Context<Members[keyof Members]>
-> {
-  return Schema.Union(...Object.values(members));
-}
-
-export const CharacterSessionQuerySchema = unionQuerySchemas(
-  CharacterSessionQuerySchemaByKind,
-);
+]);
 
 export const QueryCharacterSessionArgsSchema = Schema.Struct({
   characterId: Schema.String,

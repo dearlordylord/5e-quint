@@ -32,38 +32,36 @@ import {
 const EmptyArgsSchema = Schema.Struct({});
 
 const DraftIdArgsSchema = Schema.Struct({
-  draftId: Schema.String.annotations({
+  draftId: Schema.String.annotate({
     description: "Character Draft id returned by create_character_draft.",
   }),
 });
 
 const CharacterSessionIdArgsSchema = Schema.Struct({
-  characterId: Schema.String.annotations({
+  characterId: Schema.String.annotate({
     description:
       "Character Session id returned by finalize_character or list_characters.",
   }),
 });
 
 const FinalizeCharacterArgsSchema = Schema.Struct({
-  draftId: Schema.String.annotations({
+  draftId: Schema.String.annotate({
     description: "Character Draft id returned by create_character_draft.",
   }),
-  druidWildShapeKnownFormStatBlockIds: Schema.optionalWith(
-    Schema.Array(StatBlockId).annotations({
+  druidWildShapeKnownFormStatBlockIds: Schema.optionalKey(
+    Schema.Array(StatBlockId).annotate({
       description:
         "Selected Beast Stat Block ids for a Druid Wild Shape character. Required when the finalized draft has Wild Shape.",
     }),
-    { exact: true },
   ),
 });
 
 const CreateCharacterDraftArgsSchema = Schema.Struct({
-  draftId: Schema.optionalWith(
-    Schema.String.annotations({
+  draftId: Schema.optionalKey(
+    Schema.String.annotate({
       description:
         "Optional caller-provided Character Draft id. Omit to let the runtime assign one.",
     }),
-    { exact: true },
   ),
 });
 
@@ -148,7 +146,7 @@ export const fillCreationHolesInputSchema = mcpObjectJsonSchema(
   FillCreationHolesArgsSchema,
 );
 export const applyCharacterSessionOperationInputSchema = mcpObjectJsonSchema(
-  ApplyCharacterSessionOperationArgsSchema,
+  Schema.toType(ApplyCharacterSessionOperationArgsSchema),
 );
 export const emptyInputSchema = mcpObjectJsonSchema(EmptyArgsSchema);
 export const characterSessionIdInputSchema = mcpObjectJsonSchema(
@@ -235,7 +233,7 @@ function decodeApplyCharacterSessionOperationArgs(
   args: unknown,
 ): ToolInputResult<ApplyCharacterSessionOperationToolInput> {
   return decodeToolArgs(
-    ApplyCharacterSessionOperationArgsSchema,
+    Schema.toType(ApplyCharacterSessionOperationArgsSchema),
     args,
     characterToolNames.applyCharacterSessionOperation,
   );
