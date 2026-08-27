@@ -146,9 +146,9 @@ describe("battle tool payload boundaries", () => {
     );
     const choices = [
       {
-        kind: "reactionRollOrDamageReduction",
-        reactorId,
-        choice: {
+        kind: "reactionModifier",
+        responderId: reactorId,
+        modifier: {
           kind: "attackDamageReduction",
           procedureRef,
           reduction: { kind: "halfDamage" },
@@ -156,8 +156,7 @@ describe("battle tool payload boundaries", () => {
         initialHoles: [],
       },
       {
-        kind: "castTriggeredReactionSpell",
-        reactorId,
+        kind: "nestedProcedure",
         initialHoles: [],
         subject: {
           tag: "runtimeCommand",

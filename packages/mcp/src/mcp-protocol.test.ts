@@ -1824,8 +1824,10 @@ describe("MCP protocol server", () => {
           const presentation = presented.presentation;
           return (
             isJsonObject(choice) &&
-            choice.kind === "castTriggeredReactionSpell" &&
-            choice.reactorId === "row-shield-wizard" &&
+            choice.kind === "nestedProcedure" &&
+            isJsonObject(choice.subject) &&
+            choice.subject.command === "castTriggeredReactionSpell" &&
+            choice.subject.reactorId === "row-shield-wizard" &&
             isJsonObject(presentation) &&
             presentation.kind === "spell" &&
             isJsonObject(presentation.invocation) &&
