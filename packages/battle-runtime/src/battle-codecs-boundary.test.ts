@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import {
@@ -48,8 +48,8 @@ import {
   battleSpellEffectOccurrenceId,
 } from "./identity.ts";
 
-type EncodedHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
-type EncodedSnapshot = Schema.Schema.Encoded<typeof BattleSnapshotSchema>;
+type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
+type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
 type EncodedAct = EncodedSnapshot["acts"][number];
 type CodecCase = {
   readonly name: string;
@@ -133,8 +133,8 @@ const encodedSnapshotFromState = (
 ) => Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(state));
 
 function expectSnapshotDecodeLeft(snapshot: EncodedSnapshot): void {
-  const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(snapshot);
-  expect(Either.isLeft(decoded)).toBe(true);
+  const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(snapshot);
+  expect(Result.isFailure(decoded)).toBe(true);
 }
 
 function codecFixture() {
@@ -613,10 +613,10 @@ const cases: readonly CodecCase[] = [
 
 describe("battle codec execution-reference boundaries", () => {
   test.each(cases)("$expected $name", ({ expected, hole: replacement }) => {
-    const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(
+    const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(
       replaceActHole(fixture.snapshot, fixture.sourceProcedureRef, replacement),
     );
-    expect(Either.isRight(decoded)).toBe(expected === "Right");
+    expect(Result.isSuccess(decoded)).toBe(expected === "Right");
   });
 });
 
