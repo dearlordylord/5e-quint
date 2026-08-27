@@ -338,12 +338,19 @@ changes. The #371 reviewer loop therefore converged after the scope correction.
 
 ## Issue #374 reviewer-loop record
 
-The outer Sol implementation review found no implementation P0, P1, or P2
-findings; its only P2 was this controlled-red ledger evidence issue. An earlier
-final Sol code re-review at source head `3e5281b7a` found no P0, P1, or P2 after
-the decoder and ITF BigInt fixes. The independent Luna Spec review found no
-issues. The Luna Standards review remains pending, so this record does not
-claim that review passed or that the #374 reviewer loop has converged.
+The outer Sol implementation-delta review at source head `91a0dad99` found no
+implementation P0, P1, or P2 findings; the earlier P2 was this controlled-red
+ledger evidence issue. An earlier final Sol code re-review at source head
+`3e5281b7a` found no P0, P1, or P2 after the decoder and ITF BigInt fixes. The
+review fixes included using the canonical runtime action-order constant and
+applying Prettier formatting. Focused Prettier, ESLint, and
+`@dnd/shared-algebras` typecheck checks pass.
+
+The Luna Spec re-review found no actionable findings, and the Luna Standards
+re-review found no actionable findings. The MBT rerun was interrupted while
+waiting on an unrelated broad lock and produced no new result; the earlier
+focused 9/9 MBT pass remains the recorded evidence above. The #374
+reviewer-loop record therefore converged.
 
 ## Closure conditions
 
