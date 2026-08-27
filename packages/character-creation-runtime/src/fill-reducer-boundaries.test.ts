@@ -227,7 +227,7 @@ describe("creation fill reducer boundaries", () => {
     expect(getHole(holeIndex, unknownFill, creationFillIndex(1))).toMatchObject(
       {
         _tag: "Failure",
-        left: {
+        failure: {
           tag: "illegalFill",
           holeId: "cc:draft:draft.species",
           fillIndex: 1,
@@ -312,7 +312,7 @@ describe("creation fill reducer boundaries", () => {
       applyLoadoutFill(first.success, acceptedFill, creationFillIndex(1)),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         tag: "illegalFill",
         fillIndex: 1,
         code: "duplicateFill",
@@ -331,7 +331,7 @@ describe("creation fill reducer boundaries", () => {
       ]),
     ).toMatchObject({
       _tag: "Failure",
-      left: [
+      failure: [
         {
           tag: "illegalFill",
           fillIndex: 1,
@@ -410,7 +410,7 @@ describe("creation fill reducer boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Success",
-      right: { backgroundAbilityScoreIncrease: { kind: "oneEach" } },
+      success: { backgroundAbilityScoreIncrease: { kind: "oneEach" } },
     });
     expect(
       applyUnitFill(
@@ -424,7 +424,7 @@ describe("creation fill reducer boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Success",
-      right: { equipment: { selectedUnitIds: [unitId] } },
+      success: { equipment: { selectedUnitIds: [unitId] } },
     });
     expect(
       applyUnitFill(
@@ -438,7 +438,7 @@ describe("creation fill reducer boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         choices: [
           {
             kind: "unitChoice",

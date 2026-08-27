@@ -48,7 +48,7 @@ describe("character-creation primitive boundaries", () => {
     ).toHaveProperty("_tag", "Success");
     expect(sorcererMetamagicOptionId("synthetic_unknown")).toMatchObject({
       _tag: "Failure",
-      left: { tag: "unsupportedSorcererMetamagicOptionId" },
+      failure: { tag: "unsupportedSorcererMetamagicOptionId" },
     });
     expect(unitChoiceKey("class_feature_feat_choice")).toHaveProperty(
       "_tag",
@@ -56,7 +56,7 @@ describe("character-creation primitive boundaries", () => {
     );
     expect(unitChoiceKey("synthetic_unknown")).toMatchObject({
       _tag: "Failure",
-      left: { tag: "unsupportedUnitChoiceKey" },
+      failure: { tag: "unsupportedUnitChoiceKey" },
     });
     expect(isCharacterBuildToolProficiencyId("thieves_tools")).toBe(true);
     expect(isCharacterBuildToolProficiencyId("synthetic_unknown")).toBe(false);
@@ -104,7 +104,7 @@ describe("character-creation primitive boundaries", () => {
   test("round-trips Unit-choice source keys and reports each malformed shape", () => {
     expect(unitChoiceSourceUnitId("")).toMatchObject({
       _tag: "Failure",
-      left: { tag: "unitChoiceSourceUnitIdEmpty" },
+      failure: { tag: "unitChoiceSourceUnitIdEmpty" },
     });
     const source = {
       tag: "unitChoice",
@@ -139,7 +139,7 @@ describe("character-creation primitive boundaries", () => {
     for (const [value, tag] of malformedCases) {
       expect(parseUnitChoiceSourceKey(value)).toMatchObject({
         _tag: "Failure",
-        left: { tag },
+        failure: { tag },
       });
       expect(parseCreationHoleId(`cc:unit-source:${value}`)).toBeNull();
     }
@@ -148,7 +148,7 @@ describe("character-creation primitive boundaries", () => {
   test("round-trips loadout source keys and reports each malformed shape", () => {
     expect(loadoutEquipmentUnitId("")).toMatchObject({
       _tag: "Failure",
-      left: { tag: "loadoutEquipmentUnitIdEmpty" },
+      failure: { tag: "loadoutEquipmentUnitIdEmpty" },
     });
     const source = {
       tag: "loadout",
@@ -179,7 +179,7 @@ describe("character-creation primitive boundaries", () => {
     for (const [value, tag] of malformedCases) {
       expect(parseLoadoutSourceKey(value)).toMatchObject({
         _tag: "Failure",
-        left: { tag },
+        failure: { tag },
       });
       expect(parseCreationHoleId(`cc:loadout-source:${value}`)).toBeNull();
     }
@@ -194,7 +194,7 @@ describe("character-creation primitive boundaries", () => {
 
     expect(characterEquipmentItemUnitId("")).toMatchObject({
       _tag: "Failure",
-      left: { tag: "characterEquipmentItemUnitIdEmpty" },
+      failure: { tag: "characterEquipmentItemUnitIdEmpty" },
     });
     const unitId = expectRight(
       characterEquipmentItemUnitId("synthetic_equipment"),
@@ -211,11 +211,11 @@ describe("character-creation primitive boundaries", () => {
     }
     expect(parseCharacterEquipmentItemId("synthetic:equipment")).toMatchObject({
       _tag: "Failure",
-      left: { tag: "characterEquipmentItemIdSlotUnsupported" },
+      failure: { tag: "characterEquipmentItemIdSlotUnsupported" },
     });
     expect(parseCharacterEquipmentItemId("armor:")).toMatchObject({
       _tag: "Failure",
-      left: { tag: "characterEquipmentItemIdUnitIdEmpty", slot: "armor" },
+      failure: { tag: "characterEquipmentItemIdUnitIdEmpty", slot: "armor" },
     });
     // The public constructor is the only safe producer; this cast deliberately
     // violates its erased brand to exercise the internal invariant assertion.

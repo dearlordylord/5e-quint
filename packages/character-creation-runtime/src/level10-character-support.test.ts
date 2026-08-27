@@ -83,7 +83,7 @@ describe("Level 10 character support", () => {
 
     expect(result).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         spellcasting: {
           sources: [
             expect.objectContaining({
@@ -130,7 +130,7 @@ describe("Level 10 character support", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "invalidListPreparedSpellChoice", spellId: "hex" },
+      failure: { code: "invalidListPreparedSpellChoice", spellId: "hex" },
     });
   });
 

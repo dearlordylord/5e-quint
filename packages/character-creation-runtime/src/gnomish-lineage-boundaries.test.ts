@@ -41,7 +41,7 @@ describe("Gnomish Lineage projection boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         traitUnitId: "species_gnome_gnomish_lineage",
         spellcastingAbility: "int",
         option: { id: "forest_gnome" },
@@ -73,7 +73,7 @@ describe("Gnomish Lineage projection boundaries", () => {
         }),
       ).toMatchObject({
         _tag: "Failure",
-        left: {
+        failure: {
           tag: "gnomishLineageTraitProjectionIssue",
           message: expect.stringContaining(message),
         },

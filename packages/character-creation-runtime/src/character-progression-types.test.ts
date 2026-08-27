@@ -48,7 +48,7 @@ describe("Character progression typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "invalidHitPointRuleForLevel", totalLevel: 2 },
+      failure: { code: "invalidHitPointRuleForLevel", totalLevel: 2 },
     });
     expect(
       characterTotalLevelHitPointRule({
@@ -57,7 +57,7 @@ describe("Character progression typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "invalidHitPointRuleForLevel", totalLevel: 1 },
+      failure: { code: "invalidHitPointRuleForLevel", totalLevel: 1 },
     });
   });
 
@@ -82,7 +82,7 @@ describe("Character progression typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "invalidHitPointRuleForLevel" },
+      failure: { code: "invalidHitPointRuleForLevel" },
     });
   });
 

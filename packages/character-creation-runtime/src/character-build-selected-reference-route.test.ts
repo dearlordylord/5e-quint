@@ -88,7 +88,7 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         build,
         facts: {
           resources: [{ unitId: "fighter_second_wind" }],

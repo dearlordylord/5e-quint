@@ -161,7 +161,7 @@ describe("choice-option codec boundaries", () => {
     )) {
       expect(decodeAbilityScoreIncreaseOptionId(optionId)).toMatchObject({
         _tag: "Failure",
-        left: {
+        failure: {
           tag: "choiceOptionCodecIssue",
           optionId,
           cause,
@@ -174,7 +174,7 @@ describe("choice-option codec boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         cause: {
           tag: "invalidAbilityScoreIncreaseValue",
           field: "increase",
@@ -188,7 +188,7 @@ describe("choice-option codec boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         cause: {
           tag: "invalidAbilityScoreIncreaseValue",
           field: "increase",
@@ -200,7 +200,7 @@ describe("choice-option codec boundaries", () => {
       decodeAbilityScoreIncreaseOptionId("ability_score:future:+1:max20"),
     ).toMatchObject({
       _tag: "Failure",
-      left: { cause: { tag: "unsupportedAbility" } },
+      failure: { cause: { tag: "unsupportedAbility" } },
     });
     expect(
       decodeAbilityScoreIncreaseOptionId(
@@ -208,19 +208,19 @@ describe("choice-option codec boundaries", () => {
       ),
     ).toMatchObject({
       _tag: "Failure",
-      left: { cause: { tag: "unsupportedAbility" } },
+      failure: { cause: { tag: "unsupportedAbility" } },
     });
     expect(
       decodeAbilityScoreIncreaseOptionId("ability_scores:str:+1;str:+1:max20"),
     ).toMatchObject({
       _tag: "Failure",
-      left: { cause: { tag: "duplicateAbilities" } },
+      failure: { cause: { tag: "duplicateAbilities" } },
     });
     expect(
       decodeAbilityScoreIncreaseOptionId("ability_scores:str:+1;dex:+1:max31"),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         cause: {
           tag: "invalidAbilityScoreIncreaseValue",
           field: "maximum",
@@ -232,7 +232,7 @@ describe("choice-option codec boundaries", () => {
       decodeAbilityScoreIncreaseOptionId("synthetic_unknown"),
     ).toMatchObject({
       _tag: "Failure",
-      left: { cause: { tag: "invalidAbilityScoreIncreaseEncoding" } },
+      failure: { cause: { tag: "invalidAbilityScoreIncreaseEncoding" } },
     });
   });
 
@@ -292,7 +292,7 @@ describe("choice-option codec boundaries", () => {
     for (const [optionId, causeTag] of invalidCases) {
       expect(decodeProficiencyGrantSubjectOptionId(optionId)).toMatchObject({
         _tag: "Failure",
-        left: { cause: { tag: causeTag } },
+        failure: { cause: { tag: causeTag } },
       });
     }
   });
@@ -303,7 +303,7 @@ describe("choice-option codec boundaries", () => {
     );
     expect(parseToolProficiencyId("future")).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         cause: { tag: "unsupportedCharacterBuildToolProficiencyId" },
       },
     });

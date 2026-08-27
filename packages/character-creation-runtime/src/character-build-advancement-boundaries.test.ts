@@ -277,7 +277,7 @@ describe("Character Build advancement typed boundaries", () => {
       fighterClassUnitId({ unitLibrary, classUnitId: wizardUnitId }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonFighterClassLevelGain", className: "wizard" },
+      failure: { code: "nonFighterClassLevelGain", className: "wizard" },
     });
 
     expect(
@@ -287,7 +287,7 @@ describe("Character Build advancement typed boundaries", () => {
       warlockClassUnitId({ unitLibrary, classUnitId: wizardUnitId }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonWarlockClassLevelGain", className: "wizard" },
+      failure: { code: "nonWarlockClassLevelGain", className: "wizard" },
     });
 
     expect(
@@ -297,7 +297,7 @@ describe("Character Build advancement typed boundaries", () => {
       sorcererClassUnitId({ unitLibrary, classUnitId: wizardUnitId }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonSorcererClassLevelGain", className: "wizard" },
+      failure: { code: "nonSorcererClassLevelGain", className: "wizard" },
     });
   });
 
@@ -315,7 +315,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "unknownUnitId" },
+      failure: { code: "unknownUnitId" },
     });
     expect(
       fightingStyleFeatUnitId({
@@ -324,7 +324,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonFightingStyleFeat", unitKind: "weapon" },
+      failure: { code: "nonFightingStyleFeat", unitKind: "weapon" },
     });
     expect(
       fightingStyleFeatUnitId({
@@ -333,7 +333,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonFightingStyleFeat", featCategory: "origin" },
+      failure: { code: "nonFightingStyleFeat", featCategory: "origin" },
     });
   });
 
@@ -351,7 +351,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "unknownUnitId" },
+      failure: { code: "unknownUnitId" },
     });
     expect(
       weaponMasteryFeatureUnitId({
@@ -360,7 +360,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonWeaponMasteryFeature" },
+      failure: { code: "nonWeaponMasteryFeature" },
     });
 
     expect(
@@ -376,7 +376,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "unknownUnitId" },
+      failure: { code: "unknownUnitId" },
     });
     expect(
       weaponMasteryWeaponUnitId({
@@ -385,7 +385,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonWeaponMasteryWeapon", unitKind: "class" },
+      failure: { code: "nonWeaponMasteryWeapon", unitKind: "class" },
     });
   });
 
@@ -400,7 +400,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "unknownUnitId" },
+      failure: { code: "unknownUnitId" },
     });
     expect(
       weaponMasteryLevelGain({
@@ -412,7 +412,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonWeaponMasteryWeapon" },
+      failure: { code: "nonWeaponMasteryWeapon" },
     });
     expect(
       weaponMasteryLevelGain({
@@ -427,7 +427,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonFightingStyleFeat" },
+      failure: { code: "nonFightingStyleFeat" },
     });
     expect(
       fighterLevelGainWithFightingStyleReplacement({
@@ -438,7 +438,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "unknownUnitId" },
+      failure: { code: "unknownUnitId" },
     });
   });
 
@@ -470,7 +470,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingSelectedFightingStyle" },
+      failure: { code: "missingSelectedFightingStyle" },
     });
     expect(
       advanceCharacterBuildClassLevel({
@@ -483,7 +483,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "ambiguousSelectedFightingStyle", count: 2 },
+      failure: { code: "ambiguousSelectedFightingStyle", count: 2 },
     });
     expect(
       advanceCharacterBuildClassLevel({
@@ -493,7 +493,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "sameFightingStyleReplacement",
         selectedFeatUnitId: "feat_archery",
       },
@@ -511,7 +511,7 @@ describe("Character Build advancement typed boundaries", () => {
     });
     expect(replaced).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         features: expect.arrayContaining([
           {
             kind: "selectedClassChoice",
@@ -551,7 +551,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         classLevel: 1,
         expectedCount: 3,
@@ -567,7 +567,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         features: selectedWeapons,
         progression: {
           advancements: [
@@ -630,7 +630,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         features: fighterWeaponMasteryFeatures(selectedWeaponUnitIds),
         progression: {
           advancements: [{}, {}, {}],
@@ -739,7 +739,7 @@ describe("Character Build advancement typed boundaries", () => {
         }),
       ).toMatchObject({
         _tag: "Failure",
-        left: { code: testCase.code },
+        failure: { code: testCase.code },
       });
     }
   });
@@ -796,7 +796,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWeaponMasterySelection",
         weaponUnitId: "weapon_shortbow",
       },
@@ -829,7 +829,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "missingWeaponMasteryFeatureChoice",
         classUnitId: "class_monk",
       },
@@ -862,7 +862,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingFightingStyleCantripSpellcastingSource" },
+      failure: { code: "missingFightingStyleCantripSpellcastingSource" },
     });
     expect(
       advanceCharacterBuildClassLevel({
@@ -879,7 +879,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingListPreparedSpellcasting" },
+      failure: { code: "missingListPreparedSpellcasting" },
     });
   });
 
@@ -898,7 +898,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "unknownEldritchInvocation",
         invocationId: "synthetic_unknown",
       },
@@ -912,7 +912,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "unknownSorcererMetamagicOption" },
+      failure: { code: "unknownSorcererMetamagicOption" },
     });
     expect(
       sorcererLevelGain({
@@ -927,7 +927,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "sameSorcererMetamagicReplacement" },
+      failure: { code: "sameSorcererMetamagicReplacement" },
     });
   });
 
@@ -950,7 +950,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidRepeatableEldritchInvocationChoice",
         invocationId: "armor_of_shadows",
       },
@@ -970,7 +970,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "missingRepeatableEldritchInvocationChoice",
         invocationId: "agonizing_blast",
       },
@@ -994,7 +994,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidRepeatableEldritchInvocationChoice",
         invocationId: "lessons_of_the_first_ones",
       },
@@ -1019,7 +1019,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "sameEldritchInvocationReplacement",
         invocationId: "armor_of_shadows",
       },
@@ -1046,7 +1046,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "unknownEldritchInvocation",
         invocationId: "synthetic_unknown",
       },
@@ -1071,7 +1071,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "unknownEldritchInvocation",
         invocationId: "synthetic_unknown",
       },
@@ -1090,7 +1090,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "unknownSorcererMetamagicOption",
         optionId: "synthetic_unknown",
       },
@@ -1109,7 +1109,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "unknownSorcererMetamagicOption",
         optionId: "synthetic_unknown",
       },
@@ -1136,7 +1136,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidSorcererMetamagicSelectionCount",
         expectedCount: 0,
         actualCount: 1,
@@ -1155,7 +1155,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidSorcererMetamagicGainCount",
         expectedGains: 2,
         actualGains: 0,
@@ -1177,7 +1177,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidEldritchInvocationSelectionCount",
         warlockLevel: 12,
         actualCount: 0,
@@ -1223,7 +1223,7 @@ describe("Character Build advancement typed boundaries", () => {
 
     expect(result).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         spellcasting: {
           sources: [
             {
@@ -1250,7 +1250,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         expectedCount: 3,
         actualCount: 0,
@@ -1404,7 +1404,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingSelectedEldritchInvocation" },
+      failure: { code: "missingSelectedEldritchInvocation" },
     });
   });
 
@@ -1452,7 +1452,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "missingRepeatableEldritchInvocationChoice",
         invocationId: "repelling_blast",
       },
@@ -1500,7 +1500,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidRepeatableEldritchInvocationChoice",
         invocationId: "repelling_blast",
       },
@@ -1547,7 +1547,7 @@ describe("Character Build advancement typed boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidRepeatableEldritchInvocationChoice",
         invocationId: "repelling_blast",
       },

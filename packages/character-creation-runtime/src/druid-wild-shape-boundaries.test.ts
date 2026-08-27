@@ -150,7 +150,7 @@ describe("Druid Wild Shape boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         message: "Wild Shape projection requires Druid class progression.",
       },
     });
@@ -166,7 +166,7 @@ describe("Druid Wild Shape boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         message:
           "Wild Shape projection supports exactly one Druid Wild Shape feature.",
       },
@@ -192,7 +192,7 @@ describe("Druid Wild Shape boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         knownFormRoster: {
           flySpeed: "forbidden",
         },
@@ -219,7 +219,7 @@ describe("Druid Wild Shape boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         knownFormRoster: {
           flySpeed: "allowed",
         },
@@ -342,7 +342,7 @@ describe("Druid Wild Shape boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         message:
           "Wild Shape known forms must match the Druid's known-form count.",
       },
@@ -364,7 +364,7 @@ describe("Druid Wild Shape boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         message:
           "Wild Shape known forms must match the Druid's known-form count.",
       },
@@ -379,7 +379,7 @@ describe("Druid Wild Shape boundaries", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         message:
           "Wild Shape known forms cannot have a Fly Speed at this Druid level.",
       },
@@ -449,7 +449,7 @@ describe("Druid Wild Shape boundaries", () => {
         }),
       ).toMatchObject({
         _tag: "Failure",
-        left: { tag: "druidWildShapeFactsIssue", message },
+        failure: { tag: "druidWildShapeFactsIssue", message },
       });
     }
   });

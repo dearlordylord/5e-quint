@@ -6295,7 +6295,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "sameSorcererMetamagicReplacement" },
+      failure: { code: "sameSorcererMetamagicReplacement" },
     });
 
     const missingKnownOption = expectRight(
@@ -6318,7 +6318,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingSelectedSorcererMetamagicOption" },
+      failure: { code: "missingSelectedSorcererMetamagicOption" },
     });
 
     const duplicateKnownOption = expectRight(
@@ -6341,7 +6341,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "duplicateSorcererMetamagicOption" },
+      failure: { code: "duplicateSorcererMetamagicOption" },
     });
   });
 
@@ -6370,7 +6370,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidSorcererMetamagicSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -6485,7 +6485,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateSorcererMetamagicOption",
         optionId: "sorcerer_empowered_spell",
       },
@@ -6524,7 +6524,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidSorcererMetamagicGainCount",
         expectedGains: 2,
         actualGains: 1,
@@ -6559,7 +6559,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateSorcererMetamagicOption",
         optionId: firstOption.optionId,
       },
@@ -6584,7 +6584,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateSorcererMetamagicOption",
         optionId: "sorcerer_subtle_spell",
       },
@@ -6602,7 +6602,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidSorcererMetamagicGainCount",
         expectedGains: 2,
         actualGains: 0,
@@ -6728,7 +6728,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         route: [
           "seed",
           {
@@ -6809,7 +6809,7 @@ describe("character creation finalization", () => {
 
     expect(staleLevelFour).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         expectedCount: 4,
         actualCount: 3,
@@ -6879,7 +6879,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "weaponMasteryFeatureClassMismatch",
         classUnitId: "class_fighter",
         featureUnitId: "barbarian_weapon_mastery",
@@ -6913,7 +6913,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         classLevel: 1,
         expectedCount: 3,
@@ -6947,7 +6947,7 @@ describe("character creation finalization", () => {
         }),
       ).toMatchObject({
         _tag: "Failure",
-        left: {
+        failure: {
           code: "duplicateWeaponMasterySelection",
           featureUnitId: "fighter_weapon_mastery",
           weaponUnitId: "weapon_longsword",
@@ -6972,7 +6972,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         classLevel: 2,
         expectedCount: 3,
@@ -7001,7 +7001,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateWeaponMasterySelection",
         weaponUnitId: "weapon_longsword",
       },
@@ -7028,7 +7028,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "missingExistingWeaponMasterySelection",
         weaponUnitId: "weapon_longsword",
       },
@@ -7134,7 +7134,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonFighterClassLevelGain" },
+      failure: { code: "nonFighterClassLevelGain" },
     });
   });
 
@@ -7219,7 +7219,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "sameFightingStyleReplacement" },
+      failure: { code: "sameFightingStyleReplacement" },
     });
   });
 
@@ -7240,7 +7240,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonFightingStyleFeat" },
+      failure: { code: "nonFightingStyleFeat" },
     });
   });
 
@@ -7261,7 +7261,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "nonFighterClassLevelGain" },
+      failure: { code: "nonFighterClassLevelGain" },
     });
   });
 
@@ -7363,7 +7363,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidFightingStyleCantripSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -7384,7 +7384,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidFightingStyleCantripReplacement",
         cantripId: "fire_bolt",
       },
@@ -7401,7 +7401,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "sameFightingStyleCantripReplacement",
         cantripId: "guidance",
       },
@@ -7418,7 +7418,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "missingFightingStyleCantripReplacement",
         cantripId: "resistance",
       },
@@ -7435,7 +7435,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateFightingStyleCantripSelection",
         cantripId: "sacred_flame",
       },
@@ -7498,7 +7498,7 @@ describe("character creation finalization", () => {
       ),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidListPreparedSpellSelectionCount",
         expectedCount: 3,
         actualCount: 2,
@@ -7506,7 +7506,7 @@ describe("character creation finalization", () => {
     });
     expect(advance(build, { gainedPreparedSpells: [] })).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidListPreparedSpellGainCount",
         expectedGains: 1,
         actualGains: 0,
@@ -7522,7 +7522,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "sameListPreparedSpellReplacement",
         spellId: "heroism",
       },
@@ -7537,7 +7537,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "missingListPreparedSpellReplacement",
         spellId: "cure_wounds",
       },
@@ -7548,7 +7548,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidListPreparedSpellChoice",
         spellId: "fire_bolt",
       },
@@ -7559,7 +7559,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateListPreparedSpellSelection",
         spellId: "heroism",
       },
@@ -7590,7 +7590,7 @@ describe("character creation finalization", () => {
       ),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingListPreparedSpellcasting" },
+      failure: { code: "missingListPreparedSpellcasting" },
     });
   });
 
@@ -7699,7 +7699,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "invalidFightingStyleCantripReplacement" },
+      failure: { code: "invalidFightingStyleCantripReplacement" },
     });
   });
 
@@ -7719,7 +7719,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingFightingStyleCantripFeatureChoice" },
+      failure: { code: "missingFightingStyleCantripFeatureChoice" },
     });
   });
 
@@ -7766,7 +7766,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "duplicateFightingStyleCantripSelection" },
+      failure: { code: "duplicateFightingStyleCantripSelection" },
     });
   });
 
@@ -7813,7 +7813,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "missingFightingStyleCantripReplacement" },
+      failure: { code: "missingFightingStyleCantripReplacement" },
     });
   });
 
@@ -8706,7 +8706,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidEldritchInvocationSelectionCount",
         expectedCount: 1,
         actualCount: 0,
@@ -8720,7 +8720,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidEldritchInvocationGainCount",
         expectedGains: 2,
         actualGains: 0,
@@ -8750,7 +8750,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "missingSelectedEldritchInvocation",
         invocationId: "eldritch_mind",
       },
@@ -8783,7 +8783,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         tag: "accepted",
         route: [
           "seed",
@@ -8822,7 +8822,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Success",
-      right: {
+      success: {
         tag: "rejected",
         issue: { code: "duplicateEldritchInvocationSelection" },
         route: [
@@ -8864,7 +8864,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
+      failure: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
     });
   });
 
@@ -8946,7 +8946,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWarlockPactMagicCantripSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -8966,7 +8966,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWarlockPactMagicCantripGainCount",
         expectedGains: 0,
         actualGains: 1,
@@ -9035,7 +9035,7 @@ describe("character creation finalization", () => {
         }),
       ).toMatchObject({
         _tag: "Failure",
-        left: cantripCase.issue,
+        failure: cantripCase.issue,
       });
     }
 
@@ -9053,7 +9053,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -9114,7 +9114,7 @@ describe("character creation finalization", () => {
         }),
       ).toMatchObject({
         _tag: "Failure",
-        left: preparedSpellCase.issue,
+        failure: preparedSpellCase.issue,
       });
     }
 
@@ -9136,7 +9136,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidWarlockPactMagicSlotProjection",
         warlockLevel: 1,
         expectedCount: 1,
@@ -9338,7 +9338,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
+      failure: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
     });
   });
 
@@ -9369,7 +9369,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "unmetEldritchInvocationPrerequisite",
         invocationId: "ascendant_step",
       },
@@ -9404,7 +9404,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "lockedEldritchInvocationReplacement",
         replaceInvocationId: "pact_of_the_blade",
         dependentInvocationId: "thirsting_blade",
@@ -9447,7 +9447,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateEldritchInvocationSelection",
         invocationId: "armor_of_shadows",
       },
@@ -9475,7 +9475,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "duplicateEldritchInvocationSelection",
         invocationId: "repelling_blast",
       },
@@ -9632,7 +9632,7 @@ describe("character creation finalization", () => {
       }),
     ).toMatchObject({
       _tag: "Failure",
-      left: {
+      failure: {
         code: "invalidRepeatableEldritchInvocationChoice",
         invocationId: "repelling_blast",
       },
@@ -10081,7 +10081,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Success",
-      right: { startingEquipmentCurrencyRemainderCp: 10_471 },
+      success: { startingEquipmentCurrencyRemainderCp: 10_471 },
     });
   });
 
@@ -10109,7 +10109,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: [
+      failure: [
         {
           cause: {
             tag: "startingCurrencyInsufficientForEquipmentPurchases",
@@ -10151,7 +10151,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: [
+      failure: [
         {
           cause: {
             tag: "currencySumOutsideCopperPieceAmountRange",
@@ -10209,7 +10209,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: [
+      failure: [
         {
           cause: {
             tag: "currencySumOutsideCopperPieceAmountRange",
@@ -10254,7 +10254,7 @@ describe("character creation finalization", () => {
 
     expect(result).toMatchObject({
       _tag: "Failure",
-      left: [
+      failure: [
         {
           cause: {
             tag: "unsupportedStartingCurrency",
@@ -10297,7 +10297,7 @@ describe("character creation finalization", () => {
       finalizedBuildEquipment(completeSelections, unsupportedGrantCatalog),
     ).toMatchObject({
       _tag: "Failure",
-      left: [
+      failure: [
         {
           cause: {
             tag: "unsupportedStartingCurrency",
