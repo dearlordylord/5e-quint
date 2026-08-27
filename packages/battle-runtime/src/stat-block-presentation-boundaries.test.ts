@@ -1,6 +1,10 @@
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import {
+  abilityModifier as battleAbilityModifier,
+  attackBonus,
+} from "@dnd/shared/types";
 
 import {
   characterWeaponPresentationSource,
@@ -14,6 +18,7 @@ import {
 import { battleSubjectPresentation } from "./battle-act-composition.ts";
 import {
   battleId,
+  testLongswordAttack,
   authoredProcedureOrdinal,
   characterSeed,
   combatantId,
@@ -29,6 +34,7 @@ import {
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { attackExecutionDamageType } from "./battle-action-options.ts";
+import { attackActionOptionsForActor } from "./battle-reducer/attack-damage-apply.ts";
 import {
   attackActionOptionPresentationName,
   battleCreaturePresentationDisplayName,
@@ -215,6 +221,79 @@ describe("battle presentation joins", () => {
       expect(
         result.left.every((issue) => issue.reason === "missingPresentation"),
       ).toBe(true);
+    }
+  });
+
+  test("labels synthetic alternate weapon abilities through public attack presentation", () => {
+    const alternateAbilityCases = [
+      {
+        ability: "con" as const,
+        label: "Constitution",
+        modifier: 0,
+        attackBonus: 2,
+      },
+      {
+        ability: "int" as const,
+        label: "Intelligence",
+        modifier: 1,
+        attackBonus: 3,
+      },
+      {
+        ability: "wis" as const,
+        label: "Wisdom",
+        modifier: 2,
+        attackBonus: 4,
+      },
+      {
+        ability: "cha" as const,
+        label: "Charisma",
+        modifier: 3,
+        attackBonus: 5,
+      },
+    ];
+
+    for (const alternateAbility of alternateAbilityCases) {
+      const baseAttack = testLongswordAttack();
+      const attack = {
+        ...baseAttack,
+        alternateAbilityChoices: [
+          {
+            ability: alternateAbility.ability,
+            abilityModifier: battleAbilityModifier(alternateAbility.modifier),
+            attackBonus: attackBonus(alternateAbility.attackBonus),
+            damageAbilityModifier: battleAbilityModifier(
+              alternateAbility.modifier,
+            ),
+          },
+        ],
+      } satisfies ReturnType<typeof testLongswordAttack>;
+      const session = startBattleSessionRight({
+        battleId: battleId(
+          `stat-block-presentation-${alternateAbility.ability}`,
+        ),
+        combatants: [
+          characterSeed({ initiative: 20, attack }),
+          statBlockCreatureInit({ initiative: 10 }),
+        ],
+      });
+      const alternateAttack = attackActionOptionsForActor(
+        session.state,
+        fighterId,
+      ).find(
+        (candidate) =>
+          candidate.kind === "weapon" &&
+          candidate.ability === alternateAbility.ability,
+      );
+      expect(alternateAttack).toBeDefined();
+      if (alternateAttack === undefined) continue;
+      expect(
+        attackActionOptionPresentationName(
+          session.state,
+          session.context,
+          fighterId,
+          alternateAttack,
+        ),
+      ).toEqual(Either.right(`Longsword (${alternateAbility.label})`));
     }
   });
 
