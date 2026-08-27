@@ -411,26 +411,16 @@ export type OracleBattleActsFrontier = Schema.Schema.Type<
   typeof OracleBattleActsFrontierSchema
 >;
 
-const OracleBattleTerminalFrontierSchema = Schema.Struct({
-  kind: Schema.Literal("terminal"),
-  outcome: Schema.Literal("resolved"),
-}).annotations({
-  identifier: "OracleBattleTerminalFrontier",
-  parseOptions: { onExcessProperty: "error" },
-});
-
-export const OracleBattleFrontierSchema = Schema.Union(
+export const OracleBattleNonterminalFrontierSchema = Schema.Union(
   OracleBattleActsFrontierSchema,
   BattleMechanicalFrontierSchema,
-  OracleBattleTerminalFrontierSchema,
 ).annotations({
-  identifier: "OracleBattleFrontier",
+  identifier: "OracleBattleNonterminalFrontier",
   parseOptions: { onExcessProperty: "error" },
 });
-export type OracleBattleFrontier =
+export type OracleBattleNonterminalFrontier =
   | OracleBattleActsFrontier
-  | BattleMechanicalFrontier
-  | Schema.Schema.Type<typeof OracleBattleTerminalFrontierSchema>;
+  | BattleMechanicalFrontier;
 
 const OracleBattleEnteredShapeSchema = Schema.Struct({
   tag: Schema.Literal("battleEntered"),
@@ -453,7 +443,7 @@ export type OracleBattleEntered = Schema.Schema.Type<
 export const OracleBattleProgressedSchema = Schema.Struct({
   tag: Schema.Literal("battleProgressed"),
   checkpoint: OracleBattleCheckpointSchema,
-  frontier: OracleBattleFrontierSchema,
+  frontier: OracleBattleNonterminalFrontierSchema,
 })
   .pipe(
     Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
@@ -472,7 +462,7 @@ export type OracleBattleProgressed = Schema.Schema.Type<
 export const OracleBattleAttemptRejectionSchema = Schema.Struct({
   tag: Schema.Literal("battleAttemptRejected"),
   checkpoint: OracleBattleCheckpointSchema,
-  frontier: OracleBattleFrontierSchema,
+  frontier: OracleBattleNonterminalFrontierSchema,
   reason: Schema.Literal(
     "staleSubject",
     "wrongActor",
@@ -498,8 +488,6 @@ export type OracleBattleAttemptRejection = Schema.Schema.Type<
 
 export const OracleBattleResolvedSchema = Schema.Struct({
   tag: Schema.Literal("battleResolved"),
-  checkpoint: OracleBattleCheckpointSchema,
-  frontier: OracleBattleTerminalFrontierSchema,
 }).annotations({
   identifier: "OracleBattleResolved",
   parseOptions: { onExcessProperty: "error" },
@@ -662,14 +650,13 @@ function oracleBattleCheckpointFrontierInvariantsHold(input: {
     readonly turnOrder: readonly string[];
     readonly combatants: readonly { readonly combatantId: string }[];
   };
-  readonly frontier: OracleBattleFrontier;
+  readonly frontier: OracleBattleNonterminalFrontier;
 }): boolean {
   const liveCombatantIds = new Set(
     input.checkpoint.combatants.map(({ combatantId }) => combatantId),
   );
   return Match.value(input.frontier).pipe(
     Match.discriminatorsExhaustive("kind")({
-      terminal: () => true,
       acts: ({ acts }) =>
         acts.every(
           (subject) =>

@@ -46,18 +46,10 @@ export function validOracleTraceLifecycle(trace: {
           currentState === "sheet"
             ? { accepted: true, state: "battle" }
             : { accepted: false },
-        battleProgressed: (value): LifecycleTransition => {
-          if (currentState !== "battle") return { accepted: false };
-          const nextState: LifecycleState = Match.value(value.frontier).pipe(
-            Match.discriminatorsExhaustive("kind")({
-              acts: (): LifecycleState => "battle",
-              ordinaryHoles: (): LifecycleState => "battle",
-              interruptDecision: (): LifecycleState => "battle",
-              terminal: (): LifecycleState => "battleResolved",
-            }),
-          );
-          return { accepted: true, state: nextState };
-        },
+        battleProgressed: (): LifecycleTransition =>
+          currentState === "battle"
+            ? { accepted: true, state: currentState }
+            : { accepted: false },
         battleAttemptRejected: (): LifecycleTransition =>
           currentState === "battle"
             ? { accepted: true, state: currentState }

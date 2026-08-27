@@ -45,11 +45,12 @@ import {
   OracleBattleCheckpointSchema,
   OracleTraceSchema,
   type FreshSheetInput,
+  type OracleBattleActsFrontier,
   type OracleBattleAttempt,
   type OracleBattleCheckpoint,
   type OracleBattleCreatureInitIssue,
   type OracleBattleEntryRejection,
-  type OracleBattleFrontier,
+  type OracleBattleNonterminalFrontier,
   type OracleBattleProjectionIssue,
   type OracleBattleRosterEntry,
   type OracleBattleStateInitLeafIssue,
@@ -260,11 +261,30 @@ function appendFreshSheetAndBattleSteps(
   );
 }
 
-type OracleBattleContinuation = {
+type OracleBattleActiveContinuation = {
   readonly session: BattleRuntimeSession;
   readonly checkpoint: OracleBattleCheckpoint;
-  readonly frontier: OracleBattleFrontier;
+  readonly frontier: OracleBattleNonterminalFrontier;
 };
+
+type OracleBattleTerminalContinuation = {
+  readonly session: BattleRuntimeSession;
+  readonly frontier: { readonly kind: "terminal" };
+};
+
+type OracleBattleContinuation =
+  | OracleBattleActiveContinuation
+  | OracleBattleTerminalContinuation;
+
+type OracleBattleResolutionFrontier =
+  | OracleBattleActsFrontier
+  | { readonly kind: "terminal" };
+
+function isOracleBattleActiveContinuation(
+  continuation: OracleBattleContinuation,
+): continuation is OracleBattleActiveContinuation {
+  return continuation.frontier.kind !== "terminal";
+}
 
 function appendBattleAttempts(
   steps: [OracleTraceStep, ...OracleTraceStep[]],
@@ -274,7 +294,7 @@ function appendBattleAttempts(
 ): OracleTrace {
   let current = initial;
   for (const [attemptIndex, attempt] of attempts.entries()) {
-    if (current.frontier.kind === "terminal") {
+    if (!isOracleBattleActiveContinuation(current)) {
       steps.push({
         tag: "workflowRejected",
         reason: {
@@ -301,7 +321,7 @@ function appendBattleAttempts(
 }
 
 function appendBattleAttemptResult(input: {
-  readonly current: OracleBattleContinuation;
+  readonly current: OracleBattleActiveContinuation;
   readonly attempt: OracleBattleAttempt;
   readonly result: BattleRuntimeResolutionResult;
   readonly steps: [OracleTraceStep, ...OracleTraceStep[]];
@@ -338,7 +358,7 @@ function appendBattleAttemptResult(input: {
           session: nextSession,
           checkpoint: nextCheckpoint,
           frontier: projected.right,
-        } satisfies OracleBattleContinuation;
+        } satisfies OracleBattleActiveContinuation;
         input.steps.push({
           tag: "battleProgressed",
           checkpoint: nextCheckpoint,
@@ -349,26 +369,28 @@ function appendBattleAttemptResult(input: {
       resolved: (result) => {
         const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
         const nextFrontier = battleFrontierAfterResolution(result.session);
-        const next = {
-          session: result.session,
-          checkpoint: nextCheckpoint,
-          frontier: nextFrontier,
-        } satisfies OracleBattleContinuation;
         return Match.value(nextFrontier).pipe(
           Match.discriminatorsExhaustive("kind")({
-            acts: () => {
+            acts: (frontier) => {
+              const next = {
+                session: result.session,
+                checkpoint: nextCheckpoint,
+                frontier,
+              } satisfies OracleBattleActiveContinuation;
               input.steps.push({
                 tag: "battleProgressed",
                 checkpoint: nextCheckpoint,
-                frontier: nextFrontier,
+                frontier,
               });
               return next;
             },
-            terminal: (frontier) => {
+            terminal: () => {
+              const next = {
+                session: result.session,
+                frontier: { kind: "terminal" as const },
+              } satisfies OracleBattleTerminalContinuation;
               input.steps.push({
                 tag: "battleResolved",
-                checkpoint: nextCheckpoint,
-                frontier,
               });
               return next;
             },
@@ -381,7 +403,7 @@ function appendBattleAttemptResult(input: {
 
 function battleSessionAfterNeedsHoles(input: {
   readonly attempt: OracleBattleAttempt;
-  readonly current: OracleBattleContinuation;
+  readonly current: OracleBattleActiveContinuation;
   readonly frontier: BattleMechanicalFrontier;
   readonly result: Extract<
     BattleRuntimeResolutionResult,
@@ -444,7 +466,7 @@ function acceptedFillsForAttempt(
 
 function battleActsFrontier(
   session: BattleRuntimeSession,
-): Extract<OracleBattleFrontier, { readonly kind: "acts" }> {
+): OracleBattleActsFrontier {
   const acts = discoverBattleActs(session).map(({ subject }) => subject);
   const [firstAct, ...remainingActs] = acts;
   if (firstAct === undefined) {
@@ -455,11 +477,11 @@ function battleActsFrontier(
 
 function battleFrontierAfterResolution(
   session: BattleRuntimeSession,
-): Extract<OracleBattleFrontier, { readonly kind: "acts" | "terminal" }> {
+): OracleBattleResolutionFrontier {
   const acts = discoverBattleActs(session).map(({ subject }) => subject);
   const [firstAct, ...remainingActs] = acts;
   return firstAct === undefined
-    ? { kind: "terminal", outcome: "resolved" }
+    ? { kind: "terminal" }
     : { kind: "acts", acts: [firstAct, ...remainingActs] };
 }
 

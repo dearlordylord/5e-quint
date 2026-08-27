@@ -1225,7 +1225,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(Either.isLeft(invalidAdmission)).toBe(true);
   });
 
-  it("requires a terminal frontier witness on a resolved Battle step", () => {
+  it("uses a minimal terminal outcome and rejects impossible terminal spellings", () => {
     const trace = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
@@ -1241,6 +1241,24 @@ describe("Opaque Oracle Case and Trace contract", () => {
 
     const resolved = {
       ...trace,
+      steps: [...trace.steps, { tag: "battleResolved" as const }],
+    };
+    expect(Either.isRight(decodeOracleTrace(resolved))).toBe(true);
+
+    const resolvedWithCheckpoint = {
+      ...trace,
+      steps: [
+        ...trace.steps,
+        {
+          tag: "battleResolved" as const,
+          checkpoint: entered.checkpoint,
+        },
+      ],
+    };
+    expect(Either.isLeft(decodeOracleTrace(resolvedWithCheckpoint))).toBe(true);
+
+    const resolvedWithFrontier = {
+      ...trace,
       steps: [
         ...trace.steps,
         {
@@ -1250,20 +1268,43 @@ describe("Opaque Oracle Case and Trace contract", () => {
         },
       ],
     };
-    expect(Either.isRight(decodeOracleTrace(resolved))).toBe(true);
+    expect(Either.isLeft(decodeOracleTrace(resolvedWithFrontier))).toBe(true);
 
-    const missingFrontier = {
+    const resolvedWithOutcome = {
+      ...trace,
+      steps: [
+        ...trace.steps,
+        { tag: "battleResolved" as const, outcome: "resolved" as const },
+      ],
+    };
+    expect(Either.isLeft(decodeOracleTrace(resolvedWithOutcome))).toBe(true);
+
+    const terminalProgressed = {
       ...trace,
       steps: [
         ...trace.steps,
         {
-          tag: "battleResolved" as const,
+          tag: "battleProgressed" as const,
           checkpoint: entered.checkpoint,
-          outcome: "resolved" as const,
+          frontier: { kind: "terminal" as const },
         },
       ],
     };
-    expect(Either.isLeft(decodeOracleTrace(missingFrontier))).toBe(true);
+    expect(Either.isLeft(decodeOracleTrace(terminalProgressed))).toBe(true);
+
+    const terminalRejection = {
+      ...trace,
+      steps: [
+        ...trace.steps,
+        {
+          tag: "battleAttemptRejected" as const,
+          checkpoint: entered.checkpoint,
+          frontier: { kind: "terminal" as const },
+          reason: "wrongActor" as const,
+        },
+      ],
+    };
+    expect(Either.isLeft(decodeOracleTrace(terminalRejection))).toBe(true);
   });
 
   it(
