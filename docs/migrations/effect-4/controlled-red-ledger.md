@@ -424,9 +424,10 @@ green claim.
 
 ## Issue #377 foundation evidence snapshot
 
-Source HEAD: `f5e54695fc2d522229c20b1eda90094cb937791b`. This entry records the
-#377 foundation lane after the Battle foundation and pure representation-codec
-tranches; it does not claim package-wide or workspace-wide green status.
+Source HEAD: `2477da6698af5178acb8e0dbeedcc0c0ff781afd`. This entry records the
+#377 foundation lane after the Battle foundation, pure representation-codec,
+and immediate MCP Result caller tranches; it does not claim package-wide or
+workspace-wide green status.
 
 The isolated executable lane uses foundation-owned suites that do not import
 later-owner druid wild-shape, attack/damage, turn/movement, direct-spell, or
@@ -434,13 +435,14 @@ persistent-effect owners. The broader package test lane remains controlled-red
 because package-index and test-support closures still reach the later-owner
 `druid-wild-shape.ts`, which imports removed `effect/Either`.
 
-| Evidence                                                                                                                                                                           | Result                                                                                                                                              |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm check:effect4-cohort:self-test`                                                                                                                                              | pass                                                                                                                                                |
-| `pnpm check:effect4-cohort`                                                                                                                                                        | pass                                                                                                                                                |
-| `pnpm exec vitest run packages/battle-runtime/src/battle-reducer/domain-helpers.test.ts packages/battle-runtime/src/character-execution-profile-projection.test.ts --reporter=dot` | pass; 2 suites, 12/12 tests                                                                                                                         |
-| `pnpm --filter @dnd/battle-runtime typecheck`                                                                                                                                      | controlled red; exit 1, 364 diagnostics (604 output lines)                                                                                          |
-| Changed #377 foundation source attribution                                                                                                                                         | zero diagnostics in the changed foundation files; remaining diagnostics belong to later-owner callers/capabilities and stale Effect 3 test closures |
+| Evidence                                                                                                                                                                           | Result                                                                                                                                                               |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm check:effect4-cohort:self-test`                                                                                                                                              | pass                                                                                                                                                                 |
+| `pnpm check:effect4-cohort`                                                                                                                                                        | pass                                                                                                                                                                 |
+| `pnpm exec vitest run packages/battle-runtime/src/battle-reducer/domain-helpers.test.ts packages/battle-runtime/src/character-execution-profile-projection.test.ts --reporter=dot` | pass; 2 suites, 12/12 tests                                                                                                                                          |
+| `pnpm --filter @dnd/battle-runtime typecheck`                                                                                                                                      | controlled red; exit 1, 364 diagnostics (604 output lines)                                                                                                           |
+| `pnpm --filter @dnd/mcp typecheck`                                                                                                                                                 | controlled red; exit 1, 1,209 diagnostics; repaired lifecycle/roster/initiative callers are no longer reported, while later-owner schema/input migration remains red |
+| Changed #377 foundation source attribution                                                                                                                                         | zero diagnostics in the changed foundation files; remaining diagnostics belong to later-owner callers/capabilities and stale Effect 3 test closures                  |
 
 The focused lane is acceptance evidence for deterministic foundation behavior,
 schema/domain helper behavior, and executable test collection. It intentionally
