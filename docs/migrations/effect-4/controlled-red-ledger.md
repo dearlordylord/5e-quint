@@ -596,7 +596,8 @@ Short Rest, and Long Rest. They support the existing reducer contracts for
 initiative order and turn boundaries, movement budget and Difficult Terrain,
 reaction timing and continuation, Ready decline/release, condition effects,
 and rest/resource boundaries. The registry distinguishes semantic-core QNT
-owners from MBT parity fixtures. Semantic-core owners for this audit are
+owners from MBT parity fixtures. A representative, non-exhaustive enumeration
+of semantic-core owners for this audit is
 `battle-runtime-turn-advancement.qnt`, `battle-runtime-reaction-window.qnt`,
 `battle-runtime-command-ordering.qnt`, `movement-spatial-grapple.qnt`, and
 the bridge `battle-runtime-movement-bridge.qnt`; `battle-runtime-interrupt-stack-resume.mbt.qnt`,
@@ -614,7 +615,27 @@ searches exact runtime API/import forms for `Fiber`, `Scope`, `Schedule`,
 `Layer`, `Stream`, `Queue`, `Deferred`, and `Ref`, while excluding the domain
 field `executionScope`. It found no matches: reducers remain synchronous
 immutable transitions and no synchronization or ownership test is required.
-The exact manifest expansion is `node -e 'const x=require("./docs/migrations/effect-4/gh379-registry-path-manifest.json"); process.stdout.write([...new Set([...x.sourceOrPurePaths,...x.parityOrFixturePaths])].join("\\n"))'`; piping it to the recorded `rg -uu` expressions produced zero matches.
+The exact manifest expansion and audit pipelines are:
+
+```sh
+node -e 'const x=require("./docs/migrations/effect-4/gh379-registry-path-manifest.json"); process.stdout.write([...new Set([...x.sourceOrPurePaths,...x.parityOrFixturePaths])].join("\n"))' |
+  xargs -r rg -n -uu \
+    -e 'effect/Either' \
+    -e 'Schema\.optionalWith' \
+    -e 'Schema\.decodeUnknownEither' \
+    -e 'Schema\.standardSchemaV1' \
+    -e 'Schema\.BigIntFromSelf' \
+    -e 'Schema\.transform' \
+    -e 'Schema\.Schema\.AnyNoContext' \
+    --
+node -e 'const x=require("./docs/migrations/effect-4/gh379-registry-path-manifest.json"); process.stdout.write([...new Set([...x.sourceOrPurePaths,...x.parityOrFixturePaths])].join("\n"))' |
+  xargs -r rg -n -uu \
+    -e 'effect/(Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)' \
+    -e '\b(Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)\.' \
+    --
+```
+
+Both pipelines produced zero matches.
 
 Reviewer-loop convergence at this HEAD: RAW anchors were rechecked against the
 local SRD corpus, ubiquitous-language terms remain the existing Battle terms,
