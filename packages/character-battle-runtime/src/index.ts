@@ -64,6 +64,7 @@ import {
   CONDITIONS,
   resourceCount,
   type Condition,
+  type Hp,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
   type SpellSlotLevel,
@@ -1202,7 +1203,7 @@ function validateBattleCombatantForCharacterSheet(input: {
   readonly sheet: CharacterSheet;
   readonly combatant: CharacterBattleCreatureState;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<number, CharacterSheetBattleHandoffIssue> {
+}): Either.Either<Hp, CharacterSheetBattleHandoffIssue> {
   if (input.combatant.origin.characterId !== input.sheet.characterId) {
     return characterBattleHandoffValidationIssue(
       "characterIdentityMismatch",

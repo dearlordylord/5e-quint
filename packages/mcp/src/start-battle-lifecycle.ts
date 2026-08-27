@@ -2,6 +2,7 @@ import {
   battleAdmittedSpellPresentations,
   battlePresentedSnapshot,
   discoverBattleActs,
+  type BattleId,
   type BattleRuntimeSession,
 } from "@dnd/battle-runtime";
 import { Match, Either } from "effect";
@@ -31,7 +32,7 @@ export function activeBattleStartError(
   );
 }
 
-function alreadyActiveBattleError(battleId: string) {
+function alreadyActiveBattleError(battleId: BattleId) {
   return errorContent("A battle session is already active.", {
     code: "BATTLE_SESSION_ALREADY_ACTIVE",
     battleId,
