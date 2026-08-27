@@ -9,6 +9,7 @@ import {
   battleActSpellPresentation,
   battleAmmunitionStock,
   battleCreatureInitFromStatBlock,
+  BattleFillSchema,
   battleId,
   characterId,
   combatantId,
@@ -383,11 +384,14 @@ describe("MCP server route", () => {
 
     expect(pendingFillFrontierIssue(pending, abilityCheckFill)).toBeNull();
     expect(
-      pendingFillFrontierIssue(pending, {
-        holeId: spellcastingAbilityCheckHole.holeId,
-        kind: "rolledDice",
-        value: [{ results: [14] }],
-      } as unknown as BattleFill),
+      pendingFillFrontierIssue(
+        pending,
+        Schema.decodeUnknownSync(BattleFillSchema)({
+          holeId: spellcastingAbilityCheckHole.holeId,
+          kind: "rolledDice",
+          value: [{ results: [14] }],
+        }),
+      ),
     ).toMatchObject({
       details: { code: "BATTLE_FILL_KIND_MISMATCH" },
     });
