@@ -46485,9 +46485,9 @@
             },
             "provenance": {
               "kind": "srd-5.2.1",
-              "section": "Monsters/Monsters-A-B.md:652-687"
+              "section": "Monsters/Monsters-A-B.md:654-685"
             },
-            "rulesExcerpt": "## Black Dragons\n\n### Black Dragon Wyrmling\n\n*Medium Dragon (Chromatic), Chaotic Evil*\n\n**AC** 17\n**HP** 33 (6d8 + 6)\n**Speed** 30 ft., Fly 60 ft., Swim 30 ft.\n**Initiative** +4 (14)\n\n| | STR | DEX | CON | INT | WIS | CHA |\n|---|---|---|---|---|---|---|\n| **Score** | 15 | 14 | 13 | 10 | 11 | 13 |\n| **Mod** | +2 | +2 | +1 | +0 | +0 | +1 |\n| **Save** | +2 | +2 | +1 | +0 | +2 | +1 |\n\n**Skills** Perception +4, Stealth +4\n**Immunities** Acid\n**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14\n**Languages** Draconic\n**CR** 2 (XP 450; PB +2)\n\n#### Traits\n\n**Amphibious.** The dragon can breathe air and water.\n\n#### Actions\n\n**Multiattack.** The dragon makes two Rend attacks.\n\n**Rend.** *Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.\n\n**Acid Breath (Recharge 5–6).** *Dexterity Saving Throw:* DC 11, each creature in a 20-foot-long, 5-foot-wide Line. *Failure:* 22 (5d8) Acid damage. *Success:* Half damage.\n\n---"
+            "rulesExcerpt": "### Black Dragon Wyrmling\n\n*Medium Dragon (Chromatic), Chaotic Evil*\n\n**AC** 17\n**HP** 33 (6d8 + 6)\n**Speed** 30 ft., Fly 60 ft., Swim 30 ft.\n**Initiative** +4 (14)\n\n| | STR | DEX | CON | INT | WIS | CHA |\n|---|---|---|---|---|---|---|\n| **Score** | 15 | 14 | 13 | 10 | 11 | 13 |\n| **Mod** | +2 | +2 | +1 | +0 | +0 | +1 |\n| **Save** | +2 | +2 | +1 | +0 | +2 | +1 |\n\n**Skills** Perception +4, Stealth +4\n**Immunities** Acid\n**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14\n**Languages** Draconic\n**CR** 2 (XP 450; PB +2)\n\n#### Traits\n\n**Amphibious.** The dragon can breathe air and water.\n\n#### Actions\n\n**Multiattack.** The dragon makes two Rend attacks.\n\n**Rend.** *Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.\n\n**Acid Breath (Recharge 5–6).** *Dexterity Saving Throw:* DC 11, each creature in a 20-foot-long, 5-foot-wide Line. *Failure:* 22 (5d8) Acid damage. *Success:* Half damage."
           },
           {
             "id": "stat_block_young_black_dragon",
@@ -91359,9 +91359,9 @@
             },
             "provenance": {
               "kind": "srd-5.2.1",
-              "section": "Monsters/Monsters-A-B.md:652-687"
+              "section": "Monsters/Monsters-A-B.md:654-685"
             },
-            "rulesExcerpt": "## Black Dragons\n\n### Black Dragon Wyrmling\n\n*Medium Dragon (Chromatic), Chaotic Evil*\n\n**AC** 17\n**HP** 33 (6d8 + 6)\n**Speed** 30 ft., Fly 60 ft., Swim 30 ft.\n**Initiative** +4 (14)\n\n| | STR | DEX | CON | INT | WIS | CHA |\n|---|---|---|---|---|---|---|\n| **Score** | 15 | 14 | 13 | 10 | 11 | 13 |\n| **Mod** | +2 | +2 | +1 | +0 | +0 | +1 |\n| **Save** | +2 | +2 | +1 | +0 | +2 | +1 |\n\n**Skills** Perception +4, Stealth +4\n**Immunities** Acid\n**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14\n**Languages** Draconic\n**CR** 2 (XP 450; PB +2)\n\n#### Traits\n\n**Amphibious.** The dragon can breathe air and water.\n\n#### Actions\n\n**Multiattack.** The dragon makes two Rend attacks.\n\n**Rend.** *Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.\n\n**Acid Breath (Recharge 5–6).** *Dexterity Saving Throw:* DC 11, each creature in a 20-foot-long, 5-foot-wide Line. *Failure:* 22 (5d8) Acid damage. *Success:* Half damage.\n\n---"
+            "rulesExcerpt": "### Black Dragon Wyrmling\n\n*Medium Dragon (Chromatic), Chaotic Evil*\n\n**AC** 17\n**HP** 33 (6d8 + 6)\n**Speed** 30 ft., Fly 60 ft., Swim 30 ft.\n**Initiative** +4 (14)\n\n| | STR | DEX | CON | INT | WIS | CHA |\n|---|---|---|---|---|---|---|\n| **Score** | 15 | 14 | 13 | 10 | 11 | 13 |\n| **Mod** | +2 | +2 | +1 | +0 | +0 | +1 |\n| **Save** | +2 | +2 | +1 | +0 | +2 | +1 |\n\n**Skills** Perception +4, Stealth +4\n**Immunities** Acid\n**Senses** Blindsight 10 ft., Darkvision 60 ft.; Passive Perception 14\n**Languages** Draconic\n**CR** 2 (XP 450; PB +2)\n\n#### Traits\n\n**Amphibious.** The dragon can breathe air and water.\n\n#### Actions\n\n**Multiattack.** The dragon makes two Rend attacks.\n\n**Rend.** *Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.\n\n**Acid Breath (Recharge 5–6).** *Dexterity Saving Throw:* DC 11, each creature in a 20-foot-long, 5-foot-wide Line. *Failure:* 22 (5d8) Acid damage. *Success:* Half damage."
           },
           {
             "id": "stat_block_young_black_dragon",
