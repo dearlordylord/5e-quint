@@ -546,5 +546,10 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       }),
     );
+    if (Either.isLeft(result)) {
+      expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+        "Druid Wild Shape battle forms require valid Stat Block resource limits.; resource declaration ordinal 1 is duplicated, resource reference 99 is missing",
+      );
+    }
   });
 });
