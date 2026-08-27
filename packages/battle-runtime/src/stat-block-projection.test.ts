@@ -30,7 +30,10 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution-state.ts";
-import { statBlockTraitsAreSupported } from "./statblock-action-support.ts";
+import {
+  statBlockTraitsAreSupported,
+  supportedStatBlockTraitAttackRollModes,
+} from "./statblock-action-support.ts";
 
 const authoredOrdinal = (value: number) =>
   Schema.decodeUnknownSync(StatBlockProcedureOrdinalSchema)(value);
@@ -164,7 +167,7 @@ describe("generic Stat Block projection", () => {
     ).toBe(false);
   });
 
-  test("admits only typed attack-roll trait effects", () => {
+  test("keeps text-only traits separate from typed trait support", () => {
     const untyped = [
       {
         name: "Coordinated Strike",
@@ -180,9 +183,27 @@ describe("generic Stat Block projection", () => {
         },
       },
     ] satisfies NonNullable<StandaloneStatBlock["traits"]>;
+    const unsupported = [
+      {
+        ...untyped[0],
+        effect: {
+          kind: "caster_shared_resistance" as const,
+          chosenFrom: "resistances_list" as const,
+        },
+      },
+    ] satisfies NonNullable<StandaloneStatBlock["traits"]>;
 
-    expect(statBlockTraitsAreSupported(untyped)).toBe(false);
+    expect(statBlockTraitsAreSupported(untyped)).toBe(true);
     expect(statBlockTraitsAreSupported(typed)).toBe(true);
+    expect(statBlockTraitsAreSupported(unsupported)).toBe(false);
+    expect(supportedStatBlockTraitAttackRollModes(untyped)).toBeUndefined();
+    expect(supportedStatBlockTraitAttackRollModes(typed)).toEqual([
+      {
+        mode: "advantage",
+        predicate: "nonIncapacitatedAllyWithin5FeetOfTarget",
+      },
+    ]);
+    expect(supportedStatBlockTraitAttackRollModes(unsupported)).toBeUndefined();
   });
 
   test("admits a static-only authored damage amount as a static attack option", () => {

@@ -1,17 +1,15 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.druid-wild-shape-known-form
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import type {
-  Condition,
   CreatureNamedAttackRoll,
   CreatureTrait,
   StatBlockProcedureEntry,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
-import { CONDITIONS } from "@dnd/surface/surface/types";
 import { Match } from "effect";
-import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 import type { BattleDruidWildShapeKnownFormSupportProfile } from "./druid-wild-shape-support-execution.ts";
 import { statBlockIsWildShapeKnownFormEligible } from "./druid-wild-shape-form-eligibility.ts";
+import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
 export {
   creatureActionSectionIsSupported,
   creatureAttackRollMechanicsAreSupported,
@@ -270,15 +268,14 @@ function addStatBlockTraitCategory(
   categories: Set<WildShapeFormActionSurfaceCategory>,
   trait: CreatureTrait,
 ): void {
-  if (statBlockTraitAttackRollMode(trait) !== null) {
-    categories.add("traitDerivedConditionalAttackRollAdvantage");
-  } else if (trait.effect === undefined) {
-    categories.add(
-      mentionsAttackRollAdvantage(trait.description)
-        ? "traitDerivedConditionalAttackRollAdvantage"
-        : "tableOrProseOnlyTrait",
-    );
-  }
+  Match.value(statBlockTraitSupport(trait)).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      supported: () =>
+        categories.add("traitDerivedConditionalAttackRollAdvantage"),
+      textOnly: () => categories.add("tableOrProseOnlyTrait"),
+      unsupported: () => categories.add("tableOrProseOnlyTrait"),
+    }),
+  );
 }
 
 function addAttackRollActionSurfaceCategories(
@@ -323,61 +320,8 @@ function addAttackDescriptionRiderCategories(
 function attackHitDescriptionRiderCategories(
   description: string,
 ): readonly WildShapeFormAttackHitRiderCategory[] {
-  const categories = new Set<WildShapeFormAttackHitRiderCategory>();
-  const lowerDescription = description.toLowerCase();
-  if (
-    CONDITIONS.some((condition) =>
-      mentionsCondition(lowerDescription, condition),
-    )
-  ) {
-    categories.add("attackHitConditionRider");
-  }
-  if (mentionsForcedMovement(lowerDescription)) {
-    categories.add("attackHitForcedMovementRider");
-  }
-  if (categories.size === 0) {
-    categories.add("attackHitOtherRider");
-  }
-  return WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES.filter((category) =>
-    categories.has(category),
-  );
-}
-
-function mentionsCondition(
-  lowerDescription: string,
-  condition: Condition,
-): boolean {
-  return lowerDescription.includes(`${condition} condition`);
-}
-
-function mentionsForcedMovement(lowerDescription: string): boolean {
-  const mentionsDistance =
-    lowerDescription.includes(" feet") || lowerDescription.includes(" ft.");
-  return (
-    mentionsDistance &&
-    (lowerDescription.includes("push") ||
-      lowerDescription.includes("pull") ||
-      lowerDescription.includes("move") ||
-      lowerDescription.includes("moved"))
-  );
-}
-
-function mentionsAttackRollAdvantage(description: string): boolean {
-  const lowerDescription = description.toLowerCase();
-  return (
-    lowerDescription.includes("advantage") &&
-    lowerDescription.includes("attack roll")
-  );
-}
-
-function statBlockTraitAttackRollMode(
-  trait: CreatureTrait,
-): StatBlockTraitAttackRollMode | null {
-  return trait.effect?.kind ===
-    "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
-    ? {
-        mode: "advantage",
-        predicate: "nonIncapacitatedAllyWithin5FeetOfTarget",
-      }
-    : null;
+  // A description carries no typed destination/effect payload. Preserve the
+  // closed rider fact, but never infer its semantics from authored wording.
+  void description;
+  return ["attackHitOtherRider"];
 }

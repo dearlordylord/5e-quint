@@ -37,8 +37,8 @@ import type {
   BattleUnitSupportSource,
   BattleUnitSupportProfile,
 } from "./unit-feature-support.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
+import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
 import {
   battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlock,
@@ -256,51 +256,30 @@ function battleDruidWildShapeFormProjectionStatBlock(
   BattleDruidWildShapeKnownFormProjection,
   BattleDruidWildShapeKnownFormIssue
 > {
-  const armorClass = projection.runtime.statBlock.ac;
-  if (armorClass.kind !== "literal") {
-    return Either.left({
-      tag: "battleDruidWildShapeKnownFormIssue",
-      message: "Druid Wild Shape battle forms require literal Armor Class.",
-    });
-  }
-  const creatureSize = projection.runtime.statBlock.size;
-  if (typeof creatureSize !== "string") {
-    return Either.left({
-      tag: "battleDruidWildShapeKnownFormIssue",
-      message: "Druid Wild Shape battle forms require literal Size.",
-    });
-  }
-  const speeds = battleDruidWildShapeFormProjectionSpeeds(projection.runtime);
+  const speeds = battleDruidWildShapeFormProjectionSpeeds(
+    projection.runtime.statBlock.speeds,
+  );
   if (Either.isLeft(speeds)) return Either.left(speeds.left);
   return Either.right({
     ...projection.runtime,
     presentation: projection.presentation,
     statBlock: {
       ...projection.runtime.statBlock,
-      ac: armorClass,
-      size: creatureSize,
       speeds: speeds.right,
     },
   });
 }
 
 function battleDruidWildShapeFormProjectionSpeeds(
-  form: BattleStatBlockExecutionSource,
+  speeds: AuthoredStatBlockProjection["runtime"]["statBlock"]["speeds"],
 ): Either.Either<
   BattleDruidWildShapeFormSpeeds,
   BattleDruidWildShapeKnownFormIssue
 > {
-  const literalSpeeds: LiteralStatBlockSpeed[] = [];
-  for (const speed of form.statBlock.speeds) {
-    if (speed.feet.kind !== "literal") {
-      return Either.left({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        message:
-          "Druid Wild Shape battle forms require unconditional literal Speeds.",
-      });
-    }
-    literalSpeeds.push({ kind: speed.kind, feet: speed.feet });
-  }
+  const literalSpeeds: LiteralStatBlockSpeed[] = speeds.map((speed) => ({
+    kind: speed.kind,
+    feet: speed.feet,
+  }));
   const walkSpeed = literalSpeeds.find(
     (speed): speed is LiteralWalkStatBlockSpeed => speed.kind === "walk",
   );

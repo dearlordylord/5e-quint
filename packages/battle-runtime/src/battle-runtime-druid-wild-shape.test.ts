@@ -174,6 +174,8 @@ const wolfId = "stat_block_wolf";
 const spiderId = "stat_block_spider";
 const syntheticNonLiteralSizeFormId = "synthetic_non_literal_size_form";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
+const syntheticUntypedCoordinatedShapeId =
+  "synthetic_untyped_coordinated_shape";
 const syntheticProseProneFormId = "synthetic_prose_prone_form";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
 const syntheticSupportedNonAttackFormId = "synthetic_supported_non_attack_form";
@@ -2756,7 +2758,7 @@ test("admits selected Beast forms with multi-component attack damage and typed h
   }
 });
 
-test("filters untyped trait-derived attack-roll advantage from battle-available forms", () => {
+test("retains text-only traits without inferring typed attack-roll support", () => {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
     [{ className: "druid", level: ClassLevel.make(2) }],
@@ -2767,7 +2769,7 @@ test("filters untyped trait-derived attack-roll advantage from battle-available 
   const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
   const traitAdvantageForm = {
     ...baseForm,
-    id: parseSharedStatBlockId("synthetic_untyped_coordinated_shape"),
+    id: parseSharedStatBlockId(syntheticUntypedCoordinatedShapeId),
     provenance: {
       kind: "synthetic-test" as const,
       section: "synthetic-untyped-coordinated-shape",
@@ -2791,7 +2793,10 @@ test("filters untyped trait-derived attack-roll advantage from battle-available 
 
   expect(Either.isRight(result)).toBe(true);
   if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([ridingHorseId]);
+    expect(result.right.map((form) => form.id)).toEqual([
+      ridingHorseId,
+      syntheticUntypedCoordinatedShapeId,
+    ]);
   }
 });
 
@@ -2948,30 +2953,9 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
         exampleStatBlockIds: expect.arrayContaining([wolfId]),
       }),
       expect.objectContaining({
-        category: "attackHitConditionRider",
-        exampleStatBlockIds: expect.arrayContaining([
-          syntheticProseProneFormId,
-        ]),
-        closedBoundary: expect.objectContaining({
-          owner: expect.stringContaining("condition rider owner"),
-          reason: expect.stringContaining(
-            "outside the typed target Size Prone payload",
-          ),
-        }),
-      }),
-      expect.objectContaining({
-        category: "attackHitForcedMovementRider",
-        exampleStatBlockIds: expect.arrayContaining([
-          syntheticTypedRidersFormId,
-        ]),
-        closedBoundary: expect.objectContaining({
-          owner: expect.stringContaining("forced-movement rider owner"),
-          reason: expect.stringContaining("typed movement payload"),
-        }),
-      }),
-      expect.objectContaining({
         category: "attackHitOtherRider",
         exampleStatBlockIds: expect.arrayContaining([
+          syntheticProseProneFormId,
           syntheticTypedRidersFormId,
         ]),
         closedBoundary: expect.objectContaining({
@@ -3082,10 +3066,13 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
     ]),
   );
   expect(
+    inventory.some((entry) => entry.category === "attackHitConditionRider"),
+  ).toBe(false);
+  expect(
     inventory.some(
       (entry) => entry.category === "attackHitForcedMovementRider",
     ),
-  ).toBe(true);
+  ).toBe(false);
 });
 
 function syntheticProseProneForm(): StatBlockRecord {
