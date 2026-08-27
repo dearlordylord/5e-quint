@@ -1,4 +1,4 @@
-import { Brand, Either, Option, Schema } from "effect";
+import { Brand, Option, Result, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import type { ActionRestriction } from "@dnd/surface/surface/types";
@@ -105,19 +105,19 @@ describe("action-economy-algebra", () => {
       activationResourceCost({
         mechanics: { activationCost: { kind: "free" } },
       }),
-    ).toEqual(Either.right({ kind: "free" }));
+    ).toEqual(Result.succeed({ kind: "free" }));
     expect(
       activationResourceCost({
         mechanics: { activationCost: { kind: "bonus_action" } },
       }),
-    ).toEqual(Either.right({ kind: "bonusAction" }));
+    ).toEqual(Result.succeed({ kind: "bonusAction" }));
     expect(
       activationResourceCost({
         mechanics: {
           activationCost: { kind: "standard_action", action: "attack" },
         },
       }),
-    ).toEqual(Either.right({ kind: "action", action: "attack" }));
+    ).toEqual(Result.succeed({ kind: "action", action: "attack" }));
     expect(
       activationResourceCost({
         mechanics: {
@@ -127,17 +127,17 @@ describe("action-economy-algebra", () => {
           },
         },
       }),
-    ).toEqual(Either.left("unsupported unit activation cost"));
+    ).toEqual(Result.fail("unsupported unit activation cost"));
     expect(
       activationResourceCost({
         mechanics: { castingTime: { kind: "action" } },
       }),
-    ).toEqual(Either.right({ kind: "action", action: "magic" }));
+    ).toEqual(Result.succeed({ kind: "action", action: "magic" }));
     expect(
       activationResourceCost({
         mechanics: { castingTime: { kind: "reaction" } },
       }),
-    ).toEqual(Either.left("unsupported unit casting time"));
+    ).toEqual(Result.fail("unsupported unit casting time"));
   });
 
   it("resets turn action and bonus-action resources", () => {
@@ -151,10 +151,10 @@ describe("action-economy-algebra", () => {
     const granted = grantTestUnitActionResource();
 
     const spent = spendAction(granted, "attack");
-    expect(Either.isRight(spent)).toBe(true);
-    if (Either.isLeft(spent)) return;
+    expect(Result.isSuccess(spent)).toBe(true);
+    if (Result.isFailure(spent)) return;
 
-    expect(spent.right.actionResources).toEqual([
+    expect(spent.success.actionResources).toEqual([
       { kind: "action", source: "turn" },
     ]);
   });
@@ -163,17 +163,19 @@ describe("action-economy-algebra", () => {
     const state = resetTurnActionEconomy(emptyActionEconomyState());
 
     const free = spendActivationResource(state, { kind: "free" });
-    expect(free).toEqual(Either.right(state));
+    expect(free).toEqual(Result.succeed(state));
 
     const spentBonusAction = spendActivationResource(state, {
       kind: "bonusAction",
     });
-    expect(Either.isRight(spentBonusAction)).toBe(true);
-    if (Either.isLeft(spentBonusAction)) return;
-    expect(spentBonusAction.right.currentHasBonusAction).toBe(false);
+    expect(Result.isSuccess(spentBonusAction)).toBe(true);
+    if (Result.isFailure(spentBonusAction)) return;
+    expect(spentBonusAction.success.currentHasBonusAction).toBe(false);
     expect(
-      spendActivationResource(spentBonusAction.right, { kind: "bonusAction" }),
-    ).toEqual(Either.left("no bonus action available"));
+      spendActivationResource(spentBonusAction.success, {
+        kind: "bonusAction",
+      }),
+    ).toEqual(Result.fail("no bonus action available"));
   });
 
   it("restricts a turn to either an Action or a Bonus Action", () => {
@@ -185,38 +187,38 @@ describe("action-economy-algebra", () => {
     expect(canSpendBonusAction(restricted)).toBe(true);
 
     const spentAction = spendAction(restricted, "attack");
-    expect(Either.isRight(spentAction)).toBe(true);
-    if (Either.isLeft(spentAction)) return;
-    expect(spentAction.right.actionResources).toEqual([]);
-    expect(spentAction.right.currentHasBonusAction).toBe(false);
-    expect(spentAction.right.actionOrBonusActionExclusion).toEqual({
+    expect(Result.isSuccess(spentAction)).toBe(true);
+    if (Result.isFailure(spentAction)) return;
+    expect(spentAction.success.actionResources).toEqual([]);
+    expect(spentAction.success.currentHasBonusAction).toBe(false);
+    expect(spentAction.success.actionOrBonusActionExclusion).toEqual({
       kind: "restricted",
       choice: "action",
     });
-    expect(canSpendAction(spentAction.right, "attack")).toBe(false);
-    expect(canSpendBonusAction(spentAction.right)).toBe(false);
+    expect(canSpendAction(spentAction.success, "attack")).toBe(false);
+    expect(canSpendBonusAction(spentAction.success)).toBe(false);
 
     const spentBonusAction = spendActivationResource(restricted, {
       kind: "bonusAction",
     });
-    expect(Either.isRight(spentBonusAction)).toBe(true);
-    if (Either.isLeft(spentBonusAction)) return;
-    expect(spentBonusAction.right.actionResources).toEqual([]);
-    expect(spentBonusAction.right.currentHasBonusAction).toBe(false);
-    expect(spentBonusAction.right.actionOrBonusActionExclusion).toEqual({
+    expect(Result.isSuccess(spentBonusAction)).toBe(true);
+    if (Result.isFailure(spentBonusAction)) return;
+    expect(spentBonusAction.success.actionResources).toEqual([]);
+    expect(spentBonusAction.success.currentHasBonusAction).toBe(false);
+    expect(spentBonusAction.success.actionOrBonusActionExclusion).toEqual({
       kind: "restricted",
       choice: "bonusAction",
     });
-    expect(canSpendAction(spentBonusAction.right, "attack")).toBe(false);
-    expect(canSpendBonusAction(spentBonusAction.right)).toBe(false);
+    expect(canSpendAction(spentBonusAction.success, "attack")).toBe(false);
+    expect(canSpendBonusAction(spentBonusAction.success)).toBe(false);
     expect(
       grantUnitActionResource(
-        spentBonusAction.right,
+        spentBonusAction.success,
         sourceOwnerId,
         unitActionProcedureRef,
         attackOnlyRestriction,
       ),
-    ).toEqual(Either.left("no action resource available"));
+    ).toEqual(Result.fail("no action resource available"));
   });
 
   it("reconciles prior Action spending when the Action or Bonus Action restriction starts mid-turn", () => {
@@ -224,11 +226,11 @@ describe("action-economy-algebra", () => {
       resetTurnActionEconomy(emptyActionEconomyState()),
       "magic",
     );
-    expect(Either.isRight(actionSpent)).toBe(true);
-    if (Either.isLeft(actionSpent)) return;
-    expect(actionSpent.right.currentHasBonusAction).toBe(true);
+    expect(Result.isSuccess(actionSpent)).toBe(true);
+    if (Result.isFailure(actionSpent)) return;
+    expect(actionSpent.success.currentHasBonusAction).toBe(true);
 
-    const restricted = enableActionOrBonusActionExclusion(actionSpent.right);
+    const restricted = enableActionOrBonusActionExclusion(actionSpent.success);
 
     expect(restricted.actionResources).toEqual([]);
     expect(restricted.currentHasBonusAction).toBe(false);
@@ -245,12 +247,12 @@ describe("action-economy-algebra", () => {
       resetTurnActionEconomy(emptyActionEconomyState()),
       { kind: "bonusAction" },
     );
-    expect(Either.isRight(bonusActionSpent)).toBe(true);
-    if (Either.isLeft(bonusActionSpent)) return;
-    expect(canSpendAction(bonusActionSpent.right, "attack")).toBe(true);
+    expect(Result.isSuccess(bonusActionSpent)).toBe(true);
+    if (Result.isFailure(bonusActionSpent)) return;
+    expect(canSpendAction(bonusActionSpent.success, "attack")).toBe(true);
 
     const restricted = enableActionOrBonusActionExclusion(
-      bonusActionSpent.right,
+      bonusActionSpent.success,
     );
 
     expect(restricted.actionResources).toEqual([]);
@@ -274,15 +276,15 @@ describe("action-economy-algebra", () => {
     expect(canSpendBonusAction(restricted)).toBe(true);
 
     const spentAction = spendAction(restricted, "attack");
-    expect(Either.isRight(spentAction)).toBe(true);
-    if (Either.isLeft(spentAction)) return;
-    expect(spentAction.right.movementActionBonusActionExclusion).toEqual({
+    expect(Result.isSuccess(spentAction)).toBe(true);
+    if (Result.isFailure(spentAction)) return;
+    expect(spentAction.success.movementActionBonusActionExclusion).toEqual({
       kind: "restricted",
       choice: "action",
     });
-    expect(canSpendMovement(spentAction.right)).toBe(false);
-    expect(canSpendAction(spentAction.right, "attack")).toBe(false);
-    expect(canSpendBonusAction(spentAction.right)).toBe(false);
+    expect(canSpendMovement(spentAction.success)).toBe(false);
+    expect(canSpendAction(spentAction.success, "attack")).toBe(false);
+    expect(canSpendBonusAction(spentAction.success)).toBe(false);
 
     const spentMovement =
       markMovementSpentForMovementActionBonusActionExclusion(restricted);
@@ -305,7 +307,7 @@ describe("action-economy-algebra", () => {
         unitActionProcedureRef,
         attackOnlyRestriction,
       ),
-    ).toEqual(Either.left("unit-granted action resource already granted"));
+    ).toEqual(Result.fail("unit-granted action resource already granted"));
   });
 
   it("spends spell-effect allow-only action resources only on admitted actions", () => {
@@ -315,16 +317,16 @@ describe("action-economy-algebra", () => {
       spellEffectRef,
       oneAttackDashDisengageHideUtilizeRestriction,
     );
-    expect(Either.isRight(granted)).toBe(true);
-    if (Either.isLeft(granted)) return;
+    expect(Result.isSuccess(granted)).toBe(true);
+    if (Result.isFailure(granted)) return;
 
-    const ordinaryActionSpent = spendAction(granted.right, "magic");
-    expect(Either.isRight(ordinaryActionSpent)).toBe(true);
-    if (Either.isLeft(ordinaryActionSpent)) return;
+    const ordinaryActionSpent = spendAction(granted.success, "magic");
+    expect(Result.isSuccess(ordinaryActionSpent)).toBe(true);
+    if (Result.isFailure(ordinaryActionSpent)) return;
 
-    expect(canSpendAction(ordinaryActionSpent.right, "magic")).toBe(false);
-    expect(canSpendAction(ordinaryActionSpent.right, "dash")).toBe(true);
-    const [spellEffectResource] = ordinaryActionSpent.right.actionResources;
+    expect(canSpendAction(ordinaryActionSpent.success, "magic")).toBe(false);
+    expect(canSpendAction(ordinaryActionSpent.success, "dash")).toBe(true);
+    const [spellEffectResource] = ordinaryActionSpent.success.actionResources;
     expect(spellEffectResource).toBeDefined();
     if (spellEffectResource === undefined) return;
     expect(actionResourceAllowsAdditionalAttacks(spellEffectResource)).toBe(
@@ -342,10 +344,10 @@ describe("action-economy-algebra", () => {
         actions: [{ action: "dash" }],
       },
     );
-    expect(Either.isRight(granted)).toBe(true);
-    if (Either.isLeft(granted)) return;
+    expect(Result.isSuccess(granted)).toBe(true);
+    if (Result.isFailure(granted)) return;
 
-    const spellEffectResource = granted.right.actionResources.find(
+    const spellEffectResource = granted.success.actionResources.find(
       (resource) => resource.source === "spellEffect",
     );
     expect(spellEffectResource).toBeDefined();
@@ -362,17 +364,17 @@ describe("action-economy-algebra", () => {
       spellEffectRef,
       oneAttackDashDisengageHideUtilizeRestriction,
     );
-    expect(Either.isRight(granted)).toBe(true);
-    if (Either.isLeft(granted)) return;
+    expect(Result.isSuccess(granted)).toBe(true);
+    if (Result.isFailure(granted)) return;
 
     expect(
       grantSpellEffectActionResource(
-        granted.right,
+        granted.success,
         sourceOwnerId,
         spellEffectRef,
         oneAttackDashDisengageHideUtilizeRestriction,
       ),
-    ).toEqual(Either.left("spell-effect action resource already granted"));
+    ).toEqual(Result.fail("spell-effect action resource already granted"));
   });
 
   it("spends selected and unarmed-strike action resources", () => {
@@ -391,9 +393,9 @@ describe("action-economy-algebra", () => {
     expect(unarmedStrikeActionResourceAllows(flurry)).toBe(true);
     expect(canSpendUnarmedStrikeActionResource(state)).toBe(true);
     const spentFlurry = spendUnarmedStrikeActionResource(state);
-    expect(Either.isRight(spentFlurry)).toBe(true);
-    if (Either.isLeft(spentFlurry)) return;
-    expect(spentFlurry.right.actionResources).toEqual([
+    expect(Result.isSuccess(spentFlurry)).toBe(true);
+    if (Result.isFailure(spentFlurry)) return;
+    expect(spentFlurry.success.actionResources).toEqual([
       { kind: "action", source: "turn" },
     ]);
 
@@ -402,26 +404,26 @@ describe("action-economy-algebra", () => {
       "attack",
       (resource) => resource.source === "unit",
     );
-    expect(Either.isRight(selected)).toBe(true);
+    expect(Result.isSuccess(selected)).toBe(true);
     expect(
       spendMatchingActionResource(
         emptyActionEconomyState(),
         "attack",
         () => true,
       ),
-    ).toEqual(Either.left("no action resource available"));
+    ).toEqual(Result.fail("no action resource available"));
     expect(spendUnarmedStrikeActionResource(emptyActionEconomyState())).toEqual(
-      Either.left("no action resource available"),
+      Result.fail("no action resource available"),
     );
     expect(spendAction(emptyActionEconomyState(), "attack")).toEqual(
-      Either.left("no action resource available"),
+      Result.fail("no action resource available"),
     );
     expect(
       spendActivationResource(
         resetTurnActionEconomy(emptyActionEconomyState()),
         { kind: "action", action: "attack" },
       ),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     expect(
       spendActionResourceAtIndex(
         resetTurnActionEconomy(emptyActionEconomyState()),
@@ -692,7 +694,7 @@ describe("initiative-algebra", () => {
 
   it("supports scored construction, indexed insertion, swapping, and empty removal", () => {
     expect(
-      Either.isRight(
+      Result.isSuccess(
         createScoredInitiativeStack(
           [initiativeEntry("c1", 2), initiativeEntry("c2", 1)],
           Round(1),
@@ -704,7 +706,7 @@ describe("initiative-algebra", () => {
         [initiativeEntry("c1", 1), initiativeEntry("c2", 2)],
         Round(1),
       ),
-    ).toEqual(Either.left("Initiative order must be monotone nonincreasing."));
+    ).toEqual(Result.fail("Initiative order must be monotone nonincreasing."));
 
     const stack = initialInitiativeStack();
     expect(
@@ -780,11 +782,11 @@ function grantTestUnitActionResource(): ActionEconomyState {
     unitActionProcedureRef,
     attackOnlyRestriction,
   );
-  expect(Either.isRight(granted)).toBe(true);
-  if (Either.isLeft(granted)) {
+  expect(Result.isSuccess(granted)).toBe(true);
+  if (Result.isFailure(granted)) {
     throw new Error("Expected test setup to grant a unit action resource.");
   }
-  return granted.right;
+  return granted.success;
 }
 
 function initialInitiativeStack(): InitiativeStack<string> {
