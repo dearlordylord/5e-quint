@@ -1,6 +1,10 @@
 import { Either, Match, Schema } from "effect";
 
-import { BattleFillSchema } from "./battle-reducer/battle-codecs.ts";
+import {
+  BattleFillSchema,
+  BattleMechanicalHoleSchema,
+  BattleMechanicalInterruptProcedureChoiceSchema,
+} from "./battle-reducer/battle-codecs.ts";
 import { battleHoleFamilyKind } from "./battle-reducer/hole-helpers.ts";
 import type {
   BattleHole,
@@ -12,18 +16,10 @@ import type {
 import { BattleSubjectSchema, type BattleSubject } from "./battle-subjects.ts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown
-  ? { [P in keyof T as P extends K ? never : P]: T[P] }
-  : never;
+export type BattleMechanicalHole = typeof BattleMechanicalHoleSchema.Type;
 
-export type BattleMechanicalHole = DistributiveOmit<BattleHole, "label">;
-
-export type BattleMechanicalInterruptChoice = DistributiveOmit<
-  BattleInterruptProcedureChoice,
-  "initialHoles"
-> & {
-  readonly initialHoles: readonly BattleMechanicalHole[];
-};
+export type BattleMechanicalInterruptChoice =
+  typeof BattleMechanicalInterruptProcedureChoiceSchema.Type;
 
 export type BattleMechanicalOrdinaryFrontier = {
   readonly kind: "ordinaryHoles";
@@ -34,7 +30,10 @@ export type BattleMechanicalOrdinaryFrontier = {
 
 export type BattleMechanicalInterruptFrontier = {
   readonly kind: "interruptDecision";
-  readonly decisionHole: DistributiveOmit<BattleInterruptDecisionHole, "label">;
+  readonly decisionHole: Extract<
+    BattleMechanicalHole,
+    { readonly kind: "interruptDecision" }
+  >;
   readonly choices: ReadonlyNonEmptyArray<BattleMechanicalInterruptChoice>;
 };
 
@@ -48,15 +47,8 @@ export type BattleMechanicalFrontierIssue =
   | { readonly tag: "interruptFrontierMissingCheckpoint" }
   | { readonly tag: "interruptFrontierChoiceSetEmpty" };
 
-export const BattleMechanicalHoleSchema = Schema.declare<BattleMechanicalHole>(
-  isMechanicalHole,
-  { identifier: "BattleMechanicalHole" },
-);
-
 export const BattleMechanicalInterruptChoiceSchema =
-  Schema.declare<BattleMechanicalInterruptChoice>(isMechanicalInterruptChoice, {
-    identifier: "BattleMechanicalInterruptChoice",
-  });
+  BattleMechanicalInterruptProcedureChoiceSchema;
 
 export const BattleMechanicalFrontierSchema = Schema.Union(
   Schema.Struct({
@@ -71,8 +63,10 @@ export const BattleMechanicalFrontierSchema = Schema.Union(
       Schema.filter(
         (
           hole,
-        ): hole is DistributiveOmit<BattleInterruptDecisionHole, "label"> =>
-          hole.kind === "interruptDecision",
+        ): hole is Extract<
+          BattleMechanicalHole,
+          { kind: "interruptDecision" }
+        > => hole.kind === "interruptDecision",
       ),
     ),
     choices: Schema.NonEmptyArray(BattleMechanicalInterruptChoiceSchema),
@@ -217,35 +211,6 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       wildShapeEquipmentDisposition: removeHoleLabel,
     }),
   );
-}
-
-function removeHoleLabel<T extends BattleHole>(
-  hole: T,
-): DistributiveOmit<T, "label"> {
-  const { label: _label, ...mechanical } = hole;
-  return mechanical;
-}
-
-function isMechanicalHole(input: unknown): input is BattleMechanicalHole {
-  if (!isRecord(input)) return false;
-  return (
-    !Object.prototype.hasOwnProperty.call(input, "label") &&
-    typeof input.kind === "string"
-  );
-}
-
-function isMechanicalInterruptChoice(
-  input: unknown,
-): input is BattleMechanicalInterruptChoice {
-  if (!isRecord(input)) return false;
-  return (
-    Array.isArray(input.initialHoles) &&
-    input.initialHoles.every(isMechanicalHole)
-  );
-}
-
-function isRecord(input: unknown): input is Readonly<Record<string, unknown>> {
-  return typeof input === "object" && input !== null;
 }
 
 function projectMechanicalInterruptChoice(

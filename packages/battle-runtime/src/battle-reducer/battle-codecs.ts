@@ -1412,7 +1412,7 @@ function exhaustiveBattleHoleSchema<
   return schema;
 }
 
-const BattleHolePayloadUnionSchema = Schema.Union(
+const BattleHolePayloadMembers = [
   Schema.Struct({
     ...BattleHoleBaseSchema,
     kind: Schema.Literal("readyDeclaration"),
@@ -2770,6 +2770,13 @@ const BattleHolePayloadUnionSchema = Schema.Union(
       ),
     ),
   }),
+] as const;
+
+const [FirstBattleHolePayloadMember, ...RemainingBattleHolePayloadMembers] =
+  BattleHolePayloadMembers;
+const BattleHolePayloadUnionSchema = Schema.Union(
+  FirstBattleHolePayloadMember,
+  ...RemainingBattleHolePayloadMembers,
 );
 
 const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
@@ -2779,6 +2786,14 @@ const BattleHolePayloadSchema = exhaustiveBattleHoleSchema(
 export const BattleHoleSchema = BattleHolePayloadSchema.annotations({
   identifier: "BattleHole",
 });
+
+const MechanicalBattleHoleMembers = RemainingBattleHolePayloadMembers.map(
+  (member) => Schema.omit("label")(member),
+);
+export const BattleMechanicalHoleSchema = Schema.Union(
+  Schema.omit("label")(FirstBattleHolePayloadMember),
+  ...MechanicalBattleHoleMembers,
+).annotations({ identifier: "BattleMechanicalHole" });
 
 const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.int(),
@@ -6160,7 +6175,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   }),
 );
 
-export const BattleInterruptProcedureChoiceSchema = Schema.Union(
+const BattleInterruptProcedureChoiceMembers = [
   Schema.Struct({
     kind: Schema.Literal("releaseReadiedSpell"),
     reactorId: CombatantId,
@@ -6217,6 +6232,14 @@ export const BattleInterruptProcedureChoiceSchema = Schema.Union(
     choice: BattleReactionModifierChoiceSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
   }),
+] as const;
+const [
+  FirstBattleInterruptProcedureChoiceMember,
+  ...RemainingBattleInterruptProcedureChoiceMembers
+] = BattleInterruptProcedureChoiceMembers;
+export const BattleInterruptProcedureChoiceSchema = Schema.Union(
+  FirstBattleInterruptProcedureChoiceMember,
+  ...RemainingBattleInterruptProcedureChoiceMembers,
 ).pipe(
   Schema.filter(
     (choice) =>
@@ -6265,6 +6288,74 @@ export const BattleInterruptProcedureChoiceSchema = Schema.Union(
     },
   ),
 );
+
+const MechanicalBattleInterruptChoiceMembers =
+  RemainingBattleInterruptProcedureChoiceMembers.map((member) =>
+    Schema.omit("initialHoles")(member).pipe(
+      Schema.extend(
+        Schema.Struct({
+          initialHoles: Schema.Array(BattleMechanicalHoleSchema),
+        }),
+      ),
+    ),
+  );
+export const BattleMechanicalInterruptProcedureChoiceSchema = Schema.Union(
+  Schema.omit("initialHoles")(FirstBattleInterruptProcedureChoiceMember).pipe(
+    Schema.extend(
+      Schema.Struct({ initialHoles: Schema.Array(BattleMechanicalHoleSchema) }),
+    ),
+  ),
+  ...MechanicalBattleInterruptChoiceMembers,
+).pipe(
+  Schema.filter(isOwnedInterruptProcedureChoice, {
+    message: () =>
+      "Interrupt choices must own the matching reference-bearing runtime subject.",
+  }),
+);
+
+function isOwnedInterruptProcedureChoice(
+  choice: typeof BattleInterruptProcedureChoiceSchema.Type,
+): boolean {
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      releaseReadiedSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedSpell" &&
+        value.reactorId === value.readiedSpellCasterId &&
+        value.reactorId === value.subject.readiedSpellCasterId,
+      releaseReadiedMovement: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedMovement" &&
+        value.reactorId === value.readiedMovementActorId &&
+        value.reactorId === value.subject.readiedMovementActorId,
+      releaseReadiedAction: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedAction" &&
+        value.reactorId === value.subject.reactorId,
+      releaseReadiedAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedAttack" &&
+        value.reactorId === value.subject.reactorId,
+      castTriggeredReactionSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "castTriggeredReactionSpell" &&
+        value.reactorId === value.subject.reactorId,
+      castAttackHitBonusActionSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "castAttackHitBonusActionSpell" &&
+        value.reactorId === value.subject.casterId,
+      opportunityAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "opportunityAttack" &&
+        value.reactorId === value.subject.reactorId,
+      retaliationAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "retaliationAttack" &&
+        value.reactorId === value.subject.reactorId,
+      reactionRollOrDamageReduction: () => true,
+    }),
+  );
+}
 
 const BattlePendingReactionSnapshotSchema = Schema.Struct({
   trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
