@@ -107,6 +107,7 @@ export type McpBattleRosterTransitionIssue =
   | {
       readonly tag: "battleRosterCombatantAdmissionFailed";
       readonly combatantId: CombatantId;
+      readonly ownerPath: readonly ["operation", "combatant"];
       readonly message: string;
     }
   | {

@@ -185,6 +185,7 @@ function planAddCharacterBattleCombatant(input: {
     return Either.left({
       tag: "battleRosterCombatantAdmissionFailed",
       combatantId: operation.combatant.combatantId,
+      ownerPath: ["operation", "combatant"],
       message: battleStateInitIssueMessage(admitted.left),
     });
   }
@@ -227,6 +228,7 @@ function planAddStatBlockBattleCombatant(input: {
     return Either.left({
       tag: "battleRosterCombatantAdmissionFailed",
       combatantId: input.operation.combatant.combatantId,
+      ownerPath: ["operation", "combatant"],
       message: battleStateInitIssueMessage(admitted.left),
     });
   }

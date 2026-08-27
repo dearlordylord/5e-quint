@@ -46,7 +46,10 @@ import { Either, Option } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 
 import {
+  characterSheetBattleHandoffFactFromIssue,
+  characterSheetBattleHandoffFactFromStateInit,
   characterSheetBattleHandoffIssue,
+  type CharacterSheetBattleHandoffFact,
   type CharacterSheetBattleHandoffIssue,
 } from "./battle-handoff-issue.ts";
 
@@ -74,6 +77,8 @@ export type CharacterSheetCompanionBattleRuntimeAdmissionInput = Omit<
 };
 
 export type BattleCompanionRosterOwner = {
+  /** Owner index in the canonical initial-combatant roster. */
+  readonly index: number;
   readonly characterId: CharacterSheet["characterId"];
   readonly combatantId: CombatantId;
   readonly sheet: CharacterSheet;
@@ -88,6 +93,13 @@ export type BattleCompanionRosterRequest = {
 };
 
 export type BattleCompanionRosterIssue =
+  | {
+      readonly kind: "duplicateCompanionOwnerSource";
+      readonly reason: "duplicateOwnerSource";
+      readonly ownerIndex: number;
+      readonly firstOwnerIndex: number;
+      readonly ownerCharacterId: CharacterSheet["characterId"];
+    }
   | {
       readonly kind: "duplicateCompanionOwner";
       readonly reason: "duplicateOwner";
@@ -109,15 +121,20 @@ export type BattleCompanionRosterIssue =
       readonly ownerCharacterId: CharacterSheet["characterId"];
       readonly companionCombatantId?: CombatantId;
     }
-  | {
+  | ({
       readonly kind: "companionAdmission";
-      readonly reason: "admissionRejected";
+      readonly admissionReason: "admissionRejected";
       readonly issueTag: CharacterSheetBattleHandoffIssue["tag"];
       readonly index: number;
       readonly ownerCharacterId: CharacterSheet["characterId"];
       readonly companionCombatantId?: CombatantId;
       readonly message: string;
-    };
+    } & CharacterSheetBattleHandoffFact);
+
+type BattleCompanionRosterDependentIssue = Exclude<
+  BattleCompanionRosterIssue,
+  { readonly kind: "companionAdmission" }
+>;
 
 export type BattleCompanionRosterComposition =
   | {
@@ -130,7 +147,7 @@ export type BattleCompanionRosterComposition =
     }
   | {
       readonly tag: "dependentUnavailable";
-      readonly issues: readonly BattleCompanionRosterIssue[];
+      readonly issues: readonly BattleCompanionRosterDependentIssue[];
     };
 
 export function composeBattleCompanionRoster(input: {
@@ -141,19 +158,39 @@ export function composeBattleCompanionRoster(input: {
   readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
   readonly statBlockCatalog: StatBlockCatalog;
 }): BattleCompanionRosterComposition {
-  const owners = new Map(
-    input.owners.map((owner) => [owner.characterId, owner] as const),
-  );
+  const owners = new Map<
+    CharacterSheet["characterId"],
+    BattleCompanionRosterOwner
+  >();
   const ownerIndexes = new Map<CharacterSheet["characterId"], number>();
   const companionIndexes = new Map<CombatantId, number>();
   const issues: BattleCompanionRosterIssue[] = [];
+  const dependentIssues: BattleCompanionRosterDependentIssue[] = [];
+  const addIssue = (issue: BattleCompanionRosterIssue): void => {
+    issues.push(issue);
+    if (issue.kind !== "companionAdmission") dependentIssues.push(issue);
+  };
+  for (const owner of input.owners) {
+    const firstOwner = owners.get(owner.characterId);
+    if (firstOwner === undefined) {
+      owners.set(owner.characterId, owner);
+      continue;
+    }
+    addIssue({
+      kind: "duplicateCompanionOwnerSource",
+      reason: "duplicateOwnerSource",
+      ownerIndex: owner.index,
+      firstOwnerIndex: firstOwner.index,
+      ownerCharacterId: owner.characterId,
+    });
+  }
   let session = input.session;
 
   for (const [index, request] of input.requests.entries()) {
     const firstOwnerIndex = ownerIndexes.get(request.ownerCharacterId);
     const duplicateOwner = firstOwnerIndex !== undefined;
     if (duplicateOwner) {
-      issues.push({
+      addIssue({
         kind: "duplicateCompanionOwner",
         reason: "duplicateOwner",
         index,
@@ -171,7 +208,7 @@ export function composeBattleCompanionRoster(input: {
         : companionIndexes.get(companionCombatantId);
     const duplicateCompanionCombatant = firstCompanionIndex !== undefined;
     if (duplicateCompanionCombatant && companionCombatantId !== undefined) {
-      issues.push({
+      addIssue({
         kind: "duplicateCompanionCombatantId",
         reason: "duplicateCombatantId",
         index,
@@ -184,7 +221,7 @@ export function composeBattleCompanionRoster(input: {
 
     const owner = owners.get(request.ownerCharacterId);
     if (owner === undefined) {
-      issues.push({
+      addIssue({
         kind: "companionOwnerUnavailable",
         reason: "ownerNotInRoster",
         index,
@@ -222,13 +259,14 @@ export function composeBattleCompanionRoster(input: {
       statBlockCatalog: input.statBlockCatalog,
     });
     if (Either.isLeft(admitted)) {
-      issues.push({
+      addIssue({
         kind: "companionAdmission",
-        reason: "admissionRejected",
+        admissionReason: "admissionRejected",
         issueTag: admitted.left.tag,
         index,
         ownerCharacterId: request.ownerCharacterId,
         ...(companionCombatantId === undefined ? {} : { companionCombatantId }),
+        ...characterSheetBattleHandoffFactFromIssue(admitted.left),
         message: admitted.left.message,
       });
       continue;
@@ -237,7 +275,7 @@ export function composeBattleCompanionRoster(input: {
   }
 
   if (session === undefined) {
-    return { tag: "dependentUnavailable", issues };
+    return { tag: "dependentUnavailable", issues: dependentIssues };
   }
   if (!isNonEmptyReadonlyArray(issues)) {
     return { tag: "admitted", session };
@@ -262,6 +300,7 @@ export function admitCharacterSheetCompanionToBattle(
   const sheetCompanion = characterSheetCompanion(input.sheet);
   if (sheetCompanion.tag === "none") {
     return characterSheetBattleHandoffIssue(
+      { handoffReason: "retainedCompanionUnavailable" },
       "Character Sheet has no retained companion to admit.",
     );
   }
@@ -321,6 +360,7 @@ function admitProjectedCharacterSheetCompanion(
     });
     return Either.isLeft(admitted)
       ? characterSheetBattleHandoffIssue(
+          characterSheetBattleHandoffFactFromStateInit(admitted.left),
           battleStateInitIssueMessage(admitted.left),
         )
       : Either.right(admitted.right);
@@ -331,6 +371,7 @@ function admitProjectedCharacterSheetCompanion(
   });
   return Either.isLeft(admitted)
     ? characterSheetBattleHandoffIssue(
+        characterSheetBattleHandoffFactFromStateInit(admitted.left),
         battleStateInitIssueMessage(admitted.left),
       )
     : Either.right(admitted.right);
@@ -381,6 +422,10 @@ function companionAdmissionManifestation(input: {
       input.placement === undefined
     ) {
       return characterSheetBattleHandoffIssue(
+        {
+          handoffReason: "companionAdmissionInput",
+          requirement: "presentCombatantInitiativeAndPlacement",
+        },
         "Present companion admission requires combatant id, Initiative, and placement.",
       );
     }
@@ -402,6 +447,10 @@ function companionAdmissionManifestation(input: {
   if (manifestation.tag === "temporarilyDismissed") {
     if (input.companionCombatantId === undefined) {
       return characterSheetBattleHandoffIssue(
+        {
+          handoffReason: "companionAdmissionInput",
+          requirement: "dismissedReappearanceCombatant",
+        },
         "Temporarily dismissed companion admission requires a reappearance combatant id.",
       );
     }
@@ -460,7 +509,10 @@ function battleStoredFormForSheetCompanion(input: {
     resolvedStatBlockId: proof.resolvedStatBlockId,
   });
   if (proofIssue !== null) {
-    return characterSheetBattleHandoffIssue(proofIssue);
+    return characterSheetBattleHandoffIssue(
+      proofIssue.fact,
+      proofIssue.message,
+    );
   }
   const formEligibility = battleCompanionFormEligibilityForAccess({
     formAccess: formSelectionAccess.right.formAccess,
@@ -516,24 +568,66 @@ function retainedCompanionResolvedFormProofIssue(input: {
   readonly statBlockCatalog?: StatBlockCatalog;
   readonly selectedForm: CharacterSheetCompanionFormSelection;
   readonly resolvedStatBlockId: StatBlockRecord["id"];
-}): string | null {
+}): {
+  readonly fact: Extract<
+    CharacterSheetBattleHandoffFact,
+    { readonly handoffReason: "companionFormProof" }
+  >;
+  readonly message: string;
+} | null {
   if (input.selectedForm.tag === "challengeRatingZeroBeast") {
     if (input.selectedForm.statBlockId !== input.resolvedStatBlockId) {
-      return "Retained companion Challenge Rating 0 Beast form proof does not match its resolved Stat Block id.";
+      return {
+        fact: {
+          handoffReason: "companionFormProof",
+          check: "challengeRatingZeroBeastSelectionMismatch",
+          formId: input.selectedForm.statBlockId,
+          resolvedStatBlockId: input.resolvedStatBlockId,
+        },
+        message:
+          "Retained companion Challenge Rating 0 Beast form proof does not match its resolved Stat Block id.",
+      };
     }
     if (input.statBlockCatalog === undefined) {
-      return "Retained companion Challenge Rating 0 Beast form proof requires a Stat Block catalog.";
+      return {
+        fact: {
+          handoffReason: "companionFormProof",
+          check: "challengeRatingZeroBeastCatalogMissing",
+          formId: input.selectedForm.statBlockId,
+          resolvedStatBlockId: input.resolvedStatBlockId,
+        },
+        message:
+          "Retained companion Challenge Rating 0 Beast form proof requires a Stat Block catalog.",
+      };
     }
     const statBlock = input.statBlockCatalog.getStatBlock(
       input.selectedForm.statBlockId,
     );
     if (Option.isNone(statBlock)) {
-      return "Retained companion Challenge Rating 0 Beast form Stat Block is missing.";
+      return {
+        fact: {
+          handoffReason: "companionFormProof",
+          check: "challengeRatingZeroBeastStatBlockMissing",
+          formId: input.selectedForm.statBlockId,
+          resolvedStatBlockId: input.resolvedStatBlockId,
+        },
+        message:
+          "Retained companion Challenge Rating 0 Beast form Stat Block is missing.",
+      };
     }
     return statBlock.value.statBlock.creatureType === "beast" &&
       statBlock.value.challengeRating === 0
       ? null
-      : "Retained companion Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block.";
+      : {
+          fact: {
+            handoffReason: "companionFormProof",
+            check: "challengeRatingZeroBeastFactsMismatch",
+            formId: input.selectedForm.statBlockId,
+            resolvedStatBlockId: input.resolvedStatBlockId,
+          },
+          message:
+            "Retained companion Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block.",
+        };
   }
   if (input.selectedForm.tag === "pactOfTheChainSpecialForm") {
     const selectedForm = input.selectedForm;
@@ -544,11 +638,30 @@ function retainedCompanionResolvedFormProofIssue(input: {
     // established at compile time for this already-parsed selection.
     return specialForm.statBlockId === input.resolvedStatBlockId
       ? null
-      : "Retained companion special form proof does not match its resolved Stat Block id.";
+      : {
+          fact: {
+            handoffReason: "companionFormProof",
+            check: "specialFormSelectionMismatch",
+            formId: selectedForm.formId,
+            resolvedStatBlockId: input.resolvedStatBlockId,
+          },
+          message:
+            "Retained companion special form proof does not match its resolved Stat Block id.",
+        };
   }
   const selectedForm = input.selectedForm;
   const eligibility = retainedFamiliarLikeFormEligibility(input.unitLibrary);
-  if (Either.isLeft(eligibility)) return eligibility.left.message;
+  if (Either.isLeft(eligibility)) {
+    return {
+      fact: {
+        handoffReason: "companionFormProof",
+        check: "normalFormNotEligible",
+        formId: selectedForm.formId,
+        resolvedStatBlockId: input.resolvedStatBlockId,
+      },
+      message: eligibility.left.message,
+    };
+  }
   return retainedFamiliarLikeNormalFormProofIssue({
     eligibility: eligibility.right,
     selectedForm,
@@ -574,11 +687,13 @@ function retainedFamiliarLikeFormEligibility(
     );
   if (eligible.length === 0) {
     return characterSheetBattleHandoffIssue(
+      { handoffReason: "companionFormCatalog", cardinality: "none" },
       "Retained companion admission requires a familiar-like form catalog.",
     );
   }
   if (eligible.length > 1) {
     return characterSheetBattleHandoffIssue(
+      { handoffReason: "companionFormCatalog", cardinality: "multiple" },
       "Retained companion admission requires exactly one familiar-like form catalog.",
     );
   }
@@ -592,16 +707,40 @@ function retainedFamiliarLikeNormalFormProofIssue(input: {
     { readonly tag: "normalNamedForm" }
   >;
   readonly resolvedStatBlockId: StatBlockRecord["id"];
-}): string | null {
+}): {
+  readonly fact: Extract<
+    CharacterSheetBattleHandoffFact,
+    { readonly handoffReason: "companionFormProof" }
+  >;
+  readonly message: string;
+} | null {
   const normalForm = input.eligibility.normalForms.find(
     (form) => form.formId === input.selectedForm.formId,
   );
   if (normalForm === undefined) {
-    return "Retained companion normal form is not eligible for the familiar-like form catalog.";
+    return {
+      fact: {
+        handoffReason: "companionFormProof",
+        check: "normalFormNotEligible",
+        formId: input.selectedForm.formId,
+        resolvedStatBlockId: input.resolvedStatBlockId,
+      },
+      message:
+        "Retained companion normal form is not eligible for the familiar-like form catalog.",
+    };
   }
   return normalForm.statBlockId === input.resolvedStatBlockId
     ? null
-    : "Retained companion normal form proof does not match its resolved Stat Block id.";
+    : {
+        fact: {
+          handoffReason: "companionFormProof",
+          check: "normalFormSelectionMismatch",
+          formId: input.selectedForm.formId,
+          resolvedStatBlockId: input.resolvedStatBlockId,
+        },
+        message:
+          "Retained companion normal form proof does not match its resolved Stat Block id.",
+      };
 }
 
 type BattleFormSelectionAccess =
@@ -622,6 +761,10 @@ function battleFormSelectionAccessForSheetCompanion(input: {
   if (input.selectedForm.tag === "pactOfTheChainSpecialForm") {
     if (formAccess !== "pactOfTheChain") {
       return characterSheetBattleHandoffIssue(
+        {
+          handoffReason: "companionFormProtocol",
+          check: "specialFormRequiresPactProtocol",
+        },
         "Special retained companion forms require an attack-exception protocol.",
       );
     }
@@ -661,6 +804,10 @@ export function settleCompanionFromBattle(input: {
   const sheetCompanion = characterSheetCompanion(input.sheet);
   if (sheetCompanion.tag === "none") {
     return characterSheetBattleHandoffIssue(
+      {
+        handoffReason: "validation",
+        check: "companionSheetSlotMissing",
+      },
       "Retained battle companion has no Character Sheet companion slot to settle into.",
     );
   }
@@ -669,6 +816,10 @@ export function settleCompanionFromBattle(input: {
     battleCompanion.identity.durableCompanionId
   ) {
     return characterSheetBattleHandoffIssue(
+      {
+        handoffReason: "validation",
+        check: "companionIdentityMismatch",
+      },
       "Battle companion durable identity does not match Character Sheet companion.",
     );
   }
@@ -680,6 +831,10 @@ export function settleCompanionFromBattle(input: {
   }
   if (input.retainedCompanionSelection === undefined) {
     return characterSheetBattleHandoffIssue(
+      {
+        handoffReason: "validation",
+        check: "retainedFormSelectionMissing",
+      },
       "Retained battle companion has no battle-owned authored form selection.",
     );
   }
@@ -687,6 +842,10 @@ export function settleCompanionFromBattle(input: {
     input.retainedCompanionSelection.formAccess !== battleCompanion.formAccess
   ) {
     return characterSheetBattleHandoffIssue(
+      {
+        handoffReason: "validation",
+        check: "retainedFormAccessMismatch",
+      },
       "Retained battle companion form access does not match its battle-owned authored selection.",
     );
   }
@@ -731,11 +890,19 @@ function companionManifestationFromBattle(input: {
     const combatant = input.state.combatants.get(companionCombatantId);
     if (combatant === undefined) {
       return characterSheetBattleHandoffIssue(
+        {
+          handoffReason: "validation",
+          check: "companionCombatantMissing",
+        },
         "Present battle companion combatant is missing during handoff.",
       );
     }
     if (combatant.hp < 1) {
       return characterSheetBattleHandoffIssue(
+        {
+          handoffReason: "validation",
+          check: "companionHpNonPositive",
+        },
         "Present battle companion must have positive HP during handoff.",
       );
     }
@@ -745,14 +912,24 @@ function companionManifestationFromBattle(input: {
       companion: input.companion,
     });
     if (typeof storedForm === "string") {
-      return characterSheetBattleHandoffIssue(storedForm);
+      return characterSheetBattleHandoffIssue(
+        {
+          handoffReason: "companionStoredForm",
+          check: "presentStatBlockMissing",
+          storedCompanionCombatantId: companionCombatantId,
+        },
+        storedForm,
+      );
     }
     const proof = sheetCompanionResolvedFormProofForBattleCompanion(
       input,
       storedForm,
     );
     if (Either.isLeft(proof)) {
-      return characterSheetBattleHandoffIssue(proof.left.message);
+      return characterSheetBattleHandoffIssue(
+        characterSheetBattleHandoffFactFromIssue(proof.left),
+        proof.left.message,
+      );
     }
     return Either.right({
       tag: "embodiedOutsideBattle",
@@ -771,7 +948,10 @@ function companionManifestationFromBattle(input: {
     input.companion,
   );
   if (Either.isLeft(proof)) {
-    return characterSheetBattleHandoffIssue(proof.left.message);
+    return characterSheetBattleHandoffIssue(
+      characterSheetBattleHandoffFactFromIssue(proof.left),
+      proof.left.message,
+    );
   }
   if (input.companion.status === "temporarilyDismissed") {
     return Either.right({
@@ -806,7 +986,8 @@ function sheetCompanionResolvedFormProofForBattleCompanion(
   });
   if (retainedSelectionIssue !== null) {
     return characterSheetBattleHandoffIssue(
-      `Battle companion execution form cannot be joined to its retained authored selection: ${retainedSelectionIssue}`,
+      retainedSelectionIssue.fact,
+      `Battle companion execution form cannot be joined to its retained authored selection: ${retainedSelectionIssue.message}`,
     );
   }
   return Either.right({

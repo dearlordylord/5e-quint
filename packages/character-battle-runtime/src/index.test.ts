@@ -281,7 +281,16 @@ function testIssueForBattleRosterIssue(
             tag: "battleCreatureInitIssue" as const,
             message: matched.message,
             ...characterBattleInitIssueFactFields(
-              characterBattleInitIssueReasonFromFact(matched),
+              characterBattleInitIssueReasonFromFact(
+                (({
+                  kind: _kind,
+                  index: _index,
+                  characterId: _characterId,
+                  issueTag: _issueTag,
+                  message: _message,
+                  ...fact
+                }) => fact)(matched),
+              ),
             ),
           }
         : {
@@ -329,10 +338,6 @@ function testIssueForBattleRosterIssue(
         Match.exhaustive,
       ),
     ),
-    Match.when({ kind: "rosterCompositionInvariant" }, ({ reason }) => ({
-      tag: "battleStateInitIssue" as const,
-      message: reason,
-    })),
     Match.exhaustive,
   );
 }
@@ -1185,21 +1190,6 @@ describe("Character Sheet battle handoff", () => {
   });
 
   test("uses tagged roster and companion composition outcomes without partial products", () => {
-    const emptyRoster = composeBattleRoster(
-      [] as unknown as BattleRosterEntries,
-    );
-    expect(emptyRoster).toEqual({
-      tag: "rejected",
-      admissions: [],
-      issues: [
-        {
-          kind: "rosterCompositionInvariant",
-          index: 0,
-          reason: "nonEmptyInputProducedNoAdmissions",
-        },
-      ],
-    });
-
     const unavailableCompanion = composeBattleCompanionRoster({
       session: undefined,
       owners: [],
@@ -1255,6 +1245,7 @@ describe("Character Sheet battle handoff", () => {
       session: session.right,
       owners: [
         {
+          index: 0,
           characterId: sheet.right.characterId,
           combatantId: init.right.combatantId,
           sheet: sheet.right,
@@ -1276,14 +1267,49 @@ describe("Character Sheet battle handoff", () => {
       expect(rejectedCompanion.issues).toEqual([
         {
           kind: "companionAdmission",
-          reason: "admissionRejected",
+          admissionReason: "admissionRejected",
           issueTag: "characterSheetBattleHandoffIssue",
           index: 0,
           ownerCharacterId: sheet.right.characterId,
+          handoffReason: "retainedCompanionUnavailable",
           message: "Character Sheet has no retained companion to admit.",
         },
       ]);
     }
+
+    const duplicateOwnerSource = composeBattleCompanionRoster({
+      session: session.right,
+      owners: [
+        {
+          index: 0,
+          characterId: sheet.right.characterId,
+          combatantId: init.right.combatantId,
+          sheet: sheet.right,
+        },
+        {
+          index: 1,
+          characterId: sheet.right.characterId,
+          combatantId: combatantId("duplicate-owner-source"),
+          sheet: sheet.right,
+        },
+      ],
+      requests: [],
+      unitLibrary,
+      initialCombatantOrder: new Map([[init.right.combatantId, 0]]),
+      statBlockCatalog,
+    });
+    expect(duplicateOwnerSource).toEqual({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "duplicateCompanionOwnerSource",
+          reason: "duplicateOwnerSource",
+          ownerIndex: 1,
+          firstOwnerIndex: 0,
+          ownerCharacterId: sheet.right.characterId,
+        },
+      ],
+    });
   });
 
   test("routes Character Sheet initialization failures from caller catalog drift", () => {
@@ -5414,6 +5440,8 @@ describe("Character Sheet battle handoff", () => {
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Battle handoff Spell Slot expenditure is source-ambiguous for level 3.",
+        handoffReason: "spellSlotSourceAmbiguous",
+        spellLevel: spellSlotLevel(3),
       }),
     );
 
@@ -6497,6 +6525,8 @@ describe("Character Sheet battle handoff", () => {
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
+        handoffReason: "validation",
+        check: "spellAccessFreeCastCapShapeInvalid",
       }),
     );
   });
@@ -10363,6 +10393,8 @@ describe("Character battle runtime boundary coverage", () => {
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Battle handoff Spell Slot expenditure exceeds available Character Sheet Spell Slots.",
+        handoffReason: "validation",
+        check: "battleSpellSlotExpenditureExceedsAvailable",
       }),
     );
   });
@@ -10394,9 +10426,11 @@ describe("Character battle runtime boundary coverage", () => {
 
     expect(handoff).toEqual(
       Either.left({
-        tag: "characterSheetIssue",
+        tag: "characterSheetBattleHandoffIssue",
         message:
           "Cannot derive Hit Point maximum without grant source Unit: sorcerer_font_of_magic.",
+        handoffReason: "delegatedCharacterSheetIssue",
+        delegatedIssueTag: "characterSheetIssue",
       }),
     );
   });
@@ -10451,6 +10485,8 @@ describe("Character battle runtime boundary coverage", () => {
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
+        handoffReason: "validation",
+        check: "spellAccessFreeCastCapShapeInvalid",
       }),
     );
   });
@@ -10568,6 +10604,8 @@ describe("Character battle runtime boundary coverage", () => {
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
+        handoffReason: "validation",
+        check: "spellAccessFreeCastCapacityMismatch",
       }),
     );
   });

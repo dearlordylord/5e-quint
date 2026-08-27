@@ -411,8 +411,10 @@ export function battleCreatureStateAdmissionFromInit(
     ].flatMap((issue) =>
       issue !== null && Either.isLeft(issue) ? [issue.left] : [],
     );
-    const initInvariantIssues =
-      characterBattleInitInvariantIssues(creatureInit);
+    const initInvariantIssues = characterBattleInitInvariantIssues(
+      input.combatantId,
+      creatureInit,
+    );
     const initIssuesWithSupportProfile = initIssues.map((issue) => ({
       tag: "battleUnitSupportProfileIssue" as const,
       message: battleStateInitIssueMessage(issue),
@@ -689,6 +691,7 @@ export function hidePrerequisiteReferencedCombatantIds(
 }
 
 function characterBattleInitInvariantIssues(
+  combatantId: CombatantId,
   creatureInit: CharacterBattleCreatureInit,
 ): BattleStateInitLeafIssue[] {
   const attacks = [creatureInit.attack, creatureInit.offHandAttack].flatMap(
@@ -709,19 +712,19 @@ function characterBattleInitInvariantIssues(
       tag: "battleStateInitIssue" as const,
       message: `Character battle initialization requires an explicit ${ammunition} ammunition stock.`,
       kind: "ammunitionStockInvalid" as const,
-      combatantId: creatureInit.combatantId,
+      combatantId,
       ammunition,
     })),
     ...duplicateCharacterBattleResourceUnitIssues(
-      creatureInit.combatantId,
+      combatantId,
       creatureInit.resources ?? [],
     ),
     ...duplicateCharacterBattleFeatureUnitIssues(
-      creatureInit.combatantId,
+      combatantId,
       creatureInit.unitFeatures ?? [],
     ),
     ...duplicateCharacterBattleWeaponMasteryIssues(
-      creatureInit.combatantId,
+      combatantId,
       creatureInit.weaponMasteries,
     ),
     ...characterBattleLoadoutIssues(creatureInit),

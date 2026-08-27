@@ -28,7 +28,6 @@ import {
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
-  characterCreationIssueMessage,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   characterBuildUnitRefs,
@@ -65,6 +64,7 @@ import { isNonEmptyReadonlyArray } from "effect/Array";
 import {
   battleCreatureInitIssue,
   battleCreatureInitIssueMessage,
+  battleCreatureInitIssuesFromCharacterBuildProjection,
   battleCreatureInitIssuesFromMessages,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
@@ -198,12 +198,9 @@ export function battleCreatureInitFromCharacterBuild(
 ): Either.Either<BattleCreatureInit, BattleCreatureInitIssue> {
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
   if (Either.isLeft(hitPoints)) {
-    return battleCreatureInitIssuesFromMessages(
-      hitPoints.left.map(characterCreationIssueMessage),
-      () => ({
-        kind: "characterBuildProjection",
-        phase: "hitPoints",
-      }),
+    return battleCreatureInitIssuesFromCharacterBuildProjection(
+      hitPoints.left,
+      "hitPoints",
     );
   }
   const buildMaximumHp = Hp(hitPoints.right.maximum);
@@ -370,12 +367,9 @@ export function battleCreatureInitFromCharacterBuild(
       input.unitLibrary,
     );
     if (Either.isLeft(proficiencies)) {
-      return yield* battleCreatureInitIssuesFromMessages(
-        proficiencies.left.map(characterCreationIssueMessage),
-        () => ({
-          kind: "characterBuildProjection",
-          phase: "proficiencies",
-        }),
+      return yield* battleCreatureInitIssuesFromCharacterBuildProjection(
+        proficiencies.left,
+        "proficiencies",
       );
     }
     const spellcasting =

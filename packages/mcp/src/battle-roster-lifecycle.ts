@@ -176,6 +176,7 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
       battleLifecycleError("Battle combatant admission failed.", {
         code: "BATTLE_COMBATANT_ADMISSION_FAILED",
         combatantId: matched.combatantId,
+        ownerPath: matched.ownerPath,
         message: matched.message,
       }),
     ),

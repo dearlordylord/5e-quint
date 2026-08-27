@@ -4,7 +4,11 @@
 import * as Either from "effect/Either";
 import { Match } from "effect";
 import type { CreatureType } from "@dnd/shared/game-facts";
-import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  type DifficultyClass,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type {
   BattleCreatureState,
   BattleStateInitIssue,
@@ -47,15 +51,33 @@ export function battleStateInitIssueMessage(
 
 export function battleStateInitIssueLeaves(
   issue: BattleStateInitIssue,
-): readonly BattleStateInitLeafIssue[] {
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
   return Match.value(issue).pipe(
-    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) =>
-      issues.flatMap(battleStateInitIssueLeaves),
-    ),
-    Match.when({ tag: "battleStateInitIssue" }, (leaf) => [leaf]),
-    Match.when({ tag: "weaponLoadoutMismatch" }, (leaf) => [leaf]),
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) => {
+      const [firstIssue, ...restIssues] = issues;
+      return prependBattleStateInitLeaves(
+        battleStateInitIssueLeaves(firstIssue),
+        restIssues.flatMap(battleStateInitIssueLeaves),
+      );
+    }),
+    Match.when({ tag: "battleStateInitIssue" }, battleStateInitLeafList),
+    Match.when({ tag: "weaponLoadoutMismatch" }, battleStateInitLeafList),
     Match.exhaustive,
   );
+}
+
+function battleStateInitLeafList(
+  leaf: BattleStateInitLeafIssue,
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  return [leaf];
+}
+
+function prependBattleStateInitLeaves(
+  first: ReadonlyNonEmptyArray<BattleStateInitLeafIssue>,
+  rest: readonly BattleStateInitLeafIssue[],
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  const [firstLeaf, ...restLeaves] = first;
+  return [firstLeaf, ...restLeaves, ...rest];
 }
 
 export function battleStateInitIssues(
