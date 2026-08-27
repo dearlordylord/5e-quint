@@ -72,6 +72,7 @@ export type {
 
 export {
   battleRuntimeSessionFollows,
+  battleRuntimeSessionDescendsFrom,
   emptyBattleRuntimeContext,
   isBattleRuntimeSession,
   type BattleRuntimeContext,
@@ -352,11 +353,13 @@ export {
   battleSubjectProcedureRefsBelongToOwners,
   sameBattleSubject,
   spellSlotInvocationRef,
+  isBattleReadyTriggerReportSubject,
   type BattleRuntimeCommand,
   type BattleMovementSpeedKind,
   type BattleInterruptSubject,
   type BattleReadyResponse,
   type BattleSubject,
+  type BattleReadyTriggerReportSubject,
   type BattleSubjectAction,
   type BattleSubjectBonusAction,
   type CantripSpellProcedure,
@@ -709,6 +712,19 @@ export {
   type BattleRuntimeResolutionResult,
   type BattleRuntimeTableD20TestResolutionResult,
 } from "./battle-session-execution.ts";
+
+export {
+  settleBattleRuntimeTransaction,
+  settleBattleRuntimeResolution,
+  battlePendingTransactionView,
+  battlePendingTransactionViewForSession,
+  type BattlePendingTransaction,
+  type BattlePendingTransactionSessionView,
+  type BattlePendingTransactionView,
+  type BattleRuntimeTransactionDefect,
+  type BattleRuntimeTransactionOperation,
+  type BattleRuntimeTransactionResult,
+} from "./battle-runtime-transaction.ts";
 
 export {
   resolveBattlePossessionAttempt,

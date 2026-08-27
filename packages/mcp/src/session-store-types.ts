@@ -1,10 +1,8 @@
 import type { CharacterDraftId } from "@dnd/character-creation-runtime";
 import type {
-  BattleFill,
-  BattleHole,
   BattleId,
+  BattlePendingTransactionView,
   BattleRuntimeSession,
-  BattleSubject,
   InitialInitiativeSetup,
   snapshotBattle,
 } from "@dnd/battle-runtime";
@@ -17,7 +15,6 @@ import type {
   CharacterSheetZeroHpLifecycle,
   CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockId } from "@dnd/surface/surface/stat-block-catalog";
 import type { Either } from "effect";
 
@@ -67,14 +64,13 @@ export type CharacterSessionRegistry = {
   keys(): IterableIterator<CharacterId>;
 };
 
-export type BattleFillSession = {
-  readonly subject: BattleSubject;
-  readonly fills: readonly BattleFill[];
-  /** The current executable frontier retained after the last needsHoles result. */
-  readonly holes: ReadonlyNonEmptyArray<BattleHole>;
-};
-export type PendingBattleFillSession = BattleFillSession & {
-  readonly baseSession: BattleRuntimeSession;
+/** Wire/session projection of the shared transaction's current layer. */
+export type BattleFillSession = BattlePendingTransactionView;
+
+export type McpBattleTransactionStorageIssue = {
+  readonly tag: "battleStatePendingTransactionInvalid";
+  readonly battleId: BattleId;
+  readonly reason: "foreignTransaction" | "transactionSessionMismatch";
 };
 
 export type McpBattleState =
@@ -86,6 +82,7 @@ export type McpBattleState =
   | { readonly tag: "activeBattle"; readonly session: BattleRuntimeSession };
 
 export type McpBattleStateTransitionIssue =
+  | McpBattleTransactionStorageIssue
   | {
       readonly tag: "invalidBattleStateTransition";
       readonly from: McpBattleState["tag"];

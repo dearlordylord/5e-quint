@@ -1668,6 +1668,22 @@ export function isCharacterProcedureBattleSubject(
   );
 }
 
+export type BattleReadyTriggerReportSubject = Extract<
+  BattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "reportReadyTrigger";
+  }
+>;
+
+export function isBattleReadyTriggerReportSubject(
+  subject: BattleSubject,
+): subject is BattleReadyTriggerReportSubject {
+  return (
+    subject.tag === "runtimeCommand" && subject.command === "reportReadyTrigger"
+  );
+}
+
 export type ActionHideSubject = {
   readonly tag: "action";
   readonly actorId: CombatantId;

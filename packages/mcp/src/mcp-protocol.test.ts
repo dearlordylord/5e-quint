@@ -2501,7 +2501,8 @@ describe("MCP protocol server", () => {
               ),
               battleState: root.sessionStore.battleState,
               battleSession: root.sessionStore.battleSession,
-              transientBattleFills: root.sessionStore.pendingBattleFills,
+              transientBattleFills:
+                root.sessionStore.snapshot().transientBattleFills,
             });
           },
         );

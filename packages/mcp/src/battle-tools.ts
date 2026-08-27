@@ -1,12 +1,18 @@
 import {
   battleInitiativePosition,
+  battlePendingTransactionView,
   discoverBattleActs,
+  isBattleReadyTriggerReportSubject,
   openCreatureFallsRuntimeInterruptWindow,
-  resolveBattleRuntimeInterrupt,
-  resolveBattleRuntimeSubject,
+  settleBattleRuntimeResolution,
+  settleBattleRuntimeTransaction,
   sameBattleSubject,
+  type BattlePendingTransactionView,
+  type BattleFill,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleRuntimeTransactionResult,
+  type BattleSubject,
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 
@@ -29,7 +35,6 @@ import {
 } from "./battle-tool-output.ts";
 import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { handleBattleLifecycleToolCall } from "./battle-lifecycle-tool.ts";
-import { pendingTransactionForResult } from "./battle-pending-transaction.ts";
 import {
   battleResolutionPayload,
   battleSessionPayload,
@@ -39,10 +44,6 @@ import {
   pendingBattleFillsContent,
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
-import type {
-  McpBattleStateTransitionIssue,
-  PendingBattleFillSession,
-} from "./session-store.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
@@ -51,6 +52,41 @@ import { battleStateTransitionErrorContent } from "./battle-state-transition.ts"
 export type BattleToolResult =
   | ReturnType<typeof schemaJsonContent>
   | ReturnType<typeof errorContent>;
+
+export type BattlePendingSubjectAdmission =
+  | { readonly tag: "sameSubject" }
+  | { readonly tag: "readyTriggerOverlay" }
+  | { readonly tag: "differentSubject" };
+
+export function battlePendingSubjectAdmission(
+  pending: BattlePendingTransactionView,
+  subject: BattleSubject,
+): BattlePendingSubjectAdmission {
+  if (sameBattleSubject(pending.subject, subject)) {
+    return { tag: "sameSubject" };
+  }
+  return isBattleReadyTriggerReportSubject(subject) &&
+    pending.holes.length > 0 &&
+    pending.holes.every((hole) => hole.kind === "interruptDecision")
+    ? { tag: "readyTriggerOverlay" }
+    : { tag: "differentSubject" };
+}
+
+/**
+ * Apply the operation's ownership rule to a pending subject admission.
+ * Interrupt decisions consume the transaction-owned subject, so a Ready
+ * report overlay is valid only for an ordinary subject operation.
+ */
+export function battlePendingFillAdmission(
+  pending: BattlePendingTransactionView,
+  subject: BattleSubject,
+  fillKind: BattleFill["kind"],
+): BattlePendingSubjectAdmission {
+  const admission = battlePendingSubjectAdmission(pending, subject);
+  return fillKind === "interruptDecision" && admission.tag !== "sameSubject"
+    ? { tag: "differentSubject" }
+    : admission;
+}
 
 export function handleBattleToolCall(
   root: McpPlaySessionRoot,
@@ -94,11 +130,43 @@ export function handleBattleToolCall(
       if (Either.isLeft(visibleSession)) return visibleSession.left;
 
       const subject = matched.args.subject;
-      const previous = root.sessionStore.pendingBattleFills;
-      if (previous !== null && !sameBattleSubject(previous.subject, subject)) {
+      const previous = root.sessionStore.getPendingBattleTransaction();
+      const previousView =
+        previous === null ? null : battlePendingTransactionView(previous);
+      if (previousView === undefined) {
+        return errorContent("The stored battle transaction is invalid.", {
+          code: "BATTLE_TRANSACTION_DEFECT",
+          issue: { tag: "foreignTransaction" },
+        });
+      }
+      const pendingSubjectAdmission =
+        previousView === null
+          ? undefined
+          : battlePendingFillAdmission(
+              previousView,
+              subject,
+              matched.args.fill.kind,
+            );
+      if (
+        previous !== null &&
+        previousView !== null &&
+        isBattleReadyTriggerReportSubject(subject) &&
+        pendingSubjectAdmission?.tag === "sameSubject" &&
+        matched.args.fill.kind !== "interruptDecision"
+      ) {
+        return pendingBattleFillsContent(
+          previousView,
+          "The Ready trigger report is already pending.",
+        );
+      }
+      if (
+        previous !== null &&
+        previousView !== null &&
+        pendingSubjectAdmission?.tag === "differentSubject"
+      ) {
         return errorContent("A different battle subject has pending fills.", {
           code: "BATTLE_FILL_SUBJECT_MISMATCH",
-          pendingSubject: previous.subject,
+          pendingSubject: previousView.subject,
           requestedSubject: subject,
         });
       }
@@ -112,39 +180,47 @@ export function handleBattleToolCall(
         });
       }
 
-      const fills = [...(previous?.fills ?? []), matched.args.fill];
-      const isInterruptDecision =
-        matched.args.fill.kind === "interruptDecision";
-      const replaySession = isInterruptDecision
-        ? visibleSession.right
-        : (previous?.baseSession ?? visibleSession.right);
-      const result = isInterruptDecision
-        ? resolveBattleRuntimeInterrupt({
-            session: replaySession,
-            fill: matched.args.fill,
-          })
-        : resolveBattleRuntimeSubject({
-            session: replaySession,
-            subject,
-            fills,
-            statBlockCatalog: root.statBlockCatalog,
-          });
-      const pendingTransaction = pendingTransactionForResult({
-        result,
-        filledSubject: subject,
-        previous,
-        fills,
-        replaySession,
-        isInterruptDecision,
+      const transaction = settleBattleRuntimeTransaction({
+        session: visibleSession.right,
+        transaction: previous,
+        operation:
+          matched.args.fill.kind === "interruptDecision"
+            ? { kind: "interruptDecision", fill: matched.args.fill }
+            : {
+                kind: "ordinarySubject",
+                subject,
+                fills: [matched.args.fill],
+              },
+        statBlockCatalog: root.statBlockCatalog,
       });
-      return storedBattleResolutionContent(root, result, pendingTransaction);
+      return storedBattleTransactionContent(
+        root,
+        visibleSession.right,
+        transaction,
+      );
     }),
     Match.when({ name: battleToolNames.resolveBattleAct }, (matched) => {
-      const state = activeBattleWithoutPendingFills(
-        root,
-        "Cannot resolve another act with pending fills.",
-      );
+      const state = activeBattleForTool(root);
       if (Either.isLeft(state)) return state.left;
+      const pending = root.sessionStore.getPendingBattleTransaction();
+      if (pending !== null) {
+        const pendingView = battlePendingTransactionView(pending);
+        if (pendingView === undefined) {
+          return errorContent("The stored battle transaction is invalid.", {
+            code: "BATTLE_TRANSACTION_DEFECT",
+            issue: { tag: "foreignTransaction" },
+          });
+        }
+        if (
+          battlePendingSubjectAdmission(pendingView, matched.args.subject)
+            .tag !== "readyTriggerOverlay"
+        ) {
+          return pendingBattleFillsContent(
+            pendingView,
+            "Cannot resolve another act with pending fills.",
+          );
+        }
+      }
       if (
         matched.args.subject.tag === "runtimeCommand" &&
         matched.args.subject.command === "creatureFalls"
@@ -154,16 +230,19 @@ export function handleBattleToolCall(
           fallingCreatureId: matched.args.subject.fallingCreatureId,
           reactionSpellTargetFacts: matched.args.reactionSpellTargetFacts,
         });
-        return storedBattleResolutionContent(
+        return storedBattleTransactionContent(
           root,
-          result,
-          pendingTransactionForResult({
-            result,
-            filledSubject: matched.args.subject,
-            previous: null,
-            fills: [],
-            replaySession: state.right,
-            isInterruptDecision: false,
+          state.right,
+          settleBattleRuntimeResolution({
+            session: state.right,
+            transaction: pending,
+            operation: {
+              kind: "ordinarySubject",
+              subject: matched.args.subject,
+              fills: [],
+            },
+            resolution: result,
+            statBlockCatalog: root.statBlockCatalog,
           }),
         );
       }
@@ -182,22 +261,18 @@ export function handleBattleToolCall(
           subject: matched.args.subject,
         });
       }
-      const result = resolveBattleRuntimeSubject({
-        session: state.right,
-        subject: matched.args.subject,
-        fills: [],
-        statBlockCatalog: root.statBlockCatalog,
-      });
-      return storedBattleResolutionContent(
+      return storedBattleTransactionContent(
         root,
-        result,
-        pendingTransactionForResult({
-          result,
-          filledSubject: matched.args.subject,
-          previous: null,
-          fills: [],
-          replaySession: state.right,
-          isInterruptDecision: false,
+        state.right,
+        settleBattleRuntimeTransaction({
+          session: state.right,
+          transaction: pending,
+          operation: {
+            kind: "ordinarySubject",
+            subject: matched.args.subject,
+            fills: [],
+          },
+          statBlockCatalog: root.statBlockCatalog,
         }),
       );
     }),
@@ -207,30 +282,22 @@ export function handleBattleToolCall(
         "Cannot end turn with pending battle fills.",
       );
       if (Either.isLeft(state)) return state.left;
-      const result = resolveBattleRuntimeSubject({
-        session: state.right,
-        subject: {
-          tag: "runtimeCommand",
-          actorId: matched.args.actorId,
-          command: "endTurn",
-        },
-        fills: [],
-        statBlockCatalog: root.statBlockCatalog,
-      });
-      return storedBattleResolutionContent(
+      return storedBattleTransactionContent(
         root,
-        result,
-        pendingTransactionForResult({
-          result,
-          filledSubject: {
-            tag: "runtimeCommand",
-            actorId: matched.args.actorId,
-            command: "endTurn",
+        state.right,
+        settleBattleRuntimeTransaction({
+          session: state.right,
+          transaction: null,
+          operation: {
+            kind: "ordinarySubject",
+            subject: {
+              tag: "runtimeCommand",
+              actorId: matched.args.actorId,
+              command: "endTurn",
+            },
+            fills: [],
           },
-          previous: null,
-          fills: [],
-          replaySession: state.right,
-          isInterruptDecision: false,
+          statBlockCatalog: root.statBlockCatalog,
         }),
       );
     }),
@@ -300,59 +367,38 @@ function battleResolutionContent(
     : schemaJsonContent(BattleResolutionOutputSchema, payload.right);
 }
 
-export function storeBattleResolution(
+function storedBattleTransactionContent(
   root: McpPlaySessionRoot,
-  result: BattleRuntimeResolutionResult,
-  pendingTransaction: PendingBattleFillSession | null,
-): Either.Either<
-  { readonly tag: "stored" } | { readonly tag: "invalidResultNotStored" },
-  | McpBattleStateTransitionIssue
-  | { readonly tag: "pendingBattleFillTransactionMissing" }
-> {
+  expectedSession: BattleRuntimeSession,
+  result: BattleRuntimeTransactionResult,
+): BattleToolResult {
+  const stored = root.sessionStore.storeBattleTransactionResult(
+    expectedSession,
+    result,
+  );
+  if (Either.isLeft(stored)) {
+    return battleStateTransitionErrorContent(stored.left);
+  }
   return Match.value(result).pipe(
-    Match.when({ tag: "resolved" }, (resolved) =>
-      Either.map(root.sessionStore.storeActiveBattle(resolved.session), () => {
-        root.sessionStore.pendingBattleFills = null;
-        return { tag: "stored" } as const;
-      }),
+    Match.when({ tag: "invalid" }, ({ resolution }) =>
+      battleResolutionContent(root, resolution),
     ),
-    Match.when({ tag: "needsHoles" }, (needsHoles) => {
-      if (pendingTransaction === null) {
-        return Either.left({
-          tag: "pendingBattleFillTransactionMissing" as const,
-        });
-      }
-      return Either.map(
-        root.sessionStore.storeActiveBattle(needsHoles.session),
-        () => {
-          root.sessionStore.pendingBattleFills = pendingTransaction;
-          return { tag: "stored" } as const;
-        },
-      );
+    Match.when({ tag: "needsHoles" }, ({ resolution }) => {
+      publishAdminProjectionBestEffort(root);
+      return battleResolutionContent(root, resolution);
     }),
-    Match.when({ tag: "invalid" }, () =>
-      Either.right({ tag: "invalidResultNotStored" } as const),
+    Match.when({ tag: "settled" }, ({ resolution }) => {
+      publishAdminProjectionBestEffort(root);
+      return battleResolutionContent(root, resolution);
+    }),
+    Match.when({ tag: "defect" }, ({ issue }) =>
+      errorContent("Battle transaction settlement failed.", {
+        code: "BATTLE_TRANSACTION_DEFECT",
+        issue,
+      }),
     ),
     Match.exhaustive,
   );
-}
-
-function storedBattleResolutionContent(
-  root: McpPlaySessionRoot,
-  result: BattleRuntimeResolutionResult,
-  pendingTransaction: PendingBattleFillSession | null,
-): BattleToolResult {
-  const stored = storeBattleResolution(root, result, pendingTransaction);
-  if (Either.isLeft(stored)) {
-    return errorContent("Battle state transition failed.", {
-      code: "BATTLE_STATE_TRANSITION_INVALID",
-      transition: stored.left,
-    });
-  }
-  if (stored.right.tag === "stored") {
-    publishAdminProjectionBestEffort(root);
-  }
-  return battleResolutionContent(root, result);
 }
 
 function activeBattleWithoutPendingFills(
@@ -361,9 +407,16 @@ function activeBattleWithoutPendingFills(
 ): Either.Either<BattleRuntimeSession, ToolError> {
   const session = activeBattleForTool(root);
   if (Either.isLeft(session)) return session;
-  const pendingFills = root.sessionStore.pendingBattleFills;
-  return pendingFills === null
-    ? Either.right(session.right)
+  const pendingTransaction = root.sessionStore.getPendingBattleTransaction();
+  if (pendingTransaction === null) return Either.right(session.right);
+  const pendingFills = battlePendingTransactionView(pendingTransaction);
+  return pendingFills === undefined
+    ? Either.left(
+        errorContent("The stored battle transaction is invalid.", {
+          code: "BATTLE_TRANSACTION_DEFECT",
+          issue: { tag: "foreignTransaction" },
+        }),
+      )
     : Either.left(pendingBattleFillsContent(pendingFills, pendingMessage));
 }
 
