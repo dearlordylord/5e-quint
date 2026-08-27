@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   abilityScoreAssignment,
   classUnitId,
@@ -53,8 +54,9 @@ const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
 describe("MCP character sessions", () => {
   test("drops a selected Stat Block projection after catalog drift", () => {
     const root = createMcpPlaySessionRoot();
-    const selected = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const selected = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     let retained = true;
     const store = createMcpSessionStore({
@@ -412,8 +414,9 @@ describe("MCP character sessions", () => {
       statBlockCatalog: root.statBlockCatalog,
       unitLibrary: root.unitLibrary,
     });
-    const goblin = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const goblin = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const combatant = expectRight(
       battleCreatureInitFromStatBlock({
@@ -487,13 +490,18 @@ describe("MCP character sessions", () => {
       statBlockCatalog: root.statBlockCatalog,
       unitLibrary: root.unitLibrary,
     });
-    const goblin = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const goblin = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
-    const skeleton = root.statBlockCatalog.requireStatBlock(
-      "stat_block_skeleton",
+    const skeleton = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_skeleton"),
     );
-    const wolf = root.statBlockCatalog.requireStatBlock("stat_block_wolf");
+    const wolf = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_wolf"),
+    );
     const initial = expectRight(
       battleCreatureInitFromStatBlock({
         combatantId: combatantId("store-plan-initial"),
@@ -629,8 +637,9 @@ describe("MCP character sessions", () => {
     const goblin = expectRight(
       battleCreatureInitFromStatBlock({
         combatantId: combatantId("store-plan-character-goblin"),
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
+        statBlock: assertStatBlockForTest(
+          root.statBlockCatalog,
+          statBlockId("stat_block_goblin_warrior"),
         ),
         initiative: initiativeScore(8),
         currentHp: Hp(10),
@@ -692,8 +701,9 @@ describe("MCP character sessions", () => {
     const goblin = expectRight(
       battleCreatureInitFromStatBlock({
         combatantId: combatantId("store-plan-fills-goblin"),
-        statBlock: root.statBlockCatalog.requireStatBlock(
-          "stat_block_goblin_warrior",
+        statBlock: assertStatBlockForTest(
+          root.statBlockCatalog,
+          statBlockId("stat_block_goblin_warrior"),
         ),
         initiative: initiativeScore(10),
         currentHp: Hp(10),
@@ -706,8 +716,9 @@ describe("MCP character sessions", () => {
       expectRight(
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("store-plan-fills-skeleton"),
-          statBlock: root.statBlockCatalog.requireStatBlock(
-            "stat_block_skeleton",
+          statBlock: assertStatBlockForTest(
+            root.statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
           ),
           initiative: initiativeScore(6),
           currentHp: Hp(10),

@@ -51,6 +51,7 @@ import {
 } from "../identity.ts";
 import type {
   BattleCreatureInit,
+  CharacterBattleCombatantInit,
   BattlePositiveHpUnconscious,
   CharacterBattleCreatureInit,
   CharacterBattleCreatureInitWeaponAttack,
@@ -140,6 +141,12 @@ import {
   admitBattleStatBlockCombatantSource,
   statBlockInitialConditionImmunityIssue,
 } from "../stat-block-combatant-admission.ts";
+
+function isCharacterBattleCreatureInit(
+  input: BattleCreatureInit,
+): input is CharacterBattleCombatantInit {
+  return input.creatureInit.kind === "character";
+}
 
 function characterInitWeaponAttackExecutionRefs(
   slot: "main-hand" | "off-hand",
@@ -379,7 +386,8 @@ export function battleCreatureStateAdmissionFromInit(
     ammunitionStocks: creatureInit.ammunitionStocks,
   };
 
-  if (creatureInit.kind === "character") {
+  if (isCharacterBattleCreatureInit(input)) {
+    const { creatureInit } = input;
     const characterScopeOrdinal = startingScopeOrdinal;
     const attackScopeOrdinal = battleExecutionScopeOrdinal(
       Number(characterScopeOrdinal) + 1,
@@ -612,10 +620,11 @@ export function battleCreatureStateAdmissionFromInit(
     };
   }
 
+  const statBlockCreatureInit = input.creatureInit;
   const admission = admitBattleStatBlockCombatantSource({
     battleId,
     combatantId: input.combatantId,
-    source: creatureInit.source,
+    source: statBlockCreatureInit.source,
     startingScopeOrdinal,
   });
   if (Either.isLeft(admission)) {
@@ -628,7 +637,7 @@ export function battleCreatureStateAdmissionFromInit(
     statBlockAttackActionOptions(admission.right.origin.execution).map(
       (option) => option.attack,
     ),
-    creatureInit.ammunitionStocks,
+    statBlockCreatureInit.ammunitionStocks,
   );
   if (isNonEmptyReadonlyArray(missingAmmunitionKinds)) {
     return {
@@ -660,7 +669,7 @@ export function battleCreatureStateAdmissionFromInit(
     tag: "admitted",
     creature: admittedCreature,
     nextScopeOrdinal: admission.right.cursorTransition.to,
-    statBlockPresentation: creatureInit.presentation,
+    statBlockPresentation: statBlockCreatureInit.presentation,
   };
 }
 

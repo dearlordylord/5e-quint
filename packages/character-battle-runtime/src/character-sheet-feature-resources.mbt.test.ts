@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness SHEET.FEATURE_RESOURCES.TRANSITIONS
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
@@ -741,7 +742,10 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("combatant:metamagic-skeleton"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],

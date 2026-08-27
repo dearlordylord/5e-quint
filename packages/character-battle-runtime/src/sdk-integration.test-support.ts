@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
@@ -1149,7 +1150,7 @@ export function monsterBattleInput(
 }
 
 export function srdStatBlock(id: StatBlockRecord["id"]): StatBlockRecord {
-  return statBlockCatalog.requireStatBlock(id);
+  return assertStatBlockForTest(statBlockCatalog, id);
 }
 
 export function attackSubject(

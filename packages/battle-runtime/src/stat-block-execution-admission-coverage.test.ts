@@ -40,7 +40,6 @@ function executionFor(source: RuntimeSource, id: string) {
   }
   const initialized = {
     combatantId: actorId,
-    displayName: source.id,
     initiative: initiativeScore(10),
     creatureInit: {
       kind: "statBlock" as const,

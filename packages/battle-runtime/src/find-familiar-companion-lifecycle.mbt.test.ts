@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -928,7 +929,7 @@ function pactScratchSubject(
     statBlockProcedurePresentations({
       presentation: Either.getOrThrow(
         projectAuthoredStatBlock(
-          statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+          assertStatBlockForTest(statBlockCatalog, familiar.origin.statBlockId),
         ),
       ).presentation,
       execution: familiar.origin.execution,

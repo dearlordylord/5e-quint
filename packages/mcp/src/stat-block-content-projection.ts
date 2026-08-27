@@ -22,7 +22,7 @@ export function statBlockSummary(record: StatBlockRecord) {
   return {
     statBlockId: record.id,
     name: record.name,
-    creatureType: stringCreatureType(record),
+    creatureType: statBlock.creatureType,
     armorClass: literalNumber(statBlock.ac.value),
     hitPoints: literalNumber(statBlock.hp),
     initiativeModifier: statBlock.initiative.modifier,
@@ -127,14 +127,6 @@ function attackSummary(attack: StatBlockAttack) {
       : { longRangeFeet: attack.rangeFeet.long }),
     onHit: attack.onHit.map((effect) => JSON.stringify(effect)),
   };
-}
-
-function stringCreatureType(record: StatBlockRecord): string {
-  const { creatureType } = record.statBlock;
-  if (typeof creatureType === "string") {
-    return creatureType;
-  }
-  return JSON.stringify(creatureType);
 }
 
 function literalNumber(

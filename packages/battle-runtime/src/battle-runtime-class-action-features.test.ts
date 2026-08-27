@@ -1,9 +1,13 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   battleObjectId,
   BattleStatBlockProcedureExecutionRef,
   combatantId,
 } from "./identity.ts";
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import * as Either from "effect/Either";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.rogue-steady-aim
@@ -2626,7 +2630,10 @@ describe("battle runtime: class action features", () => {
     }
     const projectedWolf = Either.getOrThrow(
       projectAuthoredStatBlock(
-        statBlockCatalog.requireStatBlock("stat_block_wolf"),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          statBlockId("stat_block_wolf"),
+        ),
       ),
     );
     const strengthBasedStatBlockAttack = projectedWolf.runtime.procedures.find(

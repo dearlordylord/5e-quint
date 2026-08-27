@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.martial-arts-attack-projection unit-feature.weapon-mastery-sap unit-feature.weapon-mastery-topple unit-feature.weapon-mastery-cleave unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow unit-feature.fighter-tactical-master spell.invocation-marked-damage-rider
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource unit-feature.druid-wild-shape-known-form
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.monk-uncanny-metabolism-initiative-recovery
@@ -329,7 +330,10 @@ describe("Character Sheet battle handoff", () => {
         },
         statBlockBattleInput: {
           combatantId: combatantId("magic-initiate-target"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -862,7 +866,10 @@ describe("Character Sheet battle handoff", () => {
       },
       statBlockBattleInput: {
         combatantId: monsterCombatantId,
-        statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        statBlock: assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_skeleton"),
+        ),
         initiative: initiativeScore(10),
         ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
         conditions: [],
@@ -942,7 +949,10 @@ describe("Character Sheet battle handoff", () => {
         },
         statBlockBattleInput: {
           combatantId: characterCombatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -1163,7 +1173,10 @@ describe("Character Sheet battle handoff", () => {
           ),
           battleCreatureInitFromStatBlock({
             combatantId: statBlockCombatantId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -1584,7 +1597,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -2063,7 +2079,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: companionId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_cat"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_cat"),
+            ),
             initiative: initiativeScore(14),
             currentHp: Hp(0),
           }),
@@ -2108,7 +2127,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: companionId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_rat"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_rat"),
+            ),
             initiative: initiativeScore(14),
           }),
         ],
@@ -2620,7 +2642,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -2731,7 +2756,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -2798,7 +2826,6 @@ describe("Character Sheet battle handoff", () => {
         statBlockCatalog
           .listStatBlocks()
           .filter((statBlock) => statBlock.id !== "stat_block_cat"),
-      requireStatBlock: (id) => statBlockCatalog.requireStatBlock(id),
     };
     expect(
       admitCharacterSheetCompanionToBattle({
@@ -2845,7 +2872,10 @@ describe("Character Sheet battle handoff", () => {
         combatants: [
           battleCreatureInitFromStatBlock({
             combatantId: ownerId,
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(12),
           }),
         ],
@@ -3047,7 +3077,10 @@ describe("Character Sheet battle handoff", () => {
           init,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:no-catalog-skeleton"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -3110,7 +3143,10 @@ describe("Character Sheet battle handoff", () => {
           init,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:wild-shape-subset-skeleton"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -3304,10 +3340,22 @@ describe("Character Sheet battle handoff", () => {
       ammunitionStocks: [],
       unitLibrary,
       druidWildShapeAvailableForms: [
-        statBlockCatalog.requireStatBlock("stat_block_rat"),
-        statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-        statBlockCatalog.requireStatBlock("stat_block_cat"),
-        statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_rat"),
+        ),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_riding_horse"),
+        ),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_cat"),
+        ),
+        assertStatBlockForTest(
+          statBlockCatalog,
+          authoredStatBlockId("stat_block_skeleton"),
+        ),
       ],
     });
 
@@ -3317,8 +3365,9 @@ describe("Character Sheet battle handoff", () => {
         issues: [
           {
             tag: "battleDruidWildShapeKnownFormIssue",
-            statBlockId: statBlockCatalog.requireStatBlock(
-              "stat_block_skeleton",
+            statBlockId: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
             ).id,
             reason: "ineligible",
             eligibilityIssue: "creatureType",
@@ -4017,7 +4066,10 @@ describe("Character Sheet battle handoff", () => {
         },
         statBlockBattleInput: {
           combatantId: combatantId("stable-init-entry-skeleton"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -5225,7 +5277,10 @@ describe("Character Sheet battle handoff", () => {
             combatantId: combatantId(
               "combatant:sorcerer-font-battle-closed-skeleton",
             ),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -5325,7 +5380,10 @@ describe("Character Sheet battle handoff", () => {
           characterInit,
           battleCreatureInitFromStatBlock({
             combatantId: combatantId("combatant:skeleton-metamagic"),
-            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            statBlock: assertStatBlockForTest(
+              statBlockCatalog,
+              authoredStatBlockId("stat_block_skeleton"),
+            ),
             initiative: initiativeScore(10),
           }),
         ],
@@ -6559,7 +6617,10 @@ describe("Character Build battle projection", () => {
       battleCreatureInitFromCharacterBuild({
         ...init,
         druidWildShapeAvailableForms: [
-          statBlockCatalog.requireStatBlock("stat_block_rat"),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_rat"),
+          ),
         ],
       }),
     ).toMatchObject({
@@ -6579,7 +6640,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: combatantId("invalid-build-boundary-stat-block"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -7849,7 +7913,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -8031,7 +8098,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: combatantId("combatant:pact-tome-opponent"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(5),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -8509,7 +8579,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -8572,7 +8645,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -8705,7 +8781,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -8782,7 +8861,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -9049,8 +9131,9 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_goblin_warrior"),
           ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -9144,8 +9227,9 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock(
-            "stat_block_goblin_warrior",
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_goblin_warrior"),
           ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
@@ -9634,7 +9718,10 @@ describe("Character Build battle projection", () => {
         },
         statBlockBattleInput: {
           combatantId: targetId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
           ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
           conditions: [],
@@ -10542,7 +10629,10 @@ function startDruidWildShapeSheetBattle(
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: combatantId("skeleton"),
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -10562,7 +10652,6 @@ function statBlockCatalogWithLookupCount(): {
         return statBlockCatalog.getStatBlock(id);
       },
       listStatBlocks: () => statBlockCatalog.listStatBlocks(),
-      requireStatBlock: (id) => statBlockCatalog.requireStatBlock(id),
     },
     lookupCount: () => getStatBlockCalls,
   };
@@ -10572,9 +10661,6 @@ function emptyStatBlockCatalog(): StatBlockCatalog {
   return {
     getStatBlock: () => Option.none(),
     listStatBlocks: () => [],
-    requireStatBlock: (id) => {
-      throw new Error(`Unexpected Stat Block lookup: ${id}`);
-    },
   };
 }
 
@@ -12040,7 +12126,10 @@ function handoffBranchSession(
       combatants: [
         battleCreatureInitFromStatBlock({
           combatantId: combatant.combatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],

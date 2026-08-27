@@ -272,20 +272,9 @@ export function projectBattleCombatant(input: {
           ),
         );
       }
-      if (characterInit.right.creatureInit.kind !== "character") {
-        return Either.left(
-          errorContent(
-            "Character battle initialization produced a non-character combatant.",
-            { code: "CHARACTER_BATTLE_INIT_INVALID" },
-          ),
-        );
-      }
       return Either.right({
         tag: "characterSession" as const,
-        creatureInit: {
-          ...characterInit.right,
-          creatureInit: characterInit.right.creatureInit,
-        },
+        creatureInit: characterInit.right,
         characterSession: { character, session },
       });
     }),

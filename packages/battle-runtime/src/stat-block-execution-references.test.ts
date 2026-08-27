@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { Schema } from "effect";
@@ -2559,8 +2560,9 @@ describe("Stat Block execution references", () => {
 
   test("serializes and restores the execution cohort owned by Wild Shape forms", () => {
     const actorId = combatantId("execution-ref-wild-shape-owner");
-    const baseForm: StatBlockRecord = statBlockCatalog.requireStatBlock(
-      "stat_block_riding_horse",
+    const baseForm: StatBlockRecord = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_riding_horse"),
     );
     const baseActions = baseForm.statBlock.actions;
     const baseAttack = baseActions?.find(

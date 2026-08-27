@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as parseSharedStatBlockId,
   unitId as parseSharedUnitId,
@@ -18039,7 +18040,6 @@ function skeletonCreatureInit(input: {
 }): BattleCreatureInit {
   return {
     combatantId: skeletonId,
-    displayName: "Skeleton",
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
@@ -18065,7 +18065,10 @@ function skeletonCreatureInit(input: {
 }
 
 function skeletonMultiattackStatBlock(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    parseSharedStatBlockId("stat_block_skeleton"),
+  );
   const actions = base.statBlock.actions;
   const shortsword = actions?.find(
     (entry) =>

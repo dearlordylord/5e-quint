@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { ClassLevel } from "@dnd/shared/types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
@@ -549,7 +550,10 @@ describe("Stat Block projection boundary coverage", () => {
   });
 
   test("formats scalar Wild Shape projection failures through the public admission boundary", () => {
-    const source = statBlockCatalog.requireStatBlock("stat_block_rat");
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_rat"),
+    );
     const firstAction = source.statBlock.actions?.[0];
     if (firstAction === undefined) {
       throw new Error("Expected the Wild Shape fixture to have an action.");
@@ -596,7 +600,10 @@ describe("Stat Block projection boundary coverage", () => {
   });
 
   test("reports duplicate identities and challenge-rating eligibility at admission", () => {
-    const source = statBlockCatalog.requireStatBlock("stat_block_rat");
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_rat"),
+    );
     const profile = druidWildShapeKnownFormProfile();
 
     const duplicate = battleAvailableDruidWildShapeKnownForms({
@@ -646,7 +653,10 @@ describe("Stat Block projection boundary coverage", () => {
   });
 
   test("skips unsupported traits and reports prohibited Fly Speed", () => {
-    const source = statBlockCatalog.requireStatBlock("stat_block_rat");
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_rat"),
+    );
     const profile = druidWildShapeKnownFormProfile();
     const unsupportedTraitForm: StatBlockRecord = {
       ...source,

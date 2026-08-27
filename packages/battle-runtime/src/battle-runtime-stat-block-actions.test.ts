@@ -1097,7 +1097,7 @@ describe("battle runtime: Stat Block actions", () => {
       targetId: distantFighterId,
       target: statBlockCreatureInit({
         combatantId: distantFighterId,
-        displayName: "Large Target",
+        statBlockName: "Large Target",
         initiative: 10,
         statBlock: largeTargetStatBlock(),
       }),
@@ -1117,7 +1117,7 @@ describe("battle runtime: Stat Block actions", () => {
       targetId: distantFighterId,
       target: statBlockCreatureInit({
         combatantId: distantFighterId,
-        displayName: "Prone-Immune Target",
+        statBlockName: "Prone-Immune Target",
         initiative: 10,
         statBlock: proneImmuneTargetStatBlock(),
       }),

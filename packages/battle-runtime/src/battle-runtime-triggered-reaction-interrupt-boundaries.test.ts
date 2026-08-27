@@ -129,7 +129,7 @@ describe("triggered Reaction spell interrupt boundaries", () => {
       combatants: [
         statBlockCreatureInit({
           combatantId: attackerId,
-          displayName: "Fire-immune attacker",
+          statBlockName: "Fire-immune attacker",
           initiative: 20,
           statBlock: fireImmuneAttacker,
         }),
@@ -224,7 +224,7 @@ describe("triggered Reaction spell interrupt boundaries", () => {
         }),
         statBlockCreatureInit({
           combatantId: beastId,
-          displayName: "Charmed beast attacker",
+          statBlockName: "Charmed beast attacker",
           initiative: 10,
           statBlock: beastStatBlock,
         }),

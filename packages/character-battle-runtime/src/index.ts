@@ -12,7 +12,7 @@ import {
   parseSupportedUnitFeatureProfile,
   battleCreatureInitFromStatBlock,
   startBattle,
-  type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
   type BattleId,
   type BattleCreatureState,
   type BattleStateInitIssue,
@@ -228,7 +228,7 @@ export type CharacterSheetBattleInitInput = Omit<
 };
 
 export type CharacterBattleInitProjection = {
-  readonly init: BattleCreatureInit;
+  readonly init: CharacterBattleCombatantInit;
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 

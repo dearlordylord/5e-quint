@@ -521,20 +521,35 @@ export type StatBlockBattleCreatureInit = {
   readonly presentation: BattleStatBlockPresentationSource;
 };
 
-export type BattleCreatureInit = {
+type BattleCreatureInitCommon = {
   readonly combatantId: CombatantId;
-  readonly displayName: string;
   readonly initiative: InitiativeScore;
+};
+
+export type CharacterBattleCombatantInit = BattleCreatureInitCommon & {
   // The creature init kind is the zero-HP lifecycle authority:
   // characters use death saves; stat block creatures die at 0 HP.
-  readonly creatureInit:
-    | CharacterBattleCreatureInit
-    | StatBlockBattleCreatureInit;
+  readonly creatureInit: CharacterBattleCreatureInit;
+  /** Character presentation is owned by the character combatant branch. */
+  readonly displayName: string;
 };
+
+export type StatBlockBattleCombatantInit = BattleCreatureInitCommon & {
+  // The creature init kind is the zero-HP lifecycle authority:
+  // characters use death saves; stat block creatures die at 0 HP.
+  readonly creatureInit: StatBlockBattleCreatureInit;
+};
+
+export type BattleCreatureInit =
+  | CharacterBattleCombatantInit
+  | StatBlockBattleCombatantInit;
 
 export function battleCreatureInitFromStatBlock(
   input: AuthoredStatBlockBattleInitInput,
-): Either.Either<BattleCreatureInit, AuthoredStatBlockBattleInitIssue> {
+): Either.Either<
+  StatBlockBattleCombatantInit,
+  AuthoredStatBlockBattleInitIssue
+> {
   const projected = projectAuthoredStatBlock(input.statBlock);
   if (Either.isLeft(projected)) {
     return Either.left({
@@ -553,7 +568,7 @@ export function battleCreatureInitFromStatBlock(
 
 function battleCreatureInitFromRuntimeStatBlock(
   input: RuntimeStatBlockBattleInitInput,
-): Either.Either<BattleCreatureInit, StatBlockBattleInitIssue> {
+): Either.Either<StatBlockBattleCombatantInit, StatBlockBattleInitIssue> {
   const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
     input.statBlock,
     input.conditions,
@@ -564,7 +579,6 @@ function battleCreatureInitFromRuntimeStatBlock(
   const maxHp = toHp(input.statBlock.statBlock.hp.value);
   return Either.right({
     combatantId: input.combatantId,
-    displayName: input.presentation.displayName,
     initiative: input.initiative,
     creatureInit: {
       kind: "statBlock",

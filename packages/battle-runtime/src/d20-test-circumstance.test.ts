@@ -832,7 +832,7 @@ describe("Table-authored per-test D20 circumstances", () => {
       extraCombatants: [
         statBlockCreatureInit({
           combatantId: secondSkeletonId,
-          displayName: "Second Skeleton",
+          statBlockName: "Second Skeleton",
           initiative: 8,
         }),
       ],

@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { ClassLevel } from "@dnd/shared/types";
@@ -47,10 +49,16 @@ describe("extracted Stat Block parity branches", () => {
 
   test("projects optional defenses, resources, senses, and authored prose", () => {
     const skeleton = projectAuthoredStatBlock(
-      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
     );
     const sphinx = projectAuthoredStatBlock(
-      statBlockCatalog.requireStatBlock("stat_block_sphinx_of_wonder"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_sphinx_of_wonder"),
+      ),
     );
 
     expect(Either.isRight(skeleton)).toBe(true);

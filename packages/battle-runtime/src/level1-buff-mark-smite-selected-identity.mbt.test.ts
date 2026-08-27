@@ -1,3 +1,5 @@
+import { statBlockId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -2719,13 +2721,13 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
 }): BattleCreatureInit {
-  const statBlock = statBlockLibrary.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const statBlock = assertStatBlockForTest(
+    statBlockLibrary,
+    statBlockId("stat_block_goblin_warrior"),
   );
   const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
-    displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",

@@ -18,6 +18,8 @@ import {
   type CharacterBattleBookOfShadowsPresence,
   type CharacterBattleClassLevels,
   type CharacterBattleCreatureInit,
+  type CharacterBattleCombatantInit,
+  type BattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
   type BattleId,
   type BattleRuntimeSession,
@@ -25,7 +27,6 @@ import {
   type AuthoredStatBlockBattleInitIssue,
   type CharacterId,
   type CombatantId,
-  type BattleCreatureInit,
   type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
   type AuthoredStatBlockBattleInitInput,
@@ -227,7 +228,7 @@ export function battleCreatureInitFromCharacterBuild(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
-): Either.Either<BattleCreatureInit, BattleCreatureInitIssue> {
+): Either.Either<CharacterBattleCombatantInit, BattleCreatureInitIssue> {
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
   if (Either.isLeft(hitPoints)) {
     return battleCreatureInitIssue(

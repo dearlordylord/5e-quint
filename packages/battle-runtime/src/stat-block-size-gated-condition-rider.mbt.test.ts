@@ -480,13 +480,13 @@ function sizeGatedConditionRiderBattle(
     combatants: [
       statBlockCreatureInit({
         combatantId: actorId,
-        displayName: "Stat Block Size-Gated Condition Attacker",
+        statBlockName: "Stat Block Size-Gated Condition Attacker",
         initiative: 20,
         statBlock: sizeGatedConditionRiderAttackerStatBlock(),
       }),
       statBlockCreatureInit({
         combatantId: targetId,
-        displayName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
+        statBlockName: sizeGatedConditionRiderTargetDisplayName(targetSizeGate),
         initiative: 10,
         statBlock: sizeGatedConditionRiderTargetStatBlock(targetSizeGate),
       }),

@@ -1,4 +1,6 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
+  statBlockId,
   unitId as parseSharedUnitId,
   statBlockId as parseSharedStatBlockId,
 } from "@dnd/shared/game-facts";
@@ -148,10 +150,10 @@ import { shillelaghUnitId } from "./unit-profile-admission-catalog.test-support.
 import { bonusSpellAct } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 const druidId = combatantId("wild-shape-druid");
-const ratId = "stat_block_rat";
-const ridingHorseId = "stat_block_riding_horse";
-const lizardId = "stat_block_lizard";
-const catId = "stat_block_cat";
+const ratId = statBlockId("stat_block_rat");
+const ridingHorseId = statBlockId("stat_block_riding_horse");
+const lizardId = statBlockId("stat_block_lizard");
+const catId = statBlockId("stat_block_cat");
 
 type DruidWildShapeInputPhase =
   (typeof druidWildShapeInput.mechanics.phases)[number];
@@ -171,8 +173,8 @@ function syntheticDruidWildShapeUnit(
     },
   });
 }
-const wolfId = "stat_block_wolf";
-const spiderId = "stat_block_spider";
+const wolfId = statBlockId("stat_block_wolf");
+const spiderId = statBlockId("stat_block_spider");
 const syntheticNonLiteralSizeFormId = "synthetic_non_literal_size_form";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
 const syntheticUntypedCoordinatedShapeId =
@@ -458,7 +460,7 @@ test("rejects Wild Shape subjects when their form lifecycle becomes stale", () =
 });
 
 test("re-assuming a Wild Shape form preserves its committed Stat Block resources", () => {
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const limitedFormId = "synthetic_limited_wild_shape_form";
   const baseAttack = baseForm.statBlock.actions?.find(
     (entry): entry is AttackProcedureEntry =>
@@ -559,7 +561,7 @@ test("re-assuming a Wild Shape form preserves its committed Stat Block resources
 });
 
 test("an active Wild Shape form restores a spent recharge action from its start-turn roll", () => {
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const rechargeFormId = "synthetic_recharge_wild_shape_form";
   const baseAttack = baseForm.statBlock.actions?.find(
     (entry): entry is AttackProcedureEntry =>
@@ -2283,9 +2285,9 @@ test("projects Beast physical and retained character mental Ability Scores", () 
 
 test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
   const ridingHorseWithSkills: StatBlockRecord = {
-    ...statBlockCatalog.requireStatBlock(ridingHorseId),
+    ...assertStatBlockForTest(statBlockCatalog, ridingHorseId),
     statBlock: {
-      ...statBlockCatalog.requireStatBlock(ridingHorseId).statBlock,
+      ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       skillModifiers: [
         { modifier: 5, skill: "perception" },
         { modifier: 4, skill: "stealth" },
@@ -2330,9 +2332,9 @@ test("projects retained and Beast Skill modifiers while in Wild Shape", () => {
 
 test("projects retained and higher Beast Saving Throw modifiers while in Wild Shape", () => {
   const ridingHorseWithSavingThrows: StatBlockRecord = {
-    ...statBlockCatalog.requireStatBlock(ridingHorseId),
+    ...assertStatBlockForTest(statBlockCatalog, ridingHorseId),
     statBlock: {
-      ...statBlockCatalog.requireStatBlock(ridingHorseId).statBlock,
+      ...assertStatBlockForTest(statBlockCatalog, ridingHorseId).statBlock,
       savingThrowModifiers: [
         { ability: "dex", modifier: 6 },
         { ability: "wis", modifier: 1 },
@@ -2437,10 +2439,13 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
-      statBlockCatalog.requireStatBlock(ridingHorseId),
-      statBlockCatalog.requireStatBlock(catId),
-      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      assertStatBlockForTest(statBlockCatalog, ratId),
+      assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+      assertStatBlockForTest(statBlockCatalog, catId),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_skeleton"),
+      ),
     ],
   });
 
@@ -2568,7 +2573,10 @@ test("filters unsupported Wild Shape procedure forms without dropping later supp
 
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
-    forms: [unsupportedForm, statBlockCatalog.requireStatBlock(ridingHorseId)],
+    forms: [
+      unsupportedForm,
+      assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+    ],
   });
 
   expect(Either.isRight(result)).toBe(true);
@@ -2588,8 +2596,8 @@ test("rejects duplicate supplied Wild Shape form records before battle initializ
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
-      statBlockCatalog.requireStatBlock(ratId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
     ],
   });
 
@@ -2609,7 +2617,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const ridingHorse = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const ridingHorse = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const noWalkSpeedForm = {
     ...ridingHorse,
     statBlock: {
@@ -2625,10 +2633,10 @@ test("rejects known Beast forms without promoted movement facts", () => {
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
       noWalkSpeedForm,
-      statBlockCatalog.requireStatBlock(lizardId),
-      statBlockCatalog.requireStatBlock(catId),
+      assertStatBlockForTest(statBlockCatalog, lizardId),
+      assertStatBlockForTest(statBlockCatalog, catId),
     ],
   });
 
@@ -2648,7 +2656,7 @@ test("rejects known Beast forms without literal Size", () => {
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const baseForm = statBlockCatalog.requireStatBlock(ratId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ratId);
   const nonLiteralSizeForm: StatBlockRecord = {
     ...baseForm,
     id: parseSharedStatBlockId(syntheticNonLiteralSizeFormId),
@@ -2679,7 +2687,7 @@ test("rejects known Beast forms without literal Size", () => {
 });
 
 test("rejects known Beast forms with nonliteral Armor Class at the authored parser boundary", () => {
-  const baseForm = statBlockCatalog.requireStatBlock(ratId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ratId);
   const malformed = {
     ...baseForm,
     id: parseSharedStatBlockId("synthetic_nonliteral_armor_class_form"),
@@ -2703,7 +2711,7 @@ test("rejects known Beast forms with nonliteral Armor Class at the authored pars
 });
 
 test("rejects known Beast forms with conditional Speed at the authored parser boundary", () => {
-  const baseForm = statBlockCatalog.requireStatBlock(ratId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ratId);
   const firstSpeed = baseForm.statBlock.speeds[0];
   const malformed = {
     ...baseForm,
@@ -2741,10 +2749,10 @@ test("admits selected Beast forms with multi-component attack damage and typed h
   const result = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock(ratId),
-      statBlockCatalog.requireStatBlock(ridingHorseId),
-      statBlockCatalog.requireStatBlock(spiderId),
-      statBlockCatalog.requireStatBlock(wolfId),
+      assertStatBlockForTest(statBlockCatalog, ratId),
+      assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+      assertStatBlockForTest(statBlockCatalog, spiderId),
+      assertStatBlockForTest(statBlockCatalog, wolfId),
     ],
   });
 
@@ -2767,7 +2775,7 @@ test("retains text-only traits without inferring typed attack-roll support", () 
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const traitAdvantageForm = {
     ...baseForm,
     id: parseSharedStatBlockId(syntheticUntypedCoordinatedShapeId),
@@ -2809,7 +2817,7 @@ test("admits typed trait-derived attack-roll advantage from battle-available for
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const traitAdvantageForm = syntheticCoordinatedShape();
 
   const result = battleAvailableDruidWildShapeKnownForms({
@@ -2924,7 +2932,10 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
   const inventory = wildShapeFormActionSurfaceInventory({
     forms: [
       ...statBlockCatalog.listStatBlocks(),
-      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_skeleton"),
+      ),
       syntheticProseProneForm(),
       syntheticTypedRidersForm(),
       syntheticActionSectionForm(),
@@ -3077,7 +3088,7 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
 });
 
 function syntheticProseProneForm(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const hooves = base.statBlock.actions?.find(
     (entry): entry is AttackProcedureEntry =>
       entry.kind === "executable" && entry.procedure.kind === "attack_roll",
@@ -3111,7 +3122,7 @@ function syntheticProseProneForm(): StatBlockRecord {
 }
 
 function syntheticTypedRidersForm(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const hooves = base.statBlock.actions?.find(
     (entry): entry is AttackProcedureEntry =>
       entry.kind === "executable" && entry.procedure.kind === "attack_roll",
@@ -3158,7 +3169,7 @@ function syntheticTypedRidersForm(): StatBlockRecord {
 }
 
 function syntheticActionSectionForm(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const hooves = base.statBlock.actions?.find(
     (entry): entry is AttackProcedureEntry =>
       entry.kind === "executable" && entry.procedure.kind === "attack_roll",
@@ -3288,7 +3299,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
 }
 
 function syntheticSupportedNonAttackForm(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const hooves = base.statBlock.actions?.find(
     (entry): entry is AttackProcedureEntry =>
       entry.kind === "executable" && entry.procedure.kind === "attack_roll",
@@ -4072,7 +4083,7 @@ test("Beast Spells admits focus-replaceable Material spell invocation while Wild
   const session = druidWildShapeSession({
     druidLevel: DRUID_BEAST_SPELLS_CLASS_LEVEL,
     preparedSpells: [spellRecord("animal_friendship")],
-    targetStatBlock: statBlockCatalog.requireStatBlock(catId),
+    targetStatBlock: assertStatBlockForTest(statBlockCatalog, catId),
   });
   const initial = session.state;
   const assumed = requireResolved(
@@ -4331,13 +4342,16 @@ function weakTrueFormWeaponAttack(
 }
 
 function druidWildShapeKnownFormsWith(
-  fourthFormId: string,
-  fourthForm: StatBlockRecord = statBlockCatalog.requireStatBlock(fourthFormId),
+  fourthFormId: StatBlockRecord["id"],
+  fourthForm: StatBlockRecord = assertStatBlockForTest(
+    statBlockCatalog,
+    fourthFormId,
+  ),
 ): readonly StatBlockRecord[] {
   return [
-    statBlockCatalog.requireStatBlock(ratId),
-    statBlockCatalog.requireStatBlock(ridingHorseId),
-    statBlockCatalog.requireStatBlock(lizardId),
+    assertStatBlockForTest(statBlockCatalog, ratId),
+    assertStatBlockForTest(statBlockCatalog, ridingHorseId),
+    assertStatBlockForTest(statBlockCatalog, lizardId),
     fourthForm,
   ];
 }
@@ -4346,15 +4360,15 @@ function druidWildShapeKnownFormsReplacingRidingHorse(
   ridingHorse: StatBlockRecord,
 ): readonly StatBlockRecord[] {
   return [
-    statBlockCatalog.requireStatBlock(ratId),
+    assertStatBlockForTest(statBlockCatalog, ratId),
     ridingHorse,
-    statBlockCatalog.requireStatBlock(lizardId),
-    statBlockCatalog.requireStatBlock(catId),
+    assertStatBlockForTest(statBlockCatalog, lizardId),
+    assertStatBlockForTest(statBlockCatalog, catId),
   ];
 }
 
 function syntheticCoordinatedShape(): StatBlockRecord {
-  const baseForm = statBlockCatalog.requireStatBlock(ridingHorseId);
+  const baseForm = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   return {
     ...baseForm,
     id: parseSharedStatBlockId(syntheticCoordinatedShapeId),
@@ -4449,7 +4463,7 @@ function wildShapeStatBlockAttackProcedureRef(
   }
   const presentation = Either.getOrThrow(
     projectAuthoredStatBlock(
-      statBlockCatalog.requireStatBlock(active.admission.statBlock.id),
+      assertStatBlockForTest(statBlockCatalog, active.admission.statBlock.id),
     ),
   ).presentation;
   return (

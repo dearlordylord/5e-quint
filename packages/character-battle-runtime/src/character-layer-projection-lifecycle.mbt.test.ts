@@ -1,6 +1,7 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { movementFeet } from "@dnd/shared/types";
 // KERNEL-COVERAGE: parity-witness CHARACTER.LIFECYCLE.LAYER_PROJECTION
-import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
 
 import {
@@ -503,7 +504,10 @@ function startLifecycleBattle(sheet: CharacterSheet): {
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: lifecycleSkeletonCombatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(20),
         }),
       ],

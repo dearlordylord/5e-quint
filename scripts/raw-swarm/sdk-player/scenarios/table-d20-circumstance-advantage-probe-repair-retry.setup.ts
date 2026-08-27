@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
 export const setupScenario: ScenarioSetup = (context) => {
@@ -7,8 +9,9 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const ridingHorse = sdk.battleCreatureInitFromStatBlock({
     combatantId: ridingHorseId,
-    statBlock: context.statBlockCatalog.requireStatBlock(
-      "stat_block_riding_horse",
+    statBlock: assertStatBlockForTest(
+      context.statBlockCatalog,
+      statBlockId("stat_block_riding_horse"),
     ),
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [],
@@ -26,7 +29,10 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const wolf = sdk.battleCreatureInitFromStatBlock({
     combatantId: wolfId,
-    statBlock: context.statBlockCatalog.requireStatBlock("stat_block_wolf"),
+    statBlock: assertStatBlockForTest(
+      context.statBlockCatalog,
+      statBlockId("stat_block_wolf"),
+    ),
     initiative: sdk.initiativeScore(13),
     ammunitionStocks: [],
     conditions: [],

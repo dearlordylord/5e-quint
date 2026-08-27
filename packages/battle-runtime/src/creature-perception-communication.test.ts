@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-SENSE-LANGUAGE-PROJECTION druid_wild_shape
 import { expect, test } from "vitest";
@@ -146,9 +148,15 @@ test("projects retained character speech as blocked by Incapacitated", () => {
 
 test("projects Wild Shape form senses while retaining character communication", () => {
   const form = {
-    ...statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
+    ...assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_riding_horse"),
+    ),
     statBlock: {
-      ...statBlockCatalog.requireStatBlock("stat_block_riding_horse").statBlock,
+      ...assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_riding_horse"),
+      ).statBlock,
       senses: [{ kind: "blindsight", rangeFeet: 10 }],
       passivePerception: 15,
       communication: {
@@ -164,10 +172,13 @@ test("projects Wild Shape form senses while retaining character communication", 
   const initial = wildShapeBattle({
     knownLanguages: ["Common", "Druidic", "Goblin"],
     knownForms: [
-      statBlockCatalog.requireStatBlock("stat_block_rat"),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_rat")),
       form,
-      statBlockCatalog.requireStatBlock("stat_block_lizard"),
-      statBlockCatalog.requireStatBlock("stat_block_cat"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_lizard"),
+      ),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_cat")),
     ],
   });
   const assumed = requireResolved(
@@ -195,14 +206,20 @@ test("projects Wild Shape form senses while retaining character communication", 
 });
 
 test("projects no special senses when the active Wild Shape form has none", () => {
-  const form = statBlockCatalog.requireStatBlock("stat_block_riding_horse");
+  const form = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_riding_horse"),
+  );
   const initial = wildShapeBattle({
     knownLanguages: ["Common", "Druidic", "Goblin"],
     knownForms: [
-      statBlockCatalog.requireStatBlock("stat_block_rat"),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_rat")),
       form,
-      statBlockCatalog.requireStatBlock("stat_block_lizard"),
-      statBlockCatalog.requireStatBlock("stat_block_cat"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_lizard"),
+      ),
+      assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_cat")),
     ],
   });
   const assumed = requireResolved(

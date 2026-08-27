@@ -1,3 +1,5 @@
+import { statBlockId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { Either } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
@@ -250,7 +252,6 @@ function statBlockCreatureInit(input: {
   const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
-    displayName: projected.presentation.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
@@ -267,8 +268,9 @@ function statBlockCreatureInit(input: {
 }
 
 function statBlockRecord(): StatBlockRecord {
-  const statBlock = statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const statBlock = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
   );
   const scimitar = statBlock.statBlock.actions?.find(
     (entry) =>

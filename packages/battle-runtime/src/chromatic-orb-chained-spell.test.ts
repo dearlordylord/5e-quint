@@ -1,4 +1,8 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
 import * as Either from "effect/Either";
@@ -956,7 +960,6 @@ function chromaticOrbSession(input: {
       input.secondTargetKind === "poisonImmuneSkeleton"
         ? poisonImmuneSkeletonCreature({
             combatantId: secondTargetId,
-            displayName: "Second target",
             initiative: 9,
           })
         : characterCreature({
@@ -1396,17 +1399,18 @@ function savingThrowOutcomeFill(
 
 function poisonImmuneSkeletonCreature(input: {
   readonly combatantId: CombatantId;
-  readonly displayName: string;
   readonly initiative: number;
 }): BattleCreatureInit {
   const projected = Either.getOrThrow(
     projectAuthoredStatBlock(
-      statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
+      ),
     ),
   );
   return {
     combatantId: input.combatantId,
-    displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",

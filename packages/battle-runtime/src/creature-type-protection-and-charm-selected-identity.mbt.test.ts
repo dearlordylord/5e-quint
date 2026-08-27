@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ANIMAL-FRIENDSHIP animal_friendship
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good
@@ -1414,7 +1415,6 @@ function statBlockCreature(input: {
   );
   return {
     combatantId: input.combatantId,
-    displayName: input.statBlock.name,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
@@ -1433,7 +1433,10 @@ function statBlockCreature(input: {
 function statBlockWithCreatureType(
   creatureType: StatBlockRecord["statBlock"]["creatureType"],
 ): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    parseSharedStatBlockId("stat_block_goblin_warrior"),
+  );
   return {
     ...base,
     id: parseSharedStatBlockId(`stat_block_selected_identity_${creatureType}`),

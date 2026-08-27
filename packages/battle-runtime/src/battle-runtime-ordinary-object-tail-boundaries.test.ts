@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
@@ -122,7 +123,10 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
         statBlockCreatureInit({
           combatantId: goblinId,
           initiative: 20,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_wolf"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            parseSharedStatBlockId("stat_block_wolf"),
+          ),
         }),
         characterSeed({ combatantId: fighterId, initiative: 10 }),
       ],

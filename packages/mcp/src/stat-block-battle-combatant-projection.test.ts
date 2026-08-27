@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { combatantId, initiativeScore } from "@dnd/battle-runtime";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
@@ -22,8 +23,9 @@ const authoredOrdinal = (value: number) =>
 describe("MCP Stat Block battle combatant projection", () => {
   test("preserves every accumulated unsupported procedure location", () => {
     const baseRoot = createMcpPlaySessionRoot();
-    const base = baseRoot.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const attack = base.statBlock.actions?.[0];
     if (attack === undefined || attack.kind !== "executable") {
@@ -67,7 +69,7 @@ describe("MCP Stat Block battle combatant projection", () => {
       ...baseRoot,
       statBlockCatalog: {
         ...baseRoot.statBlockCatalog,
-        getStatBlock: (id: string) =>
+        getStatBlock: (id: StatBlockRecord["id"]) =>
           id === invalid.id
             ? Option.some(invalid)
             : baseRoot.statBlockCatalog.getStatBlock(id),
@@ -97,8 +99,9 @@ describe("MCP Stat Block battle combatant projection", () => {
 
   test("keeps scalar projection failures precise without procedure details", () => {
     const baseRoot = createMcpPlaySessionRoot();
-    const base = baseRoot.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const invalid = {
       ...base,
@@ -136,8 +139,9 @@ describe("MCP Stat Block battle combatant projection", () => {
 
   test("maps invalid resource limits to a precise projection failure", () => {
     const baseRoot = createMcpPlaySessionRoot();
-    const base = baseRoot.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const invalidResource = {
       ordinal: Schema.decodeUnknownSync(

@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -1408,10 +1410,22 @@ function moonbeamCastOverWildShapedTargetScenario(): {
         classLevels: [{ className: "druid", level: 2 }],
         resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
         druidWildShapeAvailableForms: [
-          statBlockCatalog.requireStatBlock("stat_block_rat"),
-          statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-          statBlockCatalog.requireStatBlock("stat_block_lizard"),
-          statBlockCatalog.requireStatBlock("stat_block_cat"),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_rat"),
+          ),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_riding_horse"),
+          ),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_lizard"),
+          ),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_cat"),
+          ),
         ],
         currentHp: 30,
         maxHp: 30,

@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import type {
   ScenarioSetup,
   ScenarioSetupOutcome,
@@ -72,9 +74,13 @@ export const setupScenario: ScenarioSetup = (context) => {
     );
   }
 
-  const wolf = context.statBlockCatalog.requireStatBlock("stat_block_wolf");
-  const goblin = context.statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const wolf = assertStatBlockForTest(
+    context.statBlockCatalog,
+    statBlockId("stat_block_wolf"),
+  );
+  const goblin = assertStatBlockForTest(
+    context.statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
   );
   const sharedWolfInitiative = sdk.initiativeScore(12);
 

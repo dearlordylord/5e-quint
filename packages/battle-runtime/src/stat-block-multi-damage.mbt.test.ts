@@ -440,7 +440,6 @@ function statBlockCreature(input: {
 }): BattleCreatureInit {
   return {
     combatantId: input.combatantId,
-    displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",

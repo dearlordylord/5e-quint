@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 
 export const SURFACE_UNIT_RECORD_SCHEMA_NEGATIVE_TEST_TIMEOUT_MILLISECONDS = 10_000;
@@ -259,6 +260,8 @@ import {
   type BattleAttackExecutionSelection,
   type BattleAttackProcedureExecutionRef,
   type BattleCreatureInit,
+  type CharacterBattleCombatantInit,
+  type StatBlockBattleCombatantInit,
   type BattleCreatureState,
   type BattleFill,
   type BattleHidePrerequisite,
@@ -275,6 +278,7 @@ import {
   type OngoingFeatureSourceKey,
   type SpellInvocationRef,
 } from "./index.ts";
+
 import {
   battleCunningStrikeSupportForUnit,
   type BattleUnitSupportProfileSourceFacts,
@@ -3606,7 +3610,7 @@ export function characterSeed(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly size?: Size;
-}): BattleCreatureInit {
+}): CharacterBattleCombatantInit {
   const selectedLoadout =
     input.selectedLoadout ??
     (input.attack === null
@@ -4016,7 +4020,7 @@ export function testPoisonWeaponAttack(): TestCharacterWeaponAttack {
 
 export function statBlockCreatureInit(input: {
   readonly combatantId?: CombatantId;
-  readonly displayName?: string;
+  readonly statBlockName?: string;
   readonly statBlock?: StatBlockRecord;
   readonly initiative: number;
   readonly currentHp?: number;
@@ -4025,9 +4029,13 @@ export function statBlockCreatureInit(input: {
     BattleCreatureInit["creatureInit"],
     { readonly kind: "statBlock" }
   >["ammunitionStocks"];
-}): BattleCreatureInit {
+}): StatBlockBattleCombatantInit {
   const statBlock = input.statBlock ?? statBlockRecord();
-  const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
+  const namedStatBlock =
+    input.statBlockName === undefined
+      ? statBlock
+      : { ...statBlock, name: input.statBlockName };
+  const projected = Either.getOrThrow(projectAuthoredStatBlock(namedStatBlock));
   if (projected.runtime.statBlock.hp.kind !== "literal") {
     throw new Error(
       "Battle runtime test Stat Block fixture must use literal HP.",
@@ -4043,7 +4051,6 @@ export function statBlockCreatureInit(input: {
     ]).map((ammunition) => battleAmmunitionStock(ammunition, 20));
   return {
     combatantId: input.combatantId ?? goblinId,
-    displayName: input.displayName ?? projected.presentation.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
@@ -4060,7 +4067,10 @@ export function statBlockCreatureInit(input: {
 }
 
 export function statBlockRecord(): StatBlockRecord {
-  return statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  return assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
+  );
 }
 
 /** Test-only admission helper: execution tests consume the source-free runtime projection. */
@@ -4403,11 +4413,14 @@ export function monsterResourceStatBlockWithTwoRechargeActions(): StatBlockRecor
 
 export function skeletonCreatureInit(input: {
   readonly initiative: number;
-}): BattleCreatureInit {
+}): StatBlockBattleCombatantInit {
   return statBlockCreatureInit({
     combatantId: skeletonId,
-    displayName: "Skeleton",
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    statBlockName: "Skeleton",
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_skeleton"),
+    ),
     initiative: input.initiative,
     currentHp: 13,
     ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
@@ -4416,8 +4429,11 @@ export function skeletonCreatureInit(input: {
 
 export function resistantSkeletonCreatureInit(input: {
   readonly initiative: number;
-}): BattleCreatureInit {
-  const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+}): StatBlockBattleCombatantInit {
+  const skeleton = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_skeleton"),
+  );
   const {
     vulnerabilities: _vulnerabilities,
     immunities: _immunities,
@@ -4425,7 +4441,7 @@ export function resistantSkeletonCreatureInit(input: {
   } = skeleton.statBlock;
   return statBlockCreatureInit({
     combatantId: skeletonId,
-    displayName: "Slashing Resistant Skeleton",
+    statBlockName: "Slashing Resistant Skeleton",
     statBlock: {
       ...skeleton,
       id: statBlockId("stat_block_slashing_resistant_skeleton"),

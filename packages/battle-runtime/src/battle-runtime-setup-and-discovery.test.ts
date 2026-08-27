@@ -948,7 +948,7 @@ describe("battle runtime: setup and discovery", () => {
       state,
       combatant: statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 15,
       }),
     });

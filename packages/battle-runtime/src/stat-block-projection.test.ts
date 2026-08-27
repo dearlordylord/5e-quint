@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 import * as Either from "effect/Either";
@@ -98,7 +99,6 @@ describe("generic Stat Block projection", () => {
 
     expect(Either.isRight(initialized)).toBe(true);
     if (Either.isLeft(initialized)) return;
-    expect(initialized.right.displayName).toBe(source.name);
     expect(initialized.right.creatureInit.kind).toBe("statBlock");
     if (initialized.right.creatureInit.kind !== "statBlock") return;
     expect(initialized.right.creatureInit.source.procedures).not.toHaveLength(
@@ -192,7 +192,10 @@ describe("generic Stat Block projection", () => {
   });
 
   test("admits a static-only authored damage amount as a static attack option", () => {
-    const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const cat = assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_cat"),
+    );
     const projected = projectAuthoredStatBlock(cat);
     expect(Either.isRight(projected)).toBe(true);
     if (Either.isLeft(projected)) return;

@@ -763,7 +763,7 @@ describe("battle fill protocol boundary owners", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Cleave second target",
+          statBlockName: "Cleave second target",
           initiative: 9,
         }),
       ],
@@ -901,7 +901,7 @@ describe("battle fill protocol boundary owners", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Horde Breaker second target",
+          statBlockName: "Horde Breaker second target",
           initiative: 9,
         }),
       ],

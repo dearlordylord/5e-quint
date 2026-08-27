@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
@@ -1608,7 +1609,10 @@ function druidWildCompanionSheet() {
 function statBlockCatalogReplacingCatHp(
   hp: StatBlockRecord["statBlock"]["hp"],
 ): StatBlockCatalog {
-  const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
+  const cat = assertStatBlockForTest(
+    statBlockCatalog,
+    authoredStatBlockId("stat_block_cat"),
+  );
   const replacement = {
     ...cat,
     statBlock: { ...cat.statBlock, hp },
@@ -1624,9 +1628,5 @@ function statBlockCatalogReplacingCatHp(
         .map((statBlock) =>
           statBlock.id === "stat_block_cat" ? replacement : statBlock,
         ),
-    requireStatBlock: (id) =>
-      id === "stat_block_cat"
-        ? replacement
-        : statBlockCatalog.requireStatBlock(id),
   };
 }

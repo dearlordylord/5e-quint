@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   abilityModifier,
   defaultArmorClassState,
@@ -251,7 +252,10 @@ export function characterCreature(input: {
 export function statBlockWithCreatureType(
   creatureType: StatBlockRecord["statBlock"]["creatureType"],
 ): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
+  );
   return {
     ...base,
     id: statBlockId(`stat_block_test_${creatureType}`),
@@ -264,7 +268,10 @@ export function statBlockWithCreatureType(
 }
 
 export function legendaryActionStatBlock(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_goblin_warrior");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
+  );
   const scimitar = base.statBlock.actions?.find(
     (entry): entry is AttackProcedureEntry =>
       entry.kind === "executable" &&
@@ -309,7 +316,6 @@ export function statBlockCreature(input: {
   );
   return {
     combatantId: input.combatantId,
-    displayName: projected.presentation.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",

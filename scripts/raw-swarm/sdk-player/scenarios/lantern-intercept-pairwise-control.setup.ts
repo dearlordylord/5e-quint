@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import type { ScenarioPlacement, ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
 const scenarioId = "lantern-intercept-pairwise-control";
@@ -50,22 +52,29 @@ export const setupScenario: ScenarioSetup = (context) => {
   const creatureInputs = [
     {
       combatantId: wolfId,
-      statBlock: context.statBlockCatalog.requireStatBlock("stat_block_wolf"),
+      statBlock: assertStatBlockForTest(
+        context.statBlockCatalog,
+        statBlockId("stat_block_wolf"),
+      ),
       initiative: sdk.initiativeScore(15),
       ammunitionStocks: [],
       conditions: [],
     },
     {
       combatantId: hawkId,
-      statBlock: context.statBlockCatalog.requireStatBlock("stat_block_hawk"),
+      statBlock: assertStatBlockForTest(
+        context.statBlockCatalog,
+        statBlockId("stat_block_hawk"),
+      ),
       initiative: sdk.initiativeScore(13),
       ammunitionStocks: [],
       conditions: [],
     },
     {
       combatantId: skeletonId,
-      statBlock: context.statBlockCatalog.requireStatBlock(
-        "stat_block_skeleton",
+      statBlock: assertStatBlockForTest(
+        context.statBlockCatalog,
+        statBlockId("stat_block_skeleton"),
       ),
       initiative: sdk.initiativeScore(10),
       ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],

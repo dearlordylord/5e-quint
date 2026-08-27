@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { describe, expect, test } from "vitest";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { characterId, combatantId, type CombatantId } from "./identity.ts";
@@ -736,7 +737,10 @@ describe("inert authored identity renaming witness (#224)", () => {
           selectedLoadout: {},
           attack: null,
           druidWildShapeAvailableForms: [
-            statBlockCatalog.requireStatBlock("stat_block_cat"),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_cat"),
+            ),
           ],
         }),
         statBlockCreatureInit({ initiative: 10 }),

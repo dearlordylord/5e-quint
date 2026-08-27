@@ -1,5 +1,4 @@
 import { Brand, Option } from "effect";
-import { StatBlockId as StatBlockIdSchema } from "@dnd/shared/game-facts";
 
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 
@@ -43,15 +42,13 @@ export type SrdStatBlockCollection = {
 };
 
 export type StatBlockCatalog = {
-  readonly getStatBlock: (id: string) => Option.Option<StatBlockRecord>;
+  readonly getStatBlock: (id: StatBlockId) => Option.Option<StatBlockRecord>;
   readonly listStatBlocks: () => readonly StatBlockRecord[];
-  readonly requireStatBlock: (id: string) => StatBlockRecord;
 };
 
 export type SrdStatBlockCatalog = {
-  readonly getStatBlock: (id: string) => Option.Option<Srd521StatBlock>;
+  readonly getStatBlock: (id: StatBlockId) => Option.Option<Srd521StatBlock>;
   readonly listStatBlocks: () => readonly Srd521StatBlock[];
-  readonly requireStatBlock: (id: string) => Srd521StatBlock;
 } & Brand.Brand<"SrdStatBlockCatalog">;
 
 const toSrdStatBlockCatalog = Brand.nominal<SrdStatBlockCatalog>();
@@ -153,10 +150,8 @@ export function buildStatBlockCatalog(input: {
   return {
     tag: "ok",
     catalog: toSrdStatBlockCatalog({
-      getStatBlock: (id) =>
-        Option.fromNullable(records.get(StatBlockIdSchema.make(id))),
+      getStatBlock: (id) => Option.fromNullable(records.get(id)),
       listStatBlocks: () => Array.from(records.values()),
-      requireStatBlock: (id) => records.get(StatBlockIdSchema.make(id))!,
     }),
   };
 }

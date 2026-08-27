@@ -1595,7 +1595,7 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
       }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 5,
       }),
     ],

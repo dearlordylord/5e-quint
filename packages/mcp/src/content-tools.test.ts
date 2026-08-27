@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
 import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
@@ -37,8 +38,9 @@ function unitDetailPayload(response: ReturnType<typeof handleToolCall>) {
 describe("MCP Stat Block summaries", () => {
   test("projects authored names and ordered procedure summaries", () => {
     const root = createMcpPlaySessionRoot();
-    const base = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const base = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const firstAction = base.statBlock.actions?.[0];
     if (firstAction === undefined) {
@@ -176,8 +178,9 @@ describe("MCP installed SRD catalog tools", () => {
 
   test("retains nested spellcasting group resource references", () => {
     const root = createMcpPlaySessionRoot();
-    const base = root.statBlockCatalog.requireStatBlock(
-      "stat_block_goblin_warrior",
+    const base = assertStatBlockForTest(
+      root.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
     );
     const summary = statBlockSummary(
       decodeStatBlockRecordSync({

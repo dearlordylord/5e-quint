@@ -18,6 +18,7 @@ import {
   defineSrdStatBlockCollection,
   srdStatBlockCollection,
 } from "./stat-block-catalog.ts";
+import { assertStatBlockForTest } from "./stat-block-catalog.test-support.ts";
 import type {
   Srd521StatBlock,
   SrdStatBlockCollection,
@@ -136,7 +137,7 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      expect(valid.catalog.requireStatBlock(goblinWarrior.id)).toEqual(
+      expect(assertStatBlockForTest(valid.catalog, goblinWarrior.id)).toEqual(
         goblinWarrior,
       );
       expect(
@@ -207,8 +208,9 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const goblin = valid.catalog.requireStatBlock(
-        "stat_block_goblin_warrior",
+      const goblin = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_goblin_warrior"),
       );
 
       expect(goblin.name).toBe("Goblin Warrior");
@@ -301,8 +303,9 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const skeletonRecord = valid.catalog.requireStatBlock(
-        "stat_block_skeleton",
+      const skeletonRecord = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_skeleton"),
       );
 
       expect(skeletonRecord).toEqual(skeleton);
@@ -346,7 +349,10 @@ describe("Stat Block catalog boundary", () => {
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
       for (const form of findFamiliarCreature.normalForms) {
-        const statBlock = valid.catalog.requireStatBlock(form.statBlockId);
+        const statBlock = assertStatBlockForTest(
+          valid.catalog,
+          statBlockId(form.statBlockId),
+        );
         expect(statBlock.name).toBe(form.displayName);
         expect(statBlock.statBlock.creatureType).toBe("beast");
         expect(statBlock.challengeRating).toBe(0);
@@ -367,14 +373,18 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const ridingHorse = valid.catalog.requireStatBlock(
-        "stat_block_riding_horse",
+      const ridingHorse = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_riding_horse"),
       );
       expect(ridingHorse.name).toBe("Riding Horse");
       expect(ridingHorse.statBlock.creatureType).toBe("beast");
       expect(ridingHorse.challengeRating).toBe(0.25);
 
-      const wolf = valid.catalog.requireStatBlock("stat_block_wolf");
+      const wolf = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_wolf"),
+      );
       expect(wolf.name).toBe("Wolf");
       expect(wolf.statBlock.creatureType).toBe("beast");
       expect(wolf.challengeRating).toBe(0.25);
@@ -392,7 +402,10 @@ describe("Stat Block catalog boundary", () => {
 
     expect(valid.tag).toBe("ok");
     if (valid.tag === "ok") {
-      const imp = valid.catalog.requireStatBlock("stat_block_imp");
+      const imp = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_imp"),
+      );
       expect(imp.statBlock.skillModifiers).toEqual([
         { modifier: 4, skill: "deception" },
         { modifier: 3, skill: "insight" },
@@ -411,8 +424,9 @@ describe("Stat Block catalog boundary", () => {
         reason: "unsupported_procedure_family",
       });
 
-      const pseudodragon = valid.catalog.requireStatBlock(
-        "stat_block_pseudodragon",
+      const pseudodragon = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_pseudodragon"),
       );
       expect(pseudodragon.statBlock.skillModifiers).toEqual([
         { modifier: 5, skill: "perception" },
@@ -427,7 +441,10 @@ describe("Stat Block catalog boundary", () => {
         ),
       });
 
-      const quasit = valid.catalog.requireStatBlock("stat_block_quasit");
+      const quasit = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_quasit"),
+      );
       expect(quasit.statBlock.skillModifiers).toEqual([
         { modifier: 5, skill: "stealth" },
       ]);
@@ -450,8 +467,9 @@ describe("Stat Block catalog boundary", () => {
         reason: "unsupported_procedure_family",
       });
 
-      const sphinxOfWonder = valid.catalog.requireStatBlock(
-        "stat_block_sphinx_of_wonder",
+      const sphinxOfWonder = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_sphinx_of_wonder"),
       );
       expect(sphinxOfWonder).toEqual(
         decodeStatBlockRecordSync(sphinxOfWonderInput),
@@ -468,7 +486,10 @@ describe("Stat Block catalog boundary", () => {
         resourceRefs: { kind: "some", ordinals: [1] },
       });
 
-      const sprite = valid.catalog.requireStatBlock("stat_block_sprite");
+      const sprite = assertStatBlockForTest(
+        valid.catalog,
+        statBlockId("stat_block_sprite"),
+      );
       expect(sprite.statBlock.skillModifiers).toEqual([
         { modifier: 3, skill: "perception" },
         { modifier: 8, skill: "stealth" },

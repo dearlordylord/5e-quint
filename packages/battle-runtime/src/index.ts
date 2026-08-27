@@ -375,6 +375,7 @@ export type {
   BattleDruidWildShapeKnownFormIssue,
   BattleDruidWildShapeKnownFormsIssue,
   BattleCreatureInit,
+  CharacterBattleCombatantInit,
   BattlePositiveHpUnconscious,
   BattleUnitRef,
   BattleWalkSpeed,
@@ -385,6 +386,7 @@ export type {
   CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleCreatureInit,
+  StatBlockBattleCombatantInit,
   StatBlockBattleInitIssue,
   StatBlockInitialCondition,
 } from "./battle-init.ts";

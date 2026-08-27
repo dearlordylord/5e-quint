@@ -1,4 +1,5 @@
 import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
+import { statBlockId } from "@dnd/shared/game-facts";
 
 export const setupScenario: ScenarioSetup = ({
   sdk,
@@ -27,7 +28,9 @@ export const setupScenario: ScenarioSetup = ({
     initiative: sdk.initiativeScore(15),
     ammunitionStocks: [],
   });
-  const statBlock = statBlockCatalog.getStatBlock("stat_block_skeleton");
+  const statBlock = statBlockCatalog.getStatBlock(
+    statBlockId("stat_block_skeleton"),
+  );
   if (sdk.isLeft(character) || statBlock._tag === "None") {
     return {
       kind: "obstructed",

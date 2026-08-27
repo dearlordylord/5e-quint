@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   unitId as parseSharedUnitId,
   statBlockId as parseSharedStatBlockId,
@@ -224,10 +225,22 @@ function druidWildShapeKnownForms() {
   const forms = battleAvailableDruidWildShapeKnownForms({
     profile,
     forms: [
-      statBlockCatalog.requireStatBlock("stat_block_rat"),
-      statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-      statBlockCatalog.requireStatBlock("stat_block_lizard"),
-      statBlockCatalog.requireStatBlock("stat_block_cat"),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_rat"),
+      ),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_riding_horse"),
+      ),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_lizard"),
+      ),
+      assertStatBlockForTest(
+        statBlockCatalog,
+        parseSharedStatBlockId("stat_block_cat"),
+      ),
     ],
   });
   if (Either.isLeft(forms)) {
@@ -242,14 +255,16 @@ function startFixtureBattle(
     readonly includeEnemy?: boolean;
   } = {},
 ): BattleState {
-  const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  const skeleton = assertStatBlockForTest(
+    statBlockCatalog,
+    parseSharedStatBlockId("stat_block_skeleton"),
+  );
   const maxHp = literalHp(skeleton);
   const result = startBattle({
     battleId: battleId("find-familiar-lifecycle-test"),
     combatants: [
       {
         combatantId: casterId,
-        displayName: "Caster",
         initiative: initiativeScore(12),
         creatureInit: {
           kind: "statBlock",
@@ -276,7 +291,6 @@ function startFixtureBattle(
         ? [
             {
               combatantId: enemyId,
-              displayName: "Enemy",
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
@@ -309,7 +323,6 @@ function startFixtureBattle(
         : [
             {
               combatantId: input.extraCombatantId,
-              displayName: "Other Combatant",
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
@@ -1153,7 +1166,7 @@ function pactScratchSubject(
     statBlockProcedurePresentations({
       presentation: Either.getOrThrow(
         projectAuthoredStatBlock(
-          statBlockCatalog.requireStatBlock(familiar.origin.statBlockId),
+          assertStatBlockForTest(statBlockCatalog, familiar.origin.statBlockId),
         ),
       ).presentation,
       execution: familiar.origin.execution,
@@ -1176,7 +1189,10 @@ function pactScratchSubject(
 
 describe("Find Familiar lifecycle", () => {
   test("rejects nonliteral familiar HP before authored projection admission", () => {
-    const source = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_cat"),
+    );
     const malformed = {
       ...source,
       id: parseSharedStatBlockId("synthetic_nonliteral_familiar_hp"),
@@ -1199,7 +1215,10 @@ describe("Find Familiar lifecycle", () => {
   });
 
   test("rejects nonliteral familiar Armor Class before authored projection admission", () => {
-    const source = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_cat"),
+    );
     const malformed = {
       ...source,
       id: parseSharedStatBlockId("synthetic_nonliteral_familiar_ac"),
@@ -2300,14 +2319,16 @@ describe("Find Familiar lifecycle", () => {
   });
 
   test("preserves a Pact Skeleton familiar's ammunition through dismissal and reappearance", () => {
-    const skeleton = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+    const skeleton = assertStatBlockForTest(
+      statBlockCatalog,
+      parseSharedStatBlockId("stat_block_skeleton"),
+    );
     const skeletonHp = literalHp(skeleton);
     const started = startBattle({
       battleId: battleId("pact-skeleton-ammunition-lifecycle"),
       combatants: [
         {
           combatantId: casterId,
-          displayName: "Pact Owner",
           initiative: initiativeScore(12),
           creatureInit: {
             kind: "statBlock",
@@ -2332,7 +2353,6 @@ describe("Find Familiar lifecycle", () => {
         },
         {
           combatantId: familiarId,
-          displayName: "Pact Skeleton Familiar",
           initiative: initiativeScore(11),
           creatureInit: {
             kind: "statBlock",

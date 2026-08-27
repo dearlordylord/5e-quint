@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import type { ScenarioSetup } from "@dnd/scenario-setup-sdk";
 
 export const setupScenario: ScenarioSetup = (context) => {
@@ -9,21 +11,30 @@ export const setupScenario: ScenarioSetup = (context) => {
 
   const nearerGoblin = sdk.battleCreatureInitFromStatBlock({
     combatantId: nearerGoblinId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    ),
     initiative: sdk.initiativeScore(18),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
   const skeleton = sdk.battleCreatureInitFromStatBlock({
     combatantId: skeletonId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_skeleton"),
+    ),
     initiative: sdk.initiativeScore(14),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
   });
   const fartherGoblin = sdk.battleCreatureInitFromStatBlock({
     combatantId: fartherGoblinId,
-    statBlock: statBlockCatalog.requireStatBlock("stat_block_goblin_warrior"),
+    statBlock: assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    ),
     initiative: sdk.initiativeScore(9),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
