@@ -879,6 +879,11 @@ describe("battle runtime: setup and discovery", () => {
     if (Either.isRight(result)) return;
     expect(result.left).toEqual({
       tag: "battleStateInitIssue",
+      kind: "characterAdmissionInvalid",
+      combatantId: fighterId,
+      phase: "executionBindings",
+      issueIndex: 0,
+      ownerPath: ["initialCombatants", 0],
       message:
         "Ability-modifier resource cap requires the projected ability modifier.",
     });
