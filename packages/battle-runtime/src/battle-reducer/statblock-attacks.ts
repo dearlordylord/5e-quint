@@ -256,12 +256,17 @@ function weaponAttackWithDamageType(
   };
 }
 
-export function attackDamage(attack: SupportedAttackActionOption): {
-  readonly dice: number;
-  readonly dieSize: number;
-  readonly flat?: number;
-  readonly damageType: DamageType;
-} {
+export function attackDamage(attack: SupportedAttackActionOption):
+  | {
+      readonly dice: number;
+      readonly dieSize: number;
+      readonly flat?: number;
+      readonly damageType: DamageType;
+    }
+  | {
+      readonly static: number;
+      readonly damageType: DamageType;
+    } {
   return Match.value(attack).pipe(
     Match.when({ kind: "weapon" }, (weaponAttack) =>
       selectedWeaponDamage(weaponAttack.weapon),
@@ -271,6 +276,12 @@ export function attackDamage(attack: SupportedAttackActionOption): {
     ),
     Match.when({ kind: "statBlockAttack" }, (statBlockAttack) => {
       const [damage] = statBlockAttackDamage(statBlockAttack).baseComponents;
+      if (!("expr" in damage)) {
+        return {
+          static: damage.static,
+          damageType: damage.damageType,
+        };
+      }
       return {
         dice: damage.expr.dice,
         dieSize: damage.expr.dieSize,
@@ -927,7 +938,7 @@ export function attackDamageComponents(
         statBlockAttack.damageNotation === "static" &&
         component.static !== undefined
           ? []
-          : [statBlockRolledDamageComponent(component, critical)],
+          : rolledStatBlockDamageComponent(component, critical),
       );
       const advantageBonus = damage.advantageBonus;
       if (
@@ -942,7 +953,7 @@ export function attackDamageComponents(
         ? baseComponents
         : [
             ...baseComponents,
-            statBlockRolledDamageComponent(advantageBonus, critical),
+            ...rolledStatBlockDamageComponent(advantageBonus, critical),
           ];
     }),
     Match.exhaustive,
@@ -955,17 +966,22 @@ export function attackDamageComponents(
   ];
 }
 
-function statBlockRolledDamageComponent(
+function rolledStatBlockDamageComponent(
   damage: StatBlockAttackDamageComponent,
   critical: boolean,
-): AttackDamageComponent {
-  return {
-    expr: {
-      ...damage.expr,
-      dice: critical ? damage.expr.dice * 2 : damage.expr.dice,
+): readonly AttackDamageComponent[] {
+  if (!("expr" in damage)) {
+    return [];
+  }
+  return [
+    {
+      expr: {
+        ...damage.expr,
+        dice: critical ? damage.expr.dice * 2 : damage.expr.dice,
+      },
+      damageType: damage.damageType,
     },
-    damageType: damage.damageType,
-  };
+  ];
 }
 
 export function weaponDamageComponent(

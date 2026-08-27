@@ -36,6 +36,12 @@ part of canonical records where the expression is itself authored input or
 where an existing typed migration has not yet replaced prose-sensitive support
 code.
 
+Standalone Stat Block records preserve every Save modifier printed by their
+source in `savingThrowModifiers`, including values equal to the corresponding
+ability modifier. The field remains optional because a source may omit a Saves
+section; a source that prints a six-ability Save table must retain all six
+entries rather than treating the table as a derived shorthand.
+
 ## Goal (read this first)
 
 This package is **where the taxonomy actually lives and evolves**. It is the
@@ -79,6 +85,11 @@ publication contract.
 
 Detailed record-family rules live next to the code that owns them. For monster
 Stat Block lookup/provenance mechanics, see `src/surface/stat-block-catalog.ts`.
+
+`buildStatBlockCatalog` admits only validated `SrdStatBlockCollection` values
+and returns an `SrdStatBlockCatalog`. Its lookup methods retain the SRD record
+type, so a production consumer cannot widen the installed collection into a
+mixed-provenance catalog while continuing to present it as the SRD catalog.
 
 ## Why Surface Is Not Runtime Code
 

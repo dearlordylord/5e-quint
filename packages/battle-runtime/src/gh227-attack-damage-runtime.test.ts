@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 // RAW trace:
 // - .references/srd-5.2.1/Playing-the-Game.md:584-588 (attack target, modifiers, resolution, and damage)
 // - .references/srd-5.2.1/Playing-the-Game.md:618-624 (ranged range and Disadvantage)
@@ -7,7 +8,10 @@
 // - .references/srd-5.2.1/Classes/Monk.md:102-106 (Deflect Attacks reaction, Focus, and redirection)
 
 import { describe, expect, test } from "vitest";
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 
 import {
   ATTACK_DAMAGE_REDUCTION_ZERO_DAMAGE_REDIRECT_SUPPORT_PROFILE,
@@ -381,8 +385,9 @@ describe("GitHub #227 attack and damage coverage", () => {
         statBlockCreatureInit({
           combatantId: strengthAttackerId,
           initiative: 20,
-          statBlock: statBlockCatalog.requireStatBlock(
-            "stat_block_riding_horse",
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_riding_horse"),
           ),
         }),
         characterSeed({ initiative: 10, currentHp: 12 }),
@@ -569,7 +574,7 @@ function deflectAttacksBattle() {
       statBlockCreatureInit({ initiative: 20 }),
       statBlockCreatureInit({
         combatantId: redirectTargetId,
-        displayName: "Redirect target",
+        statBlockName: "Redirect target",
         initiative: 15,
       }),
       characterSeed({

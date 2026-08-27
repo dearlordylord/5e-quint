@@ -94,7 +94,12 @@ type AuthoredProcedureEntry =
       readonly kind: "executable";
       readonly procedureOrdinal: PositiveInteger;
       readonly procedure: AuthoredProcedure;
-      readonly resourceRefs: readonly ResourceOrdinal[];
+      readonly resourceRefs:
+        | { readonly kind: "none" }
+        | {
+            readonly kind: "some";
+            readonly ordinals: readonly ResourceOrdinal[];
+          };
     }
   | {
       readonly kind: "textOnly";
@@ -102,7 +107,12 @@ type AuthoredProcedureEntry =
       readonly name: AuthoredName;
       readonly description: ExactRulesProse;
       readonly reason: TextOnlyReason;
-      readonly resourceRefs: readonly ResourceOrdinal[];
+      readonly resourceRefs:
+        | { readonly kind: "none" }
+        | {
+            readonly kind: "some";
+            readonly ordinals: readonly ResourceOrdinal[];
+          };
     };
 ```
 

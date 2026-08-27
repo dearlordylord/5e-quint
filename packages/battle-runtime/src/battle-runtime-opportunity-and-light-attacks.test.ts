@@ -35,6 +35,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   statBlockCreatureInit,
+  authoredProcedureOrdinal,
   reactionModifierUnitRef,
   cuttingWordsResource,
   reactionModifierChoice,
@@ -1975,10 +1976,17 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
   test("Opportunity Attack interrupt selection distinguishes two procedures from one reactor", () => {
     const reactorId = combatantId("opportunity-attack-two-procedure-reactor");
     const base = monsterResourceStatBlock();
-    const meleeAttack = base.statBlock.actions?.attacks?.find(
-      (attack) => attack.attackType === "melee",
+    const meleeAttack = base.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" &&
+        entry.procedure.kind === "attack_roll" &&
+        entry.procedure.attackType === "melee",
     );
-    if (meleeAttack === undefined) {
+    if (
+      meleeAttack === undefined ||
+      meleeAttack.kind !== "executable" ||
+      meleeAttack.procedure.kind !== "attack_roll"
+    ) {
       throw new Error(
         "Expected the synthetic reactor fixture to have a melee attack.",
       );
@@ -1994,13 +2002,17 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
             ...base,
             statBlock: {
               ...base.statBlock,
-              actions: {
-                ...base.statBlock.actions,
-                attacks: [
-                  meleeAttack,
-                  { ...meleeAttack, name: "Synthetic Echo Strike" },
-                ],
-              },
+              actions: [
+                meleeAttack,
+                {
+                  ...meleeAttack,
+                  procedureOrdinal: authoredProcedureOrdinal(2),
+                  procedure: {
+                    ...meleeAttack.procedure,
+                    name: "Synthetic Echo Strike",
+                  },
+                },
+              ],
             },
           },
         }),

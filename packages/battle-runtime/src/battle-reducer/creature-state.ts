@@ -12,10 +12,7 @@ import {
   ammunitionStockIssues,
   missingRequiredAmmunitionKinds,
 } from "../battle-ammunition.ts";
-import {
-  statBlockAttackActionOptions,
-  statBlockProjectionIssues,
-} from "../stat-block-execution.ts";
+import { statBlockAttackActionOptions } from "../stat-block-execution.ts";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 import { Either, Match } from "effect";
 import {
@@ -48,11 +45,13 @@ import {
   type BattleId,
   type BattleExecutionScopeOrdinal,
   type BattleObjectId,
+  type BattleStatBlockExecutionScopeRef,
   type CombatantId,
   type InitiativeScore,
 } from "../identity.ts";
 import type {
   BattleCreatureInit,
+  CharacterBattleCombatantInit,
   BattlePositiveHpUnconscious,
   CharacterBattleCreatureInit,
   CharacterBattleCreatureInitWeaponAttack,
@@ -83,6 +82,7 @@ import type {
   CharacterBattleRuntimeContext,
 } from "../battle-runtime-context.ts";
 import type { CharacterBattleClassLevels } from "../character-class-level.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "../druid-wild-shape-known-form-runtime.ts";
 import { characterExecutionFromUnits } from "../character-execution-admission.ts";
 import {
   parseSupportedUnitFeatureProfile,
@@ -134,16 +134,19 @@ export {
 } from "./creature-state-execution.ts";
 import { applyInitialZeroHpLifecycle } from "./damage-apply.ts";
 import { statBlockExecutionAdmissionCohort } from "../stat-block-execution.ts";
+import type { StatBlockExecutionAdmission } from "../stat-block-execution-state.ts";
 import { druidWildShapeAvailableFormsIssueForProfile } from "./druid-wild-shape.ts";
 import { admitCharacterAttackExecution } from "../attack-execution.ts";
 import {
   admitBattleStatBlockCombatantSource,
   statBlockInitialConditionImmunityIssue,
 } from "../stat-block-combatant-admission.ts";
-import {
-  statBlockLanguagePresentation,
-  statBlockProcedurePresentations,
-} from "../stat-block-presentation.ts";
+
+function isCharacterBattleCreatureInit(
+  input: BattleCreatureInit,
+): input is CharacterBattleCombatantInit {
+  return input.creatureInit.kind === "character";
+}
 
 function characterInitWeaponAttackExecutionRefs(
   slot: "main-hand" | "off-hand",
@@ -196,6 +199,94 @@ function characterInitWeaponAttackWithExecutionRefs(
     weaponObjectId: refs.right.weaponObjectId,
     hasWeaponMastery: refs.right.hasWeaponMastery,
   });
+}
+
+type CharacterWildShapeExecutionAdmission =
+  | {
+      readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+      readonly wildShape?: never;
+    }
+  | {
+      readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
+      readonly wildShape: {
+        readonly admittedForms: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
+        readonly presentations: ReadonlyMap<
+          BattleStatBlockExecutionScopeRef,
+          BattleStatBlockPresentationSource
+        >;
+      };
+    };
+
+function admitCharacterWildShapeExecution(
+  battleId: BattleId,
+  combatantId: CombatantId,
+  wildShapeForms: CharacterBattleCreatureInit["druidWildShapeAvailableForms"],
+  startingScopeOrdinal: BattleExecutionScopeOrdinal,
+): CharacterWildShapeExecutionAdmission {
+  const wildShapeRuntimeForms: readonly BattleDruidWildShapeKnownFormRuntime[] =
+    (wildShapeForms ?? []).map(
+      ({ presentation: _presentation, ...form }) => form,
+    );
+  const executionCohort = statBlockExecutionAdmissionCohort(
+    battleId,
+    combatantId,
+    wildShapeRuntimeForms,
+    startingScopeOrdinal,
+  );
+  if (wildShapeForms === undefined) {
+    return {
+      nextScopeOrdinal: executionCohort.nextScopeOrdinal,
+    };
+  }
+  const wildShapePresentationsByStatBlockId = new Map(
+    wildShapeForms.map((form) => [form.id, form.presentation] as const),
+  );
+  const wildShapePresentations = new Map<
+    BattleStatBlockExecutionScopeRef,
+    BattleStatBlockPresentationSource
+  >();
+  for (const admission of executionCohort.admissions) {
+    const presentation = wildShapePresentationsByStatBlockId.get(
+      admission.statBlock.id,
+    );
+    if (presentation !== undefined) {
+      wildShapePresentations.set(admission.execution.scopeRef, presentation);
+    }
+  }
+  return {
+    nextScopeOrdinal: executionCohort.nextScopeOrdinal,
+    wildShape: {
+      admittedForms: executionCohort.admissions,
+      presentations: wildShapePresentations,
+    },
+  };
+}
+
+function admittedWildShapeFormsProjection(
+  admission: CharacterWildShapeExecutionAdmission,
+): {
+  readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
+} {
+  return admission.wildShape === undefined
+    ? {}
+    : {
+        druidWildShapeAvailableForms: admission.wildShape.admittedForms,
+      };
+}
+
+function wildShapePresentationsProjection(
+  admission: CharacterWildShapeExecutionAdmission,
+): {
+  readonly druidWildShapeFormPresentations?: ReadonlyMap<
+    BattleStatBlockExecutionScopeRef,
+    BattleStatBlockPresentationSource
+  >;
+} {
+  return admission.wildShape === undefined
+    ? {}
+    : {
+        druidWildShapeFormPresentations: admission.wildShape.presentations,
+      };
 }
 
 export function battleCreatureStateAdmissionFromInit(
@@ -295,7 +386,8 @@ export function battleCreatureStateAdmissionFromInit(
     ammunitionStocks: creatureInit.ammunitionStocks,
   };
 
-  if (creatureInit.kind === "character") {
+  if (isCharacterBattleCreatureInit(input)) {
+    const { creatureInit } = input;
     const characterScopeOrdinal = startingScopeOrdinal;
     const attackScopeOrdinal = battleExecutionScopeOrdinal(
       Number(characterScopeOrdinal) + 1,
@@ -344,10 +436,10 @@ export function battleCreatureStateAdmissionFromInit(
       unarmedStrike: creatureInit.unarmedStrike,
       ...optionalProperty("offHandAttack", initOffHandAttack),
     });
-    const executionCohort = statBlockExecutionAdmissionCohort(
+    const wildShapeAdmission = admitCharacterWildShapeExecution(
       battleId,
       input.combatantId,
-      creatureInit.druidWildShapeAvailableForms ?? [],
+      creatureInit.druidWildShapeAvailableForms,
       attackExecution.nextScopeOrdinal,
     );
     const parsedClassLevels = parseCharacterBattleClassLevels(
@@ -479,11 +571,7 @@ export function battleCreatureStateAdmissionFromInit(
         classLevels,
         knownLanguages: creatureInit.knownLanguages,
         d20Statistics: creatureInit.d20Statistics,
-        ...(creatureInit.druidWildShapeAvailableForms === undefined
-          ? {}
-          : {
-              druidWildShapeAvailableForms: executionCohort.admissions,
-            }),
+        ...admittedWildShapeFormsProjection(wildShapeAdmission),
         weaponProficiencies: creatureInit.weaponProficiencies ?? [],
         selectedLoadout: creatureInit.selectedLoadout,
         unarmoredArmorClassBases:
@@ -517,7 +605,7 @@ export function battleCreatureStateAdmissionFromInit(
     return {
       tag: "admitted",
       creature: admittedCreature,
-      nextScopeOrdinal: executionCohort.nextScopeOrdinal,
+      nextScopeOrdinal: wildShapeAdmission.nextScopeOrdinal,
       runtimeContext: {
         resourceOwnership,
         ...optionalProperty(
@@ -527,14 +615,16 @@ export function battleCreatureStateAdmissionFromInit(
         spellPresentationSources: [],
         unitProcedureOwnership: execution.right.unitProcedureOwnership,
         unitPresentationSources: creatureInit.characterUnitRefs,
+        ...wildShapePresentationsProjection(wildShapeAdmission),
       },
     };
   }
 
+  const statBlockCreatureInit = input.creatureInit;
   const admission = admitBattleStatBlockCombatantSource({
     battleId,
     combatantId: input.combatantId,
-    source: creatureInit.source,
+    source: statBlockCreatureInit.source,
     startingScopeOrdinal,
   });
   if (Either.isLeft(admission)) {
@@ -547,7 +637,7 @@ export function battleCreatureStateAdmissionFromInit(
     statBlockAttackActionOptions(admission.right.origin.execution).map(
       (option) => option.attack,
     ),
-    creatureInit.ammunitionStocks,
+    statBlockCreatureInit.ammunitionStocks,
   );
   if (isNonEmptyReadonlyArray(missingAmmunitionKinds)) {
     return {
@@ -579,15 +669,7 @@ export function battleCreatureStateAdmissionFromInit(
     tag: "admitted",
     creature: admittedCreature,
     nextScopeOrdinal: admission.right.cursorTransition.to,
-    statBlockPresentation: {
-      displayName: input.displayName,
-      languages: statBlockLanguagePresentation(creatureInit.source),
-      procedures: statBlockProcedurePresentations({
-        statBlock: creatureInit.source,
-        execution: admission.right.origin.execution,
-      }),
-      projectionIssues: statBlockProjectionIssues(creatureInit.source),
-    },
+    statBlockPresentation: statBlockCreatureInit.presentation,
   };
 }
 

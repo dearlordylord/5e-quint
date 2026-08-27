@@ -290,7 +290,7 @@ function hordeBreakerAfterPrimaryMissFixture(
       statBlockCreatureInit({ initiative: 10 }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Second Target",
+        statBlockName: "Second Target",
         initiative: 9,
         currentHp: input.secondTargetHp,
       }),
@@ -386,7 +386,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10, currentHp: 6 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
           currentHp: 6,
         }),
@@ -517,7 +517,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -666,7 +666,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Dark Blessing Target",
+          statBlockName: "Dark Blessing Target",
           initiative: 9,
           currentHp: 1,
         }),
@@ -819,7 +819,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -1039,7 +1039,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -1181,7 +1181,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -1306,7 +1306,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -1447,7 +1447,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Horde Breaker second target",
+          statBlockName: "Horde Breaker second target",
           initiative: 9,
         }),
       ],
@@ -1861,7 +1861,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -2007,7 +2007,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Second Target",
+          statBlockName: "Second Target",
           initiative: 9,
         }),
       ],
@@ -2095,7 +2095,7 @@ describe("battle runtime: Hunter's Prey", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Marked Target",
+          statBlockName: "Marked Target",
           initiative: 9,
         }),
       ],

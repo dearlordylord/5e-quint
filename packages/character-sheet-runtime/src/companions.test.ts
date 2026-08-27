@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
@@ -419,6 +420,13 @@ describe("Character Sheet runtime / companions", () => {
         druidWildShapeKnownFormStatBlockIds:
           druidWildShapeFixtureKnownFormStatBlockIds,
         statBlockCatalog,
+        resourceExpenditures: [
+          {
+            tag: "useCountResource",
+            unitId: authoredUnitId("druid_wild_shape"),
+            expended: resourceCount(1),
+          },
+        ],
       }),
     );
 
@@ -446,7 +454,7 @@ describe("Character Sheet runtime / companions", () => {
       expect.objectContaining({
         tag: "useCountResource",
         unitId: "druid_wild_shape",
-        expended: 1,
+        expended: 2,
       }),
     );
   });
@@ -1058,7 +1066,7 @@ describe("Character Sheet runtime / companions", () => {
     });
   });
 
-  test("rejects literal-zero companion HP and nonliteral or zero recast HP", () => {
+  test("rejects literal-zero companion HP and zero recast HP", () => {
     const sheet = spellbookRitualSheet({
       characterIdText: "character:companion-hp-boundaries",
       spellbook: ["find_familiar"],
@@ -1100,13 +1108,6 @@ describe("Character Sheet runtime / companions", () => {
       }),
     );
     for (const [catalog, message] of [
-      [
-        statBlockCatalogReplacingCatHp({
-          kind: "caster_derived",
-          source: "proficiency_bonus",
-        }),
-        "Retained companion recast requires literal Stat Block HP.",
-      ],
       [zeroHpCatalog, "Retained companion current HP must be positive."],
     ] as const) {
       expect(
@@ -1124,52 +1125,6 @@ describe("Character Sheet runtime / companions", () => {
         }),
       ).toMatchObject({ _tag: "Left", left: { message } });
     }
-  });
-
-  test("rejects retained companion creation when resolved Stat Block HP is not literal", () => {
-    const sheet = spellbookRitualSheet({
-      characterIdText: "character:companion-nonliteral-hp",
-      spellbook: ["find_familiar"],
-    });
-    const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
-    const nonliteralHpCat = {
-      ...cat,
-      statBlock: {
-        ...cat.statBlock,
-        hp: { kind: "caster_derived", source: "proficiency_bonus" },
-      },
-    } as const;
-    const nonliteralHpCatalog: StatBlockCatalog = {
-      getStatBlock: (id) =>
-        id === "stat_block_cat"
-          ? Option.some(nonliteralHpCat)
-          : statBlockCatalog.getStatBlock(id),
-      listStatBlocks: () => statBlockCatalog.listStatBlocks(),
-      requireStatBlock: (id) =>
-        id === "stat_block_cat"
-          ? nonliteralHpCat
-          : statBlockCatalog.requireStatBlock(id),
-    };
-
-    expect(
-      createRetainedFamiliarLikeCompanion({
-        sheet,
-        unitLibrary,
-        statBlockCatalog: nonliteralHpCatalog,
-        companionId: retainedCompanionId("companion:cat"),
-        source: {
-          tag: "ritualSpell",
-          spellId: authoredUnitId("find_familiar"),
-        },
-        selectedForm: { tag: "normalNamedForm", formId: "cat" },
-        creatureTypeOverrideChoiceId: "fey",
-      }),
-    ).toMatchObject({
-      _tag: "Left",
-      left: {
-        message: "Retained companion creation requires literal Stat Block HP.",
-      },
-    });
   });
 
   test("rejects retained embodied companions with zero current HP", () => {
@@ -1661,7 +1616,10 @@ function druidWildCompanionSheet() {
 function statBlockCatalogReplacingCatHp(
   hp: StatBlockRecord["statBlock"]["hp"],
 ): StatBlockCatalog {
-  const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
+  const cat = assertStatBlockForTest(
+    statBlockCatalog,
+    authoredStatBlockId("stat_block_cat"),
+  );
   const replacement = {
     ...cat,
     statBlock: { ...cat.statBlock, hp },
@@ -1677,9 +1635,5 @@ function statBlockCatalogReplacingCatHp(
         .map((statBlock) =>
           statBlock.id === "stat_block_cat" ? replacement : statBlock,
         ),
-    requireStatBlock: (id) =>
-      id === "stat_block_cat"
-        ? replacement
-        : statBlockCatalog.requireStatBlock(id),
   };
 }

@@ -4,6 +4,7 @@ export const setupScenario: ScenarioSetup = ({
   sdk,
   characterSheets,
   statBlockCatalog,
+  statBlocks,
   unitCatalog,
 }) => {
   if (characterSheets.length !== 1) {
@@ -27,8 +28,10 @@ export const setupScenario: ScenarioSetup = ({
     initiative: sdk.initiativeScore(15),
     ammunitionStocks: [],
   });
-  const statBlock = statBlockCatalog.getStatBlock("stat_block_skeleton");
-  if (sdk.isLeft(character) || statBlock._tag === "None") {
+  const statBlock = statBlocks.find(
+    (candidate) => candidate.id === "stat_block_skeleton",
+  );
+  if (sdk.isLeft(character) || statBlock === undefined) {
     return {
       kind: "obstructed",
       obstruction: "Mixed composition projection failed.",
@@ -37,7 +40,7 @@ export const setupScenario: ScenarioSetup = ({
   }
   const monster = sdk.battleCreatureInitFromStatBlock({
     combatantId: sdk.combatantId("external-skeleton"),
-    statBlock: statBlock.value,
+    statBlock,
     initiative: sdk.initiativeScore(10),
     ammunitionStocks: [sdk.battleAmmunitionStock("arrow", 20)],
     conditions: [],
@@ -45,7 +48,7 @@ export const setupScenario: ScenarioSetup = ({
   if (sdk.isLeft(monster)) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(monster.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(monster.left),
       observation: { phase: "stat-block" },
     };
   }

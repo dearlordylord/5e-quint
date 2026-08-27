@@ -1,3 +1,5 @@
+import { statBlockId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -58,7 +60,6 @@ import {
 } from "@dnd/surface/surface/stat-block-catalog";
 import type {
   SpellRecord,
-  StatBlockRecord,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
 
@@ -126,6 +127,7 @@ import {
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
 import { damageTypeChoiceFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 
 type Level1BuffMarkSmiteSelectedIdentityAction =
   | "doDivineFavorWeaponDamageRider"
@@ -2719,34 +2721,26 @@ function level1BuffMarkSmiteStatBlockCreature(input: {
   readonly displayName: string;
   readonly initiative: number;
 }): BattleCreatureInit {
-  const statBlock = statBlockLibrary.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const statBlock = assertStatBlockForTest(
+    statBlockLibrary,
+    statBlockId("stat_block_goblin_warrior"),
   );
-  const maxHp = statBlockHp(statBlock);
+  const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: input.combatantId,
-    displayName: input.displayName,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
-      currentHp: maxHp,
+      source: Either.getOrThrow(
+        battleStatBlockCombatantSource(projected.runtime),
+      ),
+      currentHp: Hp(projected.runtime.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(20) }],
       conditions: [],
+      presentation: projected.presentation,
     },
   };
-}
-
-function statBlockHp(statBlock: StatBlockRecord): Hp {
-  const hp = statBlock.statBlock.hp;
-  if (typeof hp === "number") {
-    return Hp(hp);
-  }
-  if (hp.kind === "literal") {
-    return Hp(hp.value);
-  }
-  throw new Error("Expected literal Stat Block Hit Points.");
 }
 
 function spellRecord(spellId: Level1BuffMarkSmiteSpellId): SpellRecord {

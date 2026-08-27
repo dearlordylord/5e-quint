@@ -1,9 +1,10 @@
 import type {
-  BattleCreatureInit,
   BattleId,
   BattleRuntimeSession,
   BattleSubject,
   CombatantId,
+  CharacterBattleCombatantInit,
+  StatBlockBattleCombatantInit,
 } from "@dnd/battle-runtime";
 import type { CharacterSheetId } from "@dnd/character-sheet-runtime";
 
@@ -16,28 +17,9 @@ import type {
 
 type CharacterId = CharacterSheetId;
 
-type CharacterBattleCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
-  { readonly kind: "character" }
->;
-type StatBlockBattleCreatureInit = Extract<
-  BattleCreatureInit["creatureInit"],
-  { readonly kind: "statBlock" }
->;
+export type CharacterBattleRosterCombatant = CharacterBattleCombatantInit;
 
-export type CharacterBattleRosterCombatant = Omit<
-  BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: CharacterBattleCreatureInit;
-};
-
-export type StatBlockBattleRosterCombatant = Omit<
-  BattleCreatureInit,
-  "creatureInit"
-> & {
-  readonly creatureInit: StatBlockBattleCreatureInit;
-};
+export type StatBlockBattleRosterCombatant = StatBlockBattleCombatantInit;
 
 export type McpBattleRosterOperation =
   | {

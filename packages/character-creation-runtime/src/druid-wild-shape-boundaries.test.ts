@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import {
   statBlockId as authoredStatBlockId,
   unitId as authoredUnitId,
@@ -349,7 +350,7 @@ describe("Druid Wild Shape boundaries", () => {
     });
 
     const eligibleRecords = eligibleFormIds.map((statBlockId) =>
-      statBlockCatalog.requireStatBlock(statBlockId),
+      assertStatBlockForTest(statBlockCatalog, statBlockId),
     );
     expect(
       validateDruidWildShapeKnownFormRecords({
@@ -374,7 +375,10 @@ describe("Druid Wild Shape boundaries", () => {
         facts: wildShapeFacts,
         knownForms: [
           ...eligibleRecords.slice(0, 3),
-          statBlockCatalog.requireStatBlock("stat_block_hawk"),
+          assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_hawk"),
+          ),
         ],
       }),
     ).toMatchObject({

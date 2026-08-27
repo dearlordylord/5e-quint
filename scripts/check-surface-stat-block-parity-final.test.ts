@@ -131,13 +131,21 @@ describe("Surface stat-block parity final gate", () => {
       expect(report.sourceCoverage.tag).toBe("complete");
       expect(report.discovery.occurrences).toHaveLength(334);
       expect(report.discovery.identities).toHaveLength(330);
-      expect(report.issues).toHaveLength(313);
+      expect(report.issues).toHaveLength(310);
       expect(
         report.issues.filter((issue) => issue.kind === "missing"),
       ).toHaveLength(309);
       expect(
         report.issues.filter((issue) => issue.kind === "provenance"),
-      ).toHaveLength(3);
+      ).toHaveLength(0);
+      expect(
+        report.issues.filter((issue) => issue.kind === "divergent-source"),
+      ).toEqual([
+        expect.objectContaining({
+          kind: "divergent-source",
+          name: "Stone Giant",
+        }),
+      ]);
       const stoneGiant = report.issues.find(
         (issue) =>
           issue.kind === "divergent-source" && issue.name === "Stone Giant",

@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-ray-of-enfeeblement-damage-penalty
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.RAY_OF_ENFEEBLEMENT_DAMAGE_PENALTY
@@ -290,9 +292,12 @@ describe("battle runtime: Ice Knife", () => {
         }),
         statBlockCreatureInit({
           combatantId: secondSkeletonId,
-          displayName: "Nearby Skeleton",
+          statBlockName: "Nearby Skeleton",
           initiative: 8,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
         }),
       ],
     });

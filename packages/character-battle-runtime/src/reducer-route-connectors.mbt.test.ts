@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import * as path from "node:path";
@@ -10,7 +11,6 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
-  battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   combatantId,
   discoverBattleActs,
@@ -53,9 +53,9 @@ import {
   completeShortRest,
   convertFontOfMagicSorceryPointsToSpellSlot,
   convertFontOfMagicSpellSlotToSorceryPoints,
-  createFreshCharacterSheet,
   finishLongRest,
   finishShortRest,
+  rebuildCharacterSheet,
   startLongRest,
   startShortRest,
   useMonkUncannyMetabolismWhenRollingInitiative,
@@ -120,22 +120,7 @@ import {
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./index.ts";
 
-import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
-
-function battleCreatureInitFromStatBlock(
-  input: Omit<
-    Parameters<typeof parseBattleCreatureInitFromStatBlock>[0],
-    "ammunitionStocks" | "conditions"
-  >,
-) {
-  return expectRight(
-    parseBattleCreatureInitFromStatBlock({
-      ...input,
-      ammunitionStocks: testAmmunitionStocksForStatBlock(input.statBlock),
-      conditions: [],
-    }),
-  );
-}
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
 const CRIMINAL_BACKGROUND_UNIT_ID = "background_criminal";
@@ -1000,7 +985,10 @@ function metamagicBridgeUsesSharedPointPoolRoute(
         characterInit,
         battleCreatureInitFromStatBlock({
           combatantId: targetCombatantId,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            authoredStatBlockId("stat_block_skeleton"),
+          ),
           initiative: initiativeScore(10),
         }),
       ],
@@ -1265,7 +1253,7 @@ function featureResourceSheetFixture(
   >,
 ): CharacterSheet {
   return expectRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
       currentHp: Hp(input.currentHp),
@@ -1273,6 +1261,7 @@ function featureResourceSheetFixture(
       hitPointMaximumReduction: Hp(0),
       conditions: input.conditions ?? [],
       unitLibrary,
+      companion: { tag: "none" },
       ...(input.spellSlotExpenditures === undefined
         ? {}
         : { spellSlotExpenditures: input.spellSlotExpenditures }),
@@ -1417,7 +1406,7 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
     ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
-    throw new Error(projection.left.issue.message);
+    throw new Error(characterBattleRuntimeIssueMessage(projection.left.issue));
   }
   return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
     (event) => event.owner === "characterBattleBuildProjection",
@@ -1439,7 +1428,10 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
     },
     statBlockBattleInput: {
       combatantId: combatantId("combatant:route-origin-feat-skeleton"),
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+      statBlock: assertStatBlockForTest(
+        statBlockCatalog,
+        authoredStatBlockId("stat_block_skeleton"),
+      ),
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
@@ -1468,7 +1460,7 @@ function selectedReferenceRouteEvents(
 }
 
 function characterSheetForBuild(build: CharacterBuild) {
-  const sheet = createFreshCharacterSheet({
+  const sheet = rebuildCharacterSheet({
     characterId: characterSheetId("character:route-origin-feat"),
     build,
     currentHp: Hp(10),
@@ -1476,6 +1468,7 @@ function characterSheetForBuild(build: CharacterBuild) {
     hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary,
+    companion: { tag: "none" },
   });
   if (Either.isLeft(sheet)) {
     throw new Error(JSON.stringify(sheet.left));
@@ -1491,7 +1484,7 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
   return score.right;
 }

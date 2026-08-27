@@ -1,10 +1,10 @@
 import {
   battlePresentedSnapshot,
   battleAdmittedSpellPresentations,
-  discoverBattleActs,
-  battleCreatureInitFromStatBlock,
-  startBattle,
   battleStateInitIssueMessage,
+  wildShapeKnownFormsIssueMessage,
+  discoverBattleActs,
+  startBattle,
   type BattleCreatureInit,
   type BattleRuntimeSession,
   type CombatantId,
@@ -14,7 +14,7 @@ import {
   characterSheetBattleInit,
 } from "@dnd/character-battle-runtime";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
-import { Either, Match, Option } from "effect";
+import { Either, Match } from "effect";
 
 import { characterBuildDisplayName } from "./character-display.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
@@ -37,6 +37,7 @@ import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
+import { projectStatBlockBattleCombatant } from "./stat-block-battle-combatant-projection.ts";
 
 export type StartableCharacterSessionCombatant = {
   readonly character: CharacterSessionCombatantToolInput;
@@ -255,77 +256,31 @@ export function projectBattleCombatant(input: {
       });
       if (Either.isLeft(characterInit)) {
         return Either.left(
-          errorContent(characterInit.left.message, {
-            code: "CHARACTER_BATTLE_INIT_INVALID",
-          }),
-        );
-      }
-      if (characterInit.right.creatureInit.kind !== "character") {
-        return Either.left(
           errorContent(
-            "Character battle initialization produced a non-character combatant.",
-            { code: "CHARACTER_BATTLE_INIT_INVALID" },
+            characterInit.left.tag === "battleDruidWildShapeKnownFormsIssue"
+              ? wildShapeKnownFormsIssueMessage(characterInit.left.issues)
+              : characterInit.left.message,
+            {
+              code: "CHARACTER_BATTLE_INIT_INVALID",
+              ...(characterInit.left.tag ===
+              "battleDruidWildShapeKnownFormsIssue"
+                ? {
+                    wildShapeIssues: characterInit.left.issues,
+                  }
+                : {}),
+            },
           ),
         );
       }
       return Either.right({
         tag: "characterSession" as const,
-        creatureInit: {
-          ...characterInit.right,
-          creatureInit: characterInit.right.creatureInit,
-        },
+        creatureInit: characterInit.right,
         characterSession: { character, session },
       });
     }),
-    Match.when({ kind: "statBlock" }, (statBlockCombatant) => {
-      const encounterCombatant = statBlockCombatant;
-      const statBlock = root.statBlockCatalog.getStatBlock(
-        encounterCombatant.statBlockId,
-      );
-      if (Option.isNone(statBlock)) {
-        return Either.left(
-          errorContent("Unknown Stat Block combatant.", {
-            code: "UNKNOWN_STAT_BLOCK_COMBATANT",
-            statBlockId: encounterCombatant.statBlockId,
-          }),
-        );
-      }
-      const creatureInit = battleCreatureInitFromStatBlock({
-        combatantId: statBlockCombatant.combatantId,
-        statBlock: statBlock.value,
-        initiative: statBlockCombatant.initiative,
-        ammunitionStocks: statBlockCombatant.ammunitionStocks,
-        conditions: [],
-        ...(encounterCombatant.currentHp === undefined
-          ? {}
-          : { currentHp: encounterCombatant.currentHp }),
-        ...(encounterCombatant.tempHp === undefined
-          ? {}
-          : { tempHp: encounterCombatant.tempHp }),
-      });
-      if (Either.isLeft(creatureInit)) {
-        return Either.left(
-          errorContent(battleStateInitIssueMessage(creatureInit.left), {
-            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
-          }),
-        );
-      }
-      if (creatureInit.right.creatureInit.kind !== "statBlock") {
-        return Either.left(
-          errorContent(
-            "Stat Block battle initialization produced a character combatant.",
-            { code: "STAT_BLOCK_BATTLE_INIT_INVALID" },
-          ),
-        );
-      }
-      return Either.right({
-        tag: "encounterCombatant" as const,
-        creatureInit: {
-          ...creatureInit.right,
-          creatureInit: creatureInit.right.creatureInit,
-        },
-      });
-    }),
+    Match.when({ kind: "statBlock" }, (combatant) =>
+      projectStatBlockBattleCombatant({ root, combatant }),
+    ),
     Match.exhaustive,
   );
 }

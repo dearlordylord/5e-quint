@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -131,9 +133,12 @@ describe("battle runtime: Acid Splash", () => {
       extraCombatants: [
         statBlockCreatureInit({
           combatantId: secondSkeletonId,
-          displayName: "Second Skeleton",
+          statBlockName: "Second Skeleton",
           initiative: 8,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            statBlockId("stat_block_skeleton"),
+          ),
         }),
       ],
     });

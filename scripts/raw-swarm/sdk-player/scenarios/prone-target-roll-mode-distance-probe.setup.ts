@@ -35,7 +35,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(meleeGoblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the melee Goblin Warrior: ${sdk.battleStateInitIssueMessage(meleeGoblinWarrior.left)}`,
+      obstruction: `The public battle initializer rejected the melee Goblin Warrior: ${sdk.authoredStatBlockBattleInitIssueMessage(meleeGoblinWarrior.left)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "melee-goblin-warrior-initialization",
@@ -53,7 +53,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(rangedGoblinWarrior)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the ranged Goblin Warrior: ${sdk.battleStateInitIssueMessage(rangedGoblinWarrior.left)}`,
+      obstruction: `The public battle initializer rejected the ranged Goblin Warrior: ${sdk.authoredStatBlockBattleInitIssueMessage(rangedGoblinWarrior.left)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "ranged-goblin-warrior-initialization",
@@ -71,7 +71,7 @@ export const setupScenario: ScenarioSetup = ({ sdk, statBlocks }) => {
   if (sdk.isLeft(wolfCreature)) {
     return {
       kind: "obstructed",
-      obstruction: `The public battle initializer rejected the Wolf's initial Prone condition: ${sdk.battleStateInitIssueMessage(wolfCreature.left)}`,
+      obstruction: `The public battle initializer rejected the Wolf's initial Prone condition: ${sdk.authoredStatBlockBattleInitIssueMessage(wolfCreature.left)}`,
       observation: {
         scenarioId: "prone-target-roll-mode-distance-probe",
         stage: "wolf-initialization",

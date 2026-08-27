@@ -1,11 +1,19 @@
 import { Hp } from "@dnd/shared/types";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import {
+  decodeStatBlockRecordEither,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
-import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+import {
+  authoredStatBlockBattleInitIssueMessage,
+  battleCreatureInitFromStatBlock,
+} from "./battle-init.ts";
 import { battleAmmunitionStock } from "./battle-ammunition.ts";
 import {
   battleExecutionScopeOrdinal,
@@ -13,7 +21,10 @@ import {
   combatantId,
   initiativeScore,
 } from "./identity.ts";
-import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
+import {
+  admitBattleStatBlockCombatant,
+  battleStatBlockCombatantSource,
+} from "./stat-block-combatant-admission.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { startBattle } from "./battle-reducer/api-lifecycle.ts";
 import {
@@ -21,8 +32,10 @@ import {
   fighterId,
   removeBattleCombatantsRight,
   startBattleRight,
+  monsterResourceStatBlock,
   statBlockCreatureInit,
   statBlockRecord,
+  projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
 
@@ -38,7 +51,7 @@ describe("Stat Block combatant admission capability", () => {
     const admission = admitBattleStatBlockCombatant({
       battleId: admittedBattleId,
       combatantId: combatant,
-      statBlock: source,
+      statBlock: projectedStatBlockRuntimeSource(source),
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
     if (Either.isLeft(admission))
@@ -76,13 +89,13 @@ describe("Stat Block combatant admission capability", () => {
     const admission = admitBattleStatBlockCombatant({
       battleId: battleId("unresolved-resistance-choice"),
       combatantId: admittedCombatantId,
-      statBlock: {
+      statBlock: projectedStatBlockRuntimeSource({
         ...source,
         statBlock: {
           ...source.statBlock,
           resistances: { kind: "choose_one_from", options: ["fire"] },
         },
-      },
+      }),
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
@@ -100,13 +113,13 @@ describe("Stat Block combatant admission capability", () => {
     const admission = admitBattleStatBlockCombatant({
       battleId: battleId("fractional-stat-block-hp"),
       combatantId: admittedCombatantId,
-      statBlock: {
+      statBlock: projectedStatBlockRuntimeSource({
         ...source,
         statBlock: {
           ...source.statBlock,
           hp: { kind: "literal", value: 1.5 },
         },
-      },
+      }),
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
 
@@ -119,27 +132,162 @@ describe("Stat Block combatant admission capability", () => {
     );
   });
 
-  test("returns a typed issue for nonliteral Stat Block initialization facts", () => {
+  test("retains the projected empty Stat Block resource collection", () => {
+    const source = projectedStatBlockRuntimeSource(statBlockRecord());
+    expect(source.resources).toEqual([]);
+    const admitted = battleStatBlockCombatantSource(source);
+
+    expect(Either.isRight(admitted)).toBe(true);
+    if (Either.isLeft(admitted)) return;
+    expect(admitted.right.resources).toEqual([]);
+  });
+
+  test("rejects a procedure resource reference without a declaration", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const resources = source.resources;
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: resources.slice(1),
+    });
+
+    expect(admitted).toEqual(
+      Either.left({
+        tag: "statBlockResourceGraphIssue",
+        issues: [
+          {
+            kind: "missingResourceDeclaration",
+            ordinal: resources[0]!.ordinal,
+          },
+        ],
+      }),
+    );
+  });
+
+  test("rejects duplicate Stat Block resource declaration ordinals", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const resources = source.resources;
+    const [firstResource, ...remainingResources] = resources;
+    if (firstResource === undefined) {
+      throw new Error("Expected the first resource declaration.");
+    }
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: [firstResource, firstResource, ...remainingResources],
+    });
+
+    expect(admitted).toEqual(
+      Either.left({
+        tag: "statBlockResourceGraphIssue",
+        issues: [
+          { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+        ],
+      }),
+    );
+  });
+
+  test("accumulates duplicate and distinct missing resource graph issues", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const resources = source.resources;
+    const [firstResource, secondResource] = resources;
+    if (firstResource === undefined || secondResource === undefined) {
+      throw new Error("Expected both resource declarations.");
+    }
+    const missingThree = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(3);
+    const missingFour = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(4);
+    const [firstProcedure, ...remainingProcedures] = source.procedures;
+    if (firstProcedure === undefined) {
+      throw new Error("Expected the first resource-backed procedure.");
+    }
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: [firstResource, firstResource, secondResource, secondResource],
+      procedures: [
+        {
+          ...firstProcedure,
+          resourceRefs: [
+            firstResource.ordinal,
+            missingThree,
+            missingThree,
+            missingFour,
+          ],
+        },
+        ...remainingProcedures,
+      ],
+    });
+
+    expect(admitted).toEqual(
+      Either.left({
+        tag: "statBlockResourceGraphIssue",
+        issues: [
+          { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+          {
+            kind: "duplicateResourceOrdinal",
+            ordinal: secondResource.ordinal,
+          },
+          { kind: "missingResourceDeclaration", ordinal: missingThree },
+          { kind: "missingResourceDeclaration", ordinal: missingFour },
+        ],
+      }),
+    );
+  });
+
+  test("rejects nonliteral authored Stat Block initialization facts at the schema boundary", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromStatBlock({
-      combatantId: admittedCombatantId,
-      initiative: initiativeScore(10),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
+    const malformedArmorClass = decodeStatBlockRecordEither({
+      ...source,
       statBlock: {
-        ...source,
-        statBlock: {
-          ...source.statBlock,
-          ac: { kind: "caster_derived", source: "spell_save_dc" },
+        ...source.statBlock,
+        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
+      },
+    });
+    expect(malformedArmorClass).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "ParseError",
+        issue: {
+          _tag: "Composite",
+          issues: {
+            _tag: "Pointer",
+            path: "statBlock",
+            issue: {
+              _tag: "Refinement",
+              issue: {
+                _tag: "Composite",
+                issues: {
+                  _tag: "Pointer",
+                  path: "ac",
+                  issue: {
+                    _tag: "Composite",
+                    issues: {
+                      _tag: "Pointer",
+                      path: "value",
+                      issue: {
+                        _tag: "Refinement",
+                        issue: {
+                          _tag: "Composite",
+                          issues: {
+                            _tag: "Pointer",
+                            path: "source",
+                            issue: { _tag: "Unexpected" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
     });
-
-    expect(
-      Either.isLeft(initialized)
-        ? battleStateInitIssueMessage(initialized.left)
-        : "initialized",
-    ).toBe("Battle runtime requires literal Stat Block Armor Class.");
   });
 
   test("retains caller-supplied initial conditions for Stat Block creatures", () => {
@@ -240,7 +388,7 @@ describe("Stat Block combatant admission capability", () => {
 
     expect(
       Either.isLeft(initialized)
-        ? battleStateInitIssueMessage(initialized.left)
+        ? authoredStatBlockBattleInitIssueMessage(initialized.left)
         : "initialized",
     ).toBe("Stat Block combatant is immune to initial prone condition.");
   });
@@ -268,7 +416,7 @@ describe("Stat Block combatant admission capability", () => {
     ]);
     expect("statBlock" in admitted.admission).toBe(false);
     expect("displayName" in admitted.admission).toBe(false);
-    expect(serialized).not.toContain(admitted.source.statBlock.displayName);
+    expect(serialized).not.toContain(admitted.source.name);
   });
 
   test("consumes transition and initialization facts without retaining them in the durable origin", () => {
@@ -312,6 +460,9 @@ describe("Stat Block combatant admission capability", () => {
       "resistances",
       "immunities",
       "specialSenses",
+      "initiativeModifier",
+      "initiativeScore",
+      "passivePerception",
     ]);
   });
 

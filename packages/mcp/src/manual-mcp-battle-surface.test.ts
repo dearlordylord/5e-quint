@@ -1,3 +1,5 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import { statBlockId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import { Either, Schema } from "effect";
 
@@ -1253,8 +1255,9 @@ function statBlock(
     readonly creatureType?: "beast";
   },
 ): BattleCreatureInit {
-  const statBlock = root.statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const statBlock = assertStatBlockForTest(
+    root.statBlockCatalog,
+    statBlockId("stat_block_goblin_warrior"),
   );
   const battleStatBlock =
     input.creatureType === undefined
@@ -1277,7 +1280,21 @@ function statBlock(
       conditions: [],
     }),
   );
-  return { ...init, displayName: input.displayName ?? init.displayName };
+  return input.displayName === undefined
+    ? init
+    : {
+        ...init,
+        creatureInit:
+          init.creatureInit.kind === "statBlock"
+            ? {
+                ...init.creatureInit,
+                presentation: {
+                  ...init.creatureInit.presentation,
+                  displayName: input.displayName,
+                },
+              }
+            : init.creatureInit,
+      };
 }
 
 function character(

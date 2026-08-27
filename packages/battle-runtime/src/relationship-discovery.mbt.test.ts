@@ -156,7 +156,7 @@ function relationshipDiscoveryBattle(input?: {
       }),
       statBlockCreatureInit({
         combatantId: secondTargetId,
-        displayName: "Second Target",
+        statBlockName: "Second Target",
         initiative: 1,
         ...(input?.secondTargetHp === undefined
           ? {}

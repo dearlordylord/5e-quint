@@ -3,8 +3,10 @@ import fc from "fast-check";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { decodeStatBlockRecordEither } from "@dnd/surface/surface/schema";
 import { classLevel, resourceCount } from "@dnd/shared/types";
-import { unitId } from "@dnd/shared/game-facts";
+import { statBlockId, unitId } from "@dnd/shared/game-facts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 
@@ -18,6 +20,7 @@ import {
   statBlockBonusActionOptionActs,
   statBlockMultiattackActs,
 } from "./battle-reducer/battle-discovery.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import {
   spellBaseArmorClassEffectRouteForDiscoveredAct,
   spellBaseArmorClassEffectRouteForResolution,
@@ -166,6 +169,7 @@ import {
   savingThrowOutcomeFill,
   statBlockCreatureInit,
   statBlockRecord,
+  projectedStatBlockRuntimeSource,
   wizardId,
   wizardSpellcasting,
   spellRecord,
@@ -1616,55 +1620,103 @@ describe("battle boundary admission owners", () => {
   });
 
   test("stat-block and character execution admission reject malformed boundaries and round-trip valid snapshots", () => {
-    const source = statBlockRecord();
+    const authoredSource = statBlockRecord();
+    const source = projectedStatBlockRuntimeSource(authoredSource);
     const valid = battleStatBlockCombatantSource(source);
     expect(Either.isRight(valid)).toBe(true);
+    const unsupportedSectionProjection = projectAuthoredStatBlock(
+      monsterResourceStatBlockWithUnsupportedAttackSections(),
+    );
+    expect(Either.isLeft(unsupportedSectionProjection)).toBe(true);
+    if (Either.isRight(unsupportedSectionProjection)) return;
+    expect(unsupportedSectionProjection.left).toEqual({
+      tag: "battleStatBlockProjectionFailure",
+      reason: "unsupportedProcedureBinding",
+      issues: [
+        {
+          section: "bonusActions",
+          procedureOrdinal: 1,
+        },
+      ],
+    });
     expect(
       battleStatBlockCombatantSource({
         ...source,
         statBlock: { ...source.statBlock, hp: { kind: "literal", value: 0 } },
       }),
     ).toMatchObject({ _tag: "Left" });
-    expect(
-      battleStatBlockCombatantSource({
-        ...source,
-        statBlock: {
-          ...source.statBlock,
-          ac: { kind: "caster_derived", source: "spell_save_dc" },
+    const malformedArmorClass = decodeStatBlockRecordEither({
+      ...authoredSource,
+      statBlock: {
+        ...authoredSource.statBlock,
+        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
+      },
+    });
+    expect(malformedArmorClass).toMatchObject({
+      _tag: "Left",
+      left: {
+        _tag: "ParseError",
+        issue: {
+          _tag: "Composite",
+          issues: {
+            _tag: "Pointer",
+            path: "statBlock",
+            issue: {
+              _tag: "Refinement",
+              issue: {
+                _tag: "Composite",
+                issues: {
+                  _tag: "Pointer",
+                  path: "ac",
+                  issue: {
+                    _tag: "Composite",
+                    issues: {
+                      _tag: "Pointer",
+                      path: "value",
+                      issue: {
+                        _tag: "Refinement",
+                        issue: {
+                          _tag: "Composite",
+                          issues: {
+                            _tag: "Pointer",
+                            path: "source",
+                            issue: { _tag: "Unexpected" },
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
-      }),
-    ).toMatchObject({ _tag: "Left" });
-    expect(
-      admitBattleStatBlockCombatant({
-        battleId: battleId("boundary-stat-block-creature-type"),
-        combatantId: combatantId("boundary-stat-block-creature-type"),
-        statBlock: {
-          ...source,
-          statBlock: { ...source.statBlock, creatureType: 42 as never },
-        },
-        startingScopeOrdinal: battleExecutionScopeOrdinal(0),
-      }),
-    ).toMatchObject({ _tag: "Left" });
+      },
+    });
+    const malformedCreatureType = decodeStatBlockRecordEither({
+      ...authoredSource,
+      statBlock: { ...authoredSource.statBlock, creatureType: 42 },
+    });
+    expect(Either.isLeft(malformedCreatureType)).toBe(true);
     expect(
       admitBattleStatBlockCombatant({
         battleId: battleId("boundary-stat-block-resistance-choice"),
         combatantId: combatantId("boundary-stat-block-resistance-choice"),
-        statBlock: {
-          ...source,
+        statBlock: projectedStatBlockRuntimeSource({
+          ...authoredSource,
           statBlock: {
-            ...source.statBlock,
+            ...authoredSource.statBlock,
             resistances: { kind: "choose_one_from", options: ["fire"] },
           },
-        },
+        }),
         startingScopeOrdinal: battleExecutionScopeOrdinal(0),
       }),
     ).toMatchObject({ _tag: "Left" });
-    expect(
-      battleStatBlockCombatantSource({
-        ...source,
-        statBlock: { ...source.statBlock, size: 17 as never },
-      }),
-    ).toMatchObject({ _tag: "Left" });
+    const malformedSize = decodeStatBlockRecordEither({
+      ...authoredSource,
+      statBlock: { ...authoredSource.statBlock, size: 17 },
+    });
+    expect(Either.isLeft(malformedSize)).toBe(true);
     expect(
       battleStatBlockCombatantSource({
         ...source,
@@ -1683,11 +1735,16 @@ describe("battle boundary admission owners", () => {
       }),
     ).toMatchObject({ _tag: "Right" });
 
-    const executionSource = monsterResourceStatBlock();
+    const executionSource = projectedStatBlockRuntimeSource(
+      monsterResourceStatBlock(),
+    );
+    const admittedExecutionSource = Either.getOrThrow(
+      battleStatBlockCombatantSource(executionSource),
+    );
     const cohort = statBlockExecutionAdmissionCohort(
       battleId("boundary-stat-execution"),
       combatantId("boundary-stat-execution"),
-      [executionSource],
+      [admittedExecutionSource],
       battleExecutionScopeOrdinal(0),
     );
     const admission = cohort.admissions[0];
@@ -1722,10 +1779,18 @@ describe("battle boundary admission owners", () => {
       battleId("boundary-stat-sections"),
       combatantId("boundary-stat-sections"),
       [
-        monsterResourceStatBlockWithUnsupportedAttackSections(),
-        monsterMultiattackStatBlock(),
-        monsterResourceStatBlockWithTwoRechargeActions(),
-      ],
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(monsterResourceStatBlock()),
+        ),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(monsterMultiattackStatBlock()),
+        ),
+        battleStatBlockCombatantSource(
+          projectedStatBlockRuntimeSource(
+            monsterResourceStatBlockWithTwoRechargeActions(),
+          ),
+        ),
+      ].map(Either.getOrThrow),
       battleExecutionScopeOrdinal(0),
     );
     expect(sectionAdmissions.admissions).toHaveLength(3);
@@ -2622,7 +2687,7 @@ describe("battle boundary admission owners", () => {
       familiarId,
       ammunitionStocks: [],
       resolvedForm: {
-        statBlock: monsterResourceStatBlockWithUnsupportedAttackSections(),
+        statBlock: monsterResourceStatBlock(),
         creatureTypeOverride: "fey",
       },
       initiative: initiativeScore(5),
@@ -2653,8 +2718,9 @@ describe("battle boundary admission owners", () => {
           (candidate) => candidate.procedureRef === subject.procedureRef,
         );
         return (
-          binding?.procedure.kind === "attack" &&
-          binding.procedure.section === "actions"
+          binding?.procedure.kind === "unarmedStrike" ||
+          (binding?.procedure.kind === "attack" &&
+            binding.procedure.section === "actions")
         );
       }),
     ).toBe(true);
@@ -2755,33 +2821,65 @@ describe("battle boundary admission owners", () => {
         "Frenzy damage type is not available for this attack resolution.",
     });
 
-    const limitedMultiattack = monsterResourceStatBlock();
+    const resourceMonster = monsterResourceStatBlock();
+    const resourceActions = resourceMonster.statBlock.actions;
+    const dreadGaze = resourceActions?.find(
+      (entry) =>
+        entry.kind === "executable" &&
+        entry.procedure.kind === "attack_roll" &&
+        entry.procedure.name === "Dread Gaze",
+    );
+    const multiattackTemplate =
+      monsterMultiattackStatBlock().statBlock.actions?.find(
+        (entry) =>
+          entry.kind === "executable" && entry.procedure.kind === "multiattack",
+      );
+    if (
+      resourceActions === undefined ||
+      dreadGaze === undefined ||
+      multiattackTemplate === undefined ||
+      multiattackTemplate.kind !== "executable" ||
+      multiattackTemplate.procedure.kind !== "multiattack"
+    ) {
+      throw new Error("Expected canonical resource and multiattack fixtures.");
+    }
+    const limitedActions: NonNullable<typeof resourceActions> = [
+      ...resourceActions,
+      {
+        ...multiattackTemplate,
+        procedure: {
+          ...multiattackTemplate.procedure,
+          name: "Synthetic Limited Multiattack",
+          dispatches: [
+            {
+              procedureOrdinal: dreadGaze.procedureOrdinal,
+              count: { kind: "literal", value: 1 },
+            },
+          ],
+        },
+        resourceRefs: { kind: "none" },
+      },
+    ];
+    const limitedMultiattack: StatBlockRecord = {
+      ...resourceMonster,
+      id: statBlockId("stat_block_boundary_limited_multiattack"),
+      name: "Boundary Limited Multiattack Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "boundary unavailable multiattack fixture",
+      },
+      statBlock: {
+        ...resourceMonster.statBlock,
+        actions: limitedActions,
+      },
+    };
     const multiattackState = startBattleSessionRight({
       battleId: battleId("boundary-unavailable-multiattack"),
       combatants: [
         characterSeed({ initiative: 20 }),
         statBlockCreatureInit({
           initiative: 10,
-          statBlock: {
-            ...limitedMultiattack,
-            statBlock: {
-              ...limitedMultiattack.statBlock,
-              actions: {
-                ...limitedMultiattack.statBlock.actions,
-                multiattacks: [
-                  {
-                    name: "Synthetic Limited Multiattack",
-                    dispatches: [
-                      {
-                        name: "Dread Gaze",
-                        count: { kind: "literal", value: 1 },
-                      },
-                    ],
-                  },
-                ],
-              },
-            },
-          },
+          statBlock: limitedMultiattack,
         }),
       ],
     }).state;
@@ -2846,39 +2944,49 @@ describe("battle boundary admission owners", () => {
       statBlockMultiattackActs(unavailableMultiattackState, goblinId),
     ).toEqual([]);
 
-    const limitedBonusAction =
-      monsterResourceStatBlockWithUnsupportedAttackSections();
-    const bonusOptions =
-      monsterMultiattackStatBlock().statBlock.bonusActions?.actionOptions;
-    if (bonusOptions === undefined) {
-      throw new Error("Expected synthetic bonus action option.");
+    const limitedBonusAction = monsterResourceStatBlock();
+    const bonusOption =
+      monsterMultiattackStatBlock().statBlock.bonusActions?.find(
+        (entry) =>
+          entry.kind === "executable" &&
+          entry.procedure.kind === "action_option",
+      );
+    const dailyResource = limitedBonusAction.statBlock.resources?.find(
+      (resource) => resource.limit.kind === "daily",
+    );
+    if (bonusOption === undefined || dailyResource === undefined) {
+      throw new Error(
+        "Expected canonical bonus action and daily resource fixtures.",
+      );
     }
-    const bonusOptionsWithDailyUse = [
-      {
-        ...bonusOptions[0],
-        limitedUse: { kind: "daily" as const, uses: 1 },
+    const limitedBonusActionFixture: StatBlockRecord = {
+      ...limitedBonusAction,
+      id: statBlockId("stat_block_boundary_limited_bonus_action"),
+      name: "Boundary Limited Bonus Action Monster",
+      provenance: {
+        kind: "synthetic-test",
+        section: "boundary unavailable bonus action fixture",
       },
-      ...bonusOptions.slice(1).map((option) => ({
-        ...option,
-        limitedUse: { kind: "daily" as const, uses: 1 },
-      })),
-    ] as const;
+      statBlock: {
+        ...limitedBonusAction.statBlock,
+        bonusActions: [
+          {
+            ...bonusOption,
+            resourceRefs: {
+              kind: "some",
+              ordinals: [dailyResource.ordinal],
+            },
+          },
+        ],
+      },
+    };
     const bonusActionState = startBattleSessionRight({
       battleId: battleId("boundary-unavailable-bonus-action"),
       combatants: [
         characterSeed({ initiative: 20 }),
         statBlockCreatureInit({
           initiative: 10,
-          statBlock: {
-            ...limitedBonusAction,
-            statBlock: {
-              ...limitedBonusAction.statBlock,
-              bonusActions: {
-                ...limitedBonusAction.statBlock.bonusActions,
-                actionOptions: bonusOptionsWithDailyUse,
-              },
-            },
-          },
+          statBlock: limitedBonusActionFixture,
         }),
       ],
     }).state;

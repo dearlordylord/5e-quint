@@ -399,6 +399,64 @@ describe("portable SRD Surface boundary", () => {
     );
   });
 
+  test("rejects distinct Stat Block ids with the same normalized name", () => {
+    const validCase = caseDocument.cases.find(
+      (portableCase) => portableCase.name === "valid published aggregate",
+    );
+    if (validCase === undefined || !("input" in validCase)) {
+      throw new Error("Portable cases lost their valid aggregate input");
+    }
+    if (
+      typeof validCase.input !== "object" ||
+      validCase.input === null ||
+      Array.isArray(validCase.input)
+    ) {
+      throw new Error("Portable aggregate input must be an object");
+    }
+    const input = validCase.input as Record<string, unknown>;
+    const rawStatBlocks = input.statBlocks;
+    if (!Array.isArray(rawStatBlocks) || rawStatBlocks.length === 0) {
+      throw new Error("Portable aggregate must contain Stat Blocks");
+    }
+    const firstStatBlock = rawStatBlocks[0];
+    if (
+      typeof firstStatBlock !== "object" ||
+      firstStatBlock === null ||
+      Array.isArray(firstStatBlock) ||
+      typeof Reflect.get(firstStatBlock, "id") !== "string" ||
+      typeof Reflect.get(firstStatBlock, "name") !== "string"
+    ) {
+      throw new Error(
+        "Portable Stat Block fixture must contain identity fields",
+      );
+    }
+    const duplicateStatBlock = {
+      ...(firstStatBlock as Record<string, unknown>),
+      id: `${String(Reflect.get(firstStatBlock, "id"))}_duplicate_normalized_identity`,
+      name: String(Reflect.get(firstStatBlock, "name")).toUpperCase(),
+    };
+    const result = decodePortableSrdSurface({
+      ...input,
+      statBlocks: [
+        firstStatBlock,
+        duplicateStatBlock,
+        ...rawStatBlocks.slice(1),
+      ],
+    });
+
+    expect(result.tag).toBe("rejected");
+    if (result.tag !== "rejected") return;
+    expect(result.issues).toContainEqual(
+      expect.objectContaining({
+        code: "duplicate-authored-identity",
+        path: "$.statBlocks[1].id",
+        targetKind: "statBlock",
+        targetId: duplicateStatBlock.id,
+        priorPath: "$.statBlocks[0].id",
+      }),
+    );
+  });
+
   test.each([
     [
       "whitespace and nested values",

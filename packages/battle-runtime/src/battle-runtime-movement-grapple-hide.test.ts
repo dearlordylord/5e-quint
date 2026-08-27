@@ -2784,7 +2784,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       combatants: [
         statBlockCreatureInit({
           combatantId: climberId,
-          displayName: "Unequal Speed Climber",
+          statBlockName: "Unequal Speed Climber",
           initiative: 20,
           statBlock: {
             ...base,
@@ -2792,7 +2792,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
             name: "Unequal Speed Climber",
             statBlock: {
               ...base.statBlock,
-              displayName: "Unequal Speed Climber",
               speeds: [
                 { kind: "walk", feet: { kind: "literal", value: 30 } },
                 { kind: "climb", feet: { kind: "literal", value: 40 } },
@@ -3070,7 +3069,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         characterSeed({ initiative: 20 }),
         statBlockCreatureInit({
           combatantId: hugeTargetId,
-          displayName: "Huge Grapple Target",
+          statBlockName: "Huge Grapple Target",
           initiative: 10,
           statBlock: {
             ...baseTarget,
@@ -3078,7 +3077,6 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
             name: "Huge Grapple Target",
             statBlock: {
               ...baseTarget.statBlock,
-              displayName: "Huge Grapple Target",
               size: "huge",
             },
           },
@@ -3768,7 +3766,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
         statBlockCreatureInit({ initiative: 10 }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Skeleton",
+          statBlockName: "Skeleton",
           initiative: 5,
         }),
       ],

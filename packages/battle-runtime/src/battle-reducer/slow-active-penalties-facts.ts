@@ -3,8 +3,6 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type {
-  BattleActiveEffect,
-  BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleSlowSomaticSpellFailureOutcomeHole,
   BattleState,
@@ -14,11 +12,7 @@ import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./domain-constant
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 import { subtleSpellComponentProjectionForApplications } from "./metamagic-support.ts";
 import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
-
-type SlowActivePenaltiesEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "slowActivePenalties" }
->;
+import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
 
 export function slowSomaticSpellFailureOutcomeHole(input: {
   readonly state: BattleState;
@@ -62,17 +56,6 @@ export function slowSomaticSpellFailureOutcomeHole(input: {
       sourceCombatantId: effect.sourceCombatantId,
     })),
   };
-}
-
-export function slowActivePenaltiesEffects(
-  combatant: BattleCreatureState | undefined,
-): readonly SlowActivePenaltiesEffect[] {
-  return combatant === undefined
-    ? []
-    : combatant.activeEffects.filter(
-        (effect): effect is SlowActivePenaltiesEffect =>
-          effect.kind === "slowActivePenalties",
-      );
 }
 
 function spellInvocationRequiresEffectiveSomaticComponent(input: {

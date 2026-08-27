@@ -21,10 +21,8 @@ import type { CombatantId } from "../identity.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
-import {
-  slowActivePenaltiesEffects,
-  slowSomaticSpellFailureOutcomeHole,
-} from "./slow-active-penalties-facts.ts";
+import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
+import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 export { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
 

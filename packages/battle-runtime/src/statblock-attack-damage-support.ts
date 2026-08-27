@@ -109,6 +109,9 @@ function supportedStatBlockBaseDamageEffect(
     return null;
   }
 
+  if (!("expr" in effect.amount)) {
+    return { static: effect.amount.static, damageType: effect.damageType };
+  }
   return statBlockDamageComponent(effect.amount, effect.damageType);
 }
 
@@ -124,6 +127,9 @@ function supportedStatBlockAdvantageBonusDamageEffect(
     return null;
   }
 
+  if (!("expr" in effect.amount)) {
+    return { static: effect.amount.static, damageType: effect.damageType };
+  }
   return statBlockDamageComponent(effect.amount, effect.damageType);
 }
 
@@ -169,8 +175,12 @@ export function statBlockAttackDamageRequiresRoll(
   damage: StatBlockAttackDamage,
 ): boolean {
   return (
-    damage.baseComponents.some((component) => component.expr.dice > 0) ||
-    (damage.advantageBonus?.expr.dice ?? 0) > 0
+    damage.baseComponents.some(
+      (component) => "expr" in component && component.expr.dice > 0,
+    ) ||
+    (damage.advantageBonus !== undefined &&
+      "expr" in damage.advantageBonus &&
+      damage.advantageBonus.expr.dice > 0)
   );
 }
 
