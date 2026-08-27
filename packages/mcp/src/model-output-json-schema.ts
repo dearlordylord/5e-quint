@@ -1,7 +1,7 @@
 type JsonSchema = Readonly<Record<string, unknown>>;
 
 const MODEL_VISIBLE_RESULT_PATH_DEPTH = 4;
-const MODEL_OUTPUT_SCHEMA_MAX_DEPTH_VALUES = [5] as const;
+export const MODEL_OUTPUT_SCHEMA_MAX_DEPTH_VALUES = [5] as const;
 
 type ModelOutputSchemaMaxDepth =
   (typeof MODEL_OUTPUT_SCHEMA_MAX_DEPTH_VALUES)[number];
