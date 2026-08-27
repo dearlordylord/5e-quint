@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import {
   authoredStatBlockBattleInitIssueMessage,
-  battleCreatureInitFromAuthoredStatBlock,
+  battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
   battleId,
   battleObjectId,
@@ -108,8 +108,7 @@ function setupContext(
             sdk: {
               authoredStatBlockBattleInitIssueMessage,
               battleAmmunitionStock,
-              battleCreatureInitFromStatBlock:
-                battleCreatureInitFromAuthoredStatBlock,
+              battleCreatureInitFromStatBlock: battleCreatureInitFromStatBlock,
               battleId,
               battleObjectId,
               battleStateInitIssueMessage,

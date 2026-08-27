@@ -59,7 +59,7 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForHole } from "./sdk-integration.test-support.ts";
 
-import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 type SheetDerivedOutcome =
   | "init"
@@ -641,7 +641,7 @@ function startSheetDerivedSession(
 }
 
 function battleCreatureInitFromRidingHorse() {
-  return battleCreatureInitFromAuthoredStatBlock({
+  return battleCreatureInitFromStatBlock({
     combatantId: targetCombatantId,
     statBlock: statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
     initiative: initiativeScore(10),

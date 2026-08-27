@@ -119,10 +119,7 @@ import {
   type CharacterSessionSheetDerivedBattleActsRouteAction,
 } from "./index.ts";
 
-import {
-  authoredStatBlockBattleInput,
-  battleCreatureInitFromAuthoredStatBlock,
-} from "./ammunition-stock.test-support.ts";
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
 const CRIMINAL_BACKGROUND_UNIT_ID = "background_criminal";
@@ -985,7 +982,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
       battleId: battleId("battle:route-metamagic-feature-resource-bridge"),
       combatants: [
         characterInit,
-        battleCreatureInitFromAuthoredStatBlock({
+        battleCreatureInitFromStatBlock({
           combatantId: targetCombatantId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),
@@ -1425,13 +1422,13 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
       initiative: alertInitiativeScoreForBuild(build),
       ammunitionStocks: [],
     },
-    statBlockBattleInput: authoredStatBlockBattleInput({
+    statBlockBattleInput: {
       combatantId: combatantId("combatant:route-origin-feat-skeleton"),
       statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
-    }),
+    },
   });
   if (Either.isLeft(entry)) {
     throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));

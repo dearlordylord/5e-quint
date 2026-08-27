@@ -63,7 +63,7 @@ import {
 } from "./index.ts";
 import { battleProcedureExecutionRefForTest } from "./sdk-integration.test-support.ts";
 
-import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 const settlementScenarios = [
   "init",
@@ -809,7 +809,7 @@ function startCharacterBattle(input: {
       battleId: battleId(input.battleIdText),
       combatants: [
         characterInit,
-        battleCreatureInitFromAuthoredStatBlock({
+        battleCreatureInitFromStatBlock({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),

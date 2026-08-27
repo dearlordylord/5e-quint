@@ -13,7 +13,6 @@ import {
   combatantId,
   discoverBattleActs,
   initiativeScore,
-  projectAuthoredStatBlock,
   resolveBattleSubject,
   spellSlotInvocationRef,
   startBattle,
@@ -1139,14 +1138,12 @@ export function monsterBattleInput(
   statBlock: StatBlockRecord,
   input: { readonly tempHp?: number } = {},
 ): Parameters<typeof battleCreatureInitFromStatBlock>[0] {
-  const projected = Either.getOrThrow(projectAuthoredStatBlock(statBlock));
   return {
     combatantId: id,
-    statBlock: projected.runtime,
+    statBlock,
     initiative: initiativeScore(initiative),
     ammunitionStocks: testAmmunitionStocksForStatBlock(statBlock),
     conditions: [],
-    presentation: projected.presentation,
     ...(input.tempHp === undefined ? {} : { tempHp: Hp(input.tempHp) }),
   };
 }

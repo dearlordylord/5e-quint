@@ -13,7 +13,6 @@ import type {
 
 import {
   battleAmmunitionStock,
-  battleCreatureInitFromAuthoredStatBlock,
   battleCreatureInitFromStatBlock,
   battleExecutionScopeOrdinal,
   battleId,
@@ -40,17 +39,12 @@ const authoredOrdinal = (value: number) =>
   Schema.decodeUnknownSync(StatBlockProcedureOrdinalSchema)(value);
 
 function initializedStatBlock(source: StatBlockRecord) {
-  const projected = projectAuthoredStatBlock(source);
-  if (Either.isLeft(projected)) {
-    throw new Error(`Expected Stat Block projection: ${projected.left.reason}`);
-  }
   const initialized = battleCreatureInitFromStatBlock({
     combatantId: combatantId("stat-block-projection-actor"),
-    statBlock: projected.right.runtime,
+    statBlock: source,
     initiative: initiativeScore(10),
     ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     conditions: [],
-    presentation: projected.right.presentation,
   });
   if (Either.isLeft(initialized)) {
     throw new Error(`Expected Stat Block initialization: ${initialized.left}`);
@@ -94,7 +88,7 @@ function mechanicalProjection(session: ReturnType<typeof startedStatBlock>) {
 describe("generic Stat Block projection", () => {
   test("admits authored mechanics and presentation as one operation", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromAuthoredStatBlock({
+    const initialized = battleCreatureInitFromStatBlock({
       combatantId: combatantId("authored-stat-block"),
       statBlock: source,
       initiative: initiativeScore(10),
@@ -110,14 +104,14 @@ describe("generic Stat Block projection", () => {
     expect(initialized.right.creatureInit.source.procedures).not.toHaveLength(
       0,
     );
-    expect(initialized.right.creatureInit.presentation?.displayName).toBe(
+    expect(initialized.right.creatureInit.presentation.displayName).toBe(
       source.name,
     );
   });
 
   test("keeps authored projection failure distinct from battle init failure", () => {
     const source = statBlockRecord();
-    const initialized = battleCreatureInitFromAuthoredStatBlock({
+    const initialized = battleCreatureInitFromStatBlock({
       combatantId: combatantId("nonliteral-authored-stat-block"),
       statBlock: {
         ...source,
@@ -140,32 +134,20 @@ describe("generic Stat Block projection", () => {
     });
   });
 
-  test("does not synthesize presentation when initialization omits authored context", () => {
-    const projected = projectAuthoredStatBlock(statBlockRecord());
-    expect(Either.isRight(projected)).toBe(true);
-    if (Either.isLeft(projected)) return;
-
+  test("retains mandatory authored presentation at initialization", () => {
+    const source = statBlockRecord();
     const initialized = battleCreatureInitFromStatBlock({
-      combatantId: combatantId("stat-block-without-presentation"),
-      statBlock: projected.right.runtime,
+      combatantId: combatantId("stat-block-with-presentation"),
+      statBlock: source,
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
     });
     expect(Either.isRight(initialized)).toBe(true);
     if (Either.isLeft(initialized)) return;
-
-    const started = startBattle({
-      battleId: battleId("stat-block-without-presentation"),
-      combatants: [initialized.right],
-    });
-    expect(Either.isRight(started)).toBe(true);
-    if (Either.isLeft(started)) return;
-    expect(
-      started.right.context.statBlocks.has(
-        combatantId("stat-block-without-presentation"),
-      ),
-    ).toBe(false);
+    expect(initialized.right.creatureInit.presentation.displayName).toBe(
+      source.name,
+    );
   });
 
   test("keeps text-only traits separate from typed trait support", () => {

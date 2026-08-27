@@ -16,6 +16,7 @@ import {
   type BattleId,
   type BattleCreatureState,
   type BattleStateInitIssue,
+  type AuthoredStatBlockBattleInitIssue,
   type BattleState,
   type BattleRuntimeContext,
   type BattleRuntimeSession,
@@ -24,7 +25,8 @@ import {
   type CharacterBattleClassLevels,
   type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
-  type StatBlockBattleInitInput,
+  type AuthoredStatBlockBattleInitInput,
+  authoredStatBlockBattleInitIssueMessage,
   battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import {
@@ -71,7 +73,7 @@ import {
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 
 import {
   CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE,
@@ -95,11 +97,29 @@ import {
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
 export function characterBattleRuntimeIssueMessage(
-  issue: BattleCreatureInitIssue | BattleStateInitIssue,
+  issue:
+    | BattleCreatureInitIssue
+    | BattleStateInitIssue
+    | AuthoredStatBlockBattleInitIssue,
 ): string {
-  return issue.tag === "battleCreatureInitIssue"
-    ? issue.message
-    : battleStateInitIssueMessage(issue);
+  return Match.value(issue).pipe(
+    Match.when(
+      { tag: "statBlockProjectionFailure" },
+      authoredStatBlockBattleInitIssueMessage,
+    ),
+    Match.when({ tag: "battleCreatureInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, (resourceGraphIssue) =>
+      battleStateInitIssueMessage(resourceGraphIssue),
+    ),
+    Match.when({ tag: "battleStateInitIssues" }, (aggregateIssue) =>
+      battleStateInitIssueMessage(aggregateIssue),
+    ),
+    Match.when({ tag: "weaponLoadoutMismatch" }, (loadoutMismatch) =>
+      battleStateInitIssueMessage(loadoutMismatch),
+    ),
+    Match.exhaustive,
+  );
 }
 
 // UNIT-PROFILE-COVERAGE: runtime-owner character-sheet.class-feature-use-count-resource
@@ -220,7 +240,10 @@ export type CharacterBattleRuntimeEntry = {
 };
 
 export type CharacterBattleRuntimeEntryIssue = {
-  readonly issue: BattleCreatureInitIssue | BattleStateInitIssue;
+  readonly issue:
+    | BattleCreatureInitIssue
+    | BattleStateInitIssue
+    | AuthoredStatBlockBattleInitIssue;
   readonly routeEvents: readonly CharacterBattleRouteEvent[];
 };
 
@@ -369,7 +392,7 @@ function characterBuildInitIssueRoute(
 export function startBattleFromCharacterSheetAndStatBlock(input: {
   readonly battleId: BattleId;
   readonly character: CharacterSheetBattleInitInput;
-  readonly statBlockBattleInput: StatBlockBattleInitInput;
+  readonly statBlockBattleInput: AuthoredStatBlockBattleInitInput;
 }): Either.Either<
   CharacterBattleRuntimeEntry,
   CharacterBattleRuntimeEntryIssue

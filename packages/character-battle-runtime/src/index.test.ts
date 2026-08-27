@@ -164,8 +164,7 @@ import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-f
 import { settleCompanionFromBattle } from "./companion-handoff.ts";
 
 import {
-  authoredStatBlockBattleInput,
-  battleCreatureInitFromAuthoredStatBlock as battleCreatureInitFromStatBlock,
+  battleCreatureInitFromStatBlock,
   type AuthoredStatBlockBattleInitInput,
 } from "./ammunition-stock.test-support.ts";
 
@@ -221,9 +220,7 @@ function startBattleFromCharacterBuildAndStatBlock(
 ) {
   return startBattleFromCharacterBuildAndStatBlockRuntime({
     ...input,
-    statBlockBattleInput: authoredStatBlockBattleInput(
-      input.statBlockBattleInput,
-    ),
+    statBlockBattleInput: input.statBlockBattleInput,
     character: {
       ...input.character,
       resourceExpenditures: input.character.resourceExpenditures ?? [],
@@ -242,9 +239,7 @@ function startBattleFromCharacterSheetAndStatBlock(input: {
 }) {
   return startBattleFromCharacterSheetAndStatBlockRuntime({
     ...input,
-    statBlockBattleInput: authoredStatBlockBattleInput(
-      input.statBlockBattleInput,
-    ),
+    statBlockBattleInput: input.statBlockBattleInput,
   });
 }
 

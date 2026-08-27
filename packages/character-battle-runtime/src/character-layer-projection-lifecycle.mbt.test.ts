@@ -64,7 +64,7 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
-import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 const characterLifecycleLayers = [
   "Draft",
@@ -501,7 +501,7 @@ function startLifecycleBattle(sheet: CharacterSheet): {
       battleId: battleId("battle:layer-projection-lifecycle"),
       combatants: [
         characterInit,
-        battleCreatureInitFromAuthoredStatBlock({
+        battleCreatureInitFromStatBlock({
           combatantId: lifecycleSkeletonCombatantId,
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(20),

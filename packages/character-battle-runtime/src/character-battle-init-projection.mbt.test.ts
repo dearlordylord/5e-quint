@@ -52,7 +52,7 @@ import {
   characterSheetBattleInit,
 } from "./index.ts";
 
-import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 const battleInitProjectionScenarios = [
   "init",
@@ -433,7 +433,7 @@ function projectCharacterBattle(input: {
       battleId: battleId(input.battleIdText),
       combatants: [
         characterInit,
-        battleCreatureInitFromAuthoredStatBlock({
+        battleCreatureInitFromStatBlock({
           combatantId: combatantId(`${input.battleIdText}:skeleton`),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),

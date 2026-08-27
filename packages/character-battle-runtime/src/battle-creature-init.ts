@@ -22,12 +22,13 @@ import {
   type BattleId,
   type BattleRuntimeSession,
   type BattleStateInitIssue,
+  type AuthoredStatBlockBattleInitIssue,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
   type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
-  type StatBlockBattleInitInput,
+  type AuthoredStatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import {
   characterBuildDruidWildShapeFacts,
@@ -191,11 +192,13 @@ export function characterBattleInitiativeScore(input: {
 export function startBattleFromCharacterBuildAndStatBlock(input: {
   readonly battleId: BattleId;
   readonly character: CharacterBuildCreatureInput;
-  readonly statBlockBattleInput: StatBlockBattleInitInput;
+  readonly statBlockBattleInput: AuthoredStatBlockBattleInitInput;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<
   BattleRuntimeSession,
-  BattleStateInitIssue | BattleCreatureInitIssue
+  | BattleStateInitIssue
+  | BattleCreatureInitIssue
+  | AuthoredStatBlockBattleInitIssue
 > {
   const characterInit = battleCreatureInitFromCharacterBuild({
     ...input.character,

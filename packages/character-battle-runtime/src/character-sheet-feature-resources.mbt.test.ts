@@ -68,7 +68,7 @@ import {
   settleCharacterSheetFromBattle,
 } from "./index.ts";
 
-import { battleCreatureInitFromAuthoredStatBlock } from "./ammunition-stock.test-support.ts";
+import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
 
 const featureResourceScenarios = [
   "init",
@@ -739,7 +739,7 @@ function metamagicBridgeUsesSharedPointPoolProjection(): FeatureResourceProjecti
       battleId: battleId("battle:metamagic-feature-resource-bridge"),
       combatants: [
         characterInit,
-        battleCreatureInitFromAuthoredStatBlock({
+        battleCreatureInitFromStatBlock({
           combatantId: combatantId("combatant:metamagic-skeleton"),
           statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
           initiative: initiativeScore(10),

@@ -38,13 +38,16 @@ import type {
   BattleUnitSupportProfile,
 } from "./unit-feature-support.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution.ts";
 import {
   battleStatBlockProjectionFailureMessage,
   projectAuthoredStatBlock,
   type AuthoredStatBlockProjection,
   type BattleStatBlockProjectionFailure,
 } from "./stat-block-authored-projection.ts";
+import {
+  admitStatBlockResourceGraph,
+  type StatBlockResourceGraphAdmissionFailure,
+} from "./stat-block-execution-state.ts";
 import type {
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormProjection,
@@ -57,9 +60,10 @@ import type {
 export type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
 import type {
   BattleAmmunitionStock,
-  BattleStateInitIssue,
+  BattleStateInitLeafIssue,
   CharacterBattleUnarmoredArmorClassBases,
 } from "./battle-state-execution.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleStatBlockCombatantSource,
   statBlockInitialConditionImmunityIssue,
@@ -225,7 +229,16 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
       projected.right,
     );
     if (Either.isLeft(formProjection)) return Either.left(formProjection.left);
-    parsed.push(battleDruidWildShapeKnownForm(formProjection.right));
+    const resourceGraph = admitStatBlockResourceGraph(formProjection.right);
+    if (Either.isLeft(resourceGraph)) {
+      return Either.left({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        message: wildShapeResourceGraphAdmissionIssueMessage(
+          resourceGraph.left,
+        ),
+      });
+    }
+    parsed.push(battleDruidWildShapeKnownForm(resourceGraph.right));
   }
   return Either.right(parsed);
 }
@@ -234,8 +247,31 @@ function battleDruidWildShapeKnownForm(
   form: BattleDruidWildShapeKnownFormProjection,
 ): BattleDruidWildShapeKnownForm {
   // Brands are erased at runtime; the parser applies this brand only after
-  // proving roster eligibility, projection facts, and supported actions.
+  // proving roster eligibility, projection facts, supported actions, and the
+  // closed procedure/resource graph.
   return form as BattleDruidWildShapeKnownForm;
+}
+
+function wildShapeResourceGraphAdmissionIssueMessage(
+  failures: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>,
+): string {
+  return failures
+    .map((failure) =>
+      Match.value(failure).pipe(
+        Match.when(
+          { kind: "duplicateResourceOrdinal" },
+          ({ ordinal }) =>
+            `Druid Wild Shape battle forms require Stat Block resource declaration ordinal ${String(ordinal)} to be unique.`,
+        ),
+        Match.when(
+          { kind: "missingResourceDeclaration" },
+          ({ ordinal }) =>
+            `Druid Wild Shape battle forms require Stat Block procedure resource reference ${String(ordinal)} to match a declared resource.`,
+        ),
+        Match.exhaustive,
+      ),
+    )
+    .join("; ");
 }
 
 function battleDruidWildShapeFormProjectionStatBlock(
@@ -332,24 +368,16 @@ export type CharacterBattleCreatureInit = {
   readonly spellcasting?: CharacterBattleSpellcastingInit;
 };
 
-export type StatBlockBattleInitInput = {
+/** Authored Stat Block input accepted by the public battle initializer. */
+export type AuthoredStatBlockBattleInitInput = {
   readonly combatantId: CombatantId;
-  readonly statBlock: BattleStatBlockExecutionSource;
+  readonly statBlock: StatBlockRecord;
   readonly initiative: InitiativeScore;
   // defaults to max
   readonly currentHp?: Hp;
   readonly tempHp?: Hp;
   readonly ammunitionStocks: readonly BattleAmmunitionStock[];
   readonly conditions: readonly StatBlockInitialCondition[];
-  /** Authored presentation is admitted beside the runtime projection. */
-  readonly presentation?: BattleStatBlockPresentationSource;
-};
-
-export type AuthoredStatBlockBattleInitInput = Omit<
-  StatBlockBattleInitInput,
-  "statBlock" | "presentation"
-> & {
-  readonly statBlock: StatBlockRecord;
 };
 
 export type AuthoredStatBlockBattleInitIssue =
@@ -360,9 +388,22 @@ export type AuthoredStatBlockBattleInitIssue =
     };
 
 export type StatBlockBattleInitIssue = Extract<
-  BattleStateInitIssue,
-  { readonly tag: "battleStateInitIssue" }
+  BattleStateInitLeafIssue,
+  {
+    readonly tag: "battleStateInitIssue" | "statBlockResourceGraphIssue";
+  }
 >;
+
+type RuntimeStatBlockBattleInitInput = {
+  readonly combatantId: CombatantId;
+  readonly statBlock: BattleStatBlockCombatantSource;
+  readonly initiative: InitiativeScore;
+  readonly currentHp?: Hp;
+  readonly tempHp?: Hp;
+  readonly ammunitionStocks: readonly BattleAmmunitionStock[];
+  readonly conditions: readonly StatBlockInitialCondition[];
+  readonly presentation: BattleStatBlockPresentationSource;
+};
 
 export const STAT_BLOCK_INITIAL_CONDITIONS = ["prone"] as const;
 export type StatBlockInitialCondition =
@@ -378,6 +419,15 @@ export type StatBlockBattleCreatureInit = {
   readonly presentation?: BattleStatBlockPresentationSource;
 };
 
+export type AuthoredStatBlockBattleCreatureInit = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Omit<StatBlockBattleCreatureInit, "presentation"> & {
+    readonly presentation: BattleStatBlockPresentationSource;
+  };
+};
+
 export type BattleCreatureInit = {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -390,59 +440,54 @@ export type BattleCreatureInit = {
 };
 
 export function battleCreatureInitFromStatBlock(
-  input: StatBlockBattleInitInput,
-): Either.Either<BattleCreatureInit, StatBlockBattleInitIssue> {
-  const source = battleStatBlockCombatantSource(input.statBlock);
-  if (Either.isLeft(source)) return Either.left(source.left);
-  const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
-    source.right,
-    input.conditions,
-  );
-  if (initialConditionImmunityIssue !== null) {
-    return Either.left(initialConditionImmunityIssue);
-  }
-  const maxHp = toHp(source.right.statBlock.hp.value);
-  return Either.right({
-    combatantId: input.combatantId,
-    displayName: input.presentation?.displayName ?? input.statBlock.id,
-    initiative: input.initiative,
-    creatureInit: {
-      kind: "statBlock",
-      source: source.right,
-      currentHp: input.currentHp ?? maxHp,
-      tempHp: input.tempHp ?? toHp(0),
-      ammunitionStocks: input.ammunitionStocks,
-      conditions: input.conditions,
-      ...(input.presentation === undefined
-        ? {}
-        : { presentation: input.presentation }),
-    },
-  });
-}
-
-/** Admit an authored catalog record through projection and battle init once. */
-export function battleCreatureInitFromAuthoredStatBlock(
   input: AuthoredStatBlockBattleInitInput,
-): Either.Either<BattleCreatureInit, AuthoredStatBlockBattleInitIssue> {
-  const projected = projectAuthoredStatBlockBattleInitInput(input);
+): Either.Either<
+  AuthoredStatBlockBattleCreatureInit,
+  AuthoredStatBlockBattleInitIssue
+> {
+  const projected = projectAuthoredStatBlock(input.statBlock);
   if (Either.isLeft(projected)) {
     return Either.left({
       tag: "statBlockProjectionFailure",
       failure: projected.left,
     });
   }
-  return battleCreatureInitFromStatBlock(projected.right);
+  const source = battleStatBlockCombatantSource(projected.right.runtime);
+  if (Either.isLeft(source)) return Either.left(source.left);
+  return battleCreatureInitFromRuntimeStatBlock({
+    ...input,
+    statBlock: source.right,
+    presentation: projected.right.presentation,
+  });
 }
 
-export function projectAuthoredStatBlockBattleInitInput(
-  input: AuthoredStatBlockBattleInitInput,
-): Either.Either<StatBlockBattleInitInput, BattleStatBlockProjectionFailure> {
-  const projected = projectAuthoredStatBlock(input.statBlock);
-  if (Either.isLeft(projected)) return Either.left(projected.left);
+function battleCreatureInitFromRuntimeStatBlock(
+  input: RuntimeStatBlockBattleInitInput,
+): Either.Either<
+  AuthoredStatBlockBattleCreatureInit,
+  StatBlockBattleInitIssue
+> {
+  const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
+    input.statBlock,
+    input.conditions,
+  );
+  if (initialConditionImmunityIssue !== null) {
+    return Either.left(initialConditionImmunityIssue);
+  }
+  const maxHp = toHp(input.statBlock.statBlock.hp.value);
   return Either.right({
-    ...input,
-    statBlock: projected.right.runtime,
-    presentation: projected.right.presentation,
+    combatantId: input.combatantId,
+    displayName: input.presentation.displayName,
+    initiative: input.initiative,
+    creatureInit: {
+      kind: "statBlock",
+      source: input.statBlock,
+      currentHp: input.currentHp ?? maxHp,
+      tempHp: input.tempHp ?? toHp(0),
+      ammunitionStocks: input.ammunitionStocks,
+      conditions: input.conditions,
+      presentation: input.presentation,
+    },
   });
 }
 
@@ -451,6 +496,9 @@ export function authoredStatBlockBattleInitIssueMessage(
 ): string {
   return Match.value(issue).pipe(
     Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "statBlockResourceGraphIssue" }, (resourceGraphIssue) =>
+      battleStateInitIssueMessage(resourceGraphIssue),
+    ),
     Match.when({ tag: "statBlockProjectionFailure" }, ({ failure }) =>
       battleStatBlockProjectionFailureMessage(failure),
     ),

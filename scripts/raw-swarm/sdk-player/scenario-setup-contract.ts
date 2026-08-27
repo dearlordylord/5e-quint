@@ -1,6 +1,6 @@
 import type {
   authoredStatBlockBattleInitIssueMessage,
-  battleCreatureInitFromAuthoredStatBlock,
+  battleCreatureInitFromStatBlock,
   battleAmmunitionStock,
   battleId,
   battleObjectId,
@@ -66,16 +66,14 @@ export type {
 } from "./scenario-session.ts";
 
 /**
- * Scenario setup consumes authored catalog records. The runtime initializer
- * receives the one-way projection at the trusted SDK boundary instead of
- * making each setup author assemble a second execution shape.
+ * Scenario setup consumes authored catalog records at the public SDK boundary.
  */
 export type ScenarioAuthoredStatBlockBattleInitInput =
   AuthoredStatBlockBattleInitInput;
 
 export type ScenarioBattleCreatureInitFromStatBlock = (
   input: ScenarioAuthoredStatBlockBattleInitInput,
-) => ReturnType<typeof battleCreatureInitFromAuthoredStatBlock>;
+) => ReturnType<typeof battleCreatureInitFromStatBlock>;
 
 export type ScenarioSetupSdk = {
   readonly battleAmmunitionStock: typeof battleAmmunitionStock;

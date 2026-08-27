@@ -4,7 +4,10 @@ import type {
   StatBlockValue,
 } from "@dnd/surface/surface/types";
 
-import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
+import type {
+  BattleStatBlockClosedResourceGraph,
+  BattleStatBlockExecutionSource,
+} from "./stat-block-execution-state.ts";
 
 export type LiteralStatBlockValue = Extract<
   StatBlockValue,
@@ -30,10 +33,9 @@ declare const battleDruidWildShapeKnownFormBrand: unique symbol;
 
 /** Mechanical known-form facts retained by battle execution. */
 export type BattleDruidWildShapeKnownFormExecutionFacts = Omit<
-  BattleStatBlockExecutionSource,
-  "resources"
+  BattleStatBlockClosedResourceGraph<BattleStatBlockExecutionSource>,
+  "statBlock"
 > & {
-  readonly resources: NonNullable<BattleStatBlockExecutionSource["resources"]>;
   readonly statBlock: Omit<
     BattleStatBlockExecutionSource["statBlock"],
     "ac" | "size" | "speeds"

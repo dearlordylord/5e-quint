@@ -126,6 +126,29 @@ function mapNonEmpty<T, U>(
   return [map(first), ...rest.map(map)];
 }
 
+test("restore closes an omitted Stat Block resource graph", () => {
+  const actorId = combatantId("execution-ref-normalized-source");
+  const source = projectedStatBlockRuntimeSource(statBlockRecord());
+  expect(source.resources).toBeUndefined();
+  const admission = isolatedStatBlockAdmissions(actorId, [
+    statBlockRecord(),
+  ])[0];
+  if (admission === undefined) {
+    throw new Error("Expected the synthetic Stat Block admission.");
+  }
+
+  const restored = restoreStatBlockExecutionAdmission(
+    isolatedExecutionBattleId,
+    actorId,
+    source,
+    statBlockExecutionSnapshot(admission.execution),
+  );
+
+  expect(Either.isRight(restored)).toBe(true);
+  if (Either.isLeft(restored)) return;
+  expect(restored.right.statBlock.resources).toEqual([]);
+});
+
 function executionReferenceView(
   state: BattleState,
   actorId: CombatantId,
@@ -644,10 +667,13 @@ describe("Stat Block execution references", () => {
       ownership: "each",
       available: false,
     });
+    const restoredSource = projectedStatBlockRuntimeSource(
+      supportedOnlyStatBlock,
+    );
     const restored = restoreStatBlockExecutionAdmission(
       isolatedExecutionBattleId,
       actorId,
-      projectedStatBlockRuntimeSource(supportedOnlyStatBlock),
+      restoredSource,
       statBlockExecutionSnapshot(spentExecution),
     );
     expect(Either.isRight(restored)).toBe(true);
@@ -656,6 +682,9 @@ describe("Stat Block execution references", () => {
     }
     expect(restored.right.execution.resourcePools).toEqual(
       spentExecution.resourcePools,
+    );
+    expect(restored.right.statBlock.resources).toEqual(
+      restoredSource.resources,
     );
   });
 

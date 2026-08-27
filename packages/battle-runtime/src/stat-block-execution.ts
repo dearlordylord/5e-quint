@@ -49,6 +49,14 @@ type BattleStatBlockClosedExecutionSource =
   | BattleStatBlockCombatantSource
   | BattleDruidWildShapeKnownFormRuntime;
 
+type RestoredStatBlockExecutionSource<
+  TStatBlock extends BattleStatBlockExecutionSource,
+> = Omit<
+  BattleStatBlockClosedResourceGraph<TStatBlock>,
+  "legendaryActionUses"
+> &
+  BattleStatBlockExecutionSource;
+
 export type StatBlockExecutionRestoreIssue = {
   readonly tag: "invalidStatBlockExecutionSnapshot";
   readonly restorationIndex: NonNegativeInteger;
@@ -585,7 +593,9 @@ export function restoreStatBlockExecutionAdmissions<
   combatantId: CombatantId,
   restorations: readonly [StatBlockExecutionRestoration<TStatBlock>],
 ): Either.Either<
-  readonly [StatBlockExecutionAdmission<TStatBlock>],
+  readonly [
+    StatBlockExecutionAdmission<RestoredStatBlockExecutionSource<TStatBlock>>,
+  ],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 >;
 
@@ -596,7 +606,9 @@ export function restoreStatBlockExecutionAdmissions<
   combatantId: CombatantId,
   restorations: readonly StatBlockExecutionRestoration<TStatBlock>[],
 ): Either.Either<
-  readonly StatBlockExecutionAdmission<TStatBlock>[],
+  readonly StatBlockExecutionAdmission<
+    RestoredStatBlockExecutionSource<TStatBlock>
+  >[],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 >;
 
@@ -607,10 +619,14 @@ export function restoreStatBlockExecutionAdmissions<
   combatantId: CombatantId,
   restorations: readonly StatBlockExecutionRestoration<TStatBlock>[],
 ): Either.Either<
-  readonly StatBlockExecutionAdmission<TStatBlock>[],
+  readonly StatBlockExecutionAdmission<
+    RestoredStatBlockExecutionSource<TStatBlock>
+  >[],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 > {
-  const restored: StatBlockExecutionAdmission<TStatBlock>[] = [];
+  const restored: StatBlockExecutionAdmission<
+    RestoredStatBlockExecutionSource<TStatBlock>
+  >[] = [];
   const issues: StatBlockExecutionRestoreIssue[] = [];
   const restoredScopeRefs = new Set<BattleStatBlockExecutionScopeRef>();
   for (const [restorationIndex, restoration] of restorations.entries()) {
@@ -674,16 +690,19 @@ export function restoreStatBlockExecutionAdmissions<
       legendaryActionUses: _sourceLegendaryActionUses,
       ...sourceWithoutLegendaryActionUses
     } = source.right;
-    const admitted = admitStatBlock({
+    const normalizedSource: RestoredStatBlockExecutionSource<TStatBlock> = {
       ...sourceWithoutLegendaryActionUses,
       ...optionalProperty("legendaryActionUses", legendaryActionUses.right),
-    });
+    };
+    const admitted = admitStatBlock(normalizedSource);
     const allocated = allocateStatBlockExecution(
       executionReferenceAllocator(snapshot.scopeRef),
       admitted.occurrences,
     );
-    const expected = Brand.nominal<StatBlockExecutionAdmission<TStatBlock>>()({
-      statBlock: restoration.statBlock,
+    const expected = Brand.nominal<
+      StatBlockExecutionAdmission<RestoredStatBlockExecutionSource<TStatBlock>>
+    >()({
+      statBlock: normalizedSource,
       execution: allocated.execution,
     });
     if (
@@ -716,8 +735,12 @@ export function restoreStatBlockExecutionAdmissions<
       continue;
     }
     restored.push(
-      Brand.nominal<StatBlockExecutionAdmission<TStatBlock>>()({
-        statBlock: restoration.statBlock,
+      Brand.nominal<
+        StatBlockExecutionAdmission<
+          RestoredStatBlockExecutionSource<TStatBlock>
+        >
+      >()({
+        statBlock: normalizedSource,
         execution: admittedStatBlockExecutionState({
           scopeRef: snapshot.scopeRef,
           procedureBindings: expected.execution.procedureBindings,
@@ -754,7 +777,7 @@ export function restoreStatBlockExecutionAdmission<
   statBlock: TStatBlock,
   snapshot: StatBlockExecutionSnapshot,
 ): Either.Either<
-  StatBlockExecutionAdmission<TStatBlock>,
+  StatBlockExecutionAdmission<RestoredStatBlockExecutionSource<TStatBlock>>,
   StatBlockExecutionRestoreIssue
 > {
   const restoration: readonly [StatBlockExecutionRestoration<TStatBlock>] = [
