@@ -808,3 +808,165 @@ One exploratory command, `pnpm typecheck -- --continue`, forwarded
 option '--continue'`). It is excluded from every count because it did not run a
 continuation mode and is not a migration diagnostic. The correct inventory is
 the explicit owner sweep documented above.
+
+## Issue #381 persistent spells and active effects evidence snapshot
+
+This is a static evidence checkpoint at source HEAD
+`4e48b4ca78188eea7ed82474d13ca1ad912711b5` on
+`agent/gh381-persistent-spells-effect4`. The source delta from the preceding
+integration head `a30e81ab4` is limited to four MBT adapters:
+`mirror-image-hit-interception.mbt.test.ts`, `moonbeam-movable-zone.mbt.test.ts`,
+`ray-of-enfeeblement-lifecycle.mbt.test.ts`, and
+`see-invisibility-observer-sight.mbt.test.ts`. This lane did not change those
+adapters, production/runtime code, or the existing controlled-red inventory.
+Runtime, MBT, and dependency-backed QNT results below are deliberately marked
+pending.
+
+The adapter diff follows the local Effect v3-to-v4 migration guidance and the
+checked-in RC migration reference: removed `Schema.standardSchemaV1`,
+`Schema.BigIntFromSelf`, and `Schema.transform` construction is replaced by
+the repository's canonical `mbtPickSchemas` boundary helpers. No cast,
+compatibility facade, or invented migration API was added.
+
+### Scope and canonical ownership
+
+The committed [`gh381-registry-path-manifest.json`](./gh381-registry-path-manifest.json)
+derives the exact selection from `obligations.jsonl`: every
+`BATTLE.SPELL` row whose kind is `active-effect-lifecycle` or
+`reaction-continuation`, plus the explicit granted-action, Antimagic action
+interdiction, Reaction, interrupt-stack, concentration-teardown, and
+turn-boundary rows in the manifest. It contains 58 obligation IDs and records
+the direct five-obligation adapter mapping:
+
+| #381 concern | Manifest evidence |
+| --- | --- |
+| Concentration and continuation | 42 IDs, including area hazards, save-gated effects, Ray of Enfeeblement, Reaction continuation, and concentration teardown |
+| Ongoing/persistent and active effects | 49 active-effect lifecycle IDs |
+| Spatial hazards | 11 IDs, including Sleet Storm, Insect Plague, Cloudkill, Web, Gust of Wind, Spike Growth, Grease, Fog Cloud, Darkness, Flaming Sphere, and Moonbeam |
+| Granted actions | Dragon's Breath initial/granted action and Haste positive-effect IDs (3) |
+| Spell reactions/interruption | Reaction offer/decline, Feather Fall, forced movement, reaction casting, interrupt replay, and concentration teardown (6) |
+| Suppression | Antimagic ongoing suppression and Magic Action interdiction (2) |
+| Expiration/cleanup | 53 active-effect, continuation, turn-boundary, and concentration teardown IDs |
+| Directly migrated adapter obligations | Mirror Image, Moonbeam, Ray of Enfeeblement D20, Ray of Enfeeblement damage penalty, and See Invisibility (5) |
+
+The manifest also records related but unselected profile/state-transition rows
+(`READIED_RESPONSE_PROCEDURE`, `SPIRITUAL_WEAPON_ATTACK_PROXY`, the additional
+Antimagic interdiction/transit rows, and Glyph release rows). They are not
+silently claimed by this lifecycle-family selection: Readied Response was
+audited in the #380 spell-execution lane, while the other rows remain explicit
+follow-up boundaries if the #381 migration diagnostic scope expands.
+
+Battle state is the canonical owner of active spell effects, concentration,
+effect expiration, suppression projections, granted-action availability, and
+interrupt continuations. Spell definitions and spell access remain authored
+and selection boundaries; invocation facts are parsed before reducer
+execution. Reducers consume typed procedure facts and current state. They do
+not derive execution behavior from spell names, ids, slugs, or provenance, and
+the manifest does not add a second state store.
+
+Duration is a discriminated state, not an optional alias for an empty value.
+`BattleActiveEffectExpiration` has explicit `duration`, `concentration`, and
+`untilDispelled` branches. A `duration` branch requires `durationTicks`. A
+`concentration` branch may omit `durationTicks`: omission means the effect is
+bounded by concentration break only, while presence supplies a ticking upper
+duration in addition to concentration break. Effect variants that require a
+bounded concentration duration narrow that field back to required. The
+`untilDispelled` branch has no duration field. This present/omitted distinction
+is preserved by `Schema.optionalKey` in `active-effect/expiration-codecs.ts`;
+it must not be rewritten as `undefined`, an empty collection, or a default
+duration.
+
+### RAW, ubiquitous language, and identity boundary
+
+The local SRD 5.2.1 corpus was searched with bounded `rg -uu` commands and
+then inspected directly. The relevant authorities are:
+
+- `Rules-Glossary.md#Concentration` for one-concentration ownership, another
+  concentration effect, damage saves, and Incapacitated/death teardown;
+- `Rules-Glossary.md#Area-of-Effect`, `#Reaction`, `#Ready-Action`, and
+  `#Incapacitated` for area facts and continuation boundaries;
+- `Spells/Gaining-and-Casting.md#Reaction-and-Bonus-Action-Triggers`,
+  `#Longer-Casting-Times`, and `#Duration` for spell timing and concentration;
+- `Spells/Descriptions-A-D.md#Antimagic-Field`, `#Cloudkill`, `#Dispel-Magic`,
+  and `#Dragon's-Breath`;
+- `Spells/Descriptions-M-P.md#Mirror-Image` and `#Moonbeam`;
+- `Spells/Descriptions-Q-R.md#Ray-of-Enfeeblement`; and
+- `Spells/Descriptions-S-Z.md#See-Invisibility`, `#Sleet-Storm`,
+  `#Spike-Growth`, and `#Web`.
+
+The terms used here are the existing `UBIQUITOUS_LANGUAGE.md` terms: Spell
+Definition, Spell Access, Spell Invocation, Spell Effect, Concentration,
+Action Lifecycle, Resolve, Apply, Advance, Offer, and Decline. No PHB+
+record, id, name, slug, prose, heading, page reference, or source-to-Mushroom
+crosswalk was added. Existing SRD material and synthetic test identities only
+remain admissible. A targeted identity-dispatch scan over the manifest's 92
+TypeScript source/runtime paths found no `spell.id`, `spell.name`,
+`spell.slug`, `spell.provenance`, or `spellDefinition.*` dispatch. The 11
+`spellId` occurrences are typed Battle-subject boundary data, not dispatch
+conditions.
+
+### Static manifest and API audits
+
+The manifest integrity command joined the committed manifest with
+`obligations.jsonl` and `qnt-owner-roles.jsonl`, checked the selection rule,
+resolved every owner, and checked every listed path with `fs.existsSync`.
+Result: 58/58 IDs match the registry selection; no duplicate or missing ID;
+289 non-deferred audit paths exist; source/pure paths = 203; parity/non-authority
+paths = 86; referenced MBT spec paths = 44. QNT ownership accounting is 125
+resolved paths: 111 `semantic-core`, 4 `bridge`, 3 `mbt-fixture`, and 7
+`proof-only`. The two selected rows with no owner are explicitly recorded as
+unregistered gaps: `BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE` and
+`BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE`. No bridge, fixture, or
+proof-only path is labeled semantic authority.
+
+The exact dependency-free API audit expanded the manifest's
+`sourceOrPurePaths` and `parityOrFixturePaths`, excluding its two #385 deferred
+script paths, then ran fixed-string searches for `effect/Either`, `Either.`,
+`Schema.optionalWith`, `Schema.decodeUnknownEither`,
+`Schema.standardSchemaV1`, `Schema.BigIntFromSelf`, `Schema.transform`, and
+`Schema.Schema.AnyNoContext`, plus root-`effect` named `Either` imports.
+Result: 289 paths, zero matches. The targeted authored-identity and
+Fiber/Scope/Layer/Schedule/Stream/PubSub/Queue/Deferred/Ref import/member
+audits likewise returned zero matches. `git diff --check` passed. These are
+static findings only; they do not substitute for runtime behavior or QNT
+execution evidence.
+
+### Pending dependency-backed evidence
+
+The current shared `node_modules` resolves `effect@3.21.5`, while this branch's
+lockfile requires `effect@4.0.0-rc.112`; no RC112 installation was found. No
+package typecheck, Quint typecheck, MBT, runtime suite, or controlled-red
+regeneration is counted from this environment, and nothing was installed.
+
+The following commands are pending an RC112-compatible prebuilt environment:
+
+```sh
+# Resolve the 111 semantic-core owners from the committed manifest and run
+# each direct Quint typecheck sequentially under the required MBT lock.
+owner_list=$(node -e 'const fs=require("node:fs"); const m=JSON.parse(fs.readFileSync("docs/migrations/effect-4/gh381-registry-path-manifest.json","utf8")); process.stdout.write(m.qntOwnerAccounting.semanticCorePaths.join("\n"));')
+export GH381_QNT_OWNERS="$owner_list"
+. scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh bash -c '
+  set -euo pipefail
+  mapfile -t owners <<< "$GH381_QNT_OWNERS"
+  test "${#owners[@]}" -eq 111
+  for owner in "${owners[@]}"; do pnpm exec quint typecheck "$owner"; done
+'
+
+# Regenerate the post-#381 controlled-red inventory under the public broad lock.
+pnpm regenerate:effect4-controlled-red
+```
+
+The tracked inventory is still the historical #380 snapshot
+`SHA-256 d05ae671a2671cbd1f9a2d51d13c484de37830ba164eb2419534b8c0915465f3`:
+1,129 raw and 1,006 deduplicated diagnostics (176 app, 19 battle-runtime,
+934 MCP, and zero for the other owners), recorded before source HEAD
+`4e48b4ca7`. Those numbers are not a #381 result. The refreshed hash, exact
+owner counts, Battle diagnostics, focused runtime tests, and MBT/QNT results
+remain `[pending: RC112-compatible verification environment and authoritative
+runtime/MBT worker logs]`.
+
+The static RAW/ubiquitous-language, architecture/connascence, API, identity,
+and ownership passes converge for this documentation checkpoint. Full
+reviewer-loop convergence and any claim of complete #381 behavior remain
+pending the dependency-backed QNT, runtime, MBT, and controlled-red evidence;
+no issue closure or merge is claimed here.
