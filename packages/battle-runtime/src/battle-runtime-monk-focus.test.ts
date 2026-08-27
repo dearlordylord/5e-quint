@@ -99,7 +99,7 @@ describe("battle runtime: Monk's Focus battle options", () => {
       resolveReplayContinuationFromState(
         state,
         { kind: "replay", subject: mismatchedSubject, fills: [] },
-        "attackHit",
+        { trigger: "attackHit" },
         [],
       ),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });

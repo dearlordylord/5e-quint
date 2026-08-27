@@ -205,7 +205,9 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     const replay = resolveBattleSubject({
       state: {
         ...state,
-        interruptStack: [replayContinuationFrame(continuation, "afterDamage")],
+        interruptStack: [
+          replayContinuationFrame(continuation, { trigger: "afterDamage" }),
+        ],
       },
       subject,
       fills: [],
@@ -267,7 +269,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
     const replayWithAdditions = resolveReplayContinuationFromState({
       state: started.state,
       continuation: nestedContinuation,
-      handledInterruptTrigger: "afterDamage",
+      handledInterruptOccurrence: { trigger: "afterDamage" },
       fills: [],
       execution: replayExecution,
     });

@@ -23,6 +23,7 @@ import {
 import {
   cloudkillAreaId,
   cloudkillUnitId,
+  greaseAreaId,
   spellCasterId,
   spellTargetId,
 } from "./unit-profile-admission-catalog.test-support.ts";
@@ -34,6 +35,7 @@ import {
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   combatantId,
+  elapsedTimeTicks,
   endTurn,
   movementFeet,
   resolveBattleInterrupt,
@@ -63,6 +65,31 @@ import {
 const cloudkillDirectionId = battleLineDirectionId("away-from-source");
 const cloudkillDestinationId = battleTablePositionId("cloudkill-next-center");
 const cloudkillSecondaryTargetId = combatantId("cloudkill-secondary-target");
+
+function withGreaseGroundHazard(state: BattleState): BattleState {
+  const source = state.combatants.get(spellCasterId);
+  if (source === undefined) {
+    throw new Error("Expected the persistent-spell source.");
+  }
+  const effect = {
+    kind: "greaseGroundHazard",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "cloudkill-composition-grease",
+    ),
+    sourceCombatantId: spellCasterId,
+    areaId: greaseAreaId,
+    heightenedSpellTargetDisadvantage: null,
+    save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+    expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+  } as const satisfies BattleActiveEffect;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...source,
+      activeEffects: [...source.activeEffects, effect],
+    }),
+  };
+}
 
 function withCommandGrovel(
   state: BattleState,
@@ -820,6 +847,166 @@ describe("Cloudkill source-turn movement", () => {
         round: 2,
         currentActorId: spellCasterId,
         pendingInterrupt: null,
+      },
+    });
+  });
+
+  test("offers independent failed-save reactions for delegated Grease End Turn and Cloudkill movement", () => {
+    const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({
+        ...cast.session,
+        state: withGreaseGroundHazard(targetTurn.state),
+      }),
+    );
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "greaseGroundHazardSave" as const,
+      areaId: greaseAreaId,
+      trigger: "endsTurnInArea" as const,
+    };
+    const combinedFrontier = resolveBattleSubject({
+      state: readied.state,
+      subject,
+      fills: [],
+    });
+    if (combinedFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the combined Grease and Cloudkill frontier.");
+    }
+    const greaseSaveHole = combinedFrontier.holes.find(
+      (hole) =>
+        hole.kind === "savingThrowOutcome" &&
+        "greaseGroundHazard" in hole,
+    );
+    if (greaseSaveHole?.kind !== "savingThrowOutcome") {
+      throw new Error("Expected the Grease end-turn save frontier.");
+    }
+    const movementHole = requireHole(
+      combinedFrontier.holes,
+      "cloudkillMovement",
+    );
+    const greaseSaveFill = singleTargetSavingThrowOutcomeFill(
+      greaseSaveHole,
+      spellTargetId,
+      false,
+    );
+    const movementFill = cloudkillMovementFill(movementHole, [spellTargetId]);
+    const cloudkillSaveFrontier = resolveBattleSubject({
+      state: readied.state,
+      subject,
+      fills: [greaseSaveFill, movementFill],
+    });
+    if (cloudkillSaveFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the Cloudkill movement save frontier.");
+    }
+    const cloudkillSaveHole = cloudkillSaveFrontier.holes.find(
+      (hole) =>
+        hole.kind === "savingThrowOutcome" &&
+        "cloudkillAreaHazard" in hole,
+    );
+    if (cloudkillSaveHole?.kind !== "savingThrowOutcome") {
+      throw new Error("Expected the Cloudkill movement save hole.");
+    }
+    const cloudkillSaveFill = singleTargetSavingThrowOutcomeFill(
+      cloudkillSaveHole,
+      spellTargetId,
+      false,
+    );
+    const cloudkillInterrupted = resolveBattleSubject({
+      state: readied.state,
+      subject,
+      fills: [greaseSaveFill, movementFill, cloudkillSaveFill],
+    });
+    const cloudkillDecision = requireResultHole(
+      cloudkillInterrupted,
+      "interruptDecision",
+    );
+    if (cloudkillInterrupted.tag !== "needsHoles") {
+      throw new Error("Expected the Cloudkill failed-save window.");
+    }
+    const afterCloudkillDecline = resolveBattleInterrupt({
+      state: cloudkillInterrupted.state,
+      fill: interruptDecisionFill(cloudkillDecision, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    const cloudkillDamageHole = requireResultHole(
+      afterCloudkillDecline,
+      "rolledDice",
+    );
+    if (afterCloudkillDecline.tag !== "needsHoles") {
+      throw new Error("Expected the Cloudkill damage frontier.");
+    }
+    const concentrationFrontier = resolveBattleSubject({
+      state: afterCloudkillDecline.state,
+      subject: afterCloudkillDecline.subject,
+      fills: [
+        greaseSaveFill,
+        movementFill,
+        cloudkillSaveFill,
+        damageRollFillWithGroups(cloudkillDamageHole, [[1, 1, 1, 1, 1]]),
+      ],
+    });
+    const cloudkillConcentrationHole = requireResultHole(
+      concentrationFrontier,
+      "concentrationSavingThrow",
+    );
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the Cloudkill Concentration-save frontier.");
+    }
+    const greaseInterrupted = resolveBattleSubject({
+      state: concentrationFrontier.state,
+      subject: concentrationFrontier.subject,
+      fills: [
+        greaseSaveFill,
+        movementFill,
+        cloudkillSaveFill,
+        damageRollFillWithGroups(cloudkillDamageHole, [[1, 1, 1, 1, 1]]),
+        concentrationSavingThrowFill(cloudkillConcentrationHole, true),
+      ],
+    });
+
+    expect(greaseInterrupted).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      snapshot: {
+        currentActorId: spellTargetId,
+        pendingInterrupt: { trigger: "saveFailed" },
+      },
+    });
+    if (greaseInterrupted.tag !== "needsHoles") return;
+    const greaseDecision = requireHole(
+      greaseInterrupted.holes,
+      "interruptDecision",
+    );
+    const resolved = resolveBattleInterrupt({
+      state: greaseInterrupted.state,
+      fill: interruptDecisionFill(greaseDecision, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    expect(resolved).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        round: 2,
+        currentActorId: spellCasterId,
+        pendingInterrupt: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            conditions: expect.arrayContaining(["prone"]),
+          }),
+        ]),
       },
     });
   });

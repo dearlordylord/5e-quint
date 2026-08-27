@@ -1176,7 +1176,7 @@ type BattleActiveInterruptProcedure = {
   readonly responderId: CombatantId;
   readonly subject: BattleInterruptProcedureChoiceWithSubject["subject"];
   readonly fills: readonly BattleFill[];
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence?: BattleHandledInterruptOccurrence;
   readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
   readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
 };
@@ -1315,13 +1315,41 @@ export type BattleSpellCastMetamagicCommitment =
 export type BattleSpellCastConcentrationCommitment =
   | { readonly kind: "none" }
   | { readonly kind: "breakExisting" };
+export type BattleHandledInterruptOccurrence =
+  | {
+      readonly trigger: "saveFailed";
+      readonly targetId: CombatantId;
+      readonly sourceProcedureRef?: BattleProcedureExecutionRef;
+    }
+  | {
+      [T in Exclude<BattleInterruptTrigger, "saveFailed">]: {
+        readonly trigger: T;
+      };
+    }[Exclude<BattleInterruptTrigger, "saveFailed">];
+
+type BattleHandledInterruptRouteProjectionFor<
+  T extends BattleHandledInterruptOccurrence = BattleHandledInterruptOccurrence,
+> = T extends BattleHandledInterruptOccurrence
+  ? {
+      readonly handledInterruptOccurrence: T;
+      readonly handledInterruptTrigger: T["trigger"];
+    }
+  : never;
+
+export type BattleHandledInterruptRouteProjection =
+  | {
+      readonly handledInterruptOccurrence?: never;
+      readonly handledInterruptTrigger?: never;
+    }
+  | BattleHandledInterruptRouteProjectionFor;
+
 export type BattleReplayContinuationFrame = {
   readonly kind: "replayContinuation";
   readonly continuation: Extract<
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >;
-  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
 };
 export type BattleAttackDamageContinuationConcentrationFrame = {
   readonly kind: "attackDamageContinuationConcentration";
@@ -6819,17 +6847,17 @@ export type BattleInterruptRouteOptions =
   | {
       readonly replayingInterruptedProcedure?: never;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly handledInterruptOccurrence?: never;
       readonly replayParentPosition?: never;
       readonly pendingAttackDamageReductions?: never;
       readonly pendingAttackDamageAdditions?: never;
     }
-  | {
+  | (BattleHandledInterruptRouteProjection & {
       readonly replayingInterruptedProcedure: true;
-      readonly handledInterruptTrigger?: BattleInterruptTrigger;
       readonly replayParentPosition?: BattleReplayParentPosition;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
-    };
+    });
 export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
 > &

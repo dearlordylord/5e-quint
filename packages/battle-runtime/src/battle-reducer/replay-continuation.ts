@@ -1,10 +1,11 @@
 import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
-import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleFill,
+  BattleHandledInterruptOccurrence,
+  BattleHandledInterruptRouteProjection,
   BattleInterruptCheckpoint,
   BattleInterruptRouteOptions,
   BattleInterruptedProcedure,
@@ -33,6 +34,55 @@ const admittedReplayContinuationSubject = Symbol(
 );
 
 const replayParentContinuation = Symbol("ReplayParentContinuation");
+
+export function handledInterruptRouteProjection(
+  occurrence: BattleHandledInterruptOccurrence,
+): Exclude<
+  BattleHandledInterruptRouteProjection,
+  { readonly handledInterruptOccurrence?: never }
+> {
+  return Match.value(occurrence).pipe(
+    Match.when({ trigger: "saveFailed" }, (handledInterruptOccurrence) => ({
+      handledInterruptOccurrence,
+      handledInterruptTrigger: "saveFailed" as const,
+    })),
+    Match.when({ trigger: "attackHit" }, (handledInterruptOccurrence) => ({
+      handledInterruptOccurrence,
+      handledInterruptTrigger: "attackHit" as const,
+    })),
+    Match.when({ trigger: "attackDamage" }, (handledInterruptOccurrence) => ({
+      handledInterruptOccurrence,
+      handledInterruptTrigger: "attackDamage" as const,
+    })),
+    Match.when({ trigger: "spellCast" }, (handledInterruptOccurrence) => ({
+      handledInterruptOccurrence,
+      handledInterruptTrigger: "spellCast" as const,
+    })),
+    Match.when({ trigger: "afterDamage" }, (handledInterruptOccurrence) => ({
+      handledInterruptOccurrence,
+      handledInterruptTrigger: "afterDamage" as const,
+    })),
+    Match.when({ trigger: "creatureFalls" }, (handledInterruptOccurrence) => ({
+      handledInterruptOccurrence,
+      handledInterruptTrigger: "creatureFalls" as const,
+    })),
+    Match.when(
+      { trigger: "opportunityAttack" },
+      (handledInterruptOccurrence) => ({
+        handledInterruptOccurrence,
+        handledInterruptTrigger: "opportunityAttack" as const,
+      }),
+    ),
+    Match.when(
+      { trigger: "reportedReadyTrigger" },
+      (handledInterruptOccurrence) => ({
+        handledInterruptOccurrence,
+        handledInterruptTrigger: "reportedReadyTrigger" as const,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
 
 export type ReplayParentContinuation = {
   readonly state: BattleState;
@@ -133,7 +183,7 @@ type ReplayContinuationResolutionInput = {
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >;
-  readonly handledInterruptTrigger: BattleInterruptTrigger;
+  readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
   readonly fills: readonly BattleFill[];
   readonly execution: ReplayContinuationExecution;
 };
@@ -143,12 +193,12 @@ export function replayContinuationFrame(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  handledInterruptTrigger: BattleInterruptTrigger,
+  handledInterruptOccurrence: BattleHandledInterruptOccurrence,
 ): BattleReplayContinuationFrame {
   return {
     kind: "replayContinuation",
     continuation,
-    handledInterruptTrigger,
+    handledInterruptOccurrence,
   };
 }
 
@@ -175,7 +225,7 @@ export function resolveReplayContinuation(input: {
       interruptStack: input.state.interruptStack.slice(0, -1),
     },
     continuation: frame.continuation,
-    handledInterruptTrigger: frame.handledInterruptTrigger,
+    handledInterruptOccurrence: frame.handledInterruptOccurrence,
     fills: reconstructReplayContinuationFills(
       frame.continuation.fills,
       input.fills,
@@ -281,7 +331,7 @@ export function resolveReplayContinuationFromState(
       admission.input,
       replayInterruptRouteOptions(
         input.continuation,
-        input.handledInterruptTrigger,
+        input.handledInterruptOccurrence,
       ),
     ),
   );
@@ -318,7 +368,7 @@ export function resolveReplayContinuationFromState(
       ...result.state.interruptStack,
       replayContinuationFrame(
         input.continuation,
-        input.handledInterruptTrigger,
+        input.handledInterruptOccurrence,
       ),
     ],
   };
@@ -358,14 +408,14 @@ function replayInterruptRouteOptions(
     BattleInterruptedProcedure,
     { readonly kind: "replay" }
   >,
-  handledInterruptTrigger: BattleInterruptTrigger,
+  handledInterruptOccurrence: BattleHandledInterruptOccurrence,
 ): Extract<
   BattleInterruptRouteOptions,
   { readonly replayingInterruptedProcedure: true }
 > {
   return {
     replayingInterruptedProcedure: true,
-    handledInterruptTrigger,
+    ...handledInterruptRouteProjection(handledInterruptOccurrence),
     ...optionalProperty("replayParentPosition", continuation.parentPosition),
     ...optionalProperty(
       "pendingAttackDamageReductions",
@@ -389,7 +439,7 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
       ...replay.witness,
       fills: input.fills,
     },
-    handledInterruptTrigger: input.handledInterruptTrigger,
+    handledInterruptTrigger: input.handledInterruptOccurrence.trigger,
   });
   if (result.tag === "released") {
     return mergeObjectOutcomeResult(
@@ -415,7 +465,7 @@ function resolveGlyphStoredSpellReplayContinuationFromState(
         ...result.state.interruptStack,
         replayContinuationFrame(
           input.continuation,
-          input.handledInterruptTrigger,
+          input.handledInterruptOccurrence,
         ),
       ],
     };

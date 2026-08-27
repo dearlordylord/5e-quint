@@ -17,7 +17,6 @@ import type {
   BattleSleetStormAreaMembershipTrigger,
   BattleSubject,
 } from "../battle-subjects.ts";
-import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
   type BattleAreaId,
   type BattleProcedureExecutionRef,
@@ -27,6 +26,7 @@ import type {
   BattleActiveEffect,
   BattleCreatureState,
   BattleFill,
+  BattleHandledInterruptOccurrence,
   BattleFlamingSphereDamageRollHole,
   BattleFlamingSphereRamMovementHole,
   BattleFlamingSphereTrigger,
@@ -142,7 +142,10 @@ type PersistentSpatialSpellProcedureCommand =
   (typeof PERSISTENT_SPATIAL_SPELL_PROCEDURE_COMMANDS)[number];
 
 type PersistentSpatialReplayRoute = {
-  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly handledSaveFailedOccurrence?: Extract<
+    BattleHandledInterruptOccurrence,
+    { readonly trigger: "saveFailed" }
+  >;
   readonly replayParentPosition?: BattleReplayParentPosition;
 };
 
@@ -191,11 +194,21 @@ function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly replaySubject: PersistentSpatialSaveFailedReplaySubject;
   readonly replayFills: readonly BattleFill[];
-  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
+  readonly handledSaveFailedOccurrence:
+    | Extract<
+        BattleHandledInterruptOccurrence,
+        { readonly trigger: "saveFailed" }
+      >
+    | undefined;
+  readonly replayParentPosition: BattleReplayParentPosition | undefined;
 }): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> | null {
   if (input.outcome.succeeded) {
     return null;
   }
+  const handledThisOccurrence =
+    input.handledSaveFailedOccurrence?.targetId === input.outcome.targetId &&
+    input.handledSaveFailedOccurrence.sourceProcedureRef ===
+      input.sourceProcedureRef;
   return maybeOpenInterruptWindow(
     input.state,
     {
@@ -206,9 +219,12 @@ function maybeOpenPersistentSpatialSaveFailedReplayInterrupt(input: {
         kind: "replay",
         subject: input.replaySubject,
         fills: input.replayFills,
+        ...(input.replayParentPosition === undefined
+          ? {}
+          : { parentPosition: input.replayParentPosition }),
       },
     },
-    input.handledInterruptTrigger,
+    handledThisOccurrence ? "saveFailed" : undefined,
   );
 }
 
@@ -370,8 +386,7 @@ function resolveGreaseGroundHazardSaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   if (input.subject.trigger === "endsTurnInArea") {
     return resolveGreaseGroundHazardEndTurnSaveCommand(input);
@@ -388,8 +403,7 @@ function resolveGreaseGroundHazardEntrySaveCommand(
         readonly command: "greaseGroundHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Grease hazard subject exposes at most its one Saving Throw outcome hole. */
   if (
@@ -446,7 +460,8 @@ function resolveGreaseGroundHazardEntrySaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -515,8 +530,7 @@ function resolveWebRestraintSaveCommand(
         readonly command: "webRestraintSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Web restraint subject exposes at most its one Saving Throw outcome hole. */
   if (
@@ -596,7 +610,8 @@ function resolveWebRestraintSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -717,8 +732,7 @@ function resolveSleetStormAreaHazardSaveCommand(
         readonly command: "sleetStormAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed fill set: the discovered Sleet Storm subject exposes at most its one Saving Throw outcome hole. */
   if (
@@ -795,7 +809,8 @@ function resolveSleetStormAreaHazardSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -824,8 +839,7 @@ function resolveInsectPlagueAreaHazardSaveCommand(
         readonly command: "insectPlagueAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   return resolveInsectPlagueAreaSaveDamage(input);
 }
@@ -839,8 +853,7 @@ function resolveCloudkillAreaHazardSaveCommand(
         readonly command: "cloudkillAreaHazardSave";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   if (input.subject.areaMembershipTrigger.kind === "areaMovesIntoSpace") {
     return invalidResult(
@@ -1088,7 +1101,8 @@ function resolveGustOfWindLineSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -1466,7 +1480,8 @@ function resolveFlamingSphereSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -1661,8 +1676,7 @@ function resolveFlamingSphereRamCommand(
         readonly command: "movableZoneRam";
       }
     >;
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  },
+  } & PersistentSpatialReplayRoute,
 ): BattleResolutionResult {
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
   if (
@@ -1864,7 +1878,8 @@ function resolveFlamingSphereRamCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -2192,7 +2207,8 @@ function resolveMoonbeamSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;
@@ -2574,7 +2590,8 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
       sourceProcedureRef: effect.sourceProcedureRef,
       replaySubject: input.subject,
       replayFills: input.fills,
-      handledInterruptTrigger: input.handledInterruptTrigger,
+      handledSaveFailedOccurrence: input.handledSaveFailedOccurrence,
+      replayParentPosition: input.replayParentPosition,
     });
   if (saveFailedReactionWindow !== null) {
     return saveFailedReactionWindow;

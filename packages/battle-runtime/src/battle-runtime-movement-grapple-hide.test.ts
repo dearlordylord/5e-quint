@@ -4403,7 +4403,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
           },
           fills: [],
         },
-        "attackHit",
+        { trigger: "attackHit" },
         [],
       ),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });

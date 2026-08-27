@@ -189,7 +189,7 @@ test("replay rejects a Wild Shape subject bound to an unrelated procedure", () =
         subject: { ...subject, procedureRef: unrelatedProcedureRef },
         fills: [],
       },
-      "attackHit",
+      { trigger: "attackHit" },
       [],
     ),
   ).toMatchObject({ tag: "invalid", reason: "staleSubject" });

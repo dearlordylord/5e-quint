@@ -263,11 +263,11 @@ function interruptLifecycleExecution(
         executionRegistry,
         attackResolvers,
       ),
-    ({ state, continuation, handledInterruptTrigger }) =>
+    ({ state, continuation, handledInterruptOccurrence }) =>
       resolveInterruptContinuation({
         state,
         continuation,
-        handledInterruptTrigger,
+        handledInterruptOccurrence,
         execution: interruptContinuationExecution(
           executionRegistry,
           attackResolvers,
@@ -409,17 +409,32 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
   options: ResolveBattleSubjectInternalOptions,
 ): BattleResolutionResult {
   const interruptRouteOptions = options.interruptRouteOptions;
+  const handledInterruptOccurrence =
+    interruptRouteOptions.replayingInterruptedProcedure === true
+      ? interruptRouteOptions.handledInterruptOccurrence
+      : undefined;
+  const handledInterruptTrigger =
+    interruptRouteOptions.replayingInterruptedProcedure === true
+      ? handledInterruptOccurrence?.trigger
+      : interruptRouteOptions.handledInterruptTrigger;
   const handledInterruptRouteOption =
-    interruptRouteOptions.handledInterruptTrigger === undefined
+    handledInterruptTrigger === undefined
       ? {}
-      : {
-          handledInterruptTrigger:
-            interruptRouteOptions.handledInterruptTrigger,
-        };
+      : { handledInterruptTrigger };
   const replayParentRouteOption =
     interruptRouteOptions.replayParentPosition === undefined
       ? {}
       : { replayParentPosition: interruptRouteOptions.replayParentPosition };
+  const handledSaveFailedOccurrence =
+    handledInterruptOccurrence?.trigger === "saveFailed"
+      ? handledInterruptOccurrence
+      : undefined;
+  const persistentSpatialReplayRouteOption = {
+    ...(handledSaveFailedOccurrence === undefined
+      ? {}
+      : { handledSaveFailedOccurrence }),
+    ...replayParentRouteOption,
+  };
   const pendingInterruptResult = resolvePendingInterruptSubject({
     input,
     options,
@@ -649,11 +664,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         {
           ...input,
           subject,
-          ...(interruptRouteOptions.handledInterruptTrigger === undefined
+          ...(handledInterruptTrigger === undefined
             ? {}
             : {
-                handledInterruptTrigger:
-                  interruptRouteOptions.handledInterruptTrigger,
+                handledInterruptTrigger,
               }),
         },
         options.executionRegistry,
@@ -664,11 +678,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         {
           ...input,
           subject,
-          ...(interruptRouteOptions.handledInterruptTrigger === undefined
+          ...(handledInterruptTrigger === undefined
             ? {}
             : {
-                handledInterruptTrigger:
-                  interruptRouteOptions.handledInterruptTrigger,
+                handledInterruptTrigger,
               }),
         },
         options.executionRegistry,
@@ -725,8 +738,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolvePersistentSpatialSpellProcedureCommand({
         ...input,
         subject,
-        ...handledInterruptRouteOption,
-        ...replayParentRouteOption,
+        ...persistentSpatialReplayRouteOption,
       });
     }
     if (subject.tag === "runtimeCommand") {
