@@ -18,7 +18,11 @@ import {
 import { battleSubjectPresentation } from "./battle-act-composition.ts";
 import {
   battleId,
+  discoverBattleActCandidates,
+  requireResolved,
+  resolveBattleSubject,
   testLongswordAttack,
+  unitLibrary,
   authoredProcedureOrdinal,
   characterSeed,
   combatantId,
@@ -28,6 +32,7 @@ import {
   goblinId,
   monsterMultiattackStatBlock,
   startBattleSessionRight,
+  statBlockCatalog,
   statBlockCreatureInit,
   statBlockRecord,
 } from "./battle-runtime.test-support.ts";
@@ -206,6 +211,81 @@ describe("battle presentation joins", () => {
     ).toBeNull();
   });
 
+  test("returns null for an active Wild Shape with no form presentation", () => {
+    const druidId = combatantId("stat-block-presentation-druid");
+    const initial = startBattleSessionRight({
+      battleId: battleId("stat-block-presentation-wild-shape"),
+      combatants: [
+        characterSeed({
+          combatantId: druidId,
+          displayName: "Synthetic Druid",
+          initiative: 20,
+          classLevels: [{ className: "druid", level: 2 }],
+          resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
+          druidWildShapeAvailableForms: [
+            statBlockCatalog.requireStatBlock("stat_block_rat"),
+          ],
+          attack: null,
+          selectedLoadout: {},
+        }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const assumeFormCandidate = discoverBattleActCandidates(initial.state).find(
+      ({ subject }) =>
+        subject.tag === "druidWildShape" && subject.action === "assumeForm",
+    );
+    if (
+      assumeFormCandidate?.subject.tag !== "druidWildShape" ||
+      assumeFormCandidate.initialHoles[0]?.kind !==
+        "wildShapeEquipmentDisposition"
+    ) {
+      throw new Error("Expected a Druid Wild Shape assume-form action.");
+    }
+    const assumed = requireResolved(
+      resolveBattleSubject({
+        state: initial.state,
+        subject: assumeFormCandidate.subject,
+        fills: [
+          {
+            kind: "wildShapeEquipmentDisposition",
+            holeId: assumeFormCandidate.initialHoles[0].holeId,
+            value: {
+              formLimbs: { kind: "canHandleObjects" },
+              choices: [],
+            },
+          },
+        ],
+      }),
+    );
+    const druidContext = initial.context.characters.get(druidId);
+    if (druidContext === undefined) {
+      throw new Error("Expected Druid presentation context.");
+    }
+    const contextWithoutFormPresentation = battleRuntimeContextForTest(
+      new Map(initial.context.characters).set(druidId, {
+        ...druidContext,
+        druidWildShapeFormPresentations: new Map(),
+      }),
+      initial.context.statBlocks,
+    );
+
+    expect(
+      statBlockProjectionIssuesForActor(
+        assumed.state,
+        contextWithoutFormPresentation,
+        druidId,
+      ),
+    ).toBeNull();
+    expect(
+      statBlockProcedurePresentationsForActor(
+        assumed.state,
+        contextWithoutFormPresentation,
+        druidId,
+      ),
+    ).toBeNull();
+  });
+
   test("reports missing presentation when executable procedures are present", () => {
     const session = presentationSession();
     const actor = session.state.combatants.get(goblinId);
@@ -222,6 +302,72 @@ describe("battle presentation joins", () => {
         result.left.every((issue) => issue.reason === "missingPresentation"),
       ).toBe(true);
     }
+  });
+
+  test("returns no join issues for an unarmed-only or empty execution", () => {
+    const session = presentationSession();
+    const actor = session.state.combatants.get(goblinId);
+    if (actor?.origin.kind !== "statBlock") {
+      throw new Error("Expected Goblin Stat Block actor.");
+    }
+    const unarmedOnly = actor.origin.execution.procedureBindings.filter(
+      ({ procedure }) => procedure.kind === "unarmedStrike",
+    );
+    if (unarmedOnly.length !== 1) {
+      throw new Error("Expected one runtime-injected Unarmed Strike.");
+    }
+
+    expect(
+      statBlockProcedurePresentations({
+        execution: {
+          ...actor.origin.execution,
+          procedureBindings: unarmedOnly,
+        },
+      }),
+    ).toEqual(Either.right([]));
+    expect(
+      statBlockProcedurePresentations({
+        execution: {
+          ...actor.origin.execution,
+          procedureBindings: [],
+        },
+      }),
+    ).toEqual(Either.right([]));
+  });
+
+  test("reports a typed missing presentation for an option from another Stat Block actor", () => {
+    const peerId = combatantId("stat-block-presentation-peer");
+    const session = startBattleSessionRight({
+      battleId: battleId("stat-block-presentation-missing-option"),
+      combatants: [
+        statBlockCreatureInit({ initiative: 20 }),
+        statBlockCreatureInit({ combatantId: peerId, initiative: 10 }),
+      ],
+    });
+    const actor = session.state.combatants.get(goblinId);
+    if (actor?.origin.kind !== "statBlock") {
+      throw new Error("Expected Goblin Stat Block actor.");
+    }
+    const attack = statBlockAttackActionOptions(actor.origin.execution).find(
+      (candidate) => candidate.damageNotation === "rolled",
+    );
+    if (attack === undefined) {
+      throw new Error("Expected a rolled Stat Block attack.");
+    }
+
+    expect(
+      attackActionOptionPresentationName(
+        session.state,
+        session.context,
+        peerId,
+        attack,
+      ),
+    ).toEqual(
+      Either.left({
+        tag: "attackPresentationJoinIssue",
+        reason: "statBlockPresentationMissing",
+      }),
+    );
   });
 
   test("labels synthetic alternate weapon abilities through public attack presentation", () => {
