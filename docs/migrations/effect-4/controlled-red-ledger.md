@@ -328,13 +328,22 @@ requirements to pnpm workspaces while retaining version checks for the
 standalone probe. The root cohort check, missing-consumer self-test, and probe
 verification all pass with that correction.
 
-A final independent read-only standards/spec/domain/architecture and
-connascence review of the completed staged diff found no remaining issues. It
-confirmed the broad-lock and exact-pnpm guards, deterministic serial inventory,
-complete multiline diagnostic keys, committed totals, workspace-scoped
-consumer enforcement, missing-consumer coverage, and absence of TypeScript,
-Quint, or model-source changes. The reviewer loop therefore converged after the
-scope correction.
+Historical #371 evidence (not a #374 review): a final independent read-only
+standards/spec/domain/architecture and connascence review of the completed
+staged diff found no remaining issues. It confirmed the broad-lock and
+exact-pnpm guards, deterministic serial inventory, complete multiline
+diagnostic keys, committed totals, workspace-scoped consumer enforcement,
+missing-consumer coverage, and absence of TypeScript, Quint, or model-source
+changes. The #371 reviewer loop therefore converged after the scope correction.
+
+## Issue #374 reviewer-loop record
+
+The outer Sol implementation review found no implementation P0, P1, or P2
+findings; its only P2 was this controlled-red ledger evidence issue. An earlier
+final Sol code re-review at source head `3e5281b7a` found no P0, P1, or P2 after
+the decoder and ITF BigInt fixes. The independent Luna Spec review found no
+issues. The Luna Standards review remains pending, so this record does not
+claim that review passed or that the #374 reviewer loop has converged.
 
 ## Closure conditions
 
