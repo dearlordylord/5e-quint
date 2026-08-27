@@ -22,12 +22,9 @@ import {
   decodeOracleCaseJson,
   decodeOracleTrace,
   decodeOracleTraceJson,
+  evaluateOracleBatch,
   evaluateOracleCase,
-  oracleLifecycleTraceSchema,
-  oracleCaseJsonSchema,
   oracleTraceSchema,
-  oracleTraceJsonSchema,
-  OracleTraceSchema,
 } from "./index.ts";
 import {
   buildUnitCatalog,
@@ -83,6 +80,7 @@ const statBlockBattle = {
       initiative: 0,
       ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
       conditions: [],
+      tempHp: 0,
     },
   ] as const,
 };
@@ -112,8 +110,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     if (Either.isRight(decoded)) {
       expect(decoded.right.creation.fillBatches).toEqual([]);
     }
-    expect(oracleCaseJsonSchema()).toMatchObject({ type: "object" });
-    expect(oracleTraceJsonSchema()).toMatchObject({ type: "object" });
+    expect(oracleTraceSchema).toBeDefined();
   });
 
   it("rejects unknown members, duplicate set members, and duplicate JSON keys", () => {
@@ -198,6 +195,83 @@ describe("Opaque Oracle Case and Trace contract", () => {
       expect(decoded.left).toContainEqual({
         path: "/creation/fillBatches/0/0/optionIds/0",
         code: "wrongType",
+      });
+    }
+  });
+
+  it("admits empty or all-Stat-Block rosters but rejects a second fresh Sheet, duplicate conditions, and omitted temp HP", () => {
+    const empty = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: { roster: [] },
+    });
+    expect(Either.isRight(empty)).toBe(true);
+
+    const duplicateSheet = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: [
+          {
+            origin: "characterSheet",
+            combatantId: combatantId("oracle:character-one"),
+            displayName: "One",
+            initiative: 1,
+            ammunitionStocks: [],
+          },
+          {
+            origin: "characterSheet",
+            combatantId: combatantId("oracle:character-two"),
+            displayName: "Two",
+            initiative: 0,
+            ammunitionStocks: [],
+          },
+        ],
+      },
+    });
+    expect(Either.isLeft(duplicateSheet)).toBe(true);
+
+    const duplicateConditions = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: [
+          {
+            ...statBlockBattle.roster[0],
+            conditions: ["prone", "prone"],
+          },
+        ],
+      },
+    });
+    expect(Either.isLeft(duplicateConditions)).toBe(true);
+    if (Either.isLeft(duplicateConditions)) {
+      expect(duplicateConditions.left).toContainEqual({
+        path: "/battle/roster/0/conditions",
+        code: "duplicateCollectionMember",
+      });
+    }
+
+    const omittedTempHp = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: {
+        roster: [
+          {
+            origin: "statBlock",
+            combatantId: combatantId("oracle:missing-temp-hp"),
+            statBlockId: statBlockId("stat_block_skeleton"),
+            initiative: 0,
+            ammunitionStocks: [],
+            conditions: [],
+          },
+        ],
+      },
+    });
+    expect(Either.isLeft(omittedTempHp)).toBe(true);
+    if (Either.isLeft(omittedTempHp)) {
+      expect(omittedTempHp.left).toContainEqual({
+        path: "/battle/roster/0/tempHp",
+        code: "missingMember",
       });
     }
   });
@@ -331,16 +405,110 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(battleStep.checkpoint.combatants[0]).not.toHaveProperty(
       "displayName",
     );
-    expect(battleStep.frontier.acts.every((act) => {
-      return (
-        !Object.prototype.hasOwnProperty.call(act, "label") &&
-        !Object.prototype.hasOwnProperty.call(act, "summary") &&
-        !Object.prototype.hasOwnProperty.call(act, "presentation")
-      );
-    })).toBe(true);
+    expect(battleStep.frontier.acts.length).toBeGreaterThan(0);
+    expect(
+      battleStep.frontier.acts.every(
+        (subject) => !Object.prototype.hasOwnProperty.call(subject, "label"),
+      ),
+    ).toBe(true);
     expect(Either.isRight(decodeOracleTraceJson(JSON.stringify(trace)))).toBe(
       true,
     );
+  });
+
+  it("keeps successful Acts non-vacuous and reports an empty roster as typed Battle rejection", () => {
+    const successful = evaluateOracleCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: statBlockBattle,
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const entered = successful.steps.at(-1);
+    expect(entered?.tag).toBe("battleEntered");
+    if (entered?.tag === "battleEntered") {
+      expect(entered.frontier.acts.length).toBeGreaterThan(0);
+      expect(entered.frontier.acts.every((subject) =>
+        !Object.prototype.hasOwnProperty.call(subject, "initialHoles"),
+      )).toBe(true);
+    }
+
+    const empty = evaluateOracleCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: { roster: [] },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    expect(empty.steps.at(-1)).toEqual({
+      tag: "battleEntryRejected",
+      issues: [{ tag: "characterBattleEncounterEmptyRoster" }],
+    });
+    expect(Either.isRight(decodeOracleTrace(empty))).toBe(true);
+  });
+
+  it("rejects stripped checkpoints with impossible identity or turn references", () => {
+    const trace = evaluateOracleCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: mixedBattle,
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const entered = trace.steps.at(-1);
+    expect(entered?.tag).toBe("battleEntered");
+    if (entered?.tag !== "battleEntered") return;
+
+    const invalid = {
+      ...trace,
+      steps: [
+        ...trace.steps.slice(0, -1),
+        {
+          ...entered,
+          checkpoint: {
+            ...entered.checkpoint,
+            currentActorId: combatantId("oracle:not-in-turn-order"),
+          },
+        },
+      ],
+    };
+    const decoded = decodeOracleTrace(invalid);
+    expect(Either.isLeft(decoded)).toBe(true);
+  });
+
+  it("isolates A/B/A batch evaluation from singleton evaluation", () => {
+    const caseA = {
+      creation: { fillBatches: completeCreationFillBatches() },
+      sheet: { tag: "ordinary" as const },
+      battle: statBlockBattle,
+    };
+    const caseB = {
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" as const },
+      battle: statBlockBattle,
+    };
+    const singletonA = evaluateOracleCase({
+      case: caseA,
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const batch = evaluateOracleBatch({
+      batch: { cases: [caseA, caseB, caseA] },
+      services: { unitLibrary, statBlockCatalog },
+    });
+    expect(batch).toHaveLength(3);
+    expect(batch[0]).toEqual(singletonA);
+    expect(batch[2]).toEqual(singletonA);
+    expect(batch[1].steps.at(-1)).toEqual({
+      tag: "workflowRejected",
+      reason: { code: "creationInputExhausted" },
+    });
   });
 
   it("accumulates independent projection failures and reports missing records as typed entry data", () => {
@@ -353,6 +521,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           initiative: 1,
           ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
           conditions: ["prone"],
+          tempHp: 0,
         },
         {
           origin: "statBlock" as const,
@@ -361,6 +530,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           initiative: 0,
           ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
           conditions: ["prone"],
+          tempHp: 0,
         },
       ] as const,
     };
@@ -407,6 +577,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               initiative: 0,
               ammunitionStocks: [],
               conditions: [],
+              tempHp: 0,
             },
           ],
         },
@@ -425,13 +596,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
     });
   });
 
-  it("keeps JSON Schema uniqueness on optionIds arrays and shares Trace authority", () => {
-    const schema: unknown = JSON.parse(JSON.stringify(oracleCaseJsonSchema()));
-    expect(countUniqueArrayAnnotations(schema)).toBeGreaterThanOrEqual(2);
-    expect(oracleTraceSchema).toBe(OracleTraceSchema);
-    expect(oracleLifecycleTraceSchema).toBe(OracleTraceSchema);
-    const traceSchema = oracleTraceJsonSchema();
-    expect(JSON.stringify(traceSchema)).toContain('"prefixItems"');
+  it("keeps one branded Effect Trace authority", () => {
+    expect(oracleTraceSchema).toBeDefined();
     expect(
       Either.isLeft(
         decodeOracleTrace({
@@ -553,25 +719,6 @@ function choiceCombinations(
   const output: CreationChoiceOptionId[][] = [];
   collectChoiceCombinations(values, size, 0, [], output, limit);
   return output;
-}
-
-function countUniqueArrayAnnotations(value: unknown): number {
-  if (Array.isArray(value)) {
-    return value.reduce<number>(
-      (count, child) => count + countUniqueArrayAnnotations(child),
-      0,
-    );
-  }
-  if (!isRecord(value)) return 0;
-  const own = value.type === "array" && value.uniqueItems === true ? 1 : 0;
-  return own + Object.values(value).reduce<number>(
-    (count, child) => count + countUniqueArrayAnnotations(child),
-    0,
-  );
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function collectChoiceCombinations(

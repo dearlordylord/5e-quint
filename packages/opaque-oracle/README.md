@@ -26,12 +26,15 @@ The Trace preserves creation frontiers and ordered typed rejections. Input
 exhaustion and surplus are explicit workflow rejections; malformed or
 impossible owner projections escape as defects. `decodeOracleCase*` and
 `decodeOracleTrace*` reject unknown members, duplicate set members, duplicate
-JSON object keys, and invalid lifecycle sequences. The JSON Schema helpers use
-the same schemas as the decoders.
+JSON object keys, and invalid lifecycle sequences. Effect Schema is the sole
+Case/Trace validation authority; no generated JSON Schema is published because
+the lifecycle and cross-record refinements cannot be represented faithfully by
+that structural format.
 
 Successful traces contain one stripped production Battle checkpoint and one
-presentation-free Acts frontier. Entry projection failures retain the
-production owner's typed, origin-correlated diagnostics; independent failures
-are accumulated by the existing arbitrary-roster composition owner. Battle
-continuation and nested ordinary/nested continuation are intentionally outside
+frontier containing only the typed subjects discovered by the production
+`discoverBattleActs` owner. Entry projection failures retain the production
+owner's typed, origin-correlated diagnostics; independent failures are
+accumulated by the existing arbitrary-roster composition owner. Battle
+continuation, Act/Hole replay, and interrupt state are intentionally outside
 this contract.

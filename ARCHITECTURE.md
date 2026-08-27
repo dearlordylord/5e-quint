@@ -185,15 +185,19 @@ Character-creation terms live in
 `packages/character-creation-runtime/VOCABULARY.md`.
 
 `@dnd/opaque-oracle` owns the language-neutral, strict Case/Trace boundary for
-call-local production evaluation. Its current increment composes the
-Character Creation reducer through `CharacterBuild` and the fresh
-Character Sheet constructor. It supplies deterministic call-local identities,
-projects only presentation-free owner facts, and returns typed workflow
-rejections for creation-input exhaustion or surplus. It does not own sessions,
-caches, transport envelopes, Battle state, or MCP composition. A later
-integration may extend this same authority across the existing
-`@dnd/character-battle-runtime` handoff without publishing a second Battle
-contract here.
+call-local production evaluation. It composes the Character Creation reducer
+through `CharacterBuild`, fresh Character Sheet construction, and the existing
+arbitrary mixed-origin Character Battle handoff. It supplies deterministic
+call-local identities, projects only presentation-free owner facts, validates
+the stripped Battle checkpoint's surviving identity and cross-reference
+invariants, and returns typed workflow or owner rejections for exhausted or
+surplus creation input and invalid Battle entry. Its successful initial Battle
+frontier contains only typed subjects from production Act discovery; it does
+not publish presentation, Runtime Holes, continuation fills, interrupt state,
+sessions, caches, transport envelopes, Battle state ownership, or MCP
+composition. Effect Schema and its decoder are the sole Case/Trace authority;
+generated JSON Schema is not published because it cannot express these
+lifecycle and projection refinements faithfully.
 
 `@dnd/battle-runtime` owns the battle reducer state:
 `BattleState`, `BattleCreatureState`, battle subjects, replay-from-root holes

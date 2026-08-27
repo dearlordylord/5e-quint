@@ -13,7 +13,6 @@ import {
   type CreationFrontierFact,
 } from "@dnd/character-creation-runtime";
 import {
-  BattleHoleSchema,
   BattleSnapshotSchema,
   BattleSubjectSchema,
   type BattleCreatureSnapshot,
@@ -49,7 +48,7 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
 const IntegerSchema = Schema.Number.pipe(Schema.int());
 
 const CreationFillWithDistinctOptionIdsSchema = Schema.make<CreationFillFact>(
-  annotateOptionIdsAst(CreationFillFactSchema.ast),
+  CreationFillFactSchema.ast,
 );
 
 const DistinctCreationFillSchema = CreationFillWithDistinctOptionIdsSchema.pipe(
@@ -77,7 +76,6 @@ export const FreshSheetInputSchema = Schema.Union(
     statBlockIds: Schema.NonEmptyArray(StatBlockIdSchema).pipe(
       Schema.filter((values) => new Set(values).size === values.length, {
         message: () => "statBlockIds must not contain duplicate members",
-        jsonSchema: { uniqueItems: true },
       }),
     ),
   }),
@@ -89,36 +87,61 @@ const AmmunitionStockInputSchema = Schema.Struct({
   remaining: NonNegativeIntegerSchema,
 });
 
+const OracleBattleConditionsSchema = Schema.Array(
+  Schema.Literal("prone"),
+).pipe(
+  Schema.filter((conditions) => new Set(conditions).size === conditions.length, {
+    message: () => "conditions must not contain duplicate members",
+  }),
+);
+
+const OracleCharacterSheetRosterEntrySchema = Schema.Struct({
+  origin: Schema.Literal("characterSheet"),
+  combatantId: CombatantId,
+  displayName: Schema.NonEmptyTrimmedString,
+  initiative: IntegerSchema,
+  ammunitionStocks: Schema.Array(AmmunitionStockInputSchema),
+});
+
+const OracleStatBlockRosterEntrySchema = Schema.Struct({
+  origin: Schema.Literal("statBlock"),
+  combatantId: CombatantId,
+  statBlockId: StatBlockIdSchema,
+  initiative: IntegerSchema,
+  ammunitionStocks: Schema.Array(AmmunitionStockInputSchema),
+  conditions: OracleBattleConditionsSchema,
+  currentHp: Schema.optional(NonNegativeIntegerSchema),
+  tempHp: NonNegativeIntegerSchema,
+});
+
 /**
  * Every varying battle fact is explicit at the Case boundary. The origin
  * discriminant lives on the entry itself, so a participant cannot carry both
  * a Character Sheet and a Stat Block source.
  */
 export const OracleBattleRosterEntrySchema = Schema.Union(
-  Schema.Struct({
-    origin: Schema.Literal("characterSheet"),
-    combatantId: CombatantId,
-    displayName: Schema.NonEmptyTrimmedString,
-    initiative: IntegerSchema,
-    ammunitionStocks: Schema.Array(AmmunitionStockInputSchema),
-  }),
-  Schema.Struct({
-    origin: Schema.Literal("statBlock"),
-    combatantId: CombatantId,
-    statBlockId: StatBlockIdSchema,
-    initiative: IntegerSchema,
-    ammunitionStocks: Schema.Array(AmmunitionStockInputSchema),
-    conditions: Schema.Array(Schema.Literal("prone")),
-    currentHp: Schema.optional(NonNegativeIntegerSchema),
-    tempHp: Schema.optional(NonNegativeIntegerSchema),
-  }),
+  OracleCharacterSheetRosterEntrySchema,
+  OracleStatBlockRosterEntrySchema,
 );
 export type OracleBattleRosterEntry = Schema.Schema.Type<
   typeof OracleBattleRosterEntrySchema
 >;
 
 export const OracleBattleInputSchema = Schema.Struct({
-  roster: Schema.NonEmptyArray(OracleBattleRosterEntrySchema),
+  // The production composition owner reports an empty roster as a typed
+  // domain failure. Keep that input representable so it can be projected
+  // into the Trace; the refinement still admits at most one fresh Sheet.
+  roster: Schema.Array(OracleBattleRosterEntrySchema).pipe(
+    Schema.filter(
+      (roster) =>
+        roster.filter((entry) => entry.origin === "characterSheet").length <=
+        1,
+      {
+        message: () =>
+          "a Case roster may contain at most one Character Sheet participant",
+      },
+    ),
+  ),
 });
 export type OracleBattleInput = Schema.Schema.Type<
   typeof OracleBattleInputSchema
@@ -238,6 +261,9 @@ const BattleEntryIssueSchema = Schema.Union(
     statBlockId: StatBlockIdSchema,
   }),
   Schema.Struct({
+    tag: Schema.Literal("characterBattleEncounterEmptyRoster"),
+  }),
+  Schema.Struct({
     tag: Schema.Literal("battleCreatureInitRejected"),
     issue: CharacterBattleCreatureInitIssueSchema,
   }),
@@ -264,14 +290,31 @@ export const WorkflowRejectionSchema = Schema.Union(
   }),
 );
 
-export type OracleBattleCreatureSnapshot = Omit<
-  BattleCreatureSnapshot,
-  "displayName" | "origin"
-> & {
-  readonly origin: Omit<BattleCreatureSnapshot["origin"], "displayName">;
-};
+export type OracleBattleCreatureSnapshot =
+  | (Omit<
+      Extract<
+        BattleCreatureSnapshot,
+        { readonly origin: { readonly kind: "character" } }
+      >,
+      "displayName" | "origin"
+    > & {
+      readonly origin: Omit<
+        Extract<
+          BattleCreatureSnapshot["origin"],
+          { readonly kind: "character" }
+        >,
+        "displayName"
+      >;
+    })
+  | Omit<
+      Extract<
+        BattleCreatureSnapshot,
+        { readonly origin: { readonly kind: "statBlock" } }
+      >,
+      "displayName"
+    >;
 
-export type OracleBattleCheckpoint = Omit<
+type OracleBattleCheckpointShape = Omit<
   BattleSnapshot,
   | "battleId"
   | "executionScopeCursors"
@@ -283,15 +326,30 @@ export type OracleBattleCheckpoint = Omit<
   readonly combatants: readonly OracleBattleCreatureSnapshot[];
 };
 
-/** A production Battle Act with all presentation-only fields removed. */
-export const OracleBattleActSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
-  initialHoles: Schema.Array(BattleHoleSchema),
-});
-export type OracleBattleAct = Schema.Schema.Type<typeof OracleBattleActSchema>;
+/**
+ * The public checkpoint is a projection of the production snapshot. Because
+ * projection removes the production root refinement together with private
+ * fields, it owns an explicit refinement for the invariants that survive the
+ * projection (identity, turn order, and retained cross references).
+ */
+const OracleBattleCheckpointShapeSchema = Schema.make<
+  OracleBattleCheckpointShape
+>(stripBattleSnapshotAst(BattleSnapshotSchema.ast));
 
+export const OracleBattleCheckpointSchema =
+  OracleBattleCheckpointShapeSchema.pipe(
+    Schema.filter(oracleBattleCheckpointInvariantsHold, {
+      message: () =>
+        "Battle checkpoint combatants, turn order, current actor, and cross references must agree.",
+    }),
+  );
+export type OracleBattleCheckpoint = Schema.Schema.Type<
+  typeof OracleBattleCheckpointSchema
+>;
+
+/** Available Battle subjects, without presentation or Runtime Hole details. */
 export const OracleBattleActsFrontierSchema = Schema.Struct({
-  acts: Schema.Array(OracleBattleActSchema),
+  acts: Schema.Array(BattleSubjectSchema),
 });
 export type OracleBattleActsFrontier = Schema.Schema.Type<
   typeof OracleBattleActsFrontierSchema
@@ -299,9 +357,7 @@ export type OracleBattleActsFrontier = Schema.Schema.Type<
 
 export const OracleBattleEnteredSchema = Schema.Struct({
   tag: Schema.Literal("battleEntered"),
-  checkpoint: Schema.make<OracleBattleCheckpoint>(
-    stripBattleSnapshotAst(BattleSnapshotSchema.ast),
-  ),
+  checkpoint: OracleBattleCheckpointSchema,
   frontier: OracleBattleActsFrontierSchema,
 });
 export type OracleBattleEntered = Schema.Schema.Type<
@@ -445,66 +501,196 @@ function stripBattleSnapshotAstProperties(ast: AST.AST): AST.AST {
   }
 }
 
-function annotateOptionIdsAst(ast: AST.AST): AST.AST {
-  switch (ast._tag) {
-    case "TypeLiteral":
-      return new AST.TypeLiteral(
-        ast.propertySignatures.map(
-          (property) =>
-            new AST.PropertySignature(
-              property.name,
-              property.name === "optionIds"
-                ? AST.annotations(property.type, {
-                    [AST.JSONSchemaAnnotationId]: { uniqueItems: true },
-                  })
-                : annotateOptionIdsAst(property.type),
-              property.isOptional,
-              property.isReadonly,
-              property.annotations,
+const COMBATANT_REFERENCE_PROPERTIES = new Set([
+  "actorId",
+  "affectedTargetId",
+  "affectedTargetIds",
+  "allyId",
+  "afterTurnActorId",
+  "attackerId",
+  "beneficiaryId",
+  "carriedCreatureId",
+  "carrierId",
+  "casterId",
+  "combatantId",
+  "companionId",
+  "currentActorId",
+  "damagedId",
+  "fallingCreatureId",
+  "familiarId",
+  "grapplerId",
+  "helperId",
+  "holderCombatantId",
+  "moverId",
+  "observerId",
+  "obscuringCreatureId",
+  "occupantId",
+  "ownerId",
+  "originalTargetId",
+  "previousTargetId",
+  "reactorId",
+  "readiedActorId",
+  "readiedMovementActorId",
+  "readiedSpellCasterId",
+  "reappearanceCombatantId",
+  "responderId",
+  "shoverId",
+  "sourceCombatantId",
+  "sourceOwnerId",
+  "targetEnemyId",
+  "targetId",
+  "targetIds",
+  "triggeringCombatantId",
+  "wardedCombatantId",
+]);
+
+function oracleBattleCheckpointInvariantsHold(
+  checkpoint: OracleBattleCheckpointShape,
+): boolean {
+  const combatantIds = checkpoint.combatants.map(
+    (combatant) => combatant.combatantId,
+  );
+  const turnOrder = checkpoint.turnOrder;
+  const liveCombatantIds = new Set(combatantIds);
+
+  return (
+    combatantIds.length > 0 &&
+    turnOrder.length > 0 &&
+    uniqueValues(combatantIds) &&
+    uniqueValues(turnOrder) &&
+    turnOrder.length === combatantIds.length &&
+    turnOrder.every((combatantId, index) =>
+      liveCombatantIds.has(combatantId) &&
+      checkpoint.combatants[index]?.combatantId === combatantId,
+    ) &&
+    liveCombatantIds.has(checkpoint.currentActorId) &&
+    allCombatantReferencesAreLive(checkpoint, liveCombatantIds) &&
+    executionReferencesAreOwned(checkpoint.combatants)
+  );
+}
+
+function uniqueValues(values: readonly string[]): boolean {
+  return new Set(values).size === values.length;
+}
+
+function allCombatantReferencesAreLive(
+  value: unknown,
+  liveCombatantIds: ReadonlySet<string>,
+): boolean {
+  if (Array.isArray(value)) {
+    return value.every((member) =>
+      allCombatantReferencesAreLive(member, liveCombatantIds),
+    );
+  }
+  if (typeof value !== "object" || value === null) return true;
+
+  return Object.entries(value).every(([property, member]) => {
+    if (COMBATANT_REFERENCE_PROPERTIES.has(property)) {
+      return Array.isArray(member)
+        ? member.every(
+            (reference) =>
+              typeof reference === "string" &&
+              liveCombatantIds.has(reference),
+          )
+        : typeof member === "string" && liveCombatantIds.has(member);
+    }
+    return allCombatantReferencesAreLive(member, liveCombatantIds);
+  });
+}
+
+function executionReferencesAreOwned(
+  combatants: readonly OracleBattleCreatureSnapshot[],
+): boolean {
+  const scopeRefs: string[] = [];
+  const nestedScopeRefs: string[] = [];
+
+  for (const combatant of combatants) {
+    const originScopeRefs =
+      combatant.origin.kind === "character"
+        ? [
+            combatant.origin.execution.scopeRef,
+            combatant.origin.attackExecution.scopeRef,
+            ...combatant.origin.druidWildShapeAvailableForms.map(
+              (form) => form.execution.scopeRef,
             ),
+          ]
+        : [combatant.origin.execution.scopeRef];
+    if (
+      !originScopeRefs.every((scopeRef) =>
+        executionScopeBelongsToCombatant(scopeRef, combatant.combatantId),
+      )
+    ) {
+      return false;
+    }
+    scopeRefs.push(...originScopeRefs);
+
+    if (combatant.origin.kind === "character") {
+      nestedScopeRefs.push(
+        ...combatant.origin.execution.procedureBindings.map(
+          (binding) => binding.procedureRef,
         ),
-        ast.indexSignatures,
-        ast.annotations,
-      );
-    case "Union":
-      return AST.Union.make(
-        ast.types.map(annotateOptionIdsAst),
-        ast.annotations,
-      );
-    case "TupleType":
-      return new AST.TupleType(
-        ast.elements.map(
-          (element) =>
-            new AST.OptionalType(
-              annotateOptionIdsAst(element.type),
-              element.isOptional,
-              element.annotations,
-            ),
+        ...combatant.origin.resources.map(
+          (resource) => resource.resourcePoolRef,
         ),
-        ast.rest.map(
-          (element) =>
-            new AST.Type(
-              annotateOptionIdsAst(element.type),
-              element.annotations,
-            ),
+        ...[
+          combatant.origin.attackExecution.attackProcedureRef,
+          combatant.origin.attackExecution.unarmedStrikeProcedureRef,
+          combatant.origin.attackExecution.offHandAttackProcedureRef,
+        ].flatMap((procedureRef) =>
+          procedureRef === null ? [] : [procedureRef],
         ),
-        ast.isReadonly,
-        ast.annotations,
+        ...combatant.origin.druidWildShapeAvailableForms.flatMap((form) => [
+          ...form.execution.procedureBindings.map(
+            (binding) => binding.procedureRef,
+          ),
+          ...form.execution.resourcePools.map((pool) => pool.resourcePoolRef),
+        ]),
       );
-    case "Refinement":
-      return new AST.Refinement(
-        annotateOptionIdsAst(ast.from),
-        ast.filter,
-        ast.annotations,
+      continue;
+    }
+
+    nestedScopeRefs.push(
+      ...combatant.origin.execution.procedureBindings.map(
+        (binding) => binding.procedureRef,
+      ),
+      ...combatant.origin.execution.resourcePools.map(
+        (pool) => pool.resourcePoolRef,
+      ),
+    );
+  }
+
+  const ownedScopes = new Set(scopeRefs);
+  return (
+    ownedScopes.size === scopeRefs.length &&
+    nestedScopeRefs.every((reference) => {
+      const parsed = parseExecutionReference(reference);
+      return (
+        parsed !== undefined &&
+        typeof parsed.scopeRef === "string" &&
+        ownedScopes.has(parsed.scopeRef)
       );
-    case "Transformation":
-      return new AST.Transformation(
-        annotateOptionIdsAst(ast.from),
-        annotateOptionIdsAst(ast.to),
-        ast.transformation,
-        ast.annotations,
-      );
-    default:
-      return ast;
+    })
+  );
+}
+
+function executionScopeBelongsToCombatant(
+  scopeRef: string,
+  combatantId: string,
+): boolean {
+  return parseExecutionReference(scopeRef)?.combatantId === combatantId;
+}
+
+function parseExecutionReference(
+  reference: string,
+): { readonly combatantId?: unknown; readonly scopeRef?: unknown } | undefined {
+  try {
+    const parsed: unknown = JSON.parse(reference);
+    if (typeof parsed !== "object" || parsed === null) return undefined;
+    return parsed as {
+      readonly combatantId?: unknown;
+      readonly scopeRef?: unknown;
+    };
+  } catch {
+    return undefined;
   }
 }

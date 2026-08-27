@@ -3,20 +3,6 @@ import * as AST from "effect/SchemaAST";
 
 import { compareCodePoints } from "./oracle-canonical.ts";
 
-export type OracleDecodeIssueCode =
-  | "invalidJson"
-  | "wrongType"
-  | "missingMember"
-  | "unknownMember"
-  | "unknownVariant"
-  | "outOfRange"
-  | "emptyValue"
-  | "emptyCollection"
-  | "duplicateMember"
-  | "duplicateCollectionMember"
-  | "nonCanonicalDomainValue"
-  | "invalidLifecycle";
-
 export const ORACLE_DECODE_ISSUE_CODES = [
   "invalidJson",
   "duplicateMember",
@@ -30,7 +16,10 @@ export const ORACLE_DECODE_ISSUE_CODES = [
   "duplicateCollectionMember",
   "nonCanonicalDomainValue",
   "invalidLifecycle",
-] as const satisfies readonly OracleDecodeIssueCode[];
+] as const;
+
+export type OracleDecodeIssueCode =
+  (typeof ORACLE_DECODE_ISSUE_CODES)[number];
 
 export type OracleDecodeIssue = {
   readonly path: string;
