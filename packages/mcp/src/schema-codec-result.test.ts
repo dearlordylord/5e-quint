@@ -1,7 +1,11 @@
 import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
-import { decodeToolArgs, mcpObjectJsonSchema } from "./schema-codec.ts";
+import {
+  decodeToolArgs,
+  mcpObjectJsonSchema,
+  schemaJsonContent,
+} from "./schema-codec.ts";
 
 const InputSchema = Schema.Struct({
   name: Schema.String,
@@ -33,5 +37,18 @@ describe("schema-codec Effect 4 boundary", () => {
     expect(decoded.failure.content[0]?.text).toContain(
       '"error": "demo expects valid arguments."',
     );
+  });
+
+  test("encodes transformation-bearing values through the original schema", () => {
+    const transformed = Schema.Struct({
+      payload: Schema.fromJsonString(Schema.Struct({ answer: Schema.Number })),
+    });
+    const value = { payload: { answer: 42 } };
+    const content = schemaJsonContent(transformed, value);
+
+    expect(content.structuredContent).toEqual(
+      Schema.encodeSync(transformed)(value),
+    );
+    expect(content.structuredContent).toEqual({ payload: '{"answer":42}' });
   });
 });
