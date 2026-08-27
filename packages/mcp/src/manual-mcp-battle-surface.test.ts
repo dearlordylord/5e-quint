@@ -19,7 +19,6 @@ import {
   startBattle,
   battleStateInitIssueMessage,
   type BattleCreatureInit,
-  type BattlePresentedCheckpointFrontierEnvelope,
   type BattleRuntimeSession,
   type BattleUnitRef,
   type CharacterBattleClassLevelInits,
@@ -1174,7 +1173,7 @@ type BattleToolOutputByName = {
   readonly fill_battle_hole: BattleResolutionOutput;
   readonly resolve_battle_act: BattleResolutionOutput;
 };
-type BattleFrontier = BattlePresentedCheckpointFrontierEnvelope["frontier"];
+type BattleFrontier = NonNullable<BattleSessionOutput["envelope"]>["frontier"];
 type BattleHolesFrontier = Extract<BattleFrontier, { readonly kind: "holes" }>;
 type BattleInterruptFrontier = Extract<
   BattleFrontier,
@@ -1278,7 +1277,7 @@ function requireBattleHoles(
       `Expected unresolved battle holes, got ${response.envelope.frontier.kind}.`,
     );
   }
-  return response.envelope.frontier as unknown as BattleHolesFrontier;
+  return response.envelope.frontier;
 }
 
 function requireBattleInterruptFrontier(
@@ -1290,7 +1289,7 @@ function requireBattleInterruptFrontier(
       `Expected an interrupt decision frontier, got ${response.envelope.frontier.kind}.`,
     );
   }
-  return response.envelope.frontier as unknown as BattleInterruptFrontier;
+  return response.envelope.frontier;
 }
 
 function requireBattleActFrontier(
@@ -1302,10 +1301,7 @@ function requireBattleActFrontier(
   ) {
     throw new Error("Expected an active battle act frontier.");
   }
-  return response.envelope.frontier as unknown as Extract<
-    BattleFrontier,
-    { readonly kind: "acts" }
-  >;
+  return response.envelope.frontier;
 }
 
 function call<const Name extends keyof BattleToolOutputByName>(
