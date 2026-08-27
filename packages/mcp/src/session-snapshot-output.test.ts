@@ -12,7 +12,7 @@ import {
   type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
 import { NonNegativeInteger } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 
@@ -42,15 +42,15 @@ const SESSION_SUMMARY_OUTPUT_SCHEMAS = [
   SelectStatBlockOutputSchema,
   StartBattleOutputSchema,
   EndBattleOutputSchema,
-] as const satisfies ReadonlyArray<Schema.Schema.AnyNoContext>;
+] as const satisfies ReadonlyArray<Schema.Constraint>;
 
 const SESSION_SNAPSHOT_OUTPUT_SCHEMAS = [
   BattleSessionOutputSchema,
   BattleResolutionOutputSchema,
-] as const satisfies ReadonlyArray<Schema.Schema.AnyNoContext>;
+] as const satisfies ReadonlyArray<Schema.Constraint>;
 
-function outputJsonSchema(schema: Schema.Schema.AnyNoContext) {
-  return mcpOutputJsonSchema(schema);
+function outputJsonSchema(schema: Schema.Constraint) {
+  return mcpOutputJsonSchema(Schema.toCodecIso(schema));
 }
 
 const setupState = {
@@ -157,7 +157,7 @@ describe("MCP session wire projections", () => {
       ).toBe(false);
 
       const validateAdmin = jsonSchemaValidator.getValidator(
-        mcpOutputJsonSchema(AdminSessionProjectionSchema),
+        outputJsonSchema(AdminSessionProjectionSchema),
       );
       expect(
         validateAdmin({
@@ -215,7 +215,7 @@ describe("MCP session wire projections", () => {
       const activeSession = root.sessionStore.battleSession;
       if (activeSession === null) throw new Error("Expected active battle.");
       const presented = battlePresentedSnapshot(activeSession);
-      if (Either.isLeft(presented))
+      if (Result.isFailure(presented))
         throw new Error("Expected presented snapshot.");
       const result = {
         tag: "resolved",
@@ -223,9 +223,12 @@ describe("MCP session wire projections", () => {
         snapshot: snapshotBattle(activeSession.state),
         objectDamages: [],
       } satisfies BattleRuntimeResolutionResult;
-      const activeResolution = Either.getOrThrow(
+      const activeResolution = Result.getOrThrow(
         battleResolutionPayload(root, result),
       );
+      if (typeof activeResolution !== "object" || activeResolution === null) {
+        throw new Error("Expected active resolution payload.");
+      }
       const activeResolutionFixture = {
         ...activeResolution,
         availableActs: [],
@@ -257,20 +260,20 @@ describe("MCP session wire projections", () => {
       };
 
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(setupOutput),
+        Result.isSuccess(
+          Schema.decodeUnknownResult(BattleLifecycleOutputSchema)(setupOutput),
         ),
       ).toBe(true);
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
+        Result.isSuccess(
+          Schema.decodeUnknownResult(BattleLifecycleOutputSchema)(
             activeRosterOutput,
           ),
         ),
       ).toBe(true);
       expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleLifecycleOutputSchema)(
             noBattleSuccessOutput,
           ),
         ),
@@ -319,7 +322,7 @@ describe("MCP session wire projections", () => {
     } satisfies McpSessionSnapshot;
 
     expect(
-      schemaJsonContent(ListCharactersOutputSchema, {
+      schemaJsonContent(Schema.toCodecIso(ListCharactersOutputSchema), {
         characters: [],
         session: mcpSessionSummary(snapshot),
       }).structuredContent,
@@ -356,8 +359,8 @@ describe("MCP session wire projections", () => {
     );
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(McpSessionSnapshotSchema))({
           draftIds: [],
           characterIds: [],
           selectedStatBlockId: null,
@@ -395,8 +398,8 @@ describe("MCP session wire projections", () => {
     );
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(McpSessionSnapshotSchema))({
           draftIds: [],
           characterIds: [],
           selectedStatBlockId: null,
@@ -432,8 +435,8 @@ describe("MCP session wire projections", () => {
     );
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(McpSessionSnapshotSchema))({
           draftIds: [],
           characterIds: [],
           selectedStatBlockId: null,
