@@ -4266,18 +4266,11 @@ type BattleActExecution<TSubject extends BattleSubject> = {
   readonly routeEvents?: BattleReducerRouteEvents;
 };
 
-export const ATTACK_PRESENTATION_JOIN_ISSUE_REASONS = [
-  "characterContextMissing",
-  "weaponPresentationMissing",
-  "statBlockAdmissionMissing",
-  "statBlockPresentationMissing",
-] as const;
-export type AttackPresentationJoinIssueReason =
-  (typeof ATTACK_PRESENTATION_JOIN_ISSUE_REASONS)[number];
-export type AttackPresentationJoinIssue = {
-  readonly tag: "attackPresentationJoinIssue";
-  readonly reason: AttackPresentationJoinIssueReason;
-};
+export {
+  ATTACK_PRESENTATION_JOIN_ISSUE_REASONS,
+  type AttackPresentationJoinIssue,
+  type AttackPresentationJoinIssueReason,
+} from "./attack-presentation-contract.ts";
 
 export type BattleActPresentation =
   | { readonly kind: "intrinsic" }

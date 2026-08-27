@@ -157,11 +157,11 @@ import {
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
 import {
-  ATTACK_PRESENTATION_JOIN_ISSUE_REASONS,
   type BattleFill,
   type BattleHole,
   type BattleMovementFillValue,
 } from "../battle-state-execution.ts";
+import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-contract.ts";
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
 );
