@@ -61,7 +61,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -299,13 +299,13 @@ function rejectLayOnHandsOverspendProjection(): FeatureResourceProjection {
     restoreHp: Hp(1),
     removePoisoned: true,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Lay On Hands over-spend rejection.");
   }
   return projectFromParts({
     outcome: "lay-on-hands-overspend-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sourceCurrentHp: characterSheetCurrentHp(sheet),
     targetCurrentHp: characterSheetCurrentHp(sheet),
     targetPoisoned: sheet.conditions.some(
@@ -487,13 +487,13 @@ function rejectFontOfMagicAmbiguousSlotSourceProjection(): FeatureResourceProjec
     unitLibrary,
     spellLevel: spellSlotLevel(3),
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Font of Magic ambiguous slot-source rejection.");
   }
   return projectFromParts({
     outcome: "font-of-magic-ambiguous-slot-source-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sorceryPointCapacity: resourceCapacity(
       created,
       "pointPoolResource",
@@ -556,13 +556,13 @@ function rejectFontOfMagicInsufficientPointsProjection(): FeatureResourceProject
     unitLibrary,
     spellLevel: spellSlotLevel(2),
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Font of Magic insufficient-points rejection.");
   }
   return projectFromParts({
     outcome: "font-of-magic-insufficient-points-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sorceryPointCapacity: resourceCapacity(
       sheet,
       "pointPoolResource",
@@ -697,13 +697,13 @@ function rejectUncannyMetabolismRepeatUseProjection(): FeatureResourceProjection
     unitLibrary,
     martialArtsRoll: DieRollResult(4),
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected repeated Uncanny Metabolism use rejection.");
   }
   return projectFromParts({
     outcome: "uncanny-metabolism-repeat-use-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     sourceCurrentHp: characterSheetCurrentHp(used),
     temporaryHitPoints: characterSheetTempHp(used),
     monkFocusExpended: resourceExpended(
@@ -1348,9 +1348,11 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }
 
 function recordField(

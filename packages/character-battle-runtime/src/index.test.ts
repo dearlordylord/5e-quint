@@ -132,7 +132,7 @@ import {
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Option, Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -674,7 +674,7 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
       ),
     ).toEqual(
-      Either.right([{ weaponUnitId: authoredUnitId("weapon_longsword") }]),
+      Result.succeed([{ weaponUnitId: authoredUnitId("weapon_longsword") }]),
     );
   });
 
@@ -842,13 +842,13 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const entry = startBattleFromCharacterSheetAndStatBlock({
       battleId: battleId("battle:sheet-entry"),
       character: {
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         statBlockCatalog,
         combatantId: characterCombatantId,
@@ -865,28 +865,28 @@ describe("Character Sheet battle handoff", () => {
       },
     });
 
-    expect(Either.isRight(entry)).toBe(true);
-    if (Either.isLeft(entry)) return;
+    expect(Result.isSuccess(entry)).toBe(true);
+    if (Result.isFailure(entry)) return;
 
-    expect([...entry.right.session.state.combatants.keys()]).toEqual([
+    expect([...entry.success.session.state.combatants.keys()]).toEqual([
       characterCombatantId,
       monsterCombatantId,
     ]);
     expect(
-      entry.right.session.state.combatants.get(characterCombatantId),
+      entry.success.session.state.combatants.get(characterCombatantId),
     ).not.toHaveProperty("side");
     expect(
-      entry.right.session.state.combatants.get(monsterCombatantId),
+      entry.success.session.state.combatants.get(monsterCombatantId),
     ).not.toHaveProperty("side");
     expect(
-      entry.right.session.state.initiative.stillToAct.map(
+      entry.success.session.state.initiative.stillToAct.map(
         (turn) => turn.creature,
       ),
     ).toEqual([characterCombatantId, monsterCombatantId]);
-    expect(entry.right.session.state.initiative.stillToAct[0]?.creature).toBe(
+    expect(entry.success.session.state.initiative.stillToAct[0]?.creature).toBe(
       characterCombatantId,
     );
-    expect(entry.right.encounterCompositionRouteEvents).toEqual([
+    expect(entry.success.encounterCompositionRouteEvents).toEqual([
       {
         kind: "projectCharacterSheetToBattle",
         subject: "sheetToBattleInit",
@@ -928,7 +928,7 @@ describe("Character Sheet battle handoff", () => {
       startBattleFromCharacterSheetAndStatBlock({
         battleId: battleId("battle:duplicate-participant"),
         character: {
-          sheet: sheet.right,
+          sheet: sheet.success,
           unitLibrary,
           statBlockCatalog,
           combatantId: characterCombatantId,
@@ -958,7 +958,7 @@ describe("Character Sheet battle handoff", () => {
       startBattleFromCharacterSheetAndStatBlock({
         battleId: battleId("battle:unsupported-stat-block"),
         character: {
-          sheet: sheet.right,
+          sheet: sheet.success,
           unitLibrary,
           statBlockCatalog,
           combatantId: characterCombatantId,
@@ -1071,7 +1071,7 @@ describe("Character Sheet battle handoff", () => {
       proficiencyBonusChoice: "add",
     });
 
-    expect(result).toEqual(Either.right(initiativeScore(16)));
+    expect(result).toEqual(Result.succeed(initiativeScore(16)));
   });
 
   test("rejects non-integer Initiative totals and unreadable class projections", () => {
@@ -1082,7 +1082,7 @@ describe("Character Sheet battle handoff", () => {
         rollTotal: 10,
         proficiencyBonusChoice: "omit",
       }),
-    ).toEqual(Either.right(initiativeScore(10)));
+    ).toEqual(Result.succeed(initiativeScore(10)));
     expect(
       characterBattleInitiativeScore({
         build,
@@ -1123,7 +1123,7 @@ describe("Character Sheet battle handoff", () => {
       proficiencyBonusChoice: "add",
     });
 
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
   });
 
   test("rejects mismatched battle character identity", () => {
@@ -1134,11 +1134,11 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -1148,18 +1148,18 @@ describe("Character Sheet battle handoff", () => {
       }),
     });
 
-    expect(Either.isLeft(handoff)).toBe(true);
+    expect(Result.isFailure(handoff)).toBe(true);
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         combatant: handoffBranchCombatant({
           origin: {
             kind: "character",
             characterId: characterId("character:sheet"),
           },
-          hp: Hp(sheetMaximumHp(sheet.right) + 1),
-          maxHp: sheetMaximumHp(sheet.right),
+          hp: Hp(sheetMaximumHp(sheet.success) + 1),
+          maxHp: sheetMaximumHp(sheet.success),
         }),
       }),
     ).toMatchObject({
@@ -1346,11 +1346,11 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -1362,10 +1362,10 @@ describe("Character Sheet battle handoff", () => {
       }),
     });
 
-    expect(Either.isLeft(handoff)).toBe(true);
+    expect(Result.isFailure(handoff)).toBe(true);
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary: unitCatalogWithoutUnitIds("class_fighter"),
         combatant: handoffBranchCombatant({
           origin: {
@@ -1391,12 +1391,12 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-    const expectedMaximumHp = sheetMaximumHp(sheet.right);
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
+    const expectedMaximumHp = sheetMaximumHp(sheet.success);
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -1410,18 +1410,18 @@ describe("Character Sheet battle handoff", () => {
       }),
     });
 
-    expect(Either.isRight(handoff)).toBe(true);
-    if (Either.isLeft(handoff)) return;
-    expect(handoff.right.hitPointMaximumReduction).toBe(3);
+    expect(Result.isSuccess(handoff)).toBe(true);
+    if (Result.isFailure(handoff)) return;
+    expect(handoff.success.hitPointMaximumReduction).toBe(3);
     expect(
       expectRight(
         characterSheetHitPointMaximum({
-          sheet: handoff.right,
+          sheet: handoff.success,
           unitLibrary,
         }),
       ),
     ).toBe(expectedMaximumHp);
-    expect(characterSheetCurrentHp(handoff.right)).toBe(6);
+    expect(characterSheetCurrentHp(handoff.success)).toBe(6);
   });
 
   test("preserves remaining Temporary Hit Points from battle handoff", () => {
@@ -1432,11 +1432,11 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -1444,15 +1444,15 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:sheet"),
         },
         hp: Hp(8),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(4),
         positiveHpUnconscious: null,
       }),
     });
 
-    expect(Either.isRight(handoff)).toBe(true);
-    if (Either.isRight(handoff)) {
-      expect(characterSheetTempHp(handoff.right)).toBe(4);
+    expect(Result.isSuccess(handoff)).toBe(true);
+    if (Result.isSuccess(handoff)) {
+      expect(characterSheetTempHp(handoff.success)).toBe(4);
     }
   });
 
@@ -1465,11 +1465,11 @@ describe("Character Sheet battle handoff", () => {
       unitLibrary,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -1477,15 +1477,15 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:druid-wild-shape-handoff"),
         },
         hp: Hp(12),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
     });
 
-    expect(Either.isRight(handoff)).toBe(true);
-    if (Either.isRight(handoff)) {
-      expect(characterSheetDruidWildShapeKnownForms(handoff.right)).toEqual({
+    expect(Result.isSuccess(handoff)).toBe(true);
+    if (Result.isSuccess(handoff)) {
+      expect(characterSheetDruidWildShapeKnownForms(handoff.success)).toEqual({
         statBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       });
     }
@@ -2992,12 +2992,12 @@ describe("Character Sheet battle handoff", () => {
       statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const countedStatBlockCatalog = statBlockCatalogWithLookupCount();
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       statBlockCatalog: countedStatBlockCatalog.catalog,
       combatant: handoffBranchCombatant({
@@ -3006,15 +3006,15 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:druid-wild-shape-catalog"),
         },
         hp: Hp(12),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
     });
 
-    expect(Either.isRight(handoff)).toBe(true);
-    if (Either.isRight(handoff)) {
-      expect(characterSheetDruidWildShapeKnownForms(handoff.right)).toEqual({
+    expect(Result.isSuccess(handoff)).toBe(true);
+    if (Result.isSuccess(handoff)) {
+      expect(characterSheetDruidWildShapeKnownForms(handoff.success)).toEqual({
         statBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
       });
     }
@@ -3031,14 +3031,14 @@ describe("Character Sheet battle handoff", () => {
       statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const init = expectRight(
       characterSheetBattleInit({
         combatantId: combatantId("druid-wild-shape-init"),
         displayName: "Druid",
-        sheet: sheet.right,
+        sheet: sheet.success,
         initiative: initiativeScore(20),
         ammunitionStocks: [],
         unitLibrary,
@@ -3188,14 +3188,14 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const init = expectRight(
       characterSheetBattleInit({
         combatantId: combatantId("reduced-maximum-init"),
         displayName: "Fighter",
-        sheet: sheet.right,
+        sheet: sheet.success,
         initiative: initiativeScore(20),
         ammunitionStocks: [],
         unitLibrary,
@@ -3205,7 +3205,7 @@ describe("Character Sheet battle handoff", () => {
 
     expect(init.creatureInit.kind).toBe("character");
     if (init.creatureInit.kind !== "character") return;
-    expect(init.creatureInit.maxHp).toBe(sheetMaximumHp(sheet.right));
+    expect(init.creatureInit.maxHp).toBe(sheetMaximumHp(sheet.success));
     expect(init.creatureInit.currentHp).toBe(7);
   });
 
@@ -3222,7 +3222,7 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(init).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Character battle initialization max HP exceeds build-derived max HP.",
@@ -3349,7 +3349,7 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(init).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
@@ -3371,7 +3371,7 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(init).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Druid Wild Shape battle initialization requires an available known-form subset.",
@@ -3439,7 +3439,7 @@ describe("Character Sheet battle handoff", () => {
     );
 
     expect(refs).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "battleSupportProfileIssue",
           message:
@@ -3713,7 +3713,7 @@ describe("Character Sheet battle handoff", () => {
         unitLibrary,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetIssue",
         message:
           "Character Build Draconic Ancestry fact must contain exactly selected ancestry fact fields.",
@@ -3731,19 +3731,19 @@ describe("Character Sheet battle handoff", () => {
       statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
-    const state = startDruidWildShapeSheetBattle(sheet.right);
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
+    const state = startDruidWildShapeSheetBattle(sheet.success);
     const assume = requireResolvedBattleSubject(
       resolveDruidWildShapeAssumeFormWithoutLoadoutEquipment(state),
     );
     const activeHandoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       context: state.context,
       combatant: requireCombatant(assume.state, combatantId("druid")),
     });
-    expect(Either.isLeft(activeHandoff)).toBe(true);
+    expect(Result.isFailure(activeHandoff)).toBe(true);
 
     const dismissableState = restoreBonusAction(assume.state);
     const dismissableSession = battleRuntimeSessionForTest({
@@ -3759,7 +3759,7 @@ describe("Character Sheet battle handoff", () => {
     );
     const handoff = expectRight(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         context: state.context,
         combatant: requireCombatant(dismissed.state, combatantId("druid")),
@@ -3783,8 +3783,8 @@ describe("Character Sheet battle handoff", () => {
       statBlockCatalog,
       druidWildShapeKnownFormStatBlockIds: DRUID_WILD_SHAPE_KNOWN_FORM_IDS,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const wildShapeUnit = unitLibrary.requireUnit("druid_wild_shape");
     if (!isClassFeatureWithUseCountResource(wildShapeUnit)) {
@@ -3803,7 +3803,7 @@ describe("Character Sheet battle handoff", () => {
       battleResourcePoolExecutionRefForTest("drifted-wild-shape");
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -3847,7 +3847,7 @@ describe("Character Sheet battle handoff", () => {
     }
     const settleWithUsesRemaining = (usesRemaining: ResourceCount) =>
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         resourceOwnership: [
           {
@@ -3898,7 +3898,7 @@ describe("Character Sheet battle handoff", () => {
     );
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         resourceOwnership: [
           {
@@ -3956,7 +3956,7 @@ describe("Character Sheet battle handoff", () => {
     }
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         resourceOwnership: [
           {
@@ -4008,14 +4008,14 @@ describe("Character Sheet battle handoff", () => {
         },
       },
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     expect(
       characterSheetBattleInitWithRoute({
         combatantId: combatantId("stable-init-route"),
         displayName: "Stable Fighter",
-        sheet: sheet.right,
+        sheet: sheet.success,
         initiative: initiativeScore(10),
         ammunitionStocks: [],
         unitLibrary,
@@ -4038,7 +4038,7 @@ describe("Character Sheet battle handoff", () => {
         character: {
           combatantId: combatantId("stable-init-entry"),
           displayName: "Stable Fighter",
-          sheet: sheet.right,
+          sheet: sheet.success,
           initiative: initiativeScore(10),
           ammunitionStocks: [],
           unitLibrary,
@@ -4062,7 +4062,7 @@ describe("Character Sheet battle handoff", () => {
     });
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -4070,7 +4070,7 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:stable"),
         },
         hp: Hp(0),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
         zeroHpLifecycle: {
@@ -4356,11 +4356,11 @@ describe("Character Sheet battle handoff", () => {
       ],
       restFeatureUses: [{ tag: "arcaneRecovery", usedSinceLongRest: true }],
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -4369,7 +4369,7 @@ describe("Character Sheet battle handoff", () => {
           spellcasting: handoffSpellcastingState(),
         },
         hp: Hp(6),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(3),
         positiveHpUnconscious: null,
       }),
@@ -4388,7 +4388,7 @@ describe("Character Sheet battle handoff", () => {
     expect(characterSheetTempHp(settled)).toBe(3);
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         combatant: handoffBranchCombatant({
           origin: {
@@ -4405,7 +4405,7 @@ describe("Character Sheet battle handoff", () => {
             }),
           },
           hp: Hp(7),
-          maxHp: sheetMaximumHp(sheet.right),
+          maxHp: sheetMaximumHp(sheet.success),
           tempHp: Hp(0),
           positiveHpUnconscious: null,
         }),
@@ -5103,7 +5103,7 @@ describe("Character Sheet battle handoff", () => {
     });
 
     expect(ambiguousHandoff).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Battle handoff Spell Slot expenditure is source-ambiguous for level 3.",
@@ -5448,11 +5448,11 @@ describe("Character Sheet battle handoff", () => {
         { tag: "layOnHandsHealingPool", expended: resourceCount(3) },
       ],
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       combatant: handoffBranchCombatant({
         origin: {
@@ -5460,7 +5460,7 @@ describe("Character Sheet battle handoff", () => {
           characterId: characterId("character:paladin-handoff"),
         },
         hp: Hp(9),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -5480,8 +5480,8 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
@@ -5490,7 +5490,7 @@ describe("Character Sheet battle handoff", () => {
     const resourcePoolRef =
       battleResourcePoolExecutionRefForTest("favored-enemy");
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -5514,7 +5514,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(1),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -5554,8 +5554,8 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
@@ -5565,7 +5565,7 @@ describe("Character Sheet battle handoff", () => {
       "drifted-favored-enemy",
     );
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -5595,7 +5595,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(1),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -5610,7 +5610,7 @@ describe("Character Sheet battle handoff", () => {
     });
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         resourceOwnership: [
           {
@@ -5634,7 +5634,7 @@ describe("Character Sheet battle handoff", () => {
             ],
           },
           hp: Hp(1),
-          maxHp: sheetMaximumHp(sheet.right),
+          maxHp: sheetMaximumHp(sheet.success),
           tempHp: Hp(0),
           positiveHpUnconscious: null,
         }),
@@ -5663,8 +5663,8 @@ describe("Character Sheet battle handoff", () => {
         },
       ],
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const focusUnit = unitLibrary.requireUnit("monk_monks_focus");
     const focusResource = characterBattleResourceForUnit(focusUnit);
@@ -5673,9 +5673,9 @@ describe("Character Sheet battle handoff", () => {
     }
     const nextBattleResources = expectRight(
       characterBattleResourceInitsFromBuild(
-        sheet.right.build,
+        sheet.success.build,
         unitLibrary,
-        sheet.right.resourceExpenditures,
+        sheet.success.resourceExpenditures,
       ),
     );
     expect(nextBattleResources).toContainEqual(
@@ -5688,7 +5688,7 @@ describe("Character Sheet battle handoff", () => {
       battleResourcePoolExecutionRefForTest("focus-expended");
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -5712,7 +5712,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(15),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -5735,8 +5735,8 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const focusUnit = unitLibrary.requireUnit(MONK_MONKS_FOCUS_UNIT_ID);
     if (!isClassFeatureWithUseCountResource(focusUnit)) {
@@ -5755,7 +5755,7 @@ describe("Character Sheet battle handoff", () => {
       battleResourcePoolExecutionRefForTest("drifted-focus");
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -5779,7 +5779,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(15),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -5798,7 +5798,7 @@ describe("Character Sheet battle handoff", () => {
     }
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         resourceOwnership: [
           {
@@ -5822,7 +5822,7 @@ describe("Character Sheet battle handoff", () => {
             ],
           },
           hp: Hp(15),
-          maxHp: sheetMaximumHp(sheet.right),
+          maxHp: sheetMaximumHp(sheet.success),
           tempHp: Hp(0),
           positiveHpUnconscious: null,
         }),
@@ -5851,12 +5851,12 @@ describe("Character Sheet battle handoff", () => {
         },
       ],
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const recovered = expectRight(
       useMonkUncannyMetabolismWhenRollingInitiative({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         martialArtsRoll: DieRollResult(4),
       }),
@@ -5949,8 +5949,8 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const fontOfMagicUnit = unitLibrary.requireUnit("sorcerer_font_of_magic");
     if (!isClassFeatureWithPointPoolResource(fontOfMagicUnit)) {
@@ -5971,7 +5971,7 @@ describe("Character Sheet battle handoff", () => {
     );
 
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -5994,7 +5994,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(24),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -6013,7 +6013,7 @@ describe("Character Sheet battle handoff", () => {
     }
     expect(
       settleHandoffBranchToCharacterSheet({
-        sheet: sheet.right,
+        sheet: sheet.success,
         unitLibrary,
         resourceOwnership: [
           {
@@ -6036,7 +6036,7 @@ describe("Character Sheet battle handoff", () => {
             ],
           },
           hp: Hp(24),
-          maxHp: sheetMaximumHp(sheet.right),
+          maxHp: sheetMaximumHp(sheet.success),
           tempHp: Hp(0),
           positiveHpUnconscious: null,
         }),
@@ -6058,8 +6058,8 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const paladinsSmite = unitLibrary.requireUnit("paladin_paladins_smite");
     const paladinsSmiteResource = characterBattleResourceForUnit(paladinsSmite);
@@ -6070,7 +6070,7 @@ describe("Character Sheet battle handoff", () => {
     const resourcePoolRef =
       battleResourcePoolExecutionRefForTest("paladins-smite");
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -6094,7 +6094,7 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(1),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
@@ -6134,8 +6134,8 @@ describe("Character Sheet battle handoff", () => {
       tempHp: Hp(0),
       unitLibrary,
     });
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isLeft(sheet)) return;
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isFailure(sheet)) return;
 
     const favoredEnemy = unitLibrary.requireUnit("ranger_favored_enemy");
     const favoredEnemyResource = characterBattleResourceForUnit(favoredEnemy);
@@ -6147,7 +6147,7 @@ describe("Character Sheet battle handoff", () => {
       "threshold-favored-enemy",
     );
     const handoff = settleHandoffBranchToCharacterSheet({
-      sheet: sheet.right,
+      sheet: sheet.success,
       unitLibrary,
       resourceOwnership: [
         {
@@ -6179,14 +6179,14 @@ describe("Character Sheet battle handoff", () => {
           ],
         },
         hp: Hp(1),
-        maxHp: sheetMaximumHp(sheet.right),
+        maxHp: sheetMaximumHp(sheet.success),
         tempHp: Hp(0),
         positiveHpUnconscious: null,
       }),
     });
 
     expect(handoff).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
@@ -6807,7 +6807,7 @@ describe("Character Build battle projection", () => {
         },
         unitLibrary,
       ),
-    ).toEqual(Either.right(null));
+    ).toEqual(Result.succeed(null));
 
     const init = {
       combatantId: combatantId("missing-projection-unit"),
@@ -6900,7 +6900,7 @@ describe("Character Build battle projection", () => {
         unitLibrary,
         itemId: authoredPactItemId,
       }),
-    ).toEqual(Either.right(authoredPactItemId));
+    ).toEqual(Result.succeed(authoredPactItemId));
 
     expect(
       characterPactBladeBondedWeaponItemId({
@@ -6976,11 +6976,13 @@ describe("Character Build battle projection", () => {
       resourceExpenditures: [],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toContain("class_fighter");
-      expect(result.left.message).toContain("synthetic:missing-magic-initiate");
-      expect(result.left.spellAccessIssues).toEqual(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toContain("class_fighter");
+      expect(result.failure.message).toContain(
+        "synthetic:missing-magic-initiate",
+      );
+      expect(result.failure.spellAccessIssues).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             accessIndex: 1,
@@ -7010,10 +7012,10 @@ describe("Character Build battle projection", () => {
       resourceExpenditures: [],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toContain("selected spell list");
-      expect(result.left.spellAccessIssues).toEqual(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toContain("selected spell list");
+      expect(result.failure.spellAccessIssues).toEqual(
         expect.arrayContaining([
           expect.objectContaining({ cause: "invalidBuildSpellAccess" }),
         ]),
@@ -7101,9 +7103,9 @@ describe("Character Build battle projection", () => {
       unitLibrary,
     });
     expect(missingBothSpellKinds).toMatchObject({ _tag: "Left" });
-    if (Either.isLeft(missingBothSpellKinds)) {
-      expect(missingBothSpellKinds.left.message).toContain(missingCantripId);
-      expect(missingBothSpellKinds.left.message).toContain(
+    if (Result.isFailure(missingBothSpellKinds)) {
+      expect(missingBothSpellKinds.failure.message).toContain(missingCantripId);
+      expect(missingBothSpellKinds.failure.message).toContain(
         missingPreparedSpellId,
       );
     }
@@ -7259,10 +7261,10 @@ describe("Character Build battle projection", () => {
 
   test("projects an empty weapon loadout and rejects a non-Weapon off-hand reference", () => {
     expect(characterAttackActionOption(build, unitLibrary)).toEqual(
-      Either.right(null),
+      Result.succeed(null),
     );
     expect(characterOffHandAttackActionOption(build, unitLibrary)).toEqual(
-      Either.right(undefined),
+      Result.succeed(undefined),
     );
     const leatherArmorUnitId = authoredUnitId("armor_leather");
     const leatherArmorItemId = characterEquipmentItemId({
@@ -7288,7 +7290,7 @@ describe("Character Build battle projection", () => {
         unitLibrary,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message: "Off-hand weapon loadout must reference a Weapon Unit.",
       }),
@@ -7683,7 +7685,7 @@ describe("Character Build battle projection", () => {
         parsedClassLevelsForTest("druid", 2),
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Druid Wild Shape battle initialization supports exactly one Druid Wild Shape resource.",
@@ -7801,11 +7803,11 @@ describe("Character Build battle projection", () => {
       ],
     );
     expect(multiplyInvalidResources).toMatchObject({ _tag: "Left" });
-    if (Either.isLeft(multiplyInvalidResources)) {
-      expect(multiplyInvalidResources.left.message).toContain(
+    if (Result.isFailure(multiplyInvalidResources)) {
+      expect(multiplyInvalidResources.failure.message).toContain(
         "Druid Wild Shape expenditure exceeds",
       );
-      expect(multiplyInvalidResources.left.message).toContain(
+      expect(multiplyInvalidResources.failure.message).toContain(
         "use-count expenditure exceeds",
       );
     }
@@ -8118,7 +8120,7 @@ describe("Character Build battle projection", () => {
         bookOfShadowsPresence: { tag: "onPerson" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
@@ -8134,7 +8136,7 @@ describe("Character Build battle projection", () => {
         bookOfShadowsPresence: { tag: "onPerson" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message: "Book of Shadows Spell Access requires Pact of the Tome.",
       }),
@@ -8148,7 +8150,7 @@ describe("Character Build battle projection", () => {
         unitLibrary,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Book of Shadows Spell Access requires Book of Shadows presence state.",
@@ -8166,7 +8168,7 @@ describe("Character Build battle projection", () => {
         bookOfShadowsPresence: { tag: "onPerson" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Book of Shadows Spell Access must be attached to the Warlock spellcasting source.",
@@ -8184,7 +8186,7 @@ describe("Character Build battle projection", () => {
         bookOfShadowsPresence: { tag: "onPerson" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message: "Book of Shadows Spell Access requires Pact of the Tome.",
       }),
@@ -8212,7 +8214,7 @@ describe("Character Build battle projection", () => {
         bookOfShadowsPresence: { tag: "onPerson" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleCreatureInitIssue",
         message:
           "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
@@ -9349,7 +9351,7 @@ describe("Character Build battle projection", () => {
       throw new Error("Expected Pact of the Blade test weapon.");
     }
     expect(
-      Either.isLeft(
+      Result.isFailure(
         battleCreatureInitFromCharacterBuild({
           combatantId: combatantId("pact-blade-no-invocation"),
           characterId: characterId("character:pact-blade-no-invocation"),
@@ -9371,7 +9373,7 @@ describe("Character Build battle projection", () => {
       throw new Error("Expected Pact of the Blade ranged test weapon.");
     }
     expect(
-      Either.isLeft(
+      Result.isFailure(
         battleCreatureInitFromCharacterBuild({
           combatantId: combatantId("pact-blade-shortbow"),
           characterId: characterId("character:pact-blade-shortbow"),
@@ -9392,7 +9394,7 @@ describe("Character Build battle projection", () => {
       ),
     });
     expect(
-      Either.isLeft(
+      Result.isFailure(
         battleCreatureInitFromCharacterBuild({
           combatantId: combatantId("pact-blade-not-loadout"),
           characterId: characterId("character:pact-blade-not-loadout"),
@@ -9877,8 +9879,8 @@ describe("Character battle runtime boundary coverage", () => {
     );
 
     expect(result).toMatchObject({ _tag: "Right" });
-    if (Either.isRight(result)) {
-      expect(result.right).toEqual(
+    if (Result.isSuccess(result)) {
+      expect(result.success).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             unit: expect.objectContaining({ id: fontOfMagic }),
@@ -9886,7 +9888,7 @@ describe("Character battle runtime boundary coverage", () => {
         ]),
       );
       expect(
-        result.right.find(({ unit }) => unit.id === fontOfMagic),
+        result.success.find(({ unit }) => unit.id === fontOfMagic),
       ).not.toHaveProperty("pointsRemaining");
     }
   });
@@ -9905,9 +9907,9 @@ describe("Character battle runtime boundary coverage", () => {
     );
 
     expect(result).toMatchObject({ _tag: "Right" });
-    if (Either.isRight(result)) {
+    if (Result.isSuccess(result)) {
       expect(
-        result.right.find(
+        result.success.find(
           ({ unit }) => unit.id === authoredUnitId("orc_relentless_endurance"),
         ),
       ).toEqual(
@@ -9916,7 +9918,7 @@ describe("Character battle runtime boundary coverage", () => {
         }),
       );
       expect(
-        result.right.find(
+        result.success.find(
           ({ unit }) => unit.id === authoredUnitId("orc_relentless_endurance"),
         ),
       ).not.toHaveProperty("usesRemaining");
@@ -9984,7 +9986,7 @@ describe("Character battle runtime boundary coverage", () => {
     });
 
     expect(handoff).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Battle handoff Spell Slot expenditure exceeds available Character Sheet Spell Slots.",
@@ -10018,7 +10020,7 @@ describe("Character battle runtime boundary coverage", () => {
     });
 
     expect(handoff).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetIssue",
         message:
           "Cannot derive Hit Point maximum without grant source Unit: sorcerer_font_of_magic.",
@@ -10072,7 +10074,7 @@ describe("Character battle runtime boundary coverage", () => {
     });
 
     expect(handoff).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Spell Access free casts must use a fixed battle resource cap during battle handoff.",
@@ -10189,7 +10191,7 @@ describe("Character battle runtime boundary coverage", () => {
     });
 
     expect(handoff).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetBattleHandoffIssue",
         message:
           "Spell Access free-cast battle capacity must match Character Sheet resource capacity.",
@@ -11888,12 +11890,12 @@ function requireSheetWithSpellSlots(
   };
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(result.left)}`);
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
+    throw new Error(`Expected Right, got ${JSON.stringify(result.failure)}`);
   }
-  expect(Either.isRight(result)).toBe(true);
-  return result.right;
+  expect(Result.isSuccess(result)).toBe(true);
+  return result.success;
 }
 
 function sheetMaximumHp(sheet: CharacterSheet) {
@@ -12155,8 +12157,8 @@ function parsedClassLevelsForTest(
   level: number,
 ) {
   const result = parseCharacterBattleClassLevels([{ className, level }]);
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.messages.join("; "));
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.messages.join("; "));
   }
-  return result.right;
+  return result.success;
 }

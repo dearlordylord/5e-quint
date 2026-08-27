@@ -43,7 +43,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -352,14 +352,14 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     rollTotal: 14,
     proficiencyBonusChoice: "add",
   });
-  if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+  if (Result.isFailure(score)) {
+    throw new Error(score.failure.message);
   }
 
   return {
     ...criminalAlertOriginFeatProjection(),
     outcome: "alert-initiative-handoff",
-    initiativeScore: score.right,
+    initiativeScore: score.success,
   };
 }
 
@@ -375,11 +375,11 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     initiative: alertInitiativeScoreForBuild(build),
     ammunitionStocks: [],
   });
-  if (Either.isLeft(projection)) {
-    throw new Error(projection.left.issue.message);
+  if (Result.isFailure(projection)) {
+    throw new Error(projection.failure.issue.message);
   }
 
-  return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
+  return selectedReferenceRouteEvents(projection.success.routeEvents).filter(
     (event) => event.owner === "characterBattleBuildProjection",
   );
 }
@@ -406,11 +406,11 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
       conditions: [],
     },
   });
-  if (Either.isLeft(entry)) {
-    throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));
+  if (Result.isFailure(entry)) {
+    throw new Error(characterBattleRuntimeIssueMessage(entry.failure.issue));
   }
 
-  return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
+  return selectedReferenceRouteEvents(entry.success.initProjectionRouteEvents);
 }
 
 function selectedReferenceRouteEvents(
@@ -431,10 +431,10 @@ function characterSheetForBuild(build: CharacterBuild) {
     conditions: [],
     unitLibrary,
   });
-  if (Either.isLeft(sheet)) {
-    throw new Error(JSON.stringify(sheet.left));
+  if (Result.isFailure(sheet)) {
+    throw new Error(JSON.stringify(sheet.failure));
   }
-  return sheet.right;
+  return sheet.success;
 }
 
 function alertInitiativeScoreForBuild(build: CharacterBuild) {
@@ -444,10 +444,10 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     rollTotal: 14,
     proficiencyBonusChoice: "add",
   });
-  if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+  if (Result.isFailure(score)) {
+    throw new Error(score.failure.message);
   }
-  return score.right;
+  return score.success;
 }
 
 function finalizedFighterBuildForBackground(input: {
@@ -625,12 +625,12 @@ function unitChoiceHoleId(
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
   const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId));
-  if (Either.isLeft(parsedUnitId)) {
+  if (Result.isFailure(parsedUnitId)) {
     throw new Error(`Invalid unit choice source Unit id ${unitId}.`);
   }
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: parsedUnitId.right,
+    unitId: parsedUnitId.success,
     choiceKey,
   });
 }
@@ -642,12 +642,12 @@ function loadoutHoleId(
   const parsedEquipmentUnitId = loadoutEquipmentUnitId(
     authoredUnitId(equipmentUnitId),
   );
-  if (Either.isLeft(parsedEquipmentUnitId)) {
+  if (Result.isFailure(parsedEquipmentUnitId)) {
     throw new Error(`Invalid loadout equipment Unit id ${equipmentUnitId}.`);
   }
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: parsedEquipmentUnitId.right,
+    equipmentUnitId: parsedEquipmentUnitId.success,
     slot,
   });
 }
@@ -747,10 +747,10 @@ function numberFromQuintInt(raw: unknown, field: string): number {
   throw new Error(`Expected Quint integer field ${field}.`);
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(String(result.left));
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(String(result.failure));
   }
-  return result.right;
+  return result.success;
 }

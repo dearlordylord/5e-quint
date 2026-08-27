@@ -78,7 +78,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import type { SimpleActionMap, SimpleDriver } from "@firfi/quint-connect";
 import { describe, expect, it } from "vitest";
 
@@ -632,7 +632,7 @@ function rejectLayOnHandsOverspendRoute(
     restoreHp: Hp(1),
     removePoisoned: true,
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "layOnHands",
     result,
@@ -657,7 +657,7 @@ function longRestClearsLayOnHandsPoolRoute(
     }),
   ).source;
   const result = completeLongRestForFeatureResourceRoute(spent);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -702,8 +702,8 @@ function shortRestRecoversUseCountPoolsRoute(
   });
   const druidResult = completeShortRestForFeatureResourceRoute(druid);
   const monkResult = completeShortRestForFeatureResourceRoute(monk);
-  expect(Either.isRight(druidResult)).toBe(true);
-  expect(Either.isRight(monkResult)).toBe(true);
+  expect(Result.isSuccess(druidResult)).toBe(true);
+  expect(Result.isSuccess(monkResult)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result: monkResult,
@@ -726,7 +726,7 @@ function longRestClearsPointPoolAndUseStateRoute(
     ],
   });
   const result = completeLongRestForFeatureResourceRoute(sheet);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -762,7 +762,7 @@ function fontOfMagicSlotToPointsRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(2),
   });
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicSlotToPoints",
     result,
@@ -778,7 +778,7 @@ function rejectFontOfMagicAmbiguousSlotSourceRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(3),
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicSlotToPoints",
     result,
@@ -805,7 +805,7 @@ function fontOfMagicPointsToSlotRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(3),
   });
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicPointsToSlot",
     result,
@@ -838,7 +838,7 @@ function rejectFontOfMagicInsufficientPointsRoute(
     unitLibrary,
     spellLevel: spellSlotLevel(2),
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "fontOfMagicPointsToSlot",
     result,
@@ -862,7 +862,7 @@ function shortRestPreservesUncannyUseStateRoute(
     ],
   });
   const result = completeShortRestForFeatureResourceRoute(sheet);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -886,7 +886,7 @@ function longRestClearsUncannyUseStateRoute(
     ],
   });
   const result = completeLongRestForFeatureResourceRoute(sheet);
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "featureResourceRest",
     result,
@@ -950,7 +950,7 @@ function rejectUncannyMetabolismRepeatUseRoute(
     unitLibrary,
     martialArtsRoll: DieRollResult(4),
   });
-  expect(Either.isLeft(result)).toBe(true);
+  expect(Result.isFailure(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "uncannyMetabolism",
     result,
@@ -1052,7 +1052,7 @@ function metamagicBridgeUsesSharedPointPoolRoute(
     unitLibrary,
     combatant: settledCombatant,
   });
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
   return appendObservedFeatureResourceRoute(route, {
     tag: "metamagicBattleBridgeAccepted",
     result,
@@ -1416,10 +1416,10 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
     initiative: alertInitiativeScoreForBuild(build),
     ammunitionStocks: [],
   });
-  if (Either.isLeft(projection)) {
-    throw new Error(projection.left.issue.message);
+  if (Result.isFailure(projection)) {
+    throw new Error(projection.failure.issue.message);
   }
-  return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
+  return selectedReferenceRouteEvents(projection.success.routeEvents).filter(
     (event) => event.owner === "characterBattleBuildProjection",
   );
 }
@@ -1445,10 +1445,10 @@ function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly Character
       conditions: [],
     },
   });
-  if (Either.isLeft(entry)) {
-    throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));
+  if (Result.isFailure(entry)) {
+    throw new Error(characterBattleRuntimeIssueMessage(entry.failure.issue));
   }
-  return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
+  return selectedReferenceRouteEvents(entry.success.initProjectionRouteEvents);
 }
 
 function criminalAlertRouteBuild(): CharacterBuild {
@@ -1477,10 +1477,10 @@ function characterSheetForBuild(build: CharacterBuild) {
     conditions: [],
     unitLibrary,
   });
-  if (Either.isLeft(sheet)) {
-    throw new Error(JSON.stringify(sheet.left));
+  if (Result.isFailure(sheet)) {
+    throw new Error(JSON.stringify(sheet.failure));
   }
-  return sheet.right;
+  return sheet.success;
 }
 
 function alertInitiativeScoreForBuild(build: CharacterBuild) {
@@ -1490,10 +1490,10 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     rollTotal: 14,
     proficiencyBonusChoice: "add",
   });
-  if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+  if (Result.isFailure(score)) {
+    throw new Error(score.failure.message);
   }
-  return score.right;
+  return score.success;
 }
 
 function initProjectionRouteStep(
@@ -1758,12 +1758,12 @@ function unitChoiceHoleId(
   choiceKey: UnitChoiceKey,
 ): CreationHoleIdText {
   const parsedUnitId = unitChoiceSourceUnitId(authoredUnitId(unitId));
-  if (Either.isLeft(parsedUnitId)) {
+  if (Result.isFailure(parsedUnitId)) {
     throw new Error(`Invalid route Unit choice source Unit id ${unitId}.`);
   }
   return unitChoiceSourceHoleIdText({
     tag: "unitChoice",
-    unitId: parsedUnitId.right,
+    unitId: parsedUnitId.success,
     choiceKey,
   });
 }
@@ -1775,23 +1775,25 @@ function loadoutHoleId(
   const parsedEquipmentUnitId = loadoutEquipmentUnitId(
     authoredUnitId(equipmentUnitId),
   );
-  if (Either.isLeft(parsedEquipmentUnitId)) {
+  if (Result.isFailure(parsedEquipmentUnitId)) {
     throw new Error(
       `Invalid route loadout equipment Unit id ${equipmentUnitId}.`,
     );
   }
   return loadoutSourceHoleIdText({
     tag: "loadout",
-    equipmentUnitId: parsedEquipmentUnitId.right,
+    equipmentUnitId: parsedEquipmentUnitId.success,
     slot,
   });
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
-    throw new Error(`Expected Right, received ${JSON.stringify(result.left)}`);
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
+    throw new Error(
+      `Expected Right, received ${JSON.stringify(result.failure)}`,
+    );
   }
-  return result.right;
+  return result.success;
 }
 
 function indexedActionEntries<const Schema extends RouteDriverSchema>(
