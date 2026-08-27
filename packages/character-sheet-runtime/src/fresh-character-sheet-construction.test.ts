@@ -89,7 +89,7 @@ describe("fresh Character Sheet construction", () => {
     }
 
     const parsed = freshCharacterSheetFromParsedState(result.success);
-    expect(parsed).toHaveProperty("_tag", "Right");
+    expect(parsed).toHaveProperty("_tag", "Success");
     if (Result.isSuccess(parsed)) {
       expect(parsed.success.conditions).toEqual([]);
       expect(parsed.success.hitPointMaximumReduction).toBe(0);
@@ -126,7 +126,7 @@ describe("fresh Character Sheet construction", () => {
     }
 
     const parsed = freshCharacterSheetFromParsedState(result.success);
-    expect(parsed).toHaveProperty("_tag", "Right");
+    expect(parsed).toHaveProperty("_tag", "Success");
     if (Result.isSuccess(parsed)) {
       expect(parsed.success.spellSlotExpenditures).toEqual([]);
       expect(parsed.success.createdSpellSlots).toEqual([]);

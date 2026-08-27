@@ -126,9 +126,9 @@ describe("Character Sheet runtime / companions", () => {
   });
 
   test("retains the empty durable companion state", () => {
-    expect(companionFromInput({ tag: "none" })).toEqual(
-      expect.objectContaining({ _tag: "Success", value: { tag: "none" } }),
-    );
+    expect(requireRight(companionFromInput({ tag: "none" }))).toEqual({
+      tag: "none",
+    });
     expect(companionAfterLongRest({ tag: "none" })).toEqual({ tag: "none" });
   });
 
@@ -1239,11 +1239,8 @@ describe("Character Sheet runtime / companions", () => {
 
   test("parses only positive retained companion current Hit Points", () => {
     expect(
-      parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(2)),
-    ).toMatchObject({
-      _tag: "Success",
-      value: Hp(2),
-    });
+      requireRight(parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(2))),
+    ).toEqual(Hp(2));
     expect(
       parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(0)),
     ).toMatchObject({
@@ -1287,12 +1284,9 @@ describe("Character Sheet runtime / companions", () => {
         storedCompanion({ manifestation, protocolTag }),
       );
 
-      expect(result).toMatchObject({
-        _tag: "Success",
-        value: {
-          tag: "retainedOneAtATime",
-          companion: { manifestation },
-        },
+      expect(requireRight(result)).toMatchObject({
+        tag: "retainedOneAtATime",
+        companion: { manifestation },
       });
     },
   );

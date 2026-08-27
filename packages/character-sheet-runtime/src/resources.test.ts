@@ -79,10 +79,9 @@ describe("Character Sheet runtime / resources", () => {
       ],
     });
 
-    expect(result).toMatchObject({
-      _tag: "Success",
-      value: [{ tag: "layOnHandsHealingPool", expended: 2 }],
-    });
+    expect(requireRight(result)).toEqual([
+      { tag: "layOnHandsHealingPool", expended: 2 },
+    ]);
   });
 
   test.each([
@@ -135,13 +134,14 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(characterSheetMonksFocusSaveDc(sheet, unitLibrary)).toMatchObject({
-      _tag: "Success",
-      value: undefined,
-    });
     expect(
-      characterSheetMonkUncannyMetabolismUseState(sheet, unitLibrary),
-    ).toMatchObject({ _tag: "Success", value: undefined });
+      requireRight(characterSheetMonksFocusSaveDc(sheet, unitLibrary)),
+    ).toBeUndefined();
+    expect(
+      requireRight(
+        characterSheetMonkUncannyMetabolismUseState(sheet, unitLibrary),
+      ),
+    ).toBeUndefined();
   });
 
   test("projects omitted class-feature resource expenditures as zero from build-derived capacity", () => {
@@ -246,10 +246,9 @@ describe("Character Sheet runtime / resources", () => {
     ];
 
     for (const { sheet, resource } of cases) {
-      expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
-        _tag: "Success",
-        value: expect.arrayContaining([expect.objectContaining(resource)]),
-      });
+      expect(requireRight(characterSheetResources(sheet, unitLibrary))).toEqual(
+        expect.arrayContaining([expect.objectContaining(resource)]),
+      );
       expect(sheet.resourceExpenditures).toEqual([]);
     }
   });
