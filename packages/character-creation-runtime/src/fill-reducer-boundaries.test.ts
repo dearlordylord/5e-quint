@@ -4,7 +4,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -221,12 +221,12 @@ describe("creation fill reducer boundaries", () => {
     };
 
     expect(getHole(holeIndex, knownFill, creationFillIndex(0))).toEqual(
-      Either.right(hole),
+      Result.succeed(hole),
     );
     expect(requireChoiceOptionIndex(indexCreationHoles([]), hole).size).toBe(0);
     expect(getHole(holeIndex, unknownFill, creationFillIndex(1))).toMatchObject(
       {
-        _tag: "Left",
+        _tag: "Failure",
         left: {
           tag: "illegalFill",
           holeId: "cc:draft:draft.species",
@@ -304,14 +304,14 @@ describe("creation fill reducer boundaries", () => {
       acceptedFill,
       creationFillIndex(0),
     );
-    if (Either.isLeft(first)) {
+    if (Result.isFailure(first)) {
       throw new Error("The first loadout fill must be accepted.");
     }
-    expect(first.right.choices).toHaveLength(1);
+    expect(first.success.choices).toHaveLength(1);
     expect(
-      applyLoadoutFill(first.right, acceptedFill, creationFillIndex(1)),
+      applyLoadoutFill(first.success, acceptedFill, creationFillIndex(1)),
     ).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: {
         tag: "illegalFill",
         fillIndex: 1,
@@ -330,7 +330,7 @@ describe("creation fill reducer boundaries", () => {
         },
       ]),
     ).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: [
         {
           tag: "illegalFill",
@@ -409,7 +409,7 @@ describe("creation fill reducer boundaries", () => {
         },
       ),
     ).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
       right: { backgroundAbilityScoreIncrease: { kind: "oneEach" } },
     });
     expect(
@@ -423,7 +423,7 @@ describe("creation fill reducer boundaries", () => {
         },
       ),
     ).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
       right: { equipment: { selectedUnitIds: [unitId] } },
     });
     expect(
@@ -437,7 +437,7 @@ describe("creation fill reducer boundaries", () => {
         },
       ),
     ).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
       right: {
         choices: [
           {

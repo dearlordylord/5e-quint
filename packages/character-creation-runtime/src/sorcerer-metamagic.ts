@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CLASS_FEATURE_SOURCE_FACT.PROJECTION
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import { resourceCount, type ResourceCount } from "@dnd/shared/types";
 import type {
   ClassFeatureRecord,
@@ -62,7 +62,7 @@ export type CharacterBuildSorcererMetamagicFactsIssue = {
 export function characterBuildSorcererMetamagicFacts(input: {
   readonly build: Pick<CharacterBuild, "progression" | "features">;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildSorcererMetamagicFacts | undefined,
   CharacterBuildSorcererMetamagicFactsIssue
 > {
@@ -76,7 +76,7 @@ export function characterBuildSorcererMetamagicFacts(input: {
     )
   ) {
     return selectedOptionIds.length === 0
-      ? Either.right(undefined)
+      ? Result.succeed(undefined)
       : sorcererMetamagicFactsIssue(
           "Metamagic option selections require the retained Metamagic feature.",
         );
@@ -97,13 +97,13 @@ export function characterBuildSorcererMetamagicFacts(input: {
     unitLibrary: input.unitLibrary,
     feature: featureUnit.value,
   });
-  if (Either.isLeft(ownerClassLevel)) {
-    return sorcererMetamagicFactsIssue(ownerClassLevel.left.message);
+  if (Result.isFailure(ownerClassLevel)) {
+    return sorcererMetamagicFactsIssue(ownerClassLevel.failure.message);
   }
 
   const choiceCount = classLevelChoiceCountAtLevel(
     featureUnit.value.mechanics.choiceCount,
-    ownerClassLevel.right,
+    ownerClassLevel.success,
   );
   if (selectedOptionIds.length !== choiceCount) {
     return sorcererMetamagicFactsIssue(
@@ -130,18 +130,18 @@ export function characterBuildSorcererMetamagicFacts(input: {
   }
 
   const fontOfMagicFacts = characterBuildSorcererFontOfMagicFacts(input);
-  if (Either.isLeft(fontOfMagicFacts)) {
-    return sorcererMetamagicFactsIssue(fontOfMagicFacts.left.message);
+  if (Result.isFailure(fontOfMagicFacts)) {
+    return sorcererMetamagicFactsIssue(fontOfMagicFacts.failure.message);
   }
-  if (fontOfMagicFacts.right === undefined) {
+  if (fontOfMagicFacts.success === undefined) {
     return sorcererMetamagicFactsIssue(
       "Metamagic requires the shared Font of Magic Sorcery Point resource.",
     );
   }
 
-  return Either.right({
+  return Result.succeed({
     unitId: SORCERER_METAMAGIC_UNIT_ID,
-    ownerClassLevel: ownerClassLevel.right,
+    ownerClassLevel: ownerClassLevel.success,
     choiceCount,
     knownOptions,
     selectionRepeatability:
@@ -150,7 +150,7 @@ export function characterBuildSorcererMetamagicFacts(input: {
       resourceUnitId: authoredUnitId(
         featureUnit.value.mechanics.spends.resourceUnitId,
       ),
-      poolId: fontOfMagicFacts.right.sorceryPointPool.poolId,
+      poolId: fontOfMagicFacts.success.sorceryPointPool.poolId,
     },
     spellUseLimit: featureUnit.value.mechanics.spellUseLimit.kind,
   });
@@ -199,18 +199,18 @@ function metamagicOptionFact(
 
 export function parseSorcererMetamagicOptionId(
   optionId: string,
-): Either.Either<
+): Result.Result<
   SorcererMetamagicOptionId,
   CharacterBuildSorcererMetamagicFactsIssue
 > {
   const parsed = sorcererMetamagicOptionId(optionId);
-  return Either.isRight(parsed)
-    ? Either.right(parsed.right)
+  return Result.isSuccess(parsed)
+    ? Result.succeed(parsed.success)
     : sorcererMetamagicFactsIssue("Unknown Sorcerer Metamagic option id.");
 }
 
 function sorcererMetamagicFactsIssue(
   message: string,
-): Either.Either<never, CharacterBuildSorcererMetamagicFactsIssue> {
-  return Either.left({ tag: "sorcererMetamagicFactsIssue", message });
+): Result.Result<never, CharacterBuildSorcererMetamagicFactsIssue> {
+  return Result.fail({ tag: "sorcererMetamagicFactsIssue", message });
 }

@@ -1,5 +1,5 @@
 import { UnitId as UnitIdSchema } from "@dnd/shared/game-facts";
-import { Brand, Either, Schema } from "effect";
+import { Brand, Result, Schema } from "effect";
 import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
@@ -181,10 +181,10 @@ export type SorcererMetamagicOptionIdIssue = {
 
 export function sorcererMetamagicOptionId(
   value: string,
-): Either.Either<SorcererMetamagicOptionId, SorcererMetamagicOptionIdIssue> {
+): Result.Result<SorcererMetamagicOptionId, SorcererMetamagicOptionIdIssue> {
   return SORCERER_METAMAGIC_OPTION_IDS.some((optionId) => optionId === value)
-    ? Either.right(SorcererMetamagicOptionId(value))
-    : Either.left({ tag: "unsupportedSorcererMetamagicOptionId", value });
+    ? Result.succeed(SorcererMetamagicOptionId(value))
+    : Result.fail({ tag: "unsupportedSorcererMetamagicOptionId", value });
 }
 
 export const LOADOUT_SLOTS = ["armor", "shield", "weapon"] as const;
@@ -197,10 +197,10 @@ export type UnitChoiceKeyIssue = {
 
 export function unitChoiceKey(
   value: string,
-): Either.Either<UnitChoiceKey, UnitChoiceKeyIssue> {
+): Result.Result<UnitChoiceKey, UnitChoiceKeyIssue> {
   return UNIT_CHOICE_KEYS.some((key) => key === value)
-    ? Either.right(value as UnitChoiceKey)
-    : Either.left({ tag: "unsupportedUnitChoiceKey", value });
+    ? Result.succeed(value as UnitChoiceKey)
+    : Result.fail({ tag: "unsupportedUnitChoiceKey", value });
 }
 
 export type CreationChoiceOptionId = string &
@@ -346,11 +346,11 @@ export type UnitChoiceSourceUnitIdIssue = {
 
 export function unitChoiceSourceUnitId(
   value: string,
-): Either.Either<UnitChoiceSourceUnitId, UnitChoiceSourceUnitIdIssue> {
-  const unitId = Schema.decodeUnknownEither(UnitIdSchema)(value);
-  return Either.isRight(unitId)
-    ? Either.right(UnitChoiceSourceUnitId(unitId.right))
-    : Either.left({ tag: "unitChoiceSourceUnitIdEmpty", value });
+): Result.Result<UnitChoiceSourceUnitId, UnitChoiceSourceUnitIdIssue> {
+  const unitId = Schema.decodeUnknownResult(UnitIdSchema)(value);
+  return Result.isSuccess(unitId)
+    ? Result.succeed(UnitChoiceSourceUnitId(unitId.success))
+    : Result.fail({ tag: "unitChoiceSourceUnitIdEmpty", value });
 }
 
 export type LoadoutEquipmentUnitId = UnitRecord["id"] &
@@ -367,11 +367,11 @@ export type LoadoutEquipmentUnitIdIssue = {
 
 export function loadoutEquipmentUnitId(
   value: string,
-): Either.Either<LoadoutEquipmentUnitId, LoadoutEquipmentUnitIdIssue> {
-  const unitId = Schema.decodeUnknownEither(UnitIdSchema)(value);
-  return Either.isRight(unitId)
-    ? Either.right(LoadoutEquipmentUnitId(unitId.right))
-    : Either.left({ tag: "loadoutEquipmentUnitIdEmpty", value });
+): Result.Result<LoadoutEquipmentUnitId, LoadoutEquipmentUnitIdIssue> {
+  const unitId = Schema.decodeUnknownResult(UnitIdSchema)(value);
+  return Result.isSuccess(unitId)
+    ? Result.succeed(LoadoutEquipmentUnitId(unitId.success))
+    : Result.fail({ tag: "loadoutEquipmentUnitIdEmpty", value });
 }
 
 export type UnitChoiceSourceKeyText =
@@ -412,16 +412,16 @@ export function unitChoiceSourceKey(
 
 export function parseUnitChoiceSourceKey(
   value: string,
-): Either.Either<UnitChoiceSource, UnitChoiceSourceKeyIssue> {
+): Result.Result<UnitChoiceSource, UnitChoiceSourceKeyIssue> {
   const prefix = "u:";
   if (!value.startsWith(prefix)) {
-    return Either.left({ tag: "unitChoiceSourceKeyPrefixMismatch", value });
+    return Result.fail({ tag: "unitChoiceSourceKeyPrefixMismatch", value });
   }
 
   const lengthStart = prefix.length;
   const lengthEnd = value.indexOf(":", lengthStart);
   if (lengthEnd < 0) {
-    return Either.left({ tag: "unitChoiceSourceKeyMissingLength", value });
+    return Result.fail({ tag: "unitChoiceSourceKeyMissingLength", value });
   }
 
   const lengthText = value.slice(lengthStart, lengthEnd);
@@ -431,7 +431,7 @@ export function parseUnitChoiceSourceKey(
     unitIdLength < 1 ||
     String(unitIdLength) !== lengthText
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "unitChoiceSourceKeyInvalidLength",
       value,
       lengthText,
@@ -442,15 +442,15 @@ export function parseUnitChoiceSourceKey(
   const unitIdEnd = unitIdStart + unitIdLength;
   const unitId = value.slice(unitIdStart, unitIdEnd);
   if (unitId.length !== unitIdLength) {
-    return Either.left({
+    return Result.fail({
       tag: "unitChoiceSourceKeyInvalidLength",
       value,
       lengthText,
     });
   }
   const sourceUnitId = unitChoiceSourceUnitId(unitId);
-  if (Either.isLeft(sourceUnitId)) {
-    return Either.left({
+  if (Result.isFailure(sourceUnitId)) {
+    return Result.fail({
       tag: "unitChoiceSourceKeyInvalidLength",
       value,
       lengthText,
@@ -459,7 +459,7 @@ export function parseUnitChoiceSourceKey(
 
   const choicePrefix = ":c:";
   if (!value.startsWith(choicePrefix, unitIdEnd)) {
-    return Either.left({
+    return Result.fail({
       tag: "unitChoiceSourceKeyMissingChoicePrefix",
       value,
     });
@@ -467,16 +467,16 @@ export function parseUnitChoiceSourceKey(
 
   const choiceKey = value.slice(unitIdEnd + choicePrefix.length);
   if (!UNIT_CHOICE_KEYS.some((unitChoiceKey) => unitChoiceKey === choiceKey)) {
-    return Either.left({
+    return Result.fail({
       tag: "unitChoiceSourceKeyUnsupportedChoiceKey",
       value,
       choiceKey,
     });
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "unitChoice",
-    unitId: sourceUnitId.right,
+    unitId: sourceUnitId.success,
     // UNIT_CHOICE_KEYS membership check above establishes the literal union.
     choiceKey: choiceKey as UnitChoiceKey,
   });
@@ -518,16 +518,16 @@ export function loadoutSourceKey(source: LoadoutSource): LoadoutSourceKey {
 
 export function parseLoadoutSourceKey(
   value: string,
-): Either.Either<LoadoutSource, LoadoutSourceKeyIssue> {
+): Result.Result<LoadoutSource, LoadoutSourceKeyIssue> {
   const prefix = "e:";
   if (!value.startsWith(prefix)) {
-    return Either.left({ tag: "loadoutSourceKeyPrefixMismatch", value });
+    return Result.fail({ tag: "loadoutSourceKeyPrefixMismatch", value });
   }
 
   const lengthStart = prefix.length;
   const lengthEnd = value.indexOf(":", lengthStart);
   if (lengthEnd < 0) {
-    return Either.left({ tag: "loadoutSourceKeyMissingLength", value });
+    return Result.fail({ tag: "loadoutSourceKeyMissingLength", value });
   }
 
   const lengthText = value.slice(lengthStart, lengthEnd);
@@ -537,7 +537,7 @@ export function parseLoadoutSourceKey(
     equipmentUnitIdLength < 1 ||
     String(equipmentUnitIdLength) !== lengthText
   ) {
-    return Either.left({
+    return Result.fail({
       tag: "loadoutSourceKeyInvalidLength",
       value,
       lengthText,
@@ -551,15 +551,15 @@ export function parseLoadoutSourceKey(
     equipmentUnitIdEnd,
   );
   if (equipmentUnitIdText.length !== equipmentUnitIdLength) {
-    return Either.left({
+    return Result.fail({
       tag: "loadoutSourceKeyInvalidLength",
       value,
       lengthText,
     });
   }
   const equipmentUnitId = loadoutEquipmentUnitId(equipmentUnitIdText);
-  if (Either.isLeft(equipmentUnitId)) {
-    return Either.left({
+  if (Result.isFailure(equipmentUnitId)) {
+    return Result.fail({
       tag: "loadoutSourceKeyInvalidLength",
       value,
       lengthText,
@@ -568,21 +568,21 @@ export function parseLoadoutSourceKey(
 
   const slotPrefix = ":s:";
   if (!value.startsWith(slotPrefix, equipmentUnitIdEnd)) {
-    return Either.left({ tag: "loadoutSourceKeyMissingSlotPrefix", value });
+    return Result.fail({ tag: "loadoutSourceKeyMissingSlotPrefix", value });
   }
 
   const slot = value.slice(equipmentUnitIdEnd + slotPrefix.length);
   if (!LOADOUT_SLOTS.some((candidate) => candidate === slot)) {
-    return Either.left({
+    return Result.fail({
       tag: "loadoutSourceKeyUnsupportedSlot",
       value,
       slot,
     });
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "loadout",
-    equipmentUnitId: equipmentUnitId.right,
+    equipmentUnitId: equipmentUnitId.success,
     // LOADOUT_SLOTS membership check above establishes the literal union.
     slot: slot as LoadoutSlot,
   });
@@ -629,15 +629,15 @@ function parseCreationHoleIdText(value: string): CreationHoleIdText | null {
   const unitPrefix = "cc:unit-source:";
   if (value.startsWith(unitPrefix)) {
     const source = parseUnitChoiceSourceKey(value.slice(unitPrefix.length));
-    return Either.isRight(source)
-      ? unitChoiceSourceHoleIdText(source.right)
+    return Result.isSuccess(source)
+      ? unitChoiceSourceHoleIdText(source.success)
       : null;
   }
 
   const loadoutPrefix = "cc:loadout-source:";
   if (!value.startsWith(loadoutPrefix)) return null;
   const source = parseLoadoutSourceKey(value.slice(loadoutPrefix.length));
-  return Either.isRight(source) ? loadoutSourceHoleIdText(source.right) : null;
+  return Result.isSuccess(source) ? loadoutSourceHoleIdText(source.success) : null;
 }
 
 export const CHARACTER_EQUIPMENT_ITEM_SLOTS = [
@@ -661,14 +661,14 @@ export type CharacterEquipmentItemUnitIdIssue = {
 
 export function characterEquipmentItemUnitId(
   value: string,
-): Either.Either<
+): Result.Result<
   CharacterEquipmentItemUnitId,
   CharacterEquipmentItemUnitIdIssue
 > {
-  const unitId = Schema.decodeUnknownEither(UnitIdSchema)(value);
-  return Either.isRight(unitId)
-    ? Either.right(CharacterEquipmentItemUnitId(unitId.right))
-    : Either.left({ tag: "characterEquipmentItemUnitIdEmpty", value });
+  const unitId = Schema.decodeUnknownResult(UnitIdSchema)(value);
+  return Result.isSuccess(unitId)
+    ? Result.succeed(CharacterEquipmentItemUnitId(unitId.success))
+    : Result.fail({ tag: "characterEquipmentItemUnitIdEmpty", value });
 }
 
 export function characterEquipmentItemUnitIdFromLoadoutEquipmentUnitId(
@@ -785,12 +785,12 @@ export function characterEquipmentItemId<
 
 export function parseCharacterEquipmentItemId(
   value: string,
-): Either.Either<CharacterEquipmentItemSource, CharacterEquipmentItemIdIssue> {
+): Result.Result<CharacterEquipmentItemSource, CharacterEquipmentItemIdIssue> {
   const slot = CHARACTER_EQUIPMENT_ITEM_SLOTS.find((candidate) =>
     value.startsWith(`${candidate}:`),
   );
   if (slot == null) {
-    return Either.left({
+    return Result.fail({
       tag: "characterEquipmentItemIdSlotUnsupported",
       value,
     });
@@ -798,9 +798,9 @@ export function parseCharacterEquipmentItemId(
 
   const unitIdText = value.slice(slot.length + 1);
   const unitId = characterEquipmentItemUnitId(unitIdText);
-  return Either.isRight(unitId)
-    ? Either.right({ slot, unitId: unitId.right })
-    : Either.left({
+  return Result.isSuccess(unitId)
+    ? Result.succeed({ slot, unitId: unitId.success })
+    : Result.fail({
         tag: "characterEquipmentItemIdUnitIdEmpty",
         value,
         slot,
@@ -811,8 +811,8 @@ export function characterEquipmentItemSourceFromId(
   itemId: CharacterEquipmentItemId,
 ): CharacterEquipmentItemSource {
   const source = parseCharacterEquipmentItemId(itemId);
-  if (Either.isRight(source)) {
-    return source.right;
+  if (Result.isSuccess(source)) {
+    return source.success;
   }
 
   // Branded ids are only produced by characterEquipmentItemId or an explicit

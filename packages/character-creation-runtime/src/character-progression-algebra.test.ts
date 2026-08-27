@@ -1,5 +1,5 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   buildUnitCatalog,
@@ -20,15 +20,15 @@ import {
 } from "./character-progression-types.ts";
 import { characterClassLevel } from "./types.ts";
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}`,
     );
   }
 
-  return result.right;
+  return result.success;
 }
 
 const unitCatalogResult = buildUnitCatalog({
@@ -142,9 +142,9 @@ describe("character progression algebra", () => {
     const background = unitLibrary.requireUnit("background_soldier");
     const fighter = unitLibrary.requireUnit("class_fighter");
 
-    expect(classNameFromClassUnit(fighter)).toEqual(Either.right("fighter"));
+    expect(classNameFromClassUnit(fighter)).toEqual(Result.succeed("fighter"));
     expect(classNameFromClassUnit(background)).toEqual(
-      Either.left({
+      Result.fail({
         code: "nonClassUnit",
         unitId: "background_soldier",
         unitKind: "background",
@@ -156,14 +156,14 @@ describe("character progression algebra", () => {
         classUnitId: authoredUnitId("background_soldier"),
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         code: "nonClassUnit",
         unitId: "background_soldier",
         unitKind: "background",
       }),
     );
     expect(classUnitIdFromClassUnit(background)).toEqual(
-      Either.left({
+      Result.fail({
         code: "nonClassUnit",
         unitId: "background_soldier",
         unitKind: "background",
@@ -178,7 +178,7 @@ describe("character progression algebra", () => {
         classUnitId: authoredUnitId("missing_unit"),
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         code: "unknownUnitId",
         unitId: "missing_unit",
       }),
@@ -189,7 +189,7 @@ describe("character progression algebra", () => {
         classUnitId: authoredUnitId("missing_unit"),
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         code: "unknownUnitId",
         unitId: "missing_unit",
       }),
@@ -213,7 +213,7 @@ describe("character progression algebra", () => {
         })),
       }),
     ).toEqual(
-      Either.left([
+      Result.fail([
         {
           code: "invalidCharacterClassLevel",
           classLevel: 21,
@@ -229,7 +229,7 @@ describe("character progression algebra", () => {
         hitPointRule: { tag: "levelOneMaximumHitDie" },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         code: "invalidHitPointRuleForLevel",
         totalLevel: 2,
         hitPointRule: { tag: "levelOneMaximumHitDie" },

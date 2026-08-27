@@ -8,7 +8,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   abilityScoreAssignment,
@@ -82,7 +82,7 @@ describe("Level 10 character support", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
       right: {
         spellcasting: {
           sources: [
@@ -105,8 +105,8 @@ describe("Level 10 character support", () => {
         },
       },
     });
-    if (Either.isRight(result)) {
-      const bardSource = result.right.spellcasting?.sources.find(
+    if (Result.isSuccess(result)) {
+      const bardSource = result.success.spellcasting?.sources.find(
         (source) => source.sourceUnitId === "class_bard",
       );
       expect(bardSource?.preparedSpells).toHaveLength(15);
@@ -129,7 +129,7 @@ describe("Level 10 character support", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { code: "invalidListPreparedSpellChoice", spellId: "hex" },
     });
   });
@@ -447,9 +447,9 @@ function requireAcceptedBatch(
   return result.draft;
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
-    throw new Error(`Expected Right: ${JSON.stringify(result.left)}`);
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
+    throw new Error(`Expected Right: ${JSON.stringify(result.failure)}`);
   }
-  return result.right;
+  return result.success;
 }

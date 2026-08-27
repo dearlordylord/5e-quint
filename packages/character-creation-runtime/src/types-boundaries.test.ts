@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -32,28 +32,28 @@ import {
   nonEmptyReadonlyArray,
 } from "./types.ts";
 
-function expectRight<A, E>(result: Either.Either<A, E>): A {
-  if (Either.isLeft(result)) {
-    expect.fail(`Expected a parsed fixture, received ${String(result.left)}.`);
+function expectRight<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isFailure(result)) {
+    expect.fail(`Expected a parsed fixture, received ${String(result.failure)}.`);
   }
-  return result.right;
+  return result.success;
 }
 
 describe("character-creation primitive boundaries", () => {
   test("parses supported closed identities and rejects unknown values", () => {
     expect(
       sorcererMetamagicOptionId("sorcerer_empowered_spell"),
-    ).toHaveProperty("_tag", "Right");
+    ).toHaveProperty("_tag", "Success");
     expect(sorcererMetamagicOptionId("synthetic_unknown")).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { tag: "unsupportedSorcererMetamagicOptionId" },
     });
     expect(unitChoiceKey("class_feature_feat_choice")).toHaveProperty(
       "_tag",
-      "Right",
+      "Success",
     );
     expect(unitChoiceKey("synthetic_unknown")).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { tag: "unsupportedUnitChoiceKey" },
     });
     expect(isCharacterBuildToolProficiencyId("thieves_tools")).toBe(true);
@@ -101,7 +101,7 @@ describe("character-creation primitive boundaries", () => {
 
   test("round-trips Unit-choice source keys and reports each malformed shape", () => {
     expect(unitChoiceSourceUnitId("")).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { tag: "unitChoiceSourceUnitIdEmpty" },
     });
     const source = {
@@ -110,7 +110,7 @@ describe("character-creation primitive boundaries", () => {
       choiceKey: expectRight(unitChoiceKey("class_feature_feat_choice")),
     } as const;
     const key = unitChoiceSourceKey(source);
-    expect(parseUnitChoiceSourceKey(key)).toEqual(Either.right(source));
+    expect(parseUnitChoiceSourceKey(key)).toEqual(Result.succeed(source));
     expect(
       parseCreationHoleId(unitChoiceSourceHoleIdText(source)),
     ).not.toBeNull();
@@ -136,7 +136,7 @@ describe("character-creation primitive boundaries", () => {
     ] as const;
     for (const [value, tag] of malformedCases) {
       expect(parseUnitChoiceSourceKey(value)).toMatchObject({
-        _tag: "Left",
+        _tag: "Failure",
         left: { tag },
       });
       expect(parseCreationHoleId(`cc:unit-source:${value}`)).toBeNull();
@@ -145,7 +145,7 @@ describe("character-creation primitive boundaries", () => {
 
   test("round-trips loadout source keys and reports each malformed shape", () => {
     expect(loadoutEquipmentUnitId("")).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { tag: "loadoutEquipmentUnitIdEmpty" },
     });
     const source = {
@@ -161,7 +161,7 @@ describe("character-creation primitive boundaries", () => {
       ),
     ).toBe("synthetic:equipment");
     const key = loadoutSourceKey(source);
-    expect(parseLoadoutSourceKey(key)).toEqual(Either.right(source));
+    expect(parseLoadoutSourceKey(key)).toEqual(Result.succeed(source));
     expect(parseCreationHoleId(loadoutSourceHoleIdText(source))).not.toBeNull();
 
     const malformedCases = [
@@ -176,7 +176,7 @@ describe("character-creation primitive boundaries", () => {
     ] as const;
     for (const [value, tag] of malformedCases) {
       expect(parseLoadoutSourceKey(value)).toMatchObject({
-        _tag: "Left",
+        _tag: "Failure",
         left: { tag },
       });
       expect(parseCreationHoleId(`cc:loadout-source:${value}`)).toBeNull();
@@ -191,7 +191,7 @@ describe("character-creation primitive boundaries", () => {
     expect(parseCreationHoleId("synthetic_unknown")).toBeNull();
 
     expect(characterEquipmentItemUnitId("")).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { tag: "characterEquipmentItemUnitIdEmpty" },
     });
     const unitId = expectRight(
@@ -200,7 +200,7 @@ describe("character-creation primitive boundaries", () => {
     for (const slot of ["armor", "shield", "main", "off"] as const) {
       const itemId = characterEquipmentItemId({ slot, unitId });
       expect(parseCharacterEquipmentItemId(itemId)).toEqual(
-        Either.right({ slot, unitId }),
+        Result.succeed({ slot, unitId }),
       );
       expect(characterEquipmentItemSourceFromId(itemId)).toEqual({
         slot,
@@ -208,11 +208,11 @@ describe("character-creation primitive boundaries", () => {
       });
     }
     expect(parseCharacterEquipmentItemId("synthetic:equipment")).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { tag: "characterEquipmentItemIdSlotUnsupported" },
     });
     expect(parseCharacterEquipmentItemId("armor:")).toMatchObject({
-      _tag: "Left",
+      _tag: "Failure",
       left: { tag: "characterEquipmentItemIdUnitIdEmpty", slot: "armor" },
     });
     // The public constructor is the only safe producer; this cast deliberately

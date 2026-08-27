@@ -12,7 +12,7 @@ import {
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import type {
   CharacterBuild,
@@ -41,7 +41,7 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
   readonly value: unknown;
   readonly build: MagicInitiateSpellAccessBuildContext;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildMagicInitiateSpellAccess[],
   readonly [
     CharacterBuildMagicInitiateSpellAccessIssue,
@@ -49,7 +49,7 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
   ]
 > {
   if (!Array.isArray(input.value)) {
-    return Either.left([
+    return Result.fail([
       { message: "Character Build requires Magic Initiate Spell Accesses." },
     ]);
   }
@@ -68,8 +68,8 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
       grantInstances,
       unitLibrary: input.unitLibrary,
     });
-    if (Either.isLeft(parsed)) issues.push(...parsed.left);
-    else accesses.push(parsed.right);
+    if (Result.isFailure(parsed)) issues.push(...parsed.failure);
+    else accesses.push(parsed.success);
   });
 
   issues.push(
@@ -79,8 +79,8 @@ export function parseCharacterBuildMagicInitiateSpellAccesses(input: {
 
   const firstIssue = issues[0];
   return firstIssue === undefined
-    ? Either.right(accesses)
-    : Either.left([firstIssue, ...issues.slice(1)]);
+    ? Result.succeed(accesses)
+    : Result.fail([firstIssue, ...issues.slice(1)]);
 }
 
 function magicInitiateGrantInstanceIssues(
@@ -194,7 +194,7 @@ function parseMagicInitiateSpellAccessEntry(input: {
   readonly index: number;
   readonly grantInstances: readonly MagicInitiateGrantInstance[];
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildMagicInitiateSpellAccess,
   readonly [
     CharacterBuildMagicInitiateSpellAccessIssue,
@@ -203,7 +203,7 @@ function parseMagicInitiateSpellAccessEntry(input: {
 > {
   const issues: CharacterBuildMagicInitiateSpellAccessIssue[] = [];
   if (!isMagicInitiateSpellAccessInput(input.value)) {
-    return Either.left([
+    return Result.fail([
       {
         index: input.index,
         message:
@@ -250,8 +250,8 @@ function parseMagicInitiateSpellAccessEntry(input: {
 
   const firstIssue = issues[0];
   if (firstIssue !== undefined)
-    return Either.left([firstIssue, ...issues.slice(1)]);
-  return Either.right({
+    return Result.fail([firstIssue, ...issues.slice(1)]);
+  return Result.succeed({
     featUnitId,
     spellcastingAbility: input.value.spellcastingAbility,
     cantrips,

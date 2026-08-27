@@ -6,7 +6,7 @@ import {
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import type { BackgroundRecord, EffectAtom } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { createCharacterDraft } from "./draft.ts";
@@ -294,10 +294,10 @@ describe("finalization equipment and support boundary branches", () => {
       finalizedSelections({ choices: equipmentChoices() }),
       unitLibrary,
     );
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(result.right.startingEquipmentCurrencyRemainderCp).toBe(1800);
-      expect(result.right.owned).toEqual(
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(result.success.startingEquipmentCurrencyRemainderCp).toBe(1800);
+      expect(result.success.owned).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             kind: "catalogItem",
@@ -320,10 +320,10 @@ describe("finalization equipment and support boundary branches", () => {
       }),
       unitLibrary,
     );
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
       expect(
-        result.right.owned.filter(
+        result.success.owned.filter(
           (item) =>
             item.kind === "catalogItem" &&
             String(item.itemId) === "main:weapon_spear",

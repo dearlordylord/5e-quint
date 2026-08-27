@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { createCharacterDraft, parseCharacterDraft } from "./draft.ts";
@@ -128,7 +128,7 @@ function storedDraftWith(path: FixturePath, value: unknown): unknown {
 
 function expectInvalidDraft(value: unknown, path: string): void {
   expect(parseCharacterDraft(value)).toEqual(
-    Either.left(
+    Result.fail(
       expect.objectContaining({
         tag: "invalidCharacterDraft",
         path,
@@ -141,9 +141,9 @@ describe("stored CharacterDraft parser", () => {
   test("parses every durable selection variant in one maximal stored draft", () => {
     const result = parseCharacterDraft(maximalStoredDraft());
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isRight(result)) {
-      expect(result.right).toMatchObject({
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isSuccess(result)) {
+      expect(result.success).toMatchObject({
         draftId: "draft:synthetic-maximal",
         revision: 3,
         selections: {
@@ -190,9 +190,9 @@ describe("stored CharacterDraft parser", () => {
     );
     const small = storedDraftWith(["selections", "speciesSize"], "small");
 
-    expect(Either.isRight(parseCharacterDraft(pointBuy))).toBe(true);
-    expect(Either.isRight(parseCharacterDraft(oneEach))).toBe(true);
-    expect(Either.isRight(parseCharacterDraft(small))).toBe(true);
+    expect(Result.isSuccess(parseCharacterDraft(pointBuy))).toBe(true);
+    expect(Result.isSuccess(parseCharacterDraft(oneEach))).toBe(true);
+    expect(Result.isSuccess(parseCharacterDraft(small))).toBe(true);
   });
 
   test.each([

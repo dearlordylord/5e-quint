@@ -1,6 +1,6 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   buildUnitCatalog,
   srdUnitCollection,
@@ -188,23 +188,23 @@ function testProgression(
   classLevel: number,
 ): CharacterProgression {
   const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
-  if (Either.isLeft(parsedClassUnitId)) {
+  if (Result.isFailure(parsedClassUnitId)) {
     throw new Error(
-      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.left)}`,
+      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
     );
   }
   const result = parseCharacterProgressionShape({
-    startingClass: parsedClassUnitId.right,
+    startingClass: parsedClassUnitId.success,
     advancements: Array.from({ length: classLevel - 1 }, () => ({
-      classUnitId: parsedClassUnitId.right,
+      classUnitId: parsedClassUnitId.success,
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
     })),
   });
-  if (Either.isLeft(result)) {
-    throw new Error(`Invalid test progression: ${JSON.stringify(result.left)}`);
+  if (Result.isFailure(result)) {
+    throw new Error(`Invalid test progression: ${JSON.stringify(result.failure)}`);
   }
 
-  return result.right;
+  return result.success;
 }
 
 type PreferredSupportedFillOptionIdsBySource = Readonly<
@@ -325,12 +325,12 @@ function testAbilityScoreAssignment(
   scores: RawAbilityScoreAssignment,
 ): AbilityScoreAssignment {
   const parsed = abilityScoreAssignment(scores);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(
       "Test fixture ability scores must be valid AbilityScore values.",
     );
   }
-  return parsed.right;
+  return parsed.success;
 }
 
 function testUnitChoiceSourceKey(
@@ -338,15 +338,15 @@ function testUnitChoiceSourceKey(
   choiceKey: UnitChoiceKey,
 ): string {
   const sourceUnitId = unitChoiceSourceUnitId(unitId);
-  if (Either.isLeft(sourceUnitId)) {
+  if (Result.isFailure(sourceUnitId)) {
     throw new Error(
-      `Invalid test Unit choice source Unit id: ${JSON.stringify(sourceUnitId.left)}`,
+      `Invalid test Unit choice source Unit id: ${JSON.stringify(sourceUnitId.failure)}`,
     );
   }
 
   return unitChoiceSourceKey({
     tag: "unitChoice",
-    unitId: sourceUnitId.right,
+    unitId: sourceUnitId.success,
     choiceKey,
   });
 }
@@ -365,13 +365,13 @@ function selectedChoiceOptionIds(
   );
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}`,
     );
   }
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
 
-  return result.right;
+  return result.success;
 }

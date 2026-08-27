@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { characterBuildResources } from "./finalization.ts";
 import {
@@ -97,33 +97,33 @@ export function characterBuildClassFeatureFactsProjectionWithRoute<
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly route: readonly RouteEvent[];
-}): Either.Either<
+}): Result.Result<
   CharacterBuildClassFeatureFactsProjectionRoute<RouteEvent>,
   CharacterBuildClassFeatureFactsProjectionIssue
 > {
   const monksFocus = characterBuildMonksFocusFacts(input);
-  if (Either.isLeft(monksFocus)) return Either.left(monksFocus.left);
+  if (Result.isFailure(monksFocus)) return Result.fail(monksFocus.failure);
   const monkUncannyMetabolism = characterBuildMonkUncannyMetabolismFacts(input);
-  if (Either.isLeft(monkUncannyMetabolism)) {
-    return Either.left(monkUncannyMetabolism.left);
+  if (Result.isFailure(monkUncannyMetabolism)) {
+    return Result.fail(monkUncannyMetabolism.failure);
   }
   const sorcererFontOfMagic = characterBuildSorcererFontOfMagicFacts(input);
-  if (Either.isLeft(sorcererFontOfMagic)) {
-    return Either.left(sorcererFontOfMagic.left);
+  if (Result.isFailure(sorcererFontOfMagic)) {
+    return Result.fail(sorcererFontOfMagic.failure);
   }
   const sorcererMetamagic = characterBuildSorcererMetamagicFacts(input);
-  if (Either.isLeft(sorcererMetamagic)) {
-    return Either.left(sorcererMetamagic.left);
+  if (Result.isFailure(sorcererMetamagic)) {
+    return Result.fail(sorcererMetamagic.failure);
   }
 
-  return Either.right({
+  return Result.succeed({
     build: input.build,
     facts: {
       resources: characterBuildResources(input.build, input.unitLibrary),
-      monksFocus: monksFocus.right,
-      monkUncannyMetabolism: monkUncannyMetabolism.right,
-      sorcererFontOfMagic: sorcererFontOfMagic.right,
-      sorcererMetamagic: sorcererMetamagic.right,
+      monksFocus: monksFocus.success,
+      monkUncannyMetabolism: monkUncannyMetabolism.success,
+      sorcererFontOfMagic: sorcererFontOfMagic.success,
+      sorcererMetamagic: sorcererMetamagic.success,
     },
     route: [
       ...characterBuildProjectionWithRoute(input).route,

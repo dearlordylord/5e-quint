@@ -8,11 +8,13 @@ const PreparedSpellReplacementSchema = Schema.Struct({
   replaceSpellId: UnitId,
   selectedSpellId: UnitId,
 });
+const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
+  Schema.check(Schema.isNonEmpty()),
+);
 const ListPreparedSpellcastingGainSchema = Schema.Struct({
   gainedPreparedSpells: Schema.Array(UnitId),
-  preparedSpellReplacement: Schema.optionalWith(
+  preparedSpellReplacement: Schema.optionalKey(
     PreparedSpellReplacementSchema,
-    { exact: true },
   ),
 });
 const CharacterBuildPlainClassLevelGainSchema = Schema.Struct({
@@ -57,9 +59,9 @@ const CharacterBuildWeaponMasteryLevelGainSchema = Schema.Struct({
 });
 const CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGainSchema =
   Schema.Struct({
-    tag: Schema.Literal(
+    tag: Schema.Literals([
       "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
-    ),
+    ]),
     classUnitId: UnitId,
     hitPointRule: FixedHigherLevelGainRuleSchema,
     weaponMastery: Schema.Struct({
@@ -75,25 +77,24 @@ const CharacterBuildSorcererMetamagicLevelGainSchema = Schema.Struct({
   classUnitId: UnitId,
   hitPointRule: FixedHigherLevelGainRuleSchema,
   metamagic: Schema.Struct({
-    gainedOptions: Schema.Array(Schema.NonEmptyTrimmedString),
-    replacement: Schema.optionalWith(
+    gainedOptions: Schema.Array(NonEmptyTrimmedStringSchema),
+    replacement: Schema.optionalKey(
       Schema.Struct({
-        replaceOptionId: Schema.NonEmptyTrimmedString,
-        selectedOptionId: Schema.NonEmptyTrimmedString,
+        replaceOptionId: NonEmptyTrimmedStringSchema,
+        selectedOptionId: NonEmptyTrimmedStringSchema,
       }),
-      { exact: true },
     ),
   }),
 });
-const EldritchInvocationSelectionSchema = Schema.Union(
+const EldritchInvocationSelectionSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("nonRepeatable"),
-    invocationId: Schema.NonEmptyTrimmedString,
+    invocationId: NonEmptyTrimmedStringSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("repeatable"),
-    invocationId: Schema.NonEmptyTrimmedString,
-    repeatableChoice: Schema.Union(
+    invocationId: NonEmptyTrimmedStringSchema,
+    repeatableChoice: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("knownWarlockCantrip"),
         cantripId: UnitId,
@@ -102,41 +103,38 @@ const EldritchInvocationSelectionSchema = Schema.Union(
         kind: Schema.Literal("originFeat"),
         featUnitId: UnitId,
       }),
-    ),
+    ]),
   }),
-);
+]);
 const CharacterBuildWarlockLevelGainSchema = Schema.Struct({
   tag: Schema.Literal("warlockLevelGain"),
   classUnitId: UnitId,
   hitPointRule: FixedHigherLevelGainRuleSchema,
   pactMagic: Schema.Struct({
     gainedCantrips: Schema.Array(UnitId),
-    cantripReplacement: Schema.optionalWith(
+    cantripReplacement: Schema.optionalKey(
       Schema.Struct({
         replaceCantripId: UnitId,
         selectedCantripId: UnitId,
       }),
-      { exact: true },
     ),
     gainedPreparedSpells: Schema.Array(UnitId),
-    preparedSpellReplacement: Schema.optionalWith(
+    preparedSpellReplacement: Schema.optionalKey(
       PreparedSpellReplacementSchema,
-      { exact: true },
     ),
   }),
   eldritchInvocations: Schema.Struct({
     gainedInvocations: Schema.Array(EldritchInvocationSelectionSchema),
-    replacement: Schema.optionalWith(
+    replacement: Schema.optionalKey(
       Schema.Struct({
         replaceInvocation: EldritchInvocationSelectionSchema,
         selectedInvocation: EldritchInvocationSelectionSchema,
       }),
-      { exact: true },
     ),
   }),
 });
 
-export const CharacterBuildClassLevelGainSchema = Schema.Union(
+export const CharacterBuildClassLevelGainSchema = Schema.Union([
   CharacterBuildPlainClassLevelGainSchema,
   CharacterBuildListPreparedSpellcastingLevelGainSchema,
   CharacterBuildFighterFightingStyleReplacementLevelGainSchema,
@@ -145,7 +143,7 @@ export const CharacterBuildClassLevelGainSchema = Schema.Union(
   CharacterBuildFighterWeaponMasteryAndFightingStyleReplacementLevelGainSchema,
   CharacterBuildSorcererMetamagicLevelGainSchema,
   CharacterBuildWarlockLevelGainSchema,
-);
+]);
 
 export type CharacterBuildClassLevelGainSchemaInput = Schema.Schema.Type<
   typeof CharacterBuildClassLevelGainSchema

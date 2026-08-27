@@ -42,7 +42,7 @@ import {
   type FixedHigherLevelClassHitPointRule,
 } from "./character-progression-types.ts";
 import { SURFACE_ABILITIES, type Ability } from "@dnd/shared/game-facts";
-import { Either } from "effect";
+import { Result } from "effect";
 
 export type CharacterDraftParseIssue = {
   readonly tag: "invalidCharacterDraft";
@@ -50,30 +50,30 @@ export type CharacterDraftParseIssue = {
   readonly message: string;
 };
 
-type ParseResult<T> = Either.Either<T, CharacterDraftParseIssue>;
+type ParseResult<T> = Result.Result<T, CharacterDraftParseIssue>;
 
 export function parseCharacterDraft(
   value: unknown,
 ): ParseResult<CharacterDraft> {
   const draft = record(value, "$");
-  if (Either.isLeft(draft)) return failIssue(draft.left);
+  if (Result.isFailure(draft)) return failIssue(draft.failure);
 
-  const draftId = stringAt(draft.right, "draftId", "$.draftId");
-  if (Either.isLeft(draftId)) return failIssue(draftId.left);
+  const draftId = stringAt(draft.success, "draftId", "$.draftId");
+  if (Result.isFailure(draftId)) return failIssue(draftId.failure);
 
-  const revision = parseDraftRevision(draft.right.revision, "$.revision");
-  if (Either.isLeft(revision)) return failIssue(revision.left);
+  const revision = parseDraftRevision(draft.success.revision, "$.revision");
+  if (Result.isFailure(revision)) return failIssue(revision.failure);
 
   const selections = parseDraftSelections(
-    draft.right.selections,
+    draft.success.selections,
     "$.selections",
   );
-  if (Either.isLeft(selections)) return failIssue(selections.left);
+  if (Result.isFailure(selections)) return failIssue(selections.failure);
 
-  return Either.right({
-    draftId: characterDraftId(draftId.right),
-    revision: revision.right,
-    selections: selections.right,
+  return Result.succeed({
+    draftId: characterDraftId(draftId.success),
+    revision: revision.success,
+    selections: selections.success,
   });
 }
 
@@ -82,7 +82,7 @@ function parseDraftRevision(
   path: string,
 ): ParseResult<DraftRevision> {
   return typeof value === "number" && Number.isInteger(value) && value >= 0
-    ? Either.right(draftRevision(value))
+    ? Result.succeed(draftRevision(value))
     : invalid(path, "Expected a non-negative integer draft revision.");
 }
 
@@ -91,127 +91,127 @@ function parseDraftSelections(
   path: string,
 ): ParseResult<CharacterDraftSelections> {
   const selections = record(value, path);
-  if (Either.isLeft(selections)) return failIssue(selections.left);
+  if (Result.isFailure(selections)) return failIssue(selections.failure);
 
-  const choices = arrayAt(selections.right, "choices", `${path}.choices`);
-  if (Either.isLeft(choices)) return failIssue(choices.left);
+  const choices = arrayAt(selections.success, "choices", `${path}.choices`);
+  if (Result.isFailure(choices)) return failIssue(choices.failure);
 
   const parsedChoices = collect(
-    choices.right.map((choice, index) =>
+    choices.success.map((choice, index) =>
       parseCharacterChoiceSelection(choice, `${path}.choices[${index}]`),
     ),
   );
-  if (Either.isLeft(parsedChoices)) return failIssue(parsedChoices.left);
+  if (Result.isFailure(parsedChoices)) return failIssue(parsedChoices.failure);
 
   const progression =
-    selections.right.progression === undefined
-      ? Either.right(undefined)
+    selections.success.progression === undefined
+      ? Result.succeed(undefined)
       : parseCharacterProgression(
-          selections.right.progression,
+          selections.success.progression,
           `${path}.progression`,
         );
-  if (Either.isLeft(progression)) return failIssue(progression.left);
+  if (Result.isFailure(progression)) return failIssue(progression.failure);
 
   const background = optionalString(
-    selections.right.background,
+    selections.success.background,
     `${path}.background`,
   );
-  if (Either.isLeft(background)) return failIssue(background.left);
+  if (Result.isFailure(background)) return failIssue(background.failure);
 
   const abilityScoreGeneration =
-    selections.right.abilityScoreGeneration === undefined
-      ? Either.right(undefined)
+    selections.success.abilityScoreGeneration === undefined
+      ? Result.succeed(undefined)
       : parseAbilityScoreGeneration(
-          selections.right.abilityScoreGeneration,
+          selections.success.abilityScoreGeneration,
           `${path}.abilityScoreGeneration`,
         );
-  if (Either.isLeft(abilityScoreGeneration)) {
-    return failIssue(abilityScoreGeneration.left);
+  if (Result.isFailure(abilityScoreGeneration)) {
+    return failIssue(abilityScoreGeneration.failure);
   }
 
   const backgroundAbilityScoreIncrease =
-    selections.right.backgroundAbilityScoreIncrease === undefined
-      ? Either.right(undefined)
+    selections.success.backgroundAbilityScoreIncrease === undefined
+      ? Result.succeed(undefined)
       : parseBackgroundAbilityScoreIncrease(
-          selections.right.backgroundAbilityScoreIncrease,
+          selections.success.backgroundAbilityScoreIncrease,
           `${path}.backgroundAbilityScoreIncrease`,
         );
-  if (Either.isLeft(backgroundAbilityScoreIncrease)) {
-    return failIssue(backgroundAbilityScoreIncrease.left);
+  if (Result.isFailure(backgroundAbilityScoreIncrease)) {
+    return failIssue(backgroundAbilityScoreIncrease.failure);
   }
 
-  const species = optionalString(selections.right.species, `${path}.species`);
-  if (Either.isLeft(species)) return failIssue(species.left);
+  const species = optionalString(selections.success.species, `${path}.species`);
+  if (Result.isFailure(species)) return failIssue(species.failure);
 
   const speciesSize =
-    selections.right.speciesSize === undefined
-      ? Either.right(undefined)
+    selections.success.speciesSize === undefined
+      ? Result.succeed(undefined)
       : parseCharacterSpeciesSize(
-          selections.right.speciesSize,
+          selections.success.speciesSize,
           `${path}.speciesSize`,
         );
-  if (Either.isLeft(speciesSize)) return failIssue(speciesSize.left);
+  if (Result.isFailure(speciesSize)) return failIssue(speciesSize.failure);
 
   const draconicAncestry =
-    selections.right.draconicAncestry === undefined
-      ? Either.right(undefined)
+    selections.success.draconicAncestry === undefined
+      ? Result.succeed(undefined)
       : parseCharacterDraconicAncestry(
-          selections.right.draconicAncestry,
+          selections.success.draconicAncestry,
           `${path}.draconicAncestry`,
         );
-  if (Either.isLeft(draconicAncestry)) {
-    return failIssue(draconicAncestry.left);
+  if (Result.isFailure(draconicAncestry)) {
+    return failIssue(draconicAncestry.failure);
   }
 
   const languages =
-    selections.right.languages === undefined
-      ? Either.right(undefined)
-      : parseStartingLanguages(selections.right.languages, `${path}.languages`);
-  if (Either.isLeft(languages)) return failIssue(languages.left);
+    selections.success.languages === undefined
+      ? Result.succeed(undefined)
+      : parseStartingLanguages(selections.success.languages, `${path}.languages`);
+  if (Result.isFailure(languages)) return failIssue(languages.failure);
 
   const alignment =
-    selections.right.alignment === undefined
-      ? Either.right(undefined)
-      : parseAlignment(selections.right.alignment, `${path}.alignment`);
-  if (Either.isLeft(alignment)) return failIssue(alignment.left);
+    selections.success.alignment === undefined
+      ? Result.succeed(undefined)
+      : parseAlignment(selections.success.alignment, `${path}.alignment`);
+  if (Result.isFailure(alignment)) return failIssue(alignment.failure);
 
   const equipment =
-    selections.right.equipment === undefined
-      ? Either.right(undefined)
+    selections.success.equipment === undefined
+      ? Result.succeed(undefined)
       : parseEquipmentSelection(
-          selections.right.equipment,
+          selections.success.equipment,
           `${path}.equipment`,
         );
-  if (Either.isLeft(equipment)) return failIssue(equipment.left);
+  if (Result.isFailure(equipment)) return failIssue(equipment.failure);
 
-  return Either.right({
-    choices: parsedChoices.right,
-    ...(progression.right === undefined
+  return Result.succeed({
+    choices: parsedChoices.success,
+    ...(progression.success === undefined
       ? {}
-      : { progression: progression.right }),
-    ...(background.right === undefined
+      : { progression: progression.success }),
+    ...(background.success === undefined
       ? {}
-      : { background: authoredUnitId(background.right) }),
-    ...(abilityScoreGeneration.right === undefined
+      : { background: authoredUnitId(background.success) }),
+    ...(abilityScoreGeneration.success === undefined
       ? {}
-      : { abilityScoreGeneration: abilityScoreGeneration.right }),
-    ...(backgroundAbilityScoreIncrease.right === undefined
+      : { abilityScoreGeneration: abilityScoreGeneration.success }),
+    ...(backgroundAbilityScoreIncrease.success === undefined
       ? {}
       : {
-          backgroundAbilityScoreIncrease: backgroundAbilityScoreIncrease.right,
+          backgroundAbilityScoreIncrease: backgroundAbilityScoreIncrease.success,
         }),
-    ...(species.right === undefined
+    ...(species.success === undefined
       ? {}
-      : { species: authoredUnitId(species.right) }),
-    ...(speciesSize.right === undefined
+      : { species: authoredUnitId(species.success) }),
+    ...(speciesSize.success === undefined
       ? {}
-      : { speciesSize: speciesSize.right }),
-    ...(draconicAncestry.right === undefined
+      : { speciesSize: speciesSize.success }),
+    ...(draconicAncestry.success === undefined
       ? {}
-      : { draconicAncestry: draconicAncestry.right }),
-    ...(languages.right === undefined ? {} : { languages: languages.right }),
-    ...(alignment.right === undefined ? {} : { alignment: alignment.right }),
-    ...(equipment.right === undefined ? {} : { equipment: equipment.right }),
+      : { draconicAncestry: draconicAncestry.success }),
+    ...(languages.success === undefined ? {} : { languages: languages.success }),
+    ...(alignment.success === undefined ? {} : { alignment: alignment.success }),
+    ...(equipment.success === undefined ? {} : { equipment: equipment.success }),
   });
 }
 
@@ -220,9 +220,9 @@ function parseCharacterSpeciesSize(
   path: string,
 ): ParseResult<CharacterSpeciesSizeSelection> {
   const text = optionalString(value, path);
-  if (Either.isLeft(text)) return failIssue(text.left);
-  if (isCharacterSpeciesSizeSelection(text.right)) {
-    return Either.right(text.right);
+  if (Result.isFailure(text)) return failIssue(text.failure);
+  if (isCharacterSpeciesSizeSelection(text.success)) {
+    return Result.succeed(text.success);
   }
 
   return invalid(path, "Character species size must be medium or small.");
@@ -233,7 +233,7 @@ function parseCharacterDraconicAncestry(
   path: string,
 ): ParseResult<CharacterDraconicAncestrySelection> {
   return typeof value === "string"
-    ? Either.right(characterDraconicAncestrySelection(value))
+    ? Result.succeed(characterDraconicAncestrySelection(value))
     : invalid(path, "Character Draconic Ancestry must be a string.");
 }
 
@@ -242,33 +242,33 @@ function parseCharacterProgression(
   path: string,
 ): ParseResult<CharacterProgression> {
   const progression = record(value, path);
-  if (Either.isLeft(progression)) return failIssue(progression.left);
+  if (Result.isFailure(progression)) return failIssue(progression.failure);
 
   const startingClass = stringAt(
-    progression.right,
+    progression.success,
     "startingClass",
     `${path}.startingClass`,
   );
-  if (Either.isLeft(startingClass)) return failIssue(startingClass.left);
+  if (Result.isFailure(startingClass)) return failIssue(startingClass.failure);
 
   const advancements = arrayAt(
-    progression.right,
+    progression.success,
     "advancements",
     `${path}.advancements`,
   );
-  if (Either.isLeft(advancements)) return failIssue(advancements.left);
+  if (Result.isFailure(advancements)) return failIssue(advancements.failure);
 
   const parsedAdvancements = collect(
-    advancements.right.map((entry, index) =>
+    advancements.success.map((entry, index) =>
       parseCharacterProgressionEntry(entry, `${path}.advancements[${index}]`),
     ),
   );
-  if (Either.isLeft(parsedAdvancements))
-    return failIssue(parsedAdvancements.left);
+  if (Result.isFailure(parsedAdvancements))
+    return failIssue(parsedAdvancements.failure);
 
-  return Either.right({
-    startingClass: classUnitId(authoredUnitId(startingClass.right)),
-    advancements: parsedAdvancements.right,
+  return Result.succeed({
+    startingClass: classUnitId(authoredUnitId(startingClass.success)),
+    advancements: parsedAdvancements.success,
   });
 }
 
@@ -277,20 +277,20 @@ function parseCharacterProgressionEntry(
   path: string,
 ): ParseResult<CharacterProgressionEntry> {
   const entry = record(value, path);
-  if (Either.isLeft(entry)) return failIssue(entry.left);
+  if (Result.isFailure(entry)) return failIssue(entry.failure);
 
-  const classId = stringAt(entry.right, "classUnitId", `${path}.classUnitId`);
-  if (Either.isLeft(classId)) return failIssue(classId.left);
+  const classId = stringAt(entry.success, "classUnitId", `${path}.classUnitId`);
+  if (Result.isFailure(classId)) return failIssue(classId.failure);
 
   const hitPointRule = parseFixedHigherLevelHitPointRule(
-    entry.right.hitPointRule,
+    entry.success.hitPointRule,
     `${path}.hitPointRule`,
   );
-  if (Either.isLeft(hitPointRule)) return failIssue(hitPointRule.left);
+  if (Result.isFailure(hitPointRule)) return failIssue(hitPointRule.failure);
 
-  return Either.right({
-    classUnitId: classUnitId(authoredUnitId(classId.right)),
-    hitPointRule: hitPointRule.right,
+  return Result.succeed({
+    classUnitId: classUnitId(authoredUnitId(classId.success)),
+    hitPointRule: hitPointRule.success,
   });
 }
 
@@ -299,9 +299,9 @@ function parseFixedHigherLevelHitPointRule(
   path: string,
 ): ParseResult<FixedHigherLevelClassHitPointRule> {
   const rule = record(value, path);
-  if (Either.isLeft(rule)) return failIssue(rule.left);
-  return rule.right.tag === "fixedHigherLevelGain"
-    ? Either.right({ tag: "fixedHigherLevelGain" })
+  if (Result.isFailure(rule)) return failIssue(rule.failure);
+  return rule.success.tag === "fixedHigherLevelGain"
+    ? Result.succeed({ tag: "fixedHigherLevelGain" })
     : invalid(path, "Expected fixedHigherLevelGain hit point rule.");
 }
 
@@ -312,22 +312,22 @@ function parseAbilityScoreGeneration(
   NonNullable<CharacterDraftSelections["abilityScoreGeneration"]>
 > {
   const selection = record(value, path);
-  if (Either.isLeft(selection)) return failIssue(selection.left);
+  if (Result.isFailure(selection)) return failIssue(selection.failure);
 
-  const method = selection.right.method;
+  const method = selection.success.method;
   if (!supportedAbilityScoreMethod(method)) {
     return invalid(path, "Expected a supported ability score method.");
   }
 
-  const assignedScores = abilityScoreAssignment(selection.right.assignedScores);
-  return Either.isLeft(assignedScores)
+  const assignedScores = abilityScoreAssignment(selection.success.assignedScores);
+  return Result.isFailure(assignedScores)
     ? invalid(
         `${path}.assignedScores`,
         "Expected a valid ability score assignment.",
       )
-    : Either.right({
+    : Result.succeed({
         method,
-        assignedScores: assignedScores.right,
+        assignedScores: assignedScores.success,
       });
 }
 
@@ -336,24 +336,24 @@ function parseBackgroundAbilityScoreIncrease(
   path: string,
 ): ParseResult<BackgroundAbilityScoreIncreaseSelection> {
   const selection = record(value, path);
-  if (Either.isLeft(selection)) return failIssue(selection.left);
+  if (Result.isFailure(selection)) return failIssue(selection.failure);
 
-  if (selection.right.kind === "oneEach")
-    return Either.right({ kind: "oneEach" });
-  if (selection.right.kind !== "twoAndOne") {
+  if (selection.success.kind === "oneEach")
+    return Result.succeed({ kind: "oneEach" });
+  if (selection.success.kind !== "twoAndOne") {
     return invalid(
       path,
       "Expected a supported background ability score increase.",
     );
   }
 
-  const plusTwo = parseAbility(selection.right.plusTwo, `${path}.plusTwo`);
-  if (Either.isLeft(plusTwo)) return failIssue(plusTwo.left);
-  const plusOne = parseAbility(selection.right.plusOne, `${path}.plusOne`);
-  if (Either.isLeft(plusOne)) return failIssue(plusOne.left);
+  const plusTwo = parseAbility(selection.success.plusTwo, `${path}.plusTwo`);
+  if (Result.isFailure(plusTwo)) return failIssue(plusTwo.failure);
+  const plusOne = parseAbility(selection.success.plusOne, `${path}.plusOne`);
+  if (Result.isFailure(plusOne)) return failIssue(plusOne.failure);
   return twoAndOneBackgroundAbilityScoreIncrease(
-    plusTwo.right,
-    plusOne.right,
+    plusTwo.success,
+    plusOne.success,
     path,
   );
 }
@@ -384,9 +384,9 @@ function parseAlignment(
   path: string,
 ): ParseResult<CharacterAlignment> {
   const alignment = record(value, path);
-  if (Either.isLeft(alignment)) return failIssue(alignment.left);
-  const order = alignment.right.order;
-  const morality = alignment.right.morality;
+  if (Result.isFailure(alignment)) return failIssue(alignment.failure);
+  const order = alignment.success.order;
+  const morality = alignment.success.morality;
   if (!alignmentOrder(order)) {
     return invalid(`${path}.order`, "Expected a supported alignment order.");
   }
@@ -396,7 +396,7 @@ function parseAlignment(
       "Expected a supported alignment morality.",
     );
   }
-  return Either.right({ order, morality });
+  return Result.succeed({ order, morality });
 }
 
 function parseEquipmentSelection(
@@ -404,22 +404,22 @@ function parseEquipmentSelection(
   path: string,
 ): ParseResult<CharacterEquipmentSelection> {
   const equipment = record(value, path);
-  if (Either.isLeft(equipment)) return failIssue(equipment.left);
+  if (Result.isFailure(equipment)) return failIssue(equipment.failure);
   const selectedUnitIds = arrayAt(
-    equipment.right,
+    equipment.success,
     "selectedUnitIds",
     `${path}.selectedUnitIds`,
   );
-  if (Either.isLeft(selectedUnitIds)) return failIssue(selectedUnitIds.left);
+  if (Result.isFailure(selectedUnitIds)) return failIssue(selectedUnitIds.failure);
   const parsedUnitIds = collect(
-    selectedUnitIds.right.map((unitId, index) =>
+    selectedUnitIds.success.map((unitId, index) =>
       parseString(unitId, `${path}.selectedUnitIds[${index}]`),
     ),
   );
-  return Either.isLeft(parsedUnitIds)
-    ? failIssue(parsedUnitIds.left)
-    : Either.right({
-        selectedUnitIds: parsedUnitIds.right.map(authoredUnitId),
+  return Result.isFailure(parsedUnitIds)
+    ? failIssue(parsedUnitIds.failure)
+    : Result.succeed({
+        selectedUnitIds: parsedUnitIds.success.map(authoredUnitId),
       });
 }
 
@@ -428,43 +428,43 @@ function parseCharacterChoiceSelection(
   path: string,
 ): ParseResult<CharacterChoiceSelection> {
   const selection = record(value, path);
-  if (Either.isLeft(selection)) return failIssue(selection.left);
+  if (Result.isFailure(selection)) return failIssue(selection.failure);
 
-  if (selection.right.kind === "unitChoice") {
+  if (selection.success.kind === "unitChoice") {
     const source = parseUnitChoiceSelectionSource(
-      selection.right.source,
+      selection.success.source,
       `${path}.source`,
     );
-    if (Either.isLeft(source)) return failIssue(source.left);
+    if (Result.isFailure(source)) return failIssue(source.failure);
     const options = parseSelectedChoiceOptions(
-      selection.right.options,
+      selection.success.options,
       `${path}.options`,
     );
-    return Either.isLeft(options)
-      ? failIssue(options.left)
-      : Either.right({
+    return Result.isFailure(options)
+      ? failIssue(options.failure)
+      : Result.succeed({
           kind: "unitChoice",
-          source: source.right,
-          options: options.right,
+          source: source.success,
+          options: options.success,
         });
   }
 
-  if (selection.right.kind === "loadout") {
+  if (selection.success.kind === "loadout") {
     const source = parseLoadoutSelectionSource(
-      selection.right.source,
+      selection.success.source,
       `${path}.source`,
     );
-    if (Either.isLeft(source)) return failIssue(source.left);
+    if (Result.isFailure(source)) return failIssue(source.failure);
     const options = parseLoadoutSelectedChoiceOptions(
-      selection.right.options,
+      selection.success.options,
       `${path}.options`,
     );
-    return Either.isLeft(options)
-      ? failIssue(options.left)
-      : Either.right({
+    return Result.isFailure(options)
+      ? failIssue(options.failure)
+      : Result.succeed({
           kind: "loadout",
-          source: source.right,
-          options: options.right,
+          source: source.success,
+          options: options.success,
         });
   }
 
@@ -478,27 +478,27 @@ function parseUnitChoiceSelectionSource(
   Extract<CharacterChoiceSelection, { readonly kind: "unitChoice" }>["source"]
 > {
   const source = record(value, path);
-  if (Either.isLeft(source)) return failIssue(source.left);
-  if (source.right.tag !== "unitChoice") {
+  if (Result.isFailure(source)) return failIssue(source.failure);
+  if (source.success.tag !== "unitChoice") {
     return invalid(`${path}.tag`, "Expected unitChoice source.");
   }
-  const unitId = stringAt(source.right, "unitId", `${path}.unitId`);
-  if (Either.isLeft(unitId)) return failIssue(unitId.left);
-  const parsedUnitId = unitChoiceSourceUnitId(unitId.right);
-  if (Either.isLeft(parsedUnitId)) {
+  const unitId = stringAt(source.success, "unitId", `${path}.unitId`);
+  if (Result.isFailure(unitId)) return failIssue(unitId.failure);
+  const parsedUnitId = unitChoiceSourceUnitId(unitId.success);
+  if (Result.isFailure(parsedUnitId)) {
     return invalid(`${path}.unitId`, "Expected a non-empty Unit id.");
   }
-  const choiceKeyValue = source.right.choiceKey;
+  const choiceKeyValue = source.success.choiceKey;
   if (typeof choiceKeyValue !== "string") {
     return invalid(`${path}.choiceKey`, "Expected a Unit choice key.");
   }
   const choiceKey = unitChoiceKey(choiceKeyValue);
-  return Either.isLeft(choiceKey)
+  return Result.isFailure(choiceKey)
     ? invalid(`${path}.choiceKey`, "Expected a supported Unit choice key.")
-    : Either.right({
+    : Result.succeed({
         tag: "unitChoice",
-        unitId: parsedUnitId.right,
-        choiceKey: choiceKey.right,
+        unitId: parsedUnitId.success,
+        choiceKey: choiceKey.success,
       });
 }
 
@@ -509,30 +509,30 @@ function parseLoadoutSelectionSource(
   Extract<CharacterChoiceSelection, { readonly kind: "loadout" }>["source"]
 > {
   const source = record(value, path);
-  if (Either.isLeft(source)) return failIssue(source.left);
-  if (source.right.tag !== "loadout") {
+  if (Result.isFailure(source)) return failIssue(source.failure);
+  if (source.success.tag !== "loadout") {
     return invalid(`${path}.tag`, "Expected loadout source.");
   }
   const equipmentUnitId = stringAt(
-    source.right,
+    source.success,
     "equipmentUnitId",
     `${path}.equipmentUnitId`,
   );
-  if (Either.isLeft(equipmentUnitId)) return failIssue(equipmentUnitId.left);
-  const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId.right);
-  if (Either.isLeft(parsedEquipmentUnitId)) {
+  if (Result.isFailure(equipmentUnitId)) return failIssue(equipmentUnitId.failure);
+  const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId.success);
+  if (Result.isFailure(parsedEquipmentUnitId)) {
     return invalid(
       `${path}.equipmentUnitId`,
       "Expected a non-empty equipment Unit id.",
     );
   }
-  const slot = source.right.slot;
+  const slot = source.success.slot;
   if (!loadoutSlot(slot)) {
     return invalid(`${path}.slot`, "Expected a supported loadout slot.");
   }
-  return Either.right({
+  return Result.succeed({
     tag: "loadout",
-    equipmentUnitId: parsedEquipmentUnitId.right,
+    equipmentUnitId: parsedEquipmentUnitId.success,
     slot,
   });
 }
@@ -542,9 +542,9 @@ function parseSelectedChoiceOptions(
   path: string,
 ): ParseResult<readonly CharacterSelectedChoiceOption[]> {
   const options = parseArray(value, path);
-  if (Either.isLeft(options)) return failIssue(options.left);
+  if (Result.isFailure(options)) return failIssue(options.failure);
   return collect(
-    options.right.map((option, index) =>
+    options.success.map((option, index) =>
       parseSelectedChoiceOption(option, `${path}[${index}]`),
     ),
   );
@@ -555,18 +555,18 @@ function parseSelectedChoiceOption(
   path: string,
 ): ParseResult<CharacterSelectedChoiceOption> {
   const option = record(value, path);
-  if (Either.isLeft(option)) return failIssue(option.left);
-  const optionId = stringAt(option.right, "optionId", `${path}.optionId`);
-  if (Either.isLeft(optionId)) return failIssue(optionId.left);
+  if (Result.isFailure(option)) return failIssue(option.failure);
+  const optionId = stringAt(option.success, "optionId", `${path}.optionId`);
+  if (Result.isFailure(optionId)) return failIssue(optionId.failure);
   const unitRef =
-    option.right.unitRef === undefined
-      ? Either.right(undefined)
-      : parseUnitRef(option.right.unitRef, `${path}.unitRef`);
-  return Either.isLeft(unitRef)
-    ? failIssue(unitRef.left)
-    : Either.right({
-        optionId: creationChoiceOptionId(optionId.right),
-        ...(unitRef.right === undefined ? {} : { unitRef: unitRef.right }),
+    option.success.unitRef === undefined
+      ? Result.succeed(undefined)
+      : parseUnitRef(option.success.unitRef, `${path}.unitRef`);
+  return Result.isFailure(unitRef)
+    ? failIssue(unitRef.failure)
+    : Result.succeed({
+        optionId: creationChoiceOptionId(optionId.success),
+        ...(unitRef.success === undefined ? {} : { unitRef: unitRef.success }),
       });
 }
 
@@ -575,30 +575,30 @@ function parseLoadoutSelectedChoiceOptions(
   path: string,
 ): ParseResult<readonly [LoadoutSelectedChoiceOption]> {
   const options = parseArray(value, path);
-  if (Either.isLeft(options)) return failIssue(options.left);
-  if (options.right.length !== 1) {
+  if (Result.isFailure(options)) return failIssue(options.failure);
+  if (options.success.length !== 1) {
     return invalid(path, "Expected exactly one loadout choice option.");
   }
-  const option = record(options.right[0], `${path}[0]`);
-  if (Either.isLeft(option)) return failIssue(option.left);
-  const optionId = stringAt(option.right, "optionId", `${path}[0].optionId`);
-  return Either.isLeft(optionId)
-    ? failIssue(optionId.left)
-    : Either.right([{ optionId: creationChoiceOptionId(optionId.right) }]);
+  const option = record(options.success[0], `${path}[0]`);
+  if (Result.isFailure(option)) return failIssue(option.failure);
+  const optionId = stringAt(option.success, "optionId", `${path}[0].optionId`);
+  return Result.isFailure(optionId)
+    ? failIssue(optionId.failure)
+    : Result.succeed([{ optionId: creationChoiceOptionId(optionId.success) }]);
 }
 
 function parseUnitRef(value: unknown, path: string): ParseResult<UnitRef> {
   const unitRef = record(value, path);
-  if (Either.isLeft(unitRef)) return failIssue(unitRef.left);
-  const unitId = stringAt(unitRef.right, "unitId", `${path}.unitId`);
-  return Either.isLeft(unitId)
-    ? failIssue(unitId.left)
-    : Either.right({ unitId: authoredUnitId(unitId.right) });
+  if (Result.isFailure(unitRef)) return failIssue(unitRef.failure);
+  const unitId = stringAt(unitRef.success, "unitId", `${path}.unitId`);
+  return Result.isFailure(unitId)
+    ? failIssue(unitId.failure)
+    : Result.succeed({ unitId: authoredUnitId(unitId.success) });
 }
 
 function parseAbility(value: unknown, path: string): ParseResult<Ability> {
   return ability(value)
-    ? Either.right(value)
+    ? Result.succeed(value)
     : invalid(path, "Expected an ability.");
 }
 
@@ -651,7 +651,7 @@ function startingLanguagesSelection<First extends SelectableStandardLanguage>(
   // cannot connect that runtime inequality to CharacterStartingLanguages' mapped
   // tuple union.
   const languages = ["Common", first, second] as CharacterStartingLanguages;
-  return Either.right(languages);
+  return Result.succeed(languages);
 }
 
 function twoAndOneBackgroundAbilityScoreIncrease(
@@ -669,7 +669,7 @@ function twoAndOneBackgroundAbilityScoreIncrease(
     plusOne,
   } as TwoAndOneBackgroundAbilityScoreIncreaseSelection;
 
-  return Either.right(selection);
+  return Result.succeed(selection);
 }
 
 function selectableStandardLanguage(
@@ -687,7 +687,7 @@ function optionalString(
   path: string,
 ): ParseResult<string | undefined> {
   return value === undefined
-    ? Either.right(undefined)
+    ? Result.succeed(undefined)
     : parseString(value, path);
 }
 
@@ -701,7 +701,7 @@ function stringAt(
 
 function parseString(value: unknown, path: string): ParseResult<string> {
   return typeof value === "string"
-    ? Either.right(value)
+    ? Result.succeed(value)
     : invalid(path, "Expected a string.");
 }
 
@@ -718,7 +718,7 @@ function parseArray(
   path: string,
 ): ParseResult<readonly unknown[]> {
   return Array.isArray(value)
-    ? Either.right(value)
+    ? Result.succeed(value)
     : invalid(path, "Expected an array.");
 }
 
@@ -727,7 +727,7 @@ function record(
   path: string,
 ): ParseResult<Readonly<Record<string, unknown>>> {
   return unknownRecord(value)
-    ? Either.right(value)
+    ? Result.succeed(value)
     : invalid(path, "Expected an object.");
 }
 
@@ -742,18 +742,18 @@ function collect<T>(
 ): ParseResult<readonly T[]> {
   const values: T[] = [];
   for (const result of results) {
-    if (Either.isLeft(result)) return failIssue(result.left);
-    values.push(result.right);
+    if (Result.isFailure(result)) return failIssue(result.failure);
+    values.push(result.success);
   }
-  return Either.right(values);
+  return Result.succeed(values);
 }
 
 function invalid<T = never>(path: string, message: string): ParseResult<T> {
-  return Either.left({ tag: "invalidCharacterDraft", path, message });
+  return Result.fail({ tag: "invalidCharacterDraft", path, message });
 }
 
 function failIssue<T>(issue: CharacterDraftParseIssue): ParseResult<T> {
-  return Either.left(issue);
+  return Result.fail(issue);
 }
 
 let nextDraftOrdinal = 0;

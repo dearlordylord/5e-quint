@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner CREATION.CHOICE_DISCOVERY_CARDINALITY CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE CREATION.WIZARD_SPELLBOOK_LEARNING.CHOICE_FINALIZATION CREATION.MAGIC_INITIATE.CHOICE_FINALIZATION
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.wizard-spellbook-learning-choice unit-feature.hunters-prey character-creation.origin-feat-proficiency-choice character-creation.species-trait-proficiency-choice character-creation.species-origin-feat-choice character-creation.species-origin-feat-proficiency-choice character-creation.species-lineage-choice
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 import {
   ALIGNMENT_CHOICES,
   STANDARD_LANGUAGES,
@@ -766,8 +766,8 @@ export function selectedClassFeatureAcquisitionGrantChoiceHoles(input: {
     }
     const featureChoiceKey = unitChoiceKey(feature.value.mechanics.choiceKey);
     if (
-      Either.isLeft(featureChoiceKey) ||
-      featureChoiceKey.right !== selection.source.choiceKey
+      Result.isFailure(featureChoiceKey) ||
+      featureChoiceKey.success !== selection.source.choiceKey
     ) {
       return [];
     }
@@ -1219,16 +1219,19 @@ export function backgroundToolChoiceSpec(
     }
   | undefined {
   const spec = Match.value(proficiency).pipe(
-    Match.when({ kind: "specific_tool" }, (specificTool) => ({
-      cardinality: EXACTLY_ONE_CHOICE,
-      options: [
-        {
-          optionId: creationChoiceOptionId(specificTool.toolId),
-          label: specificTool.toolId,
-          unitRef: { unitId: specificTool.toolId },
-        },
-      ],
-    })),
+    Match.when({ kind: "specific_tool" }, (specificTool) => {
+      const toolId = authoredUnitId(specificTool.toolId);
+      return {
+        cardinality: EXACTLY_ONE_CHOICE,
+        options: [
+          {
+            optionId: creationChoiceOptionId(toolId),
+            label: specificTool.toolId,
+            unitRef: { unitId: toolId },
+          },
+        ],
+      };
+    }),
     Match.when(
       { kind: "tool_category_choice", category: "gaming_set" },
       (toolChoice) => ({
@@ -1891,13 +1894,13 @@ export function classFeatureGrantChoiceHoles(
   if (mechanics.family === "class_feature_acquisition_choice") {
     const choiceKey = unitChoiceKey(mechanics.choiceKey);
     /* v8 ignore start -- @preserve -- Supported acquisition-choice mechanics carry a canonical nonempty choice key and produce a choice hole. */
-    if (Either.isLeft(choiceKey)) {
+    if (Result.isFailure(choiceKey)) {
       return [];
     }
 
     const hole = requireChoiceCreationHole(
       choiceHole({
-        source: unitSource(featureUnitId, choiceKey.right),
+        source: unitSource(featureUnitId, choiceKey.success),
         cardinality: EXACTLY_ONE_CHOICE,
         options: mechanics.options.map((option) => ({
           optionId: creationChoiceOptionId(option.id),
@@ -1920,12 +1923,12 @@ export function classFeatureGrantChoiceHoles(
   if (mechanics.family === "hunters_prey") {
     const choiceKey = unitChoiceKey(HUNTERS_PREY_CHOICE_KEY);
     /* v8 ignore start -- @preserve -- The canonical Hunter's Prey key is a fixed valid UnitChoiceKey and its mechanics produce a choice hole. */
-    if (Either.isLeft(choiceKey)) {
+    if (Result.isFailure(choiceKey)) {
       return [];
     }
     const hole = requireChoiceCreationHole(
       choiceHole({
-        source: unitSource(featureUnitId, choiceKey.right),
+        source: unitSource(featureUnitId, choiceKey.success),
         cardinality: EXACTLY_ONE_CHOICE,
         options: mechanics.options.map((option) => ({
           optionId: creationChoiceOptionId(option.id),
@@ -2339,7 +2342,7 @@ function fixedPassiveGrantLanguages(
         return [];
       }
       const language = languageFromSurfaceLanguageId(grant.languageId);
-      return Either.isRight(language) ? [language.right] : [];
+      return Result.isSuccess(language) ? [language.success] : [];
     }),
   );
 }
@@ -2437,7 +2440,7 @@ function selectedClassFeatureLanguageChoices(
       return selection.options.flatMap((option) => {
         const language = languageFromCreationChoiceOptionId(option.optionId);
         /* v8 ignore start -- @preserve -- Supported language selections retain only ids emitted by the language codec. */
-        return Either.isRight(language) ? [language.right] : [];
+        return Result.isSuccess(language) ? [language.success] : [];
         /* v8 ignore stop -- @preserve */
       });
     }),
@@ -2929,7 +2932,7 @@ function proficiencyGrantChoiceHole(
 ): readonly ChoiceCreationHole[] {
   const choiceKey = unitChoiceKey(choiceKeyText);
   /* v8 ignore start -- @preserve -- Supported authored proficiency grants carry a canonical nonempty choice key and feasible positive count. */
-  if (Either.isLeft(choiceKey)) {
+  if (Result.isFailure(choiceKey)) {
     return [];
   }
   const ownedSkills = uniqueSkills(ownedSkillProficiencies);
@@ -2958,7 +2961,7 @@ function proficiencyGrantChoiceHole(
 
   const hole = requireChoiceCreationHole(
     choiceHole({
-      source: unitSource(sourceUnitId, choiceKey.right),
+      source: unitSource(sourceUnitId, choiceKey.success),
       cardinality,
       options,
     }),

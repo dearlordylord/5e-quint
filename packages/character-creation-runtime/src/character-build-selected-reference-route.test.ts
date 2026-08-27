@@ -3,7 +3,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -87,7 +87,7 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
         route: ["seed"],
       }),
     ).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
       right: {
         build,
         facts: {
@@ -125,9 +125,9 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
       });
 
       expect(characterBuildSelectedReferenceCount(build)).toBe(1);
-      expect(Either.isRight(result)).toBe(true);
-      if (Either.isLeft(result)) return;
-      expect(result.right.route).toEqual([
+      expect(Result.isSuccess(result)).toBe(true);
+      if (Result.isFailure(result)) return;
+      expect(result.success.route).toEqual([
         "seed",
         {
           kind: "retainCreationSelectedReferences",
@@ -157,7 +157,7 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
 
     expect(characterBuildSelectedReferenceCount(build)).toBe(3);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         characterBuildSelectedReferencesWithRoute({ build, route: [] }),
       ),
     ).toBe(true);
@@ -236,9 +236,9 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
     });
 
     expect(characterBuildSelectedReferenceCount(build)).toBe(2);
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    expect(result.right.route).toEqual([
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    expect(result.success.route).toEqual([
       "seed",
       {
         kind: "retainCreationSelectedReferences",
@@ -271,7 +271,7 @@ describe("characterBuildSelectedReferencesWithRoute", () => {
 
     expect(characterBuildSelectedReferenceCount(build)).toBe(0);
     expect(result).toEqual(
-      Either.left({
+      Result.fail({
         tag: "noSelectedReferences",
         message: "CharacterBuild has no retained selected references to route.",
       }),
@@ -320,7 +320,7 @@ function testBuild(input: {
   };
 }
 
-function expectRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
+function expectRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
   throw new Error("Expected route test fixture parse to succeed.");
 }

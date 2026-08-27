@@ -15,7 +15,7 @@ import {
   type Skill,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -463,25 +463,25 @@ function rogueProgression(totalLevel: 1 | 6): CharacterProgression {
     unitLibrary,
     classUnitId: authoredUnitId(SRD_ROGUE_CLASS_UNIT_ID),
   });
-  if (Either.isLeft(parsedClassUnitId)) {
+  if (Result.isFailure(parsedClassUnitId)) {
     throw new Error(
-      `Invalid Rogue class Unit id: ${JSON.stringify(parsedClassUnitId.left)}`,
+      `Invalid Rogue class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
     );
   }
   const parsedProgression = parseCharacterProgressionShape({
-    startingClass: parsedClassUnitId.right,
+    startingClass: parsedClassUnitId.success,
     advancements: Array.from({ length: totalLevel - 1 }, () => ({
-      classUnitId: parsedClassUnitId.right,
+      classUnitId: parsedClassUnitId.success,
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
     })),
   });
-  if (Either.isLeft(parsedProgression)) {
+  if (Result.isFailure(parsedProgression)) {
     throw new Error(
-      `Invalid Rogue Expertise selected identity progression: ${JSON.stringify(parsedProgression.left)}`,
+      `Invalid Rogue Expertise selected identity progression: ${JSON.stringify(parsedProgression.failure)}`,
     );
   }
 
-  return parsedProgression.right;
+  return parsedProgression.success;
 }
 
 function preferredRogueOptionIdsBySource(
@@ -722,23 +722,23 @@ function testAbilityScoreAssignment(
   scores: RawAbilityScoreAssignment,
 ): AbilityScoreAssignment {
   const parsed = abilityScoreAssignment(scores);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(
       "Rogue Expertise selected identity Standard Array fixture must parse.",
     );
   }
 
-  return parsed.right;
+  return parsed.success;
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}.`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}.`,
     );
   }
 
-  return result.right;
+  return result.success;
 }
 
 function qStateValue(raw: unknown): unknown {

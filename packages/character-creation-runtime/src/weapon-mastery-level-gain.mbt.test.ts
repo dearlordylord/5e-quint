@@ -10,7 +10,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 
@@ -877,13 +877,13 @@ function testProgression(
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
     })),
   });
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Invalid Weapon Mastery level gain progression: ${JSON.stringify(result.left)}`,
+      `Invalid Weapon Mastery level gain progression: ${JSON.stringify(result.failure)}`,
     );
   }
 
-  return result.right;
+  return result.success;
 }
 
 function selectedBuildClassChoiceUnitIds(
@@ -942,27 +942,27 @@ function compareProjection(
   return true;
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}.`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}.`,
     );
   }
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
 
-  return result.right;
+  return result.success;
 }
 
 function expectLeftCode<E extends { readonly code: string }>(
-  result: Either.Either<unknown, E>,
+  result: Result.Result<unknown, E>,
   code: E["code"],
 ): E {
-  if (Either.isRight(result)) {
-    throw new Error("Expected Either.left, received Either.right.");
+  if (Result.isSuccess(result)) {
+    throw new Error("Expected Result.fail, received Result.succeed.");
   }
-  expect(result.left.code).toBe(code);
+  expect(result.failure.code).toBe(code);
 
-  return result.left;
+  return result.failure;
 }
 
 function testClassUnitId(classUnitId: UnitRecord["id"]) {
@@ -989,13 +989,13 @@ function testAbilityScoreAssignment(
   scores: RawAbilityScoreAssignment,
 ): AbilityScoreAssignment {
   const parsed = abilityScoreAssignment(scores);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(
       "Weapon Mastery level gain Standard Array fixture must parse.",
     );
   }
 
-  return parsed.right;
+  return parsed.success;
 }
 
 function sameUnitList(

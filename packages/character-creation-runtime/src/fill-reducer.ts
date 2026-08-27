@@ -8,7 +8,7 @@ import {
 } from "@dnd/shared/game-facts";
 import { isValidAbilityScoreAssignment } from "@dnd/shared-algebras/ability-score-algebra";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { discoverCreationHoles } from "./discovery.ts";
 import { finalizeCharacterDraft } from "./finalization.ts";
 import {
@@ -59,12 +59,12 @@ import {
 } from "./types.ts";
 
 type ApplyCreationFillIssue = CreationFillIssue;
-type ApplyCreationFillResult<T> = Either.Either<T, ApplyCreationFillIssue>;
+type ApplyCreationFillResult<T> = Result.Result<T, ApplyCreationFillIssue>;
 
 function applyCreationFillIssue<T>(
   issue: ApplyCreationFillIssue,
 ): ApplyCreationFillResult<T> {
-  return Either.left(issue);
+  return Result.fail(issue);
 }
 
 export type CreationHoleIndex = {
@@ -152,18 +152,18 @@ export function fillCreationHoles(
     fillAcceptance.acceptedFills,
   );
   /* v8 ignore start -- @preserve -- acceptedCreationFills checked every fill against these same holes, so applying that narrowed batch cannot reject. */
-  if (Either.isLeft(nextDraft)) {
+  if (Result.isFailure(nextDraft)) {
     return {
       tag: "rejected",
       draft: input.draft,
       holes,
-      issues: nextDraft.left,
+      issues: nextDraft.failure,
       finalization,
     };
   }
   /* v8 ignore stop -- @preserve */
 
-  return acceptedCreationBatchFillResult(fillInput, nextDraft.right);
+  return acceptedCreationBatchFillResult(fillInput, nextDraft.success);
 }
 
 function acceptedCreationBatchFillResult(
@@ -243,8 +243,8 @@ function acceptedCreationFills(
       fillIndex,
       input.supportProfile,
     );
-    if (Either.isLeft(acceptedFill)) return [acceptedFill.left];
-    acceptedFills.push({ fillIndex, acceptedFill: acceptedFill.right });
+    if (Result.isFailure(acceptedFill)) return [acceptedFill.failure];
+    acceptedFills.push({ fillIndex, acceptedFill: acceptedFill.success });
     return [];
   });
 
@@ -440,7 +440,7 @@ export function abilityScoreFillIssues(
 export function applyCreationFills(
   draft: CharacterDraft,
   acceptedFills: readonly AcceptedCreationFillEntry[],
-): Either.Either<
+): Result.Result<
   CharacterDraft,
   NonEmptyReadonlyArray<CreationBatchFillIssue>
 > {
@@ -451,12 +451,12 @@ export function applyCreationFills(
       acceptedFill.acceptedFill,
       acceptedFill.fillIndex,
     );
-    if (Either.isLeft(nextSelections))
-      return Either.left([nextSelections.left]);
-    selections = nextSelections.right;
+    if (Result.isFailure(nextSelections))
+      return Result.fail([nextSelections.failure]);
+    selections = nextSelections.success;
   }
 
-  return Either.right({
+  return Result.succeed({
     ...draft,
     selections,
     revision: draftRevision(draft.revision + 1),
@@ -470,8 +470,8 @@ export function getHole(
 ): ApplyCreationFillResult<CreationHole> {
   const hole = holeIndex.holesById.get(fill.holeId);
   return hole == null
-    ? Either.left(unknownHoleIssue(fill, fillIndex))
-    : Either.right(hole);
+    ? Result.fail(unknownHoleIssue(fill, fillIndex))
+    : Result.succeed(hole);
 }
 
 export function indexCreationHoles(
@@ -549,31 +549,31 @@ function acceptedCreationFill(
       fillIndex,
       supportProfile,
     );
-    return Either.isLeft(acceptedFill)
-      ? Either.left(acceptedFill.left)
-      : Either.right({ tag: "draft", acceptedFill: acceptedFill.right });
+    return Result.isFailure(acceptedFill)
+      ? Result.fail(acceptedFill.failure)
+      : Result.succeed({ tag: "draft", acceptedFill: acceptedFill.success });
   }
 
   if (isUnitSourcedCreationHole(hole)) {
     const acceptedFill = acceptedUnitFill(hole, fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already admitted this fill against this exact Unit-sourced hole. */
-    return Either.isLeft(acceptedFill)
-      ? Either.left(acceptedFill.left)
-      : Either.right({ tag: "unitChoice", acceptedFill: acceptedFill.right });
+    return Result.isFailure(acceptedFill)
+      ? Result.fail(acceptedFill.failure)
+      : Result.succeed({ tag: "unitChoice", acceptedFill: acceptedFill.success });
     /* v8 ignore stop -- @preserve */
   }
 
   if (isLoadoutSourcedCreationHole(hole)) {
     const acceptedFill = acceptedLoadoutFill(hole, fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already admitted this fill against this exact loadout-sourced hole. */
-    return Either.isLeft(acceptedFill)
-      ? Either.left(acceptedFill.left)
-      : Either.right({ tag: "loadout", acceptedFill: acceptedFill.right });
+    return Result.isFailure(acceptedFill)
+      ? Result.fail(acceptedFill.failure)
+      : Result.succeed({ tag: "loadout", acceptedFill: acceptedFill.success });
   }
   /* v8 ignore stop -- @preserve */
 
   /* v8 ignore start -- @preserve -- Creation-hole source is exhaustive across draft, Unit, and loadout variants. */
-  return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+  return Result.fail(wrongFillKindIssue(fill, fillIndex, hole));
 }
 /* v8 ignore stop -- @preserve */
 
@@ -587,11 +587,11 @@ function acceptedDraftFill(
   if (path === "draft.abilityScoreGeneration") {
     /* v8 ignore start -- @preserve -- Validation already matched the ability-score fill to this ability-score hole. */
     if (hole.kind !== "abilityScores" || fill.kind !== "abilityScores") {
-      return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+      return Result.fail(wrongFillKindIssue(fill, fillIndex, hole));
     }
     /* v8 ignore stop -- @preserve */
 
-    return Either.right({
+    return Result.succeed({
       tag: "abilityScoreGeneration",
       hole,
       fill,
@@ -600,26 +600,26 @@ function acceptedDraftFill(
 
   const choiceFill = acceptedDraftChoiceFillForHole(hole, fill, fillIndex);
   /* v8 ignore next -- @preserve -- Validation already narrowed this to a matching draft choice fill. */
-  if (Either.isLeft(choiceFill)) return applyCreationFillIssue(choiceFill.left);
+  if (Result.isFailure(choiceFill)) return applyCreationFillIssue(choiceFill.failure);
 
   if (path === "draft.progression.initial") {
-    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already enforced this hole's exactly-one cardinality. */
-    if (Either.isLeft(singleFill))
-      return applyCreationFillIssue(singleFill.left);
+    if (Result.isFailure(singleFill))
+      return applyCreationFillIssue(singleFill.failure);
     /* v8 ignore stop -- @preserve */
-    const optionId = singleFill.right.optionIds[0];
+    const optionId = singleFill.success.optionIds[0];
     const progression = supportedProgressionForOptionId(
       optionId,
       supportProfile,
     );
     /* v8 ignore start -- @preserve -- The initial-progression hole contains only option ids projected from this support profile. */
     return progression == null
-      ? Either.left(unsupportedChoiceIssue(fill, fillIndex, optionId))
-      : Either.right({
+      ? Result.fail(unsupportedChoiceIssue(fill, fillIndex, optionId))
+      : Result.succeed({
           tag: "initialProgression",
-          hole: choiceFill.right.hole,
-          fill: singleFill.right,
+          hole: choiceFill.success.hole,
+          fill: singleFill.success,
           progression,
         });
     /* v8 ignore stop -- @preserve */
@@ -627,118 +627,118 @@ function acceptedDraftFill(
 
   if (path === "draft.background") {
     const unitId = selectedSingleUnitId(
-      choiceFill.right.hole,
-      choiceFill.right.fill,
+      choiceFill.success.hole,
+      choiceFill.success.fill,
       fillIndex,
     );
     /* v8 ignore start -- @preserve -- Validation already admitted exactly one Unit-referencing background option from this hole. */
-    return Either.isLeft(unitId)
-      ? applyCreationFillIssue(unitId.left)
-      : Either.right({
+    return Result.isFailure(unitId)
+      ? applyCreationFillIssue(unitId.failure)
+      : Result.succeed({
           tag: "background",
-          hole: choiceFill.right.hole,
-          fill: unitId.right.fill,
-          background: unitId.right.unitId,
+          hole: choiceFill.success.hole,
+          fill: unitId.success.fill,
+          background: unitId.success.unitId,
         });
     /* v8 ignore stop -- @preserve */
   }
 
   if (path === "draft.species") {
     const unitId = selectedSingleUnitId(
-      choiceFill.right.hole,
-      choiceFill.right.fill,
+      choiceFill.success.hole,
+      choiceFill.success.fill,
       fillIndex,
     );
     /* v8 ignore start -- @preserve -- Validation already admitted exactly one Unit-referencing species option from this hole. */
-    return Either.isLeft(unitId)
-      ? applyCreationFillIssue(unitId.left)
-      : Either.right({
+    return Result.isFailure(unitId)
+      ? applyCreationFillIssue(unitId.failure)
+      : Result.succeed({
           tag: "species",
-          hole: choiceFill.right.hole,
-          fill: unitId.right.fill,
-          species: unitId.right.unitId,
+          hole: choiceFill.success.hole,
+          fill: unitId.success.fill,
+          species: unitId.success.unitId,
         });
     /* v8 ignore stop -- @preserve */
   }
 
   if (path === "draft.speciesSize") {
-    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already enforced this hole's exactly-one cardinality. */
-    if (Either.isLeft(singleFill))
-      return applyCreationFillIssue(singleFill.left);
+    if (Result.isFailure(singleFill))
+      return applyCreationFillIssue(singleFill.failure);
     /* v8 ignore stop -- @preserve */
     const size = speciesSizeSelection(
-      singleFill.right,
+      singleFill.success,
       fillIndex,
-      singleFill.right.optionIds[0],
+      singleFill.success.optionIds[0],
     );
     /* v8 ignore start -- @preserve -- The species-size hole contains only ids admitted by the closed size selection parser. */
-    return Either.isLeft(size)
-      ? applyCreationFillIssue(size.left)
-      : Either.right({
+    return Result.isFailure(size)
+      ? applyCreationFillIssue(size.failure)
+      : Result.succeed({
           tag: "speciesSize",
-          hole: choiceFill.right.hole,
-          fill: singleFill.right,
-          size: size.right,
+          hole: choiceFill.success.hole,
+          fill: singleFill.success,
+          size: size.success,
         });
     /* v8 ignore stop -- @preserve */
   }
 
   if (path === "draft.draconicAncestry") {
-    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already enforced this hole's exactly-one cardinality. */
-    if (Either.isLeft(singleFill))
-      return applyCreationFillIssue(singleFill.left);
+    if (Result.isFailure(singleFill))
+      return applyCreationFillIssue(singleFill.failure);
     /* v8 ignore stop -- @preserve */
-    return Either.right({
+    return Result.succeed({
       tag: "draconicAncestry",
-      hole: choiceFill.right.hole,
-      fill: singleFill.right,
+      hole: choiceFill.success.hole,
+      fill: singleFill.success,
       ancestry: characterDraconicAncestrySelection(
-        singleFill.right.optionIds[0],
+        singleFill.success.optionIds[0],
       ),
     });
   }
 
   if (path === "draft.languages") {
-    const languages = startingLanguages(choiceFill.right.fill, fillIndex);
+    const languages = startingLanguages(choiceFill.success.fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already admitted exactly two distinct selectable language ids from this hole. */
-    return Either.isLeft(languages)
-      ? applyCreationFillIssue(languages.left)
-      : Either.right({
+    return Result.isFailure(languages)
+      ? applyCreationFillIssue(languages.failure)
+      : Result.succeed({
           tag: "languages",
-          hole: choiceFill.right.hole,
-          fill: choiceFill.right.fill,
-          languages: languages.right,
+          hole: choiceFill.success.hole,
+          fill: choiceFill.success.fill,
+          languages: languages.success,
         });
     /* v8 ignore stop -- @preserve */
   }
 
   if (path === "draft.alignment") {
-    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already enforced this hole's exactly-one cardinality. */
-    if (Either.isLeft(singleFill))
-      return applyCreationFillIssue(singleFill.left);
+    if (Result.isFailure(singleFill))
+      return applyCreationFillIssue(singleFill.failure);
     /* v8 ignore stop -- @preserve */
     const alignment = alignmentSelection(
-      singleFill.right,
+      singleFill.success,
       fillIndex,
-      singleFill.right.optionIds[0],
+      singleFill.success.optionIds[0],
     );
     /* v8 ignore start -- @preserve -- The alignment hole contains only ids admitted by the closed alignment parser. */
-    return Either.isLeft(alignment)
-      ? applyCreationFillIssue(alignment.left)
-      : Either.right({
+    return Result.isFailure(alignment)
+      ? applyCreationFillIssue(alignment.failure)
+      : Result.succeed({
           tag: "alignment",
-          hole: choiceFill.right.hole,
-          fill: singleFill.right,
-          alignment: alignment.right,
+          hole: choiceFill.success.hole,
+          fill: singleFill.success,
+          alignment: alignment.success,
         });
   }
   /* v8 ignore stop -- @preserve */
 
   /* v8 ignore start -- @preserve -- DraftPath is exhaustive across the draft branches handled above. */
-  return Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+  return Result.fail(wrongFillKindIssue(fill, fillIndex, hole));
 }
 /* v8 ignore stop -- @preserve */
 
@@ -749,74 +749,74 @@ function acceptedUnitFill(
 ): ApplyCreationFillResult<AcceptedUnitFill> {
   const choiceFill = acceptedUnitChoiceFillForHole(hole, fill, fillIndex);
   /* v8 ignore next -- @preserve -- Validation already narrowed this to a matching Unit choice fill. */
-  if (Either.isLeft(choiceFill)) return applyCreationFillIssue(choiceFill.left);
+  if (Result.isFailure(choiceFill)) return applyCreationFillIssue(choiceFill.failure);
 
   if (hole.source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY) {
-    const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+    const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
     /* v8 ignore start -- @preserve -- Validation already enforced this hole's exactly-one cardinality. */
-    if (Either.isLeft(singleFill))
-      return applyCreationFillIssue(singleFill.left);
+    if (Result.isFailure(singleFill))
+      return applyCreationFillIssue(singleFill.failure);
     /* v8 ignore stop -- @preserve */
     const selection = backgroundAbilityScoreIncreaseSelection(
-      singleFill.right,
+      singleFill.success,
       fillIndex,
-      singleFill.right.optionIds[0],
+      singleFill.success.optionIds[0],
     );
     /* v8 ignore start -- @preserve -- The background increase hole contains only ids admitted by its option codec. */
-    return Either.isLeft(selection)
-      ? applyCreationFillIssue(selection.left)
-      : Either.right({
+    return Result.isFailure(selection)
+      ? applyCreationFillIssue(selection.failure)
+      : Result.succeed({
           tag: "backgroundAbilityScoreIncrease",
-          hole: choiceFill.right.hole,
-          fill: singleFill.right,
-          selection: selection.right,
+          hole: choiceFill.success.hole,
+          fill: singleFill.success,
+          selection: selection.success,
         });
     /* v8 ignore stop -- @preserve */
   }
 
   if (hole.source.choiceKey === EQUIPMENT_PURCHASE_CHOICE_KEY) {
     const unitIds = selectedUnitIds(
-      choiceFill.right.hole,
-      choiceFill.right.fill,
+      choiceFill.success.hole,
+      choiceFill.success.fill,
       fillIndex,
-      choiceFill.right.fill.optionIds,
+      choiceFill.success.fill.optionIds,
     );
     /* v8 ignore start -- @preserve -- Validation already admitted every purchase option and its Unit reference from this hole. */
-    return Either.isLeft(unitIds)
-      ? applyCreationFillIssue(unitIds.left)
-      : Either.right({
+    return Result.isFailure(unitIds)
+      ? applyCreationFillIssue(unitIds.failure)
+      : Result.succeed({
           tag: "equipmentPurchase",
-          hole: choiceFill.right.hole,
-          fill: choiceFill.right.fill,
-          unitIds: unitIds.right,
+          hole: choiceFill.success.hole,
+          fill: choiceFill.success.fill,
+          unitIds: unitIds.success,
         });
     /* v8 ignore stop -- @preserve */
   }
 
   /* v8 ignore start -- @preserve -- Choice validation already enforced this Unit hole's positive cardinality. */
-  if (choiceFill.right.fill.optionIds.length === 0) {
-    return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
+  if (choiceFill.success.fill.optionIds.length === 0) {
+    return Result.fail(tooFewChoicesIssue(fill, fillIndex, 1));
   }
   /* v8 ignore stop -- @preserve */
 
   const options = [];
-  for (const optionId of choiceFill.right.fill.optionIds) {
+  for (const optionId of choiceFill.success.fill.optionIds) {
     const option = acceptedChoiceOption(
-      choiceFill.right.hole,
-      choiceFill.right.fill,
+      choiceFill.success.hole,
+      choiceFill.success.fill,
       fillIndex,
       optionId,
     );
     /* v8 ignore start -- @preserve -- Validation already admitted this option id from this exact Unit hole. */
-    if (Either.isLeft(option)) return applyCreationFillIssue(option.left);
+    if (Result.isFailure(option)) return applyCreationFillIssue(option.failure);
     /* v8 ignore stop -- @preserve */
-    options.push(selectedChoiceOption(option.right));
+    options.push(selectedChoiceOption(option.success));
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "unitChoice",
-    hole: choiceFill.right.hole,
-    fill: choiceFill.right.fill,
+    hole: choiceFill.success.hole,
+    fill: choiceFill.success.fill,
     options,
   });
 }
@@ -828,34 +828,34 @@ function acceptedLoadoutFill(
 ): ApplyCreationFillResult<AcceptedLoadoutFill> {
   const choiceFill = acceptedLoadoutChoiceFillForHole(hole, fill, fillIndex);
   /* v8 ignore start -- @preserve -- Validation already narrowed this to a matching loadout choice fill. */
-  if (Either.isLeft(choiceFill)) return applyCreationFillIssue(choiceFill.left);
+  if (Result.isFailure(choiceFill)) return applyCreationFillIssue(choiceFill.failure);
   /* v8 ignore stop -- @preserve */
-  const singleFill = singleChoiceFill(choiceFill.right.fill, fillIndex);
+  const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
   /* v8 ignore start -- @preserve -- Validation already enforced this loadout hole's exactly-one cardinality. */
-  if (Either.isLeft(singleFill)) return applyCreationFillIssue(singleFill.left);
+  if (Result.isFailure(singleFill)) return applyCreationFillIssue(singleFill.failure);
   /* v8 ignore stop -- @preserve */
   const option = acceptedChoiceOption(
-    choiceFill.right.hole,
-    singleFill.right,
+    choiceFill.success.hole,
+    singleFill.success,
     fillIndex,
-    singleFill.right.optionIds[0],
+    singleFill.success.optionIds[0],
   );
   /* v8 ignore start -- @preserve -- Validation already admitted this option id from this exact loadout hole. */
-  if (Either.isLeft(option)) return applyCreationFillIssue(option.left);
+  if (Result.isFailure(option)) return applyCreationFillIssue(option.failure);
   /* v8 ignore stop -- @preserve */
   const selectedOption = selectedLoadoutChoiceOption(
-    choiceFill.right.hole.source,
-    option.right,
-    singleFill.right,
+    choiceFill.success.hole.source,
+    option.success,
+    singleFill.success,
     fillIndex,
   );
   /* v8 ignore start -- @preserve -- Validation already matched the loadout option's Unit reference to this loadout source. */
-  return Either.isLeft(selectedOption)
-    ? applyCreationFillIssue(selectedOption.left)
-    : Either.right({
-        hole: choiceFill.right.hole,
-        fill: singleFill.right,
-        selectedOption: selectedOption.right,
+  return Result.isFailure(selectedOption)
+    ? applyCreationFillIssue(selectedOption.failure)
+    : Result.succeed({
+        hole: choiceFill.success.hole,
+        fill: singleFill.success,
+        selectedOption: selectedOption.success,
       });
   /* v8 ignore stop -- @preserve */
 }
@@ -870,8 +870,8 @@ function acceptedDraftChoiceFillForHole(
 }> {
   /* v8 ignore start -- @preserve -- This helper runs only after validation matches a choice fill to a draft choice hole. */
   return hole.kind === "choice" && fill.kind === "choice"
-    ? Either.right({ hole, fill })
-    : Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+    ? Result.succeed({ hole, fill })
+    : Result.fail(wrongFillKindIssue(fill, fillIndex, hole));
   /* v8 ignore stop -- @preserve */
 }
 
@@ -885,8 +885,8 @@ function acceptedUnitChoiceFillForHole(
 }> {
   /* v8 ignore start -- @preserve -- This helper runs only after validation matches a choice fill to a Unit choice hole. */
   return hole.kind === "choice" && fill.kind === "choice"
-    ? Either.right({ hole, fill })
-    : Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+    ? Result.succeed({ hole, fill })
+    : Result.fail(wrongFillKindIssue(fill, fillIndex, hole));
   /* v8 ignore stop -- @preserve */
 }
 
@@ -900,8 +900,8 @@ function acceptedLoadoutChoiceFillForHole(
 }> {
   /* v8 ignore start -- @preserve -- This helper runs only after validation matches a choice fill to a loadout choice hole. */
   return hole.kind === "choice" && fill.kind === "choice"
-    ? Either.right({ hole, fill })
-    : Either.left(wrongFillKindIssue(fill, fillIndex, hole));
+    ? Result.succeed({ hole, fill })
+    : Result.fail(wrongFillKindIssue(fill, fillIndex, hole));
   /* v8 ignore stop -- @preserve */
 }
 
@@ -912,14 +912,14 @@ function singleChoiceFill(
   const optionId = fill.optionIds[0];
   /* v8 ignore start -- @preserve -- Callers use singleChoiceFill only after the hole cardinality validator admits exactly one option. */
   if (optionId == null) {
-    return Either.left(tooFewChoicesIssue(fill, fillIndex, 1));
+    return Result.fail(tooFewChoicesIssue(fill, fillIndex, 1));
   }
   if (fill.optionIds.length > 1) {
-    return Either.left(tooManyChoicesIssue(fill, fillIndex, 1));
+    return Result.fail(tooManyChoicesIssue(fill, fillIndex, 1));
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({ ...fill, optionIds: [optionId] });
+  return Result.succeed({ ...fill, optionIds: [optionId] });
 }
 
 export function applyDraftFill(
@@ -927,42 +927,42 @@ export function applyDraftFill(
   acceptedFill: AcceptedDraftFill,
 ): ApplyCreationFillResult<CharacterDraftSelections> {
   if (acceptedFill.tag === "initialProgression") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       progression: acceptedFill.progression,
     });
   }
 
   if (acceptedFill.tag === "background") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       background: acceptedFill.background,
     });
   }
 
   if (acceptedFill.tag === "species") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       species: acceptedFill.species,
     });
   }
 
   if (acceptedFill.tag === "speciesSize") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       speciesSize: acceptedFill.size,
     });
   }
 
   if (acceptedFill.tag === "draconicAncestry") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       draconicAncestry: acceptedFill.ancestry,
     });
   }
 
   if (acceptedFill.tag === "abilityScoreGeneration") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       abilityScoreGeneration: {
         method: acceptedFill.fill.method,
@@ -972,14 +972,14 @@ export function applyDraftFill(
   }
 
   if (acceptedFill.tag === "languages") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       languages: acceptedFill.languages,
     });
   }
 
   if (acceptedFill.tag === "alignment") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       alignment: acceptedFill.alignment,
     });
@@ -997,14 +997,14 @@ export function applyUnitFill(
   acceptedFill: AcceptedUnitFill,
 ): ApplyCreationFillResult<CharacterDraftSelections> {
   if (acceptedFill.tag === "backgroundAbilityScoreIncrease") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       backgroundAbilityScoreIncrease: acceptedFill.selection,
     });
   }
 
   if (acceptedFill.tag === "equipmentPurchase") {
-    return Either.right({
+    return Result.succeed({
       ...selections,
       equipment: {
         selectedUnitIds: acceptedFill.unitIds,
@@ -1012,7 +1012,7 @@ export function applyUnitFill(
     });
   }
 
-  return Either.right({
+  return Result.succeed({
     ...selections,
     choices: [
       ...selections.choices,
@@ -1037,10 +1037,10 @@ export function applyLoadoutFill(
         selection.source.slot === acceptedFill.hole.source.slot,
     )
   ) {
-    return Either.left(duplicateFillIssue(acceptedFill.fill, fillIndex));
+    return Result.fail(duplicateFillIssue(acceptedFill.fill, fillIndex));
   }
 
-  return Either.right({
+  return Result.succeed({
     ...selections,
     choices: [
       ...selections.choices,
@@ -1061,8 +1061,8 @@ function selectedLoadoutChoiceOption(
 ): ApplyCreationFillResult<LoadoutSelectedChoiceOption> {
   /* v8 ignore start -- @preserve -- The selected option came from this loadout hole, whose Unit reference equals its source equipment id. */
   return option.unitRef?.unitId !== source.equipmentUnitId
-    ? Either.left(invalidChoiceIssue(fill, fillIndex, option.optionId))
-    : Either.right({
+    ? Result.fail(invalidChoiceIssue(fill, fillIndex, option.optionId))
+    : Result.succeed({
         optionId: option.optionId,
       });
   /* v8 ignore stop -- @preserve */
@@ -1078,11 +1078,11 @@ function selectedUnitIds(
   for (const optionId of optionIds) {
     const unitId = selectedUnitId(hole, fill, fillIndex, optionId);
     /* v8 ignore start -- @preserve -- Validation already admitted every selected Unit option from this exact hole. */
-    if (Either.isLeft(unitId)) return applyCreationFillIssue(unitId.left);
+    if (Result.isFailure(unitId)) return applyCreationFillIssue(unitId.failure);
     /* v8 ignore stop -- @preserve */
-    unitIds.push(unitId.right);
+    unitIds.push(unitId.success);
   }
-  return Either.right(unitIds);
+  return Result.succeed(unitIds);
 }
 
 function selectedSingleUnitId(
@@ -1095,17 +1095,17 @@ function selectedSingleUnitId(
 }> {
   const singleFill = singleChoiceFill(fill, fillIndex);
   /* v8 ignore start -- @preserve -- Validation already enforced this Unit hole's exactly-one cardinality. */
-  if (Either.isLeft(singleFill)) return applyCreationFillIssue(singleFill.left);
+  if (Result.isFailure(singleFill)) return applyCreationFillIssue(singleFill.failure);
   /* v8 ignore stop -- @preserve */
   const unitId = selectedUnitId(
     hole,
-    singleFill.right,
+    singleFill.success,
     fillIndex,
-    singleFill.right.optionIds[0],
+    singleFill.success.optionIds[0],
   );
-  return Either.isLeft(unitId)
-    ? applyCreationFillIssue(unitId.left)
-    : Either.right({ fill: singleFill.right, unitId: unitId.right });
+  return Result.isFailure(unitId)
+    ? applyCreationFillIssue(unitId.failure)
+    : Result.succeed({ fill: singleFill.success, unitId: unitId.success });
 }
 
 function selectedUnitId(
@@ -1116,12 +1116,12 @@ function selectedUnitId(
 ): ApplyCreationFillResult<UnitRecord["id"]> {
   const option = acceptedChoiceOption(hole, fill, fillIndex, optionId);
   /* v8 ignore start -- @preserve -- Validation already admitted this option id from this exact hole roster. */
-  if (Either.isLeft(option)) return applyCreationFillIssue(option.left);
+  if (Result.isFailure(option)) return applyCreationFillIssue(option.failure);
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- Unit-selection helpers are called only for hole options whose schema includes a Unit reference. */
-  return option.right.unitRef == null
-    ? Either.left(invalidChoiceIssue(fill, fillIndex, optionId))
-    : Either.right(option.right.unitRef.unitId);
+  return option.success.unitRef == null
+    ? Result.fail(invalidChoiceIssue(fill, fillIndex, optionId))
+    : Result.succeed(option.success.unitRef.unitId);
   /* v8 ignore stop -- @preserve */
 }
 
@@ -1136,8 +1136,8 @@ function acceptedChoiceOption(
   );
   /* v8 ignore start -- @preserve -- Choice validation already admitted this option id from this exact hole roster. */
   return option == null
-    ? Either.left(invalidChoiceIssue(fill, fillIndex, optionId))
-    : Either.right(option);
+    ? Result.fail(invalidChoiceIssue(fill, fillIndex, optionId))
+    : Result.succeed(option);
   /* v8 ignore stop -- @preserve */
 }
 
@@ -1153,8 +1153,8 @@ function alignmentSelection(
       ? undefined
       : alignmentFromOptionId(alignmentOption);
   return alignment == null
-    ? Either.left(invalidChoiceIssue(fill, fillIndex, optionId))
-    : Either.right(alignment);
+    ? Result.fail(invalidChoiceIssue(fill, fillIndex, optionId))
+    : Result.succeed(alignment);
 }
 /* v8 ignore stop -- @preserve */
 
@@ -1164,10 +1164,10 @@ function speciesSizeSelection(
   optionId: CreationChoiceOptionId,
 ): ApplyCreationFillResult<CharacterSpeciesSizeSelection> {
   if (isCharacterSpeciesSizeSelection(optionId)) {
-    return Either.right(optionId);
+    return Result.succeed(optionId);
     /* v8 ignore start -- @preserve -- The species-size hole exposes only values accepted by isCharacterSpeciesSizeSelection. */
   }
-  return Either.left(invalidChoiceIssue(fill, fillIndex, optionId));
+  return Result.fail(invalidChoiceIssue(fill, fillIndex, optionId));
 }
 /* v8 ignore stop -- @preserve */
 
@@ -1179,19 +1179,19 @@ function startingLanguages(
   const second = fill.optionIds[1];
   /* v8 ignore start -- @preserve -- Choice validation already admitted exactly two distinct selectable language ids. */
   if (fill.optionIds.length < 2) {
-    return Either.left(tooFewChoicesIssue(fill, fillIndex, 2));
+    return Result.fail(tooFewChoicesIssue(fill, fillIndex, 2));
   }
   if (fill.optionIds.length > 2) {
-    return Either.left(tooManyChoicesIssue(fill, fillIndex, 2));
+    return Result.fail(tooManyChoicesIssue(fill, fillIndex, 2));
   }
   if (!isSelectableStandardLanguage(first)) {
-    return Either.left(invalidChoiceIssue(fill, fillIndex, first));
+    return Result.fail(invalidChoiceIssue(fill, fillIndex, first));
   }
   if (!isSelectableStandardLanguage(second) || first === second) {
-    return Either.left(invalidChoiceIssue(fill, fillIndex, second));
+    return Result.fail(invalidChoiceIssue(fill, fillIndex, second));
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(["Common", first, second] as CharacterStartingLanguages);
+  return Result.succeed(["Common", first, second] as CharacterStartingLanguages);
 }
 
 function backgroundAbilityScoreIncreaseSelection(
@@ -1202,8 +1202,8 @@ function backgroundAbilityScoreIncreaseSelection(
   const selection = parseBackgroundAbilityScoreIncreaseOptionId(optionId);
   /* v8 ignore start -- @preserve -- The background increase hole exposes only ids emitted by this same option codec. */
   return selection == null
-    ? Either.left(invalidChoiceIssue(fill, fillIndex, optionId))
-    : Either.right(selection);
+    ? Result.fail(invalidChoiceIssue(fill, fillIndex, optionId))
+    : Result.succeed(selection);
   /* v8 ignore stop -- @preserve */
 }
 

@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { LANGUAGES, type Language } from "@dnd/shared/game-facts";
 import {
   creationChoiceOptionId,
@@ -19,11 +19,11 @@ export type SurfaceLanguageIdIssue = {
 
 export function languageFromSurfaceLanguageId(
   value: string,
-): Either.Either<Language, SurfaceLanguageIdIssue> {
+): Result.Result<Language, SurfaceLanguageIdIssue> {
   const language = LANGUAGE_BY_SURFACE_LANGUAGE_ID[value];
   return language === undefined
-    ? Either.left({ tag: "unsupportedSurfaceLanguageId", value })
-    : Either.right(language);
+    ? Result.fail({ tag: "unsupportedSurfaceLanguageId", value })
+    : Result.succeed(language);
 }
 
 export type LanguageChoiceOptionIdIssue = {
@@ -33,11 +33,11 @@ export type LanguageChoiceOptionIdIssue = {
 
 export function languageFromCreationChoiceOptionId(
   value: CreationChoiceOptionId,
-): Either.Either<Language, LanguageChoiceOptionIdIssue> {
+): Result.Result<Language, LanguageChoiceOptionIdIssue> {
   const language = LANGUAGES.find((candidate) => candidate === value);
   return language === undefined
-    ? Either.left({ tag: "unsupportedLanguageChoiceOptionId", value })
-    : Either.right(language);
+    ? Result.fail({ tag: "unsupportedLanguageChoiceOptionId", value })
+    : Result.succeed(language);
 }
 
 export function characterCreationLanguageTableOptions(input: {
