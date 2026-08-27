@@ -31,6 +31,8 @@ import {
   type ProtocolToolDefinition,
 } from "./tool-definition-contract.ts";
 
+const BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS = { maxDepth: 5 } as const;
+
 export const battleToolDefinitions = [
   {
     name: battleToolNames.selectStatBlock,
@@ -48,7 +50,10 @@ export const battleToolDefinitions = [
       "Start a battle session from finalized Character Builds and the selected SRD Stat Block. The caller must provide Initiative scores for every combatant; choose initialSetup to keep the SDK-owned Initiative setup open for the battle_lifecycle surface.",
     inputSchema: startBattleInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    outputSchema: mcpModelOutputJsonSchema(StartBattleOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(
+      StartBattleOutputSchema,
+      BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
+    ),
   },
   {
     name: battleToolNames.battleLifecycle,
@@ -57,7 +62,10 @@ export const battleToolDefinitions = [
       "Apply one Battle lifecycle operation: swap Initiative with a willing ally or finalize initial setup, or atomically add/remove a supported Character Session or installed Stat Block combatant while the Battle is active.",
     inputSchema: battleLifecycleInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    outputSchema: mcpModelOutputJsonSchema(BattleLifecycleOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(
+      BattleLifecycleOutputSchema,
+      BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
+    ),
   },
   {
     name: battleToolNames.readBattleState,
@@ -66,7 +74,10 @@ export const battleToolDefinitions = [
       "Return the current battle-runtime checkpoint/frontier envelope and MCP session summary.",
     inputSchema: readBattleStateInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(
+      BattleSessionOutputSchema,
+      BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
+    ),
   },
   {
     name: battleToolNames.discoverBattleActs,
@@ -75,7 +86,10 @@ export const battleToolDefinitions = [
       "Return the current checkpoint/frontier envelope with runtime-discovered acts for the current combatant.",
     inputSchema: discoverBattleActsInputSchema,
     annotations: READ_ONLY_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    outputSchema: mcpModelOutputJsonSchema(BattleSessionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(
+      BattleSessionOutputSchema,
+      BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
+    ),
   },
   {
     name: battleToolNames.fillBattleHole,
@@ -84,7 +98,10 @@ export const battleToolDefinitions = [
       "Fill one hole for a selected battle act subject. MCP retains the base session, subject, and accepted fills while the battle runtime advances the checkpoint/frontier envelope.",
     inputSchema: fillBattleHoleInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(
+      BattleResolutionOutputSchema,
+      BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
+    ),
   },
   {
     name: battleToolNames.resolveBattleAct,
@@ -93,7 +110,10 @@ export const battleToolDefinitions = [
       "Resolve a selected battle act subject that does not need holes, such as Action Surge.",
     inputSchema: resolveBattleActInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(
+      BattleResolutionOutputSchema,
+      BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
+    ),
   },
   {
     name: battleToolNames.endTurn,
@@ -102,7 +122,10 @@ export const battleToolDefinitions = [
       "Resolve the current actor's End Turn runtime command and store the updated battle session.",
     inputSchema: endTurnInputSchema,
     annotations: DESTRUCTIVE_NON_IDEMPOTENT_CLOSED_WORLD_TOOL_ANNOTATIONS,
-    outputSchema: mcpModelOutputJsonSchema(BattleResolutionOutputSchema),
+    outputSchema: mcpModelOutputJsonSchema(
+      BattleResolutionOutputSchema,
+      BATTLE_MODEL_OUTPUT_SCHEMA_OPTIONS,
+    ),
   },
   {
     name: battleToolNames.endBattle,

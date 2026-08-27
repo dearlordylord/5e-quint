@@ -7,7 +7,10 @@ import {
   jsonContent,
   jsonSerializablePayload,
 } from "./tool-content.ts";
-import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
+import {
+  projectModelOutputJsonSchema,
+  type ModelOutputSchemaProjectionOptions,
+} from "./model-output-json-schema.ts";
 
 export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
   readonly type: "object";
@@ -24,7 +27,10 @@ export type ToolError = ReturnType<typeof errorContent>;
 export type ToolInputResult<A> = Either.Either<A, ToolError>;
 
 const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
-const modelOutputSchemaByCodec = new WeakMap<object, McpModelOutputSchema>();
+const modelOutputSchemaByCodec = new WeakMap<
+  object,
+  Map<ModelOutputSchemaProjectionOptions["maxDepth"], McpModelOutputSchema>
+>();
 
 export function decodeToolArgs<A, I>(
   schema: Schema.Schema<A, I, never>,
@@ -161,14 +167,16 @@ export function mcpOutputJsonSchema<A, I>(
 
 export function mcpModelOutputJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
+  options: ModelOutputSchemaProjectionOptions = {},
 ): McpModelOutputSchema {
-  const cached = modelOutputSchemaByCodec.get(schema);
+  const maxDepth = options.maxDepth;
+  const cached = modelOutputSchemaByCodec.get(schema)?.get(maxDepth);
   if (cached !== undefined) return cached;
 
   const generated = omitRedundantImpossibleProperties(
     jsonSchemaFromCodec(schema),
   );
-  const projected = projectModelOutputJsonSchema(generated);
+  const projected = projectModelOutputJsonSchema(generated, options);
   const identified = {
     $id: outputSchemaId(projected),
     ...projected,
@@ -177,7 +185,14 @@ export function mcpModelOutputJsonSchema<A, I>(
   Object.defineProperty(identified, MODEL_OUTPUT_SCHEMA, {
     enumerable: false,
   });
-  modelOutputSchemaByCodec.set(schema, identified);
+  const schemasByDepth =
+    modelOutputSchemaByCodec.get(schema) ??
+    new Map<
+      ModelOutputSchemaProjectionOptions["maxDepth"],
+      McpModelOutputSchema
+    >();
+  schemasByDepth.set(maxDepth, identified);
+  modelOutputSchemaByCodec.set(schema, schemasByDepth);
   return identified;
 }
 

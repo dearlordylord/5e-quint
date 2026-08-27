@@ -796,6 +796,30 @@
             "result",
             "envelope",
             "frontier",
+            "acts",
+            "[]",
+            "subject"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "frontier",
+            "acts",
+            "[]",
+            "initialHoles"
+          ]
+        },
+        {
+          "toolName": "discover_battle_acts",
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "frontier",
             "holes"
           ]
         },

@@ -214,4 +214,62 @@ describe("MCP model output JSON Schema", () => {
       ],
     });
   });
+
+  test("keys bounded projections by their depth without widening the default", () => {
+    const codec = Schema.Struct({
+      envelope: Schema.Struct({
+        frontier: Schema.Struct({
+          acts: Schema.Array(
+            Schema.Struct({
+              subject: Schema.String,
+              initialHoles: Schema.Array(Schema.String),
+            }),
+          ),
+        }),
+      }),
+    });
+
+    const defaultProjection = mcpModelOutputJsonSchema(codec);
+    const battleProjection = mcpModelOutputJsonSchema(codec, { maxDepth: 5 });
+
+    expect(defaultProjection).toMatchObject({
+      properties: {
+        envelope: {
+          properties: {
+            frontier: {
+              properties: {
+                acts: { type: "array", items: { type: "object" } },
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(battleProjection).toMatchObject({
+      properties: {
+        envelope: {
+          properties: {
+            frontier: {
+              properties: {
+                acts: {
+                  type: "array",
+                  items: {
+                    type: "object",
+                    properties: {
+                      subject: { type: "string" },
+                      initialHoles: { type: "array" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+    expect(mcpModelOutputJsonSchema(codec)).toBe(defaultProjection);
+    expect(mcpModelOutputJsonSchema(codec, { maxDepth: 5 })).toBe(
+      battleProjection,
+    );
+  });
 });
