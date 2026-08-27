@@ -6,7 +6,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
   DRUID_WILD_SHAPE_UNIT_ID,
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   characterBuildResources,
@@ -232,7 +232,7 @@ describe("Character Sheet runtime / druid features", () => {
     );
 
     expect(
-      Either.isLeft(
+      Result.isFailure(
         rebuildCharacterSheetFixture({
           characterId: characterSheetId(
             "character:druid-wild-shape-missing-forms",

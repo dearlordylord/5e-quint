@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { PositiveInteger, spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -27,7 +27,7 @@ export function castTelepathicBond(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly targets: readonly CharacterSheetTelepathicBondTarget[];
-}): Either.Either<CharacterSheetTelepathicBondResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetTelepathicBondResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -64,7 +64,7 @@ function telepathicBondTargetIssue(
 function telepathicBondInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly targets: readonly CharacterSheetTelepathicBondTarget[];
-}): Either.Either<CharacterSheetTelepathicBondInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetTelepathicBondInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Telepathic Bond support profile required by this projector. */
   if (
@@ -85,7 +85,7 @@ function telepathicBondInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.value);
   /* v8 ignore start -- @preserve -- The authored one-hour duration is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue(
       "Telepathic Bond requires a supported duration.",
     );
@@ -111,7 +111,7 @@ function telepathicBondInvocationFromSpell(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "telepathicBond",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -124,7 +124,7 @@ function telepathicBondInvocationFromSpell(input: {
     ritualAvailable: true,
     rangeFeet: TELEPATHIC_BOND_RANGE_FEET,
     targetLimit: TELEPATHIC_BOND_TARGET_LIMIT,
-    duration: duration.right,
+    duration: duration.success,
     targets: input.targets,
     communication: {
       answerOwner: "session",

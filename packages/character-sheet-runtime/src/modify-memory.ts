@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -31,7 +31,7 @@ export function castModifyMemory(input: {
   readonly unitLibrary: UnitCatalog;
   readonly target: CharacterSheetModifyMemoryTarget;
   readonly memoryEdit: CharacterSheetModifyMemoryMemoryEdit;
-}): Either.Either<CharacterSheetModifyMemoryResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetModifyMemoryResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -98,7 +98,7 @@ function modifyMemoryInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly target: CharacterSheetModifyMemoryTarget;
   readonly memoryEdit: CharacterSheetModifyMemoryMemoryEdit;
-}): Either.Either<CharacterSheetModifyMemoryInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetModifyMemoryInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Modify Memory support profile required by this projector. */
   if (
@@ -148,12 +148,12 @@ function modifyMemoryInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Modify Memory requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "modify_memory",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -167,7 +167,7 @@ function modifyMemoryInvocationFromSpell(input: {
     rangeFeet: MODIFY_MEMORY_RANGE_FEET,
     components: ["v", "s"],
     concentration: {
-      upTo: duration.right,
+      upTo: duration.success,
       earlyEnd: ["target_takes_damage", "targeted_by_another_spell"],
       noMemoryModifiedOnEarlyEnd: true,
     },

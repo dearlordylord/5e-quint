@@ -12,7 +12,7 @@ import { describe, expect, it, test } from "vitest";
 import type { CharacterSheet } from "./index.ts";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castGreaterRestorationOnSheet,
@@ -353,9 +353,9 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Reincarnate requires prepared class Spell Access.",
       );
     }
@@ -386,9 +386,9 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Reincarnate requires the soul to accept revival.",
       );
     }

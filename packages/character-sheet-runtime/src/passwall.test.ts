@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castPasswall,
@@ -134,9 +134,9 @@ describe("Character Sheet runtime / Passwall", () => {
       surface: passwallSurface,
       dimensions: { ...passwallDimensions, widthFeet: 6 },
     });
-    expect(Either.isLeft(overWide)).toBe(true);
-    if (Either.isLeft(overWide)) {
-      expect(overWide.left.message).toBe(
+    expect(Result.isFailure(overWide)).toBe(true);
+    if (Result.isFailure(overWide)) {
+      expect(overWide.failure.message).toBe(
         "Passwall width must be at most 5 feet.",
       );
     }
@@ -151,9 +151,9 @@ describe("Character Sheet runtime / Passwall", () => {
       dimensions: passwallDimensions,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Passwall requires prepared class Spell Access.",
       );
     }

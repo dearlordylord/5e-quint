@@ -12,7 +12,7 @@ import {
   type SpellRecord,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import {
   RITUAL_ADDITIONAL_CASTING_TIME_MINUTES,
@@ -44,7 +44,7 @@ type CharacterSheetSpellbookRitualFeature = CharacterSheetClassFeatureRecord & {
 
 export function characterSheetSpellInvocation(
   input: CharacterSheetSpellInvocationInput,
-): Either.Either<CharacterSheetSpellInvocation, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellInvocation, CharacterSheetIssue> {
   const bookOfShadowsRitual =
     characterSheetBookOfShadowsRitualInvocation(input);
   if (bookOfShadowsRitual !== null) {
@@ -55,7 +55,7 @@ export function characterSheetSpellInvocation(
 
 export function characterSheetSpellbookRitualAccess(
   input: CharacterSheetSpellbookRitualAccessInput,
-): Either.Either<CharacterSheetSpellbookRitualAccess, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellbookRitualAccess, CharacterSheetIssue> {
   return characterSheetSpellbookRitualAccessForSpell(input, {
     missingSpellbookMessage:
       "Wizard Ritual Adept requires the spell in the spellbook.",
@@ -65,12 +65,12 @@ export function characterSheetSpellbookRitualAccess(
 export function characterSheetSpellbookRitualAccessesForBuild(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterSheetSpellbookRitualAccess[],
   CharacterSheetIssue
 > {
   if (!isSpellcastingBuild(input.build)) {
-    return Either.right([]);
+    return Result.succeed([]);
   }
 
   const accesses: CharacterSheetSpellbookRitualAccess[] = [];
@@ -82,45 +82,45 @@ export function characterSheetSpellbookRitualAccessesForBuild(input: {
       sourceUnitId: source.sourceUnitId,
     });
     /* v8 ignore next -- @preserve -- Feature lookup rejection is malformed spellbook-source/catalog correlation. */
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    if (feature.right === null) continue;
+    if (Result.isFailure(feature)) return Result.fail(feature.failure);
+    if (feature.success === null) continue;
     for (const spellId of source.spellbook) {
       const spell = getRequiredUnit(input.unitLibrary, spellId);
       /* v8 ignore next -- @preserve -- A spellbook id must resolve in the same Unit catalog used to parse the build. */
-      if (Either.isLeft(spell)) return Either.left(spell.left);
+      if (Result.isFailure(spell)) return Result.fail(spell.failure);
       /* v8 ignore start -- @preserve -- Spellbook ids are parsed against the same Unit catalog and must resolve to Spell records. */
-      if (!isSpellRecord(spell.right)) {
+      if (!isSpellRecord(spell.success)) {
         return characterSheetIssue(
           "Spellbook Ritual Access requires Spell records in the spellbook.",
         );
       }
       /* v8 ignore stop -- @preserve */
-      if (!spellHasLeveledRitualTag(spell.right)) continue;
+      if (!spellHasLeveledRitualTag(spell.success)) continue;
       accesses.push({
         tag: "spellbookRitual",
-        spell: spell.right,
+        spell: spell.success,
         spellcastingSourceUnitId: source.sourceUnitId,
-        featureUnitId: feature.right.id,
+        featureUnitId: feature.success.id,
       });
     }
   }
-  return Either.right(accesses);
+  return Result.succeed(accesses);
 }
 
 export function characterSheetSpellbookRitualInvocationProjection(
   input: CharacterSheetSpellInvocationInput,
 ): CharacterSheetSpellbookRitualInvocationProjection {
   const invocation = characterSheetSpellbookRitualInvocation(input);
-  if (Either.isRight(invocation)) {
+  if (Result.isSuccess(invocation)) {
     return {
       tag: "accepted",
-      invocation: invocation.right,
+      invocation: invocation.success,
       qRoute: CHARACTER_SHEET_SPELLBOOK_RITUAL_ACCEPTED_ROUTE,
     };
   }
   return {
     tag: "rejected",
-    issue: invocation.left,
+    issue: invocation.failure,
     qRoute: CHARACTER_SHEET_SPELLBOOK_RITUAL_REJECTED_ROUTE,
   };
 }
@@ -138,7 +138,7 @@ export function characterBuildHasSpellbookSpell(input: {
 
 function characterSheetBookOfShadowsRitualInvocation(
   input: CharacterSheetSpellInvocationInput,
-): Either.Either<
+): Result.Result<
   CharacterSheetBookOfShadowsRitualInvocation,
   CharacterSheetIssue
 > | null {
@@ -160,11 +160,11 @@ function characterSheetBookOfShadowsRitualInvocation(
   }
   const spell = requiredRitualSpell(input, spellHasTopLevelRitualTag);
   /* v8 ignore next -- @preserve -- Ritual spell rejection is malformed Book of Shadows spell/catalog input. */
-  if (Either.isLeft(spell)) return Either.left(spell.left);
-  return Either.right({
+  if (Result.isFailure(spell)) return Result.fail(spell.failure);
+  return Result.succeed({
     tag: "bookOfShadowsRitual",
     spellId: input.spellId,
-    spellLevel: spell.right.mechanics.level,
+    spellLevel: spell.success.mechanics.level,
     spellcastingSourceUnitId: source.sourceUnitId,
     spellSlotCost: { kind: "none" },
     preparationRequirement: "prepared",
@@ -176,20 +176,20 @@ function characterSheetBookOfShadowsRitualInvocation(
 
 function characterSheetSpellbookRitualInvocation(
   input: CharacterSheetSpellInvocationInput,
-): Either.Either<CharacterSheetSpellbookRitualInvocation, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellbookRitualInvocation, CharacterSheetIssue> {
   const access = characterSheetSpellbookRitualAccess({
     build: input.sheet.build,
     unitLibrary: input.unitLibrary,
     spellId: input.spellId,
   });
   /* v8 ignore next -- @preserve -- Access rejection is propagated from the typed ritual-access boundary. */
-  if (Either.isLeft(access)) return Either.left(access.left);
-  return Either.right({
+  if (Result.isFailure(access)) return Result.fail(access.failure);
+  return Result.succeed({
     tag: "spellbookRitual",
-    spellId: access.right.spell.id,
-    spellLevel: access.right.spell.mechanics.level,
-    spellcastingSourceUnitId: access.right.spellcastingSourceUnitId,
-    featureUnitId: access.right.featureUnitId,
+    spellId: access.success.spell.id,
+    spellLevel: access.success.spell.mechanics.level,
+    spellcastingSourceUnitId: access.success.spellcastingSourceUnitId,
+    featureUnitId: access.success.featureUnitId,
     spellSlotCost: { kind: "none" },
     preparationRequirement: "not_required",
     requiredSpellAccess: "spellbook",
@@ -201,7 +201,7 @@ function characterSheetSpellbookRitualInvocation(
 function characterSheetSpellbookRitualAccessForSpell(
   input: CharacterSheetSpellbookRitualAccessInput,
   messages: { readonly missingSpellbookMessage: string },
-): Either.Either<CharacterSheetSpellbookRitualAccess, CharacterSheetIssue> {
+): Result.Result<CharacterSheetSpellbookRitualAccess, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- Ritual invocation on a non-spellcasting build is malformed internal input after invocation admission. */
   if (!isSpellcastingBuild(input.build)) {
     return characterSheetIssue(
@@ -211,7 +211,7 @@ function characterSheetSpellbookRitualAccessForSpell(
   /* v8 ignore stop -- @preserve */
   const spell = requiredRitualSpell(input, spellHasLeveledRitualTag);
   /* v8 ignore next -- @preserve -- Ritual spell rejection is malformed spellbook spell/catalog input. */
-  if (Either.isLeft(spell)) return Either.left(spell.left);
+  if (Result.isFailure(spell)) return Result.fail(spell.failure);
   const spellbookSources = input.build.spellcasting.sources.filter(
     (candidate) =>
       candidate.spellbook.some((spellId) => spellId === input.spellId),
@@ -226,13 +226,13 @@ function characterSheetSpellbookRitualAccessForSpell(
       sourceUnitId: source.sourceUnitId,
     });
     /* v8 ignore next -- @preserve -- Feature lookup rejection is malformed spellbook-source/catalog correlation. */
-    if (Either.isLeft(feature)) return Either.left(feature.left);
-    if (feature.right === null) continue;
-    return Either.right({
+    if (Result.isFailure(feature)) return Result.fail(feature.failure);
+    if (feature.success === null) continue;
+    return Result.succeed({
       tag: "spellbookRitual",
-      spell: spell.right,
+      spell: spell.success,
       spellcastingSourceUnitId: source.sourceUnitId,
-      featureUnitId: feature.right.id,
+      featureUnitId: feature.success.id,
     });
   }
   return characterSheetIssue(
@@ -246,17 +246,17 @@ function requiredRitualSpell(
     "spellId" | "unitLibrary"
   >,
   hasRequiredRitualTag: (spell: SpellRecord) => boolean,
-): Either.Either<SpellRecord, CharacterSheetIssue> {
+): Result.Result<SpellRecord, CharacterSheetIssue> {
   const spell = getRequiredUnit(input.unitLibrary, input.spellId);
   /* v8 ignore next -- @preserve -- A selected ritual spell id must resolve in the same Unit catalog. */
-  if (Either.isLeft(spell)) return Either.left(spell.left);
+  if (Result.isFailure(spell)) return Result.fail(spell.failure);
   /* v8 ignore start -- @preserve -- A ritual spell id resolving to a non-Spell Unit is a build/catalog correlation failure. */
-  if (!isSpellRecord(spell.right)) {
+  if (!isSpellRecord(spell.success)) {
     return characterSheetIssue("Ritual spell invocation requires a Spell.");
   }
   /* v8 ignore stop -- @preserve */
-  return hasRequiredRitualTag(spell.right)
-    ? Either.right(spell.right)
+  return hasRequiredRitualTag(spell.success)
+    ? Result.succeed(spell.success)
     : characterSheetIssue(
         "Ritual spell invocation requires a ritual-tagged Spell Definition.",
       );
@@ -266,7 +266,7 @@ function optionalSpellbookRitualAccessFeatureForSource(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly sourceUnitId: UnitRecord["id"];
-}): Either.Either<
+}): Result.Result<
   CharacterSheetSpellbookRitualFeature | null,
   CharacterSheetIssue
 > {
@@ -275,20 +275,20 @@ function optionalSpellbookRitualAccessFeatureForSource(input: {
     input.unitLibrary,
   );
   /* v8 ignore next -- @preserve -- Feature lookup rejection is malformed build/catalog correlation. */
-  if (Either.isLeft(feature)) return Either.left(feature.left);
-  if (feature.right === null) return Either.right(null);
+  if (Result.isFailure(feature)) return Result.fail(feature.failure);
+  if (feature.success === null) return Result.succeed(null);
   const sourceGrantsFeature = classSourceGrantsFeatureAtBuildLevel({
     build: input.build,
     unitLibrary: input.unitLibrary,
     classUnitId: input.sourceUnitId,
-    featureUnitId: feature.right.id,
+    featureUnitId: feature.success.id,
   });
   /* v8 ignore start -- @preserve -- The spellcasting source and its class feature grants are correlated by parsed Character Build facts. */
-  if (Either.isLeft(sourceGrantsFeature)) {
-    return Either.left(sourceGrantsFeature.left);
+  if (Result.isFailure(sourceGrantsFeature)) {
+    return Result.fail(sourceGrantsFeature.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(sourceGrantsFeature.right ? feature.right : null);
+  return Result.succeed(sourceGrantsFeature.success ? feature.success : null);
 }
 
 function classSourceGrantsFeatureAtBuildLevel(input: {
@@ -296,18 +296,18 @@ function classSourceGrantsFeatureAtBuildLevel(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: UnitRecord["id"];
   readonly featureUnitId: UnitRecord["id"];
-}): Either.Either<boolean, CharacterSheetIssue> {
+}): Result.Result<boolean, CharacterSheetIssue> {
   const classUnit = getRequiredUnit(input.unitLibrary, input.classUnitId);
   /* v8 ignore next -- @preserve -- A spellcasting source class id must resolve in the same Unit catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
-  const facts = readClassCreationFacts(classUnit.right);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
+  const facts = readClassCreationFacts(classUnit.success);
   /* v8 ignore next -- @preserve -- Unsupported authored class data: an admitted spellcasting source must expose readable class-creation facts. */
-  if (facts.tag !== "readable") return Either.right(false);
+  if (facts.tag !== "readable") return Result.succeed(false);
   const classLevel = classLevelForUnit(
     input.build.progression,
     input.classUnitId,
   );
-  return Either.right(
+  return Result.succeed(
     facts.value.featureGrants.some(
       (grant) =>
         grant.unitId === input.featureUnitId && grant.level <= classLevel,
@@ -318,7 +318,7 @@ function classSourceGrantsFeatureAtBuildLevel(input: {
 function optionalSpellbookRitualAccessFeatureForBuild(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
-): Either.Either<
+): Result.Result<
   CharacterSheetSpellbookRitualFeature | null,
   CharacterSheetIssue
 > {
@@ -335,7 +335,7 @@ function optionalSpellbookRitualAccessFeatureForBuild(
     }
   }
   if (features.length === 0) {
-    return Either.right(null);
+    return Result.succeed(null);
   }
   /* v8 ignore start -- @preserve -- More than one spellbook Ritual Access feature is an unsupported duplicate authored profile. */
   if (features.length > 1) {
@@ -347,10 +347,10 @@ function optionalSpellbookRitualAccessFeatureForBuild(
   const feature = features[0];
   /* v8 ignore start -- @preserve -- A collection proven nonempty above always has a first Ritual Access feature. */
   if (feature === undefined) {
-    return Either.right(null);
+    return Result.succeed(null);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right(feature);
+  return Result.succeed(feature);
 }
 
 function isSpellRecord(unit: UnitRecord): unit is SpellRecord {

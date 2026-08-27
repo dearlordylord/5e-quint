@@ -15,7 +15,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -489,12 +489,12 @@ function longRestCompletionForSheet(sheet: CharacterSheet) {
 function projectResult(input: {
   readonly outcome: HpRestHitDiceScenario;
   readonly sheet: CharacterSheet;
-  readonly result: Either.Either<unknown, { readonly message: string }>;
+  readonly result: Result.Result<unknown, { readonly message: string }>;
   readonly requiredLongRestTicks?: number | undefined;
   readonly remainingWaitTicks?: number | undefined;
   readonly replayIndex: number;
 }): HpRestHitDiceProjection {
-  return Either.isRight(input.result)
+  return Result.isSuccess(input.result)
     ? projectAccepted({
         outcome: input.outcome,
         sheet: input.sheet,
@@ -505,7 +505,7 @@ function projectResult(input: {
     : projectFromSheet({
         outcome: input.outcome,
         accepted: false,
-        message: input.result.left.message,
+        message: input.result.failure.message,
         sheet: input.sheet,
         requiredLongRestTicks: input.requiredLongRestTicks,
         remainingWaitTicks: input.remainingWaitTicks,
@@ -795,9 +795,11 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }
 
 function recordField(

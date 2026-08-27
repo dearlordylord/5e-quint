@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -28,7 +28,7 @@ const TREE_STRIDE_DESTINATION_SEARCH_RADIUS_FEET = 500;
 export function castTreeStride(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetTreeStrideResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetTreeStrideResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -43,7 +43,7 @@ export function castTreeStride(input: {
 
 export function resolveTreeStrideTransit(
   input: CharacterSheetTreeStrideTransitInput,
-): Either.Either<CharacterSheetTreeStrideTransitResult, CharacterSheetIssue> {
+): Result.Result<CharacterSheetTreeStrideTransitResult, CharacterSheetIssue> {
   if (input.usedThisTurn) {
     return characterSheetIssue("Tree Stride can be used only once per turn.");
   }
@@ -65,7 +65,7 @@ export function resolveTreeStrideTransit(
     input.movementAvailableFeet >=
       TREE_STRIDE_ENTRY_MOVEMENT_COST_FEET +
         TREE_STRIDE_DESTINATION_MOVEMENT_COST_FEET;
-  return Either.right({
+  return Result.succeed({
     arrivalTree: canReachDestination ? input.destinationTree : input.entryTree,
     movementSpentFeet: canReachDestination
       ? TREE_STRIDE_ENTRY_MOVEMENT_COST_FEET +
@@ -78,7 +78,7 @@ export function resolveTreeStrideTransit(
 
 function treeStrideInvocationFromSpell(
   spell: SpellRecord,
-): Either.Either<CharacterSheetTreeStrideInvocation, CharacterSheetIssue> {
+): Result.Result<CharacterSheetTreeStrideInvocation, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Tree Stride support profile required by this projector. */
   if (
     spell.mechanics.family !== "activation" ||
@@ -96,7 +96,7 @@ function treeStrideInvocationFromSpell(
   /* v8 ignore stop -- @preserve */
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The authored Tree Stride duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Tree Stride requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
@@ -117,7 +117,7 @@ function treeStrideInvocationFromSpell(
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "treeStride",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -127,7 +127,7 @@ function treeStrideInvocationFromSpell(
     },
     preparationRequirement: "prepared",
     requiredSpellAccess: "class_prepared",
-    duration: duration.right,
+    duration: duration.success,
     concentrationRequired: true,
     transport: {
       entryMovementCostFeet: TREE_STRIDE_ENTRY_MOVEMENT_COST_FEET,

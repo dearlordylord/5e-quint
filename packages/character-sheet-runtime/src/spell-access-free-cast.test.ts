@@ -5,7 +5,7 @@ import {
 } from "@dnd/character-creation-runtime";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Hp, resourceCount } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -225,7 +225,7 @@ describe("Character Sheet Spell Access free casts", () => {
     invalidExpenditure.resourceExpenditures[0].spellId =
       "synthetic_other_spell";
     expect(
-      Either.isLeft(parseCharacterSheet(invalidExpenditure, unitLibrary)),
+      Result.isFailure(parseCharacterSheet(invalidExpenditure, unitLibrary)),
     ).toBe(true);
 
     const duplicateExpenditure = JSON.parse(JSON.stringify(spent));
@@ -233,7 +233,7 @@ describe("Character Sheet Spell Access free casts", () => {
       duplicateExpenditure.resourceExpenditures[0],
     );
     expect(
-      Either.isLeft(parseCharacterSheet(duplicateExpenditure, unitLibrary)),
+      Result.isFailure(parseCharacterSheet(duplicateExpenditure, unitLibrary)),
     ).toBe(true);
   });
 
@@ -290,9 +290,9 @@ describe("Character Sheet Spell Access free casts", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(parsed)).toBe(true);
-    if (Either.isLeft(parsed)) {
-      expect(parsed.left.map((issue) => issue.index)).toEqual(
+    expect(Result.isFailure(parsed)).toBe(true);
+    if (Result.isFailure(parsed)) {
+      expect(parsed.failure.map((issue) => issue.index)).toEqual(
         expect.arrayContaining([0, 1]),
       );
     }

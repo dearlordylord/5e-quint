@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castMislead,
@@ -155,9 +155,9 @@ describe("Character Sheet runtime / Mislead", () => {
       casting: { casterSpeedFeet: 0 },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Mislead requires a positive caster Speed.",
       );
     }
@@ -171,9 +171,9 @@ describe("Character Sheet runtime / Mislead", () => {
       casting: { casterSpeedFeet: 30 },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Mislead requires prepared class Spell Access.",
       );
     }

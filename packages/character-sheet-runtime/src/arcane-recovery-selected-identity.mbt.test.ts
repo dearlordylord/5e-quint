@@ -16,7 +16,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -337,12 +337,12 @@ function rejectPactSlotArcaneRecoveryProjection(): Extract<
       ],
     },
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Arcane Recovery to reject Pact Slot recovery.");
   }
-  if (result.left.message !== ARCANE_RECOVERY_PACT_SLOT_REJECTION) {
+  if (result.failure.message !== ARCANE_RECOVERY_PACT_SLOT_REJECTION) {
     throw new Error(
-      `Expected Pact Slot rejection, got ${result.left.message}.`,
+      `Expected Pact Slot rejection, got ${result.failure.message}.`,
     );
   }
   return {
@@ -627,9 +627,9 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const left = result.failure;
   if (
     left !== null &&
     typeof left === "object" &&

@@ -8,7 +8,7 @@ import {
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -32,7 +32,7 @@ export function castDominatePerson(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly target: CharacterSheetDominatePersonTarget;
-}): Either.Either<CharacterSheetDominatePersonResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetDominatePersonResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -74,7 +74,7 @@ function dominatePersonTargetIssue(
 function dominatePersonInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly target: CharacterSheetDominatePersonTarget;
-}): Either.Either<CharacterSheetDominatePersonInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetDominatePersonInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Dominate Person support profile required by this projector. */
   if (
@@ -118,14 +118,14 @@ function dominatePersonInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The exact one-minute duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue(
       "Dominate Person requires a supported duration.",
     );
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "dominate_person",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -147,7 +147,7 @@ function dominatePersonInvocationFromSpell(input: {
     },
     outcome: dominatePersonOutcome({
       target: input.target,
-      duration: duration.right,
+      duration: duration.success,
     }),
   });
 }

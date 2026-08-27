@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castLegendLore,
@@ -129,9 +129,9 @@ describe("Character Sheet runtime / Legend Lore", () => {
       subject: famousLegendLoreSubject,
       casting: completedLegendLoreCasting,
     });
-    expect(Either.isLeft(second)).toBe(true);
-    if (Either.isLeft(second)) {
-      expect(second.left.message).toBe(
+    expect(Result.isFailure(second)).toBe(true);
+    if (Result.isFailure(second)) {
+      expect(second.failure.message).toBe(
         "Spell Slot spend requires an unexpended ordinary Spell Slot.",
       );
     }
@@ -175,9 +175,9 @@ describe("Character Sheet runtime / Legend Lore", () => {
       casting: completedLegendLoreCasting,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Legend Lore requires prepared class Spell Access.",
       );
     }

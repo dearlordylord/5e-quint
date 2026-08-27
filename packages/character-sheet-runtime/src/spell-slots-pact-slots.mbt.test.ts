@@ -23,7 +23,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -264,13 +264,13 @@ function rejectMismatchedOrdinarySpellSlotCapacityProjection(): SlotProjection {
       },
     ],
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected ordinary Spell Slot capacity mismatch.");
   }
   return projectFromParts({
     outcome: "ordinary-capacity-mismatch-rejected",
     accepted: false,
-    message: result.left[0].code,
+    message: result.failure[0].code,
     ordinaryLevel1Capacity: 3,
     replayIndex: 1,
   });
@@ -289,13 +289,13 @@ function rejectPactSlotExpenditureOverCapacityProjection(): SlotProjection {
     unitLibrary,
     pactSlots: { expended: resourceCount(3) },
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Pact Slot expenditure over capacity.");
   }
   return projectFromParts({
     outcome: "pact-expenditure-over-capacity-rejected",
     accepted: false,
-    message: result.left[0].code,
+    message: result.failure[0].code,
     pactSlotLevel: 1,
     pactSlotCapacity: 2,
     pactSlotExpended: 3,
@@ -436,12 +436,12 @@ function rejectMagicalCunningWithoutExpendedPactSlotsProjection(): SlotProjectio
     pactExpended: 0,
   });
   const result = completeMagicalCunningRite({ sheet, unitLibrary });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Magical Cunning to reject fresh Pact Slots.");
   }
   return projectRejected({
     outcome: "magical-cunning-no-expended-pact-slots-rejected",
-    message: result.left.message,
+    message: result.failure.message,
     sheet,
     replayIndex: 10,
   });
@@ -461,12 +461,12 @@ function rejectArcaneRecoveryPactSlotRefundProjection(): SlotProjection {
       ],
     },
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Arcane Recovery to reject Pact Slot recovery.");
   }
   return projectRejected({
     outcome: "arcane-recovery-pact-slot-refund-rejected",
-    message: result.left.message,
+    message: result.failure.message,
     sheet,
     replayIndex: 11,
   });
@@ -1170,9 +1170,11 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }
 
 function recordField(

@@ -9,7 +9,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castContactPatron,
@@ -221,9 +221,9 @@ describe("Character Sheet runtime / Contact Patron", () => {
       sheet: result.sheet,
       unitLibrary,
     });
-    expect(Either.isLeft(secondUse)).toBe(true);
-    if (Either.isLeft(secondUse)) {
-      expect(secondUse.left.message).toBe(
+    expect(Result.isFailure(secondUse)).toBe(true);
+    if (Result.isFailure(secondUse)) {
+      expect(secondUse.failure.message).toBe(
         "Contact Patron cannot be used again until a Long Rest.",
       );
     }
@@ -233,7 +233,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
     );
     expect(rested.resourceExpenditures).toEqual([]);
     expect(
-      Either.isRight(castContactPatron({ sheet: rested, unitLibrary })),
+      Result.isSuccess(castContactPatron({ sheet: rested, unitLibrary })),
     ).toBe(true);
   });
 });

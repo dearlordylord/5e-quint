@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castHallow,
@@ -143,9 +143,9 @@ describe("Character Sheet runtime / Hallow", () => {
       extraEffect: resistanceEffect,
     });
 
-    expect(Either.isLeft(oversized)).toBe(true);
-    if (Either.isLeft(oversized)) {
-      expect(oversized.left.message).toBe(
+    expect(Result.isFailure(oversized)).toBe(true);
+    if (Result.isFailure(oversized)) {
+      expect(oversized.failure.message).toBe(
         "Hallow area radius must be at most 60 feet.",
       );
     }
@@ -167,9 +167,9 @@ describe("Character Sheet runtime / Hallow", () => {
       extraEffect: resistanceEffect,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Hallow creature type choices must be unique.",
       );
     }
@@ -186,9 +186,9 @@ describe("Character Sheet runtime / Hallow", () => {
       extraEffect: resistanceEffect,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Hallow requires prepared class Spell Access.",
       );
     }

@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castSeeming,
@@ -202,9 +202,11 @@ describe("Character Sheet runtime / Seeming", () => {
       targets: [duplicateA, duplicateB],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe("Seeming requires unique target ids.");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
+        "Seeming requires unique target ids.",
+      );
     }
     expect(sheet.spellSlotExpenditures).toEqual([]);
   });
@@ -221,9 +223,9 @@ describe("Character Sheet runtime / Seeming", () => {
       ],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Seeming requires prepared class Spell Access.",
       );
     }

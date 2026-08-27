@@ -1,6 +1,6 @@
 import { statBlockId as authoredStatBlockId } from "@dnd/shared/game-facts";
 import { spellSlotLevel } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -35,17 +35,17 @@ describe("fresh Character Sheet construction", () => {
       unitLibrary,
     });
 
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       throw new Error(
-        `Valid fresh fixture must construct: ${JSON.stringify(result.left)}`,
+        `Valid fresh fixture must construct: ${JSON.stringify(result.failure)}`,
       );
     }
 
-    const zeroReduction: 0 = result.right.hitPointMaximumReduction;
-    const noConditions: readonly [] = result.right.conditions;
+    const zeroReduction: 0 = result.success.hitPointMaximumReduction;
+    const noConditions: readonly [] = result.success.conditions;
     expect([zeroReduction, noConditions]).toEqual([0, []]);
 
-    const projection = freshCharacterSheetProjection(result.right);
+    const projection = freshCharacterSheetProjection(result.success);
     expect(projection).toMatchObject({
       hitPointMaximumReduction: 0,
       exhaustionLevel: 0,
@@ -58,15 +58,15 @@ describe("fresh Character Sheet construction", () => {
       companion: { tag: "none" },
     });
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(FreshCharacterSheetProjectionSchema, {
+      Result.isSuccess(
+        Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
           onExcessProperty: "error",
         })(projection),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(FreshCharacterSheetProjectionSchema, {
+      Result.isFailure(
+        Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
           onExcessProperty: "error",
         })({ ...projection, displayName: "presentation must stay outside" }),
       ),
@@ -82,26 +82,26 @@ describe("fresh Character Sheet construction", () => {
       conditions: [],
       unitLibrary,
     });
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       throw new Error(
-        `Valid nonspellcasting fixture must construct: ${JSON.stringify(result.left)}`,
+        `Valid nonspellcasting fixture must construct: ${JSON.stringify(result.failure)}`,
       );
     }
 
-    const parsed = freshCharacterSheetFromParsedState(result.right);
+    const parsed = freshCharacterSheetFromParsedState(result.success);
     expect(parsed).toHaveProperty("_tag", "Right");
-    if (Either.isRight(parsed)) {
-      expect(parsed.right.conditions).toEqual([]);
-      expect(parsed.right.hitPointMaximumReduction).toBe(0);
+    if (Result.isSuccess(parsed)) {
+      expect(parsed.success.conditions).toEqual([]);
+      expect(parsed.success.hitPointMaximumReduction).toBe(0);
     }
 
     expect(
       freshCharacterSheetFromParsedState({
-        ...result.right,
+        ...result.success,
         conditions: ["blinded"],
       }),
     ).toEqual(
-      Either.left("Fresh Character Sheet requires unspent initial play state."),
+      Result.fail("Fresh Character Sheet requires unspent initial play state."),
     );
   });
 
@@ -114,34 +114,34 @@ describe("fresh Character Sheet construction", () => {
       conditions: [],
       unitLibrary,
     });
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       throw new Error(
-        `Valid spellcasting fixture must construct: ${JSON.stringify(result.left)}`,
+        `Valid spellcasting fixture must construct: ${JSON.stringify(result.failure)}`,
       );
     }
-    if (!isFreshSpellcastingCharacterSheet(result.right)) {
+    if (!isFreshSpellcastingCharacterSheet(result.success)) {
       throw new Error(
         "Expected the parsed fixture to retain spellcasting state.",
       );
     }
 
-    const parsed = freshCharacterSheetFromParsedState(result.right);
+    const parsed = freshCharacterSheetFromParsedState(result.success);
     expect(parsed).toHaveProperty("_tag", "Right");
-    if (Either.isRight(parsed)) {
-      expect(parsed.right.spellSlotExpenditures).toEqual([]);
-      expect(parsed.right.createdSpellSlots).toEqual([]);
-      expect(parsed.right.pactSlotExpenditure).toBeUndefined();
+    if (Result.isSuccess(parsed)) {
+      expect(parsed.success.spellSlotExpenditures).toEqual([]);
+      expect(parsed.success.createdSpellSlots).toEqual([]);
+      expect(parsed.success.pactSlotExpenditure).toBeUndefined();
     }
 
     expect(
       freshCharacterSheetFromParsedState({
-        ...result.right,
+        ...result.success,
         spellSlotExpenditures: [
           { spellLevel: spellSlotLevel(1), expended: resourceCount(1) },
         ],
       }),
     ).toEqual(
-      Either.left("Fresh Character Sheet requires unspent initial play state."),
+      Result.fail("Fresh Character Sheet requires unspent initial play state."),
     );
   });
 
@@ -154,19 +154,19 @@ describe("fresh Character Sheet construction", () => {
       conditions: [],
       unitLibrary,
     });
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
 
     expect(
       parseFreshCharacterSheet(
         {
-          ...result.right,
-          hitPoints: { ...result.right.hitPoints, currentHp: 1 },
+          ...result.success,
+          hitPoints: { ...result.success.hitPoints, currentHp: 1 },
         },
         unitLibrary,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterSheetIssue",
         message: "Fresh Character Sheet requires full current Hit Points.",
       }),
@@ -190,22 +190,22 @@ describe("fresh Character Sheet construction", () => {
     });
 
     expect(result).toEqual(
-      Either.left([
+      Result.fail([
         { code: "hitPointStateInvalid" },
         { code: "spellSlotStateUnexpected" },
         { code: "pactSlotStateUnexpected" },
         { code: "wildShapeKnownFormsUnexpected" },
       ]),
     );
-    if (Either.isLeft(result)) {
-      expect(characterSheetConstructionIssuesSummary(result.left)).toBe(
+    if (Result.isFailure(result)) {
+      expect(characterSheetConstructionIssuesSummary(result.failure)).toBe(
         "hitPointStateInvalid; spellSlotStateUnexpected; pactSlotStateUnexpected; wildShapeKnownFormsUnexpected",
       );
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(CharacterSheetConstructionIssuesSchema, {
+        Result.isSuccess(
+          Schema.decodeUnknownResult(CharacterSheetConstructionIssuesSchema, {
             onExcessProperty: "error",
-          })(result.left),
+          })(result.failure),
         ),
       ).toBe(true);
     }
@@ -221,18 +221,18 @@ describe("fresh Character Sheet construction", () => {
       unitLibrary,
     });
 
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       throw new Error(
-        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.left)}`,
+        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.failure)}`,
       );
     }
-    if (!isFreshSpellcastingCharacterSheet(result.right)) {
+    if (!isFreshSpellcastingCharacterSheet(result.success)) {
       throw new Error("Expected a spellcasting fresh Character Sheet.");
     }
     const ordinaryExpenditures: readonly [] =
-      result.right.spellSlotExpenditures;
-    const createdSlots: readonly [] = result.right.createdSpellSlots;
-    const pactExpenditure: undefined = result.right.pactSlotExpenditure;
+      result.success.spellSlotExpenditures;
+    const createdSlots: readonly [] = result.success.createdSpellSlots;
+    const pactExpenditure: undefined = result.success.pactSlotExpenditure;
     expect([ordinaryExpenditures, createdSlots, pactExpenditure]).toEqual([
       [],
       [],
@@ -253,12 +253,12 @@ describe("fresh Character Sheet construction", () => {
         druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
     });
 
-    if (Either.isLeft(result)) {
+    if (Result.isFailure(result)) {
       throw new Error(
-        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.left)}`,
+        `Valid fresh Druid fixture must construct: ${JSON.stringify(result.failure)}`,
       );
     }
-    expect(freshCharacterSheetProjection(result.right)).toMatchObject({
+    expect(freshCharacterSheetProjection(result.success)).toMatchObject({
       druidCircleLand: { land: "temperate" },
       druidWildShapeKnownForms: {
         statBlockIds: druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
@@ -286,7 +286,7 @@ describe("fresh Character Sheet construction", () => {
     });
 
     expect(result).toEqual(
-      Either.left([
+      Result.fail([
         {
           code: "wildShapeKnownFormWrongCreatureType",
           statBlockId: authoredStatBlockId("stat_block_goblin_warrior"),
@@ -297,8 +297,8 @@ describe("fresh Character Sheet construction", () => {
         },
       ]),
     );
-    if (Either.isLeft(result)) {
-      expect(characterSheetConstructionIssuesSummary(result.left)).toBe(
+    if (Result.isFailure(result)) {
+      expect(characterSheetConstructionIssuesSummary(result.failure)).toBe(
         "wildShapeKnownFormWrongCreatureType: stat_block_goblin_warrior; wildShapeKnownFormUnavailable: stat_block_missing",
       );
     }

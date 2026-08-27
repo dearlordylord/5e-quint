@@ -17,7 +17,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -401,9 +401,11 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }
 
 function recordField(

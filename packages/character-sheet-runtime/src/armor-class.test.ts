@@ -4,7 +4,7 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 import {
-  Either,
+  Result,
   abilityScoreAssignment,
   armorClassBuild,
   characterSheetArmorClass,
@@ -142,8 +142,8 @@ describe("Character Sheet runtime / armor class", () => {
     };
     const result = characterSheetArmorClassState(input);
 
-    expect(Either.isLeft(result)).toBe(true);
-    expect(Either.isLeft(characterSheetArmorClass(input))).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
+    expect(Result.isFailure(characterSheetArmorClass(input))).toBe(true);
   });
 
   test("rejects missing class-feature Units while deriving Armor Class base formulas", () => {

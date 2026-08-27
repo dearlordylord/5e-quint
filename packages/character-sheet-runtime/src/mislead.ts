@@ -5,7 +5,7 @@ import { timeSpanDuration } from "@dnd/shared/elapsed-time";
 import { spellSlotLevel } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -26,7 +26,7 @@ export function castMislead(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly casting: CharacterSheetMisleadCasting;
-}): Either.Either<CharacterSheetMisleadResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetMisleadResult, CharacterSheetIssue> {
   return castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -53,7 +53,7 @@ export function castMislead(input: {
 function misleadInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly casting: CharacterSheetMisleadCasting;
-}): Either.Either<CharacterSheetMisleadInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetMisleadInvocation, CharacterSheetIssue> {
   const spell = input.spell;
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Mislead support profile required by this projector. */
   if (
@@ -106,12 +106,12 @@ function misleadInvocationFromSpell(input: {
 
   const duration = timeSpanDuration(spell.mechanics.duration.upTo);
   /* v8 ignore start -- @preserve -- The authored Mislead duration admitted above is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(duration)) {
+  if (Result.isFailure(duration)) {
     return characterSheetIssue("Mislead requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "mislead",
     spellId: spell.id,
     spellLevel: spell.mechanics.level,
@@ -125,7 +125,7 @@ function misleadInvocationFromSpell(input: {
     range: "self",
     components: ["s"],
     concentration: {
-      upTo: duration.right,
+      upTo: duration.success,
       doubleDurationMatchesConcentration: true,
     },
     invisibility: {

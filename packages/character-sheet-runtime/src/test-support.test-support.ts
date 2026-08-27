@@ -40,7 +40,7 @@ import {
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import {
   CHARACTER_SHEET_NO_OTHER_PROFICIENCY_BONUS,
@@ -199,7 +199,7 @@ export {
   currentArmorClass,
   DRUID_WILD_SHAPE_UNIT_ID,
   DieRollResult,
-  Either,
+  Result,
   eldritchInvocationId,
   elapsedTimeTicks,
   Hp,
@@ -826,9 +826,11 @@ export function prayerOfHealingDirectPhase(
   return phase as PrayerOfHealingDirectPhase;
 }
 
-export function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+export function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }
 
 export function weaponMasteryBuild(input: {
@@ -1351,7 +1353,9 @@ export function prayerOfHealingClericBuild(): CharacterBuild {
   };
 }
 
-export function expectRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+export function expectRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }

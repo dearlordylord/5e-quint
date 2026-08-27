@@ -17,7 +17,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -320,13 +320,13 @@ function invokeSpellbookRitualProjection(): InvokedSpellbookRitualSelectedIdenti
     spellId: authoredUnitId(DETECT_MAGIC_SPELL_ID),
     invocation: { kind: "ritual" },
   });
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.message);
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.message);
   }
-  if (result.right.tag !== "spellbookRitual") {
-    throw new Error(`Expected spellbook Ritual, got ${result.right.tag}.`);
+  if (result.success.tag !== "spellbookRitual") {
+    throw new Error(`Expected spellbook Ritual, got ${result.success.tag}.`);
   }
-  return projectAcceptedSpellbookRitual(sheet, result.right);
+  return projectAcceptedSpellbookRitual(sheet, result.success);
 }
 
 function rejectPreparedOnlyRitualProjection(): PreparedOnlyRejectedSpellbookRitualSelectedIdentityProjection {
@@ -340,7 +340,7 @@ function rejectPreparedOnlyRitualProjection(): PreparedOnlyRejectedSpellbookRitu
     spellId: authoredUnitId(DETECT_MAGIC_SPELL_ID),
     invocation: { kind: "ritual" },
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error(
       "Expected prepared-only Ritual Adept invocation rejection.",
     );
@@ -617,9 +617,9 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isRight(result)) return result.right;
-  const left = result.left;
+function requireRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isSuccess(result)) return result.success;
+  const left = result.failure;
   if (
     left !== null &&
     typeof left === "object" &&

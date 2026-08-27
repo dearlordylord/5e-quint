@@ -9,7 +9,7 @@ import {
 } from "@dnd/shared/types";
 import type { UnitCatalog } from "@dnd/character-creation-runtime";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   COMMUNE_CASTING_REST_FEATURE_TAG,
@@ -30,7 +30,7 @@ const COMMUNE_NO_ANSWER_CHANCE_PERCENT_PER_REPEAT_CASTING = 25;
 export function castCommune(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<CharacterSheetCommuneResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetCommuneResult, CharacterSheetIssue> {
   const cast = castPreparedSpell({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
@@ -46,26 +46,26 @@ export function castCommune(input: {
       });
     },
   });
-  if (Either.isLeft(cast)) return Either.left(cast.left);
-  return Either.right({
+  if (Result.isFailure(cast)) return Result.fail(cast.failure);
+  return Result.succeed({
     sheet: {
-      ...cast.right.sheet,
+      ...cast.success.sheet,
       restFeatureUses: replaceCommuneCastCountSinceLongRest({
-        restFeatureUses: cast.right.sheet.restFeatureUses,
+        restFeatureUses: cast.success.sheet.restFeatureUses,
         nextCastCount: resourceCount(
-          cast.right.invocation.repeatedCasting.previousCastCountSinceLongRest +
-            1,
+          cast.success.invocation.repeatedCasting
+            .previousCastCountSinceLongRest + 1,
         ),
       }),
     },
-    invocation: cast.right.invocation,
+    invocation: cast.success.invocation,
   });
 }
 
 function communeInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly previousCastCountSinceLongRest: CharacterSheetCommuneInvocation["repeatedCasting"]["previousCastCountSinceLongRest"];
-}): Either.Either<CharacterSheetCommuneInvocation, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetCommuneInvocation, CharacterSheetIssue> {
   /* v8 ignore start -- @preserve -- The catalog record failed the exact authored level-5 Commune support profile required by this projector. */
   if (
     input.spell.mechanics.family !== "activation" ||
@@ -97,12 +97,12 @@ function communeInvocationFromSpell(input: {
   /* v8 ignore stop -- @preserve */
   const questionWindow = timeSpanDuration(input.spell.mechanics.duration.value);
   /* v8 ignore start -- @preserve -- The authored Commune question window is always accepted by the elapsed-time parser. */
-  if (Either.isLeft(questionWindow)) {
+  if (Result.isFailure(questionWindow)) {
     return characterSheetIssue("Commune requires a supported duration.");
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     tag: "commune",
     spellId: input.spell.id,
     spellLevel: input.spell.mechanics.level,
@@ -118,7 +118,7 @@ function communeInvocationFromSpell(input: {
       primaryAnswer: "yes_no",
       unknownAnswer: "unclear",
       misleadingAnswerFallback: "short_phrase_if_one_word_misleading",
-      window: questionWindow.right,
+      window: questionWindow.success,
     },
     repeatedCasting: {
       previousCastCountSinceLongRest: input.previousCastCountSinceLongRest,

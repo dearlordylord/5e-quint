@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castGeas,
@@ -212,9 +212,9 @@ describe("Character Sheet runtime / Geas", () => {
       command: geasCommand({ commandText: "   " }),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe("Geas requires a nonempty command.");
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe("Geas requires a nonempty command.");
     }
     expect(sheet.spellSlotExpenditures).toEqual([]);
   });
@@ -227,9 +227,9 @@ describe("Character Sheet runtime / Geas", () => {
       command: geasCommand(),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Geas requires prepared class Spell Access.",
       );
     }

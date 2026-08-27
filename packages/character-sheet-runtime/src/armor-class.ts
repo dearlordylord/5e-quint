@@ -25,7 +25,7 @@ import type {
   EquipmentPredicate,
   UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   characterSheetIssue,
@@ -51,15 +51,15 @@ const CHARACTER_SHEET_ARMOR_CLASS_ROUTE = [
 
 export function characterSheetArmorClassState(
   input: CharacterSheetArmorClassStateInput,
-): Either.Either<ArmorClassState, CharacterSheetIssue> {
+): Result.Result<ArmorClassState, CharacterSheetIssue> {
   const { build, unitLibrary } = input;
   const loadout = build.equipment.loadout;
   const defaultState = defaultArmorClassState();
   const armorTraining = characterBuildArmorTraining(build, unitLibrary);
   /* v8 ignore start -- @preserve -- Armor training failure means the parsed build and Unit catalog no longer correlate. */
-  if (Either.isLeft(armorTraining)) {
+  if (Result.isFailure(armorTraining)) {
     return characterSheetIssue(
-      armorTraining.left.map(characterCreationIssueMessage).join("; "),
+      armorTraining.failure.map(characterCreationIssueMessage).join("; "),
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -72,8 +72,8 @@ export function characterSheetArmorClassState(
           characterEquipmentItemSourceFromId(loadout.armor).unitId,
         );
   /* v8 ignore start -- @preserve -- A loadout armor item id must resolve in the same Unit catalog used to parse equipment. */
-  if (armor !== undefined && Either.isLeft(armor)) {
-    return Either.left(armor.left);
+  if (armor !== undefined && Result.isFailure(armor)) {
+    return Result.fail(armor.failure);
   }
   /* v8 ignore stop -- @preserve */
 
@@ -85,40 +85,40 @@ export function characterSheetArmorClassState(
           characterEquipmentItemSourceFromId(loadout.shield).unitId,
         );
   /* v8 ignore start -- @preserve -- A loadout shield item id must resolve in the same Unit catalog used to parse equipment. */
-  if (shield !== undefined && Either.isLeft(shield)) {
-    return Either.left(shield.left);
+  if (shield !== undefined && Result.isFailure(shield)) {
+    return Result.fail(shield.failure);
   }
   /* v8 ignore stop -- @preserve */
 
   const base =
-    armor?.right.kind === "armor"
-      ? Either.right(armorBaseSource(armor.right))
+    armor?.success.kind === "armor"
+      ? Result.succeed(armorBaseSource(armor.success))
       : selectedUnarmoredBaseSource(input, {
           wearingArmor: false,
-          wieldingShield: shield?.right.kind === "shield",
+          wieldingShield: shield?.success.kind === "shield",
         });
   /* v8 ignore next -- @preserve -- Base selection rejection is malformed stored choice or build/catalog input. */
-  if (Either.isLeft(base)) return Either.left(base.left);
+  if (Result.isFailure(base)) return Result.fail(base.failure);
 
   const bonuses: ArmorClassState["bonuses"][number][] = [];
-  if (shield?.right.kind === "shield") {
+  if (shield?.success.kind === "shield") {
     bonuses.push({
       kind: "shield",
-      bonus: armorClassDelta(shield.right.armorClassProjection.bonus),
-      handUse: shield.right.armorClassProjection.handUse,
-      trainingRequired: shield.right.armorClassProjection.trainingRequired,
-      sourceUnitId: shield.right.id,
+      bonus: armorClassDelta(shield.success.armorClassProjection.bonus),
+      handUse: shield.success.armorClassProjection.handUse,
+      trainingRequired: shield.success.armorClassProjection.trainingRequired,
+      sourceUnitId: shield.success.id,
     });
   }
 
-  return Either.right({
+  return Result.succeed({
     ...defaultState,
     abilityModifiers: characterSheetAbilityModifiers(build),
-    base: base.right,
+    base: base.success,
     bonuses,
-    armorTraining: new Set(armorTraining.right),
+    armorTraining: new Set(armorTraining.success),
     leftHandUse:
-      shield?.right.kind === "shield"
+      shield?.success.kind === "shield"
         ? "shield"
         : loadout.offHandWeapon == null
           ? "free"
@@ -131,7 +131,7 @@ export function characterSheetUnarmoredArmorClassBase(
   input: CharacterSheetArmorClassStateInput & {
     readonly wieldingShield: boolean;
   },
-): Either.Either<
+): Result.Result<
   Extract<ArmorClassBaseSource, { readonly kind: "ability_sum" }>,
   CharacterSheetIssue
 > {
@@ -143,20 +143,20 @@ export function characterSheetUnarmoredArmorClassBase(
 
 export function characterSheetArmorClass(
   input: CharacterSheetArmorClassStateInput,
-): Either.Either<ReturnType<typeof currentArmorClass>, CharacterSheetIssue> {
+): Result.Result<ReturnType<typeof currentArmorClass>, CharacterSheetIssue> {
   const state = characterSheetArmorClassState(input);
-  if (Either.isRight(state)) {
-    return Either.right(currentArmorClass(state.right));
+  if (Result.isSuccess(state)) {
+    return Result.succeed(currentArmorClass(state.success));
   }
   /* v8 ignore start -- @preserve -- The scalar wrapper propagates malformed Armor Class state input unchanged. */
-  return Either.left(state.left);
+  return Result.fail(state.failure);
   /* v8 ignore stop -- @preserve */
 }
 
 export function characterSheetArmorClassProjection(
   input: CharacterSheetArmorClassStateInput,
-): Either.Either<CharacterSheetArmorClassProjection, CharacterSheetIssue> {
-  return Either.map(characterSheetArmorClassState(input), (state) => ({
+): Result.Result<CharacterSheetArmorClassProjection, CharacterSheetIssue> {
+  return Result.map(characterSheetArmorClassState(input), (state) => ({
     state,
     armorClass: currentArmorClass(state),
     qRoute: CHARACTER_SHEET_ARMOR_CLASS_ROUTE,
@@ -189,7 +189,7 @@ type ModifyAcSetBaseGrant = Extract<
 function selectedUnarmoredBaseSource(
   input: CharacterSheetArmorClassStateInput,
   equipment: CharacterSheetArmorClassEquipmentState,
-): Either.Either<
+): Result.Result<
   Extract<ArmorClassBaseSource, { readonly kind: "ability_sum" }>,
   CharacterSheetIssue
 > {
@@ -204,18 +204,18 @@ function selectedUnarmoredBaseSource(
       equipment,
     );
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: feature ids admitted into the build must still resolve while Armor Class candidates are projected. */
-  if (Either.isLeft(classFeatureCandidateResult)) {
-    return Either.left(classFeatureCandidateResult.left);
+  if (Result.isFailure(classFeatureCandidateResult)) {
+    return Result.fail(classFeatureCandidateResult.failure);
   }
   /* v8 ignore stop -- @preserve */
-  const candidates = [defaultBase, ...classFeatureCandidateResult.right];
+  const candidates = [defaultBase, ...classFeatureCandidateResult.success];
   const baseChoice = input.baseChoice;
   if (baseChoice !== undefined) {
     const selected = candidates.find((candidate) =>
       armorClassChoiceEquals(candidate.choice, baseChoice),
     );
     /* v8 ignore start -- @preserve -- Malformed retained selection: a stored Armor Class base identity must name a candidate reprojected from the same admitted build. */
-    if (selected !== undefined) return Either.right(selected.base);
+    if (selected !== undefined) return Result.succeed(selected.base);
     return characterSheetIssue(
       "Selected Armor Class base formula is not available.",
     );
@@ -225,9 +225,9 @@ function selectedUnarmoredBaseSource(
     (candidate) => candidate.choice.kind === "class_feature",
   );
   if (classFeatureCandidates.length === 0)
-    return Either.right(defaultBase.base);
+    return Result.succeed(defaultBase.base);
   if (classFeatureCandidates.length === 1) {
-    return Either.right(classFeatureCandidates[0].base);
+    return Result.succeed(classFeatureCandidates[0].base);
   }
   return characterSheetIssue(
     "Multiple class-feature Armor Class base formulas are available; choose one.",
@@ -238,7 +238,7 @@ function characterSheetClassFeatureArmorClassBaseCandidates(
   build: CharacterBuild,
   unitLibrary: UnitCatalog,
   equipment: CharacterSheetArmorClassEquipmentState,
-): Either.Either<
+): Result.Result<
   readonly CharacterSheetArmorClassBaseCandidate[],
   CharacterSheetIssue
 > {
@@ -246,10 +246,12 @@ function characterSheetClassFeatureArmorClassBaseCandidates(
   for (const unitId of characterBuildFeatureUnitIds(build, unitLibrary)) {
     const unit = getRequiredUnit(unitLibrary, unitId);
     /* v8 ignore next -- @preserve -- A build-owned Armor Class feature id must resolve in the same Unit catalog. */
-    if (Either.isLeft(unit)) return Either.left(unit.left);
-    candidates.push(...armorClassBaseCandidatesForUnit(unit.right, equipment));
+    if (Result.isFailure(unit)) return Result.fail(unit.failure);
+    candidates.push(
+      ...armorClassBaseCandidatesForUnit(unit.success, equipment),
+    );
   }
-  return Either.right(candidates);
+  return Result.succeed(candidates);
 }
 
 function armorClassBaseCandidatesForUnit(

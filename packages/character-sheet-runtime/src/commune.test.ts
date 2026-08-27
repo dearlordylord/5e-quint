@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castCommune,
@@ -156,9 +156,9 @@ describe("Character Sheet runtime / Commune", () => {
     ]);
 
     const third = castCommune({ sheet: second.sheet, unitLibrary });
-    expect(Either.isLeft(third)).toBe(true);
-    if (Either.isLeft(third)) {
-      expect(third.left.message).toBe(
+    expect(Result.isFailure(third)).toBe(true);
+    if (Result.isFailure(third)) {
+      expect(third.failure.message).toBe(
         "Spell Slot spend requires an unexpended ordinary Spell Slot.",
       );
     }

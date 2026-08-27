@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castWallOfForce,
@@ -175,9 +175,9 @@ describe("Character Sheet runtime / Wall of Force", () => {
       shape: { ...wallOfForceGlobeOrDome, radiusFeet: 11 },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Wall of Force globe or dome radius must be at most 10 feet.",
       );
     }
@@ -192,9 +192,9 @@ describe("Character Sheet runtime / Wall of Force", () => {
       shape: wallOfForceFlatPanels,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Wall of Force requires prepared class Spell Access.",
       );
     }

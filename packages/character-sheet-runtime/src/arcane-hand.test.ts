@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castArcaneHand,
@@ -189,9 +189,9 @@ describe("Character Sheet runtime / Arcane Hand", () => {
       castLevel: spellSlotLevel(4),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Arcane Hand requires a level-5 or higher Spell Slot.",
       );
     }
@@ -205,9 +205,9 @@ describe("Character Sheet runtime / Arcane Hand", () => {
       space: arcaneHandSpace,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Arcane Hand requires prepared class Spell Access.",
       );
     }

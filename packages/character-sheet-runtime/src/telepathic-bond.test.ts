@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castTelepathicBond,
@@ -127,9 +127,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       slots: 1,
     });
     const empty = castTelepathicBond({ sheet, unitLibrary, targets: [] });
-    expect(Either.isLeft(empty)).toBe(true);
-    if (Either.isLeft(empty)) {
-      expect(empty.left.message).toBe(
+    expect(Result.isFailure(empty)).toBe(true);
+    if (Result.isFailure(empty)) {
+      expect(empty.failure.message).toBe(
         "Telepathic Bond requires at least one target.",
       );
     }
@@ -139,9 +139,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       unitLibrary,
       targets: telepathicBondTargets(9),
     });
-    expect(Either.isLeft(overLimit)).toBe(true);
-    if (Either.isLeft(overLimit)) {
-      expect(overLimit.left.message).toBe(
+    expect(Result.isFailure(overLimit)).toBe(true);
+    if (Result.isFailure(overLimit)) {
+      expect(overLimit.failure.message).toBe(
         "Telepathic Bond supports up to eight willing targets.",
       );
     }
@@ -152,9 +152,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       unitLibrary,
       targets: [duplicateTarget, duplicateTarget],
     });
-    expect(Either.isLeft(duplicate)).toBe(true);
-    if (Either.isLeft(duplicate)) {
-      expect(duplicate.left.message).toBe(
+    expect(Result.isFailure(duplicate)).toBe(true);
+    if (Result.isFailure(duplicate)) {
+      expect(duplicate.failure.message).toBe(
         "Telepathic Bond requires unique target ids.",
       );
     }
@@ -168,9 +168,9 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
       targets: telepathicBondTargets(2),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Telepathic Bond requires prepared class Spell Access.",
       );
     }

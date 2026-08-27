@@ -16,7 +16,7 @@ import {
 import { Hp, spellSlotLevel } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import backgroundSoldierInput from "../../surface/content/background_soldier.json";
 import classWizardInput from "../../surface/content/class_wizard.json";
 import dominatePersonInput from "../../surface/content/dominate_person.json";
@@ -185,9 +185,9 @@ describe("Character Sheet runtime / Dominate Person", () => {
       target: dominatePersonTarget({ savingThrowOutcome: { tag: "failed" } }),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Dominate Person requires prepared class Spell Access.",
       );
     }
@@ -336,7 +336,7 @@ const dominatePersonCatalogById = new Map(
 );
 const dominatePersonUnitLibrary: UnitCatalog = {
   getUnit: (id) =>
-    Option.fromNullable(dominatePersonCatalogById.get(authoredUnitId(id))),
+    Option.fromNullishOr(dominatePersonCatalogById.get(authoredUnitId(id))),
   listUnits: () => dominatePersonCatalogUnits,
   requireUnit: (id) => {
     const unit = dominatePersonCatalogById.get(authoredUnitId(id));
@@ -383,9 +383,11 @@ function armorClassBuild(input: {
   };
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isLeft(either)) {
-    throw new Error(`Expected Right, got Left: ${JSON.stringify(either.left)}`);
+function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isFailure(either)) {
+    throw new Error(
+      `Expected Right, got Left: ${JSON.stringify(either.failure)}`,
+    );
   }
-  return either.right;
+  return either.success;
 }

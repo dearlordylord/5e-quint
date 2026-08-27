@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castCreation,
@@ -128,9 +128,9 @@ describe("Character Sheet runtime / Creation", () => {
       object: { ...mixedGemAndVegetableObject, cubeSideFeet: 6 },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Creation object must fit inside the slot-scaled Cube.",
       );
     }
@@ -144,9 +144,9 @@ describe("Character Sheet runtime / Creation", () => {
       object: mixedGemAndVegetableObject,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Creation requires prepared class Spell Access.",
       );
     }

@@ -10,7 +10,7 @@ import { Option } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castModifyMemory,
@@ -237,9 +237,9 @@ describe("Character Sheet runtime / Modify Memory", () => {
       memoryEdit: modifyMemoryEdit(),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Modify Memory requires prepared class Spell Access.",
       );
     }

@@ -15,7 +15,7 @@ import {
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "../../surface/src/surface/schema.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import antilifeShellInput from "../../surface/content/antilife_shell.json";
 import classDruidInput from "../../surface/content/class_druid.json";
@@ -155,9 +155,9 @@ describe("Character Sheet runtime / Antilife Shell", () => {
       placement: antilifeShellPlacement,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Antilife Shell requires prepared class Spell Access.",
       );
     }
@@ -333,17 +333,17 @@ const unitLibrary = minimalUnitCatalog([
   decodeUnitRecordSync(druidWildShapeInput),
 ]);
 
-function requireRight<R, L>(result: Either.Either<R, L>): R {
-  if (Either.isRight(result)) return result.right;
+function requireRight<R, L>(result: Result.Result<R, L>): R {
+  if (Result.isSuccess(result)) return result.success;
   throw new Error(
-    `Expected Right, received Left: ${JSON.stringify(result.left)}`,
+    `Expected Right, received Left: ${JSON.stringify(result.failure)}`,
   );
 }
 
 function minimalUnitCatalog(units: readonly UnitRecord[]): UnitCatalog {
   const records = new Map(units.map((unit) => [unit.id, unit]));
   return {
-    getUnit: (id) => Option.fromNullable(records.get(authoredUnitId(id))),
+    getUnit: (id) => Option.fromNullishOr(records.get(authoredUnitId(id))),
     listUnits: () => [...records.values()],
     requireUnit: (id) => {
       const unit = records.get(authoredUnitId(id));

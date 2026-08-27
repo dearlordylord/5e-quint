@@ -13,7 +13,7 @@ import {
   type SpellRecord,
   type UnitRecord,
 } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import { characterSheetResources } from "./resources.ts";
 import {
@@ -57,19 +57,19 @@ export function castDivineIntervention(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly spellId: UnitRecord["id"];
-}): Either.Either<CharacterSheetDivineInterventionResult, CharacterSheetIssue> {
+}): Result.Result<CharacterSheetDivineInterventionResult, CharacterSheetIssue> {
   const feature = divineInterventionFeatureForSheet(input);
   /* v8 ignore next -- @preserve -- Unsupported invocation input: this operation is admitted only for a retained Divine Intervention feature profile. */
-  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (Result.isFailure(feature)) return Result.fail(feature.failure);
 
   const resource = divineInterventionResource({
     sheet: input.sheet,
     unitLibrary: input.unitLibrary,
-    featureUnitId: feature.right.id,
+    featureUnitId: feature.success.id,
   });
   /* v8 ignore next -- @preserve -- Malformed retained support state: Divine Intervention admission correlates its feature with one projected use-count resource. */
-  if (Either.isLeft(resource)) return Either.left(resource.left);
-  if (resource.right.expended >= resource.right.count) {
+  if (Result.isFailure(resource)) return Result.fail(resource.failure);
+  if (resource.success.expended >= resource.success.count) {
     return characterSheetIssue(
       "Divine Intervention cannot be used again until a Long Rest.",
     );
@@ -77,45 +77,45 @@ export function castDivineIntervention(input: {
 
   const spell = getRequiredUnit(input.unitLibrary, input.spellId);
   /* v8 ignore next -- @preserve -- Malformed selection/catalog correlation: the selected Divine Intervention spell id comes from this admitted Unit catalog. */
-  if (Either.isLeft(spell)) return Either.left(spell.left);
+  if (Result.isFailure(spell)) return Result.fail(spell.failure);
   /* v8 ignore start -- @preserve -- A spell id selected from Divine Intervention's admitted catalog must resolve to a Spell Unit. */
-  if (spell.right.kind !== "spell") {
+  if (spell.success.kind !== "spell") {
     return characterSheetIssue("Divine Intervention requires a Spell record.");
   }
   /* v8 ignore stop -- @preserve */
 
   const invocation = divineInterventionInvocationFromSpell({
-    spell: spell.right,
-    featureUnitId: feature.right.id,
+    spell: spell.success,
+    featureUnitId: feature.success.id,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore next -- @preserve -- Unsupported authored data: Divine Intervention selection narrows to the supported Cleric spell invocation profile before projection. */
-  if (Either.isLeft(invocation)) return Either.left(invocation.left);
+  if (Result.isFailure(invocation)) return Result.fail(invocation.failure);
 
-  return Either.right({
+  return Result.succeed({
     sheet: {
       ...input.sheet,
       resourceExpenditures: replaceDivineInterventionExpenditure({
         expenditures: input.sheet.resourceExpenditures,
-        unitId: feature.right.id,
-        expended: resourceCount(resource.right.expended + 1),
+        unitId: feature.success.id,
+        expended: resourceCount(resource.success.expended + 1),
       }),
     },
-    invocation: invocation.right,
+    invocation: invocation.success,
   });
 }
 
 function divineInterventionFeatureForSheet(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<DivineInterventionFeature, CharacterSheetIssue> {
+}): Result.Result<DivineInterventionFeature, CharacterSheetIssue> {
   for (const featureUnitId of characterBuildFeatureUnitIds(
     input.sheet.build,
     input.unitLibrary,
   )) {
     const unit = input.unitLibrary.getUnit(featureUnitId);
     if (Option.isSome(unit) && isDivineInterventionFeature(unit.value)) {
-      return Either.right(unit.value);
+      return Result.succeed(unit.value);
     }
   }
   return characterSheetIssue(
@@ -127,11 +127,11 @@ function divineInterventionResource(input: {
   readonly sheet: CharacterSheet;
   readonly unitLibrary: UnitCatalog;
   readonly featureUnitId: UnitRecord["id"];
-}): Either.Either<DivineInterventionResource, CharacterSheetIssue> {
+}): Result.Result<DivineInterventionResource, CharacterSheetIssue> {
   const resources = characterSheetResources(input.sheet, input.unitLibrary);
   /* v8 ignore next -- @preserve -- Malformed build/catalog correlation: resource projection can fail only when retained admitted Units no longer resolve. */
-  if (Either.isLeft(resources)) return Either.left(resources.left);
-  const resource = resources.right.find(
+  if (Result.isFailure(resources)) return Result.fail(resources.failure);
+  const resource = resources.success.find(
     (
       candidate,
     ): candidate is Extract<
@@ -148,7 +148,7 @@ function divineInterventionResource(input: {
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     unitId: resource.unitId,
     count: resource.count,
     expended: resource.expended,
@@ -159,7 +159,7 @@ function divineInterventionInvocationFromSpell(input: {
   readonly spell: SpellRecord;
   readonly featureUnitId: UnitRecord["id"];
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<
+}): Result.Result<
   CharacterSheetDivineInterventionInvocation,
   CharacterSheetIssue
 > {
@@ -179,7 +179,7 @@ function divineInterventionInvocationFromSpell(input: {
       "Divine Intervention session handoff supports action-time Cleric spells.",
     );
   }
-  return Either.right({
+  return Result.succeed({
     tag: "divineIntervention",
     spellId: input.spell.id,
     spellLevel: input.spell.mechanics.level,

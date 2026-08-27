@@ -16,7 +16,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castAnimateObjects,
@@ -224,7 +224,7 @@ describe("Character Sheet runtime / summoned and object lifecycle spells", () =>
       spellcastingAbilityModifier: 2,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
+    expect(Result.isFailure(result)).toBe(true);
     expect(sheet.spellSlotExpenditures).toEqual([]);
   });
 

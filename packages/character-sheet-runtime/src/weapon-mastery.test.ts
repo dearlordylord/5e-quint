@@ -1,6 +1,6 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { Hp } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -67,9 +67,9 @@ describe("Character Sheet runtime / Weapon Mastery selected references", () => {
       featureUnitId: authoredUnitId("paladin_lay_on_hands"),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(projectionIssue);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(projectionIssue);
     }
   });
 
@@ -80,9 +80,9 @@ describe("Character Sheet runtime / Weapon Mastery selected references", () => {
       featureUnitId: authoredUnitId("paladin_weapon_mastery"),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(unownedClassIssue);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(unownedClassIssue);
     }
   });
 });

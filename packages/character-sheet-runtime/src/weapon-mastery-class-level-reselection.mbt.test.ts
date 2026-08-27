@@ -8,7 +8,7 @@ import type { UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, it } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   authoredNonEmptyUnitIds,
   characterSheetId,
@@ -487,15 +487,15 @@ function expectSelectedWeaponsMatchChoiceCount(
 }
 
 function expectLeftMessage<T, E extends { readonly message?: string }>(
-  result: Either.Either<T, E>,
+  result: Result.Result<T, E>,
   expectedMessage: string,
 ): void {
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected Weapon Mastery Long Rest reselection rejection.");
   }
-  if (result.left.message !== expectedMessage) {
+  if (result.failure.message !== expectedMessage) {
     throw new Error(
-      `Expected Weapon Mastery Long Rest reselection rejection ${expectedMessage}, received ${String(result.left.message)}.`,
+      `Expected Weapon Mastery Long Rest reselection rejection ${expectedMessage}, received ${String(result.failure.message)}.`,
     );
   }
 }

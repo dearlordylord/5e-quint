@@ -8,7 +8,7 @@ import { describe, expect, it, test } from "vitest";
 
 import {
   AWAKEN_MATERIAL_COMPONENTS,
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castAwaken,
@@ -186,9 +186,9 @@ describe("Character Sheet runtime / Awaken", () => {
       }),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Awaken creature targets must have Intelligence 3 or less.",
       );
     }
@@ -203,9 +203,9 @@ describe("Character Sheet runtime / Awaken", () => {
       target: awakenNaturalPlantTarget(),
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Awaken requires prepared class Spell Access.",
       );
     }

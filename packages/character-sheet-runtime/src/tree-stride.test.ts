@@ -7,7 +7,7 @@ import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, it, test } from "vitest";
 
 import {
-  Either,
+  Result,
   Hp,
   armorClassBuild,
   castTreeStride,
@@ -187,9 +187,9 @@ describe("Character Sheet runtime / Tree Stride", () => {
       movementAvailableFeet: 10,
       usedThisTurn: true,
     });
-    expect(Either.isLeft(repeated)).toBe(true);
-    if (Either.isLeft(repeated)) {
-      expect(repeated.left.message).toBe(
+    expect(Result.isFailure(repeated)).toBe(true);
+    if (Result.isFailure(repeated)) {
+      expect(repeated.failure.message).toBe(
         "Tree Stride can be used only once per turn.",
       );
     }
@@ -235,9 +235,9 @@ describe("Character Sheet runtime / Tree Stride", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Tree Stride requires prepared class Spell Access.",
       );
     }

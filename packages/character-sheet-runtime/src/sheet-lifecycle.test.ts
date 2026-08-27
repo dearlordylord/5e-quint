@@ -4,7 +4,7 @@ import { describe, expect, test } from "vitest";
 import {
   CHARACTER_SHEET_HEROIC_INSPIRATION_AVAILABLE,
   CHARACTER_SHEET_NO_HEROIC_INSPIRATION,
-  Either,
+  Result,
   Hp,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   SORCERER_METAMAGIC_UNIT_ID,
@@ -228,9 +228,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isRight(sheet)) {
-      expect(sheet.right.hitPoints).toEqual({
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isSuccess(sheet)) {
+      expect(sheet.success.hitPoints).toEqual({
         tag: "positive",
         currentHp: 8,
         tempHp: 0,
@@ -247,9 +247,9 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isRight(sheet)) {
-      expect(characterSheetTempHp(sheet.right)).toBe(5);
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isSuccess(sheet)) {
+      expect(characterSheetTempHp(sheet.success)).toBe(5);
     }
   });
 
@@ -266,7 +266,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       },
     });
 
-    expect(Either.isLeft(sheet)).toBe(true);
+    expect(Result.isFailure(sheet)).toBe(true);
   });
 
   test("rejects current HP above sheet maximum HP", () => {
@@ -278,7 +278,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(sheet)).toBe(true);
+    expect(Result.isFailure(sheet)).toBe(true);
   });
 
   test("defaults omitted current HP to the derived effective maximum", () => {
@@ -290,19 +290,19 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isRight(sheet)).toBe(true);
-    if (Either.isRight(sheet)) {
-      expect("maximumHp" in sheet.right).toBe(false);
-      expect(sheet.right.hitPoints).toEqual({
+    expect(Result.isSuccess(sheet)).toBe(true);
+    if (Result.isSuccess(sheet)) {
+      expect("maximumHp" in sheet.success).toBe(false);
+      expect(sheet.success.hitPoints).toEqual({
         tag: "positive",
         currentHp: 8,
         tempHp: 0,
       });
-      expect(characterSheetHitPointMaximum(sheet.right)).toBe(8);
+      expect(characterSheetHitPointMaximum(sheet.success)).toBe(8);
       expect(
         requireRight(
           characterSheetNormalHitPointMaximum({
-            sheet: sheet.right,
+            sheet: sheet.success,
             unitLibrary,
           }),
         ),
@@ -439,7 +439,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    expect(Either.isLeft(sheet)).toBe(true);
+    expect(Result.isFailure(sheet)).toBe(true);
   });
 
   test("preserves stored Druid class-feature language facts separately from origin languages", () => {
@@ -992,7 +992,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         unitLibrary,
       );
 
-      expect(Either.isLeft(sheet)).toBe(true);
+      expect(Result.isFailure(sheet)).toBe(true);
     }
   });
 
@@ -1056,14 +1056,14 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    if (Either.isLeft(sheet)) {
+    if (Result.isFailure(sheet)) {
       throw new Error(
-        `Expected parsed sheet, got ${JSON.stringify(sheet.left)}`,
+        `Expected parsed sheet, got ${JSON.stringify(sheet.failure)}`,
       );
     }
-    expect(sheet.right.build.spellcasting?.sources[0]?.bookOfShadows).toEqual(
+    expect(sheet.success.build.spellcasting?.sources[0]?.bookOfShadows).toEqual(
       bookOfShadows,
     );
-    expect(sheet.right.bookOfShadowsPresence).toEqual({ tag: "notOnPerson" });
+    expect(sheet.success.bookOfShadowsPresence).toEqual({ tag: "notOnPerson" });
   });
 });

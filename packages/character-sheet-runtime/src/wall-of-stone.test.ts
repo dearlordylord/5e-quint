@@ -15,7 +15,7 @@ import {
 import { Hp, resourceCount, spellSlotLevel } from "@dnd/shared/types";
 import { decodeUnitRecordSync } from "../../surface/src/surface/schema.ts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 
 import classWizardInput from "../../surface/content/class_wizard.json";
 import wizardAbilityScoreImprovementL4Input from "../../surface/content/wizard_ability_score_improvement_l4.json";
@@ -194,9 +194,9 @@ describe("Character Sheet runtime / Wall of Stone", () => {
       shape: { ...wallOfStoneStandardPanels, thicknessInches: 3 },
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Wall of Stone panels must be either 10-by-10 feet and 6 inches thick or 10-by-20 feet and 3 inches thick.",
       );
     }
@@ -213,9 +213,9 @@ describe("Character Sheet runtime / Wall of Stone", () => {
       shape: wallOfStoneStandardPanels,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(
         "Wall of Stone requires prepared class Spell Access.",
       );
     }
@@ -413,17 +413,17 @@ const unitLibrary = minimalUnitCatalog([
   decodeUnitRecordSync(wizardScholarInput),
 ]);
 
-function requireRight<R, L>(result: Either.Either<R, L>): R {
-  if (Either.isRight(result)) return result.right;
+function requireRight<R, L>(result: Result.Result<R, L>): R {
+  if (Result.isSuccess(result)) return result.success;
   throw new Error(
-    `Expected Right, received Left: ${JSON.stringify(result.left)}`,
+    `Expected Right, received Left: ${JSON.stringify(result.failure)}`,
   );
 }
 
 function minimalUnitCatalog(units: readonly UnitRecord[]): UnitCatalog {
   const records = new Map(units.map((unit) => [unit.id, unit]));
   return {
-    getUnit: (id) => Option.fromNullable(records.get(authoredUnitId(id))),
+    getUnit: (id) => Option.fromNullishOr(records.get(authoredUnitId(id))),
     listUnits: () => [...records.values()],
     requireUnit: (id) => {
       const unit = records.get(authoredUnitId(id));
