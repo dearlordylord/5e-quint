@@ -1,9 +1,14 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 import { describe, expect, test } from "vitest";
 
-import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
+import {
+  allocateBattleActiveEffectRefForCreature,
+  spellActiveEffectExecutionRef,
+} from "./active-effect/execution-ref.ts";
+import { assertBattleSnapshotCodecRoundTripForTest } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleSubjectBoundExecutionReferences } from "./battle-subjects.ts";
+import { snapshotBattle } from "./index.ts";
 import {
   cloudkillAreaFill,
   spellAct,
@@ -76,6 +81,13 @@ describe("Cloudkill strong-wind dispersal", () => {
     if (cloudkill === undefined) {
       throw new Error("Expected active Cloudkill effect.");
     }
+    const allocation = allocateBattleActiveEffectRefForCreature({
+      owner: containingOwner,
+    });
+    const ownerScopedCloudkill = {
+      ...cloudkill,
+      effectRef: allocation.effectRef,
+    };
     const combatants = new Map(state.combatants)
       .set(spellCasterId, {
         ...caster,
@@ -84,10 +96,14 @@ describe("Cloudkill strong-wind dispersal", () => {
         ),
       })
       .set(spellTargetId, {
-        ...containingOwner,
-        activeEffects: [...containingOwner.activeEffects, cloudkill],
+        ...allocation.owner,
+        activeEffects: [
+          ...allocation.owner.activeEffects,
+          ownerScopedCloudkill,
+        ],
       });
     const relocatedState = { ...state, combatants };
+    assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(relocatedState));
     const act = discoverBattleActs(
       battleRuntimeSessionForTest({ ...session, state: relocatedState }),
     ).find(
@@ -98,9 +114,9 @@ describe("Cloudkill strong-wind dispersal", () => {
     if (act === undefined) {
       throw new Error("Expected relocated Cloudkill dispersal act.");
     }
-    const effectRef = spellActiveEffectExecutionRef(cloudkill);
+    const effectRef = spellActiveEffectExecutionRef(ownerScopedCloudkill);
 
-    expect(cloudkill.sourceCombatantId).toBe(spellCasterId);
+    expect(ownerScopedCloudkill.sourceCombatantId).toBe(spellCasterId);
     expect(act.subject).toMatchObject({
       effectOwnerId: spellTargetId,
       effectRef,
