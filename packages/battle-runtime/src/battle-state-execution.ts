@@ -229,6 +229,7 @@ import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-sta
 import type {
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
+  StatBlockResourceGraphAdmissionFailure,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
 import type { UnitId } from "@dnd/shared/game-facts";
@@ -4228,6 +4229,10 @@ export type BattleStateInitLeafIssue =
   | {
       readonly tag: "battleStateInitIssue";
       readonly message: string;
+    }
+  | {
+      readonly tag: "statBlockResourceGraphIssue";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
     }
   | {
       readonly tag: "weaponLoadoutMismatch";

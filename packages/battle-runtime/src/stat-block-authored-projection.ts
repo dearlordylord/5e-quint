@@ -33,14 +33,19 @@ import {
   type BattleStatBlockRuntimeResource,
   type BattleStatBlockRuntimeSpeed,
   type BattleStatBlockRuntimeSense,
+  type StatBlockRuntimeResourceParseFailure,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
-  | "invalidLegendaryActionUses"
-  | "invalidResourceLimit";
+  | "invalidLegendaryActionUses";
+
+export type BattleStatBlockInvalidResourceDeclaration = {
+  readonly ordinal: StatBlockProcedureResourceOrdinal;
+  readonly reason: StatBlockRuntimeResourceParseFailure;
+};
 
 export type BattleStatBlockUnsupportedProcedureBinding = {
   readonly section: StatBlockActionProjectionSection;
@@ -51,6 +56,13 @@ export type BattleStatBlockProjectionFailure =
   | {
       readonly tag: "battleStatBlockProjectionFailure";
       readonly reason: BattleStatBlockProjectionScalarFailureReason;
+      readonly procedureOrdinal?: never;
+      readonly section?: never;
+    }
+  | {
+      readonly tag: "battleStatBlockProjectionFailure";
+      readonly reason: "invalidResourceLimit";
+      readonly issues: ReadonlyNonEmptyArray<BattleStatBlockInvalidResourceDeclaration>;
       readonly procedureOrdinal?: never;
       readonly section?: never;
     }
@@ -131,7 +143,7 @@ export function projectAuthoredStatBlock(
   }
   const resources = runtimeResources(source.resources);
   if (Either.isLeft(resources)) {
-    return Either.left(failure("invalidResourceLimit"));
+    return Either.left(invalidResourceLimitFailure(resources.left));
   }
   const runtimeProcedures = runtimeProcedureBindings(source);
   if (Either.isLeft(runtimeProcedures)) {
@@ -524,14 +536,22 @@ function runtimeResources(
   resources: NonNullable<StandaloneStatBlock["resources"]> | undefined,
 ): Either.Either<
   readonly BattleStatBlockRuntimeResource[] | undefined,
-  "invalidResourceLimit"
+  ReadonlyNonEmptyArray<BattleStatBlockInvalidResourceDeclaration>
 > {
   if (resources === undefined) return Either.right(undefined);
   const projected: BattleStatBlockRuntimeResource[] = [];
+  const issues: BattleStatBlockInvalidResourceDeclaration[] = [];
   for (const resource of resources) {
     const parsed = parseStatBlockRuntimeResource(resource);
-    if (Either.isLeft(parsed)) return Either.left("invalidResourceLimit");
-    projected.push(parsed.right);
+    if (Either.isLeft(parsed)) {
+      issues.push({ ordinal: resource.ordinal, reason: parsed.left });
+    } else {
+      projected.push(parsed.right);
+    }
+  }
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return Either.left([firstIssue, ...remainingIssues]);
   }
   return Either.right(projected);
 }
@@ -609,6 +629,16 @@ function failure(
   reason: BattleStatBlockProjectionScalarFailureReason,
 ): BattleStatBlockProjectionFailure {
   return { tag: "battleStatBlockProjectionFailure", reason };
+}
+
+function invalidResourceLimitFailure(
+  issues: ReadonlyNonEmptyArray<BattleStatBlockInvalidResourceDeclaration>,
+): BattleStatBlockProjectionFailure {
+  return {
+    tag: "battleStatBlockProjectionFailure",
+    reason: "invalidResourceLimit",
+    issues,
+  };
 }
 
 function procedureBindingIssue(

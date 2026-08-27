@@ -139,21 +139,27 @@ describe("MCP Stat Block battle combatant projection", () => {
     const base = baseRoot.statBlockCatalog.requireStatBlock(
       "stat_block_goblin_warrior",
     );
+    const invalidResource = {
+      ordinal: Schema.decodeUnknownSync(
+        StatBlockProcedureResourceOrdinalSchema,
+      )(1),
+      ownership: "each" as const,
+      limit: { kind: "daily" as const, uses: 0 },
+    };
+    const invalidRechargeResource = {
+      ordinal: Schema.decodeUnknownSync(
+        StatBlockProcedureResourceOrdinalSchema,
+      )(2),
+      ownership: "shared" as const,
+      limit: { kind: "recharge" as const, minimumRoll: 7 },
+    };
     const invalid = {
       ...base,
       id: statBlockId("stat_block_synthetic_mcp_invalid_resource_limit"),
       name: "Synthetic MCP Invalid Resource Limit",
       statBlock: {
         ...base.statBlock,
-        resources: [
-          {
-            ordinal: Schema.decodeUnknownSync(
-              StatBlockProcedureResourceOrdinalSchema,
-            )(1),
-            ownership: "each" as const,
-            limit: { kind: "daily" as const, uses: 0 },
-          },
-        ],
+        resources: [invalidResource, invalidRechargeResource],
       },
     } satisfies StatBlockRecord;
     const root = {
@@ -177,6 +183,16 @@ describe("MCP Stat Block battle combatant projection", () => {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
         statBlockId: invalid.id,
         reason: "invalidResourceLimit",
+        issues: [
+          {
+            ordinal: invalidResource.ordinal,
+            reason: "invalidDailyUses",
+          },
+          {
+            ordinal: invalidRechargeResource.ordinal,
+            reason: "invalidRechargeMinimumRoll",
+          },
+        ],
       },
     });
   });

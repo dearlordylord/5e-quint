@@ -1,11 +1,11 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 import * as Either from "effect/Either";
+import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 
 import {
   battleAmmunitionStock,
-  battleCreatureInitFromStatBlock,
   battleId,
   combatantId,
   initiativeScore,
@@ -17,6 +17,10 @@ import {
   monsterResourceStatBlock,
   projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
+import { admitStatBlockResourceGraph } from "./stat-block-execution-state.ts";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { Schema } from "effect";
+import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 
 type RuntimeSource = ReturnType<typeof projectedStatBlockRuntimeSource>;
 type RuntimeProcedure = RuntimeSource["procedures"][number];
@@ -28,22 +32,29 @@ type RuntimeDispatch = RuntimeMultiattackProcedure["dispatches"][number];
 
 function executionFor(source: RuntimeSource, id: string) {
   const actorId = combatantId(`stat-block-execution-${id}`);
-  const initialized = battleCreatureInitFromStatBlock({
-    combatantId: actorId,
-    statBlock: source,
-    initiative: initiativeScore(10),
-    ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-    conditions: [],
-  });
-  if (Either.isLeft(initialized)) {
+  const admitted = battleStatBlockCombatantSource(source);
+  if (Either.isLeft(admitted)) {
     throw new Error(
-      `Expected Stat Block initialization: ${JSON.stringify(initialized.left)}`,
+      `Expected Stat Block source admission: ${JSON.stringify(admitted.left)}`,
     );
   }
+  const initialized = {
+    combatantId: actorId,
+    displayName: source.id,
+    initiative: initiativeScore(10),
+    creatureInit: {
+      kind: "statBlock" as const,
+      source: admitted.right,
+      currentHp: Hp(source.statBlock.hp.value),
+      tempHp: Hp(0),
+      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+      conditions: [],
+    },
+  };
 
   const started = startBattle({
     battleId: battleId(`stat-block-execution-${id}`),
-    combatants: [initialized.right],
+    combatants: [initialized],
   });
   if (Either.isLeft(started)) {
     throw new Error(
@@ -103,6 +114,58 @@ function multiattackBindings(execution: ReturnType<typeof executionFor>) {
 }
 
 describe("Stat Block execution admission branch coverage", () => {
+  test("accumulates duplicate declarations and distinct missing references", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const resources = source.resources;
+    if (resources === undefined) {
+      throw new Error("Expected the resource-backed Stat Block fixture.");
+    }
+    const [firstResource, secondResource] = resources;
+    const firstProcedure = source.procedures[0];
+    if (
+      firstResource === undefined ||
+      secondResource === undefined ||
+      firstProcedure === undefined
+    ) {
+      throw new Error("Expected the resource-backed Stat Block graph.");
+    }
+    const missingThree = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(3);
+    const missingFour = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(4);
+
+    const admitted = admitStatBlockResourceGraph({
+      ...source,
+      resources: [firstResource, firstResource, secondResource, secondResource],
+      procedures: [
+        {
+          ...firstProcedure,
+          resourceRefs: [
+            firstResource.ordinal,
+            missingThree,
+            missingThree,
+            missingFour,
+          ],
+        },
+        ...source.procedures.slice(1),
+      ],
+    });
+
+    expect(admitted).toEqual(
+      Either.left([
+        { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+        {
+          kind: "duplicateResourceOrdinal",
+          ordinal: secondResource.ordinal,
+        },
+        { kind: "missingResourceDeclaration", ordinal: missingThree },
+        { kind: "missingResourceDeclaration", ordinal: missingFour },
+      ]),
+    );
+  });
+
   test("omits Legendary Action procedures when their optional uses are absent", () => {
     const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
     expect(source.legendaryActionUses).toBeDefined();

@@ -1,5 +1,5 @@
 import {
-  battleCreatureInitFromAuthoredStatBlock,
+  battleCreatureInitFromStatBlock,
   battleStateInitIssueMessage,
   type BattleStatBlockProjectionFailure,
 } from "@dnd/battle-runtime";
@@ -24,7 +24,7 @@ export function projectStatBlockBattleCombatant(input: {
       }),
     );
   }
-  const creatureInit = battleCreatureInitFromAuthoredStatBlock({
+  const creatureInit = battleCreatureInitFromStatBlock({
     combatantId: input.combatant.combatantId,
     statBlock: statBlock.value,
     initiative: input.combatant.initiative,
@@ -49,6 +49,14 @@ export function projectStatBlockBattleCombatant(input: {
         Match.when({ tag: "battleStateInitIssue" }, (issue) =>
           errorContent(battleStateInitIssueMessage(issue), {
             code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+            statBlockId: input.combatant.statBlockId,
+          }),
+        ),
+        Match.when({ tag: "statBlockResourceGraphIssue" }, (issue) =>
+          errorContent(battleStateInitIssueMessage(issue), {
+            code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+            statBlockId: input.combatant.statBlockId,
+            issues: issue.issues,
           }),
         ),
         Match.exhaustive,
@@ -82,8 +90,9 @@ function statBlockProjectionFailureContent(
       ({ reason, issues }) => ({ reason, issues }),
     ),
     Match.when({ reason: "nonLiteralSize" }, ({ reason }) => ({ reason })),
-    Match.when({ reason: "invalidResourceLimit" }, ({ reason }) => ({
+    Match.when({ reason: "invalidResourceLimit" }, ({ reason, issues }) => ({
       reason,
+      issues,
     })),
     Match.when({ reason: "invalidLegendaryActionUses" }, ({ reason }) => ({
       reason,

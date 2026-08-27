@@ -104,32 +104,44 @@ export function admitStatBlockResourceGraph<
   source: TSource,
 ): Either.Either<
   BattleStatBlockClosedResourceGraph<TSource>,
-  StatBlockResourceGraphAdmissionFailure
+  ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>
 > {
   const resources = source.resources ?? [];
-  const resourceOrdinals = new Set(
-    resources.map((resource) => resource.ordinal),
-  );
-  const duplicateOrdinal = resources.find(
-    (resource, index) =>
-      resources.findIndex(
-        (candidate) => candidate.ordinal === resource.ordinal,
-      ) !== index,
-  )?.ordinal;
-  if (duplicateOrdinal !== undefined) {
-    return Either.left({
-      kind: "duplicateResourceOrdinal",
-      ordinal: duplicateOrdinal,
-    });
+  const declaredOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
+  const duplicateOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
+  const duplicateIssues: StatBlockResourceGraphAdmissionFailure[] = [];
+  for (const resource of resources) {
+    if (declaredOrdinals.has(resource.ordinal)) {
+      if (duplicateOrdinals.has(resource.ordinal)) continue;
+      duplicateOrdinals.add(resource.ordinal);
+      duplicateIssues.push({
+        kind: "duplicateResourceOrdinal",
+        ordinal: resource.ordinal,
+      });
+      continue;
+    }
+    declaredOrdinals.add(resource.ordinal);
   }
-  const missingResourceOrdinal = source.procedures
-    .flatMap((procedure) => procedure.resourceRefs)
-    .find((ordinal) => !resourceOrdinals.has(ordinal));
-  if (missingResourceOrdinal !== undefined) {
-    return Either.left({
-      kind: "missingResourceDeclaration",
-      ordinal: missingResourceOrdinal,
-    });
+
+  const missingOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
+  const missingIssues: StatBlockResourceGraphAdmissionFailure[] = [];
+  for (const procedure of source.procedures) {
+    for (const ordinal of procedure.resourceRefs) {
+      if (declaredOrdinals.has(ordinal) || missingOrdinals.has(ordinal)) {
+        continue;
+      }
+      missingOrdinals.add(ordinal);
+      missingIssues.push({
+        kind: "missingResourceDeclaration",
+        ordinal,
+      });
+    }
+  }
+
+  const issues = [...duplicateIssues, ...missingIssues];
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return Either.left([firstIssue, ...remainingIssues]);
   }
   const { resources: _resources, ...sourceWithoutResources } = source;
   return Either.right({ ...sourceWithoutResources, resources });

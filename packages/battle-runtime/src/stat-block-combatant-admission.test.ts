@@ -1,12 +1,19 @@
 import { Hp } from "@dnd/shared/types";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
+import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import { decodeStatBlockRecordEither } from "@dnd/surface/surface/schema";
+import {
+  decodeStatBlockRecordEither,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
-import { battleCreatureInitFromStatBlock } from "./battle-init.ts";
+import {
+  authoredStatBlockBattleInitIssueMessage,
+  battleCreatureInitFromStatBlock,
+} from "./battle-init.ts";
 import { battleAmmunitionStock } from "./battle-ammunition.ts";
 import {
   battleExecutionScopeOrdinal,
@@ -148,9 +155,13 @@ describe("Stat Block combatant admission capability", () => {
 
     expect(admitted).toEqual(
       Either.left({
-        tag: "battleStateInitIssue",
-        message:
-          "Battle runtime requires Stat Block procedure resource reference 1 to match a declared resource.",
+        tag: "statBlockResourceGraphIssue",
+        issues: [
+          {
+            kind: "missingResourceDeclaration",
+            ordinal: resources[0]!.ordinal,
+          },
+        ],
       }),
     );
   });
@@ -173,9 +184,64 @@ describe("Stat Block combatant admission capability", () => {
 
     expect(admitted).toEqual(
       Either.left({
-        tag: "battleStateInitIssue",
-        message:
-          "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.",
+        tag: "statBlockResourceGraphIssue",
+        issues: [
+          { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+        ],
+      }),
+    );
+  });
+
+  test("accumulates duplicate and distinct missing resource graph issues", () => {
+    const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
+    const resources = source.resources;
+    if (resources === undefined) {
+      throw new Error("Expected the resource-backed Stat Block fixture.");
+    }
+    const [firstResource, secondResource] = resources;
+    if (firstResource === undefined || secondResource === undefined) {
+      throw new Error("Expected both resource declarations.");
+    }
+    const missingThree = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(3);
+    const missingFour = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(4);
+    const [firstProcedure, ...remainingProcedures] = source.procedures;
+    if (firstProcedure === undefined) {
+      throw new Error("Expected the first resource-backed procedure.");
+    }
+
+    const admitted = battleStatBlockCombatantSource({
+      ...source,
+      resources: [firstResource, firstResource, secondResource, secondResource],
+      procedures: [
+        {
+          ...firstProcedure,
+          resourceRefs: [
+            firstResource.ordinal,
+            missingThree,
+            missingThree,
+            missingFour,
+          ],
+        },
+        ...remainingProcedures,
+      ],
+    });
+
+    expect(admitted).toEqual(
+      Either.left({
+        tag: "statBlockResourceGraphIssue",
+        issues: [
+          { kind: "duplicateResourceOrdinal", ordinal: firstResource.ordinal },
+          {
+            kind: "duplicateResourceOrdinal",
+            ordinal: secondResource.ordinal,
+          },
+          { kind: "missingResourceDeclaration", ordinal: missingThree },
+          { kind: "missingResourceDeclaration", ordinal: missingFour },
+        ],
       }),
     );
   });
@@ -239,7 +305,7 @@ describe("Stat Block combatant admission capability", () => {
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: ["prone"],
-      statBlock: projectedStatBlockRuntimeSource(source),
+      statBlock: source,
     });
     expect(Either.isRight(initialized)).toBe(true);
     if (Either.isLeft(initialized)) return;
@@ -319,18 +385,18 @@ describe("Stat Block combatant admission capability", () => {
       initiative: initiativeScore(10),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: ["prone"],
-      statBlock: projectedStatBlockRuntimeSource({
+      statBlock: {
         ...source,
         statBlock: {
           ...source.statBlock,
           immunities: { conditions: ["prone"] },
         },
-      }),
+      },
     });
 
     expect(
       Either.isLeft(initialized)
-        ? battleStateInitIssueMessage(initialized.left)
+        ? authoredStatBlockBattleInitIssueMessage(initialized.left)
         : "initialized",
     ).toBe("Stat Block combatant is immune to initial prone condition.");
   });

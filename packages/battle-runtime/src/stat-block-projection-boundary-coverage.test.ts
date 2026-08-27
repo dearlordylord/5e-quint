@@ -14,14 +14,12 @@ import { describe, expect, test } from "vitest";
 import {
   authoredStatBlockBattleInitIssueMessage,
   battleAvailableDruidWildShapeKnownForms,
-  battleCreatureInitFromAuthoredStatBlock,
   battleCreatureInitFromStatBlock,
   combatantId,
   initiativeScore,
   parseSupportedUnitFeatureProfile,
 } from "./index.ts";
 import {
-  projectedStatBlockRuntimeSource,
   monsterMultiattackStatBlock,
   monsterResourceStatBlock,
   statBlockCatalog,
@@ -111,7 +109,7 @@ describe("Stat Block projection boundary coverage", () => {
         reason: projectionCase.reason,
       });
 
-      const initialized = battleCreatureInitFromAuthoredStatBlock({
+      const initialized = battleCreatureInitFromStatBlock({
         combatantId: combatantId(`synthetic-projection-failure-${index}`),
         statBlock: projectionCase.record,
         initiative: initiativeScore(10),
@@ -125,13 +123,12 @@ describe("Stat Block projection boundary coverage", () => {
       );
     }
 
-    const runtime = projectedStatBlockRuntimeSource(source);
     const battleInit = battleCreatureInitFromStatBlock({
       combatantId: combatantId("synthetic-battle-init-issue"),
       statBlock: {
-        ...runtime,
+        ...source,
         statBlock: {
-          ...runtime.statBlock,
+          ...source.statBlock,
           immunities: { conditions: ["prone"] },
         },
       },
@@ -201,14 +198,62 @@ describe("Stat Block projection boundary coverage", () => {
       },
     };
 
-    for (const record of [malformedDaily, malformedRecharge]) {
+    const invalidResourceCases = [
+      {
+        record: malformedDaily,
+        issues: [{ ordinal: daily.ordinal, reason: "invalidDailyUses" }],
+      },
+      {
+        record: malformedRecharge,
+        issues: [
+          {
+            ordinal: recharge.ordinal,
+            reason: "invalidRechargeMinimumRoll",
+          },
+        ],
+      },
+    ] as const;
+
+    for (const { record, issues } of invalidResourceCases) {
       expect(projectAuthoredStatBlock(record)).toEqual(
         Either.left({
           tag: "battleStatBlockProjectionFailure",
           reason: "invalidResourceLimit",
+          issues,
         }),
       );
     }
+
+    const malformedBoth: StatBlockRecord = {
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        resources: [
+          {
+            ...firstResource,
+            limit: { kind: "daily", uses: 0 },
+          },
+          {
+            ...secondResource,
+            limit: { kind: "recharge", minimumRoll: 7 },
+          },
+          ...remainingResources,
+        ],
+      },
+    };
+    expect(projectAuthoredStatBlock(malformedBoth)).toEqual(
+      Either.left({
+        tag: "battleStatBlockProjectionFailure",
+        reason: "invalidResourceLimit",
+        issues: [
+          { ordinal: firstResource.ordinal, reason: "invalidDailyUses" },
+          {
+            ordinal: secondResource.ordinal,
+            reason: "invalidRechargeMinimumRoll",
+          },
+        ],
+      }),
+    );
   });
 
   test("rejects a non-positive authored Multiattack count before execution", () => {
@@ -364,7 +409,7 @@ describe("Stat Block projection boundary coverage", () => {
       ],
     });
 
-    const initialized = battleCreatureInitFromAuthoredStatBlock({
+    const initialized = battleCreatureInitFromStatBlock({
       combatantId: combatantId("synthetic-unsupported-procedures"),
       statBlock: record,
       initiative: initiativeScore(10),
