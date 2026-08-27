@@ -13,7 +13,7 @@ import {
   StatBlockId,
   type StatBlockId as StatBlockIdType,
 } from "@dnd/shared/game-facts";
-import { Either, Match, Schema } from "effect";
+import { Either, Match, Result, Schema } from "effect";
 
 import {
   decodeToolArgs,
@@ -189,7 +189,7 @@ export function decodeBattleToolCall(input: {
       })),
     ),
     Match.when(battleToolNames.battleLifecycle, () =>
-      Either.map(decodeBattleLifecycleArgs(input.args), (args) => ({
+      Result.map(decodeBattleLifecycleArgs(input.args), (args) => ({
         name: battleToolNames.battleLifecycle,
         args,
       })),
