@@ -97,20 +97,22 @@ function combatantCommunicationProjection(
       },
     };
   }
+  const presentation = context.statBlocks.get(combatant.combatantId);
+  if (presentation === undefined) {
+    return {
+      kind: "statBlockCommunicationText",
+      languages: { kind: "absentStatBlockLanguages" },
+    };
+  }
   return {
     kind: "statBlockCommunicationText",
-    languages: statBlockCommunicationText(
-      context.statBlocks.get(combatant.combatantId)?.communication,
-    ),
+    languages: statBlockCommunicationText(presentation.communication),
   };
 }
 
 function statBlockCommunicationText(
-  communication: StatBlockCommunication | undefined,
+  communication: StatBlockCommunication,
 ): BattleStatBlockCommunicationText {
-  if (communication === undefined) {
-    return { kind: "absentStatBlockLanguages" };
-  }
   if (
     communication.kind !== "spoken_and_understood" &&
     communication.kind !== "understood_but_cannot_speak"

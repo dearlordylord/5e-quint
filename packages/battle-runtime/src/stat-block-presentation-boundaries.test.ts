@@ -55,6 +55,7 @@ describe("battle presentation joins", () => {
     expect(projected.presentation).toMatchObject({
       displayName: source.name,
       communication: source.statBlock.communication,
+      traits: [],
     });
   });
 

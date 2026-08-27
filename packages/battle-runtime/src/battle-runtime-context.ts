@@ -108,10 +108,10 @@ export type BattleStatBlockAuthoredTraitPresentation = {
 
 export type BattleStatBlockPresentationSource = {
   readonly displayName: string;
-  /** Authored communication is presentation data; absence is explicit. */
-  readonly communication?: StatBlockCommunication;
+  /** Authored communication is presentation data; no communication is explicit. */
+  readonly communication: StatBlockCommunication;
   /** Authored trait facts retained for presentation-boundary diagnostics. */
-  readonly traits?: readonly BattleStatBlockAuthoredTraitPresentation[];
+  readonly traits: readonly BattleStatBlockAuthoredTraitPresentation[];
   readonly orderedProcedures: readonly BattleStatBlockAuthoredProcedurePresentation[];
 };
 

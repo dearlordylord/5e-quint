@@ -66,11 +66,9 @@ function procedureCoordinateIndex<T extends ProcedureCoordinate>(
     Map<StatBlockProcedureOrdinal, T>
   >();
   for (const value of values) {
-    let ordinals = index.get(value.section);
-    if (ordinals === undefined) {
-      ordinals = new Map();
-      index.set(value.section, ordinals);
-    }
+    const ordinals =
+      index.get(value.section) ?? new Map<StatBlockProcedureOrdinal, T>();
+    index.set(value.section, ordinals);
     ordinals.set(value.procedureOrdinal, value);
   }
   return index;
@@ -125,7 +123,7 @@ function statBlockProjectionIssues(
     StatBlockProjectionIssue,
     { readonly source: { readonly kind: "action" } }
   >;
-  const traitIssues = (presentation.traits ?? []).flatMap(
+  const traitIssues = presentation.traits.flatMap(
     (trait): readonly TraitIssue[] => {
       const nonExecutableReason =
         trait.effect === undefined

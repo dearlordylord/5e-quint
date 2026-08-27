@@ -453,15 +453,13 @@ function presentationProjection(
   return {
     displayName: record.name,
     communication: record.statBlock.communication,
-    ...(record.statBlock.traits === undefined
-      ? {}
-      : { traits: authoredTraitPresentations(record.statBlock.traits) }),
+    traits: authoredTraitPresentations(record.statBlock.traits ?? []),
     orderedProcedures: authoredProcedurePresentations(record.statBlock),
   };
 }
 
 function authoredTraitPresentations(
-  traits: NonNullable<StandaloneStatBlock["traits"]>,
+  traits: readonly NonNullable<StandaloneStatBlock["traits"]>[number][],
 ): readonly BattleStatBlockAuthoredTraitPresentation[] {
   return traits.map((trait) => ({
     name: trait.name,
