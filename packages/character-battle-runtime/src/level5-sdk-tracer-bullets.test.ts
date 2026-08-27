@@ -3447,13 +3447,12 @@ function startCounterspellableMagicMissile(input: {
       ]),
     ],
   });
-  expect(result.tag).toBe("needsHoles");
-  expect(battleFrontierInterruptDecisionForState(result.state)?.trigger).toBe(
-    "spellCast",
-  );
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Counterspell Reaction window.");
   }
+  expect(battleFrontierInterruptDecisionForState(result.state)?.trigger).toBe(
+    "spellCast",
+  );
   return result;
 }
 
