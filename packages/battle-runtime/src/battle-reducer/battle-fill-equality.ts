@@ -24,6 +24,7 @@ export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
   "toolPossessionFacts",
   "cunningStrikeEndTurnCoverFacts",
   "deathSavingThrow",
+  "statBlockRechargeRoll",
 ] as const satisfies ReadonlyArray<BattleFill["kind"]>;
 
 export type BattleContinuationComparableFill = Extract<
@@ -121,6 +122,16 @@ export function battleContinuationFillEquals(
         d20TestNaturalOneRerollDieDecisionsEqual(
           left.d20TestNaturalOneReroll,
           b.d20TestNaturalOneReroll,
+        ),
+      statBlockRechargeRoll: (left) =>
+        b.kind === "statBlockRechargeRoll" &&
+        left.holeId === b.holeId &&
+        sameMultisetBy(
+          left.value,
+          b.value,
+          (leftResult, rightResult) =>
+            leftResult.target === rightResult.target &&
+            leftResult.roll === rightResult.roll,
         ),
     }),
   );
