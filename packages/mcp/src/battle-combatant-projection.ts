@@ -25,7 +25,9 @@ import type { ToolError } from "./schema-codec.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import {
   battleCombatantCorrelationIssueContent,
+  type BattleCombatantCorrelationPair,
   correlateBattleCombatantInitializations,
+  correlateSingleBattleCombatantInitialization,
 } from "./battle-combatant-correlation.ts";
 
 export type StartableCharacterSessionCombatant = {
@@ -121,53 +123,39 @@ export function projectBattleCombatant(input: {
     const [firstIssue] = compositionToolErrors(composition.left);
     return Either.left(firstIssue);
   }
-  const correlated = correlateBattleCombatantInitializations({
-    participants: [resolved.right.participant],
+  const correlated = correlateSingleBattleCombatantInitialization({
+    participant: resolved.right.participant,
     creatureInits: composition.right.creatureInits,
   });
   if (Either.isLeft(correlated)) {
     return Either.left(battleCombatantCorrelationIssueContent(correlated.left));
   }
-  const correlatedPair = correlated.right[0];
-  if (correlatedPair === undefined) {
-    throw new Error(
-      "Internal invariant: single-combatant correlation returned no pair.",
-    );
-  }
-  const creatureInit = correlatedPair.initialization;
-  if (isResolvedCharacterBattleCombatant(resolved.right)) {
-    if (!isCharacterBattleRosterCombatant(creatureInit)) {
-      throw new Error(
-        "Internal invariant: character participant correlated with non-character initialization.",
-      );
-    }
-    return Either.right({
-      tag: "characterSession" as const,
-      creatureInit,
-      characterSession: resolved.right.characterSession,
-    });
-  }
-  if (isStatBlockBattleRosterCombatant(creatureInit)) {
-    return Either.right({
-      tag: "encounterCombatant" as const,
-      creatureInit,
-    });
-  }
-  throw new Error(
-    "Internal invariant: stat block participant correlated with non-stat-block initialization.",
+  const correlatedPair = correlated.right;
+  return Match.value(correlatedPair.participant.origin).pipe(
+    Match.when("characterSheet", () => {
+      const characterPair = correlatedPair as Extract<
+        BattleCombatantCorrelationPair<BattleCreatureInit>,
+        { readonly participant: { readonly origin: "characterSheet" } }
+      >;
+      return Either.right({
+        tag: "characterSession" as const,
+        creatureInit: characterPair.initialization,
+        characterSession: (resolved.right as ResolvedCharacterBattleCombatant)
+          .characterSession,
+      });
+    }),
+    Match.when("statBlock", () => {
+      const statBlockPair = correlatedPair as Extract<
+        BattleCombatantCorrelationPair<BattleCreatureInit>,
+        { readonly participant: { readonly origin: "statBlock" } }
+      >;
+      return Either.right({
+        tag: "encounterCombatant" as const,
+        creatureInit: statBlockPair.initialization,
+      });
+    }),
+    Match.exhaustive,
   );
-}
-
-function isCharacterBattleRosterCombatant(
-  creatureInit: BattleCreatureInit,
-): creatureInit is CharacterBattleRosterCombatant {
-  return creatureInit.creatureInit.kind === "character";
-}
-
-function isStatBlockBattleRosterCombatant(
-  creatureInit: BattleCreatureInit,
-): creatureInit is StatBlockBattleRosterCombatant {
-  return creatureInit.creatureInit.kind === "statBlock";
 }
 
 type ResolvedBattleCombatant =
