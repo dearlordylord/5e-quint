@@ -11,7 +11,7 @@ import {
   BattleShovePushOutcomeSchema,
   BattlePresentedSnapshotSchema,
   BattleSubjectSchema,
-} from "@dnd/battle-runtime";
+} from "@dnd/battle-runtime/protocol-codecs";
 import { Schema } from "effect";
 
 import {

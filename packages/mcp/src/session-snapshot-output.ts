@@ -3,7 +3,7 @@ import {
   BattleHoleSchema,
   BattleSubjectSchema,
   CombatantId,
-} from "@dnd/battle-runtime";
+} from "@dnd/battle-runtime/protocol-codecs";
 import { Schema } from "effect";
 
 import type { McpSessionSnapshot } from "./session-store.ts";
