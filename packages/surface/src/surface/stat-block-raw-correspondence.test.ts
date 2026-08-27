@@ -346,8 +346,13 @@ const dailyResource = (
     limit: { kind: "daily", uses },
   });
 
-type StandaloneStatBlockInput = Omit<
+type EncodedStandaloneNonSwarmStatBlock = Extract<
   EncodedStandaloneStatBlock,
+  { readonly swarm?: never }
+>;
+
+type StandaloneStatBlockInput = Omit<
+  EncodedStandaloneNonSwarmStatBlock,
   "ac" | "hp"
 > & {
   readonly ac: number;

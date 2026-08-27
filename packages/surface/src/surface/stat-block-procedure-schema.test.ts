@@ -6,7 +6,7 @@ import {
   CreatureStatBlockProjectionSchema,
   EffectAtomSchema,
   StandaloneStatBlockSchema,
-  StatBlockLegendaryActionUsesSchema,
+  StatBlockLegendaryActionSectionSchema,
   StatBlockProcedureEntrySchema,
   StatBlockProcedureSectionSchema,
 } from "./schema.ts";
@@ -159,20 +159,26 @@ describe("standalone Stat Block procedure sections", () => {
       additionalUsesInLair: 1,
     } as const;
 
-    expect(decode(StatBlockLegendaryActionUsesSchema, fixed)).toEqual(fixed);
-    expect(decode(StatBlockLegendaryActionUsesSchema, lairBonus)).toEqual(
-      lairBonus,
-    );
+    const entries = syntheticStandaloneStatBlock.legendaryActions.entries;
+    expect(
+      decode(StatBlockLegendaryActionSectionSchema, { uses: fixed, entries }),
+    ).toMatchObject({ uses: fixed });
+    expect(
+      decode(StatBlockLegendaryActionSectionSchema, {
+        uses: lairBonus,
+        entries,
+      }),
+    ).toMatchObject({ uses: lairBonus });
     expect(() =>
-      decode(StatBlockLegendaryActionUsesSchema, {
-        ...lairBonus,
-        additionalUsesInLair: 0,
+      decode(StatBlockLegendaryActionSectionSchema, {
+        uses: { ...lairBonus, additionalUsesInLair: 0 },
+        entries,
       }),
     ).toThrow();
     expect(() =>
-      decode(StatBlockLegendaryActionUsesSchema, {
-        ...lairBonus,
-        usesInLair: 4,
+      decode(StatBlockLegendaryActionSectionSchema, {
+        uses: { ...lairBonus, usesInLair: 4 },
+        entries,
       }),
     ).toThrow();
   });
@@ -386,22 +392,22 @@ describe("standalone Stat Block procedure sections", () => {
     ).toThrow();
   });
 
-  test("shares timed apply_condition effects with the general effect schema", () => {
+  test("distinguishes source- and target-turn Stat Block condition expiration from spell duration", () => {
     const effects = [
       {
         kind: "apply_condition",
         condition: "incapacitated",
-        duration: "end_of_next_turn",
+        expiresAt: { kind: "target_next_turn_end" },
       },
       {
         kind: "apply_condition",
         condition: "poisoned",
-        duration: "end_of_caster_next_turn",
+        expiresAt: { kind: "source_next_turn_end" },
       },
     ] as const;
 
     for (const effect of effects) {
-      expect(decode(EffectAtomSchema, effect)).toEqual(effect);
+      expect(() => decode(EffectAtomSchema, effect)).toThrow();
       expect(
         decode(StatBlockProcedureEntrySchema, {
           kind: "executable",
@@ -420,11 +426,19 @@ describe("standalone Stat Block procedure sections", () => {
       ).toMatchObject({ procedure: { onHit: [effect] } });
     }
 
-    const unsupportedDuration = {
+    const spellRelativeEffect = {
+      kind: "apply_condition",
+      condition: "incapacitated",
+      duration: "end_of_next_turn",
+    } as const;
+    expect(decode(EffectAtomSchema, spellRelativeEffect)).toEqual(
+      spellRelativeEffect,
+    );
+
+    const unsupportedExpiration = {
       ...effects[0],
-      duration: "end_of_target_next_turn",
+      expiresAt: { kind: "current_turn_end" },
     };
-    expect(() => decode(EffectAtomSchema, unsupportedDuration)).toThrow();
     expect(() =>
       decode(StatBlockProcedureEntrySchema, {
         kind: "executable",
@@ -436,9 +450,40 @@ describe("standalone Stat Block procedure sections", () => {
           attackAbility: "str",
           attackBonus: { kind: "literal", value: 4 },
           reachFeet: 5,
-          onHit: [unsupportedDuration],
+          onHit: [unsupportedExpiration],
         },
         resourceRefs: { kind: "none" },
+      }),
+    ).toThrow();
+
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        kind: "executable",
+        procedureOrdinal: 1,
+        procedure: {
+          kind: "attack_roll",
+          name: "Synthetic Condition Attack",
+          attackType: "melee",
+          attackAbility: "str",
+          attackBonus: { kind: "literal", value: 4 },
+          reachFeet: 5,
+          onHit: [spellRelativeEffect],
+        },
+        resourceRefs: { kind: "none" },
+      }),
+    ).toThrow();
+
+    const damageWithAmbiguousTiming = {
+      ...syntheticStandaloneStatBlock.actions[1].procedure.onHit[0],
+      timing: "end_of_next_turn",
+    } as const;
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...syntheticStandaloneStatBlock.actions[1],
+        procedure: {
+          ...syntheticStandaloneStatBlock.actions[1].procedure,
+          onHit: [damageWithAmbiguousTiming],
+        },
       }),
     ).toThrow();
 

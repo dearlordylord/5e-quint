@@ -50,7 +50,9 @@
             },
             {
               "condition": "poisoned",
-              "duration": "end_of_caster_next_turn",
+              "expiresAt": {
+                "kind": "source_next_turn_end"
+              },
               "kind": "apply_condition"
             }
           ],

@@ -30260,7 +30260,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -30366,7 +30365,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -30380,7 +30380,6 @@
             "name": "Cat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -30502,7 +30501,8 @@
                   "name": "Jumper",
                   "description": "The cat's jump distance is determined using its Dexterity rather than its Strength."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -30516,7 +30516,6 @@
             "name": "Frog",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -30642,7 +30641,8 @@
                   "name": "Standing Leap",
                   "description": "The frog's Long Jump is up to 10 feet and its High Jump is up to 5 feet with or without a running start."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -30656,7 +30656,6 @@
             "name": "Hawk",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -30762,7 +30761,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -30776,7 +30776,6 @@
             "name": "Lizard",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -30888,7 +30887,8 @@
                   "name": "Spider Climb",
                   "description": "The lizard can climb difficult surfaces, including along ceilings, without needing to make an ability check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -30902,7 +30902,6 @@
             "name": "Octopus",
             "challengeRating": 0,
             "statBlock": {
-              "size": "small",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -31053,7 +31052,8 @@
                   "name": "Water Breathing",
                   "description": "The octopus can breathe only underwater."
                 }
-              ]
+              ],
+              "size": "small"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -31067,7 +31067,6 @@
             "name": "Owl",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -31189,7 +31188,8 @@
                   "name": "Flyby",
                   "description": "The owl doesn't provoke an Opportunity Attack when it flies out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -31203,7 +31203,6 @@
             "name": "Rat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -31321,7 +31320,8 @@
                   "name": "Agile",
                   "description": "The rat doesn't provoke an Opportunity Attack when it moves out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -31335,7 +31335,6 @@
             "name": "Raven",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -31447,7 +31446,8 @@
                   "name": "Mimicry",
                   "description": "The raven can mimic simple sounds it has heard, such as a whisper or chitter. A hearer can discern the sounds are imitations with a successful DC 10 Wisdom (Insight) check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -31461,7 +31461,6 @@
             "name": "Spider",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -31595,7 +31594,8 @@
                   "name": "Web Walker",
                   "description": "The spider ignores movement restrictions caused by webs, and the spider knows the location of any other creature in contact with the same web."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -31609,7 +31609,6 @@
             "name": "Weasel",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -31729,7 +31728,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -31743,7 +31743,6 @@
             "name": "Venomous Snake",
             "challengeRating": 0.125,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -31866,7 +31865,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -31880,7 +31880,6 @@
             "name": "Imp",
             "challengeRating": 1,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "fiend",
               "creatureTypeTags": [
                 "devil"
@@ -32072,7 +32071,8 @@
                   "name": "Magic Resistance",
                   "description": "The imp has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -32086,7 +32086,6 @@
             "name": "Pseudodragon",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "dragon",
               "alignment": {
                 "order": "neutral",
@@ -32257,7 +32256,8 @@
                   "name": "Magic Resistance",
                   "description": "The pseudodragon has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -32271,7 +32271,6 @@
             "name": "Quasit",
             "challengeRating": 1,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "fiend",
               "creatureTypeTags": [
                 "demon"
@@ -32436,7 +32435,8 @@
                   "name": "Magic Resistance",
                   "description": "The quasit has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -32450,7 +32450,6 @@
             "name": "Sprite",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "fey",
               "alignment": {
                 "order": "neutral",
@@ -32606,7 +32605,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -32620,7 +32620,6 @@
             "name": "Riding Horse",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "large",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -32718,7 +32717,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "large"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -32732,7 +32732,6 @@
             "name": "Wolf",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "medium",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -32860,7 +32859,8 @@
                     "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
                   }
                 }
-              ]
+              ],
+              "size": "medium"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -32874,7 +32874,6 @@
             "name": "Goblin Warrior",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "small",
               "creatureType": "fey",
               "creatureTypeTags": [
                 "goblinoid"
@@ -33075,7 +33074,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "small"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -33089,7 +33089,6 @@
             "name": "Skeleton",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "medium",
               "creatureType": "undead",
               "alignment": {
                 "order": "lawful",
@@ -33263,7 +33262,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "medium"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -33277,7 +33277,6 @@
             "name": "Sphinx of Wonder",
             "challengeRating": 1,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "celestial",
               "alignment": {
                 "order": "lawful",
@@ -33463,7 +33462,8 @@
                   "name": "Magic Resistance",
                   "description": "The sphinx has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -33632,7 +33632,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -33738,7 +33737,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -33865,7 +33865,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -33971,7 +33970,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "synthetic-test",
@@ -34098,7 +34098,6 @@
             "name": "Bat",
             "challengeRating": 99,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -34204,7 +34203,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -34606,7 +34606,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -34712,7 +34711,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -35069,7 +35069,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -35175,7 +35174,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -35366,7 +35366,6 @@
             "name": "Cat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -35488,7 +35487,8 @@
                   "name": "Jumper",
                   "description": "The cat's jump distance is determined using its Dexterity rather than its Strength."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -35502,7 +35502,6 @@
             "name": "Frog",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -35628,7 +35627,8 @@
                   "name": "Standing Leap",
                   "description": "The frog's Long Jump is up to 10 feet and its High Jump is up to 5 feet with or without a running start."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -35642,7 +35642,6 @@
             "name": "Hawk",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -35748,7 +35747,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -35762,7 +35762,6 @@
             "name": "Lizard",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -35874,7 +35873,8 @@
                   "name": "Spider Climb",
                   "description": "The lizard can climb difficult surfaces, including along ceilings, without needing to make an ability check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -35888,7 +35888,6 @@
             "name": "Octopus",
             "challengeRating": 0,
             "statBlock": {
-              "size": "small",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -36039,7 +36038,8 @@
                   "name": "Water Breathing",
                   "description": "The octopus can breathe only underwater."
                 }
-              ]
+              ],
+              "size": "small"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -36053,7 +36053,6 @@
             "name": "Owl",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -36175,7 +36174,8 @@
                   "name": "Flyby",
                   "description": "The owl doesn't provoke an Opportunity Attack when it flies out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -36189,7 +36189,6 @@
             "name": "Rat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -36307,7 +36306,8 @@
                   "name": "Agile",
                   "description": "The rat doesn't provoke an Opportunity Attack when it moves out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -36321,7 +36321,6 @@
             "name": "Raven",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -36433,7 +36432,8 @@
                   "name": "Mimicry",
                   "description": "The raven can mimic simple sounds it has heard, such as a whisper or chitter. A hearer can discern the sounds are imitations with a successful DC 10 Wisdom (Insight) check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -36447,7 +36447,6 @@
             "name": "Spider",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -36581,7 +36580,8 @@
                   "name": "Web Walker",
                   "description": "The spider ignores movement restrictions caused by webs, and the spider knows the location of any other creature in contact with the same web."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -36595,7 +36595,6 @@
             "name": "Weasel",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -36715,7 +36714,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -36906,7 +36906,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37012,7 +37011,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37027,7 +37027,6 @@
             "name": "Cat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37149,7 +37148,8 @@
                   "name": "Jumper",
                   "description": "The cat's jump distance is determined using its Dexterity rather than its Strength."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37163,7 +37163,6 @@
             "name": "Frog",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37289,7 +37288,8 @@
                   "name": "Standing Leap",
                   "description": "The frog's Long Jump is up to 10 feet and its High Jump is up to 5 feet with or without a running start."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37303,7 +37303,6 @@
             "name": "Hawk",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37409,7 +37408,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37423,7 +37423,6 @@
             "name": "Lizard",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37535,7 +37534,8 @@
                   "name": "Spider Climb",
                   "description": "The lizard can climb difficult surfaces, including along ceilings, without needing to make an ability check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37549,7 +37549,6 @@
             "name": "Octopus",
             "challengeRating": 0,
             "statBlock": {
-              "size": "small",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37700,7 +37699,8 @@
                   "name": "Water Breathing",
                   "description": "The octopus can breathe only underwater."
                 }
-              ]
+              ],
+              "size": "small"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37714,7 +37714,6 @@
             "name": "Owl",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37836,7 +37835,8 @@
                   "name": "Flyby",
                   "description": "The owl doesn't provoke an Opportunity Attack when it flies out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37850,7 +37850,6 @@
             "name": "Rat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -37968,7 +37967,8 @@
                   "name": "Agile",
                   "description": "The rat doesn't provoke an Opportunity Attack when it moves out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -37982,7 +37982,6 @@
             "name": "Raven",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -38094,7 +38093,8 @@
                   "name": "Mimicry",
                   "description": "The raven can mimic simple sounds it has heard, such as a whisper or chitter. A hearer can discern the sounds are imitations with a successful DC 10 Wisdom (Insight) check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -38108,7 +38108,6 @@
             "name": "Spider",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -38242,7 +38241,8 @@
                   "name": "Web Walker",
                   "description": "The spider ignores movement restrictions caused by webs, and the spider knows the location of any other creature in contact with the same web."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -38256,7 +38256,6 @@
             "name": "Weasel",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -38376,7 +38375,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -38571,7 +38571,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -38677,7 +38676,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39008,7 +39008,6 @@
             "name": "Cat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -39130,7 +39129,8 @@
                   "name": "Jumper",
                   "description": "The cat's jump distance is determined using its Dexterity rather than its Strength."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39144,7 +39144,6 @@
             "name": "Frog",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -39270,7 +39269,8 @@
                   "name": "Standing Leap",
                   "description": "The frog's Long Jump is up to 10 feet and its High Jump is up to 5 feet with or without a running start."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39284,7 +39284,6 @@
             "name": "Hawk",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -39390,7 +39389,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39404,7 +39404,6 @@
             "name": "Lizard",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -39516,7 +39515,8 @@
                   "name": "Spider Climb",
                   "description": "The lizard can climb difficult surfaces, including along ceilings, without needing to make an ability check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39530,7 +39530,6 @@
             "name": "Octopus",
             "challengeRating": 0,
             "statBlock": {
-              "size": "small",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -39681,7 +39680,8 @@
                   "name": "Water Breathing",
                   "description": "The octopus can breathe only underwater."
                 }
-              ]
+              ],
+              "size": "small"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39695,7 +39695,6 @@
             "name": "Owl",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -39817,7 +39816,8 @@
                   "name": "Flyby",
                   "description": "The owl doesn't provoke an Opportunity Attack when it flies out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39831,7 +39831,6 @@
             "name": "Rat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -39949,7 +39948,8 @@
                   "name": "Agile",
                   "description": "The rat doesn't provoke an Opportunity Attack when it moves out of an enemy's reach."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -39963,7 +39963,6 @@
             "name": "Raven",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -40075,7 +40074,8 @@
                   "name": "Mimicry",
                   "description": "The raven can mimic simple sounds it has heard, such as a whisper or chitter. A hearer can discern the sounds are imitations with a successful DC 10 Wisdom (Insight) check."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -40089,7 +40089,6 @@
             "name": "Spider",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -40223,7 +40222,8 @@
                   "name": "Web Walker",
                   "description": "The spider ignores movement restrictions caused by webs, and the spider knows the location of any other creature in contact with the same web."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -40237,7 +40237,6 @@
             "name": "Weasel",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -40357,7 +40356,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -47739,7 +47739,6 @@
             "name": "Venomous Snake",
             "challengeRating": 0.125,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -47862,7 +47861,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -50022,7 +50022,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -50128,7 +50127,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -50417,7 +50417,6 @@
             "name": "Venomous Snake",
             "challengeRating": 0.125,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -50540,7 +50539,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -50554,7 +50554,6 @@
             "name": "Imp",
             "challengeRating": 1,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "fiend",
               "creatureTypeTags": [
                 "devil"
@@ -50746,7 +50745,8 @@
                   "name": "Magic Resistance",
                   "description": "The imp has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -50760,7 +50760,6 @@
             "name": "Pseudodragon",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "dragon",
               "alignment": {
                 "order": "neutral",
@@ -50931,7 +50930,8 @@
                   "name": "Magic Resistance",
                   "description": "The pseudodragon has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -50945,7 +50945,6 @@
             "name": "Quasit",
             "challengeRating": 1,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "fiend",
               "creatureTypeTags": [
                 "demon"
@@ -51110,7 +51109,8 @@
                   "name": "Magic Resistance",
                   "description": "The quasit has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -51124,7 +51124,6 @@
             "name": "Sprite",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "fey",
               "alignment": {
                 "order": "neutral",
@@ -51280,7 +51279,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -51294,7 +51294,6 @@
             "name": "Riding Horse",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "large",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -51392,7 +51391,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "large"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -51406,7 +51406,6 @@
             "name": "Wolf",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "medium",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -51534,7 +51533,8 @@
                     "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
                   }
                 }
-              ]
+              ],
+              "size": "medium"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -51548,7 +51548,6 @@
             "name": "Goblin Warrior",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "small",
               "creatureType": "fey",
               "creatureTypeTags": [
                 "goblinoid"
@@ -51749,7 +51748,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "small"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -51763,7 +51763,6 @@
             "name": "Skeleton",
             "challengeRating": 0.25,
             "statBlock": {
-              "size": "medium",
               "creatureType": "undead",
               "alignment": {
                 "order": "lawful",
@@ -51937,7 +51936,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "medium"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -51951,7 +51951,6 @@
             "name": "Sphinx of Wonder",
             "challengeRating": 1,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "celestial",
               "alignment": {
                 "order": "lawful",
@@ -52137,7 +52136,8 @@
                   "name": "Magic Resistance",
                   "description": "The sphinx has Advantage on saving throws against spells and other magical effects."
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -52371,7 +52371,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -52477,7 +52476,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -52561,7 +52561,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -52667,7 +52666,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -52801,7 +52801,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -52907,7 +52906,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -53066,7 +53066,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -53172,7 +53171,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -53312,7 +53312,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -53418,7 +53417,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -53508,7 +53508,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -53614,7 +53613,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -53700,7 +53700,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -53806,7 +53805,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -53895,7 +53895,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -54001,7 +54000,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -54104,7 +54104,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -54210,7 +54209,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -54303,7 +54303,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -54409,7 +54408,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -54524,7 +54524,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -54630,7 +54629,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -54773,7 +54773,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -54879,7 +54878,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -55002,7 +55002,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -55108,7 +55107,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -56008,7 +56008,6 @@
             "name": "Bat",
             "challengeRating": 0,
             "statBlock": {
-              "size": "tiny",
               "creatureType": "beast",
               "alignment": "unaligned",
               "ac": {
@@ -56114,7 +56113,8 @@
                     "kind": "none"
                   }
                 }
-              ]
+              ],
+              "size": "tiny"
             },
             "provenance": {
               "kind": "srd-5.2.1",

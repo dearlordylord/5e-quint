@@ -687,9 +687,6 @@ export type StatBlockProcedureResourceOrdinal = Schema.Schema.Type<
 export type StatBlockProcedureResource = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockProcedureResourceSchema
 >;
-export type StatBlockLegendaryActionUses = Schema.Schema.Type<
-  typeof SurfaceSchema.StatBlockLegendaryActionUsesSchema
->;
 export type StatBlockCommunication = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockCommunicationSchema
 >;

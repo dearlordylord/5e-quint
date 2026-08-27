@@ -55,7 +55,7 @@ let piercingHit =
           , damageType = Some "piercing"
           , amount = Some (T.defaultDiceAmount
               // { kind = "fixed"
-                 , expr = Some { dice = 1, dieSize = 10, flat = None Integer }
+                 , expr = Some { dice = 1, dieSize = 10 }
                  })
           }
 
@@ -68,7 +68,7 @@ let coldDamage =
           , amount = Some (T.defaultDiceAmount
               // { kind = "linear_per_level"
                  , axis = Some "slot"
-                 , base = Some { dice = 2, dieSize = 6, flat = None Integer }
+                 , base = Some { dice = 2, dieSize = 6 }
                  , perLevel = Some { dice = 1, dieSize = Some 6 }
                  , startingAtLevel = Some 1
                  })

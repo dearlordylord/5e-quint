@@ -160,30 +160,58 @@ describe("standalone Stat Block general facts", () => {
     ).toThrow();
   });
 
-  test("preserves a swarm's constituent Size without a parallel creature type tag", () => {
-    const swarm = {
+  test("admits only the SRD aggregate and constituent Size pairs for a swarm", () => {
+    const mediumSwarm = {
       ...syntheticStandaloneStatBlock,
       size: "medium",
       creatureType: "undead",
       creatureTypeTags: undefined,
       swarm: { constituentSize: "tiny" },
     } as const;
-    const { creatureTypeTags: _omittedTags, ...authoredSwarm } = swarm;
+    const { creatureTypeTags: _omittedTags, ...authoredMediumSwarm } =
+      mediumSwarm;
+    const authoredLargeSwarm = {
+      ...authoredMediumSwarm,
+      size: "large",
+    } as const;
 
-    expect(decode(StandaloneStatBlockSchema, authoredSwarm)).toMatchObject({
+    expect(
+      decode(StandaloneStatBlockSchema, authoredMediumSwarm),
+    ).toMatchObject({
       size: "medium",
       creatureType: "undead",
       swarm: { constituentSize: "tiny" },
     });
+    expect(decode(StandaloneStatBlockSchema, authoredLargeSwarm)).toMatchObject(
+      {
+        size: "large",
+        swarm: { constituentSize: "tiny" },
+      },
+    );
+
+    for (const forbiddenAggregateSize of ["tiny", "gargantuan"] as const) {
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...authoredMediumSwarm,
+          size: forbiddenAggregateSize,
+        }),
+      ).toThrow();
+    }
     expect(() =>
       decode(StandaloneStatBlockSchema, {
-        ...authoredSwarm,
+        ...authoredMediumSwarm,
         creatureTypeTags: ["swarm"],
       }),
     ).toThrow();
     expect(() =>
       decode(StandaloneStatBlockSchema, {
-        ...authoredSwarm,
+        ...authoredMediumSwarm,
+        swarm: { constituentSize: "medium" },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredMediumSwarm,
         swarm: { constituentSize: "tiny", size: "medium" },
       }),
     ).toThrow();

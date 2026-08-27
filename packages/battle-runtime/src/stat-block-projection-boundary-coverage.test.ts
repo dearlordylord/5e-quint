@@ -154,6 +154,61 @@ describe("Stat Block projection boundary coverage", () => {
     );
   });
 
+  test("preserves source/target condition expiry while rejecting it from execution", () => {
+    const source = statBlockRecord();
+    const attack = source.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+    );
+    if (
+      attack === undefined ||
+      attack.kind !== "executable" ||
+      attack.procedure.kind !== "attack_roll"
+    ) {
+      throw new Error("Expected the Stat Block fixture to have an attack.");
+    }
+
+    for (const expirationKind of [
+      "source_next_turn_end",
+      "target_next_turn_end",
+    ] as const) {
+      const timedCondition = {
+        kind: "apply_condition",
+        condition: "poisoned",
+        expiresAt: { kind: expirationKind },
+      } as const;
+      const timedAttack = decodeProcedure({
+        ...attack,
+        procedure: {
+          ...attack.procedure,
+          onHit: [...attack.procedure.onHit, timedCondition],
+        },
+      });
+      expect(timedAttack).toMatchObject({
+        procedure: { onHit: expect.arrayContaining([timedCondition]) },
+      });
+
+      expect(
+        projectAuthoredStatBlock({
+          ...source,
+          id: statBlockId(`synthetic-${expirationKind}`),
+          statBlock: { ...source.statBlock, actions: [timedAttack] },
+        }),
+      ).toEqual(
+        Either.left({
+          tag: "battleStatBlockProjectionFailure",
+          reason: "unsupportedProcedureBinding",
+          issues: [
+            {
+              section: "actions",
+              procedureOrdinal: attack.procedureOrdinal,
+            },
+          ],
+        }),
+      );
+    }
+  });
+
   test("rejects invalid authored resource limits before runtime allocation", () => {
     const source = monsterResourceStatBlock();
     const resources = source.statBlock.resources;

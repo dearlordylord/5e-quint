@@ -5192,13 +5192,27 @@ const StatBlockProcedureDamageAmountSchema = Schema.Union(
   }),
 );
 
+const StatBlockConditionExpirationSchema = Schema.Union(
+  strictStruct({ kind: Schema.Literal("source_next_turn_end") }),
+  strictStruct({ kind: Schema.Literal("target_next_turn_end") }),
+);
+
+/**
+ * Stat Block attacks name the creature whose next turn owns condition expiry.
+ * This is deliberately separate from spell-relative condition duration.
+ */
+const StatBlockApplyConditionEffectSchema = strictStruct({
+  kind: Schema.Literal("apply_condition"),
+  condition: ConditionSchema,
+  expiresAt: StatBlockConditionExpirationSchema,
+});
+
 const AuthoredProcedureEffectAtomSchema = Schema.Union(
-  ApplyConditionEffectSchema,
+  StatBlockApplyConditionEffectSchema,
   strictStruct({
     kind: Schema.Literal("damage"),
     damageType: DamageTypeSchema,
     amount: StatBlockProcedureDamageAmountSchema,
-    timing: optionalExact(Schema.Literal("end_of_next_turn")),
   }),
   strictStruct({
     kind: Schema.Literal("conditional_bonus_damage"),
@@ -5581,7 +5595,7 @@ const StatBlockLairBonusLegendaryActionUsesSchema = strictStruct({
   additionalUsesInLair: StatBlockProcedurePositiveIntegerSchema,
 });
 
-export const StatBlockLegendaryActionUsesSchema = Schema.Union(
+const StatBlockLegendaryActionUsesSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("fixed"),
     uses: StatBlockProcedurePositiveIntegerSchema,
@@ -6397,8 +6411,7 @@ const StandaloneStatBlockProcedureFields = {
  * facts that a spawned/runtime projection intentionally does not carry.
  * Hit Dice notation is deliberately not represented here yet.
  */
-const StandaloneStatBlockBaseSchema = Schema.Struct({
-  size: StandaloneStatBlockSizeSchema,
+const StandaloneStatBlockSharedSchema = Schema.Struct({
   creatureType: CreatureTypeSchema,
   creatureTypeTags: optionalExact(
     nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")).pipe(
@@ -6411,7 +6424,6 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
       ),
     ),
   ),
-  swarm: optionalExact(strictStruct({ constituentSize: SizeSchema })),
   alignment: StatBlockAlignmentSchema,
   ac: StatBlockArmorClassSchema,
   hp: StandaloneStatBlockValueSchema,
@@ -6437,6 +6449,31 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
   ...StandaloneStatBlockProcedureFields,
   traits: CreatureStatBlockProjectionFields.traits,
 });
+
+/**
+ * The SRD authors only Medium/Large aggregates of Tiny constituents. The
+ * structural union makes a non-Swarm distinct from either valid Swarm pair;
+ * aggregate Size remains the canonical runtime projection fact.
+ */
+const StandaloneStatBlockSizeAndSwarmSchema = Schema.Union(
+  strictStruct({
+    size: StandaloneStatBlockSizeSchema,
+    swarm: optionalExact(ForbiddenValueSchema),
+  }),
+  strictStruct({
+    size: Schema.Literal("medium"),
+    swarm: strictStruct({ constituentSize: Schema.Literal("tiny") }),
+  }),
+  strictStruct({
+    size: Schema.Literal("large"),
+    swarm: strictStruct({ constituentSize: Schema.Literal("tiny") }),
+  }),
+);
+
+const StandaloneStatBlockBaseSchema = Schema.extend(
+  StandaloneStatBlockSharedSchema,
+  StandaloneStatBlockSizeAndSwarmSchema,
+);
 
 type StandaloneStatBlockProcedureFields = {
   readonly actions?: StatBlockProcedureSection;

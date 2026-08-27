@@ -9,7 +9,6 @@ import {
 import type { StandardActionKind } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
 import type {
-  CreatureAttackRollMechanics,
   StatBlockProcedureEntry,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
@@ -41,7 +40,10 @@ import {
   type StatBlockRuntimeResourceParseFailure,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
-import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
+import type {
+  StatBlockTraitAttackRollMode,
+  SupportedCreatureAttackRollMechanics,
+} from "./battle-action-options.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
@@ -359,7 +361,7 @@ function supportedAttackOrdinals(
     (entries ?? []).flatMap((entry) =>
       entry.kind === "executable" &&
       entry.procedure.kind === "attack_roll" &&
-      creatureAttackRollMechanicsAreSupported(
+      authoredAttackMechanicsAreSupported(
         authoredAttackMechanics(entry.procedure),
       )
         ? [entry.procedureOrdinal]
@@ -461,7 +463,7 @@ function runtimeAttackBinding(
   const attack = authoredAttackMechanics(procedure);
   if (
     (section !== "actions" && section !== "legendaryActions") ||
-    !creatureAttackRollMechanicsAreSupported(attack)
+    !authoredAttackMechanicsAreSupported(attack)
   )
     return Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
   return Either.right({
@@ -638,17 +640,43 @@ function procedurePresentationBase(
   };
 }
 
-function authoredAttackMechanics(
-  procedure: Extract<
-    Extract<
-      StatBlockProcedureEntry,
-      { readonly kind: "executable" }
-    >["procedure"],
-    { readonly kind: "attack_roll" }
-  >,
-): CreatureAttackRollMechanics {
+type AuthoredAttackProcedure = Extract<
+  Extract<
+    StatBlockProcedureEntry,
+    { readonly kind: "executable" }
+  >["procedure"],
+  { readonly kind: "attack_roll" }
+>;
+
+function authoredAttackMechanics(procedure: AuthoredAttackProcedure) {
   const { kind: _kind, name: _name, ...attack } = procedure;
   return attack;
+}
+
+type AuthoredAttackMechanics = ReturnType<typeof authoredAttackMechanics>;
+
+/**
+ * Authored timed conditions retain their explicit turn owner but are not yet
+ * an executable battle effect. Exhaustive matching prevents a future authored
+ * effect kind from entering the older creature-attack projection implicitly.
+ */
+function authoredAttackMechanicsAreSupported(
+  attack: AuthoredAttackMechanics,
+): attack is AuthoredAttackMechanics & SupportedCreatureAttackRollMechanics {
+  const authoredEffectsAreSupported = attack.onHit.every((effect) =>
+    Match.value(effect).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        apply_condition: () => false,
+        apply_condition_if_target_size_at_most: () => true,
+        conditional_bonus_damage: () => true,
+        damage: () => true,
+      }),
+    ),
+  );
+  return (
+    authoredEffectsAreSupported &&
+    creatureAttackRollMechanicsAreSupported(attack)
+  );
 }
 
 function procedureResourceRefs(

@@ -11,7 +11,7 @@ in  { challengeRating = 9
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The giant makes two attacks, using Thunderous Mace or Thundercloud in any combination. It can replace one attack with a use of Spellcasting to cast Fog Cloud.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Thunderous Mace", attackAbility = "str", attackBonus = +12, reachFeet = 10, onHit = [ T.damage { damageType = "bludgeoning", dice = 3, dieSize = 8, flat = (Some +8), static = 21 }, T.damage { damageType = "thunder", dice = 2, dieSize = 6, flat = (None Integer), static = 7 } ] } }
             , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Thundercloud", attackAbility = "str", attackBonus = +12, rangeFeet = { normal = 240, long = 240 }, ammunition = (None Text), onHit = [ T.damage { damageType = "thunder", dice = 3, dieSize = 6, flat = (Some +8), static = 18 }
-                  , T.applyCondition { condition = "incapacitated", duration = "end_of_next_turn" }
+                  , T.applyCondition { condition = "incapacitated", expiresAt = T.targetNextTurnEnd }
                   ] } }
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 15 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = [ T.atWill { spells =
                       [ -- RAW: Monsters/Monsters-C-D.md:228-261 — At Will: Detect Magic.

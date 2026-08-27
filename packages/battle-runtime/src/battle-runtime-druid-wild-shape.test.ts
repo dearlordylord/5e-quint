@@ -83,6 +83,7 @@ import {
   goblinAttackSubject,
   goblinId,
   requireHole,
+  requireNonSwarmStatBlockRecordForTest,
   requireResolved,
   resolveBattleSubject,
   resource,
@@ -2655,7 +2656,9 @@ test("rejects known Beast forms without literal Size", () => {
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected Druid Wild Shape support profile.");
   }
-  const baseForm = assertStatBlockForTest(statBlockCatalog, ratId);
+  const baseForm = requireNonSwarmStatBlockRecordForTest(
+    assertStatBlockForTest(statBlockCatalog, ratId),
+  );
   const nonLiteralSizeForm: StatBlockRecord = {
     ...baseForm,
     id: parseSharedStatBlockId(syntheticNonLiteralSizeFormId),

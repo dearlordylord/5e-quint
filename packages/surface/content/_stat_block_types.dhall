@@ -1,17 +1,61 @@
 -- Shared authoring shapes for standalone Stat Block content.
 --
--- The generic effect and dice superset lives in `_types.dhall`.  This module
--- only adds the Stat Block entry, resource, and projection-shaped constructors
--- needed to keep heterogeneous procedure lists homogeneous in Dhall.  The
--- publication command's `--omit-empty` flag removes the optional sentinels.
+-- Stat Block procedure effects are intentionally local to this authoring
+-- context. They include printed flat damage modifiers and turn-owner-relative
+-- condition expiration facts that are not part of the spell Effect superset.
+-- The publication command's `--omit-empty` flag removes optional sentinels.
 
-let T = ./_types.dhall
+let DiceExpr : Type =
+      { dice : Natural, dieSize : Natural, flat : Optional Integer }
 
-let DiceExpr : Type = T.DiceExpr
-let Amount : Type = T.DiceAmount
-let Effect : Type = T.Effect
-let defaultAmount : Amount = T.defaultDiceAmount
-let defaultEffect : Effect = T.defaultEffect
+let Amount : Type =
+      { kind : Text
+      , expr : Optional DiceExpr
+      , static : Optional Natural
+      }
+
+let defaultAmount : Amount =
+      { kind = "", expr = None DiceExpr, static = None Natural }
+
+let ConditionExpiration : Type =
+      < source_next_turn_end | target_next_turn_end >
+
+let ConditionExpirationRecord : Type = { kind : Text }
+
+let sourceNextTurnEnd : ConditionExpiration =
+      ConditionExpiration.source_next_turn_end
+
+let targetNextTurnEnd : ConditionExpiration =
+      ConditionExpiration.target_next_turn_end
+
+let conditionExpirationRecord :
+      ConditionExpiration -> ConditionExpirationRecord =
+      λ(expiration : ConditionExpiration) ->
+        merge
+          { source_next_turn_end = { kind = "source_next_turn_end" }
+          , target_next_turn_end = { kind = "target_next_turn_end" }
+          }
+          expiration
+
+let Effect : Type =
+      { kind : Text
+      , damageType : Optional Text
+      , amount : Optional Amount
+      , condition : Optional Text
+      , expiresAt : Optional ConditionExpirationRecord
+      , maxCreatureSize : Optional Text
+      , when : Optional { kind : Text, types : Optional (List Text) }
+      }
+
+let defaultEffect : Effect =
+      { kind = ""
+      , damageType = None Text
+      , amount = None Amount
+      , condition = None Text
+      , expiresAt = None ConditionExpirationRecord
+      , maxCreatureSize = None Text
+      , when = None { kind : Text, types : Optional (List Text) }
+      }
 
 let DamageInput : Type =
       { damageType : Text
@@ -66,11 +110,12 @@ let advantageDamage : DamageInput -> Effect =
                 }
             }
 
-let applyCondition : { condition : Text, duration : Text } -> Effect =
-      λ(input : { condition : Text, duration : Text }) ->
+let applyCondition :
+      { condition : Text, expiresAt : ConditionExpiration } -> Effect =
+      λ(input : { condition : Text, expiresAt : ConditionExpiration }) ->
         defaultEffect
         //  { condition = Some input.condition
-            , duration = Some input.duration
+            , expiresAt = Some (conditionExpirationRecord input.expiresAt)
             , kind = "apply_condition"
             }
 
@@ -456,6 +501,8 @@ in  { advantageDamage
     , spellDefinitionComponents
     , spellcasting
     , staticDamage
+    , sourceNextTurnEnd
+    , targetNextTurnEnd
     , textOnly
     , resourceTextOnly
     , trait

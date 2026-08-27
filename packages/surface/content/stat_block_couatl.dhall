@@ -9,7 +9,7 @@ in  { challengeRating = 4
         , ac = { value = { kind = "literal", value = 19 } }
         , actions =
             [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Bite", attackAbility = "dex", attackBonus = +7, reachFeet = 5, onHit = [ T.damage { damageType = "piercing", dice = 1, dieSize = 12, flat = (Some +5), static = 11 }
-                  , T.applyCondition { condition = "poisoned", duration = "end_of_caster_next_turn" }
+                  , T.applyCondition { condition = "poisoned", expiresAt = T.sourceNextTurnEnd }
                   ] } }
             , T.textOnly { procedureOrdinal = 2, name = "Constrict", description = "Strength Saving Throw: DC 15, one Medium or smaller creature the couatl can see within 5 feet. Failure: 8 (1d6 + 5) Bludgeoning damage. The target has the Grappled condition (escape DC 13), and it has the Restrained condition until the grapple ends.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 3, procedure = T.spellcasting { name = "Spellcasting", ability = "wis", spellSaveDc = (Some { kind = "fixed", dc = 15 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noComponents, groups = [ T.atWill { spells =
@@ -38,11 +38,11 @@ in  { challengeRating = 4
             ]
         , bonusActions =
             [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Divine Aid", ability = "wis", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noComponents, groups = [ T.limited { resourceOrdinals = [ 2 ], spells =
-                      [ -- RAW: Monsters/Monsters-C-D.md:479-515 — Divine Aid, 2/Day Each: Bless.
+                      [ -- RAW: Monsters/Monsters-C-D.md:479-515 — Divine Aid shared 2/Day pool: Bless.
                         T.spellRef { spellId = "bless", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
-                      , -- RAW: Monsters/Monsters-C-D.md:479-515 — Divine Aid, 2/Day Each: Lesser Restoration.
+                      , -- RAW: Monsters/Monsters-C-D.md:479-515 — Divine Aid shared 2/Day pool: Lesser Restoration.
                         T.spellRef { spellId = "lesser_restoration", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
-                      , -- RAW: Monsters/Monsters-C-D.md:479-515 — Divine Aid, 2/Day Each: Sanctuary.
+                      , -- RAW: Monsters/Monsters-C-D.md:479-515 — Divine Aid shared 2/Day pool: Sanctuary.
                         T.spellRef { spellId = "sanctuary", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       ] }
                   ] } }
