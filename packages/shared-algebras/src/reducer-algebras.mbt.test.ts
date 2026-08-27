@@ -208,18 +208,22 @@ function createActionEconomyDriver() {
         Effect.sync(() => grantUnitAction(unitActionA)),
       doGrantRestrictedUnitActionB: () =>
         Effect.sync(() => grantUnitAction(unitActionB)),
-      doSpendBonusAction: () => Effect.sync(() => {
-        const result = spendActivationResource(state, { kind: "bonusAction" });
-        if (Result.isSuccess(result)) {
-          state = result.success;
-        }
-      }),
-      doSpendFreeAction: () => Effect.sync(() => {
-        const result = spendActivationResource(state, { kind: "free" });
-        if (Result.isSuccess(result)) {
-          state = result.success;
-        }
-      }),
+      doSpendBonusAction: () =>
+        Effect.sync(() => {
+          const result = spendActivationResource(state, {
+            kind: "bonusAction",
+          });
+          if (Result.isSuccess(result)) {
+            state = result.success;
+          }
+        }),
+      doSpendFreeAction: () =>
+        Effect.sync(() => {
+          const result = spendActivationResource(state, { kind: "free" });
+          if (Result.isSuccess(result)) {
+            state = result.success;
+          }
+        }),
       doResetTurn: () => Effect.sync(reset),
       step: () => Effect.void,
       getState: () => Effect.succeed(projectActionEconomy(state)),
@@ -237,36 +241,46 @@ function createConditionsDriver() {
 
     return {
       init: () => Effect.sync(reset),
-      doApplyBlinded: () => Effect.sync(() => {
-        state = applyCondition(state, "blinded");
-      }),
-      doRemoveBlinded: () => Effect.sync(() => {
-        state = removeCondition(state, "blinded");
-      }),
-      doApplyProne: () => Effect.sync(() => {
-        state = applyCondition(state, "prone");
-      }),
-      doRemoveProne: () => Effect.sync(() => {
-        state = removeCondition(state, "prone");
-      }),
-      doApplyParalyzed: () => Effect.sync(() => {
-        state = applyCondition(state, "paralyzed");
-      }),
-      doRemoveParalyzed: () => Effect.sync(() => {
-        state = removeCondition(state, "paralyzed");
-      }),
-      doApplyUnconscious: () => Effect.sync(() => {
-        state = applyCondition(state, "unconscious");
-      }),
-      doRemoveUnconscious: () => Effect.sync(() => {
-        state = removeCondition(state, "unconscious");
-      }),
-      doApplyDirectIncapacitated: () => Effect.sync(() => {
-        state = applyCondition(state, "incapacitated");
-      }),
-      doRemoveDirectIncapacitated: () => Effect.sync(() => {
-        state = removeCondition(state, "incapacitated");
-      }),
+      doApplyBlinded: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "blinded");
+        }),
+      doRemoveBlinded: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "blinded");
+        }),
+      doApplyProne: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "prone");
+        }),
+      doRemoveProne: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "prone");
+        }),
+      doApplyParalyzed: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "paralyzed");
+        }),
+      doRemoveParalyzed: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "paralyzed");
+        }),
+      doApplyUnconscious: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "unconscious");
+        }),
+      doRemoveUnconscious: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "unconscious");
+        }),
+      doApplyDirectIncapacitated: () =>
+        Effect.sync(() => {
+          state = applyCondition(state, "incapacitated");
+        }),
+      doRemoveDirectIncapacitated: () =>
+        Effect.sync(() => {
+          state = removeCondition(state, "incapacitated");
+        }),
       step: () => Effect.void,
       getState: () => Effect.succeed(projectConditions(state)),
     };
@@ -283,24 +297,30 @@ function createDeathSavesDriver() {
 
     return {
       init: () => Effect.sync(reset),
-      doRollFail: () => Effect.sync(() => {
-        state = resolveDeathSavingThrow(state, 5);
-      }),
-      doRollNat1: () => Effect.sync(() => {
-        state = resolveDeathSavingThrow(state, 1);
-      }),
-      doRollSuccess: () => Effect.sync(() => {
-        state = resolveDeathSavingThrow(state, 10);
-      }),
-      doRollNat20: () => Effect.sync(() => {
-        state = resolveDeathSavingThrow(state, 20);
-      }),
-      doDamageFailure: () => Effect.sync(() => {
-        state = addDeathFailures(state, 1);
-      }),
-      doCriticalDamageFailure: () => Effect.sync(() => {
-        state = addDeathFailures(state, 2);
-      }),
+      doRollFail: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 5);
+        }),
+      doRollNat1: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 1);
+        }),
+      doRollSuccess: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 10);
+        }),
+      doRollNat20: () =>
+        Effect.sync(() => {
+          state = resolveDeathSavingThrow(state, 20);
+        }),
+      doDamageFailure: () =>
+        Effect.sync(() => {
+          state = addDeathFailures(state, 1);
+        }),
+      doCriticalDamageFailure: () =>
+        Effect.sync(() => {
+          state = addDeathFailures(state, 2);
+        }),
       step: () => Effect.void,
       getState: () => Effect.succeed(projectDeathSaves(state)),
     };
@@ -349,9 +369,10 @@ function createInitiativeDriver() {
 
     return {
       init: () => Effect.sync(reset),
-      doNext: () => Effect.sync(() => {
-        stack = nextInitiative(stack);
-      }),
+      doNext: () =>
+        Effect.sync(() => {
+          stack = nextInitiative(stack);
+        }),
       doRemoveC1: () => Effect.sync(() => removeCreature("c1")),
       doRemoveC2: () => Effect.sync(() => removeCreature("c2")),
       doInsertC3NoDecision: () => Effect.sync(() => insertCreature("c3", 3)),
@@ -367,8 +388,7 @@ function createInitiativeDriver() {
 }
 
 const RESTRICTED_UNIT_ACTION_ORDERS = [0, 1, 2, 3, 4] as const;
-type RestrictedUnitActionOrder =
-  (typeof RESTRICTED_UNIT_ACTION_ORDERS)[number];
+type RestrictedUnitActionOrder = (typeof RESTRICTED_UNIT_ACTION_ORDERS)[number];
 
 const quintNumberSchema = Schema.Union([
   Schema.Number,
@@ -386,7 +406,7 @@ const quintNumberSchema = Schema.Union([
 const quintRestrictedUnitActionOrderSchema = quintNumberSchema.pipe(
   Schema.refine(
     (value): value is RestrictedUnitActionOrder =>
-      value === 0 || value === 1 || value === 2 || value === 3 || value === 4,
+      RESTRICTED_UNIT_ACTION_ORDERS.some((order) => order === value),
     { expected: "a restricted unit action order from 0 through 4" },
   ),
 );
@@ -587,12 +607,8 @@ describe("shared reducer algebra trace-state decoders", () => {
     const initiativeState = await Effect.runPromise(
       decodeInitiativeSpecState({
         qRound: { "#bigint": "2" },
-        qAlreadyActed: [
-          { creature: "c4", initiative: { "#bigint": "4" } },
-        ],
-        qStillToAct: [
-          { creature: "c1", initiative: { "#bigint": "1" } },
-        ],
+        qAlreadyActed: [{ creature: "c4", initiative: { "#bigint": "4" } }],
+        qStillToAct: [{ creature: "c1", initiative: { "#bigint": "1" } }],
         qLastInsert: {
           tag: "LastInsertDecision",
           value: ["c1"],
@@ -644,9 +660,7 @@ describe("shared reducer algebra trace-state decoders", () => {
 
   it("returns a typed failure for malformed death-save state", async () => {
     const result = await Effect.runPromise(
-      Effect.result(
-        decodeDeathSavesSpecState({ qSuccesses: "not-a-number" }),
-      ),
+      Effect.result(decodeDeathSavesSpecState({ qSuccesses: "not-a-number" })),
     );
 
     expect(Result.isFailure(result)).toBe(true);
@@ -778,16 +792,17 @@ function projectInitiativeEntry(
 
 function decodeActionEconomySpecState(raw: unknown) {
   return Schema.decodeUnknownEffect(actionEconomySpecStateSchema)(raw).pipe(
-    Effect.map((state): ActionEconomyProjection => ({
-      turnActionAvailable: state.qTurnActionAvailable,
-      restrictedUnitActionProcedureRefs:
-        [
+    Effect.map(
+      (state): ActionEconomyProjection => ({
+        turnActionAvailable: state.qTurnActionAvailable,
+        restrictedUnitActionProcedureRefs: [
           ...restrictedUnitActionProcedureRefsByOrder[
             state.qRestrictedUnitActionOrder
           ],
         ],
-      hasBonusAction: state.qHasBonusAction,
-    })),
+        hasBonusAction: state.qHasBonusAction,
+      }),
+    ),
   );
 }
 
@@ -853,10 +868,10 @@ function decodeInitiativeLastInsert(
       status: "ok" as const,
       tie: [] as const,
     })),
-    Match.when(
-      "LastInsertErrorDecisionSuppliedWithoutTie",
-      () => ({ status: "error" as const, tie: [] as const }),
-    ),
+    Match.when("LastInsertErrorDecisionSuppliedWithoutTie", () => ({
+      status: "error" as const,
+      tie: [] as const,
+    })),
     Match.when({ tag: "LastInsertNone" }, () => ({
       status: "none" as const,
       tie: [] as const,
