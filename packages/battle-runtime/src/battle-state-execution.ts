@@ -179,10 +179,6 @@ import type {
   SpellMechanics,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import type {
-  FindFamiliarNormalFormRef,
-  PactOfTheChainSpecialFormRef,
-} from "@dnd/surface/surface/find-familiar-forms";
 import type * as Option from "effect/Option";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
@@ -4407,12 +4403,12 @@ export type BattleInitializationIssueFacts =
   | {
       readonly kind: "companionFormSpecialFormUnknown";
       readonly formAccess: "pactOfTheChain";
-      readonly formId: PactOfTheChainSpecialFormRef["formId"];
+      readonly formId: string;
     }
   | {
       readonly kind: "companionFormNormalFormIneligible";
       readonly formAccess: "findFamiliar" | "pactOfTheChain";
-      readonly formId: FindFamiliarNormalFormRef["formId"];
+      readonly formId: string;
     }
   | {
       readonly kind: "companionCombatantAdmissionInvalid";
