@@ -16,7 +16,10 @@ import type {
   BattleState,
   GlyphStoredSpellReleaseReplayContext,
 } from "../battle-state-execution.ts";
-import { battleContinuationFillEquals } from "./battle-fill-equality.ts";
+import {
+  battleContinuationFillEquals,
+  isBattleContinuationComparableFill,
+} from "./battle-fill-equality.ts";
 import {
   currentInterruptCheckpoint,
   currentInterruptFrame,
@@ -231,17 +234,6 @@ function replayContinuationSuffixFills(
   });
 }
 
-const replayContinuationSemanticFillKinds = [
-  "targetChoice",
-  "attackRoll",
-  "rolledDice",
-] as const satisfies ReadonlyArray<BattleFill["kind"]>;
-
-type ReplayContinuationSemanticFill = Extract<
-  BattleFill,
-  { readonly kind: (typeof replayContinuationSemanticFillKinds)[number] }
->;
-
 function replayContinuationRecordedFillMatches(
   recordedFill: BattleFill,
   submittedFill: BattleFill,
@@ -257,18 +249,12 @@ function replayContinuationSemanticFillEquals(
   submittedFill: BattleFill,
 ): boolean {
   if (
-    !isReplayContinuationSemanticFill(recordedFill) ||
-    !isReplayContinuationSemanticFill(submittedFill)
+    !isBattleContinuationComparableFill(recordedFill) ||
+    !isBattleContinuationComparableFill(submittedFill)
   ) {
     return false;
   }
   return battleContinuationFillEquals(recordedFill, submittedFill);
-}
-
-function isReplayContinuationSemanticFill(
-  fill: BattleFill,
-): fill is ReplayContinuationSemanticFill {
-  return replayContinuationSemanticFillKinds.some((kind) => kind === fill.kind);
 }
 
 export function resolveReplayContinuationFromState(

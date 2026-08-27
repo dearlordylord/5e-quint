@@ -699,6 +699,77 @@ describe("Cloudkill source-turn movement", () => {
     ).not.toBe(movementHole.holeId);
   });
 
+  test("does not accept a prior-round movement consequence fill", () => {
+    const { boundaryState, movementHole } = sourceTurnMovementBoundary();
+    const firstMovementFill = cloudkillMovementFill(movementHole, [
+      spellTargetId,
+    ]);
+    const firstSaveFrontier = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [firstMovementFill],
+    });
+    const firstSaveHole = requireResultHole(
+      firstSaveFrontier,
+      "savingThrowOutcome",
+    );
+    const firstSaveFill = singleTargetSavingThrowOutcomeFill(
+      firstSaveHole,
+      spellTargetId,
+      true,
+    );
+    const firstDamageFrontier = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [firstMovementFill, firstSaveFill],
+    });
+    const firstDamageFill = damageRollFillWithGroups(
+      requireResultHole(firstDamageFrontier, "rolledDice"),
+      [[1, 1, 1, 1, 1]],
+    );
+    const firstSourceTurn = endTurn({
+      state: boundaryState,
+      actorId: spellTargetId,
+      fills: [firstMovementFill, firstSaveFill, firstDamageFill],
+    });
+    if (firstSourceTurn.tag !== "resolved") {
+      throw new Error("Expected the first source turn to start.");
+    }
+    const nextTargetTurn = endTurn({
+      state: firstSourceTurn.state,
+      actorId: spellCasterId,
+    });
+    if (nextTargetTurn.tag !== "resolved") {
+      throw new Error("Expected the next target turn to start.");
+    }
+    const nextMovementFrontier = endTurn({
+      state: nextTargetTurn.state,
+      actorId: spellTargetId,
+    });
+    const nextMovementFill = cloudkillMovementFill(
+      requireResultHole(nextMovementFrontier, "cloudkillMovement"),
+      [spellTargetId],
+    );
+    const nextSaveFrontier = endTurn({
+      state: nextTargetTurn.state,
+      actorId: spellTargetId,
+      fills: [nextMovementFill],
+    });
+    const nextSaveHole = requireResultHole(
+      nextSaveFrontier,
+      "savingThrowOutcome",
+    );
+
+    expect(nextSaveHole.holeId).not.toBe(firstSaveHole.holeId);
+    expect(
+      endTurn({
+        state: nextTargetTurn.state,
+        actorId: spellTargetId,
+        fills: [nextMovementFill, firstSaveFill],
+      }),
+    ).toMatchObject({ tag: "needsHoles", holes: [{ kind: "savingThrowOutcome" }] });
+  });
+
   test("replays an interrupted movement save without advancing or reopening it", () => {
     const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
     const targetTurn = endTurn({
@@ -801,7 +872,11 @@ describe("Cloudkill source-turn movement", () => {
         saveFill,
         damageFill,
         concentrationSavingThrowFill(concentrationHole, true),
-      ],
+      ].map((fill) =>
+        Schema.decodeUnknownSync(BattleFillSchema)(
+          Schema.encodeSync(BattleFillSchema)(fill),
+        ),
+      ),
     });
 
     expect(resumed).toMatchObject({
@@ -1432,6 +1507,114 @@ describe("Cloudkill source-turn movement", () => {
     });
     if (resumed.tag !== "resolved") return;
     expect(resumed.droppedObjects).toHaveLength(1);
+  });
+
+  test("preserves a known-empty Command Drop outcome through interrupted movement replay", () => {
+    const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const commanded = withCommandDrop(readied.state, spellTargetId);
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: spellTargetId,
+      command: "commandDrop" as const,
+      effectRef: commanded.effectRef,
+    };
+    const movementFrontier = resolveBattleSubject({
+      state: commanded.state,
+      subject,
+      fills: [],
+    });
+    const movementFill = cloudkillMovementFill(
+      requireResultHole(movementFrontier, "cloudkillMovement"),
+      [spellTargetId],
+    );
+    const saveFrontier = resolveBattleSubject({
+      state: commanded.state,
+      subject,
+      fills: [movementFill],
+    });
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      spellTargetId,
+      false,
+    );
+    const interrupted = resolveBattleSubject({
+      state: commanded.state,
+      subject,
+      fills: [movementFill, saveFill],
+    });
+    expect(interrupted).toMatchObject({
+      tag: "needsHoles",
+      state: {
+        interruptStack: expect.arrayContaining([
+          expect.objectContaining({
+            kind: "interruptCheckpoint",
+            frame: expect.objectContaining({
+              continuation: expect.objectContaining({
+                objectOutcomes: { droppedObjects: [] },
+              }),
+            }),
+          }),
+        ]),
+      },
+    });
+    if (interrupted.tag !== "needsHoles") {
+      throw new Error("Expected Command Drop movement interruption.");
+    }
+    const pending = interrupted.snapshot.pendingInterrupt;
+    if (pending === null) {
+      throw new Error("Expected the movement failed-save interrupt.");
+    }
+    const declined = resolveBattleInterrupt({
+      state: interrupted.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    const damageFill = damageRollFillWithGroups(
+      requireResultHole(declined, "rolledDice"),
+      [[1, 1, 1, 1, 1]],
+    );
+    if (declined.tag !== "needsHoles") {
+      throw new Error("Expected Command Drop movement damage frontier.");
+    }
+    const concentrationFrontier = resolveBattleSubject({
+      state: declined.state,
+      subject: declined.subject,
+      fills: [movementFill, saveFill, damageFill],
+    });
+    const concentrationFill = concentrationSavingThrowFill(
+      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+      true,
+    );
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error("Expected Command Drop movement Concentration frontier.");
+    }
+    const resumedWithEmptyDrop = resolveBattleSubject({
+      state: concentrationFrontier.state,
+      subject: concentrationFrontier.subject,
+      fills: [movementFill, saveFill, damageFill, concentrationFill],
+    });
+
+    expect(resumedWithEmptyDrop).toMatchObject({
+      tag: "resolved",
+      droppedObjects: [],
+      snapshot: {
+        round: 2,
+        currentActorId: spellCasterId,
+        pendingInterrupt: null,
+      },
+    });
   });
 
   test("resolves Grease before advancing End Turn into Cloudkill movement", () => {

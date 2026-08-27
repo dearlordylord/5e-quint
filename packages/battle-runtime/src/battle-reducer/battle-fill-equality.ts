@@ -11,22 +11,35 @@ import { Match } from "effect";
 import { sameMultisetBy } from "../mechanical-equality.ts";
 import { opportunityAttackThreatEqual } from "./opportunity-attack-equality.ts";
 
+export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
+  "targetChoice",
+  "attackRoll",
+  "rolledDice",
+  "attackDamageDisposition",
+  "concentrationSavingThrow",
+  "savingThrowOutcome",
+  "movement",
+  "cloudkillMovement",
+  "cloudkillStartTurnOrder",
+  "toolPossessionFacts",
+  "cunningStrikeEndTurnCoverFacts",
+  "deathSavingThrow",
+] as const satisfies ReadonlyArray<BattleFill["kind"]>;
+
 export type BattleContinuationComparableFill = Extract<
   BattleFill,
   {
-    readonly kind:
-      | "targetChoice"
-      | "attackRoll"
-      | "rolledDice"
-      | "attackDamageDisposition"
-      | "concentrationSavingThrow"
-      | "savingThrowOutcome"
-      | "movement"
-      | "toolPossessionFacts"
-      | "cunningStrikeEndTurnCoverFacts"
-      | "deathSavingThrow";
+    readonly kind: (typeof BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS)[number];
   }
 >;
+
+export function isBattleContinuationComparableFill(
+  fill: BattleFill,
+): fill is BattleContinuationComparableFill {
+  return BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS.some(
+    (kind) => kind === fill.kind,
+  );
+}
 
 export function battleContinuationFillEquals(
   a: BattleContinuationComparableFill,
@@ -81,6 +94,18 @@ export function battleContinuationFillEquals(
         b.kind === "movement" &&
         left.holeId === b.holeId &&
         movementFillValuesEqual(left.value, b.value),
+      cloudkillMovement: (left) =>
+        b.kind === "cloudkillMovement" &&
+        left.holeId === b.holeId &&
+        sameMultisetBy(
+          left.value.affectedCombatantIds,
+          b.value.affectedCombatantIds,
+          (leftId, rightId) => leftId === rightId,
+        ),
+      cloudkillStartTurnOrder: (left) =>
+        b.kind === "cloudkillStartTurnOrder" &&
+        left.holeId === b.holeId &&
+        left.value === b.value,
       toolPossessionFacts: (left) =>
         b.kind === "toolPossessionFacts" &&
         left.holeId === b.holeId &&

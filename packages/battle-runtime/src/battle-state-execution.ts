@@ -4669,17 +4669,17 @@ export type BattleObjectOutcomeAccumulation =
   | {
       readonly objectDamages: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
       readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
-      readonly droppedObjects?: ReadonlyNonEmptyArray<BattleDroppedObjectOutcome>;
+      readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
     }
   | {
       readonly objectDamages?: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
       readonly objectIgnitions: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
-      readonly droppedObjects?: ReadonlyNonEmptyArray<BattleDroppedObjectOutcome>;
+      readonly droppedObjects?: readonly BattleDroppedObjectOutcome[];
     }
   | {
       readonly objectDamages?: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
       readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
-      readonly droppedObjects: ReadonlyNonEmptyArray<BattleDroppedObjectOutcome>;
+      readonly droppedObjects: readonly BattleDroppedObjectOutcome[];
     };
 export type BattleFireballObjectIgnitionFact = {
   readonly objectId: BattleObjectId;

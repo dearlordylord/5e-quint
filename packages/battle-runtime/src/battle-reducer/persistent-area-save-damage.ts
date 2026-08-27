@@ -18,6 +18,7 @@ import type {
   BattleCloudkillAreaHazardSavingThrowOutcomeHole,
   BattleCloudkillAreaHazardTrigger,
   BattleCloudkillMovementSequenceResumeCheckpoint,
+  BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
   BattleHandledInterruptOccurrence,
@@ -521,7 +522,10 @@ function resolvePersistentAreaSaveDamageStep(input: {
 }): PersistentAreaSaveDamageStep {
   const { procedure, context } = input;
   const { resolution, target, effect } = procedure;
-  const { saveHole, damageHole } = persistentAreaProcedureHoles(procedure);
+  const { saveHole, damageHole } = persistentAreaProcedureHoles(
+    procedure,
+    context,
+  );
   const procedureName = persistentAreaProcedureName(procedure.kind);
   const saveFills = resolution.fills.filter(
     (
@@ -624,9 +628,10 @@ function resolvePersistentAreaSaveDamageStep(input: {
     damageFill,
     saveSucceeded: saveOutcome.succeeded,
   });
-  const concentrationHole = concentrationSavingThrowHole(
+  const concentrationHole = persistentAreaConcentrationSavingThrowHole(
     target,
     adjustedDamage,
+    context,
   );
   const concentrationFills =
     concentrationHole === null
@@ -827,6 +832,7 @@ const byPersistentAreaProcedureKind = Match.discriminator("kind");
 
 function persistentAreaProcedureHoles(
   procedure: ParsedPersistentAreaSaveDamageProcedure,
+  context: PersistentAreaResolutionContext,
 ): PersistentAreaProcedureHoles {
   return Match.value(procedure).pipe(
     byPersistentAreaProcedureKind("insectPlague", (insectPlague) => ({
@@ -848,11 +854,13 @@ function persistentAreaProcedureHoles(
         cloudkill.resolution.subject.actorId,
         cloudkill.effect,
         cloudkill.trigger,
+        context.kind === "replayParent" ? context.sourceTurn : undefined,
       ),
       damageHole: cloudkillAreaHazardDamageRollHole(
         cloudkill.resolution.subject.actorId,
         cloudkill.effect,
         cloudkill.trigger,
+        context.kind === "replayParent" ? context.sourceTurn : undefined,
       ),
     })),
     Match.exhaustive,
@@ -1099,8 +1107,9 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
+  sourceTurn?: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
 ): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}`;
+  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}${cloudkillMovementSourceTurnKey(trigger, sourceTurn)}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -1122,9 +1131,10 @@ function cloudkillAreaHazardDamageRollHole(
   targetId: CombatantId,
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
+  sourceTurn?: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
 ): BattleCloudkillAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}:${expr}`;
+  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}${cloudkillMovementSourceTurnKey(trigger, sourceTurn)}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -1139,5 +1149,31 @@ function cloudkillAreaHazardDamageRollHole(
       damage: effect.damage,
     },
     critical: false,
+  };
+}
+
+function cloudkillMovementSourceTurnKey(
+  trigger: BattleCloudkillAreaHazardTrigger,
+  sourceTurn:
+    | BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"]
+    | undefined,
+): string {
+  return trigger === "movesIntoSpace" && sourceTurn !== undefined
+    ? `:${sourceTurn.actorId}:${Number(sourceTurn.round)}`
+    : "";
+}
+
+function persistentAreaConcentrationSavingThrowHole(
+  target: BattleCreatureState,
+  damageAmount: number,
+  context: PersistentAreaResolutionContext,
+): BattleConcentrationSavingThrowHole | null {
+  const base = concentrationSavingThrowHole(target, damageAmount);
+  if (base === null || context.kind === "standalone") return base;
+  const key = `battle:cloudkill-movement-concentration:${context.sourceTurn.actorId}:${Number(context.sourceTurn.round)}:${context.occurrence.sourceProcedureRef}:${context.occurrence.areaId}:${context.occurrence.targetId}`;
+  return {
+    ...base,
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
   };
 }

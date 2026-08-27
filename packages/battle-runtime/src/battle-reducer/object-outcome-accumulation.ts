@@ -26,6 +26,16 @@ function appendNonEmpty<T>(
   return current === undefined ? [first, ...rest] : [...current, ...candidates];
 }
 
+function appendKnownCollection<T>(
+  current: readonly T[] | undefined,
+  additions: readonly T[] | undefined,
+): readonly T[] | undefined {
+  if (additions === undefined || additions.length === 0) {
+    return current ?? additions;
+  }
+  return current === undefined ? additions : [...current, ...additions];
+}
+
 export function appendObjectOutcomeAccumulation(
   current: BattleObjectOutcomeAccumulation | undefined,
   source: ObjectOutcomeSource,
@@ -38,7 +48,7 @@ export function appendObjectOutcomeAccumulation(
     current?.objectIgnitions,
     source.objectIgnitions,
   );
-  const droppedObjects = appendNonEmpty(
+  const droppedObjects = appendKnownCollection(
     current?.droppedObjects,
     source.droppedObjects,
   );

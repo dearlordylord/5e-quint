@@ -383,12 +383,9 @@ function resolveCommandDropCommand(
       },
     }),
   );
-  const replayObjectOutcomes: BattleObjectOutcomeAccumulation | undefined =
-    droppedObjects[0] === undefined
-      ? undefined
-      : {
-          droppedObjects: [droppedObjects[0], ...droppedObjects.slice(1)],
-        };
+  const replayObjectOutcomes: BattleObjectOutcomeAccumulation = {
+    droppedObjects,
+  };
 
   const withoutPending = stateWithoutCommandPendingEffect(
     input.state,
@@ -398,7 +395,7 @@ function resolveCommandDropCommand(
   const endTurnResult = resolveDelegatedEndTurnCommand(
     {
       ...input,
-      ...(replayObjectOutcomes === undefined ? {} : { replayObjectOutcomes }),
+      replayObjectOutcomes,
     },
     {
       state: withoutPending,
