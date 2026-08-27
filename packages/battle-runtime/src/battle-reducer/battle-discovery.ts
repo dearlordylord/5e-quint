@@ -146,6 +146,7 @@ import {
   wardingBondSeparationFactsHole,
 } from "./warding-bond.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "./domain-constants.ts";
+import { areaWindStrengthHole } from "./area-wind-strength.ts";
 import { discoverLegendaryActionActs } from "./unit-feature-discovery.ts";
 import {
   activeSelfTransformationModeEffect,
@@ -1598,8 +1599,15 @@ function cloudkillStrongWindDispersalAct(
       actorId,
       command: "disperseCloudkill",
       areaId: effect.areaId,
+      effectOwnerId: effect.sourceCombatantId,
+      effectRef: spellActiveEffectExecutionRef(effect),
     },
-    initialHoles: [],
+    initialHoles: [
+      areaWindStrengthHole(
+        effect.areaId,
+        spellActiveEffectExecutionRef(effect),
+      ),
+    ],
   };
 }
 

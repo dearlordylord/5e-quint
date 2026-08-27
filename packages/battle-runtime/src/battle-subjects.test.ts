@@ -116,7 +116,7 @@ describe("BattleSubject identity", () => {
       cloudkillAreaHazardSave: {
         areaMembershipTrigger: { kind: "areaMovesIntoSpace", areaId },
       },
-      disperseCloudkill: { areaId },
+      disperseCloudkill: { areaId, effectOwnerId: actorId, effectRef },
       webRestrainedNoLongerInArea: { areaId },
       webAreaRemoved: { areaId },
       gustOfWindLineSave: {

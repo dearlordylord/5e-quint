@@ -13,6 +13,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "readyDeclaration",
   "helpAttackAllyDecision",
   "helpAttackEnemyDecision",
+  "areaWindStrength",
   "targetChoice",
   "targetSpatialFacts",
   "hitPointHealingDistribution",

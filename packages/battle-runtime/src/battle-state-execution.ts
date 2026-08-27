@@ -4480,6 +4480,16 @@ export type BattleWardingBondSeparationFactsHole = {
   };
   readonly requiresTableSpatialFact: true;
 };
+export type BattleAreaWindStrength =
+  | { readonly kind: "strong" }
+  | { readonly kind: "notStrong" };
+export type BattleAreaWindStrengthHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "areaWindStrength";
+  readonly label: string;
+  readonly areaId: BattleAreaId;
+};
 export type BattleSpellAreaChoiceHole = {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6051,6 +6061,7 @@ export type BattleHole =
   | BattleSpellCastReactionFactsHole
   | BattleSlowSomaticSpellFailureOutcomeHole
   | BattleWardingBondSeparationFactsHole
+  | BattleAreaWindStrengthHole
   | BattleObjectTargetChoiceHole
   | BattleObjectContactTargetsHole
   | BattleObjectContactSavingThrowOutcomeHole
@@ -6408,6 +6419,11 @@ export type BattleFill =
       readonly kind: "targetSpatialFacts";
       readonly holeId: BattleHoleId;
       readonly spatialFacts: readonly BattleTargetSpatialFact[];
+    }
+  | {
+      readonly kind: "areaWindStrength";
+      readonly holeId: BattleHoleId;
+      readonly value: BattleAreaWindStrength;
     }
   | {
       readonly kind: "slowSomaticSpellFailureOutcome";

@@ -298,6 +298,11 @@ const BattleHoleBaseSchema = {
   unit: Schema.optionalKey(Schema.Never),
 } as const;
 
+const BattleAreaWindStrengthSchema = Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("strong") }),
+  Schema.Struct({ kind: Schema.Literal("notStrong") }),
+]);
+
 const BattleBrutalStrikeForcefulBlowMovementFactSchema = Schema.Struct({
   kind: Schema.Literal("brutalStrikeForcefulBlowStraightTowardTarget"),
   targetId: CombatantId,
@@ -1506,6 +1511,11 @@ const BattleHolePayloadUnionSchema = Schema.Union([
       components: Schema.Array(Schema.Literals(["V", "S", "M"])),
     }),
     requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
+    kind: Schema.Literal("areaWindStrength"),
+    areaId: BattleAreaId,
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3221,6 +3231,13 @@ type BattleFillEncoded =
       readonly spatialFacts: readonly BattleTargetSpatialFactEncoded[];
     }
   | {
+      readonly kind: "areaWindStrength";
+      readonly holeId: string;
+      readonly value:
+        | { readonly kind: "strong" }
+        | { readonly kind: "notStrong" };
+    }
+  | {
       readonly kind: "slowSomaticSpellFailureOutcome";
       readonly holeId: string;
       readonly value: {
@@ -4321,6 +4338,11 @@ export const BattleFillSchema: Schema.Codec<
       kind: Schema.Literal("targetSpatialFacts"),
       holeId: BattleHoleIdSchema,
       spatialFacts: BattleTargetSpatialFactsSchema,
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("areaWindStrength"),
+      holeId: BattleHoleIdSchema,
+      value: BattleAreaWindStrengthSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("slowSomaticSpellFailureOutcome"),
@@ -6668,6 +6690,7 @@ function serializedBattleHoleExecutionReferences(
         ),
       helpAttackAllyDecision: noSerializedExecutionReferences,
       helpAttackEnemyDecision: noSerializedExecutionReferences,
+      areaWindStrength: noSerializedExecutionReferences,
       damageRelationshipDecisions: (value) =>
         value.questions.flatMap((question) =>
           question.kind === "enemyZeroHitPointTemporaryHitPoints"

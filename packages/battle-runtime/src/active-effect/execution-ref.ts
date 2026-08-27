@@ -17,6 +17,7 @@ export type ReplayAddressableSpellActiveEffect = Extract<
   {
     readonly kind:
       | "commandPending"
+      | "cloudkillAreaHazard"
       | "dragonsBreath"
       | "dancingLights"
       | "heldLight"
