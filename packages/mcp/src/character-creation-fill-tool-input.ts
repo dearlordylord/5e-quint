@@ -114,7 +114,7 @@ export function decodeFillCreationHolesArgs(
 ): ToolInputResult<FillCreationHolesToolInput> {
   const record = decodeToolArgs(FillCreationHolesArgsSchema, args, toolName);
   if (Result.isFailure(record)) return Result.fail(record.failure);
-  const fills = traverseValidation(record.right.fills, (value, index) =>
+  const fills = traverseValidation(record.success.fills, (value, index) =>
     decodeCreationFill(value, index, toolName),
   );
   if (Result.isFailure(fills)) {
@@ -122,9 +122,9 @@ export function decodeFillCreationHolesArgs(
   }
 
   return Result.succeed({
-    draftId: characterDraftId(record.right.draftId),
-    expectedRevision: draftRevision(record.right.expectedRevision),
-    fills: fills.right,
+    draftId: characterDraftId(record.success.draftId),
+    expectedRevision: draftRevision(record.success.expectedRevision),
+    fills: fills.success,
   });
 }
 

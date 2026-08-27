@@ -1,4 +1,4 @@
-import { Either, Match, Schema } from "effect";
+import { Match, Result, Schema } from "effect";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 
 import type { McpApplicationServices } from "./composition-root.ts";
@@ -156,10 +156,10 @@ export function isContentToolName(name: string): name is ContentToolName {
 export function decodeContentToolCall(input: {
   readonly name: ContentToolName;
   readonly args: unknown;
-}): Either.Either<ContentToolCall, ReturnType<typeof errorContent>> {
+}): Result.Result<ContentToolCall, ReturnType<typeof errorContent>> {
   return Match.value(input.name).pipe(
     Match.when(contentToolNames.describeMcpWorkflow, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -172,7 +172,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.listStatBlocks, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -185,7 +185,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.listCatalogUnits, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           EmptyArgsSchema,
           input.args,
@@ -198,7 +198,7 @@ export function decodeContentToolCall(input: {
       ),
     ),
     Match.when(contentToolNames.inspectCatalogUnit, () =>
-      Either.map(
+      Result.map(
         decodeToolArgs(
           InspectCatalogUnitInputSchema,
           input.args,
