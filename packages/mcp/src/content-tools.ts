@@ -25,8 +25,8 @@ const EmptyArgsSchema = Schema.Struct({});
 const StringArraySchema = Schema.Array(Schema.String);
 const WorkflowGuideOutputSchema = Schema.Struct({
   lifecycle: StringArraySchema,
-  resultPaths: Schema.Record({ key: Schema.String, value: Schema.String }),
-  acceptedInputs: Schema.Record({ key: Schema.String, value: Schema.String }),
+  resultPaths: Schema.Record(Schema.String, Schema.String),
+  acceptedInputs: Schema.Record(Schema.String, Schema.String),
   naturalLanguagePolicy: Schema.String,
   recovery: StringArraySchema,
   limits: StringArraySchema,
@@ -36,29 +36,26 @@ const UnitSummarySchema = Schema.Struct({
   name: Schema.String,
 });
 const ListCatalogUnitsOutputSchema = Schema.Struct({
-  unitsByKind: Schema.Record({
-    key: Schema.String,
-    value: Schema.Array(UnitSummarySchema),
-  }),
+  unitsByKind: Schema.Record(Schema.String, Schema.Array(UnitSummarySchema)),
   naturalLanguagePolicy: Schema.String,
   next: Schema.String,
 });
 const StatBlockAttackSummarySchema = Schema.Struct({
   attackName: Schema.String,
   attackType: Schema.String,
-  attackBonus: Schema.Union(Schema.Number, Schema.Null),
-  reachFeet: Schema.optionalWith(Schema.Number, { exact: true }),
-  normalRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
-  longRangeFeet: Schema.optionalWith(Schema.Number, { exact: true }),
+  attackBonus: Schema.Union([Schema.Number, Schema.Null]),
+  reachFeet: Schema.optionalKey(Schema.Number),
+  normalRangeFeet: Schema.optionalKey(Schema.Number),
+  longRangeFeet: Schema.optionalKey(Schema.Number),
   onHit: StringArraySchema,
 });
 const StatBlockSummarySchema = Schema.Struct({
   statBlockId: Schema.String,
   displayName: Schema.String,
   creatureType: Schema.String,
-  armorClass: Schema.Union(Schema.Number, Schema.Null),
-  hitPoints: Schema.Union(Schema.Number, Schema.Null),
-  initiativeModifier: Schema.optionalWith(Schema.Number, { exact: true }),
+  armorClass: Schema.Union([Schema.Number, Schema.Null]),
+  hitPoints: Schema.Union([Schema.Number, Schema.Null]),
+  initiativeModifier: Schema.optionalKey(Schema.Number),
   attacks: Schema.Array(StatBlockAttackSummarySchema),
   damageVulnerabilities: StringArraySchema,
   damageResistances: StringArraySchema,

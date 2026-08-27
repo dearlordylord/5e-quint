@@ -21,80 +21,103 @@ import {
 } from "./schema-codec.ts";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
 );
 const ChoiceCreationFillArgsSchema = Schema.Struct({
   kind: Schema.Literal("choice"),
-  holeId: Schema.String.annotations({
-    description:
-      "Creation hole id from holes[].holeId. For draft.progression.initial, this is the one progression-profile hole; there is no separate level-1 class-entry hole.",
-  }),
-  optionIds: Schema.Array(Schema.String).annotations({
-    description:
-      "Choice option ids from the matching holes[].options[].optionId. A progression option id names the whole Character Progression profile: starting class plus any post-start advancement entries. Respect the hole cardinality returned by discovery.",
-  }),
+  holeId: Schema.String.pipe(
+    Schema.annotate({
+      description:
+        "Creation hole id from holes[].holeId. For draft.progression.initial, this is the one progression-profile hole; there is no separate level-1 class-entry hole.",
+    }),
+  ),
+  optionIds: Schema.Array(Schema.String).pipe(
+    Schema.annotate({
+      description:
+        "Choice option ids from the matching holes[].options[].optionId. A progression option id names the whole Character Progression profile: starting class plus any post-start advancement entries. Respect the hole cardinality returned by discovery.",
+    }),
+  ),
 });
 
 const AbilityScoreAssignmentArgsSchema = Schema.Struct({
   str: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(1),
-    Schema.lessThanOrEqualTo(30),
+    Schema.check(
+      Schema.isInt(),
+      Schema.isGreaterThanOrEqualTo(1),
+      Schema.isLessThanOrEqualTo(30),
+    ),
   ),
   dex: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(1),
-    Schema.lessThanOrEqualTo(30),
+    Schema.check(
+      Schema.isInt(),
+      Schema.isGreaterThanOrEqualTo(1),
+      Schema.isLessThanOrEqualTo(30),
+    ),
   ),
   con: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(1),
-    Schema.lessThanOrEqualTo(30),
+    Schema.check(
+      Schema.isInt(),
+      Schema.isGreaterThanOrEqualTo(1),
+      Schema.isLessThanOrEqualTo(30),
+    ),
   ),
   int: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(1),
-    Schema.lessThanOrEqualTo(30),
+    Schema.check(
+      Schema.isInt(),
+      Schema.isGreaterThanOrEqualTo(1),
+      Schema.isLessThanOrEqualTo(30),
+    ),
   ),
   wis: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(1),
-    Schema.lessThanOrEqualTo(30),
+    Schema.check(
+      Schema.isInt(),
+      Schema.isGreaterThanOrEqualTo(1),
+      Schema.isLessThanOrEqualTo(30),
+    ),
   ),
   cha: Schema.Number.pipe(
-    Schema.int(),
-    Schema.greaterThanOrEqualTo(1),
-    Schema.lessThanOrEqualTo(30),
+    Schema.check(
+      Schema.isInt(),
+      Schema.isGreaterThanOrEqualTo(1),
+      Schema.isLessThanOrEqualTo(30),
+    ),
   ),
 });
 
 const AbilityScoreCreationFillArgsSchema = Schema.Struct({
   kind: Schema.Literal("abilityScores"),
-  holeId: Schema.String.annotations({
-    description: "Ability-score creation hole id from holes[].holeId.",
-  }),
-  method: Schema.Literal(...SUPPORTED_ABILITY_SCORE_METHODS),
+  holeId: Schema.String.pipe(
+    Schema.annotate({
+      description: "Ability-score creation hole id from holes[].holeId.",
+    }),
+  ),
+  method: Schema.Literals(SUPPORTED_ABILITY_SCORE_METHODS),
   value: AbilityScoreAssignmentArgsSchema,
 });
 
-const CreationFillArgsSchema = Schema.Union(
+const CreationFillArgsSchema = Schema.Union([
   ChoiceCreationFillArgsSchema,
   AbilityScoreCreationFillArgsSchema,
-);
+]);
 
 export const FillCreationHolesArgsSchema = Schema.Struct({
-  draftId: Schema.String.annotations({
-    description: "Character Draft id returned by create_character_draft.",
-  }),
-  expectedRevision: NonNegativeIntegerSchema.annotations({
-    description:
-      "Current draft revision from draft.revision or storedDraft.revision.",
-  }),
-  fills: Schema.Array(CreationFillArgsSchema).annotations({
-    description:
-      "Atomic batch of current creation-hole fills. Copy holeId and optionIds from discover_creation_holes or the prior tool response.",
-  }),
+  draftId: Schema.String.pipe(
+    Schema.annotate({
+      description: "Character Draft id returned by create_character_draft.",
+    }),
+  ),
+  expectedRevision: NonNegativeIntegerSchema.pipe(
+    Schema.annotate({
+      description:
+        "Current draft revision from draft.revision or storedDraft.revision.",
+    }),
+  ),
+  fills: Schema.Array(CreationFillArgsSchema).pipe(
+    Schema.annotate({
+      description:
+        "Atomic batch of current creation-hole fills. Copy holeId and optionIds from discover_creation_holes or the prior tool response.",
+    }),
+  ),
 });
 
 type FillCreationHolesArgs = Schema.Schema.Type<

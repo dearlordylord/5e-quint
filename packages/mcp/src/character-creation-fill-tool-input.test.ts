@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { decodeFillCreationHolesArgs } from "./character-creation-fill-tool-input.ts";
@@ -6,7 +6,9 @@ import { decodeFillCreationHolesArgs } from "./character-creation-fill-tool-inpu
 describe("character creation fill tool input", () => {
   test("reports arguments rejected by the boundary schema", () => {
     expect(
-      Either.isLeft(decodeFillCreationHolesArgs(null, "fill_creation_holes")),
+      Result.isFailure(
+        decodeFillCreationHolesArgs(null, "fill_creation_holes"),
+      ),
     ).toBe(true);
   });
 });
