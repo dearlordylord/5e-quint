@@ -53,7 +53,7 @@ import {
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
 } from "../unit-feature-support.ts";
 import { Match, Schema } from "effect";
-import { SpellExecutionFactsSchema } from "./spell-execution-facts.ts";
+import { SpellExecutionFactsSchema } from "./spell-execution-facts-codec.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
   UnitSupportProcedureExecutionSchema,
