@@ -46,6 +46,24 @@ export type RawCorrespondenceBindingInput = {
   readonly readFile?: (absolutePath: string) => string;
 };
 
+type RawCorrespondenceSourceRead =
+  | { readonly tag: "read"; readonly contents: string }
+  | { readonly tag: "unreadable"; readonly message: string };
+
+function readRawCorrespondenceSource(
+  readFile: (absolutePath: string) => string,
+  absolutePath: string,
+): RawCorrespondenceSourceRead {
+  try {
+    return { tag: "read", contents: readFile(absolutePath) };
+  } catch (error) {
+    return {
+      tag: "unreadable",
+      message: error instanceof Error ? error.message : String(error),
+    };
+  }
+}
+
 export function parseRawCorrespondenceSource(
   source: string,
 ): ParsedRawCorrespondenceSource | undefined {
@@ -116,18 +134,16 @@ export function bindRawCorrespondence(
 
   const readFile =
     input.readFile ?? ((path: string) => readFileSync(path, "utf8"));
-  let contents: string;
-  try {
-    contents = readFile(absolutePath);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
+  const sourceRead = readRawCorrespondenceSource(readFile, absolutePath);
+  if (sourceRead.tag === "unreadable") {
     return {
       tag: "invalid",
       source: input.source,
       reason: "unreadable-source",
-      message: `Unable to read ${parsed.path}: ${message}`,
+      message: `Unable to read ${parsed.path}: ${sourceRead.message}`,
     };
   }
+  const contents = sourceRead.contents;
 
   const lineStarts = [0];
   for (let index = contents.indexOf("\n"); index !== -1; ) {
