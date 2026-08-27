@@ -60,6 +60,23 @@ describe("battle lifecycle admission issue aggregation", () => {
     });
   }
 
+  function missingWeaponPresentationCombatant(id: string, initiative: number) {
+    const character = characterSeed({
+      combatantId: combatantId(id),
+      initiative,
+    });
+    if (character.creatureInit.kind !== "character") {
+      throw new Error("Expected character fixture.");
+    }
+    return {
+      ...character,
+      creatureInit: {
+        ...character.creatureInit,
+        characterUnitRefs: [],
+      },
+    };
+  }
+
   test("startBattle returns a single leaf issue when there is one admission failure", () => {
     const result = startBattle({
       battleId: battleId("single-issue"),
@@ -173,6 +190,86 @@ describe("battle lifecycle admission issue aggregation", () => {
         ],
       });
     }
+  });
+
+  test.each([
+    {
+      name: "invalid entry first",
+      combatants: [
+        mismatchedMainHandCombatant("shared-combatant"),
+        characterSeed({
+          combatantId: combatantId("shared-combatant"),
+          initiative: 16,
+        }),
+      ],
+      issues: [
+        { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+        {
+          tag: "battleStateInitIssue",
+          message: "Duplicate combatant id: shared-combatant",
+        },
+      ],
+    },
+    {
+      name: "valid entry first",
+      combatants: [
+        characterSeed({
+          combatantId: combatantId("shared-combatant"),
+          initiative: 20,
+        }),
+        mismatchedMainHandCombatant("shared-combatant"),
+      ],
+      issues: [
+        {
+          tag: "battleStateInitIssue",
+          message: "Duplicate combatant id: shared-combatant",
+        },
+        { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+      ],
+    },
+  ])(
+    "startBattle retains duplicate and admission issues when $name",
+    ({ combatants, issues }) => {
+      const result = startBattle({
+        battleId: battleId(`duplicate-and-admission-${issues.length}`),
+        combatants,
+      });
+
+      expect(result).toEqual(
+        Result.fail({
+          tag: "battleStateInitIssues",
+          issues,
+        }),
+      );
+    },
+  );
+
+  test("startBattle accumulates missing weapon presentation sources across characters", () => {
+    const result = startBattle({
+      battleId: battleId("aggregate-presentation-sources"),
+      combatants: [
+        missingWeaponPresentationCombatant("missing-source-first", 20),
+        missingWeaponPresentationCombatant("missing-source-second", 18),
+      ],
+    });
+
+    expect(result).toEqual(
+      Result.fail({
+        tag: "battleStateInitIssues",
+        issues: [
+          {
+            tag: "battleStateInitIssue",
+            message:
+              "Character missing-source-first weapon weapon_longsword has missing authored presentation source.",
+          },
+          {
+            tag: "battleStateInitIssue",
+            message:
+              "Character missing-source-second weapon weapon_longsword has missing authored presentation source.",
+          },
+        ],
+      }),
+    );
   });
 
   test("addBattleCombatant follows the same leaf/aggregate contract as startBattle", () => {

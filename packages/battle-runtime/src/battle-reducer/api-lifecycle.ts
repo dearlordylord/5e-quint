@@ -236,13 +236,15 @@ export function startBattle(
     import("../battle-runtime-context.ts").BattleStatBlockPresentationSource
   >();
   const initializationIssues: BattleStateInitLeafIssue[] = [];
+  const seenCombatantIds = new Set<CombatantId>();
   for (const combatant of input.combatants) {
-    if (combatants.has(combatant.combatantId)) {
+    const duplicateCombatantId = seenCombatantIds.has(combatant.combatantId);
+    seenCombatantIds.add(combatant.combatantId);
+    if (duplicateCombatantId) {
       initializationIssues.push({
         tag: "battleStateInitIssue",
         message: `Duplicate combatant id: ${combatant.combatantId}`,
       });
-      continue;
     }
     const positiveHpUnconsciousIssue =
       positiveHpUnconsciousInitIssue(combatant);
@@ -272,6 +274,7 @@ export function startBattle(
       });
       continue;
     }
+    if (duplicateCombatantId) continue;
     combatants.set(combatant.combatantId, admission.creature);
     if ("runtimeContext" in admission) {
       characterContexts.set(combatant.combatantId, admission.runtimeContext);
@@ -325,9 +328,11 @@ export function startBattle(
     if (!isCharacterBattleCreatureState(combatant)) continue;
     const characterContext = characterContexts.get(combatantId);
     if (characterContext === undefined) {
-      return battleStateInitIssue(
-        `Character ${combatantId} is missing its runtime context.`,
-      );
+      initializationIssues.push({
+        tag: "battleStateInitIssue",
+        message: `Character ${combatantId} is missing its runtime context.`,
+      });
+      continue;
     }
     for (const attack of [
       combatant.origin.attack,
@@ -339,11 +344,22 @@ export function startBattle(
         attack.weapon.weaponUnitId,
       );
       if (Result.isFailure(presentationSource)) {
-        return battleStateInitIssue(
-          `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
-        );
+        initializationIssues.push({
+          tag: "battleStateInitIssue",
+          message: `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
+        });
       }
     }
+  }
+  if (isNonEmptyReadonlyArray(initializationIssues)) {
+    return battleStateInitIssueFromAdmissionIssues(initializationIssues);
+  }
+  for (const [combatantId, combatant] of state.combatants) {
+    if (!isCharacterBattleCreatureState(combatant)) continue;
+    const characterContext = characterContexts.get(combatantId);
+    /* v8 ignore start -- @preserve -- The presentation-validation pass above rejects every admitted character without a runtime context before this execution pass. */
+    if (characterContext === undefined) continue;
+    /* v8 ignore stop -- @preserve */
     const spellAdmission = admitCharacterSpellExecution({
       combatant,
       state,
