@@ -1,8 +1,8 @@
-import { Either, JSONSchema, Schema } from "effect";
+import { Either, JSONSchema } from "effect";
 import {
   OracleCaseSchema,
   OracleEvaluationBatchSchema,
-  OracleTraceStructureSchema,
+  OracleTraceSchema,
   type CreationFillBatch,
   type FreshSheetInput,
   type OracleCase,
@@ -20,7 +20,6 @@ import {
   canonicalizeCaseInput,
   canonicalizeTraceInput,
 } from "./oracle-input-canonical.ts";
-import { validOracleTraceLifecycle } from "./oracle-lifecycle.ts";
 
 export {
   CreationFillBatchSchema,
@@ -29,7 +28,6 @@ export {
   OracleEvaluationBatchSchema,
   OracleTraceSchema,
   OracleTraceStepSchema,
-  OracleTraceStructureSchema,
   WorkflowRejectionSchema,
   oracleCaseSchema,
   oracleEvaluationBatchSchema,
@@ -68,14 +66,25 @@ export function decodeOracleEvaluationBatch(
 export function decodeOracleTrace(
   input: unknown,
 ): Either.Either<OracleTrace, readonly OracleDecodeIssue[]> {
-  const decoded = decodeWithSchema(
-    OracleTraceStructureSchema,
-    canonicalizeTraceInput(input),
+  const decoded = decodeWithSchema(OracleTraceSchema, canonicalizeTraceInput(input), {
+    classifyRefinement: (actual, path) =>
+      (path === "" || path === "/steps") &&
+      typeof actual === "object" &&
+      actual !== null &&
+      "steps" in actual &&
+      Array.isArray(actual.steps) &&
+      actual.steps.length > 0
+        ? "invalidLifecycle"
+        : undefined,
+  });
+  if (Either.isRight(decoded)) return decoded;
+  return Either.left(
+    decoded.left.map((issue) =>
+      issue.code === "invalidLifecycle" && issue.path === ""
+        ? { ...issue, path: "/steps" }
+        : issue,
+    ),
   );
-  if (Either.isLeft(decoded)) return decoded;
-  return validOracleTraceLifecycle(decoded.right)
-    ? decoded
-    : Either.left([{ path: "/steps", code: "invalidLifecycle" }]);
 }
 
 export function decodeOracleCaseJson(
@@ -118,7 +127,7 @@ export function oracleEvaluationBatchJsonSchema(): ReturnType<
 }
 
 export function oracleTraceJsonSchema(): ReturnType<typeof JSONSchema.make> {
-  const schema = JSONSchema.make(OracleTraceStructureSchema, {
+  const schema = JSONSchema.make(OracleTraceSchema, {
     target: "jsonSchema2020-12",
   });
   if (
@@ -147,10 +156,6 @@ export function oracleTraceJsonSchema(): ReturnType<typeof JSONSchema.make> {
 
 export type OracleTraceIssueCode = OracleDecodeIssueCode;
 
-// Keep the lifecycle refinement available to callers that need a schema-level
-// parser while retaining the structural schema for portable JSON Schema.
-export const oracleLifecycleTraceSchema = OracleTraceStructureSchema.pipe(
-  Schema.filter(validOracleTraceLifecycle, {
-    message: () => "trace steps do not form a valid Oracle lifecycle",
-  }),
-);
+// Kept as a descriptive alias for clients that used the earlier name. It is
+// the same refined authority, never a weaker structural schema.
+export const oracleLifecycleTraceSchema = OracleTraceSchema;

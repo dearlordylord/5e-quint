@@ -1,6 +1,11 @@
 import type { OracleTraceStep } from "./oracle-case-trace-schema.ts";
 
-type LifecycleState = "creation" | "built" | "sheet" | "terminal";
+type LifecycleState =
+  | "creation"
+  | "built"
+  | "sheet"
+  | "battle"
+  | "terminal";
 
 export function validOracleTraceLifecycle(trace: {
   readonly steps: readonly OracleTraceStep[];
@@ -10,7 +15,7 @@ export function validOracleTraceLifecycle(trace: {
 
   let state: LifecycleState = "creation";
   for (const [stepIndex, step] of trace.steps.entries()) {
-    if (state === "terminal" || state === "sheet") return false;
+    if (state === "terminal" || state === "battle") return false;
 
     switch (step.tag) {
       case "creationStarted":
@@ -27,6 +32,10 @@ export function validOracleTraceLifecycle(trace: {
         if (state !== "built") return false;
         state = "sheet";
         break;
+      case "battleEntered":
+        if (state !== "sheet") return false;
+        state = "battle";
+        break;
       case "creationFillRejected":
       case "creationFinalizationRejected":
         if (state !== "creation") return false;
@@ -34,6 +43,10 @@ export function validOracleTraceLifecycle(trace: {
         break;
       case "characterSheetConstructionRejected":
         if (state !== "built") return false;
+        state = "terminal";
+        break;
+      case "battleEntryRejected":
+        if (state !== "sheet") return false;
         state = "terminal";
         break;
       case "workflowRejected":
@@ -50,5 +63,5 @@ export function validOracleTraceLifecycle(trace: {
     }
   }
 
-  return state === "sheet" || state === "terminal";
+  return state === "battle" || state === "terminal";
 }

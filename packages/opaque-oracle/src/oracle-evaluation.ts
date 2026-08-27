@@ -10,18 +10,36 @@ import {
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import {
+  startBattleFromCharacterBattleRoster,
+  type CharacterBattleEncounterParticipant,
+  type CharacterBattleRuntimeEntryIssue,
+} from "@dnd/character-battle-runtime";
+import {
+  battleId,
+  initiativeScore,
+  snapshotBattle,
+} from "@dnd/battle-runtime";
+import {
   characterSheetId,
   createFreshCharacterSheet,
   freshCharacterSheetProjection,
   type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
-import { Hp } from "@dnd/shared/types";
+import {
+  Hp,
+  Index,
+  resourceCount,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import { Either } from "effect";
+import { Either, Option } from "effect";
 
 import { canonicalizeStringSet } from "./oracle-canonical.ts";
 import {
   type FreshSheetInput,
+  type OracleBattleCheckpoint,
+  type OracleBattleEntryRejection,
+  type OracleBattleRosterEntry,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleTrace,
@@ -30,7 +48,7 @@ import {
 
 export type OracleEvaluationServices = {
   readonly unitLibrary: UnitCatalog;
-  readonly statBlockCatalog?: StatBlockCatalog;
+  readonly statBlockCatalog: StatBlockCatalog;
 };
 
 export type OracleCaseEvaluationInput = OracleEvaluationServices & {
@@ -42,6 +60,7 @@ export const ORACLE_CHARACTER_DRAFT_ID: CharacterDraftId = characterDraftId(
 );
 export const ORACLE_CHARACTER_SHEET_ID: CharacterSheetId =
   characterSheetId("oracle:character");
+export const ORACLE_BATTLE_ID = battleId("oracle:battle");
 
 export function evaluateOracleCase(
   input: OracleCaseEvaluationInput,
@@ -56,16 +75,12 @@ export function evaluateOracleCase(
   ];
   let currentDraft = draft;
 
-  for (
-    let batchIndex = 0;
-    batchIndex < oracleCase.creation.fillBatches.length;
-    batchIndex += 1
-  ) {
+  for (const [batchIndex, fillBatch] of oracleCase.creation.fillBatches.entries()) {
     const result = fillCreationHoles({
       draft: currentDraft,
       unitLibrary,
       expectedRevision: currentDraft.revision,
-      fills: oracleCase.creation.fillBatches[batchIndex]!,
+      fills: fillBatch,
     });
     const projected = characterCreationBatchFactOrDefect(result);
 
@@ -99,18 +114,19 @@ export function evaluateOracleCase(
         tag: "workflowRejected",
         reason: {
           code: "creationInputSurplus",
-          firstUnusedBatchIndex: batchIndex + 1,
+          firstUnusedBatchIndex: Index(batchIndex + 1),
         },
       });
       return oracleTrace(steps);
     }
 
-    return appendFreshSheetStep(
+    return appendFreshSheetAndBattleSteps(
       steps,
       result.finalization.tag === "ready"
         ? result.finalization.build
         : defect("ready finalization was narrowed inconsistently"),
       oracleCase.sheet,
+      oracleCase.battle.roster,
       unitLibrary,
       statBlockCatalog,
     );
@@ -148,12 +164,13 @@ function characterCreationBatchFactOrDefect(
   return projected.right;
 }
 
-function appendFreshSheetStep(
+function appendFreshSheetAndBattleSteps(
   steps: [OracleTraceStep, ...OracleTraceStep[]],
   build: CharacterBuild,
-  input: FreshSheetInput,
+  sheetInput: FreshSheetInput,
+  rosterInput: ReadonlyNonEmptyArray<OracleBattleRosterEntry>,
   unitLibrary: UnitCatalog,
-  statBlockCatalog: StatBlockCatalog | undefined,
+  statBlockCatalog: StatBlockCatalog,
 ): OracleTrace {
   const freshSheet = createFreshCharacterSheet({
     characterId: ORACLE_CHARACTER_SHEET_ID,
@@ -162,12 +179,12 @@ function appendFreshSheetStep(
     hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary,
-    ...(input.tag === "wildShapeKnownForms"
+    ...(sheetInput.tag === "wildShapeKnownForms"
       ? {
           druidWildShapeKnownFormStatBlockIds: canonicalizeStringSet(
-            input.statBlockIds,
+            sheetInput.statBlockIds,
           ),
-          ...(statBlockCatalog === undefined ? {} : { statBlockCatalog }),
+          statBlockCatalog,
         }
       : {}),
   });
@@ -178,11 +195,220 @@ function appendFreshSheetStep(
     });
     return oracleTrace(steps);
   }
+
   steps.push({
     tag: "characterSheetConstructed",
     sheet: freshCharacterSheetProjection(freshSheet.right),
   });
+
+  const roster = resolveBattleRoster({
+    roster: rosterInput,
+    sheet: freshSheet.right,
+    statBlockCatalog,
+  });
+  if (Either.isLeft(roster)) {
+    steps.push(roster.left);
+    return oracleTrace(steps);
+  }
+
+  const entry = startBattleFromCharacterBattleRoster({
+    battleId: ORACLE_BATTLE_ID,
+    roster: roster.right,
+    unitLibrary,
+    statBlockCatalog,
+  });
+  if (Either.isLeft(entry)) {
+    steps.push(battleEntryRejection(entry.left));
+    return oracleTrace(steps);
+  }
+
+  const snapshot = snapshotBattle(entry.right.session.state);
+  steps.push({
+    tag: "battleEntered",
+    checkpoint: strippedBattleCheckpoint(snapshot),
+    frontier: { acts: snapshot.acts },
+  });
   return oracleTrace(steps);
+}
+
+function resolveBattleRoster(input: {
+  readonly roster: ReadonlyNonEmptyArray<OracleBattleRosterEntry>;
+  readonly sheet: Parameters<typeof freshCharacterSheetProjection>[0];
+  readonly statBlockCatalog: StatBlockCatalog;
+}): Either.Either<
+  ReadonlyNonEmptyArray<CharacterBattleEncounterParticipant>,
+  OracleBattleEntryRejection
+> {
+  type OracleBattleEntryIssue = OracleBattleEntryRejection["issues"][number];
+  const missingStatBlocks: OracleBattleEntryIssue[] = [];
+  const participants: CharacterBattleEncounterParticipant[] = [];
+
+  for (const entry of input.roster) {
+    const ammunitionStocks = entry.ammunitionStocks.map((stock) => ({
+      ammunition: stock.ammunition,
+      remaining: resourceCount(stock.remaining),
+    }));
+    if (entry.origin === "characterSheet") {
+      participants.push({
+        origin: "characterSheet",
+        sheet: input.sheet,
+        combatantId: entry.combatantId,
+        displayName: entry.displayName,
+        initiative: initiativeScore(entry.initiative),
+        ammunitionStocks,
+      });
+      continue;
+    }
+
+    const statBlock = input.statBlockCatalog.getStatBlock(entry.statBlockId);
+    if (Option.isNone(statBlock)) {
+      missingStatBlocks.push({
+        tag: "statBlockUnavailable",
+        statBlockId: entry.statBlockId,
+      });
+      continue;
+    }
+    participants.push({
+      origin: "statBlock",
+      combatantId: entry.combatantId,
+      statBlock: statBlock.value,
+      initiative: initiativeScore(entry.initiative),
+      ammunitionStocks,
+      conditions: entry.conditions,
+      ...(entry.currentHp === undefined
+        ? {}
+        : { currentHp: Hp(entry.currentHp) }),
+      ...(entry.tempHp === undefined ? {} : { tempHp: Hp(entry.tempHp) }),
+    });
+  }
+
+  if (missingStatBlocks.length > 0) {
+    const [firstMissing, ...remainingMissing] = missingStatBlocks;
+    if (firstMissing === undefined) {
+      return Either.left({
+        tag: "battleEntryRejected",
+        issues: [
+          {
+            tag: "battleStateInitRejected",
+            issue: {
+              tag: "battleStateInitIssue",
+              message: "Missing Stat Block issue accumulation was empty.",
+            },
+          },
+        ],
+      });
+    }
+    return Either.left({
+      tag: "battleEntryRejected",
+      issues: [firstMissing, ...remainingMissing],
+    });
+  }
+  const [first, ...rest] = participants;
+  if (first === undefined) {
+    return Either.left({
+      tag: "battleEntryRejected",
+      issues: [
+        {
+          tag: "battleStateInitRejected",
+          issue: {
+            tag: "battleStateInitIssue",
+            message: "Battle roster resolution produced no participants.",
+          },
+        },
+      ],
+    });
+  }
+  return Either.right([first, ...rest]);
+}
+
+function battleEntryRejection(
+  entry: CharacterBattleRuntimeEntryIssue,
+): OracleBattleEntryRejection {
+  const issue = entry.issue;
+  if (issue.tag === "characterBattleEncounterProjectionIssues") {
+    return { tag: "battleEntryRejected", issues: [issue] };
+  }
+  if (issue.tag === "characterBattleEncounterEmptyRoster") {
+    return {
+      tag: "battleEntryRejected",
+      issues: [
+        {
+          tag: "battleStateInitRejected",
+          issue: {
+            tag: "battleStateInitIssue",
+            message: "Character battle encounter requires at least one participant.",
+          },
+        },
+      ],
+    };
+  }
+  if (issue.tag === "battleCreatureInitIssue") {
+    return {
+      tag: "battleEntryRejected",
+      issues: [
+        {
+          tag: "battleCreatureInitRejected",
+          issue,
+        },
+      ],
+    };
+  }
+  return {
+    tag: "battleEntryRejected",
+    issues: [{ tag: "battleStateInitRejected", issue }],
+  };
+}
+
+function strippedBattleCheckpoint(
+  snapshot: ReturnType<typeof snapshotBattle>,
+): OracleBattleCheckpoint {
+  return {
+    round: snapshot.round,
+    currentActorId: snapshot.currentActorId,
+    turnOrder: snapshot.turnOrder,
+    combatants: snapshot.combatants.map((combatant) =>
+      isCharacterBattleCreatureSnapshot(combatant)
+        ? stripCharacterBattleCreatureSnapshot(combatant)
+        : stripStatBlockBattleCreatureSnapshot(combatant),
+    ),
+    companions: snapshot.companions,
+    lightEmitters: snapshot.lightEmitters,
+    obscurementZones: snapshot.obscurementZones,
+    turn: snapshot.turn,
+    readiedResponses: snapshot.readiedResponses,
+    helpAttackMarkers: snapshot.helpAttackMarkers,
+  };
+}
+
+function isCharacterBattleCreatureSnapshot(
+  combatant: ReturnType<typeof snapshotBattle>["combatants"][number],
+): combatant is Extract<
+  ReturnType<typeof snapshotBattle>["combatants"][number],
+  { readonly origin: { readonly kind: "character" } }
+> {
+  return combatant.origin.kind === "character";
+}
+
+function stripCharacterBattleCreatureSnapshot(
+  combatant: Extract<
+    ReturnType<typeof snapshotBattle>["combatants"][number],
+    { readonly origin: { readonly kind: "character" } }
+  >,
+): OracleBattleCheckpoint["combatants"][number] {
+  const { displayName: ignoredDisplayName, origin, ...withoutDisplayName } =
+    combatant;
+  void ignoredDisplayName;
+  return { ...withoutDisplayName, origin };
+}
+
+function stripStatBlockBattleCreatureSnapshot(
+  combatant: Extract<
+    ReturnType<typeof snapshotBattle>["combatants"][number],
+    { readonly origin: { readonly kind: "statBlock" } }
+  >,
+): OracleBattleCheckpoint["combatants"][number] {
+  const { origin, ...withoutOrigin } = combatant;
+  return { ...withoutOrigin, origin };
 }
 
 function oracleTrace(
