@@ -1,5 +1,4 @@
 import { Schema } from "effect";
-import * as AST from "effect/SchemaAST";
 import {
   CharacterBuildFactSchema,
   CharacterCreationBatchFactSchema,
@@ -12,18 +11,14 @@ import {
   type CreationFinalizationRejectionFact,
   type CreationFrontierFact,
 } from "@dnd/character-creation-runtime";
-import {
-  BattleSnapshotSchema,
-  BattleSubjectSchema,
-  type BattleCreatureSnapshot,
-  type BattleSnapshot,
-} from "@dnd/battle-runtime";
+import { BattleSubjectSchema } from "@dnd/battle-runtime";
 import {
   CharacterSheetConstructionIssueSchema,
   FreshCharacterSheetProjectionSchema,
 } from "@dnd/character-sheet-runtime";
 import {
   AmmunitionKindSchema,
+  CONDITIONS,
   StatBlockId as StatBlockIdSchema,
   UnitId as UnitIdSchema,
 } from "@dnd/shared/game-facts";
@@ -31,15 +26,6 @@ import { Index } from "@dnd/shared/types";
 import { CombatantId } from "@dnd/battle-runtime";
 
 import { validOracleTraceLifecycle } from "./oracle-lifecycle.ts";
-
-const BATTLE_SNAPSHOT_INTERNAL_PROPERTIES = new Set<PropertyKey>([
-  "battleId",
-  "executionScopeCursors",
-  "retiredExecutionScopeAllocations",
-  "acts",
-  "pendingInterrupt",
-  "displayName",
-]);
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -87,12 +73,13 @@ const AmmunitionStockInputSchema = Schema.Struct({
   remaining: NonNegativeIntegerSchema,
 });
 
-const OracleBattleConditionsSchema = Schema.Array(
-  Schema.Literal("prone"),
-).pipe(
-  Schema.filter((conditions) => new Set(conditions).size === conditions.length, {
-    message: () => "conditions must not contain duplicate members",
-  }),
+const OracleBattleConditionsSchema = Schema.Array(Schema.Literal("prone")).pipe(
+  Schema.filter(
+    (conditions) => new Set(conditions).size === conditions.length,
+    {
+      message: () => "conditions must not contain duplicate members",
+    },
+  ),
 );
 
 const OracleCharacterSheetRosterEntrySchema = Schema.Struct({
@@ -134,8 +121,7 @@ export const OracleBattleInputSchema = Schema.Struct({
   roster: Schema.Array(OracleBattleRosterEntrySchema).pipe(
     Schema.filter(
       (roster) =>
-        roster.filter((entry) => entry.origin === "characterSheet").length <=
-        1,
+        roster.filter((entry) => entry.origin === "characterSheet").length <= 1,
       {
         message: () =>
           "a Case roster may contain at most one Character Sheet participant",
@@ -290,57 +276,33 @@ export const WorkflowRejectionSchema = Schema.Union(
   }),
 );
 
-export type OracleBattleCreatureSnapshot =
-  | (Omit<
-      Extract<
-        BattleCreatureSnapshot,
-        { readonly origin: { readonly kind: "character" } }
-      >,
-      "displayName" | "origin"
-    > & {
-      readonly origin: Omit<
-        Extract<
-          BattleCreatureSnapshot["origin"],
-          { readonly kind: "character" }
-        >,
-        "displayName"
-      >;
-    })
-  | Omit<
-      Extract<
-        BattleCreatureSnapshot,
-        { readonly origin: { readonly kind: "statBlock" } }
-      >,
-      "displayName"
-    >;
+const OracleBattleCreatureSnapshotSchema = Schema.Struct({
+  combatantId: CombatantId,
+  origin: Schema.Struct({ kind: Schema.Literal("character", "statBlock") }),
+  initiative: IntegerSchema,
+  hp: NonNegativeIntegerSchema,
+  maxHp: NonNegativeIntegerSchema,
+  tempHp: NonNegativeIntegerSchema,
+  armorClass: Schema.Number,
+  size: Schema.String,
+  conditions: Schema.Array(Schema.Literal(...CONDITIONS)),
+});
+export type OracleBattleCreatureSnapshot = Schema.Schema.Type<
+  typeof OracleBattleCreatureSnapshotSchema
+>;
 
-type OracleBattleCheckpointShape = Omit<
-  BattleSnapshot,
-  | "battleId"
-  | "executionScopeCursors"
-  | "retiredExecutionScopeAllocations"
-  | "acts"
-  | "pendingInterrupt"
-  | "combatants"
-> & {
-  readonly combatants: readonly OracleBattleCreatureSnapshot[];
-};
-
-/**
- * The public checkpoint is a projection of the production snapshot. Because
- * projection removes the production root refinement together with private
- * fields, it owns an explicit refinement for the invariants that survive the
- * projection (identity, turn order, and retained cross references).
- */
-const OracleBattleCheckpointShapeSchema = Schema.make<
-  OracleBattleCheckpointShape
->(stripBattleSnapshotAst(BattleSnapshotSchema.ast));
+const OracleBattleCheckpointShapeSchema = Schema.Struct({
+  round: NonNegativeIntegerSchema,
+  currentActorId: CombatantId,
+  turnOrder: Schema.Array(CombatantId),
+  combatants: Schema.NonEmptyArray(OracleBattleCreatureSnapshotSchema),
+});
 
 export const OracleBattleCheckpointSchema =
   OracleBattleCheckpointShapeSchema.pipe(
     Schema.filter(oracleBattleCheckpointInvariantsHold, {
       message: () =>
-        "Battle checkpoint combatants, turn order, current actor, and cross references must agree.",
+        "Battle checkpoint combatants, turn order, and current actor must agree.",
     }),
   );
 export type OracleBattleCheckpoint = Schema.Schema.Type<
@@ -421,137 +383,16 @@ export type OracleCreationBatchFact = Schema.Schema.Type<
   typeof CharacterCreationBatchFactSchema
 >;
 
-function stripBattleSnapshotAst(ast: AST.AST): AST.AST {
-  // The root refinement checks ownership against fields removed above. Its
-  // underlying type remains the complete production shape, but the invariant
-  // predicate cannot run on a stripped projection.
-  const root = AST.isRefinement(ast) ? ast.from : ast;
-  return stripBattleSnapshotAstProperties(root);
-}
-
-function stripBattleSnapshotAstProperties(ast: AST.AST): AST.AST {
-  switch (ast._tag) {
-    case "TypeLiteral":
-      return new AST.TypeLiteral(
-        ast.propertySignatures
-          .filter(
-            (property) =>
-              !BATTLE_SNAPSHOT_INTERNAL_PROPERTIES.has(property.name),
-          )
-          .map(
-            (property) =>
-              new AST.PropertySignature(
-                property.name,
-                stripBattleSnapshotAstProperties(property.type),
-                property.isOptional,
-                property.isReadonly,
-                property.annotations,
-              ),
-          ),
-        ast.indexSignatures.map(
-          (signature) =>
-            new AST.IndexSignature(
-              signature.parameter,
-              stripBattleSnapshotAstProperties(signature.type),
-              signature.isReadonly,
-            ),
-        ),
-        ast.annotations,
-      );
-    case "Union":
-      return AST.Union.make(
-        ast.types.map(stripBattleSnapshotAstProperties),
-        ast.annotations,
-      );
-    case "TupleType":
-      return new AST.TupleType(
-        ast.elements.map(
-          (element) =>
-            new AST.OptionalType(
-              stripBattleSnapshotAstProperties(element.type),
-              element.isOptional,
-              element.annotations,
-            ),
-        ),
-        ast.rest.map(
-          (element) =>
-            new AST.Type(
-              stripBattleSnapshotAstProperties(element.type),
-              element.annotations,
-            ),
-        ),
-        ast.isReadonly,
-        ast.annotations,
-      );
-    case "Refinement":
-      return new AST.Refinement(
-        stripBattleSnapshotAstProperties(ast.from),
-        ast.filter,
-        ast.annotations,
-      );
-    case "Transformation":
-      return new AST.Transformation(
-        stripBattleSnapshotAstProperties(ast.from),
-        stripBattleSnapshotAstProperties(ast.to),
-        ast.transformation,
-        ast.annotations,
-      );
-    default:
-      return ast;
-  }
-}
-
-const COMBATANT_REFERENCE_PROPERTIES = new Set([
-  "actorId",
-  "affectedTargetId",
-  "affectedTargetIds",
-  "allyId",
-  "afterTurnActorId",
-  "attackerId",
-  "beneficiaryId",
-  "carriedCreatureId",
-  "carrierId",
-  "casterId",
-  "combatantId",
-  "companionId",
-  "currentActorId",
-  "damagedId",
-  "fallingCreatureId",
-  "familiarId",
-  "grapplerId",
-  "helperId",
-  "holderCombatantId",
-  "moverId",
-  "observerId",
-  "obscuringCreatureId",
-  "occupantId",
-  "ownerId",
-  "originalTargetId",
-  "previousTargetId",
-  "reactorId",
-  "readiedActorId",
-  "readiedMovementActorId",
-  "readiedSpellCasterId",
-  "reappearanceCombatantId",
-  "responderId",
-  "shoverId",
-  "sourceCombatantId",
-  "sourceOwnerId",
-  "targetEnemyId",
-  "targetId",
-  "targetIds",
-  "triggeringCombatantId",
-  "wardedCombatantId",
-]);
-
-function oracleBattleCheckpointInvariantsHold(
-  checkpoint: OracleBattleCheckpointShape,
-): boolean {
+function oracleBattleCheckpointInvariantsHold(checkpoint: {
+  readonly currentActorId: string;
+  readonly turnOrder: readonly string[];
+  readonly combatants: readonly OracleBattleCreatureSnapshot[];
+}): boolean {
   const combatantIds = checkpoint.combatants.map(
     (combatant) => combatant.combatantId,
   );
   const turnOrder = checkpoint.turnOrder;
-  const liveCombatantIds = new Set(combatantIds);
+  const liveCombatantIds: ReadonlySet<string> = new Set(combatantIds);
 
   return (
     combatantIds.length > 0 &&
@@ -559,138 +400,11 @@ function oracleBattleCheckpointInvariantsHold(
     uniqueValues(combatantIds) &&
     uniqueValues(turnOrder) &&
     turnOrder.length === combatantIds.length &&
-    turnOrder.every((combatantId, index) =>
-      liveCombatantIds.has(combatantId) &&
-      checkpoint.combatants[index]?.combatantId === combatantId,
-    ) &&
     liveCombatantIds.has(checkpoint.currentActorId) &&
-    allCombatantReferencesAreLive(checkpoint, liveCombatantIds) &&
-    executionReferencesAreOwned(checkpoint.combatants)
+    turnOrder.every((combatantId) => liveCombatantIds.has(combatantId))
   );
 }
 
 function uniqueValues(values: readonly string[]): boolean {
   return new Set(values).size === values.length;
-}
-
-function allCombatantReferencesAreLive(
-  value: unknown,
-  liveCombatantIds: ReadonlySet<string>,
-): boolean {
-  if (Array.isArray(value)) {
-    return value.every((member) =>
-      allCombatantReferencesAreLive(member, liveCombatantIds),
-    );
-  }
-  if (typeof value !== "object" || value === null) return true;
-
-  return Object.entries(value).every(([property, member]) => {
-    if (COMBATANT_REFERENCE_PROPERTIES.has(property)) {
-      return Array.isArray(member)
-        ? member.every(
-            (reference) =>
-              typeof reference === "string" &&
-              liveCombatantIds.has(reference),
-          )
-        : typeof member === "string" && liveCombatantIds.has(member);
-    }
-    return allCombatantReferencesAreLive(member, liveCombatantIds);
-  });
-}
-
-function executionReferencesAreOwned(
-  combatants: readonly OracleBattleCreatureSnapshot[],
-): boolean {
-  const scopeRefs: string[] = [];
-  const nestedScopeRefs: string[] = [];
-
-  for (const combatant of combatants) {
-    const originScopeRefs =
-      combatant.origin.kind === "character"
-        ? [
-            combatant.origin.execution.scopeRef,
-            combatant.origin.attackExecution.scopeRef,
-            ...combatant.origin.druidWildShapeAvailableForms.map(
-              (form) => form.execution.scopeRef,
-            ),
-          ]
-        : [combatant.origin.execution.scopeRef];
-    if (
-      !originScopeRefs.every((scopeRef) =>
-        executionScopeBelongsToCombatant(scopeRef, combatant.combatantId),
-      )
-    ) {
-      return false;
-    }
-    scopeRefs.push(...originScopeRefs);
-
-    if (combatant.origin.kind === "character") {
-      nestedScopeRefs.push(
-        ...combatant.origin.execution.procedureBindings.map(
-          (binding) => binding.procedureRef,
-        ),
-        ...combatant.origin.resources.map(
-          (resource) => resource.resourcePoolRef,
-        ),
-        ...[
-          combatant.origin.attackExecution.attackProcedureRef,
-          combatant.origin.attackExecution.unarmedStrikeProcedureRef,
-          combatant.origin.attackExecution.offHandAttackProcedureRef,
-        ].flatMap((procedureRef) =>
-          procedureRef === null ? [] : [procedureRef],
-        ),
-        ...combatant.origin.druidWildShapeAvailableForms.flatMap((form) => [
-          ...form.execution.procedureBindings.map(
-            (binding) => binding.procedureRef,
-          ),
-          ...form.execution.resourcePools.map((pool) => pool.resourcePoolRef),
-        ]),
-      );
-      continue;
-    }
-
-    nestedScopeRefs.push(
-      ...combatant.origin.execution.procedureBindings.map(
-        (binding) => binding.procedureRef,
-      ),
-      ...combatant.origin.execution.resourcePools.map(
-        (pool) => pool.resourcePoolRef,
-      ),
-    );
-  }
-
-  const ownedScopes = new Set(scopeRefs);
-  return (
-    ownedScopes.size === scopeRefs.length &&
-    nestedScopeRefs.every((reference) => {
-      const parsed = parseExecutionReference(reference);
-      return (
-        parsed !== undefined &&
-        typeof parsed.scopeRef === "string" &&
-        ownedScopes.has(parsed.scopeRef)
-      );
-    })
-  );
-}
-
-function executionScopeBelongsToCombatant(
-  scopeRef: string,
-  combatantId: string,
-): boolean {
-  return parseExecutionReference(scopeRef)?.combatantId === combatantId;
-}
-
-function parseExecutionReference(
-  reference: string,
-): { readonly combatantId?: unknown; readonly scopeRef?: unknown } | undefined {
-  try {
-    const parsed: unknown = JSON.parse(reference);
-    if (typeof parsed !== "object" || parsed === null) return undefined;
-    return parsed as {
-      readonly combatantId?: unknown;
-      readonly scopeRef?: unknown;
-    };
-  } catch {
-    return undefined;
-  }
 }
