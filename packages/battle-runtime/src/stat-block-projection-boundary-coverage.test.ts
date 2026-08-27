@@ -299,6 +299,88 @@ describe("Stat Block projection boundary coverage", () => {
     }
   });
 
+  test("retains authored attack descriptions and rejects misplaced Multiattacks", () => {
+    const source = statBlockRecord();
+    const attack = source.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+    );
+    if (
+      attack === undefined ||
+      attack.kind !== "executable" ||
+      attack.procedure.kind !== "attack_roll"
+    ) {
+      throw new Error("Expected a synthetic attack procedure.");
+    }
+    const described: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic_described_attack_form"),
+      name: "Synthetic Described Attack Form",
+      provenance: {
+        kind: "synthetic-test",
+        section: "stat-block-projection-boundary-coverage",
+      },
+      statBlock: {
+        ...source.statBlock,
+        actions: [
+          {
+            ...attack,
+            procedure: {
+              ...attack.procedure,
+              description: "A synthetic authored attack description.",
+            },
+          },
+        ],
+      },
+    };
+    const describedProjection = projectAuthoredStatBlock(described);
+    expect(Either.isRight(describedProjection)).toBe(true);
+    if (Either.isRight(describedProjection)) {
+      expect(describedProjection.right.presentation.orderedProcedures).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            kind: "attack",
+            description: "A synthetic authored attack description.",
+          }),
+        ]),
+      );
+    }
+
+    const multiattack = monsterMultiattackStatBlock();
+    const multiattackEntry = multiattack.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "multiattack",
+    );
+    if (multiattackEntry === undefined) {
+      throw new Error("Expected a synthetic Multiattack procedure.");
+    }
+    const misplaced: StatBlockRecord = {
+      ...multiattack,
+      id: statBlockId("synthetic_misplaced_multiattack_form"),
+      name: "Synthetic Misplaced Multiattack Form",
+      provenance: {
+        kind: "synthetic-test",
+        section: "stat-block-projection-boundary-coverage",
+      },
+      statBlock: {
+        ...multiattack.statBlock,
+        bonusActions: [multiattackEntry],
+      },
+    };
+    expect(projectAuthoredStatBlock(misplaced)).toEqual(
+      Either.left({
+        tag: "battleStatBlockProjectionFailure",
+        reason: "unsupportedProcedureBinding",
+        issues: [
+          {
+            section: "bonusActions",
+            procedureOrdinal: multiattackEntry.procedureOrdinal,
+          },
+        ],
+      }),
+    );
+  });
+
   test("rejects a non-positive authored Multiattack count before execution", () => {
     const source = monsterMultiattackStatBlock();
     const multiattack = source.statBlock.actions?.find(
@@ -559,6 +641,77 @@ describe("Stat Block projection boundary coverage", () => {
     if (Either.isLeft(tooDifficult)) {
       expect(wildShapeKnownFormsIssueMessage(tooDifficult.left.issues)).toBe(
         "Druid Wild Shape battle forms cannot exceed the Druid's maximum Challenge Rating.",
+      );
+    }
+  });
+
+  test("skips unsupported traits and reports prohibited Fly Speed", () => {
+    const source = statBlockCatalog.requireStatBlock("stat_block_rat");
+    const profile = druidWildShapeKnownFormProfile();
+    const unsupportedTraitForm: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic_unsupported_trait_form"),
+      name: "Synthetic Unsupported Trait Form",
+      provenance: {
+        kind: "synthetic-test",
+        section: "stat-block-projection-boundary-coverage",
+      },
+      statBlock: {
+        ...source.statBlock,
+        traits: [
+          {
+            name: "Synthetic Unsupported Trait",
+            description: "A synthetic unsupported trait.",
+            effect: {
+              kind: "caster_shared_resistance",
+              chosenFrom: "resistances_list",
+            },
+          },
+        ],
+      },
+    };
+    const skipped = battleAvailableDruidWildShapeKnownForms({
+      profile,
+      forms: [unsupportedTraitForm],
+    });
+    expect(skipped).toEqual(Either.right([]));
+
+    const flyingForm: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic_flying_form"),
+      name: "Synthetic Flying Form",
+      provenance: {
+        kind: "synthetic-test",
+        section: "stat-block-projection-boundary-coverage",
+      },
+      statBlock: {
+        ...source.statBlock,
+        speeds: [
+          ...source.statBlock.speeds,
+          { kind: "fly", feet: { kind: "literal", value: 30 } },
+        ],
+      },
+    };
+    const ineligible = battleAvailableDruidWildShapeKnownForms({
+      profile,
+      forms: [flyingForm],
+    });
+    expect(ineligible).toEqual(
+      Either.left({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: flyingForm.id,
+            reason: "ineligible",
+            eligibilityIssue: "flySpeed",
+          },
+        ],
+      }),
+    );
+    if (Either.isLeft(ineligible)) {
+      expect(wildShapeKnownFormsIssueMessage(ineligible.left.issues)).toBe(
+        "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
       );
     }
   });
