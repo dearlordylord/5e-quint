@@ -82,7 +82,10 @@ export const BattleMechanicalFrontierSchema = Schema.Union(
     decisionHole: BattleMechanicalInterruptDecisionHoleSchema,
     choices: Schema.NonEmptyArray(BattleMechanicalInterruptChoiceSchema),
   }),
-).annotations({ identifier: "BattleMechanicalFrontier" });
+).annotations({
+  identifier: "BattleMechanicalFrontier",
+  parseOptions: { onExcessProperty: "error" },
+});
 
 export function battleMechanicalFrontier(input: {
   readonly result: Extract<
@@ -116,12 +119,19 @@ export function battleMechanicalFrontier(input: {
     if (pendingInterrupt.choices.length === 0) {
       return Either.left({ tag: "interruptFrontierChoiceSetEmpty" });
     }
-    if (!sameDomainValue(interruptHole, pendingInterrupt.decisionHole)) {
+    const mechanicalInterruptHole =
+      projectMechanicalInterruptHole(interruptHole);
+    const mechanicalPendingInterruptHole = projectMechanicalInterruptHole(
+      pendingInterrupt.decisionHole,
+    );
+    if (
+      !sameDomainValue(mechanicalInterruptHole, mechanicalPendingInterruptHole)
+    ) {
       return Either.left({ tag: "interruptFrontierDecisionHoleMismatch" });
     }
     return Either.right({
       kind: "interruptDecision",
-      decisionHole: projectMechanicalInterruptHole(interruptHole),
+      decisionHole: mechanicalInterruptHole,
       choices: projectMechanicalChoices(pendingInterrupt.choices),
     });
   }

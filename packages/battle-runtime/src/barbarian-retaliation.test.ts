@@ -95,11 +95,26 @@ describe("battle runtime: Barbarian Retaliation", () => {
         Schema.encodeSync(BattleSnapshotSchema)(awaitingRetaliation.snapshot),
       ),
     ).not.toThrow();
+    const forgedRetaliationSnapshot = {
+      ...awaitingRetaliation.snapshot,
+      pendingInterrupt: {
+        ...awaitingRetaliation.snapshot.pendingInterrupt!,
+        choices: awaitingRetaliation.snapshot.pendingInterrupt!.choices.map(
+          (choice) =>
+            choice.kind === "nestedProcedure" &&
+            choice.subject.command === "retaliationAttack"
+              ? {
+                  ...choice,
+                  subject: { ...choice.subject, reactorId: goblinId },
+                }
+              : choice,
+        ),
+      },
+    };
     expect(() =>
-      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)({
-        ...retaliationChoice,
-        reactorId: goblinId,
-      }),
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        Schema.encodeSync(BattleSnapshotSchema)(forgedRetaliationSnapshot),
+      ),
     ).toThrow();
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),

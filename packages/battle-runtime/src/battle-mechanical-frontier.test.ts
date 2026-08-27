@@ -278,6 +278,22 @@ describe("battle mechanical frontier", () => {
         }),
       ),
     ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleMechanicalFrontierSchema)({
+          ...ordinaryFrontier,
+          label: "presentation must not cross the boundary",
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleMechanicalFrontierSchema)({
+          ...interruptFrontier,
+          unknown: true,
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("projects an ordinary frontier without a pending interrupt", () => {
@@ -288,22 +304,27 @@ describe("battle mechanical frontier", () => {
     );
 
     expect(Either.isRight(frontier)).toBe(true);
-    if (Either.isRight(frontier)) {
-      expect(frontier.right.kind).toBe("ordinaryHoles");
-      expect(frontier.right.holes).toHaveLength(result.holes.length);
-      expect(frontier.right.acceptedFills).toEqual([]);
+    if (Either.isLeft(frontier)) {
+      throw new Error("Expected an ordinary mechanical frontier.");
     }
+    if (frontier.right.kind !== "ordinaryHoles") {
+      throw new Error("Expected an ordinary mechanical frontier.");
+    }
+    expect(frontier.right.holes).toHaveLength(result.holes.length);
+    expect(frontier.right.acceptedFills).toEqual([]);
   });
 
   test("projects an interrupt frontier when its decision hole matches the checkpoint", () => {
     const result = ordinaryNeedsHolesResult();
 
     const frontier = battleMechanicalFrontier(
-      frontierInput(
-        result,
-        [runtimeInterruptDecisionHole],
-        runtimePendingInterrupt,
-      ),
+      frontierInput(result, [runtimeInterruptDecisionHole], {
+        ...runtimePendingInterrupt,
+        decisionHole: {
+          ...runtimePendingInterrupt.decisionHole,
+          label: "A different presentation label",
+        },
+      }),
     );
 
     expect(Either.isRight(frontier)).toBe(true);
