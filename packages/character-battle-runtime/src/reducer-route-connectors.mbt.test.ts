@@ -53,9 +53,9 @@ import {
   completeShortRest,
   convertFontOfMagicSorceryPointsToSpellSlot,
   convertFontOfMagicSpellSlotToSorceryPoints,
-  createFreshCharacterSheet,
   finishLongRest,
   finishShortRest,
+  rebuildCharacterSheet,
   startLongRest,
   startShortRest,
   useMonkUncannyMetabolismWhenRollingInitiative,
@@ -1265,7 +1265,7 @@ function featureResourceSheetFixture(
   >,
 ): CharacterSheet {
   return expectRight(
-    createFreshCharacterSheet({
+    rebuildCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
       currentHp: Hp(input.currentHp),
@@ -1273,6 +1273,7 @@ function featureResourceSheetFixture(
       hitPointMaximumReduction: Hp(0),
       conditions: input.conditions ?? [],
       unitLibrary,
+      companion: { tag: "none" },
       ...(input.spellSlotExpenditures === undefined
         ? {}
         : { spellSlotExpenditures: input.spellSlotExpenditures }),
@@ -1468,7 +1469,7 @@ function selectedReferenceRouteEvents(
 }
 
 function characterSheetForBuild(build: CharacterBuild) {
-  const sheet = createFreshCharacterSheet({
+  const sheet = rebuildCharacterSheet({
     characterId: characterSheetId("character:route-origin-feat"),
     build,
     currentHp: Hp(10),
@@ -1476,6 +1477,7 @@ function characterSheetForBuild(build: CharacterBuild) {
     hitPointMaximumReduction: Hp(0),
     conditions: [],
     unitLibrary,
+    companion: { tag: "none" },
   });
   if (Either.isLeft(sheet)) {
     throw new Error(JSON.stringify(sheet.left));
