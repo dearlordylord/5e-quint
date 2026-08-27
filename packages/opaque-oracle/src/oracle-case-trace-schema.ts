@@ -488,6 +488,7 @@ export type OracleBattleAttemptRejection = Schema.Schema.Type<
 
 export const OracleBattleResolvedSchema = Schema.Struct({
   tag: Schema.Literal("battleResolved"),
+  checkpoint: OracleBattleCheckpointSchema,
 }).annotations({
   identifier: "OracleBattleResolved",
   parseOptions: { onExcessProperty: "error" },

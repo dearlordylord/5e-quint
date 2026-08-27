@@ -1225,7 +1225,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(Either.isLeft(invalidAdmission)).toBe(true);
   });
 
-  it("uses a minimal terminal outcome and rejects impossible terminal spellings", () => {
+  it("preserves the terminal checkpoint and rejects redundant terminal spellings", () => {
     const trace = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
@@ -1241,12 +1241,6 @@ describe("Opaque Oracle Case and Trace contract", () => {
 
     const resolved = {
       ...trace,
-      steps: [...trace.steps, { tag: "battleResolved" as const }],
-    };
-    expect(Either.isRight(decodeOracleTrace(resolved))).toBe(true);
-
-    const resolvedWithCheckpoint = {
-      ...trace,
       steps: [
         ...trace.steps,
         {
@@ -1255,7 +1249,22 @@ describe("Opaque Oracle Case and Trace contract", () => {
         },
       ],
     };
-    expect(Either.isLeft(decodeOracleTrace(resolvedWithCheckpoint))).toBe(true);
+    const decodedResolved = decodeOracleTrace(resolved);
+    expect(Either.isRight(decodedResolved)).toBe(true);
+    if (Either.isRight(decodedResolved)) {
+      expect(decodedResolved.right.steps.at(-1)).toEqual({
+        tag: "battleResolved",
+        checkpoint: entered.checkpoint,
+      });
+    }
+
+    const resolvedWithoutCheckpoint = {
+      ...trace,
+      steps: [...trace.steps, { tag: "battleResolved" as const }],
+    };
+    expect(Either.isLeft(decodeOracleTrace(resolvedWithoutCheckpoint))).toBe(
+      true,
+    );
 
     const resolvedWithFrontier = {
       ...trace,
@@ -1274,7 +1283,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ...trace,
       steps: [
         ...trace.steps,
-        { tag: "battleResolved" as const, outcome: "resolved" as const },
+        {
+          tag: "battleResolved" as const,
+          checkpoint: entered.checkpoint,
+          outcome: "resolved" as const,
+        },
       ],
     };
     expect(Either.isLeft(decodeOracleTrace(resolvedWithOutcome))).toBe(true);

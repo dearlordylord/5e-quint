@@ -391,6 +391,7 @@ function appendBattleAttemptResult(input: {
               } satisfies OracleBattleTerminalContinuation;
               input.steps.push({
                 tag: "battleResolved",
+                checkpoint: nextCheckpoint,
               });
               return next;
             },
