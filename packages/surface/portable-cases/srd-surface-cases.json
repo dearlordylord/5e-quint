@@ -43858,7 +43858,7 @@
                   "kind": "textOnly",
                   "procedureOrdinal": 1,
                   "name": "Smother",
-                  "description": "Smother. Melee Attack Roll: +5, reach 5 ft. Hit: 10 (2d6 + 3) Bludgeoning damage. If the target is a Medium or smaller creature, the rug can give it the Grappled condition (escape DC 13) instead of dealing damage. Until the grapple ends, the target has the Blinded and Restrained conditions, is suffocating, and takes 10 (2d6 + 3) Bludgeoning damage at the start of each of its turns. The rug can smother only one creature at a time. While grappling the target, the rug can't take this action, the rug halves the damage it takes (round down), and the target takes the same amount of damage.",
+                  "description": "Melee Attack Roll: +5, reach 5 ft. Hit: 10 (2d6 + 3) Bludgeoning damage. If the target is a Medium or smaller creature, the rug can give it the Grappled condition (escape DC 13) instead of dealing damage. Until the grapple ends, the target has the Blinded and Restrained conditions, is suffocating, and takes 10 (2d6 + 3) Bludgeoning damage at the start of each of its turns. The rug can smother only one creature at a time. While grappling the target, the rug can't take this action, the rug halves the damage it takes (round down), and the target takes the same amount of damage.",
                   "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
@@ -44859,6 +44859,12 @@
                   "modifier": 6
                 }
               ],
+              "skillModifiers": [
+                {
+                  "skill": "perception",
+                  "modifier": 9
+                }
+              ],
               "resistances": {
                 "kind": "fixed",
                 "damageTypes": [
@@ -45701,7 +45707,7 @@
                   "kind": "textOnly",
                   "procedureOrdinal": 1,
                   "name": "Petrifying Gaze (Recharge 4–6)",
-                  "description": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
+                  "description": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
                   "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "some",
@@ -88748,7 +88754,7 @@
                   "kind": "textOnly",
                   "procedureOrdinal": 1,
                   "name": "Smother",
-                  "description": "Smother. Melee Attack Roll: +5, reach 5 ft. Hit: 10 (2d6 + 3) Bludgeoning damage. If the target is a Medium or smaller creature, the rug can give it the Grappled condition (escape DC 13) instead of dealing damage. Until the grapple ends, the target has the Blinded and Restrained conditions, is suffocating, and takes 10 (2d6 + 3) Bludgeoning damage at the start of each of its turns. The rug can smother only one creature at a time. While grappling the target, the rug can't take this action, the rug halves the damage it takes (round down), and the target takes the same amount of damage.",
+                  "description": "Melee Attack Roll: +5, reach 5 ft. Hit: 10 (2d6 + 3) Bludgeoning damage. If the target is a Medium or smaller creature, the rug can give it the Grappled condition (escape DC 13) instead of dealing damage. Until the grapple ends, the target has the Blinded and Restrained conditions, is suffocating, and takes 10 (2d6 + 3) Bludgeoning damage at the start of each of its turns. The rug can smother only one creature at a time. While grappling the target, the rug can't take this action, the rug halves the damage it takes (round down), and the target takes the same amount of damage.",
                   "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "none"
@@ -89749,6 +89755,12 @@
                   "modifier": 6
                 }
               ],
+              "skillModifiers": [
+                {
+                  "skill": "perception",
+                  "modifier": 9
+                }
+              ],
               "resistances": {
                 "kind": "fixed",
                 "damageTypes": [
@@ -90591,7 +90603,7 @@
                   "kind": "textOnly",
                   "procedureOrdinal": 1,
                   "name": "Petrifying Gaze (Recharge 4–6)",
-                  "description": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
+                  "description": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
                   "reason": "unsupported_action_shape",
                   "resourceRefs": {
                     "kind": "some",

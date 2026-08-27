@@ -72,7 +72,7 @@
     "alignment": "unaligned",
     "bonusActions": [
       {
-        "description": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
+        "description": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn if it is still Restrained, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
         "kind": "textOnly",
         "name": "Petrifying Gaze (Recharge 4–6)",
         "procedureOrdinal": 1,

@@ -32,6 +32,7 @@ in { challengeRating = 19
         }
       , initiative = { modifier = 14, score = 24 }
       , passivePerception = 19
+      , skillModifiers = [ { skill = "perception", modifier = +9 } ]
       , resistances = { damageTypes = [ "cold", "lightning" ], kind = "fixed" }
       , savingThrowModifiers =
         [ { ability = "str", modifier = 8 }

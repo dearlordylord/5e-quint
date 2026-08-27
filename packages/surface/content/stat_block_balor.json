@@ -146,6 +146,12 @@
       }
     ],
     "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 9,
+        "skill": "perception"
+      }
+    ],
     "speeds": [
       {
         "feet": {
