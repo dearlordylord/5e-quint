@@ -14,7 +14,10 @@ import {
   startBattle,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
-import { characterSheetBattleInit } from "@dnd/character-battle-runtime";
+import {
+  characterSheetBattleInit,
+  type BattleRosterStatBlockCombatant,
+} from "@dnd/character-battle-runtime";
 import {
   characterSheetDruidWildShapeKnownForms,
   characterSheetId,
@@ -32,7 +35,6 @@ import {
   availableCharacterSession,
   createMcpSessionStore,
 } from "./session-store.ts";
-import type { StatBlockBattleRosterCombatant } from "./battle-roster-session-types.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test character-sheet.class-feature-use-count-resource
@@ -822,7 +824,7 @@ function expectRight<T, E>(value: Either.Either<T, E>): T {
 
 function expectStatBlockCombatant(
   combatant: import("@dnd/battle-runtime").BattleCreatureInit,
-): StatBlockBattleRosterCombatant {
+): BattleRosterStatBlockCombatant {
   if (combatant.creatureInit.kind !== "statBlock") {
     throw new Error("Expected a Stat Block combatant.");
   }

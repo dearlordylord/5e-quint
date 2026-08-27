@@ -10,6 +10,7 @@ import {
   readJsonLines,
   type ArtifactAuthority,
 } from "./artifact-authority.ts";
+import type { ArtifactSha256 } from "./artifact-authority-schema.ts";
 import {
   BenchmarkAuxiliaryModelInvocationLedgerEntrySchema,
   benchmarkModelInvocationEvidenceFromEvents,
@@ -45,16 +46,19 @@ import {
   type BenchmarkContextRole,
 } from "./benchmark-context.ts";
 import { readReviewInvocationEvidenceManifest } from "./review-invocation-evidence.ts";
+import { PortableManifestSchema } from "./artifact-index.ts";
+import { relativePathWithinRoot } from "./repository-path.ts";
 import {
   codexOutputJsonSchema,
-  CurrentScenarioCompositeReviewSchema,
+  classifyScenarioReviewOutputSchema,
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
   ScenarioQualityReviewSchema,
+  scenarioSha256MatchesArtifact,
 } from "./scenario-campaign.ts";
 export {
   codexOutputJsonSchema,
-  CurrentScenarioCompositeReviewSchema,
+  classifyScenarioReviewOutputSchema,
   FinalScenarioReviewSchema,
   HistoricalScenarioCompositeReviewSchema,
 };
@@ -429,22 +433,30 @@ export function summarizeControlledExecution(
   const reportingManifestAuthority = artifactAuthority(
     input.reportingManifestPath,
   );
-  const reportingManifest: unknown = JSON.parse(
-    readFileSync(resolve(repoRoot, input.reportingManifestPath), "utf8"),
+  const reportingManifest = decode(
+    PortableManifestSchema,
+    input.reportingManifestPath,
+  );
+  const reportingManifestRoot = dirname(
+    resolve(repoRoot, reportingManifestAuthority.path),
+  );
+  const reportingTimingPath = relativePathWithinRoot(
+    reportingManifestRoot,
+    resolve(repoRoot, reportingTimingAuthority.path),
+  );
+  const timingAttachment = reportingManifest.controlledAttachments.find(
+    ({ tag, sha256, byteLength }) =>
+      tag === "controlledReportingTiming" &&
+      sha256 === reportingTimingAuthority.sha256 &&
+      byteLength === reportingTimingAuthority.byteLength,
   );
   if (
     reportingTiming.transcriptSha256 !== transcriptAuthority.sha256 ||
     reportingTiming.reviewSha256 !== reviewAuthority.sha256 ||
-    !isJsonRecord(reportingManifest) ||
-    !isJsonRecord(reportingManifest.index) ||
     reportingManifest.index.sha256 !== reportingTiming.indexSha256 ||
-    !Array.isArray(reportingManifest.artifacts) ||
-    !reportingManifest.artifacts.some(
-      (artifact) =>
-        isJsonRecord(artifact) &&
-        artifact.sha256 === reportingTimingAuthority.sha256 &&
-        artifact.byteLength === reportingTimingAuthority.byteLength,
-    )
+    timingAttachment === undefined ||
+    reportingTimingPath === undefined ||
+    timingAttachment.path !== reportingTimingPath
   ) {
     fail("Controlled reporting timing does not match its execution artifacts.");
   }
@@ -2173,14 +2185,16 @@ function benchmarkReviewResult(
       "Validated retained benchmark review envelope became unreadable.",
     );
   }
-  const decoded =
-    profile === "documentDeclarationSet"
-      ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(envelope.right.result)
-      : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
-          onExcessProperty: "error",
-        })(envelope.right.result);
+  const compatibility = classifyScenarioReviewOutputSchema({
+    schemaVersion: envelope.right.schemaVersion,
+    outputJsonSchema: envelope.right.outputJsonSchema,
+  });
+  const expectedTag =
+    profile === "documentDeclarationSet" ? "historical" : "legacyCurrent";
+  if (Either.isLeft(compatibility) || compatibility.right.tag !== expectedTag) {
+    return fail("Validated benchmark review authority became unreadable.");
+  }
+  const decoded = compatibility.right.decodeResult(envelope.right.result);
   if (Either.isLeft(decoded)) {
     return fail("Validated benchmark review authority became unreadable.");
   }
@@ -3382,9 +3396,6 @@ function currentAuthorityContentIssues(
     findings,
     issues,
   );
-  const expectedOutputJsonSchema = codexOutputJsonSchema(
-    CurrentScenarioCompositeReviewSchema,
-  );
   const transcriptAuthority = findings.authorities.find(
     ({ role }) => role === "transcript",
   );
@@ -3555,17 +3566,21 @@ function currentAuthorityContentIssues(
         `Replay authority role ${authority.role} is bound to ${namedReplayStage}, but its envelope is ${replay.reviewStage}.`,
       );
     }
-    const currentResult = Schema.decodeUnknownEither(
-      CurrentScenarioCompositeReviewSchema,
-      { onExcessProperty: "error" },
-    )(replay.result);
+    const compatibility = classifyScenarioReviewOutputSchema({
+      schemaVersion: replay.schemaVersion,
+      outputJsonSchema: replay.outputJsonSchema,
+    });
+    const retainedResult = Either.isRight(compatibility)
+      ? compatibility.right.decodeResult(replay.result)
+      : undefined;
     if (
-      canonicalJson(replay.outputJsonSchema) !==
-        canonicalJson(expectedOutputJsonSchema) ||
-      Either.isLeft(currentResult)
+      Either.isLeft(compatibility) ||
+      retainedResult === undefined ||
+      Either.isLeft(retainedResult) ||
+      compatibility.right.tag === "historical"
     ) {
       issues.push(
-        `Replay authority ${authority.role} is not bound to the current scenario review schema and identity.`,
+        `Replay authority ${authority.role} is not bound to a current scenario review schema and identity.`,
       );
     }
     const invocation = measurement.invocations.find(
@@ -4013,7 +4028,7 @@ function currentAuthorityIssues(
     );
     return issues;
   }
-  const eventAuthorities = new Map(
+  const eventAuthorities = new Map<ArtifactSha256, ArtifactAuthority>(
     measurement.invocationEvents.map((authority) => [
       authority.sha256,
       authority,
@@ -4426,16 +4441,10 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
   readonly measurement: BenchmarkMeasurementWithCurrentEvidence;
   readonly findings: FindingsProjection;
   readonly eventAuthorityCache: EventAuthoritySnapshotCache;
-  readonly expectedReviewSchema:
-    | typeof HistoricalScenarioCompositeReviewSchema
-    | typeof CurrentScenarioCompositeReviewSchema;
+  readonly expectedReviewSchema: "historical" | "legacyCurrent";
 }): readonly string[] {
   const { measurement, findings, expectedReviewSchema } = input;
   const issues: string[] = [];
-  const expectedOutputJsonSchema =
-    expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
-      ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
-      : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
   const candidateInvocations = candidateReplayInvocations(
     measurement.invocations,
   );
@@ -4567,15 +4576,19 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       );
       continue;
     }
-    const currentResult =
-      expectedReviewSchema === HistoricalScenarioCompositeReviewSchema
-        ? Schema.decodeUnknownEither(HistoricalScenarioCompositeReviewSchema, {
-            onExcessProperty: "error",
-          })(replay.right.result)
-        : Schema.decodeUnknownEither(CurrentScenarioCompositeReviewSchema, {
-            onExcessProperty: "error",
-          })(replay.right.result);
-    if (Either.isLeft(currentResult)) {
+    const compatibility = classifyScenarioReviewOutputSchema({
+      schemaVersion: replay.right.schemaVersion,
+      outputJsonSchema: replay.right.outputJsonSchema,
+    });
+    const result = Either.isRight(compatibility)
+      ? compatibility.right.decodeResult(replay.right.result)
+      : undefined;
+    if (
+      Either.isLeft(compatibility) ||
+      result === undefined ||
+      Either.isLeft(result) ||
+      compatibility.right.tag !== expectedReviewSchema
+    ) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not a retained review envelope.`,
       );
@@ -4593,8 +4606,8 @@ function benchmarkRetainedPrePlayReviewIssues(input: {
       replayLifecycleValid &&
       String(replayScenarioId) === String(measurement.scenarioId) &&
       replay.right.sourceGitSha === measurement.implementationGitSha &&
-      canonicalJson(replay.right.outputJsonSchema) ===
-        canonicalJson(expectedOutputJsonSchema);
+      Either.isRight(compatibility) &&
+      compatibility.right.tag === expectedReviewSchema;
     if (!replayIdentityValid) {
       issues.push(
         `Benchmark ${reviewStage} pre-play review authority is not bound to the ${measurement.profile} composite-review schema, scenario identity, implementation revision, and Git authority.`,
@@ -5208,7 +5221,10 @@ function benchmarkAuthorityIssues(
   } else {
     if (
       decodedScenarioReview.right.scenarioId !== measurement.scenarioId ||
-      decodedScenarioReview.right.scenarioSha256 !== bundle.scenario.sha256
+      !scenarioSha256MatchesArtifact({
+        scenarioSha256: decodedScenarioReview.right.scenarioSha256,
+        artifactSha256: bundle.scenario.sha256,
+      })
     ) {
       issues.push(
         "Benchmark scenario-review authority is not bound to the scenario bundle identity.",
@@ -5328,8 +5344,8 @@ function benchmarkAuthorityIssues(
         eventAuthorityCache,
         expectedReviewSchema:
           measurement.profile === "documentDeclarationSet"
-            ? HistoricalScenarioCompositeReviewSchema
-            : CurrentScenarioCompositeReviewSchema,
+            ? "historical"
+            : "legacyCurrent",
       }),
     );
     issues.push(...benchmarkCompleteEvidenceIssues({ measurement, findings }));
@@ -5391,7 +5407,7 @@ function benchmarkAuthorityIssues(
       "Each benchmark invocation must have exactly one retained event authority.",
     );
   }
-  const eventAuthorities = new Map(
+  const eventAuthorities = new Map<ArtifactSha256, ArtifactAuthority>(
     measurement.invocationEvents.map((authority) => [
       authority.sha256,
       authority,

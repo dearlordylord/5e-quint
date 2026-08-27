@@ -3,6 +3,7 @@ import {
   characterBuildHitPoints,
   characterCreationIssueMessage,
   type CharacterBuild,
+  type CharacterBuildProjectionIssue,
   type UnitCatalog,
 } from "@dnd/character-creation-runtime";
 import {
@@ -19,7 +20,12 @@ import {
   type RuntimeHole,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { ElapsedTimeTicks } from "@dnd/shared/elapsed-time";
-import { DieRollResult, Hp, type Hp as HpType } from "@dnd/shared/types";
+import {
+  DieRollResult,
+  Hp,
+  type Hp as HpType,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import { Either } from "effect";
 
 import {
@@ -52,6 +58,16 @@ const CHARACTER_SHEET_HIT_POINT_MAXIMUM_PROJECTION_ROUTE = [
     owner: "buildProjection",
   },
 ] as const satisfies CharacterSheetHitPointMaximumProjection["qRoute"];
+
+/**
+ * Character Sheet HP projection failures retain the original Character Build
+ * leaves for battle admission. The ordinary Sheet API continues to expose a
+ * presentation-only Character Sheet issue for callers that do not need those
+ * structured causes.
+ */
+export type CharacterSheetHitPointMaximumProjectionIssue =
+  | CharacterSheetIssue
+  | ReadonlyNonEmptyArray<CharacterBuildProjectionIssue>;
 
 export function characterSheetHitPoints(
   input: CharacterSheetHitPointsInput,
@@ -138,10 +154,32 @@ export function characterSheetHitPointMaximumProjection(input: {
   CharacterSheetHitPointMaximumProjection,
   CharacterSheetIssue
 > {
-  const normalHitPointMaximum = characterSheetBuildNormalHitPointMaximum({
-    build: input.sheet.build,
-    unitLibrary: input.unitLibrary,
-  });
+  const projection = characterSheetHitPointMaximumProjectionWithIssues(input);
+  if (Either.isLeft(projection)) {
+    return characterSheetIssue(
+      characterSheetHitPointMaximumProjectionIssueMessage(projection.left),
+    );
+  }
+  return Either.right(projection.right);
+}
+
+/**
+ * Project a Character Sheet HP maximum while retaining every independent
+ * Character Build projection cause. This is the structured companion to
+ * characterSheetHitPointMaximumProjection's presentation-only failure.
+ */
+export function characterSheetHitPointMaximumProjectionWithIssues(input: {
+  readonly sheet: Pick<CharacterSheet, "build" | "hitPointMaximumReduction">;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  CharacterSheetHitPointMaximumProjection,
+  CharacterSheetHitPointMaximumProjectionIssue
+> {
+  const normalHitPointMaximum =
+    characterSheetBuildNormalHitPointMaximumWithIssues({
+      build: input.sheet.build,
+      unitLibrary: input.unitLibrary,
+    });
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: normal or reduced HP maximum cannot be projected from the retained build. */
   if (Either.isLeft(normalHitPointMaximum)) {
     return Either.left(normalHitPointMaximum.left);
@@ -160,6 +198,20 @@ export function characterSheetHitPointMaximumProjection(input: {
     hitPointMaximumReduction: input.sheet.hitPointMaximumReduction,
     qRoute: CHARACTER_SHEET_HIT_POINT_MAXIMUM_PROJECTION_ROUTE,
   });
+}
+
+function characterSheetHitPointMaximumProjectionIssueMessage(
+  issue: CharacterSheetHitPointMaximumProjectionIssue,
+): string {
+  return isCharacterBuildProjectionIssues(issue)
+    ? issue.map(characterCreationIssueMessage).join("; ")
+    : issue.message;
+}
+
+function isCharacterBuildProjectionIssues(
+  issue: CharacterSheetHitPointMaximumProjectionIssue,
+): issue is ReadonlyNonEmptyArray<CharacterBuildProjectionIssue> {
+  return Array.isArray(issue);
 }
 
 export function characterSheetHitPointsCurrentHp(
@@ -336,13 +388,28 @@ function characterSheetBuildNormalHitPointMaximum(input: {
   >;
   readonly unitLibrary: UnitCatalog;
 }): Either.Either<HpType, CharacterSheetIssue> {
-  const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
+  const hitPoints = characterSheetBuildNormalHitPointMaximumWithIssues(input);
   /* v8 ignore start -- @preserve -- Malformed build/catalog correlation: character creation cannot project the retained build's normal HP maximum. */
   if (Either.isLeft(hitPoints))
     return characterSheetIssue(
       hitPoints.left.map(characterCreationIssueMessage).join("; "),
     );
   /* v8 ignore stop -- @preserve */
+  return Either.right(hitPoints.right);
+}
+
+function characterSheetBuildNormalHitPointMaximumWithIssues(input: {
+  readonly build: Pick<
+    CharacterBuild,
+    "progression" | "species" | "abilityScores" | "features"
+  >;
+  readonly unitLibrary: UnitCatalog;
+}): Either.Either<
+  HpType,
+  ReadonlyNonEmptyArray<CharacterBuildProjectionIssue>
+> {
+  const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
+  if (Either.isLeft(hitPoints)) return Either.left(hitPoints.left);
   return Either.right(Hp(Number(hitPoints.right.maximum)));
 }
 

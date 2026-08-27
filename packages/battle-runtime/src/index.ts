@@ -2,6 +2,7 @@ export {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
+  BattleCompanionFormId,
   BattleDancingLightId,
   BattleId,
   BattleLineDirectionId,
@@ -18,6 +19,7 @@ export {
   battleAttackProcedureExecutionRef,
   battleAreaId,
   battleCharacterExecutionScopeRef,
+  battleCompanionFormId,
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
   battleStatBlockExecutionScopeRef,
@@ -375,6 +377,7 @@ export type {
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
   BattleCreatureInit,
+  BattleStatBlockCreatureInitResult,
   BattlePositiveHpUnconscious,
   BattleUnitRef,
   BattleWalkSpeed,
@@ -526,6 +529,11 @@ export {
   type BattleStatBlockRechargeRollHole,
   type BattleStatBlockRechargeRollResult,
   type BattleState,
+  type BattleInitializationIssue,
+  type BattleInitializationIssueFact,
+  type BattleInitializationIssueFacts,
+  type BattleInitializationLeafIssue,
+  type BattleStatBlockInitializationIssue,
   type BattleStateInitIssue,
   type BattleStateInitLeafIssue,
   type BattleSuccessfulAbilityCheckFacts,
@@ -579,11 +587,14 @@ export {
 export {
   addBattleRuntimeCombatant,
   applyInitiativeSwap,
+  battleInitializationIssueFactFields,
+  battleInitializationIssueLeaves,
   finishInitialInitiativeSetup,
   removeBattleRuntimeCombatants,
   requiredInitiativeRollModeForCombatant,
   startBattle,
   startBattleWithInitialInitiativeSetup,
+  type BattleStartInput,
   type InitialInitiativeSetup,
   type InitiativeSwapCandidateWitness,
 } from "./battle-reducer/api-lifecycle.ts";
@@ -626,6 +637,7 @@ export {
 } from "./battle-reducer/damage-apply.ts";
 export { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
 export {
+  battleStateInitIssueLeaves,
   battleStateInitIssueMessage,
   concentrationSavingThrowDc,
   scoreModifier,

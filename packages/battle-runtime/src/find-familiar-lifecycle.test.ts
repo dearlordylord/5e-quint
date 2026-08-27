@@ -1253,8 +1253,115 @@ describe("Find Familiar lifecycle", () => {
     ).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "companionOwnerRuntimeContextMissing",
+        ownerId: casterId,
         message:
           "Retained companion admission owner has no authored runtime context.",
+      }),
+    );
+
+    let presentationCatalogLookups = 0;
+    const presentationStatBlockMissing = admitCompanionToBattleRuntime({
+      session,
+      ownerId: casterId,
+      companionId: familiarId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:presentation-missing-stat-block",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      catalog: {
+        ...statBlockCatalog,
+        getStatBlock: (statBlockId) => {
+          presentationCatalogLookups += 1;
+          return presentationCatalogLookups === 1
+            ? statBlockCatalog.getStatBlock(statBlockId)
+            : Option.none();
+        },
+      },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "embodiedOutsideBattle",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
+        },
+        creatureTypeOverride: firstTypeOverride.creatureType,
+        hitPoints: {
+          currentHp: positiveCompanionHp(1),
+          tempHp: Hp(0),
+        },
+        ammunitionStocks: [],
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
+    });
+    expect(presentationStatBlockMissing).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        kind: "companionPresentationStatBlockMissing",
+        companionCombatantId: familiarId,
+        statBlockId: parseSharedStatBlockId("stat_block_cat"),
+        message:
+          "Committed companion presentation Stat Block is missing from the catalog.",
+      }),
+    );
+
+    const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const malformedSelectedStatBlock = {
+      ...cat,
+      statBlock: {
+        ...cat.statBlock,
+        ac: { kind: "caster_derived", source: "spell_save_dc" } as const,
+      },
+    };
+    const malformedSelectedStatBlockAdmission = admitCompanionToBattleRuntime({
+      session,
+      ownerId: casterId,
+      companionId: familiarId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:malformed-selected-stat-block",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      catalog: {
+        ...statBlockCatalog,
+        getStatBlock: () => Option.some(malformedSelectedStatBlock),
+      },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "embodiedOutsideBattle",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
+        },
+        creatureTypeOverride: firstTypeOverride.creatureType,
+        hitPoints: {
+          currentHp: positiveCompanionHp(1),
+          tempHp: Hp(0),
+        },
+        ammunitionStocks: [],
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
+    });
+    expect(malformedSelectedStatBlockAdmission).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        kind: "statBlockSourceInvalid",
+        statBlockId: parseSharedStatBlockId("stat_block_cat"),
+        constraint: "literalArmorClassRequired",
+        message: "Battle runtime requires literal Stat Block Armor Class.",
       }),
     );
 
@@ -1501,6 +1608,13 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(collision)).toBe(true);
     if (Either.isRight(collision)) return;
+    expect(collision.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionDurableIdentityInUse",
+      ownerId: otherOwnerId,
+      durableCompanionId: "durable:first",
+      existingOwnerId: casterId,
+    });
     expect(battleStateInitIssueMessage(collision.left)).toBe(
       "Companion admission identity is already used by another companion.",
     );
@@ -1614,6 +1728,11 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
+    expect(admitted.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionDurableIdentityMissing",
+      ownerId: casterId,
+    });
     expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Companion admission requires durable id.",
     );
@@ -1660,6 +1779,13 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
+    expect(admitted.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionFormResolvedStatBlockMismatch",
+      formAccess: "findFamiliar",
+      expectedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
+      resolvedStatBlockId: parseSharedStatBlockId("stat_block_owl"),
+    });
     expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Retained familiar form proof resolved Stat Block mismatch: stat_block_owl.",
     );
@@ -1711,6 +1837,14 @@ describe("Find Familiar lifecycle", () => {
 
     expect(Either.isLeft(admitted)).toBe(true);
     if (Either.isRight(admitted)) return;
+    expect(admitted.left).toMatchObject({
+      tag: "battleStateInitIssue",
+      kind: "companionFormSelectionStatBlockInvalid",
+      formAccess: "findFamiliar",
+      selectedStatBlockId: parseSharedStatBlockId("stat_block_goblin_warrior"),
+      expectedCreatureType: "beast",
+      expectedChallengeRating: 0,
+    });
     expect(battleStateInitIssueMessage(admitted.left)).toBe(
       "Retained familiar Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block: stat_block_goblin_warrior.",
     );
@@ -4669,7 +4803,14 @@ describe("Find Familiar lifecycle", () => {
           : combatant,
       ),
     });
-    expect(Either.isLeft(authoredNameInMechanicalSnapshot)).toBe(true);
+    expect(Either.isRight(authoredNameInMechanicalSnapshot)).toBe(true);
+    if (Either.isRight(authoredNameInMechanicalSnapshot)) {
+      expect(
+        authoredNameInMechanicalSnapshot.right.combatants.find(
+          (combatant) => combatant.combatantId === familiarId,
+        ),
+      ).not.toHaveProperty("displayName");
+    }
     const invalid = Schema.decodeUnknownEither(BattleSnapshotSchema)({
       ...encoded,
       companions: [{ status: "present" }],
@@ -4819,6 +4960,8 @@ describe("Find Familiar lifecycle", () => {
     expect(admitted).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "duplicateCombatantId",
+        combatantId: enemyId,
         message:
           "Find Familiar familiar identity must not identify an ordinary combatant.",
       }),

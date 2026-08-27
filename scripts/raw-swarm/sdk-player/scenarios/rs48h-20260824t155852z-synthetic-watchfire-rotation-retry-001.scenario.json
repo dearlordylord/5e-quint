@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 2,
+  "scenarioId": "rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001",
+  "title": "Synthetic Watchfire rotation retry 001",
+  "purpose": "Explore materially distinct supported target-priority changes across several stat-block turns with movement, reactions, and serious individual objectives.",
+  "authoredSource": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001.md",
+    "byteLength": 2594,
+    "sha256": "9c941aa981140bfb61f39116cc9f406ed66c2a9d61b836d8d3b9ac18fc42b0c7"
+  },
+  "admissionReview": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001.md.scenario-review.json",
+    "byteLength": 14182,
+    "sha256": "ef0aaa586e048d1457efa0b15a92f0f74617c33e4db5d17843518b43be24504c"
+  },
+  "stageFacts": {
+    "path": "scripts/raw-swarm/sdk-player/scenarios/rs48h-20260824t155852z-synthetic-watchfire-rotation-retry-001.md.stage-facts.json",
+    "byteLength": 730,
+    "sha256": "13fded3c08fd93d365a1d77a9c12a4b05d4117496d983cf1fce43a7df57b2051"
+  },
+  "predecessorScenarioIds": [
+    "four-way-crank-control-cycle",
+    "goblin-warrior-skeleton-tracer",
+    "lantern-intercept-pairwise-control",
+    "mounted-dispatch-through-flooded-orchard",
+    "open-grid-wolf-skeleton-pursuit",
+    "orc-fighter-rogue-close-interception",
+    "prone-target-roll-mode-distance-probe",
+    "sand-band-four-skeleton-skirmish",
+    "synthetic-beacon-eight-round-defense",
+    "table-authored-shove-then-grapple",
+    "table-authored-three-shove-cycle",
+    "table-d20-circumstance-advantage-probe-repair-retry",
+    "two-goblins-pursue-skeleton"
+  ]
+}

@@ -172,6 +172,7 @@ describe("battle runtime: setup and discovery", () => {
     expect(Either.isRight(presented)).toBe(true);
     if (Either.isLeft(presented)) return;
     expect(presented.right.combatants[0]?.displayName).toBe("Goblin Warrior");
+    expect(presented.right.combatants[1]?.displayName).toBe("Fighter");
     expect(Schema.is(BattlePresentedSnapshotSchema)(presented.right)).toBe(
       true,
     );
@@ -868,6 +869,11 @@ describe("battle runtime: setup and discovery", () => {
     if (Either.isRight(result)) return;
     expect(result.left).toEqual({
       tag: "battleStateInitIssue",
+      kind: "characterAdmissionInvalid",
+      combatantId: fighterId,
+      phase: "executionBindings",
+      issueIndex: 0,
+      ownerPath: ["initialCombatants", 0],
       message:
         "Ability-modifier resource cap requires the projected ability modifier.",
     });

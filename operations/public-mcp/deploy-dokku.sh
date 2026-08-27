@@ -109,8 +109,8 @@ openai_apps_challenge="$(ssh "dokku@$dokku_host" config:get "$dokku_app" DND_OPE
   echo "$dokku_app has invalid $deployment_environment smoke configuration" >&2
   exit 65
 }
-if [[ "$deployment_environment" == production ]]; then
-  [[ "$publication_mode" == enabled && "$publisher_name" != "5e Quint developers" && -n "$openai_apps_challenge" ]] || {
+if [[ "$deployment_environment" == production && "$publication_mode" == enabled ]]; then
+  [[ "$publisher_name" != "5e Quint developers" && -n "$openai_apps_challenge" ]] || {
     echo "Production requires publication mode, the verified publisher name, and the OpenAI domain challenge" >&2
     exit 65
   }

@@ -110,10 +110,11 @@ supported deployment mode there.
 After release, the commands require live HTTPS health, release and publisher
 pages, and the complete guest newcomer journey to pass. They ignore untracked
 files but refuse uncommitted tracked changes or a branch other than `master`.
-Production additionally refuses to deploy until the application reports
-`production`, publication mode is enabled, the publisher is no longer the
-development placeholder, and the OpenAI domain challenge is configured. The
-operator needs GitHub CLI access to trigger and download workflow artifacts,
+Production may deploy with publication mode disabled so the portal can scan and
+connect to the real origin before identity and domain verification are complete.
+When publication mode is enabled, deployment additionally refuses to proceed
+until the publisher is no longer the development placeholder and the OpenAI
+domain challenge is configured. The operator needs GitHub CLI access to trigger and download workflow artifacts,
 `dokku` SSH access for application operations, and `root` SSH access only for
 the memory preflight and immutable rollback image lookup.
 

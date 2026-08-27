@@ -82,6 +82,14 @@ type ScenarioCatalogueReadSource = Readonly<{
   readonly admissionComparison: ScenarioCatalogueAdmissionComparison;
 }>;
 
+type ScenarioCatalogueScope = "live" | "contained";
+
+type RawSwarmCatalogueScenario = ScenarioCatalogueSource &
+  Readonly<{
+    readonly executionIds: readonly ExecutionId[];
+    readonly benchmarkIds: readonly BenchmarkId[];
+  }>;
+
 export type ScenarioExecutionRecord = Readonly<{
   readonly schemaVersion: 1;
   readonly executionId: ExecutionId;
@@ -274,14 +282,14 @@ export type ScenarioCatalogueFailure =
     }>;
 
 export type RawSwarmCatalogue = Readonly<{
-  readonly scenarios: readonly (ScenarioCatalogueSource & {
-    readonly executionIds: readonly ExecutionId[];
-    readonly benchmarkIds: readonly BenchmarkId[];
-  })[];
+  /** Current admitted Scenarios available to future authoring. */
+  readonly scenarios: readonly RawSwarmCatalogueScenario[];
+  /** Immutable admitted authorities retained only for historical validation. */
+  readonly containedScenarios: readonly RawSwarmCatalogueScenario[];
   readonly rejectedCandidates: readonly RejectedScenarioCandidateRecord[];
 }>;
 
-export function findAdmittedScenarioInCatalogue(input: {
+export function findAuthorableScenarioInCatalogue(input: {
   readonly catalogue: RawSwarmCatalogue;
   readonly scenarioId: ScenarioId;
 }): Either.Either<RawSwarmCatalogue["scenarios"][number], string> {
@@ -290,7 +298,7 @@ export function findAdmittedScenarioInCatalogue(input: {
   );
   return scenario === undefined
     ? Either.left(
-        `Scenario ${input.scenarioId} is not present in the canonically validated admitted catalogue.`,
+        `Scenario ${input.scenarioId} is not present in the canonically validated authorable catalogue.`,
       )
     : Either.right(scenario);
 }
@@ -316,7 +324,10 @@ function nonEmptyIssues<A>(
 
 export function projectRawSwarmCatalogue(
   input: Readonly<{
+    /** Current admitted Scenarios available to future authoring. */
     readonly scenarios: readonly ScenarioCatalogueSource[];
+    /** Immutable admitted authorities retained only for historical validation. */
+    readonly containedScenarios: readonly ScenarioCatalogueSource[];
     readonly executions: readonly ScenarioExecutionRecord[];
     /** Profile records remain distinct from ordinary execution records. */
     readonly executionProfiles?: readonly BenchmarkExecutionProfileDescriptor[];
@@ -325,6 +336,8 @@ export function projectRawSwarmCatalogue(
   }>,
 ): Either.Either<RawSwarmCatalogue, NonEmptyIssues<ScenarioCatalogueFailure>> {
   const issues: ScenarioCatalogueFailure[] = [];
+  const containedScenarioSources = input.containedScenarios;
+  const allScenarioSources = [...input.scenarios, ...containedScenarioSources];
   const executionRecords: readonly ScenarioExecutionRecord[] = [
     ...input.executions,
     ...(input.executionProfiles ?? []).map(
@@ -348,7 +361,7 @@ export function projectRawSwarmCatalogue(
     ),
   ]);
   for (const scenarioId of duplicates(
-    input.scenarios.map(({ scenarioId }) => scenarioId),
+    allScenarioSources.map(({ scenarioId }) => scenarioId),
   )) {
     issues.push({
       tag: "duplicateScenarioId",
@@ -403,7 +416,7 @@ export function projectRawSwarmCatalogue(
   }
 
   const scenarioIds = new Set(
-    input.scenarios.map(({ scenarioId }) => scenarioId),
+    allScenarioSources.map(({ scenarioId }) => scenarioId),
   );
   for (const execution of executionRecords) {
     if (!scenarioIds.has(execution.scenarioId)) {
@@ -466,40 +479,36 @@ export function projectRawSwarmCatalogue(
   const catalogueIssues = nonEmptyIssues(issues);
   if (catalogueIssues !== undefined) return Either.left(catalogueIssues);
 
-  const scenarios = [...input.scenarios]
-    .sort((left, right) =>
-      String(left.scenarioId).localeCompare(String(right.scenarioId)),
-    )
-    .map((scenario) => {
-      const executions = input.executions
-        .concat(
-          (input.executionProfiles ?? []).map(
-            ({ schemaVersion, executionId, scenarioId, evidenceSetId }) => ({
-              schemaVersion,
-              executionId,
-              scenarioId,
-              evidenceSetId,
-            }),
-          ),
-        )
-        .filter(({ scenarioId }) => scenarioId === scenario.scenarioId)
-        .map(({ executionId }) => executionId)
-        .sort((left, right) => String(left).localeCompare(String(right)));
-      const relevantExecutionIds = new Set(executions);
-      const benchmarkIds = input.benchmarks
-        .filter((benchmark) =>
-          benchmarkComparisonTargetsForScenario(
-            benchmark,
-            relevantExecutionIds,
-          ),
-        )
-        .map(({ benchmarkId }) => benchmarkId)
-        .sort((left, right) => String(left).localeCompare(String(right)));
-      return { ...scenario, executionIds: executions, benchmarkIds };
-    });
+  const projectScenarioRecords = (
+    sources: readonly ScenarioCatalogueSource[],
+  ): readonly RawSwarmCatalogueScenario[] =>
+    [...sources]
+      .sort((left, right) =>
+        String(left.scenarioId).localeCompare(String(right.scenarioId)),
+      )
+      .map((scenario) => {
+        const executions = executionRecords
+          .filter(({ scenarioId }) => scenarioId === scenario.scenarioId)
+          .map(({ executionId }) => executionId)
+          .sort((left, right) => String(left).localeCompare(String(right)));
+        const relevantExecutionIds = new Set(executions);
+        const benchmarkIds = input.benchmarks
+          .filter((benchmark) =>
+            benchmarkComparisonTargetsForScenario(
+              benchmark,
+              relevantExecutionIds,
+            ),
+          )
+          .map(({ benchmarkId }) => benchmarkId)
+          .sort((left, right) => String(left).localeCompare(String(right)));
+        return { ...scenario, executionIds: executions, benchmarkIds };
+      });
+  const scenarios = projectScenarioRecords(input.scenarios);
+  const containedScenarios = projectScenarioRecords(containedScenarioSources);
 
   return Either.right({
     scenarios,
+    containedScenarios,
     rejectedCandidates: [...input.rejectedCandidates].sort((left, right) =>
       String(left.candidateId).localeCompare(String(right.candidateId)),
     ),
@@ -911,6 +920,7 @@ function readAuthority(
 function readScenarioCatalogueSource(
   repositoryRoot: string,
   path: string,
+  scope: ScenarioCatalogueScope,
 ): Either.Either<
   ScenarioCatalogueReadSource,
   NonEmptyIssues<CatalogueReadFailure>
@@ -941,7 +951,10 @@ function readScenarioCatalogueSource(
     ]);
   }
   const record = decoded.right;
-  const expectedName = `${record.scenarioId}.scenario.json`;
+  const expectedName =
+    scope === "live"
+      ? `${record.scenarioId}.scenario.json`
+      : `${record.scenarioId}.scenario.contained.json`;
   if (!recordPath.endsWith(`/${expectedName}`)) {
     return Either.left([
       {
@@ -1071,39 +1084,59 @@ export function readRawSwarmCatalogue(
     ]);
   }
   const recordDiscoveryIssues: CatalogueReadFailure[] = [];
-  const recordPaths = Either.try({
-    try: () =>
-      readdirSync(canonicalScenarioDirectory.right)
-        .filter((name) => name.endsWith(".scenario.json"))
-        .sort()
-        .flatMap((name) => {
-          const canonicalRecordPath = canonicalRepositoryReadPath(
-            input.repositoryRoot,
-            resolve(canonicalScenarioDirectory.right, name),
-          );
-          if (Either.isLeft(canonicalRecordPath)) {
-            recordDiscoveryIssues.push({
-              tag: "unreadableCatalogueAuthority",
-              path: resolve(canonicalScenarioDirectory.right, name),
-            });
-            return [];
-          }
-          return [canonicalRecordPath.right];
-        }),
+  const recordNames = Either.try({
+    try: () => readdirSync(canonicalScenarioDirectory.right).sort(),
     catch: (): CatalogueReadFailure => ({
       tag: "unreadableCatalogueAuthority",
       path: canonicalScenarioDirectory.right,
     }),
   });
-  if (Either.isLeft(recordPaths)) return Either.left([recordPaths.left]);
-  const scenarioReads: ScenarioCatalogueReadSource[] = [];
+  if (Either.isLeft(recordNames)) return Either.left([recordNames.left]);
+  const discoverRecordPaths = (suffix: string): readonly string[] =>
+    recordNames.right
+      .filter((name) => name.endsWith(suffix))
+      .flatMap((name) => {
+        const canonicalRecordPath = canonicalRepositoryReadPath(
+          input.repositoryRoot,
+          resolve(canonicalScenarioDirectory.right, name),
+        );
+        if (Either.isLeft(canonicalRecordPath)) {
+          recordDiscoveryIssues.push({
+            tag: "unreadableCatalogueAuthority",
+            path: resolve(canonicalScenarioDirectory.right, name),
+          });
+          return [];
+        }
+        return [canonicalRecordPath.right];
+      });
+  const liveRecordPaths = discoverRecordPaths(".scenario.json").filter(
+    (path) => !path.endsWith(".scenario.contained.json"),
+  );
+  const containedRecordPaths = discoverRecordPaths(".scenario.contained.json");
+  const liveScenarioReads: ScenarioCatalogueReadSource[] = [];
+  const containedScenarioReads: ScenarioCatalogueReadSource[] = [];
   const scenarioIssues: CatalogueReadFailure[] = [...recordDiscoveryIssues];
-  for (const path of recordPaths.right) {
-    const scenario = readScenarioCatalogueSource(input.repositoryRoot, path);
+  for (const path of liveRecordPaths) {
+    const scenario = readScenarioCatalogueSource(
+      input.repositoryRoot,
+      path,
+      "live",
+    );
     if (Either.isLeft(scenario)) scenarioIssues.push(...scenario.left);
-    else scenarioReads.push(scenario.right);
+    else liveScenarioReads.push(scenario.right);
   }
-  const scenarios = scenarioReads.map(({ source }) => source);
+  for (const path of containedRecordPaths) {
+    const scenario = readScenarioCatalogueSource(
+      input.repositoryRoot,
+      path,
+      "contained",
+    );
+    if (Either.isLeft(scenario)) scenarioIssues.push(...scenario.left);
+    else containedScenarioReads.push(scenario.right);
+  }
+  const scenarios = liveScenarioReads.map(({ source }) => source);
+  const containedScenarios = containedScenarioReads.map(({ source }) => source);
+  const allScenarios = [...scenarios, ...containedScenarios];
   const relationshipPaths = relationshipRecordPaths(
     input.repositoryRoot,
     input.evidenceDirectory,
@@ -1142,12 +1175,21 @@ export function readRawSwarmCatalogue(
   const rejectionComparisonIssues = validateRejectedCandidateComparisons({
     records: rejectedCandidates.right,
     paths: relationshipPaths.rejections,
+    scenarios: allScenarios,
+  });
+  const liveAdmissionComparisonIssues = validateCurrentAdmissionComparisons({
+    reads: liveScenarioReads,
     scenarios,
   });
-  const admissionComparisonIssues = validateCurrentAdmissionComparisons({
-    reads: scenarioReads,
-    scenarios,
-  });
+  const containedAdmissionComparisonIssues =
+    validateCurrentAdmissionComparisons({
+      reads: containedScenarioReads,
+      scenarios: allScenarios,
+    });
+  const admissionComparisonIssues = [
+    ...liveAdmissionComparisonIssues,
+    ...containedAdmissionComparisonIssues,
+  ];
   const allReadIssues = nonEmptyIssues([
     ...rejectionComparisonIssues,
     ...admissionComparisonIssues,
@@ -1155,6 +1197,7 @@ export function readRawSwarmCatalogue(
   if (allReadIssues !== undefined) return Either.left(allReadIssues);
   return projectRawSwarmCatalogue({
     scenarios,
+    containedScenarios,
     executions: executions.right,
     executionProfiles: executionProfiles.right,
     benchmarks: benchmarks.right,

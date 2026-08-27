@@ -10,6 +10,7 @@ import {
   type BattleHole,
   type BattleResolutionResult,
   type BattleRuntimeSession,
+  type BattleStateInitIssue,
   battleCreatureInitFromStatBlock as parseBattleCreatureInitFromStatBlock,
   battleId,
   combatantId,
@@ -56,6 +57,7 @@ import {
   createFreshCharacterSheet,
   finishLongRest,
   finishShortRest,
+  rebuildCharacterSheet,
   startLongRest,
   startShortRest,
   useMonkUncannyMetabolismWhenRollingInitiative,
@@ -104,7 +106,7 @@ import {
   settleBattleToCharacterSheetRoute as settleBattleToCharacterSheet,
   characterSheetBattleInitWithRoute,
   settleCharacterSheetFromBattle,
-  startBattleFromCharacterSheetAndStatBlock,
+  composeBattleRoster,
   characterBattleRuntimeIssueMessage,
   type CharacterBattleFeatureResourceRouteObservation,
   type CharacterBattleEncounterCompositionRouteAction,
@@ -135,6 +137,45 @@ function battleCreatureInitFromStatBlock(
       conditions: [],
     }),
   );
+}
+
+type RouteCharacterBattleRuntimeEntry = {
+  readonly session: BattleRuntimeSession;
+  readonly initProjectionRouteEvents: readonly CharacterBattleRouteEvent[];
+};
+
+type RouteCharacterBattleRuntimeEntryIssue = BattleStateInitIssue & {
+  readonly routeEvents: readonly [];
+};
+
+function startBattleFromTestRoster(input: {
+  readonly battleId: Parameters<typeof startBattle>[0]["battleId"];
+  readonly entries: Parameters<typeof composeBattleRoster>[0];
+}): Either.Either<
+  RouteCharacterBattleRuntimeEntry,
+  RouteCharacterBattleRuntimeEntryIssue
+> {
+  const roster = composeBattleRoster(input.entries);
+  if (roster.tag === "rejected") {
+    return Either.left({
+      tag: "battleStateInitIssue" as const,
+      message: `Roster admission failed: ${roster.issues[0].kind}`,
+      routeEvents: [],
+    });
+  }
+  const session = startBattle({
+    battleId: input.battleId,
+    combatants: roster.admissions.map((admission) => admission.combatant),
+  });
+  if (Either.isLeft(session)) {
+    return Either.left({ ...session.left, routeEvents: [] });
+  }
+  return Either.right({
+    session: session.right,
+    initProjectionRouteEvents: roster.admissions.flatMap((admission) =>
+      admission.kind === "characterSheet" ? admission.routeEvents : [],
+    ),
+  });
 }
 
 const MBT_TEST_TIMEOUT_MS = 120_000;
@@ -1264,30 +1305,67 @@ function featureResourceSheetFixture(
     >
   >,
 ): CharacterSheet {
-  return expectRight(
+  const fresh = expectRight(
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
-      currentHp: Hp(input.currentHp),
-      tempHp: Hp(input.tempHp ?? 0),
+      tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
-      conditions: input.conditions ?? [],
+      conditions: [],
       unitLibrary,
-      ...(input.spellSlotExpenditures === undefined
-        ? {}
-        : { spellSlotExpenditures: input.spellSlotExpenditures }),
-      ...(input.resourceExpenditures === undefined
-        ? {}
-        : { resourceExpenditures: input.resourceExpenditures }),
-      ...(input.restFeatureUses === undefined
-        ? {}
-        : { restFeatureUses: input.restFeatureUses }),
       ...(input.druidWildShapeKnownFormStatBlockIds === undefined
         ? {}
         : {
             druidWildShapeKnownFormStatBlockIds:
               input.druidWildShapeKnownFormStatBlockIds,
           }),
+    }),
+  );
+  const rebuildInput = {
+    characterId: fresh.characterId,
+    currentHp: Hp(input.currentHp),
+    tempHp: Hp(input.tempHp ?? 0),
+    hitPointMaximumReduction: Hp(0),
+    conditions: input.conditions ?? [],
+    companion: fresh.companion,
+    unitLibrary,
+    ...(input.spellSlotExpenditures === undefined
+      ? {}
+      : { spellSlotExpenditures: input.spellSlotExpenditures }),
+    ...(input.resourceExpenditures === undefined
+      ? {}
+      : { resourceExpenditures: input.resourceExpenditures }),
+    ...(input.restFeatureUses === undefined
+      ? {}
+      : { restFeatureUses: input.restFeatureUses }),
+    ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormStatBlockIds:
+            input.druidWildShapeKnownFormStatBlockIds,
+        }),
+  };
+  if ("bookOfShadowsPresence" in fresh) {
+    if (fresh.bookOfShadowsPresence === undefined) {
+      return expectRight(
+        rebuildCharacterSheet({
+          ...rebuildInput,
+          build: fresh.build,
+        }),
+      );
+    }
+    return expectRight(
+      rebuildCharacterSheet({
+        ...rebuildInput,
+        build: fresh.build,
+        bookOfShadowsPresence: fresh.bookOfShadowsPresence,
+      }),
+    );
+  }
+  return expectRight(
+    rebuildCharacterSheet({
+      ...rebuildInput,
+      build: fresh.build,
     }),
   );
 }
@@ -1417,7 +1495,7 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
     ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
-    throw new Error(projection.left.issue.message);
+    throw new Error(characterBattleRuntimeIssueMessage(projection.left));
   }
   return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
     (event) => event.owner === "characterBattleBuildProjection",
@@ -1426,27 +1504,43 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
 
 function originFeatSelectedReferenceInitiativeHandoffRoute(): readonly CharacterBattleRouteEvent[] {
   const build = criminalAlertRouteBuild();
-  const entry = startBattleFromCharacterSheetAndStatBlock({
+  const entry = startBattleFromTestRoster({
     battleId: battleId("battle:route-origin-feat-runtime-entry"),
-    character: {
-      sheet: characterSheetForBuild(build),
-      unitLibrary,
-      statBlockCatalog,
-      combatantId: combatantId("combatant:route-origin-feat-runtime-entry"),
-      displayName: "Route Origin Feat Runtime Entry",
-      initiative: alertInitiativeScoreForBuild(build),
-      ammunitionStocks: [],
-    },
-    statBlockBattleInput: {
-      combatantId: combatantId("combatant:route-origin-feat-skeleton"),
-      statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
-      initiative: initiativeScore(10),
-      ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
-      conditions: [],
-    },
+    entries: [
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "available",
+          input: {
+            sheet: characterSheetForBuild(build),
+            unitLibrary,
+            statBlockCatalog,
+            combatantId: combatantId(
+              "combatant:route-origin-feat-runtime-entry",
+            ),
+            displayName: "Route Origin Feat Runtime Entry",
+            initiative: alertInitiativeScoreForBuild(build),
+            ammunitionStocks: [],
+          },
+        },
+      },
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: combatantId("combatant:route-origin-feat-skeleton"),
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(10),
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          },
+        },
+      },
+    ],
   });
   if (Either.isLeft(entry)) {
-    throw new Error(characterBattleRuntimeIssueMessage(entry.left.issue));
+    throw new Error(characterBattleRuntimeIssueMessage(entry.left));
   }
   return selectedReferenceRouteEvents(entry.right.initProjectionRouteEvents);
 }
@@ -1471,7 +1565,6 @@ function characterSheetForBuild(build: CharacterBuild) {
   const sheet = createFreshCharacterSheet({
     characterId: characterSheetId("character:route-origin-feat"),
     build,
-    currentHp: Hp(10),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
@@ -1491,7 +1584,7 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
   return score.right;
 }

@@ -3,12 +3,7 @@ import { resolve } from "node:path";
 
 import { Either, Schema } from "effect";
 
-import {
-  codexOutputJsonSchema,
-  CurrentScenarioCompositeReviewSchema,
-  HistoricalScenarioCompositeReviewSchema,
-  ScenarioCompositeReviewSchema,
-} from "./scenario-campaign.ts";
+import { classifyScenarioReviewOutputSchema } from "./scenario-campaign.ts";
 import { modelInvocationEvidenceFromEvents } from "./model-telemetry.ts";
 import {
   RetainedScenarioReviewInputSchema,
@@ -116,29 +111,27 @@ export function validateRetainedScenarioReviewInvocation(input: {
       `Retained ${reviewStage} review input does not match its invocation event metadata.`,
     );
   }
-  const currentOutputSchema = codexOutputJsonSchema(
-    CurrentScenarioCompositeReviewSchema,
-  );
-  const historicalOutputSchema = codexOutputJsonSchema(
-    HistoricalScenarioCompositeReviewSchema,
-  );
-  if (
-    canonicalJson(retained.outputJsonSchema) !==
-      canonicalJson(currentOutputSchema) &&
-    canonicalJson(retained.outputJsonSchema) !==
-      canonicalJson(historicalOutputSchema)
-  ) {
+  const compatibility = classifyScenarioReviewOutputSchema({
+    schemaVersion: retained.schemaVersion,
+    outputJsonSchema: retained.outputJsonSchema,
+  });
+  if (Either.isLeft(compatibility)) {
     fail(
       `Retained ${reviewStage} review input has an unsupported output schema.`,
     );
   }
-  const output = Schema.decodeUnknownEither(
-    Schema.Struct({ result: ScenarioCompositeReviewSchema }),
-    { onExcessProperty: "error" },
-  )(finalAgentMessage(input.events));
+  const retainedResult = compatibility.right.decodeResult(retained.result);
+  if (Either.isLeft(retainedResult)) {
+    fail(
+      `Retained ${reviewStage} review input result does not match its output schema.`,
+    );
+  }
+  const output = compatibility.right.decodeOutput(
+    finalAgentMessage(input.events),
+  );
   if (
     Either.isLeft(output) ||
-    canonicalJson(output.right.result) !== canonicalJson(retained.result)
+    canonicalJson(output.right.result) !== canonicalJson(retainedResult.right)
   ) {
     fail(
       `Retained ${reviewStage} review input result does not match its invocation event output.`,

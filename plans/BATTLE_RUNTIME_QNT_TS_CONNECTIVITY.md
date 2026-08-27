@@ -88,7 +88,7 @@ flowchart TB
     ProofLane["src/battle-runtime-qnt-proofs.ts + .test.ts<br/>opt-in RUN_QNT_PROOFS=1, one bounded quint test per module"]
     TraceTest["src/battle-trace-contract.test.ts"]
     ReducerTests["focused src/*.test.ts reducer tests"]
-    ClosureGate["scripts/check-mbt-driver-closure.cjs<br/>witness transitive closure budget of 8 files, in pnpm quality"]
+    ClosureGate["scripts/check-mbt-driver-closure.cjs<br/>witness transitive closure budget of 8 files, in pnpm quality:milestone"]
   end
 
   Conc --> Model
@@ -297,7 +297,7 @@ flowchart TB
   a rule inside a witness to avoid an import. The dominant MBT cost is
   import-closure instantiation per trace, hence the 8-file closure budget.
 - The proof lane is opt-in (`pnpm --filter @dnd/battle-runtime
-  test:qnt-proofs`, which sets `RUN_QNT_PROOFS=1`) and self-discovering:
+test:qnt-proofs`, which sets `RUN_QNT_PROOFS=1`) and self-discovering:
   `src/battle-runtime-qnt-proofs.ts` globs every package-local `.qnt` with
   `run test_*` blocks and runs each as its own hard-deadlined `quint test`, so
   a runaway proof fails one module instead of hanging the suite.

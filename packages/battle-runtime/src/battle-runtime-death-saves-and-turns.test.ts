@@ -546,6 +546,10 @@ describe("battle runtime: death saves and turns", () => {
     ).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "positiveHpUnconsciousInvalid",
+        combatantId: wizardId,
+        requirement: "unconsciousCondition",
+        ownerPath: ["initialCombatants", 1],
         message:
           "Knocked Out Unconscious initialization requires the Unconscious condition.",
       }),
@@ -572,6 +576,10 @@ describe("battle runtime: death saves and turns", () => {
       ).toEqual(
         Either.left({
           tag: "battleStateInitIssue",
+          kind: "positiveHpUnconsciousInvalid",
+          combatantId: secondWizardId,
+          requirement: "oneCurrentHp",
+          ownerPath: ["initialCombatants", 1],
           message:
             "Knocked Out Unconscious initialization requires exactly 1 current HP.",
         }),

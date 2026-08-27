@@ -1,0 +1,15 @@
+{
+  "campaignId": "riverstone-relief-48h-authoring",
+  "plannedScenarioId": "synthetic-riverstone-relief",
+  "scenarioTitle": "Synthetic Riverstone relief",
+  "scenarioPurpose": "Explore a materially distinct supported rescue under attack pressure through delegated Character Sheet choices, resource use, movement, and serious opposed objectives.",
+  "evidenceSetId": "riverstone-relief-48h-authoring-evidence",
+  "distributionPreference": "Create a compact available-content scenario that tests supported delegated character choices and a concrete rescue or extraction objective under attack pressure. Seek a materially distinct combination of resource use, movement, attacks, and changing tactical choices against the complete admitted catalogue. Let the supplied capability projection determine representability; do not invent operations, prescribe an expected winner, create an encounter side, or give the player ownership of Table facts.",
+  "contentAvailabilityIntent": "availableOnly",
+  "sdkCapabilityIntent": "supportedOnly",
+  "minimumIterations": 2,
+  "maximumIterations": 4,
+  "candidatesPerIteration": 4,
+  "reviewMilestone": 2,
+  "admitReviewedUnsupported": false
+}

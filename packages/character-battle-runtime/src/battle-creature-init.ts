@@ -1,5 +1,4 @@
 import {
-  battleCreatureInitFromStatBlock,
   battleAvailableDruidWildShapeKnownForms,
   characterBattleResourceForUnit,
   characterBattleResourceMaxPoints,
@@ -9,7 +8,6 @@ import {
   parseSupportedUnitFeatureProfile,
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
   scoreModifier,
-  startBattle,
   initiativeScore,
   type CharacterBattleFeatureInit,
   type CharacterBattleMetamagicInit,
@@ -19,22 +17,17 @@ import {
   type CharacterBattleClassLevels,
   type CharacterBattleCreatureInit,
   type CharacterZeroHpLifecycleInit,
-  type BattleId,
-  type BattleRuntimeSession,
-  type BattleStateInitIssue,
   type CharacterId,
   type CombatantId,
   type BattleCreatureInit,
   type BattleDruidWildShapeKnownForm,
   type InitiativeScore,
-  type StatBlockBattleInitInput,
 } from "@dnd/battle-runtime";
 import {
   characterBuildDruidWildShapeFacts,
   characterBuildFeatureUnitIds,
   characterBuildHitPoints,
   characterBuildProficiencies,
-  characterCreationIssueMessage,
   characterBuildSorcererFontOfMagicFacts,
   characterBuildSorcererMetamagicFacts,
   characterBuildUnitRefs,
@@ -69,6 +62,9 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 import {
   battleCreatureInitIssue,
+  battleCreatureInitIssueMessage,
+  battleCreatureInitIssuesFromCharacterBuildProjection,
+  battleCreatureInitIssuesFromMessages,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
   characterAttackActionOption,
@@ -129,6 +125,17 @@ export type CharacterBuildCreatureInput = {
       >["itemId"];
 };
 
+/** Character-build projection cannot admit a Stat Block creature. */
+export type CharacterBattleCreatureInitResult = Omit<
+  BattleCreatureInit,
+  "creatureInit"
+> & {
+  readonly creatureInit: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >;
+};
+
 export const CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE =
   "Character battle initialization max HP exceeds build-derived max HP.";
 
@@ -154,7 +161,9 @@ export function characterBattleInitiativeScore(input: {
     input.unitLibrary,
   );
   if (Either.isLeft(classLevels)) {
-    return battleCreatureInitIssue(classLevels.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(classLevels.left),
+    );
   }
   const supportProjection = characterBattleSupportProjection(
     input.build,
@@ -163,8 +172,12 @@ export function characterBattleInitiativeScore(input: {
     classLevels.right,
   );
   if (Either.isLeft(supportProjection)) {
-    return battleCreatureInitIssue(
-      supportProjection.left.map((issue) => issue.message).join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      supportProjection.left.map((issue) => issue.message),
+      (issueIndex) => ({
+        kind: "characterBattleSupportProjection",
+        issueIndex,
+      }),
     );
   }
   const hasInitiativeProficiency = supportProjection.right.unitRefs.some(
@@ -188,42 +201,16 @@ export function characterBattleInitiativeScore(input: {
   return Either.right(initiativeScore(input.rollTotal + proficiencyBonus));
 }
 
-export function startBattleFromCharacterBuildAndStatBlock(input: {
-  readonly battleId: BattleId;
-  readonly character: CharacterBuildCreatureInput;
-  readonly statBlockBattleInput: StatBlockBattleInitInput;
-  readonly unitLibrary: UnitCatalog;
-}): Either.Either<
-  BattleRuntimeSession,
-  BattleStateInitIssue | BattleCreatureInitIssue
-> {
-  const characterInit = battleCreatureInitFromCharacterBuild({
-    ...input.character,
-    unitLibrary: input.unitLibrary,
-  });
-  if (Either.isLeft(characterInit)) {
-    return battleCreatureInitIssue(characterInit.left.message);
-  }
-  const statBlockInit = battleCreatureInitFromStatBlock(
-    input.statBlockBattleInput,
-  );
-  if (Either.isLeft(statBlockInit)) return Either.left(statBlockInit.left);
-
-  return startBattle({
-    battleId: input.battleId,
-    combatants: [characterInit.right, statBlockInit.right],
-  });
-}
-
 export function battleCreatureInitFromCharacterBuild(
   input: CharacterBuildCreatureInput & {
     readonly unitLibrary: UnitCatalog;
   },
-): Either.Either<BattleCreatureInit, BattleCreatureInitIssue> {
+): Either.Either<CharacterBattleCreatureInitResult, BattleCreatureInitIssue> {
   const hitPoints = characterBuildHitPoints(input.build, input.unitLibrary);
   if (Either.isLeft(hitPoints)) {
-    return battleCreatureInitIssue(
-      hitPoints.left.map(characterCreationIssueMessage).join("; "),
+    return battleCreatureInitIssuesFromCharacterBuildProjection(
+      hitPoints.left,
+      "hitPoints",
     );
   }
   const buildMaximumHp = Hp(hitPoints.right.maximum);
@@ -243,8 +230,12 @@ export function battleCreatureInitFromCharacterBuild(
     input.unitLibrary,
   );
   if (Either.isLeft(weaponMasteries)) {
-    return battleCreatureInitIssue(
-      weaponMasteries.left.map((issue) => issue.message).join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      weaponMasteries.left.map((issue) => issue.message),
+      () => ({
+        kind: "characterBuildProjection",
+        phase: "equipment",
+      }),
     );
   }
   const currentHp = input.currentHp ?? maxHp;
@@ -310,8 +301,12 @@ export function battleCreatureInitFromCharacterBuild(
     );
     const parsedClassLevels = parseCharacterBattleClassLevels(classLevels);
     if (Either.isLeft(parsedClassLevels)) {
-      return yield* battleCreatureInitIssue(
-        parsedClassLevels.left.messages.join("; "),
+      return yield* battleCreatureInitIssuesFromMessages(
+        parsedClassLevels.left.messages,
+        (issueIndex) => ({
+          kind: "characterBattleClassLevelsProjection",
+          issueIndex,
+        }),
       );
     }
     const supportProjection = characterBattleSupportProjection(
@@ -321,8 +316,12 @@ export function battleCreatureInitFromCharacterBuild(
       classLevels,
     );
     if (Either.isLeft(supportProjection)) {
-      return yield* battleCreatureInitIssue(
-        supportProjection.left.map((issue) => issue.message).join("; "),
+      return yield* battleCreatureInitIssuesFromMessages(
+        supportProjection.left.map((issue) => issue.message),
+        (issueIndex) => ({
+          kind: "characterBattleSupportProjection",
+          issueIndex,
+        }),
       );
     }
     const pactBladeBondedWeaponItemId =
@@ -378,8 +377,9 @@ export function battleCreatureInitFromCharacterBuild(
       input.unitLibrary,
     );
     if (Either.isLeft(proficiencies)) {
-      return yield* battleCreatureInitIssue(
-        proficiencies.left.map(characterCreationIssueMessage).join("; "),
+      return yield* battleCreatureInitIssuesFromCharacterBuildProjection(
+        proficiencies.left,
+        "proficiencies",
       );
     }
     const spellcasting =
@@ -588,7 +588,9 @@ function characterBattleClassLevels(
   for (const entry of progressionClassLevels(build.progression)) {
     const classUnit = getRequiredUnit(unitLibrary, entry.classUnitId);
     if (Either.isLeft(classUnit)) {
-      return battleCreatureInitIssue(classUnit.left.message);
+      return battleCreatureInitIssue(
+        battleCreatureInitIssueMessage(classUnit.left),
+      );
     }
     if (classUnit.right.kind !== "class") {
       return battleCreatureInitIssue(
@@ -676,7 +678,13 @@ export function characterBattleResourceInitsFromBuild(
       ? parseCharacterBattleClassLevels(classLevels.right)
       : Either.right(parsedClassLevels);
   if (Either.isLeft(parsedLevelsResult)) {
-    return battleCreatureInitIssue(parsedLevelsResult.left.messages.join("; "));
+    return battleCreatureInitIssuesFromMessages(
+      parsedLevelsResult.left.messages,
+      (issueIndex) => ({
+        kind: "characterBattleClassLevelsProjection",
+        issueIndex,
+      }),
+    );
   }
   const supportProjection = characterBattleSupportProjection(
     build,
@@ -685,8 +693,12 @@ export function characterBattleResourceInitsFromBuild(
     classLevels.right,
   );
   if (Either.isLeft(supportProjection)) {
-    return battleCreatureInitIssue(
-      supportProjection.left.map(({ message }) => message).join("; "),
+    return battleCreatureInitIssuesFromMessages(
+      supportProjection.left.map(({ message }) => message),
+      (issueIndex) => ({
+        kind: "characterBattleSupportProjection",
+        issueIndex,
+      }),
     );
   }
   const resourceProjectionFacts = characterBattleResourceProjectionFacts(
@@ -740,7 +752,10 @@ function characterBattleResourceInits(
     ...spellAccessResourceProjection.issues,
   ];
   if (issues.length > 0) {
-    return battleCreatureInitIssue(issues.join("; "));
+    return battleCreatureInitIssuesFromMessages(issues, (issueIndex) => ({
+      kind: "characterBattleResourceProjection",
+      issueIndex,
+    }));
   }
   return Either.right([
     ...admittedResourceProjection.resources,
@@ -784,7 +799,7 @@ function characterBattleResourceInitsFromAdmittedUnits(
       druidWildShapeFacts,
     );
     if (Either.isLeft(init)) {
-      issues.push(init.left.message);
+      issues.push(battleCreatureInitIssueMessage(init.left));
     } else {
       resources.push(init.right);
     }

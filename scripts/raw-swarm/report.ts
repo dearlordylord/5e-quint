@@ -1,7 +1,13 @@
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import {
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  realpathSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { Either, Match, Option, Schema } from "effect";
@@ -9,14 +15,17 @@ import { Either, Match, Option, Schema } from "effect";
 import { artifactAuthorityForBytes } from "./artifact-authority.ts";
 import {
   defaultEvidenceSetDirectory,
+  FindingsProjectionSchema,
   findingsArtifactPath,
   findingsTranscriptSha256,
+  portableFindingAuthoritySnapshotForBytes,
   projectExecutionFindings,
-  readFindingsProjection,
+  validateFindingsProjection,
   writeFindingsProjection,
   type FindingAuthority,
   type Finding,
   type FindingIssueLink,
+  type FindingsProjection,
 } from "./findings.ts";
 import { renderFindingsAudit, writeFindingsAudit } from "./findings-audit.ts";
 import { ReviewOutputSchema, VERDICT_CLASSES } from "./review-contract.ts";
@@ -28,8 +37,15 @@ import {
   ingestGenerationFindings,
   inventoryLegacyDatabase,
   openArtifactIndex,
+  openArtifactIndexReadOnly,
+  PortableManifestArtifactSchema,
+  PortableManifestSchema,
+  PortableRelativePathSchema,
   registerIndexArtifact,
   rebuildLegacyArtifactIndex,
+  type PortableManifest,
+  type PortableManifestArtifact,
+  type PortableControlledAttachment,
 } from "./artifact-index.ts";
 import {
   extractSdkTranscriptSequences,
@@ -43,6 +59,10 @@ import {
   sha256Canonical,
   StartedAtSchema,
 } from "./transcript.ts";
+import {
+  canonicalRepositoryReadPath,
+  relativePathWithinRoot,
+} from "./repository-path.ts";
 import {
   EvidenceSetIdSchema,
   ExecutionIdSchema,
@@ -321,6 +341,11 @@ type PersistedExecutionIdentity = Schema.Schema.Type<
 const PersistedExecutionAuditSchema = Schema.Struct({
   ...PersistedExecutionIdentitySchema.fields,
   findingsPath: Schema.String,
+  findingsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  findingsByteLength: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+  ),
 });
 const PersistedExecutionReviewSchema = Schema.Struct({
   ...PersistedExecutionIdentitySchema.fields,
@@ -333,7 +358,384 @@ const PersistedCampaignAuditSchema = Schema.Struct({
   gitSha: GitShaSchema,
   startedAt: StartedAtSchema,
   findingsPath: Schema.String,
+  findingsSha256: Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/)),
+  findingsByteLength: Schema.Number.pipe(
+    Schema.int(),
+    Schema.greaterThanOrEqualTo(0),
+  ),
 });
+
+type IndexedReportArtifact = PortableManifestArtifact;
+
+type PortableReportBundle = Readonly<{
+  readonly root: string;
+  readonly artifacts: ReadonlyMap<string, IndexedReportArtifact>;
+  readonly controlledAttachments: readonly PortableControlledAttachment[];
+}>;
+
+function sha256Bytes(bytes: Uint8Array): string {
+  return createHash("sha256").update(bytes).digest("hex");
+}
+
+function pathIsContained(root: string, candidate: string): boolean {
+  return relativePathWithinRoot(root, candidate) !== undefined;
+}
+
+function canonicalPortableReportIndexPath(dbPath: string): string {
+  try {
+    return realpathSync(resolve(repoRoot, dbPath));
+  } catch (error) {
+    return fail(
+      `Portable report index is unreadable: ${dbPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function readPortableReportManifest(manifestPath: string): PortableManifest {
+  const value = (() => {
+    try {
+      return JSON.parse(readFileSync(manifestPath, "utf8")) as unknown;
+    } catch (error) {
+      return fail(
+        `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const decoded = Schema.decodeUnknownEither(PortableManifestSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    return fail(
+      `Portable report manifest is invalid: ${manifestPath}: ${decoded.left.message}`,
+    );
+  }
+  return decoded.right;
+}
+
+function readPortableReportIndexBytes(indexPath: string): Buffer {
+  try {
+    return readFileSync(indexPath);
+  } catch (error) {
+    return fail(
+      `Portable report index is unreadable: ${indexPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+}
+
+function indexedReportArtifacts(
+  db: DatabaseSync,
+): readonly IndexedReportArtifact[] {
+  return db
+    .prepare("SELECT sha256, byteLength, path FROM artifacts ORDER BY sha256")
+    .all()
+    .map((row, index) => {
+      const decoded = Schema.decodeUnknownEither(
+        PortableManifestArtifactSchema,
+        { onExcessProperty: "error" },
+      )(row);
+      if (Either.isLeft(decoded)) {
+        return fail(
+          `Portable artifact index row ${String(index + 1)} is invalid.`,
+        );
+      }
+      return decoded.right;
+    });
+}
+
+function portableReportBundle(
+  dbPath: string,
+): PortableReportBundle | undefined {
+  const indexPath = canonicalPortableReportIndexPath(dbPath);
+  const root = dirname(indexPath);
+  const manifestPath = resolve(root, "manifest.json");
+  if (!existsSync(manifestPath)) return undefined;
+  try {
+    const canonicalManifestPath = realpathSync(manifestPath);
+    if (!pathIsContained(root, canonicalManifestPath)) {
+      return fail(
+        `Portable report manifest symlink escapes its bundle: ${manifestPath}`,
+      );
+    }
+  } catch (error) {
+    return fail(
+      `Portable report manifest is unreadable: ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
+  const value = readPortableReportManifest(manifestPath);
+  const index = value.index;
+  if (basename(indexPath) !== index.path) {
+    return fail(
+      `Portable report index path does not match its manifest: ${indexPath}`,
+    );
+  }
+  const indexBytes = readPortableReportIndexBytes(indexPath);
+  if (
+    indexBytes.byteLength !== index.byteLength ||
+    sha256Bytes(indexBytes) !== index.sha256
+  ) {
+    return fail(
+      `Portable report index does not match its manifest: ${indexPath}`,
+    );
+  }
+  const artifacts = new Map<string, IndexedReportArtifact>();
+  const artifactPaths = new Set<string>();
+  for (const [entryIndex, entry] of value.artifacts.entries()) {
+    if (
+      !pathIsContained(root, resolve(root, entry.path)) ||
+      artifacts.has(entry.sha256) ||
+      artifactPaths.has(entry.path)
+    ) {
+      return fail(
+        `Portable report manifest artifact ${String(entryIndex + 1)} is invalid: ${manifestPath}`,
+      );
+    }
+    artifacts.set(entry.sha256, {
+      sha256: entry.sha256,
+      byteLength: entry.byteLength,
+      path: entry.path,
+    });
+    artifactPaths.add(entry.path);
+  }
+  const controlledAttachments = value.controlledAttachments.map(
+    (entry, entryIndex) => {
+      if (
+        !pathIsContained(root, resolve(root, entry.path)) ||
+        artifacts.has(entry.sha256) ||
+        artifactPaths.has(entry.path) ||
+        value.controlledAttachments.some(
+          (candidate, candidateIndex) =>
+            candidateIndex < entryIndex &&
+            (candidate.sha256 === entry.sha256 ||
+              candidate.path === entry.path),
+        )
+      ) {
+        return fail(
+          `Portable report controlled attachment ${String(entryIndex + 1)} is invalid: ${manifestPath}`,
+        );
+      }
+      return entry;
+    },
+  );
+  return { root, artifacts, controlledAttachments };
+}
+
+function validatePortableArtifactInventory(
+  bundle: PortableReportBundle,
+  indexed: readonly IndexedReportArtifact[],
+): void {
+  if (bundle.artifacts.size !== indexed.length) {
+    fail(
+      `Portable report artifact inventory does not match its manifest: expected ${String(indexed.length)} entries, found ${String(bundle.artifacts.size)}.`,
+    );
+  }
+  for (const artifact of indexed) {
+    const manifestArtifact = bundle.artifacts.get(artifact.sha256);
+    if (
+      manifestArtifact === undefined ||
+      manifestArtifact.byteLength !== artifact.byteLength ||
+      manifestArtifact.path !== artifact.path
+    ) {
+      fail(
+        `Portable report artifact inventory does not match its manifest: ${artifact.path}.`,
+      );
+    }
+  }
+  for (const artifact of bundle.artifacts.values()) {
+    portableReportArtifactBytes(bundle, artifact);
+  }
+  for (const attachment of bundle.controlledAttachments) {
+    portableReportArtifactBytes(bundle, attachment);
+  }
+}
+
+export function auditPortableReportBundle(dbPath: string): void {
+  const db = openArtifactIndexReadOnly(dbPath);
+  try {
+    const bundle = portableReportBundle(dbPath);
+    if (bundle === undefined) {
+      return fail(
+        `Portable report index requires a manifest.json beside the relocated database: ${dbPath}`,
+      );
+    }
+    validatePortableArtifactInventory(bundle, indexedReportArtifacts(db));
+  } finally {
+    db.close();
+  }
+}
+
+function portableReportArtifactBytes(
+  bundle: PortableReportBundle,
+  indexed: IndexedReportArtifact,
+): Buffer {
+  if (
+    indexed.path.includes("\0") ||
+    indexed.path.length === 0 ||
+    isAbsolute(indexed.path)
+  ) {
+    return fail(`Portable report artifact path is invalid: ${indexed.path}`);
+  }
+  const canonical = (() => {
+    const lexical = resolve(bundle.root, indexed.path);
+    if (!pathIsContained(bundle.root, lexical)) {
+      return fail(
+        `Portable report artifact path escapes its bundle: ${indexed.path}`,
+      );
+    }
+    try {
+      const resolved = realpathSync(lexical);
+      if (!pathIsContained(bundle.root, resolved)) {
+        return fail(
+          `Portable report artifact symlink escapes its bundle: ${indexed.path}`,
+        );
+      }
+      return resolved;
+    } catch (error) {
+      return fail(
+        `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const bytes = (() => {
+    try {
+      return readFileSync(canonical);
+    } catch (error) {
+      return fail(
+        `Portable report artifact is unreadable: ${indexed.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  if (
+    bytes.byteLength !== indexed.byteLength ||
+    sha256Bytes(bytes) !== indexed.sha256
+  ) {
+    return fail(
+      `Portable report artifact hash verification failed: ${indexed.path}`,
+    );
+  }
+  return bytes;
+}
+
+function readPortableFindingsProjection(
+  bundle: PortableReportBundle,
+  findingsArtifact: IndexedReportArtifact,
+  artifacts: readonly IndexedReportArtifact[],
+): FindingsProjection {
+  const findingsBytes = portableReportArtifactBytes(bundle, findingsArtifact);
+  const value = (() => {
+    try {
+      return JSON.parse(findingsBytes.toString("utf8")) as unknown;
+    } catch (error) {
+      return fail(
+        `Portable findings artifact is invalid JSON: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const decoded = Schema.decodeUnknownEither(FindingsProjectionSchema, {
+    onExcessProperty: "error",
+  })(value);
+  if (Either.isLeft(decoded)) {
+    return fail(`Invalid findings projection: ${decoded.left.message}`);
+  }
+  const snapshots = decoded.right.authorities.map((authority) => {
+    const indexedAuthority = artifacts.find(
+      (artifact) => artifact.sha256 === authority.sha256,
+    );
+    if (indexedAuthority === undefined) {
+      return fail(
+        `Portable findings authority is not indexed: ${authority.path}`,
+      );
+    }
+    if (indexedAuthority.byteLength !== authority.byteLength) {
+      return fail(
+        `Portable findings authority length does not match: ${authority.path}`,
+      );
+    }
+    const bytes = portableReportArtifactBytes(bundle, indexedAuthority);
+    const snapshot = portableFindingAuthoritySnapshotForBytes(authority, bytes);
+    return Either.isRight(snapshot) ? snapshot.right : fail(snapshot.left);
+  });
+  const validation = validateFindingsProjection(decoded.right, snapshots);
+  return validation.tag === "valid"
+    ? validation.projection
+    : fail(`Invalid findings projection: ${validation.message}`);
+}
+
+function readRepositoryFindingsProjection(
+  findingsArtifact: IndexedReportArtifact,
+): FindingsProjection {
+  const canonical = canonicalRepositoryReadPath(
+    repoRoot,
+    findingsArtifact.path,
+  );
+  if (Either.isLeft(canonical)) {
+    return fail(
+      `Source findings artifact is not repository-owned: ${findingsArtifact.path}: ${canonical.left}`,
+    );
+  }
+  const bytes = (() => {
+    try {
+      return readFileSync(canonical.right);
+    } catch (error) {
+      return fail(
+        `Source findings artifact is unreadable: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const authority = artifactAuthorityForBytes(
+    relative(repoRoot, canonical.right),
+    bytes,
+  );
+  if (
+    authority.byteLength !== findingsArtifact.byteLength ||
+    authority.sha256 !== findingsArtifact.sha256
+  ) {
+    return fail(
+      `Source findings artifact does not match its indexed authority: ${findingsArtifact.path}.`,
+    );
+  }
+  const value = (() => {
+    try {
+      return JSON.parse(bytes.toString("utf8")) as unknown;
+    } catch (error) {
+      return fail(
+        `Source findings artifact is invalid JSON: ${findingsArtifact.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  })();
+  const validation = validateFindingsProjection(value);
+  return validation.tag === "valid"
+    ? validation.projection
+    : fail(`Invalid findings projection: ${validation.message}`);
+}
+
+function readIndexedFindingsProjection(input: {
+  readonly db: DatabaseSync;
+  readonly dbPath: string;
+  readonly findingsPath: string;
+  readonly findingsSha256: string;
+  readonly findingsByteLength: number;
+}): FindingsProjection {
+  const findingsArtifact = Schema.decodeUnknownSync(
+    PortableManifestArtifactSchema,
+  )({
+    sha256: input.findingsSha256,
+    byteLength: input.findingsByteLength,
+    path: input.findingsPath,
+  });
+  const bundle = portableReportBundle(input.dbPath);
+  if (bundle !== undefined) {
+    const artifacts = indexedReportArtifacts(input.db);
+    validatePortableArtifactInventory(bundle, artifacts);
+    return readPortableFindingsProjection(bundle, findingsArtifact, artifacts);
+  }
+  const database = canonicalRepositoryReadPath(repoRoot, input.dbPath);
+  if (Either.isLeft(database)) {
+    return fail(
+      `Portable report index requires a manifest.json beside the relocated database: ${input.dbPath}`,
+    );
+  }
+  return readRepositoryFindingsProjection(findingsArtifact);
+}
 
 export function ingest(args: readonly string[]): void {
   const [transcriptArg, ...rest] = args;
@@ -741,48 +1143,59 @@ function audit(args: readonly string[]): void {
     required(flagValue(args, "--execution-row"), "--execution-row"),
   );
   const outputPath = flagValue(args, "--output");
-  const db = openArtifactIndex(dbPath);
-  const row = db
-    .prepare(
-      `SELECT runs.id, runs.executionId, runs.evidenceSetId, runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
-              artifacts.path AS findingsPath
-       FROM runs
-       JOIN runArtifacts ON runArtifacts.runId = runs.id AND runArtifacts.role = 'findings'
-       JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
-       WHERE runs.id = ? AND runs.evidenceKind = 'currentExecution'`,
-    )
-    .get(runId);
-  db.close();
-  const decodedRow = Schema.decodeUnknownEither(PersistedExecutionAuditSchema, {
-    onExcessProperty: "error",
-  })(row);
-  if (Either.isLeft(decodedRow)) {
-    fail(`Execution row ${String(runId)} has no indexed findings artifact.`);
-  }
-  const execution = decodedRow.right;
-  const projection = readFindingsProjection(execution.findingsPath);
-  if (projection.subject.tag !== "execution") {
-    fail(`Execution row ${String(runId)} has non-Execution findings.`);
-  }
-  if (
-    projection.subject.executionId !== execution.executionId ||
-    projection.subject.evidenceSetId !== execution.evidenceSetId ||
-    projection.subject.scenarioId !== execution.scenarioId ||
-    projection.subject.gitSha !== execution.gitSha ||
-    projection.subject.startedAt !== execution.startedAt ||
-    findingsTranscriptSha256(projection.subject) !== execution.transcriptSha256
-  ) {
-    fail(
-      `Findings artifact identity does not match Execution row ${String(runId)}.`,
-    );
-  }
-  if (outputPath === undefined) {
-    process.stdout.write(renderFindingsAudit(projection));
-  } else {
-    writeFindingsAudit({ projection, path: outputPath });
-    console.log(
-      `Rendered Execution row ${String(runId)} audit into ${outputPath}`,
-    );
+  const db = openArtifactIndexReadOnly(dbPath);
+  try {
+    const row = db
+      .prepare(
+        `SELECT runs.id, runs.executionId, runs.evidenceSetId, runs.scenarioId, runs.gitSha, runs.startedAt, runs.transcriptSha256,
+                artifacts.path AS findingsPath, artifacts.sha256 AS findingsSha256, artifacts.byteLength AS findingsByteLength
+         FROM runs
+         JOIN runArtifacts ON runArtifacts.runId = runs.id AND runArtifacts.role = 'findings'
+         JOIN artifacts ON artifacts.sha256 = runArtifacts.artifactSha256
+         WHERE runs.id = ? AND runs.evidenceKind = 'currentExecution'`,
+      )
+      .get(runId);
+    const decodedRow = Schema.decodeUnknownEither(
+      PersistedExecutionAuditSchema,
+      { onExcessProperty: "error" },
+    )(row);
+    if (Either.isLeft(decodedRow)) {
+      fail(`Execution row ${String(runId)} has no indexed findings artifact.`);
+    }
+    const execution = decodedRow.right;
+    const projection = readIndexedFindingsProjection({
+      db,
+      dbPath,
+      findingsPath: execution.findingsPath,
+      findingsSha256: execution.findingsSha256,
+      findingsByteLength: execution.findingsByteLength,
+    });
+    if (projection.subject.tag !== "execution") {
+      fail(`Execution row ${String(runId)} has non-Execution findings.`);
+    }
+    if (
+      projection.subject.executionId !== execution.executionId ||
+      projection.subject.evidenceSetId !== execution.evidenceSetId ||
+      projection.subject.scenarioId !== execution.scenarioId ||
+      projection.subject.gitSha !== execution.gitSha ||
+      projection.subject.startedAt !== execution.startedAt ||
+      findingsTranscriptSha256(projection.subject) !==
+        execution.transcriptSha256
+    ) {
+      fail(
+        `Findings artifact identity does not match Execution row ${String(runId)}.`,
+      );
+    }
+    if (outputPath === undefined) {
+      process.stdout.write(renderFindingsAudit(projection));
+    } else {
+      writeFindingsAudit({ projection, path: outputPath });
+      console.log(
+        `Rendered Execution row ${String(runId)} audit into ${outputPath}`,
+      );
+    }
+  } finally {
+    db.close();
   }
 }
 
@@ -793,54 +1206,64 @@ function generationAudit(args: readonly string[]): void {
     "--campaign-row",
   );
   const outputPath = flagValue(args, "--output");
-  const db = openArtifactIndex(dbPath);
-  const row = db
-    .prepare(
-      `SELECT scenarioCampaigns.campaignId, scenarioCampaigns.plannedScenarioId, scenarioCampaigns.evidenceSetId, scenarioCampaigns.gitSha, scenarioCampaigns.startedAt,
-              artifacts.path AS findingsPath
-       FROM scenarioCampaigns
-       JOIN scenarioCampaignArtifacts
-         ON scenarioCampaignArtifacts.scenarioCampaignRowId = scenarioCampaigns.id
-        AND scenarioCampaignArtifacts.role = 'findings'
-       JOIN artifacts ON artifacts.sha256 = scenarioCampaignArtifacts.artifactSha256
-       WHERE scenarioCampaigns.id = ?`,
-    )
-    .get(campaignRowId);
-  db.close();
-  const decodedRow = Schema.decodeUnknownEither(PersistedCampaignAuditSchema, {
-    onExcessProperty: "error",
-  })(row);
-  if (Either.isLeft(decodedRow)) {
-    fail(
-      `Scenario Campaign row ${String(campaignRowId)} has no indexed findings artifact.`,
-    );
-  }
-  const campaign = decodedRow.right;
-  const projection = readFindingsProjection(campaign.findingsPath);
-  if (projection.subject.tag !== "scenarioCampaign") {
-    fail(
-      `Scenario Campaign row ${String(campaignRowId)} has non-Campaign findings.`,
-    );
-  }
-  if (
-    projection.subject.campaignId !== campaign.campaignId ||
-    projection.subject.plannedScenarioId !== campaign.plannedScenarioId ||
-    projection.subject.evidenceSetId !== campaign.evidenceSetId ||
-    projection.subject.gitSha !== campaign.gitSha ||
-    projection.subject.startedAt !== campaign.startedAt ||
-    findingsTranscriptSha256(projection.subject) !== undefined
-  ) {
-    fail(
-      `Generation findings identity does not match Scenario Campaign row ${String(campaignRowId)}.`,
-    );
-  }
-  if (outputPath === undefined) {
-    process.stdout.write(renderFindingsAudit(projection));
-  } else {
-    writeFindingsAudit({ projection, path: outputPath });
-    console.log(
-      `Rendered Scenario Campaign row ${String(campaignRowId)} audit into ${outputPath}`,
-    );
+  const db = openArtifactIndexReadOnly(dbPath);
+  try {
+    const row = db
+      .prepare(
+        `SELECT scenarioCampaigns.campaignId, scenarioCampaigns.plannedScenarioId, scenarioCampaigns.evidenceSetId, scenarioCampaigns.gitSha, scenarioCampaigns.startedAt,
+                artifacts.path AS findingsPath, artifacts.sha256 AS findingsSha256, artifacts.byteLength AS findingsByteLength
+         FROM scenarioCampaigns
+         JOIN scenarioCampaignArtifacts
+           ON scenarioCampaignArtifacts.scenarioCampaignRowId = scenarioCampaigns.id
+          AND scenarioCampaignArtifacts.role = 'findings'
+         JOIN artifacts ON artifacts.sha256 = scenarioCampaignArtifacts.artifactSha256
+         WHERE scenarioCampaigns.id = ?`,
+      )
+      .get(campaignRowId);
+    const decodedRow = Schema.decodeUnknownEither(
+      PersistedCampaignAuditSchema,
+      { onExcessProperty: "error" },
+    )(row);
+    if (Either.isLeft(decodedRow)) {
+      fail(
+        `Scenario Campaign row ${String(campaignRowId)} has no indexed findings artifact.`,
+      );
+    }
+    const campaign = decodedRow.right;
+    const projection = readIndexedFindingsProjection({
+      db,
+      dbPath,
+      findingsPath: campaign.findingsPath,
+      findingsSha256: campaign.findingsSha256,
+      findingsByteLength: campaign.findingsByteLength,
+    });
+    if (projection.subject.tag !== "scenarioCampaign") {
+      fail(
+        `Scenario Campaign row ${String(campaignRowId)} has non-Campaign findings.`,
+      );
+    }
+    if (
+      projection.subject.campaignId !== campaign.campaignId ||
+      projection.subject.plannedScenarioId !== campaign.plannedScenarioId ||
+      projection.subject.evidenceSetId !== campaign.evidenceSetId ||
+      projection.subject.gitSha !== campaign.gitSha ||
+      projection.subject.startedAt !== campaign.startedAt ||
+      findingsTranscriptSha256(projection.subject) !== undefined
+    ) {
+      fail(
+        `Generation findings identity does not match Scenario Campaign row ${String(campaignRowId)}.`,
+      );
+    }
+    if (outputPath === undefined) {
+      process.stdout.write(renderFindingsAudit(projection));
+    } else {
+      writeFindingsAudit({ projection, path: outputPath });
+      console.log(
+        `Rendered Scenario Campaign row ${String(campaignRowId)} audit into ${outputPath}`,
+      );
+    }
+  } finally {
+    db.close();
   }
 }
 
@@ -903,13 +1326,13 @@ function controlledReporting(args: readonly string[]): void {
   }
   const absoluteDestination = resolve(repoRoot, destination);
   const absoluteTimingPath = resolve(repoRoot, timingPath);
-  const portableTimingPath = relative(absoluteDestination, absoluteTimingPath);
-  if (
-    portableTimingPath === ".." ||
-    portableTimingPath.startsWith(`..${sep}`)
-  ) {
+  const decodedPortableTimingPath = Schema.decodeUnknownEither(
+    PortableRelativePathSchema,
+  )(relative(absoluteDestination, absoluteTimingPath));
+  if (Either.isLeft(decodedPortableTimingPath)) {
     fail("Controlled reporting timing must be inside the portable export.");
   }
+  const portableTimingPath = decodedPortableTimingPath.right;
   if (existsSync(absoluteTimingPath)) {
     fail("Refusing to overwrite controlled reporting timing evidence.");
   }
@@ -1004,14 +1427,22 @@ function controlledReporting(args: readonly string[]): void {
     portableTimingPath,
     readFileSync(absoluteTimingPath),
   );
+  const timingAttachment = {
+    tag: "controlledReportingTiming",
+    ...timingArtifact,
+    path: portableTimingPath,
+  } satisfies PortableControlledAttachment;
+  if (manifest.controlledAttachments.length !== 0) {
+    fail(
+      "Portable export already contains controlled reporting timing evidence.",
+    );
+  }
   writeFileSync(
     resolve(absoluteDestination, "manifest.json"),
     `${JSON.stringify(
       {
         ...manifest,
-        artifacts: [...manifest.artifacts, timingArtifact].sort((left, right) =>
-          left.sha256.localeCompare(right.sha256),
-        ),
+        controlledAttachments: [timingAttachment],
       },
       null,
       2,
@@ -1404,74 +1835,78 @@ export function review(args: readonly string[]): void {
 
 function summary(args: readonly string[]): void {
   const dbPath = required(flagValue(args, "--db"), "--db");
-  const db = openArtifactIndex(dbPath);
-  const evidenceCounts = db
-    .prepare(
-      "SELECT evidenceKind, COUNT(*) AS count FROM runs GROUP BY evidenceKind",
-    )
-    .all();
-  if (
-    evidenceCounts.some(
-      (row) =>
-        !isJsonRecord(row) ||
-        typeof row.evidenceKind !== "string" ||
-        typeof row.count !== "number",
-    )
-  ) {
-    db.close();
-    fail("Report database returned invalid evidence counts");
-  }
-  const count = (kind: "currentExecution" | "historicalObservation") =>
-    evidenceCounts.find((row) => isJsonRecord(row) && row.evidenceKind === kind)
-      ?.count ?? 0;
-  console.log(`Executions: ${String(count("currentExecution"))}`);
-  console.log(
-    `Historical observations: ${String(count("historicalObservation"))}`,
-  );
-  for (const [kind, label] of [
-    ["currentExecution", "Execution verdicts"],
-    ["historicalObservation", "Historical verdicts"],
-  ] as const) {
-    const rows = db
+  const db = openArtifactIndexReadOnly(dbPath);
+  try {
+    const evidenceCounts = db
       .prepare(
-        "SELECT verdicts.class, COUNT(*) AS count FROM verdicts JOIN runs ON runs.id = verdicts.runId WHERE runs.evidenceKind = ? GROUP BY verdicts.class ORDER BY verdicts.class",
+        "SELECT evidenceKind, COUNT(*) AS count FROM runs GROUP BY evidenceKind",
       )
-      .all(kind);
-    if (rows.length === 0) console.log(`${label}: none`);
-    for (const row of rows) {
-      if (
-        !isJsonRecord(row) ||
-        typeof row.class !== "string" ||
-        typeof row.count !== "number"
-      ) {
-        db.close();
-        fail("Report database returned an invalid verdict count");
-      }
-      console.log(`${label} ${row.class}: ${row.count}`);
+      .all();
+    if (
+      evidenceCounts.some(
+        (row) =>
+          !isJsonRecord(row) ||
+          typeof row.evidenceKind !== "string" ||
+          typeof row.count !== "number",
+      )
+    ) {
+      fail("Report database returned invalid evidence counts");
     }
+    const count = (kind: "currentExecution" | "historicalObservation") =>
+      evidenceCounts.find(
+        (row) => isJsonRecord(row) && row.evidenceKind === kind,
+      )?.count ?? 0;
+    console.log(`Executions: ${String(count("currentExecution"))}`);
+    console.log(
+      `Historical observations: ${String(count("historicalObservation"))}`,
+    );
+    for (const [kind, label] of [
+      ["currentExecution", "Execution verdicts"],
+      ["historicalObservation", "Historical verdicts"],
+    ] as const) {
+      const rows = db
+        .prepare(
+          "SELECT verdicts.class, COUNT(*) AS count FROM verdicts JOIN runs ON runs.id = verdicts.runId WHERE runs.evidenceKind = ? GROUP BY verdicts.class ORDER BY verdicts.class",
+        )
+        .all(kind);
+      if (rows.length === 0) console.log(`${label}: none`);
+      for (const row of rows) {
+        if (
+          !isJsonRecord(row) ||
+          typeof row.class !== "string" ||
+          typeof row.count !== "number"
+        ) {
+          fail("Report database returned an invalid verdict count");
+        }
+        console.log(`${label} ${row.class}: ${row.count}`);
+      }
+    }
+  } finally {
+    db.close();
   }
-  db.close();
 }
 
 function issues(args: readonly string[]): void {
   const { dbPath, linkFilter } = parseIssuesArgs(args);
-  const db = openArtifactIndex(dbPath);
-  const rows = db
-    .prepare(
-      `SELECT fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber
-       FROM issues
-       ${issueLinkFilterSql(linkFilter)}
-       ORDER BY firstSeenAt, fingerprint`,
-    )
-    .all();
-  for (const row of rows) {
-    if (!isIssueRow(row)) {
-      db.close();
-      fail("Report database returned an invalid issue row");
+  const db = openArtifactIndexReadOnly(dbPath);
+  try {
+    const rows = db
+      .prepare(
+        `SELECT fingerprint, class, claim, firstSeenAt, lastSeenAt, githubIssueNumber
+         FROM issues
+         ${issueLinkFilterSql(linkFilter)}
+         ORDER BY firstSeenAt, fingerprint`,
+      )
+      .all();
+    for (const row of rows) {
+      if (!isIssueRow(row)) {
+        fail("Report database returned an invalid issue row");
+      }
+      console.log(JSON.stringify(row));
     }
-    console.log(JSON.stringify(row));
+  } finally {
+    db.close();
   }
-  db.close();
 }
 
 function parseIssuesArgs(args: readonly string[]): {

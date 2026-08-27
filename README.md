@@ -81,7 +81,7 @@ const fighterAfterBattle = handoff(battle, fighterSheet);
 pnpm install
 pnpm test
 pnpm typecheck
-pnpm quality
+pnpm quality:milestone
 ```
 
 ## License

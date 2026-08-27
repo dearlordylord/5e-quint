@@ -18,10 +18,14 @@ import {
   retainedScenarioReviewMatchesReplayBinding,
 } from "./scenario-review-input.ts";
 import {
+  classifyScenarioReviewOutputSchema,
   codexOutputJsonSchema,
   CurrentScenarioCompositeReviewSchema,
+  scenarioCompositeReviewSchemaForIntents,
 } from "./scenario-campaign.ts";
+import { ScenarioCampaignManifestSchema } from "./evidence-manifests.ts";
 import { validateRetainedScenarioReviewInvocation } from "./review-invocation-binding.ts";
+import { replayRetainedScenarioReview } from "./generate-scenario.ts";
 import { rawSwarmTestOutputDirectory } from "./test-output.ts";
 import { isJsonRecord, repoRoot, sha256Text } from "./transcript.ts";
 
@@ -41,13 +45,17 @@ function rewriteCurrentReviewSubject(
   fixture: ControlledReviewEvidenceFixture,
   index: 0 | 1,
   subject: Record<string, unknown>,
+  options: Readonly<{
+    readonly outputJsonSchema?: unknown;
+    readonly result?: Record<string, unknown>;
+  }> = {},
 ): void {
   const sourcePath = fixture.sourcePrePlayReviewInputPaths[index];
   const replayPath = fixture.replayPrePlayReviewInputPaths[index];
   if (sourcePath === undefined || replayPath === undefined) {
     throw new Error("Missing retained review input fixture.");
   }
-  const result = {
+  const result = options.result ?? {
     ...(parseJsonRecord(readFileSync(replayPath, "utf8")).result as Record<
       string,
       unknown
@@ -62,9 +70,9 @@ function rewriteCurrentReviewSubject(
     delete input.scenarioId;
     input.schemaVersion = 3;
     input.subject = subject;
-    input.outputJsonSchema = codexOutputJsonSchema(
-      CurrentScenarioCompositeReviewSchema,
-    );
+    input.outputJsonSchema =
+      options.outputJsonSchema ??
+      codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
     input.result = result;
     writeFileSync(path, `${JSON.stringify(input)}\n`);
   }
@@ -1074,6 +1082,287 @@ describe("review invocation evidence", () => {
     expect(() =>
       readReviewInvocationEvidenceManifest(fixture.manifestPath),
     ).toThrow(/canonical composite-review schema/);
+  });
+
+  test("rejects the incident cross-intent result in a strict current envelope", async () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-strict-intent-envelope-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const strictSchema = codexOutputJsonSchema(
+      scenarioCompositeReviewSchemaForIntents({
+        contentAvailabilityIntent: "availableOnly",
+        sdkCapabilityIntent: "supportedOnly",
+      }),
+    );
+    const incidentResult = {
+      raw: {
+        classification: "supported",
+        evidence: "Synthetic RAW evidence.",
+      },
+      contentAvailability: {
+        classification: "supplied",
+        evidence: "The selected records are available.",
+      },
+      sdkCapability: {
+        classification: "missingUnsupportedProbe",
+        evidence: "The scenario requires an undocumented operation.",
+        critique: "Declare the unsupported capability probe.",
+      },
+      artifactPolicy: {
+        classification: "safe",
+        evidence: "Synthetic policy evidence.",
+      },
+      scenarioQuality: {
+        classification: "ready",
+        evidence: "Synthetic quality evidence.",
+      },
+    } satisfies Record<string, unknown>;
+    rewriteCurrentReviewSubject(
+      fixture,
+      0,
+      {
+        tag: "scenarioCandidate",
+        campaignId: "fixture-campaign",
+        evidenceSetId: "fixture-evidence",
+        candidateId: "fixture-candidate-milestone",
+        candidateScenarioSha256: "b".repeat(64),
+        plannedScenarioId: "same",
+      },
+      {
+        outputJsonSchema: strictSchema,
+        result: incidentResult,
+      },
+    );
+    rewriteCurrentReviewSubject(
+      fixture,
+      1,
+      {
+        tag: "scenarioCandidate",
+        campaignId: "fixture-campaign",
+        evidenceSetId: "fixture-evidence",
+        candidateId: "fixture-candidate-final",
+        candidateScenarioSha256: "c".repeat(64),
+        plannedScenarioId: "same",
+      },
+      {
+        outputJsonSchema: strictSchema,
+        result: incidentResult,
+      },
+    );
+    expect(() =>
+      readReviewInvocationEvidenceManifest(fixture.manifestPath),
+    ).toThrow(/replay input|invocation event output|composite-review/);
+    const retained = Schema.decodeUnknownEither(
+      RetainedScenarioReviewInputSchema,
+      { onExcessProperty: "error" },
+    )(
+      parseJsonRecord(
+        readFileSync(fixture.replayPrePlayReviewInputPaths[0], "utf8"),
+      ),
+    );
+    expect(Either.isRight(retained)).toBe(true);
+    if (Either.isLeft(retained)) return;
+    await expect(
+      replayRetainedScenarioReview({
+        retainedInput: retained.right,
+        ledgerPath: resolve(directory, "review-ledger.jsonl"),
+        gitSha: retained.right.sourceGitSha,
+      }),
+    ).rejects.toThrow(/result does not match its canonical output schema/);
+  });
+
+  test("keeps an incident-shaped broad v3 envelope in explicit legacy compatibility", () => {
+    const directory = rawSwarmTestOutputDirectory(
+      "review-broad-v3-incident-envelope-test-",
+    );
+    directories.push(directory);
+    const fixture = controlledReviewEvidenceFixture({
+      directory,
+      ledgerEntries: [
+        {
+          schemaVersion: 4,
+          phase: "postPlayReview",
+          stagePlanReason: "The fixture stage requires post-play review.",
+          invocationId: "review",
+          model: "gpt-5.6-luna",
+          reasoningEffort: "max",
+          startedAt: "2026-08-17T00:00:00.000Z",
+          elapsedMilliseconds: 1,
+          exit: { tag: "exited", status: 0 },
+          result: { tag: "succeeded" },
+          usage: {
+            tag: "unavailable",
+            reason:
+              "The first-party event stream exposed no turn.completed usage object.",
+          },
+        },
+      ],
+    });
+    const broadSchema = codexOutputJsonSchema(
+      CurrentScenarioCompositeReviewSchema,
+    );
+    const strictSchema = codexOutputJsonSchema(
+      scenarioCompositeReviewSchemaForIntents({
+        contentAvailabilityIntent: "availableOnly",
+        sdkCapabilityIntent: "supportedOnly",
+      }),
+    );
+    const incidentResult = {
+      raw: {
+        classification: "supported",
+        evidence: "Synthetic RAW evidence.",
+      },
+      contentAvailability: {
+        classification: "supplied",
+        evidence: "The selected records are available.",
+      },
+      sdkCapability: {
+        classification: "missingUnsupportedProbe",
+        evidence: "The scenario requires an undocumented operation.",
+        critique: "Declare the unsupported capability probe.",
+      },
+      artifactPolicy: {
+        classification: "safe",
+        evidence: "Synthetic artifact policy evidence.",
+      },
+      scenarioQuality: {
+        classification: "ready",
+        evidence: "Synthetic scenario quality evidence.",
+      },
+    } satisfies Record<string, unknown>;
+    const legacy = classifyScenarioReviewOutputSchema({
+      schemaVersion: 3,
+      outputJsonSchema: broadSchema,
+    });
+    expect(Either.isRight(legacy)).toBe(true);
+    if (Either.isLeft(legacy)) return;
+    expect(legacy.right.tag).toBe("legacyCurrent");
+    expect(Either.isRight(legacy.right.decodeResult(incidentResult))).toBe(
+      true,
+    );
+    const strict = classifyScenarioReviewOutputSchema({
+      schemaVersion: 3,
+      outputJsonSchema: strictSchema,
+    });
+    expect(Either.isRight(strict)).toBe(true);
+    if (Either.isLeft(strict)) return;
+    expect(strict.right.tag).toBe("intentSpecificCurrent");
+    expect(Either.isLeft(strict.right.decodeResult(incidentResult))).toBe(true);
+
+    const subjects = [
+      {
+        tag: "scenarioCandidate",
+        campaignId: "fixture-campaign",
+        evidenceSetId: "fixture-evidence",
+        candidateId: "fixture-candidate-milestone",
+        candidateScenarioSha256: "b".repeat(64),
+        plannedScenarioId: "same",
+      },
+      {
+        tag: "scenarioCandidate",
+        campaignId: "fixture-campaign",
+        evidenceSetId: "fixture-evidence",
+        candidateId: "fixture-candidate-final",
+        candidateScenarioSha256: String(
+          parseJsonRecord(
+            readFileSync(
+              resolve(directory, "run", "SCENARIO_REVIEW.json"),
+              "utf8",
+            ),
+          ).scenarioSha256,
+        ),
+        plannedScenarioId: "same",
+      },
+    ] as const;
+    for (const [index, subject] of subjects.entries()) {
+      rewriteCurrentReviewSubject(fixture, index as 0 | 1, subject, {
+        outputJsonSchema: broadSchema,
+        result: incidentResult,
+      });
+    }
+    rmSync(fixture.manifestPath);
+    writeControlledReviewManifest(fixture);
+    const manifest = readReviewInvocationEvidenceManifest(fixture.manifestPath);
+    expect(manifest.prePlayReviews).toHaveLength(2);
+    const campaign = Schema.decodeUnknownSync(ScenarioCampaignManifestSchema)(
+      parseJsonRecord(
+        readFileSync(resolve(directory, "campaign.json"), "utf8"),
+      ),
+    );
+    for (const [index, subject] of subjects.entries()) {
+      const retained = Schema.decodeUnknownEither(
+        RetainedScenarioReviewInputSchema,
+        { onExcessProperty: "error" },
+      )(
+        parseJsonRecord(
+          readFileSync(
+            fixture.replayPrePlayReviewInputPaths[index as 0 | 1]!,
+            "utf8",
+          ),
+        ),
+      );
+      const ledger = parseModelInvocationLedgerEntry(
+        parseJsonRecord(
+          readFileSync(fixture.ledgerPath, "utf8").trim().split("\n")[index]!,
+        ),
+      );
+      expect(Either.isRight(retained)).toBe(true);
+      expect(Either.isRight(ledger)).toBe(true);
+      if (Either.isLeft(retained) || Either.isLeft(ledger)) continue;
+      const binding = retainedScenarioReviewMatchesReplayBinding(
+        retained.right,
+        ledger.right,
+        index === 1
+          ? {
+              tag: "candidate",
+              reviewStage: "final",
+              scenarioId: "same",
+              admittedScenarioSha256: subject.candidateScenarioSha256,
+              campaign,
+            }
+          : {
+              tag: "candidate",
+              reviewStage: "milestone",
+              scenarioId: "same",
+              campaign,
+            },
+      );
+      expect(Either.isRight(binding)).toBe(true);
+      if (Either.isLeft(binding)) continue;
+      expect(() =>
+        validateRetainedScenarioReviewInvocation({
+          binding: binding.right,
+          eventSha256: ledger.right.eventsSha256,
+          events: readFileSync(fixture.eventPaths[index]!, "utf8")
+            .trim()
+            .split("\n")
+            .map(parseJsonRecord),
+        }),
+      ).not.toThrow();
+    }
   });
 
   test("rejects an unrelated ledger and enforces current tracer commandless policy", () => {

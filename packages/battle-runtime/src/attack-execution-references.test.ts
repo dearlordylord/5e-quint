@@ -115,6 +115,11 @@ describe("character attack execution references", () => {
     expect(result).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "weaponPresentationUnavailable",
+        combatantId: fighterId,
+        weaponUnitId: "weapon_longsword",
+        availability: "missing",
+        ownerPath: ["initialCombatants", 0],
         message:
           "Character fighter weapon weapon_longsword has missing authored presentation source.",
       }),

@@ -39,11 +39,8 @@ import {
   type RetainedScenarioReviewInput,
 } from "./scenario-review-input.ts";
 import {
-  codexOutputJsonSchema,
-  CurrentScenarioCompositeReviewSchema,
   FinalScenarioReviewSchema,
-  HistoricalScenarioCompositeReviewSchema,
-  ScenarioCompositeReviewSchema,
+  classifyScenarioReviewOutputSchema,
 } from "./scenario-campaign.ts";
 import {
   reviewEvidenceCatalogForPacket,
@@ -620,16 +617,27 @@ function deriveManifest(input: {
       retainedScenarioReviewScenarioReference(sourceInput);
     const replayScenarioReference =
       retainedScenarioReviewScenarioReference(replayInput);
-    const expectedOutputJsonSchema =
-      sourceInput.schemaVersion === 2
-        ? codexOutputJsonSchema(HistoricalScenarioCompositeReviewSchema)
-        : codexOutputJsonSchema(CurrentScenarioCompositeReviewSchema);
+    const compatibility = classifyScenarioReviewOutputSchema({
+      schemaVersion: sourceInput.schemaVersion,
+      outputJsonSchema: sourceInput.outputJsonSchema,
+    });
+    if (Either.isLeft(compatibility)) {
+      fail(
+        `Retained ${reviewStage} source input does not use a canonical composite-review schema.`,
+      );
+    }
+    const decodedSourceResult = compatibility.right.decodeResult(
+      sourceInput.result,
+    );
+    const decodedReplayResult = compatibility.right.decodeResult(
+      replayInput.result,
+    );
     if (
-      canonicalJson(sourceInput.outputJsonSchema) !==
-      canonicalJson(expectedOutputJsonSchema)
+      Either.isLeft(decodedSourceResult) ||
+      Either.isLeft(decodedReplayResult)
     ) {
       fail(
-        `Retained ${reviewStage} source input does not use the canonical composite-review schema.`,
+        `Retained ${reviewStage} input result does not match its canonical composite-review schema.`,
       );
     }
     if (
@@ -657,10 +665,7 @@ function deriveManifest(input: {
     );
     const output =
       events === undefined ? undefined : finalAgentMessage(events.events);
-    const decodedOutput = Schema.decodeUnknownEither(
-      Schema.Struct({ result: ScenarioCompositeReviewSchema }),
-      { onExcessProperty: "error" },
-    )(output);
+    const decodedOutput = compatibility.right.decodeOutput(output);
     if (entry !== undefined && events !== undefined) {
       validateRetainedScenarioReviewInvocationEvidence({
         retainedInput: replayInput,
@@ -679,7 +684,7 @@ function deriveManifest(input: {
       entry.reasoningEffort !== replayInput.reasoningEffort ||
       Either.isLeft(decodedOutput) ||
       canonicalJson(decodedOutput.right.result) !==
-        canonicalJson(replayInput.result)
+        canonicalJson(decodedReplayResult.right)
     ) {
       fail(
         `Retained ${reviewStage} replay input does not match its invocation evidence.`,
