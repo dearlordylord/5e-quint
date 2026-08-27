@@ -1,0 +1,202 @@
+{
+  "challengeRating": 5,
+  "id": "stat_block_air_elemental",
+  "kind": "statBlock",
+  "name": "Air Elemental",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:61-92"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 6,
+      "con": 14,
+      "dex": 20,
+      "int": 6,
+      "str": 14,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Thunderous Slam",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 14
+              },
+              "damageType": "thunder",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Whirlwind (Recharge 4–6). Strength Saving Throw: DC 13, one Medium or smaller creature in the elemental's space. Failure: 24 (4d10 + 2) Thunder damage, and the target is pushed up to 20 feet straight away from the elemental and has the Prone condition. Success: Half damage only.",
+        "kind": "textOnly",
+        "name": "Whirlwind",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Primordial (Auran)"
+        ]
+      }
+    },
+    "creatureType": "elemental",
+    "hp": {
+      "kind": "literal",
+      "value": 90
+    },
+    "immunities": {
+      "conditions": [
+        "exhaustion",
+        "grappled",
+        "paralyzed",
+        "petrified",
+        "poisoned",
+        "prone",
+        "restrained",
+        "unconscious"
+      ],
+      "damageTypes": [
+        "poison",
+        "thunder"
+      ]
+    },
+    "initiative": {
+      "modifier": 5,
+      "score": 15
+    },
+    "passivePerception": 10,
+    "resistances": {
+      "damageTypes": [
+        "bludgeoning",
+        "lightning",
+        "piercing",
+        "slashing"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 4
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 2
+      },
+      {
+        "ability": "dex",
+        "modifier": 5
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -2
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 10
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 90
+        },
+        "hover": true,
+        "kind": "fly"
+      }
+    ]
+  }
+}

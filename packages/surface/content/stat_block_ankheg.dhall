@@ -1,0 +1,24 @@
+{ challengeRating = 2
+, id = "stat_block_ankheg"
+, kind = "statBlock"
+, name = "Ankheg"
+, provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:180-207" }
+, statBlock =
+  { abilityScores = { cha = 6, con = 14, dex = 11, int = 1, str = 17, wis = 13 }
+  , ac.value = { kind = "literal", value = 14 }
+  , actions =
+    [ { description = "Bite. Melee Attack Roll: +5 (with Advantage if the target is Grappled by the ankheg), reach 5 ft. Hit: 10 (2d6 + 3) Slashing damage plus 3 (1d6) Acid damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13). Acid Spray (Recharge 6). Dexterity Saving Throw: DC 12, each creature in a 30-foot-long, 5-foot-wide Line. Failure: 14 (4d6) Acid damage. Success: Half damage.", kind = "textOnly", name = "Actions", procedureOrdinal = 1, reason = "unsupported_action_shape", resourceRefs = { kind = "some", ordinals = [ 1 ] } }
+    ]
+  , alignment = "unaligned"
+  , communication = { kind = "none" }
+  , creatureType = "monstrosity"
+  , hp = { kind = "literal", value = 45 }
+  , initiative = { modifier = 0, score = 10 }
+  , passivePerception = 11
+  , savingThrowModifiers = [ { ability = "str", modifier = +3 }, { ability = "dex", modifier = +0 }, { ability = "con", modifier = +2 }, { ability = "int", modifier = -5 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -2 } ]
+  , senses = [ { kind = "darkvision", rangeFeet = 60 }, { kind = "tremorsense", rangeFeet = 60 } ]
+  , size = "large"
+  , speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" }, { feet = { kind = "literal", value = 10 }, kind = "burrow" } ]
+  , resources = [ { limit = { kind = "recharge", minimumRoll = 6 }, ordinal = 1, ownership = "each" } ]
+  }
+}
