@@ -20,6 +20,7 @@ import {
   combatantId,
   initiativeScore,
   parseSupportedUnitFeatureProfile,
+  wildShapeKnownFormsIssueMessage,
 } from "./index.ts";
 import {
   monsterMultiattackStatBlock,
@@ -464,6 +465,11 @@ describe("Stat Block projection boundary coverage", () => {
           ],
         }),
       );
+      if (Either.isLeft(result)) {
+        expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
+          projectionCase.message,
+        );
+      }
     }
   });
 
@@ -501,6 +507,7 @@ describe("Stat Block projection boundary coverage", () => {
       statBlock: {
         ...source.statBlock,
         creatureType: "beast",
+        resources: [resources[0]!, resources[0]!, resources[1]!] as const,
         actions: [
           {
             ...firstAction,
@@ -529,6 +536,10 @@ describe("Stat Block projection boundary coverage", () => {
             statBlockId: graphFailureForm.id,
             reason: "resourceGraph",
             issues: [
+              {
+                kind: "duplicateResourceOrdinal",
+                ordinal: resources[0]!.ordinal,
+              },
               { kind: "missingResourceDeclaration", ordinal: missingOrdinal },
             ],
           },
