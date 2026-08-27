@@ -30,7 +30,6 @@ import type {
   BattleStatBlockPresentationSource,
 } from "./battle-runtime-context.ts";
 import {
-  parseStatBlockLegendaryActionUses,
   parseStatBlockPositiveIntegerLiteral,
   parseStatBlockRuntimeResource,
   type BattleStatBlockExecutionSource,
@@ -46,7 +45,7 @@ import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
-  | "invalidLegendaryActionUses";
+  | "unsupportedLairConditionalLegendaryActionUses";
 
 export type BattleStatBlockInvalidResourceDeclaration = {
   readonly ordinal: StatBlockProcedureResourceOrdinal;
@@ -109,9 +108,9 @@ export function battleStatBlockProjectionFailureMessage(
       () => "battle initialization requires a concrete Size",
     ),
     Match.when(
-      "invalidLegendaryActionUses",
+      "unsupportedLairConditionalLegendaryActionUses",
       () =>
-        "battle initialization requires positive integer Legendary Action uses",
+        "battle initialization does not own the lair context needed to select Legendary Action uses",
     ),
     Match.when(
       "invalidResourceLimit",
@@ -141,11 +140,11 @@ export function projectAuthoredStatBlock(
   const size = literalSize(source.size);
   if (size === null) return Either.left(failure("nonLiteralSize"));
   const speeds = source.speeds.map(runtimeSpeed);
-  const legendaryActionUses = parseStatBlockLegendaryActionUses(
+  const legendaryActionUses = authoredLegendaryActionUses(
     source.legendaryActions?.uses,
   );
   if (Either.isLeft(legendaryActionUses)) {
-    return Either.left(failure("invalidLegendaryActionUses"));
+    return Either.left(legendaryActionUses.left);
   }
   const resources = runtimeResources(source.resources);
   if (Either.isLeft(resources)) {
@@ -588,9 +587,6 @@ function attackProcedurePresentation(
 > {
   return {
     ...procedurePresentationBase(section, entry, procedure.name),
-    ...(procedure.description === undefined
-      ? {}
-      : { description: procedure.description }),
     kind: "attack",
   };
 }
@@ -651,12 +647,7 @@ function authoredAttackMechanics(
     { readonly kind: "attack_roll" }
   >,
 ): CreatureAttackRollMechanics {
-  const {
-    kind: _kind,
-    name: _name,
-    description: _description,
-    ...attack
-  } = procedure;
+  const { kind: _kind, name: _name, ...attack } = procedure;
   return attack;
 }
 
@@ -731,6 +722,26 @@ function runtimeSense(
 
 function literalSize(size: StandaloneStatBlock["size"]): Size | null {
   return typeof size === "string" ? size : null;
+}
+
+function authoredLegendaryActionUses(
+  uses:
+    | NonNullable<StandaloneStatBlock["legendaryActions"]>["uses"]
+    | undefined,
+): Either.Either<
+  BattleStatBlockExecutionSource["legendaryActionUses"],
+  BattleStatBlockProjectionFailure
+> {
+  if (uses === undefined) return Either.right(undefined);
+  return Match.value(uses).pipe(
+    Match.when({ kind: "fixed" }, ({ uses: fixedUses }) =>
+      Either.right(PositiveInteger(fixedUses)),
+    ),
+    Match.when({ kind: "lair_bonus" }, () =>
+      Either.left(failure("unsupportedLairConditionalLegendaryActionUses")),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function nonEmptyRuntimeValues<T>(

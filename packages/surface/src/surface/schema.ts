@@ -63,6 +63,7 @@ export {
   StatBlockActionSectionSchema,
   StatBlockBonusActionSectionSchema,
   StatBlockLegendaryActionSectionSchema,
+  StatBlockLegendaryActionUsesSchema,
   StatBlockProcedureAreaShapeSchema,
   StatBlockProcedureDcSourceSchema,
   StatBlockProcedureEntrySchema,

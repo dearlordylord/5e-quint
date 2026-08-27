@@ -93,19 +93,23 @@ describe("Stat Block projection boundary coverage", () => {
           "Stat Block authored projection failed: battle initialization requires a concrete Size.",
       },
       {
-        reason: "invalidLegendaryActionUses" as const,
+        reason: "unsupportedLairConditionalLegendaryActionUses" as const,
         record: {
           ...source,
           statBlock: {
             ...source.statBlock,
             legendaryActions: {
-              uses: 0,
+              uses: {
+                kind: "lair_bonus",
+                usesOutsideLair: 3,
+                additionalUsesInLair: 1,
+              },
               entries: [firstAction],
             },
           },
         },
         message:
-          "Stat Block authored projection failed: battle initialization requires positive integer Legendary Action uses.",
+          "Stat Block authored projection failed: battle initialization does not own the lair context needed to select Legendary Action uses.",
       },
     ] as const;
 
@@ -300,53 +304,7 @@ describe("Stat Block projection boundary coverage", () => {
     }
   });
 
-  test("retains authored attack descriptions and rejects misplaced Multiattacks", () => {
-    const source = statBlockRecord();
-    const attack = source.statBlock.actions?.find(
-      (entry) =>
-        entry.kind === "executable" && entry.procedure.kind === "attack_roll",
-    );
-    if (
-      attack === undefined ||
-      attack.kind !== "executable" ||
-      attack.procedure.kind !== "attack_roll"
-    ) {
-      throw new Error("Expected a synthetic attack procedure.");
-    }
-    const described: StatBlockRecord = {
-      ...source,
-      id: statBlockId("synthetic_described_attack_form"),
-      name: "Synthetic Described Attack Form",
-      provenance: {
-        kind: "synthetic-test",
-        section: "stat-block-projection-boundary-coverage",
-      },
-      statBlock: {
-        ...source.statBlock,
-        actions: [
-          {
-            ...attack,
-            procedure: {
-              ...attack.procedure,
-              description: "A synthetic authored attack description.",
-            },
-          },
-        ],
-      },
-    };
-    const describedProjection = projectAuthoredStatBlock(described);
-    expect(Either.isRight(describedProjection)).toBe(true);
-    if (Either.isRight(describedProjection)) {
-      expect(describedProjection.right.presentation.orderedProcedures).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            kind: "attack",
-            description: "A synthetic authored attack description.",
-          }),
-        ]),
-      );
-    }
-
+  test("rejects misplaced Multiattacks", () => {
     const multiattack = monsterMultiattackStatBlock();
     const multiattackEntry = multiattack.statBlock.actions?.find(
       (entry) =>
@@ -565,11 +523,18 @@ describe("Stat Block projection boundary coverage", () => {
           ...source,
           statBlock: {
             ...source.statBlock,
-            legendaryActions: { uses: 0, entries: [firstAction] },
+            legendaryActions: {
+              uses: {
+                kind: "lair_bonus",
+                usesOutsideLair: 3,
+                additionalUsesInLair: 1,
+              },
+              entries: [firstAction],
+            },
           },
         },
         message:
-          "Druid Wild Shape battle forms require positive integer Legendary Action uses.",
+          "Druid Wild Shape battle forms cannot select lair-conditional Legendary Action uses without lair context.",
       },
     ] as const;
     const profile = druidWildShapeKnownFormProfile();
@@ -586,7 +551,7 @@ describe("Stat Block projection boundary coverage", () => {
             {
               tag: "battleDruidWildShapeKnownFormIssue",
               statBlockId: projectionCase.record.id,
-              reason: "invalidLegendaryActionUses",
+              reason: "unsupportedLairConditionalLegendaryActionUses",
             },
           ],
         }),

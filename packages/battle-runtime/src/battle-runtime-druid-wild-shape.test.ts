@@ -179,7 +179,6 @@ const syntheticNonLiteralSizeFormId = "synthetic_non_literal_size_form";
 const syntheticCoordinatedShapeId = "synthetic_coordinated_shape";
 const syntheticUntypedCoordinatedShapeId =
   "synthetic_untyped_coordinated_shape";
-const syntheticProseProneFormId = "synthetic_prose_prone_form";
 const syntheticActionSectionFormId = "synthetic_action_section_form";
 const syntheticSupportedNonAttackFormId = "synthetic_supported_non_attack_form";
 const syntheticTraitProjectionFormId = "synthetic_trait_projection_form";
@@ -2936,7 +2935,6 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
         statBlockCatalog,
         parseSharedStatBlockId("stat_block_skeleton"),
       ),
-      syntheticProseProneForm(),
       syntheticTypedRidersForm(),
       syntheticActionSectionForm(),
     ],
@@ -2967,7 +2965,6 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
       expect.objectContaining({
         category: "attackHitOtherRider",
         exampleStatBlockIds: expect.arrayContaining([
-          syntheticProseProneFormId,
           syntheticTypedRidersFormId,
         ]),
         closedBoundary: expect.objectContaining({
@@ -3087,40 +3084,6 @@ test("classifies eligible Wild Shape Beast action surfaces without making ids th
   ).toBe(false);
 });
 
-function syntheticProseProneForm(): StatBlockRecord {
-  const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
-  const hooves = base.statBlock.actions?.find(
-    (entry): entry is AttackProcedureEntry =>
-      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
-  );
-  if (hooves === undefined) {
-    throw new Error("Expected Riding Horse Hooves fixture.");
-  }
-  return {
-    ...base,
-    id: parseSharedStatBlockId(syntheticProseProneFormId),
-    name: "Synthetic Prose Prone Form",
-    provenance: {
-      kind: "synthetic-test",
-      section: "synthetic-prose-prone-form",
-    },
-    statBlock: {
-      ...base.statBlock,
-      actions: [
-        {
-          ...hooves,
-          procedure: {
-            ...hooves.procedure,
-            description:
-              "If the target is a Medium or smaller creature, it has the Prone condition.",
-            name: "Synthetic Bite",
-          },
-        },
-      ],
-    },
-  };
-}
-
 function syntheticTypedRidersForm(): StatBlockRecord {
   const base = assertStatBlockForTest(statBlockCatalog, ridingHorseId);
   const hooves = base.statBlock.actions?.find(
@@ -3159,7 +3122,6 @@ function syntheticTypedRidersForm(): StatBlockRecord {
                 amount: { kind: "fixed", static: 1 },
               },
             ],
-            description: "The target is pushed 5 feet.",
             name: "Synthetic Rider Strike",
           },
         },
@@ -3282,7 +3244,7 @@ function syntheticActionSectionForm(): StatBlockRecord {
         },
       ],
       legendaryActions: {
-        uses: 1,
+        uses: { kind: "fixed", uses: 1 },
         entries: [
           {
             kind: "textOnly",

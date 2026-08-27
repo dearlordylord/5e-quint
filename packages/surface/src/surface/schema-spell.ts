@@ -5280,43 +5280,31 @@ const AuthoredAttackRollProcedureSchema = Schema.Union(
     kind: Schema.Literal("attack_roll"),
     attackAbility: AbilitySchema,
     attackBonus: StatBlockProcedureSignedValueSchema,
-    reachFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-    rangeFeet: optionalExact(
-      strictStruct({
-        normal: StatBlockProcedurePositiveIntegerSchema,
-        long: StatBlockProcedurePositiveIntegerSchema,
-      }),
-    ),
+    reachFeet: StatBlockProcedurePositiveIntegerSchema,
     onHit: nonEmpty(AuthoredProcedureEffectAtomSchema),
     multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
     attackType: Schema.Literal("melee"),
     name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-    description: optionalExact(surfaceExactProse(Schema.String)),
   }),
   strictStruct({
     kind: Schema.Literal("attack_roll"),
     attackAbility: AbilitySchema,
     attackBonus: StatBlockProcedureSignedValueSchema,
-    reachFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-    rangeFeet: optionalExact(
-      strictStruct({
-        normal: StatBlockProcedurePositiveIntegerSchema,
-        long: StatBlockProcedurePositiveIntegerSchema,
-      }),
-    ),
+    rangeFeet: strictStruct({
+      normal: StatBlockProcedurePositiveIntegerSchema,
+      long: StatBlockProcedurePositiveIntegerSchema,
+    }),
     onHit: nonEmpty(AuthoredProcedureEffectAtomSchema),
     multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
     attackType: Schema.Literal("ranged"),
     ammunition: optionalExact(AmmunitionKindSchema),
     name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-    description: optionalExact(surfaceExactProse(Schema.String)),
   }),
 );
 
 const AuthoredSaveGateProcedureBaseFields = {
   kind: Schema.Literal("save"),
   name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-  description: optionalExact(surfaceExactProse(Schema.String)),
   ability: AbilitySchema,
   dc: StatBlockProcedureDcSourceSchema,
   onFail: AuthoredProcedureEffectAtomSchema,
@@ -5587,8 +5575,22 @@ export const StatBlockReactionSectionSchema = nonEmpty(
   }),
 );
 
+const StatBlockLairBonusLegendaryActionUsesSchema = strictStruct({
+  kind: Schema.Literal("lair_bonus"),
+  usesOutsideLair: StatBlockProcedurePositiveIntegerSchema,
+  additionalUsesInLair: StatBlockProcedurePositiveIntegerSchema,
+});
+
+export const StatBlockLegendaryActionUsesSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    uses: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  StatBlockLairBonusLegendaryActionUsesSchema,
+);
+
 export const StatBlockLegendaryActionSectionSchema = strictStruct({
-  uses: StatBlockProcedurePositiveIntegerSchema,
+  uses: StatBlockLegendaryActionUsesSchema,
   entries: StatBlockProcedureSectionSchema,
 });
 
@@ -6399,8 +6401,17 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
   size: StandaloneStatBlockSizeSchema,
   creatureType: CreatureTypeSchema,
   creatureTypeTags: optionalExact(
-    nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")),
+    nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")).pipe(
+      Schema.filter(
+        (tags) => tags.every((tag) => tag.toLowerCase() !== "swarm"),
+        {
+          message: () =>
+            "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
+        },
+      ),
+    ),
   ),
+  swarm: optionalExact(strictStruct({ constituentSize: SizeSchema })),
   alignment: StatBlockAlignmentSchema,
   ac: StatBlockArmorClassSchema,
   hp: StandaloneStatBlockValueSchema,

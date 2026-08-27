@@ -160,6 +160,35 @@ describe("standalone Stat Block general facts", () => {
     ).toThrow();
   });
 
+  test("preserves a swarm's constituent Size without a parallel creature type tag", () => {
+    const swarm = {
+      ...syntheticStandaloneStatBlock,
+      size: "medium",
+      creatureType: "undead",
+      creatureTypeTags: undefined,
+      swarm: { constituentSize: "tiny" },
+    } as const;
+    const { creatureTypeTags: _omittedTags, ...authoredSwarm } = swarm;
+
+    expect(decode(StandaloneStatBlockSchema, authoredSwarm)).toMatchObject({
+      size: "medium",
+      creatureType: "undead",
+      swarm: { constituentSize: "tiny" },
+    });
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredSwarm,
+        creatureTypeTags: ["swarm"],
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredSwarm,
+        swarm: { constituentSize: "tiny", size: "medium" },
+      }),
+    ).toThrow();
+  });
+
   test("leaves grouped procedure sections to the procedure schema", () => {
     expect(() =>
       decode(StandaloneStatBlockSchema, {
@@ -182,7 +211,10 @@ describe("standalone Stat Block general facts", () => {
     expect(() =>
       decode(StandaloneStatBlockSchema, {
         ...syntheticStandaloneStatBlock,
-        legendaryActions: { uses: 1, actions: {} },
+        legendaryActions: {
+          uses: { kind: "fixed", uses: 1 },
+          actions: {},
+        },
       }),
     ).toThrow();
   });

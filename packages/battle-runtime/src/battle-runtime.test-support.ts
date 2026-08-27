@@ -4218,7 +4218,7 @@ export function monsterResourceStatBlock(): StatBlockRecord {
         },
       ],
       legendaryActions: {
-        uses: 2,
+        uses: { kind: "fixed", uses: 2 },
         entries: [
           renamedAttackProcedureEntry({
             entry: scimitar,

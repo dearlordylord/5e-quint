@@ -48,9 +48,6 @@
       }
     },
     "creatureType": "undead",
-    "creatureTypeTags": [
-      "swarm"
-    ],
     "hp": {
       "kind": "literal",
       "value": 49
@@ -136,6 +133,9 @@
         "kind": "climb"
       }
     ],
+    "swarm": {
+      "constituentSize": "tiny"
+    },
     "traits": [
       {
         "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny creature. The swarm can't regain Hit Points or gain Temporary Hit Points.",

@@ -14,7 +14,7 @@ in  { challengeRating = 3
         , alignment = { order = "neutral", morality = "evil" }
         , communication = { kind = "understood_but_cannot_speak", languages = { kind = "named", languages = [ "Common" ] } }
         , creatureType = "undead"
-        , creatureTypeTags = [ "swarm" ]
+        , swarm = { constituentSize = "tiny" }
         , hp = { kind = "literal", value = 49 }
         , initiative = { modifier = +2, score = 12 }
         , passivePerception = 10

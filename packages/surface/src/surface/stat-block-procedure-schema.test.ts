@@ -6,6 +6,7 @@ import {
   CreatureStatBlockProjectionSchema,
   EffectAtomSchema,
   StandaloneStatBlockSchema,
+  StatBlockLegendaryActionUsesSchema,
   StatBlockProcedureEntrySchema,
   StatBlockProcedureSectionSchema,
 } from "./schema.ts";
@@ -135,7 +136,7 @@ const syntheticStandaloneStatBlock = {
     },
   ],
   legendaryActions: {
-    uses: 3,
+    uses: { kind: "fixed", uses: 3 },
     entries: [
       {
         kind: "textOnly",
@@ -150,6 +151,32 @@ const syntheticStandaloneStatBlock = {
 } as const;
 
 describe("standalone Stat Block procedure sections", () => {
+  test("models fixed and additive in-lair Legendary Action uses without correlated totals", () => {
+    const fixed = { kind: "fixed", uses: 3 } as const;
+    const lairBonus = {
+      kind: "lair_bonus",
+      usesOutsideLair: 3,
+      additionalUsesInLair: 1,
+    } as const;
+
+    expect(decode(StatBlockLegendaryActionUsesSchema, fixed)).toEqual(fixed);
+    expect(decode(StatBlockLegendaryActionUsesSchema, lairBonus)).toEqual(
+      lairBonus,
+    );
+    expect(() =>
+      decode(StatBlockLegendaryActionUsesSchema, {
+        ...lairBonus,
+        additionalUsesInLair: 0,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockLegendaryActionUsesSchema, {
+        ...lairBonus,
+        usesInLair: 4,
+      }),
+    ).toThrow();
+  });
+
   test("preserves mixed source order, ordinal dispatch, text-only reasons, and spell refs", () => {
     const decoded = decode(
       StandaloneStatBlockSchema,
@@ -619,6 +646,15 @@ describe("standalone Stat Block procedure sections", () => {
         ...saveEntry,
         procedure: {
           ...saveEntry.procedure,
+          description: "Executable prose must use a text-only entry.",
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...saveEntry,
+        procedure: {
+          ...saveEntry.procedure,
           dc: { kind: "caster_spell_save_dc" },
         },
       }),
@@ -680,14 +716,31 @@ describe("standalone Stat Block procedure sections", () => {
         procedure: {
           ...attackEntry.procedure,
           reachFeet: 1001,
-          rangeFeet: { normal: 1001, long: 1002 },
         },
       }),
     ).toMatchObject({
       procedure: {
         reachFeet: 1001,
+      },
+    });
+
+    const rangedAttackEntry = {
+      ...attackEntry,
+      procedure: {
+        ...attackEntry.procedure,
+        attackType: "ranged",
         rangeFeet: { normal: 1001, long: 1002 },
       },
+    } as const;
+    const { reachFeet: _meleeReachFeet, ...rangedProcedure } =
+      rangedAttackEntry.procedure;
+    expect(
+      decode(StatBlockProcedureEntrySchema, {
+        ...rangedAttackEntry,
+        procedure: rangedProcedure,
+      }),
+    ).toMatchObject({
+      procedure: { rangeFeet: { normal: 1001, long: 1002 } },
     });
 
     for (const value of [0, -1, 1.5, NaN, Infinity, -Infinity] as const) {
@@ -701,6 +754,47 @@ describe("standalone Stat Block procedure sections", () => {
         }),
       ).toThrow();
     }
+
+    const { reachFeet: _requiredReachFeet, ...meleeWithoutReach } =
+      attackEntry.procedure;
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: meleeWithoutReach,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          rangeFeet: { normal: 30, long: 120 },
+        },
+      }),
+    ).toThrow();
+    const { rangeFeet: _requiredRangeFeet, ...rangedWithoutRange } =
+      rangedProcedure;
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...rangedAttackEntry,
+        procedure: rangedWithoutRange,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...rangedAttackEntry,
+        procedure: { ...rangedProcedure, reachFeet: 5 },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          description: "Executable prose must use a text-only entry.",
+        },
+      }),
+    ).toThrow();
   });
 
   test("requires a parsed trigger for executable reactions while retaining text-only reactions", () => {

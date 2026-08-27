@@ -288,7 +288,7 @@ export function legendaryActionStatBlock(): StatBlockRecord {
     statBlock: {
       ...base.statBlock,
       legendaryActions: {
-        uses: 1,
+        uses: { kind: "fixed", uses: 1 },
         entries: [
           {
             ...scimitar,
