@@ -1,0 +1,30 @@
+let T = ./_stat_block_types.dhall
+in  { challengeRating = 1
+    , id = "stat_block_brass_dragon_wyrmling"
+    , kind = "statBlock"
+    , name = "Brass Dragon Wyrmling"
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1102-1131" }
+    , statBlock =
+        { abilityScores = { str = 15, dex = 10, con = 13, int = 10, wis = 11, cha = 13 }
+        , ac = { value = { kind = "literal", value = 15 } }
+        , actions =
+            [ T.exec 1 (T.attack "Rend" "melee" "str" +4 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 10 (Some +2) 7 ] (None Text))
+            , T.execSome 2 (T.save "Fire Breath" "dex" 11 (T.line 20 5) (T.damage "fire" 4 6 (None Integer) 14) { kind = "half_damage" } (None Text)) [ 1 ]
+            , T.text 3 "Sleep Breath" "Constitution Saving Throw: DC 11, each creature in a 15-foot Cone. Failure: The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save. Second Failure: The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it." "unsupported_action_shape"
+            ]
+        , alignment = { order = "chaotic", morality = "good" }
+        , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Draconic" ] } }
+        , creatureType = "dragon"
+        , creatureTypeTags = [ "metallic" ]
+        , hp = { kind = "literal", value = 22 }
+        , immunities = { conditions = None (List Text), damageTypes = Some [ "fire" ] }
+        , initiative = { modifier = +2, score = 12 }
+        , passivePerception = 14
+        , savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "dex", modifier = +2 }, { ability = "con", modifier = +1 }, { ability = "int", modifier = +0 }, { ability = "wis", modifier = +2 }, { ability = "cha", modifier = +1 } ]
+        , senses = [ { kind = "blindsight", rangeFeet = 10, qualifier = None Text }, { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ]
+        , skillModifiers = [ { skill = "perception", modifier = 4 }, { skill = "stealth", modifier = 2 } ]
+        , size = "medium"
+        , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "burrow", feet = { kind = "literal", value = 15 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 60 }, hover = None Bool } ]
+        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        }
+    }
