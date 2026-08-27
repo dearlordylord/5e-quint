@@ -312,6 +312,16 @@ let multiattack : Multiattack -> Procedure =
             , name = input.name
             }
 
+let ActionOption : Type = { name : Text, options : List Text }
+
+let actionOption : ActionOption -> Procedure =
+      λ(input : ActionOption) ->
+        defaultProcedure
+        //  { kind = "action_option"
+            , name = input.name
+            , options = Some input.options
+            }
+
 let Spellcasting : Type =
       { name : Text
       , ability : Text
@@ -433,6 +443,7 @@ let trait : TraitInput -> Trait =
         }
 
 in  { advantageDamage
+    , actionOption
     , meleeAttack
     , rangedAttack
     , atWill

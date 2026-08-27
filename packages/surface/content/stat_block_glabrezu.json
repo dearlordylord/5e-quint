@@ -1,0 +1,230 @@
+{
+  "challengeRating": 9,
+  "id": "stat_block_glabrezu",
+  "kind": "statBlock",
+  "name": "Glabrezu",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:586-623"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 21,
+      "dex": 15,
+      "int": 19,
+      "str": 20,
+      "wis": 17
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "description": "The glabrezu makes two Pincer attacks and uses Pummel or Spellcasting.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +9, reach 10 ft. Hit: 16 (2d10 + 5) Slashing damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 15) from one of two pincers.",
+        "kind": "textOnly",
+        "name": "Pincer",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Dexterity Saving Throw: DC 17, one creature Grappled by the glabrezu. Failure: 15 (3d6 + 5) Bludgeoning damage. Success: Half damage.",
+        "kind": "textOnly",
+        "name": "Pummel",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "int",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "darkness"
+                },
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "dispel_magic"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "confusion"
+                },
+                {
+                  "spellId": "fly"
+                },
+                {
+                  "spellId": "power_word_stun"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 16,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Abyssal"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "fiend",
+    "creatureTypeTags": [
+      "demon"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 189
+    },
+    "immunities": {
+      "conditions": [
+        "poisoned"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 6,
+      "score": 16
+    },
+    "passivePerception": 17,
+    "resistances": {
+      "damageTypes": [
+        "cold",
+        "fire",
+        "lightning"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 9
+      },
+      {
+        "ability": "con",
+        "modifier": 9
+      },
+      {
+        "ability": "wis",
+        "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 7
+      }
+    ],
+    "senses": [
+      {
+        "kind": "truesight",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 7,
+        "skill": "deception"
+      },
+      {
+        "modifier": 7,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the glabrezu dies outside the Abyss, its body dissolves into ichor, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Abyss.",
+        "name": "Demonic Restoration"
+      },
+      {
+        "description": "The glabrezu has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}
