@@ -5,7 +5,6 @@ import {
   statBlockProcedurePresentationsForStateForTest,
   authoredProcedureOrdinal,
   executableProcedureEntry,
-  projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.attack-control
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
@@ -31,6 +30,7 @@ import {
 } from "./rule-core-component-route.test-support.ts";
 import { Either } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import { describe, it } from "vitest";
 
 import { Hp, DieRollResult, movementFeet } from "@dnd/shared/types";
@@ -38,6 +38,10 @@ import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlock,
+} from "./stat-block-authored-projection.ts";
 
 import {
   battleId,
@@ -318,25 +322,34 @@ function statBlockCreature(input: {
   readonly initiative: number;
   readonly statBlock: StatBlockRecord;
 }): BattleCreatureInit {
+  const projectedResult = projectAuthoredStatBlock(input.statBlock);
+  if (Either.isLeft(projectedResult)) {
+    throw new Error(
+      battleStatBlockProjectionFailureMessage(
+        projectedResult.left,
+        "Expected rule-core Stat Block fixture projection",
+      ),
+    );
+  }
+  const sourceResult = battleStatBlockCombatantSource(
+    projectedResult.right.runtime,
+  );
+  if (Either.isLeft(sourceResult)) {
+    throw new Error(battleStateInitIssueMessage(sourceResult.left));
+  }
   return {
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
-        battleStatBlockCombatantSource(
-          projectedStatBlockRuntimeSource(input.statBlock),
-        ),
-      ),
+      source: sourceResult.right,
       currentHp: Hp(12),
       tempHp: Hp(0),
       ammunitionStocks: [],
       conditions: [],
       presentation: {
+        ...projectedResult.right.presentation,
         displayName: input.displayName,
-        communication: { kind: "none" },
-        traits: [],
-        orderedProcedures: [],
       },
     },
   };
