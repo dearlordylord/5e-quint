@@ -175,7 +175,7 @@ export function mcpModelOutputJsonSchema<A, I>(
 
 export function schemaJsonContent<T, E, RD>(
   schema: Schema.ConstraintCodec<T, E, RD, never>,
-  value: T,
+  value: NoInfer<T>,
 ) {
   const encoded = jsonSerializablePayload(
     Effect.runSync(Schema.encodeEffect(schema)(value)),

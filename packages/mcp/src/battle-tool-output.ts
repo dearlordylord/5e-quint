@@ -100,23 +100,25 @@ const BattleLifecycleResultSchema = Schema.Union([
 ]);
 
 function battlePresentationOutputSchema(session: Schema.Constraint) {
-  return Schema.Union([
-    Schema.Struct({
-      ...BattlePresentationBranches.none,
-      ...BattlePresentationProjectionFields,
-      session,
-    }),
-    Schema.Struct({
-      ...BattlePresentationBranches.initialInitiativeSetup,
-      ...BattlePresentationProjectionFields,
-      session,
-    }),
-    Schema.Struct({
-      ...BattlePresentationBranches.activeBattle,
-      ...BattlePresentationProjectionFields,
-      session,
-    }),
-  ]);
+  return Schema.toCodecIso(
+    Schema.Union([
+      Schema.Struct({
+        ...BattlePresentationBranches.none,
+        ...BattlePresentationProjectionFields,
+        session,
+      }),
+      Schema.Struct({
+        ...BattlePresentationBranches.initialInitiativeSetup,
+        ...BattlePresentationProjectionFields,
+        session,
+      }),
+      Schema.Struct({
+        ...BattlePresentationBranches.activeBattle,
+        ...BattlePresentationProjectionFields,
+        session,
+      }),
+    ]),
+  );
 }
 
 export const SelectStatBlockOutputSchema = Schema.Struct({
@@ -152,11 +154,13 @@ const BattleLifecycleActiveOutputSchema = Schema.Struct({
   session: McpActiveSessionSnapshotSchema,
 });
 
-export const BattleLifecycleOutputSchema = Schema.Union([
-  BattleLifecycleActiveOutputSchema,
-  BattleLifecycleInitialInitiativeSetupOutputSchema,
-  BattleLifecycleActiveSetupOutputSchema,
-]);
+export const BattleLifecycleOutputSchema = Schema.toCodecIso(
+  Schema.Union([
+    BattleLifecycleActiveOutputSchema,
+    BattleLifecycleInitialInitiativeSetupOutputSchema,
+    BattleLifecycleActiveSetupOutputSchema,
+  ]),
+);
 
 export const BattleResolutionOutputSchema = Schema.Struct({
   battleState: McpActiveBattleStateSnapshotSchema,
