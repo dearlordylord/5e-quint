@@ -23,6 +23,7 @@ import {
 } from "./index.ts";
 import {
   projectedStatBlockRuntimeSource,
+  monsterMultiattackStatBlock,
   statBlockCatalog,
   statBlockRecord,
   unitLibrary,
@@ -287,6 +288,77 @@ describe("Stat Block projection boundary coverage", () => {
     expect(authoredStatBlockBattleInitIssueMessage(initialized.left)).toBe(
       "Stat Block authored projection failed in actions procedure 1, bonusActions procedure 2, reactions procedure 3: the procedure binding is not supported by battle execution.",
     );
+  });
+
+  test("returns a typed failure for malformed authored Multiattack counts", () => {
+    const source = monsterMultiattackStatBlock();
+    const multiattack = source.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "multiattack",
+    );
+    if (
+      multiattack === undefined ||
+      multiattack.kind !== "executable" ||
+      multiattack.procedure.kind !== "multiattack"
+    ) {
+      throw new Error("Expected the synthetic Multiattack procedure.");
+    }
+    const firstDispatch = multiattack.procedure.dispatches[0];
+    if (firstDispatch === undefined) {
+      throw new Error("Expected the synthetic Multiattack dispatch.");
+    }
+    const remainingDispatches = multiattack.procedure.dispatches.slice(1);
+
+    const malformedCounts: readonly unknown[] = [
+      null,
+      { kind: "unexpected", value: 1 },
+      { kind: "literal", value: 0 },
+      { kind: "literal" },
+    ];
+    for (const [index, count] of malformedCounts.entries()) {
+      const actions = source.statBlock.actions?.map((entry) =>
+        entry === multiattack
+          ? {
+              ...entry,
+              procedure: {
+                ...entry.procedure,
+                dispatches: [
+                  { ...firstDispatch, count },
+                  ...remainingDispatches,
+                ],
+              },
+            }
+          : entry,
+      );
+      const record = syntheticProjectionRecord(
+        source,
+        `multiattack-count-${index}`,
+        {
+          ...source.statBlock,
+          actions,
+        },
+      );
+
+      let projection: ReturnType<typeof projectAuthoredStatBlock> | undefined;
+      expect(() => {
+        projection = projectAuthoredStatBlock(record);
+      }).not.toThrow();
+      if (projection === undefined) {
+        throw new Error("Expected a Stat Block projection result.");
+      }
+      expect(projection).toEqual(
+        Either.left({
+          tag: "battleStatBlockProjectionFailure",
+          reason: "unsupportedProcedureBinding",
+          issues: [
+            {
+              section: "actions",
+              procedureOrdinal: multiattack.procedureOrdinal,
+            },
+          ],
+        }),
+      );
+    }
   });
 
   test("formats scalar Wild Shape projection failures through the public admission boundary", () => {

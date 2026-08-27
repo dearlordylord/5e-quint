@@ -133,27 +133,6 @@ describe("Stat Block execution admission branch coverage", () => {
     ).toEqual([]);
   });
 
-  test("omits a Multiattack with an invalid first dispatch count", () => {
-    const source = projectedStatBlockRuntimeSource(
-      monsterMultiattackStatBlock(),
-    );
-    const multiattack = multiattackProcedure(source);
-    const firstDispatch = multiattack.dispatches[0];
-    if (firstDispatch === undefined) {
-      throw new Error("Expected the first Multiattack dispatch.");
-    }
-
-    const execution = executionFor(
-      withMultiattackDispatches(
-        source,
-        dispatches({ ...firstDispatch, count: 0 }),
-      ),
-      "invalid-first-multiattack-count",
-    );
-
-    expect(multiattackBindings(execution)).toEqual([]);
-  });
-
   test("omits a Multiattack with an unknown first dispatch ordinal", () => {
     const source = projectedStatBlockRuntimeSource(
       monsterMultiattackStatBlock(),
@@ -173,31 +152,6 @@ describe("Stat Block execution admission branch coverage", () => {
         }),
       ),
       "unknown-first-multiattack-ordinal",
-    );
-
-    expect(multiattackBindings(execution)).toEqual([]);
-  });
-
-  test("omits a Multiattack when a later dispatch has an invalid count", () => {
-    const source = projectedStatBlockRuntimeSource(
-      monsterMultiattackStatBlock(),
-    );
-    const multiattack = multiattackProcedure(source);
-    const firstDispatch = multiattack.dispatches[0];
-    const secondDispatch = multiattack.dispatches[1];
-    if (firstDispatch === undefined || secondDispatch === undefined) {
-      throw new Error("Expected two Multiattack dispatches.");
-    }
-
-    const execution = executionFor(
-      withMultiattackDispatches(
-        source,
-        dispatches(
-          { ...firstDispatch, count: 1 },
-          { ...secondDispatch, count: 0 },
-        ),
-      ),
-      "invalid-second-multiattack-count",
     );
 
     expect(multiattackBindings(execution)).toEqual([]);

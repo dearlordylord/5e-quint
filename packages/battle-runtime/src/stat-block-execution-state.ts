@@ -90,6 +90,64 @@ export function parseStatBlockLegendaryActionUses(
   );
 }
 
+export type StatBlockLiteralValueParseFailure = "invalidLiteral";
+
+/** A literal Stat Block value after resolving the authored value union. */
+export type BattleStatBlockLiteralValue = Extract<
+  StatBlockLiteralValue,
+  { readonly kind: "literal" }
+>;
+
+/**
+ * Parse a runtime-facing literal value without trusting an object-shaped
+ * boundary supplied by a restore or test caller.
+ */
+export function parseStatBlockLiteralValue(
+  value: StatBlockLiteralValue,
+): Either.Either<
+  BattleStatBlockLiteralValue,
+  StatBlockLiteralValueParseFailure
+> {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("kind" in value) ||
+    value.kind !== "literal" ||
+    !("value" in value) ||
+    typeof value.value !== "number" ||
+    !Number.isFinite(value.value)
+  ) {
+    return Either.left("invalidLiteral");
+  }
+  return Either.right({ kind: "literal", value: value.value });
+}
+
+export type BattleStatBlockPositiveIntegerLiteral = Omit<
+  BattleStatBlockLiteralValue,
+  "value"
+> & {
+  readonly value: PositiveIntegerType;
+};
+
+export type StatBlockPositiveIntegerLiteralParseFailure =
+  | StatBlockLiteralValueParseFailure
+  | "invalidPositiveInteger";
+
+export function parseStatBlockPositiveIntegerLiteral(
+  value: StatBlockLiteralValue,
+): Either.Either<
+  BattleStatBlockPositiveIntegerLiteral,
+  StatBlockPositiveIntegerLiteralParseFailure
+> {
+  const literal = parseStatBlockLiteralValue(value);
+  if (Either.isLeft(literal)) return Either.left(literal.left);
+  const positiveInteger = PositiveInteger.either(literal.right.value);
+  if (Either.isLeft(positiveInteger)) {
+    return Either.left("invalidPositiveInteger");
+  }
+  return Either.right({ kind: "literal", value: positiveInteger.right });
+}
+
 export type BattleStatBlockRuntimeResource = {
   readonly ordinal: StatBlockProcedureResourceOrdinal;
   readonly ownership: "shared" | "each";
@@ -101,7 +159,7 @@ export type BattleStatBlockRuntimeResource = {
 
 export type BattleStatBlockRuntimeMultiattackDispatch = {
   readonly procedureOrdinal: StatBlockProcedureOrdinal;
-  readonly count: number;
+  readonly count: PositiveIntegerType;
 };
 
 export type BattleStatBlockRuntimeFacts = {
@@ -121,6 +179,15 @@ export type BattleStatBlockRuntimeFacts = {
   readonly resistances?: CreatureResistanceList;
   readonly immunities?: CreatureImmunityList;
   readonly senses?: readonly BattleStatBlockRuntimeSense[];
+};
+
+export type BattleStatBlockCombatantFacts = Omit<
+  BattleStatBlockRuntimeFacts,
+  "size" | "ac" | "hp"
+> & {
+  readonly size: Size;
+  readonly ac: BattleStatBlockLiteralValue;
+  readonly hp: BattleStatBlockPositiveIntegerLiteral;
 };
 
 export type BattleStatBlockRuntimeSpeed = {

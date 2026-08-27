@@ -24,8 +24,10 @@ import type {
 } from "./battle-runtime-context.ts";
 import {
   parseStatBlockLegendaryActionUses,
+  parseStatBlockPositiveIntegerLiteral,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
+  type BattleStatBlockRuntimeMultiattackDispatch,
   type BattleStatBlockRuntimeResource,
   type BattleStatBlockRuntimeSpeed,
   type BattleStatBlockRuntimeSense,
@@ -395,26 +397,25 @@ function runtimeMultiattackBinding(
       procedureBindingIssue("actions", entry.procedureOrdinal),
     );
   }
-  if (
-    !procedure.dispatches.every(
-      ({ count }) => Number.isInteger(count.value) && count.value >= 1,
-    )
-  ) {
-    return Either.left(
-      procedureBindingIssue("actions", entry.procedureOrdinal),
-    );
+  const dispatches: BattleStatBlockRuntimeMultiattackDispatch[] = [];
+  for (const dispatch of procedure.dispatches) {
+    const count = parseStatBlockPositiveIntegerLiteral(dispatch.count);
+    if (Either.isLeft(count)) {
+      return Either.left(
+        procedureBindingIssue("actions", entry.procedureOrdinal),
+      );
+    }
+    dispatches.push({
+      procedureOrdinal: dispatch.procedureOrdinal,
+      count: count.right.value,
+    });
   }
   return Either.right([
     {
       kind: "multiattack",
       section: "actions",
       procedureOrdinal: entry.procedureOrdinal,
-      dispatches: nonEmptyRuntimeValues(
-        procedure.dispatches.map((dispatch) => ({
-          procedureOrdinal: dispatch.procedureOrdinal,
-          count: dispatch.count.value,
-        })),
-      ),
+      dispatches: nonEmptyRuntimeValues(dispatches),
       resourceRefs: procedureResourceRefs(entry),
     },
   ]);

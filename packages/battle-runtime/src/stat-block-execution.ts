@@ -2,9 +2,9 @@
 import { optionalProperty } from "./optional-property.ts";
 import {
   NonNegativeInteger,
-  PositiveInteger,
   abilityScoreToMod,
   resourceCount,
+  type PositiveInteger,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import { Brand, Match } from "effect";
@@ -367,8 +367,6 @@ function admittedMultiattackDispatch(
   >["dispatches"][number],
   actionAttacks: readonly AdmittedAttackOccurrence[],
 ): AdmittedMultiattackDispatch | null {
-  if (!Number.isInteger(dispatch.count) || dispatch.count < 1) return null;
-  const count = PositiveInteger(dispatch.count);
   const candidate = actionAttacks.find(
     (attack) => attack.procedureOrdinal === dispatch.procedureOrdinal,
   );
@@ -376,7 +374,7 @@ function admittedMultiattackDispatch(
   return {
     attack: candidate,
     procedureOrdinal: dispatch.procedureOrdinal,
-    count,
+    count: dispatch.count,
   };
 }
 

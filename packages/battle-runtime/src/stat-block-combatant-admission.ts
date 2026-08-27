@@ -1,6 +1,6 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Condition } from "@dnd/shared/game-facts";
-import { Hp } from "@dnd/shared/types";
+import { Hp, SIZES } from "@dnd/shared/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 
@@ -13,10 +13,12 @@ import {
 } from "./identity.ts";
 import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
 import {
+  parseStatBlockLiteralValue,
   parseStatBlockLegendaryActionUses,
+  parseStatBlockPositiveIntegerLiteral,
+  type BattleStatBlockCombatantFacts,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockExecutionSourceInput,
-  type BattleStatBlockRuntimeFacts,
   type BattleStatBlockRuntimeResource,
 } from "./stat-block-execution-state.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
@@ -28,7 +30,7 @@ const AdmittedBattleStatBlockCombatant =
 export type BattleStatBlockCombatantSource = {
   readonly id: BattleStatBlockExecutionSource["id"];
   readonly challengeRating: BattleStatBlockExecutionSource["challengeRating"];
-  readonly statBlock: BattleStatBlockRuntimeFacts;
+  readonly statBlock: BattleStatBlockCombatantFacts;
   readonly procedures: BattleStatBlockExecutionSource["procedures"];
   readonly resources?: readonly BattleStatBlockRuntimeResource[];
   readonly legendaryActionUses?: NonNullable<
@@ -144,21 +146,19 @@ export function battleStatBlockCombatantSource(
   BattleStatBlockCombatantSource,
   StatBlockCombatantAdmissionIssue
 > {
-  if (statBlock.statBlock.ac.kind !== "literal") {
+  const ac = parseStatBlockLiteralValue(statBlock.statBlock.ac);
+  if (Either.isLeft(ac)) {
     return issue("Battle runtime requires literal Stat Block Armor Class.");
   }
-  if (statBlock.statBlock.hp.kind !== "literal") {
-    return issue("Battle runtime requires literal Stat Block maximum HP.");
-  }
-  if (
-    !Number.isInteger(statBlock.statBlock.hp.value) ||
-    statBlock.statBlock.hp.value < 1
-  ) {
+  const hp = parseStatBlockPositiveIntegerLiteral(statBlock.statBlock.hp);
+  if (Either.isLeft(hp)) {
     return issue(
-      "Battle runtime requires Stat Block maximum HP to be a positive integer.",
+      hp.left === "invalidLiteral"
+        ? "Battle runtime requires literal Stat Block maximum HP."
+        : "Battle runtime requires Stat Block maximum HP to be a positive integer.",
     );
   }
-  if (typeof statBlock.statBlock.size !== "string") {
+  if (!SIZES.some((size) => size === statBlock.statBlock.size)) {
     return issue("Battle runtime requires a concrete creature Size.");
   }
   const legendaryActionUses = parseStatBlockLegendaryActionUses(
@@ -179,8 +179,8 @@ export function battleStatBlockCombatantSource(
       ...optionalProperty("legendaryActionUses", legendaryActionUses.right),
       statBlock: {
         ...statBlock.statBlock,
-        ac: statBlock.statBlock.ac,
-        hp: statBlock.statBlock.hp,
+        ac: ac.right,
+        hp: hp.right,
         size: statBlock.statBlock.size,
       },
     }),
