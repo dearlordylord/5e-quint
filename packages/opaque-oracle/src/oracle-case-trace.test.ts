@@ -584,7 +584,6 @@ describe("Opaque Oracle Case and Trace contract", () => {
                 subject === ownerAct
                   ? {
                       ...subject,
-                      actorId: foreignOwnerId,
                       procedureRef: forgedProcedureRef,
                     }
                   : subject,
@@ -594,6 +593,28 @@ describe("Opaque Oracle Case and Trace contract", () => {
         ],
       };
       expect(Either.isLeft(decodeOracleTrace(crossOwnerProcedure))).toBe(true);
+
+      const wrongInitialActor = {
+        ...trace,
+        steps: [
+          ...trace.steps.slice(0, -1),
+          {
+            ...entered,
+            frontier: {
+              acts: entered.frontier.acts.map((subject) =>
+                subject === ownerAct
+                  ? {
+                      ...subject,
+                      actorId: foreignOwnerId,
+                      procedureRef: forgedProcedureRef,
+                    }
+                  : subject,
+              ),
+            },
+          },
+        ],
+      };
+      expect(Either.isLeft(decodeOracleTrace(wrongInitialActor))).toBe(true);
     }
 
     const emptyFrontier = {
