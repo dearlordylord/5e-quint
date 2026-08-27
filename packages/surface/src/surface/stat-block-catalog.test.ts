@@ -491,11 +491,18 @@ describe("Stat Block catalog boundary", () => {
         section: srdGoblinWarrior.provenance.section,
       },
     });
+    expect(() =>
+      defineSrdStatBlockCollection({
+        statBlocks: [srdGoblinWarrior, duplicateName],
+      }),
+    ).toThrow(
+      '"code":"duplicateStatBlockIdentity","normalizedIdentity":"goblin warrior"',
+    );
+
     const result = buildStatBlockCatalog({
       collections: [
-        defineSrdStatBlockCollection({
-          statBlocks: [srdGoblinWarrior, duplicateName],
-        }),
+        defineSrdStatBlockCollection({ statBlocks: [srdGoblinWarrior] }),
+        defineSrdStatBlockCollection({ statBlocks: [duplicateName] }),
       ],
     });
 

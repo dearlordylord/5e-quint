@@ -114,11 +114,13 @@ export function defineSrdStatBlockCollection(input: {
     provenance: { kind: "srd-5.2.1" },
     statBlocks: input.statBlocks,
   } as const satisfies SrdStatBlockCollection;
-  const provenanceIssues = validateSrdStatBlockCollection(collection);
+  const collectionIssues = collectStatBlockCatalogIssues([collection]).issues;
 
-  /* v8 ignore start -- @preserve -- Srd521StatBlock input typing makes mixed-provenance collection construction malformed internal composition */
-  if (provenanceIssues.length > 0) {
-    throw new Error("SRD Stat Block collection contains non-SRD provenance");
+  /* v8 ignore start -- @preserve -- Srd521StatBlock input typing makes malformed collection construction an internal composition failure */
+  if (collectionIssues.length > 0) {
+    throw new Error(
+      `Invalid SRD Stat Block collection: ${JSON.stringify(collectionIssues)}`,
+    );
   }
   /* v8 ignore stop -- @preserve */
 
@@ -142,14 +144,45 @@ export const srdStatBlockCollection = defineSrdStatBlockCollection({
 export function buildStatBlockCatalog(input: {
   readonly collections: readonly SrdStatBlockCollection[];
 }): StatBlockCatalogBuildResult {
+  const { issues, records } = collectStatBlockCatalogIssues(input.collections);
+
+  if (issues.length > 0) {
+    return { tag: "invalid", issues };
+  }
+
+  return {
+    tag: "ok",
+    catalog: toSrdStatBlockCatalog({
+      getStatBlock: (id) =>
+        Option.fromNullable(records.get(StatBlockIdSchema.make(id))),
+      listStatBlocks: () => Array.from(records.values()),
+      requireStatBlock: (id) => records.get(StatBlockIdSchema.make(id))!,
+    }),
+  };
+}
+
+function collectStatBlockCatalogIssues(
+  collections: readonly SrdStatBlockCollection[],
+): {
+  readonly issues: readonly StatBlockCatalogBuildIssue[];
+  readonly records: ReadonlyMap<StatBlockId, Srd521StatBlock>;
+} {
   const issues: StatBlockCatalogBuildIssue[] = [];
   const records = new Map<StatBlockId, Srd521StatBlock>();
   const identityOwners = new Map<string, StatBlockId>();
 
-  for (const collection of input.collections) {
-    issues.push(...validateSrdStatBlockCollection(collection));
-
+  for (const collection of collections) {
     for (const statBlock of collection.statBlocks) {
+      if (!isSrd521Provenance(statBlock.provenance)) {
+        issues.push({
+          code: "mixedProvenance",
+          collectionKind: collection.kind,
+          expected: collection.provenance,
+          actual: statBlock.provenance,
+          statBlockId: statBlock.id,
+        });
+      }
+
       if (records.has(statBlock.id)) {
         issues.push({
           code: "duplicateStatBlockId",
@@ -174,35 +207,5 @@ export function buildStatBlockCatalog(input: {
     }
   }
 
-  if (issues.length > 0) {
-    return { tag: "invalid", issues };
-  }
-
-  return {
-    tag: "ok",
-    catalog: toSrdStatBlockCatalog({
-      getStatBlock: (id) =>
-        Option.fromNullable(records.get(StatBlockIdSchema.make(id))),
-      listStatBlocks: () => Array.from(records.values()),
-      requireStatBlock: (id) => records.get(StatBlockIdSchema.make(id))!,
-    }),
-  };
-}
-
-function validateSrdStatBlockCollection(
-  collection: SrdStatBlockCollection,
-): readonly StatBlockCatalogBuildIssue[] {
-  return collection.statBlocks.flatMap((statBlock) =>
-    isSrd521Provenance(statBlock.provenance)
-      ? []
-      : [
-          {
-            code: "mixedProvenance",
-            collectionKind: collection.kind,
-            expected: collection.provenance,
-            actual: statBlock.provenance,
-            statBlockId: statBlock.id,
-          } satisfies StatBlockCatalogBuildIssue,
-        ],
-  );
+  return { issues, records };
 }
