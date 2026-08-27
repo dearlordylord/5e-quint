@@ -13,6 +13,7 @@ const artifactPath = resolve(
 );
 const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as {
   readonly fixedPoint: { readonly commit: string };
+  readonly provenance: { readonly certifiedBaseline: string };
   readonly cases: readonly {
     readonly id: string;
     readonly input: unknown;
@@ -25,7 +26,10 @@ const artifact = JSON.parse(readFileSync(artifactPath, "utf8")) as {
 describe("character-sheet persistence fixed point", () => {
   test("replays the bounded old-parser matrix", () => {
     expect(artifact.fixedPoint.commit).toBe(
-      "e8621156332b0b4bd65379043d0bc1bc32f3a0af",
+      "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
+    );
+    expect(artifact.provenance.certifiedBaseline).toBe(
+      "docs/migrations/effect-4/baseline-certification.md",
     );
 
     for (const testCase of artifact.cases) {

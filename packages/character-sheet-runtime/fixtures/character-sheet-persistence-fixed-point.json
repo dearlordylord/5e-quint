@@ -2,9 +2,13 @@
   "artifactKind": "character-sheet-persistence-fixed-point",
   "formatVersion": 1,
   "fixedPoint": {
-    "commit": "e8621156332b0b4bd65379043d0bc1bc32f3a0af",
-    "checkout": "clean detached worktree",
+    "commit": "76d9abaf0ec9c8369d5f95f603c5cce88704d26e",
+    "checkout": "clean detached worktree with offline frozen dependencies",
     "parser": "packages/character-sheet-runtime/src/sheet-lifecycle.ts#parseCharacterSheet"
+  },
+  "provenance": {
+    "certifiedBaseline": "docs/migrations/effect-4/baseline-certification.md",
+    "oldParserProbe": "9/9 cases matched at 76d9abaf0ec9c8369d5f95f603c5cce88704d26e"
   },
   "projection": "Each expected value is the parser success projection or failure issue; Effect Either/Result tags are excluded.",
   "scope": "Bounded representative persisted inputs from stored-sheet-parser and sheet-lifecycle tests; this is not an exhaustive compatibility matrix.",
