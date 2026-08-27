@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { JSONSchema, Result, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   errorContent,
@@ -21,7 +21,7 @@ const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
 const modelOutputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
 
 export function decodeToolArgs<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
   args: unknown,
   toolName: string,
 ): ToolInputResult<A> {
@@ -40,7 +40,7 @@ export function decodeToolArgs<A, I>(
 }
 
 export function mcpObjectJsonSchema<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpObjectInputSchema {
   const generated = parseMcpObjectInputSchema(
     omitRedundantImpossibleProperties(jsonSchemaFromCodec(schema)),
@@ -55,7 +55,7 @@ export function mcpObjectJsonSchema<A, I>(
 }
 
 export function mcpObjectJsonSchemaWithCopiedObjects<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
   copiedObjectDescriptions: Readonly<Record<string, string>>,
 ): McpObjectInputSchema {
   const generated = mcpObjectJsonSchema(schema);
@@ -139,7 +139,7 @@ export function omitRedundantImpossibleProperties(value: unknown): unknown {
 }
 
 export function mcpOutputJsonSchema<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
   const cached = outputSchemaByCodec.get(schema);
   if (cached !== undefined) return cached;
@@ -156,7 +156,7 @@ export function mcpOutputJsonSchema<A, I>(
 }
 
 export function mcpModelOutputJsonSchema<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
   const cached = modelOutputSchemaByCodec.get(schema);
   if (cached !== undefined) return cached;
@@ -174,7 +174,7 @@ export function mcpModelOutputJsonSchema<A, I>(
 }
 
 export function schemaJsonContent<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
   value: A,
 ) {
   const encoded = jsonSerializablePayload(Schema.encodeSync(schema)(value));
@@ -185,9 +185,9 @@ export function schemaJsonContent<A, I>(
 }
 
 function jsonSchemaFromCodec<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
-  return stripSchemaIds(JSONSchema.make(schema));
+  return stripSchemaIds(Schema.toStandardJSONSchemaV1(schema).jsonSchema);
 }
 
 function parseMcpObjectInputSchema(

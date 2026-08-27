@@ -121,9 +121,9 @@ export function handleApplicationToolCall(
 ) {
   if (isContentToolName(name)) {
     const decoded = decodeContentToolCall({ name, args });
-    return Either.isLeft(decoded)
-      ? decoded.left
-      : handleContentToolCall(services, decoded.right);
+    return Result.isFailure(decoded)
+      ? decoded.failure
+      : handleContentToolCall(services, decoded.success);
   }
 
   return errorContent(`Unknown MCP application tool: ${name}`);
