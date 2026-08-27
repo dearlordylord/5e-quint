@@ -101,7 +101,10 @@ export function startableBattleCombatants(input: {
   }
 
   return Either.right({
-    creatureInits: correlated.right.map(({ initialization }) => initialization),
+    creatureInits: mapNonEmpty(
+      correlated.right,
+      ({ initialization }) => initialization,
+    ),
     characterSessions: resolved.right.flatMap((combatant) =>
       isResolvedCharacterBattleCombatant(combatant)
         ? [combatant.characterSession]
@@ -162,6 +165,14 @@ export function projectBattleCombatant(input: {
     ),
     Match.exhaustive,
   );
+}
+
+function mapNonEmpty<A, B>(
+  values: ReadonlyNonEmptyArray<A>,
+  map: (value: A) => B,
+): ReadonlyNonEmptyArray<B> {
+  const [first, ...rest] = values;
+  return [map(first), ...rest.map(map)];
 }
 
 type ResolvedBattleCombatant =
