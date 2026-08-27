@@ -157,8 +157,8 @@ describe("Character Sheet Spell Access free casts", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Spell Access free cast is exhausted." },
+      _tag: "Failure",
+      failure: { message: "Spell Access free cast is exhausted." },
     });
   });
 
@@ -184,8 +184,8 @@ describe("Character Sheet Spell Access free casts", () => {
     );
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "spellAccessFreeCast",
           sourceUnitId: magicInitiateSourceUnitId,
@@ -210,13 +210,13 @@ describe("Character Sheet Spell Access free casts", () => {
     );
     expect(
       parseCharacterSheet(JSON.parse(JSON.stringify(spent)), unitLibrary),
-    ).toMatchObject({ _tag: "Right", right: spent });
+    ).toMatchObject({ _tag: "Success", value: spent });
 
     const missingAccess = JSON.parse(JSON.stringify(spent));
     delete missingAccess.build.magicInitiateSpellAccesses;
     expect(parseCharacterSheet(missingAccess, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Character Build requires Magic Initiate Spell Accesses.",
       },
     });
@@ -248,8 +248,8 @@ describe("Character Sheet Spell Access free casts", () => {
       },
     ];
     expect(parseCharacterSheet(duplicateList, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: expect.stringContaining(
           "Character Build cannot acquire Magic Initiate more than once for the same spell list.",
         ),
@@ -272,7 +272,7 @@ describe("Character Sheet Spell Access free casts", () => {
       levelOneSpell: "bless",
     });
     expect(parseCharacterSheet(distinctLists, unitLibrary)).toMatchObject({
-      _tag: "Right",
+      _tag: "Success",
     });
   });
 

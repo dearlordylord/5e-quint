@@ -121,8 +121,8 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
     expect(
       useHeroicWarriorAtCombatTurnStart({ sheet, unitLibrary }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Heroic Warrior requires starting the combat turn without Heroic Inspiration.",
       },
@@ -147,8 +147,8 @@ describe("Character Sheet runtime / Fighter Heroic Warrior", () => {
         unitLibrary,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Heroic Warrior requires a retained combat turn-start Heroic Inspiration feature.",
       },

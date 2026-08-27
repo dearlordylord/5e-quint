@@ -107,8 +107,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     });
     expect(result.target.conditions).toEqual([]);
     expect(characterSheetResources(result.source, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           unitId: authoredUnitId("paladin_lay_on_hands"),
           count: 10,
@@ -175,7 +175,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         hpGate: "requiresShortRestStartHp",
         arcaneRecovery: { refundSpellSlots: [] },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("Short Rest benefit composition returns an accepted Arcane Recovery sheet", () => {
@@ -233,8 +233,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         removePoisoned: true,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Lay On Hands cannot spend more healing pool than remains.",
       },
     });
@@ -266,8 +266,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
 
     expect(rested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: [
+      _tag: "Success",
+      value: [
         {
           unitId: authoredUnitId("paladin_lay_on_hands"),
           count: 5,
@@ -397,8 +397,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     expect(
       characterSheetResources(result.recipients[1], unitLibrary),
     ).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -455,8 +455,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spell rest benefit recipient cannot be affected by this spell again until finishing a Long Rest.",
       },
@@ -651,7 +651,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
             },
           ],
         }),
-      ).toMatchObject({ _tag: "Left" });
+      ).toMatchObject({ _tag: "Failure" });
     }
   });
 
@@ -675,8 +675,8 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
           unitLibrary,
         ),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message:
             "Spell recipient rest lockout requires an admitted spell rest-benefit profile.",
         },

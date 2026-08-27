@@ -166,8 +166,8 @@ describe("Character Sheet runtime / passive defenses", () => {
     expect(
       characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         damageResistances: ["fire"],
         fiendishResilience: {
           damageType: "fire",
@@ -222,8 +222,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         fiendishResilienceDamageType: "force",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Fiendish Resilience damage type must be a non-Force damage type.",
       },
@@ -245,8 +245,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Fiendish Resilience selection requires the Fiendish Resilience feature.",
       },
@@ -254,8 +254,8 @@ describe("Character Sheet runtime / passive defenses", () => {
 
     expect(parseStoredFiendishResilience({ damageType: "cold" })).toMatchObject(
       {
-        _tag: "Right",
-        right: { damageType: "cold" },
+        _tag: "Success",
+        value: { damageType: "cold" },
       },
     );
   });
@@ -283,8 +283,8 @@ describe("Character Sheet runtime / passive defenses", () => {
     expect(
       characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         damageResistances: ["lightning"],
         conditionImmunities: ["poisoned"],
         naturesWard: {
@@ -309,8 +309,8 @@ describe("Character Sheet runtime / passive defenses", () => {
     expect(
       characterSheetPassiveDefenseProjection({ sheet: rested, unitLibrary }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         damageResistances: ["fire"],
         conditionImmunities: ["poisoned"],
         naturesWard: {
@@ -337,8 +337,8 @@ describe("Character Sheet runtime / passive defenses", () => {
     expect(
       characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         conditionImmunities: ["frightened"],
         auraOfCourage: {
           sourceUnitId: authoredUnitId("paladin_aura_of_courage"),
@@ -367,8 +367,8 @@ describe("Character Sheet runtime / passive defenses", () => {
     expect(
       characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         selfRestoration: {
           sourceUnitId: authoredUnitId("monk_self_restoration"),
           turnEndRemovableConditions: ["charmed", "frightened", "poisoned"],
@@ -393,8 +393,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         condition: "frightened",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Self-Restoration requires the chosen condition to be present.",
       },
@@ -421,8 +421,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         spellSourceUnitId: authoredUnitId("class_wizard"),
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         sourceUnitId: authoredUnitId("wizard_empowered_evocation"),
         spellSourceUnitId: "class_wizard",
         school: "evocation",
@@ -439,8 +439,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         spellSourceUnitId: authoredUnitId("class_wizard"),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Empowered Evocation requires an Evocation Spell Definition.",
       },
     });
@@ -453,8 +453,8 @@ describe("Character Sheet runtime / passive defenses", () => {
         spellSourceUnitId: authoredUnitId("class_sorcerer"),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Empowered Evocation requires Wizard Spell Access.",
       },
     });

@@ -162,8 +162,8 @@ describe("Character Sheet runtime / armor class", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { message: "Unknown Unit id: missing_unarmored_defense" },
+      _tag: "Failure",
+      failure: { message: "Unknown Unit id: missing_unarmored_defense" },
     });
   });
 

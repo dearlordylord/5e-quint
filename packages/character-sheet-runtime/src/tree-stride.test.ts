@@ -202,8 +202,8 @@ describe("Character Sheet runtime / Tree Stride", () => {
         usedThisTurn: false,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Tree Stride requires 5 feet of movement to enter a tree.",
       },
     });
@@ -222,8 +222,8 @@ describe("Character Sheet runtime / Tree Stride", () => {
         usedThisTurn: false,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Tree Stride destination must be a tree of the same kind.",
       },
     });

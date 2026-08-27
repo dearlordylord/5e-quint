@@ -323,8 +323,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Stored Character Sheet must not carry build-derived maximum HP.",
       },
@@ -344,8 +344,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Stored Character Sheet must not carry build-derived ordinary Spell Slot capacity.",
       },
@@ -365,8 +365,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Stored Character Sheet must not carry build-derived Pact Slot capacity.",
       },
@@ -389,8 +389,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Pact Slot expenditure state must contain exactly expended count.",
       },
@@ -410,8 +410,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spent Hit Dice state must contain exactly class Unit id and spent count.",
       },
@@ -539,8 +539,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language projection is incomplete for source Unit druid_druidic.",
@@ -567,8 +567,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language choices for source Unit rogue_thieves_cant must match the source choice count.",
@@ -595,8 +595,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language source Unit druid_druidic is not owned by the build.",
@@ -630,8 +630,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language source Unit druid_druidic is not owned by the build.",
@@ -658,8 +658,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message: "Duplicate Character Build language Thieves' Cant.",
       },
@@ -695,8 +695,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message:
           "Character Build class-feature language choices for source Unit rogue_thieves_cant must match the source choice count.",
@@ -837,8 +837,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "characterSheetIssue",
         message: "Metamagic known option count must match the Sorcerer level.",
       },
@@ -888,8 +888,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       );
 
       expect(sheet).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message:
             "Character Build Eldritch Invocation repeatable known cantrip choice must be a known Warlock cantrip.",
         },
@@ -924,8 +924,8 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Character Build Eldritch Invocation repeatable choice is invalid.",
       },

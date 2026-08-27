@@ -151,8 +151,8 @@ describe("Character Sheet runtime / spell slots", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Spell Slot state does not match build capacity for level 1.",
       },
     });
@@ -171,8 +171,8 @@ describe("Character Sheet runtime / spell slots", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spell Slot expenditure state must contain exactly spell level and expended count.",
       },
@@ -194,8 +194,8 @@ describe("Character Sheet runtime / spell slots", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Created Spell Slot state must contain exactly spell level, count, and expended count.",
       },
@@ -242,8 +242,8 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 2, count: 2, expended: 2 },
     ]);
     expect(characterSheetResources(converted, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -273,8 +273,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(1),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion would exceed the Sorcery Point maximum.",
       },
@@ -306,8 +306,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(1),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion requires an unexpended ordinary Spell Slot.",
       },
@@ -332,8 +332,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(1),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion requires the Sorcerer Font of Magic feature.",
       },
@@ -368,8 +368,8 @@ describe("Character Sheet runtime / spell slots", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Spell Slot state does not match build capacity for level 3.",
       },
     });
@@ -388,8 +388,8 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 3, count: 3, expended: 0 },
     ]);
     expect(characterSheetResources(created, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -406,8 +406,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(3),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic conversion requires a Spell Slot source when ordinary and created Spell Slots are both available.",
       },
@@ -433,8 +433,8 @@ describe("Character Sheet runtime / spell slots", () => {
     expect(
       characterSheetResources(createdSlotConverted, unitLibrary),
     ).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -493,8 +493,8 @@ describe("Character Sheet runtime / spell slots", () => {
       { spellLevel: 3, count: 2, expended: 0 },
     ]);
     expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -522,8 +522,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(2),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic Spell Slot creation requires Sorcerer level 3 for a level 2 Spell Slot.",
       },
@@ -558,8 +558,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(2),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic Spell Slot creation requires enough unexpended Sorcery Points.",
       },
@@ -572,8 +572,8 @@ describe("Character Sheet runtime / spell slots", () => {
         spellLevel: spellSlotLevel(6),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Font of Magic Spell Slot creation requires a Creating Spell Slots table entry.",
       },

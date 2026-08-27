@@ -63,8 +63,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Ritual spell invocation requires spellcasting Spell Access.",
       },
     });
@@ -99,8 +99,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         tag: "bookOfShadowsRitual",
         spellId: "detect_magic",
         requiredSpellAccess: "bookOfShadows",
@@ -115,8 +115,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Book of Shadows Ritual requires the book on your person.",
       },
     });
@@ -136,8 +136,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         tag: "spellbookRitual",
         spellId: "detect_magic",
         spellLevel: 1,
@@ -216,8 +216,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Wizard Ritual Adept requires the spell in the spellbook.",
       },
     });
@@ -269,8 +269,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Ritual spell invocation requires a ritual-tagged Spell Definition.",
       },
@@ -300,8 +300,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
       },
@@ -337,8 +337,8 @@ describe("Character Sheet runtime / spell invocation", () => {
         invocation: { kind: "ritual" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Spellbook ritual invocation requires a spellbook Ritual Access feature for the spellbook source.",
       },

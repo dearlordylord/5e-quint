@@ -300,7 +300,7 @@ describe("Character Sheet runtime / Modify Memory", () => {
         target: modifyMemoryTarget({ savingThrowOutcome: { tag: "failed" } }),
         memoryEdit: modifyMemoryEdit(),
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
   });
 });
 

@@ -80,8 +80,8 @@ describe("Character Sheet runtime / resources", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Right",
-      right: [{ tag: "layOnHandsHealingPool", expended: 2 }],
+      _tag: "Success",
+      value: [{ tag: "layOnHandsHealingPool", expended: 2 }],
     });
   });
 
@@ -118,8 +118,8 @@ describe("Character Sheet runtime / resources", () => {
         resource,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Spell Access free cast requires matching Spell Access.",
       },
     });
@@ -136,12 +136,12 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(characterSheetMonksFocusSaveDc(sheet, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: undefined,
+      _tag: "Success",
+      value: undefined,
     });
     expect(
       characterSheetMonkUncannyMetabolismUseState(sheet, unitLibrary),
-    ).toMatchObject({ _tag: "Right", right: undefined });
+    ).toMatchObject({ _tag: "Success", value: undefined });
   });
 
   test("projects omitted class-feature resource expenditures as zero from build-derived capacity", () => {
@@ -247,8 +247,8 @@ describe("Character Sheet runtime / resources", () => {
 
     for (const { sheet, resource } of cases) {
       expect(characterSheetResources(sheet, unitLibrary)).toMatchObject({
-        _tag: "Right",
-        right: expect.arrayContaining([expect.objectContaining(resource)]),
+        _tag: "Success",
+        value: expect.arrayContaining([expect.objectContaining(resource)]),
       });
       expect(sheet.resourceExpenditures).toEqual([]);
     }
@@ -357,8 +357,8 @@ describe("Character Sheet runtime / resources", () => {
       });
 
       expect(sheet).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message:
             "Character Sheet resource expenditure cannot exceed build resource capacity.",
         },
@@ -457,8 +457,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: { message: input.message },
+      _tag: "Failure",
+      failure: { message: input.message },
     });
   });
 
@@ -510,8 +510,8 @@ describe("Character Sheet runtime / resources", () => {
       );
 
       expect(sheet).toMatchObject({
-        _tag: "Left",
-        left: { message },
+        _tag: "Failure",
+        failure: { message },
       });
     },
   );
@@ -536,8 +536,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: [
+      _tag: "Success",
+      value: [
         {
           sourceUnitId: authoredUnitId("ranger_favored_enemy"),
           spellId: authoredUnitId("hunters_mark"),
@@ -553,8 +553,8 @@ describe("Character Sheet runtime / resources", () => {
 
     expect(rested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: [
+      _tag: "Success",
+      value: [
         {
           sourceUnitId: authoredUnitId("ranger_favored_enemy"),
           spellId: authoredUnitId("hunters_mark"),
@@ -588,8 +588,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
           spellId: authoredUnitId("divine_smite"),
@@ -605,8 +605,8 @@ describe("Character Sheet runtime / resources", () => {
 
     expect(rested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(rested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
           spellId: authoredUnitId("divine_smite"),
@@ -649,8 +649,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -661,8 +661,8 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     });
     expect(characterSheetMonksFocusSaveDc(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: { unitId: MONK_MONKS_FOCUS_UNIT_ID, dc: 13 },
+      _tag: "Success",
+      value: { unitId: MONK_MONKS_FOCUS_UNIT_ID, dc: 13 },
     });
 
     const shortRested = requireRight(
@@ -670,8 +670,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -687,8 +687,8 @@ describe("Character Sheet runtime / resources", () => {
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -731,8 +731,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -753,8 +753,8 @@ describe("Character Sheet runtime / resources", () => {
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -789,8 +789,8 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -826,8 +826,8 @@ describe("Character Sheet runtime / resources", () => {
         .restFeatureUses,
     ).toEqual(shortRested.restFeatureUses);
     expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -846,8 +846,8 @@ describe("Character Sheet runtime / resources", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Sorcerous Restoration cannot be used again until a Long Rest.",
       },
@@ -861,8 +861,8 @@ describe("Character Sheet runtime / resources", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Sorcerous Restoration cannot recover more than half Sorcerer level rounded down.",
       },
@@ -896,8 +896,8 @@ describe("Character Sheet runtime / resources", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Sorcerous Restoration requires the Sorcerer level 5 feature.",
       },
     });
@@ -909,8 +909,8 @@ describe("Character Sheet runtime / resources", () => {
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(longRested.restFeatureUses).toEqual([]);
     expect(characterSheetResources(longRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
           unitId: SORCERER_FONT_OF_MAGIC_UNIT_ID,
@@ -952,8 +952,8 @@ describe("Character Sheet runtime / resources", () => {
     expect(
       characterSheetMonkUncannyMetabolismUseState(spent, unitLibrary),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
         trigger: "roll_initiative",
         optional: true,
@@ -977,8 +977,8 @@ describe("Character Sheet runtime / resources", () => {
       },
     });
     expect(characterSheetResources(spent, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -996,8 +996,8 @@ describe("Character Sheet runtime / resources", () => {
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
     ]);
     expect(characterSheetResources(shortRested, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -1014,8 +1014,8 @@ describe("Character Sheet runtime / resources", () => {
     expect(
       characterSheetMonkUncannyMetabolismUseState(longRested, unitLibrary),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,
         usedSinceLongRest: false,
       },
@@ -1061,8 +1061,8 @@ describe("Character Sheet runtime / resources", () => {
     expect(
       characterSheetMonkUncannyMetabolismUseState(recovered, unitLibrary),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         healing: {
           martialArtsDie: { dice: 1, dieSize: 8 },
           monkLevelBonus: 5,
@@ -1071,8 +1071,8 @@ describe("Character Sheet runtime / resources", () => {
       },
     });
     expect(characterSheetResources(recovered, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: expect.arrayContaining([
+      _tag: "Success",
+      value: expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
           unitId: MONK_MONKS_FOCUS_UNIT_ID,
@@ -1136,8 +1136,8 @@ describe("Character Sheet runtime / resources", () => {
         martialArtsRoll: DieRollResult(9),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Uncanny Metabolism Martial Arts die roll must be within d8.",
       },
     });
@@ -1156,8 +1156,8 @@ describe("Character Sheet runtime / resources", () => {
         martialArtsRoll: DieRollResult(4),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Uncanny Metabolism cannot be used again until a Long Rest.",
       },
     });
@@ -1179,8 +1179,8 @@ describe("Character Sheet runtime / resources", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Uncanny Metabolism rest feature use requires the Monk Uncanny Metabolism feature.",
       },

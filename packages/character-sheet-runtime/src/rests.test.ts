@@ -106,8 +106,8 @@ describe("Character Sheet runtime / rests", () => {
     );
 
     expect(startShortRest({ sheet })).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         tag: "shortRestStarted",
         requiredRestTicks: CHARACTER_SHEET_SHORT_REST_TICKS,
       },
@@ -121,14 +121,14 @@ describe("Character Sheet runtime / rests", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Short Rest requires 1 hour before benefits can be received.",
       },
     });
     expect(startShortRest({ sheet: zeroHp })).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Short Rest requires the Character Sheet to have at least 1 HP.",
       },
@@ -136,8 +136,8 @@ describe("Character Sheet runtime / rests", () => {
     expect(
       startLongRest({ sheet: zeroHp, timing: { tag: "noPriorLongRest" } }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest requires the Character Sheet to have at least 1 HP.",
       },
@@ -165,8 +165,8 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest requires waiting 16 hours after finishing the previous Long Rest.",
       },
@@ -180,8 +180,8 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      value: {
         tag: "longRestStarted",
         requiredRestTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS,
         nextLongRestStartWaitTicks: CHARACTER_SHEET_LONG_REST_WAIT_TICKS,
@@ -204,8 +204,8 @@ describe("Character Sheet runtime / rests", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest requires the full required duration before benefits can be received.",
       },
@@ -339,8 +339,8 @@ describe("Character Sheet runtime / rests", () => {
     expect(
       completeLongRest({ sheet, unitLibrary: missingResourcefulUnitLibrary }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Unknown Unit id: species_human_resourceful" },
+      _tag: "Failure",
+      failure: { message: "Unknown Unit id: species_human_resourceful" },
     });
   });
 
@@ -737,8 +737,8 @@ describe("Character Sheet runtime / rests", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Interrupted Long Rest before 1 hour cannot receive Short Rest benefit inputs.",
       },
@@ -756,8 +756,8 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Long Rest physical exertion interruption requires at least 1 hour.",
       },
@@ -775,8 +775,8 @@ describe("Character Sheet runtime / rests", () => {
           interruptionsIncludingThisOne: resourceCount(1),
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message:
             "Long Rest interruption requires rested time before the required Long Rest duration.",
         },
@@ -912,8 +912,10 @@ describe("Character Sheet runtime / rests", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Short Rest cannot spend more Hit Dice than remain." },
+      _tag: "Failure",
+      failure: {
+        message: "Short Rest cannot spend more Hit Dice than remain.",
+      },
     });
   });
 
@@ -976,8 +978,8 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Arcane Recovery cannot be used again until a Long Rest.",
       },
     });
@@ -1122,8 +1124,8 @@ describe("Character Sheet runtime / rests", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Arcane Recovery refund exceeds half Wizard level rounded up.",
       },
     });
@@ -1211,8 +1213,8 @@ describe("Character Sheet runtime / rests", () => {
     });
 
     expect(sheet).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Arcane Recovery rest feature use requires the Wizard Arcane Recovery feature.",
       },
@@ -1252,8 +1254,8 @@ describe("Character Sheet runtime / rests", () => {
     expect(
       completeMagicalCunningRite({ sheet: recovered, unitLibrary }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Magical Cunning cannot be used again until a Long Rest.",
       },
     });
@@ -1335,8 +1337,8 @@ describe("Character Sheet runtime / rests", () => {
     );
 
     expect(completeMagicalCunningRite({ sheet, unitLibrary })).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Magical Cunning requires the Warlock Magical Cunning feature.",
       },

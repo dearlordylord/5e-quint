@@ -127,7 +127,7 @@ describe("Character Sheet runtime / companions", () => {
 
   test("retains the empty durable companion state", () => {
     expect(companionFromInput({ tag: "none" })).toEqual(
-      expect.objectContaining({ _tag: "Right", right: { tag: "none" } }),
+      expect.objectContaining({ _tag: "Success", value: { tag: "none" } }),
     );
     expect(companionAfterLongRest({ tag: "none" })).toEqual({ tag: "none" });
   });
@@ -143,8 +143,8 @@ describe("Character Sheet runtime / companions", () => {
         }),
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Retained companion special forms require the attack-exception protocol.",
       },
@@ -161,7 +161,7 @@ describe("Character Sheet runtime / companions", () => {
           ),
         ),
       ),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
   });
 
   test("creates and parses an empty durable companion slot", () => {
@@ -177,8 +177,8 @@ describe("Character Sheet runtime / companions", () => {
 
     expect(characterSheetCompanion(sheet)).toEqual({ tag: "none" });
     expect(parseCharacterSheet(sheet, unitLibrary)).toMatchObject({
-      _tag: "Right",
-      right: { companion: { tag: "none" } },
+      _tag: "Success",
+      value: { companion: { tag: "none" } },
     });
   });
 
@@ -343,7 +343,7 @@ describe("Character Sheet runtime / companions", () => {
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
         creatureTypeOverrideChoiceId: "fey",
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
   });
 
   test("creates a Pact of the Chain special-form companion from invocation access", () => {
@@ -531,8 +531,8 @@ describe("Character Sheet runtime / companions", () => {
         creatureTypeOverrideChoiceId: "fey",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Retained companion recast cannot replace the durable identity of an occupied companion slot.",
       },
@@ -641,8 +641,8 @@ describe("Character Sheet runtime / companions", () => {
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Retained companion class-feature spend requires an unexpended use-count resource.",
       },
@@ -888,7 +888,7 @@ describe("Character Sheet runtime / companions", () => {
             ? {}
             : { creatureTypeOverrideChoiceId }),
         }),
-      ).toMatchObject({ _tag: "Left", left: { message } });
+      ).toMatchObject({ _tag: "Failure", failure: { message } });
     },
   );
 
@@ -922,8 +922,8 @@ describe("Character Sheet runtime / companions", () => {
         creatureTypeOverrideChoiceId: "fey",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Retained companion spell-slot source requires a slot at least as high as the selected spell level.",
       },
@@ -987,7 +987,7 @@ describe("Character Sheet runtime / companions", () => {
           selectedForm: { tag: "normalNamedForm", formId: "cat" },
           creatureTypeOverrideChoiceId: "fey",
         }),
-      ).toMatchObject({ _tag: "Left", left: { message } });
+      ).toMatchObject({ _tag: "Failure", failure: { message } });
     },
   );
 
@@ -1016,8 +1016,8 @@ describe("Character Sheet runtime / companions", () => {
         unitLibrary: unitLibraryReplacing("find_familiar", undefined),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Unknown Spell Unit id: find_familiar" },
+      _tag: "Failure",
+      failure: { message: "Unknown Spell Unit id: find_familiar" },
     });
     expect(
       createRetainedFamiliarLikeCompanion({
@@ -1028,8 +1028,8 @@ describe("Character Sheet runtime / companions", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Retained companion source must reference a Spell record.",
       },
     });
@@ -1050,8 +1050,8 @@ describe("Character Sheet runtime / companions", () => {
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Unknown retained companion feature Unit id: druid_wild_companion",
       },
@@ -1081,8 +1081,8 @@ describe("Character Sheet runtime / companions", () => {
         creatureTypeOverrideChoiceId: "fey",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Retained companion current HP must be positive." },
+      _tag: "Failure",
+      failure: { message: "Retained companion current HP must be positive." },
     });
 
     const retained = requireRight(
@@ -1122,7 +1122,7 @@ describe("Character Sheet runtime / companions", () => {
           selectedForm: { tag: "normalNamedForm", formId: "cat" },
           creatureTypeOverrideChoiceId: "fey",
         }),
-      ).toMatchObject({ _tag: "Left", left: { message } });
+      ).toMatchObject({ _tag: "Failure", failure: { message } });
     }
   });
 
@@ -1165,8 +1165,8 @@ describe("Character Sheet runtime / companions", () => {
         creatureTypeOverrideChoiceId: "fey",
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Retained companion creation requires literal Stat Block HP.",
       },
     });
@@ -1183,8 +1183,8 @@ describe("Character Sheet runtime / companions", () => {
         companion: retainedCompanionInput({ currentHp: Hp(0) }),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Retained companion current HP must be positive unless it disappeared at 0 HP.",
       },
@@ -1195,8 +1195,8 @@ describe("Character Sheet runtime / companions", () => {
     "rejects retained companions with an empty or untrimmed durable id",
     (value) => {
       expect(parseCharacterSheetRetainedCompanionId(value)).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           message: "Retained companion id must be non-empty and trimmed.",
         },
       });
@@ -1232,8 +1232,8 @@ describe("Character Sheet runtime / companions", () => {
     };
 
     expect(parseCharacterSheet(storedSheet, unitLibrary)).toMatchObject({
-      _tag: "Left",
-      left: { message: "Expected retained companion protocol tag." },
+      _tag: "Failure",
+      failure: { message: "Expected retained companion protocol tag." },
     });
   });
 
@@ -1241,14 +1241,14 @@ describe("Character Sheet runtime / companions", () => {
     expect(
       parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(2)),
     ).toMatchObject({
-      _tag: "Right",
-      right: Hp(2),
+      _tag: "Success",
+      value: Hp(2),
     });
     expect(
       parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(0)),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Retained companion current HP must be positive." },
+      _tag: "Failure",
+      failure: { message: "Retained companion current HP must be positive." },
     });
   });
 
@@ -1288,8 +1288,8 @@ describe("Character Sheet runtime / companions", () => {
       );
 
       expect(result).toMatchObject({
-        _tag: "Right",
-        right: {
+        _tag: "Success",
+        value: {
           tag: "retainedOneAtATime",
           companion: { manifestation },
         },
@@ -1442,8 +1442,8 @@ describe("Character Sheet runtime / companions", () => {
     },
   ])("rejects stored companion state with $name", ({ value, message }) => {
     expect(parseStoredCharacterSheetCompanion(value)).toMatchObject({
-      _tag: "Left",
-      left: { message },
+      _tag: "Failure",
+      failure: { message },
     });
   });
 
@@ -1469,8 +1469,8 @@ describe("Character Sheet runtime / companions", () => {
           companion,
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: { message },
+        _tag: "Failure",
+        failure: { message },
       });
     },
   );

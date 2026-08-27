@@ -124,8 +124,8 @@ describe("Character Sheet runtime / Ranger Tireless", () => {
         tirelessRoll: DieRollResult(9),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Tireless roll must be within d8." },
+      _tag: "Failure",
+      failure: { message: "Tireless roll must be within d8." },
     });
   });
 
