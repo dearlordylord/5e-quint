@@ -229,11 +229,9 @@ describe("battle presentation joins", () => {
       throw new Error("Expected Goblin presentation procedure.");
     }
     const unmatchedProjectionCases = [
+      { kind: "attack", shape: "attack" },
       { kind: "multiattack", shape: "multiattack" },
       { kind: "bonusActionOption", shape: "actionOption" },
-      { kind: "save", shape: "save" },
-      { kind: "support", shape: "support" },
-      { kind: "spellcasting", shape: "special" },
     ] as const;
     const unmatchedPresentationCases = unmatchedProjectionCases.map(
       ({ kind, shape }, index) => ({

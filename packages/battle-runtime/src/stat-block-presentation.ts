@@ -107,9 +107,8 @@ export function statBlockProjectionIssuesForActor(
 
 function statBlockProjectionIssues(
   presentation: BattleStatBlockPresentationSource,
-  execution: StatBlockExecutionState | undefined,
+  execution: StatBlockExecutionState,
 ): readonly StatBlockProjectionIssue[] {
-  if (execution === undefined) return [];
   const admitted = procedureCoordinateIndex(
     execution.procedureBindings.flatMap((binding) =>
       binding.procedure.kind === "unarmedStrike" ? [] : [binding.procedure],
@@ -195,9 +194,6 @@ function projectionShape(
     Match.when("attack", () => "attack" as const),
     Match.when("multiattack", () => "multiattack" as const),
     Match.when("bonusActionOption", () => "actionOption" as const),
-    Match.when("save", () => "save" as const),
-    Match.when("support", () => "support" as const),
-    Match.when("spellcasting", () => "special" as const),
     Match.exhaustive,
   );
 }

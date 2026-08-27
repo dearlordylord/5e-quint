@@ -13,9 +13,6 @@ export const STAT_BLOCK_PROCEDURE_PRESENTATION_KINDS = [
   "attack",
   "multiattack",
   "bonusActionOption",
-  "save",
-  "support",
-  "spellcasting",
   "textOnly",
 ] as const;
 export type StatBlockProcedurePresentationKind =
