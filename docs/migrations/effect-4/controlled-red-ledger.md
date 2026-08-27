@@ -364,14 +364,14 @@ assertions were updated from Effect 3 `left`/`right` payloads to Effect 4
 `failure`/`success` payloads while preserving the existing behavioral,
 accumulation, and ordering assertions.
 
-| Command | Result |
-| --- | --- |
-| `pnpm --filter @dnd/character-creation-runtime typecheck --pretty false` | pass; zero diagnostics |
-| `pnpm --filter @dnd/character-creation-runtime test` | pass; 28 files, 474 passed, 2 skipped (476 total) |
-| `pnpm --filter @dnd/character-creation-runtime test:qnt-slice` | pass; 1 passed, 196 skipped |
-| `pnpm --filter @dnd/character-creation-runtime test:qnt-proofs` | pass; 3 passed |
-| `pnpm --filter @dnd/character-creation-runtime test:mbt:weapon-mastery-level-gain` | pass; 3 passed |
-| Focused Prettier and ESLint checks | pass |
+| Command                                                                            | Result                                            |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `pnpm --filter @dnd/character-creation-runtime typecheck --pretty false`           | pass; zero diagnostics                            |
+| `pnpm --filter @dnd/character-creation-runtime test`                               | pass; 28 files, 474 passed, 2 skipped (476 total) |
+| `pnpm --filter @dnd/character-creation-runtime test:qnt-slice`                     | pass; 1 passed, 196 skipped                       |
+| `pnpm --filter @dnd/character-creation-runtime test:qnt-proofs`                    | pass; 3 passed                                    |
+| `pnpm --filter @dnd/character-creation-runtime test:mbt:weapon-mastery-level-gain` | pass; 3 passed                                    |
+| Focused Prettier and ESLint checks                                                 | pass                                              |
 
 The focused test migration initially exposed 97 stale Effect 3 shape
 assertions; after correction, the focused set passed 289/289 and the full
