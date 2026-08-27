@@ -173,7 +173,7 @@ describe("Animals Stat Block procedure fidelity", () => {
         onHit: expect.arrayContaining([
           {
             condition: "poisoned",
-            duration: "end_of_next_turn",
+            expiresAt: { kind: "target_next_turn_end" },
             kind: "apply_condition",
           },
         ]),

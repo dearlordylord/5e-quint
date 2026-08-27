@@ -15,6 +15,7 @@
 let DiceExpr : Type =
       { dice : Natural
       , dieSize : Natural
+      , flat : Optional Integer
       }
 
 let DiceExprDelta : Type = { dice : Natural, dieSize : Optional Natural }
