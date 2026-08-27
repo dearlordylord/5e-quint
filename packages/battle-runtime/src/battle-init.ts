@@ -154,14 +154,10 @@ type WildShapeKnownFormScalarProjectionFailureReason = Exclude<
 
 const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
   nonLiteralSize: "Druid Wild Shape battle forms require literal Size.",
-  nonLiteralArmorClass:
-    "Druid Wild Shape battle forms require literal Armor Class.",
-  nonLiteralHitPoints:
-    "Druid Wild Shape battle forms require literal maximum Hit Points.",
-  nonLiteralSpeed:
-    "Druid Wild Shape battle forms require unconditional literal Speeds.",
   invalidLegendaryActionUses:
     "Druid Wild Shape battle forms require positive integer Legendary Action uses.",
+  invalidResourceLimit:
+    "Druid Wild Shape battle forms require valid Stat Block resource limits.",
 } as const satisfies Record<
   WildShapeKnownFormScalarProjectionFailureReason,
   string
@@ -207,19 +203,11 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
           kind: "failure" as const,
           message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
         })),
-        Match.when("nonLiteralArmorClass", (reason) => ({
-          kind: "failure" as const,
-          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
-        })),
-        Match.when("nonLiteralHitPoints", (reason) => ({
-          kind: "failure" as const,
-          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
-        })),
-        Match.when("nonLiteralSpeed", (reason) => ({
-          kind: "failure" as const,
-          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
-        })),
         Match.when("invalidLegendaryActionUses", (reason) => ({
+          kind: "failure" as const,
+          message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
+        })),
+        Match.when("invalidResourceLimit", (reason) => ({
           kind: "failure" as const,
           message: WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES[reason],
         })),

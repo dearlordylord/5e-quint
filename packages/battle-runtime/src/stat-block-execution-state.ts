@@ -24,6 +24,7 @@ import type {
   CreatureVulnerabilityList,
   StatBlockId,
   StatBlockProcedureOrdinal,
+  StatBlockProcedureResource,
   StatBlockProcedureResourceOrdinal,
 } from "@dnd/surface/surface/types";
 import type { Size } from "@dnd/shared/types";
@@ -152,10 +153,79 @@ export type BattleStatBlockRuntimeResource = {
   readonly ordinal: StatBlockProcedureResourceOrdinal;
   readonly ownership: "shared" | "each";
   readonly limit:
-    | { readonly kind: "daily"; readonly uses: number }
-    | { readonly kind: "recharge"; readonly minimumRoll: number }
+    | { readonly kind: "daily"; readonly uses: PositiveIntegerType }
+    | {
+        readonly kind: "recharge";
+        readonly minimumRoll: StatBlockRechargeMinimumRoll;
+      }
     | { readonly kind: "recharge_after_rest" };
 };
+
+export const STAT_BLOCK_RECHARGE_MINIMUM_ROLLS = [
+  2, 3, 4, 5, 6,
+] as const satisfies ReadonlyArray<number>;
+export type StatBlockRechargeMinimumRoll =
+  (typeof STAT_BLOCK_RECHARGE_MINIMUM_ROLLS)[number];
+
+export type StatBlockRuntimeResourceParseFailure =
+  | "invalidDailyUses"
+  | "invalidRechargeMinimumRoll";
+
+/**
+ * Resolve one authored resource declaration into the source-free runtime
+ * shape. The surface decoder owns structure; this boundary narrows the daily
+ * and recharge numeric facts before execution receives them.
+ */
+export function parseStatBlockRuntimeResource(
+  resource: StatBlockProcedureResource,
+): Either.Either<
+  BattleStatBlockRuntimeResource,
+  StatBlockRuntimeResourceParseFailure
+> {
+  if (resource.limit.kind === "daily") {
+    const uses = PositiveInteger.either(resource.limit.uses);
+    if (Either.isLeft(uses)) {
+      return Either.left("invalidDailyUses");
+    }
+    return Either.right({
+      ordinal: resource.ordinal,
+      ownership: resource.ownership,
+      limit: { kind: "daily", uses: uses.right },
+    });
+  }
+  if (resource.limit.kind === "recharge") {
+    const minimumRoll = statBlockRechargeMinimumRoll(
+      resource.limit.minimumRoll,
+    );
+    if (minimumRoll === null) {
+      return Either.left("invalidRechargeMinimumRoll");
+    }
+    return Either.right({
+      ordinal: resource.ordinal,
+      ownership: resource.ownership,
+      limit: {
+        kind: "recharge",
+        minimumRoll,
+      },
+    });
+  }
+  return Either.right({
+    ordinal: resource.ordinal,
+    ownership: resource.ownership,
+    limit: { kind: "recharge_after_rest" },
+  });
+}
+
+function statBlockRechargeMinimumRoll(
+  value: number,
+): StatBlockRechargeMinimumRoll | null {
+  return (
+    STAT_BLOCK_RECHARGE_MINIMUM_ROLLS.find(
+      (minimumRoll): minimumRoll is StatBlockRechargeMinimumRoll =>
+        minimumRoll === value,
+    ) ?? null
+  );
+}
 
 export type BattleStatBlockRuntimeMultiattackDispatch = {
   readonly procedureOrdinal: StatBlockProcedureOrdinal;

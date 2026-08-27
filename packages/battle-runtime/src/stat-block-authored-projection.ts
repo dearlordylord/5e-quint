@@ -25,6 +25,7 @@ import type {
 import {
   parseStatBlockLegendaryActionUses,
   parseStatBlockPositiveIntegerLiteral,
+  parseStatBlockRuntimeResource,
   type BattleStatBlockExecutionSource,
   type BattleStatBlockRuntimeProcedure,
   type BattleStatBlockRuntimeMultiattackDispatch,
@@ -37,10 +38,8 @@ import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
-  | "nonLiteralArmorClass"
-  | "nonLiteralHitPoints"
-  | "nonLiteralSpeed"
-  | "invalidLegendaryActionUses";
+  | "invalidLegendaryActionUses"
+  | "invalidResourceLimit";
 
 export type BattleStatBlockUnsupportedProcedureBinding = {
   readonly section: StatBlockActionProjectionSection;
@@ -91,21 +90,13 @@ export function battleStatBlockProjectionFailureMessage(
       () => "battle initialization requires a concrete Size",
     ),
     Match.when(
-      "nonLiteralArmorClass",
-      () => "battle initialization requires literal Armor Class",
-    ),
-    Match.when(
-      "nonLiteralHitPoints",
-      () => "battle initialization requires literal maximum Hit Points",
-    ),
-    Match.when(
-      "nonLiteralSpeed",
-      () => "battle initialization requires unconditional literal Speeds",
-    ),
-    Match.when(
       "invalidLegendaryActionUses",
       () =>
         "battle initialization requires positive integer Legendary Action uses",
+    ),
+    Match.when(
+      "invalidResourceLimit",
+      () => "battle initialization requires valid Stat Block resource limits",
     ),
     Match.when(
       "unsupportedProcedureBinding",
@@ -130,21 +121,16 @@ export function projectAuthoredStatBlock(
   const source = record.statBlock;
   const size = literalSize(source.size);
   if (size === null) return Either.left(failure("nonLiteralSize"));
-  if (source.ac.value.kind !== "literal") {
-    return Either.left(failure("nonLiteralArmorClass"));
-  }
-  if (source.hp.kind !== "literal") {
-    return Either.left(failure("nonLiteralHitPoints"));
-  }
   const speeds = source.speeds.map(runtimeSpeed);
-  if (speeds.some((speed) => speed === null)) {
-    return Either.left(failure("nonLiteralSpeed"));
-  }
   const legendaryActionUses = parseStatBlockLegendaryActionUses(
     source.legendaryActions?.uses,
   );
   if (Either.isLeft(legendaryActionUses)) {
     return Either.left(failure("invalidLegendaryActionUses"));
+  }
+  const resources = runtimeResources(source.resources);
+  if (Either.isLeft(resources)) {
+    return Either.left(failure("invalidResourceLimit"));
   }
   const runtimeProcedures = runtimeProcedureBindings(source);
   if (Either.isLeft(runtimeProcedures)) {
@@ -157,6 +143,7 @@ export function projectAuthoredStatBlock(
     source,
     size,
     nonEmptyRuntimeValues(speeds),
+    resources.right,
     runtimeProcedures.right,
     legendaryActionUses.right,
   );
@@ -171,6 +158,7 @@ function runtimeProjection(
   source: StandaloneStatBlock,
   size: Size,
   speeds: ReadonlyNonEmptyArray<BattleStatBlockRuntimeSpeed>,
+  resources: readonly BattleStatBlockRuntimeResource[] | undefined,
   procedures: readonly BattleStatBlockRuntimeProcedure[],
   legendaryActionUses: BattleStatBlockExecutionSource["legendaryActionUses"],
 ): BattleStatBlockExecutionSource {
@@ -179,9 +167,7 @@ function runtimeProjection(
     challengeRating: record.challengeRating,
     statBlock: runtimeStatBlockProjection(source, size, speeds),
     procedures,
-    ...(source.resources === undefined
-      ? {}
-      : { resources: source.resources.map(runtimeResource) }),
+    ...(resources === undefined ? {} : { resources }),
     ...(legendaryActionUses === undefined ? {} : { legendaryActionUses }),
   };
 }
@@ -533,14 +519,20 @@ function procedureResourceRefs(
   return refs;
 }
 
-function runtimeResource(
-  resource: NonNullable<StandaloneStatBlock["resources"]>[number],
-): BattleStatBlockRuntimeResource {
-  return {
-    ordinal: resource.ordinal,
-    ownership: resource.ownership,
-    limit: resource.limit,
-  };
+function runtimeResources(
+  resources: NonNullable<StandaloneStatBlock["resources"]> | undefined,
+): Either.Either<
+  readonly BattleStatBlockRuntimeResource[] | undefined,
+  "invalidResourceLimit"
+> {
+  if (resources === undefined) return Either.right(undefined);
+  const projected: BattleStatBlockRuntimeResource[] = [];
+  for (const resource of resources) {
+    const parsed = parseStatBlockRuntimeResource(resource);
+    if (Either.isLeft(parsed)) return Either.left("invalidResourceLimit");
+    projected.push(parsed.right);
+  }
+  return Either.right(projected);
 }
 
 function runtimePresentationKind(
@@ -577,8 +569,7 @@ function traitModes(source: StandaloneStatBlock): {
 
 function runtimeSpeed(
   speed: StandaloneStatBlock["speeds"][number],
-): BattleStatBlockRuntimeSpeed | null {
-  if (speed.feet.kind !== "literal") return null;
+): BattleStatBlockRuntimeSpeed {
   return {
     kind: speed.kind,
     feet: speed.feet,

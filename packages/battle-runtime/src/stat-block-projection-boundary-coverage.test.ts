@@ -1,5 +1,4 @@
 import { ClassLevel } from "@dnd/shared/types";
-import { statBlockId } from "@dnd/shared/game-facts";
 import {
   StatBlockProcedureEntrySchema,
   StatBlockReactionSectionSchema,
@@ -24,6 +23,7 @@ import {
 import {
   projectedStatBlockRuntimeSource,
   monsterMultiattackStatBlock,
+  monsterResourceStatBlock,
   statBlockCatalog,
   statBlockRecord,
   unitLibrary,
@@ -45,23 +45,6 @@ const decodeReaction = (
   }
   return entry;
 };
-
-function syntheticProjectionRecord(
-  source: StatBlockRecord,
-  section: string,
-  statBlock: unknown,
-): StatBlockRecord {
-  // Standalone authored values are currently decoded as literal-only. These
-  // typed boundary fixtures exercise the public projection's defensive checks
-  // for broader wire-shaped values that the projection still validates.
-  return {
-    ...source,
-    id: statBlockId(`synthetic-${section}`),
-    name: `Synthetic ${section}`,
-    provenance: { kind: "synthetic-test", section },
-    statBlock,
-  } as unknown as StatBlockRecord;
-}
 
 function requiredProjectionFailure(record: StatBlockRecord) {
   const result = projectAuthoredStatBlock(record);
@@ -86,70 +69,36 @@ function druidWildShapeKnownFormProfile() {
 describe("Stat Block projection boundary coverage", () => {
   test("formats a battle-init issue and every projection failure reason", () => {
     const source = statBlockRecord();
-    const firstSpeed = source.statBlock.speeds[0];
-    if (firstSpeed === undefined) {
-      throw new Error("Expected the Stat Block fixture to have a Speed.");
+    const firstAction = source.statBlock.actions?.[0];
+    if (firstAction === undefined) {
+      throw new Error("Expected the Stat Block fixture to have an action.");
     }
 
     const projectionCases = [
       {
         reason: "nonLiteralSize" as const,
-        record: syntheticProjectionRecord(source, "non-literal-size", {
-          ...source.statBlock,
-          size: { kind: "alternatives", options: ["small", "medium"] },
-        }),
+        record: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            size: { kind: "alternatives", options: ["small", "medium"] },
+          },
+        },
         message:
           "Stat Block authored projection failed: battle initialization requires a concrete Size.",
       },
       {
-        reason: "nonLiteralArmorClass" as const,
-        record: syntheticProjectionRecord(source, "non-literal-armor-class", {
-          ...source.statBlock,
-          ac: {
-            ...source.statBlock.ac,
-            value: { kind: "caster_derived", source: "spell_save_dc" },
-          },
-        }),
-        message:
-          "Stat Block authored projection failed: battle initialization requires literal Armor Class.",
-      },
-      {
-        reason: "nonLiteralHitPoints" as const,
-        record: syntheticProjectionRecord(source, "non-literal-hit-points", {
-          ...source.statBlock,
-          hp: { kind: "caster_derived", source: "spell_save_dc" },
-        }),
-        message:
-          "Stat Block authored projection failed: battle initialization requires literal maximum Hit Points.",
-      },
-      {
-        reason: "nonLiteralSpeed" as const,
-        record: syntheticProjectionRecord(source, "non-literal-speed", {
-          ...source.statBlock,
-          speeds: [
-            {
-              ...firstSpeed,
-              feet: { kind: "caster_derived", source: "spell_save_dc" },
-            },
-            ...source.statBlock.speeds.slice(1),
-          ],
-        }),
-        message:
-          "Stat Block authored projection failed: battle initialization requires unconditional literal Speeds.",
-      },
-      {
         reason: "invalidLegendaryActionUses" as const,
-        record: syntheticProjectionRecord(
-          source,
-          "invalid-legendary-action-uses",
-          {
+        record: {
+          ...source,
+          statBlock: {
             ...source.statBlock,
             legendaryActions: {
               uses: 0,
-              entries: [...(source.statBlock.actions?.slice(0, 1) ?? [])],
+              entries: [firstAction],
             },
           },
-        ),
+        },
         message:
           "Stat Block authored projection failed: battle initialization requires positive integer Legendary Action uses.",
       },
@@ -194,6 +143,146 @@ describe("Stat Block projection boundary coverage", () => {
     if (Either.isRight(battleInit)) return;
     expect(authoredStatBlockBattleInitIssueMessage(battleInit.left)).toBe(
       "Stat Block combatant is immune to initial prone condition.",
+    );
+  });
+
+  test("rejects invalid authored resource limits before runtime allocation", () => {
+    const source = monsterResourceStatBlock();
+    const resources = source.statBlock.resources;
+    if (resources === undefined) {
+      throw new Error("Expected the resource-backed Stat Block fixture.");
+    }
+    const daily = resources.find((resource) => resource.limit.kind === "daily");
+    const recharge = resources.find(
+      (resource) => resource.limit.kind === "recharge",
+    );
+    if (daily === undefined || recharge === undefined) {
+      throw new Error("Expected daily and recharge resource fixtures.");
+    }
+    const [firstResource, secondResource, ...remainingResources] = resources;
+    if (firstResource === undefined || secondResource === undefined) {
+      throw new Error("Expected both resource declarations.");
+    }
+
+    const malformedDaily: StatBlockRecord = {
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        resources: [
+          firstResource.ordinal === daily.ordinal
+            ? { ...firstResource, limit: { kind: "daily", uses: 0 } }
+            : firstResource,
+          secondResource.ordinal === daily.ordinal
+            ? { ...secondResource, limit: { kind: "daily", uses: 0 } }
+            : secondResource,
+          ...remainingResources,
+        ],
+      },
+    };
+    const malformedRecharge: StatBlockRecord = {
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        resources: [
+          firstResource.ordinal === recharge.ordinal
+            ? {
+                ...firstResource,
+                limit: { kind: "recharge", minimumRoll: 7 },
+              }
+            : firstResource,
+          secondResource.ordinal === recharge.ordinal
+            ? {
+                ...secondResource,
+                limit: { kind: "recharge", minimumRoll: 7 },
+              }
+            : secondResource,
+          ...remainingResources,
+        ],
+      },
+    };
+
+    for (const record of [malformedDaily, malformedRecharge]) {
+      expect(projectAuthoredStatBlock(record)).toEqual(
+        Either.left({
+          tag: "battleStatBlockProjectionFailure",
+          reason: "invalidResourceLimit",
+        }),
+      );
+    }
+  });
+
+  test("rejects a non-positive authored Multiattack count before execution", () => {
+    const source = monsterMultiattackStatBlock();
+    const multiattack = source.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" && entry.procedure.kind === "multiattack",
+    );
+    if (
+      multiattack === undefined ||
+      multiattack.kind !== "executable" ||
+      multiattack.procedure.kind !== "multiattack"
+    ) {
+      throw new Error("Expected the synthetic Multiattack procedure.");
+    }
+    const firstDispatch = multiattack.procedure.dispatches[0];
+    if (firstDispatch === undefined) {
+      throw new Error("Expected the synthetic Multiattack dispatch.");
+    }
+    const actions = source.statBlock.actions;
+    if (actions === undefined) {
+      throw new Error("Expected the synthetic Multiattack actions.");
+    }
+    const [firstAction, ...remainingActions] = actions;
+    if (firstAction === undefined) {
+      throw new Error("Expected the first synthetic action.");
+    }
+    const replaceCount = (entry: (typeof actions)[number]) => {
+      if (entry.procedureOrdinal !== multiattack.procedureOrdinal) {
+        return entry;
+      }
+      if (
+        entry.kind !== "executable" ||
+        entry.procedure.kind !== "multiattack"
+      ) {
+        return entry;
+      }
+      const malformedDispatches: typeof entry.procedure.dispatches = [
+        {
+          ...firstDispatch,
+          count: { kind: "literal", value: 0 },
+        },
+        ...entry.procedure.dispatches.slice(1),
+      ];
+      return {
+        ...entry,
+        procedure: {
+          ...entry.procedure,
+          dispatches: malformedDispatches,
+        },
+      };
+    };
+    const malformedActions: NonNullable<
+      StatBlockRecord["statBlock"]["actions"]
+    > = [replaceCount(firstAction), ...remainingActions.map(replaceCount)];
+    const record: StatBlockRecord = {
+      ...source,
+      statBlock: {
+        ...source.statBlock,
+        actions: malformedActions,
+      },
+    };
+
+    expect(projectAuthoredStatBlock(record)).toEqual(
+      Either.left({
+        tag: "battleStatBlockProjectionFailure",
+        reason: "unsupportedProcedureBinding",
+        issues: [
+          {
+            section: "actions",
+            procedureOrdinal: multiattack.procedureOrdinal,
+          },
+        ],
+      }),
     );
   });
 
@@ -259,11 +348,10 @@ describe("Stat Block projection boundary coverage", () => {
         }),
       ],
     };
-    const record = syntheticProjectionRecord(
-      source,
-      "unsupported-procedure-locations",
-      unsupportedProcedures,
-    );
+    const record: StatBlockRecord = {
+      ...source,
+      statBlock: unsupportedProcedures,
+    };
 
     const failure = requiredProjectionFailure(record);
     expect(failure).toEqual({
@@ -290,83 +378,8 @@ describe("Stat Block projection boundary coverage", () => {
     );
   });
 
-  test("returns a typed failure for malformed authored Multiattack counts", () => {
-    const source = monsterMultiattackStatBlock();
-    const multiattack = source.statBlock.actions?.find(
-      (entry) =>
-        entry.kind === "executable" && entry.procedure.kind === "multiattack",
-    );
-    if (
-      multiattack === undefined ||
-      multiattack.kind !== "executable" ||
-      multiattack.procedure.kind !== "multiattack"
-    ) {
-      throw new Error("Expected the synthetic Multiattack procedure.");
-    }
-    const firstDispatch = multiattack.procedure.dispatches[0];
-    if (firstDispatch === undefined) {
-      throw new Error("Expected the synthetic Multiattack dispatch.");
-    }
-    const remainingDispatches = multiattack.procedure.dispatches.slice(1);
-
-    const malformedCounts: readonly unknown[] = [
-      null,
-      { kind: "unexpected", value: 1 },
-      { kind: "literal", value: 0 },
-      { kind: "literal" },
-    ];
-    for (const [index, count] of malformedCounts.entries()) {
-      const actions = source.statBlock.actions?.map((entry) =>
-        entry === multiattack
-          ? {
-              ...entry,
-              procedure: {
-                ...entry.procedure,
-                dispatches: [
-                  { ...firstDispatch, count },
-                  ...remainingDispatches,
-                ],
-              },
-            }
-          : entry,
-      );
-      const record = syntheticProjectionRecord(
-        source,
-        `multiattack-count-${index}`,
-        {
-          ...source.statBlock,
-          actions,
-        },
-      );
-
-      let projection: ReturnType<typeof projectAuthoredStatBlock> | undefined;
-      expect(() => {
-        projection = projectAuthoredStatBlock(record);
-      }).not.toThrow();
-      if (projection === undefined) {
-        throw new Error("Expected a Stat Block projection result.");
-      }
-      expect(projection).toEqual(
-        Either.left({
-          tag: "battleStatBlockProjectionFailure",
-          reason: "unsupportedProcedureBinding",
-          issues: [
-            {
-              section: "actions",
-              procedureOrdinal: multiattack.procedureOrdinal,
-            },
-          ],
-        }),
-      );
-    }
-  });
-
   test("formats scalar Wild Shape projection failures through the public admission boundary", () => {
     const source = statBlockCatalog.requireStatBlock("stat_block_rat");
-    const firstSpeed = source.statBlock.speeds[0];
-    if (firstSpeed === undefined) {
-      throw new Error("Expected the Wild Shape fixture to have a Speed.");
-    }
     const firstAction = source.statBlock.actions?.[0];
     if (firstAction === undefined) {
       throw new Error("Expected the Wild Shape fixture to have an action.");
@@ -374,46 +387,13 @@ describe("Stat Block projection boundary coverage", () => {
 
     const cases = [
       {
-        record: syntheticProjectionRecord(source, "wild-shape-armor-class", {
-          ...source.statBlock,
-          ac: {
-            ...source.statBlock.ac,
-            value: { kind: "caster_derived", source: "spell_save_dc" },
-          },
-        }),
-        message: "Druid Wild Shape battle forms require literal Armor Class.",
-      },
-      {
-        record: syntheticProjectionRecord(source, "wild-shape-hit-points", {
-          ...source.statBlock,
-          hp: { kind: "caster_derived", source: "spell_save_dc" },
-        }),
-        message:
-          "Druid Wild Shape battle forms require literal maximum Hit Points.",
-      },
-      {
-        record: syntheticProjectionRecord(source, "wild-shape-speed", {
-          ...source.statBlock,
-          speeds: [
-            {
-              ...firstSpeed,
-              feet: { kind: "caster_derived", source: "spell_save_dc" },
-            },
-            ...source.statBlock.speeds.slice(1),
-          ],
-        }),
-        message:
-          "Druid Wild Shape battle forms require unconditional literal Speeds.",
-      },
-      {
-        record: syntheticProjectionRecord(
-          source,
-          "wild-shape-legendary-action-uses",
-          {
+        record: {
+          ...source,
+          statBlock: {
             ...source.statBlock,
             legendaryActions: { uses: 0, entries: [firstAction] },
           },
-        ),
+        },
         message:
           "Druid Wild Shape battle forms require positive integer Legendary Action uses.",
       },

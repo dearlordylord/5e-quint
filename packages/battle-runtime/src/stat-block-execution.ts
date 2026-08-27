@@ -2,6 +2,7 @@
 import { optionalProperty } from "./optional-property.ts";
 import {
   NonNegativeInteger,
+  ResourceCount,
   abilityScoreToMod,
   resourceCount,
   type PositiveInteger,
@@ -940,7 +941,7 @@ function resourcePoolFromDeclaration(
 ): StatBlockResourcePoolState {
   const resourcePoolRef = allocateResourcePoolRef(allocator);
   if (declaration.limit.kind === "daily") {
-    const uses = resourceCount(declaration.limit.uses);
+    const uses = ResourceCount.make(declaration.limit.uses);
     return {
       resourcePoolRef,
       kind: "daily",
