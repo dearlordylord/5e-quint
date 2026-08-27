@@ -3,6 +3,7 @@ export * from "./oracle-case-trace-schema.ts";
 export * from "./oracle-decode.ts";
 export * from "./oracle-document.ts";
 export * from "./oracle-evaluation.ts";
+export * from "./oracle-publication.ts";
 export {
   canonicalizeCaseInput,
   canonicalizeBatchInput,
