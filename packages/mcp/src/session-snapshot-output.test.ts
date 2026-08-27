@@ -305,6 +305,17 @@ describe("MCP session wire projections", () => {
         session: activeSession,
       }),
     ).toSatisfy((result) => Either.isRight(result));
+    expect(
+      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+        result: {
+          tag: "invalid",
+          reason: "inventedReason",
+          message: "Retry the current frontier.",
+        },
+        envelope: presented.right,
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
 
     const forgedBattleIdEnvelope = {
       ...presented.right,

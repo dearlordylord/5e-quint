@@ -303,7 +303,6 @@ function seamCase(
 
 type RuntimeBattleProjection = {
   readonly session: BattleRuntimeSession;
-  readonly publishedEnvelope: PublishedBattleEnvelope;
   readonly runtimeEnvelope: BattlePresentedCheckpointFrontierEnvelope;
 };
 
@@ -363,12 +362,5 @@ async function runtimeProjection(
     throw new Error("Expected the live MCP Play Session to contain a Battle.");
   }
   const { session, envelope } = result.right.value;
-  const publishedEnvelope = Schema.decodeUnknownSync(
-    BattlePresentedCheckpointFrontierEnvelopeSchema,
-  )(
-    Schema.encodeSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(
-      envelope,
-    ),
-  );
-  return { session, publishedEnvelope, runtimeEnvelope: envelope };
+  return { session, runtimeEnvelope: envelope };
 }

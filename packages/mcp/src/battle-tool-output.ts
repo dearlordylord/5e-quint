@@ -4,6 +4,7 @@ import {
   BattleObjectIgnitionOutcomeSchema,
   BattleDroppedObjectOutcomeSchema,
   BattleShovePushOutcomeSchema,
+  BATTLE_INVALID_REASON_CODES,
   BattlePresentedCheckpointFrontierEnvelopeSchema,
   CombatantId,
 } from "@dnd/battle-runtime";
@@ -47,7 +48,7 @@ const BattleResolutionNeedsHolesResultSchema = Schema.Struct({
 
 const BattleResolutionInvalidResultSchema = Schema.Struct({
   tag: Schema.Literal("invalid"),
-  reason: Schema.String,
+  reason: Schema.Literal(...BATTLE_INVALID_REASON_CODES),
   message: Schema.String,
 });
 
