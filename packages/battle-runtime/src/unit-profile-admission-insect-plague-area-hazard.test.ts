@@ -19,6 +19,7 @@ import {
   requireHole,
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
+import { requireResolved } from "./battle-runtime.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   insectPlagueAreaFill,
@@ -43,6 +44,8 @@ import {
   spellSlotInvocationRef,
   type BattleSubject,
 } from "./unit-profile-admission.test-support.ts";
+import type { BattleInsectPlagueAreaHazardTrigger } from "./battle-state-execution.ts";
+import { resolveInsectPlagueAreaSaveDamage } from "./battle-reducer/persistent-area-save-damage.ts";
 
 function castInsectPlague() {
   const spell = insectPlagueSpellRecord();
@@ -109,11 +112,12 @@ function insectPlagueDifficultTerrainFact(
 function resolveInsectPlagueSave(input: {
   readonly session: BattleRuntimeSession;
   readonly succeeded: boolean;
+  readonly trigger: BattleInsectPlagueAreaHazardTrigger;
 }) {
   const saveAct = insectPlagueAreaHazardSaveAct(
     input.session,
     spellTargetId,
-    "appearsInArea",
+    input.trigger,
   );
   const saveHole = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   const pendingDamage = resolveBattleSubject({
@@ -149,6 +153,18 @@ function resolveInsectPlagueSave(input: {
       damageRollFillWithGroups(damageHole, [[5, 5, 5, 5]]),
     ],
   });
+}
+
+function insectPlagueSavedThisTurn(
+  state: ReturnType<typeof castInsectPlague>["cast"],
+) {
+  const effect = requireCombatant(state, spellCasterId).activeEffects.find(
+    (candidate) => candidate.kind === "insectPlagueAreaHazard",
+  );
+  if (effect?.kind !== "insectPlagueAreaHazard") {
+    throw new Error("Expected active Insect Plague area hazard.");
+  }
+  return effect.savedThisTurn;
 }
 
 describe("L19E deterministic Insect Plague area-hazard admission", () => {
@@ -307,13 +323,16 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
 
   test("appearance save applies full or half Piercing damage through the active hazard", () => {
     const first = castInsectPlague();
-    const failed = resolveInsectPlagueSave({
-      session: battleRuntimeSessionForTest({
-        state: first.cast,
-        context: first.session.context,
+    const failed = requireResolved(
+      resolveInsectPlagueSave({
+        session: battleRuntimeSessionForTest({
+          state: first.cast,
+          context: first.session.context,
+        }),
+        succeeded: false,
+        trigger: "appearsInArea",
       }),
-      succeeded: false,
-    });
+    );
     expect(failed).toMatchObject({
       tag: "resolved",
       snapshot: {
@@ -322,6 +341,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         ]),
       },
     });
+    expect(insectPlagueSavedThisTurn(failed.state)).toEqual([spellTargetId]);
 
     const second = castInsectPlague();
     const succeeded = resolveInsectPlagueSave({
@@ -330,6 +350,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         context: second.session.context,
       }),
       succeeded: true,
+      trigger: "appearsInArea",
     });
     expect(succeeded).toMatchObject({
       tag: "resolved",
@@ -341,55 +362,102 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     });
   });
 
-  test("entry and end-turn saves share the once-per-turn hazard ledger", () => {
-    const { session, targetTurn } = castInsectPlague();
-    const targetTurnSession = battleRuntimeSessionForTest({
-      state: targetTurn,
+  test("appearance, entry, and end-turn saves share one per-turn hazard ledger", () => {
+    const { cast, session } = castInsectPlague();
+    const appearanceSession = battleRuntimeSessionForTest({
+      state: cast,
       context: session.context,
     });
-    const entryAct = insectPlagueAreaHazardSaveAct(
-      targetTurnSession,
+    const appearanceAct = insectPlagueAreaHazardSaveAct(
+      appearanceSession,
       spellTargetId,
-      "entersArea",
+      "appearsInArea",
     );
-    const saveHole = requireHole(entryAct.initialHoles, "savingThrowOutcome");
+    expect(insectPlagueSavedThisTurn(cast)).toEqual([]);
+
+    const combatantsWithoutTarget = new Map(cast.combatants);
+    combatantsWithoutTarget.delete(spellTargetId);
+    const stateWithoutTarget = { ...cast, combatants: combatantsWithoutTarget };
+    expect(
+      resolveInsectPlagueAreaSaveDamage({
+        state: stateWithoutTarget,
+        subject: appearanceAct.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Insect Plague save target is no longer available.",
+    });
+    expect(insectPlagueSavedThisTurn(stateWithoutTarget)).toEqual([]);
+
+    const saveHole = requireHole(
+      appearanceAct.initialHoles,
+      "savingThrowOutcome",
+    );
     const pendingDamage = resolveBattleSubject({
-      state: targetTurn,
-      subject: entryAct.subject,
+      state: cast,
+      subject: appearanceAct.subject,
       fills: [
         singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
       ],
     });
     if (pendingDamage.tag === "invalid") {
       throw new Error(
-        `Expected Insect Plague entry save to request damage: ${JSON.stringify(pendingDamage)}`,
+        `Expected Insect Plague appearance save to request damage: ${JSON.stringify(pendingDamage)}`,
       );
     }
-    const damageHole = requireResultHole(pendingDamage, "rolledDice");
-    const entrySaved = resolveBattleSubject({
-      state: targetTurn,
-      subject: entryAct.subject,
-      fills: [
-        singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
-        damageRollFillWithGroups(damageHole, [[1, 1, 1, 1]]),
-      ],
-    });
-    if (entrySaved.tag !== "resolved") {
-      throw new Error("Expected Insect Plague entry save to resolve.");
-    }
+    expect(insectPlagueSavedThisTurn(pendingDamage.state)).toEqual([]);
 
-    expect(
-      insectPlagueAreaHazardSaveAct(
-        battleRuntimeSessionForTest({
-          state: entrySaved.state,
+    const appeared = requireResolved(
+      resolveInsectPlagueSave({
+        session: appearanceSession,
+        succeeded: true,
+        trigger: "appearsInArea",
+      }),
+    );
+    expect(insectPlagueSavedThisTurn(appeared.state)).toEqual([spellTargetId]);
+
+    const entryAct = insectPlagueAreaHazardSaveAct(
+      battleRuntimeSessionForTest({
+        state: appeared.state,
+        context: session.context,
+      }),
+      spellTargetId,
+      "entersArea",
+    );
+    const duplicate = resolveInsectPlagueAreaSaveDamage({
+      state: appeared.state,
+      subject: entryAct.subject,
+      fills: [],
+    });
+    expect(duplicate).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Insect Plague save was already resolved for this target this turn.",
+    });
+    expect(insectPlagueSavedThisTurn(appeared.state)).toEqual([spellTargetId]);
+
+    const targetTurn = requireResolved(
+      endTurn({ state: appeared.state, actorId: spellCasterId }),
+    );
+    expect(insectPlagueSavedThisTurn(targetTurn.state)).toEqual([]);
+
+    const entrySaved = requireResolved(
+      resolveInsectPlagueSave({
+        session: battleRuntimeSessionForTest({
+          state: targetTurn.state,
           context: session.context,
         }),
-        spellTargetId,
-        "endsTurnInArea",
-      ).subject,
-    ).toEqual(
-      expect.objectContaining({ command: "insectPlagueAreaHazardSave" }),
+        succeeded: true,
+        trigger: "entersArea",
+      }),
     );
+    expect(insectPlagueSavedThisTurn(entrySaved.state)).toEqual([
+      spellTargetId,
+    ]);
+
     expect(
       resolveBattleSubject({
         state: entrySaved.state,
@@ -408,12 +476,6 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       message:
         "Insect Plague save was already resolved for this target this turn.",
     });
-
-    const nextTurn = endTurn({
-      state: entrySaved.state,
-      actorId: spellTargetId,
-    });
-    expect(nextTurn.tag).toBe("resolved");
   });
 
   test("rejects a previously discovered save after concentration removes the hazard", () => {

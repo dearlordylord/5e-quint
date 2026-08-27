@@ -238,7 +238,6 @@ function parsePersistentAreaSaveDamageProcedure(
     };
   }
   if (
-    candidate.trigger !== "appearsInArea" &&
     candidate.effect.savedThisTurn.includes(
       candidate.resolution.subject.actorId,
     )
@@ -464,9 +463,6 @@ function stateAfterPersistentAreaSaveDamage(
   procedure: ParsedPersistentAreaSaveDamageProcedure,
   state: BattleState,
 ): BattleState {
-  if (procedure.trigger === "appearsInArea") {
-    return state;
-  }
   return Match.value(procedure).pipe(
     byPersistentAreaProcedureKind("insectPlague", (insectPlague) =>
       markInsectPlagueAreaHazardSavedThisTurn(
