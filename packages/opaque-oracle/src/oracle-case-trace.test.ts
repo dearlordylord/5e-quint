@@ -1,6 +1,6 @@
 import { statBlockId } from "@dnd/shared/game-facts";
 import { combatantId } from "@dnd/battle-runtime";
-import { Either, Option } from "effect";
+import { Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -35,6 +35,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
+import { OracleBattleCheckpointSchema } from "./oracle-case-trace-schema.ts";
 
 const unitLibraryResult = buildUnitCatalog({
   collections: [srdUnitCollection],
@@ -489,6 +490,19 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(entered?.tag).toBe("battleEntered");
     if (entered?.tag !== "battleEntered") return;
 
+    const laterActor = entered.checkpoint.turnOrder[1];
+    expect(laterActor).toBeDefined();
+    if (laterActor !== undefined) {
+      expect(
+        Either.isRight(
+          Schema.decodeUnknownEither(OracleBattleCheckpointSchema)({
+            ...entered.checkpoint,
+            currentActorId: laterActor,
+          }),
+        ),
+      ).toBe(true);
+    }
+
     const invalid = {
       ...trace,
       steps: [
@@ -538,6 +552,45 @@ describe("Opaque Oracle Case and Trace contract", () => {
       ],
     };
     expect(Either.isLeft(decodeOracleTrace(unreachableFrontier))).toBe(true);
+
+    type SubjectWithProcedureRef = {
+      readonly actorId: string;
+      readonly procedureRef: string;
+    };
+    const hasProcedureRef = (
+      subject: (typeof entered.frontier.acts)[number],
+    ): subject is typeof subject & SubjectWithProcedureRef =>
+      "actorId" in subject && "procedureRef" in subject;
+    const ownerAct = entered.frontier.acts.find(hasProcedureRef);
+    const foreignOwnerId = entered.checkpoint.combatants.find(
+      ({ combatantId }) =>
+        ownerAct !== undefined && combatantId !== ownerAct.actorId,
+    )?.combatantId;
+    expect(ownerAct).toBeDefined();
+    expect(foreignOwnerId).toBeDefined();
+    if (ownerAct !== undefined && foreignOwnerId !== undefined) {
+      const forgedProcedureRef = ownerAct.procedureRef.replace(
+        ownerAct.actorId,
+        foreignOwnerId,
+      );
+      const crossOwnerProcedure = {
+        ...trace,
+        steps: [
+          ...trace.steps.slice(0, -1),
+          {
+            ...entered,
+            frontier: {
+              acts: entered.frontier.acts.map((subject) =>
+                subject === ownerAct
+                  ? { ...subject, procedureRef: forgedProcedureRef }
+                  : subject,
+              ),
+            },
+          },
+        ],
+      };
+      expect(Either.isLeft(decodeOracleTrace(crossOwnerProcedure))).toBe(true);
+    }
 
     const emptyFrontier = {
       ...trace,

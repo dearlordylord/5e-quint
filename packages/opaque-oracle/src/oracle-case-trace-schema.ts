@@ -11,7 +11,11 @@ import {
   type CreationFinalizationRejectionFact,
   type CreationFrontierFact,
 } from "@dnd/character-creation-runtime";
-import { BattleSubjectSchema, type BattleSubject } from "@dnd/battle-runtime";
+import {
+  BattleSubjectSchema,
+  type BattleProcedureExecutionRef,
+  type BattleSubject,
+} from "@dnd/battle-runtime";
 import {
   CharacterSheetConstructionIssueSchema,
   FreshCharacterSheetProjectionSchema,
@@ -427,7 +431,6 @@ function oracleBattleCheckpointInvariantsHold(checkpoint: {
     checkpoint.combatants.every(
       (combatant, index) => combatant.combatantId === turnOrder[index],
     ) &&
-    checkpoint.currentActorId === turnOrder[0] &&
     liveCombatantIds.has(checkpoint.currentActorId) &&
     turnOrder.every((combatantId) => liveCombatantIds.has(combatantId))
   );
@@ -467,6 +470,8 @@ const BATTLE_SUBJECT_REFERENCE_PROPERTIES = {
 
 function oracleBattleEnteredInvariantsHold(entered: {
   readonly checkpoint: {
+    readonly currentActorId: string;
+    readonly turnOrder: readonly string[];
     readonly combatants: readonly { readonly combatantId: string }[];
   };
   readonly frontier: { readonly acts: readonly BattleSubject[] };
@@ -474,10 +479,57 @@ function oracleBattleEnteredInvariantsHold(entered: {
   const liveCombatantIds = new Set(
     entered.checkpoint.combatants.map(({ combatantId }) => combatantId),
   );
-  return entered.frontier.acts.every((subject) =>
-    battleSubjectReferencesAreLive(subject, liveCombatantIds),
+  return entered.frontier.acts.every(
+    (subject) =>
+      entered.checkpoint.currentActorId === entered.checkpoint.turnOrder[0] &&
+      battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
+      battleSubjectProcedureRefsBelongToActor(subject),
   );
 }
+
+const ProcedureEnvelopeSchema = Schema.parseJson(
+  Schema.Struct({ scopeRef: Schema.String }),
+);
+const ProcedureScopeSchema = Schema.parseJson(
+  Schema.Struct({ combatantId: CombatantId }),
+);
+
+function battleSubjectProcedureRefsBelongToActor(
+  subject: BattleSubject,
+): boolean {
+  if (!("actorId" in subject)) return true;
+  return Object.entries(subject).every(([property, value]) => {
+    if (!(property in BATTLE_SUBJECT_PROCEDURE_REFERENCE_PROPERTIES)) {
+      return true;
+    }
+    if (typeof value !== "string") return false;
+    const envelope = Schema.decodeUnknownEither(ProcedureEnvelopeSchema)(value);
+    if (envelope._tag === "Left") return false;
+    const scope = Schema.decodeUnknownEither(ProcedureScopeSchema)(
+      envelope.right.scopeRef,
+    );
+    return (
+      scope._tag === "Right" && scope.right.combatantId === subject.actorId
+    );
+  });
+}
+
+type ProcedureReferenceProperty<Value> = Value extends unknown
+  ? {
+      [Property in keyof Value]-?: [NonNullable<Value[Property]>] extends [
+        never,
+      ]
+        ? never
+        : NonNullable<Value[Property]> extends BattleProcedureExecutionRef
+          ? Property
+          : never;
+    }[keyof Value]
+  : never;
+
+const BATTLE_SUBJECT_PROCEDURE_REFERENCE_PROPERTIES = {
+  procedureRef: true,
+  focusProcedureRef: true,
+} satisfies Record<ProcedureReferenceProperty<BattleSubject>, true>;
 
 function battleSubjectReferencesAreLive(
   subject: BattleSubject,
