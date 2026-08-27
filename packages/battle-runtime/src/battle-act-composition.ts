@@ -76,6 +76,25 @@ type IntrinsicRuntimeAttackSubject = Extract<
   }
 >;
 
+type IntrinsicPresentation = Extract<
+  BattleActPresentation,
+  { readonly kind: "intrinsic" }
+>;
+
+type IntrinsicAttackPresentation = Extract<
+  BattleActPresentation,
+  { readonly kind: "attack" | "presentationIssue" }
+>;
+
+type IntrinsicProcedurePresentation = Extract<
+  BattleActPresentation,
+  { readonly kind: "intrinsic" | "presentationIssue" }
+>;
+
+type IntrinsicActPresentation =
+  | IntrinsicPresentation
+  | IntrinsicAttackPresentation;
+
 export function battleActSpellPresentation(
   act: AvailableBattleAct,
 ): Extract<BattleActPresentation, { readonly kind: "spell" }> | undefined {
@@ -310,7 +329,7 @@ function intrinsicSubjectPresentation(
   state: BattleState,
   context: BattleRuntimeContext,
   subject: IntrinsicBattleSubject,
-): BattleActPresentation | undefined {
+): IntrinsicActPresentation | undefined {
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       action: (value) =>
@@ -331,7 +350,7 @@ function intrinsicActionSubjectPresentation(
   state: BattleState,
   context: BattleRuntimeContext,
   subject: Extract<IntrinsicBattleSubject, { readonly tag: "action" }>,
-): BattleActPresentation | undefined {
+): IntrinsicActPresentation | undefined {
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("action")({
       attack: (value) =>
@@ -359,7 +378,7 @@ function intrinsicBonusActionSubjectPresentation(
   state: BattleState,
   context: BattleRuntimeContext,
   subject: Extract<IntrinsicBattleSubject, { readonly tag: "bonusAction" }>,
-): BattleActPresentation | undefined {
+): IntrinsicActPresentation | undefined {
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("action")({
       offHandAttack: (value) =>
@@ -375,7 +394,7 @@ function intrinsicRuntimeCommandSubjectPresentation(
   state: BattleState,
   context: BattleRuntimeContext,
   subject: Extract<IntrinsicBattleSubject, { readonly tag: "runtimeCommand" }>,
-): BattleActPresentation | undefined {
+): IntrinsicActPresentation | undefined {
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("command")({
       opportunityAttack: (value) =>
@@ -433,7 +452,7 @@ function intrinsicAttackSubjectPresentation(
   state: BattleState,
   context: BattleRuntimeContext,
   subject: IntrinsicAttackSubject,
-): BattleActPresentation | undefined {
+): IntrinsicAttackPresentation | undefined {
   const attackOptions =
     subject.tag === "bonusAction"
       ? offHandAttackActionOptionsForActor(state, subject.actorId)
@@ -455,7 +474,7 @@ function intrinsicRuntimeAttackSubjectPresentation(
   state: BattleState,
   context: BattleRuntimeContext,
   subject: IntrinsicRuntimeAttackSubject,
-): BattleActPresentation | undefined {
+): IntrinsicAttackPresentation | undefined {
   const attack = attackActionOptionsForActor(state, subject.reactorId).find(
     (candidate) => candidate.procedureRef === subject.procedureRef,
   );
@@ -475,7 +494,7 @@ function attackPresentationJoin(
     { readonly kind: "attack" }
   >["procedureRef"],
   name: Either.Either<string, AttackPresentationJoinIssue>,
-): BattleActPresentation {
+): IntrinsicAttackPresentation {
   return Either.isLeft(name)
     ? { kind: "presentationIssue", issue: name.left }
     : { kind: "attack", procedureRef, name: name.right };
@@ -485,7 +504,7 @@ function intrinsicStatBlockProcedurePresentation(
   state: BattleState,
   context: BattleRuntimeContext,
   actorId: CombatantId,
-): BattleActPresentation {
+): IntrinsicProcedurePresentation {
   const presentations = statBlockProcedurePresentationsForActor(
     state,
     context,
@@ -504,7 +523,7 @@ function intrinsicStatBlockProcedurePresentation(
   };
 }
 
-function intrinsicSubjectPresentationFallback(): BattleActPresentation {
+function intrinsicSubjectPresentationFallback(): IntrinsicPresentation {
   return { kind: "intrinsic" };
 }
 

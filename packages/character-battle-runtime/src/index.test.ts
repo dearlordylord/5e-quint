@@ -48,6 +48,7 @@ import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
   battleActUnitPresentation,
+  battleCreatureInitFromStatBlock as battleCreatureInitFromStatBlockRuntime,
   battleCreaturePresentationDisplayName,
   battleAmmunitionStock,
   battleId,
@@ -67,7 +68,10 @@ import {
 } from "@dnd/battle-runtime";
 import { findFamiliarFormEligibilityForSpell } from "@dnd/surface/surface/find-familiar-forms";
 import { battleResourcePoolExecutionRefForTest } from "./sdk-integration.test-support.ts";
-import { characterUnarmoredArmorClassBases } from "./battle-character-build-projection.ts";
+import {
+  battleCreatureInitIssueMessage,
+  characterUnarmoredArmorClassBases,
+} from "./battle-character-build-projection.ts";
 import {
   abilityScoreAssignment,
   characterBuildCatalogEquipmentItem,
@@ -10286,6 +10290,155 @@ describe("Character battle runtime boundary coverage", () => {
         message: expect.stringContaining(
           "Druid Wild Shape battle capacity must match Character Sheet resource capacity",
         ),
+      },
+    });
+  });
+
+  test("formats structured battle initialization issue variants", () => {
+    const wildShapeIssue = {
+      tag: "battleDruidWildShapeKnownFormsIssue" as const,
+      issues: [
+        {
+          tag: "battleDruidWildShapeKnownFormIssue" as const,
+          statBlockId: authoredStatBlockId("stat_block_skeleton"),
+          reason: "duplicateFormIdentity" as const,
+        },
+      ] as const,
+    };
+    expect(battleCreatureInitIssueMessage(wildShapeIssue)).toContain(
+      "distinct available known forms",
+    );
+    expect(characterBattleRuntimeIssueMessage(wildShapeIssue)).toContain(
+      "distinct available known forms",
+    );
+
+    expect(
+      characterBattleRuntimeIssueMessage({
+        tag: "battleStateInitIssues",
+        issues: [
+          { tag: "battleStateInitIssue", message: "first issue" },
+          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+        ],
+      }),
+    ).toContain("first issue");
+    expect(
+      characterBattleRuntimeIssueMessage({
+        tag: "weaponLoadoutMismatch",
+        slot: "off-hand",
+      }),
+    ).toContain("off-hand weapon attack");
+  });
+
+  test("formats a Stat Block resource-graph admission issue", () => {
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_sphinx_of_wonder"),
+    );
+    const action = source.statBlock.actions?.find(
+      (entry) => entry.kind === "executable",
+    );
+    const resourceOrdinal = source.statBlock.resources?.[0]?.ordinal;
+    if (action === undefined || resourceOrdinal === undefined) {
+      throw new Error("Expected the Sphinx resource-backed action fixture.");
+    }
+    const malformedStatBlock = { ...source.statBlock };
+    delete malformedStatBlock.resources;
+    malformedStatBlock.actions = [
+      {
+        ...action,
+        resourceRefs: { kind: "some", ordinals: [resourceOrdinal] },
+      },
+    ];
+    const malformed = { ...source, statBlock: malformedStatBlock };
+    const init = battleCreatureInitFromStatBlockRuntime({
+      combatantId: combatantId("resource-graph-message"),
+      statBlock: malformed,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      conditions: [],
+    });
+
+    expect(init).toMatchObject({
+      _tag: "Left",
+      left: { tag: "statBlockResourceGraphIssue" },
+    });
+    if (Either.isRight(init)) return;
+    expect(characterBattleRuntimeIssueMessage(init.left)).toContain(
+      "resource reference",
+    );
+  });
+
+  test("routes a structured Wild Shape admission issue", () => {
+    const form = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_rat"),
+    );
+    const result = battleCreatureInitFromCharacterBuildWithRoute({
+      combatantId: combatantId("wild-shape-duplicate-form-route"),
+      characterId: characterId("character:wild-shape-duplicate-form-route"),
+      displayName: "Druid",
+      build: druidWildShapeBuild(),
+      initiative: initiativeScore(20),
+      ammunitionStocks: [],
+      unitLibrary,
+      druidWildShapeAvailableForms: [form, form],
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: { tag: "battleDruidWildShapeKnownFormsIssue" },
+      },
+    });
+  });
+
+  test("propagates an authored Stat Block projection failure after sheet init", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:stat-block-projection-route"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_skeleton"),
+    );
+    const result = startBattleFromCharacterSheetAndStatBlock({
+      battleId: battleId("battle:stat-block-projection-route"),
+      character: {
+        sheet,
+        unitLibrary,
+        statBlockCatalog,
+        combatantId: combatantId("stat-block-projection-character"),
+        displayName: "Character",
+        initiative: initiativeScore(20),
+        ammunitionStocks: [],
+      },
+      statBlockBattleInput: {
+        combatantId: combatantId("stat-block-projection-monster"),
+        statBlock: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            size: { kind: "alternatives", options: ["small", "medium"] },
+          },
+        },
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+        conditions: [],
+      },
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        issue: {
+          tag: "statBlockProjectionFailure",
+          failure: { reason: "nonLiteralSize" },
+        },
       },
     });
   });
