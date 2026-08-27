@@ -1,6 +1,5 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
-import { optionalProperty } from "./optional-property.ts";
 import {
   ordinaryFamiliarLikeProtocol,
   ownerLongRestExpiringFamiliarLikeProtocol,
@@ -62,6 +61,8 @@ import {
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import { admitFindFamiliarReappearance } from "./find-familiar-admission.ts";
 import type { BattleStatBlockExecutionCatalog } from "./battle-state-execution.ts";
+import type { AdmittedBattleStatBlockCombatant } from "./stat-block-combatant-execution-state.ts";
+import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
 
 export type FindFamiliarReappearanceInput = {
   readonly state: BattleState;
@@ -699,7 +700,7 @@ export function admitCompanionToBattle(
     placement: input.manifestation.placement,
     ownerId: input.ownerId,
   });
-  const nextState = withAdmittedFindFamiliarCombatant({
+  const combatantAdmissionInput = {
     state: input.state,
     casterId: input.ownerId,
     familiarId: input.companionId,
@@ -710,7 +711,19 @@ export function admitCompanionToBattle(
     currentHp: input.manifestation.hitPoints.currentHp,
     tempHp: input.manifestation.hitPoints.tempHp,
     reactionAvailable: true,
-  });
+  } satisfies FindFamiliarCombatantAdmissionInput;
+  const combatantAdmission = admitFindFamiliarStatBlockCombatant(
+    combatantAdmissionInput,
+  );
+  /* v8 ignore start -- @preserve -- The stored form was resolved from the catalog immediately above; only a forged execution source can fail Stat Block combatant admission here. */
+  if (Either.isLeft(combatantAdmission)) {
+    return Either.left(combatantAdmission.left);
+  }
+  /* v8 ignore stop -- @preserve */
+  const nextState = withFindFamiliarCombatantWithAdmission(
+    combatantAdmissionInput,
+    combatantAdmission.right,
+  );
   /* v8 ignore start -- @preserve -- The resolved stored form and collision-checked companion identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
   if (nextState.tag === "invalid") {
     return companionStateInitIssue(
@@ -750,16 +763,18 @@ function findFamiliarIdentityStateInitIssue(
       };
 }
 
-function withAdmittedFindFamiliarCombatant(
-  input: Omit<
-    Parameters<typeof withFindFamiliarCombatant>[0],
-    "displayName" | "combatantAdmission"
-  > & {
-    readonly statBlock: import("./stat-block-execution-state.ts").BattleStatBlockExecutionSource;
-  },
-): ReturnType<typeof withFindFamiliarCombatant> {
+type FindFamiliarCombatantAdmissionInput = Omit<
+  Parameters<typeof withFindFamiliarCombatant>[0],
+  "displayName" | "combatantAdmission"
+> & {
+  readonly statBlock: BattleStatBlockExecutionSource;
+};
+
+function admitFindFamiliarStatBlockCombatant(
+  input: FindFamiliarCombatantAdmissionInput,
+): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
   const allocation = input.state.executionScopeCursors.get(input.familiarId);
-  const combatantAdmission = admitBattleStatBlockCombatant({
+  return admitBattleStatBlockCombatant({
     battleId: input.state.battleId,
     combatantId: input.familiarId,
     statBlock: input.statBlock,
@@ -767,6 +782,12 @@ function withAdmittedFindFamiliarCombatant(
       allocation?.nextScopeOrdinal,
     ),
   });
+}
+
+function withAdmittedFindFamiliarCombatant(
+  input: FindFamiliarCombatantAdmissionInput,
+): ReturnType<typeof withFindFamiliarCombatant> {
+  const combatantAdmission = admitFindFamiliarStatBlockCombatant(input);
   /* v8 ignore start -- @preserve -- The stored form was resolved from the catalog immediately above; only a forged execution source can fail Stat Block combatant admission here. */
   if (Either.isLeft(combatantAdmission)) {
     return invalidFindFamiliarResult(
@@ -776,17 +797,20 @@ function withAdmittedFindFamiliarCombatant(
     );
   }
   /* v8 ignore stop -- @preserve */
+  return withFindFamiliarCombatantWithAdmission(
+    input,
+    combatantAdmission.right,
+  );
+}
+
+function withFindFamiliarCombatantWithAdmission(
+  input: FindFamiliarCombatantAdmissionInput,
+  combatantAdmission: AdmittedBattleStatBlockCombatant,
+): ReturnType<typeof withFindFamiliarCombatant> {
+  const { statBlock: _statBlock, ...findFamiliarInput } = input;
   return withFindFamiliarCombatant({
-    state: input.state,
-    casterId: input.casterId,
-    familiarId: input.familiarId,
-    familiar: input.familiar,
-    initiative: input.initiative,
-    combatantAdmission: combatantAdmission.right,
-    ammunitionStocks: input.ammunitionStocks,
-    reactionAvailable: input.reactionAvailable,
-    ...optionalProperty("currentHp", input.currentHp),
-    ...optionalProperty("tempHp", input.tempHp),
+    ...findFamiliarInput,
+    combatantAdmission,
   });
 }
 

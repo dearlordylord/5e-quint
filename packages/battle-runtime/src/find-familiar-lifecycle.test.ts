@@ -1311,6 +1311,59 @@ describe("Find Familiar lifecycle", () => {
       }),
     );
 
+    const cat = statBlockCatalog.requireStatBlock("stat_block_cat");
+    const malformedSelectedStatBlock = {
+      ...cat,
+      statBlock: {
+        ...cat.statBlock,
+        ac: { kind: "caster_derived", source: "spell_save_dc" } as const,
+      },
+    };
+    const malformedSelectedStatBlockAdmission = admitCompanionToBattleRuntime({
+      session,
+      ownerId: casterId,
+      companionId: familiarId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:malformed-selected-stat-block",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      catalog: {
+        ...statBlockCatalog,
+        getStatBlock: () => Option.some(malformedSelectedStatBlock),
+      },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "embodiedOutsideBattle",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
+        },
+        creatureTypeOverride: firstTypeOverride.creatureType,
+        hitPoints: {
+          currentHp: positiveCompanionHp(1),
+          tempHp: Hp(0),
+        },
+        ammunitionStocks: [],
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
+    });
+    expect(malformedSelectedStatBlockAdmission).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        kind: "statBlockSourceInvalid",
+        statBlockId: parseSharedStatBlockId("stat_block_cat"),
+        constraint: "literalArmorClassRequired",
+        message: "Battle runtime requires literal Stat Block Armor Class.",
+      }),
+    );
+
     const admitted = admitCompanionToBattleRuntime({
       session,
       ownerId: casterId,
