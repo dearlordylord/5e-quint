@@ -383,6 +383,41 @@ oracle remain controlled-red.
 The independent Standards and Spec reviews found no actionable findings. The
 #375 reviewer loop therefore converged.
 
+## Issue #376 evidence snapshot
+
+Source HEAD: `ff94d74a1973dc58f7bab4b5504c981d67b2e83a`. The public controlled-red
+regeneration was run directly with `pnpm regenerate:effect4-controlled-red`.
+The generated inventory is [`controlled-red-inventory.json`](./controlled-red-inventory.json),
+SHA-256 `95ab10a086c4607ec1eba2d1727933cfdb5c10b552cda12c8fce07b8f2be2000`.
+
+The Character Sheet owner is green: typecheck exit 0 with zero diagnostics.
+The four remaining failing owners are `@dnd/app` (4,335 raw diagnostics),
+`@dnd/battle-runtime` (7,723), `@dnd/character-battle-runtime` (5,140), and
+`@dnd/mcp` (5,387). Inventory totals are exactly 22,585 raw and 10,108
+deduplicated diagnostics. The diagnostic code/family/raw/deduplicated records
+are authoritative in the generated inventory; the codes are TS1360, TS18046,
+TS18047, TS18048, TS2305, TS2307, TS2314, TS2322, TS2339, TS2344, TS2345,
+TS2352, TS2353, TS2367, TS2488, TS2551, TS2554, TS2556, TS2560, TS2571,
+TS2638, TS2694, TS2698, TS2700, TS2724, TS2739, TS2740, TS2741, TS2749,
+TS2769, TS7006, TS7031, and TS7053.
+
+| Evidence                                                 | Result                        |
+| -------------------------------------------------------- | ----------------------------- |
+| `pnpm --filter @dnd/character-sheet-runtime typecheck`   | pass; zero diagnostics        |
+| `pnpm --filter @dnd/character-sheet-runtime audit:split` | pass; 225/225 exports         |
+| `pnpm --filter @dnd/character-sheet-runtime test`        | pass; 47 files, 479/479 tests |
+| `test:mbt:weapon-mastery-class-level-reselection`        | pass; 3/3                     |
+| `test:mbt:spell-access-free-cast`                        | pass; 1/1                     |
+| Certified Effect 3 parser at `76d9abaf0`                 | pass; 9/9 fixed-point cases   |
+| Candidate fixed-point replay                             | pass; 9/9 cases               |
+| Focused ESLint and Prettier                              | pass                          |
+
+The global Effect 3 oracle is unchanged. Full workspace verification and the
+baseline verifier remain deferred because Battle is controlled-red. The #376
+review loop converged across standards, specification, domain/architecture,
+connascence, and code-review passes; this snapshot makes no workspace or Battle
+green claim.
+
 ## Closure conditions
 
 Close this controlled-red interval only when all of the following are true:
