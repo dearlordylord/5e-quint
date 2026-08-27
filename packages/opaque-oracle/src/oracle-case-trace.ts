@@ -1,4 +1,4 @@
-import { Either, JSONSchema } from "effect";
+import { Either } from "effect";
 import {
   OracleCaseSchema,
   OracleEvaluationBatchSchema,
@@ -24,6 +24,11 @@ import {
 export {
   CreationFillBatchSchema,
   FreshSheetInputSchema,
+  OracleBattleActsFrontierSchema,
+  OracleBattleCheckpointSchema,
+  OracleBattleEnteredSchema,
+  OracleBattleInputSchema,
+  OracleBattleRosterEntrySchema,
   OracleCaseSchema,
   OracleEvaluationBatchSchema,
   OracleTraceSchema,
@@ -114,48 +119,4 @@ export function decodeOracleTraceJson(
     : decodeOracleTrace(parsed.right);
 }
 
-export function oracleCaseJsonSchema(): ReturnType<typeof JSONSchema.make> {
-  return JSONSchema.make(OracleCaseSchema, { target: "jsonSchema2020-12" });
-}
-
-export function oracleEvaluationBatchJsonSchema(): ReturnType<
-  typeof JSONSchema.make
-> {
-  return JSONSchema.make(OracleEvaluationBatchSchema, {
-    target: "jsonSchema2020-12",
-  });
-}
-
-export function oracleTraceJsonSchema(): ReturnType<typeof JSONSchema.make> {
-  const schema = JSONSchema.make(OracleTraceSchema, {
-    target: "jsonSchema2020-12",
-  });
-  if (
-    !("type" in schema) ||
-    schema.type !== "object" ||
-    !("properties" in schema)
-  ) {
-    throw new Error("Opaque Oracle Trace JSON schema root must be an object");
-  }
-  const steps = schema.properties.steps;
-  if (steps === undefined || !("type" in steps) || steps.type !== "array") {
-    throw new Error("Opaque Oracle Trace JSON schema must contain steps");
-  }
-  schema.properties.steps = {
-    ...steps,
-    prefixItems: [
-      {
-        type: "object",
-        required: ["tag", "frontier"],
-        properties: { tag: { enum: ["creationStarted"] } },
-      },
-    ],
-  };
-  return schema;
-}
-
 export type OracleTraceIssueCode = OracleDecodeIssueCode;
-
-// Kept as a descriptive alias for clients that used the earlier name. It is
-// the same refined authority, never a weaker structural schema.
-export const oracleLifecycleTraceSchema = OracleTraceSchema;

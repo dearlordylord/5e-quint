@@ -16,6 +16,7 @@ import {
 } from "@dnd/character-battle-runtime";
 import {
   battleId,
+  discoverBattleActs,
   initiativeScore,
   snapshotBattle,
 } from "@dnd/battle-runtime";
@@ -29,13 +30,13 @@ import {
   Hp,
   Index,
   resourceCount,
-  type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Option } from "effect";
 
 import { canonicalizeStringSet } from "./oracle-canonical.ts";
 import {
+  OracleBattleCheckpointSchema,
   OracleTraceSchema,
   type FreshSheetInput,
   type OracleBattleCheckpoint,
@@ -169,7 +170,7 @@ function appendFreshSheetAndBattleSteps(
   steps: [OracleTraceStep, ...OracleTraceStep[]],
   build: CharacterBuild,
   sheetInput: FreshSheetInput,
-  rosterInput: ReadonlyNonEmptyArray<OracleBattleRosterEntry>,
+  rosterInput: readonly OracleBattleRosterEntry[],
   unitLibrary: UnitCatalog,
   statBlockCatalog: StatBlockCatalog,
 ): OracleTrace {
@@ -227,17 +228,19 @@ function appendFreshSheetAndBattleSteps(
   steps.push({
     tag: "battleEntered",
     checkpoint: strippedBattleCheckpoint(snapshot),
-    frontier: { acts: snapshot.acts },
+    frontier: {
+      acts: discoverBattleActs(entry.right.session).map(({ subject }) => subject),
+    },
   });
   return oracleTrace(steps);
 }
 
 function resolveBattleRoster(input: {
-  readonly roster: ReadonlyNonEmptyArray<OracleBattleRosterEntry>;
+  readonly roster: readonly OracleBattleRosterEntry[];
   readonly sheet: Parameters<typeof freshCharacterSheetProjection>[0];
   readonly statBlockCatalog: StatBlockCatalog;
 }): Either.Either<
-  ReadonlyNonEmptyArray<CharacterBattleEncounterParticipant>,
+  readonly CharacterBattleEncounterParticipant[],
   OracleBattleEntryRejection
 > {
   type OracleBattleEntryIssue = OracleBattleEntryRejection["issues"][number];
@@ -279,47 +282,20 @@ function resolveBattleRoster(input: {
       ...(entry.currentHp === undefined
         ? {}
         : { currentHp: Hp(entry.currentHp) }),
-      ...(entry.tempHp === undefined ? {} : { tempHp: Hp(entry.tempHp) }),
+      tempHp: Hp(entry.tempHp),
     });
   }
 
   if (missingStatBlocks.length > 0) {
     const [firstMissing, ...remainingMissing] = missingStatBlocks;
-    if (firstMissing === undefined) {
-      return Either.left({
-        tag: "battleEntryRejected",
-        issues: [
-          {
-            tag: "battleStateInitRejected",
-            issue: {
-              tag: "battleStateInitIssue",
-              message: "Missing Stat Block issue accumulation was empty.",
-            },
-          },
-        ],
-      });
-    }
+    if (firstMissing === undefined)
+      return defect("missing Stat Block issue accumulation was empty");
     return Either.left({
       tag: "battleEntryRejected",
       issues: [firstMissing, ...remainingMissing],
     });
   }
-  const [first, ...rest] = participants;
-  if (first === undefined) {
-    return Either.left({
-      tag: "battleEntryRejected",
-      issues: [
-        {
-          tag: "battleStateInitRejected",
-          issue: {
-            tag: "battleStateInitIssue",
-            message: "Battle roster resolution produced no participants.",
-          },
-        },
-      ],
-    });
-  }
-  return Either.right([first, ...rest]);
+  return Either.right(participants);
 }
 
 function battleEntryRejection(
@@ -330,18 +306,7 @@ function battleEntryRejection(
     return { tag: "battleEntryRejected", issues: [issue] };
   }
   if (issue.tag === "characterBattleEncounterEmptyRoster") {
-    return {
-      tag: "battleEntryRejected",
-      issues: [
-        {
-          tag: "battleStateInitRejected",
-          issue: {
-            tag: "battleStateInitIssue",
-            message: "Character battle encounter requires at least one participant.",
-          },
-        },
-      ],
-    };
+    return { tag: "battleEntryRejected", issues: [issue] };
   }
   if (issue.tag === "battleCreatureInitIssue") {
     return {
@@ -363,7 +328,7 @@ function battleEntryRejection(
 function strippedBattleCheckpoint(
   snapshot: ReturnType<typeof snapshotBattle>,
 ): OracleBattleCheckpoint {
-  return {
+  return OracleBattleCheckpointSchema.make({
     round: snapshot.round,
     currentActorId: snapshot.currentActorId,
     turnOrder: snapshot.turnOrder,
@@ -378,7 +343,7 @@ function strippedBattleCheckpoint(
     turn: snapshot.turn,
     readiedResponses: snapshot.readiedResponses,
     helpAttackMarkers: snapshot.helpAttackMarkers,
-  };
+  });
 }
 
 function isCharacterBattleCreatureSnapshot(
