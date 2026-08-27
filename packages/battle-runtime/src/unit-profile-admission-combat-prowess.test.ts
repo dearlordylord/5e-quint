@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT56 feat_boon_of_combat_prowess
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-roll-miss-to-hit-replacement
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   characterAttackSubjectForTest,
   requireCharacterUnitProcedureRefForTest,
@@ -35,7 +36,6 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
-  Either,
   parseSupportedUnitFeatureProfile,
   resolveBattleInterrupt,
   resolveBattleSubject,
@@ -60,7 +60,7 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(boonOfCombatProwessUnitId),
         supportProfiles: [combatProwessSupportProfile],
       }),

@@ -16,7 +16,7 @@ import {
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle hypnotic_pattern doResolveHypnoticPatternFailedSavingThrow
 // UNIT-IDENTITY-REPLAY: condition-saving-throw-lifecycle sleep doResolveSleepRepeatSavingThrowFailure
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_CONDITION_LIFECYCLE
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -1204,10 +1204,10 @@ function conditionSpellBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function conditionSpellCreature(input: {

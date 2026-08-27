@@ -1,3 +1,4 @@
+import { Result } from "effect";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { cantripSpellInvocationRef } from "./battle-subjects.ts";
 import { combatantKnockedOutUnconscious } from "./battle-reducer/creature-state.ts";
@@ -26,7 +27,6 @@ import {
   damageRollFillWithGroups,
   deathSavingThrowFill,
   discoverBattleActs,
-  Either,
   endTurn,
   fighterAttackSubject,
   fighterId,
@@ -420,14 +420,14 @@ describe("battle runtime: death saves and turns", () => {
       throw new Error("Expected the Knocked Out fighter.");
     }
     expect(combatantKnockedOutUnconscious(knockedOut)).toEqual(
-      Either.right(KNOCKED_OUT_UNCONSCIOUS),
+      Result.succeed(KNOCKED_OUT_UNCONSCIOUS),
     );
     const ordinary = state.combatants.get(wizardId);
     if (ordinary === undefined) {
       throw new Error("Expected the ordinary conscious caster.");
     }
     expect(combatantKnockedOutUnconscious(ordinary)).toEqual(
-      Either.right(null),
+      Result.succeed(null),
     );
     const healingWordAct = discoverBattleActs(session).find(
       (candidate) =>
@@ -543,7 +543,7 @@ describe("battle runtime: death saves and turns", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message:
           "Knocked Out Unconscious initialization requires the Unconscious condition.",
@@ -569,7 +569,7 @@ describe("battle runtime: death saves and turns", () => {
           ],
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleStateInitIssue",
           message:
             "Knocked Out Unconscious initialization requires exactly 1 current HP.",

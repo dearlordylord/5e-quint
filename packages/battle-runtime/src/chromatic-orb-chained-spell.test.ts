@@ -1,7 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-chained-attack-damage spell.invocation-warding-bond-linked-effect
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CHAINED_ATTACK_SEQUENCE
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -990,10 +990,10 @@ function chromaticOrbSession(input: {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function decodeSpellRecord(raw: unknown): SpellRecord {
@@ -1404,7 +1404,7 @@ function poisonImmuneSkeletonCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
+      source: Result.getOrThrow(
         battleStatBlockCombatantSource(
           statBlockCatalog.requireStatBlock("stat_block_skeleton"),
         ),

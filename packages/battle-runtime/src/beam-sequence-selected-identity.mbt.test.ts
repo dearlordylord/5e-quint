@@ -3,7 +3,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-ELDRITCH-BLAST eldritch_blast
 // UNIT-IDENTITY-REPLAY: L1H-ELDRITCH-BLAST eldritch_blast doDiscoverLevelFiveBeamTargetHoles doResolveTwoCreatureBeamsSameTarget doResolveTwoCreatureBeamsSplitTargets doResolveCreatureAndObjectBeamTargets
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INDEPENDENT_ATTACK_SEQUENCE
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   armorClass,
@@ -368,10 +368,10 @@ function eldritchBlastBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function battleCreature(input: {

@@ -1,6 +1,6 @@
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
@@ -1891,8 +1891,8 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       unitRef: { unitId: halflingLuck.id },
       unit: halflingLuck,
     });
-    if (Either.isLeft(halflingLuckRef)) {
-      throw new Error(halflingLuckRef.left.message);
+    if (Result.isFailure(halflingLuckRef)) {
+      throw new Error(halflingLuckRef.failure.message);
     }
     const state = requireResolved(
       endTurn({
@@ -1901,7 +1901,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
           combatants: [
             characterSeed({
               initiative: 20,
-              characterUnitRefs: [halflingLuckRef.right],
+              characterUnitRefs: [halflingLuckRef.success],
               unitFeatures: [characterBattleFeatureInitForTest(halflingLuck)],
             }),
             statBlockCreatureInit({ initiative: 10 }),

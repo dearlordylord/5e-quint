@@ -314,8 +314,8 @@ describe("battle lifecycle admission issue aggregation", () => {
       combatants: [],
     });
     expect(emptySetup).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "battleStateInitIssue",
         message: "startBattle requires at least one combatant.",
       },
@@ -360,8 +360,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Initiative Swap requires a distinct willing ally.",
       },
     });
@@ -373,8 +373,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Initiative Swap source must be a combatant in this battle.",
       },
     });
@@ -386,8 +386,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Initiative Swap candidate must be a combatant in this battle.",
       },
@@ -400,8 +400,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Initiative Swap source lacks an admitted Initiative swap support profile.",
       },
@@ -417,8 +417,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Initial Initiative setup is already complete." },
+      _tag: "Failure",
+      failure: { message: "Initial Initiative setup is already complete." },
     });
 
     expect(
@@ -427,8 +427,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         combatant: baseCombatant,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
       },
     });

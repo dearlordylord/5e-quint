@@ -17,7 +17,7 @@ import {
   presentFindFamiliarHitPoints,
 } from "./find-familiar-lifecycle-execution.ts";
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import * as Option from "effect/Option";
 import { Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
@@ -185,12 +185,12 @@ function halflingLuckUnitRef(): Extract<
 >["characterUnitRefs"][number] {
   const unit = halflingLuckUnit();
   const supportProfiles = battleUnitSupportProfilesForUnit({ unit });
-  if (Either.isLeft(supportProfiles)) {
-    throw new Error(supportProfiles.left.message);
+  if (Result.isFailure(supportProfiles)) {
+    throw new Error(supportProfiles.failure.message);
   }
   return {
     unit: unitCatalog.requireUnit(unit.id),
-    supportProfiles: supportProfiles.right,
+    supportProfiles: supportProfiles.success,
   };
 }
 
@@ -227,10 +227,10 @@ function druidWildShapeKnownForms() {
       statBlockCatalog.requireStatBlock("stat_block_cat"),
     ],
   });
-  if (Either.isLeft(forms)) {
-    throw new Error(forms.left.message);
+  if (Result.isFailure(forms)) {
+    throw new Error(forms.failure.message);
   }
-  return forms.right;
+  return forms.success;
 }
 
 function startFixtureBattle(
@@ -250,7 +250,7 @@ function startFixtureBattle(
         initiative: initiativeScore(12),
         creatureInit: {
           kind: "statBlock",
-          source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+          source: Result.getOrThrow(battleStatBlockCombatantSource(skeleton)),
           currentHp: maxHp,
           tempHp: Hp(0),
           ammunitionStocks: [
@@ -267,7 +267,7 @@ function startFixtureBattle(
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
-                source: Either.getOrThrow(
+                source: Result.getOrThrow(
                   battleStatBlockCombatantSource(skeleton),
                 ),
                 currentHp: maxHp,
@@ -292,7 +292,7 @@ function startFixtureBattle(
               initiative: initiativeScore(10),
               creatureInit: {
                 kind: "statBlock" as const,
-                source: Either.getOrThrow(
+                source: Result.getOrThrow(
                   battleStatBlockCombatantSource(skeleton),
                 ),
                 currentHp: maxHp,
@@ -309,10 +309,10 @@ function startFixtureBattle(
           ]),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function startSpellcasterFixtureBattle(
@@ -385,10 +385,10 @@ function startSpellcasterFixtureBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function startPactWarlockFixtureBattle(
@@ -469,10 +469,10 @@ function startPactWarlockFixtureBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function startWildCompanionDruidFixtureBattle(input: {
@@ -553,10 +553,10 @@ function startWildCompanionDruidFixtureBattle(input: {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function wildShapeResourcePoolRefForFixture(session: BattleRuntimeSession) {
@@ -626,10 +626,10 @@ function startWrongOwnerPactFixtureBattle(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function startFindFamiliarSpellcasterFixtureBattle(): BattleRuntimeSession {
@@ -671,10 +671,10 @@ function startFindFamiliarSpellcasterFixtureBattle(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function fixtureBattleState(source: BattleState | BattleRuntimeSession) {
@@ -1151,11 +1151,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const session = battleRuntimeSessionForTest({
-      state: initial.right.state,
+      state: initial.success.state,
       context: battleRuntimeContextForTest(
         new Map([
           [
@@ -1222,10 +1222,10 @@ describe("Find Familiar lifecycle", () => {
       session,
       ...absentPactFamiliarInput,
     });
-    expect(Either.isRight(admittedAbsentPactFamiliar)).toBe(true);
-    if (Either.isRight(admittedAbsentPactFamiliar)) {
+    expect(Result.isSuccess(admittedAbsentPactFamiliar)).toBe(true);
+    if (Result.isSuccess(admittedAbsentPactFamiliar)) {
       expect(
-        admittedAbsentPactFamiliar.right.context.characters.get(casterId),
+        admittedAbsentPactFamiliar.success.context.characters.get(casterId),
       ).toMatchObject({
         retainedCompanionSelection: {
           formAccess: "pactOfTheChain",
@@ -1250,7 +1250,7 @@ describe("Find Familiar lifecycle", () => {
         ...absentPactFamiliarInput,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message:
           "Retained companion admission owner has no authored runtime context.",
@@ -1289,20 +1289,20 @@ describe("Find Familiar lifecycle", () => {
       },
       initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
     });
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isLeft(admitted)) return;
-    expect(admitted.right.context.characters.get(casterId)).toMatchObject({
+    expect(Result.isSuccess(admitted)).toBe(true);
+    if (Result.isFailure(admitted)) return;
+    expect(admitted.success.context.characters.get(casterId)).toMatchObject({
       retainedCompanionSelection: {
         formAccess: "findFamiliar",
         selectedForm: { tag: "normalNamedForm", formId: "cat" },
       },
     });
-    expect(admitted.right.context.statBlocks.get(familiarId)).toMatchObject({
+    expect(admitted.success.context.statBlocks.get(familiarId)).toMatchObject({
       displayName: "Cat",
     });
     expect(
       castRetainedFindFamiliarRuntime({
-        session: admitted.right,
+        session: admitted.success,
         casterId,
         ammunitionStocks: [],
         familiarId,
@@ -1319,7 +1319,7 @@ describe("Find Familiar lifecycle", () => {
     ).toMatchObject({ tag: "invalid" });
     expect(
       castRetainedFindFamiliarRuntime({
-        session: admitted.right,
+        session: admitted.success,
         casterId,
         ammunitionStocks: [],
         familiarId: casterId,
@@ -1333,7 +1333,7 @@ describe("Find Familiar lifecycle", () => {
     ).toMatchObject({ tag: "invalid" });
 
     const recast = castRetainedFindFamiliarRuntime({
-      session: admitted.right,
+      session: admitted.success,
       casterId,
       ammunitionStocks: [],
       familiarId,
@@ -1429,11 +1429,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const firstAdmission = admitCompanionToBattle({
-      state: initial.right.state,
+      state: initial.success.state,
       ownerId: casterId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -1470,11 +1470,11 @@ describe("Find Familiar lifecycle", () => {
       },
       initialCombatantOrder: initialCombatantOrder(casterId, otherOwnerId),
     });
-    expect(Either.isRight(firstAdmission)).toBe(true);
-    if (Either.isLeft(firstAdmission)) return;
+    expect(Result.isSuccess(firstAdmission)).toBe(true);
+    if (Result.isFailure(firstAdmission)) return;
 
     const collision = admitCompanionToBattle({
-      state: firstAdmission.right,
+      state: firstAdmission.success,
       ownerId: otherOwnerId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -1498,12 +1498,12 @@ describe("Find Familiar lifecycle", () => {
       initialCombatantOrder: initialCombatantOrder(casterId, otherOwnerId),
     });
 
-    expect(Either.isLeft(collision)).toBe(true);
-    if (Either.isRight(collision)) return;
-    expect(battleStateInitIssueMessage(collision.left)).toBe(
+    expect(Result.isFailure(collision)).toBe(true);
+    if (Result.isSuccess(collision)) return;
+    expect(battleStateInitIssueMessage(collision.failure)).toBe(
       "Companion admission identity is already used by another companion.",
     );
-    expect(firstAdmission.right.companions.get(casterId)).toMatchObject({
+    expect(firstAdmission.success.companions.get(casterId)).toMatchObject({
       ownerId: casterId,
       status: "temporarilyDismissed",
       identity: {
@@ -1524,11 +1524,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const retained = admitCompanionToBattle({
-      state: initial.right.state,
+      state: initial.success.state,
       ownerId: casterId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -1551,18 +1551,18 @@ describe("Find Familiar lifecycle", () => {
       },
       initialCombatantOrder: initialCombatantOrder(casterId),
     });
-    expect(Either.isRight(retained)).toBe(true);
-    if (Either.isLeft(retained)) return;
+    expect(Result.isSuccess(retained)).toBe(true);
+    if (Result.isFailure(retained)) return;
 
-    const recast = castRatFamiliar(retained.right);
+    const recast = castRatFamiliar(retained.success);
     expect(recast).toMatchObject({
       tag: "invalid",
       message:
         "Retained Find Familiar recast requires the session-owned authored selection transition.",
     });
-    expect(recast.snapshot).toEqual(snapshotBattle(retained.right));
+    expect(recast.snapshot).toEqual(snapshotBattle(retained.success));
     expect(
-      findFamiliarCompanionForOwner(retained.right, casterId),
+      findFamiliarCompanionForOwner(retained.success, casterId),
     ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
       identity: {
@@ -1583,11 +1583,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const admitted = admitCompanionToBattle({
-      state: initial.right.state,
+      state: initial.success.state,
       ownerId: casterId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -1611,9 +1611,9 @@ describe("Find Familiar lifecycle", () => {
       initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
-    expect(Either.isLeft(admitted)).toBe(true);
-    if (Either.isRight(admitted)) return;
-    expect(battleStateInitIssueMessage(admitted.left)).toBe(
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(battleStateInitIssueMessage(admitted.failure)).toBe(
       "Companion admission requires durable id.",
     );
   });
@@ -1629,11 +1629,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const admitted = admitCompanionToBattle({
-      state: initial.right.state,
+      state: initial.success.state,
       ownerId: casterId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -1657,9 +1657,9 @@ describe("Find Familiar lifecycle", () => {
       initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
-    expect(Either.isLeft(admitted)).toBe(true);
-    if (Either.isRight(admitted)) return;
-    expect(battleStateInitIssueMessage(admitted.left)).toBe(
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(battleStateInitIssueMessage(admitted.failure)).toBe(
       "Retained familiar form proof resolved Stat Block mismatch: stat_block_owl.",
     );
   });
@@ -1675,11 +1675,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const admitted = admitCompanionToBattle({
-      state: initial.right.state,
+      state: initial.success.state,
       ownerId: casterId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -1708,9 +1708,9 @@ describe("Find Familiar lifecycle", () => {
       initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
-    expect(Either.isLeft(admitted)).toBe(true);
-    if (Either.isRight(admitted)) return;
-    expect(battleStateInitIssueMessage(admitted.left)).toBe(
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(battleStateInitIssueMessage(admitted.failure)).toBe(
       "Retained familiar Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block: stat_block_goblin_warrior.",
     );
   });
@@ -1726,11 +1726,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const admitted = admitCompanionToBattle({
-      state: initial.right.state,
+      state: initial.success.state,
       ownerId: casterId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -1757,10 +1757,10 @@ describe("Find Familiar lifecycle", () => {
       initialCombatantOrder: initialCombatantOrder(casterId),
     });
 
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isLeft(admitted)) return;
+    expect(Result.isSuccess(admitted)).toBe(true);
+    if (Result.isFailure(admitted)) return;
     expect(
-      findFamiliarCompanionForOwner(admitted.right, casterId),
+      findFamiliarCompanionForOwner(admitted.success, casterId),
     ).toMatchObject({
       status: "disappearedAtZeroHitPoints",
       creatureTypeOverride: "celestial",
@@ -2227,7 +2227,7 @@ describe("Find Familiar lifecycle", () => {
           initiative: initiativeScore(12),
           creatureInit: {
             kind: "statBlock",
-            source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            source: Result.getOrThrow(battleStatBlockCombatantSource(skeleton)),
             currentHp: skeletonHp,
             tempHp: Hp(0),
             ammunitionStocks: [
@@ -2242,7 +2242,7 @@ describe("Find Familiar lifecycle", () => {
           initiative: initiativeScore(11),
           creatureInit: {
             kind: "statBlock",
-            source: Either.getOrThrow(battleStatBlockCombatantSource(skeleton)),
+            source: Result.getOrThrow(battleStatBlockCombatantSource(skeleton)),
             currentHp: skeletonHp,
             tempHp: Hp(0),
             ammunitionStocks: [
@@ -2253,10 +2253,10 @@ describe("Find Familiar lifecycle", () => {
         },
       ],
     });
-    expect(Either.isRight(started)).toBe(true);
-    if (Either.isLeft(started)) return;
+    expect(Result.isSuccess(started)).toBe(true);
+    if (Result.isFailure(started)) return;
     const presentState: BattleState = {
-      ...started.right.state,
+      ...started.success.state,
       companions: new Map([
         [
           casterId,
@@ -2342,7 +2342,7 @@ describe("Find Familiar lifecycle", () => {
     const cast = castCatFamiliar(withoutFamiliar);
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
-    const catSource = Either.getOrThrow(
+    const catSource = Result.getOrThrow(
       battleStatBlockCombatantSource(
         statBlockCatalog.requireStatBlock("stat_block_cat"),
       ),
@@ -2433,11 +2433,11 @@ describe("Find Familiar lifecycle", () => {
         }),
       ],
     });
-    expect(Either.isRight(initial)).toBe(true);
-    if (Either.isLeft(initial)) return;
+    expect(Result.isSuccess(initial)).toBe(true);
+    if (Result.isFailure(initial)) return;
 
     const admitted = admitCompanionToBattle({
-      state: initial.right.state,
+      state: initial.success.state,
       ownerId: casterId,
       identity: {
         tag: "retainedBetweenBattles",
@@ -2473,9 +2473,9 @@ describe("Find Familiar lifecycle", () => {
       initialCombatantOrder: initialCombatantOrder(casterId, otherCombatantId),
     });
 
-    expect(Either.isLeft(admitted)).toBe(true);
-    if (Either.isRight(admitted)) return;
-    expect(battleStateInitIssueMessage(admitted.left)).toBe(
+    expect(Result.isFailure(admitted)).toBe(true);
+    if (Result.isSuccess(admitted)) return;
+    expect(battleStateInitIssueMessage(admitted.failure)).toBe(
       "Find Familiar familiar identity must not identify an ordinary combatant.",
     );
   });
@@ -2748,14 +2748,14 @@ describe("Find Familiar lifecycle", () => {
       state: cast.state,
       combatantIds: [casterId],
     });
-    expect(Either.isRight(ownerRemoved)).toBe(true);
-    if (Either.isLeft(ownerRemoved)) return;
-    expect(ownerRemoved.right.combatants.has(casterId)).toBe(false);
-    expect(ownerRemoved.right.combatants.has(familiarId)).toBe(false);
+    expect(Result.isSuccess(ownerRemoved)).toBe(true);
+    if (Result.isFailure(ownerRemoved)) return;
+    expect(ownerRemoved.success.combatants.has(casterId)).toBe(false);
+    expect(ownerRemoved.success.combatants.has(familiarId)).toBe(false);
     expect(
-      findFamiliarCompanionForOwner(ownerRemoved.right, casterId),
+      findFamiliarCompanionForOwner(ownerRemoved.success, casterId),
     ).toBeNull();
-    expect(snapshotBattle(ownerRemoved.right).companions).toEqual([]);
+    expect(snapshotBattle(ownerRemoved.success).companions).toEqual([]);
 
     const recast = castCatFamiliar(startFixtureBattle({ includeEnemy: true }));
     expect(recast.tag).toBe("resolved");
@@ -2764,14 +2764,14 @@ describe("Find Familiar lifecycle", () => {
       state: recast.state,
       combatantIds: [familiarId],
     });
-    expect(Either.isRight(familiarRemoved)).toBe(true);
-    if (Either.isLeft(familiarRemoved)) return;
-    expect(familiarRemoved.right.combatants.has(casterId)).toBe(true);
-    expect(familiarRemoved.right.combatants.has(familiarId)).toBe(false);
+    expect(Result.isSuccess(familiarRemoved)).toBe(true);
+    if (Result.isFailure(familiarRemoved)) return;
+    expect(familiarRemoved.success.combatants.has(casterId)).toBe(true);
+    expect(familiarRemoved.success.combatants.has(familiarId)).toBe(false);
     expect(
-      findFamiliarCompanionForOwner(familiarRemoved.right, casterId),
+      findFamiliarCompanionForOwner(familiarRemoved.success, casterId),
     ).toBeNull();
-    expect(snapshotBattle(familiarRemoved.right).companions).toEqual([]);
+    expect(snapshotBattle(familiarRemoved.success).companions).toEqual([]);
   });
 
   test("ordinary damage to 0 HP makes a present familiar disappear", () => {
@@ -3723,12 +3723,12 @@ describe("Find Familiar lifecycle", () => {
       casterId,
       catalog: statBlockCatalog,
     });
-    expect(Either.isRight(admittedReappearance)).toBe(true);
-    if (Either.isLeft(admittedReappearance)) return;
+    expect(Result.isSuccess(admittedReappearance)).toBe(true);
+    if (Result.isFailure(admittedReappearance)) return;
     const mechanicalPlacementFrontier =
       resolveAdmittedFindFamiliarReappearanceSubject({
         fills: [],
-        admission: admittedReappearance.right.mechanics,
+        admission: admittedReappearance.success.mechanics,
       });
     expect(mechanicalPlacementFrontier.tag).toBe("needsHoles");
     expect(
@@ -4650,9 +4650,9 @@ describe("Find Familiar lifecycle", () => {
       },
     ]);
 
-    const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(encoded);
-    expect(Either.isRight(decoded)).toBe(true);
-    const authoredNameInMechanicalSnapshot = Schema.decodeUnknownEither(
+    const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(encoded);
+    expect(Result.isSuccess(decoded)).toBe(true);
+    const authoredNameInMechanicalSnapshot = Schema.decodeUnknownResult(
       BattleSnapshotSchema,
     )({
       ...encoded,
@@ -4662,13 +4662,13 @@ describe("Find Familiar lifecycle", () => {
           : combatant,
       ),
     });
-    expect(Either.isLeft(authoredNameInMechanicalSnapshot)).toBe(true);
-    const invalid = Schema.decodeUnknownEither(BattleSnapshotSchema)({
+    expect(Result.isFailure(authoredNameInMechanicalSnapshot)).toBe(true);
+    const invalid = Schema.decodeUnknownResult(BattleSnapshotSchema)({
       ...encoded,
       companions: [{ status: "present" }],
     });
-    expect(Either.isLeft(invalid)).toBe(true);
-    const invalidEmptyResolvedStatBlockId = Schema.decodeUnknownEither(
+    expect(Result.isFailure(invalid)).toBe(true);
+    const invalidEmptyResolvedStatBlockId = Schema.decodeUnknownResult(
       BattleSnapshotSchema,
     )({
       ...encoded,
@@ -4679,8 +4679,8 @@ describe("Find Familiar lifecycle", () => {
         },
       ],
     });
-    expect(Either.isLeft(invalidEmptyResolvedStatBlockId)).toBe(true);
-    const dismissedAtZeroHp = Schema.decodeUnknownEither(BattleSnapshotSchema)({
+    expect(Result.isFailure(invalidEmptyResolvedStatBlockId)).toBe(true);
+    const dismissedAtZeroHp = Schema.decodeUnknownResult(BattleSnapshotSchema)({
       ...encoded,
       companions: [
         {
@@ -4697,7 +4697,7 @@ describe("Find Familiar lifecycle", () => {
         },
       ],
     });
-    expect(Either.isLeft(dismissedAtZeroHp)).toBe(true);
+    expect(Result.isFailure(dismissedAtZeroHp)).toBe(true);
   });
 
   test("reappearance admission reports missing and malformed retained forms", () => {
@@ -4717,14 +4717,14 @@ describe("Find Familiar lifecycle", () => {
       catalog: { getStatBlock: () => Option.none() },
     });
     expect(missing).toEqual(
-      Either.left({
+      Result.fail({
         tag: "findFamiliarReappearanceAdmissionIssue",
         message:
           "Retained familiar form Stat Block is missing: stat_block_cat.",
       }),
     );
 
-    const catSource = Either.getOrThrow(
+    const catSource = Result.getOrThrow(
       battleStatBlockCombatantSource(
         statBlockCatalog.requireStatBlock("stat_block_cat"),
       ),
@@ -4743,9 +4743,9 @@ describe("Find Familiar lifecycle", () => {
           }),
       },
     });
-    expect(Either.isLeft(malformed)).toBe(true);
-    if (Either.isRight(malformed)) return;
-    expect(malformed.left).toEqual({
+    expect(Result.isFailure(malformed)).toBe(true);
+    if (Result.isSuccess(malformed)) return;
+    expect(malformed.failure).toEqual({
       tag: "findFamiliarReappearanceAdmissionIssue",
       message: "Battle runtime requires literal Stat Block Armor Class.",
     });
@@ -4810,7 +4810,7 @@ describe("Find Familiar lifecycle", () => {
     });
 
     expect(admitted).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message:
           "Find Familiar familiar identity must not identify an ordinary combatant.",

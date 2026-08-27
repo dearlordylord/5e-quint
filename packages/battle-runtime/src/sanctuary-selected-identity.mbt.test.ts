@@ -2,7 +2,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SANCTUARY.TARGETING_INTERDICTION
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1H-SANCTUARY sanctuary
 // UNIT-IDENTITY-REPLAY: L1H-SANCTUARY sanctuary doCastSanctuaryWardCreation doInterdictDirectAttackFailedSaveLoss doInterdictDirectSpellSuccessfulSavePassThrough doRetargetDirectAttackToLegalReplacement doRejectIllegalReplacementTarget doExcludeAreaEffectFromInterdiction doEndWardOnWardedAttackRoll doEndWardOnWardedSpellCast doEndWardOnWardedDamageDealt
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -1229,10 +1229,10 @@ function battleSessionWithSanctuary(): BattleRuntimeSession {
       characterCreature(replacementId, "Replacement", 9),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function characterCreature(

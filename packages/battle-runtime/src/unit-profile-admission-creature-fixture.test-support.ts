@@ -2,6 +2,7 @@ import {
   abilityModifier,
   defaultArmorClassState,
 } from "@dnd/shared-algebras/armor-class-algebra";
+import { Result } from "effect";
 import {
   attackBonus,
   DieRollResult,
@@ -39,6 +40,7 @@ import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
 import { battleObjectId } from "./identity.ts";
 import { attackActionOptionForSubject } from "./battle-reducer/attack-damage-apply.ts";
+import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
   battleAmmunitionStock,
   requiredAmmunitionKinds,
@@ -293,7 +295,7 @@ export function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
+      source: Result.getOrThrow(
         battleStatBlockCombatantSource(input.statBlock),
       ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),
@@ -871,5 +873,3 @@ export function rolledDiceGroup(
     results: [DieRollResult(firstResult), ...restResults.map(DieRollResult)],
   };
 }
-import { Either } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";

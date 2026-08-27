@@ -7,7 +7,7 @@ import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-suppor
 // UNIT-IDENTITY-REPLAY: roll-modifier-buff shield_of_faith doShieldOfFaithArmorClassBonus
 // KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.TYPE_CHOICE_AND_REDUCTION
 import { describe, expect, it } from "vitest";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   resolveBattleSubject,
   characterAttackSubjectForTest,
@@ -494,10 +494,10 @@ function rollModifierBuffBattle(
         : []),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function rollModifierBuffCreature(input: {

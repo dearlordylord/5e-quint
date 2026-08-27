@@ -32,7 +32,7 @@ import type { SpellRecord, StatBlockRecord } from "@dnd/surface/surface/types";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import druidWildShapeInput from "../../surface/content/druid_wild_shape.json";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { expect, test } from "vitest";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
@@ -667,9 +667,9 @@ test("derives Wild Shape equipment disposition candidates from selected loadout 
 });
 
 test("decodes Wild Shape worn equipment disposition fills for selected loadout objects", () => {
-  const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+  const decodeFill = Schema.decodeUnknownResult(BattleFillSchema);
   expect(
-    Either.isRight(
+    Result.isSuccess(
       decodeFill({
         kind: "wildShapeEquipmentDisposition",
         holeId: "wild-shape-equipment-hole",
@@ -691,7 +691,7 @@ test("decodes Wild Shape worn equipment disposition fills for selected loadout o
     ),
   ).toBe(true);
   expect(
-    Either.isRight(
+    Result.isSuccess(
       decodeFill({
         kind: "wildShapeEquipmentDisposition",
         holeId: "wild-shape-equipment-hole",
@@ -714,7 +714,7 @@ test("decodes Wild Shape worn equipment disposition fills for selected loadout o
 
   for (const wornWeaponKind of ["mainWeapon", "offHandWeapon"] as const) {
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeFill({
           kind: "wildShapeEquipmentDisposition",
           holeId: "wild-shape-equipment-hole",
@@ -2340,9 +2340,9 @@ test("rejects omitted Wild Shape available-form subset for a direct battle init"
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(battleStateInitIssueMessage(result.left)).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(battleStateInitIssueMessage(result.failure)).toBe(
       "Druid Wild Shape battle initialization requires an available known-form subset.",
     );
   }
@@ -2372,9 +2372,9 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(result.failure.message).toBe(
       "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
     );
   }
@@ -2489,9 +2489,9 @@ test("rejects duplicate supplied Wild Shape form records before battle initializ
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(result.failure.message).toBe(
       "Druid Wild Shape battle initialization requires distinct available known forms.",
     );
   }
@@ -2528,9 +2528,9 @@ test("rejects known Beast forms without promoted movement facts", () => {
     ],
   });
 
-  expect(Either.isLeft(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+  expect(Result.isFailure(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    expect(result.failure.message).toBe(
       "Druid Wild Shape battle forms require literal Walk Speed.",
     );
   }
@@ -2593,9 +2593,9 @@ test.each([
       forms: [mutate(statBlockCatalog.requireStatBlock(ratId))],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(expected);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.message).toBe(expected);
     }
   },
 );
@@ -2618,9 +2618,9 @@ test("admits selected Beast forms with multi-component attack damage and typed h
     ],
   });
 
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([
       ratId,
       ridingHorseId,
       spiderId,
@@ -2658,9 +2658,9 @@ test("filters untyped trait-derived attack-roll advantage from battle-available 
     forms: [baseForm, traitAdvantageForm],
   });
 
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([ridingHorseId]);
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([ridingHorseId]);
   }
 });
 
@@ -2680,9 +2680,9 @@ test("admits typed trait-derived attack-roll advantage from battle-available for
     forms: [baseForm, traitAdvantageForm],
   });
 
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isRight(result)) {
-    expect(result.right.map((form) => form.id)).toEqual([
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isSuccess(result)) {
+    expect(result.success.map((form) => form.id)).toEqual([
       ridingHorseId,
       syntheticCoordinatedShapeId,
     ]);
@@ -3296,13 +3296,13 @@ test("active Wild Shape reversion reports an owner removed through the public ro
     }),
     combatantIds: [druidId],
   });
-  if (Either.isLeft(removed)) {
-    throw new Error(JSON.stringify(removed.left));
+  if (Result.isFailure(removed)) {
+    throw new Error(JSON.stringify(removed.failure));
   }
 
   expect(
     revertShapeShiftedRuntimeState({
-      state: removed.right.state,
+      state: removed.success.state,
       shapeShift,
     }),
   ).toMatchObject({

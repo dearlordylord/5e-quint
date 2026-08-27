@@ -3,7 +3,7 @@
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet, type MovementFeet } from "@dnd/shared/types";
 import type { CreatureSense } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import type {
   BattleActiveEffect,
@@ -114,7 +114,7 @@ export function shareFindFamiliarSenses(input: {
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidTransition(
       "staleSubject",
       "Find Familiar shared senses require an available Bonus Action.",
@@ -137,7 +137,7 @@ export function shareFindFamiliarSenses(input: {
   const nextState = {
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.casterId, nextCaster),
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",

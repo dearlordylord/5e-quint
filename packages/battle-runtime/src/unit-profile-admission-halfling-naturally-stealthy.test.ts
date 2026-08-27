@@ -5,6 +5,7 @@
 
 import type { Size, UnitRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import type { BattleHidePrerequisite } from "./battle-state-execution.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
@@ -28,7 +29,6 @@ import {
   battleUnitRefWithSupportProfiles,
   combatantId,
   discoverBattleActs,
-  Either,
   HIDE_ACTION_OBSCUREMENT_PERMISSION_SUPPORT_PROFILE,
   hideActionObscurementPermissionProfileForUnit,
   parseSupportedUnitFeatureProfile,
@@ -75,7 +75,7 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesHalflingNaturallyStealthyUnitId),
         supportProfiles: [expectedSupport],
       }),
@@ -241,8 +241,8 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
       ]),
     });
 
-    expect(Either.isLeft(unknown)).toBe(true);
-    expect(Either.isLeft(selfObscuring)).toBe(true);
+    expect(Result.isFailure(unknown)).toBe(true);
+    expect(Result.isFailure(selfObscuring)).toBe(true);
   });
 
   test("removing the obscuring creature prunes its hider's prerequisite", () => {
@@ -260,11 +260,11 @@ describe("L3-FOLLOWUP-HALFLING-NATURALLY-STEALTHY-RUNTIME deterministic profile 
       combatantIds: [obscuringCreatureId],
     });
 
-    expect(Either.isRight(removed)).toBe(true);
-    if (Either.isLeft(removed)) {
-      throw new Error(battleStateInitIssueMessage(removed.left));
+    expect(Result.isSuccess(removed)).toBe(true);
+    if (Result.isFailure(removed)) {
+      throw new Error(battleStateInitIssueMessage(removed.failure));
     }
-    expect(removed.right.hidePrerequisites.has(fighterId)).toBe(false);
+    expect(removed.success.hidePrerequisites.has(fighterId)).toBe(false);
   });
 });
 
@@ -291,11 +291,11 @@ function supportSelection(unit: UnitRecord): {
     unitRef: { unitId: unit.id },
     unit,
   });
-  expect(Either.isRight(unitRef)).toBe(true);
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  expect(Result.isSuccess(unitRef)).toBe(true);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return { unitRef: unitRef.right };
+  return { unitRef: unitRef.success };
 }
 
 function naturallyStealthyBattle(input: {

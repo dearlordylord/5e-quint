@@ -32,7 +32,7 @@ import {
   startBattleRight,
 } from "./battle-runtime.test-support.ts";
 import { BattleAttackProcedureExecutionRef } from "./identity.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 type HalflingNimblenessLastResult =
   | "init"
@@ -303,8 +303,8 @@ function halflingNimblenessBattle(input: {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   return startBattleRight({
     battleId: battleId(
@@ -321,7 +321,7 @@ function halflingNimblenessBattle(input: {
         initiative: 20,
         size: "small",
         unitFeatures: [characterBattleFeatureInitForTest(unit)],
-        characterUnitRefs: input.selected ? [unitRef.right] : [],
+        characterUnitRefs: input.selected ? [unitRef.success] : [],
       }),
       characterSeed({
         combatantId: blockerId,

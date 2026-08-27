@@ -3,7 +3,7 @@ import { characterSpellProcedure } from "./character-execution-admission.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery
 // UNIT-IDENTITY-REPLAY: L1D2-SORCERER-INNATE-SORCERY sorcerer_innate_sorcery doActivateInnateSorcery doProjectInnateSorcerySpellBenefits doExcludeInnateSorceryNonSorcererSpellBenefits
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -419,10 +419,10 @@ function startBattleRight(
   input: Parameters<typeof startBattle>[0],
 ): BattleState {
   const result = startBattle(input);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function characterCombatant(input: {

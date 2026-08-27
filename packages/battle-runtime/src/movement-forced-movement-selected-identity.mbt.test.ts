@@ -8,7 +8,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-REPLAY: movement-forced-movement barbarian_fast_movement doBarbarianFastMovementDash
 // UNIT-IDENTITY-REPLAY: B5-CLASS-FEATURE-IDENTITY-BATCH-2 monk_unarmored_movement doMonkUnarmoredMovementDash
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.EXPEDITIOUS_RETREAT_DASH_LIFECYCLE BATTLE.SPELL.FORCED_REACTION_MOVEMENT_LIFECYCLE
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -1668,10 +1668,10 @@ function movementCompelledMovementBattle(input: {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function movementCompelledMovementCreature(input: {
@@ -1753,10 +1753,10 @@ function featureBattleUnitRef(
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function actionSpellAct(

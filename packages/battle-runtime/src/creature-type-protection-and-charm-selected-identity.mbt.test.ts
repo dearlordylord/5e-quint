@@ -4,7 +4,7 @@ import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-REPLAY: L1H-ANIMAL-FRIENDSHIP animal_friendship doDiscoverAnimalFriendshipBeastTargetAdmission doResolveAnimalFriendshipFailedSaveCharmed doResolveAnimalFriendshipCasterDamageBreak
 // UNIT-IDENTITY-REPLAY: L1H-PROTECTION-EVIL-GOOD protection_from_evil_and_good doResolveProtectionFromEvilAndGoodKnownWillingTargetProtection doProjectProtectionFromEvilAndGoodScopedAttackDisadvantage doPreventProtectionFromEvilAndGoodScopedCharmAndPossession doResolveProtectionFromEvilAndGoodRelevantCharmSaveAdvantage
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CREATURE_TYPE_PROTECTION_AND_CONDITION_PREVENTION
-import { Either } from "effect";
+import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { battleActsWithReducerRouteEvents } from "./battle-act-composition.ts";
 import { describe, expect, it } from "vitest";
@@ -1041,10 +1041,10 @@ function animalFriendshipBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function protectionFromEvilAndGoodBattle(): BattleState {
@@ -1097,10 +1097,10 @@ function protectionFromEvilAndGoodBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function resolveProtectionFromEvilAndGood(): {
@@ -1414,7 +1414,7 @@ function statBlockCreature(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(
+      source: Result.getOrThrow(
         battleStatBlockCombatantSource(input.statBlock),
       ),
       currentHp: Hp(statBlockLiteralNumber(input.statBlock.statBlock.hp)),

@@ -15,7 +15,7 @@ import {
   addBattleCombatant,
   removeBattleCombatants,
 } from "../battle-reducer/api-lifecycle.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type { SpellActiveEffect } from "./execution-ref.ts";
 import {
   allocateBattleActiveEffectRef,
@@ -98,16 +98,16 @@ describe("spell active-effect execution references", () => {
       state: first.state,
       combatantIds: [fighterId],
     });
-    expect(Either.isRight(removed)).toBe(true);
-    if (Either.isLeft(removed)) return;
+    expect(Result.isSuccess(removed)).toBe(true);
+    if (Result.isFailure(removed)) return;
     const readmitted = addBattleCombatant({
-      state: removed.right,
+      state: removed.success,
       combatant: characterSeed({ initiative: 5 }),
     });
-    expect(Either.isRight(readmitted)).toBe(true);
-    if (Either.isLeft(readmitted)) return;
+    expect(Result.isSuccess(readmitted)).toBe(true);
+    if (Result.isFailure(readmitted)) return;
     const second = allocateBattleActiveEffectRef({
-      state: readmitted.right,
+      state: readmitted.success,
       ownerId: fighterId,
     });
     expect(second.tag).toBe("allocated");

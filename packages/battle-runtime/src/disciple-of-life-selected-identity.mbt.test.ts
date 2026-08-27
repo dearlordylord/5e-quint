@@ -4,6 +4,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-03 cleric_disciple_of_life
 // UNIT-IDENTITY-REPLAY: L3PUTB-03 cleric_disciple_of_life doSlotHealingModifier doNonModifierSlotHealing doNonSlotHealingExcluded doEachCreatureHealed
 import { Hp } from "@dnd/shared/types";
+import { Result } from "effect";
 
 import {
   characterBattleFeatureInitForTest,
@@ -366,8 +367,8 @@ function requireDiscipleOfLifeUnitRef(): BattleUnitRef {
     unitRef: { unitId: parseSharedUnitId(clericDiscipleOfLifeUnitId) },
     unit: discipleOfLifeUnit,
   });
-  if (unitRef._tag === "Left") {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return { ...unitRef.right, supportProfiles: [support] };
+  return { ...unitRef.success, supportProfiles: [support] };
 }

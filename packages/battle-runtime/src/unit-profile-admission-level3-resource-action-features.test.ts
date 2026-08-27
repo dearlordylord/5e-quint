@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L13UG-A17 rogue_fast_hands
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bonus-action-delegated-standard-actions
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   rogueFastHandsUnitId,
   subclassRogueThiefUnitId,
@@ -12,7 +13,6 @@ import {
   battleUnitRefWithSupportProfiles,
   BONUS_ACTION_DELEGATED_STANDARD_ACTIONS_SUPPORT_PROFILE,
   classLevel,
-  Either,
   parseSupportedUnitFeatureProfile,
 } from "./unit-profile-admission.test-support.ts";
 
@@ -56,7 +56,7 @@ describe("L13UG-A17 level-3 resource and action feature admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rogueFastHandsUnitId),
         supportProfiles: [supportProfile],
       }),

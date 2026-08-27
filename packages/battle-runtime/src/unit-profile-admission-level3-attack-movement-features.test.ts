@@ -3,6 +3,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.remarkable-athlete unit-feature.open-hand-technique unit-feature.paladin-sacred-weapon unit-feature.hunters-prey unit-feature.rogue-steady-aim unit-feature.potent-cantrip
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   chromaticOrbUnitId,
   classRogueUnitId,
@@ -38,7 +39,6 @@ import {
   attackTargetFill,
   classLevel,
   combatantId,
-  Either,
   HUNTERS_PREY_SUPPORT_PROFILE,
   movementFeet,
   OPEN_HAND_TECHNIQUE_SUPPORT_PROFILE,
@@ -121,11 +121,11 @@ function remarkableAthleteRuntimeSession(input: {
       }),
     ],
   });
-  expect(Either.isRight(state)).toBe(true);
-  if (Either.isLeft(state)) {
-    throw new Error(battleStateInitIssueMessage(state.left));
+  expect(Result.isSuccess(state)).toBe(true);
+  if (Result.isFailure(state)) {
+    throw new Error(battleStateInitIssueMessage(state.failure));
   }
-  return state.right;
+  return state.success;
 }
 
 function remarkableAthleteRuntimeBattleWithFlySpeed() {
@@ -163,11 +163,11 @@ function remarkableAthleteSelectedUnit() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  expect(Either.isRight(unitRef)).toBe(true);
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  expect(Result.isSuccess(unitRef)).toBe(true);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return { unit, unitRef: unitRef.right };
+  return { unit, unitRef: unitRef.success };
 }
 
 function remarkableAthleteAttackPrefix(
@@ -442,7 +442,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rangerHuntersPreyUnitId),
         supportProfiles: [huntersPreyWoundedTargetWeaponDamageSupport],
       }),
@@ -459,7 +459,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(rangerHuntersPreyUnitId),
         supportProfiles: [
           huntersPreyNearbyDifferentTargetSameWeaponAttackSupport,
@@ -472,7 +472,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleUnitSupportProfileIssue",
         message:
           "Battle Unit ref ranger_hunters_prey requires a retained Hunter's Prey selection before battle initialization.",
@@ -502,7 +502,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         unit: huntersPreyUnit,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleUnitSupportProfileIssue",
         message: `Battle Unit ref ${secondWindUnit.id} does not match Unit ${huntersPreyUnit.id}.`,
       }),
@@ -520,7 +520,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         unit: secondWindUnit,
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleUnitSupportProfileIssue",
         message: `Battle Unit ref ${secondWindUnit.id} selected Hunter's Prey option requires Hunter's Prey support.`,
       }),
@@ -539,7 +539,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           unit,
         }),
       ).toEqual(
-        Either.right({
+        Result.succeed({
           unit,
           supportProfiles: [support],
         }),
@@ -565,9 +565,9 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
       unitRef: { unitId: unit.id },
       unit,
     });
-    expect(Either.isRight(unitRef)).toBe(true);
-    if (Either.isLeft(unitRef)) {
-      throw new Error(unitRef.left.message);
+    expect(Result.isSuccess(unitRef)).toBe(true);
+    if (Result.isFailure(unitRef)) {
+      throw new Error(unitRef.failure.message);
     }
     const state = startBattle({
       battleId: battleId("remarkable-athlete-roll-modes"),
@@ -576,7 +576,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
           combatantId: remarkableAthleteActorId,
           displayName: "Remarkable Athlete Actor",
           initiative: 18,
-          characterUnitRefs: [unitRef.right],
+          characterUnitRefs: [unitRef.success],
           classLevels: [{ className: "fighter", level: 3 }],
           unitFeatures: [
             characterBattleFeatureInitForTest(unit, [
@@ -591,19 +591,19 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         }),
       ],
     });
-    expect(Either.isRight(state)).toBe(true);
-    if (Either.isLeft(state)) {
-      throw new Error(battleStateInitIssueMessage(state.left));
+    expect(Result.isSuccess(state)).toBe(true);
+    if (Result.isFailure(state)) {
+      throw new Error(battleStateInitIssueMessage(state.failure));
     }
     expect(
       requiredInitiativeRollModeForCombatant(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
       ),
     ).toBe("advantage");
     expect(
       requiredAbilityCheckRollMode(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
         "str",
         { skill: "athletics" },
@@ -611,14 +611,14 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ).toBe("advantage");
     expect(
       requiredAbilityCheckRollMode(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
         "str",
       ),
     ).toBeUndefined();
     expect(
       requiredAbilityCheckRollMode(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
         "str",
         { skill: "acrobatics" },
@@ -626,7 +626,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ).toBeUndefined();
     expect(
       requiredAbilityCheckRollMode(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
         "dex",
         { skill: "athletics" },
@@ -634,7 +634,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     ).toBeUndefined();
     expect(
       requiredInitiativeRollModeForCombatant(
-        state.right.state,
+        state.success.state,
         remarkableAthleteTargetId,
       ),
     ).toBeUndefined();
@@ -653,20 +653,20 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         }),
       ],
     });
-    expect(Either.isRight(state)).toBe(true);
-    if (Either.isLeft(state)) {
-      throw new Error(battleStateInitIssueMessage(state.left));
+    expect(Result.isSuccess(state)).toBe(true);
+    if (Result.isFailure(state)) {
+      throw new Error(battleStateInitIssueMessage(state.failure));
     }
 
     expect(
       requiredInitiativeRollModeForCombatant(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
       ),
     ).toBeUndefined();
     expect(
       requiredAbilityCheckRollMode(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
         "str",
         { skill: "athletics" },
@@ -689,11 +689,11 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
         }),
       ],
     });
-    expect(Either.isRight(state)).toBe(true);
-    if (Either.isLeft(state)) {
-      throw new Error(battleStateInitIssueMessage(state.left));
+    expect(Result.isSuccess(state)).toBe(true);
+    if (Result.isFailure(state)) {
+      throw new Error(battleStateInitIssueMessage(state.failure));
     }
-    const actor = state.right.state.combatants.get(remarkableAthleteActorId);
+    const actor = state.success.state.combatants.get(remarkableAthleteActorId);
     if (actor?.origin.kind !== "character") {
       throw new Error("Expected the support-only character execution.");
     }
@@ -712,7 +712,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
 
     expect(
       requiredInitiativeRollModeForCombatant(
-        state.right.state,
+        state.success.state,
         remarkableAthleteActorId,
       ),
     ).toBeUndefined();
@@ -1621,7 +1621,7 @@ describe("L13UG-A18 level-3 attack and movement feature admission", () => {
     expect(
       battleUnitSupportProfilesForUnit({ unit: unsupportedHuntersPrey }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleUnitSupportProfileIssue",
         message: `Unsupported battle Hunter's Prey Unit hook: ${unsupportedHuntersPrey.id}.`,
       }),

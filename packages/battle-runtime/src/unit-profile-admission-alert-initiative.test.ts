@@ -2,13 +2,13 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-ALERT-INITIATIVE-RUNTIME alert
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.initiative-proficiency-and-swap
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   applyInitiativeSwap,
   battleId,
   battleInitiativeProficiencyAndSwapSupportForUnit,
   battleUnitRefWithSupportProfiles,
   combatantId,
-  Either,
   endTurn,
   finishInitialInitiativeSetup,
   INITIATIVE_PROFICIENCY_AND_SWAP_SUPPORT_PROFILE,
@@ -57,7 +57,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(alertUnitId),
         supportProfiles: [alertSupportProfile],
       }),
@@ -188,7 +188,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
           unit: adjacentUnit,
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleUnitSupportProfileIssue",
           message: `Unsupported battle Initiative proficiency-and-swap Unit hook: ${adjacentUnit.id}.`,
         }),
@@ -226,9 +226,9 @@ describe("L12G deterministic Alert Initiative admission", () => {
       candidateWitness: { tag: "willingAlly" },
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      throw new Error(battleStateInitIssueMessage(result.left));
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      throw new Error(battleStateInitIssueMessage(result.failure));
     }
     const state = finishInitialInitiativeSetup(setup);
     expect(initiativeOrder(state.state)).toEqual([
@@ -256,9 +256,9 @@ describe("L12G deterministic Alert Initiative admission", () => {
       candidateId: alertEnemyId,
       candidateWitness: { tag: "willingAlly" },
     } satisfies Parameters<typeof applyInitiativeSwap>[0];
-    expect(Either.isRight(applyInitiativeSwap(tableAcceptsRelationship))).toBe(
-      true,
-    );
+    expect(
+      Result.isSuccess(applyInitiativeSwap(tableAcceptsRelationship)),
+    ).toBe(true);
   });
 
   test("Initiative Swap consumes one post-roll opportunity for the source", () => {
@@ -271,7 +271,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       candidateWitness: { tag: "willingAlly" },
     });
 
-    expect(Either.isRight(firstSwap)).toBe(true);
+    expect(Result.isSuccess(firstSwap)).toBe(true);
     expect(setup.state.combatants.get(alertSourceId)?.initiative).toBe(18);
     const secondSwapFromStaleSetup = applyInitiativeSwap({
       setup,
@@ -279,7 +279,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       candidateId: alertSecondAllyId,
       candidateWitness: { tag: "willingAlly" },
     });
-    expect(Either.isLeft(secondSwapFromStaleSetup)).toBe(true);
+    expect(Result.isFailure(secondSwapFromStaleSetup)).toBe(true);
 
     const secondSwap = applyInitiativeSwap({
       setup,
@@ -288,7 +288,7 @@ describe("L12G deterministic Alert Initiative admission", () => {
       candidateWitness: { tag: "willingAlly" },
     });
 
-    expect(Either.isLeft(secondSwap)).toBe(true);
+    expect(Result.isFailure(secondSwap)).toBe(true);
   });
 
   test("Initiative Swap requires a willing same-combat non-Incapacitated ally", () => {
@@ -373,13 +373,13 @@ function alertBattleSetup(
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(alertUnitId),
       supportProfiles: [alertSupportProfile],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattleWithInitialInitiativeSetup({
     battleId: battleId("unit-profile-alert-initiative-admission"),
@@ -388,7 +388,7 @@ function alertBattleSetup(
         combatantId: alertSourceId,
         displayName: "Alert source",
         initiative: 12,
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
         conditions: input.sourceConditions,
       }),
       characterCreature({
@@ -409,15 +409,15 @@ function alertBattleSetup(
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function expectSwapRejected(input: Parameters<typeof applyInitiativeSwap>[0]) {
-  expect(Either.isLeft(applyInitiativeSwap(input))).toBe(true);
+  expect(Result.isFailure(applyInitiativeSwap(input))).toBe(true);
 }
 
 function alertPassiveMechanics() {

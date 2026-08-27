@@ -8,7 +8,7 @@ import {
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L3PUTB-04 cleric_preserve_life
 // UNIT-IDENTITY-REPLAY: L3PUTB-04 cleric_preserve_life doDistributeHealing doSelfHealing doRejectNonBloodied doRejectOverPool doRejectOverCap doRejectMissingRange doRejectMissingResource doRejectMissingMagicAction
 import { Hp, movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import {
   type BattleFill,
@@ -323,10 +323,10 @@ function preserveLifeBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function preserveLifeAct(
@@ -430,15 +430,15 @@ function requirePreserveLifeUnitRef() {
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support = battleMagicActionHealingPoolSupportForUnit(preserveLifeUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Expected Preserve Life healing-pool support.");
   }
   if (
-    !unitRef.right.supportProfiles.some(
+    !unitRef.success.supportProfiles.some(
       (profile) =>
         typeof profile !== "string" &&
         profile.kind === support.kind &&
@@ -447,5 +447,5 @@ function requirePreserveLifeUnitRef() {
   ) {
     throw new Error("Expected Preserve Life Unit ref support profile.");
   }
-  return unitRef.right;
+  return unitRef.success;
 }

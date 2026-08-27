@@ -4,7 +4,7 @@ import {
 } from "./optional-property.ts";
 import { spendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Hp } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type {
   BattleDroppedObjectOutcome,
   BattleAmmunitionStock,
@@ -523,17 +523,17 @@ export function withFindFamiliarCombatant(input: {
     },
   });
   /* v8 ignore start -- @preserve -- Internal commit invariant: the familiar identity was collision-checked and its Stat Block combatant admission succeeded immediately before insertion. */
-  if (Either.isLeft(added)) {
+  if (Result.isFailure(added)) {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      battleStateInitIssueMessage(added.left),
+      battleStateInitIssueMessage(added.failure),
     );
   }
   /* v8 ignore stop -- @preserve */
   return {
     tag: "resolved",
-    state: withFindFamiliar(added.right, input.familiar),
+    state: withFindFamiliar(added.success, input.familiar),
   };
 }
 
@@ -553,15 +553,15 @@ function withoutPresentFindFamiliarCombatant(
     combatantIds: [familiarId],
   });
   /* v8 ignore start -- @preserve -- Internal removal invariant: callers pass an id already proven to be the present companion in this roster, so lifecycle-alignment removal cannot fail. */
-  if (Either.isLeft(removed)) {
+  if (Result.isFailure(removed)) {
     return invalidFindFamiliarResult(
       state,
       "invalidFill",
-      battleStateInitIssueMessage(removed.left),
+      battleStateInitIssueMessage(removed.failure),
     );
   }
   /* v8 ignore stop -- @preserve */
-  return { tag: "resolved", state: { ...removed.right, companions } };
+  return { tag: "resolved", state: { ...removed.success, companions } };
 }
 
 export function familiarStatBlockWithCreatureTypeOverride(input: {
@@ -630,7 +630,7 @@ export function spendFindFamiliarMagicAction(
     );
   }
   const spent = spendAction(state.currentTurnResources, "magic");
-  return Either.isLeft(spent)
+  return Result.isFailure(spent)
     ? invalidFindFamiliarResult(
         state,
         "staleSubject",
@@ -640,7 +640,7 @@ export function spendFindFamiliarMagicAction(
         tag: "resolved",
         state: {
           ...state,
-          currentTurnResources: spent.right,
+          currentTurnResources: spent.success,
         },
       };
 }

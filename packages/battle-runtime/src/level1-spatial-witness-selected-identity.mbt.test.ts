@@ -10,7 +10,7 @@ import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-sup
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
-import { Either } from "effect";
+import { Either, Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   resolveBattleSubject,
@@ -3080,10 +3080,10 @@ function dancingLightsBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function faerieFireBattle(): BattleState {
@@ -3120,10 +3120,10 @@ function faerieFireBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function featherFallBattle(): BattleState {
@@ -3164,10 +3164,10 @@ function featherFallBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function fogCloudBattle(): BattleState {
@@ -3203,10 +3203,10 @@ function fogCloudBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function greaseBattle(): BattleState {
@@ -3247,10 +3247,10 @@ function greaseBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function jumpBattle(): BattleState {
@@ -3286,10 +3286,10 @@ function jumpBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function lightBattle(): BattleState {
@@ -3325,10 +3325,10 @@ function lightBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function lightOneRoundRemainingBattle(): BattleState {
@@ -3378,10 +3378,10 @@ function produceFlameBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function produceFlameOneRoundRemainingBattle(): BattleState {
@@ -3445,10 +3445,10 @@ function thunderwaveBattle(): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function spatialWitnessCreature(input: {

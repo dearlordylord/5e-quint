@@ -1,7 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.fighter-tactical-master unit-feature.weapon-mastery-push unit-feature.weapon-mastery-slow
 import { attackBonus, classLevel } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   characterBattleFeatureInitForTest,
   startBattleRight,
@@ -135,10 +135,10 @@ function selectedDarkOnesBlessingUnit() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(admitted)) {
-    throw new Error(admitted.left.message);
+  if (Result.isFailure(admitted)) {
+    throw new Error(admitted.failure.message);
   }
-  return { unit, unitRef: admitted.right };
+  return { unit, unitRef: admitted.success };
 }
 
 function darkOnesBlessingRangeFact(
@@ -952,8 +952,8 @@ describe("battle runtime: Weapon Mastery", () => {
       unitRef: { unitId: halflingLuck.id },
       unit: halflingLuck,
     });
-    if (Either.isLeft(halflingLuckRef)) {
-      throw new Error(halflingLuckRef.left.message);
+    if (Result.isFailure(halflingLuckRef)) {
+      throw new Error(halflingLuckRef.failure.message);
     }
     const state = startBattleRight({
       battleId: battleId("battle-weapon-mastery-cleave"),
@@ -962,7 +962,7 @@ describe("battle runtime: Weapon Mastery", () => {
           initiative: 20,
           characterUnitRefs: [
             ...masteryCleaveUnitRefs(),
-            halflingLuckRef.right,
+            halflingLuckRef.success,
           ],
           unitFeatures: [characterBattleFeatureInitForTest(halflingLuck)],
           weaponMasteries: greataxeWeaponMasterySelections(),

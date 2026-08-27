@@ -9,7 +9,7 @@ import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime.test-s
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import type {
   BattleFill,
@@ -518,10 +518,10 @@ function breathWeaponBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function expectedProjection(
@@ -810,15 +810,15 @@ function breathWeaponUnitRef() {
     throw new Error("Expected Breath Weapon support.");
   }
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(speciesDragonbornBreathWeaponUnitId),
       supportProfiles: [support],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function recordResolvedState(result: BattleResolutionResult): BattleState {

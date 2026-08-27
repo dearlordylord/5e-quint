@@ -11,6 +11,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-HALFLING-NIMBLENESS-RUNTIME species_halfling_nimbleness
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
 import { abilityModifier, Hp } from "@dnd/shared/types";
+import { Result } from "effect";
 import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -57,7 +58,6 @@ import {
   difficultyClass,
   discoverBattleActCandidates,
   discoverBattleActs,
-  Either,
   elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
@@ -622,12 +622,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     ]);
     expect(
-      Schema.decodeUnknownEither(BattleFillSchema)({
+      Schema.decodeUnknownResult(BattleFillSchema)({
         kind: "readyDeclaration",
         holeId: act.initialHoles[0]?.holeId,
         value: { trigger: "   ", response: { kind: "movement" } },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
   });
 
   test("Disengage suppresses Opportunity Attacks for current-turn Movement", () => {
@@ -664,7 +664,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("BattleFillSchema decodes creature-space traversal Movement facts", () => {
-    const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+    const decodeFill = Schema.decodeUnknownResult(BattleFillSchema);
     const unoccupiedDestination = decodeFill({
       kind: "movement",
       holeId: "battle:movement",
@@ -688,10 +688,10 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       },
     });
 
-    if (Either.isLeft(unoccupiedDestination)) {
-      throw new Error(String(unoccupiedDestination.left));
+    if (Result.isFailure(unoccupiedDestination)) {
+      throw new Error(String(unoccupiedDestination.failure));
     }
-    expect(unoccupiedDestination.right).toMatchObject({
+    expect(unoccupiedDestination.success).toMatchObject({
       kind: "movement",
       value: {
         creatureSpaceTraversal: {
@@ -710,7 +710,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       },
     });
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeFill({
           kind: "movement",
           holeId: "battle:movement",
@@ -732,7 +732,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
     ).toBe(true);
 
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeFill({
           kind: "movement",
           holeId: "battle:movement",
@@ -762,8 +762,8 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
 
   test("BattleFillSchema rejects empty Grapple Drag Movement facts", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "movement",
           holeId: "battle:movement",
           value: {
@@ -782,7 +782,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("BattleFillSchema admits only non-empty procedure-specific roll relationship facts", () => {
-    const decodeFill = Schema.decodeUnknownEither(BattleFillSchema);
+    const decodeFill = Schema.decodeUnknownResult(BattleFillSchema);
     const valid = decodeFill({
       kind: "targetChoice",
       holeId: "battle:attack:target",
@@ -816,9 +816,9 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       ],
     });
 
-    expect(Either.isRight(valid)).toBe(true);
-    expect(Either.isLeft(empty)).toBe(true);
-    expect(Either.isLeft(wrongProcedure)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
+    expect(Result.isFailure(empty)).toBe(true);
+    expect(Result.isFailure(wrongProcedure)).toBe(true);
   });
 
   test("Halfling Nimbleness Movement facts admit traversal through a larger occupied creature space", () => {
@@ -4521,7 +4521,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       ROGUE_CUNNING_ACTION_SUPPORT_PROFILE,
     );
     expect(battleUnitSupportProfilesForUnit({ unit })).toEqual(
-      Either.right([ROGUE_CUNNING_ACTION_SUPPORT_PROFILE]),
+      Result.succeed([ROGUE_CUNNING_ACTION_SUPPORT_PROFILE]),
     );
   });
 

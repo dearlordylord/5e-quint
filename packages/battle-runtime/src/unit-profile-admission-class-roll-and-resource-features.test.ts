@@ -10,6 +10,7 @@ import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV75A sorcerer_innate_sorcery
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.bardic-inspiration-grant unit-feature.failed-ability-check-resource-boost unit-feature.failed-saving-throw-reroll unit-feature.innate-sorcery-activation unit-feature.reaction-roll-or-damage-reduction
 import { describe, expect, it, test } from "vitest";
+import { Result } from "effect";
 import {
   barbarianRecklessAttackUnitId,
   bardBardicInspirationUnitId,
@@ -32,7 +33,6 @@ import {
   classLevel,
   difficultyClass,
   DieRollResult,
-  Either,
   elapsedTimeTicks,
   FAILED_ABILITY_CHECK_RESOURCE_BOOST_SUPPORT_PROFILE,
   movementFeet,
@@ -80,10 +80,10 @@ function fighterClassLevels(level: number): CharacterBattleClassLevels {
   const result = parseCharacterBattleClassLevels([
     { className: "fighter", level },
   ]);
-  if (Either.isLeft(result)) {
-    throw new Error(result.left.messages.join("; "));
+  if (Result.isFailure(result)) {
+    throw new Error(result.failure.messages.join("; "));
   }
-  return result.right;
+  return result.success;
 }
 
 function failedSavingThrowRerollExecutionForTest(
@@ -231,7 +231,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [],
       }),
@@ -325,7 +325,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [],
       }),
@@ -472,7 +472,7 @@ describe("QMBT7 deterministic Unit profile admission", () => {
           unit,
         }),
       ).toEqual(
-        Either.right({
+        Result.succeed({
           unit,
           supportProfiles: [SAVE_DAMAGE_REPLACEMENT_SUPPORT_PROFILE],
         }),
@@ -529,7 +529,7 @@ describe("QMBT62 Tactical Mind deterministic Unit profile admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [supportProfile],
       }),
@@ -618,7 +618,7 @@ describe("L19D-04 Fighter Indomitable failed Saving Throw reroll", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [supportProfile],
       }),
@@ -862,7 +862,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [BARDIC_INSPIRATION_GRANT_SUPPORT_PROFILE],
       }),
@@ -1020,7 +1020,7 @@ describe("QMBT65 Cutting Words deterministic Unit profile admission", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [supportProfile],
       }),
@@ -1208,7 +1208,7 @@ describe("SRDINV75A Innate Sorcery deterministic Unit profile admission", () => 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [],
       }),

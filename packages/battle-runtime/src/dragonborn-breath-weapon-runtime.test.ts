@@ -3,7 +3,7 @@
 
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { DieRollResult } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 
@@ -496,10 +496,10 @@ function breathWeaponBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function breathWeaponAct(state: BattleState) {
@@ -611,12 +611,12 @@ function breathWeaponUnitRef() {
     throw new Error("Expected Breath Weapon support.");
   }
   expect(unitRef).toEqual(
-    Either.right({ unit: breathWeaponUnit, supportProfiles: [support] }),
+    Result.succeed({ unit: breathWeaponUnit, supportProfiles: [support] }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function resolvedState(result: BattleResolutionResult): BattleState {

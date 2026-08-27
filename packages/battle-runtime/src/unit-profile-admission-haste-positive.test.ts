@@ -42,6 +42,7 @@ import {
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { Result } from "effect";
 import {
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
@@ -800,15 +801,15 @@ function extraAttackBattleUnitRef() {
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(fighterExtraAttackUnitId),
       supportProfiles: [extraAttackSupportProfile],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function stateAfterSpendingResource(

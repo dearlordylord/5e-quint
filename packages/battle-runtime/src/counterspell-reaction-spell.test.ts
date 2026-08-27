@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.reaction-counterspell spell.reaction-shield spell.invocation-damage-save-or-attack
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.REACTION_CASTING_TIME
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   abilityModifier,
@@ -1483,10 +1483,10 @@ function battleWithCounterspell(
         : []),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(JSON.stringify(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(JSON.stringify(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function counterspellSpellcasting(
