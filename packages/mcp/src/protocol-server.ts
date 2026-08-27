@@ -57,6 +57,7 @@ import type { BattleToolName } from "./battle-tool-input.ts";
 import type { CharacterToolName } from "./character-tool-input.ts";
 import type { DiceToolName } from "./dice-tool-input.ts";
 import { projectModelOutputJsonSchema } from "./model-output-json-schema.ts";
+import { isMcpModelOutputSchema } from "./schema-codec.ts";
 import type { ProtocolToolDefinition } from "./tool-definition-contract.ts";
 import {
   NO_AUTH_SECURITY_SCHEMES,
@@ -117,7 +118,9 @@ export function buildAdvertisedToolDefinitions(
           : {
               ...definition,
               outputSchema: {
-                ...projectModelOutputJsonSchema(definition.outputSchema),
+                ...(isMcpModelOutputSchema(definition.outputSchema)
+                  ? definition.outputSchema
+                  : projectModelOutputJsonSchema(definition.outputSchema)),
                 type: "object",
               },
             };
