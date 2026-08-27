@@ -6144,62 +6144,72 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   }),
 );
 
+type BattleInterruptProcedureChoiceFields = Schema.Struct.Fields & {
+  readonly initialHoles?: never;
+};
+
+function pairedBattleInterruptProcedureChoiceMember<
+  const Fields extends BattleInterruptProcedureChoiceFields,
+>(fields: Fields) {
+  return {
+    labeled: Schema.Struct({
+      ...fields,
+      initialHoles: Schema.Array(BattleHoleSchema),
+    }),
+    mechanical: Schema.Struct({
+      ...fields,
+      initialHoles: Schema.Array(BattleMechanicalHoleSchema),
+    }),
+  };
+}
+
 const BattleInterruptProcedureChoiceMembers = [
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("releaseReadiedSpell"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
     readiedSpellCasterId: CombatantId,
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("releaseReadiedMovement"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
     readiedMovementActorId: CombatantId,
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("releaseReadiedAction"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("releaseReadiedAttack"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("castTriggeredReactionSpell"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("castAttackHitBonusActionSpell"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("opportunityAttack"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("retaliationAttack"),
     reactorId: CombatantId,
     subject: BattleSubjectSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
+  pairedBattleInterruptProcedureChoiceMember({
     kind: Schema.Literal("reactionRollOrDamageReduction"),
     reactorId: CombatantId,
     choice: BattleReactionModifierChoiceSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
   }),
 ] as const;
 const [
@@ -6207,26 +6217,18 @@ const [
   ...RemainingBattleInterruptProcedureChoiceMembers
 ] = BattleInterruptProcedureChoiceMembers;
 const BattleInterruptProcedureChoiceUnfilteredSchema = Schema.Union(
-  FirstBattleInterruptProcedureChoiceMember,
-  ...RemainingBattleInterruptProcedureChoiceMembers,
+  FirstBattleInterruptProcedureChoiceMember.labeled,
+  ...RemainingBattleInterruptProcedureChoiceMembers.map(
+    ({ labeled }) => labeled,
+  ),
 );
 
 const MechanicalBattleInterruptChoiceMembers =
-  RemainingBattleInterruptProcedureChoiceMembers.map((member) =>
-    Schema.omit("initialHoles")(member).pipe(
-      Schema.extend(
-        Schema.Struct({
-          initialHoles: Schema.Array(BattleMechanicalHoleSchema),
-        }),
-      ),
-    ),
+  RemainingBattleInterruptProcedureChoiceMembers.map(
+    ({ mechanical }) => mechanical,
   );
 const BattleMechanicalInterruptProcedureChoiceUnfilteredSchema = Schema.Union(
-  Schema.omit("initialHoles")(FirstBattleInterruptProcedureChoiceMember).pipe(
-    Schema.extend(
-      Schema.Struct({ initialHoles: Schema.Array(BattleMechanicalHoleSchema) }),
-    ),
-  ),
+  FirstBattleInterruptProcedureChoiceMember.mechanical,
   ...MechanicalBattleInterruptChoiceMembers,
 );
 
