@@ -27,7 +27,7 @@ import {
   spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type {
   BattleMovementSpeedKind,
   BattleSubject,
@@ -1865,15 +1865,15 @@ export function hasTurnActionResource(state: ActionEconomyState): boolean {
 
 export function spendTurnAction<T extends ActionEconomyState>(
   state: T,
-): Either.Either<T, "no action resource available"> {
+): Result.Result<T, "no action resource available"> {
   const turnActionResourceIndex = state.actionResources.findIndex(
     (resource) => resource.source === "turn",
   );
   if (turnActionResourceIndex === -1 || !canSpendAction(state, "attack")) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
 
-  return Either.right(
+  return Result.succeed(
     spendActionResourceAtIndex(state, turnActionResourceIndex),
   );
 }
