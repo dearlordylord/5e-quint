@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   admitOracleCaseDocument,
+  admitOracleEvaluationBatchDocument,
   admitOracleTraceDocument,
   decodeOracleCase,
   decodeOracleCaseDocument,
@@ -86,6 +87,53 @@ const characterRosterCase = {
   },
 } as const;
 
+const wildShapeKnownFormsCase = {
+  ...minimalCase,
+  sheet: {
+    tag: "wildShapeKnownForms",
+    statBlockIds: ["stat_block_skeleton", "stat_block_rat"],
+  },
+} as const;
+
+const ordinaryAttemptCase = {
+  ...minimalCase,
+  battle: {
+    ...minimalCase.battle,
+    attempts: [
+      {
+        kind: "ordinarySubject",
+        subject: {
+          tag: "action",
+          actorId: "oracle:entered-actor",
+          action: "dash",
+          speedKind: "walk",
+        },
+        fills: [],
+      },
+    ],
+  },
+} as const;
+
+const interruptAttemptCase = {
+  ...minimalCase,
+  battle: {
+    ...minimalCase.battle,
+    attempts: [
+      {
+        kind: "interruptDecision",
+        fill: {
+          kind: "interruptDecision",
+          holeId: "oracle:interrupt-hole",
+          value: {
+            kind: "decline",
+            responderId: "oracle:entered-actor",
+          },
+        },
+      },
+    ],
+  },
+} as const;
+
 const orderedFill = {
   kind: "choice",
   holeId: "cc:draft:draft.background",
@@ -120,6 +168,9 @@ const freshSheet = {
   resourceExpenditures: [],
   heroicInspiration: { tag: "none" },
   companion: { tag: "none" },
+  druidWildShapeKnownForms: {
+    statBlockIds: ["stat_block_skeleton", "stat_block_rat"],
+  },
 } as const;
 
 const checkpoint = {
@@ -159,6 +210,50 @@ const enteredBattle = {
     rejections: [],
     outcome: { tag: "awaitingInput" },
   },
+} as const;
+
+const ordinaryHolesFrontier = {
+  kind: "ordinaryHoles",
+  subject: {
+    tag: "action",
+    actorId: "oracle:entered-actor",
+    action: "dash",
+    speedKind: "walk",
+  },
+  holes: [
+    {
+      holeInstanceKey: "oracle:movement-hole:instance",
+      holeId: "oracle:movement-hole",
+      kind: "movement",
+      actorId: "oracle:entered-actor",
+      movementBudgetFeet: 30,
+      speedKinds: [{ kind: "walk", movementBudgetFeet: 30 }],
+    },
+  ],
+  acceptedFills: [],
+} as const;
+
+const interruptDecisionFrontier = {
+  kind: "interruptDecision",
+  decisionHole: {
+    holeInstanceKey: "oracle:interrupt-hole:instance",
+    holeId: "oracle:interrupt-hole",
+    kind: "interruptDecision",
+    trigger: "attackHit",
+    eligibleResponders: ["oracle:entered-actor"],
+  },
+  choices: [
+    {
+      kind: "nestedProcedure",
+      subject: {
+        tag: "runtimeCommand",
+        actorId: "oracle:entered-actor",
+        command: "releaseReadiedMovement",
+        readiedMovementActorId: "oracle:entered-actor",
+      },
+      initialHoles: [],
+    },
+  ],
 } as const;
 
 const builtTrace = {
@@ -203,6 +298,22 @@ const readyActionTrace = {
   },
 } as const;
 
+function battleEntryRejectedTrace(issues: readonly unknown[]) {
+  return {
+    ...builtTrace,
+    creation: {
+      ...builtTrace.creation,
+      outcome: {
+        ...builtTrace.creation.outcome,
+        sheet: {
+          ...builtTrace.creation.outcome.sheet,
+          battle: { tag: "rejected", issues },
+        },
+      },
+    },
+  };
+}
+
 function documentResult<A, E>(result: Either.Either<A, E>): boolean {
   return Either.isRight(result);
 }
@@ -236,6 +347,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
     const validCases = [
       ["minimal stat-block roster", minimalCase],
       ["character-sheet prefix and suffix", characterRosterCase],
+      ["wild-shape known-form set", wildShapeKnownFormsCase],
       [
         "ammunition object map",
         {
@@ -258,6 +370,8 @@ describe("Opaque Oracle document JSON Schemas", () => {
           },
         },
       ],
+      ["ordinary subject attempt", ordinaryAttemptCase],
+      ["interrupt decision attempt", interruptAttemptCase],
     ] as const;
     for (const [name, value] of validCases) {
       expect(documentValidators.case(value), `${name}: Ajv should accept`).toBe(
@@ -427,6 +541,40 @@ describe("Opaque Oracle document JSON Schemas", () => {
           },
         },
       },
+      battleEntryRejectedTrace([
+        { tag: "statBlockUnavailable", statBlockId: "stat_block_skeleton" },
+      ]),
+      battleEntryRejectedTrace([
+        {
+          tag: "battleCreatureInitRejected",
+          issue: { tag: "battleCreatureInitIssue" },
+        },
+      ]),
+      battleEntryRejectedTrace([
+        {
+          tag: "battleStateInitRejected",
+          issue: { tag: "battleStateInitIssue" },
+        },
+      ]),
+      battleEntryRejectedTrace([
+        {
+          tag: "characterBattleEncounterProjectionIssues",
+          issues: [
+            {
+              tag: "characterBattleEncounterProjectionIssue",
+              origin: "characterSheet",
+              combatantId: "oracle:character",
+              issue: { tag: "battleCreatureInitIssue" },
+            },
+            {
+              tag: "characterBattleEncounterProjectionIssue",
+              origin: "statBlock",
+              combatantId: "oracle:stat-block",
+              issue: { tag: "battleStateInitIssue" },
+            },
+          ],
+        },
+      ]),
     ] as const;
     for (const [index, value] of terminalTraces.entries()) {
       const ajvAccepted = documentValidators.trace(value);
@@ -465,6 +613,33 @@ describe("Opaque Oracle document JSON Schemas", () => {
         },
       },
     } as const;
+    const nextTraceWithFrontier = (frontier: unknown) => ({
+      ...recursiveNext,
+      creation: {
+        ...recursiveNext.creation,
+        outcome: {
+          ...recursiveNext.creation.outcome,
+          sheet: {
+            ...recursiveNext.creation.outcome.sheet,
+            battle: {
+              ...recursiveNext.creation.outcome.sheet.battle,
+              segment: {
+                ...recursiveNext.creation.outcome.sheet.battle.segment,
+                outcome: {
+                  ...recursiveNext.creation.outcome.sheet.battle.segment
+                    .outcome,
+                  continuation: {
+                    ...recursiveNext.creation.outcome.sheet.battle.segment
+                      .outcome.continuation,
+                    frontier,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
     const resolved = {
       ...builtTrace,
       creation: {
@@ -513,6 +688,14 @@ describe("Opaque Oracle document JSON Schemas", () => {
     } as const;
     for (const [name, value] of [
       ["recursive next", recursiveNext],
+      [
+        "ordinary-hole continuation",
+        nextTraceWithFrontier(ordinaryHolesFrontier),
+      ],
+      [
+        "interrupt-decision continuation",
+        nextTraceWithFrontier(interruptDecisionFrontier),
+      ],
       ["resolved", resolved],
       ["surplus", surplus],
     ] as const) {
@@ -697,6 +880,77 @@ describe("Opaque Oracle document JSON Schemas", () => {
     }
   });
 
+  it("canonicalizes direct Trace and Batch Document admission", () => {
+    const reversedTrace = {
+      ...builtTrace,
+      creation: {
+        ...builtTrace.creation,
+        outcome: {
+          ...builtTrace.creation.outcome,
+          sheet: {
+            ...builtTrace.creation.outcome.sheet,
+            sheet: {
+              ...freshSheet,
+              druidWildShapeKnownForms: {
+                statBlockIds: ["stat_block_skeleton", "stat_block_rat"],
+              },
+            },
+          },
+        },
+      },
+    } as const;
+    const admittedTrace = admitOracleTraceDocument(reversedTrace);
+    expect(Either.isRight(admittedTrace)).toBe(true);
+    if (Either.isRight(admittedTrace)) {
+      const outcome = admittedTrace.right.creation.outcome;
+      expect(outcome.tag).toBe("built");
+      if (outcome.tag === "built" && outcome.sheet.tag === "constructed") {
+        expect(outcome.sheet.sheet.druidWildShapeKnownForms).toEqual({
+          statBlockIds: ["stat_block_rat", "stat_block_skeleton"],
+        });
+      }
+    }
+
+    const reversedBatch = {
+      cases: [
+        {
+          ...wildShapeKnownFormsCase,
+          battle: {
+            ...wildShapeKnownFormsCase.battle,
+            roster: {
+              tag: "statBlocks",
+              entries: [
+                {
+                  ...statBlockEntry,
+                  ammunitionStocks: { bolt: 1, arrow: 2 },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    } as const;
+    const admittedBatch = admitOracleEvaluationBatchDocument(reversedBatch);
+    expect(Either.isRight(admittedBatch)).toBe(true);
+    if (Either.isRight(admittedBatch)) {
+      const [caseValue] = admittedBatch.right.cases;
+      expect(caseValue).toBeDefined();
+      if (caseValue !== undefined) {
+        expect(caseValue.sheet).toEqual({
+          tag: "wildShapeKnownForms",
+          statBlockIds: ["stat_block_rat", "stat_block_skeleton"],
+        });
+        if (caseValue.battle.roster.tag === "statBlocks") {
+          expect(
+            Object.keys(
+              caseValue.battle.roster.entries[0]?.ammunitionStocks ?? {},
+            ),
+          ).toEqual(["arrow", "bolt"]);
+        }
+      }
+    }
+  });
+
   it("treats creation progression as ordered evidence snapshots, not an executable lifecycle", () => {
     // The trace records phase order and the frontier observed at each point.
     // It intentionally carries neither the omitted catalog nor the fills that
@@ -795,6 +1049,105 @@ describe("Opaque Oracle document JSON Schemas", () => {
           `${name} direct deep input should fail`,
         ).toBe(true);
       }
+    }
+
+    // Keep the same hostile depth inside otherwise-shaped envelopes so the
+    // Document and full decoders, rather than only their root type guards,
+    // receive the input. The nested member is intentionally structurally
+    // invalid, but its depth must never turn rejection into a throw.
+    const shapedDeepInputs: readonly [string, unknown][] = [
+      [
+        "Case nested array",
+        {
+          ...minimalCase,
+          creation: { fillBatches: [deeplyNestedArray] },
+        },
+      ],
+      [
+        "Case nested object",
+        {
+          ...minimalCase,
+          creation: { fillBatches: [deeplyNestedObject] },
+        },
+      ],
+      [
+        "Trace nested array",
+        {
+          creation: {
+            started: { holes: deeplyNestedArray },
+            progression: [],
+            outcome: { tag: "inputExhausted" },
+          },
+        },
+      ],
+      [
+        "Trace nested object",
+        {
+          creation: {
+            started: { holes: deeplyNestedObject },
+            progression: [],
+            outcome: { tag: "inputExhausted" },
+          },
+        },
+      ],
+      [
+        "Batch nested array",
+        {
+          cases: [
+            {
+              ...minimalCase,
+              creation: { fillBatches: [deeplyNestedArray] },
+            },
+          ],
+        },
+      ],
+      [
+        "Batch nested object",
+        {
+          cases: [
+            {
+              ...minimalCase,
+              creation: { fillBatches: [deeplyNestedObject] },
+            },
+          ],
+        },
+      ],
+    ];
+    const fullDecoders: readonly [string, (value: unknown) => unknown][] = [
+      ["Case", decodeOracleCase],
+      ["Trace", decodeOracleTrace],
+      ["Batch", decodeOracleEvaluationBatch],
+    ];
+    for (const [inputName, value] of shapedDeepInputs) {
+      const decoder = inputName.startsWith("Case")
+        ? fullDecoders[0]
+        : inputName.startsWith("Trace")
+          ? fullDecoders[1]
+          : fullDecoders[2];
+      if (decoder === undefined) continue;
+      const [decoderName, fullDecoder] = decoder;
+      expect(
+        () => fullDecoder(value),
+        `${decoderName} ${inputName} should be total`,
+      ).not.toThrow();
+      expect(
+        isLeftWithIssues(fullDecoder(value)),
+        `${decoderName} ${inputName} should fail with issues`,
+      ).toBe(true);
+      const documentDecoder =
+        decoderName === "Case"
+          ? decodeOracleCaseDocument
+          : decoderName === "Trace"
+            ? decodeOracleTraceDocument
+            : decodeOracleEvaluationBatchDocument;
+      expect(
+        () => documentDecoder(value),
+        `${decoderName} ${inputName} Document should be total`,
+      ).not.toThrow();
+      expect(
+        isLeftWithIssues(documentDecoder(value)),
+        `${decoderName} ${inputName} Document should fail with issues`,
+      ).toBe(true);
     }
   });
 
