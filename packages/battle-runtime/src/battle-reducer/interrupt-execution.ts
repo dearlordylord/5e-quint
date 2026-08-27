@@ -358,11 +358,13 @@ export function interruptedProcedureSupportsAttackDamageChanges(
   BattleInterruptedProcedure,
   {
     readonly kind: "replay";
+    readonly parentPosition?: never;
     readonly glyphStoredSpellReleaseReplay?: never;
   }
 > {
   return (
     procedure.kind === "replay" &&
+    procedure.parentPosition === undefined &&
     procedure.glyphStoredSpellReleaseReplay === undefined
   );
 }

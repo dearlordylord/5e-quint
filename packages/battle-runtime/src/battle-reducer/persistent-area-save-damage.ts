@@ -19,11 +19,14 @@ import type {
   BattleCloudkillAreaHazardTrigger,
   BattleCreatureState,
   BattleFill,
+  BattleHole,
+  BattleHoleId,
   BattleInsectPlagueAreaHazardDamageRollHole,
   BattleInsectPlagueAreaHazardSavingThrowOutcomeHole,
   BattleInsectPlagueAreaHazardTrigger,
   BattleResolutionInput,
   BattleResolutionResult,
+  BattleReplayParentPosition,
   BattleSavingThrowOutcome,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -32,6 +35,7 @@ import type { BattleAreaId, CombatantId } from "../identity.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import { concentrationSavingThrowHole } from "./damage-apply.ts";
 import { damageAmountAfterTargetAdjustments } from "./damage-helpers.ts";
+import { currentActorId } from "./creature-state-leaves.ts";
 import {
   rolledDiceFillForHole,
   savingThrowOutcomeFillForHole,
@@ -39,6 +43,11 @@ import {
 import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
+import {
+  projectReplayChildResult,
+  replayParentProcedureAt,
+  type ReplayParentContinuation,
+} from "./replay-continuation.ts";
 import {
   markCloudkillAreaHazardSavedThisTurn,
   markInsectPlagueAreaHazardSavedThisTurn,
@@ -56,10 +65,39 @@ type InsectPlagueAreaHazardEffect = Extract<
   { readonly kind: "insectPlagueAreaHazard" }
 >;
 
-type CloudkillAreaHazardEffect = Extract<
+export type CloudkillAreaHazardEffect = Extract<
   BattleActiveEffect,
   { readonly kind: "cloudkillAreaHazard" }
 >;
+
+export type CloudkillMovementSaveDamageRequest = {
+  readonly effect: CloudkillAreaHazardEffect;
+  readonly parentHoleId: BattleHoleId;
+  readonly subject: CloudkillResolutionInput["subject"];
+};
+
+type PersistentAreaSequenceHole = Extract<
+  BattleHole,
+  {
+    readonly kind:
+      | "savingThrowOutcome"
+      | "rolledDice"
+      | "concentrationSavingThrow";
+  }
+>;
+
+export type CloudkillMovementSaveDamageSequenceResult =
+  | {
+      readonly tag: "resolved";
+      readonly state: BattleState;
+      readonly saveHoleIds: ReadonlySet<BattleHoleId>;
+      readonly damageHoleIds: ReadonlySet<BattleHoleId>;
+      readonly concentrationHoleIds: ReadonlySet<BattleHoleId>;
+    }
+  | {
+      readonly tag: "result";
+      readonly result: BattleResolutionResult;
+    };
 
 type InsectPlagueResolutionInput = BattleResolutionInput & {
   readonly subject: Extract<
@@ -196,6 +234,217 @@ export function resolveCloudkillAreaSaveDamage(
     : resolveParsedPersistentAreaSaveDamage(parsed.procedure);
 }
 
+export function persistentAreaAppearanceTriggerMatchesCurrentTurn(
+  state: BattleState,
+  trigger:
+    | BattleInsectPlagueAreaMembershipTrigger
+    | BattleCloudkillAreaMembershipTrigger,
+): boolean {
+  return (
+    trigger.kind === "appearsInArea" &&
+    trigger.triggerTurn.actorId === currentActorId(state) &&
+    trigger.triggerTurn.round === state.initiative.round
+  );
+}
+
+export function resolveCloudkillMovementSaveDamageSequence(input: {
+  readonly advancedState: BattleState;
+  readonly parent: ReplayParentContinuation;
+  readonly requests: readonly CloudkillMovementSaveDamageRequest[];
+  readonly parentPosition: BattleReplayParentPosition | undefined;
+}): CloudkillMovementSaveDamageSequenceResult {
+  const saveHoleIds = new Set<BattleHoleId>();
+  const damageHoleIds = new Set<BattleHoleId>();
+  const concentrationHoleIds = new Set<BattleHoleId>();
+  let parentPositionMatched = input.parentPosition === undefined;
+  let state = input.advancedState;
+
+  for (const request of input.requests) {
+    let resumesAfterThisSave = false;
+    let savePosition: BattleReplayParentPosition | undefined;
+    const procedureFills: BattleFill[] = [];
+    let child = resolveCloudkillAreaSaveDamage({
+      state,
+      subject: request.subject,
+      fills: procedureFills,
+      handledInterruptTrigger: "saveFailed",
+    });
+
+    for (;;) {
+      const childStep = Match.value(child).pipe(
+        Match.when({ tag: "resolved" }, (result) => ({
+          tag: "resolved" as const,
+          result,
+        })),
+        Match.when({ tag: "needsHoles" }, (result) => ({
+          tag: "needsHoles" as const,
+          result,
+        })),
+        Match.when({ tag: "invalid" }, (result) => ({
+          tag: "invalid" as const,
+          result,
+        })),
+        Match.exhaustive,
+      );
+      if (childStep.tag === "resolved") {
+        state = childStep.result.state;
+        break;
+      }
+      if (childStep.tag === "invalid") {
+        return {
+          tag: "result",
+          result: projectReplayChildResult(input.parent, childStep.result),
+        };
+      }
+
+      const [hole, ...additionalHoles] = childStep.result.holes;
+      if (
+        hole === undefined ||
+        additionalHoles.length > 0 ||
+        !isPersistentAreaSequenceHole(hole)
+      ) {
+        return invalidCloudkillMovementSaveDamageSequence(input.parent);
+      }
+      const matchingFills = input.parent.fills.filter(
+        (fill) => fill.kind === hole.kind && fill.holeId === hole.holeId,
+      );
+      if (matchingFills.length === 0) {
+        return {
+          tag: "result",
+          result: projectReplayChildResult(input.parent, childStep.result),
+        };
+      }
+      procedureFills.push(...matchingFills);
+      if (hole.kind === "savingThrowOutcome") {
+        savePosition = cloudkillMovementSaveDamagePosition(
+          request,
+          hole.holeId,
+        );
+        resumesAfterThisSave =
+          input.parentPosition !== undefined &&
+          sameCloudkillMovementSaveDamagePosition(
+            input.parentPosition,
+            savePosition,
+          );
+        if (resumesAfterThisSave) {
+          parentPositionMatched = true;
+        }
+      }
+      Match.value(hole).pipe(
+        Match.when({ kind: "savingThrowOutcome" }, ({ holeId }) =>
+          saveHoleIds.add(holeId),
+        ),
+        Match.when({ kind: "rolledDice" }, ({ holeId }) =>
+          damageHoleIds.add(holeId),
+        ),
+        Match.when({ kind: "concentrationSavingThrow" }, ({ holeId }) =>
+          concentrationHoleIds.add(holeId),
+        ),
+        Match.exhaustive,
+      );
+      child = resolveCloudkillAreaSaveDamage({
+        state,
+        subject: request.subject,
+        fills: procedureFills,
+        handledInterruptTrigger: "saveFailed",
+      });
+
+      const failedSave =
+        matchingFills.find(
+          (
+            fill,
+          ): fill is Extract<
+            BattleFill,
+            { readonly kind: "savingThrowOutcome" }
+          > => fill.kind === "savingThrowOutcome",
+        )?.value.outcomes[0]?.succeeded === false;
+      if (failedSave && !resumesAfterThisSave) {
+        if (savePosition === undefined) {
+          return invalidCloudkillMovementSaveDamageSequence(input.parent);
+        }
+        const reactionWindow = maybeOpenInterruptWindow(
+          input.parent.state,
+          {
+            trigger: "saveFailed",
+            targetId: request.subject.actorId,
+            sourceProcedureRef: request.effect.sourceProcedureRef,
+            continuation: replayParentProcedureAt(input.parent, savePosition),
+          },
+          undefined,
+        );
+        if (reactionWindow !== null) {
+          return {
+            tag: "result",
+            result: projectReplayChildResult(input.parent, reactionWindow),
+          };
+        }
+      }
+    }
+  }
+
+  if (!parentPositionMatched) {
+    return invalidCloudkillMovementSaveDamageSequence(input.parent);
+  }
+  return {
+    tag: "resolved",
+    state,
+    saveHoleIds,
+    damageHoleIds,
+    concentrationHoleIds,
+  };
+}
+
+function cloudkillMovementSaveDamagePosition(
+  request: CloudkillMovementSaveDamageRequest,
+  saveHoleId: BattleHoleId,
+): BattleReplayParentPosition {
+  return {
+    kind: "persistentAreaSaveDamage",
+    parentHoleId: request.parentHoleId,
+    saveHoleId,
+    areaId: request.effect.areaId,
+    sourceProcedureRef: request.effect.sourceProcedureRef,
+    targetId: request.subject.actorId,
+  };
+}
+
+function sameCloudkillMovementSaveDamagePosition(
+  left: BattleReplayParentPosition,
+  right: BattleReplayParentPosition,
+): boolean {
+  return (
+    left.kind === right.kind &&
+    left.parentHoleId === right.parentHoleId &&
+    left.saveHoleId === right.saveHoleId &&
+    left.areaId === right.areaId &&
+    left.sourceProcedureRef === right.sourceProcedureRef &&
+    left.targetId === right.targetId
+  );
+}
+
+function isPersistentAreaSequenceHole(
+  hole: BattleHole,
+): hole is PersistentAreaSequenceHole {
+  return (
+    hole.kind === "savingThrowOutcome" ||
+    hole.kind === "rolledDice" ||
+    hole.kind === "concentrationSavingThrow"
+  );
+}
+
+function invalidCloudkillMovementSaveDamageSequence(
+  parent: ReplayParentContinuation,
+): CloudkillMovementSaveDamageSequenceResult {
+  return {
+    tag: "result",
+    result: invalidResult(
+      parent.state,
+      "staleSubject",
+      "Cloudkill movement damage could not continue from its current start-turn boundary.",
+    ),
+  };
+}
+
 function persistentAreaAllowedFillIssue(
   resolution: BattleResolutionInput,
   procedureName: "Insect Plague" | "Cloudkill",
@@ -217,6 +466,23 @@ function persistentAreaAllowedFillIssue(
 function parsePersistentAreaSaveDamageProcedure(
   candidate: PersistentAreaSaveDamageProcedureCandidate,
 ): PersistentAreaProcedureParseResult {
+  const membershipTrigger = candidate.resolution.subject.areaMembershipTrigger;
+  if (
+    membershipTrigger.kind === "appearsInArea" &&
+    !persistentAreaAppearanceTriggerMatchesCurrentTurn(
+      candidate.resolution.state,
+      membershipTrigger,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        candidate.resolution.state,
+        "staleSubject",
+        `${persistentAreaProcedureName(candidate.kind)} appearance save no longer matches its triggering turn.`,
+      ),
+    };
+  }
   if (candidate.effect === undefined) {
     return {
       tag: "invalid",
@@ -437,6 +703,7 @@ function persistentAreaProcedureHoles(
         insectPlague.trigger,
       ),
       damageHole: insectPlagueAreaHazardDamageRollHole(
+        insectPlague.resolution.state,
         insectPlague.resolution.subject.actorId,
         insectPlague.effect,
         insectPlague.trigger,
@@ -450,6 +717,7 @@ function persistentAreaProcedureHoles(
         cloudkill.trigger,
       ),
       damageHole: cloudkillAreaHazardDamageRollHole(
+        cloudkill.resolution.state,
         cloudkill.resolution.subject.actorId,
         cloudkill.effect,
         cloudkill.trigger,
@@ -621,7 +889,7 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
   effect: InsectPlagueAreaHazardEffect,
   trigger: BattleInsectPlagueAreaHazardTrigger,
 ): BattleInsectPlagueAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -640,12 +908,13 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
 }
 
 function insectPlagueAreaHazardDamageRollHole(
+  state: BattleState,
   targetId: CombatantId,
   effect: InsectPlagueAreaHazardEffect,
   trigger: BattleInsectPlagueAreaHazardTrigger,
 ): BattleInsectPlagueAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}:${expr}`;
+  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -683,13 +952,24 @@ function persistentAreaHazardTriggerLabel(
   );
 }
 
+function persistentAreaAppearanceTurnKey(
+  state: BattleState,
+  trigger:
+    | BattleInsectPlagueAreaHazardTrigger
+    | BattleCloudkillAreaHazardTrigger,
+): string {
+  return trigger === "appearsInArea"
+    ? `:${currentActorId(state)}:${state.initiative.round}`
+    : "";
+}
+
 export function cloudkillAreaHazardSavingThrowOutcomeHole(
   state: BattleState,
   targetId: CombatantId,
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
 ): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}`;
+  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -708,12 +988,13 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
 }
 
 function cloudkillAreaHazardDamageRollHole(
+  state: BattleState,
   targetId: CombatantId,
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
 ): BattleCloudkillAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}:${expr}`;
+  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),

@@ -1,4 +1,6 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
+import { Match } from "effect";
 import {
   DieRollResult,
   movementFeet,
@@ -1540,15 +1542,25 @@ export function insectPlagueAreaHazardSaveAct(
     tag: "runtimeCommand",
     actorId,
     command: "insectPlagueAreaHazardSave",
-    areaMembershipTrigger: {
-      kind:
-        trigger === "appearsInArea"
-          ? "appearsInArea"
-          : trigger === "entersArea"
-            ? "firstEntryOnTurn"
-            : "turnEndInArea",
-      areaId: effect.areaId,
-    },
+    areaMembershipTrigger: Match.value(trigger).pipe(
+      Match.when("appearsInArea", () => ({
+        kind: "appearsInArea" as const,
+        areaId: effect.areaId,
+        triggerTurn: {
+          actorId: currentActing(session.state.initiative),
+          round: session.state.initiative.round,
+        },
+      })),
+      Match.when("entersArea", () => ({
+        kind: "firstEntryOnTurn" as const,
+        areaId: effect.areaId,
+      })),
+      Match.when("endsTurnInArea", () => ({
+        kind: "turnEndInArea" as const,
+        areaId: effect.areaId,
+      })),
+      Match.exhaustive,
+    ),
   };
   return {
     presentation: { kind: "intrinsic" },
@@ -1599,17 +1611,29 @@ export function cloudkillAreaHazardSaveAct(
     tag: "runtimeCommand",
     actorId,
     command: "cloudkillAreaHazardSave",
-    areaMembershipTrigger: {
-      kind:
-        trigger === "appearsInArea"
-          ? "appearsInArea"
-          : trigger === "movesIntoSpace"
-            ? "areaMovesIntoSpace"
-            : trigger === "entersArea"
-              ? "firstEntryOnTurn"
-              : "turnEndInArea",
-      areaId: effect.areaId,
-    },
+    areaMembershipTrigger: Match.value(trigger).pipe(
+      Match.when("appearsInArea", () => ({
+        kind: "appearsInArea" as const,
+        areaId: effect.areaId,
+        triggerTurn: {
+          actorId: currentActing(session.state.initiative),
+          round: session.state.initiative.round,
+        },
+      })),
+      Match.when("movesIntoSpace", () => ({
+        kind: "areaMovesIntoSpace" as const,
+        areaId: effect.areaId,
+      })),
+      Match.when("entersArea", () => ({
+        kind: "firstEntryOnTurn" as const,
+        areaId: effect.areaId,
+      })),
+      Match.when("endsTurnInArea", () => ({
+        kind: "turnEndInArea" as const,
+        areaId: effect.areaId,
+      })),
+      Match.exhaustive,
+    ),
   };
   return {
     presentation: { kind: "intrinsic" },

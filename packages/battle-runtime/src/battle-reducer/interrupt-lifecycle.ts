@@ -34,6 +34,7 @@ import {
 import { combatantCanTakeReactions } from "./creature-state-execution.ts";
 import {
   interruptCheckpointFrame,
+  interruptedProcedureSupportsAttackDamageChanges,
   spendReaction,
 } from "./interrupt-execution.ts";
 import { interruptAttackExecutionSelectionsEqual } from "./movement-speed.ts";
@@ -687,8 +688,7 @@ function interruptCheckpointAfterModifier(
   if (
     frame.trigger === "attackHit" &&
     choice.kind === "attackDamageReduction" &&
-    frame.continuation.kind === "replay" &&
-    frame.continuation.glyphStoredSpellReleaseReplay === undefined
+    interruptedProcedureSupportsAttackDamageChanges(frame.continuation)
   ) {
     return {
       ...frame,

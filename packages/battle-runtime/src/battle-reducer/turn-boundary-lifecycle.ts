@@ -35,6 +35,7 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   currentActing,
+  initiativeOrder,
   nextInitiative,
 } from "@dnd/shared-algebras/initiative-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
@@ -64,6 +65,7 @@ import type {
   BattleHoleId,
   BattleResolutionInput,
   BattleResolutionResult,
+  BattleReplayParentPosition,
   BattleSavingThrowFlatBonusProjection,
   BattleSavingThrowOutcomeValue,
   BattleSavingThrowRollModeProjection,
@@ -131,9 +133,17 @@ import {
   flySpeedGrantEndFallCleanupFramesForExpiredEffects,
 } from "./fly-speed-grant-end-fall-cleanup.ts";
 import { hideousLaughterRepeatSavingThrowOutcomeHole } from "./hideous-laughter-repeat-save.ts";
-import { maybeOpenInterruptWindow } from "./interrupt-execution.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
-import { resolveCloudkillAreaSaveDamage } from "./persistent-area-save-damage.ts";
+import {
+  resolveCloudkillMovementSaveDamageSequence,
+  type CloudkillAreaHazardEffect,
+  type CloudkillMovementSaveDamageRequest,
+} from "./persistent-area-save-damage.ts";
+import {
+  projectReplayChildResult,
+  replayParentContinuationFor,
+  type ReplayParentContinuation,
+} from "./replay-continuation.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { slowActionOrBonusActionTurnResources } from "./slow-active-penalties-runtime.ts";
 import {
@@ -234,11 +244,6 @@ type ResolvedTurnBoundaryFills = {
   >[];
 };
 
-type CloudkillAreaHazardEffect = Extract<
-  BattleActiveEffect,
-  { readonly kind: "cloudkillAreaHazard" }
->;
-
 const CLOUDKILL_START_TURN_MOVE_FEET = movementFeet(10);
 
 function cloudkillStartTurnMovementEffects(
@@ -279,8 +284,12 @@ type CloudkillMovementFill = Extract<
   { readonly kind: "cloudkillMovement" }
 >;
 
-type CloudkillMovementBoundaryRequest = {
+type CloudkillMovementBoundary = {
   readonly effect: CloudkillAreaHazardEffect;
+  readonly hole: BattleCloudkillMovementHole;
+};
+
+type CloudkillMovementBoundaryRequest = CloudkillMovementBoundary & {
   readonly fill: CloudkillMovementFill;
 };
 
@@ -291,19 +300,6 @@ type CloudkillMovementSaveSubject = Extract<
     readonly command: "cloudkillAreaHazardSave";
   }
 >;
-
-type CloudkillMovementAffectedResolution =
-  | {
-      readonly tag: "resolved";
-      readonly state: BattleState;
-      readonly saveHoleIds: ReadonlySet<BattleHoleId>;
-      readonly damageHoleIds: ReadonlySet<BattleHoleId>;
-      readonly concentrationHoleIds: ReadonlySet<BattleHoleId>;
-    }
-  | {
-      readonly tag: "result";
-      readonly result: BattleResolutionResult;
-    };
 
 function cloudkillMovementSaveSubject(
   targetId: CombatantId,
@@ -320,158 +316,21 @@ function cloudkillMovementSaveSubject(
   };
 }
 
-function cloudkillMovementAffectedTargets(
-  requests: readonly CloudkillMovementBoundaryRequest[],
-): readonly {
-  readonly effect: CloudkillAreaHazardEffect;
-  readonly subject: CloudkillMovementSaveSubject;
-}[] {
-  return requests.flatMap(({ effect, fill }) =>
-    fill.value.affectedCombatantIds.map((targetId) => ({
-      effect,
-      subject: cloudkillMovementSaveSubject(targetId, effect),
-    })),
-  );
-}
-
-function cloudkillMovementChildResult(
-  boundaryState: BattleState,
-  parentSubject: BattleSubject,
-  result: Exclude<BattleResolutionResult, { readonly tag: "resolved" }>,
-): BattleResolutionResult {
-  return result.tag === "needsHoles"
-    ? needsHolesResult(boundaryState, parentSubject, result.holes)
-    : invalidResult(boundaryState, result.reason, result.message);
-}
-
-function invalidCloudkillMovementProtocol(
+function cloudkillMovementSaveDamageRequests(
   state: BattleState,
-): CloudkillMovementAffectedResolution {
-  return {
-    tag: "result",
-    result: invalidResult(
-      state,
-      "staleSubject",
-      "Cloudkill movement damage could not continue from its current start-turn boundary.",
-    ),
-  };
-}
-
-function resolveCloudkillMovementAffectedTargets(input: {
-  readonly boundaryState: BattleState;
-  readonly advancedState: BattleState;
-  readonly parentSubject: BattleSubject;
-  readonly fills: readonly BattleFill[];
-  readonly requests: readonly CloudkillMovementBoundaryRequest[];
-  readonly handledInterruptTrigger: BattleInterruptTrigger | undefined;
-}): CloudkillMovementAffectedResolution {
-  const affectedTargets = cloudkillMovementAffectedTargets(input.requests);
-  const saveHoleIds = new Set<BattleHoleId>();
-  const damageHoleIds = new Set<BattleHoleId>();
-  const concentrationHoleIds = new Set<BattleHoleId>();
-  let state = input.advancedState;
-  for (const target of affectedTargets) {
-    const procedureFills: BattleFill[] = [];
-    let result = resolveCloudkillAreaSaveDamage({
-      state,
-      subject: target.subject,
-      fills: procedureFills,
-      handledInterruptTrigger: "saveFailed",
-    });
-    while (result.tag === "needsHoles") {
-      const [hole, ...additionalHoles] = result.holes;
-      if (
-        hole === undefined ||
-        additionalHoles.length > 0 ||
-        (hole.kind !== "savingThrowOutcome" &&
-          hole.kind !== "rolledDice" &&
-          hole.kind !== "concentrationSavingThrow")
-      ) {
-        return invalidCloudkillMovementProtocol(input.boundaryState);
-      }
-      const matchingFills = input.fills.filter(
-        (fill) => fill.kind === hole.kind && fill.holeId === hole.holeId,
-      );
-      if (matchingFills.length === 0) {
-        return {
-          tag: "result",
-          result: needsHolesResult(input.boundaryState, input.parentSubject, [
-            hole,
-          ]),
-        };
-      }
-      procedureFills.push(...matchingFills);
-      if (hole.kind === "savingThrowOutcome") {
-        saveHoleIds.add(hole.holeId);
-      } else if (hole.kind === "rolledDice") {
-        damageHoleIds.add(hole.holeId);
-      } else {
-        concentrationHoleIds.add(hole.holeId);
-      }
-      result = resolveCloudkillAreaSaveDamage({
-        state,
-        subject: target.subject,
-        fills: procedureFills,
-        handledInterruptTrigger: "saveFailed",
-      });
-      if (result.tag === "invalid") {
-        return {
-          tag: "result",
-          result: cloudkillMovementChildResult(
-            input.boundaryState,
-            input.parentSubject,
-            result,
-          ),
-        };
-      }
-      const saveOutcome = matchingFills.find(
-        (
-          fill,
-        ): fill is Extract<
-          BattleFill,
-          { readonly kind: "savingThrowOutcome" }
-        > => fill.kind === "savingThrowOutcome",
-      )?.value.outcomes[0];
-      if (saveOutcome?.succeeded === false) {
-        const saveFailedReactionWindow = maybeOpenInterruptWindow(
-          input.boundaryState,
-          {
-            trigger: "saveFailed",
-            targetId: target.subject.actorId,
-            sourceProcedureRef: target.effect.sourceProcedureRef,
-            continuation: {
-              kind: "replay",
-              subject: input.parentSubject,
-              fills: input.fills,
-            },
-          },
-          input.handledInterruptTrigger,
-        );
-        if (saveFailedReactionWindow !== null) {
-          return { tag: "result", result: saveFailedReactionWindow };
-        }
-      }
-    }
-    if (result.tag === "invalid") {
-      return {
-        tag: "result",
-        result: cloudkillMovementChildResult(
-          input.boundaryState,
-          input.parentSubject,
-          result,
-        ),
-      };
-    }
-    state = result.state;
-  }
-
-  return {
-    tag: "resolved",
-    state,
-    saveHoleIds,
-    damageHoleIds,
-    concentrationHoleIds,
-  };
+  requests: readonly CloudkillMovementBoundaryRequest[],
+): readonly CloudkillMovementSaveDamageRequest[] {
+  const combatantOrder = initiativeOrder(state.initiative);
+  return requests.flatMap(({ effect, fill, hole }) => {
+    const affectedCombatantIds = new Set(fill.value.affectedCombatantIds);
+    return combatantOrder
+      .filter((targetId) => affectedCombatantIds.has(targetId))
+      .map((targetId) => ({
+        effect,
+        parentHoleId: hole.holeId,
+        subject: cloudkillMovementSaveSubject(targetId, effect),
+      }));
+  });
 }
 
 function resolveEndTurn({
@@ -2841,10 +2700,45 @@ function expireOngoingFeatures(
   );
 }
 
+type EndTurnResolutionInput = BattleResolutionInput & {
+  readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  readonly replayParentPosition?: BattleReplayParentPosition;
+};
+
 export function resolveEndTurnCommand(
-  input: BattleResolutionInput & {
-    readonly handledInterruptTrigger?: BattleInterruptTrigger;
+  input: EndTurnResolutionInput,
+): BattleResolutionResult {
+  const parent = replayParentContinuationFor(input);
+  return projectReplayChildResult(
+    parent,
+    resolveEndTurnCommandForParent(input, parent),
+  );
+}
+
+export function resolveDelegatedEndTurnCommand(
+  parentInput: BattleResolutionInput & {
+    readonly replayParentPosition?: BattleReplayParentPosition;
   },
+  endTurnInput: BattleResolutionInput,
+): BattleResolutionResult {
+  const parent = replayParentContinuationFor(parentInput);
+  return projectReplayChildResult(
+    parent,
+    resolveEndTurnCommandForParent(
+      {
+        ...endTurnInput,
+        ...(parentInput.replayParentPosition === undefined
+          ? {}
+          : { replayParentPosition: parentInput.replayParentPosition }),
+      },
+      parent,
+    ),
+  );
+}
+
+function resolveEndTurnCommandForParent(
+  input: EndTurnResolutionInput,
+  parent: ReplayParentContinuation,
 ): BattleResolutionResult {
   const unsupportedFill = input.fills.find(
     (fill) => !isEndTurnFillKind(fill.kind),
@@ -3759,26 +3653,46 @@ export function resolveEndTurnCommand(
     ),
     damageDispositions: damageDispositionFills,
   });
-  const cloudkillMovementEffects = cloudkillStartTurnMovementEffects(
+  const cloudkillMovementBoundaries = cloudkillStartTurnMovementEffects(
     advancedTurn.state,
     nextActorId,
-  );
-  const cloudkillMovementHoles = cloudkillMovementEffects.map((effect) =>
-    cloudkillStartTurnMovementHole(input.state, effect),
+  ).map(
+    (effect): CloudkillMovementBoundary => ({
+      effect,
+      hole: cloudkillStartTurnMovementHole(input.state, effect),
+    }),
   );
   const cloudkillMovementFills = input.fills.filter(
     (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
   );
   const cloudkillMovementHoleIds = new Set(
-    cloudkillMovementHoles.map((hole) => hole.holeId),
+    cloudkillMovementBoundaries.map(({ hole }) => hole.holeId),
   );
+  const resumedMovementBoundary =
+    input.replayParentPosition === undefined
+      ? undefined
+      : cloudkillMovementBoundaries.find(
+          ({ effect, hole }) =>
+            hole.holeId === input.replayParentPosition?.parentHoleId &&
+            effect.areaId === input.replayParentPosition.areaId &&
+            effect.sourceProcedureRef ===
+              input.replayParentPosition.sourceProcedureRef,
+        );
+  const canceledMovementPosition =
+    input.replayParentPosition !== undefined &&
+    resumedMovementBoundary === undefined
+      ? input.replayParentPosition
+      : undefined;
+  if (canceledMovementPosition !== undefined) {
+    cloudkillMovementHoleIds.add(canceledMovementPosition.parentHoleId);
+  }
   /* v8 ignore start -- @preserve -- Malformed resolution input: a movement fill can answer only a Cloudkill movement hole discovered for this exact source-turn boundary. */
   if (
     cloudkillMovementFills.some(
       (fill) => !cloudkillMovementHoleIds.has(fill.holeId),
     ) ||
-    cloudkillMovementHoles.some(
-      (hole) =>
+    cloudkillMovementBoundaries.some(
+      ({ hole }) =>
         cloudkillMovementFills.filter((fill) => fill.holeId === hole.holeId)
           .length > 1,
     )
@@ -3790,9 +3704,11 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const missingCloudkillMovementHoles = cloudkillMovementHoles.filter(
-    (hole) =>
-      !cloudkillMovementFills.some((fill) => fill.holeId === hole.holeId),
+  const missingCloudkillMovementHoles = cloudkillMovementBoundaries.flatMap(
+    ({ hole }) =>
+      !cloudkillMovementFills.some((fill) => fill.holeId === hole.holeId)
+        ? [hole]
+        : [],
   );
   if (missingCloudkillMovementHoles.length > 0) {
     return needsHolesResult(
@@ -3823,17 +3739,28 @@ export function resolveEndTurnCommand(
       );
     }
   }
-  const cloudkillMovementRequests = cloudkillMovementEffects.flatMap(
-    (effect, index): readonly CloudkillMovementBoundaryRequest[] => {
-      const hole = cloudkillMovementHoles[index];
+  if (
+    canceledMovementPosition !== undefined &&
+    !cloudkillMovementFills.some(
+      (fill) => fill.holeId === canceledMovementPosition.parentHoleId,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cloudkill movement interruption no longer matches its parent movement fill.",
+    );
+  }
+  const cloudkillMovementRequests = cloudkillMovementBoundaries.flatMap(
+    ({ effect, hole }): readonly CloudkillMovementBoundaryRequest[] => {
       const fill = cloudkillMovementFills.find(
-        (candidate) => candidate.holeId === hole?.holeId,
+        (candidate) => candidate.holeId === hole.holeId,
       );
-      return hole === undefined || fill === undefined ? [] : [{ effect, fill }];
+      return fill === undefined ? [] : [{ effect, hole, fill }];
     },
   );
   /* v8 ignore start -- @preserve -- The exact movement-fill validation above proves that every discovered movement effect has one matching hole and fill. */
-  if (cloudkillMovementRequests.length !== cloudkillMovementHoles.length) {
+  if (cloudkillMovementRequests.length !== cloudkillMovementBoundaries.length) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3841,14 +3768,20 @@ export function resolveEndTurnCommand(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const movementAffectedResolution = resolveCloudkillMovementAffectedTargets({
-    boundaryState: input.state,
-    advancedState: advancedTurn.state,
-    parentSubject: input.subject,
-    fills: input.fills,
-    requests: cloudkillMovementRequests,
-    handledInterruptTrigger: input.handledInterruptTrigger,
-  });
+  const movementAffectedResolution = resolveCloudkillMovementSaveDamageSequence(
+    {
+      advancedState: advancedTurn.state,
+      parent,
+      requests: cloudkillMovementSaveDamageRequests(
+        advancedTurn.state,
+        cloudkillMovementRequests,
+      ),
+      parentPosition:
+        canceledMovementPosition === undefined
+          ? input.replayParentPosition
+          : undefined,
+    },
+  );
   if (movementAffectedResolution.tag === "result") {
     return movementAffectedResolution.result;
   }
@@ -3858,6 +3791,7 @@ export function resolveEndTurnCommand(
     savingThrowOutcomeFills.some(
       (fill) =>
         !savingThrowOutcomeHoleIds.has(fill.holeId) &&
+        fill.holeId !== canceledMovementPosition?.saveHoleId &&
         !movementAffectedResolution.saveHoleIds.has(fill.holeId),
     ) ||
     input.fills.some(

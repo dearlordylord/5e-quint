@@ -52,6 +52,7 @@ import {
   TRANSMUTED_SPELL_DAMAGE_TYPES,
 } from "./battle-reducer/metamagic-transmuted-facts.ts";
 import { attackExecutionSelectionKey } from "./battle-action-options.ts";
+import { BattleRoundSchema } from "./active-effect/round-codec.ts";
 
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
   Schema.check(Schema.isNonEmpty()),
@@ -177,11 +178,17 @@ export const BattleSleetStormAreaMembershipTriggerSchema = Schema.Union([
 export type BattleSleetStormAreaMembershipTrigger =
   typeof BattleSleetStormAreaMembershipTriggerSchema.Type;
 
+const BattlePersistentAreaAppearanceTriggerTurnSchema = Schema.Struct({
+  actorId: CombatantId,
+  round: BattleRoundSchema,
+});
+
 export const BattleInsectPlagueAreaMembershipTriggerSchema = Schema.Union([
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("appearsInArea"),
     areaId: BattleAreaId,
+    triggerTurn: BattlePersistentAreaAppearanceTriggerTurnSchema,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
@@ -202,6 +209,7 @@ export const BattleCloudkillAreaMembershipTriggerSchema = Schema.Union([
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("appearsInArea"),
     areaId: BattleAreaId,
+    triggerTurn: BattlePersistentAreaAppearanceTriggerTurnSchema,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,

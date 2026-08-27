@@ -12,6 +12,7 @@ import {
   type CombatantId,
 } from "./identity.ts";
 import type {
+  BattleActiveEffect,
   BattleCloudkillMovementHole,
   BattleState,
 } from "./battle-state-execution.ts";
@@ -32,6 +33,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
+  combatantId,
   endTurn,
   movementFeet,
   resolveBattleInterrupt,
@@ -41,9 +43,18 @@ import {
   damageRollFillWithGroups,
   interruptDecisionFill,
   requireHole,
+  requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { concentrationSavingThrowFill } from "./battle-runtime.test-support.ts";
+import {
+  attackRollFill,
+  battleActiveEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+  concentrationSavingThrowFill,
+  damageRollFill,
+  reactionChoiceWithSubject,
+  targetFill,
+} from "./battle-runtime.test-support.ts";
 import {
   readyTargetRayOfFrost,
   spellBattleWithTargetRayOfFrost,
@@ -51,6 +62,50 @@ import {
 
 const cloudkillDirectionId = battleLineDirectionId("away-from-source");
 const cloudkillDestinationId = battleTablePositionId("cloudkill-next-center");
+const cloudkillSecondaryTargetId = combatantId("cloudkill-secondary-target");
+
+function withCommandGrovel(
+  state: BattleState,
+  actorId: CombatantId,
+): {
+  readonly state: BattleState;
+  readonly effectRef: Extract<
+    BattleActiveEffect,
+    { readonly kind: "commandPending" }
+  >["effectRef"];
+} {
+  const target = state.combatants.get(actorId);
+  if (target === undefined) {
+    throw new Error("Expected the Command Grovel target.");
+  }
+  const effectRef = battleActiveEffectExecutionRefForTest(
+    "cloudkill-command-grovel",
+  );
+  const effect = {
+    kind: "commandPending",
+    effectRef,
+    sourceCombatantId: spellCasterId,
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "cloudkill-command-grovel",
+    ),
+    option: "grovel",
+    expiresAt: {
+      kind: "endOfTurn",
+      combatantId: actorId,
+      round: state.initiative.round,
+    },
+  } as const satisfies BattleActiveEffect;
+  return {
+    effectRef,
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(actorId, {
+        ...target,
+        activeEffects: [...target.activeEffects, effect],
+      }),
+    },
+  };
+}
 
 function cloudkillMovementFill(
   hole: BattleCloudkillMovementHole,
@@ -68,7 +123,10 @@ function cloudkillMovementFill(
 }
 
 function castCloudkill(
-  input: { readonly targetCanReadyRayOfFrost?: true } = {},
+  input: {
+    readonly targetCanReadyRayOfFrost?: true;
+    readonly extraTargetIds?: readonly CombatantId[];
+  } = {},
 ) {
   const spell = decodeUnitRecordSync(cloudkillInput);
   if (spell.kind !== "spell") {
@@ -80,12 +138,26 @@ function castCloudkill(
         spellSlots: [{ spellLevel: 5, count: 1 }],
         targetHp: 30,
         targetMaxHp: 30,
+        ...(input.extraTargetIds === undefined
+          ? {}
+          : {
+              extraTargetIds: input.extraTargetIds,
+              extraTargetHp: 30,
+              extraTargetMaxHp: 30,
+            }),
       })
     : spellBattle({
         preparedSpells: [spell],
         spellSlots: [{ spellLevel: 5, count: 1 }],
         targetHp: 30,
         targetMaxHp: 30,
+        ...(input.extraTargetIds === undefined
+          ? {}
+          : {
+              extraTargetIds: input.extraTargetIds,
+              extraTargetHp: 30,
+              extraTargetMaxHp: 30,
+            }),
       });
   const act = spellAct({
     session,
@@ -481,6 +553,426 @@ describe("Cloudkill source-turn movement", () => {
         pendingInterrupt: null,
       },
     });
+  });
+
+  test("opens independent failed-save windows for two movement-affected targets", () => {
+    const cast = castCloudkill({
+      targetCanReadyRayOfFrost: true,
+      extraTargetIds: [cloudkillSecondaryTargetId],
+    });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const secondaryTurn = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+    });
+    if (secondaryTurn.tag !== "resolved") {
+      throw new Error("Expected the secondary target's turn to start.");
+    }
+    const movementFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+    });
+    const movementHole = requireResultHole(
+      movementFrontier,
+      "cloudkillMovement",
+    );
+    const movementFill = cloudkillMovementFill(movementHole, [
+      cloudkillSecondaryTargetId,
+      spellCasterId,
+    ]);
+    const firstSaveFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [movementFill],
+    });
+    const firstSaveHole = requireResultHole(
+      firstSaveFrontier,
+      "savingThrowOutcome",
+    );
+    expect(firstSaveHole).toMatchObject({
+      cloudkillAreaHazard: { targetId: spellCasterId },
+    });
+    const firstSaveFill = singleTargetSavingThrowOutcomeFill(
+      firstSaveHole,
+      spellCasterId,
+      false,
+    );
+    const firstInterrupted = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [movementFill, firstSaveFill],
+    });
+    const firstDecision = requireResultHole(
+      firstInterrupted,
+      "interruptDecision",
+    );
+    if (firstInterrupted.tag !== "needsHoles") {
+      throw new Error("Expected the first failed-save window.");
+    }
+    const firstDeclined = resolveBattleInterrupt({
+      state: firstInterrupted.state,
+      fill: interruptDecisionFill(firstDecision, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    const firstDamageHole = requireResultHole(firstDeclined, "rolledDice");
+    const firstDamageFill = damageRollFillWithGroups(firstDamageHole, [
+      [1, 1, 1, 1, 1],
+    ]);
+    if (firstDeclined.tag !== "needsHoles") {
+      throw new Error("Expected the first target's damage frontier.");
+    }
+    const concentrationFrontier = resolveBattleSubject({
+      state: firstDeclined.state,
+      subject: firstDeclined.subject,
+      fills: [movementFill, firstSaveFill, firstDamageFill],
+    });
+    const concentrationFill = concentrationSavingThrowFill(
+      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
+      true,
+    );
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the source Concentration save frontier.");
+    }
+    const secondSaveFrontier = resolveBattleSubject({
+      state: concentrationFrontier.state,
+      subject: concentrationFrontier.subject,
+      fills: [movementFill, firstSaveFill, firstDamageFill, concentrationFill],
+    });
+    const secondSaveHole = requireResultHole(
+      secondSaveFrontier,
+      "savingThrowOutcome",
+    );
+    const secondSaveFill = singleTargetSavingThrowOutcomeFill(
+      secondSaveHole,
+      cloudkillSecondaryTargetId,
+      false,
+    );
+    if (secondSaveFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the second target's save frontier.");
+    }
+    const secondInterrupted = resolveBattleSubject({
+      state: secondSaveFrontier.state,
+      subject: secondSaveFrontier.subject,
+      fills: [
+        movementFill,
+        firstSaveFill,
+        firstDamageFill,
+        concentrationFill,
+        secondSaveFill,
+      ],
+    });
+
+    expect(secondInterrupted).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      snapshot: {
+        pendingInterrupt: {
+          trigger: "saveFailed",
+          choices: [
+            expect.objectContaining({ readiedSpellCasterId: spellTargetId }),
+          ],
+        },
+      },
+    });
+  });
+
+  test("preserves and resolves movement interrupt replay through delegated Command End Turn", () => {
+    const cast = castCloudkill({
+      targetCanReadyRayOfFrost: true,
+      extraTargetIds: [cloudkillSecondaryTargetId],
+    });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const secondaryTurn = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+    });
+    if (secondaryTurn.tag !== "resolved") {
+      throw new Error("Expected the secondary target's turn to start.");
+    }
+    const commanded = withCommandGrovel(
+      secondaryTurn.state,
+      cloudkillSecondaryTargetId,
+    );
+    const subject = {
+      tag: "runtimeCommand" as const,
+      actorId: cloudkillSecondaryTargetId,
+      command: "commandGrovel" as const,
+      effectRef: commanded.effectRef,
+    };
+    const movementFrontier = resolveBattleSubject({
+      state: commanded.state,
+      subject,
+      fills: [],
+    });
+    const movementFill = cloudkillMovementFill(
+      requireResultHole(movementFrontier, "cloudkillMovement"),
+      [cloudkillSecondaryTargetId],
+    );
+    const saveFrontier = resolveBattleSubject({
+      state: commanded.state,
+      subject,
+      fills: [movementFill],
+    });
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      cloudkillSecondaryTargetId,
+      false,
+    );
+    const interrupted = resolveBattleSubject({
+      state: commanded.state,
+      subject,
+      fills: [movementFill, saveFill],
+    });
+
+    expect(interrupted).toMatchObject({
+      tag: "needsHoles",
+      subject,
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      state: {
+        interruptStack: [
+          {
+            kind: "interruptCheckpoint",
+            frame: {
+              trigger: "saveFailed",
+              continuation: {
+                kind: "replay",
+                subject,
+                parentPosition: {
+                  kind: "persistentAreaSaveDamage",
+                  targetId: cloudkillSecondaryTargetId,
+                },
+              },
+            },
+          },
+        ],
+      },
+    });
+    if (interrupted.tag !== "needsHoles") {
+      throw new Error("Expected delegated movement interrupt.");
+    }
+    const pending = interrupted.snapshot.pendingInterrupt;
+    if (pending === null) {
+      throw new Error("Expected delegated pending interrupt.");
+    }
+    const declined = resolveBattleInterrupt({
+      state: interrupted.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    expect(declined).toMatchObject({
+      tag: "needsHoles",
+      subject,
+      holes: [{ kind: "rolledDice" }],
+      state: {
+        interruptStack: [
+          {
+            kind: "replayContinuation",
+            continuation: {
+              kind: "replay",
+              subject,
+              parentPosition: {
+                kind: "persistentAreaSaveDamage",
+                targetId: cloudkillSecondaryTargetId,
+              },
+            },
+          },
+        ],
+      },
+    });
+    if (declined.tag !== "needsHoles") {
+      throw new Error("Expected delegated movement damage frontier.");
+    }
+    const damageFill = damageRollFillWithGroups(
+      requireResultHole(declined, "rolledDice"),
+      [[1, 1, 1, 1, 1]],
+    );
+    const resumed = resolveBattleSubject({
+      state: declined.state,
+      subject: declined.subject,
+      fills: [movementFill, saveFill, damageFill],
+    });
+
+    expect(resumed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        round: 2,
+        currentActorId: spellCasterId,
+        pendingInterrupt: null,
+      },
+    });
+  });
+
+  test("cancels remaining movement damage and advances once when an accepted reaction ends source Concentration", () => {
+    const cast = castCloudkill({
+      targetCanReadyRayOfFrost: true,
+      extraTargetIds: [cloudkillSecondaryTargetId],
+    });
+    const targetTurn = endTurn({
+      state: cast.state,
+      actorId: spellCasterId,
+    });
+    if (targetTurn.tag !== "resolved") {
+      throw new Error("Expected the target turn to start.");
+    }
+    const readied = readyTargetRayOfFrost(
+      battleRuntimeSessionForTest({ ...cast.session, state: targetTurn.state }),
+    );
+    const secondaryTurn = endTurn({
+      state: readied.state,
+      actorId: spellTargetId,
+    });
+    if (secondaryTurn.tag !== "resolved") {
+      throw new Error("Expected the secondary target's turn to start.");
+    }
+    const sourceHpBeforeReaction =
+      secondaryTurn.state.combatants.get(spellCasterId)?.hp;
+    if (sourceHpBeforeReaction === undefined) {
+      throw new Error("Expected the Cloudkill source.");
+    }
+    const movementFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+    });
+    const movementFill = cloudkillMovementFill(
+      requireResultHole(movementFrontier, "cloudkillMovement"),
+      [cloudkillSecondaryTargetId],
+    );
+    const saveFrontier = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [movementFill],
+    });
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireResultHole(saveFrontier, "savingThrowOutcome"),
+      cloudkillSecondaryTargetId,
+      false,
+    );
+    const interrupted = endTurn({
+      state: secondaryTurn.state,
+      actorId: cloudkillSecondaryTargetId,
+      fills: [movementFill, saveFill],
+    });
+    if (interrupted.tag !== "needsHoles") {
+      throw new Error("Expected the failed-save reaction window.");
+    }
+    const pending = interrupted.snapshot.pendingInterrupt;
+    if (pending === null) {
+      throw new Error("Expected a pending failed-save interrupt.");
+    }
+    const choice = reactionChoiceWithSubject(pending.choices);
+    if (
+      choice.kind !== "releaseReadiedSpell" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
+      throw new Error("Expected the readied Ray of Frost choice.");
+    }
+    const released = resolveBattleInterrupt({
+      state: interrupted.state,
+      fill: interruptDecisionFill(pending.decisionHole, {
+        kind: "resolve",
+        responderId: spellTargetId,
+        choice: {
+          kind: "releaseReadiedSpell",
+          readiedSpellCasterId: spellTargetId,
+          procedureRef: choice.subject.procedureRef,
+          fills: [],
+        },
+      }),
+    });
+    const reactionTargetHole = requireResultHole(released, "targetChoice");
+    if (released.tag !== "needsHoles") {
+      throw new Error("Expected the readied spell target frontier.");
+    }
+    const reactionTargetFill = targetFill(reactionTargetHole, spellCasterId);
+    const attackFrontier = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [reactionTargetFill],
+    });
+    const attackHole = requireResultHole(attackFrontier, "attackRoll");
+    const attackFill = attackRollFill(attackHole, {
+      total: 20,
+      naturalD20: 15,
+    });
+    const damageFrontier = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [reactionTargetFill, attackFill],
+    });
+    const damageHole = requireResultHole(damageFrontier, "rolledDice");
+    const damageFill = damageRollFill(damageHole, 4);
+    const concentrationFrontier = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [reactionTargetFill, attackFill, damageFill],
+    });
+    const concentrationHole = requireResultHole(
+      concentrationFrontier,
+      "concentrationSavingThrow",
+    );
+    if (concentrationFrontier.tag !== "needsHoles") {
+      throw new Error("Expected the source Concentration save frontier.");
+    }
+    const resumed = resolveBattleSubject({
+      state: released.state,
+      subject: released.subject,
+      fills: [
+        reactionTargetFill,
+        attackFill,
+        damageFill,
+        concentrationSavingThrowFill(concentrationHole, false),
+      ],
+    });
+
+    expect(resumed).toMatchObject({
+      tag: "resolved",
+      snapshot: {
+        round: 2,
+        currentActorId: spellCasterId,
+        pendingInterrupt: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellCasterId,
+            concentrating: false,
+          }),
+        ]),
+      },
+    });
+    if (resumed.tag !== "resolved") return;
+    expect(
+      [...resumed.state.combatants.values()].flatMap(
+        (combatant) => combatant.activeEffects,
+      ),
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "cloudkillAreaHazard" }),
+      ]),
+    );
+    expect(resumed.state.combatants.get(spellCasterId)?.hp).toBe(
+      sourceHpBeforeReaction - 4,
+    );
   });
 
   test("rejects the former anytime movement-save command", () => {

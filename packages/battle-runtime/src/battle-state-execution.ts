@@ -736,11 +736,20 @@ export type BattleAttackDamageInterruptionFrame = {
   readonly phase: "attackDamage";
   readonly continuation: BattleAttackDamageInterruptionContinuation;
 };
+export type BattleReplayParentPosition = {
+  readonly kind: "persistentAreaSaveDamage";
+  readonly parentHoleId: BattleHoleId;
+  readonly saveHoleId: BattleHoleId;
+  readonly areaId: BattleAreaId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly targetId: CombatantId;
+};
 export type BattleInterruptedProcedure =
   | {
       readonly kind: "replay";
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
+      readonly parentPosition?: never;
       readonly glyphStoredSpellReleaseReplay?: never;
       readonly attackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly attackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
@@ -748,8 +757,19 @@ export type BattleInterruptedProcedure =
     }
   | {
       readonly kind: "replay";
+      readonly subject: BattleSubject;
+      readonly fills: readonly BattleFill[];
+      readonly parentPosition: BattleReplayParentPosition;
+      readonly glyphStoredSpellReleaseReplay?: never;
+      readonly attackDamageReductions?: never;
+      readonly attackDamageAdditions?: never;
+      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
+    }
+  | {
+      readonly kind: "replay";
       readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
       readonly fills: readonly BattleFill[];
+      readonly parentPosition?: never;
       readonly glyphStoredSpellReleaseReplay: GlyphStoredSpellReleaseReplayContext;
       readonly attackDamageReductions?: never;
       readonly attackDamageAdditions?: never;
@@ -1234,6 +1254,7 @@ export type BattleAttackHitReplayCheckpoint = Extract<
     BattleInterruptedProcedure,
     {
       readonly kind: "replay";
+      readonly parentPosition?: never;
       readonly glyphStoredSpellReleaseReplay?: never;
     }
   >;
@@ -6798,12 +6819,14 @@ export type BattleInterruptRouteOptions =
   | {
       readonly replayingInterruptedProcedure?: never;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly replayParentPosition?: never;
       readonly pendingAttackDamageReductions?: never;
       readonly pendingAttackDamageAdditions?: never;
     }
   | {
       readonly replayingInterruptedProcedure: true;
       readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly replayParentPosition?: BattleReplayParentPosition;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
     };

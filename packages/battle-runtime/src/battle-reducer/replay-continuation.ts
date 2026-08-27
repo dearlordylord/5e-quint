@@ -1,4 +1,5 @@
 import { optionalProperty } from "../optional-property.ts";
+import { Match } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import type {
@@ -8,6 +9,7 @@ import type {
   BattleInterruptRouteOptions,
   BattleInterruptedProcedure,
   BattleReplayContinuationFrame,
+  BattleReplayParentPosition,
   BattleResolutionResult,
   BattleState,
   GlyphStoredSpellReleaseReplayContext,
@@ -29,6 +31,53 @@ import { mergeObjectOutcomeResult } from "./object-outcome-accumulation.ts";
 const admittedReplayContinuationSubject = Symbol(
   "AdmittedReplayContinuationSubject",
 );
+
+const replayParentContinuation = Symbol("ReplayParentContinuation");
+
+export type ReplayParentContinuation = {
+  readonly state: BattleState;
+  readonly subject: BattleSubject;
+  readonly fills: readonly BattleFill[];
+  readonly [replayParentContinuation]: true;
+};
+
+export function replayParentContinuationFor(
+  input: Pick<ReplayParentContinuation, "state" | "subject" | "fills">,
+): ReplayParentContinuation {
+  return { ...input, [replayParentContinuation]: true };
+}
+
+export function replayParentProcedureAt(
+  parent: ReplayParentContinuation,
+  position: BattleReplayParentPosition,
+): Extract<BattleInterruptedProcedure, { readonly kind: "replay" }> {
+  return {
+    kind: "replay",
+    subject: parent.subject,
+    fills: parent.fills,
+    parentPosition: position,
+  };
+}
+
+export function projectReplayChildResult(
+  parent: ReplayParentContinuation,
+  child: BattleResolutionResult,
+): BattleResolutionResult {
+  return Match.value(child).pipe(
+    Match.when({ tag: "needsHoles" }, (result) => {
+      const state =
+        result.state.interruptStack.length > parent.state.interruptStack.length
+          ? result.state
+          : parent.state;
+      return needsHolesResult(state, parent.subject, result.holes);
+    }),
+    Match.when({ tag: "invalid" }, (result) =>
+      invalidResult(parent.state, result.reason, result.message),
+    ),
+    Match.when({ tag: "resolved" }, (result) => result),
+    Match.exhaustive,
+  );
+}
 
 export type AdmittedReplayContinuationSubject = {
   readonly input: AdmittedBattleResolutionInput;
@@ -317,6 +366,7 @@ function replayInterruptRouteOptions(
   return {
     replayingInterruptedProcedure: true,
     handledInterruptTrigger,
+    ...optionalProperty("replayParentPosition", continuation.parentPosition),
     ...optionalProperty(
       "pendingAttackDamageReductions",
       continuation.attackDamageReductions,

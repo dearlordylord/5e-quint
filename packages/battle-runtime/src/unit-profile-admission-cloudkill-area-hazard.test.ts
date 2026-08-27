@@ -364,6 +364,44 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(cloudkillSavedThisTurn(entrySaved.state)).toEqual([spellTargetId]);
   });
 
+  test("rejects an incomplete appearance save after its triggering turn changes", () => {
+    const { cast, session, targetTurn } = castCloudkill();
+    const appearanceAct = cloudkillAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: cast }),
+      spellTargetId,
+      "appearsInArea",
+    );
+    const saveFill = singleTargetSavingThrowOutcomeFill(
+      requireHole(appearanceAct.initialHoles, "savingThrowOutcome"),
+      spellTargetId,
+      true,
+    );
+    const pendingDamage = resolveBattleSubject({
+      state: cast,
+      subject: appearanceAct.subject,
+      fills: [saveFill],
+    });
+    const damageFill = damageRollFillWithGroups(
+      requireResultHole(pendingDamage, "rolledDice"),
+      [[1, 1, 1, 1, 1]],
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn,
+        subject: appearanceAct.subject,
+        fills: [saveFill, damageFill],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message:
+        "Cloudkill appearance save no longer matches its triggering turn.",
+    });
+    expect(cloudkillSavedThisTurn(targetTurn)).toEqual([]);
+    expect(requireCombatant(targetTurn, spellTargetId).hp).toBe(Hp(30));
+  });
+
   test("a discovered save becomes stale when Cloudkill Concentration ends", () => {
     const { targetTurn, session } = castCloudkill();
     const saveAct = cloudkillAreaHazardSaveAct(

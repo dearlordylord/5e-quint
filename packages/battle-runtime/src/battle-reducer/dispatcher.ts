@@ -416,6 +416,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
           handledInterruptTrigger:
             interruptRouteOptions.handledInterruptTrigger,
         };
+  const replayParentRouteOption =
+    interruptRouteOptions.replayParentPosition === undefined
+      ? {}
+      : { replayParentPosition: interruptRouteOptions.replayParentPosition };
   const pendingInterruptResult = resolvePendingInterruptSubject({
     input,
     options,
@@ -428,7 +432,10 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     actorId !== options.readiedActionActorId &&
     !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
-    !persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(input.subject)
+    !persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(
+      input.state,
+      input.subject,
+    )
   ) {
     return invalidResult(
       input.state,
@@ -675,11 +682,13 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ? resolveEndTurnCommand({
             ...input,
             ...handledInterruptRouteOption,
+            ...replayParentRouteOption,
           })
         : resolveCommandHaltEndTurn({
             ...input,
             subject,
             ...handledInterruptRouteOption,
+            ...replayParentRouteOption,
           });
     }
     if (isCommandFollowUpSubject(subject)) {
@@ -687,6 +696,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ...input,
         subject,
         ...handledInterruptRouteOption,
+        ...replayParentRouteOption,
       });
     }
     if (isMovementProcedureSubject(subject)) {
@@ -716,6 +726,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         ...input,
         subject,
         ...handledInterruptRouteOption,
+        ...replayParentRouteOption,
       });
     }
     if (subject.tag === "runtimeCommand") {
