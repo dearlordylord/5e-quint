@@ -156,10 +156,10 @@ import {
   BRUTAL_STRIKE_EFFECT_DECISION_CHOICES,
   TACTICAL_MASTER_REPLACEMENT_DECISION_CHOICES,
 } from "../unit-feature-support.ts";
-import {
-  type BattleFill,
-  type BattleHole,
-  type BattleMovementFillValue,
+import type {
+  BattleFill,
+  BattleHole,
+  BattleMovementFillValue,
 } from "../battle-state-execution.ts";
 import { ATTACK_PRESENTATION_JOIN_ISSUE_REASONS } from "../attack-presentation-contract.ts";
 const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
