@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/spell-procedure-execution-schema.typecheck.ts"]
+}

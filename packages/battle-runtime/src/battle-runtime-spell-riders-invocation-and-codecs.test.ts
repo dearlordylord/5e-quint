@@ -855,6 +855,7 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       kind: "savingThrowOutcome",
       targetRollModes: [{ targetId: goblinId, rollMode: "advantage" }],
     });
+    expect(Schema.encodeSync(BattleHoleSchema)(decoded.success)).toEqual(hole);
   });
 
   test("spell target-list codec preserves the willing-target evidence request", () => {
@@ -880,6 +881,9 @@ describe("battle runtime: spell riders, invocations, and codecs", () => {
       kind: "spellTargetList",
       requiresKnownWillingTargets: true,
     });
+    expect(Schema.encodeSync(BattleHoleSchema)(decoded.success)).toEqual(
+      encoded,
+    );
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleHoleSchema)({

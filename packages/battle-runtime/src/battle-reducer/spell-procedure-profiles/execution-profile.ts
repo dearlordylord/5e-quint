@@ -13,7 +13,9 @@ import type {
 import type { CombatantId } from "../../identity.ts";
 import type { SpellFillSet } from "../spells-resolve-fill-set.ts";
 import type { SpellProcedureExecutionRegistry } from "./execution-registry.ts";
+import type { SpellProcedureExecutionCodec } from "./execution-schema-contract.ts";
 import type { SpellProcedureDeclarationResolution } from "./resolution-contract.ts";
+export type { SpellProcedureExecutionCodec } from "./execution-schema-contract.ts";
 
 export type OkSpellFillSet = Extract<SpellFillSet, { readonly tag: "ok" }>;
 
@@ -55,9 +57,7 @@ export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
       SpellProcedureExecutionByProcedure[P]
     >,
   ) => readonly BattleActDiscoveryCandidate[];
-  readonly executionSchema: {
-    readonly Type: SpellProcedureExecutionByProcedure[P];
-  };
+  readonly executionSchema: SpellProcedureExecutionCodec<P>;
   readonly resolve: (
     input: SpellProcedureDeclarationResolution<P>,
     executionRegistry: SpellProcedureExecutionRegistry,
@@ -65,7 +65,7 @@ export type SpellProcedureExecutionDeclaration<P extends SpellProcedureKey> = {
 };
 
 export function spellProcedureExecutionSchema<
-  S extends Schema.Schema.AnyNoContext,
+  S extends Schema.ConstraintCodec<unknown, unknown, never, never>,
 >(schema: S & (0 extends 1 & S["Type"] ? never : unknown)): S {
   return schema;
 }
