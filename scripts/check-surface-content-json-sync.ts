@@ -35,6 +35,7 @@ import {
   type SurfacePublicationKnownRecordKind,
   type SurfacePublicationRecordKind,
 } from "./surface-publication-peer-observations.ts";
+import { discoverCanonicalSurfaceContentPeers } from "./surface-content-peer-discovery.ts";
 import { srdSurface } from "../packages/surface/src/surface/surface-catalog.ts";
 
 export type PublicationIssue =
@@ -148,10 +149,8 @@ function contentFiles(
 }
 
 function canonicalDhallFiles(contentDir: string): readonly string[] {
-  // Files beginning with `_` are Dhall authoring helpers, not authored records.
-  // This source-shape convention keeps discovery closed under new record kinds.
-  return contentFiles(contentDir, ".dhall").filter(
-    (name) => !name.startsWith("_"),
+  return discoverCanonicalSurfaceContentPeers(contentDir).map(
+    ({ sourceName }) => sourceName,
   );
 }
 

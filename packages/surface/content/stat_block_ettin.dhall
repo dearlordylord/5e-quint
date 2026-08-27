@@ -17,9 +17,7 @@ in  { challengeRating = 4
                     , attackBonus = +7
                     , reachFeet = 5
                     , onHit =
-                        [ T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = Some +5, static = 14 }
-                        , T.conditionIfSize { condition = "prone", maxCreatureSize = "large" }
-                        ]
+                        { first = T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = Some +5, static = 14 }, rest = [ T.conditionIfSize { condition = "prone", maxCreatureSize = "large" } ] }
                     }
                 }
             , T.textOnly { procedureOrdinal = 3, name = "Morningstar", description = "Melee Attack Roll: +7, reach 5 ft. Hit: 14 (2d8 + 5) Piercing damage, and the target has Disadvantage on the next attack roll it makes before the end of its next turn.", reason = "unsupported_action_shape" }

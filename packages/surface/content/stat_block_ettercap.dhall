@@ -17,7 +17,7 @@ in  { challengeRating = 2
                     , attackAbility = "str"
                     , attackBonus = +4
                     , reachFeet = 5
-                    , onHit = [ T.damage { damageType = "slashing", dice = 2, dieSize = 4, flat = Some +2, static = 7 } ]
+                    , onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 4, flat = Some +2, static = 7 }, rest = [] : List T.Effect }
                     }
                 }
             , T.resourceTextOnly
@@ -25,7 +25,7 @@ in  { challengeRating = 2
                 , name = "Web Strand (Recharge 5–6)"
                 , description = "Dexterity Saving Throw: DC 12, one Large or smaller creature the ettercap can see within 30 feet. Failure: The target has the Restrained condition until the web is destroyed (AC 10; HP 5; Vulnerability to Fire damage; Immunity to Bludgeoning, Poison, and Psychic damage)."
                 , reason = "unsupported_action_shape"
-                , resourceOrdinals = [ 1 ]
+                , resourceOrdinals = { first = 1, rest = [] : List Natural }
                 }
             ]
         , bonusActions =

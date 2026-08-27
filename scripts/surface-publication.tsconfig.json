@@ -5,9 +5,12 @@
     "check-surface-stat-block-parity-final.ts",
     "check-surface-stat-block-parity-final.test.ts",
     "generate-surface-publication.ts",
+    "generate-srd-stat-block-aggregate.ts",
+    "check-srd-stat-block-aggregate.ts",
     "generate-surface-portable-cases.ts",
     "surface-portable-case-oracle.ts",
     "srd-surface-publication-artifacts.ts",
+    "srd-stat-block-aggregate.ts",
     "srd521-stat-block-parity.ts",
     "srd521-stat-block-parity.test.ts"
   ],

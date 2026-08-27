@@ -16,7 +16,7 @@ in  { challengeRating = 5
                     , attackAbility = "str"
                     , attackBonus = +8
                     , reachFeet = 10
-                    , onHit = [ T.damage { damageType = "bludgeoning", dice = 2, dieSize = 8, flat = Some +5, static = 14 } ]
+                    , onHit = { first = T.damage { damageType = "bludgeoning", dice = 2, dieSize = 8, flat = Some +5, static = 14 }, rest = [] : List T.Effect }
                     }
                 }
             , T.executable
@@ -28,9 +28,7 @@ in  { challengeRating = 5
                     , rangeFeet = { normal = 60, long = 60 }
                     , ammunition = None Text
                     , onHit =
-                        [ T.damage { damageType = "bludgeoning", dice = 1, dieSize = 6, flat = Some +5, static = 8 }
-                        , T.conditionIfSize { condition = "prone", maxCreatureSize = "large" }
-                        ]
+                        { first = T.damage { damageType = "bludgeoning", dice = 1, dieSize = 6, flat = Some +5, static = 8 }, rest = [ T.conditionIfSize { condition = "prone", maxCreatureSize = "large" } ] }
                     }
                 }
             ]

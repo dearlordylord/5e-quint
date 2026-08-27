@@ -135,7 +135,7 @@ import {
   srdStatBlockCollection,
   type StatBlockCatalog,
 } from "@dnd/surface/surface/stat-block-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -261,6 +261,20 @@ if (unitCatalogResult.tag !== "ok" || statBlockCatalogResult.tag !== "ok") {
 }
 const unitLibrary = unitCatalogResult.catalog;
 const statBlockCatalog = statBlockCatalogResult.catalog;
+
+function withAlternativeSizeForProjectionFailure(
+  source: StatBlockRecord,
+): StatBlockRecord {
+  const { swarm: _swarm, ...nonSwarmStatBlock } = source.statBlock;
+  return {
+    ...source,
+    statBlock: {
+      ...nonSwarmStatBlock,
+      size: { kind: "alternatives", options: ["small", "medium"] },
+    },
+  };
+}
+
 const DRUID_WILD_SHAPE_KNOWN_FORM_IDS = [
   authoredStatBlockId("stat_block_rat"),
   authoredStatBlockId("stat_block_riding_horse"),
@@ -6710,13 +6724,7 @@ describe("Character Build battle projection", () => {
       },
       statBlockBattleInput: {
         combatantId: combatantId("non-literal-stat-block-monster"),
-        statBlock: {
-          ...source,
-          statBlock: {
-            ...source.statBlock,
-            size: { kind: "alternatives", options: ["small", "medium"] },
-          },
-        },
+        statBlock: withAlternativeSizeForProjectionFailure(source),
         initiative: initiativeScore(10),
         ammunitionStocks: [],
         conditions: [],
@@ -10494,13 +10502,7 @@ describe("Character battle runtime boundary coverage", () => {
       },
       statBlockBattleInput: {
         combatantId: combatantId("stat-block-projection-monster"),
-        statBlock: {
-          ...source,
-          statBlock: {
-            ...source.statBlock,
-            size: { kind: "alternatives", options: ["small", "medium"] },
-          },
-        },
+        statBlock: withAlternativeSizeForProjectionFailure(source),
         initiative: initiativeScore(10),
         ammunitionStocks: [],
         conditions: [],

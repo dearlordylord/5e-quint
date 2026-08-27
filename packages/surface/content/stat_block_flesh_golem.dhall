@@ -10,7 +10,7 @@ in  { challengeRating = 5
         , actions =
             [ T.executable
                 { procedureOrdinal = 1
-                , procedure = T.multiattack { name = "Multiattack", dispatches = [ { procedureOrdinal = 2, count = { kind = "literal", value = +2 } } ] }
+                , procedure = T.multiattack { name = "Multiattack", dispatches = { first = { procedureOrdinal = 2, count = { kind = "literal", value = +2 } }, rest = [] : List T.Dispatch } }
                 }
             , T.executable
                 { procedureOrdinal = 2
@@ -20,9 +20,7 @@ in  { challengeRating = 5
                     , attackBonus = +7
                     , reachFeet = 5
                     , onHit =
-                        [ T.damage { damageType = "bludgeoning", dice = 2, dieSize = 8, flat = Some +4, static = 13 }
-                        , T.damage { damageType = "lightning", dice = 1, dieSize = 8, flat = None Integer, static = 4 }
-                        ]
+                        { first = T.damage { damageType = "bludgeoning", dice = 2, dieSize = 8, flat = Some +4, static = 13 }, rest = [ T.damage { damageType = "lightning", dice = 1, dieSize = 8, flat = None Integer, static = 4 } ] }
                     }
                 }
             ]

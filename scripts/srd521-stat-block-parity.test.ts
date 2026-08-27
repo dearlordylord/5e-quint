@@ -120,7 +120,10 @@ describe("SRD Stat Block source parity operation", () => {
     expect(srdStatBlockSourceIdentityCount(report.discovery)).toBe(330);
     expect(
       report.issues.filter((issue) => issue.kind === "missing"),
-    ).toHaveLength(309);
+    ).toHaveLength(
+      report.discovery.identities.length -
+        srdStatBlockCollection.statBlocks.length,
+    );
     expect(
       report.issues.filter((issue) => issue.kind === "extra"),
     ).toHaveLength(0);
@@ -141,7 +144,7 @@ describe("SRD Stat Block source parity operation", () => {
     ).toHaveLength(0);
   });
 
-  test("rejects a pilot duplicate identity even when membership still reports 309 missing", () => {
+  test("rejects a pilot duplicate identity while preserving source-derived membership", () => {
     const bat = srdStatBlockCollection.statBlocks.find(
       (statBlock) => statBlock.name === "Bat",
     );
@@ -166,7 +169,10 @@ describe("SRD Stat Block source parity operation", () => {
     });
     expect(
       report.issues.filter((issue) => issue.kind === "missing"),
-    ).toHaveLength(309);
+    ).toHaveLength(
+      report.discovery.identities.length -
+        srdStatBlockCollection.statBlocks.length,
+    );
     expect(
       report.issues.filter((issue) => issue.kind === "cardinality"),
     ).toEqual([]);

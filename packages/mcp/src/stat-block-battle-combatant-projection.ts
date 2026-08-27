@@ -87,9 +87,10 @@ function statBlockProjectionFailureContent(
       reason,
       issues,
     })),
-    Match.when({ reason: "invalidLegendaryActionUses" }, ({ reason }) => ({
-      reason,
-    })),
+    Match.when(
+      { reason: "unsupportedLairConditionalLegendaryActionUses" },
+      ({ reason }) => ({ reason }),
+    ),
     Match.exhaustive,
   );
   return errorContent("Stat Block projection failed.", {

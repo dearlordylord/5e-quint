@@ -1,0 +1,56 @@
+let S = ./_stat_block_types.dhall
+
+in  { challengeRating = 5
+    , id = "stat_block_giant_shark"
+    , kind = "statBlock"
+    , name = "Giant Shark"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1205-1231" }
+    , statBlock =
+      { abilityScores =
+        { cha = 5, con = 21, dex = 11, int = 1, str = 23, wis = 10 }
+      , ac.value = { kind = "literal", value = 13 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Multiattack"
+            , description = "The shark makes two Bite attacks."
+            , reason = "unsupported_procedure_family"
+            }
+        , S.textOnly
+            { procedureOrdinal = 2
+            , name = "Bite"
+            , description =
+                "*Melee Attack Roll:* +9 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. *Hit:* 22 (3d10 + 6) Piercing damage."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 92 }
+      , initiative = { modifier = +3, score = 13 }
+      , passivePerception = 13
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +6 }
+        , { ability = "dex", modifier = +0 }
+        , { ability = "con", modifier = +5 }
+        , { ability = "int", modifier = -5 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , senses = [ { kind = "blindsight", rangeFeet = 60 } ]
+      , size = "huge"
+      , skillModifiers = [ { modifier = +3, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 5 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 60 }, kind = "swim" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Water Breathing"
+            , description = "The shark can breathe only underwater."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

@@ -17,9 +17,7 @@ in  { challengeRating = 9
                     , attackBonus = +11
                     , reachFeet = 10
                     , onHit =
-                        [ T.damage { damageType = "slashing", dice = 4, dieSize = 6, flat = Some +7, static = 21 }
-                        , T.damage { damageType = "fire", dice = 3, dieSize = 6, flat = None Integer, static = 10 }
-                        ]
+                        { first = T.damage { damageType = "slashing", dice = 4, dieSize = 6, flat = Some +7, static = 21 }, rest = [ T.damage { damageType = "fire", dice = 3, dieSize = 6, flat = None Integer, static = 10 } ] }
                     }
                 }
             , T.textOnly { procedureOrdinal = 3, name = "Hammer Throw", description = "Ranged Attack Roll: +11, range 60/240 ft. Hit: 23 (3d10 + 7) Bludgeoning damage plus 4 (1d8) Fire damage, and the target is pushed up to 15 feet straight away from the giant and has Disadvantage on the next attack roll it makes before the end of its next turn.", reason = "unsupported_action_shape" }

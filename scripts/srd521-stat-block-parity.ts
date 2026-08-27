@@ -5,8 +5,11 @@ import type { StatBlockRecord } from "../packages/surface/src/surface/types.ts";
 import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
 import type { SrdStatBlockPeerObservation } from "./surface-publication-peer-observations.ts";
 
+export const SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH =
+  ".references/srd-5.2.1/Animals.md" as const;
+
 export const SRD_STAT_BLOCK_SOURCE_PATHS = [
-  ".references/srd-5.2.1/Animals.md",
+  SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
   ".references/srd-5.2.1/Monsters/Monsters-A-B.md",
   ".references/srd-5.2.1/Monsters/Monsters-C-D.md",
   ".references/srd-5.2.1/Monsters/Monsters-E-G.md",

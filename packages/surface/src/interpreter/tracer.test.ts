@@ -368,7 +368,7 @@ describe("Surface trace interpreter", () => {
           },
         ],
         legendaryActions: {
-          uses: 2,
+          uses: { kind: "fixed", uses: 2 },
           entries: [
             {
               ...goblinWarriorInput.statBlock.actions[0],

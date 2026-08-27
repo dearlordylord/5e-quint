@@ -17,15 +17,13 @@ in  { challengeRating = 8
                     , attackBonus = +9
                     , reachFeet = 10
                     , onHit =
-                        [ T.damage { damageType = "slashing", dice = 2, dieSize = 12, flat = Some +6, static = 19 }
-                        , T.damage { damageType = "cold", dice = 2, dieSize = 8, flat = None Integer, static = 9 }
-                        ]
+                        { first = T.damage { damageType = "slashing", dice = 2, dieSize = 12, flat = Some +6, static = 19 }, rest = [ T.damage { damageType = "cold", dice = 2, dieSize = 8, flat = None Integer, static = 9 } ] }
                     }
                 }
             , T.textOnly { procedureOrdinal = 3, name = "Great Bow", description = "Ranged Attack Roll: +9, range 150/600 ft. Hit: 17 (2d10 + 6) Piercing damage plus 7 (2d6) Cold damage, and the target's Speed decreases by 10 feet until the end of its next turn.", reason = "unsupported_action_shape" }
             ]
         , bonusActions =
-            [ T.resourceTextOnly { procedureOrdinal = 1, name = "War Cry (Recharge 5–6)", description = "The giant or one creature of its choice that can see or hear it gains 16 (2d10 + 5) Temporary Hit Points and has Advantage on attack rolls until the start of the giant's next turn.", reason = "unsupported_action_shape", resourceOrdinals = [ 1 ] } ]
+            [ T.resourceTextOnly { procedureOrdinal = 1, name = "War Cry (Recharge 5–6)", description = "The giant or one creature of its choice that can see or hear it gains 16 (2d10 + 5) Temporary Hit Points and has Advantage on attack rolls until the start of the giant's next turn.", reason = "unsupported_action_shape", resourceOrdinals = { first = 1, rest = [] : List Natural } } ]
         , alignment = { order = "neutral", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Giant" ] } }
         , creatureType = "giant"

@@ -17,9 +17,7 @@ in  { challengeRating = 11
                     , attackBonus = +10
                     , reachFeet = 5
                     , onHit =
-                        [ T.damage { damageType = "slashing", dice = 2, dieSize = 6, flat = Some +6, static = 13 }
-                        , T.damage { damageType = "fire", dice = 2, dieSize = 12, flat = None Integer, static = 13 }
-                        ]
+                        { first = T.damage { damageType = "slashing", dice = 2, dieSize = 6, flat = Some +6, static = 13 }, rest = [ T.damage { damageType = "fire", dice = 2, dieSize = 12, flat = None Integer, static = 13 } ] }
                     }
                 }
             , T.executable
@@ -30,7 +28,7 @@ in  { challengeRating = 11
                     , attackBonus = +8
                     , rangeFeet = { normal = 120, long = 120 }
                     , ammunition = None Text
-                    , onHit = [ T.damage { damageType = "fire", dice = 7, dieSize = 6, flat = None Integer, static = 24 } ]
+                    , onHit = { first = T.damage { damageType = "fire", dice = 7, dieSize = 6, flat = None Integer, static = 24 }, rest = [] : List T.Effect }
                     }
                 }
             , T.resourceExecutable
@@ -42,20 +40,16 @@ in  { challengeRating = 11
                     , spellAttackBonus = None { kind : Text, value : Integer }
                     , components = T.noMaterialComponents
                     , groups =
-                      [ T.atWill
+                      { first = T.atWill
                           { spells =
-                      [ -- RAW: Monsters/Monsters-E-G.md:40-77 — At Will: Detect Magic.
-                        T.spellRef { spellId = "detect_magic", count = None Natural, castAtLevel = None Natural, restriction = None Text }
-                      , -- RAW: Monsters/Monsters-E-G.md:40-77 — At Will: Elementalism.
-                        T.spellRef { spellId = "elementalism", count = None Natural, castAtLevel = None Natural, restriction = None Text }
-                      ]
-                          }
-                      , T.limited
-                          { resourceOrdinals = [ 1 ]
+                      { first = -- RAW: Monsters/Monsters-E-G.md:40-77 — At Will: Detect Magic.
+                        T.spellRef { spellId = "detect_magic", count = None Natural, castAtLevel = None Natural, restriction = None Text }, rest = [ -- RAW: Monsters/Monsters-E-G.md:40-77 — At Will: Elementalism.
+                        T.spellRef { spellId = "elementalism", count = None Natural, castAtLevel = None Natural, restriction = None Text } ] }
+                          }, rest = [ T.limited
+                          { resourceOrdinals = { first = 1, rest = [] : List Natural }
                           , spells =
-                      [ -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Gaseous Form.
-                        T.spellRef { spellId = "gaseous_form", count = None Natural, castAtLevel = None Natural, restriction = None Text }
-                      , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Invisibility.
+                      { first = -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Gaseous Form.
+                        T.spellRef { spellId = "gaseous_form", count = None Natural, castAtLevel = None Natural, restriction = None Text }, rest = [ -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Invisibility.
                         T.spellRef { spellId = "invisibility", count = None Natural, castAtLevel = None Natural, restriction = None Text }
                       , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Major Image.
                         T.spellRef { spellId = "major_image", count = None Natural, castAtLevel = None Natural, restriction = None Text }
@@ -64,12 +58,10 @@ in  { challengeRating = 11
                       , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Tongues.
                         T.spellRef { spellId = "tongues", count = None Natural, castAtLevel = None Natural, restriction = None Text }
                       , -- RAW: Monsters/Monsters-E-G.md:40-77 — 1/Day Each: Wall of Fire (level 7 version).
-                        T.spellRef { spellId = "wall_of_fire", count = None Natural, castAtLevel = Some 7, restriction = None Text }
-                      ]
-                          }
-                      ]
+                        T.spellRef { spellId = "wall_of_fire", count = None Natural, castAtLevel = Some 7, restriction = None Text } ] }
+                          } ] }
                     }
-                , resourceOrdinals = [ 1 ]
+                , resourceOrdinals = { first = 1, rest = [] : List Natural }
                 }
             ]
         , traits =

@@ -17,9 +17,7 @@ in  { challengeRating = 12
                     , attackBonus = +8
                     , reachFeet = 5
                     , onHit =
-                        [ T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = Some +4, static = 13 }
-                        , T.damage { damageType = "necrotic", dice = 2, dieSize = 10, flat = None Integer, static = 11 }
-                        ]
+                        { first = T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = Some +4, static = 13 }, rest = [ T.damage { damageType = "necrotic", dice = 2, dieSize = 10, flat = None Integer, static = 11 } ] }
                     }
                 }
             , T.textOnly { procedureOrdinal = 3, name = "Entangling Rope (Requires Magic Rope)", description = "Strength Saving Throw: DC 16, one creature the erinyes can see within 120 feet. Failure: 14 (4d6) Force damage, and the target has the Restrained condition until the rope is destroyed, the erinyes uses a Bonus Action to release the target, or the erinyes uses Entangling Rope again.", reason = "unsupported_action_shape" }

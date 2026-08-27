@@ -1,0 +1,294 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_druid",
+  "kind": "statBlock",
+  "name": "Druid",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:894-925"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 11,
+      "con": 13,
+      "dex": 12,
+      "int": 12,
+      "str": 10,
+      "wis": 16
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "description": "The druid makes two attacks, using Vine Staff or Verdant Wisp in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "wis",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Vine Staff",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4
+                },
+                "kind": "fixed",
+                "static": 2
+              },
+              "damageType": "poison",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "wis",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Verdant Wisp",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 10
+              },
+              "damageType": "radiant",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 90,
+            "normal": 90
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "druidcraft"
+                },
+                {
+                  "spellId": "speak_with_animals"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "entangle"
+                },
+                {
+                  "spellId": "thunderwave"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "animal_messenger"
+                },
+                {
+                  "spellId": "longstrider"
+                },
+                {
+                  "spellId": "moonbeam"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 13,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Druidic",
+          "Sylvan"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "creatureTypeTags": [
+      "druid"
+    ],
+    "gear": [
+      {
+        "item": "Studded Leather Armor"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 44
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 15,
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 2
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "wis",
+        "modifier": 3
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "medicine"
+      },
+      {
+        "modifier": 3,
+        "skill": "nature"
+      },
+      {
+        "modifier": 5,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}
