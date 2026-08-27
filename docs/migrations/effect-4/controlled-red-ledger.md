@@ -479,7 +479,7 @@ added.
 
 ## Issue #378 attack and damage evidence snapshot
 
-Source HEAD: `d6a80d404a3e8161763f7ae923601f576d8d83cd`. This entry records the ordinary attack, damage,
+Source HEAD: `3ddfa3769618d0bae6e9b19abcd45cccc87251cc`. This entry records the ordinary attack, damage,
 hit-point, creature, object, and stat-block Effect 4 consumer migration plus
 the cross-combatant `startBattle` admission accumulation fix. The latest
 checkpoint also retains duplicate identity and presentation-source issues
@@ -493,7 +493,7 @@ The generated inventory is
 | `pnpm regenerate:effect4-controlled-red`                                                                                                                                        | pass under the required broad lock; 1,133 raw / 1,007 deduplicated diagnostics                                                                                                           |
 | Regenerated owner attribution                                                                                                                                                   | controlled red: `@dnd/app` 177, `@dnd/battle-runtime` 20, `@dnd/character-battle-runtime` 1, `@dnd/mcp` 935; all other owners 0                                                          |
 | `pnpm --filter @dnd/battle-runtime typecheck --pretty false`                                                                                                                    | controlled red; exit 1 with 20 parsed TypeScript diagnostics (27 output lines), all in untouched later-owner execution-profile or mirror-image/see-invisibility/moonbeam/ray MBT helpers |
-| Changed TypeScript path attribution against `4a062776e..ebc0b1d4c`                                                                                                              | 104 changed `.ts`/`.tsx` paths; zero package diagnostics on changed paths; app, character-battle, and MCP diagnostics are downstream closure, not changed #378 paths                     |
+| Changed TypeScript path attribution against `4a062776e..3ddfa3769`                                                                                                              | 104 changed `.ts`/`.tsx` paths; zero package diagnostics on changed paths; app, character-battle, and MCP diagnostics are downstream closure, not changed #378 paths                     |
 | Focused native runtime suite (API lifecycle, attack rolls/routes, damage/HP, creature admission/origin/state, ordinary object attack/tail, attack pipeline, opportunity/light)  | pass; 12 files, 105 tests                                                                                                                                                                |
 | `pnpm --filter @dnd/battle-runtime test:mbt:ordinary-object-attack`                                                                                                             | pass; 1/1                                                                                                                                                                                |
 | `pnpm --filter @dnd/battle-runtime test:mbt:weapon-attack-ordering`                                                                                                             | pass; 1/1                                                                                                                                                                                |
@@ -504,13 +504,14 @@ The generated inventory is
 | Focused relationship/continuation tests (`battle-runtime-damage-relationship-decisions`, replay continuation, interrupt lifecycle/continuation boundaries, attack rolls/damage) | pass; 4 files, 44 tests                                                                                                                                                                  |
 | `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-metamagic-resource.test.ts`                                                                               | pass; 1 file, 101 tests                                                                                                                                                                  |
 | `pnpm --filter @dnd/battle-runtime test:mbt:quickened-spell-governor`                                                                                                           | pass; 1 file, 10 tests                                                                                                                                                                   |
-| Focused admission/relationship suite (`api-lifecycle`, attack execution references, creature admission boundaries, stat-block admission, damage relationship decisions)         | pass; 5 files, 51 tests                                                                                                                                                                  |
+| Focused admission/relationship suite (`api-lifecycle`, attack execution references, creature admission boundaries, stat-block admission, damage relationship decisions)         | pass; 5 files, 52 tests                                                                                                                                                                  |
 | Focused Prettier and `git diff --check`                                                                                                                                         | pass                                                                                                                                                                                     |
 
-`startBattle` now accumulates independent roster admission leaves in stable
-input order while preserving one-leaf versus flat-aggregate output. The
-focused API lifecycle test proves two distinct combatants contribute both
-loadout failures. `collectSelectedAttackFills` and
+`startBattle` now accumulates independent roster admission and presentation
+leaves in stable stage/input order while preserving one-leaf versus
+flat-aggregate output. The focused API lifecycle tests prove duplicate IDs are
+retained alongside admission failures and that admission plus presentation
+issues are both retained. `collectSelectedAttackFills` and
 `DamageRelationshipDecisionsByHole.parse` remain intentional stage gates: each
 rejects the whole malformed replay set, exposes a single invalid-message
 contract, and cannot be made executable by processing later fills. Their
