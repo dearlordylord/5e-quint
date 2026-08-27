@@ -786,9 +786,7 @@
             "result",
             "envelope",
             "frontier",
-            "acts",
-            "[]",
-            "subject"
+            "acts"
           ]
         },
         {
@@ -798,9 +796,7 @@
             "result",
             "envelope",
             "frontier",
-            "acts",
-            "[]",
-            "initialHoles"
+            "holes"
           ]
         },
         {
@@ -841,11 +837,17 @@
         },
         {
           "toolName": "resolve_battle_act",
-          "pathSegments": ["operation", "result", "result", "holes"]
+          "pathSegments": ["operation", "result", "envelope", "frontier"]
         },
         {
           "toolName": "resolve_battle_act",
-          "pathSegments": ["operation", "result", "envelope", "frontier"]
+          "pathSegments": [
+            "operation",
+            "result",
+            "envelope",
+            "frontier",
+            "holes"
+          ]
         },
         {
           "toolName": "resolve_battle_act",

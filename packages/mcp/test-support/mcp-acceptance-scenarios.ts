@@ -1146,16 +1146,16 @@ export async function verifyCompleteNewcomerJourney(
       },
     ],
   });
-  assert.equal(get(setup, "battleState.tag"), "initialInitiativeSetup");
+  assert.equal(get(setup, "session.battleState.tag"), "initialInitiativeSetup");
   const battleId = parseString(
-    get(setup, "battleState.battleId"),
-    "battleState.battleId",
+    get(setup, "session.battleState.battleId"),
+    "session.battleState.battleId",
   );
 
   const active = await callTool(client, "battle_lifecycle", {
     operation: { kind: "finalizeInitialInitiativeSetup" },
   });
-  assert.equal(get(active, "battleState.tag"), "activeBattle");
+  assert.equal(get(active, "session.battleState.tag"), "activeBattle");
   const activeActorId = parseString(
     get(active, "envelope.checkpoint.currentActorId"),
     "envelope.checkpoint.currentActorId",
