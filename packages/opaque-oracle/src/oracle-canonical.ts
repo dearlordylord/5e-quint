@@ -6,7 +6,8 @@ export function compareCodePoints(left: string, right: string): number {
     index < Math.min(leftPoints.length, rightPoints.length);
     index += 1
   ) {
-    const difference = leftPoints[index]! - rightPoints[index]!;
+    const difference =
+      (leftPoints[index] ?? 0) - (rightPoints[index] ?? 0);
     if (difference !== 0) return difference;
   }
   return leftPoints.length - rightPoints.length;

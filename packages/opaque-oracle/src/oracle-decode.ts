@@ -1,4 +1,7 @@
 import { Either, ParseResult, Schema } from "effect";
+import * as AST from "effect/SchemaAST";
+
+import { compareCodePoints } from "./oracle-canonical.ts";
 
 export type OracleDecodeIssueCode =
   | "invalidJson"
@@ -34,9 +37,17 @@ export type OracleDecodeIssue = {
   readonly code: OracleDecodeIssueCode;
 };
 
+type DecodeOptions = {
+  readonly classifyRefinement?: (
+    actual: unknown,
+    path: string,
+  ) => OracleDecodeIssueCode | undefined;
+};
+
 export function decodeWithSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
   input: unknown,
+  options: DecodeOptions = {},
 ): Either.Either<A, readonly OracleDecodeIssue[]> {
   const decoded = Schema.decodeUnknownEither(schema, {
     errors: "all",
@@ -45,7 +56,7 @@ export function decodeWithSchema<A, I>(
   if (Either.isRight(decoded)) return Either.right(decoded.right);
 
   const issues: OracleDecodeIssue[] = [];
-  collectParseIssues(decoded.left.issue, "", issues);
+  collectParseIssues(decoded.left.issue, "", issues, options);
   return Either.left(
     sortIssues(
       uniqueIssues(
@@ -59,6 +70,7 @@ function collectParseIssues(
   issue: ParseResult.ParseIssue,
   path: string,
   output: OracleDecodeIssue[],
+  options: DecodeOptions,
 ): void {
   switch (issue._tag) {
     case "Pointer": {
@@ -68,14 +80,10 @@ function collectParseIssues(
         typeof issue.path === "symbol"
           ? [issue.path]
           : issue.path;
-      collectParseIssues(
-        issue.issue,
-        pointerPath.reduce<string>(
-          (currentPath, segment) => appendPath(currentPath, segment),
-          path,
-        ),
-        output,
-      );
+      collectParseIssues(issue.issue, pointerPath.reduce<string>(
+        (currentPath, segment) => appendPath(currentPath, segment),
+        path,
+      ), output, options);
       return;
     }
     case "Composite": {
@@ -83,7 +91,7 @@ function collectParseIssues(
         ? issue.issues
         : [issue.issues];
       for (const child of children) {
-        collectParseIssues(child, path, output);
+        collectParseIssues(child, path, output, options);
       }
       return;
     }
@@ -95,26 +103,24 @@ function collectParseIssues(
       return;
     case "Refinement":
       if (issue.issue._tag === "Composite" || issue.issue._tag === "Pointer") {
-        collectParseIssues(issue.issue, path, output);
+        collectParseIssues(issue.issue, path, output, options);
         return;
       }
+      const classified = options.classifyRefinement?.(issue.actual, path);
       output.push({
         path,
-        code: refinementCode(
-          ParseResult.TreeFormatter.formatIssueSync(issue),
-          issue.actual,
-        ),
+        code: classified ?? refinementCode(issue.actual),
       });
       return;
     case "Transformation":
-      collectParseIssues(issue.issue, path, output);
+      collectParseIssues(issue.issue, path, output, options);
       return;
     case "Type":
       output.push({
         path,
         code:
           typeof issue.actual === "string" &&
-          /\/(?:tag|kind|code|reasonCode)$/u.test(path)
+          literalStrings(issue.ast).length > 0
             ? "unknownVariant"
             : "wrongType",
       });
@@ -122,10 +128,7 @@ function collectParseIssues(
   }
 }
 
-function refinementCode(
-  rendered: string,
-  actual: unknown,
-): Exclude<
+function refinementCode(actual: unknown): Exclude<
   OracleDecodeIssueCode,
   | "invalidJson"
   | "wrongType"
@@ -135,24 +138,57 @@ function refinementCode(
   | "duplicateMember"
   | "invalidLifecycle"
 > {
-  const message = rendered.toLowerCase();
-  if (message.includes("duplicate")) return "duplicateCollectionMember";
+  if (containsDuplicateCollectionMember(actual)) {
+    return "duplicateCollectionMember";
+  }
   if (typeof actual === "string") {
     if (actual.length === 0) return "emptyValue";
     if (actual.trim() !== actual) return "nonCanonicalDomainValue";
   }
   if (Array.isArray(actual) && actual.length === 0) return "emptyCollection";
-  if (
-    message.includes("greater than") ||
-    message.includes("less than") ||
-    message.includes("range")
-  ) {
+  if (typeof actual === "number" &&
+      (!Number.isFinite(actual) || !Number.isInteger(actual) || actual < 0)) {
     return "outOfRange";
   }
-  if (message.includes("empty") || message.includes("nonempty")) {
-    return Array.isArray(actual) ? "emptyCollection" : "emptyValue";
-  }
   return "nonCanonicalDomainValue";
+}
+
+function literalStrings(ast: AST.AST): readonly string[] {
+  switch (ast._tag) {
+    case "Literal":
+      return typeof ast.literal === "string" ? [ast.literal] : [];
+    case "Union":
+      return ast.types.flatMap(literalStrings);
+    case "Refinement":
+      return literalStrings(ast.from);
+    case "Transformation":
+      return literalStrings(ast.from);
+    default:
+      return [];
+  }
+}
+
+function containsDuplicateCollectionMember(
+  value: unknown,
+  visited = new Set<object>(),
+): boolean {
+  if (Array.isArray(value)) {
+    const keys = new Set<string>();
+    for (const member of value) {
+      const key = JSON.stringify(member) ?? String(member);
+      if (keys.has(key) || containsDuplicateCollectionMember(member, visited)) {
+        return true;
+      }
+      keys.add(key);
+    }
+    return false;
+  }
+  if (typeof value !== "object" || value === null) return false;
+  if (visited.has(value)) return false;
+  visited.add(value);
+  return Object.values(value).some((member) =>
+    containsDuplicateCollectionMember(member, visited),
+  );
 }
 
 function uniqueIssues(
@@ -176,20 +212,6 @@ function sortIssues(
         ORACLE_DECODE_ISSUE_CODES.indexOf(right.code)
       : compareCodePoints(left.path, right.path),
   );
-}
-
-function compareCodePoints(left: string, right: string): number {
-  const leftPoints = [...left].map((value) => value.codePointAt(0) ?? 0);
-  const rightPoints = [...right].map((value) => value.codePointAt(0) ?? 0);
-  for (
-    let index = 0;
-    index < Math.min(leftPoints.length, rightPoints.length);
-    index += 1
-  ) {
-    const difference = leftPoints[index]! - rightPoints[index]!;
-    if (difference !== 0) return difference;
-  }
-  return leftPoints.length - rightPoints.length;
 }
 
 function appendPath(path: string, segment: PropertyKey): string {
@@ -219,7 +241,7 @@ export function parseJsonWithDuplicateDetection(
     );
   }
   try {
-    return Either.right(JSON.parse(text) as unknown);
+    return Either.right(JSON.parse(text));
   } catch {
     return Either.left([{ path: "", code: "invalidJson" }]);
   }
@@ -309,7 +331,7 @@ function scanJsonString(text: string, start: number): ParsedJson | undefined {
     else if (text[cursor] === '"') {
       const raw = text.slice(start, cursor + 1);
       try {
-        return { value: JSON.parse(raw) as unknown, end: cursor + 1 };
+        return { value: JSON.parse(raw), end: cursor + 1 };
       } catch {
         return undefined;
       }

@@ -520,6 +520,12 @@ importers:
 
   packages/opaque-oracle:
     dependencies:
+      '@dnd/battle-runtime':
+        specifier: workspace:*
+        version: link:../battle-runtime
+      '@dnd/character-battle-runtime':
+        specifier: workspace:*
+        version: link:../character-battle-runtime
       '@dnd/character-creation-runtime':
         specifier: workspace:*
         version: link:../character-creation-runtime
