@@ -60,7 +60,7 @@ Discovers what acts a subject can take. Anchor:
 ### Cluster F — `turn` (7337..8243, 33 funcs, 907 LOC)
 
 - 7337 **E** `endTurn` (17)
-- 7354 **E** `snapshotBattle` (31) + `battleTurnSnapshot`, `pendingInterruptSnapshot`
+- 7354 **E** `snapshotBattle` (31) + `battleTurnSnapshot`, `interruptDecisionFrontier`
 - reaction-window orchestration: `currentInterruptFrame`, `currentInterruptCheckpoint`, `interruptDecisionHole`, `interruptTriggerLabel`, `unofferedEligibleResponders`, `maybeOpenInterruptWindow` (61), `readiedSpellReactionChoices`, `readiedMovementReactionChoices`, `triggeredReactionSpellChoices` (56), `triggeredReactionSpellTurnResourceAvailable`, `currentActorHasPendingSlottedSpellCast`, `shieldReactionSpellMatchesTrigger`, `interruptChoices`, `reactionRollOrDamageReductionChoices`, `reactionRollOrDamageReductionChoiceForProfile` (145)
 - visibility/hole sundries (`combatantCanSee`, `reactionModifierRollHole`, `attackDamageReductionZeroDamageRedirectHoles` (61), `attackDamageReductionZeroDamageRedirectTargetChoices`, `attackDamageReductionRedirectResourceAvailable`, `spendAttackDamageReductionRedirectResource`, `attackDamageReductionRedirectResource`, `hasAttackDamageReductionRedirectTargetSpatialFact`, `characterAbilityModifier`, `abilityProficiencyDifficultyClass`, `attackDamageReductionOriginalDamageType`, `reactionModifierResourceAvailable`, `reactionModifierResourceSpend`, `opportunityAttackReactionChoices`)
 

@@ -3,7 +3,7 @@ import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
   currentInterruptCheckpoint,
-  pendingInterruptSnapshot,
+  interruptDecisionFrontier,
 } from "./battle-reducer/battle-snapshot.ts";
 import {
   BattleSnapshotSchema,
@@ -116,8 +116,11 @@ describe("BattleSnapshot durable checkpoint", () => {
       kind: "durableInterruptCheckpoint",
     });
 
-    const frontier = pendingInterruptSnapshot(awaitingReaction.state);
-    expect(frontier).toMatchObject({ trigger: "attackHit" });
+    const frontier = interruptDecisionFrontier(awaitingReaction.state);
+    expect(frontier).toMatchObject({
+      kind: "interruptDecision",
+      trigger: "attackHit",
+    });
     expect(currentInterruptCheckpoint(awaitingReaction.state)).toMatchObject({
       trigger: "attackHit",
     });
@@ -165,9 +168,7 @@ describe("BattleSnapshot durable checkpoint", () => {
     expect(currentInterruptCheckpoint(released.state)).toMatchObject({
       trigger: "attackHit",
     });
-    expect(pendingInterruptSnapshot(released.state)).toMatchObject({
-      trigger: "attackHit",
-    });
+    expect(interruptDecisionFrontier(released.state)).toBeNull();
   });
 
   test("rejects legacy frontier and allocator fields at the codec boundary", () => {

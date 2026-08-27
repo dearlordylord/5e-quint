@@ -26,7 +26,7 @@ import type {
   BattleInterruptFrame,
   BattleInterruptDecisionHole,
   BattleInterruptCheckpoint,
-  BattlePendingInterruptSnapshot,
+  BattleInterruptDecisionFrontier,
   BattleSnapshot,
   BattleState,
   BattleTurnSnapshot,
@@ -189,13 +189,14 @@ function requirePresentFamiliarCombatantStatBlockId(
   return combatant.origin.statBlockId;
 }
 
-export function pendingInterruptSnapshot(
+export function interruptDecisionFrontier(
   state: BattleState,
-): BattlePendingInterruptSnapshot | null {
+): BattleInterruptDecisionFrontier | null {
   const frame = currentInterruptCheckpoint(state);
-  return frame === null
+  return frame === null || frame.activeInterrupt !== undefined
     ? null
     : {
+        kind: "interruptDecision",
         trigger: frame.trigger,
         decisionHole: interruptDecisionHole(frame),
         choices: frame.choices,
