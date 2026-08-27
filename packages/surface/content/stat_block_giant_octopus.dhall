@@ -57,7 +57,7 @@ in  { challengeRating = 1
             , description =
                 "*Trigger:* The octopus takes damage while underwater. *Response:* The octopus releases ink that fills a 10-foot Cube centered on itself, and the octopus moves up to its Swim Speed. The Cube is Heavily Obscured for 1 minute or until a strong current or similar effect disperses the ink."
             , reason = "unsupported_procedure_family"
-            , resourceOrdinals = [ 1 ]
+            , resourceOrdinals = { first = 1, rest = [] : List Natural }
             }
         ]
       , resources =

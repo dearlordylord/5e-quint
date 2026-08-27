@@ -19,15 +19,18 @@ in  { challengeRating = 0
                   , attackBonus = +2
                   , reachFeet = 5
                   , onHit =
-                    [ S.staticDamage { damageType = "piercing", static = 1 }
-                    , S.damage
-                        { damageType = "poison"
-                        , dice = 1
-                        , dieSize = 6
-                        , flat = None Integer
-                        , static = 3
-                        }
-                    ]
+                    { first =
+                        S.staticDamage { damageType = "piercing", static = 1 }
+                    , rest =
+                      [ S.damage
+                          { damageType = "poison"
+                          , dice = 1
+                          , dieSize = 6
+                          , flat = None Integer
+                          , static = 3
+                          }
+                      ]
+                    }
                   }
             }
         ]

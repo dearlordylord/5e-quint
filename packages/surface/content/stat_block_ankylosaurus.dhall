@@ -16,10 +16,12 @@ in  { challengeRating = 3
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +2 }
+                    { first =
+                      { count = { kind = "literal", value = +2 }
                       , procedureOrdinal = 2
                       }
-                    ]
+                    , rest = [] : List S.Dispatch
+                    }
                   }
             }
         , S.executable
@@ -31,16 +33,19 @@ in  { challengeRating = 3
                   , attackBonus = +6
                   , reachFeet = 10
                   , onHit =
-                    [ S.damage
-                        { damageType = "bludgeoning"
-                        , dice = 1
-                        , dieSize = 10
-                        , flat = Some +4
-                        , static = 9
-                        }
-                    , S.conditionIfSize
-                        { condition = "prone", maxCreatureSize = "huge" }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "bludgeoning"
+                          , dice = 1
+                          , dieSize = 10
+                          , flat = Some +4
+                          , static = 9
+                          }
+                    , rest =
+                      [ S.conditionIfSize
+                          { condition = "prone", maxCreatureSize = "huge" }
+                      ]
+                    }
                   }
             }
         ]

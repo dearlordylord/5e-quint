@@ -16,10 +16,12 @@ in  { challengeRating = 7
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +2 }
+                    { first =
+                      { count = { kind = "literal", value = +2 }
                       , procedureOrdinal = 2
                       }
-                    ]
+                    , rest = [] : List S.Dispatch
+                    }
                   }
             }
         , S.executable
@@ -31,14 +33,16 @@ in  { challengeRating = 7
                   , attackBonus = +9
                   , reachFeet = 10
                   , onHit =
-                    [ S.damage
-                        { damageType = "bludgeoning"
-                        , dice = 3
-                        , dieSize = 10
-                        , flat = Some +6
-                        , static = 22
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "bludgeoning"
+                          , dice = 3
+                          , dieSize = 10
+                          , flat = Some +6
+                          , static = 22
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         , S.resourceTextOnly
@@ -47,7 +51,7 @@ in  { challengeRating = 7
             , description =
                 "The ape hurls a boulder at a point it can see within 90 feet. *Dexterity Saving Throw:* DC 17, each creature in a 5-foot-radius Sphere centered on that point. *Failure:* 24 (7d6) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition. *Success:* Half damage only."
             , reason = "unsupported_procedure_family"
-            , resourceOrdinals = [ 1 ]
+            , resourceOrdinals = { first = 1, rest = [] : List Natural }
             }
         ]
       , alignment = "unaligned"

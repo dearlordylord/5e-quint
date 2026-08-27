@@ -16,10 +16,12 @@ in  { challengeRating = 0.5
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +2 }
+                    { first =
+                      { count = { kind = "literal", value = +2 }
                       , procedureOrdinal = 2
                       }
-                    ]
+                    , rest = [] : List S.Dispatch
+                    }
                   }
             }
         , S.executable
@@ -31,14 +33,16 @@ in  { challengeRating = 0.5
                   , attackBonus = +4
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 1
-                        , dieSize = 6
-                        , flat = Some +2
-                        , static = 5
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 1
+                          , dieSize = 6
+                          , flat = Some +2
+                          , static = 5
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]

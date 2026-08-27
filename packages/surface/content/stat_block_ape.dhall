@@ -16,10 +16,12 @@ in  { challengeRating = 0.5
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +2 }
+                    { first =
+                      { count = { kind = "literal", value = +2 }
                       , procedureOrdinal = 2
                       }
-                    ]
+                    , rest = [] : List S.Dispatch
+                    }
                   }
             }
         , S.executable
@@ -31,14 +33,16 @@ in  { challengeRating = 0.5
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "bludgeoning"
-                        , dice = 1
-                        , dieSize = 4
-                        , flat = Some +3
-                        , static = 5
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "bludgeoning"
+                          , dice = 1
+                          , dieSize = 4
+                          , flat = Some +3
+                          , static = 5
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         , S.resourceExecutable
@@ -51,16 +55,18 @@ in  { challengeRating = 0.5
                   , rangeFeet = { normal = 25, long = 50 }
                   , ammunition = None Text
                   , onHit =
-                    [ S.damage
-                        { damageType = "bludgeoning"
-                        , dice = 2
-                        , dieSize = 6
-                        , flat = Some +3
-                        , static = 10
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "bludgeoning"
+                          , dice = 2
+                          , dieSize = 6
+                          , flat = Some +3
+                          , static = 10
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
-            , resourceOrdinals = [ 1 ]
+            , resourceOrdinals = { first = 1, rest = [] : List Natural }
             }
         ]
       , alignment = "unaligned"

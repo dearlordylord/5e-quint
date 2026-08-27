@@ -19,14 +19,16 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "piercing"
-                        , dice = 2
-                        , dieSize = 6
-                        , flat = Some +3
-                        , static = 10
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "piercing"
+                          , dice = 2
+                          , dieSize = 6
+                          , flat = Some +3
+                          , static = 10
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]
@@ -55,7 +57,7 @@ in  { challengeRating = 1
             , description =
                 "Immediately after dealing damage to a creature that was already Bloodied, the hyena can move up to half its Speed, and it makes one Bite attack."
             , reason = "unsupported_procedure_family"
-            , resourceOrdinals = [ 1 ]
+            , resourceOrdinals = { first = 1, rest = [] : List Natural }
             }
         ]
       , resources =

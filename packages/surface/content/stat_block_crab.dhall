@@ -19,8 +19,11 @@ in  { challengeRating = 0
                   , attackBonus = +2
                   , reachFeet = 5
                   , onHit =
-                    [ S.staticDamage { damageType = "bludgeoning", static = 1 }
-                    ]
+                    { first =
+                        S.staticDamage
+                          { damageType = "bludgeoning", static = 1 }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]

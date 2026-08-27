@@ -94,13 +94,18 @@
       "order": "neutral"
     },
     "communication": {
-      "kind": "understood_but_cannot_speak",
+      "additionallyUnderstoodButCannotSpeak": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Primordial (Auran)"
+        ]
+      },
+      "kind": "spoken_and_understood",
       "languages": {
         "kind": "named",
         "languages": [
-          "Celestial",
-          "Common",
-          "Primordial (Auran)"
+          "Celestial"
         ]
       }
     },

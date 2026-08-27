@@ -19,14 +19,16 @@ in  { challengeRating = 0.125
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "piercing"
-                        , dice = 1
-                        , dieSize = 4
-                        , flat = Some +3
-                        , static = 5
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "piercing"
+                          , dice = 1
+                          , dieSize = 4
+                          , flat = Some +3
+                          , static = 5
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]

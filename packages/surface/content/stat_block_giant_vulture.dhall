@@ -19,28 +19,28 @@ in  { challengeRating = 1
                   , attackBonus = +4
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "piercing"
-                        , dice = 2
-                        , dieSize = 6
-                        , flat = Some +2
-                        , static = 9
-                        }
-                    , S.applyCondition
-                        { condition = "poisoned"
-                        , duration = "end_of_next_turn"
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "piercing"
+                          , dice = 2
+                          , dieSize = 6
+                          , flat = Some +2
+                          , static = 9
+                          }
+                    , rest =
+                      [ S.applyCondition
+                          { condition = "poisoned"
+                          , duration = "end_of_next_turn"
+                          }
+                      ]
+                    }
                   }
             }
         ]
       , alignment = { morality = "evil", order = "neutral" }
       , communication =
         { kind = "understood_but_cannot_speak"
-        , languages =
-          { kind = "named"
-          , languages = [ "Understands Common but can't speak", "Common" ]
-          }
+        , languages = { kind = "named", languages = [ "Common" ] }
         }
       , creatureType = "monstrosity"
       , hp = { kind = "literal", value = 25 }

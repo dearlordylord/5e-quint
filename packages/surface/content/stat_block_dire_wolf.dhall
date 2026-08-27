@@ -19,16 +19,19 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "piercing"
-                        , dice = 1
-                        , dieSize = 10
-                        , flat = Some +3
-                        , static = 8
-                        }
-                    , S.conditionIfSize
-                        { condition = "prone", maxCreatureSize = "large" }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "piercing"
+                          , dice = 1
+                          , dieSize = 10
+                          , flat = Some +3
+                          , static = 8
+                          }
+                    , rest =
+                      [ S.conditionIfSize
+                          { condition = "prone", maxCreatureSize = "large" }
+                      ]
+                    }
                   }
             }
         ]

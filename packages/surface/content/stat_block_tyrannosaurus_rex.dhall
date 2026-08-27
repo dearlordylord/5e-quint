@@ -33,16 +33,19 @@ in  { challengeRating = 8
                   , attackBonus = +10
                   , reachFeet = 15
                   , onHit =
-                    [ S.damage
-                        { damageType = "bludgeoning"
-                        , dice = 4
-                        , dieSize = 8
-                        , flat = Some +7
-                        , static = 25
-                        }
-                    , S.conditionIfSize
-                        { condition = "prone", maxCreatureSize = "huge" }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "bludgeoning"
+                          , dice = 4
+                          , dieSize = 8
+                          , flat = Some +7
+                          , static = 25
+                          }
+                    , rest =
+                      [ S.conditionIfSize
+                          { condition = "prone", maxCreatureSize = "huge" }
+                      ]
+                    }
                   }
             }
         ]

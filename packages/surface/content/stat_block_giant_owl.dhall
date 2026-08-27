@@ -19,14 +19,16 @@ in  { challengeRating = 0.25
                   , attackBonus = +4
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 1
-                        , dieSize = 10
-                        , flat = Some +2
-                        , static = 7
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 1
+                          , dieSize = 10
+                          , flat = Some +2
+                          , static = 7
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         , S.resourceTextOnly
@@ -39,16 +41,15 @@ in  { challengeRating = 0.25
                 At Will: *Detect Evil and Good*, *Detect Magic*
                 1/Day: *Clairvoyance*''
             , reason = "unsupported_procedure_family"
-            , resourceOrdinals = [ 1 ]
+            , resourceOrdinals = { first = 1, rest = [] : List Natural }
             }
         ]
       , alignment = { morality = "neutral", order = "neutral" }
       , communication =
-        { kind = "understood_but_cannot_speak"
-        , languages =
-          { kind = "named"
-          , languages = [ "Celestial", "Common", "Elvish", "Sylvan" ]
-          }
+        { kind = "spoken_and_understood"
+        , languages = { kind = "named", languages = [ "Celestial" ] }
+        , additionallyUnderstoodButCannotSpeak = Some
+          { kind = "named", languages = [ "Common", "Elvish", "Sylvan" ] }
         }
       , creatureType = "celestial"
       , hp = { kind = "literal", value = 19 }

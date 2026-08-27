@@ -16,10 +16,12 @@ in  { challengeRating = 1
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +2 }
+                    { first =
+                      { count = { kind = "literal", value = +2 }
                       , procedureOrdinal = 2
                       }
-                    ]
+                    , rest = [] : List S.Dispatch
+                    }
                   }
             }
         , S.executable
@@ -31,31 +33,33 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 1
-                        , dieSize = 4
-                        , flat = Some +3
-                        , static = 5
-                        }
-                    , S.damage
-                        { damageType = "radiant"
-                        , dice = 1
-                        , dieSize = 6
-                        , flat = None Integer
-                        , static = 3
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 1
+                          , dieSize = 4
+                          , flat = Some +3
+                          , static = 5
+                          }
+                    , rest =
+                      [ S.damage
+                          { damageType = "radiant"
+                          , dice = 1
+                          , dieSize = 6
+                          , flat = None Integer
+                          , static = 3
+                          }
+                      ]
+                    }
                   }
             }
         ]
       , alignment = { morality = "good", order = "neutral" }
       , communication =
-        { kind = "understood_but_cannot_speak"
-        , languages =
-          { kind = "named"
-          , languages = [ "Celestial", "Common", "Primordial (Auran)" ]
-          }
+        { kind = "spoken_and_understood"
+        , languages = { kind = "named", languages = [ "Celestial" ] }
+        , additionallyUnderstoodButCannotSpeak = Some
+          { kind = "named", languages = [ "Common", "Primordial (Auran)" ] }
         }
       , creatureType = "celestial"
       , hp = { kind = "literal", value = 26 }

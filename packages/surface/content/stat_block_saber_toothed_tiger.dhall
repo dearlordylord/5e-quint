@@ -16,10 +16,12 @@ in  { challengeRating = 2
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +2 }
+                    { first =
+                      { count = { kind = "literal", value = +2 }
                       , procedureOrdinal = 2
                       }
-                    ]
+                    , rest = [] : List S.Dispatch
+                    }
                   }
             }
         , S.executable
@@ -31,14 +33,16 @@ in  { challengeRating = 2
                   , attackBonus = +6
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 2
-                        , dieSize = 6
-                        , flat = Some +4
-                        , static = 11
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 2
+                          , dieSize = 6
+                          , flat = Some +4
+                          , static = 11
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]
@@ -76,7 +80,9 @@ in  { challengeRating = 2
             { procedureOrdinal = 1
             , procedure =
                 S.actionOption
-                  { name = "Nimble Escape", options = [ "disengage", "hide" ] }
+                  { name = "Nimble Escape"
+                  , options = { first = "disengage", rest = [ "hide" ] }
+                  }
             }
         ]
       }

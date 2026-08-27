@@ -34620,11 +34620,16 @@
               },
               "passivePerception": 16,
               "communication": {
-                "kind": "understood_but_cannot_speak",
+                "kind": "spoken_and_understood",
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Celestial",
+                    "Celestial"
+                  ]
+                },
+                "additionallyUnderstoodButCannotSpeak": {
+                  "kind": "named",
+                  "languages": [
                     "Common",
                     "Primordial (Auran)"
                   ]
@@ -34794,11 +34799,16 @@
               ],
               "passivePerception": 14,
               "communication": {
-                "kind": "understood_but_cannot_speak",
+                "kind": "spoken_and_understood",
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Celestial",
+                    "Celestial"
+                  ]
+                },
+                "additionallyUnderstoodButCannotSpeak": {
+                  "kind": "named",
+                  "languages": [
                     "Common",
                     "Elvish",
                     "Sylvan"
@@ -35720,11 +35730,16 @@
               ],
               "passivePerception": 16,
               "communication": {
-                "kind": "understood_but_cannot_speak",
+                "kind": "spoken_and_understood",
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Celestial",
+                    "Celestial"
+                  ]
+                },
+                "additionallyUnderstoodButCannotSpeak": {
+                  "kind": "named",
+                  "languages": [
                     "Common",
                     "Elvish",
                     "Sylvan"
@@ -36875,7 +36890,6 @@
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Understands Common but can't speak",
                     "Common"
                   ]
                 }
@@ -65350,11 +65364,16 @@
               },
               "passivePerception": 16,
               "communication": {
-                "kind": "understood_but_cannot_speak",
+                "kind": "spoken_and_understood",
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Celestial",
+                    "Celestial"
+                  ]
+                },
+                "additionallyUnderstoodButCannotSpeak": {
+                  "kind": "named",
+                  "languages": [
                     "Common",
                     "Primordial (Auran)"
                   ]
@@ -65524,11 +65543,16 @@
               ],
               "passivePerception": 14,
               "communication": {
-                "kind": "understood_but_cannot_speak",
+                "kind": "spoken_and_understood",
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Celestial",
+                    "Celestial"
+                  ]
+                },
+                "additionallyUnderstoodButCannotSpeak": {
+                  "kind": "named",
+                  "languages": [
                     "Common",
                     "Elvish",
                     "Sylvan"
@@ -66450,11 +66474,16 @@
               ],
               "passivePerception": 16,
               "communication": {
-                "kind": "understood_but_cannot_speak",
+                "kind": "spoken_and_understood",
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Celestial",
+                    "Celestial"
+                  ]
+                },
+                "additionallyUnderstoodButCannotSpeak": {
+                  "kind": "named",
+                  "languages": [
                     "Common",
                     "Elvish",
                     "Sylvan"
@@ -67605,7 +67634,6 @@
                 "languages": {
                   "kind": "named",
                   "languages": [
-                    "Understands Common but can't speak",
                     "Common"
                   ]
                 }

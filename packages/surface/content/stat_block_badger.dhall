@@ -19,7 +19,10 @@ in  { challengeRating = 0
                   , attackBonus = +2
                   , reachFeet = 5
                   , onHit =
-                    [ S.staticDamage { damageType = "piercing", static = 1 } ]
+                    { first =
+                        S.staticDamage { damageType = "piercing", static = 1 }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]

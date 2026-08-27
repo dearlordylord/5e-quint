@@ -16,10 +16,12 @@ in  { challengeRating = 4
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +2 }
+                    { first =
+                      { count = { kind = "literal", value = +2 }
                       , procedureOrdinal = 2
                       }
-                    ]
+                    , rest = [] : List S.Dispatch
+                    }
                   }
             }
         , S.executable
@@ -31,14 +33,16 @@ in  { challengeRating = 4
                   , attackBonus = +7
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "piercing"
-                        , dice = 2
-                        , dieSize = 10
-                        , flat = Some +5
-                        , static = 16
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "piercing"
+                          , dice = 2
+                          , dieSize = 10
+                          , flat = Some +5
+                          , static = 16
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]

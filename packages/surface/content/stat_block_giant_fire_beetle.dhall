@@ -19,7 +19,9 @@ in  { challengeRating = 0
                   , attackBonus = +1
                   , reachFeet = 5
                   , onHit =
-                    [ S.staticDamage { damageType = "fire", static = 1 } ]
+                    { first = S.staticDamage { damageType = "fire", static = 1 }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]

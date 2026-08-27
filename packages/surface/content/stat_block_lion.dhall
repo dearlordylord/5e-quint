@@ -26,14 +26,16 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 1
-                        , dieSize = 8
-                        , flat = Some +3
-                        , static = 7
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 1
+                          , dieSize = 8
+                          , flat = Some +3
+                          , static = 7
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         , S.textOnly

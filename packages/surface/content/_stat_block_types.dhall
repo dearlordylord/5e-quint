@@ -13,6 +13,13 @@ let Effect : Type = T.Effect
 let defaultAmount : Amount = T.defaultDiceAmount
 let defaultEffect : Effect = T.defaultEffect
 
+let NonEmpty = λ(element : Type) -> { first : element, rest : List element }
+
+let nonEmptyToList =
+      λ(element : Type) ->
+      λ(input : NonEmpty element) ->
+        [ input.first ] # input.rest
+
 let DamageInput : Type =
       { damageType : Text
       , dice : Natural
@@ -115,9 +122,9 @@ let ResourceRefs : Type =
 let noneRefs : ResourceRefs =
       { kind = "none", ordinals = None (List Natural) }
 
-let someRefs : List Natural -> ResourceRefs =
-      λ(ordinals : List Natural) ->
-        { kind = "some", ordinals = Some ordinals }
+let someRefs : NonEmpty Natural -> ResourceRefs =
+      λ(ordinals : NonEmpty Natural) ->
+        { kind = "some", ordinals = Some (nonEmptyToList Natural ordinals) }
 
 let ResourceLimit : Type =
       { kind : Text
@@ -169,18 +176,21 @@ let Group : Type =
       , spells : List SpellRef
       }
 
-let atWill : { spells : List SpellRef } -> Group =
-      λ(input : { spells : List SpellRef }) ->
-        { kind = "at_will", resourceRefs = noneRefs, spells = input.spells }
+let atWill : { spells : NonEmpty SpellRef } -> Group =
+      λ(input : { spells : NonEmpty SpellRef }) ->
+        { kind = "at_will"
+        , resourceRefs = noneRefs
+        , spells = nonEmptyToList SpellRef input.spells
+        }
 
 let LimitedSpells : Type =
-      { resourceOrdinals : List Natural, spells : List SpellRef }
+      { resourceOrdinals : NonEmpty Natural, spells : NonEmpty SpellRef }
 
 let limited : LimitedSpells -> Group =
       λ(input : LimitedSpells) ->
         { kind = "limited"
         , resourceRefs = someRefs input.resourceOrdinals
-        , spells = input.spells
+        , spells = nonEmptyToList SpellRef input.spells
         }
 
 let Components : Type = { v : Bool, s : Bool, m : Bool }
@@ -244,7 +254,7 @@ let MeleeAttack : Type =
       , attackAbility : Text
       , attackBonus : Integer
       , reachFeet : Natural
-      , onHit : List Effect
+      , onHit : NonEmpty Effect
       }
 
 let meleeAttack : MeleeAttack -> Procedure =
@@ -255,7 +265,7 @@ let meleeAttack : MeleeAttack -> Procedure =
             , attackType = Some "melee"
             , kind = "attack_roll"
             , name = input.name
-            , onHit = Some input.onHit
+            , onHit = Some (nonEmptyToList Effect input.onHit)
             , reachFeet = Some input.reachFeet
             }
 
@@ -265,7 +275,7 @@ let RangedAttack : Type =
       , attackBonus : Integer
       , rangeFeet : Range
       , ammunition : Optional Text
-      , onHit : List Effect
+      , onHit : NonEmpty Effect
       }
 
 let rangedAttack : RangedAttack -> Procedure =
@@ -277,7 +287,7 @@ let rangedAttack : RangedAttack -> Procedure =
             , attackType = Some "ranged"
             , kind = "attack_roll"
             , name = input.name
-            , onHit = Some input.onHit
+            , onHit = Some (nonEmptyToList Effect input.onHit)
             , rangeFeet = Some input.rangeFeet
             }
 
@@ -302,24 +312,24 @@ let saveArea : SaveArea -> Procedure =
             , onSuccess = Some input.onSuccess
             }
 
-let Multiattack : Type = { name : Text, dispatches : List Dispatch }
+let Multiattack : Type = { name : Text, dispatches : NonEmpty Dispatch }
 
 let multiattack : Multiattack -> Procedure =
       λ(input : Multiattack) ->
         defaultProcedure
-        //  { dispatches = Some input.dispatches
+        //  { dispatches = Some (nonEmptyToList Dispatch input.dispatches)
             , kind = "multiattack"
             , name = input.name
             }
 
-let ActionOption : Type = { name : Text, options : List Text }
+let ActionOption : Type = { name : Text, options : NonEmpty Text }
 
 let actionOption : ActionOption -> Procedure =
       λ(input : ActionOption) ->
         defaultProcedure
         //  { kind = "action_option"
             , name = input.name
-            , options = Some input.options
+            , options = Some (nonEmptyToList Text input.options)
             }
 
 let Spellcasting : Type =
@@ -328,7 +338,7 @@ let Spellcasting : Type =
       , spellSaveDc : Optional { kind : Text, dc : Natural }
       , spellAttackBonus : Optional { kind : Text, value : Integer }
       , components : Optional Components
-      , groups : List Group
+      , groups : NonEmpty Group
       }
 
 let spellcasting : Spellcasting -> Procedure =
@@ -336,7 +346,7 @@ let spellcasting : Spellcasting -> Procedure =
         defaultProcedure
         //  { ability = Some input.ability
             , components = input.components
-            , groups = Some input.groups
+            , groups = Some (nonEmptyToList Group input.groups)
             , kind = "spellcasting"
             , name = input.name
             , spellAttackBonus = input.spellAttackBonus
@@ -370,7 +380,7 @@ let executable : Executable -> Entry =
 let ResourceExecutable : Type =
       { procedureOrdinal : Natural
       , procedure : Procedure
-      , resourceOrdinals : List Natural
+      , resourceOrdinals : NonEmpty Natural
       }
 
 let resourceExecutable : ResourceExecutable -> Entry =
@@ -407,7 +417,7 @@ let ResourceTextOnly : Type =
       , name : Text
       , description : Text
       , reason : Text
-      , resourceOrdinals : List Natural
+      , resourceOrdinals : NonEmpty Natural
       }
 
 let resourceTextOnly : ResourceTextOnly -> Entry =
@@ -442,7 +452,9 @@ let trait : TraitInput -> Trait =
               input.effectKind
         }
 
-in  { advantageDamage
+in  { Effect
+    , Dispatch
+    , advantageDamage
     , actionOption
     , meleeAttack
     , rangedAttack

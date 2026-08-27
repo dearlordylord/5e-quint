@@ -19,21 +19,24 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "piercing"
-                        , dice = 1
-                        , dieSize = 8
-                        , flat = Some +3
-                        , static = 7
-                        }
-                    , S.damage
-                        { damageType = "poison"
-                        , dice = 2
-                        , dieSize = 6
-                        , flat = None Integer
-                        , static = 7
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "piercing"
+                          , dice = 1
+                          , dieSize = 8
+                          , flat = Some +3
+                          , static = 7
+                          }
+                    , rest =
+                      [ S.damage
+                          { damageType = "poison"
+                          , dice = 2
+                          , dieSize = 6
+                          , flat = None Integer
+                          , static = 7
+                          }
+                      ]
+                    }
                   }
             }
         , S.resourceTextOnly
@@ -42,7 +45,7 @@ in  { challengeRating = 1
             , description =
                 "*Dexterity Saving Throw:* DC 13, one creature the spider can see within 60 feet. *Failure:* The target has the Restrained condition until the web is destroyed (AC 10; HP 5; Vulnerability to Fire damage; Immunity to Poison and Psychic damage)."
             , reason = "unsupported_procedure_family"
-            , resourceOrdinals = [ 1 ]
+            , resourceOrdinals = { first = 1, rest = [] : List Natural }
             }
         ]
       , alignment = "unaligned"

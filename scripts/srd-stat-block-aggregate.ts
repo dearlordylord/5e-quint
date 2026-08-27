@@ -1,17 +1,22 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type {
   SrdStatBlockRecord,
   StatBlockRecord,
+  UnitRecord,
 } from "../packages/surface/src/surface/types.ts";
-import { decodeStatBlockRecordSync } from "../packages/surface/src/surface/schema.ts";
+import {
+  decodeStatBlockRecordSync,
+  decodeUnitRecordSync,
+} from "../packages/surface/src/surface/schema.ts";
 import { normalizeStatBlockIdentity } from "../packages/surface/src/surface/stat-block-identity.ts";
 import {
   discoverSrdStatBlocks,
   SRD_STAT_BLOCK_SOURCE_PATHS,
   type SrdStatBlockSourceDiscovery,
 } from "./srd521-stat-block-parity.ts";
+import { discoverCanonicalSurfaceContentPeers } from "./surface-content-peer-discovery.ts";
 
 const SRD_SOURCE_SECTION_PATHS = new Set(
   SRD_STAT_BLOCK_SOURCE_PATHS.map((sourcePath) =>
@@ -43,7 +48,9 @@ export function buildSrdStatBlockAggregateModule(repoRoot: string): string {
   const discovery = discoverSrdStatBlocks([...sourceFiles]);
   assertCompleteSourceDiscovery(discovery);
 
-  const peers = readSrdStatBlockPeers(repoRoot);
+  const peers = readSrdStatBlockPeers(
+    join(repoRoot, "packages", "surface", "content"),
+  );
   const sourceIdentities = new Set(
     discovery.identities.map((identity) =>
       normalizeStatBlockIdentity(identity.name),
@@ -83,12 +90,11 @@ function assertCompleteSourceDiscovery(
 }
 
 function readSrdStatBlockPeers(
-  repoRoot: string,
+  contentDirectory: string,
 ): ReadonlyMap<string, StatBlockPeer> {
-  const contentDirectory = join(repoRoot, "packages", "surface", "content");
-  const peerNames = readdirSync(contentDirectory)
-    .filter((name) => name.startsWith("stat_block_") && name.endsWith(".json"))
-    .sort();
+  const peerNames = discoverCanonicalSurfaceContentPeers(contentDirectory).map(
+    ({ peerName }) => peerName,
+  );
   const peers = new Map<string, StatBlockPeer>();
 
   for (const peerName of peerNames) {
@@ -96,8 +102,10 @@ function readSrdStatBlockPeers(
     const parsed: unknown = JSON.parse(readFileSync(peerPath, "utf8"));
     const records = Array.isArray(parsed) ? parsed : [parsed];
     for (const [index, rawRecord] of records.entries()) {
-      const decoded = decodeStatBlockRecordSync(rawRecord);
-      if (!isSrdStatBlockRecord(decoded)) continue;
+      const decoded = decodeSurfaceContentRecord(rawRecord);
+      if (decoded.kind !== "statBlock" || !isSrdStatBlockRecord(decoded)) {
+        continue;
+      }
       if (!isSrdSourceSection(decoded.provenance.section)) continue;
       const record: SrdStatBlockRecord = decoded;
       const identity = normalizeStatBlockIdentity(record.name);
@@ -117,6 +125,26 @@ function readSrdStatBlockPeers(
   }
 
   return peers;
+}
+
+function decodeSurfaceContentRecord(
+  record: unknown,
+): StatBlockRecord | UnitRecord {
+  return isStatBlockDocument(record)
+    ? decodeStatBlockRecordSync(record)
+    : decodeUnitRecordSync(record);
+}
+
+function isStatBlockDocument(
+  record: unknown,
+): record is { readonly kind: "statBlock" } {
+  return (
+    typeof record === "object" &&
+    record !== null &&
+    !Array.isArray(record) &&
+    "kind" in record &&
+    record.kind === "statBlock"
+  );
 }
 
 function isSrdStatBlockRecord(

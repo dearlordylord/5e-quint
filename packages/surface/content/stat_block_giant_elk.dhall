@@ -20,11 +20,10 @@ in  { challengeRating = 2
         ]
       , alignment = { morality = "good", order = "neutral" }
       , communication =
-        { kind = "understood_but_cannot_speak"
-        , languages =
-          { kind = "named"
-          , languages = [ "Celestial", "Common", "Elvish", "Sylvan" ]
-          }
+        { kind = "spoken_and_understood"
+        , languages = { kind = "named", languages = [ "Celestial" ] }
+        , additionallyUnderstoodButCannotSpeak = Some
+          { kind = "named", languages = [ "Common", "Elvish", "Sylvan" ] }
         }
       , creatureType = "celestial"
       , hp = { kind = "literal", value = 42 }

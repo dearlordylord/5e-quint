@@ -19,14 +19,16 @@ in  { challengeRating = 0
                   , attackBonus = +2
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "bludgeoning"
-                        , dice = 1
-                        , dieSize = 4
-                        , flat = None Integer
-                        , static = 2
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "bludgeoning"
+                          , dice = 1
+                          , dieSize = 4
+                          , flat = None Integer
+                          , static = 2
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]

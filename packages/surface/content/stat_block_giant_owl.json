@@ -75,14 +75,19 @@
       "order": "neutral"
     },
     "communication": {
-      "kind": "understood_but_cannot_speak",
-      "languages": {
+      "additionallyUnderstoodButCannotSpeak": {
         "kind": "named",
         "languages": [
-          "Celestial",
           "Common",
           "Elvish",
           "Sylvan"
+        ]
+      },
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Celestial"
         ]
       }
     },

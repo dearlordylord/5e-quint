@@ -16,13 +16,16 @@ in  { challengeRating = 1
                 S.multiattack
                   { name = "Multiattack"
                   , dispatches =
-                    [ { count = { kind = "literal", value = +1 }
+                    { first =
+                      { count = { kind = "literal", value = +1 }
                       , procedureOrdinal = 2
                       }
-                    , { count = { kind = "literal", value = +1 }
-                      , procedureOrdinal = 3
-                      }
-                    ]
+                    , rest =
+                      [ { count = { kind = "literal", value = +1 }
+                        , procedureOrdinal = 3
+                        }
+                      ]
+                    }
                   }
             }
         , S.executable
@@ -34,14 +37,16 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "piercing"
-                        , dice = 1
-                        , dieSize = 8
-                        , flat = Some +3
-                        , static = 7
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "piercing"
+                          , dice = 1
+                          , dieSize = 8
+                          , flat = Some +3
+                          , static = 7
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         , S.executable
@@ -53,16 +58,19 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 1
-                        , dieSize = 4
-                        , flat = Some +3
-                        , static = 5
-                        }
-                    , S.conditionIfSize
-                        { condition = "prone", maxCreatureSize = "large" }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 1
+                          , dieSize = 4
+                          , flat = Some +3
+                          , static = 5
+                          }
+                    , rest =
+                      [ S.conditionIfSize
+                          { condition = "prone", maxCreatureSize = "large" }
+                      ]
+                    }
                   }
             }
         ]

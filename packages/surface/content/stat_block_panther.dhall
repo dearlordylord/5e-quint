@@ -19,14 +19,16 @@ in  { challengeRating = 0.25
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 1
-                        , dieSize = 6
-                        , flat = Some +3
-                        , static = 6
-                        }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 1
+                          , dieSize = 6
+                          , flat = Some +3
+                          , static = 6
+                          }
+                    , rest = [] : List S.Effect
+                    }
                   }
             }
         ]
@@ -59,7 +61,9 @@ in  { challengeRating = 0.25
             { procedureOrdinal = 1
             , procedure =
                 S.actionOption
-                  { name = "Nimble Escape", options = [ "disengage", "hide" ] }
+                  { name = "Nimble Escape"
+                  , options = { first = "disengage", rest = [ "hide" ] }
+                  }
             }
         ]
       }

@@ -97,6 +97,30 @@ describe("Animals Stat Block procedure fidelity", () => {
     }
   });
 
+  test("separates spoken languages from understanding-only languages", () => {
+    for (const [id, additionallyUnderstood] of [
+      ["stat_block_giant_eagle", ["Common", "Primordial (Auran)"]],
+      ["stat_block_giant_elk", ["Common", "Elvish", "Sylvan"]],
+      ["stat_block_giant_owl", ["Common", "Elvish", "Sylvan"]],
+    ] as const) {
+      expect(requireAnimal(id).statBlock.communication).toEqual({
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Celestial"] },
+        additionallyUnderstoodButCannotSpeak: {
+          kind: "named",
+          languages: additionallyUnderstood,
+        },
+      });
+    }
+
+    expect(
+      requireAnimal("stat_block_giant_vulture").statBlock.communication,
+    ).toEqual({
+      kind: "understood_but_cannot_speak",
+      languages: { kind: "named", languages: ["Common"] },
+    });
+  });
+
   test("distinguishes executable damage from unsupported attack conditions", () => {
     expect(requireEntry("stat_block_badger", "actions", "Bite")).toMatchObject({
       kind: "executable",

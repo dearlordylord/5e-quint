@@ -19,16 +19,19 @@ in  { challengeRating = 1
                   , attackBonus = +5
                   , reachFeet = 5
                   , onHit =
-                    [ S.damage
-                        { damageType = "slashing"
-                        , dice = 2
-                        , dieSize = 6
-                        , flat = Some +3
-                        , static = 10
-                        }
-                    , S.conditionIfSize
-                        { condition = "prone", maxCreatureSize = "large" }
-                    ]
+                    { first =
+                        S.damage
+                          { damageType = "slashing"
+                          , dice = 2
+                          , dieSize = 6
+                          , flat = Some +3
+                          , static = 10
+                          }
+                    , rest =
+                      [ S.conditionIfSize
+                          { condition = "prone", maxCreatureSize = "large" }
+                      ]
+                    }
                   }
             }
         ]
@@ -58,7 +61,9 @@ in  { challengeRating = 1
             { procedureOrdinal = 1
             , procedure =
                 S.actionOption
-                  { name = "Nimble Escape", options = [ "disengage", "hide" ] }
+                  { name = "Nimble Escape"
+                  , options = { first = "disengage", rest = [ "hide" ] }
+                  }
             }
         ]
       }
