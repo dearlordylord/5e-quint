@@ -558,12 +558,6 @@ describe("battle mechanical frontier", () => {
         issue: { tag: "mixedInterruptAndOrdinaryHoles" },
       },
       {
-        name: "ordinary frontier with pending interrupt",
-        holes: result.holes,
-        pendingInterrupt: runtimePendingInterrupt,
-        issue: { tag: "ordinaryFrontierHasPendingInterrupt" },
-      },
-      {
         name: "interrupt frontier missing checkpoint",
         holes: [runtimeInterruptDecisionHole],
         pendingInterrupt: null,

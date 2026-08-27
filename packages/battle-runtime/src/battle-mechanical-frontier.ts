@@ -71,7 +71,6 @@ export type BattleMechanicalFrontierResult = Pick<
 export type BattleMechanicalFrontierIssue =
   | { readonly tag: "emptyHoleFrontier" }
   | { readonly tag: "mixedInterruptAndOrdinaryHoles" }
-  | { readonly tag: "ordinaryFrontierHasPendingInterrupt" }
   | { readonly tag: "interruptFrontierMissingCheckpoint" }
   | { readonly tag: "interruptFrontierChoiceSetEmpty" }
   | { readonly tag: "interruptFrontierDecisionHoleMismatch" };
@@ -142,9 +141,6 @@ export function battleMechanicalFrontier(input: {
       decisionHole: mechanicalInterruptHole,
       choices: projectMechanicalChoices(pendingInterrupt.choices),
     });
-  }
-  if (result.snapshot.pendingInterrupt !== null) {
-    return Either.left({ tag: "ordinaryFrontierHasPendingInterrupt" });
   }
   return Either.right({
     kind: "ordinaryHoles",

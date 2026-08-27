@@ -9,7 +9,7 @@ import {
   startBattle,
   type BattleFill,
 } from "@dnd/battle-runtime";
-import { movementFeet, resourceCount } from "@dnd/shared/types";
+import { DieRollResult, movementFeet, resourceCount } from "@dnd/shared/types";
 import { Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -36,6 +36,7 @@ import {
   evaluateOracleCase,
   ORACLE_BATTLE_ID,
   oracleTraceSchema,
+  type OracleBattleAttempt,
 } from "./index.ts";
 import {
   buildUnitCatalog,
@@ -732,6 +733,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
         ],
       },
     } satisfies BattleFill;
+    const moveAttempt = {
+      kind: "ordinarySubject" as const,
+      subject: moveSubject,
+      fills: [movement],
+    } satisfies OracleBattleAttempt;
 
     const valid = evaluateDecodedCase({
       case: {
@@ -739,13 +745,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
         sheet: { tag: "ordinary" },
         battle: {
           ...twoSkeletonBattle,
-          attempts: [
-            {
-              kind: "ordinarySubject",
-              subject: moveSubject,
-              fills: [movement],
-            },
-          ],
+          attempts: [moveAttempt],
         },
       },
       unitLibrary,
@@ -779,6 +779,187 @@ describe("Opaque Oracle Case and Trace contract", () => {
     );
     expect(opportunityAttack.initialHoles).toEqual([]);
 
+    const interruptFill = Schema.decodeUnknownEither(
+      OracleBattleInterruptDecisionFillSchema,
+    )({
+      kind: "interruptDecision",
+      holeId: validFrontierStep.frontier.decisionHole.holeId,
+      value: {
+        kind: "resolve",
+        responderId: opportunityAttack.subject.reactorId,
+        choice: {
+          kind: "opportunityAttack",
+          selection: {
+            procedureRef: opportunityAttack.subject.procedureRef,
+          },
+          fills: [],
+        },
+      },
+    });
+    expect(Either.isRight(interruptFill)).toBe(true);
+    if (Either.isLeft(interruptFill)) return;
+    const interruptAttempt = {
+      kind: "interruptDecision" as const,
+      fill: interruptFill.right,
+    } satisfies OracleBattleAttempt;
+    const afterInterrupt = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...twoSkeletonBattle,
+          attempts: [moveAttempt, interruptAttempt],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const afterInterruptStep = afterInterrupt.steps.at(-1);
+    expect(afterInterruptStep?.tag).toBe("battleProgressed");
+    if (
+      afterInterruptStep?.tag !== "battleProgressed" ||
+      afterInterruptStep.frontier.kind !== "ordinaryHoles"
+    ) {
+      return;
+    }
+    expect(afterInterruptStep.frontier.subject).toEqual(
+      opportunityAttack.subject,
+    );
+    expect(afterInterruptStep.frontier.acceptedFills).toEqual([]);
+    const attackRollHole = afterInterruptStep.frontier.holes.find(
+      (hole) => hole.kind === "attackRoll",
+    );
+    expect(attackRollHole).toBeDefined();
+    if (attackRollHole?.kind !== "attackRoll") return;
+
+    const attackRoll = {
+      kind: "attackRoll" as const,
+      holeId: attackRollHole.holeId,
+      value: {
+        naturalD20: DieRollResult(20),
+        total: 20,
+      },
+    } satisfies BattleFill;
+    const afterAttackRoll = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...twoSkeletonBattle,
+          attempts: [
+            moveAttempt,
+            interruptAttempt,
+            {
+              kind: "ordinarySubject" as const,
+              subject: afterInterruptStep.frontier.subject,
+              fills: [attackRoll],
+            },
+          ],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const afterAttackRollStep = afterAttackRoll.steps.at(-1);
+    expect(afterAttackRollStep?.tag).toBe("battleProgressed");
+    if (
+      afterAttackRollStep?.tag !== "battleProgressed" ||
+      afterAttackRollStep.frontier.kind !== "ordinaryHoles"
+    ) {
+      return;
+    }
+    const rolledDiceHole = afterAttackRollStep.frontier.holes.find(
+      (hole) => hole.kind === "rolledDice",
+    );
+    expect(rolledDiceHole).toBeDefined();
+    if (rolledDiceHole?.kind !== "rolledDice") return;
+
+    const rolledDice = {
+      kind: "rolledDice" as const,
+      holeId: rolledDiceHole.holeId,
+      value: [{ results: [DieRollResult(6), DieRollResult(6)] }],
+    } satisfies BattleFill;
+    const afterRolledDice = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...twoSkeletonBattle,
+          attempts: [
+            moveAttempt,
+            interruptAttempt,
+            {
+              kind: "ordinarySubject" as const,
+              subject: afterInterruptStep.frontier.subject,
+              fills: [attackRoll, rolledDice],
+            },
+          ],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const afterRolledDiceStep = afterRolledDice.steps.at(-1);
+    expect(afterRolledDiceStep?.tag).toBe("battleProgressed");
+    if (
+      afterRolledDiceStep?.tag !== "battleProgressed" ||
+      afterRolledDiceStep.frontier.kind !== "ordinaryHoles"
+    ) {
+      return;
+    }
+    const damageDispositionHole = afterRolledDiceStep.frontier.holes.find(
+      (hole) => hole.kind === "attackDamageDisposition",
+    );
+    expect(damageDispositionHole).toBeDefined();
+    if (damageDispositionHole?.kind !== "attackDamageDisposition") return;
+
+    const damageDisposition = {
+      kind: "attackDamageDisposition" as const,
+      holeId: damageDispositionHole.holeId,
+      value: { kind: "ordinaryDamage" as const },
+    } satisfies BattleFill;
+    const resolved = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...twoSkeletonBattle,
+          attempts: [
+            moveAttempt,
+            interruptAttempt,
+            {
+              kind: "ordinarySubject" as const,
+              subject: afterInterruptStep.frontier.subject,
+              fills: [attackRoll, rolledDice, damageDisposition],
+            },
+          ],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const resolvedStep = resolved.steps.at(-1);
+    expect(resolvedStep?.tag).toBe("battleProgressed");
+    if (
+      resolvedStep?.tag !== "battleProgressed" ||
+      resolvedStep.frontier.kind !== "acts"
+    ) {
+      return;
+    }
+    const defeated = resolvedStep.checkpoint.combatants.find(
+      ({ combatantId: id }) => id === combatantId("oracle:skeleton-a"),
+    );
+    expect(defeated?.hp).toBe(0);
+    expect(
+      resolvedStep.frontier.acts.some(
+        (subject) =>
+          subject.tag === "runtimeCommand" &&
+          subject.actorId === combatantId("oracle:skeleton-a") &&
+          subject.command === "endTurn",
+      ),
+    ).toBe(true);
+    expect(Either.isRight(decodeOracleTrace(resolved))).toBe(true);
+
     const retry = evaluateDecodedCase({
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
@@ -794,11 +975,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               },
               fills: [],
             },
-            {
-              kind: "ordinarySubject",
-              subject: moveSubject,
-              fills: [movement],
-            },
+            moveAttempt,
           ],
         },
       },
