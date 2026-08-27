@@ -250,7 +250,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
     if (sorceryPoints === undefined) {
       throw new Error("Expected Sorcery Point resource.");
     }
-    const spent = expectRight(
+    const spent = expectSuccess(
       spendCharacterPointPoolResource({
         resource: sorceryPoints,
         points: resourceCount(2),
@@ -4643,9 +4643,9 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
   });
 });
 
-function expectRight<T, E>(result: Result.Result<T, E>): T {
+function expectSuccess<T, E>(result: Result.Result<T, E>): T {
   if (Result.isFailure(result)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(result.failure)}`);
+    throw new Error(`Expected Success, got ${JSON.stringify(result.failure)}`);
   }
   return result.success;
 }
@@ -4736,7 +4736,7 @@ function admittedSubtleProjection(
 function magicActionSpent(state: BattleState): BattleState {
   return {
     ...state,
-    currentTurnResources: expectRight(
+    currentTurnResources: expectSuccess(
       spendAction(state.currentTurnResources, "magic"),
     ),
   };
@@ -4745,7 +4745,7 @@ function magicActionSpent(state: BattleState): BattleState {
 function bonusActionSpent(state: BattleState): BattleState {
   return {
     ...state,
-    currentTurnResources: expectRight(
+    currentTurnResources: expectSuccess(
       spendActivationResource(state.currentTurnResources, {
         kind: "bonusAction",
       }),

@@ -1605,7 +1605,7 @@ function metamagicBattle(input?: MetamagicBattleInput): BattleRuntimeSession {
 function magicActionSpent(state: BattleState): BattleState {
   return {
     ...state,
-    currentTurnResources: expectRight(
+    currentTurnResources: expectSuccess(
       spendAction(state.currentTurnResources, "magic"),
     ),
   };
@@ -1876,9 +1876,9 @@ function expectInvalid(result: BattleResolutionResult, message: string): void {
   expect(result).toMatchObject({ tag: "invalid", message });
 }
 
-function expectRight<T, E>(result: Result.Result<T, E>): T {
+function expectSuccess<T, E>(result: Result.Result<T, E>): T {
   if (Result.isFailure(result)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(result.failure)}`);
+    throw new Error(`Expected Success, got ${JSON.stringify(result.failure)}`);
   }
   return result.success;
 }
