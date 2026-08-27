@@ -1,0 +1,138 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_plesiosaurus",
+  "kind": "statBlock",
+  "name": "Plesiosaurus",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:1874-1898"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 16,
+      "dex": 15,
+      "int": 2,
+      "str": 18,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +6, reach 10 ft. *Hit:* 11 (2d6 + 4) Piercing damage.",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 11
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "creatureTypeTags": [
+      "dinosaur"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 68
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 13,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 3,
+        "skill": "perception"
+      },
+      {
+        "modifier": 4,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The plesiosaurus can hold its breath for 1 hour.",
+        "name": "Hold Breath"
+      }
+    ]
+  }
+}

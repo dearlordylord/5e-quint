@@ -1,0 +1,113 @@
+{
+  "challengeRating": 0,
+  "id": "stat_block_crab",
+  "kind": "statBlock",
+  "name": "Crab",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:373-397"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 2,
+      "con": 12,
+      "dex": 11,
+      "int": 1,
+      "str": 6,
+      "wis": 8
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 11
+      }
+    },
+    "actions": [
+      {
+        "description": "*Melee Attack Roll:* +2, reach 5 ft. *Hit:* 1 Bludgeoning damage.",
+        "kind": "textOnly",
+        "name": "Claw",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 3
+    },
+    "initiative": {
+      "modifier": 0,
+      "score": 10
+    },
+    "passivePerception": 9,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": -2
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": -4
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 30
+      }
+    ],
+    "size": "tiny",
+    "skillModifiers": [
+      {
+        "modifier": 2,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The crab can breathe air and water.",
+        "name": "Amphibious"
+      }
+    ]
+  }
+}

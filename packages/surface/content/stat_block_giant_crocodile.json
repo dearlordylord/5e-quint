@@ -1,0 +1,192 @@
+{
+  "challengeRating": 5,
+  "id": "stat_block_giant_crocodile",
+  "kind": "statBlock",
+  "name": "Giant Crocodile",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:828-856"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 7,
+      "con": 17,
+      "dex": 9,
+      "int": 2,
+      "str": 21,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 1
+              },
+              "procedureOrdinal": 2
+            },
+            {
+              "count": {
+                "kind": "literal",
+                "value": 1
+              },
+              "procedureOrdinal": 3
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +8, reach 5 ft. *Hit:* 21 (3d10 + 5) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 15). While Grappled, the target has the Restrained condition and can't be targeted by the crocodile's Tail.",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 10,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 21
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +8, reach 10 ft. *Hit:* 18 (3d8 + 5) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.",
+          "kind": "attack_roll",
+          "name": "Tail",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 8,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 18
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 85
+    },
+    "initiative": {
+      "modifier": -1,
+      "score": 9
+    },
+    "passivePerception": 10,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 5
+      },
+      {
+        "ability": "dex",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
+      }
+    ],
+    "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The crocodile can hold its breath for 1 hour.",
+        "name": "Hold Breath"
+      }
+    ]
+  }
+}

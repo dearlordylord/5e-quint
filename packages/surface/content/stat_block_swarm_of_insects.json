@@ -1,0 +1,165 @@
+{
+  "challengeRating": 0.5,
+  "id": "stat_block_swarm_of_insects",
+  "kind": "statBlock",
+  "name": "Swarm of Insects",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:2256-2283"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 1,
+      "con": 14,
+      "dex": 13,
+      "int": 1,
+      "str": 3,
+      "wis": 7
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 11
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 3
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 6 (2d4 + 1) Poison damage, or 3 (1d4 + 1) Poison damage if the swarm is Bloodied.",
+          "kind": "attack_roll",
+          "name": "Bites",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 4,
+                  "flat": 1
+                },
+                "kind": "fixed",
+                "static": 6
+              },
+              "damageType": "poison",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "creatureTypeTags": [
+      "swarm of tiny beasts"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 19
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "frightened",
+        "grappled",
+        "paralyzed",
+        "petrified",
+        "prone",
+        "restrained",
+        "stunned"
+      ]
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 8,
+    "resistances": {
+      "damageTypes": [
+        "bludgeoning",
+        "piercing",
+        "slashing"
+      ],
+      "kind": "fixed"
+    },
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": -4
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "wis",
+        "modifier": -2
+      },
+      {
+        "ability": "cha",
+        "modifier": -5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 30
+      }
+    ],
+    "size": "medium",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "climb"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the swarm has a Climb Speed, the swarm can climb difficult surfaces, including along ceilings, without needing to make an ability check.",
+        "name": "Spider Climb"
+      },
+      {
+        "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny insect. The swarm can't regain Hit Points or gain Temporary Hit Points.",
+        "name": "Swarm"
+      }
+    ]
+  }
+}

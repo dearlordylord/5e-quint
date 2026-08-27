@@ -1,0 +1,154 @@
+{
+  "challengeRating": 4,
+  "id": "stat_block_archelon",
+  "kind": "statBlock",
+  "name": "Archelon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:82-108"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 6,
+      "con": 13,
+      "dex": 16,
+      "int": 4,
+      "str": 18,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 14 (3d6 + 4) Piercing damage.",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 14
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "creatureTypeTags": [
+      "dinosaur"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 90
+    },
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 12,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": -3
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
+      }
+    ],
+    "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The archelon can breathe air and water.",
+        "name": "Amphibious"
+      }
+    ]
+  }
+}

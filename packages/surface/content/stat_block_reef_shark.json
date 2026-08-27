@@ -1,0 +1,141 @@
+{
+  "challengeRating": 0.5,
+  "id": "stat_block_reef_shark",
+  "kind": "statBlock",
+  "name": "Reef Shark",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:2036-2062"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 4,
+      "con": 13,
+      "dex": 15,
+      "int": 1,
+      "str": 14,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 12
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 7 (2d4 + 2) Piercing damage.",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 4,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 22
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 12,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 2
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 30
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 2,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 5
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The shark has Advantage on an attack roll against a creature if at least one of the shark's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "name": "Pack Tactics"
+      },
+      {
+        "description": "The shark can breathe only underwater.",
+        "name": "Water Breathing"
+      }
+    ]
+  }
+}

@@ -1,0 +1,175 @@
+{
+  "challengeRating": 1,
+  "id": "stat_block_giant_eagle",
+  "kind": "statBlock",
+  "name": "Giant Eagle",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:860-883"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 10,
+      "con": 13,
+      "dex": 17,
+      "int": 8,
+      "str": 16,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 5 (1d4 + 3) Slashing damage plus 3 (1d6) Radiant damage.",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 5
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 3
+              },
+              "damageType": "radiant",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Celestial",
+          "Common",
+          "Primordial (Auran)"
+        ]
+      }
+    },
+    "creatureType": "celestial",
+    "hp": {
+      "kind": "literal",
+      "value": 26
+    },
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 16,
+    "resistances": {
+      "damageTypes": [
+        "necrotic",
+        "radiant"
+      ],
+      "kind": "fixed"
+    },
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": -1
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 6,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 10
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "fly"
+      }
+    ]
+  }
+}

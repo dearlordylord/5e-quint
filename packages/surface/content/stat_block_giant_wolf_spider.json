@@ -1,0 +1,141 @@
+{
+  "challengeRating": 0.25,
+  "id": "stat_block_giant_wolf_spider",
+  "kind": "statBlock",
+  "name": "Giant Wolf Spider",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:1402-1426"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 4,
+      "con": 13,
+      "dex": 16,
+      "int": 3,
+      "str": 12,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 5 (1d4 + 3) Piercing damage plus 5 (2d4) Poison damage.",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 5
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 11
+    },
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 13,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 1
+      },
+      {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 10
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 3,
+        "skill": "perception"
+      },
+      {
+        "modifier": 7,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "climb"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The spider can climb difficult surfaces, including along ceilings, without needing to make an ability check.",
+        "name": "Spider Climb"
+      }
+    ]
+  }
+}

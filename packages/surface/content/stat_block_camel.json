@@ -1,0 +1,118 @@
+{
+  "challengeRating": 0.125,
+  "id": "stat_block_camel",
+  "kind": "statBlock",
+  "name": "Camel",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:296-315"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 17,
+      "dex": 8,
+      "int": 2,
+      "str": 15,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 10
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "description": "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 4 (1d4 + 2) Bludgeoning damage.",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 4
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 17
+    },
+    "initiative": {
+      "modifier": -1,
+      "score": 9
+    },
+    "passivePerception": 10,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 2
+      },
+      {
+        "ability": "dex",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}
