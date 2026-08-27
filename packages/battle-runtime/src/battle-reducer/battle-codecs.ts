@@ -6779,21 +6779,29 @@ function serializedBattleSubjectOwnsBoundProcedure(
   );
 }
 
+const SERIALIZED_EXECUTION_REFERENCE_FIELD_NAMES = new Set([
+  "procedureRef",
+  "procedureRefs",
+  "effectRef",
+  "resourcePoolRef",
+  "resourcePoolRefs",
+  "rechargeTargets",
+  "formExecutionRef",
+]);
+
+function serializedExecutionReferenceFieldName(key: string): boolean {
+  return (
+    SERIALIZED_EXECUTION_REFERENCE_FIELD_NAMES.has(key) ||
+    key.endsWith("ProcedureRef") ||
+    key.endsWith("ProcedureRefs") ||
+    key.endsWith("EffectRef")
+  );
+}
+
 function serializedBattleHoleExecutionReferences(
   hole: object,
 ): readonly SerializedExecutionReferenceOwnership[] {
   const references: SerializedExecutionReferenceOwnership[] = [];
-  const executionReferenceKey = (key: string): boolean =>
-    key === "procedureRef" ||
-    key === "procedureRefs" ||
-    key.endsWith("ProcedureRef") ||
-    key.endsWith("ProcedureRefs") ||
-    key === "effectRef" ||
-    key.endsWith("EffectRef") ||
-    key === "resourcePoolRef" ||
-    key === "resourcePoolRefs" ||
-    key === "rechargeTargets" ||
-    key === "formExecutionRef";
   const ownerIdFor = (
     fields: Readonly<Record<string, unknown>>,
     referenceKey: string,
@@ -6827,7 +6835,7 @@ function serializedBattleHoleExecutionReferences(
     const fields = value as Readonly<Record<string, unknown>>;
     for (const [key, field] of Object.entries(fields)) {
       if (
-        executionReferenceKey(key) &&
+        serializedExecutionReferenceFieldName(key) &&
         !(key === "effectRef" && fields.kind === "spellMarkedDamageRider")
       ) {
         const localOwnerId = ownerIdFor(fields, key);

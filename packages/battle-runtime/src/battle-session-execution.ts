@@ -62,6 +62,10 @@ type ResolvedBattleResult = Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
 >;
+type NeedsHolesBattleResult = Extract<
+  BattleResolutionResult,
+  { readonly tag: "needsHoles" }
+>;
 export type BattleCheckpointFrontierEnvelope = {
   readonly checkpoint: BattleSnapshot;
   readonly frontier:
@@ -611,10 +615,12 @@ function battleRuntimeResolutionFromMechanical(
         ...outcome
       }) => {
         const runtimeOwnedInterrupt =
-          checkpointMode === "interrupt" ||
-          _checkpointBoundary !== undefined ||
-          session.state.interruptStack.length > 0 ||
-          state.interruptStack.length > 0;
+          battleResolutionRequiresRuntimeOwnedInterruptCheckpoint({
+            checkpointBoundary: _checkpointBoundary,
+            checkpointMode,
+            session,
+            state,
+          });
         const checkpointState = runtimeOwnedInterrupt ? state : session.state;
         const checkpointSession = runtimeOwnedInterrupt
           ? battleRuntimeSessionWithState(session, state)
@@ -665,6 +671,20 @@ function battleRuntimeResolutionFromMechanical(
   );
 }
 
+function battleResolutionRequiresRuntimeOwnedInterruptCheckpoint(input: {
+  readonly checkpointBoundary: NeedsHolesBattleResult["checkpointBoundary"];
+  readonly checkpointMode: "ordinary" | "interrupt";
+  readonly session: BattleRuntimeSession;
+  readonly state: BattleState;
+}): boolean {
+  return (
+    input.checkpointMode === "interrupt" ||
+    input.checkpointBoundary !== undefined ||
+    input.session.state.interruptStack.length > 0 ||
+    input.state.interruptStack.length > 0
+  );
+}
+
 export function resolveBattleRuntimeInterrupt(input: {
   readonly session: BattleRuntimeSession;
   readonly fill: Extract<BattleFill, { readonly kind: "interruptDecision" }>;
@@ -692,13 +712,17 @@ export function endBattleRuntimeTurn(input: {
   );
 }
 
-export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
+type BattleRuntimeTurnD20TestResolutionInput = {
   readonly session: BattleRuntimeSession;
   readonly actorId: CombatantId;
   readonly fills: readonly BattleFill[];
   readonly d20TestResolutionId: D20TestResolutionId;
   readonly tableD20TestCircumstanceDecisions: readonly TableD20TestCircumstanceDecision[];
-}): BattleRuntimeTableD20TestResolutionResult {
+};
+
+function endBattleRuntimeTurnD20TestRequests(
+  input: BattleRuntimeTurnD20TestResolutionInput,
+): readonly BattleD20TestCircumstanceRequest[] {
   const requests: BattleD20TestCircumstanceRequest[] = [];
   for (let fillIndex = 0; fillIndex <= input.fills.length; fillIndex += 1) {
     const frontier = endBattleRuntimeTurn({
@@ -717,17 +741,15 @@ export function endBattleRuntimeTurnWithTableD20TestCircumstances(input: {
       }),
       fill,
     );
-    for (const request of frontierRequests) {
-      if (
-        !requests.some(
-          ({ requestRef: priorRequestRef }) =>
-            priorRequestRef === request.requestRef,
-        )
-      ) {
-        requests.push(request);
-      }
-    }
+    appendUnseenD20TestRequests(requests, frontierRequests);
   }
+  return requests;
+}
+
+export function endBattleRuntimeTurnWithTableD20TestCircumstances(
+  input: BattleRuntimeTurnD20TestResolutionInput,
+): BattleRuntimeTableD20TestResolutionResult {
+  const requests = endBattleRuntimeTurnD20TestRequests(input);
   const admission = admitTableD20TestCircumstanceDecisions({
     requests,
     decisions: input.tableD20TestCircumstanceDecisions,

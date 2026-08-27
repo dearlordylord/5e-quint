@@ -52,6 +52,11 @@ export type BattleToolResult =
   | ReturnType<typeof schemaJsonContent>
   | ReturnType<typeof errorContent>;
 
+type FillBattleHoleToolInput = Extract<
+  BattleToolCall,
+  { readonly name: typeof battleToolNames.fillBattleHole }
+>["args"];
+
 export function handleBattleToolCall(
   root: McpPlaySessionRoot,
   call: BattleToolCall,
@@ -89,69 +94,9 @@ export function handleBattleToolCall(
     Match.when({ name: battleToolNames.discoverBattleActs }, () =>
       battleSessionContent(root),
     ),
-    Match.when({ name: battleToolNames.fillBattleHole }, (matched) => {
-      const visibleSession = activeBattleForTool(root);
-      if (Either.isLeft(visibleSession)) return visibleSession.left;
-
-      const subject = matched.args.subject;
-      const previous = root.sessionStore.pendingBattleFills;
-      if (previous !== null && !sameBattleSubject(previous.subject, subject)) {
-        return errorContent("A different battle subject has pending fills.", {
-          code: "BATTLE_FILL_SUBJECT_MISMATCH",
-          pendingSubject: previous.subject,
-          requestedSubject: subject,
-        });
-      }
-      const frontier = battleMechanicsEnvelopeForSession(
-        root,
-        visibleSession.right,
-      ).frontier;
-      const frontierIssue = pendingFillFrontierIssue(
-        frontier,
-        matched.args.fill,
-      );
-      if (frontierIssue !== null) {
-        return errorContent(frontierIssue.message, frontierIssue.details);
-      }
-      const availableSubject =
-        frontier.kind === "acts"
-          ? frontier.acts.some((act) => sameBattleSubject(act.subject, subject))
-          : frontier.kind === "holes"
-            ? sameBattleSubject(frontier.subject, subject)
-            : previous !== null;
-      if (previous === null && !availableSubject) {
-        return errorContent("Battle act is not currently available.", {
-          code: "BATTLE_ACT_NOT_AVAILABLE",
-          subject,
-        });
-      }
-
-      const fills = [...(previous?.fills ?? []), matched.args.fill];
-      const replaySession =
-        matched.args.fill.kind === "interruptDecision"
-          ? visibleSession.right
-          : (previous?.baseSession ?? visibleSession.right);
-      const result =
-        matched.args.fill.kind === "interruptDecision"
-          ? resolveBattleRuntimeInterrupt({
-              session: replaySession,
-              fill: matched.args.fill,
-            })
-          : resolveBattleRuntimeSubject({
-              session: replaySession,
-              subject,
-              fills,
-              statBlockCatalog: root.statBlockCatalog,
-            });
-      const pendingTransaction = pendingTransactionForResult({
-        result,
-        filledSubject: subject,
-        previous,
-        fills,
-        replaySession,
-      });
-      return storedBattleResolutionContent(root, result, pendingTransaction);
-    }),
+    Match.when({ name: battleToolNames.fillBattleHole }, (matched) =>
+      handleFillBattleHoleToolCall(root, matched.args),
+    ),
     Match.when({ name: battleToolNames.resolveBattleAct }, (matched) => {
       const state = activeBattleWithoutPendingFills(
         root,
@@ -286,6 +231,103 @@ export function handleBattleToolCall(
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
+    Match.exhaustive,
+  );
+}
+
+function handleFillBattleHoleToolCall(
+  root: McpPlaySessionRoot,
+  input: FillBattleHoleToolInput,
+): BattleToolResult {
+  const admitted = admitBattleFillToolInput(root, input);
+  if (Either.isLeft(admitted)) return admitted.left;
+
+  const { session, previous, subject, fill } = admitted.right;
+  const fills = [...(previous?.fills ?? []), fill];
+  const replaySession =
+    fill.kind === "interruptDecision"
+      ? session
+      : (previous?.baseSession ?? session);
+  const result =
+    fill.kind === "interruptDecision"
+      ? resolveBattleRuntimeInterrupt({ session: replaySession, fill })
+      : resolveBattleRuntimeSubject({
+          session: replaySession,
+          subject,
+          fills,
+          statBlockCatalog: root.statBlockCatalog,
+        });
+  const pendingTransaction = pendingTransactionForResult({
+    result,
+    filledSubject: subject,
+    previous,
+    fills,
+    replaySession,
+  });
+  return storedBattleResolutionContent(root, result, pendingTransaction);
+}
+
+function admitBattleFillToolInput(
+  root: McpPlaySessionRoot,
+  input: FillBattleHoleToolInput,
+) {
+  const visibleSession = activeBattleForTool(root);
+  if (Either.isLeft(visibleSession)) return Either.left(visibleSession.left);
+
+  const previous = root.sessionStore.pendingBattleFills;
+  if (
+    previous !== null &&
+    !sameBattleSubject(previous.subject, input.subject)
+  ) {
+    return Either.left(
+      errorContent("A different battle subject has pending fills.", {
+        code: "BATTLE_FILL_SUBJECT_MISMATCH",
+        pendingSubject: previous.subject,
+        requestedSubject: input.subject,
+      }),
+    );
+  }
+  const frontier = battleMechanicsEnvelopeForSession(
+    root,
+    visibleSession.right,
+  ).frontier;
+  const frontierIssue = pendingFillFrontierIssue(frontier, input.fill);
+  if (frontierIssue !== null) {
+    return Either.left(
+      errorContent(frontierIssue.message, frontierIssue.details),
+    );
+  }
+  if (
+    previous === null &&
+    !battleSubjectIsAvailableWithoutPendingFills(frontier, input.subject)
+  ) {
+    return Either.left(
+      errorContent("Battle act is not currently available.", {
+        code: "BATTLE_ACT_NOT_AVAILABLE",
+        subject: input.subject,
+      }),
+    );
+  }
+  return Either.right({
+    session: visibleSession.right,
+    previous,
+    subject: input.subject,
+    fill: input.fill,
+  });
+}
+
+function battleSubjectIsAvailableWithoutPendingFills(
+  frontier: BattleCheckpointFrontierEnvelope["frontier"],
+  subject: FillBattleHoleToolInput["subject"],
+): boolean {
+  return Match.value(frontier).pipe(
+    Match.when({ kind: "acts" }, (actsFrontier) =>
+      actsFrontier.acts.some((act) => sameBattleSubject(act.subject, subject)),
+    ),
+    Match.when({ kind: "holes" }, (holesFrontier) =>
+      sameBattleSubject(holesFrontier.subject, subject),
+    ),
+    Match.when({ kind: "interruptDecision" }, () => false),
     Match.exhaustive,
   );
 }

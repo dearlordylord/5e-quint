@@ -103,10 +103,11 @@
       "module/binding:weaponHostedAttackCompositionRouteForResolution": 23
     },
     "packages/battle-runtime/src/battle-reducer/battle-codecs.ts": {
-      "module/binding:battleCreatureSnapshotInvariantsHold": 14,
-      "module/binding:battleSnapshotInvariantsHold": 13,
-      "module/binding:serializedBattleActOwnsBoundProcedure": 59,
-      "module/binding:serializedBattleHoleExecutionReferences/binding:rolledDiceReferences/call:Match.when:argument-1:selector-4fcf1a150972": 9,
+      "module/binding:battleCheckpointFrontierInvariantsHold/owner:call:Match.value(frontier).pipe:argument-0/owner:call:Match.discriminatorsExhaustive(\"kind\"):argument-0/owner:object:anonymous/binding:interruptDecision/call:value.choices.every:argument-0": 12,
+      "module/binding:battleCreatureSnapshotInvariantsHold": 13,
+      "module/binding:serializedBattleHoleExecutionReferences/binding:visit": 15,
+      "module/binding:serializedBattleSubjectOwnsBoundProcedure": 21,
+      "module/binding:serializedInterruptChoiceOwnsBoundProcedure": 11,
       "module/binding:statBlockExecutionSnapshotGraphIsValid": 12,
       "module/binding:statBlockExecutionSnapshotGraphIsValid/call:snapshot.procedureBindings.every:argument-0": 19
     },
@@ -1215,9 +1216,6 @@
     },
     "packages/mcp/src/admin-mirror-server.ts": {
       "module/binding:handleAdminMirrorRequest": 20
-    },
-    "packages/mcp/src/battle-tools.ts": {
-      "module/binding:handleBattleToolCall/call:Match.when:argument-1:selector-808174cea28e": 12
     },
     "packages/mcp/src/character-session-sheet-rebuild.ts": {
       "module/binding:rebuildCharacterSheetForOperation": 9
