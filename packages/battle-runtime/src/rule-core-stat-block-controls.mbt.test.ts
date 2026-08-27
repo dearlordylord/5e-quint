@@ -28,34 +28,30 @@ import {
   type RuleCoreComponentRoutedProjection,
   withRuleCoreComponentRoute,
 } from "./rule-core-component-route.test-support.ts";
-import { Either } from "effect";
-import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
-import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import * as Either from "effect/Either";
 import { describe, it } from "vitest";
 
-import { Hp, DieRollResult, movementFeet } from "@dnd/shared/types";
+import { DieRollResult, movementFeet } from "@dnd/shared/types";
 import type {
   AuthoredExecutableProcedure,
   StatBlockRecord,
 } from "@dnd/surface/surface/types";
-import {
-  battleStatBlockProjectionFailureMessage,
-  projectAuthoredStatBlock,
-} from "./stat-block-authored-projection.ts";
 
 import {
+  authoredStatBlockBattleInitIssueMessage,
   battleId,
+  battleCreatureInitFromStatBlock,
   combatantId,
   discoverBattleActCandidates,
   initiativeScore,
   snapshotBattle,
-  type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
   type BattleState,
   type BattleSubject,
   type CombatantId,
+  type StatBlockBattleCombatantInit,
 } from "./index.ts";
 
 const ruleCoreStatBlockControlMbtHoles = [
@@ -302,13 +298,11 @@ function statBlockControlBattle(): BattleState {
     combatants: [
       statBlockCreature({
         combatantId: actorId,
-        displayName: "Rule Core Multiattacker",
         initiative: 20,
         statBlock: multiattackStatBlock(),
       }),
       statBlockCreature({
         combatantId: targetId,
-        displayName: "Rule Core Target",
         initiative: 10,
         statBlock: targetStatBlock(),
       }),
@@ -318,41 +312,20 @@ function statBlockControlBattle(): BattleState {
 
 function statBlockCreature(input: {
   readonly combatantId: CombatantId;
-  readonly displayName: string;
   readonly initiative: number;
   readonly statBlock: StatBlockRecord;
-}): BattleCreatureInit {
-  const projectedResult = projectAuthoredStatBlock(input.statBlock);
-  if (Either.isLeft(projectedResult)) {
-    throw new Error(
-      battleStatBlockProjectionFailureMessage(
-        projectedResult.left,
-        "Expected rule-core Stat Block fixture projection",
-      ),
-    );
-  }
-  const sourceResult = battleStatBlockCombatantSource(
-    projectedResult.right.runtime,
-  );
-  if (Either.isLeft(sourceResult)) {
-    throw new Error(battleStateInitIssueMessage(sourceResult.left));
-  }
-  return {
+}): StatBlockBattleCombatantInit {
+  const initialized = battleCreatureInitFromStatBlock({
     combatantId: input.combatantId,
     initiative: initiativeScore(input.initiative),
-    creatureInit: {
-      kind: "statBlock",
-      source: sourceResult.right,
-      currentHp: Hp(12),
-      tempHp: Hp(0),
-      ammunitionStocks: [],
-      conditions: [],
-      presentation: {
-        ...projectedResult.right.presentation,
-        displayName: input.displayName,
-      },
-    },
-  };
+    statBlock: input.statBlock,
+    ammunitionStocks: [],
+    conditions: [],
+  });
+  if (Either.isLeft(initialized)) {
+    throw new Error(authoredStatBlockBattleInitIssueMessage(initialized.left));
+  }
+  return initialized.right;
 }
 
 function multiattackSubject(
