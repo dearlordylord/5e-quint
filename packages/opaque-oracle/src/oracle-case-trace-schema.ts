@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Match, Schema } from "effect";
 import {
   CharacterBuildFactSchema,
   CharacterCreationBatchFactSchema,
@@ -12,8 +12,15 @@ import {
   type CreationFrontierFact,
 } from "@dnd/character-creation-runtime";
 import {
+  BattleFillSchema,
+  BattleMechanicalFrontierSchema,
   BattleSubjectSchema,
+  battleProcedureExecutionRefBelongsToCombatant,
   battleSubjectProcedureRefsBelongToOwners,
+  type BattleFill,
+  type BattleInterruptSubject,
+  type BattleMechanicalInterruptChoice,
+  type BattleMechanicalFrontier,
   type BattleSubject,
 } from "@dnd/battle-runtime";
 import {
@@ -113,9 +120,60 @@ const OracleStatBlockRosterEntrySchema = Schema.Struct({
 export const OracleBattleRosterEntrySchema = Schema.Union(
   OracleCharacterSheetRosterEntrySchema,
   OracleStatBlockRosterEntrySchema,
-);
+).annotations({ parseOptions: { onExcessProperty: "error" } });
 export type OracleBattleRosterEntry = Schema.Schema.Type<
   typeof OracleBattleRosterEntrySchema
+>;
+
+const OracleBattleFillSchema = BattleFillSchema.annotations({
+  parseOptions: { onExcessProperty: "error" },
+});
+
+const OracleBattleInterruptDecisionFillSchema = OracleBattleFillSchema.pipe(
+  Schema.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "interruptDecision" }> =>
+      fill.kind === "interruptDecision",
+    {
+      message: () =>
+        "an interrupt attempt must carry an interruptDecision Battle fill",
+    },
+  ),
+).annotations({ parseOptions: { onExcessProperty: "error" } });
+
+export const OracleBattleOrdinaryAttemptSchema = Schema.Struct({
+  kind: Schema.Literal("ordinarySubject"),
+  subject: BattleSubjectSchema,
+  fills: Schema.Array(OracleBattleFillSchema),
+}).annotations({
+  identifier: "OracleBattleOrdinaryAttempt",
+  parseOptions: { onExcessProperty: "error" },
+});
+export type OracleBattleOrdinaryAttempt = Schema.Schema.Type<
+  typeof OracleBattleOrdinaryAttemptSchema
+>;
+
+export const OracleBattleInterruptAttemptSchema = Schema.Struct({
+  kind: Schema.Literal("interruptDecision"),
+  fill: OracleBattleInterruptDecisionFillSchema,
+}).annotations({
+  identifier: "OracleBattleInterruptAttempt",
+  parseOptions: { onExcessProperty: "error" },
+});
+export type OracleBattleInterruptAttempt = Schema.Schema.Type<
+  typeof OracleBattleInterruptAttemptSchema
+>;
+
+export const OracleBattleAttemptSchema = Schema.Union(
+  OracleBattleOrdinaryAttemptSchema,
+  OracleBattleInterruptAttemptSchema,
+).annotations({
+  identifier: "OracleBattleAttempt",
+  parseOptions: { onExcessProperty: "error" },
+});
+export type OracleBattleAttempt = Schema.Schema.Type<
+  typeof OracleBattleAttemptSchema
 >;
 
 export const OracleBattleInputSchema = Schema.Struct({
@@ -132,6 +190,10 @@ export const OracleBattleInputSchema = Schema.Struct({
       },
     ),
   ),
+  attempts: Schema.Array(OracleBattleAttemptSchema),
+}).annotations({
+  identifier: "OracleBattleInput",
+  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleInput = Schema.Schema.Type<
   typeof OracleBattleInputSchema
@@ -143,14 +205,20 @@ const OracleCaseShapeSchema = Schema.Struct({
   }),
   sheet: FreshSheetInputSchema,
   battle: OracleBattleInputSchema,
-});
+}).annotations({ parseOptions: { onExcessProperty: "error" } });
 export const OracleCaseSchema = OracleCaseShapeSchema.pipe(
   Schema.brand("OracleCase"),
-);
+).annotations({
+  identifier: "OracleCase",
+  parseOptions: { onExcessProperty: "error" },
+});
 export type OracleCase = Schema.Schema.Type<typeof OracleCaseSchema>;
 
 export const OracleEvaluationBatchSchema = Schema.Struct({
   cases: Schema.NonEmptyArray(OracleCaseSchema),
+}).annotations({
+  identifier: "OracleEvaluationBatch",
+  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleEvaluationBatch = Schema.Schema.Type<
   typeof OracleEvaluationBatchSchema
@@ -289,7 +357,14 @@ export const WorkflowRejectionSchema = Schema.Union(
     code: Schema.Literal("creationInputSurplus"),
     firstUnusedBatchIndex: Schema.fromBrand(Index)(NonNegativeIntegerSchema),
   }),
-);
+  Schema.Struct({
+    code: Schema.Literal("battleInputSurplus"),
+    firstUnusedAttemptIndex: Schema.fromBrand(Index)(NonNegativeIntegerSchema),
+  }),
+).annotations({
+  identifier: "OracleWorkflowRejection",
+  parseOptions: { onExcessProperty: "error" },
+});
 
 const OracleBattleCreatureSnapshotSchema = Schema.Struct({
   combatantId: CombatantId,
@@ -331,25 +406,111 @@ export type OracleBattleCheckpoint = Schema.Schema.Type<
 
 /** Available Battle subjects, without presentation or Runtime Hole details. */
 export const OracleBattleActsFrontierSchema = Schema.Struct({
+  kind: Schema.Literal("acts"),
   acts: Schema.NonEmptyArray(BattleSubjectSchema),
+}).annotations({
+  identifier: "OracleBattleActsFrontier",
+  parseOptions: { onExcessProperty: "error" },
 });
 export type OracleBattleActsFrontier = Schema.Schema.Type<
   typeof OracleBattleActsFrontierSchema
 >;
 
+const OracleBattleTerminalFrontierSchema = Schema.Struct({
+  kind: Schema.Literal("terminal"),
+  outcome: Schema.Literal("resolved"),
+}).annotations({
+  identifier: "OracleBattleTerminalFrontier",
+  parseOptions: { onExcessProperty: "error" },
+});
+
+export const OracleBattleFrontierSchema = Schema.Union(
+  OracleBattleActsFrontierSchema,
+  BattleMechanicalFrontierSchema,
+  OracleBattleTerminalFrontierSchema,
+).annotations({
+  identifier: "OracleBattleFrontier",
+  parseOptions: { onExcessProperty: "error" },
+});
+export type OracleBattleFrontier =
+  | OracleBattleActsFrontier
+  | BattleMechanicalFrontier
+  | Schema.Schema.Type<typeof OracleBattleTerminalFrontierSchema>;
+
 const OracleBattleEnteredShapeSchema = Schema.Struct({
   tag: Schema.Literal("battleEntered"),
   checkpoint: OracleBattleCheckpointSchema,
   frontier: OracleBattleActsFrontierSchema,
-});
+}).annotations({ parseOptions: { onExcessProperty: "error" } });
 export const OracleBattleEnteredSchema = OracleBattleEnteredShapeSchema.pipe(
   Schema.filter(oracleBattleEnteredInvariantsHold, {
     message: () =>
       "Battle frontier subjects must reference combatants in the checkpoint.",
   }),
-);
+).annotations({
+  identifier: "OracleBattleEntered",
+  parseOptions: { onExcessProperty: "error" },
+});
 export type OracleBattleEntered = Schema.Schema.Type<
   typeof OracleBattleEnteredSchema
+>;
+
+export const OracleBattleProgressedSchema = Schema.Struct({
+  tag: Schema.Literal("battleProgressed"),
+  checkpoint: OracleBattleCheckpointSchema,
+  frontier: OracleBattleFrontierSchema,
+})
+  .pipe(
+    Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
+      message: () =>
+        "Battle frontier references must agree with the projected checkpoint.",
+    }),
+  )
+  .annotations({
+    identifier: "OracleBattleProgressed",
+    parseOptions: { onExcessProperty: "error" },
+  });
+export type OracleBattleProgressed = Schema.Schema.Type<
+  typeof OracleBattleProgressedSchema
+>;
+
+export const OracleBattleAttemptRejectionSchema = Schema.Struct({
+  tag: Schema.Literal("battleAttemptRejected"),
+  checkpoint: OracleBattleCheckpointSchema,
+  frontier: OracleBattleFrontierSchema,
+  reason: Schema.Literal(
+    "staleSubject",
+    "wrongActor",
+    "missingCombatant",
+    "invalidFill",
+    "unsupportedSubject",
+    "unsupportedActOption",
+  ),
+})
+  .pipe(
+    Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
+      message: () =>
+        "Battle frontier references must agree with the projected checkpoint.",
+    }),
+  )
+  .annotations({
+    identifier: "OracleBattleAttemptRejection",
+    parseOptions: { onExcessProperty: "error" },
+  });
+export type OracleBattleAttemptRejection = Schema.Schema.Type<
+  typeof OracleBattleAttemptRejectionSchema
+>;
+
+export const OracleBattleResolvedSchema = Schema.Struct({
+  tag: Schema.Literal("battleResolved"),
+  checkpoint: OracleBattleCheckpointSchema,
+  outcome: Schema.Literal("resolved"),
+}).annotations({
+  identifier: "OracleBattleResolved",
+  parseOptions: { onExcessProperty: "error" },
+});
+export type OracleBattleResolved = Schema.Schema.Type<
+  typeof OracleBattleResolvedSchema
 >;
 
 export const OracleTraceStepSchema = Schema.Union(
@@ -370,11 +531,17 @@ export const OracleTraceStepSchema = Schema.Union(
   SheetConstructionRejectionSchema,
   BattleEntryRejectionSchema,
   OracleBattleEnteredSchema,
+  OracleBattleProgressedSchema,
+  OracleBattleAttemptRejectionSchema,
+  OracleBattleResolvedSchema,
   Schema.Struct({
     tag: Schema.Literal("workflowRejected"),
     reason: WorkflowRejectionSchema,
   }),
-);
+).annotations({
+  identifier: "OracleTraceStep",
+  parseOptions: { onExcessProperty: "error" },
+});
 
 export type OracleTraceStep = Schema.Schema.Type<typeof OracleTraceStepSchema>;
 
@@ -383,13 +550,16 @@ export type OracleTraceStep = Schema.Schema.Type<typeof OracleTraceStepSchema>;
 // constructed through a weaker exported alias.
 const OracleTraceShapeSchema = Schema.Struct({
   steps: Schema.NonEmptyArray(OracleTraceStepSchema),
-});
+}).annotations({ parseOptions: { onExcessProperty: "error" } });
 export const OracleTraceSchema = OracleTraceShapeSchema.pipe(
   Schema.filter(validOracleTraceLifecycle, {
     message: () => "trace steps do not form a valid Oracle lifecycle",
   }),
   Schema.brand("OracleTrace"),
-);
+).annotations({
+  identifier: "OracleTrace",
+  parseOptions: { onExcessProperty: "error" },
+});
 export type OracleTrace = Schema.Schema.Type<typeof OracleTraceSchema>;
 
 export const oracleCaseSchema = OracleCaseSchema;
@@ -466,7 +636,10 @@ const BATTLE_SUBJECT_REFERENCE_PROPERTIES = {
   readiedSpellCasterId: true,
   sourceCombatantId: true,
   targetId: true,
-} satisfies Record<CombatantReferenceProperty<BattleSubject>, true>;
+} satisfies Record<
+  CombatantReferenceProperty<BattleSubject | BattleInterruptSubject>,
+  true
+>;
 
 function oracleBattleEnteredInvariantsHold(entered: {
   readonly checkpoint: {
@@ -474,20 +647,154 @@ function oracleBattleEnteredInvariantsHold(entered: {
     readonly turnOrder: readonly string[];
     readonly combatants: readonly { readonly combatantId: string }[];
   };
-  readonly frontier: { readonly acts: readonly BattleSubject[] };
+  readonly frontier: {
+    readonly kind: "acts";
+    readonly acts: readonly [BattleSubject, ...BattleSubject[]];
+  };
+}): boolean {
+  return oracleBattleCheckpointFrontierInvariantsHold({
+    checkpoint: entered.checkpoint,
+    frontier: entered.frontier,
+  });
+}
+
+function oracleBattleCheckpointFrontierInvariantsHold(input: {
+  readonly checkpoint: {
+    readonly currentActorId: string;
+    readonly turnOrder: readonly string[];
+    readonly combatants: readonly { readonly combatantId: string }[];
+  };
+  readonly frontier: OracleBattleFrontier;
 }): boolean {
   const liveCombatantIds = new Set(
-    entered.checkpoint.combatants.map(({ combatantId }) => combatantId),
+    input.checkpoint.combatants.map(({ combatantId }) => combatantId),
   );
-  return entered.frontier.acts.every(
-    (subject) =>
-      entered.checkpoint.currentActorId === entered.checkpoint.turnOrder[0] &&
-      battleSubjectBelongsToCurrentActor(
-        subject,
-        entered.checkpoint.currentActorId,
-      ) &&
-      battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
-      battleSubjectProcedureRefsBelongToOwners(subject),
+  if (
+    input.frontier.kind === "terminal" ||
+    input.frontier.kind === "interruptDecision"
+  ) {
+    return input.frontier.kind === "terminal"
+      ? true
+      : input.frontier.decisionHole.eligibleResponders.every((responderId) =>
+          liveCombatantIds.has(responderId),
+        ) &&
+          input.frontier.choices.every((choice) =>
+            oracleBattleInterruptChoiceIsValid(choice, liveCombatantIds),
+          );
+  }
+
+  if (input.frontier.kind === "acts") {
+    return (
+      input.checkpoint.currentActorId === input.checkpoint.turnOrder[0] &&
+      input.frontier.acts.every(
+        (subject) =>
+          battleSubjectBelongsToCurrentActor(
+            subject,
+            input.checkpoint.currentActorId,
+          ) &&
+          battleSubjectReferencesAreLive(subject, liveCombatantIds) &&
+          battleSubjectProcedureRefsBelongToOwners(subject),
+      )
+    );
+  }
+
+  return (
+    input.checkpoint.currentActorId === input.checkpoint.turnOrder[0] &&
+    battleSubjectBelongsToCurrentActor(
+      input.frontier.subject,
+      input.checkpoint.currentActorId,
+    ) &&
+    battleSubjectReferencesAreLive(input.frontier.subject, liveCombatantIds) &&
+    battleSubjectProcedureRefsBelongToOwners(input.frontier.subject)
+  );
+}
+
+function oracleBattleInterruptChoiceIsValid(
+  choice: BattleMechanicalInterruptChoice,
+  liveCombatantIds: ReadonlySet<string>,
+): boolean {
+  const responderId = oracleBattleInterruptChoiceResponderId(choice);
+  if (!liveCombatantIds.has(responderId)) return false;
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      nestedProcedure: ({ subject }) =>
+        oracleBattleInterruptSubjectIsValid(subject, liveCombatantIds),
+      reactionModifier: () => true,
+    }),
+  );
+}
+
+function oracleBattleInterruptChoiceResponderId(
+  choice: BattleMechanicalInterruptChoice,
+): string {
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      nestedProcedure: ({ subject }) =>
+        Match.value(subject).pipe(
+          Match.discriminatorsExhaustive("command")({
+            releaseReadiedSpell: (value) => value.readiedSpellCasterId,
+            releaseReadiedMovement: (value) => value.readiedMovementActorId,
+            releaseReadiedAction: (value) => value.reactorId,
+            releaseReadiedAttack: (value) => value.reactorId,
+            castTriggeredReactionSpell: (value) => value.reactorId,
+            castAttackHitBonusActionSpell: (value) => value.casterId,
+            opportunityAttack: (value) => value.reactorId,
+            retaliationAttack: (value) => value.reactorId,
+          }),
+        ),
+      reactionModifier: ({ responderId }) => responderId,
+    }),
+  );
+}
+
+function oracleBattleInterruptSubjectIsValid(
+  subject: BattleInterruptSubject,
+  liveCombatantIds: ReadonlySet<string>,
+): boolean {
+  if (!battleSubjectReferencesAreLive(subject, liveCombatantIds)) {
+    return false;
+  }
+  const procedureOwnerAndRefs = Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      releaseReadiedSpell: (value) => ({
+        ownerId: value.readiedSpellCasterId,
+        procedureRefs: [value.procedureRef],
+      }),
+      releaseReadiedMovement: (value) => ({
+        ownerId: value.actorId,
+        procedureRefs: [],
+      }),
+      releaseReadiedAction: (value) => ({
+        ownerId: value.reactorId,
+        procedureRefs: [],
+      }),
+      releaseReadiedAttack: (value) => ({
+        ownerId: value.reactorId,
+        procedureRefs: [value.procedureRef],
+      }),
+      castTriggeredReactionSpell: (value) => ({
+        ownerId: value.reactorId,
+        procedureRefs: [value.procedureRef],
+      }),
+      castAttackHitBonusActionSpell: (value) => ({
+        ownerId: value.casterId,
+        procedureRefs: [value.procedureRef],
+      }),
+      opportunityAttack: (value) => ({
+        ownerId: value.reactorId,
+        procedureRefs: [value.procedureRef],
+      }),
+      retaliationAttack: (value) => ({
+        ownerId: value.reactorId,
+        procedureRefs: [value.procedureRef],
+      }),
+    }),
+  );
+  return procedureOwnerAndRefs.procedureRefs.every((procedureRef) =>
+    battleProcedureExecutionRefBelongsToCombatant(
+      procedureRef,
+      procedureOwnerAndRefs.ownerId,
+    ),
   );
 }
 

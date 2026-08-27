@@ -86,6 +86,7 @@ const statBlockBattle = {
       tempHp: 0,
     },
   ] as const,
+  attempts: [],
 };
 
 const mixedBattle = {
@@ -99,6 +100,7 @@ const mixedBattle = {
     },
     ...statBlockBattle.roster,
   ] as const,
+  attempts: [],
 };
 
 describe("Opaque Oracle Case and Trace contract", () => {
@@ -174,6 +176,19 @@ describe("Opaque Oracle Case and Trace contract", () => {
         { path: "/creation", code: "duplicateMember" },
       ]);
     }
+
+    const missingAttempts = decodeOracleCase({
+      creation: { fillBatches: [] },
+      sheet: { tag: "ordinary" },
+      battle: { roster: statBlockBattle.roster },
+    });
+    expect(Either.isLeft(missingAttempts)).toBe(true);
+    if (Either.isLeft(missingAttempts)) {
+      expect(missingAttempts.left).toContainEqual({
+        path: "/battle/attempts",
+        code: "missingMember",
+      });
+    }
   });
 
   it("reports malformed set members through the decoder", () => {
@@ -206,7 +221,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
     const empty = decodeOracleCase({
       creation: { fillBatches: [] },
       sheet: { tag: "ordinary" },
-      battle: { roster: [] },
+      battle: { roster: [], attempts: [] },
     });
     expect(Either.isRight(empty)).toBe(true);
 
@@ -230,6 +245,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             ammunitionStocks: [],
           },
         ],
+        attempts: [],
       },
     });
     expect(Either.isLeft(duplicateSheet)).toBe(true);
@@ -244,6 +260,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             conditions: ["prone", "prone"],
           },
         ],
+        attempts: [],
       },
     });
     expect(Either.isLeft(duplicateConditions)).toBe(true);
@@ -268,6 +285,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
             conditions: [],
           },
         ],
+        attempts: [],
       },
     });
     expect(Either.isLeft(omittedTempHp)).toBe(true);
@@ -464,7 +482,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
       case: {
         creation: { fillBatches: completeCreationFillBatches() },
         sheet: { tag: "ordinary" },
-        battle: { roster: [] },
+        battle: { roster: [], attempts: [] },
       },
       unitLibrary,
       statBlockCatalog,
@@ -474,6 +492,107 @@ describe("Opaque Oracle Case and Trace contract", () => {
       issues: [{ tag: "characterBattleEncounterEmptyRoster" }],
     });
     expect(Either.isRight(decodeOracleTrace(empty))).toBe(true);
+  });
+
+  it("drives an ordinary Act attempt through the mechanical Hole frontier", () => {
+    const initial = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: mixedBattle,
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const entered = initial.steps.at(-1);
+    expect(entered?.tag).toBe("battleEntered");
+    if (entered?.tag !== "battleEntered") return;
+    const subject = entered.frontier.acts[0];
+    expect(subject).toBeDefined();
+    if (subject === undefined) return;
+
+    const trace = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...mixedBattle,
+          attempts: [{ kind: "ordinarySubject", subject, fills: [] }],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const progressed = trace.steps.at(-1);
+    expect(progressed?.tag).toBe("battleProgressed");
+    if (progressed?.tag !== "battleProgressed") return;
+    expect(progressed.frontier.kind).toBe("ordinaryHoles");
+    if (progressed.frontier.kind === "ordinaryHoles") {
+      expect(progressed.frontier.subject).toEqual(subject);
+      expect(progressed.frontier.holes.length).toBeGreaterThan(0);
+      expect(progressed.frontier.acceptedFills).toEqual([]);
+    }
+    expect(Either.isRight(decodeOracleTrace(trace))).toBe(true);
+  });
+
+  it("keeps an invalid Act attempt's checkpoint/frontier stable for retry", () => {
+    const initial = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: mixedBattle,
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const entered = initial.steps.at(-1);
+    expect(entered?.tag).toBe("battleEntered");
+    if (entered?.tag !== "battleEntered") return;
+    const subject = entered.frontier.acts[0];
+    expect(subject).toBeDefined();
+    if (subject === undefined || !("actorId" in subject)) return;
+
+    const trace = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...mixedBattle,
+          attempts: [
+            {
+              kind: "ordinarySubject",
+              subject: {
+                ...subject,
+                actorId: combatantId("oracle:wrong-actor"),
+              },
+              fills: [],
+            },
+            { kind: "ordinarySubject", subject, fills: [] },
+          ],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const rejection = trace.steps.at(-2);
+    const progressed = trace.steps.at(-1);
+    expect(rejection?.tag).toBe("battleAttemptRejected");
+    expect(progressed?.tag).toBe("battleProgressed");
+    if (
+      rejection?.tag !== "battleAttemptRejected" ||
+      progressed?.tag !== "battleProgressed"
+    ) {
+      return;
+    }
+    expect(rejection.reason).toBe("wrongActor");
+    expect(rejection.checkpoint).toEqual(
+      trace.steps.find((step) => step.tag === "battleEntered")?.checkpoint,
+    );
+    expect(rejection.frontier).toEqual(
+      trace.steps.find((step) => step.tag === "battleEntered")?.frontier,
+    );
+    expect(progressed.frontier.kind).toBe("ordinaryHoles");
+    expect(Either.isRight(decodeOracleTrace(trace))).toBe(true);
   });
 
   it("rejects stripped checkpoints with impossible identity or turn references", () => {
@@ -641,6 +760,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           initiative: 1,
         },
       ] as const,
+      attempts: [],
     };
     const caseB = {
       creation: { fillBatches: completeCreationFillBatches() },
@@ -690,6 +810,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
           tempHp: 0,
         },
       ] as const,
+      attempts: [],
     };
     const rejected = evaluateDecodedCase({
       case: {
@@ -739,6 +860,7 @@ describe("Opaque Oracle Case and Trace contract", () => {
               tempHp: 0,
             },
           ],
+          attempts: [],
         },
       },
       unitLibrary,

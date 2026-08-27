@@ -18,9 +18,17 @@ import {
 } from "@dnd/character-battle-runtime";
 import {
   battleId,
+  battleMechanicalFrontier,
   discoverBattleActs,
   initiativeScore,
+  resolveBattleRuntimeInterrupt,
+  resolveBattleRuntimeSubject,
   snapshotBattle,
+  type BattleFill,
+  type BattleMechanicalFrontier,
+  type BattleResolutionResult,
+  type BattleRuntimeResolutionResult,
+  type BattleRuntimeSession,
   type BattleStateInitIssue,
 } from "@dnd/battle-runtime";
 import {
@@ -31,16 +39,18 @@ import {
 } from "@dnd/character-sheet-runtime";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 
 import { canonicalizeStringSet } from "./oracle-canonical.ts";
 import {
   OracleBattleCheckpointSchema,
   OracleTraceSchema,
   type FreshSheetInput,
+  type OracleBattleAttempt,
   type OracleBattleCheckpoint,
   type OracleBattleCreatureInitIssue,
   type OracleBattleEntryRejection,
+  type OracleBattleFrontier,
   type OracleBattleProjectionIssue,
   type OracleBattleRosterEntry,
   type OracleBattleStateInitLeafIssue,
@@ -135,6 +145,7 @@ export function evaluateOracleCase(
         : defect("ready finalization was narrowed inconsistently"),
       oracleCase.sheet,
       oracleCase.battle.roster,
+      oracleCase.battle.attempts,
       unitLibrary,
       statBlockCatalog,
     );
@@ -177,6 +188,7 @@ function appendFreshSheetAndBattleSteps(
   build: CharacterBuild,
   sheetInput: FreshSheetInput,
   rosterInput: readonly OracleBattleRosterEntry[],
+  attemptsInput: readonly OracleBattleAttempt[],
   unitLibrary: UnitCatalog,
   statBlockCatalog: StatBlockCatalog,
 ): OracleTrace {
@@ -231,20 +243,198 @@ function appendFreshSheetAndBattleSteps(
   }
 
   const snapshot = snapshotBattle(entry.right.session.state);
-  const acts = discoverBattleActs(entry.right.session).map(
-    ({ subject }) => subject,
-  );
-  const [firstAct, ...remainingActs] = acts;
-  if (firstAct === undefined)
-    return defect("Battle act discovery produced an empty frontier");
+  const initialFrontier = battleActsFrontier(entry.right.session);
   steps.push({
     tag: "battleEntered",
     checkpoint: strippedBattleCheckpoint(snapshot),
-    frontier: {
-      acts: [firstAct, ...remainingActs],
-    },
+    frontier: initialFrontier,
   });
+  return appendBattleAttempts(
+    steps,
+    {
+      session: entry.right.session,
+      checkpoint: strippedBattleCheckpoint(snapshot),
+      frontier: initialFrontier,
+    },
+    attemptsInput,
+    statBlockCatalog,
+  );
+}
+
+type OracleBattleContinuation = {
+  readonly session: BattleRuntimeSession;
+  readonly checkpoint: OracleBattleCheckpoint;
+  readonly frontier: OracleBattleFrontier;
+};
+
+function appendBattleAttempts(
+  steps: [OracleTraceStep, ...OracleTraceStep[]],
+  initial: OracleBattleContinuation,
+  attempts: readonly OracleBattleAttempt[],
+  statBlockCatalog: StatBlockCatalog,
+): OracleTrace {
+  let current = initial;
+  for (const [attemptIndex, attempt] of attempts.entries()) {
+    if (current.frontier.kind === "terminal") {
+      steps.push({
+        tag: "workflowRejected",
+        reason: {
+          code: "battleInputSurplus",
+          firstUnusedAttemptIndex: Index(attemptIndex),
+        },
+      });
+      return oracleTrace(steps);
+    }
+
+    const result = resolveBattleAttempt({
+      attempt,
+      session: current.session,
+      statBlockCatalog,
+    });
+    if (result.tag === "invalid") {
+      steps.push({
+        tag: "battleAttemptRejected",
+        checkpoint: current.checkpoint,
+        frontier: current.frontier,
+        reason: result.reason,
+      });
+      continue;
+    }
+
+    if (result.tag === "needsHoles") {
+      const mechanicalFrontier = projectBattleMechanicalFrontier(
+        result,
+        acceptedFillsForAttempt(attempt),
+      );
+      const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
+      const nextSession =
+        attempt.kind === "interruptDecision" ||
+        mechanicalFrontier.kind === "interruptDecision"
+          ? result.session
+          : current.session;
+      current = {
+        session: nextSession,
+        checkpoint: nextCheckpoint,
+        frontier: mechanicalFrontier,
+      };
+      steps.push({
+        tag: "battleProgressed",
+        checkpoint: nextCheckpoint,
+        frontier: mechanicalFrontier,
+      });
+      continue;
+    }
+
+    const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
+    const nextFrontier = battleFrontierAfterResolution(result.session);
+    current = {
+      session: result.session,
+      checkpoint: nextCheckpoint,
+      frontier: nextFrontier,
+    };
+    if (nextFrontier.kind === "terminal") {
+      steps.push({
+        tag: "battleResolved",
+        checkpoint: nextCheckpoint,
+        outcome: "resolved",
+      });
+    } else {
+      steps.push({
+        tag: "battleProgressed",
+        checkpoint: nextCheckpoint,
+        frontier: nextFrontier,
+      });
+    }
+  }
   return oracleTrace(steps);
+}
+
+function resolveBattleAttempt(input: {
+  readonly attempt: OracleBattleAttempt;
+  readonly session: BattleRuntimeSession;
+  readonly statBlockCatalog: StatBlockCatalog;
+}): BattleRuntimeResolutionResult {
+  return Match.value(input.attempt).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      ordinarySubject: (attempt) =>
+        resolveBattleRuntimeSubject({
+          session: input.session,
+          subject: attempt.subject,
+          fills: attempt.fills,
+          statBlockCatalog: input.statBlockCatalog,
+        }),
+      interruptDecision: (attempt) =>
+        resolveBattleRuntimeInterrupt({
+          session: input.session,
+          fill: attempt.fill,
+        }),
+    }),
+  );
+}
+
+function acceptedFillsForAttempt(
+  attempt: OracleBattleAttempt,
+): readonly BattleFill[] {
+  return Match.value(attempt).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      ordinarySubject: ({ fills }) => fills,
+      interruptDecision: ({ fill }) =>
+        fill.value.kind === "resolve" ? fill.value.choice.fills : [],
+    }),
+  );
+}
+
+function projectBattleMechanicalFrontier(
+  result: Extract<
+    BattleRuntimeResolutionResult,
+    { readonly tag: "needsHoles" }
+  >,
+  acceptedFills: readonly BattleFill[],
+): BattleMechanicalFrontier {
+  const mechanicalResult: Extract<
+    BattleResolutionResult,
+    { readonly tag: "needsHoles" }
+  > = {
+    tag: "needsHoles",
+    state: result.session.state,
+    subject: result.subject,
+    holes: result.holes,
+    snapshot: result.snapshot,
+    ...(result.routeEvents === undefined
+      ? {}
+      : { routeEvents: result.routeEvents }),
+  };
+  const projected = battleMechanicalFrontier({
+    result: mechanicalResult,
+    acceptedFills,
+  });
+  if (Either.isLeft(projected)) {
+    return defect(
+      `Battle mechanical frontier projection defect: ${projected.left.tag}`,
+    );
+  }
+  return projected.right;
+}
+
+function battleActsFrontier(
+  session: BattleRuntimeSession,
+): Extract<OracleBattleFrontier, { readonly kind: "acts" }> {
+  const acts = discoverBattleActs(session).map(({ subject }) => subject);
+  const [firstAct, ...remainingActs] = acts;
+  if (firstAct === undefined) {
+    return defect("Battle act discovery produced an empty frontier");
+  }
+  return { kind: "acts", acts: [firstAct, ...remainingActs] };
+}
+
+function battleFrontierAfterResolution(
+  session: BattleRuntimeSession,
+): OracleBattleFrontier {
+  const acts = discoverBattleActs(session).map(({ subject }) => subject);
+  const [firstAct, ...remainingActs] = acts;
+  return firstAct === undefined
+    ? { kind: "terminal", outcome: "resolved" }
+    : { kind: "acts", acts: [firstAct, ...remainingActs] };
 }
 
 function resolveBattleRoster(input: {

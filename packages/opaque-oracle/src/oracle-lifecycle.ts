@@ -5,6 +5,7 @@ type LifecycleState =
   | "built"
   | "sheet"
   | "battle"
+  | "battleResolved"
   | "terminal";
 
 export function validOracleTraceLifecycle(trace: {
@@ -15,7 +16,7 @@ export function validOracleTraceLifecycle(trace: {
 
   let state: LifecycleState = "creation";
   for (const [stepIndex, step] of trace.steps.entries()) {
-    if (state === "terminal" || state === "battle") return false;
+    if (state === "terminal") return false;
 
     switch (step.tag) {
       case "creationStarted":
@@ -36,6 +37,17 @@ export function validOracleTraceLifecycle(trace: {
         if (state !== "sheet") return false;
         state = "battle";
         break;
+      case "battleProgressed":
+        if (state !== "battle") return false;
+        if (step.frontier.kind === "terminal") state = "battleResolved";
+        break;
+      case "battleAttemptRejected":
+        if (state !== "battle") return false;
+        break;
+      case "battleResolved":
+        if (state !== "battle") return false;
+        state = "battleResolved";
+        break;
       case "creationFillRejected":
       case "creationFinalizationRejected":
         if (state !== "creation") return false;
@@ -53,7 +65,9 @@ export function validOracleTraceLifecycle(trace: {
         if (
           (state === "creation" &&
             step.reason.code === "creationInputExhausted") ||
-          (state === "built" && step.reason.code === "creationInputSurplus")
+          (state === "built" && step.reason.code === "creationInputSurplus") ||
+          ((state === "battle" || state === "battleResolved") &&
+            step.reason.code === "battleInputSurplus")
         ) {
           state = "terminal";
         } else {
@@ -63,5 +77,7 @@ export function validOracleTraceLifecycle(trace: {
     }
   }
 
-  return state === "battle" || state === "terminal";
+  return (
+    state === "battle" || state === "battleResolved" || state === "terminal"
+  );
 }
