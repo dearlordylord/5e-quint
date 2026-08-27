@@ -272,16 +272,17 @@ export function resolveCloudkillAreaSaveDamage(
     : resolveParsedPersistentAreaSaveDamage(parsed.procedure);
 }
 
-export function persistentAreaAppearanceTriggerMatchesCurrentTurn(
+function persistentAreaAppearanceTriggerMatchesCastOccurrence(
   state: BattleState,
   trigger:
     | BattleInsectPlagueAreaMembershipTrigger
     | BattleCloudkillAreaMembershipTrigger,
+  effect: InsectPlagueAreaHazardEffect | CloudkillAreaHazardEffect,
 ): boolean {
   return (
     trigger.kind === "appearsInArea" &&
-    trigger.triggerTurn.actorId === currentActorId(state) &&
-    trigger.triggerTurn.round === state.initiative.round
+    effect.appearanceOccurrence.actorId === currentActorId(state) &&
+    effect.appearanceOccurrence.round === state.initiative.round
   );
 }
 
@@ -427,22 +428,6 @@ function parsePersistentAreaSaveDamageProcedure(
   candidate: PersistentAreaSaveDamageProcedureCandidate,
 ): PersistentAreaProcedureParseResult {
   const membershipTrigger = candidate.resolution.subject.areaMembershipTrigger;
-  if (
-    membershipTrigger.kind === "appearsInArea" &&
-    !persistentAreaAppearanceTriggerMatchesCurrentTurn(
-      candidate.resolution.state,
-      membershipTrigger,
-    )
-  ) {
-    return {
-      tag: "invalid",
-      result: invalidResult(
-        candidate.resolution.state,
-        "staleSubject",
-        `${persistentAreaProcedureName(candidate.kind)} appearance save no longer matches its triggering turn.`,
-      ),
-    };
-  }
   if (candidate.effect === undefined) {
     return {
       tag: "invalid",
@@ -450,6 +435,23 @@ function parsePersistentAreaSaveDamageProcedure(
         candidate.resolution.state,
         "staleSubject",
         `${persistentAreaProcedureName(candidate.kind)} save is no longer available.`,
+      ),
+    };
+  }
+  if (
+    membershipTrigger.kind === "appearsInArea" &&
+    !persistentAreaAppearanceTriggerMatchesCastOccurrence(
+      candidate.resolution.state,
+      membershipTrigger,
+      candidate.effect,
+    )
+  ) {
+    return {
+      tag: "invalid",
+      result: invalidResult(
+        candidate.resolution.state,
+        "staleSubject",
+        `${persistentAreaProcedureName(candidate.kind)} appearance save is outside its cast occurrence.`,
       ),
     };
   }
@@ -839,7 +841,6 @@ function persistentAreaProcedureHoles(
         insectPlague.trigger,
       ),
       damageHole: insectPlagueAreaHazardDamageRollHole(
-        insectPlague.resolution.state,
         insectPlague.resolution.subject.actorId,
         insectPlague.effect,
         insectPlague.trigger,
@@ -853,7 +854,6 @@ function persistentAreaProcedureHoles(
         cloudkill.trigger,
       ),
       damageHole: cloudkillAreaHazardDamageRollHole(
-        cloudkill.resolution.state,
         cloudkill.resolution.subject.actorId,
         cloudkill.effect,
         cloudkill.trigger,
@@ -1025,7 +1025,7 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
   effect: InsectPlagueAreaHazardEffect,
   trigger: BattleInsectPlagueAreaHazardTrigger,
 ): BattleInsectPlagueAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}`;
+  const key = `battle:insect-plague-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -1044,13 +1044,12 @@ export function insectPlagueAreaHazardSavingThrowOutcomeHole(
 }
 
 function insectPlagueAreaHazardDamageRollHole(
-  state: BattleState,
   targetId: CombatantId,
   effect: InsectPlagueAreaHazardEffect,
   trigger: BattleInsectPlagueAreaHazardTrigger,
 ): BattleInsectPlagueAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}:${expr}`;
+  const key = `battle:insect-plague-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -1088,14 +1087,14 @@ function persistentAreaHazardTriggerLabel(
   );
 }
 
-function persistentAreaAppearanceTurnKey(
-  state: BattleState,
+function persistentAreaAppearanceOccurrenceKey(
+  effect: InsectPlagueAreaHazardEffect | CloudkillAreaHazardEffect,
   trigger:
     | BattleInsectPlagueAreaHazardTrigger
     | BattleCloudkillAreaHazardTrigger,
 ): string {
   return trigger === "appearsInArea"
-    ? `:${currentActorId(state)}:${state.initiative.round}`
+    ? `:${effect.appearanceOccurrence.actorId}:${effect.appearanceOccurrence.round}`
     : "";
 }
 
@@ -1105,7 +1104,7 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
 ): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
-  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}`;
+  const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}`;
   return {
     kind: "savingThrowOutcome",
     holeId: holeId(key),
@@ -1124,13 +1123,12 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
 }
 
 function cloudkillAreaHazardDamageRollHole(
-  state: BattleState,
   targetId: CombatantId,
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
 ): BattleCloudkillAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
-  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceTurnKey(state, trigger)}:${expr}`;
+  const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}:${expr}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),

@@ -6,11 +6,7 @@ import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import cloudkillInput from "../../surface/content/cloudkill.json";
-import {
-  battleLineDirectionId,
-  battleTablePositionId,
-  type CombatantId,
-} from "./identity.ts";
+import type { CombatantId } from "./identity.ts";
 import type {
   BattleActiveEffect,
   BattleCloudkillMovementHole,
@@ -62,8 +58,6 @@ import {
   spellBattleWithTargetRayOfFrost,
 } from "./unit-profile-admission-spell-battle.test-support.ts";
 
-const cloudkillDirectionId = battleLineDirectionId("away-from-source");
-const cloudkillDestinationId = battleTablePositionId("cloudkill-next-center");
 const cloudkillSecondaryTargetId = combatantId("cloudkill-secondary-target");
 
 function withGreaseGroundHazard(state: BattleState): BattleState {
@@ -142,8 +136,6 @@ function cloudkillMovementFill(
     kind: "cloudkillMovement" as const,
     holeId: hole.holeId,
     value: {
-      directionId: cloudkillDirectionId,
-      destinationId: cloudkillDestinationId,
       affectedCombatantIds,
     },
   };
@@ -968,7 +960,7 @@ describe("Cloudkill source-turn movement", () => {
     });
   });
 
-  test("offers independent failed-save reactions for delegated Grease End Turn and Cloudkill movement", () => {
+  test("resolves Grease before advancing End Turn into Cloudkill movement", () => {
     const cast = castCloudkill({ targetCanReadyRayOfFrost: true });
     const targetTurn = endTurn({
       state: cast.state,
@@ -1005,20 +997,66 @@ describe("Cloudkill source-turn movement", () => {
     if (greaseSaveHole?.kind !== "savingThrowOutcome") {
       throw new Error("Expected the Grease end-turn save frontier.");
     }
-    const movementHole = requireHole(
-      combinedFrontier.holes,
-      "cloudkillMovement",
-    );
+    expect(combinedFrontier.holes).toEqual([greaseSaveHole]);
     const greaseSaveFill = singleTargetSavingThrowOutcomeFill(
       greaseSaveHole,
       spellTargetId,
       false,
     );
-    const movementFill = cloudkillMovementFill(movementHole, [spellTargetId]);
-    const cloudkillSaveFrontier = resolveBattleSubject({
+    const greaseInterrupted = resolveBattleSubject({
       state: readied.state,
       subject,
-      fills: [greaseSaveFill, movementFill],
+      fills: [greaseSaveFill],
+    });
+    expect(greaseInterrupted).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
+      snapshot: {
+        currentActorId: spellTargetId,
+        pendingInterrupt: { trigger: "saveFailed" },
+      },
+    });
+    if (greaseInterrupted.tag !== "needsHoles") {
+      throw new Error("Expected the Grease failed-save window.");
+    }
+    const greaseDecision = requireHole(
+      greaseInterrupted.holes,
+      "interruptDecision",
+    );
+    const cloudkillMovementFrontier = resolveBattleInterrupt({
+      state: greaseInterrupted.state,
+      fill: interruptDecisionFill(greaseDecision, {
+        kind: "decline",
+        responderId: spellTargetId,
+      }),
+    });
+    expect(cloudkillMovementFrontier).toMatchObject({
+      tag: "needsHoles",
+      holes: [{ kind: "cloudkillMovement" }],
+      snapshot: {
+        round: 1,
+        currentActorId: spellTargetId,
+        pendingInterrupt: null,
+        combatants: expect.arrayContaining([
+          expect.objectContaining({
+            combatantId: spellTargetId,
+            conditions: expect.arrayContaining(["prone"]),
+          }),
+        ]),
+      },
+    });
+    if (cloudkillMovementFrontier.tag !== "needsHoles") {
+      throw new Error("Expected Cloudkill movement after Grease resolved.");
+    }
+    const movementHole = requireHole(
+      cloudkillMovementFrontier.holes,
+      "cloudkillMovement",
+    );
+    const movementFill = cloudkillMovementFill(movementHole, [spellTargetId]);
+    const cloudkillSaveFrontier = resolveBattleSubject({
+      state: cloudkillMovementFrontier.state,
+      subject: cloudkillMovementFrontier.subject,
+      fills: [movementFill],
     });
     if (cloudkillSaveFrontier.tag !== "needsHoles") {
       throw new Error("Expected the Cloudkill movement save frontier.");
@@ -1036,92 +1074,16 @@ describe("Cloudkill source-turn movement", () => {
       false,
     );
     const cloudkillInterrupted = resolveBattleSubject({
-      state: readied.state,
-      subject,
-      fills: [greaseSaveFill, movementFill, cloudkillSaveFill],
+      state: cloudkillSaveFrontier.state,
+      subject: cloudkillSaveFrontier.subject,
+      fills: [movementFill, cloudkillSaveFill],
     });
-    const cloudkillDecision = requireResultHole(
-      cloudkillInterrupted,
-      "interruptDecision",
-    );
-    if (cloudkillInterrupted.tag !== "needsHoles") {
-      throw new Error("Expected the Cloudkill failed-save window.");
-    }
-    const afterCloudkillDecline = resolveBattleInterrupt({
-      state: cloudkillInterrupted.state,
-      fill: interruptDecisionFill(cloudkillDecision, {
-        kind: "decline",
-        responderId: spellTargetId,
-      }),
-    });
-    const cloudkillDamageHole = requireResultHole(
-      afterCloudkillDecline,
-      "rolledDice",
-    );
-    if (afterCloudkillDecline.tag !== "needsHoles") {
-      throw new Error("Expected the Cloudkill damage frontier.");
-    }
-    const concentrationFrontier = resolveBattleSubject({
-      state: afterCloudkillDecline.state,
-      subject: afterCloudkillDecline.subject,
-      fills: [
-        greaseSaveFill,
-        movementFill,
-        cloudkillSaveFill,
-        damageRollFillWithGroups(cloudkillDamageHole, [[1, 1, 1, 1, 1]]),
-      ],
-    });
-    const cloudkillConcentrationHole = requireResultHole(
-      concentrationFrontier,
-      "concentrationSavingThrow",
-    );
-    if (concentrationFrontier.tag !== "needsHoles") {
-      throw new Error("Expected the Cloudkill Concentration-save frontier.");
-    }
-    const greaseInterrupted = resolveBattleSubject({
-      state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
-      fills: [
-        greaseSaveFill,
-        movementFill,
-        cloudkillSaveFill,
-        damageRollFillWithGroups(cloudkillDamageHole, [[1, 1, 1, 1, 1]]),
-        concentrationSavingThrowFill(cloudkillConcentrationHole, true),
-      ],
-    });
-
-    expect(greaseInterrupted).toMatchObject({
+    expect(cloudkillInterrupted).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "saveFailed" }],
       snapshot: {
         currentActorId: spellCasterId,
         pendingInterrupt: { trigger: "saveFailed" },
-      },
-    });
-    if (greaseInterrupted.tag !== "needsHoles") return;
-    const greaseDecision = requireHole(
-      greaseInterrupted.holes,
-      "interruptDecision",
-    );
-    const resolved = resolveBattleInterrupt({
-      state: greaseInterrupted.state,
-      fill: interruptDecisionFill(greaseDecision, {
-        kind: "decline",
-        responderId: spellTargetId,
-      }),
-    });
-    expect(resolved).toMatchObject({
-      tag: "resolved",
-      snapshot: {
-        round: 2,
-        currentActorId: spellCasterId,
-        pendingInterrupt: null,
-        combatants: expect.arrayContaining([
-          expect.objectContaining({
-            combatantId: spellTargetId,
-            conditions: expect.arrayContaining(["prone"]),
-          }),
-        ]),
       },
     });
   });
@@ -1313,20 +1275,16 @@ describe("Cloudkill source-turn movement", () => {
     fc.assert(
       fc.property(
         fc.record({
-          directionId: fc.stringMatching(/^[a-z][a-z0-9-]{0,15}$/),
-          destinationId: fc.stringMatching(/^[a-z][a-z0-9-]{0,15}$/),
           affectedCombatantIds: fc.shuffledSubarray([
             spellCasterId,
             spellTargetId,
           ]),
         }),
-        ({ directionId, destinationId, affectedCombatantIds }) => {
+        ({ affectedCombatantIds }) => {
           const fill = {
             kind: "cloudkillMovement" as const,
             holeId: movementHole.holeId,
             value: {
-              directionId: battleLineDirectionId(directionId),
-              destinationId: battleTablePositionId(destinationId),
               affectedCombatantIds,
             },
           };

@@ -478,6 +478,44 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
     });
   });
 
+  test("rejects a freshly fabricated appearance after the cast occurrence", () => {
+    const { cast, session } = castInsectPlague();
+    const appeared = requireResolved(
+      resolveInsectPlagueSave({
+        session: battleRuntimeSessionForTest({
+          state: cast,
+          context: session.context,
+        }),
+        succeeded: true,
+        trigger: "appearsInArea",
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: appeared.state, actorId: spellCasterId }),
+    );
+    const fabricatedAppearance = insectPlagueAreaHazardSaveAct(
+      battleRuntimeSessionForTest({
+        state: targetTurn.state,
+        context: session.context,
+      }),
+      spellTargetId,
+      "appearsInArea",
+    );
+
+    expect(
+      resolveBattleSubject({
+        state: targetTurn.state,
+        subject: fabricatedAppearance.subject,
+        fills: [],
+      }),
+    ).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+      message: "Insect Plague appearance save is outside its cast occurrence.",
+    });
+    expect(insectPlagueSavedThisTurn(targetTurn.state)).toEqual([]);
+  });
+
   test("rejects a previously discovered save after concentration removes the hazard", () => {
     const { session, cast } = castInsectPlague();
     const saveAct = insectPlagueAreaHazardSaveAct(

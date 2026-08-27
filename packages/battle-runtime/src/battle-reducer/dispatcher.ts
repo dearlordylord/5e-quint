@@ -185,7 +185,7 @@ import {
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
-  persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn,
+  isPersistentAreaAppearanceSubject,
   resolvePersistentSpatialSpellProcedureCommand,
 } from "./persistent-spatial-spell-procedures.ts";
 import { resolveEndConcentrationCommand } from "./concentration-procedures.ts";
@@ -423,6 +423,27 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     interruptRouteOptions.replayParentPosition === undefined
       ? {}
       : { replayParentPosition: interruptRouteOptions.replayParentPosition };
+  const interruptConsumerOptions =
+    interruptRouteOptions.replayingInterruptedProcedure === true &&
+    handledInterruptOccurrence !== undefined
+      ? {
+          replayingInterruptedProcedure: true as const,
+          handledInterruptTrigger: handledInterruptOccurrence.trigger,
+          ...replayParentRouteOption,
+          ...(interruptRouteOptions.pendingAttackDamageReductions === undefined
+            ? {}
+            : {
+                pendingAttackDamageReductions:
+                  interruptRouteOptions.pendingAttackDamageReductions,
+              }),
+          ...(interruptRouteOptions.pendingAttackDamageAdditions === undefined
+            ? {}
+            : {
+                pendingAttackDamageAdditions:
+                  interruptRouteOptions.pendingAttackDamageAdditions,
+              }),
+        }
+      : handledInterruptRouteOption;
   const handledSaveFailedOccurrence =
     handledInterruptOccurrence?.trigger === "saveFailed"
       ? handledInterruptOccurrence
@@ -446,10 +467,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     interruptRouteOptions.replayParentPosition === undefined &&
     !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
-    !persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(
-      input.state,
-      input.subject,
-    )
+    !isPersistentAreaAppearanceSubject(input.subject)
   ) {
     return invalidResult(
       input.state,
@@ -540,7 +558,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         return options.attackResolvers.resolveAttack({
           ...input,
           subject,
-          ...interruptRouteOptions,
+          ...interruptConsumerOptions,
         });
       }
       if (subject.action === "dash") {
@@ -602,7 +620,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveOffHandAttack({
         ...input,
         subject,
-        ...interruptRouteOptions,
+        ...interruptConsumerOptions,
       });
     }
     if (
@@ -612,7 +630,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return resolveMartialArtsBonusUnarmedStrike({
         ...input,
         subject,
-        ...interruptRouteOptions,
+        ...interruptConsumerOptions,
       });
     }
     if (subject.tag === "monkFocusOption") {
@@ -622,7 +640,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
       return options.attackResolvers.resolveMonkFocusFlurryOfBlowsStrike({
         ...input,
         subject,
-        ...interruptRouteOptions,
+        ...interruptConsumerOptions,
       });
     }
     if (
@@ -653,7 +671,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         {
           ...input,
           subject,
-          ...interruptRouteOptions,
+          ...interruptConsumerOptions,
         },
         options.executionRegistry,
       );

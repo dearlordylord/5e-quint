@@ -35,6 +35,7 @@ import {
   hasCondition,
 } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import {
   movementFeet,
   type Ability,
@@ -2316,6 +2317,10 @@ export function applyInsectPlagueAreaHazardCastEffect(input: {
       kind: "insectPlagueAreaHazard" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
+      appearanceOccurrence: {
+        actorId: currentActing(input.state.initiative),
+        round: input.state.initiative.round,
+      },
       areaId: input.areaId,
       radiusFeet: input.invocation.targeting.radiusFeet,
       save: {
@@ -2349,6 +2354,10 @@ export function applyCloudkillAreaHazardCastEffect(input: {
       kind: "cloudkillAreaHazard" as const,
       sourceProcedureRef: input.invocation.sourceProcedureRef,
       sourceCombatantId: input.actorId,
+      appearanceOccurrence: {
+        actorId: currentActing(input.state.initiative),
+        round: input.state.initiative.round,
+      },
       areaId: input.areaId,
       radiusFeet: input.invocation.targeting.radiusFeet,
       save: {

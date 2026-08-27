@@ -1333,21 +1333,13 @@ export type BattleHandledInterruptOccurrence =
       };
     }[Exclude<BattleInterruptTrigger, "saveFailed">];
 
-type BattleHandledInterruptRouteProjectionFor<
-  T extends BattleHandledInterruptOccurrence = BattleHandledInterruptOccurrence,
-> = T extends BattleHandledInterruptOccurrence
-  ? {
-      readonly handledInterruptOccurrence: T;
-      readonly handledInterruptTrigger: T["trigger"];
-    }
-  : never;
-
 export type BattleHandledInterruptRouteProjection =
   | {
       readonly handledInterruptOccurrence?: never;
-      readonly handledInterruptTrigger?: never;
     }
-  | BattleHandledInterruptRouteProjectionFor;
+  | {
+      readonly handledInterruptOccurrence: BattleHandledInterruptOccurrence;
+    };
 
 export type BattleReplayContinuationFrame = {
   readonly kind: "replayContinuation";
@@ -6311,8 +6303,6 @@ export type BattleCloudkillMovementFill = {
   readonly kind: "cloudkillMovement";
   readonly holeId: BattleHoleId;
   readonly value: {
-    readonly directionId: BattleLineDirectionId;
-    readonly destinationId: BattleTablePositionId;
     readonly affectedCombatantIds: readonly CombatantId[];
   };
 };
@@ -6864,10 +6854,25 @@ export type BattleInterruptRouteOptions =
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
     });
+export type BattleInterruptConsumerOptions =
+  | {
+      readonly replayingInterruptedProcedure?: never;
+      readonly handledInterruptTrigger?: BattleInterruptTrigger;
+      readonly replayParentPosition?: never;
+      readonly pendingAttackDamageReductions?: never;
+      readonly pendingAttackDamageAdditions?: never;
+    }
+  | {
+      readonly replayingInterruptedProcedure: true;
+      readonly handledInterruptTrigger: BattleInterruptTrigger;
+      readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+      readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
+      readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
+    };
 export type AttackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "action"; readonly action: "attack" }>
 > &
-  BattleInterruptRouteOptions;
+  BattleInterruptConsumerOptions;
 export type MultiattackBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<
     BattleSubject,
@@ -6881,7 +6886,7 @@ export type OffHandAttackBattleResolutionInput =
       { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
     >
   > &
-    BattleInterruptRouteOptions;
+    BattleInterruptConsumerOptions;
 export type MartialArtsBonusUnarmedStrikeBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -6892,7 +6897,7 @@ export type MartialArtsBonusUnarmedStrikeBattleResolutionInput =
       }
     >
   > &
-    BattleInterruptRouteOptions;
+    BattleInterruptConsumerOptions;
 export type StatBlockBonusActionOptionBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<
@@ -6938,7 +6943,7 @@ export type EscapeSpellRestraintBattleResolutionInput =
 export type ActionSpellBattleResolutionInput = BattleResolutionInputForSubject<
   Extract<BattleSubject, { readonly tag: "actionSpell" }>
 > &
-  BattleInterruptRouteOptions &
+  BattleInterruptConsumerOptions &
   (
     | {
         readonly reactionContinuation?: {
@@ -6981,7 +6986,7 @@ export type MonkFocusOptionBattleResolutionInput =
   >;
 export type MonkFocusFlurryOfBlowsStrikeBattleResolutionInput =
   BattleResolutionInputForSubject<MonkFocusFlurryOfBlowsStrikeSubject> &
-    BattleInterruptRouteOptions;
+    BattleInterruptConsumerOptions;
 export type DruidWildShapeBattleResolutionInput =
   BattleResolutionInputForSubject<
     Extract<BattleSubject, { readonly tag: "druidWildShape" }>

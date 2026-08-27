@@ -73,7 +73,6 @@ import {
   moonbeamMoveDistanceAccepted,
 } from "./moonbeam-movable-zone.ts";
 import {
-  persistentAreaAppearanceTriggerMatchesCurrentTurn,
   resolveCloudkillAreaSaveDamage,
   resolveInsectPlagueAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
@@ -241,18 +240,14 @@ export function isPersistentSpatialSpellProcedureSubject(
   );
 }
 
-export function persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(
-  state: BattleState,
+export function isPersistentAreaAppearanceSubject(
   subject: BattleSubject,
 ): boolean {
   return (
     subject.tag === "runtimeCommand" &&
     (subject.command === "insectPlagueAreaHazardSave" ||
       subject.command === "cloudkillAreaHazardSave") &&
-    persistentAreaAppearanceTriggerMatchesCurrentTurn(
-      state,
-      subject.areaMembershipTrigger,
-    )
+    subject.areaMembershipTrigger.kind === "appearsInArea"
   );
 }
 
@@ -1065,17 +1060,11 @@ function resolveGustOfWindLineSaveCommand(
   const endTurnFills = input.fills.filter(
     (fill) => fill.holeId !== hole.holeId,
   );
-  const endTurnProbe = resolveDelegatedEndTurnCommand(input, {
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   if (matchingGustFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole,
-      endTurnProbe,
     });
   }
   const validation = validateGustOfWindLineSavingThrowOutcome(
@@ -1088,13 +1077,6 @@ function resolveGustOfWindLineSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
   const outcome = matchingGustFill.value.outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({
@@ -1451,18 +1433,12 @@ function resolveFlamingSphereSaveCommand(
       fill.holeId !== damageHole.holeId &&
       fill.holeId !== concentrationHoleId,
   );
-  const endTurnProbe = resolveDelegatedEndTurnCommand(input, {
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: saveHole,
-      endTurnProbe,
     });
   }
   const saveValidation = validateFlamingSphereSavingThrowOutcome(
@@ -1490,11 +1466,10 @@ function resolveFlamingSphereSaveCommand(
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: damageHole,
-      endTurnProbe,
     });
   }
   const damageValidation = validateFlamingSphereDamageRoll(
@@ -1544,19 +1519,11 @@ function resolveFlamingSphereSaveCommand(
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
   if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: concentrationHole,
-      endTurnProbe,
     });
-  }
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
   }
   const damaged = applyFlamingSphereDamage({
     state: input.state,
@@ -2176,20 +2143,12 @@ function resolveMoonbeamSaveCommand(
           fill.holeId !== concentrationHoleId,
       )
     : [];
-  const endTurnProbe = isEndTurn
-    ? resolveDelegatedEndTurnCommand(input, {
-        state: input.state,
-        subject: endTurnSubject,
-        fills: endTurnFills,
-      })
-    : null;
   const saveFill = savingThrowOutcomeFillForHole(saveFills, saveHole);
   if (saveFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: saveHole,
-      endTurnProbe,
     });
   }
   const saveValidation = validateMoonbeamSavingThrowOutcome(
@@ -2217,11 +2176,10 @@ function resolveMoonbeamSaveCommand(
   }
   const damageFill = rolledDiceFillForHole(damageFills, damageHole);
   if (damageFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: damageHole,
-      endTurnProbe,
     });
   }
   const damageValidation = validateMoonbeamDamageRoll(damageFill, damageHole);
@@ -2268,19 +2226,11 @@ function resolveMoonbeamSaveCommand(
       ? undefined
       : concentrationSavingThrowFillFor(concentrationFills, concentrationHole);
   if (concentrationHole !== null && concentrationFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole: concentrationHole,
-      endTurnProbe,
     });
-  }
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
   }
   const afterDamage = applyMoonbeamDamage({
     state: input.state,
@@ -2451,50 +2401,12 @@ function resolveMoonbeamRepositionCommand(
   };
 }
 
-function needsSpatialProcedureHoleWithEndTurnFrontier(input: {
+function needsSpatialProcedureHole(input: {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly hole: BattleHole;
-  readonly endTurnProbe: BattleResolutionResult | null;
 }): BattleResolutionResult {
-  if (input.endTurnProbe === null) {
-    return needsHolesResult(input.state, input.subject, [input.hole]);
-  }
-  return Match.value(input.endTurnProbe).pipe(
-    Match.when({ tag: "needsHoles" }, (endTurnFrontier) =>
-      needsHolesResult(endTurnFrontier.state, input.subject, [
-        input.hole,
-        ...endTurnFrontier.holes,
-      ]),
-    ),
-    /* v8 ignore start -- @preserve -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted spatial procedure and End Turn hole contracts were supplied. */
-    Match.when({ tag: "invalid" }, (invalid) => invalid),
-    /* v8 ignore stop -- @preserve */
-    Match.when({ tag: "resolved" }, () =>
-      needsHolesResult(input.state, input.subject, [input.hole]),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function pendingSpatialProcedureEndTurnResult(
-  endTurnProbe: BattleResolutionResult | null,
-  subject: BattleSubject,
-): BattleResolutionResult | null {
-  if (endTurnProbe === null) {
-    return null;
-  }
-  return Match.value(endTurnProbe).pipe(
-    Match.when({ tag: "needsHoles" }, (frontier) => ({
-      ...frontier,
-      subject,
-    })),
-    /* v8 ignore start -- @preserve -- Malformed combined-command input: a nested End Turn probe is invalid only when fills outside the admitted spatial procedure and End Turn hole contracts were supplied. */
-    Match.when({ tag: "invalid" }, (invalid) => invalid),
-    /* v8 ignore stop -- @preserve */
-    Match.when({ tag: "resolved" }, () => null),
-    Match.exhaustive,
-  );
+  return needsHolesResult(input.state, input.subject, [input.hole]);
 }
 
 function resolveGreaseGroundHazardEndTurnSaveCommand(
@@ -2555,17 +2467,11 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
   const endTurnFills = input.fills.filter(
     (fill) => fill.holeId !== hole.holeId,
   );
-  const endTurnProbe = resolveDelegatedEndTurnCommand(input, {
-    state: input.state,
-    subject: endTurnSubject,
-    fills: endTurnFills,
-  });
   if (matchingGreaseFill === undefined) {
-    return needsSpatialProcedureHoleWithEndTurnFrontier({
+    return needsSpatialProcedureHole({
       state: input.state,
       subject: input.subject,
       hole,
-      endTurnProbe,
     });
   }
   const validation = validateGreaseGroundHazardSavingThrowOutcome(
@@ -2577,13 +2483,6 @@ function resolveGreaseGroundHazardEndTurnSaveCommand(
     return invalidResult(input.state, "invalidFill", validation);
   }
   /* v8 ignore stop -- @preserve */
-  const pendingEndTurn = pendingSpatialProcedureEndTurnResult(
-    endTurnProbe,
-    input.subject,
-  );
-  if (pendingEndTurn !== null) {
-    return pendingEndTurn;
-  }
   const outcome = matchingGreaseFill.value.outcomes[0]!;
   const saveFailedReactionWindow =
     maybeOpenPersistentSpatialSaveFailedReplayInterrupt({

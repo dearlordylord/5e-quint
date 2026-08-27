@@ -364,42 +364,37 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(cloudkillSavedThisTurn(entrySaved.state)).toEqual([spellTargetId]);
   });
 
-  test("rejects an incomplete appearance save after its triggering turn changes", () => {
-    const { cast, session, targetTurn } = castCloudkill();
-    const appearanceAct = cloudkillAreaHazardSaveAct(
-      battleRuntimeSessionForTest({ ...session, state: cast }),
+  test("rejects a freshly fabricated appearance after the cast occurrence", () => {
+    const { cast, session } = castCloudkill();
+    const appeared = requireResolved(
+      resolveCloudkillSave({
+        session,
+        state: cast,
+        succeeded: true,
+        trigger: "appearsInArea",
+      }),
+    );
+    const targetTurn = requireResolved(
+      endTurn({ state: appeared.state, actorId: spellCasterId }),
+    );
+    const fabricatedAppearance = cloudkillAreaHazardSaveAct(
+      battleRuntimeSessionForTest({ ...session, state: targetTurn.state }),
       spellTargetId,
       "appearsInArea",
-    );
-    const saveFill = singleTargetSavingThrowOutcomeFill(
-      requireHole(appearanceAct.initialHoles, "savingThrowOutcome"),
-      spellTargetId,
-      true,
-    );
-    const pendingDamage = resolveBattleSubject({
-      state: cast,
-      subject: appearanceAct.subject,
-      fills: [saveFill],
-    });
-    const damageFill = damageRollFillWithGroups(
-      requireResultHole(pendingDamage, "rolledDice"),
-      [[1, 1, 1, 1, 1]],
     );
 
     expect(
       resolveBattleSubject({
-        state: targetTurn,
-        subject: appearanceAct.subject,
-        fills: [saveFill, damageFill],
+        state: targetTurn.state,
+        subject: fabricatedAppearance.subject,
+        fills: [],
       }),
     ).toMatchObject({
       tag: "invalid",
       reason: "staleSubject",
-      message:
-        "Cloudkill appearance save no longer matches its triggering turn.",
+      message: "Cloudkill appearance save is outside its cast occurrence.",
     });
-    expect(cloudkillSavedThisTurn(targetTurn)).toEqual([]);
-    expect(requireCombatant(targetTurn, spellTargetId).hp).toBe(Hp(30));
+    expect(cloudkillSavedThisTurn(targetTurn.state)).toEqual([]);
   });
 
   test("a discovered save becomes stale when Cloudkill Concentration ends", () => {

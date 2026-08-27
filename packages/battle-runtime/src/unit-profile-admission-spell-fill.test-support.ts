@@ -1,5 +1,4 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { Match } from "effect";
 import {
   DieRollResult,
@@ -1546,10 +1545,6 @@ export function insectPlagueAreaHazardSaveAct(
       Match.when("appearsInArea", () => ({
         kind: "appearsInArea" as const,
         areaId: effect.areaId,
-        triggerTurn: {
-          actorId: currentActing(session.state.initiative),
-          round: session.state.initiative.round,
-        },
       })),
       Match.when("entersArea", () => ({
         kind: "firstEntryOnTurn" as const,
@@ -1615,10 +1610,6 @@ export function cloudkillAreaHazardSaveAct(
       Match.when("appearsInArea", () => ({
         kind: "appearsInArea" as const,
         areaId: effect.areaId,
-        triggerTurn: {
-          actorId: currentActing(session.state.initiative),
-          round: session.state.initiative.round,
-        },
       })),
       Match.when("movesIntoSpace", () => ({
         kind: "areaMovesIntoSpace" as const,

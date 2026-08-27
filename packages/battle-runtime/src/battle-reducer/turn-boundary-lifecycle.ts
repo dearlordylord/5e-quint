@@ -2920,7 +2920,11 @@ export function resolveDelegatedEndTurnCommand(
   },
   endTurnInput: BattleResolutionInput,
 ): BattleResolutionResult {
-  const parent = replayParentContinuationFor(parentInput);
+  const parent = replayParentContinuationFor({
+    state: endTurnInput.state,
+    subject: parentInput.subject,
+    fills: parentInput.fills,
+  });
   const result = resolveEndTurnCommandForParent(
     {
       ...endTurnInput,

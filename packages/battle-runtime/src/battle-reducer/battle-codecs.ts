@@ -3604,8 +3604,6 @@ type BattleFillEncoded =
       readonly kind: "cloudkillMovement";
       readonly holeId: string;
       readonly value: {
-        readonly directionId: string;
-        readonly destinationId: string;
         readonly affectedCombatantIds: readonly string[];
       };
     }
@@ -4737,8 +4735,6 @@ export const BattleFillSchema: Schema.Codec<
       kind: Schema.Literal("cloudkillMovement"),
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
-        directionId: BattleLineDirectionId,
-        destinationId: BattleTablePositionId,
         affectedCombatantIds: Schema.Array(CombatantId),
       }),
     }),

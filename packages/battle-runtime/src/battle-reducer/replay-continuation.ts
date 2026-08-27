@@ -41,47 +41,7 @@ export function handledInterruptRouteProjection(
   BattleHandledInterruptRouteProjection,
   { readonly handledInterruptOccurrence?: never }
 > {
-  return Match.value(occurrence).pipe(
-    Match.when({ trigger: "saveFailed" }, (handledInterruptOccurrence) => ({
-      handledInterruptOccurrence,
-      handledInterruptTrigger: "saveFailed" as const,
-    })),
-    Match.when({ trigger: "attackHit" }, (handledInterruptOccurrence) => ({
-      handledInterruptOccurrence,
-      handledInterruptTrigger: "attackHit" as const,
-    })),
-    Match.when({ trigger: "attackDamage" }, (handledInterruptOccurrence) => ({
-      handledInterruptOccurrence,
-      handledInterruptTrigger: "attackDamage" as const,
-    })),
-    Match.when({ trigger: "spellCast" }, (handledInterruptOccurrence) => ({
-      handledInterruptOccurrence,
-      handledInterruptTrigger: "spellCast" as const,
-    })),
-    Match.when({ trigger: "afterDamage" }, (handledInterruptOccurrence) => ({
-      handledInterruptOccurrence,
-      handledInterruptTrigger: "afterDamage" as const,
-    })),
-    Match.when({ trigger: "creatureFalls" }, (handledInterruptOccurrence) => ({
-      handledInterruptOccurrence,
-      handledInterruptTrigger: "creatureFalls" as const,
-    })),
-    Match.when(
-      { trigger: "opportunityAttack" },
-      (handledInterruptOccurrence) => ({
-        handledInterruptOccurrence,
-        handledInterruptTrigger: "opportunityAttack" as const,
-      }),
-    ),
-    Match.when(
-      { trigger: "reportedReadyTrigger" },
-      (handledInterruptOccurrence) => ({
-        handledInterruptOccurrence,
-        handledInterruptTrigger: "reportedReadyTrigger" as const,
-      }),
-    ),
-    Match.exhaustive,
-  );
+  return { handledInterruptOccurrence: occurrence };
 }
 
 export type ReplayParentContinuation = {

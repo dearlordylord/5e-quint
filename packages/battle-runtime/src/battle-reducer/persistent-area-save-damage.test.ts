@@ -1,5 +1,4 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
-import { currentActing } from "@dnd/shared-algebras/initiative-algebra";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -9,13 +8,13 @@ import {
   startBattleRight,
   statBlockCreatureInit,
 } from "../battle-runtime.test-support.ts";
-import type { BattleFill, BattleState } from "../battle-state-execution.ts";
+import type { BattleFill } from "../battle-state-execution.ts";
 import { battleAreaId, type BattleAreaId } from "../identity.ts";
 import {
   resolveCloudkillAreaSaveDamage,
   resolveInsectPlagueAreaSaveDamage,
 } from "./persistent-area-save-damage.ts";
-import { persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn } from "./persistent-spatial-spell-procedures.ts";
+import { isPersistentAreaAppearanceSubject } from "./persistent-spatial-spell-procedures.ts";
 
 function persistentAreaBattle() {
   return startBattleRight({
@@ -33,27 +32,21 @@ const unrelatedFill = {
   value: "fire",
 } satisfies BattleFill;
 
-function appearanceTrigger(state: BattleState, areaId: BattleAreaId) {
+function appearanceTrigger(areaId: BattleAreaId) {
   return {
     kind: "appearsInArea" as const,
     areaId,
-    triggerTurn: {
-      actorId: currentActing(state.initiative),
-      round: state.initiative.round,
-    },
   };
 }
 
 describe("persistent-area save/damage protocol", () => {
-  test("admits only appearance-triggered persistent-area saves outside the current turn", () => {
-    const state = persistentAreaBattle();
+  test("identifies appearance subjects admitted to occurrence validation", () => {
     const areaMembershipTrigger = appearanceTrigger(
-      state,
       battleAreaId("test-persistent-area-appearance"),
     );
 
     expect(
-      persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(state, {
+      isPersistentAreaAppearanceSubject({
         tag: "runtimeCommand",
         actorId: fighterId,
         command: "insectPlagueAreaHazardSave",
@@ -61,7 +54,7 @@ describe("persistent-area save/damage protocol", () => {
       }),
     ).toBe(true);
     expect(
-      persistentAreaAppearanceSaveMayResolveOutsideCurrentTurn(state, {
+      isPersistentAreaAppearanceSubject({
         tag: "runtimeCommand",
         actorId: fighterId,
         command: "cloudkillAreaHazardSave",
@@ -82,7 +75,6 @@ describe("persistent-area save/damage protocol", () => {
         actorId: fighterId,
         command: "insectPlagueAreaHazardSave",
         areaMembershipTrigger: appearanceTrigger(
-          state,
           battleAreaId("test-insect-plague-area"),
         ),
       },
@@ -106,7 +98,6 @@ describe("persistent-area save/damage protocol", () => {
         actorId: fighterId,
         command: "cloudkillAreaHazardSave",
         areaMembershipTrigger: appearanceTrigger(
-          state,
           battleAreaId("test-cloudkill-area"),
         ),
       },

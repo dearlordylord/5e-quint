@@ -694,6 +694,7 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "insectPlagueAreaHazard";
+      readonly appearanceOccurrence: BattleTurnAnchor;
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
       readonly save: {
@@ -712,6 +713,7 @@ export type BattleActiveEffect =
     })
   | (BattleSpellEffectBase & {
       readonly kind: "cloudkillAreaHazard";
+      readonly appearanceOccurrence: BattleTurnAnchor;
       readonly areaId: BattleAreaId;
       readonly radiusFeet: MovementFeet;
       readonly save: {
