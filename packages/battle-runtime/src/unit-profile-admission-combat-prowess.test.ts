@@ -205,12 +205,14 @@ describe("QMBT56 deterministic Combat Prowess profile slice", () => {
     const shieldChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
-          choice.kind === "castTriggeredReactionSpell" &&
-          choice.reactorId === spellTargetId,
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castTriggeredReactionSpell" &&
+          choice.subject.reactorId === spellTargetId,
       );
     if (
       shieldChoice === undefined ||
-      shieldChoice.kind !== "castTriggeredReactionSpell"
+      shieldChoice.kind !== "nestedProcedure" ||
+      shieldChoice.subject.command !== "castTriggeredReactionSpell"
     ) {
       throw new Error("Expected Shield reaction choice.");
     }

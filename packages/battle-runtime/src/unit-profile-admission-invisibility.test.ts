@@ -62,6 +62,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleResolutionResult,
   type BattleRuntimeSession,
@@ -769,6 +770,16 @@ type NeedsHolesResult = Extract<
   { readonly tag: "needsHoles" }
 >;
 
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
+
 function requireNeedsHoles(result: BattleResolutionResult): NeedsHolesResult {
   expect(result).toMatchObject({ tag: "needsHoles" });
   if (result.tag !== "needsHoles") {
@@ -820,20 +831,13 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly spellId: string;
   readonly procedure: string;
   readonly slotLevel: number;
-}): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+}): TriggeredReactionSpellChoice {
   const choice = input.result.snapshot.pendingInterrupt?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+    (candidate): candidate is TriggeredReactionSpellChoice => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== input.reactorId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== input.reactorId
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
@@ -841,7 +845,7 @@ function requireTriggeredReactionSpellChoice(input: {
           state: input.result.state,
           context: input.session.context,
         }),
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (
@@ -860,10 +864,7 @@ function requireTriggeredReactionSpellChoice(input: {
 
 function triggeredReactionSpellDecision(
   reactorId: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {

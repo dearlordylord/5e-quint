@@ -77,6 +77,8 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleIllumination,
   type BattleLightEmitter,
   type BattleAreaId,
@@ -408,6 +410,15 @@ type ThunderwavePushDisposition =
 type ThunderwaveSavingThrowOutcome = {
   readonly targetId: CombatantId;
   readonly succeeded: boolean;
+};
+type FeatherFallReactionChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
 };
 type ThunderwaveProjection = {
   readonly affectedTargetOutcomeCount: number;
@@ -4124,19 +4135,28 @@ function featherFallTriggerFact(
 
 function featherFallReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
-) {
-  const choice = result.snapshot.pendingInterrupt?.choices.find((candidate) => {
-    if (candidate.kind !== "castTriggeredReactionSpell") return false;
-    const reactor = result.state.combatants.get(candidate.reactorId);
-    return (
-      reactor?.origin.kind === "character" &&
-      characterSpellProcedureExecution(
-        reactor.origin.execution,
-        candidate.subject.procedureRef,
-      )?.procedure === "featherFallMitigation"
-    );
-  });
-  if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+): FeatherFallReactionChoice {
+  const choice = result.snapshot.pendingInterrupt?.choices.find(
+    (candidate): candidate is FeatherFallReactionChoice => {
+      if (
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.tag !== "runtimeCommand" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== casterId
+      ) {
+        return false;
+      }
+      const reactor = result.state.combatants.get(candidate.subject.reactorId);
+      return (
+        reactor?.origin.kind === "character" &&
+        characterSpellProcedureExecution(
+          reactor.origin.execution,
+          candidate.subject.procedureRef,
+        )?.procedure === "featherFallMitigation"
+      );
+    },
+  );
+  if (choice === undefined) {
     throw new Error("Expected Feather Fall Reaction choice.");
   }
   return choice;

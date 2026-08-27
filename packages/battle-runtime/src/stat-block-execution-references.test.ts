@@ -1307,7 +1307,7 @@ describe("Stat Block execution references", () => {
       },
     ])[0];
     if (
-      choice?.kind !== "opportunityAttack" ||
+      choice?.kind !== "nestedProcedure" ||
       choice.subject.command !== "opportunityAttack"
     ) {
       throw new Error("Expected Stat Block Opportunity Attack choice.");

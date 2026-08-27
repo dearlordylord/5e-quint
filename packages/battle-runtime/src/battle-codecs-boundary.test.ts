@@ -732,10 +732,14 @@ describe("battle codec act ownership boundaries", () => {
     }
     const choice = reported.snapshot.pendingInterrupt?.choices.find(
       (candidate) =>
-        candidate.kind === "releaseReadiedAttack" &&
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedAttack" &&
         candidate.subject.targetId === fighterId,
     );
-    if (choice?.kind !== "releaseReadiedAttack") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedAttack"
+    ) {
       throw new Error("Expected a fixed-target readied attack choice.");
     }
     const targetSpatialFacts = {
@@ -772,7 +776,6 @@ describe("battle codec act ownership boundaries", () => {
             responderId: goblinId,
             choice: {
               kind: "releaseReadiedAttack",
-              reactorId: goblinId,
               targetId: fighterId,
               procedureRef: attackResponse.selection.procedureRef,
               fills: [decoded],
@@ -848,7 +851,6 @@ describe("battle codec act ownership boundaries", () => {
           responderId: fighterId,
           choice: {
             kind: "releaseReadiedAction",
-            reactorId: fighterId,
             fills: [],
           },
         }),

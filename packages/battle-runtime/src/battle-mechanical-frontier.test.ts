@@ -34,8 +34,7 @@ const mechanicalNestedHole = {
 };
 
 const mechanicalInterruptChoice = {
-  kind: "releaseReadiedAction" as const,
-  reactorId: "reactor-id",
+  kind: "nestedProcedure" as const,
   subject: {
     tag: "runtimeCommand" as const,
     actorId: "reactor-id",

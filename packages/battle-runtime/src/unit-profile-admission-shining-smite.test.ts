@@ -113,13 +113,18 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     }
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) => {
-        if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+        if (
+          candidate.kind !== "nestedProcedure" ||
+          candidate.subject.command !== "castAttackHitBonusActionSpell"
+        ) {
+          return false;
+        }
         const invocationRef = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
             ...session,
             state: awaitingReaction.state,
           }),
-          candidate.reactorId,
+          candidate.subject.casterId,
           candidate.subject.procedureRef,
         );
         return (
@@ -131,7 +136,8 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     );
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
@@ -141,7 +147,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
           ...session,
           state: awaitingReaction.state,
         }),
-        choice.reactorId,
+        choice.subject.casterId,
         choice.subject.procedureRef,
       ),
     ).toEqual(
@@ -428,9 +434,14 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
       throw new Error("Expected Shining Smite Unarmed Strike window.");
     }
     const unarmedChoice = unarmedHit.snapshot.pendingInterrupt?.choices.find(
-      (candidate) => candidate.kind === "castAttackHitBonusActionSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castAttackHitBonusActionSpell",
     );
-    if (unarmedChoice?.kind !== "castAttackHitBonusActionSpell") {
+    if (
+      unarmedChoice?.kind !== "nestedProcedure" ||
+      unarmedChoice.subject.command !== "castAttackHitBonusActionSpell"
+    ) {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
     expect(() =>
@@ -449,7 +460,7 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
           ...unarmedSession,
           state: unarmedHit.state,
         }),
-        unarmedChoice.reactorId,
+        unarmedChoice.subject.casterId,
         unarmedChoice.subject.procedureRef,
       ),
     ).toEqual(

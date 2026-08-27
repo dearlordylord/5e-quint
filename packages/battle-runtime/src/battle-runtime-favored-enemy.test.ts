@@ -498,8 +498,10 @@ describe("battle runtime: Paladin's Smite", () => {
     const smiteChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find((choice) => {
         if (
-          choice.kind !== "castAttackHitBonusActionSpell" ||
-          choice.reactorId !== fighterId
+          choice.kind !== "nestedProcedure" ||
+          choice.subject.tag !== "runtimeCommand" ||
+          choice.subject.command !== "castAttackHitBonusActionSpell" ||
+          choice.subject.casterId !== fighterId
         )
           return false;
         return (
@@ -508,14 +510,16 @@ describe("battle runtime: Paladin's Smite", () => {
               state: awaitingReaction.state,
               context: session.context,
             }),
-            choice.reactorId,
+            choice.subject.casterId,
             choice.subject.procedureRef,
           ).tag === "spellAccessFreeCast"
         );
       });
     if (
       smiteChoice === undefined ||
-      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+      smiteChoice.kind !== "nestedProcedure" ||
+      smiteChoice.subject.tag !== "runtimeCommand" ||
+      smiteChoice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Paladin's Smite free-cast choice.");
     }
@@ -525,7 +529,7 @@ describe("battle runtime: Paladin's Smite", () => {
           state: awaitingReaction.state,
           context: session.context,
         }),
-        smiteChoice.reactorId,
+        smiteChoice.subject.casterId,
         smiteChoice.subject.procedureRef,
       ),
     ).toEqual(
@@ -662,13 +666,18 @@ describe("battle runtime: Paladin's Smite", () => {
 
     expect(
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
-        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        if (
+          choice.kind !== "nestedProcedure" ||
+          choice.subject.tag !== "runtimeCommand" ||
+          choice.subject.command !== "castAttackHitBonusActionSpell"
+        )
+          return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
             state: awaitingReaction.state,
             context: session.context,
           }),
-          choice.reactorId,
+          choice.subject.casterId,
           choice.subject.procedureRef,
         );
         return (
@@ -679,13 +688,18 @@ describe("battle runtime: Paladin's Smite", () => {
     ).toBe(false);
     expect(
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
-        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        if (
+          choice.kind !== "nestedProcedure" ||
+          choice.subject.tag !== "runtimeCommand" ||
+          choice.subject.command !== "castAttackHitBonusActionSpell"
+        )
+          return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
             state: awaitingReaction.state,
             context: session.context,
           }),
-          choice.reactorId,
+          choice.subject.casterId,
           choice.subject.procedureRef,
         );
         return (
@@ -735,13 +749,18 @@ describe("battle runtime: Paladin's Smite", () => {
 
     expect(
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
-        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        if (
+          choice.kind !== "nestedProcedure" ||
+          choice.subject.tag !== "runtimeCommand" ||
+          choice.subject.command !== "castAttackHitBonusActionSpell"
+        )
+          return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
             state: awaitingReaction.state,
             context: session.context,
           }),
-          choice.reactorId,
+          choice.subject.casterId,
           choice.subject.procedureRef,
         );
         return (
@@ -752,13 +771,18 @@ describe("battle runtime: Paladin's Smite", () => {
     ).toBe(true);
     expect(
       awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
-        if (choice.kind !== "castAttackHitBonusActionSpell") return false;
+        if (
+          choice.kind !== "nestedProcedure" ||
+          choice.subject.tag !== "runtimeCommand" ||
+          choice.subject.command !== "castAttackHitBonusActionSpell"
+        )
+          return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
             state: awaitingReaction.state,
             context: session.context,
           }),
-          choice.reactorId,
+          choice.subject.casterId,
           choice.subject.procedureRef,
         );
         return (

@@ -110,11 +110,14 @@ describe("Shield Reaction spell", () => {
     }
     const reactionChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "castTriggeredReactionSpell",
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castTriggeredReactionSpell",
       );
     if (
       reactionChoice === undefined ||
-      reactionChoice.kind !== "castTriggeredReactionSpell"
+      reactionChoice.kind !== "nestedProcedure" ||
+      reactionChoice.subject.command !== "castTriggeredReactionSpell"
     ) {
       throw new Error("Expected Shield Reaction spell choice.");
     }
@@ -369,11 +372,14 @@ describe("Shield Reaction spell", () => {
     }
     const opportunityAttackChoice =
       awaitingOpportunityAttack.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "opportunityAttack",
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "opportunityAttack",
       );
     if (
       opportunityAttackChoice === undefined ||
-      opportunityAttackChoice.kind !== "opportunityAttack"
+      opportunityAttackChoice.kind !== "nestedProcedure" ||
+      opportunityAttackChoice.subject.command !== "opportunityAttack"
     ) {
       throw new Error("Expected Opportunity Attack Reaction choice.");
     }
@@ -1317,22 +1323,25 @@ function resolveShieldReactionChoice(
 ): ReturnType<typeof resolveBattleInterrupt> {
   const reactionChoice =
     awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (choice) => choice.kind === "castTriggeredReactionSpell",
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell",
     );
   if (
     reactionChoice === undefined ||
-    reactionChoice.kind !== "castTriggeredReactionSpell"
+    reactionChoice.kind !== "nestedProcedure" ||
+    reactionChoice.subject.command !== "castTriggeredReactionSpell"
   ) {
     throw new Error("Expected Shield Reaction spell choice.");
   }
-  expect(reactionChoice.reactorId).toBe(spellCasterId);
+  expect(reactionChoice.subject.reactorId).toBe(spellCasterId);
   expect(
     characterSpellInvocationRefForProcedureRefForTest(
       battleRuntimeSessionForTest({
         state: awaitingReaction.state,
         context: session.context,
       }),
-      reactionChoice.reactorId,
+      reactionChoice.subject.reactorId,
       reactionChoice.subject.procedureRef,
     ),
   ).toMatchObject({

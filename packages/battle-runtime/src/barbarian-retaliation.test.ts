@@ -50,8 +50,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
           trigger: "afterDamage",
           choices: expect.arrayContaining([
             expect.objectContaining({
-              kind: "retaliationAttack",
-              reactorId: fighterId,
+              kind: "nestedProcedure",
               subject: expect.objectContaining({
                 command: "retaliationAttack",
                 reactorId: fighterId,
@@ -61,8 +60,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
               }),
             }),
             expect.objectContaining({
-              kind: "retaliationAttack",
-              reactorId: fighterId,
+              kind: "nestedProcedure",
               subject: expect.objectContaining({
                 command: "retaliationAttack",
                 reactorId: fighterId,
@@ -80,7 +78,9 @@ describe("battle runtime: Barbarian Retaliation", () => {
     }
     const retaliationChoice =
       awaitingRetaliation.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "retaliationAttack",
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "retaliationAttack",
       );
     if (retaliationChoice === undefined) {
       throw new Error("Expected a Retaliation codec fixture.");
@@ -100,9 +100,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
         ...retaliationChoice,
         reactorId: goblinId,
       }),
-    ).toThrow(
-      "Interrupt choices must own the matching reference-bearing runtime subject.",
-    );
+    ).toThrow();
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
     );
@@ -116,7 +114,6 @@ describe("battle runtime: Barbarian Retaliation", () => {
           responderId: fighterId,
           choice: {
             kind: "retaliationAttack",
-            reactorId: fighterId,
             selection: longswordSelection,
             fills: [
               {

@@ -151,6 +151,8 @@ export {
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
 
+export { interruptChoiceResponderId } from "./battle-state-execution.ts";
+
 export {
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
@@ -332,6 +334,7 @@ export {
   BATTLE_SUBJECT_ACTIONS,
   BATTLE_SUBJECT_BONUS_ACTIONS,
   CANTRIP_SPELL_PROCEDURES,
+  BattleInterruptSubjectSchema,
   BattleSubjectSchema,
   BattleReadyResponseSchema,
   ReadyTriggerDescription,
@@ -349,6 +352,7 @@ export {
   spellSlotInvocationRef,
   type BattleRuntimeCommand,
   type BattleMovementSpeedKind,
+  type BattleInterruptSubject,
   type BattleReadyResponse,
   type BattleSubject,
   type BattleSubjectAction,

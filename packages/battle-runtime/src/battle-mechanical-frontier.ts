@@ -394,19 +394,8 @@ function projectMechanicalInterruptChoice(
 ): BattleMechanicalInterruptChoice {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      releaseReadiedSpell: (value) => projectChoiceWithMechanicalHoles(value),
-      releaseReadiedMovement: (value) =>
-        projectChoiceWithMechanicalHoles(value),
-      releaseReadiedAction: (value) => projectChoiceWithMechanicalHoles(value),
-      releaseReadiedAttack: (value) => projectChoiceWithMechanicalHoles(value),
-      castTriggeredReactionSpell: (value) =>
-        projectChoiceWithMechanicalHoles(value),
-      castAttackHitBonusActionSpell: (value) =>
-        projectChoiceWithMechanicalHoles(value),
-      opportunityAttack: (value) => projectChoiceWithMechanicalHoles(value),
-      retaliationAttack: (value) => projectChoiceWithMechanicalHoles(value),
-      reactionRollOrDamageReduction: (value) =>
-        projectChoiceWithMechanicalHoles(value),
+      nestedProcedure: (value) => projectChoiceWithMechanicalHoles(value),
+      reactionModifier: (value) => projectChoiceWithMechanicalHoles(value),
     }),
   );
 }

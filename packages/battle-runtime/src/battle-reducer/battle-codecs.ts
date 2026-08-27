@@ -79,6 +79,7 @@ import {
   BattleReadyResponseSnapshotSchema,
   BattleReadyResponseSchema,
   BattleInterruptAttackExecutionSelectionSchema,
+  BattleInterruptSubjectSchema,
   ReadyTriggerDescription,
   SpellInvocationRefSchema,
 } from "../battle-subjects.ts";
@@ -157,6 +158,7 @@ import {
 } from "../unit-feature-support.ts";
 import {
   ATTACK_PRESENTATION_JOIN_ISSUE_REASONS,
+  interruptChoiceResponderId,
   type BattleFill,
   type BattleHole,
   type BattleMovementFillValue,
@@ -4166,23 +4168,19 @@ type BattleFillEncoded =
             readonly choice:
               | {
                   readonly kind: "releaseReadiedSpell";
-                  readonly readiedSpellCasterId: string;
                   readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "releaseReadiedMovement";
-                  readonly readiedMovementActorId: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "releaseReadiedAction";
-                  readonly reactorId: string;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "releaseReadiedAttack";
-                  readonly reactorId: string;
                   readonly targetId: string;
                   readonly procedureRef: string;
                   readonly fills: readonly BattleFillEncoded[];
@@ -4199,13 +4197,11 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "opportunityAttack";
-                  readonly reactorId: string;
                   readonly selection: BattleInterruptAttackExecutionSelectionEncoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
               | {
                   readonly kind: "retaliationAttack";
-                  readonly reactorId: string;
                   readonly selection: BattleInterruptAttackExecutionSelectionEncoded;
                   readonly fills: readonly BattleFillEncoded[];
                 }
@@ -5156,23 +5152,19 @@ export const BattleFillSchema: Schema.Schema<
           choice: Schema.Union(
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedSpell"),
-              readiedSpellCasterId: CombatantId,
               procedureRef: BattleProcedureExecutionRef,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedMovement"),
-              readiedMovementActorId: CombatantId,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedAction"),
-              reactorId: CombatantId,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
               kind: Schema.Literal("releaseReadiedAttack"),
-              reactorId: CombatantId,
               targetId: CombatantId,
               procedureRef: Schema.Union(
                 BattleAttackProcedureExecutionRef,
@@ -5192,13 +5184,11 @@ export const BattleFillSchema: Schema.Schema<
             }),
             Schema.Struct({
               kind: Schema.Literal("opportunityAttack"),
-              reactorId: CombatantId,
               selection: BattleInterruptAttackExecutionSelectionSchema,
               fills: Schema.Array(BattleFillSchema),
             }),
             Schema.Struct({
               kind: Schema.Literal("retaliationAttack"),
-              reactorId: CombatantId,
               selection: BattleInterruptAttackExecutionSelectionSchema,
               fills: Schema.Array(BattleFillSchema),
             }),
@@ -6280,51 +6270,13 @@ function pairedBattleInterruptProcedureChoiceMember<
 
 const BattleInterruptProcedureChoiceMembers = [
   pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("releaseReadiedSpell"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    readiedSpellCasterId: CombatantId,
+    kind: Schema.Literal("nestedProcedure"),
+    subject: BattleInterruptSubjectSchema,
   }),
   pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("releaseReadiedMovement"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-    readiedMovementActorId: CombatantId,
-  }),
-  pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("releaseReadiedAction"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-  }),
-  pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("releaseReadiedAttack"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-  }),
-  pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("castTriggeredReactionSpell"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-  }),
-  pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("castAttackHitBonusActionSpell"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-  }),
-  pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("opportunityAttack"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-  }),
-  pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("retaliationAttack"),
-    reactorId: CombatantId,
-    subject: BattleSubjectSchema,
-  }),
-  pairedBattleInterruptProcedureChoiceMember({
-    kind: Schema.Literal("reactionRollOrDamageReduction"),
-    reactorId: CombatantId,
-    choice: BattleReactionModifierChoiceSchema,
+    kind: Schema.Literal("reactionModifier"),
+    responderId: CombatantId,
+    modifier: BattleReactionModifierChoiceSchema,
   }),
 ] as const;
 const [
@@ -6346,67 +6298,14 @@ const BattleMechanicalInterruptProcedureChoiceUnfilteredSchema = Schema.Union(
   FirstBattleInterruptProcedureChoiceMember.mechanical,
   ...MechanicalBattleInterruptChoiceMembers,
 );
-
-const interruptChoiceOwnershipMessage = () =>
-  "Interrupt choices must own the matching reference-bearing runtime subject.";
 export const BattleInterruptProcedureChoiceSchema =
-  BattleInterruptProcedureChoiceUnfilteredSchema.pipe(
-    Schema.filter(isOwnedInterruptProcedureChoice, {
-      message: interruptChoiceOwnershipMessage,
-    }),
-  );
+  BattleInterruptProcedureChoiceUnfilteredSchema.annotations({
+    parseOptions: { onExcessProperty: "error" },
+  });
 export const BattleMechanicalInterruptProcedureChoiceSchema =
-  BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.pipe(
-    Schema.filter(isOwnedInterruptProcedureChoice, {
-      message: interruptChoiceOwnershipMessage,
-    }),
-  );
-
-function isOwnedInterruptProcedureChoice(
-  choice:
-    | typeof BattleInterruptProcedureChoiceUnfilteredSchema.Type
-    | typeof BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.Type,
-): boolean {
-  return Match.value(choice).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      releaseReadiedSpell: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedSpell" &&
-        value.reactorId === value.readiedSpellCasterId &&
-        value.reactorId === value.subject.readiedSpellCasterId,
-      releaseReadiedMovement: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedMovement" &&
-        value.reactorId === value.readiedMovementActorId &&
-        value.reactorId === value.subject.readiedMovementActorId,
-      releaseReadiedAction: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedAction" &&
-        value.reactorId === value.subject.reactorId,
-      releaseReadiedAttack: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "releaseReadiedAttack" &&
-        value.reactorId === value.subject.reactorId,
-      castTriggeredReactionSpell: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "castTriggeredReactionSpell" &&
-        value.reactorId === value.subject.reactorId,
-      castAttackHitBonusActionSpell: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "castAttackHitBonusActionSpell" &&
-        value.reactorId === value.subject.casterId,
-      opportunityAttack: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "opportunityAttack" &&
-        value.reactorId === value.subject.reactorId,
-      retaliationAttack: (value) =>
-        value.subject.tag === "runtimeCommand" &&
-        value.subject.command === "retaliationAttack" &&
-        value.reactorId === value.subject.reactorId,
-      reactionRollOrDamageReduction: () => true,
-    }),
-  );
-}
+  BattleMechanicalInterruptProcedureChoiceUnfilteredSchema.annotations({
+    parseOptions: { onExcessProperty: "error" },
+  });
 
 const BattlePendingReactionSnapshotSchema = Schema.Struct({
   trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
@@ -6615,6 +6514,10 @@ const BattleCompanionSnapshotSchema = Schema.Union(
 type EncodedBattleCreatureSnapshot = BattleCreatureSnapshotInvariantInput;
 type EncodedBattleInterruptChoice =
   typeof BattleInterruptProcedureChoiceSchema.Type;
+type EncodedNestedInterruptChoice = Extract<
+  EncodedBattleInterruptChoice,
+  { readonly kind: "nestedProcedure" }
+>;
 type EncodedBattleReadiedSpellSnapshot =
   typeof BattleReadiedSpellSnapshotSchema.Type;
 type EncodedBattleReadiedResponseSnapshot =
@@ -7210,30 +7113,24 @@ function serializedReadiedSpellOwnsInvocation(
 
 function serializedImmediateSpellChoiceIsBound(
   combatants: readonly EncodedBattleCreatureSnapshot[],
-  choice: Extract<
-    EncodedBattleInterruptChoice,
-    {
-      readonly kind:
-        | "castTriggeredReactionSpell"
-        | "castAttackHitBonusActionSpell";
-    }
-  >,
+  choice: EncodedNestedInterruptChoice,
 ): boolean {
+  if (choice.subject.tag !== "runtimeCommand") return false;
   if (
-    choice.subject.tag !== "runtimeCommand" ||
-    (choice.subject.command !== "castTriggeredReactionSpell" &&
-      choice.subject.command !== "castAttackHitBonusActionSpell")
-  )
+    choice.subject.command !== "castTriggeredReactionSpell" &&
+    choice.subject.command !== "castAttackHitBonusActionSpell"
+  ) {
     return false;
+  }
   const binding = characterProcedureBinding(
     combatants,
-    choice.reactorId,
+    interruptChoiceResponderId(choice),
     choice.subject.procedureRef,
   );
   if (binding?.procedure.kind !== "spellInvocation") return false;
   return (
     binding.procedure.executionFacts.kind ===
-    (choice.kind === "castTriggeredReactionSpell"
+    (choice.subject.command === "castTriggeredReactionSpell"
       ? "triggeredReactionSpell"
       : "attackHitBonusActionSpell")
   );
@@ -7379,24 +7276,9 @@ function serializedInterruptChoiceProcedureRefs(
 ): ReadonlySet<BattleProcedureExecutionRef> {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      releaseReadiedSpell: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      releaseReadiedMovement: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      releaseReadiedAction: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      releaseReadiedAttack: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      castTriggeredReactionSpell: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      castAttackHitBonusActionSpell: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      opportunityAttack: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      retaliationAttack: (value) =>
-        new Set(battleSubjectProcedureRefs(value.subject)),
-      reactionRollOrDamageReduction: (value) =>
-        new Set([value.choice.procedureRef]),
+      nestedProcedure: ({ subject }) =>
+        new Set(battleSubjectProcedureRefs(subject)),
+      reactionModifier: ({ modifier }) => new Set([modifier.procedureRef]),
     }),
   );
 }
@@ -7407,47 +7289,12 @@ function serializedInterruptChoiceOwnsBoundSubjectReferences(
 ): boolean {
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      releaseReadiedSpell: (value) =>
+      nestedProcedure: (value) =>
         serializedBattleSubjectOwnsBoundExecutionReferences(
           value.subject,
           combatants,
         ),
-      releaseReadiedMovement: (value) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          value.subject,
-          combatants,
-        ),
-      releaseReadiedAction: (value) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          value.subject,
-          combatants,
-        ),
-      releaseReadiedAttack: (value) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          value.subject,
-          combatants,
-        ),
-      castTriggeredReactionSpell: (value) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          value.subject,
-          combatants,
-        ),
-      castAttackHitBonusActionSpell: (value) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          value.subject,
-          combatants,
-        ),
-      opportunityAttack: (value) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          value.subject,
-          combatants,
-        ),
-      retaliationAttack: (value) =>
-        serializedBattleSubjectOwnsBoundExecutionReferences(
-          value.subject,
-          combatants,
-        ),
-      reactionRollOrDamageReduction: () => true,
+      reactionModifier: () => true,
     }),
   );
 }
@@ -7720,87 +7567,105 @@ function pendingInterruptChoiceOwnsBoundProcedure(input: {
   readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
 }): boolean {
   const { choice } = input;
-  if (choice.kind === "releaseReadiedMovement") {
-    return pendingReadiedMovementChoiceOwnsBoundResponse(
-      choice,
-      input.readiedResponses,
-    );
-  }
-  if (choice.kind === "releaseReadiedAction") {
-    return pendingReadiedActionChoiceOwnsBoundResponse(
-      choice,
-      input.readiedResponses,
-    );
-  }
-  if (choice.kind === "reactionRollOrDamageReduction") {
-    return serializedReactionModifierProcedureRefIsBound(
-      input.combatants,
-      choice.reactorId,
-      choice.choice.procedureRef,
-    );
-  }
-  if (choice.kind === "releaseReadiedSpell") {
-    return pendingReadiedSpellChoiceOwnsBoundResponse(
-      choice,
-      input.combatants,
-      input.readiedSpells,
-    );
-  }
-  if (
-    choice.kind === "castTriggeredReactionSpell" ||
-    choice.kind === "castAttackHitBonusActionSpell"
-  ) {
-    return pendingImmediateSpellChoiceOwnsBoundProcedure(
-      choice,
-      input.combatants,
-    );
-  }
-  return pendingAttackChoiceOwnsBoundProcedure(
-    choice,
-    input.combatants,
-    input.readiedResponses,
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      nestedProcedure: (value) =>
+        Match.value(value.subject).pipe(
+          Match.discriminatorsExhaustive("command")({
+            releaseReadiedSpell: () =>
+              pendingReadiedSpellChoiceOwnsBoundResponse(
+                value,
+                input.combatants,
+                input.readiedSpells,
+              ),
+            releaseReadiedMovement: () =>
+              pendingReadiedMovementChoiceOwnsBoundResponse(
+                value,
+                input.readiedResponses,
+              ),
+            releaseReadiedAction: () =>
+              pendingReadiedActionChoiceOwnsBoundResponse(
+                value,
+                input.readiedResponses,
+              ),
+            releaseReadiedAttack: () =>
+              pendingReadiedAttackChoiceOwnsBoundProcedure(
+                value,
+                input.combatants,
+                input.readiedResponses,
+              ),
+            castTriggeredReactionSpell: () =>
+              pendingImmediateSpellChoiceOwnsBoundProcedure(
+                value,
+                input.combatants,
+              ),
+            castAttackHitBonusActionSpell: () =>
+              pendingImmediateSpellChoiceOwnsBoundProcedure(
+                value,
+                input.combatants,
+              ),
+            opportunityAttack: () =>
+              pendingAttackChoiceOwnsBoundProcedure(
+                value,
+                input.combatants,
+                input.readiedResponses,
+              ),
+            retaliationAttack: () =>
+              pendingAttackChoiceOwnsBoundProcedure(
+                value,
+                input.combatants,
+                input.readiedResponses,
+              ),
+          }),
+        ),
+      reactionModifier: (value) =>
+        serializedReactionModifierProcedureRefIsBound(
+          input.combatants,
+          value.responderId,
+          value.modifier.procedureRef,
+        ),
+    }),
   );
 }
 
 function pendingReadiedMovementChoiceOwnsBoundResponse(
-  choice: Extract<
-    EncodedBattleInterruptChoice,
-    { readonly kind: "releaseReadiedMovement" }
-  >,
+  choice: EncodedNestedInterruptChoice,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    choice.subject.command !== "releaseReadiedMovement"
+  ) {
+    return false;
+  }
+  const subject = choice.subject;
   return readiedResponses.some(
     (readied) =>
-      readied.actorId === choice.reactorId &&
-      readied.actorId === choice.readiedMovementActorId &&
+      readied.actorId === subject.readiedMovementActorId &&
       readied.response.kind === "movement",
   );
 }
 
 function pendingReadiedActionChoiceOwnsBoundResponse(
-  choice: Extract<
-    EncodedBattleInterruptChoice,
-    { readonly kind: "releaseReadiedAction" }
-  >,
+  choice: EncodedNestedInterruptChoice,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
-  return (
-    choice.subject.tag === "runtimeCommand" &&
-    choice.subject.command === "releaseReadiedAction" &&
-    choice.subject.reactorId === choice.reactorId &&
-    readiedResponses.some(
-      (readied) =>
-        readied.actorId === choice.reactorId &&
-        readied.response.kind === "action",
-    )
+  if (
+    choice.subject.tag !== "runtimeCommand" ||
+    choice.subject.command !== "releaseReadiedAction"
+  ) {
+    return false;
+  }
+  const subject = choice.subject;
+  return readiedResponses.some(
+    (readied) =>
+      readied.actorId === subject.reactorId &&
+      readied.response.kind === "action",
   );
 }
 
 function pendingReadiedSpellChoiceOwnsBoundResponse(
-  choice: Extract<
-    EncodedBattleInterruptChoice,
-    { readonly kind: "releaseReadiedSpell" }
-  >,
+  choice: EncodedNestedInterruptChoice,
   combatants: readonly EncodedBattleCreatureSnapshot[],
   readiedSpells: readonly EncodedBattleReadiedSpellSnapshot[],
 ): boolean {
@@ -7810,27 +7675,24 @@ function pendingReadiedSpellChoiceOwnsBoundResponse(
   ) {
     return false;
   }
-  const procedureRef = choice.subject.procedureRef;
+  const subject = choice.subject;
+  const procedureRef = subject.procedureRef;
   return (
     serializedSpellProcedureRefIsBound(
       combatants,
-      choice.reactorId,
+      subject.readiedSpellCasterId,
       procedureRef,
     ) &&
     readiedSpells.some(
       (readied) =>
-        readied.casterId === choice.reactorId &&
+        readied.casterId === subject.readiedSpellCasterId &&
         readied.procedureRef === procedureRef,
     )
   );
 }
 
 function pendingImmediateSpellChoiceOwnsBoundProcedure(
-  choice: Extract<
-    EncodedBattleInterruptChoice,
-    | { readonly kind: "castTriggeredReactionSpell" }
-    | { readonly kind: "castAttackHitBonusActionSpell" }
-  >,
+  choice: EncodedNestedInterruptChoice,
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
   if (
@@ -7844,15 +7706,7 @@ function pendingImmediateSpellChoiceOwnsBoundProcedure(
 }
 
 function pendingAttackChoiceOwnsBoundProcedure(
-  choice: Exclude<
-    EncodedBattleInterruptChoice,
-    | { readonly kind: "releaseReadiedMovement" }
-    | { readonly kind: "releaseReadiedAction" }
-    | { readonly kind: "reactionRollOrDamageReduction" }
-    | { readonly kind: "releaseReadiedSpell" }
-    | { readonly kind: "castTriggeredReactionSpell" }
-    | { readonly kind: "castAttackHitBonusActionSpell" }
-  >,
+  choice: EncodedNestedInterruptChoice,
   combatants: readonly EncodedBattleCreatureSnapshot[],
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
@@ -7864,7 +7718,8 @@ function pendingAttackChoiceOwnsBoundProcedure(
   ) {
     return false;
   }
-  if (choice.kind === "releaseReadiedAttack") {
+  const subject = choice.subject;
+  if (subject.command === "releaseReadiedAttack") {
     return pendingReadiedAttackChoiceOwnsBoundProcedure(
       choice,
       combatants,
@@ -7873,16 +7728,13 @@ function pendingAttackChoiceOwnsBoundProcedure(
   }
   return serializedAttackProcedureRefIsBound(
     combatants,
-    choice.reactorId,
-    choice.subject.procedureRef,
+    interruptChoiceResponderId(choice),
+    subject.procedureRef,
   );
 }
 
 function pendingReadiedAttackChoiceOwnsBoundProcedure(
-  choice: Extract<
-    EncodedBattleInterruptChoice,
-    { readonly kind: "releaseReadiedAttack" }
-  >,
+  choice: EncodedNestedInterruptChoice,
   combatants: readonly EncodedBattleCreatureSnapshot[],
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
@@ -7901,7 +7753,7 @@ function pendingReadiedAttackChoiceOwnsBoundProcedure(
     combatants.some((combatant) => combatant.combatantId === subjectTargetId) &&
     readiedResponses.some(
       (readied) =>
-        readied.actorId === choice.reactorId &&
+        readied.actorId === attackSubject.reactorId &&
         readied.response.kind === "attack" &&
         readied.response.procedureRef === subjectProcedureRef,
     )

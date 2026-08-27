@@ -4268,15 +4268,18 @@ describe("Find Familiar lifecycle", () => {
     ]);
     const shieldChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "castTriggeredReactionSpell",
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castTriggeredReactionSpell",
       );
     expect(shieldChoice).toMatchObject({
-      kind: "castTriggeredReactionSpell",
-      reactorId: enemyId,
+      kind: "nestedProcedure",
+      subject: { command: "castTriggeredReactionSpell", reactorId: enemyId },
     });
     if (
       shieldChoice === undefined ||
-      shieldChoice.kind !== "castTriggeredReactionSpell"
+      shieldChoice.kind !== "nestedProcedure" ||
+      shieldChoice.subject.command !== "castTriggeredReactionSpell"
     ) {
       throw new Error("Expected Shield Reaction choice.");
     }

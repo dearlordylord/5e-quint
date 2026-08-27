@@ -131,12 +131,17 @@ describe("battle runtime: attack reaction coverage", () => {
         candidate,
       ): candidate is Extract<
         BattleInterruptProcedureChoice,
-        { readonly kind: "castTriggeredReactionSpell" }
+        { readonly kind: "nestedProcedure" }
       > =>
-        candidate.kind === "castTriggeredReactionSpell" &&
-        candidate.reactorId === casterId,
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castTriggeredReactionSpell" &&
+        candidate.subject.reactorId === casterId,
     );
-    if (choice === undefined) {
+    if (
+      choice === undefined ||
+      choice.subject.tag !== "runtimeCommand" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected Hellish Rebuke reaction choice.");
     }
     const saveHole = findHole(choice.initialHoles, "savingThrowOutcome");

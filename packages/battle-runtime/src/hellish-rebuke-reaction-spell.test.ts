@@ -65,6 +65,7 @@ import {
   type BattleHole,
   type BattleInterruptCheckpoint,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleRuntimeSession,
   type BattleState,
   type BattleSubject,
@@ -86,6 +87,16 @@ const magicMissileUnitId = "magic_missile";
 const spellCasterId = combatantId("hellish-rebuke-caster");
 const laughterCasterId = combatantId("hideous-laughter-caster");
 const damagerId = combatantId("hellish-rebuke-damager");
+
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
 
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -934,8 +945,10 @@ describe("Hellish Rebuke Reaction spell", () => {
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) => {
         if (
-          candidate.kind !== "castTriggeredReactionSpell" ||
-          candidate.reactorId !== spellCasterId
+          candidate.kind !== "nestedProcedure" ||
+          candidate.subject.tag !== "runtimeCommand" ||
+          candidate.subject.command !== "castTriggeredReactionSpell" ||
+          candidate.subject.reactorId !== spellCasterId
         )
           return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
@@ -943,22 +956,24 @@ describe("Hellish Rebuke Reaction spell", () => {
             ...state,
             state: awaitingReaction.state,
           }),
-          candidate.reactorId,
+          candidate.subject.reactorId,
           candidate.subject.procedureRef,
         );
         return invocation.tag === "spellSlot" && invocation.slotLevel === 2;
       },
     );
     expect(choice).toMatchObject({
-      kind: "castTriggeredReactionSpell",
-      reactorId: spellCasterId,
+      kind: "nestedProcedure",
       subject: {
         tag: "runtimeCommand",
         command: "castTriggeredReactionSpell",
         reactorId: spellCasterId,
       },
     });
-    if (choice?.kind !== "castTriggeredReactionSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected Hellish Rebuke Reaction choice.");
     }
     expect(
@@ -967,7 +982,7 @@ describe("Hellish Rebuke Reaction spell", () => {
           ...state,
           state: awaitingReaction.state,
         }),
-        choice.reactorId,
+        choice.subject.reactorId,
         choice.subject.procedureRef,
       ),
     ).toEqual(
@@ -1514,10 +1529,14 @@ function expectHellishRebukeChoice(
 ): void {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
     (candidate) =>
-      candidate.kind === "castTriggeredReactionSpell" &&
-      candidate.reactorId === reactorId,
+      candidate.kind === "nestedProcedure" &&
+      candidate.subject.command === "castTriggeredReactionSpell" &&
+      candidate.subject.reactorId === reactorId,
   );
-  if (choice?.kind !== "castTriggeredReactionSpell") {
+  if (
+    choice?.kind !== "nestedProcedure" ||
+    choice.subject.command !== "castTriggeredReactionSpell"
+  ) {
     throw new Error("Expected Hellish Rebuke Reaction spell choice.");
   }
   expect(() =>
@@ -1531,7 +1550,7 @@ function expectHellishRebukeChoice(
   expect(
     characterSpellInvocationRefForProcedureRefForTest(
       battleRuntimeSessionForTest({ ...session, state: result.state }),
-      choice.reactorId,
+      choice.subject.reactorId,
       choice.subject.procedureRef,
     ),
   ).toMatchObject({
@@ -1547,25 +1566,19 @@ function requireHellishRebukeChoice(
   >,
   reactorId: CombatantId,
   session: BattleRuntimeSession,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+    (candidate): candidate is TriggeredReactionSpellChoice => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== reactorId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.tag !== "runtimeCommand" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== reactorId
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({ ...session, state: result.state }),
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (

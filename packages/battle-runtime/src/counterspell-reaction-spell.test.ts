@@ -34,6 +34,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
   type BattleRuntimeSession,
@@ -72,6 +73,16 @@ const shieldUnitId = "shield";
 const casterId = combatantId("counterspell-triggering-caster");
 const counterspellerId = combatantId("counterspell-reactor");
 const secondCounterspellerId = combatantId("counterspell-second-reactor");
+
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
 
 describe("Counterspell Reaction spell", () => {
   test("does not admit a Counterspell reactor without an available spell slot", () => {
@@ -1779,10 +1790,7 @@ function requireCounterspellChoice(
   slotLevel: number,
   session: BattleRuntimeSession,
   resource?: CounterspellFreeCastChoiceResource,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   return requireTriggeredReactionSpellChoice({
     session,
     result,
@@ -1812,21 +1820,15 @@ function requireTriggeredReactionSpellChoice(input: {
   readonly procedure: string;
   readonly slotLevel: number;
   readonly resource?: CounterspellFreeCastChoiceResource;
-}): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+}): TriggeredReactionSpellChoice {
   const expectedFreeCastResource = input.resource;
   const choice = input.result.snapshot.pendingInterrupt?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+    (candidate): candidate is TriggeredReactionSpellChoice => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== input.reactorId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.tag !== "runtimeCommand" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== input.reactorId
       ) {
         return false;
       }
@@ -1835,7 +1837,7 @@ function requireTriggeredReactionSpellChoice(input: {
           state: input.result.state,
           context: input.session.context,
         }),
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (
@@ -1858,20 +1860,14 @@ function requireTriggeredReactionSpellChoice(input: {
 
 function counterspellDecision(
   reactorId: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return triggeredReactionSpellDecision(reactorId, choice, fills);
 }
 
 function counterspellSavingThrowFills(
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   triggeringCasterId: CombatantId,
   succeeded: boolean,
   additionalFills: readonly BattleFill[] = [],
@@ -1887,10 +1883,7 @@ function counterspellSavingThrowFills(
 
 function triggeredReactionSpellDecision(
   reactorId: CombatantId,
-  choice: Extract<
-    BattleInterruptProcedureChoice,
-    { readonly kind: "castTriggeredReactionSpell" }
-  >,
+  choice: TriggeredReactionSpellChoice,
   fills: readonly BattleFill[],
 ): Extract<BattleFill, { readonly kind: "interruptDecision" }>["value"] {
   return {

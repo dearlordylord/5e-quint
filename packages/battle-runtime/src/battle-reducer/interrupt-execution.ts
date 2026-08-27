@@ -43,6 +43,7 @@ import {
 } from "./readied-initial-holes.ts";
 import { readiedAttackOption } from "./ready.ts";
 import { interruptDecisionHole, snapshotBattle } from "./battle-snapshot.ts";
+import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 export {
   battleSnapshotProjection,
   battleTurnSnapshot,
@@ -541,7 +542,7 @@ function openPreparedInterruptWindowWithChoices(
   ],
 ): BattleOpenedInterruptWindowResult {
   const eligibleResponders = [
-    ...new Set(choices.map((choice) => choice.reactorId)),
+    ...new Set(choices.map(interruptChoiceResponderId)),
   ];
   const frameCommon = {
     eligibleResponders,
@@ -616,9 +617,7 @@ export function readiedSpellReactionChoices(
       }
       return [
         {
-          kind: "releaseReadiedSpell" as const,
-          reactorId: casterId,
-          readiedSpellCasterId: casterId,
+          kind: "nestedProcedure" as const,
           initialHoles: readiedSpellInitialHoles(state, casterId, readiedSpell),
           subject: {
             tag: "runtimeCommand" as const,
@@ -652,9 +651,7 @@ export function readiedMovementReactionChoices(
     initialHoles.length > 0
     ? [
         {
-          kind: "releaseReadiedMovement",
-          reactorId: readiedMovementActorId,
-          readiedMovementActorId,
+          kind: "nestedProcedure",
           initialHoles,
           subject: {
             tag: "runtimeCommand",
@@ -680,8 +677,7 @@ export function readiedActionReactionChoices(
     combatantCanTakeReactions(reactor)
     ? [
         {
-          kind: "releaseReadiedAction",
-          reactorId,
+          kind: "nestedProcedure",
           initialHoles: [],
           subject: {
             tag: "runtimeCommand",
@@ -720,8 +716,7 @@ export function readiedAttackReactionChoices(
       ? []
       : [
           {
-            kind: "releaseReadiedAttack" as const,
-            reactorId,
+            kind: "nestedProcedure" as const,
             initialHoles: [],
             subject: {
               tag: "runtimeCommand" as const,
@@ -833,8 +828,7 @@ export function attackHitBonusActionSpellReactionChoices(
           : [];
       return [
         {
-          kind: "castAttackHitBonusActionSpell" as const,
-          reactorId: frame.attackerId,
+          kind: "nestedProcedure" as const,
           initialHoles,
           subject: {
             tag: "runtimeCommand" as const,
@@ -887,8 +881,7 @@ export function opportunityAttackReactionChoices(
     if (selection === undefined) return [];
     return [
       {
-        kind: "opportunityAttack" as const,
-        reactorId,
+        kind: "nestedProcedure" as const,
         initialHoles: [],
         subject: {
           tag: "runtimeCommand" as const,
@@ -942,8 +935,7 @@ export function retaliationReactionAttackChoices(
     reactorId,
     frame.damageSourceId,
   ).map((selection) => ({
-    kind: "retaliationAttack" as const,
-    reactorId,
+    kind: "nestedProcedure" as const,
     initialHoles: [],
     subject: {
       tag: "runtimeCommand" as const,

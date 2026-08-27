@@ -695,7 +695,13 @@ describe("L12G deterministic Flaming Sphere admission", () => {
         pendingInterrupt: {
           trigger: "saveFailed",
           choices: [
-            expect.objectContaining({ readiedSpellCasterId: spellTargetId }),
+            expect.objectContaining({
+              kind: "nestedProcedure",
+              subject: expect.objectContaining({
+                command: "releaseReadiedSpell",
+                readiedSpellCasterId: spellTargetId,
+              }),
+            }),
           ],
         },
       },

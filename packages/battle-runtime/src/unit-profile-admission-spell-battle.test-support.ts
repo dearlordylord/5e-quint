@@ -357,8 +357,9 @@ export function declineTargetReadiedSpellAfterFailedSave(
   }
   const ownsReadiedSpell = pendingInterrupt.choices.some(
     (choice) =>
-      choice.kind === "releaseReadiedSpell" &&
-      choice.readiedSpellCasterId === responderId,
+      choice.kind === "nestedProcedure" &&
+      choice.subject.command === "releaseReadiedSpell" &&
+      choice.subject.readiedSpellCasterId === responderId,
   );
   if (!ownsReadiedSpell) {
     throw new Error("Expected the target to own the readied-spell Reaction.");
