@@ -51,12 +51,8 @@ export type BattleCombatantCorrelationPair<
   Participant extends BattleCombatantCorrelationParticipant =
     BattleCombatantCorrelationParticipant,
 > =
-  | (Participant extends { readonly origin: "characterSheet" }
-      ? CharacterBattleCombatantCorrelationPair<Initialization, Participant>
-      : never)
-  | (Participant extends { readonly origin: "statBlock" }
-      ? StatBlockBattleCombatantCorrelationPair<Initialization, Participant>
-      : never);
+  | CharacterBattleCombatantCorrelationPair<Initialization, Participant>
+  | StatBlockBattleCombatantCorrelationPair<Initialization, Participant>;
 
 type CharacterBattleCombatantCorrelationInitialization<
   Initialization extends BattleCombatantCorrelationInitialization,
@@ -179,11 +175,14 @@ export function correlateBattleCombatantInitializations<
       initializationByCombatantId,
       participant.combatantId,
     );
-    const pair = Match.value(participant).pipe(
-      Match.when({ origin: "characterSheet" }, (characterParticipant) =>
+    const pair = Match.value(participant.origin).pipe(
+      Match.when("characterSheet", () =>
         isCharacterBattleCombatantCorrelationInitialization(creatureInit)
           ? Either.right({
-              participant: characterParticipant,
+              participant: {
+                ...participant,
+                origin: "characterSheet" as const,
+              },
               initialization: creatureInit,
             })
           : Either.left({
@@ -193,10 +192,10 @@ export function correlateBattleCombatantInitializations<
               actualOrigin: creatureInit.creatureInit.kind,
             }),
       ),
-      Match.when({ origin: "statBlock" }, (statBlockParticipant) =>
+      Match.when("statBlock", () =>
         isStatBlockBattleCombatantCorrelationInitialization(creatureInit)
           ? Either.right({
-              participant: statBlockParticipant,
+              participant: { ...participant, origin: "statBlock" as const },
               initialization: creatureInit,
             })
           : Either.left({

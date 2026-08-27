@@ -1,4 +1,5 @@
 import { combatantId, type CombatantId } from "@dnd/battle-runtime";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -32,14 +33,20 @@ describe("battle combatant initialization correlation", () => {
     const secondId = combatantId("correlation-second");
     const first = statBlockInitialization(firstId, "First initialization");
     const second = statBlockInitialization(secondId, "Second initialization");
-    const participants = [
-      participant("statBlock", "correlation-first"),
-      participant("statBlock", "correlation-second"),
-    ];
+    const participants: ReadonlyNonEmptyArray<BattleCombatantCorrelationParticipant> =
+      [
+        participant("statBlock", "correlation-first"),
+        participant("statBlock", "correlation-second"),
+      ];
+    const creatureInits: ReadonlyNonEmptyArray<
+      BattleCombatantCorrelationInitialization & {
+        readonly displayName: string;
+      }
+    > = [second, first];
 
     const correlated = correlateBattleCombatantInitializations({
       participants,
-      creatureInits: [second, first],
+      creatureInits,
     });
 
     expect(Either.isRight(correlated)).toBe(true);
@@ -68,10 +75,14 @@ describe("battle combatant initialization correlation", () => {
 
   test("rejects a participant with no matching initialization id", () => {
     const expectedId = combatantId("correlation-missing");
+    const otherId = combatantId("correlation-other");
 
     const correlated = correlateBattleCombatantInitializations({
-      participants: [participant("statBlock", "correlation-missing")],
-      creatureInits: [],
+      participants: [
+        participant("statBlock", "correlation-missing"),
+        participant("statBlock", "correlation-other"),
+      ],
+      creatureInits: [statBlockInitialization(otherId, "Other")],
     });
 
     expect(Either.isLeft(correlated)).toBe(true);
