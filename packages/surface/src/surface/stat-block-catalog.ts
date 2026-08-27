@@ -2,13 +2,9 @@ import { Brand, Option } from "effect";
 
 import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 
-// Content JSON is generated from the matching content/*.dhall source.
-// Keep authoring changes in Dhall, then regenerate JSON and trace output.
-import findFamiliarStatBlocksInput from "../../content/stat_block_find_familiar_forms.json";
-import goblinWarriorInput from "../../content/stat_block_goblin_warrior.json";
-import skeletonInput from "../../content/stat_block_skeleton.json";
-import sphinxOfWonderInput from "../../content/stat_block_sphinx_of_wonder.json";
-import wildShapeRecommendedFormsInput from "../../content/stat_block_wild_shape_recommended_forms.json";
+// Canonical authored state remains in content/*.dhall and its strict JSON
+// peers; this generated module stores only their deterministic import order.
+import { srdStatBlockAggregateInputs } from "./generated/srd-stat-block-aggregate.ts";
 import { decodeStatBlockRecordSync } from "./schema.ts";
 import type {
   Provenance,
@@ -124,18 +120,13 @@ export function defineSrdStatBlockCollection(input: {
   return collection;
 }
 
+const installedSrdStatBlocks: readonly Srd521StatBlock[] =
+  srdStatBlockAggregateInputs.map((input) =>
+    assertSrd521StatBlock(decodeStatBlockRecordSync(input)),
+  );
+
 export const srdStatBlockCollection = defineSrdStatBlockCollection({
-  statBlocks: [
-    ...findFamiliarStatBlocksInput.map((input) =>
-      assertSrd521StatBlock(decodeStatBlockRecordSync(input)),
-    ),
-    ...wildShapeRecommendedFormsInput.map((input) =>
-      assertSrd521StatBlock(decodeStatBlockRecordSync(input)),
-    ),
-    assertSrd521StatBlock(decodeStatBlockRecordSync(goblinWarriorInput)),
-    assertSrd521StatBlock(decodeStatBlockRecordSync(skeletonInput)),
-    assertSrd521StatBlock(decodeStatBlockRecordSync(sphinxOfWonderInput)),
-  ],
+  statBlocks: installedSrdStatBlocks,
 });
 
 export function buildStatBlockCatalog(input: {
