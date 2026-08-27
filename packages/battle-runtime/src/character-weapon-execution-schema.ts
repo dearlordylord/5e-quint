@@ -8,8 +8,7 @@ import {
 } from "@dnd/surface/surface/schema";
 import { Schema } from "effect";
 
-export const CharacterWeaponAttackExecutionWeaponSchema = Schema.Struct({
-  weaponUnitId: UnitId,
+const CharacterWeaponAttackExecutionWeaponFactsFields = {
   attachedWeaponAttackOverrideEligibility: Schema.optionalWith(
     Schema.Struct({ kind: Schema.Literal("clubOrQuarterstaff") }),
     { exact: true },
@@ -20,7 +19,18 @@ export const CharacterWeaponAttackExecutionWeaponSchema = Schema.Struct({
   properties: Schema.Array(WeaponPropertyDetailSchema),
   mastery: WeaponMasteryNameSchema,
   costGp: Schema.Number,
+} as const;
+
+export const CharacterWeaponAttackExecutionWeaponFactsSchema = Schema.Struct(
+  CharacterWeaponAttackExecutionWeaponFactsFields,
+);
+
+export const CharacterWeaponAttackExecutionWeaponSchema = Schema.Struct({
+  weaponUnitId: UnitId,
+  ...CharacterWeaponAttackExecutionWeaponFactsFields,
 });
 
 export type CharacterWeaponAttackExecutionWeapon =
   typeof CharacterWeaponAttackExecutionWeaponSchema.Type;
+export type CharacterWeaponAttackExecutionWeaponFacts =
+  typeof CharacterWeaponAttackExecutionWeaponFactsSchema.Type;

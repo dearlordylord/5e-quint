@@ -148,6 +148,7 @@ import {
   DcSourceSchema,
   DifficultyClass,
   MovementFeet,
+  MechanicalSupportedAttackActionOptionSchema,
   SpellSlotLevel,
   SupportedAttackActionOptionSchema,
 } from "./codec-building-blocks.ts";
@@ -1867,7 +1868,13 @@ const BattleHolePayloadMembers = [
         { exact: true },
       ),
     },
-    D20TestNaturalOneRerollHoleOptionsFields,
+    mergeBattleHoleFieldPairs(
+      {
+        labeled: {},
+        mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
+      },
+      D20TestNaturalOneRerollHoleOptionsFields,
+    ),
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -1894,68 +1901,74 @@ const BattleHolePayloadMembers = [
       D20TestNaturalOneRerollHoleOptionsFields,
     ),
   ),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("rolledDice"),
-    attack: SupportedAttackActionOptionSchema,
-    critical: Schema.Boolean,
-    attackDamageRiders: Schema.optionalWith(
-      Schema.Array(
-        Schema.Struct({
-          attackerId: CombatantId,
-          procedureRef: BattleProcedureExecutionRef,
-          optional: Schema.Boolean,
-          damage: Schema.Struct({
-            dice: Schema.Number,
-            dieSize: Schema.Number,
-            damageType: DamageTypeSchema,
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("rolledDice"),
+      attack: SupportedAttackActionOptionSchema,
+      critical: Schema.Boolean,
+      attackDamageRiders: Schema.optionalWith(
+        Schema.Array(
+          Schema.Struct({
+            attackerId: CombatantId,
+            procedureRef: BattleProcedureExecutionRef,
+            optional: Schema.Boolean,
+            damage: Schema.Struct({
+              dice: Schema.Number,
+              dieSize: Schema.Number,
+              damageType: DamageTypeSchema,
+            }),
           }),
-        }),
+        ),
+        { exact: true },
       ),
-      { exact: true },
-    ),
-    spellWeaponDamageRiders: Schema.optionalWith(
-      Schema.Array(SpellWeaponDamageRiderSchema),
-      { exact: true },
-    ),
-    spellMarkedDamageRiders: Schema.optionalWith(
-      Schema.Array(SpellMarkedDamageRiderSchema),
-      { exact: true },
-    ),
-    cunningStrikeOptions: Schema.optionalWith(
-      Schema.Array(
-        Schema.Struct({
-          procedureRef: BattleProcedureExecutionRef,
-          optionId: Schema.Literal(
-            ...BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
-          ),
-          sourceDamageRiderProcedureRef: BattleProcedureExecutionRef,
-          dieCost: Schema.Struct({
-            dice: Schema.Literal(1),
-            dieSize: Schema.Literal(6),
+      spellWeaponDamageRiders: Schema.optionalWith(
+        Schema.Array(SpellWeaponDamageRiderSchema),
+        { exact: true },
+      ),
+      spellMarkedDamageRiders: Schema.optionalWith(
+        Schema.Array(SpellMarkedDamageRiderSchema),
+        { exact: true },
+      ),
+      cunningStrikeOptions: Schema.optionalWith(
+        Schema.Array(
+          Schema.Struct({
+            procedureRef: BattleProcedureExecutionRef,
+            optionId: Schema.Literal(
+              ...BATTLE_CUNNING_STRIKE_OPTION_SELECTION_IDS,
+            ),
+            sourceDamageRiderProcedureRef: BattleProcedureExecutionRef,
+            dieCost: Schema.Struct({
+              dice: Schema.Literal(1),
+              dieSize: Schema.Literal(6),
+            }),
           }),
-        }),
+        ),
+        { exact: true },
       ),
-      { exact: true },
-    ),
-    weaponDamageDiceRollChoiceProcedureRefs: Schema.optionalWith(
-      Schema.Array(BattleProcedureExecutionRef),
-      { exact: true },
-    ),
-    attackDamageDieFloorChoiceProcedureRefs: Schema.optionalWith(
-      Schema.NonEmptyArray(BattleProcedureExecutionRef),
-      { exact: true },
-    ),
-    attackDamageAbilityModifierChoice: Schema.optionalWith(
-      Schema.Struct({
-        procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
-        unitIds: Schema.optionalWith(Schema.Never, { exact: true }),
-        appliedDamageAbilityModifier: AbilityModifier,
-        declinedDamageAbilityModifier: AbilityModifier,
-      }),
-      { exact: true },
-    ),
-  }),
+      weaponDamageDiceRollChoiceProcedureRefs: Schema.optionalWith(
+        Schema.Array(BattleProcedureExecutionRef),
+        { exact: true },
+      ),
+      attackDamageDieFloorChoiceProcedureRefs: Schema.optionalWith(
+        Schema.NonEmptyArray(BattleProcedureExecutionRef),
+        { exact: true },
+      ),
+      attackDamageAbilityModifierChoice: Schema.optionalWith(
+        Schema.Struct({
+          procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+          unitIds: Schema.optionalWith(Schema.Never, { exact: true }),
+          appliedDamageAbilityModifier: AbilityModifier,
+          declinedDamageAbilityModifier: AbilityModifier,
+        }),
+        { exact: true },
+      ),
+    },
+    {
+      labeled: {},
+      mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
+    },
+  ),
   pairedBattleHoleMemberWithFields(
     {
       ...BattleHoleBaseFieldsSchema,

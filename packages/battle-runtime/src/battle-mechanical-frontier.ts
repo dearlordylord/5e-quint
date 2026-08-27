@@ -9,6 +9,7 @@ import {
 } from "./battle-reducer/battle-codecs.ts";
 import { battleHoleFamilyKind } from "./battle-reducer/hole-helpers.ts";
 import { sameDomainValue } from "./domain-value-equality.ts";
+import { projectMechanicalAttackActionOption } from "./battle-mechanical-attack-options.ts";
 import type {
   BattleHole,
   BattleInterruptProcedureChoice,
@@ -347,8 +348,15 @@ function projectMechanicalD20Hole(
 function projectMechanicalAttackRollHole(
   hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
 ): Extract<BattleMechanicalOrdinaryHole, { readonly kind: "attackRoll" }> {
-  const { label, d20TestNaturalOneRerolls, ...mechanical } = hole;
+  const { label, d20TestNaturalOneRerolls, ...withoutLabel } = hole;
   void label;
+  const mechanical =
+    "attack" in withoutLabel
+      ? {
+          ...withoutLabel,
+          attack: projectMechanicalAttackActionOption(withoutLabel.attack),
+        }
+      : withoutLabel;
   const mechanicalWithD20 = {
     ...mechanical,
     ...(d20TestNaturalOneRerolls === undefined
@@ -373,8 +381,15 @@ function projectMechanicalAttackRollHole(
 function projectMechanicalRolledDiceHole(
   hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
 ): Extract<BattleMechanicalOrdinaryHole, { readonly kind: "rolledDice" }> {
-  const { label, ...mechanical } = hole;
+  const { label, ...withoutLabel } = hole;
   void label;
+  const mechanical =
+    "attack" in withoutLabel
+      ? {
+          ...withoutLabel,
+          attack: projectMechanicalAttackActionOption(withoutLabel.attack),
+        }
+      : withoutLabel;
   if ("spellDamageRerolls" in hole && hole.spellDamageRerolls !== undefined) {
     return {
       ...mechanical,
