@@ -1,0 +1,350 @@
+{
+  "challengeRating": 16,
+  "id": "stat_block_adult_blue_dragon",
+  "kind": "statBlock",
+  "name": "Adult Blue Dragon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:962-1008"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 20,
+      "con": 23,
+      "dex": 10,
+      "int": 16,
+      "str": 25,
+      "wis": 15
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 19
+      }
+    },
+    "actions": [
+      {
+        "description": "The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Shatter.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 12
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 7
+                },
+                "kind": "fixed",
+                "static": 16
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 10
+                },
+                "kind": "fixed",
+                "static": 5
+              },
+              "damageType": "lightning",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "line",
+            "lengthFeet": 90,
+            "widthFeet": 5
+          },
+          "dc": {
+            "dc": 19,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Lightning Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 11,
+                "dieSize": 10
+              },
+              "kind": "fixed",
+              "static": 60
+            },
+            "damageType": "lightning",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "invisibility"
+                },
+                {
+                  "spellId": "mage_hand"
+                },
+                {
+                  "spellId": "shatter"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "scrying"
+                },
+                {
+                  "spellId": "sending"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 18,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            2
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "chromatic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 212
+    },
+    "immunities": {
+      "damageTypes": [
+        "lightning"
+      ]
+    },
+    "initiative": {
+      "modifier": 10,
+      "score": 20
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "The dragon uses Spellcasting to cast Invisibility on itself, and it can fly up to half its Fly Speed. The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Cloaked Flight",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon uses Spellcasting to cast Shatter. The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Sonic Boom",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon makes one Rend attack.",
+          "kind": "textOnly",
+          "name": "Tail Swipe",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 22,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 7
+      },
+      {
+        "ability": "dex",
+        "modifier": 5
+      },
+      {
+        "ability": "con",
+        "modifier": 6
+      },
+      {
+        "ability": "int",
+        "modifier": 3
+      },
+      {
+        "ability": "wis",
+        "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 12,
+        "skill": "perception"
+      },
+      {
+        "modifier": 5,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "burrow"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the dragon fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (3/Day, or 4/Day in Lair)"
+      }
+    ]
+  }
+}

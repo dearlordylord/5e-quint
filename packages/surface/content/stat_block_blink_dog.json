@@ -1,0 +1,168 @@
+{
+  "challengeRating": 0.25,
+  "id": "stat_block_blink_dog",
+  "kind": "statBlock",
+  "name": "Blink Dog",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:868-894"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 11,
+      "con": 12,
+      "dex": 17,
+      "int": 10,
+      "str": 12,
+      "wis": 13
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 5
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "lawful"
+    },
+    "bonusActions": [
+      {
+        "description": "The dog teleports up to 40 feet to an unoccupied space it can see.",
+        "kind": "textOnly",
+        "name": "Teleport (Recharge 4–6)",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "communication": {
+      "additionallyUnderstoodButCannotSpeak": {
+        "kind": "named",
+        "languages": [
+          "Elvish",
+          "Sylvan"
+        ]
+      },
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Blink Dog"
+        ]
+      }
+    },
+    "creatureType": "fey",
+    "hp": {
+      "kind": "literal",
+      "value": 22
+    },
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 15,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 4
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 1
+      },
+      {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "perception"
+      },
+      {
+        "modifier": 5,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

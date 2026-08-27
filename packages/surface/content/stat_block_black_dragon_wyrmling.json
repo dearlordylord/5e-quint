@@ -1,0 +1,249 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_black_dragon_wyrmling",
+  "kind": "statBlock",
+  "name": "Black Dragon Wyrmling",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:654-685"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 13,
+      "con": 13,
+      "dex": 14,
+      "int": 10,
+      "str": 15,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 5
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4
+                },
+                "kind": "fixed",
+                "static": 2
+              },
+              "damageType": "acid",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "line",
+            "lengthFeet": 20,
+            "widthFeet": 5
+          },
+          "dc": {
+            "dc": 11,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Acid Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 5,
+                "dieSize": 8
+              },
+              "kind": "fixed",
+              "static": 22
+            },
+            "damageType": "acid",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "chromatic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 33
+    },
+    "immunities": {
+      "damageTypes": [
+        "acid"
+      ]
+    },
+    "initiative": {
+      "modifier": 4,
+      "score": 14
+    },
+    "passivePerception": 14,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 2
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 1
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 10
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 4,
+        "skill": "perception"
+      },
+      {
+        "modifier": 4,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 60
+        },
+        "kind": "fly"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The dragon can breathe air and water.",
+        "name": "Amphibious"
+      }
+    ]
+  }
+}

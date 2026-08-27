@@ -1,0 +1,213 @@
+{
+  "challengeRating": 5,
+  "id": "stat_block_barbed_devil",
+  "kind": "statBlock",
+  "name": "Barbed Devil",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:477-515"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 14,
+      "con": 18,
+      "dex": 17,
+      "int": 12,
+      "str": 16,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "description": "The devil makes one Claws attack and one Tail attack, or it makes two Hurl Flame attacks.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +6, reach 5 ft. Hit: 10 (2d6 + 3) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13) from both claws.",
+        "kind": "textOnly",
+        "name": "Claws",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Tail",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 14
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Ranged Attack Roll: +5, range 150 ft. Hit: 17 (5d6) Fire damage. If the target is a flammable object that isn't being worn or carried, it starts burning.",
+        "kind": "textOnly",
+        "name": "Hurl Flame",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Infernal"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "fiend",
+    "creatureTypeTags": [
+      "devil"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 110
+    },
+    "immunities": {
+      "conditions": [
+        "poisoned"
+      ],
+      "damageTypes": [
+        "fire",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 18,
+    "resistances": {
+      "damageTypes": [
+        "cold"
+      ],
+      "kind": "fixed"
+    },
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 6
+      },
+      {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 7
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "wis",
+        "modifier": 5
+      },
+      {
+        "ability": "cha",
+        "modifier": 2
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "qualifier": "unimpeded_by_magical_darkness",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "deception"
+      },
+      {
+        "modifier": 5,
+        "skill": "insight"
+      },
+      {
+        "modifier": 8,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "climb"
+      }
+    ],
+    "traits": [
+      {
+        "description": "At the start of each of its turns, the devil deals 5 (1d10) Piercing damage to any creature it is grappling or any creature grappling it.",
+        "name": "Barbed Hide"
+      },
+      {
+        "description": "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.",
+        "name": "Diabolical Restoration"
+      },
+      {
+        "description": "The devil has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}

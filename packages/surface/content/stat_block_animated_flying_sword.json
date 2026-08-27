@@ -1,0 +1,140 @@
+{
+  "challengeRating": 0.25,
+  "id": "stat_block_animated_flying_sword",
+  "kind": "statBlock",
+  "name": "Animated Flying Sword",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:126-148"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 1,
+      "con": 11,
+      "dex": 15,
+      "int": 1,
+      "str": 12,
+      "wis": 5
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Slash",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 6
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "construct",
+    "hp": {
+      "kind": "literal",
+      "value": 14
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "deafened",
+        "exhaustion",
+        "frightened",
+        "paralyzed",
+        "petrified",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "poison",
+        "psychic"
+      ]
+    },
+    "initiative": {
+      "modifier": 4,
+      "score": 14
+    },
+    "passivePerception": 7,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 1
+      },
+      {
+        "ability": "dex",
+        "modifier": 4
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": -5
+      },
+      {
+        "ability": "wis",
+        "modifier": -3
+      },
+      {
+        "ability": "cha",
+        "modifier": -5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "small",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 5
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "hover": true,
+        "kind": "fly"
+      }
+    ]
+  }
+}

@@ -1,0 +1,195 @@
+{
+  "challengeRating": 9,
+  "id": "stat_block_bone_devil",
+  "kind": "statBlock",
+  "name": "Bone Devil",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:1062-1096"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 18,
+      "dex": 16,
+      "int": 13,
+      "str": 18,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 16
+      }
+    },
+    "actions": [
+      {
+        "description": "The devil makes two Claw attacks and one Infernal Sting attack.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Claw",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 13
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +8, reach 10 ft. Hit: 15 (2d10 + 4) Piercing damage plus 18 (4d8) Poison damage, and the target has the Poisoned condition until the start of the devil's next turn. While Poisoned, the target can't regain Hit Points.",
+        "kind": "textOnly",
+        "name": "Infernal Sting",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Infernal"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "fiend",
+    "creatureTypeTags": [
+      "devil"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 161
+    },
+    "immunities": {
+      "conditions": [
+        "poisoned"
+      ],
+      "damageTypes": [
+        "fire",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 7,
+      "score": 17
+    },
+    "passivePerception": 12,
+    "resistances": {
+      "damageTypes": [
+        "cold"
+      ],
+      "kind": "fixed"
+    },
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 8
+      },
+      {
+        "ability": "dex",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 4
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "wis",
+        "modifier": 6
+      },
+      {
+        "ability": "cha",
+        "modifier": 7
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "qualifier": "unimpeded_by_magical_darkness",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 7,
+        "skill": "deception"
+      },
+      {
+        "modifier": 6,
+        "skill": "insight"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.",
+        "name": "Diabolical Restoration"
+      },
+      {
+        "description": "The devil has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}
