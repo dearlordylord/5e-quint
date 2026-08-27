@@ -2,20 +2,11 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import Ajv2020 from "ajv/dist/2020.js";
-
 import {
   ORACLE_PUBLICATION_ARTIFACTS,
   ORACLE_PUBLICATION_MEMBERS,
 } from "../src/oracle-publication.ts";
-
-const DRAFT_2020_12_SCHEMA = "https://json-schema.org/draft/2020-12/schema";
-
-type JsonRecord = { readonly [key: string]: unknown };
-
-function isJsonRecord(value: unknown): value is JsonRecord {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+import { validateOraclePublicationSchemaBytes } from "./oracle-publication-validation.ts";
 
 export function checkOraclePublicationSync(
   publicationDirectory = join(process.cwd(), "publication"),
@@ -69,47 +60,9 @@ export function checkOraclePublicationSync(
       );
       continue;
     }
-    if (!committedBytes.equals(artifact.bytes)) {
-      issues.push(`publication artifact is out of sync: ${artifact.fileName}`);
-    }
-
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(committedBytes.toString("utf8"));
-    } catch (error) {
-      issues.push(
-        `publication artifact is not valid JSON (${artifact.fileName}): ${error instanceof Error ? error.message : String(error)}`,
-      );
-      continue;
-    }
-    if (!isJsonRecord(parsed)) {
-      issues.push(
-        `publication artifact root is not an object: ${artifact.fileName}`,
-      );
-      continue;
-    }
-    if (parsed.$schema !== DRAFT_2020_12_SCHEMA) {
-      issues.push(
-        `publication artifact has the wrong $schema: ${artifact.fileName}`,
-      );
-    }
-    if (parsed.$id !== artifact.rootId) {
-      issues.push(
-        `publication artifact has the wrong root $id: ${artifact.fileName}`,
-      );
-    }
-
-    try {
-      new Ajv2020({
-        strict: false,
-        inlineRefs: false,
-        code: { optimize: 0 },
-      }).compile(parsed);
-    } catch (error) {
-      issues.push(
-        `publication artifact does not compile with Draft 2020-12 Ajv (${artifact.fileName}): ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    issues.push(
+      ...validateOraclePublicationSchemaBytes(member, committedBytes).issues,
+    );
   }
 
   return issues;

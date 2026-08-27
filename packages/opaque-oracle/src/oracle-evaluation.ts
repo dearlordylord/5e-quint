@@ -180,10 +180,15 @@ function defect(message: string): never {
 export function evaluateOracleBatch(input: {
   readonly batch: OracleEvaluationBatch;
   readonly services: OracleEvaluationServices;
-}): readonly OracleTrace[] {
-  return input.batch.cases.map((oracleCase) =>
+}): readonly [OracleTrace, ...OracleTrace[]] {
+  const traces = input.batch.cases.map((oracleCase) =>
     evaluateOracleCase({ ...input.services, case: oracleCase }),
   );
+  const [firstTrace, ...remainingTraces] = traces;
+  if (firstTrace === undefined) {
+    throw new Error("Opaque Oracle defect: nonempty batch produced no traces.");
+  }
+  return [firstTrace, ...remainingTraces];
 }
 
 function characterCreationBatchFactOrDefect(

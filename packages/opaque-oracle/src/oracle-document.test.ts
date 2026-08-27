@@ -1567,6 +1567,7 @@ describe("Opaque Oracle document JSON Schemas", () => {
       creationHoleCardinalityCorrelation: 1,
       creationFrontierCorrelation: 0,
       checkpointFrontierCorrelation: 4,
+      corpusBatchTraceLengthCorrelation: 0,
       constraintFreeBrand: 1,
     });
 

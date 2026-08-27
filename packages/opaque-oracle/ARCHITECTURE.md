@@ -29,6 +29,29 @@ not encode arbitrary cross-record correlations. Those are deliberately
 preparse and semantic-admission responsibilities rather than claims made by
 the published schemas.
 
+## Corpus publication
+
+The Effect CLI in `scripts/oracle-evaluation-cli.ts` is the only filesystem
+composition boundary for the committed evaluation corpus. Its production
+composition root builds the SRD Unit and Stat Block catalogs once and passes
+the resulting `OracleEvaluationServices` to the core source-batch builder.
+The command handlers receive `FileSystem`, `Path`, and `Terminal` services;
+Node-specific layers are installed only by the executable bootstrap.
+
+`generate` and `check` are read-only: generation validates its stdout artifact
+before display, while checking additionally requires the committed bytes to
+equal the deterministic source artifact. `write` validates first, recursively
+creates the target directory, and then uses a same-directory temporary file
+and rename. Resource cleanup runs on both successful and failed writes, so a
+failed temporary write or rename cannot replace the committed target.
+
+Schema snapshots are checked through the shared
+`oracle-publication-validation.ts` helper. Each of the three committed bytes
+is compared with `ORACLE_PUBLICATION_ARTIFACTS`, parsed independently, and
+compiled independently with Draft 2020-12 Ajv before corpus values are
+validated. This keeps the Node schema-sync script and injected-FileSystem CLI
+on one publication-byte policy.
+
 ## Identity and presentation
 
 Trace execution facts exclude session/frame bookkeeping, transport state,
