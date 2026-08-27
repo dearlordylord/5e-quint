@@ -93,7 +93,7 @@ Quint Connect manifest consumer, and missing lockfile sections.
 The following is the initial post-cutover snapshot, retained as historical
 evidence from before the #372 and #373 downstream source migrations. Each
 public workspace command acquired and released the repository broad lock
-through its own documented wrapper. The current owner status is recorded in
+through its own documented wrapper. The historical owner status is recorded in
 the regenerated inventory below.
 
 | Command          | Result       | Controlled-red classification                                                                                                                                                                                                                                    |
@@ -103,10 +103,14 @@ the regenerated inventory below.
 | `pnpm test`      | fail, exit 1 | `@dnd/tactical-space` passed 1 file/53 tests. `@dnd/shared` then stopped the lane with two failed suites and zero collected tests: `Schema.int is not a function` and missing `effect/Either`.                                                                   |
 
 The build and test failures are intentionally recorded at their first public
-stop point in that historical snapshot. The owner sweep below is the current
-regenerated inventory and was run separately under the repository broad lock.
+stop point in that historical snapshot. The owner sweep below is also retained
+as historical #375 evidence; the current #376 regenerated inventory is recorded
+in the later Issue #376 evidence snapshot.
 
-## Exhaustive typecheck inventory
+## Exhaustive typecheck inventory (historical #375 snapshot)
+
+The owner sweep, totals, and tables in this subsection are retained historical
+#375 evidence and are not the current #376 counts.
 
 The canonical regeneration command is
 `pnpm regenerate:effect4-controlled-red`. Its public script acquires the
@@ -138,8 +142,9 @@ The inventory ran each workspace `typecheck` script once in this order:
 @dnd/tactical-space-prototype
 ```
 
-The nine green owners passed, while four remaining Effect-consuming owners
-failed. The
+The four prototype/tactical owners, `@dnd/shared`, `@dnd/shared-algebras`,
+`@dnd/surface`, and `@dnd/character-creation-runtime` passed. The five
+remaining Effect-consuming owners failed. The
 raw counts below are
 the committed output's per-command counts; workspace-linked source is repeated
 when a dependent package typechecks it.
