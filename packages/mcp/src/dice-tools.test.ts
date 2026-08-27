@@ -2,8 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
-import { Effect, Random, Result, Schema } from "effect";
-import type * as Context from "effect/Context";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -23,6 +22,7 @@ import { handleDiceToolCall, rollDice } from "./dice-tools.ts";
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+import { fixedRandom, seededRandom } from "./dice-random-test-support.ts";
 
 const request = {
   groups: [
@@ -30,32 +30,6 @@ const request = {
     { dice: 1, dieSize: 4 },
   ],
 } as const;
-
-type RandomService = Context.Service.Shape<typeof Random.Random>;
-
-const fixedRandom = (values: readonly [number, ...number[]]): RandomService => {
-  let index = 0;
-  const nextDoubleUnsafe = () => {
-    const value = values[index % values.length] ?? 0;
-    index += 1;
-    return value;
-  };
-  return {
-    nextDoubleUnsafe,
-    nextIntUnsafe: () =>
-      Math.floor(
-        nextDoubleUnsafe() *
-          (Number.MAX_SAFE_INTEGER - Number.MIN_SAFE_INTEGER + 1),
-      ) + Number.MIN_SAFE_INTEGER,
-  };
-};
-
-const seededRandom = (seed: string): RandomService =>
-  Effect.runSync(
-    Effect.gen(function* () {
-      return yield* Random.Random;
-    }).pipe(Random.withSeed(seed)),
-  );
 
 describe("structured MCP bulk dice roller", () => {
   test("rejects empty groups and caller correlation/idempotency fields", () => {
