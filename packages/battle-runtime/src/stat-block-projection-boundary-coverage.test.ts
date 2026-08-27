@@ -29,7 +29,10 @@ import {
   statBlockRecord,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
-import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import {
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlock,
+} from "./stat-block-authored-projection.ts";
 
 const decodeProcedure = (input: unknown): StatBlockProcedureEntry =>
   Schema.decodeUnknownSync(StatBlockProcedureEntrySchema)(input);
@@ -218,12 +221,17 @@ describe("Stat Block projection boundary coverage", () => {
     ] as const;
 
     for (const { record, issues } of invalidResourceCases) {
-      expect(projectAuthoredStatBlock(record)).toEqual(
+      const projection = projectAuthoredStatBlock(record);
+      expect(projection).toEqual(
         Either.left({
           tag: "battleStatBlockProjectionFailure",
           reason: "invalidResourceLimit",
           issues,
         }),
+      );
+      if (Either.isRight(projection)) continue;
+      expect(battleStatBlockProjectionFailureMessage(projection.left)).toBe(
+        "Stat Block authored projection failed: battle initialization requires valid Stat Block resource limits.",
       );
     }
 
@@ -546,6 +554,19 @@ describe("Stat Block projection boundary coverage", () => {
         ],
       }),
     );
+    const initialized = battleCreatureInitFromStatBlock({
+      combatantId: combatantId("synthetic-resource-graph-issue"),
+      statBlock: graphFailureForm,
+      initiative: initiativeScore(10),
+      ammunitionStocks: [],
+      conditions: [],
+    });
+    expect(Either.isLeft(initialized)).toBe(true);
+    if (Either.isLeft(initialized)) {
+      expect(authoredStatBlockBattleInitIssueMessage(initialized.left)).toBe(
+        "Battle runtime requires Stat Block resource declaration ordinal 1 to be unique.; Battle runtime requires Stat Block procedure resource reference 99 to match a declared resource.",
+      );
+    }
     if (Either.isLeft(result)) {
       expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
         "Druid Wild Shape battle forms require valid Stat Block resource limits.; resource declaration ordinal 1 is duplicated, resource reference 99 is missing",
