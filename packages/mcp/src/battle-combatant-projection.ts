@@ -97,7 +97,7 @@ export function startableBattleCombatants(input: {
   }
 
   return Either.right({
-    creatureInits: correlated.right,
+    creatureInits: correlated.right.map(({ initialization }) => initialization),
     characterSessions: resolved.right.flatMap((combatant) =>
       isResolvedCharacterBattleCombatant(combatant)
         ? [combatant.characterSession]
@@ -128,26 +128,17 @@ export function projectBattleCombatant(input: {
   if (Either.isLeft(correlated)) {
     return Either.left(battleCombatantCorrelationIssueContent(correlated.left));
   }
-  const creatureInit = correlated.right.find(
-    ({ combatantId }) => combatantId === resolved.right.participant.combatantId,
-  );
+  const correlatedPair = correlated.right[0];
+  if (correlatedPair === undefined) {
+    throw new Error(
+      "Internal invariant: single-combatant correlation returned no pair.",
+    );
+  }
+  const creatureInit = correlatedPair.initialization;
   if (isResolvedCharacterBattleCombatant(resolved.right)) {
-    if (creatureInit === undefined) {
-      return Either.left(
-        battleCombatantCorrelationIssueContent({
-          tag: "missingInitializationCombatantId",
-          combatantId: resolved.right.participant.combatantId,
-        }),
-      );
-    }
     if (!isCharacterBattleRosterCombatant(creatureInit)) {
-      return Either.left(
-        battleCombatantCorrelationIssueContent({
-          tag: "initializationOriginMismatch",
-          combatantId: resolved.right.participant.combatantId,
-          expectedOrigin: resolved.right.participant.origin,
-          actualOrigin: creatureInit.creatureInit.kind,
-        }),
+      throw new Error(
+        "Internal invariant: character participant correlated with non-character initialization.",
       );
     }
     return Either.right({
@@ -156,29 +147,14 @@ export function projectBattleCombatant(input: {
       characterSession: resolved.right.characterSession,
     });
   }
-  if (
-    creatureInit !== undefined &&
-    isStatBlockBattleRosterCombatant(creatureInit)
-  ) {
+  if (isStatBlockBattleRosterCombatant(creatureInit)) {
     return Either.right({
       tag: "encounterCombatant" as const,
       creatureInit,
     });
   }
-  return Either.left(
-    battleCombatantCorrelationIssueContent(
-      creatureInit === undefined
-        ? {
-            tag: "missingInitializationCombatantId",
-            combatantId: resolved.right.participant.combatantId,
-          }
-        : {
-            tag: "initializationOriginMismatch",
-            combatantId: resolved.right.participant.combatantId,
-            expectedOrigin: resolved.right.participant.origin,
-            actualOrigin: creatureInit.creatureInit.kind,
-          },
-    ),
+  throw new Error(
+    "Internal invariant: stat block participant correlated with non-stat-block initialization.",
   );
 }
 

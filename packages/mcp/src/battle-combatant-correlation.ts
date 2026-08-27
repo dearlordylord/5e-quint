@@ -17,6 +17,13 @@ export type BattleCombatantCorrelationInitialization = Pick<
   readonly creatureInit: Pick<BattleCreatureInit["creatureInit"], "kind">;
 };
 
+export type BattleCombatantCorrelationPair<
+  Initialization extends BattleCombatantCorrelationInitialization,
+> = {
+  readonly participant: BattleCombatantCorrelationParticipant;
+  readonly initialization: Initialization;
+};
+
 export type BattleCombatantCorrelationIssue =
   | {
       readonly tag: "duplicateParticipantCombatantId";
@@ -46,7 +53,10 @@ export function correlateBattleCombatantInitializations<
 >(input: {
   readonly participants: readonly BattleCombatantCorrelationParticipant[];
   readonly creatureInits: readonly Initialization[];
-}): Either.Either<readonly Initialization[], BattleCombatantCorrelationIssue> {
+}): Either.Either<
+  readonly BattleCombatantCorrelationPair<Initialization>[],
+  BattleCombatantCorrelationIssue
+> {
   const participantByCombatantId = new Map<
     CombatantId,
     BattleCombatantCorrelationParticipant
@@ -92,17 +102,12 @@ export function correlateBattleCombatantInitializations<
 
   // The MCP roster order is the caller's order; the owner output order is not
   // part of this join contract.
-  const orderedInitializations: Initialization[] = [];
+  const orderedPairs: BattleCombatantCorrelationPair<Initialization>[] = [];
   for (const participant of input.participants) {
-    const creatureInit = initializationByCombatantId.get(
+    const creatureInit = requiredBattleCombatantInitialization(
+      initializationByCombatantId,
       participant.combatantId,
     );
-    if (creatureInit === undefined) {
-      return Either.left({
-        tag: "missingInitializationCombatantId",
-        combatantId: participant.combatantId,
-      });
-    }
     if (
       !battleCombatantInitializationOriginMatches(participant, creatureInit)
     ) {
@@ -113,9 +118,24 @@ export function correlateBattleCombatantInitializations<
         actualOrigin: creatureInit.creatureInit.kind,
       });
     }
-    orderedInitializations.push(creatureInit);
+    orderedPairs.push({ participant, initialization: creatureInit });
   }
-  return Either.right(orderedInitializations);
+  return Either.right(orderedPairs);
+}
+
+function requiredBattleCombatantInitialization<
+  Initialization extends BattleCombatantCorrelationInitialization,
+>(
+  initializationByCombatantId: ReadonlyMap<CombatantId, Initialization>,
+  combatantId: CombatantId,
+): Initialization {
+  const creatureInit = initializationByCombatantId.get(combatantId);
+  if (creatureInit === undefined) {
+    throw new Error(
+      `Internal invariant: validated combatant initialization is absent for ${combatantId}.`,
+    );
+  }
+  return creatureInit;
 }
 
 function battleCombatantInitializationOriginMatches(
