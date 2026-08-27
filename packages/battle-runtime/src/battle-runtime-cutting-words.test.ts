@@ -1,6 +1,8 @@
 import { attackDamageInterruptionFrame } from "./battle-reducer/attack-damage-events.ts";
 import { classLevel } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { combatantId } from "./identity.ts";
 import {
   attackDamageHoleAfterHit,
@@ -42,6 +44,10 @@ import {
   targetFill,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
+} from "./index.ts";
 
 describe("battle runtime: Cutting Words", () => {
   test("full SRD Cutting Words is admitted with ability-check reactions supported", () => {
@@ -113,6 +119,15 @@ describe("battle runtime: Cutting Words", () => {
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+            battleCheckpointFrontierEnvelope(awaitingReaction.state),
+          ),
+        ),
+      ),
+    ).toBe(true);
     const resolved = resolveBattleInterrupt({
       state: awaitingReaction.state,
       fill: interruptDecisionFill(

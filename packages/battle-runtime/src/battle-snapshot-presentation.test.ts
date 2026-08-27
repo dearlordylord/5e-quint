@@ -14,11 +14,17 @@ import {
   statBlockCreatureInit,
 } from "./battle-runtime.test-support.ts";
 import type { BattleInterruptProcedureChoice } from "./battle-state-execution.ts";
-import { currentBattleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
+import {
+  battleFrontierHoles,
+  currentBattleCheckpointFrontierEnvelope,
+  resolveBattleRuntimeSubject,
+} from "./battle-session-execution.ts";
 import { battleReplayStackDepth } from "./identity.ts";
 import {
   BattlePresentedCheckpointFrontierEnvelopeSchema,
   battlePresentedCheckpointFrontierEnvelope,
+  battlePresentedSnapshot,
+  presentBattleCheckpointFrontierEnvelope,
   presentBattleInterruptChoices,
 } from "./battle-snapshot-presentation.ts";
 
@@ -29,6 +35,21 @@ describe("battle snapshot frontier presentation", () => {
       characterSeed({ combatantId: fighterId, initiative: 20 }),
       statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
     ],
+  });
+
+  test("presents the durable snapshot from the live session", () => {
+    const presented = battlePresentedSnapshot(session);
+    expect(Either.isRight(presented)).toBe(true);
+    if (Either.isLeft(presented)) return;
+    expect(
+      presented.right.combatants.map(({ combatantId, displayName }) => ({
+        combatantId,
+        displayName,
+      })),
+    ).toEqual([
+      { combatantId: fighterId, displayName: "Fighter" },
+      { combatantId: goblinId, displayName: "Goblin Warrior" },
+    ]);
   });
 
   test("preserves canonical act subjects and holes while joining presentation", () => {
@@ -81,6 +102,42 @@ describe("battle snapshot frontier presentation", () => {
     );
   });
 
+  test("preserves a mechanical holes frontier while presenting its checkpoint", () => {
+    const mechanical = currentBattleCheckpointFrontierEnvelope(session);
+    if (mechanical.frontier.kind !== "acts") {
+      throw new Error("Expected an Acts frontier.");
+    }
+    expect(battleFrontierHoles(mechanical)).toBeNull();
+    const act = mechanical.frontier.acts.find(
+      (candidate) => candidate.initialHoles.length > 0,
+    );
+    if (act === undefined) {
+      throw new Error("Expected an act with an initial hole.");
+    }
+    const resolution = resolveBattleRuntimeSubject({
+      session,
+      subject: act.subject,
+      fills: [],
+    });
+    if (
+      resolution.tag !== "needsHoles" ||
+      resolution.envelope.frontier.kind !== "holes"
+    ) {
+      throw new Error("Expected a mechanical holes frontier.");
+    }
+    expect(battleFrontierHoles(resolution.envelope)).toEqual(
+      resolution.envelope.frontier,
+    );
+
+    const presented = presentBattleCheckpointFrontierEnvelope(
+      session,
+      resolution.envelope,
+    );
+    expect(Either.isRight(presented)).toBe(true);
+    if (Either.isLeft(presented)) return;
+    expect(presented.right.frontier).toEqual(resolution.envelope.frontier);
+  });
+
   test("retains modifier-only interrupt choices without an authored join", () => {
     const choice = {
       kind: "reactionRollOrDamageReduction",
@@ -99,6 +156,34 @@ describe("battle snapshot frontier presentation", () => {
     expect(Either.isRight(result)).toBe(true);
     if (Either.isLeft(result)) return;
     expect(result.right).toEqual([{ choice }]);
+
+    const mechanical = currentBattleCheckpointFrontierEnvelope(session);
+    const presentedEnvelope = presentBattleCheckpointFrontierEnvelope(session, {
+      checkpoint: mechanical.checkpoint,
+      frontier: {
+        kind: "interruptDecision",
+        trigger: "afterDamage",
+        decisionHole: {
+          holeInstanceKey: holeInstanceKey(
+            "battle:snapshot-presentation:frontier-modifier",
+          ),
+          holeId: holeId("battle:snapshot-presentation:frontier-modifier"),
+          kind: "interruptDecision",
+          label: "Reduce damage",
+          trigger: "afterDamage",
+          eligibleResponders: [fighterId],
+        },
+        choices: [choice],
+        stackDepth: battleReplayStackDepth(1),
+      },
+    });
+    expect(Either.isRight(presentedEnvelope)).toBe(true);
+    if (Either.isRight(presentedEnvelope)) {
+      expect(presentedEnvelope.right.frontier).toMatchObject({
+        kind: "interruptDecision",
+        choices: [{ choice }],
+      });
+    }
   });
 
   test("round-trips a modifier-only interrupt choice without presentation", () => {
@@ -188,6 +273,9 @@ describe("battle snapshot frontier presentation", () => {
       },
     } as const satisfies BattleInterruptProcedureChoice;
     const presentation = { kind: "intrinsic" } as const;
+    expect(presentBattleInterruptChoices(session, [choice])).toEqual(
+      Either.right([{ choice, presentation }]),
+    );
     const presented = battlePresentedCheckpointFrontierEnvelope(session);
     if (Either.isLeft(presented)) {
       throw new Error("Expected a presented checkpoint frontier envelope.");

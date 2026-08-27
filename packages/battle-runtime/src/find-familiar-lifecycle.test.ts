@@ -49,9 +49,11 @@ import {
   battleCreaturePresentationDisplayName,
   battleDruidWildShapeKnownFormSupportForUnit,
   battleId,
+  battleCheckpointFrontierEnvelope,
   battleObjectId,
   battleUnitSupportProfilesForUnit,
   BattleSnapshotSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   castFindFamiliar,
   castRetainedFindFamiliarRuntime,
   castWildCompanion,
@@ -4612,6 +4614,30 @@ describe("Find Familiar lifecycle", () => {
     expect(cast.tag).toBe("resolved");
     if (cast.tag !== "resolved") return;
     assertBattleSnapshotCodecRoundTripForTest(snapshotBattle(cast.state));
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+            battleCheckpointFrontierEnvelope(cast.state),
+          ),
+        ),
+      ),
+    ).toBe(true);
+    const caster = cast.state.combatants.get(casterId);
+    if (caster?.origin.kind !== "character") {
+      throw new Error("Expected the Pact familiar owner character.");
+    }
+    expect(() =>
+      snapshotBattle({
+        ...cast.state,
+        combatants: new Map(cast.state.combatants).set(familiarId, {
+          ...caster,
+          combatantId: familiarId,
+        }),
+      }),
+    ).toThrow(
+      "Present Find Familiar snapshot requires a Stat Block combatant.",
+    );
     const attackActs = discoverBattleActs(
       battleRuntimeSessionForTest({
         state: cast.state,

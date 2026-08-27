@@ -46,12 +46,21 @@ import {
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
+  battleActiveEffectExecutionOrdinal,
   battleCharacterExecutionScopeRef,
+  battleCharacterExecutionScopeRefOrdinalIsBefore,
   battleActiveEffectExecutionRef,
+  battleActiveEffectExecutionRefOrdinalIsBefore,
+  battleAttackExecutionScopeRef,
+  battleAttackExecutionScopeRefOrdinalIsBefore,
+  battleExecutionScopeCursor,
   battleProcedureExecutionRef,
+  battleProcedureExecutionCursor,
+  battleProcedureExecutionRefOrdinalIsBefore,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
   battleStatBlockExecutionScopeRef,
+  battleStatBlockExecutionScopeRefOrdinalIsBefore,
   battleStatBlockExecutionScopeRefIsWellFormed,
   combatantId,
   type BattleStatBlockExecutionScopeRef as BattleStatBlockExecutionScopeReference,
@@ -104,6 +113,99 @@ function executionReferenceView(
 }
 
 describe("Stat Block execution references", () => {
+  test("orders every execution-reference family against its allocation cursor", () => {
+    const ownerBattleId = battleId("battle-reference-ordinal-ordering");
+    const ownerId = combatantId("reference-ordinal-owner");
+    const ordinal = battleExecutionScopeOrdinal(0);
+    const nextScope = battleExecutionScopeCursor(
+      battleExecutionScopeOrdinal(1),
+    );
+    const characterScope = battleCharacterExecutionScopeRef(
+      ownerBattleId,
+      ownerId,
+      ordinal,
+    );
+    const statBlockScope = battleStatBlockExecutionScopeRef(
+      ownerBattleId,
+      ownerId,
+      ordinal,
+    );
+    const attackScope = battleAttackExecutionScopeRef(
+      ownerBattleId,
+      ownerId,
+      ordinal,
+    );
+    const procedureRef = battleProcedureExecutionRef(
+      characterScope,
+      NonNegativeInteger(0),
+    );
+    const activeEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        kind: "activeEffectOccurrence",
+        ownerScopeRef: characterScope,
+        ordinal: 0,
+      }),
+    );
+
+    expect(
+      battleCharacterExecutionScopeRefOrdinalIsBefore(
+        characterScope,
+        nextScope,
+      ),
+    ).toBe(true);
+    expect(
+      battleStatBlockExecutionScopeRefOrdinalIsBefore(
+        statBlockScope,
+        nextScope,
+      ),
+    ).toBe(true);
+    expect(
+      battleAttackExecutionScopeRefOrdinalIsBefore(attackScope, nextScope),
+    ).toBe(true);
+    expect(
+      battleProcedureExecutionRefOrdinalIsBefore(
+        procedureRef,
+        characterScope,
+        battleProcedureExecutionCursor(1),
+      ),
+    ).toBe(true);
+    expect(
+      battleActiveEffectExecutionRefOrdinalIsBefore(
+        activeEffectRef,
+        characterScope,
+        battleActiveEffectExecutionOrdinal(1),
+      ),
+    ).toBe(true);
+    expect(
+      battleCharacterExecutionScopeRefOrdinalIsBefore(
+        characterScope,
+        undefined,
+      ),
+    ).toBe(false);
+    expect(
+      battleStatBlockExecutionScopeRefOrdinalIsBefore(
+        statBlockScope,
+        undefined,
+      ),
+    ).toBe(false);
+    expect(
+      battleAttackExecutionScopeRefOrdinalIsBefore(attackScope, undefined),
+    ).toBe(false);
+    expect(
+      battleProcedureExecutionRefOrdinalIsBefore(
+        procedureRef,
+        statBlockScope,
+        battleProcedureExecutionCursor(1),
+      ),
+    ).toBe(false);
+    expect(
+      battleActiveEffectExecutionRefOrdinalIsBefore(
+        activeEffectRef,
+        statBlockScope,
+        battleActiveEffectExecutionOrdinal(1),
+      ),
+    ).toBe(false);
+  });
   test("offers only rolled damage when structured attack damage omits a static value", () => {
     const base = statBlockRecord();
     const attacks = base.statBlock.actions?.attacks;
@@ -2404,6 +2506,18 @@ describe("Stat Block execution references", () => {
     const encodedBattle = Schema.encodeSync(BattleSnapshotSchema)(
       snapshotBattle(spentBattle),
     );
+    expect(
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(encodedBattle),
+    ).toEqual(snapshotBattle(spentBattle));
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+            battleCheckpointFrontierEnvelope(spentBattle),
+          ),
+        ),
+      ),
+    ).toBe(true);
     expect(() =>
       Schema.decodeUnknownSync(BattleSnapshotSchema)({
         ...encodedBattle,

@@ -7210,16 +7210,9 @@ function serializedReadiedMovementChoiceOwnsResponse(
   >,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
-  const subject = choice.subject;
-  if (
-    subject.tag !== "runtimeCommand" ||
-    subject.command !== "releaseReadiedMovement"
-  ) {
-    return false;
-  }
   return readiedResponses.some(
     (readied) =>
-      readied.actorId === subject.readiedMovementActorId &&
+      readied.actorId === choice.readiedMovementActorId &&
       readied.response.kind === "movement",
   );
 }
@@ -7231,16 +7224,9 @@ function serializedReadiedActionChoiceOwnsResponse(
   >,
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
-  const subject = choice.subject;
-  if (
-    subject.tag !== "runtimeCommand" ||
-    subject.command !== "releaseReadiedAction"
-  ) {
-    return false;
-  }
   return readiedResponses.some(
     (readied) =>
-      readied.actorId === subject.reactorId &&
+      readied.actorId === choice.reactorId &&
       readied.response.kind === "action",
   );
 }
@@ -7436,80 +7422,36 @@ type EncodedBattleCheckpointFrontierEnvelope = {
   readonly frontier: EncodedBattleCheckpointFrontier;
 };
 
-function serializedExecutionReferencesAreBound(input: {
-  readonly references: readonly SerializedExecutionReferenceOwnership[];
-  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
-  readonly boundExecutionRefs: ReadonlySet<string>;
-  readonly expectedProcedureRefs: ReadonlySet<BattleProcedureExecutionRef>;
-}): boolean {
-  return input.references.every((reference) => {
-    if (!input.boundExecutionRefs.has(reference.ref)) return false;
-    if (
-      reference.subjectProcedure &&
-      input.expectedProcedureRefs.size > 0 &&
-      !input.expectedProcedureRefs.has(
-        reference.ref as BattleProcedureExecutionRef,
-      )
-    ) {
-      return false;
-    }
-    if (reference.ownerId === undefined) return true;
-    const owner = input.combatants.find(
-      (combatant) => combatant.combatantId === reference.ownerId,
-    );
-    return (
-      owner !== undefined &&
-      serializedCombatantAuthoritativeExecutionReferences(owner).includes(
-        reference.ref,
-      )
-    );
-  });
-}
-
 function serializedInterruptChoiceSubject(
   choice: EncodedBattleInterruptProcedureChoice,
-): EncodedBattleSubject | undefined {
+): EncodedRuntimeCommandBattleSubject | undefined {
+  const runtimeCommandSubject = (
+    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
+  ): EncodedRuntimeCommandBattleSubject | undefined =>
+    subjectChoice.subject.tag === "runtimeCommand"
+      ? subjectChoice.subject
+      : undefined;
   return Match.value(choice).pipe(
     Match.discriminatorsExhaustive("kind")({
-      castAttackHitBonusActionSpell: (subjectChoice) => subjectChoice.subject,
-      castTriggeredReactionSpell: (subjectChoice) => subjectChoice.subject,
-      opportunityAttack: (subjectChoice) => subjectChoice.subject,
+      castAttackHitBonusActionSpell: runtimeCommandSubject,
+      castTriggeredReactionSpell: runtimeCommandSubject,
+      opportunityAttack: runtimeCommandSubject,
       reactionRollOrDamageReduction: () => undefined,
-      releaseReadiedAction: (subjectChoice) => subjectChoice.subject,
-      releaseReadiedAttack: (subjectChoice) => subjectChoice.subject,
-      releaseReadiedMovement: (subjectChoice) => subjectChoice.subject,
-      releaseReadiedSpell: (subjectChoice) => subjectChoice.subject,
-      retaliationAttack: (subjectChoice) => subjectChoice.subject,
+      releaseReadiedAction: runtimeCommandSubject,
+      releaseReadiedAttack: runtimeCommandSubject,
+      releaseReadiedMovement: runtimeCommandSubject,
+      releaseReadiedSpell: runtimeCommandSubject,
+      retaliationAttack: runtimeCommandSubject,
     }),
   );
 }
 
 function serializedInterruptChoiceTargetIsLive(
-  subject: EncodedBattleSubject | undefined,
+  subject: EncodedRuntimeCommandBattleSubject | undefined,
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
   if (subject === undefined) return true;
-  return Match.value(subject).pipe(
-    Match.discriminatorsExhaustive("tag")({
-      action: () => true,
-      actionSpell: () => true,
-      bonusAction: () => true,
-      bonusActionDashSpell: () => true,
-      bonusActionSpell: () => true,
-      bonusActionStandardAction: () => true,
-      companionLifecycle: () => true,
-      druidWildShape: () => true,
-      findFamiliarSharedSenses: () => true,
-      findFamiliarTouchSpell: () => true,
-      monkFocusFlurryOfBlowsStrike: () => true,
-      monkFocusOption: () => true,
-      pactOfTheChainFamiliarAttack: () => true,
-      runtimeCommand: (command) =>
-        serializedRuntimeCommandTargetIsLive(command, combatants),
-      unitFeature: () => true,
-      unitFeatureHeldWeaponActivation: () => true,
-    }),
-  );
+  return serializedRuntimeCommandTargetIsLive(subject, combatants);
 }
 
 function serializedRuntimeCommandTargetIsLive(
@@ -7631,29 +7573,17 @@ function battleCheckpointFrontierInvariantsHold(
           value.holes,
           new Set(battleSubjectProcedureRefs(value.subject)),
         ),
-      interruptDecision: (value) => {
-        const decisionHoleIsBound = serializedExecutionReferencesAreBound({
-          references: serializedBattleHoleExecutionReferences(
-            value.decisionHole,
-          ),
-          combatants: checkpoint.combatants,
-          boundExecutionRefs,
-          expectedProcedureRefs: new Set(),
-        });
-        return (
-          decisionHoleIsBound &&
-          value.choices.every((choice) =>
-            serializedInterruptChoiceInvariantsHold({
-              choice,
-              combatants: checkpoint.combatants,
-              readiedSpells,
-              readiedResponses,
-              subjectIsBound,
-              holesAreBound,
-            }),
-          )
-        );
-      },
+      interruptDecision: (value) =>
+        value.choices.every((choice) =>
+          serializedInterruptChoiceInvariantsHold({
+            choice,
+            combatants: checkpoint.combatants,
+            readiedSpells,
+            readiedResponses,
+            subjectIsBound,
+            holesAreBound,
+          }),
+        ),
     }),
   );
 }

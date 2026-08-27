@@ -257,6 +257,11 @@ function battleCurrentContinuation(state: BattleRuntimeSession["state"]): {
 } | null {
   const frame = currentInterruptFrame(state);
   if (frame === null) return null;
+  const attackDamageContinuation = ({
+    continuation,
+  }: {
+    readonly continuation: { readonly participant: BattleSubject };
+  }) => ({ subject: continuation.participant, fills: [] });
   return Match.value(frame).pipe(
     Match.when({ kind: "interruptCheckpoint" }, ({ frame: checkpoint }) => {
       const activeInterrupt = checkpoint.activeInterrupt;
@@ -273,17 +278,11 @@ function battleCurrentContinuation(state: BattleRuntimeSession["state"]): {
     })),
     Match.when(
       { kind: "attackDamageContinuationConcentration" },
-      ({ continuation }) => ({
-        subject: continuation.participant,
-        fills: [],
-      }),
+      attackDamageContinuation,
     ),
     Match.when(
       { kind: "attackDamageContinuationCunningStrike" },
-      ({ continuation }) => ({
-        subject: continuation.participant,
-        fills: [],
-      }),
+      attackDamageContinuation,
     ),
     Match.when({ kind: "flySpeedGrantEndFallCleanup" }, () => null),
     Match.when({ kind: "fallDamageLandingMitigation" }, () => null),

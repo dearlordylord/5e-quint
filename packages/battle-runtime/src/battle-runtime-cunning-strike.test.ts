@@ -73,6 +73,7 @@ import {
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import { battleCunningStrikeOptionGrantSupportForUnit } from "./unit-feature-support.ts";
+import { battleCheckpointFrontierEnvelope } from "./battle-session-execution.ts";
 
 describe("battle runtime: Cunning Strike", () => {
   test("Surface rejects malformed same-family Cunning Strike records", () => {
@@ -391,6 +392,9 @@ describe("battle runtime: Cunning Strike", () => {
     if (needsTripSave.tag !== "needsHoles") {
       throw new Error("Expected Cunning Strike Trip staged save.");
     }
+    expect(
+      battleCheckpointFrontierEnvelope(needsTripSave.state).checkpoint.battleId,
+    ).toBe(needsTripSave.state.battleId);
 
     expect(targetTempHp(needsTripSave.state)).toBe(40);
 

@@ -61,6 +61,10 @@ type EncodedActsFrontier = Extract<
   { readonly kind: "acts" }
 >;
 type EncodedAct = EncodedActsFrontier["acts"][number];
+type EncodedInterruptChoice = Extract<
+  EncodedEnvelope["frontier"],
+  { readonly kind: "interruptDecision" }
+>["choices"][number];
 type CodecCase = {
   readonly name: string;
   readonly expected: "Right" | "Left";
@@ -794,6 +798,241 @@ describe("battle codec act ownership boundaries", () => {
     if (choice?.kind !== "releaseReadiedAttack") {
       throw new Error("Expected a fixed-target readied attack choice.");
     }
+    const pendingEnvelope = encodedEnvelopeFromState(reported.state);
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          pendingEnvelope,
+        ),
+      ),
+    ).toBe(true);
+    if (pendingEnvelope.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected a pending interrupt-decision frontier.");
+    }
+    const readiedAttackSnapshot =
+      pendingEnvelope.checkpoint.readiedResponses.actionsOrMovements.find(
+        (readied) => readied.response.kind === "attack",
+      );
+    if (readiedAttackSnapshot?.response.kind !== "attack") {
+      throw new Error("Expected an encoded readied-attack snapshot.");
+    }
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      checkpoint: {
+        ...pendingEnvelope.checkpoint,
+        readiedResponses: {
+          ...pendingEnvelope.checkpoint.readiedResponses,
+          actionsOrMovements: [
+            {
+              ...readiedAttackSnapshot,
+              actorId: combatantId("codec-missing-readied-attacker"),
+            },
+          ],
+        },
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      checkpoint: {
+        ...pendingEnvelope.checkpoint,
+        readiedResponses: {
+          ...pendingEnvelope.checkpoint.readiedResponses,
+          spells: [
+            {
+              casterId: fighterId,
+              procedureRef: readiedAttackSnapshot.response.procedureRef,
+              trigger: "attackHit",
+              expiresAt: readiedAttackSnapshot.expiresAt,
+            },
+          ],
+        },
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      checkpoint: {
+        ...pendingEnvelope.checkpoint,
+        readiedResponses: {
+          ...pendingEnvelope.checkpoint.readiedResponses,
+          spells: [
+            {
+              casterId: goblinId,
+              procedureRef: readiedAttackSnapshot.response.procedureRef,
+              trigger: "attackHit",
+              expiresAt: readiedAttackSnapshot.expiresAt,
+            },
+          ],
+        },
+      },
+    });
+    const encodedReadiedAttack = pendingEnvelope.frontier.choices.find(
+      (candidate) =>
+        candidate.kind === "releaseReadiedAttack" &&
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "releaseReadiedAttack",
+    );
+    if (
+      encodedReadiedAttack?.kind !== "releaseReadiedAttack" ||
+      encodedReadiedAttack.subject.tag !== "runtimeCommand" ||
+      encodedReadiedAttack.subject.command !== "releaseReadiedAttack"
+    ) {
+      throw new Error("Expected the encoded readied-attack choice.");
+    }
+    const interruptKindCases: readonly {
+      readonly expected: "Right" | "Left";
+      readonly choice: EncodedInterruptChoice;
+    }[] = [
+      {
+        expected: "Right",
+        choice: {
+          kind: "castAttackHitBonusActionSpell",
+          reactorId: goblinId,
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "castAttackHitBonusActionSpell",
+            casterId: goblinId,
+            procedureRef: encodedReadiedAttack.subject.procedureRef,
+          },
+          initialHoles: [],
+        },
+      },
+      {
+        expected: "Right",
+        choice: {
+          kind: "castTriggeredReactionSpell",
+          reactorId: goblinId,
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "castTriggeredReactionSpell",
+            reactorId: goblinId,
+            procedureRef: encodedReadiedAttack.subject.procedureRef,
+          },
+          initialHoles: [],
+        },
+      },
+      {
+        expected: "Right",
+        choice: {
+          kind: "opportunityAttack",
+          reactorId: goblinId,
+          subject: {
+            ...encodedReadiedAttack.subject,
+            command: "opportunityAttack",
+            distanceFeet: 5,
+          },
+          initialHoles: [],
+        },
+      },
+      {
+        expected: "Right",
+        choice: {
+          kind: "retaliationAttack",
+          reactorId: goblinId,
+          subject: {
+            ...encodedReadiedAttack.subject,
+            command: "retaliationAttack",
+          },
+          initialHoles: [],
+        },
+      },
+      {
+        expected: "Left",
+        choice: {
+          kind: "releaseReadiedMovement",
+          reactorId: goblinId,
+          readiedMovementActorId: goblinId,
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "releaseReadiedMovement",
+            readiedMovementActorId: goblinId,
+          },
+          initialHoles: [],
+        },
+      },
+      {
+        expected: "Left",
+        choice: {
+          kind: "releaseReadiedSpell",
+          reactorId: goblinId,
+          readiedSpellCasterId: goblinId,
+          subject: {
+            tag: "runtimeCommand",
+            actorId: fighterId,
+            command: "releaseReadiedSpell",
+            readiedSpellCasterId: goblinId,
+            procedureRef: encodedReadiedAttack.subject.procedureRef,
+          },
+          initialHoles: [],
+        },
+      },
+      {
+        expected: "Left",
+        choice: {
+          kind: "reactionRollOrDamageReduction",
+          reactorId: fighterId,
+          choice: {
+            kind: "attackDamageReduction",
+            procedureRef: encodedReadiedAttack.subject.procedureRef,
+            reduction: { kind: "halfDamage" },
+          },
+          initialHoles: [],
+        },
+      },
+      {
+        expected: "Left",
+        choice: {
+          kind: "reactionRollOrDamageReduction",
+          reactorId: goblinId,
+          choice: {
+            kind: "attackDamageReduction",
+            procedureRef: encodedReadiedAttack.subject.procedureRef,
+            reduction: { kind: "halfDamage" },
+          },
+          initialHoles: [],
+        },
+      },
+    ];
+    for (const interruptCase of interruptKindCases) {
+      const decoded = Schema.decodeUnknownEither(
+        BattleCheckpointFrontierEnvelopeSchema,
+      )({
+        ...pendingEnvelope,
+        frontier: {
+          ...pendingEnvelope.frontier,
+          choices: [interruptCase.choice],
+        },
+      });
+      expect(Either.isRight(decoded)).toBe(interruptCase.expected === "Right");
+    }
+    const replaceTarget = (
+      candidate: EncodedInterruptChoice,
+    ): EncodedInterruptChoice =>
+      candidate.kind === "releaseReadiedAttack" &&
+      candidate.subject.tag === "runtimeCommand" &&
+      candidate.subject.command === "releaseReadiedAttack"
+        ? {
+            ...candidate,
+            subject: {
+              ...candidate.subject,
+              targetId: combatantId("codec-unknown-target"),
+            },
+          }
+        : candidate;
+    const [firstChoice, ...remainingChoices] = pendingEnvelope.frontier.choices;
+    const malformedTargetEnvelope = {
+      ...pendingEnvelope,
+      frontier: {
+        ...pendingEnvelope.frontier,
+        choices: [
+          replaceTarget(firstChoice),
+          ...remainingChoices.map(replaceTarget),
+        ] as const,
+      },
+    };
+    expectEnvelopeDecodeLeft(malformedTargetEnvelope);
     const targetSpatialFacts = {
       kind: "targetSpatialFacts" as const,
       holeId: ATTACK_TARGET_HOLE_ID,
@@ -890,6 +1129,14 @@ describe("battle codec act ownership boundaries", () => {
       throw new Error("Expected a pending readied-action interrupt.");
     }
 
+    const pendingEnvelope = encodedEnvelopeFromState(reported.state);
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          pendingEnvelope,
+        ),
+      ),
+    ).toBe(true);
     const encoded = Schema.encodeSync(BattleSnapshotSchema)(reported.snapshot);
     expect(Schema.decodeUnknownSync(BattleSnapshotSchema)(encoded)).toEqual(
       reported.snapshot,

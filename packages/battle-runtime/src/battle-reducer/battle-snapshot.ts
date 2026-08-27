@@ -68,18 +68,13 @@ function battleSnapshotProjectionFromCommittedState(state: BattleState): {
           return [entry.companion];
         }
         const { combatantId, ...snapshotCompanion } = entry.companion;
+        const combatant = presentFamiliarSnapshotFacts(state, combatantId);
         return [
           {
             ...snapshotCompanion,
             companionId: combatantId,
-            resolvedStatBlockId: requirePresentFamiliarCombatantStatBlockId(
-              state,
-              combatantId,
-            ),
-            initiative: requirePresentFamiliarCombatantInitiative(
-              state,
-              combatantId,
-            ),
+            resolvedStatBlockId: combatant.resolvedStatBlockId,
+            initiative: combatant.initiative,
           },
         ];
       },
@@ -160,34 +155,20 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
   };
 }
 
-function requirePresentFamiliarCombatantInitiative(
+function presentFamiliarSnapshotFacts(
   state: BattleState,
   familiarId: CombatantId,
-): Extract<
-  BattleCompanionSnapshot,
-  { readonly status: "present" }
->["initiative"] {
-  const combatant = state.combatants.get(familiarId);
-  if (combatant === undefined) {
-    throw new Error("Present Find Familiar snapshot requires a combatant.");
-  }
-  return combatant.initiative;
-}
-
-function requirePresentFamiliarCombatantStatBlockId(
-  state: BattleState,
-  familiarId: CombatantId,
-): Extract<
-  BattleCompanionSnapshot,
-  { readonly status: "present" }
->["resolvedStatBlockId"] {
+) {
   const combatant = state.combatants.get(familiarId);
   if (combatant?.origin.kind !== "statBlock") {
     throw new Error(
       "Present Find Familiar snapshot requires a Stat Block combatant.",
     );
   }
-  return combatant.origin.statBlockId;
+  return {
+    initiative: combatant.initiative,
+    resolvedStatBlockId: combatant.origin.statBlockId,
+  };
 }
 
 export function interruptDecisionFrontier(
