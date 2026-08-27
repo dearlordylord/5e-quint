@@ -57,6 +57,69 @@ describe("standalone Stat Block general facts", () => {
     expect("displayName" in syntheticStandaloneStatBlock).toBe(false);
   });
 
+  test("accepts sparse or complete saving throw modifiers without duplicate abilities", () => {
+    expect(
+      decode(StandaloneStatBlockSchema, syntheticStandaloneStatBlock)
+        .savingThrowModifiers,
+    ).toBeUndefined();
+
+    const sparseSavingThrowModifiers = [
+      { ability: "dex", modifier: 2 },
+    ] as const;
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        savingThrowModifiers: sparseSavingThrowModifiers,
+      }).savingThrowModifiers,
+    ).toEqual(sparseSavingThrowModifiers);
+
+    const completeSavingThrowModifiers = [
+      { ability: "str", modifier: 1 },
+      { ability: "dex", modifier: 2 },
+      { ability: "con", modifier: 3 },
+      { ability: "int", modifier: 4 },
+      { ability: "wis", modifier: 5 },
+      { ability: "cha", modifier: 6 },
+    ] as const;
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        savingThrowModifiers: completeSavingThrowModifiers,
+      }).savingThrowModifiers,
+    ).toEqual(completeSavingThrowModifiers);
+
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        savingThrowModifiers: [],
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        savingThrowModifiers: undefined,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        savingThrowModifiers: [
+          { ability: "dex", modifier: 2 },
+          { ability: "dex", modifier: 3 },
+        ],
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        savingThrowModifiers: [
+          ...completeSavingThrowModifiers,
+          { ability: "str", modifier: 7 },
+        ],
+      }),
+    ).toThrow();
+  });
+
   test("keeps standalone authored facts outside the reusable creature projection", () => {
     const projection = {
       displayName: "Synthetic Spirit",

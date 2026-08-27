@@ -6096,6 +6096,25 @@ export const CreatureSavingThrowModifierSchema = Schema.Struct({
   modifier: Schema.Number.pipe(Schema.int()),
 });
 
+const MAX_SAVING_THROW_MODIFIERS = 6;
+
+const hasDistinctSavingThrowAbilities = (
+  modifiers: ReadonlyArray<
+    Schema.Schema.Type<typeof CreatureSavingThrowModifierSchema>
+  >,
+): boolean =>
+  new Set(modifiers.map(({ ability }) => ability)).size === modifiers.length;
+
+const CreatureSavingThrowModifiersSchema = nonEmpty(
+  CreatureSavingThrowModifierSchema,
+).pipe(
+  Schema.maxItems(MAX_SAVING_THROW_MODIFIERS),
+  Schema.filter(hasDistinctSavingThrowAbilities, {
+    message: () =>
+      "Stat Block saving throw modifiers must contain distinct abilities.",
+  }),
+);
+
 export const CreatureSkillModifierSchema = Schema.Struct({
   skill: SkillSchema,
   modifier: Schema.Number.pipe(Schema.int()),
@@ -6329,9 +6348,7 @@ const CreatureStatBlockProjectionFields = {
   speeds: nonEmpty(CreatureSpeedSchema),
   abilityScores: SixAbilityScoresSchema,
   initiativeModifier: optionalExact(StatBlockInitiativeModifierSchema),
-  savingThrowModifiers: optionalExact(
-    nonEmpty(CreatureSavingThrowModifierSchema),
-  ),
+  savingThrowModifiers: optionalExact(CreatureSavingThrowModifiersSchema),
   skillModifiers: optionalExact(nonEmpty(CreatureSkillModifierSchema)),
   saveProficiencies: optionalExact(nonEmpty(AbilitySchema)),
   vulnerabilities: optionalExact(CreatureVulnerabilityListSchema),
