@@ -833,7 +833,7 @@ export function characterSpellcasting(input: {
       build,
     );
     return battleCreatureInitIssue(
-      spellAccessIssues.map((issue) => issue.message).join("; "),
+      "Character Battle Spell Access projection contains invalid selections.",
       spellAccessIssues,
     );
   }
@@ -868,7 +868,7 @@ export function characterSpellcasting(input: {
   if (Either.isLeft(projectedMagicInitiateSpellAccesses)) {
     const spellAccessIssues = projectedMagicInitiateSpellAccesses.left;
     return battleCreatureInitIssue(
-      spellAccessIssues.map((issue) => issue.message).join("; "),
+      "Character Battle Spell Access projection contains invalid selections.",
       spellAccessIssues,
     );
   }

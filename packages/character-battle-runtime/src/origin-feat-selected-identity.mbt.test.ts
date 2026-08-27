@@ -51,7 +51,7 @@ import {
   characterBattleInitiativeScore,
   characterBattleRuntimeIssueMessage,
   characterSheetBattleInitWithRoute,
-  composeCharacterBattleRoster,
+  composeBattleRoster,
   type CharacterBattleRouteEvent,
 } from "./index.ts";
 
@@ -377,7 +377,7 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
-    throw new Error(projection.left.issue.message);
+    throw new Error(projection.left.message);
   }
 
   return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
@@ -397,21 +397,21 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
     initiative: alertInitiativeScoreForBuild(build),
     ammunitionStocks: [],
   };
-  const statBlockBattleInput = {
+  const statBlockEntryInput = {
     combatantId: combatantId("combatant:origin-feat-skeleton"),
     statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
     initiative: initiativeScore(10),
     ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
     conditions: [],
   };
-  const roster = composeCharacterBattleRoster([
+  const roster = composeBattleRoster([
     {
       kind: "characterSheet",
       source: { kind: "available", input: character },
     },
     {
       kind: "statBlock",
-      source: { kind: "available", input: statBlockBattleInput },
+      source: { kind: "available", input: statBlockEntryInput },
     },
   ]);
   if (roster.issues.length > 0) {
