@@ -18,22 +18,21 @@ export {
   supportedStatBlockTraitAttackRollModes,
 } from "./statblock-action-execution-support.ts";
 
+const WILD_SHAPE_FORM_EXECUTABLE_ATTACK_HIT_RIDER_CATEGORIES = [
+  "attackHitTargetSizeConditionRider",
+] as const;
+
 const WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES = [
   "simpleLiteralAttackSingleDamage",
   "multiDamageComponentsOnHit",
   "traitDerivedConditionalAttackRollAdvantage",
-  "attackHitTargetSizeConditionRider",
+  ...WILD_SHAPE_FORM_EXECUTABLE_ATTACK_HIT_RIDER_CATEGORIES,
 ] as const;
 
 const WILD_SHAPE_FORM_CLOSED_ATTACK_HIT_RIDER_CATEGORIES = [
   "attackHitConditionRider",
   "attackHitForcedMovementRider",
   "attackHitOtherRider",
-] as const;
-
-const WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES = [
-  "attackHitTargetSizeConditionRider",
-  ...WILD_SHAPE_FORM_CLOSED_ATTACK_HIT_RIDER_CATEGORIES,
 ] as const;
 
 const WILD_SHAPE_FORM_ACTION_SECTION_CATEGORIES = [
@@ -61,7 +60,8 @@ export const WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES = [
 type WildShapeFormExecutableActionSurfaceCategory =
   (typeof WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES)[number];
 type WildShapeFormAttackHitRiderCategory =
-  (typeof WILD_SHAPE_FORM_ATTACK_HIT_RIDER_CATEGORIES)[number];
+  | (typeof WILD_SHAPE_FORM_EXECUTABLE_ATTACK_HIT_RIDER_CATEGORIES)[number]
+  | (typeof WILD_SHAPE_FORM_CLOSED_ATTACK_HIT_RIDER_CATEGORIES)[number];
 type WildShapeFormClosedActionSurfaceCategory =
   (typeof WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES)[number];
 export type WildShapeFormActionSurfaceCategory =
