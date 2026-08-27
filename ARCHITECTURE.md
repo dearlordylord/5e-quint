@@ -84,7 +84,8 @@ Local SRD corpus + ASSUMPTIONS.md + UBIQUITOUS_LANGUAGE.md
 +----------------------------------+
 | @dnd/opaque-oracle               |
 | - strict Case/Trace contract     |
-| - creation -> fresh-sheet eval   |
+| - creation -> sheet -> Battle    |
+| - minimal checkpoint/frontier    |
 +----------------------------------+
 
 @dnd/shared and @dnd/shared-algebras (incl. rule-core slices) sit below all
