@@ -64,7 +64,16 @@ function projectDocumentAst(root: AST.AST): AST.AST {
       case "Refinement": {
         const projectedFrom = project(ast.from, path);
         const jsonSchema = AST.getJSONSchemaAnnotation(ast);
-        if (Option.isNone(jsonSchema)) return projectedFrom;
+        if (Option.isNone(jsonSchema)) {
+          // Refinement filters are semantic unless their JSON Schema
+          // annotation explicitly describes the structural predicate. The
+          // annotation map is still part of the surrounding boundary,
+          // though: identifiers and parse options must survive when the
+          // predicate itself is removed.
+          const projected = AST.annotations(projectedFrom, ast.annotations);
+          projectedByAst.set(ast, projected);
+          return projected;
+        }
         const projected = new AST.Refinement(
           projectedFrom,
           ast.filter,

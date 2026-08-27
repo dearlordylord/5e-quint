@@ -1,11 +1,33 @@
 import Ajv2020 from "ajv/dist/2020.js";
+import { Either, Option } from "effect";
+import * as AST from "effect/SchemaAST";
 import { describe, expect, it } from "vitest";
 
 import {
+  admitOracleCaseDocument,
+  admitOracleTraceDocument,
+  decodeOracleCase,
+  decodeOracleCaseDocument,
+  decodeOracleCaseJson,
+  decodeOracleEvaluationBatch,
+  decodeOracleEvaluationBatchDocument,
+  decodeOracleEvaluationBatchJson,
+  decodeOracleTrace,
+  decodeOracleTraceDocument,
+  decodeOracleTraceJson,
+} from "./oracle-case-trace.ts";
+import {
   OracleCaseDocumentJsonSchema,
+  OracleCaseDocumentSchema,
   OracleEvaluationBatchDocumentJsonSchema,
+  OracleEvaluationBatchDocumentSchema,
   OracleTraceDocumentJsonSchema,
+  OracleTraceDocumentSchema,
 } from "./oracle-document.ts";
+import {
+  canonicalStructuralKey,
+  canonicalizeStringSet,
+} from "./oracle-canonical.ts";
 
 const documentSchemas = [
   ["Case", OracleCaseDocumentJsonSchema],
@@ -13,18 +35,883 @@ const documentSchemas = [
   ["Evaluation Batch", OracleEvaluationBatchDocumentJsonSchema],
 ] as const;
 
+const ajv = new Ajv2020({
+  strict: false,
+  inlineRefs: false,
+  code: { optimize: 0 },
+});
+
+// Compile each graph once. Every parity table below uses these independent
+// validators rather than Effect's JSON Schema implementation.
+const documentValidators = {
+  case: ajv.compile(OracleCaseDocumentJsonSchema),
+  trace: ajv.compile(OracleTraceDocumentJsonSchema),
+  batch: ajv.compile(OracleEvaluationBatchDocumentJsonSchema),
+};
+
+const statBlockEntry = {
+  combatantId: "oracle:stat-block",
+  statBlockId: "stat_block_skeleton",
+  initiative: 0,
+  ammunitionStocks: { arrow: 5, bolt: 1 },
+  conditions: [],
+  tempHp: 0,
+} as const;
+
+const minimalCase = {
+  creation: { fillBatches: [] },
+  sheet: { tag: "ordinary" },
+  battle: {
+    roster: { tag: "statBlocks", entries: [] },
+    attempts: [],
+  },
+} as const;
+
+const characterRosterCase = {
+  ...minimalCase,
+  battle: {
+    roster: {
+      tag: "characterSheet",
+      precedingStatBlocks: [statBlockEntry],
+      characterSheet: {
+        combatantId: "oracle:character",
+        initiative: 3,
+        ammunitionStocks: { bullet: 2 },
+      },
+      followingStatBlocks: [
+        { ...statBlockEntry, combatantId: "oracle:stat-block-after" },
+      ],
+    },
+    attempts: [],
+  },
+} as const;
+
+const orderedFill = {
+  kind: "choice",
+  holeId: "cc:draft:draft.background",
+  optionIds: ["option:first"],
+} as const;
+
+const validBuild = {
+  progression: { startingClass: "class", advancements: [] },
+  background: "background",
+  species: "species",
+  originLanguages: ["Common", "Dwarvish", "Elvish"],
+  classFeatureLanguages: [],
+  alignment: { order: "neutral", morality: "neutral" },
+  abilityScores: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+  proficiencyChoices: [],
+  features: [],
+  magicInitiateSpellAccesses: [],
+  equipment: {
+    startingEquipmentCurrencyRemainderCp: 0,
+    owned: [],
+    loadout: {},
+  },
+} as const;
+
+const freshSheet = {
+  hitPointMaximumReduction: 0,
+  exhaustionLevel: 0,
+  hitPoints: { tag: "positive", currentHp: 1, tempHp: 0 },
+  conditions: [],
+  spentHitDice: [],
+  restFeatureUses: [],
+  resourceExpenditures: [],
+  heroicInspiration: { tag: "none" },
+  companion: { tag: "none" },
+} as const;
+
+const checkpoint = {
+  round: 1,
+  alreadyActed: [],
+  stillToAct: [
+    {
+      creature: {
+        combatantId: "oracle:entered-actor",
+        origin: { kind: "statBlock" },
+        hp: 1,
+        maxHp: 1,
+        tempHp: 0,
+        armorClass: 10,
+        size: "medium",
+        conditions: [],
+      },
+      initiative: 0,
+    },
+  ],
+} as const;
+
+const enteredBattle = {
+  tag: "entered",
+  checkpoint,
+  frontier: {
+    kind: "acts",
+    acts: [
+      {
+        tag: "runtimeCommand",
+        actorId: "oracle:entered-actor",
+        command: "endTurn",
+      },
+    ],
+  },
+  segment: {
+    rejections: [],
+    outcome: { tag: "awaitingInput" },
+  },
+} as const;
+
+const builtTrace = {
+  creation: {
+    started: { holes: [] },
+    progression: [],
+    outcome: {
+      tag: "built",
+      build: validBuild,
+      sheet: {
+        tag: "constructed",
+        sheet: freshSheet,
+        battle: enteredBattle,
+      },
+    },
+  },
+} as const;
+
+const readyActionTrace = {
+  ...builtTrace,
+  creation: {
+    ...builtTrace.creation,
+    outcome: {
+      ...builtTrace.creation.outcome,
+      sheet: {
+        ...builtTrace.creation.outcome.sheet,
+        battle: {
+          ...enteredBattle,
+          frontier: {
+            kind: "acts",
+            acts: [
+              {
+                tag: "action",
+                actorId: "oracle:entered-actor",
+                action: "ready",
+              },
+            ],
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+function documentResult<A, E>(result: Either.Either<A, E>): boolean {
+  return Either.isRight(result);
+}
+
+function isLeftWithIssues(value: unknown): boolean {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("_tag" in value) ||
+    value._tag !== "Left" ||
+    !("left" in value)
+  ) {
+    return false;
+  }
+  return Array.isArray(value.left) && value.left.length > 0;
+}
+
 describe("Opaque Oracle document JSON Schemas", () => {
-  it("compiles every derived document graph with an independent Ajv2020", () => {
+  it("compiles every derived document graph with one independent Ajv2020", () => {
     for (const [name, schema] of documentSchemas) {
-      expect(
-        () =>
-          new Ajv2020({
-            strict: false,
-            inlineRefs: false,
-            code: { optimize: 0 },
-          }).compile(schema),
-        `the ${name} document schema should compile`,
-      ).not.toThrow();
+      expect(schema, `the ${name} document schema should be present`).toBe(
+        schema,
+      );
     }
+    expect(documentValidators.case).toBeTypeOf("function");
+    expect(documentValidators.trace).toBeTypeOf("function");
+    expect(documentValidators.batch).toBeTypeOf("function");
   }, 120_000);
+
+  it("keeps Case Ajv and Effect Document admission in parity", () => {
+    const validCases = [
+      ["minimal stat-block roster", minimalCase],
+      ["character-sheet prefix and suffix", characterRosterCase],
+      [
+        "ammunition object map",
+        {
+          ...minimalCase,
+          battle: {
+            ...minimalCase.battle,
+            roster: {
+              tag: "statBlocks",
+              entries: [{ ...statBlockEntry, ammunitionStocks: { bolt: 3 } }],
+            },
+          },
+        },
+      ],
+      [
+        "repeated ordered creation batches",
+        {
+          ...minimalCase,
+          creation: {
+            fillBatches: [[orderedFill], [orderedFill]],
+          },
+        },
+      ],
+    ] as const;
+    for (const [name, value] of validCases) {
+      expect(documentValidators.case(value), `${name}: Ajv should accept`).toBe(
+        true,
+      );
+      expect(
+        documentResult(decodeOracleCaseDocument(value)),
+        `${name}: Effect should accept`,
+      ).toBe(true);
+    }
+
+    const invalidCases = [
+      [
+        "missing attempts",
+        { ...minimalCase, battle: { roster: minimalCase.battle.roster } },
+      ],
+      ["unknown member", { ...minimalCase, unexpected: true }],
+      [
+        "unknown roster discriminant",
+        {
+          ...minimalCase,
+          battle: {
+            ...minimalCase.battle,
+            roster: { tag: "neither", entries: [] },
+          },
+        },
+      ],
+      [
+        "fractional initiative",
+        {
+          ...minimalCase,
+          battle: {
+            ...minimalCase.battle,
+            roster: {
+              tag: "statBlocks",
+              entries: [{ ...statBlockEntry, initiative: 1.5 }],
+            },
+          },
+        },
+      ],
+      [
+        "negative ammunition",
+        {
+          ...minimalCase,
+          battle: {
+            ...minimalCase.battle,
+            roster: {
+              tag: "statBlocks",
+              entries: [{ ...statBlockEntry, ammunitionStocks: { arrow: -1 } }],
+            },
+          },
+        },
+      ],
+      [
+        "duplicate true set",
+        {
+          ...minimalCase,
+          sheet: {
+            tag: "wildShapeKnownForms",
+            statBlockIds: ["stat_block_rat", "stat_block_rat"],
+          },
+        },
+      ],
+      [
+        "empty required nonempty",
+        {
+          ...minimalCase,
+          sheet: { tag: "wildShapeKnownForms", statBlockIds: [] },
+        },
+      ],
+      [
+        "unknown ammunition map key",
+        {
+          ...minimalCase,
+          battle: {
+            ...minimalCase.battle,
+            roster: {
+              tag: "statBlocks",
+              entries: [
+                {
+                  ...statBlockEntry,
+                  ammunitionStocks: { arrow: 1, cartridge: 1 },
+                },
+              ],
+            },
+          },
+        },
+      ],
+    ] as const;
+    for (const [name, value] of invalidCases) {
+      const ajvAccepted = documentValidators.case(value);
+      const effectAccepted = documentResult(decodeOracleCaseDocument(value));
+      expect(effectAccepted, `${name}: Effect/Ajv parity`).toBe(ajvAccepted);
+      expect(ajvAccepted, `${name}: Ajv should reject`).toBe(false);
+    }
+  });
+
+  it("keeps Trace Ajv and Effect Document admission in parity across terminal and battle states", () => {
+    const terminalTraces = [
+      {
+        creation: {
+          started: { holes: [] },
+          progression: [],
+          outcome: { tag: "inputExhausted" },
+        },
+      },
+      {
+        creation: {
+          started: { holes: [] },
+          progression: [{ holes: [] }, { holes: [] }],
+          outcome: {
+            tag: "fillRejected",
+            issues: [{ tag: "illegalBatch", code: "staleRevision" }],
+          },
+        },
+      },
+      {
+        creation: {
+          started: { holes: [] },
+          progression: [],
+          outcome: {
+            tag: "finalizationRejected",
+            issues: [
+              {
+                tag: "unsupportedFinalization",
+                cause: { tag: "unsupportedBackground" },
+              },
+            ],
+          },
+        },
+      },
+      {
+        creation: {
+          started: { holes: [] },
+          progression: [],
+          outcome: { tag: "inputSurplus", build: validBuild, index: 0 },
+        },
+      },
+      builtTrace,
+      readyActionTrace,
+      {
+        ...builtTrace,
+        creation: {
+          ...builtTrace.creation,
+          outcome: {
+            ...builtTrace.creation.outcome,
+            sheet: {
+              tag: "rejected",
+              issues: [{ code: "hitPointStateInvalid" }],
+            },
+          },
+        },
+      },
+      {
+        ...builtTrace,
+        creation: {
+          ...builtTrace.creation,
+          outcome: {
+            ...builtTrace.creation.outcome,
+            sheet: {
+              ...builtTrace.creation.outcome.sheet,
+              battle: {
+                tag: "rejected",
+                issues: [{ tag: "characterBattleEncounterEmptyRoster" }],
+              },
+            },
+          },
+        },
+      },
+    ] as const;
+    for (const [index, value] of terminalTraces.entries()) {
+      const ajvAccepted = documentValidators.trace(value);
+      const effectAccepted = Either.isRight(decodeOracleTraceDocument(value));
+      expect(effectAccepted, `trace ${index}: Ajv/Effect parity`).toBe(
+        ajvAccepted,
+      );
+      expect(ajvAccepted, `trace ${index}: expected structural validity`).toBe(
+        true,
+      );
+    }
+
+    const recursiveNext = {
+      ...builtTrace,
+      creation: {
+        ...builtTrace.creation,
+        outcome: {
+          ...builtTrace.creation.outcome,
+          sheet: {
+            ...builtTrace.creation.outcome.sheet,
+            battle: {
+              ...enteredBattle,
+              segment: {
+                rejections: [],
+                outcome: {
+                  tag: "next",
+                  continuation: {
+                    checkpoint,
+                    frontier: enteredBattle.frontier,
+                    segment: enteredBattle.segment,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as const;
+    const resolved = {
+      ...builtTrace,
+      creation: {
+        ...builtTrace.creation,
+        outcome: {
+          ...builtTrace.creation.outcome,
+          sheet: {
+            ...builtTrace.creation.outcome.sheet,
+            battle: {
+              ...enteredBattle,
+              segment: {
+                rejections: [],
+                outcome: {
+                  tag: "resolved",
+                  checkpoint,
+                  after: { tag: "complete" },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as const;
+    const surplus = {
+      ...resolved,
+      creation: {
+        ...resolved.creation,
+        outcome: {
+          ...resolved.creation.outcome,
+          sheet: {
+            ...resolved.creation.outcome.sheet,
+            battle: {
+              ...enteredBattle,
+              segment: {
+                rejections: [],
+                outcome: {
+                  tag: "resolved",
+                  checkpoint,
+                  after: { tag: "surplus", index: 0 },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as const;
+    for (const [name, value] of [
+      ["recursive next", recursiveNext],
+      ["resolved", resolved],
+      ["surplus", surplus],
+    ] as const) {
+      const ajvAccepted = documentValidators.trace(value);
+      const effectAccepted = Either.isRight(decodeOracleTraceDocument(value));
+      expect(effectAccepted, `${name}: Ajv/Effect parity`).toBe(ajvAccepted);
+      expect(ajvAccepted, `${name}: expected structural validity`).toBe(true);
+    }
+
+    const invalidTraces = [
+      [
+        "unknown outcome",
+        {
+          ...terminalTraces[0],
+          creation: {
+            ...terminalTraces[0].creation,
+            outcome: { tag: "unknown" },
+          },
+        },
+      ],
+      [
+        "missing outcome",
+        {
+          ...terminalTraces[0],
+          creation: { started: { holes: [] }, progression: [] },
+        },
+      ],
+      [
+        "wrong round",
+        {
+          ...builtTrace,
+          creation: {
+            ...builtTrace.creation,
+            outcome: {
+              ...builtTrace.creation.outcome,
+              sheet: {
+                ...builtTrace.creation.outcome.sheet,
+                battle: {
+                  ...enteredBattle,
+                  checkpoint: { ...checkpoint, round: 0 },
+                },
+              },
+            },
+          },
+        },
+      ],
+    ] as const;
+    for (const [name, value] of invalidTraces) {
+      const ajvAccepted = documentValidators.trace(value);
+      const effectAccepted = Either.isRight(decodeOracleTraceDocument(value));
+      expect(effectAccepted, `${name}: Ajv/Effect parity`).toBe(ajvAccepted);
+      expect(ajvAccepted, `${name}: expected rejection`).toBe(false);
+    }
+  });
+
+  it("keeps Batch Ajv and Effect Document admission in parity and accumulates paths", () => {
+    const batches = [
+      ["empty", { cases: [] }],
+      ["single", { cases: [minimalCase] }],
+      ["multiple", { cases: [minimalCase, characterRosterCase, minimalCase] }],
+      [
+        "invalid member",
+        { cases: [minimalCase, { ...minimalCase, sheet: { tag: "unknown" } }] },
+      ],
+    ] as const;
+    for (const [name, value] of batches) {
+      const ajvAccepted = documentValidators.batch(value);
+      const effectAccepted = Either.isRight(
+        decodeOracleEvaluationBatchDocument(value),
+      );
+      expect(effectAccepted, `${name}: Ajv/Effect parity`).toBe(ajvAccepted);
+      expect(ajvAccepted, `${name}: expected validity`).toBe(
+        name !== "empty" && name !== "invalid member",
+      );
+    }
+
+    const invalidBatch = {
+      cases: [
+        { ...minimalCase, creation: {} },
+        { ...minimalCase, battle: { roster: minimalCase.battle.roster } },
+      ],
+    };
+    const decoded = decodeOracleEvaluationBatchDocument(invalidBatch);
+    expect(Either.isLeft(decoded)).toBe(true);
+    if (Either.isLeft(decoded)) {
+      expect(decoded.left).toEqual([
+        { path: "/cases/0/creation/fillBatches", code: "missingMember" },
+        { path: "/cases/1/battle/attempts", code: "missingMember" },
+      ]);
+    }
+  });
+
+  it("keeps unannotated semantic admission separate from structural Document admission", () => {
+    const semanticCounterexample = {
+      ...minimalCase,
+      creation: {
+        fillBatches: [
+          [
+            {
+              ...orderedFill,
+              holeId: "not-a-creation-hole",
+            },
+          ],
+        ],
+      },
+    };
+    const document = decodeOracleCaseDocument(semanticCounterexample);
+    expect(Either.isRight(document)).toBe(true);
+    expect(Either.isLeft(decodeOracleCase(semanticCounterexample))).toBe(true);
+
+    const invalidOwner = {
+      ...builtTrace,
+      creation: {
+        ...builtTrace.creation,
+        outcome: {
+          ...builtTrace.creation.outcome,
+          sheet: {
+            ...builtTrace.creation.outcome.sheet,
+            battle: {
+              ...enteredBattle,
+              frontier: {
+                kind: "acts",
+                acts: [
+                  {
+                    tag: "runtimeCommand",
+                    actorId: "oracle:not-the-current-actor",
+                    command: "endTurn",
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    } as const;
+    const invalidOwnerDocument = decodeOracleTraceDocument(invalidOwner);
+    expect(Either.isRight(invalidOwnerDocument)).toBe(true);
+    if (Either.isRight(invalidOwnerDocument)) {
+      expect(
+        Either.isLeft(admitOracleTraceDocument(invalidOwnerDocument.right)),
+      ).toBe(true);
+    }
+  });
+
+  it("canonicalizes direct Document admission at the same boundary as decoding", () => {
+    const reversed = {
+      ...minimalCase,
+      sheet: {
+        tag: "wildShapeKnownForms",
+        statBlockIds: ["stat_block_skeleton", "stat_block_rat"],
+      },
+      battle: {
+        roster: {
+          tag: "statBlocks",
+          entries: [
+            {
+              ...statBlockEntry,
+              ammunitionStocks: { bolt: 1, arrow: 2 },
+            },
+          ],
+        },
+        attempts: [],
+      },
+    } as const;
+    const admitted = admitOracleCaseDocument(reversed);
+    expect(Either.isRight(admitted)).toBe(true);
+    if (Either.isRight(admitted)) {
+      expect(admitted.right.sheet).toEqual({
+        tag: "wildShapeKnownForms",
+        statBlockIds: ["stat_block_rat", "stat_block_skeleton"],
+      });
+      if (admitted.right.battle.roster.tag === "statBlocks") {
+        const entry = admitted.right.battle.roster.entries[0];
+        expect(entry).toBeDefined();
+        if (entry !== undefined) {
+          expect(Object.keys(entry.ammunitionStocks)).toEqual([
+            "arrow",
+            "bolt",
+          ]);
+        }
+      }
+    }
+  });
+
+  it("treats creation progression as ordered evidence snapshots, not an executable lifecycle", () => {
+    // The trace records phase order and the frontier observed at each point.
+    // It intentionally carries neither the omitted catalog nor the fills that
+    // would be needed to prove a transition, so admission checks only the
+    // local shape of each snapshot.
+    const arbitrarySnapshots = {
+      creation: {
+        started: { holes: [] },
+        progression: [{ holes: [] }, { holes: [] }],
+        outcome: { tag: "inputExhausted" },
+      },
+    } as const;
+    expect(Either.isRight(decodeOracleTraceDocument(arbitrarySnapshots))).toBe(
+      true,
+    );
+    expect(Either.isRight(decodeOracleTrace(arbitrarySnapshots))).toBe(true);
+  });
+
+  it("scans duplicate JSON members before parsing and remains total for hostile and deep input", () => {
+    const duplicateJson =
+      '{"creation":{"fillBatches":[]},"creation":{"fillBatches":[]},"sheet":{"tag":"ordinary"},"battle":{"roster":{"tag":"statBlocks","entries":[]},"attempts":[]}}';
+    const duplicate = decodeOracleCaseJson(duplicateJson);
+    expect(Either.isLeft(duplicate)).toBe(true);
+    if (Either.isLeft(duplicate)) {
+      expect(duplicate.left).toEqual([
+        { path: "/creation", code: "duplicateMember" },
+      ]);
+    }
+    // Once JSON has been parsed, duplicate member spellings no longer exist;
+    // the Document boundary only validates the resulting value.
+    expect(
+      Either.isRight(decodeOracleCaseDocument(JSON.parse(duplicateJson))),
+    ).toBe(true);
+
+    const deepArray = `${"[".repeat(20_000)}null${"]".repeat(20_000)}`;
+    const deepObject = `${"{".repeat(20_000)}"x":null${"}".repeat(20_000)}`;
+    for (const [name, decoder] of [
+      ["Case", decodeOracleCaseJson],
+      ["Trace", decodeOracleTraceJson],
+      ["Batch", decodeOracleEvaluationBatchJson],
+    ] as const) {
+      for (const payload of [deepArray, deepObject]) {
+        expect(() => decoder(payload), `${name} deep input`).not.toThrow();
+        const result: unknown = decoder(payload);
+        expect(isLeftWithIssues(result), `${name} deep input should fail`).toBe(
+          true,
+        );
+      }
+    }
+
+    const cyclic: Record<string, unknown> = {};
+    cyclic.self = cyclic;
+    const hostile = new Proxy(
+      {},
+      {
+        ownKeys: () => {
+          throw new Error("hostile ownKeys trap");
+        },
+      },
+    );
+    const hostileDecoders: readonly [string, (value: unknown) => unknown][] = [
+      ["Case", decodeOracleCase],
+      ["Case Document", decodeOracleCaseDocument],
+      ["Trace", decodeOracleTrace],
+      ["Trace Document", decodeOracleTraceDocument],
+      ["Batch", decodeOracleEvaluationBatch],
+      ["Batch Document", decodeOracleEvaluationBatchDocument],
+    ];
+    for (const [name, decoder] of hostileDecoders) {
+      for (const value of [cyclic, hostile]) {
+        expect(() => decoder(value), `${name} hostile input`).not.toThrow();
+        const result: unknown = decoder(value);
+        expect(
+          isLeftWithIssues(result),
+          `${name} hostile input should fail`,
+        ).toBe(true);
+      }
+    }
+
+    let deeplyNestedObject: unknown = null;
+    let deeplyNestedArray: unknown = null;
+    for (let depth = 0; depth < 20_000; depth += 1) {
+      deeplyNestedObject = { nested: deeplyNestedObject };
+      deeplyNestedArray = [deeplyNestedArray];
+    }
+    const documentDecoders: readonly [string, (value: unknown) => unknown][] = [
+      ["Case Document", decodeOracleCaseDocument],
+      ["Trace Document", decodeOracleTraceDocument],
+      ["Batch Document", decodeOracleEvaluationBatchDocument],
+    ];
+    for (const [name, decoder] of documentDecoders) {
+      for (const value of [deeplyNestedObject, deeplyNestedArray]) {
+        expect(() => decoder(value), `${name} direct deep input`).not.toThrow();
+        expect(
+          isLeftWithIssues(decoder(value)),
+          `${name} direct deep input should fail`,
+        ).toBe(true);
+      }
+    }
+  });
+
+  it("retains only closed, annotated structural AST refinements", () => {
+    const inventory = {
+      refinements: 0,
+      unannotatedRefinements: 0,
+      uniqueItems: 0,
+      minItems: 0,
+      identifiers: [] as string[],
+      openNodes: [] as string[],
+    };
+    const pending: AST.AST[] = [
+      OracleCaseDocumentSchema.ast,
+      OracleTraceDocumentSchema.ast,
+      OracleEvaluationBatchDocumentSchema.ast,
+    ];
+    const visited = new Set<object>();
+    while (pending.length > 0) {
+      const ast = pending.pop();
+      if (ast === undefined || visited.has(ast)) continue;
+      visited.add(ast);
+      const identifier = Option.getOrUndefined(
+        AST.getIdentifierAnnotation(ast),
+      );
+      if (identifier !== undefined) inventory.identifiers.push(identifier);
+      switch (ast._tag) {
+        case "AnyKeyword":
+        case "UnknownKeyword":
+        case "Declaration":
+        case "ObjectKeyword":
+          inventory.openNodes.push(ast._tag);
+          continue;
+        case "Refinement": {
+          inventory.refinements += 1;
+          const annotation = Option.getOrUndefined(
+            AST.getJSONSchemaAnnotation(ast),
+          );
+          if (annotation === undefined) inventory.unannotatedRefinements += 1;
+          if (typeof annotation === "object" && annotation !== null) {
+            if (
+              "uniqueItems" in annotation &&
+              annotation.uniqueItems === true
+            ) {
+              inventory.uniqueItems += 1;
+            }
+            if ("minItems" in annotation && annotation.minItems !== undefined) {
+              inventory.minItems += 1;
+            }
+          }
+          pending.push(ast.from);
+          continue;
+        }
+        case "TypeLiteral":
+          for (const property of ast.propertySignatures) {
+            pending.push(property.type);
+          }
+          for (const index of ast.indexSignatures) {
+            pending.push(index.parameter, index.type);
+          }
+          continue;
+        case "TupleType":
+          for (const element of ast.elements) pending.push(element.type);
+          pending.push(...ast.rest.map((value) => value.type));
+          continue;
+        case "Union":
+          pending.push(...ast.types);
+          continue;
+        case "Transformation":
+          pending.push(ast.from, ast.to);
+          continue;
+        case "Suspend":
+          pending.push(ast.f());
+          continue;
+        case "TemplateLiteral":
+          for (const span of ast.spans) pending.push(span.type);
+          continue;
+        case "Enums":
+        case "Literal":
+        case "UniqueSymbol":
+        case "UndefinedKeyword":
+        case "VoidKeyword":
+        case "NeverKeyword":
+        case "StringKeyword":
+        case "NumberKeyword":
+        case "BooleanKeyword":
+        case "BigIntKeyword":
+        case "SymbolKeyword":
+          continue;
+      }
+    }
+    expect(inventory.openNodes).toEqual([]);
+    expect(inventory.refinements).toBeGreaterThan(0);
+    expect(inventory.unannotatedRefinements).toBe(0);
+    expect(inventory.uniqueItems).toBeGreaterThan(0);
+    expect(inventory.minItems).toBeGreaterThan(0);
+    expect(inventory.identifiers).toContain("OracleBattleEntered");
+
+    const schemaText = JSON.stringify({
+      OracleCaseDocumentJsonSchema,
+      OracleTraceDocumentJsonSchema,
+      OracleEvaluationBatchDocumentJsonSchema,
+    });
+    for (const field of ["session", "frame", "globalRole", "presentation"]) {
+      expect(schemaText).not.toContain(`\"${field}\"`);
+    }
+    expect(schemaText).not.toContain('"steps"');
+  });
+
+  it("keeps canonical equality type-aware, order-aware, and set sorting non-deduplicating", () => {
+    expect(canonicalStructuralKey({ a: 1, b: "two" })).toBe(
+      canonicalStructuralKey({ b: "two", a: 1 }),
+    );
+    expect(canonicalStructuralKey(["first", "second"])).not.toBe(
+      canonicalStructuralKey(["second", "first"]),
+    );
+    expect(canonicalStructuralKey([1])).not.toBe(canonicalStructuralKey(["1"]));
+    expect(canonicalizeStringSet(["b", "a", "a"])).toEqual(["a", "a", "b"]);
+  });
 });

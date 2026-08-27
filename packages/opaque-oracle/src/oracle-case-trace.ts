@@ -23,6 +23,11 @@ import {
   type OracleEvaluationBatchDocument,
   type OracleTraceDocument,
 } from "./oracle-document.ts";
+import {
+  canonicalizeBatchInput,
+  canonicalizeCaseInput,
+  canonicalizeTraceInput,
+} from "./oracle-input-canonical.ts";
 
 export {
   CreationFillBatchSchema,
@@ -116,19 +121,22 @@ export function decodeOracleTrace(
 export function admitOracleCaseDocument(
   document: OracleCaseDocument,
 ): Either.Either<OracleCase, OracleDecodeIssues> {
-  return decodeWithSchema(OracleCaseSchema, document);
+  return decodeWithSchema(OracleCaseSchema, canonicalizeCaseInput(document));
 }
 
 export function admitOracleEvaluationBatchDocument(
   document: OracleEvaluationBatchDocument,
 ): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
-  return decodeWithSchema(OracleEvaluationBatchSchema, document);
+  return decodeWithSchema(
+    OracleEvaluationBatchSchema,
+    canonicalizeBatchInput(document),
+  );
 }
 
 export function admitOracleTraceDocument(
   document: OracleTraceDocument,
 ): Either.Either<OracleTrace, OracleDecodeIssues> {
-  return decodeWithSchema(OracleTraceSchema, document);
+  return decodeWithSchema(OracleTraceSchema, canonicalizeTraceInput(document));
 }
 
 export function decodeOracleCaseJson(
