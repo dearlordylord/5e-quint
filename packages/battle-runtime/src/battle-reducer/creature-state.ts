@@ -297,7 +297,7 @@ export function battleCreatureStateAdmissionFromInit(
       readonly tag: "admitted";
       readonly creature: StatBlockBattleCreatureState;
       readonly nextScopeOrdinal: BattleExecutionScopeOrdinal;
-      readonly statBlockPresentation?: BattleStatBlockPresentationSource;
+      readonly statBlockPresentation: BattleStatBlockPresentationSource;
     }
   | {
       readonly tag: "invalid";
@@ -660,9 +660,7 @@ export function battleCreatureStateAdmissionFromInit(
     tag: "admitted",
     creature: admittedCreature,
     nextScopeOrdinal: admission.right.cursorTransition.to,
-    ...(creatureInit.presentation === undefined
-      ? {}
-      : { statBlockPresentation: creatureInit.presentation }),
+    statBlockPresentation: creatureInit.presentation,
   };
 }
 

@@ -104,6 +104,7 @@ describe("generic Stat Block projection", () => {
     expect(initialized.right.creatureInit.source.procedures).not.toHaveLength(
       0,
     );
+    if (initialized.right.creatureInit.kind !== "statBlock") return;
     expect(initialized.right.creatureInit.presentation.displayName).toBe(
       source.name,
     );
@@ -145,6 +146,7 @@ describe("generic Stat Block projection", () => {
     });
     expect(Either.isRight(initialized)).toBe(true);
     if (Either.isLeft(initialized)) return;
+    if (initialized.right.creatureInit.kind !== "statBlock") return;
     expect(initialized.right.creatureInit.presentation.displayName).toBe(
       source.name,
     );

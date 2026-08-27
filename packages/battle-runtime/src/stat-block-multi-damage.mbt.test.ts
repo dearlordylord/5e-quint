@@ -453,6 +453,12 @@ function statBlockCreature(input: {
       tempHp: Hp(0),
       ammunitionStocks: [],
       conditions: [],
+      presentation: {
+        displayName: input.displayName,
+        communication: { kind: "none" },
+        traits: [],
+        orderedProcedures: [],
+      },
     },
   };
 }

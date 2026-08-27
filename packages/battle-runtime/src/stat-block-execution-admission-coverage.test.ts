@@ -49,6 +49,12 @@ function executionFor(source: RuntimeSource, id: string) {
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
+      presentation: {
+        displayName: source.id,
+        communication: { kind: "none" as const },
+        traits: [],
+        orderedProcedures: [],
+      },
     },
   };
 

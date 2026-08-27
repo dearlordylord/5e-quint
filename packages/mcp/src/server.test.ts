@@ -15,7 +15,6 @@ import {
   endTurn,
   initiativeScore,
   KNOCKED_OUT_UNCONSCIOUS,
-  projectAuthoredStatBlock,
   snapshotBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
@@ -178,19 +177,12 @@ function startBattleFromCharacterBuildAndStatBlockRight(
     };
   },
 ): BattleRuntimeSession {
-  const projection = projectAuthoredStatBlock(
-    input.statBlockBattleInput.statBlock,
-  );
-  if (Either.isLeft(projection)) {
-    throw new Error(`Stat Block projection failed: ${projection.left.reason}`);
-  }
   const result = startBattleFromCharacterBuildAndStatBlock({
     ...input,
     character: { ...input.character, ammunitionStocks: [] },
     statBlockBattleInput: {
       ...input.statBlockBattleInput,
-      statBlock: projection.right.runtime,
-      presentation: projection.right.presentation,
+      statBlock: input.statBlockBattleInput.statBlock,
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
     },

@@ -551,7 +551,7 @@ function battleDruidWildShapeAvailableFormsFromInput(
     profile: projection.profile,
   });
   if (Either.isLeft(availableForms)) {
-    return battleCreatureInitIssue(availableForms.left.message);
+    return Either.left(availableForms.left);
   }
   return Either.right(availableForms.right);
 }

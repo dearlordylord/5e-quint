@@ -3313,9 +3313,17 @@ describe("Character Sheet battle handoff", () => {
 
     expect(init).toEqual(
       Either.left({
-        tag: "battleCreatureInitIssue",
-        message:
-          "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: statBlockCatalog.requireStatBlock(
+              "stat_block_skeleton",
+            ).id,
+            reason: "ineligible",
+            eligibilityIssue: "creatureType",
+          },
+        ],
       }),
     );
   });
@@ -6911,6 +6919,7 @@ describe("Character Build battle projection", () => {
 
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isLeft(result)) {
+      if (result.left.tag !== "battleCreatureInitIssue") return;
       expect(result.left.message).toContain("class_fighter");
       expect(result.left.message).toContain("synthetic:missing-magic-initiate");
       expect(result.left.spellAccessIssues).toEqual(
@@ -6945,6 +6954,7 @@ describe("Character Build battle projection", () => {
 
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isLeft(result)) {
+      if (result.left.tag !== "battleCreatureInitIssue") return;
       expect(result.left.message).toContain("selected spell list");
       expect(result.left.spellAccessIssues).toEqual(
         expect.arrayContaining([

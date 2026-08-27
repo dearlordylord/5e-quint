@@ -102,6 +102,7 @@ import {
   battleDruidWildShapeKnownFormSupportForUnit,
   battleStateWithGroundObjects,
   battleAvailableDruidWildShapeKnownForms,
+  wildShapeKnownFormsIssueMessage,
   BattleFillSchema,
   battleShapeShiftedRuntimeState,
   combatantAbilityCheckModifier,
@@ -2445,7 +2446,7 @@ test("rejects ineligible known Beast forms before battle initialization", () => 
 
   expect(Either.isLeft(result)).toBe(true);
   if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
       "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
     );
   }
@@ -2594,7 +2595,7 @@ test("rejects duplicate supplied Wild Shape form records before battle initializ
 
   expect(Either.isLeft(result)).toBe(true);
   if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
       "Druid Wild Shape battle initialization requires distinct available known forms.",
     );
   }
@@ -2633,7 +2634,7 @@ test("rejects known Beast forms without promoted movement facts", () => {
 
   expect(Either.isLeft(result)).toBe(true);
   if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
       "Druid Wild Shape battle forms require literal Walk Speed.",
     );
   }
@@ -2671,7 +2672,7 @@ test("rejects known Beast forms without literal Size", () => {
 
   expect(Either.isLeft(result)).toBe(true);
   if (Either.isLeft(result)) {
-    expect(result.left.message).toBe(
+    expect(wildShapeKnownFormsIssueMessage(result.left.issues)).toBe(
       "Druid Wild Shape battle forms require literal Size.",
     );
   }

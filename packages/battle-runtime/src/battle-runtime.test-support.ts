@@ -205,6 +205,7 @@ import {
   BATTLE_READIED_SPELL_TRIGGERS,
   battleAreaId,
   battleAvailableDruidWildShapeKnownForms,
+  wildShapeKnownFormsIssueMessage,
   battleBonusActionStandardActionSupportForUnit,
   BattleFillSchema,
   BattleHoleSchema,
@@ -3675,7 +3676,9 @@ export function characterSeed(input: {
     druidWildShapeAvailableForms !== undefined &&
     Either.isLeft(druidWildShapeAvailableForms)
   ) {
-    throw new Error(druidWildShapeAvailableForms.left.message);
+    throw new Error(
+      wildShapeKnownFormsIssueMessage(druidWildShapeAvailableForms.left.issues),
+    );
   }
   const parsedDruidWildShapeAvailableForms =
     druidWildShapeAvailableForms === undefined

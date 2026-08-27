@@ -200,18 +200,22 @@ describe("battle presentation joins", () => {
     ).toBeNull();
   });
 
-  test("returns empty procedure presentations when presentation is absent", () => {
+  test("reports missing presentation when executable procedures are present", () => {
     const session = presentationSession();
     const actor = session.state.combatants.get(goblinId);
     if (actor?.origin.kind !== "statBlock") {
       throw new Error("Expected Goblin Stat Block actor.");
     }
 
-    expect(
-      statBlockProcedurePresentations({
-        execution: actor.origin.execution,
-      }),
-    ).toEqual(Either.right([]));
+    const result = statBlockProcedurePresentations({
+      execution: actor.origin.execution,
+    });
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect(
+        result.left.every((issue) => issue.reason === "missingPresentation"),
+      ).toBe(true);
+    }
   });
 
   test("maps unmatched presentation shapes to projection issues", () => {

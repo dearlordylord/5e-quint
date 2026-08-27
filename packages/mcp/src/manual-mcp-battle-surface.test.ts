@@ -15,7 +15,6 @@ import {
   characterId,
   combatantId,
   initiativeScore,
-  projectAuthoredStatBlock,
   startBattle,
   battleStateInitIssueMessage,
   type BattleCreatureInit,
@@ -1267,26 +1266,33 @@ function statBlock(
             creatureType: input.creatureType,
           },
         };
-  const projection = Either.getOrThrow(
-    projectAuthoredStatBlock(battleStatBlock),
-  );
-  const presentation =
-    input.displayName === undefined
-      ? projection.presentation
-      : { ...projection.presentation, displayName: input.displayName };
   const init = Either.getOrThrow(
     battleCreatureInitFromStatBlock({
       combatantId: input.combatantId,
-      statBlock: projection.runtime,
+      statBlock: battleStatBlock,
       initiative: initiativeScore(input.initiative),
       currentHp: Hp(10),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
-      presentation,
     }),
   );
-  return init;
+  return input.displayName === undefined
+    ? init
+    : {
+        ...init,
+        displayName: input.displayName,
+        creatureInit:
+          init.creatureInit.kind === "statBlock"
+            ? {
+                ...init.creatureInit,
+                presentation: {
+                  ...init.creatureInit.presentation,
+                  displayName: input.displayName,
+                },
+              }
+            : init.creatureInit,
+      };
 }
 
 function character(

@@ -217,7 +217,25 @@ export function battleCreaturePresentationDisplayName(
 export function statBlockProcedurePresentations(
   admission: StatBlockPresentationAdmission,
 ): StatBlockProcedurePresentationResult {
-  if (admission.presentation === undefined) return Either.right([]);
+  if (admission.presentation === undefined) {
+    const issues = admission.execution.procedureBindings.flatMap((binding) =>
+      binding.procedure.kind === "unarmedStrike"
+        ? []
+        : [
+            {
+              tag: "statBlockProcedurePresentationJoinIssue" as const,
+              reason: "missingPresentation" as const,
+              section: binding.procedure.section,
+              procedureOrdinal: binding.procedure.procedureOrdinal,
+              executionKind: binding.procedure.kind,
+            },
+          ],
+    );
+    const [firstIssue, ...remainingIssues] = issues;
+    return firstIssue === undefined
+      ? Either.right([])
+      : Either.left([firstIssue, ...remainingIssues]);
+  }
   const labels = procedureCoordinateIndex(
     admission.presentation.orderedProcedures,
   );

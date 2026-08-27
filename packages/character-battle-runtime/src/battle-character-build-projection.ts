@@ -18,6 +18,7 @@ import {
   type CharacterWeaponAttackActionOption,
   type CharacterWeaponAttackDamageTypeChoices,
   type BattleCreatureInit,
+  type BattleDruidWildShapeKnownFormsIssue,
   type CharacterBattleLoadoutRef,
   type CharacterBattleCreatureInitWeaponAttack,
   martialArtsAttackProjectionProfileForUnit,
@@ -90,11 +91,13 @@ import {
   type ClassSpellChoiceKind,
 } from "./class-spell-choice-projection.ts";
 
-export type BattleCreatureInitIssue = {
-  readonly tag: "battleCreatureInitIssue";
-  readonly message: string;
-  readonly spellAccessIssues?: readonly CharacterBattleSpellAccessProjectionIssue[];
-};
+export type BattleCreatureInitIssue =
+  | BattleDruidWildShapeKnownFormsIssue
+  | {
+      readonly tag: "battleCreatureInitIssue";
+      readonly message: string;
+      readonly spellAccessIssues?: readonly CharacterBattleSpellAccessProjectionIssue[];
+    };
 
 type CharacterBattleSpellAccessProjectionIssueBase = {
   readonly tag: "characterBattleSpellAccessProjectionIssue";

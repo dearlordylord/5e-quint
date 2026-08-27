@@ -27,6 +27,7 @@ import {
   type CharacterZeroHpLifecycleInit,
   type AuthoredStatBlockBattleInitInput,
   authoredStatBlockBattleInitIssueMessage,
+  wildShapeKnownFormsIssueMessage,
   battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import {
@@ -108,6 +109,9 @@ export function characterBattleRuntimeIssueMessage(
       authoredStatBlockBattleInitIssueMessage,
     ),
     Match.when({ tag: "battleCreatureInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "battleDruidWildShapeKnownFormsIssue" }, ({ issues }) =>
+      wildShapeKnownFormsIssueMessage(issues),
+    ),
     Match.when({ tag: "battleStateInitIssue" }, ({ message }) => message),
     Match.when({ tag: "statBlockResourceGraphIssue" }, (resourceGraphIssue) =>
       battleStateInitIssueMessage(resourceGraphIssue),

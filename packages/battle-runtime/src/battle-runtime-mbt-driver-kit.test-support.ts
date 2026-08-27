@@ -18054,6 +18054,12 @@ function skeletonCreatureInit(input: {
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
+      presentation: {
+        displayName: "Skeleton",
+        communication: { kind: "none" },
+        traits: [],
+        orderedProcedures: [],
+      },
     },
   };
 }

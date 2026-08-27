@@ -371,9 +371,9 @@ export type {
 export type {
   AuthoredStatBlockBattleInitInput,
   AuthoredStatBlockBattleInitIssue,
-  AuthoredStatBlockBattleCreatureInit,
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
+  BattleDruidWildShapeKnownFormsIssue,
   BattleCreatureInit,
   BattlePositiveHpUnconscious,
   BattleUnitRef,
@@ -404,6 +404,7 @@ export type {
 
 export {
   authoredStatBlockBattleInitIssueMessage,
+  wildShapeKnownFormsIssueMessage,
   KNOCKED_OUT_UNCONSCIOUS,
   STAT_BLOCK_INITIAL_CONDITIONS,
   battleAvailableDruidWildShapeKnownForms,

@@ -2,6 +2,7 @@ import {
   battlePresentedSnapshot,
   battleAdmittedSpellPresentations,
   battleStateInitIssueMessage,
+  wildShapeKnownFormsIssueMessage,
   discoverBattleActs,
   startBattle,
   type BattleCreatureInit,
@@ -255,9 +256,20 @@ export function projectBattleCombatant(input: {
       });
       if (Either.isLeft(characterInit)) {
         return Either.left(
-          errorContent(characterInit.left.message, {
-            code: "CHARACTER_BATTLE_INIT_INVALID",
-          }),
+          errorContent(
+            characterInit.left.tag === "battleDruidWildShapeKnownFormsIssue"
+              ? wildShapeKnownFormsIssueMessage(characterInit.left.issues)
+              : characterInit.left.message,
+            {
+              code: "CHARACTER_BATTLE_INIT_INVALID",
+              ...(characterInit.left.tag ===
+              "battleDruidWildShapeKnownFormsIssue"
+                ? {
+                    wildShapeIssues: characterInit.left.issues,
+                  }
+                : {}),
+            },
+          ),
         );
       }
       if (characterInit.right.creatureInit.kind !== "character") {

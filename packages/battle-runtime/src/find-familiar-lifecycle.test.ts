@@ -47,6 +47,7 @@ import {
   admitCompanionToBattleRuntime,
   applyFindFamiliarZeroHitPointDisappearance,
   battleAvailableDruidWildShapeKnownForms,
+  wildShapeKnownFormsIssueMessage,
   battleCreaturePresentationDisplayName,
   battleDruidWildShapeKnownFormSupportForUnit,
   battleId,
@@ -230,7 +231,7 @@ function druidWildShapeKnownForms() {
     ],
   });
   if (Either.isLeft(forms)) {
-    throw new Error(forms.left.message);
+    throw new Error(wildShapeKnownFormsIssueMessage(forms.left.issues));
   }
   return forms.right;
 }
@@ -263,6 +264,12 @@ function startFixtureBattle(
             { ammunition: "arrow" as const, remaining: resourceCount(20) },
           ],
           conditions: [],
+          presentation: {
+            displayName: "Caster",
+            communication: { kind: "none" as const },
+            traits: [],
+            orderedProcedures: [],
+          },
         },
       },
       ...(input.includeEnemy === true
@@ -287,6 +294,12 @@ function startFixtureBattle(
                   },
                 ],
                 conditions: [],
+                presentation: {
+                  displayName: "Enemy",
+                  communication: { kind: "none" as const },
+                  traits: [],
+                  orderedProcedures: [],
+                },
               },
             },
           ]
@@ -314,6 +327,12 @@ function startFixtureBattle(
                   },
                 ],
                 conditions: [],
+                presentation: {
+                  displayName: "Other Combatant",
+                  communication: { kind: "none" as const },
+                  traits: [],
+                  orderedProcedures: [],
+                },
               },
             },
           ]),
@@ -2303,6 +2322,12 @@ describe("Find Familiar lifecycle", () => {
               { ammunition: "arrow", remaining: resourceCount(20) },
             ],
             conditions: [],
+            presentation: {
+              displayName: "Pact Owner",
+              communication: { kind: "none" as const },
+              traits: [],
+              orderedProcedures: [],
+            },
           },
         },
         {
@@ -2322,6 +2347,12 @@ describe("Find Familiar lifecycle", () => {
               { ammunition: "arrow", remaining: resourceCount(7) },
             ],
             conditions: [],
+            presentation: {
+              displayName: "Pact Skeleton Familiar",
+              communication: { kind: "none" as const },
+              traits: [],
+              orderedProcedures: [],
+            },
           },
         },
       ],
