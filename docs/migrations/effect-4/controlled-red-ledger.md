@@ -7,10 +7,10 @@ Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
 Status: the dependency cutover is complete and the cohort gate is green. The
 repository remains intentionally controlled-red for downstream Effect 4 API
-migration: the current owner sweep records five failing package owners, while
-`@dnd/shared-algebras` is at zero diagnostics after #374 and `@dnd/surface` is
-at zero after #373. This ledger is evidence, not a waiver, and does not claim
-product or rule behavior is green.
+migration: the current owner sweep records four failing package owners and nine
+green owners, including `@dnd/shared-algebras` at zero diagnostics after #374
+and `@dnd/surface` at zero after #373. This ledger is evidence, not a waiver,
+and does not claim product or rule behavior is green.
 
 ## Scope and ownership
 
@@ -138,9 +138,8 @@ The inventory ran each workspace `typecheck` script once in this order:
 @dnd/tactical-space-prototype
 ```
 
-The four prototype/tactical owners, `@dnd/shared`, `@dnd/shared-algebras`,
-`@dnd/surface`, and `@dnd/character-creation-runtime` passed. The five
-remaining Effect-consuming owners failed. The
+The nine green owners passed, while four remaining Effect-consuming owners
+failed. The
 raw counts below are
 the committed output's per-command counts; workspace-linked source is repeated
 when a dependent package typechecks it.
@@ -426,7 +425,7 @@ Close this controlled-red interval only when all of the following are true:
    with the exact values in this ledger, and the lockfile still contains one
    `effect` version (`4.0.0-rc.112`) with no removed or unsupported Effect
    packages.
-2. The five currently affected workspace owners and `scripts/effect3-baseline.ts` have
+2. The four currently affected workspace owners and `scripts/effect3-baseline.ts` have
    zero deduplicated diagnostics. The code-count table is regenerated rather
    than manually decremented.
 3. Direct `pnpm build`, `pnpm typecheck`, and `pnpm test` pass under the public
