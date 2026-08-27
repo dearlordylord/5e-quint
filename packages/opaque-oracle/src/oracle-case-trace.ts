@@ -12,14 +12,17 @@ import {
 import {
   decodeWithSchema,
   parseJsonWithDuplicateDetection,
-  type OracleDecodeIssue,
   type OracleDecodeIssueCode,
+  type OracleDecodeIssues,
 } from "./oracle-decode.ts";
 import {
-  canonicalizeBatchInput,
-  canonicalizeCaseInput,
-  canonicalizeTraceInput,
-} from "./oracle-input-canonical.ts";
+  decodeOracleCaseDocument,
+  decodeOracleEvaluationBatchDocument,
+  decodeOracleTraceDocument,
+  type OracleCaseDocument,
+  type OracleEvaluationBatchDocument,
+  type OracleTraceDocument,
+} from "./oracle-document.ts";
 
 export {
   CreationFillBatchSchema,
@@ -29,6 +32,7 @@ export {
   OracleBattleAttemptRejectionReasonSchema,
   OracleBattleAttemptSegmentSchema,
   OracleBattleInitiativeEntrySchema,
+  OracleAmmunitionStocksSchema,
   OracleBattleCheckpointSchema,
   OracleBattleContinuationSchema,
   OracleBattleEnteredSchema,
@@ -53,6 +57,7 @@ export {
   type OracleBattleAttemptSegment,
   type OracleBattleContinuation,
   type OracleBattleInitiativeEntry,
+  type OracleAmmunitionStocks,
   type OracleBattleInterruptDecisionFill,
   type OracleBattleNonterminalFrontier,
   type OracleBattleRoster,
@@ -70,35 +75,65 @@ export {
 export {
   type OracleDecodeIssue,
   type OracleDecodeIssueCode,
+  type OracleDecodeIssues,
 } from "./oracle-decode.ts";
+export {
+  decodeOracleCaseDocument,
+  decodeOracleEvaluationBatchDocument,
+  decodeOracleTraceDocument,
+  type OracleCaseDocument,
+  type OracleEvaluationBatchDocument,
+  type OracleTraceDocument,
+} from "./oracle-document.ts";
 
 export type OracleCreationFillBatch = CreationFillBatch;
 export type OracleFreshSheetInput = FreshSheetInput;
 
 export function decodeOracleCase(
   input: unknown,
-): Either.Either<OracleCase, readonly OracleDecodeIssue[]> {
-  return decodeWithSchema(OracleCaseSchema, canonicalizeCaseInput(input));
+): Either.Either<OracleCase, OracleDecodeIssues> {
+  const document = decodeOracleCaseDocument(input);
+  if (Either.isLeft(document)) return Either.left(document.left);
+  return admitOracleCaseDocument(document.right);
 }
 
 export function decodeOracleEvaluationBatch(
   input: unknown,
-): Either.Either<OracleEvaluationBatch, readonly OracleDecodeIssue[]> {
-  return decodeWithSchema(
-    OracleEvaluationBatchSchema,
-    canonicalizeBatchInput(input),
-  );
+): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
+  const document = decodeOracleEvaluationBatchDocument(input);
+  if (Either.isLeft(document)) return Either.left(document.left);
+  return admitOracleEvaluationBatchDocument(document.right);
 }
 
 export function decodeOracleTrace(
   input: unknown,
-): Either.Either<OracleTrace, readonly OracleDecodeIssue[]> {
-  return decodeWithSchema(OracleTraceSchema, canonicalizeTraceInput(input));
+): Either.Either<OracleTrace, OracleDecodeIssues> {
+  const document = decodeOracleTraceDocument(input);
+  if (Either.isLeft(document)) return Either.left(document.left);
+  return admitOracleTraceDocument(document.right);
+}
+
+export function admitOracleCaseDocument(
+  document: OracleCaseDocument,
+): Either.Either<OracleCase, OracleDecodeIssues> {
+  return decodeWithSchema(OracleCaseSchema, document);
+}
+
+export function admitOracleEvaluationBatchDocument(
+  document: OracleEvaluationBatchDocument,
+): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
+  return decodeWithSchema(OracleEvaluationBatchSchema, document);
+}
+
+export function admitOracleTraceDocument(
+  document: OracleTraceDocument,
+): Either.Either<OracleTrace, OracleDecodeIssues> {
+  return decodeWithSchema(OracleTraceSchema, document);
 }
 
 export function decodeOracleCaseJson(
   input: string,
-): Either.Either<OracleCase, readonly OracleDecodeIssue[]> {
+): Either.Either<OracleCase, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
   return Either.isLeft(parsed)
     ? Either.left(parsed.left)
@@ -107,7 +142,7 @@ export function decodeOracleCaseJson(
 
 export function decodeOracleEvaluationBatchJson(
   input: string,
-): Either.Either<OracleEvaluationBatch, readonly OracleDecodeIssue[]> {
+): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
   return Either.isLeft(parsed)
     ? Either.left(parsed.left)
@@ -116,7 +151,7 @@ export function decodeOracleEvaluationBatchJson(
 
 export function decodeOracleTraceJson(
   input: string,
-): Either.Either<OracleTrace, readonly OracleDecodeIssue[]> {
+): Either.Either<OracleTrace, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
   return Either.isLeft(parsed)
     ? Either.left(parsed.left)

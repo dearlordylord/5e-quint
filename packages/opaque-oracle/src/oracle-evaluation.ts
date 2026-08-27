@@ -37,11 +37,15 @@ import {
   freshCharacterSheetProjection,
   type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
+import { AMMUNITION_KINDS, type AmmunitionKind } from "@dnd/shared/game-facts";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Match, Option } from "effect";
 
-import { canonicalizeStringSet } from "./oracle-canonical.ts";
+import {
+  canonicalizeStringSet,
+  compareCodePoints,
+} from "./oracle-canonical.ts";
 import {
   OracleBattleCheckpointSchema,
   OracleTraceSchema,
@@ -60,6 +64,7 @@ import {
   type OracleBattleRoster,
   type OracleBattleStatBlockRosterEntry,
   type OracleBattleCharacterSheetRosterEntry,
+  type OracleAmmunitionStocks,
   type OracleBattleStateInitLeafIssue,
   type OracleBattleStateInitIssue,
   type OracleCase,
@@ -536,10 +541,7 @@ function resolveBattleRoster(input: {
   const participants: CharacterBattleEncounterParticipant[] = [];
 
   for (const entry of flattenOracleBattleRoster(input.roster)) {
-    const ammunitionStocks = entry.ammunitionStocks.map((stock) => ({
-      ammunition: stock.ammunition,
-      remaining: resourceCount(stock.remaining),
-    }));
+    const ammunitionStocks = projectAmmunitionStocks(entry.ammunitionStocks);
     if (entry.origin === "characterSheet") {
       participants.push({
         origin: "characterSheet",
@@ -587,6 +589,27 @@ function resolveBattleRoster(input: {
     });
   }
   return Either.right(participants);
+}
+
+function projectAmmunitionStocks(stocks: OracleAmmunitionStocks): readonly {
+  readonly ammunition: AmmunitionKind;
+  readonly remaining: ReturnType<typeof resourceCount>;
+}[] {
+  const projected: Array<{
+    readonly ammunition: AmmunitionKind;
+    readonly remaining: ReturnType<typeof resourceCount>;
+  }> = [];
+  for (const key of Object.keys(stocks).sort(compareCodePoints)) {
+    const ammunition = AMMUNITION_KINDS.find((candidate) => candidate === key);
+    if (ammunition === undefined) {
+      return defect(`Unknown ammunition stock key ${key}`);
+    }
+    const remaining = stocks[ammunition];
+    if (remaining !== undefined) {
+      projected.push({ ammunition, remaining: resourceCount(remaining) });
+    }
+  }
+  return projected;
 }
 
 function battleEntryRejection(

@@ -1,10 +1,7 @@
-import { Either, ParseResult, Schema } from "effect";
+import { Either, Option, ParseResult, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 
-import {
-  canonicalStructuralKey,
-  compareCodePoints,
-} from "./oracle-canonical.ts";
+import { compareCodePoints } from "./oracle-canonical.ts";
 
 export const ORACLE_DECODE_ISSUE_CODES = [
   "invalidJson",
@@ -27,6 +24,11 @@ export type OracleDecodeIssue = {
   readonly code: OracleDecodeIssueCode;
 };
 
+export type OracleDecodeIssues = readonly [
+  OracleDecodeIssue,
+  ...OracleDecodeIssue[],
+];
+
 type DecodeOptions = {
   readonly classifyRefinement?: (
     actual: unknown,
@@ -38,7 +40,7 @@ export function decodeWithSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
   input: unknown,
   options: DecodeOptions = {},
-): Either.Either<A, readonly OracleDecodeIssue[]> {
+): Either.Either<A, OracleDecodeIssues> {
   let decoded: Either.Either<A, ParseResult.ParseError>;
   try {
     decoded = Schema.decodeUnknownEither(schema, {
@@ -56,13 +58,7 @@ export function decodeWithSchema<A, I>(
   } catch {
     return Either.left([{ path: "", code: "wrongType" }]);
   }
-  return Either.left(
-    sortIssues(
-      uniqueIssues(
-        issues.length === 0 ? [{ path: "", code: "wrongType" }] : issues,
-      ),
-    ),
-  );
+  return Either.left(toOracleDecodeIssues(sortIssues(uniqueIssues(issues))));
 }
 
 function collectParseIssues(
@@ -71,69 +67,110 @@ function collectParseIssues(
   output: OracleDecodeIssue[],
   options: DecodeOptions,
 ): void {
-  switch (issue._tag) {
-    case "Pointer": {
-      const pointerPath: readonly PropertyKey[] =
-        typeof issue.path === "string" ||
-        typeof issue.path === "number" ||
-        typeof issue.path === "symbol"
-          ? [issue.path]
-          : issue.path;
-      collectParseIssues(
-        issue.issue,
-        pointerPath.reduce<string>(
-          (currentPath, segment) => appendPath(currentPath, segment),
-          path,
-        ),
-        output,
-        options,
-      );
-      return;
+  const pending: Array<{
+    readonly issue: ParseResult.ParseIssue;
+    readonly path: string;
+    readonly depth: number;
+  }> = [{ issue, path, depth: 0 }];
+  let visited = 0;
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined) continue;
+    visited += 1;
+    if (visited > MAX_RAW_JSON_ITEMS || current.depth > MAX_RAW_JSON_DEPTH) {
+      output.push({ path: current.path, code: "wrongType" });
+      continue;
     }
-    case "Composite": {
-      const children = Array.isArray(issue.issues)
-        ? issue.issues
-        : [issue.issues];
-      for (const child of children) {
-        collectParseIssues(child, path, output, options);
+    const currentIssue = current.issue;
+    switch (currentIssue._tag) {
+      case "Pointer": {
+        const pointerPath: readonly PropertyKey[] =
+          typeof currentIssue.path === "string" ||
+          typeof currentIssue.path === "number" ||
+          typeof currentIssue.path === "symbol"
+            ? [currentIssue.path]
+            : currentIssue.path;
+        pending.push({
+          issue: currentIssue.issue,
+          path: pointerPath.reduce<string>(
+            (currentPath, segment) => appendPath(currentPath, segment),
+            current.path,
+          ),
+          depth: current.depth + 1,
+        });
+        continue;
       }
-      return;
+      case "Composite": {
+        const children = Array.isArray(currentIssue.issues)
+          ? currentIssue.issues
+          : [currentIssue.issues];
+        for (let index = children.length - 1; index >= 0; index -= 1) {
+          const child = children[index];
+          if (child !== undefined) {
+            pending.push({
+              issue: child,
+              path: current.path,
+              depth: current.depth + 1,
+            });
+          }
+        }
+        continue;
+      }
+      case "Unexpected":
+        output.push({ path: current.path, code: "unknownMember" });
+        continue;
+      case "Missing":
+        output.push({ path: current.path, code: "missingMember" });
+        continue;
+      case "Refinement":
+        if (
+          currentIssue.issue._tag === "Composite" ||
+          currentIssue.issue._tag === "Pointer"
+        ) {
+          pending.push({
+            issue: currentIssue.issue,
+            path: current.path,
+            depth: current.depth + 1,
+          });
+          continue;
+        }
+        {
+          const classified = options.classifyRefinement?.(
+            currentIssue.actual,
+            current.path,
+          );
+          output.push({
+            path: current.path,
+            code:
+              classified ??
+              refinementCode(currentIssue.actual, currentIssue.ast),
+          });
+        }
+        continue;
+      case "Transformation":
+        pending.push({
+          issue: currentIssue.issue,
+          path: current.path,
+          depth: current.depth + 1,
+        });
+        continue;
+      case "Type":
+        output.push({
+          path: current.path,
+          code:
+            typeof currentIssue.actual === "string" &&
+            literalStrings(currentIssue.ast).length > 0
+              ? "unknownVariant"
+              : "wrongType",
+        });
+        continue;
     }
-    case "Unexpected":
-      output.push({ path, code: "unknownMember" });
-      return;
-    case "Missing":
-      output.push({ path, code: "missingMember" });
-      return;
-    case "Refinement":
-      if (issue.issue._tag === "Composite" || issue.issue._tag === "Pointer") {
-        collectParseIssues(issue.issue, path, output, options);
-        return;
-      }
-      const classified = options.classifyRefinement?.(issue.actual, path);
-      output.push({
-        path,
-        code: classified ?? refinementCode(issue.actual),
-      });
-      return;
-    case "Transformation":
-      collectParseIssues(issue.issue, path, output, options);
-      return;
-    case "Type":
-      output.push({
-        path,
-        code:
-          typeof issue.actual === "string" &&
-          literalStrings(issue.ast).length > 0
-            ? "unknownVariant"
-            : "wrongType",
-      });
-      return;
   }
 }
 
 function refinementCode(
   actual: unknown,
+  ast: AST.Refinement,
 ): Exclude<
   OracleDecodeIssueCode,
   | "invalidJson"
@@ -143,14 +180,12 @@ function refinementCode(
   | "unknownVariant"
   | "duplicateMember"
 > {
-  if (containsDuplicateCollectionMember(actual)) {
-    return "duplicateCollectionMember";
-  }
+  if (Array.isArray(actual) && actual.length === 0) return "emptyCollection";
+  if (hasUniqueItemsAnnotation(ast)) return "duplicateCollectionMember";
   if (typeof actual === "string") {
     if (actual.length === 0) return "emptyValue";
     if (actual.trim() !== actual) return "nonCanonicalDomainValue";
   }
-  if (Array.isArray(actual) && actual.length === 0) return "emptyCollection";
   if (
     typeof actual === "number" &&
     (!Number.isFinite(actual) || !Number.isInteger(actual) || actual < 0)
@@ -158,6 +193,16 @@ function refinementCode(
     return "outOfRange";
   }
   return "nonCanonicalDomainValue";
+}
+
+function hasUniqueItemsAnnotation(ast: AST.Refinement): boolean {
+  const annotation = Option.getOrUndefined(AST.getJSONSchemaAnnotation(ast));
+  return (
+    typeof annotation === "object" &&
+    annotation !== null &&
+    "uniqueItems" in annotation &&
+    annotation.uniqueItems === true
+  );
 }
 
 function literalStrings(ast: AST.AST): readonly string[] {
@@ -173,49 +218,6 @@ function literalStrings(ast: AST.AST): readonly string[] {
     default:
       return [];
   }
-}
-
-function containsDuplicateCollectionMember(value: unknown): boolean {
-  const visited = new Set<object>();
-  const pending: unknown[] = [value];
-
-  while (pending.length > 0) {
-    const current = pending.pop();
-    if (current === undefined) continue;
-
-    let isArray: boolean;
-    try {
-      isArray = Array.isArray(current);
-    } catch {
-      continue;
-    }
-    if (isArray) {
-      if (visited.has(current as object)) continue;
-      visited.add(current as object);
-      const keys = new Set<string>();
-      try {
-        for (const member of current as readonly unknown[]) {
-          const key = canonicalStructuralKey(member);
-          if (keys.has(key)) return true;
-          keys.add(key);
-          pending.push(member);
-        }
-      } catch {
-        continue;
-      }
-      continue;
-    }
-
-    if (typeof current !== "object" || current === null) continue;
-    if (visited.has(current)) continue;
-    visited.add(current);
-    try {
-      pending.push(...Object.values(current));
-    } catch {
-      continue;
-    }
-  }
-  return false;
 }
 
 function uniqueIssues(
@@ -241,17 +243,45 @@ function sortIssues(
   );
 }
 
+function toOracleDecodeIssues(
+  issues: readonly OracleDecodeIssue[],
+): OracleDecodeIssues {
+  const [first, ...rest] = issues;
+  return first === undefined
+    ? [{ path: "", code: "wrongType" }]
+    : [first, ...rest];
+}
+
 function appendPath(path: string, segment: PropertyKey): string {
   return typeof segment === "number"
     ? `${path}/${segment}`
     : `${path}/${String(segment).replaceAll("~", "~0").replaceAll("/", "~1")}`;
 }
 
-type ParsedJson = { readonly value: unknown; readonly end: number };
+const MAX_RAW_JSON_DEPTH = 1_024;
+const MAX_RAW_JSON_ITEMS = 100_000;
+
+type ParsedJson = { readonly end: number };
+type ParsedJsonString = { readonly value: string; readonly end: number };
+
+type JsonScanFrame =
+  | {
+      readonly kind: "object";
+      readonly path: string;
+      readonly keys: Set<string>;
+      state: "keyOrEnd" | "keyRequired" | "value" | "commaOrEnd";
+      pendingPath: string | undefined;
+    }
+  | {
+      readonly kind: "array";
+      readonly path: string;
+      length: number;
+      state: "valueOrEnd" | "valueRequired" | "commaOrEnd";
+    };
 
 export function parseJsonWithDuplicateDetection(
   text: string,
-): Either.Either<unknown, readonly OracleDecodeIssue[]> {
+): Either.Either<unknown, OracleDecodeIssues> {
   const duplicates: string[] = [];
   const parsed = scanJsonValue(text, skipWhitespace(text, 0), "", duplicates);
   if (
@@ -262,8 +292,13 @@ export function parseJsonWithDuplicateDetection(
   }
   if (duplicates.length > 0) {
     return Either.left(
-      sortIssues(
-        duplicates.map((path) => ({ path, code: "duplicateMember" as const })),
+      toOracleDecodeIssues(
+        sortIssues(
+          duplicates.map((path) => ({
+            path,
+            code: "duplicateMember" as const,
+          })),
+        ),
       ),
     );
   }
@@ -280,85 +315,159 @@ function scanJsonValue(
   path: string,
   duplicates: string[],
 ): ParsedJson | undefined {
-  const char = text[start];
-  if (char === "{") return scanJsonObject(text, start, path, duplicates);
-  if (char === "[") return scanJsonArray(text, start, path, duplicates);
-  if (char === '"') return scanJsonString(text, start);
-  if (text.startsWith("true", start)) return { value: true, end: start + 4 };
-  if (text.startsWith("false", start)) return { value: false, end: start + 5 };
-  if (text.startsWith("null", start)) return { value: null, end: start + 4 };
-  const number = text
-    .slice(start)
-    .match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/u);
-  return number === null
-    ? undefined
-    : { value: Number(number[0]), end: start + number[0].length };
+  let cursor = skipWhitespace(text, start);
+  let nextValue: { readonly path: string } | undefined = { path };
+  let rootComplete = false;
+  let scannedItems = 0;
+  const frames: JsonScanFrame[] = [];
+
+  const completeValue = (): void => {
+    const parent = frames[frames.length - 1];
+    if (parent === undefined) {
+      rootComplete = true;
+      return;
+    }
+    if (parent.kind === "object") {
+      parent.state = "commaOrEnd";
+      parent.pendingPath = undefined;
+      return;
+    }
+    parent.length += 1;
+    parent.state = "commaOrEnd";
+  };
+
+  while (true) {
+    if (rootComplete) return { end: skipWhitespace(text, cursor) };
+
+    if (nextValue !== undefined) {
+      scannedItems += 1;
+      if (scannedItems > MAX_RAW_JSON_ITEMS) return undefined;
+      const valuePath = nextValue.path;
+      nextValue = undefined;
+      const char = text[cursor];
+      if (char === "{") {
+        if (frames.length + 1 > MAX_RAW_JSON_DEPTH) return undefined;
+        frames.push({
+          kind: "object",
+          path: valuePath,
+          keys: new Set<string>(),
+          state: "keyOrEnd",
+          pendingPath: undefined,
+        });
+        cursor = skipWhitespace(text, cursor + 1);
+        continue;
+      }
+      if (char === "[") {
+        if (frames.length + 1 > MAX_RAW_JSON_DEPTH) return undefined;
+        frames.push({
+          kind: "array",
+          path: valuePath,
+          length: 0,
+          state: "valueOrEnd",
+        });
+        cursor = skipWhitespace(text, cursor + 1);
+        continue;
+      }
+      if (char === '"') {
+        const string = scanJsonString(text, cursor);
+        if (string === undefined) return undefined;
+        cursor = skipWhitespace(text, string.end);
+        completeValue();
+        continue;
+      }
+      let end: number | undefined;
+      if (text.startsWith("true", cursor)) end = cursor + 4;
+      else if (text.startsWith("false", cursor)) end = cursor + 5;
+      else if (text.startsWith("null", cursor)) end = cursor + 4;
+      else {
+        const number = text
+          .slice(cursor)
+          .match(/^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?/u);
+        end = number === null ? undefined : cursor + number[0].length;
+      }
+      if (end === undefined) return undefined;
+      cursor = skipWhitespace(text, end);
+      completeValue();
+      continue;
+    }
+
+    const frame = frames[frames.length - 1];
+    if (frame === undefined) return undefined;
+    if (frame.kind === "object") {
+      if (frame.state === "commaOrEnd") {
+        if (text[cursor] === "}") {
+          frames.pop();
+          cursor = skipWhitespace(text, cursor + 1);
+          completeValue();
+          continue;
+        }
+        if (text[cursor] !== ",") return undefined;
+        frame.state = "keyRequired";
+        cursor = skipWhitespace(text, cursor + 1);
+      }
+      if (frame.state === "keyOrEnd" && text[cursor] === "}") {
+        frames.pop();
+        cursor = skipWhitespace(text, cursor + 1);
+        completeValue();
+        continue;
+      }
+      if (frame.state !== "keyOrEnd" && frame.state !== "keyRequired") {
+        return undefined;
+      }
+      const key = scanJsonString(text, cursor);
+      if (key === undefined) return undefined;
+      cursor = skipWhitespace(text, key.end);
+      if (text[cursor] !== ":") return undefined;
+      cursor = skipWhitespace(text, cursor + 1);
+      const memberPath = appendPath(frame.path, key.value);
+      if (frame.keys.has(key.value)) duplicates.push(memberPath);
+      frame.keys.add(key.value);
+      frame.pendingPath = memberPath;
+      frame.state = "value";
+      nextValue = { path: memberPath };
+      continue;
+    }
+
+    if (frame.state === "commaOrEnd") {
+      if (text[cursor] === "]") {
+        frames.pop();
+        cursor = skipWhitespace(text, cursor + 1);
+        completeValue();
+        continue;
+      }
+      if (text[cursor] !== ",") return undefined;
+      frame.state = "valueRequired";
+      cursor = skipWhitespace(text, cursor + 1);
+    }
+    if (frame.state === "valueOrEnd" && text[cursor] === "]") {
+      frames.pop();
+      cursor = skipWhitespace(text, cursor + 1);
+      completeValue();
+      continue;
+    }
+    if (frame.state !== "valueOrEnd" && frame.state !== "valueRequired") {
+      return undefined;
+    }
+    const memberPath = appendPath(frame.path, frame.length);
+    frame.state = "commaOrEnd";
+    nextValue = { path: memberPath };
+  }
 }
 
-function scanJsonObject(
+function scanJsonString(
   text: string,
   start: number,
-  path: string,
-  duplicates: string[],
-): ParsedJson | undefined {
-  let cursor = skipWhitespace(text, start + 1);
-  const keys = new Set<string>();
-  const output: Record<string, unknown> = {};
-  if (text[cursor] === "}") return { value: output, end: cursor + 1 };
-  while (cursor < text.length) {
-    const key = scanJsonString(text, cursor);
-    if (key === undefined || typeof key.value !== "string") return undefined;
-    cursor = skipWhitespace(text, key.end);
-    if (text[cursor] !== ":") return undefined;
-    cursor = skipWhitespace(text, cursor + 1);
-    const memberPath = appendPath(path, key.value);
-    const member = scanJsonValue(text, cursor, memberPath, duplicates);
-    if (member === undefined) return undefined;
-    if (keys.has(key.value)) duplicates.push(memberPath);
-    keys.add(key.value);
-    output[key.value] = member.value;
-    cursor = skipWhitespace(text, member.end);
-    if (text[cursor] === "}") return { value: output, end: cursor + 1 };
-    if (text[cursor] !== ",") return undefined;
-    cursor = skipWhitespace(text, cursor + 1);
-  }
-  return undefined;
-}
-
-function scanJsonArray(
-  text: string,
-  start: number,
-  path: string,
-  duplicates: string[],
-): ParsedJson | undefined {
-  let cursor = skipWhitespace(text, start + 1);
-  const output: unknown[] = [];
-  if (text[cursor] === "]") return { value: output, end: cursor + 1 };
-  while (cursor < text.length) {
-    const item = scanJsonValue(
-      text,
-      cursor,
-      appendPath(path, output.length),
-      duplicates,
-    );
-    if (item === undefined) return undefined;
-    output.push(item.value);
-    cursor = skipWhitespace(text, item.end);
-    if (text[cursor] === "]") return { value: output, end: cursor + 1 };
-    if (text[cursor] !== ",") return undefined;
-    cursor = skipWhitespace(text, cursor + 1);
-  }
-  return undefined;
-}
-
-function scanJsonString(text: string, start: number): ParsedJson | undefined {
+): ParsedJsonString | undefined {
   let cursor = start + 1;
   while (cursor < text.length) {
     if (text[cursor] === "\\") cursor += 2;
     else if (text[cursor] === '"') {
       const raw = text.slice(start, cursor + 1);
       try {
-        return { value: JSON.parse(raw), end: cursor + 1 };
+        const value = JSON.parse(raw);
+        return typeof value === "string"
+          ? { value, end: cursor + 1 }
+          : undefined;
       } catch {
         return undefined;
       }

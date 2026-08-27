@@ -1,4 +1,7 @@
-import { canonicalizeStringSet } from "./oracle-canonical.ts";
+import {
+  canonicalizeStringSet,
+  compareCodePoints,
+} from "./oracle-canonical.ts";
 
 type RecordInput = Readonly<Record<string, unknown>>;
 
@@ -136,11 +139,22 @@ function canonicalizeRoster(input: RecordInput): unknown {
 }
 
 function canonicalizeRosterEntry(input: unknown): unknown {
-  if (!isRecord(input) || !isStringArray(input.conditions)) return input;
+  if (!isRecord(input)) return input;
+  const conditions = isStringArray(input.conditions)
+    ? canonicalizeStringSet(input.conditions)
+    : input.conditions;
+  const ammunitionStocks = canonicalizeAmmunitionStocks(input.ammunitionStocks);
   return {
     ...input,
-    conditions: canonicalizeStringSet(input.conditions),
+    ...(conditions === undefined ? {} : { conditions }),
+    ...(ammunitionStocks === undefined ? {} : { ammunitionStocks }),
   };
+}
+
+function canonicalizeAmmunitionStocks(input: unknown): unknown {
+  if (!isRecord(input)) return input;
+  const keys = Object.keys(input).sort(compareCodePoints);
+  return Object.fromEntries(keys.map((key) => [key, input[key]]));
 }
 
 function canonicalizeBattleOutcome(input: RecordInput): unknown {

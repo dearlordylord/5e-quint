@@ -29,10 +29,10 @@ import {
   FreshCharacterSheetProjectionSchema,
 } from "@dnd/character-sheet-runtime";
 import {
-  AmmunitionKindSchema,
   CONDITIONS,
   StatBlockId as StatBlockIdSchema,
   UnitId as UnitIdSchema,
+  type AmmunitionKind,
 } from "@dnd/shared/game-facts";
 import { Index, SIZES } from "@dnd/shared/types";
 import { CombatantId } from "@dnd/battle-runtime";
@@ -77,10 +77,23 @@ export const FreshSheetInputSchema = Schema.Union(
 );
 export type FreshSheetInput = Schema.Schema.Type<typeof FreshSheetInputSchema>;
 
-const AmmunitionStockInputSchema = Schema.Struct({
-  ammunition: AmmunitionKindSchema,
-  remaining: NonNegativeIntegerSchema,
-});
+const AmmunitionStockValueSchema = NonNegativeIntegerSchema;
+const OracleAmmunitionStockFields = {
+  arrow: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
+  bolt: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
+  bullet: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
+  needle: Schema.optionalWith(AmmunitionStockValueSchema, { exact: true }),
+  sling_bullet: Schema.optionalWith(AmmunitionStockValueSchema, {
+    exact: true,
+  }),
+} satisfies Record<AmmunitionKind, object>;
+
+export const OracleAmmunitionStocksSchema = Schema.Struct(
+  OracleAmmunitionStockFields,
+).annotations({ parseOptions: { onExcessProperty: "error" } });
+export type OracleAmmunitionStocks = Schema.Schema.Type<
+  typeof OracleAmmunitionStocksSchema
+>;
 
 const OracleBattleConditionsSchema = Schema.Array(Schema.Literal("prone")).pipe(
   Schema.filter((conditions) => !hasDuplicateStructuralValues(conditions), {
@@ -92,14 +105,14 @@ const OracleBattleConditionsSchema = Schema.Array(Schema.Literal("prone")).pipe(
 const OracleCharacterSheetRosterEntrySchema = Schema.Struct({
   combatantId: CombatantId,
   initiative: IntegerSchema,
-  ammunitionStocks: Schema.Array(AmmunitionStockInputSchema),
+  ammunitionStocks: OracleAmmunitionStocksSchema,
 });
 
 const OracleStatBlockRosterEntrySchema = Schema.Struct({
   combatantId: CombatantId,
   statBlockId: StatBlockIdSchema,
   initiative: IntegerSchema,
-  ammunitionStocks: Schema.Array(AmmunitionStockInputSchema),
+  ammunitionStocks: OracleAmmunitionStocksSchema,
   conditions: OracleBattleConditionsSchema,
   currentHp: Schema.optional(NonNegativeIntegerSchema),
   tempHp: NonNegativeIntegerSchema,

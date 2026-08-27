@@ -162,7 +162,6 @@ import {
   interruptChoiceResponderId,
   type BattleFill,
   type BattleHole,
-  type BattleMovementFillValue,
 } from "../battle-state-execution.ts";
 const BattleCompanionResolvedStatBlockIdSchema = Schema.NonEmptyTrimmedString;
 const BattleCompanionDurableIdSchema = Schema.NonEmptyTrimmedString;
@@ -3449,6 +3448,61 @@ type BattleMovementFillValueCommonEncoded = Schema.Schema.Encoded<
   typeof BattleMovementFillValueCommonSchema
 >;
 
+type BattleOrdinaryMovementFillValueEncoded =
+  BattleMovementFillValueCommonEncoded & {
+    readonly commandApproach?: {
+      readonly kind: "commandApproachShortestDirectRouteTowardCaster";
+      readonly movedWithinFiveFeetOfCaster: boolean;
+    };
+    readonly commandFlee?: {
+      readonly kind: "commandFleeFastestAvailableRouteAwayFromCaster";
+    };
+    readonly jumpMovementReplacement?: {
+      readonly kind: "jumpMovementReplacement";
+      readonly distanceFeet: number;
+      readonly landing:
+        | {
+            readonly kind: "legalLanding";
+            readonly difficultTerrainAcrobatics: "notRequired";
+          }
+        | {
+            readonly kind: "legalLanding";
+            readonly difficultTerrainAcrobatics: "passed";
+          }
+        | {
+            readonly kind: "legalLanding";
+            readonly difficultTerrainAcrobatics: "failed";
+          };
+    };
+    readonly levitatedMovement?: {
+      readonly kind: "levitatedMovement";
+      readonly sourceCombatantId: string;
+      readonly sourceProcedureRef: string;
+      readonly fixedObjectOrSurfaceWithinReach: true;
+      readonly altitudeChange?: {
+        readonly direction: "up" | "down";
+        readonly distanceFeet: number;
+      };
+    };
+    readonly brutalStrikeForcefulBlow?: never;
+    readonly additionalSpeedSegments?: never;
+  };
+type BattleBrutalStrikeForcefulBlowMovementValueEncoded =
+  BattleMovementFillValueCommonEncoded & {
+    readonly commandApproach?: never;
+    readonly commandFlee?: never;
+    readonly jumpMovementReplacement?: never;
+    readonly levitatedMovement?: never;
+    readonly brutalStrikeForcefulBlow: {
+      readonly kind: "brutalStrikeForcefulBlowStraightTowardTarget";
+      readonly targetId: string;
+    };
+    readonly additionalSpeedSegments: readonly BattleMovementFillValueCommonEncoded[];
+  };
+type BattleMovementFillValueEncoded =
+  | BattleOrdinaryMovementFillValueEncoded
+  | BattleBrutalStrikeForcefulBlowMovementValueEncoded;
+
 type BattleReadyResponseEncoded = Schema.Schema.Encoded<
   typeof BattleReadyResponseSchema
 >;
@@ -4325,47 +4379,7 @@ type BattleFillEncoded =
   | {
       readonly kind: "movement";
       readonly holeId: string;
-      readonly value: BattleMovementFillValueCommonEncoded & {
-        readonly commandApproach?: {
-          readonly kind: "commandApproachShortestDirectRouteTowardCaster";
-          readonly movedWithinFiveFeetOfCaster: boolean;
-        };
-        readonly commandFlee?: {
-          readonly kind: "commandFleeFastestAvailableRouteAwayFromCaster";
-        };
-        readonly brutalStrikeForcefulBlow?: {
-          readonly kind: "brutalStrikeForcefulBlowStraightTowardTarget";
-          readonly targetId: string;
-        };
-        readonly additionalSpeedSegments?: readonly BattleMovementFillValueCommonEncoded[];
-        readonly jumpMovementReplacement?: {
-          readonly kind: "jumpMovementReplacement";
-          readonly distanceFeet: number;
-          readonly landing:
-            | {
-                readonly kind: "legalLanding";
-                readonly difficultTerrainAcrobatics: "notRequired";
-              }
-            | {
-                readonly kind: "legalLanding";
-                readonly difficultTerrainAcrobatics: "passed";
-              }
-            | {
-                readonly kind: "legalLanding";
-                readonly difficultTerrainAcrobatics: "failed";
-              };
-        };
-        readonly levitatedMovement?: {
-          readonly kind: "levitatedMovement";
-          readonly sourceCombatantId: string;
-          readonly sourceProcedureRef: string;
-          readonly fixedObjectOrSurfaceWithinReach: true;
-          readonly altitudeChange?: {
-            readonly direction: "up" | "down";
-            readonly distanceFeet: number;
-          };
-        };
-      };
+      readonly value: BattleMovementFillValueEncoded;
     }
   | {
       readonly kind: "levitateAltitudeChange";
@@ -4548,6 +4562,81 @@ const BattleMovementFillValueCommonSchemaFields = {
 } as const;
 const BattleMovementFillValueCommonSchema = Schema.Struct(
   BattleMovementFillValueCommonSchemaFields,
+);
+
+const BattleOrdinaryMovementFillValueSchema = Schema.Struct({
+  ...BattleMovementFillValueCommonSchemaFields,
+  commandApproach: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("commandApproachShortestDirectRouteTowardCaster"),
+      movedWithinFiveFeetOfCaster: Schema.Boolean,
+    }),
+    { exact: true },
+  ),
+  commandFlee: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("commandFleeFastestAvailableRouteAwayFromCaster"),
+    }),
+    { exact: true },
+  ),
+  jumpMovementReplacement: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("jumpMovementReplacement"),
+      distanceFeet: MovementFeet,
+      landing: Schema.Union(
+        Schema.Struct({
+          kind: Schema.Literal("legalLanding"),
+          difficultTerrainAcrobatics: Schema.Literal("notRequired"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("legalLanding"),
+          difficultTerrainAcrobatics: Schema.Literal("passed"),
+        }),
+        Schema.Struct({
+          kind: Schema.Literal("legalLanding"),
+          difficultTerrainAcrobatics: Schema.Literal("failed"),
+        }),
+      ),
+    }),
+    { exact: true },
+  ),
+  levitatedMovement: Schema.optionalWith(
+    Schema.Struct({
+      kind: Schema.Literal("levitatedMovement"),
+      sourceCombatantId: CombatantId,
+      sourceProcedureRef: BattleProcedureExecutionRef,
+      fixedObjectOrSurfaceWithinReach: Schema.Literal(true),
+      altitudeChange: Schema.optionalWith(
+        Schema.Struct({
+          direction: Schema.Literal("up", "down"),
+          distanceFeet: MovementFeet,
+        }),
+        { exact: true },
+      ),
+    }),
+    { exact: true },
+  ),
+  brutalStrikeForcefulBlow: Schema.optionalWith(Schema.Never, {
+    exact: true,
+  }),
+  additionalSpeedSegments: Schema.optionalWith(Schema.Never, {
+    exact: true,
+  }),
+});
+
+const BattleBrutalStrikeForcefulBlowMovementValueSchema = Schema.Struct({
+  ...BattleMovementFillValueCommonSchemaFields,
+  commandApproach: Schema.optionalWith(Schema.Never, { exact: true }),
+  commandFlee: Schema.optionalWith(Schema.Never, { exact: true }),
+  jumpMovementReplacement: Schema.optionalWith(Schema.Never, { exact: true }),
+  levitatedMovement: Schema.optionalWith(Schema.Never, { exact: true }),
+  brutalStrikeForcefulBlow: BattleBrutalStrikeForcefulBlowMovementFactSchema,
+  additionalSpeedSegments: Schema.Array(BattleMovementFillValueCommonSchema),
+});
+
+const BattleMovementFillValueSchema = Schema.Union(
+  BattleOrdinaryMovementFillValueSchema,
+  BattleBrutalStrikeForcefulBlowMovementValueSchema,
 );
 
 export const BattleInterruptDecisionFillSchema = Schema.suspend(() =>
@@ -5322,86 +5411,7 @@ export const BattleFillSchema: Schema.Schema<
     Schema.Struct({
       kind: Schema.Literal("movement"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Struct({
-        ...BattleMovementFillValueCommonSchemaFields,
-        commandApproach: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal(
-              "commandApproachShortestDirectRouteTowardCaster",
-            ),
-            movedWithinFiveFeetOfCaster: Schema.Boolean,
-          }),
-          { exact: true },
-        ),
-        commandFlee: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal(
-              "commandFleeFastestAvailableRouteAwayFromCaster",
-            ),
-          }),
-          { exact: true },
-        ),
-        brutalStrikeForcefulBlow: Schema.optionalWith(
-          BattleBrutalStrikeForcefulBlowMovementFactSchema,
-          { exact: true },
-        ),
-        additionalSpeedSegments: Schema.optionalWith(
-          Schema.Array(BattleMovementFillValueCommonSchema),
-          { exact: true },
-        ),
-        jumpMovementReplacement: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal("jumpMovementReplacement"),
-            distanceFeet: MovementFeet,
-            landing: Schema.Union(
-              Schema.Struct({
-                kind: Schema.Literal("legalLanding"),
-                difficultTerrainAcrobatics: Schema.Literal("notRequired"),
-              }),
-              Schema.Struct({
-                kind: Schema.Literal("legalLanding"),
-                difficultTerrainAcrobatics: Schema.Literal("passed"),
-              }),
-              Schema.Struct({
-                kind: Schema.Literal("legalLanding"),
-                difficultTerrainAcrobatics: Schema.Literal("failed"),
-              }),
-            ),
-          }),
-          { exact: true },
-        ),
-        levitatedMovement: Schema.optionalWith(
-          Schema.Struct({
-            kind: Schema.Literal("levitatedMovement"),
-            sourceCombatantId: CombatantId,
-            sourceProcedureRef: BattleProcedureExecutionRef,
-            fixedObjectOrSurfaceWithinReach: Schema.Literal(true),
-            altitudeChange: Schema.optionalWith(
-              Schema.Struct({
-                direction: Schema.Literal("up", "down"),
-                distanceFeet: MovementFeet,
-              }),
-              { exact: true },
-            ),
-          }),
-          { exact: true },
-        ),
-      }).pipe(
-        Schema.filter(
-          (value): value is BattleMovementFillValue =>
-            value.brutalStrikeForcefulBlow === undefined
-              ? value.additionalSpeedSegments === undefined
-              : value.additionalSpeedSegments !== undefined &&
-                value.jumpMovementReplacement === undefined &&
-                value.levitatedMovement === undefined &&
-                value.commandApproach === undefined &&
-                value.commandFlee === undefined,
-          {
-            message: () =>
-              "Additional speed segments require Forceful Blow movement, which cannot carry a jump, levitation, or command movement protocol.",
-          },
-        ),
-      ),
+      value: BattleMovementFillValueSchema,
     }),
     Schema.Struct({
       kind: Schema.Literal("levitateAltitudeChange"),

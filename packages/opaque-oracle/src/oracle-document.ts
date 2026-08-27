@@ -1,4 +1,4 @@
-import { JSONSchema, Option, Schema } from "effect";
+import { Either, JSONSchema, Option, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import { stripNestedJsonSchemaIds } from "@dnd/shared/json-schema";
 
@@ -7,17 +7,25 @@ import {
   OracleEvaluationBatchSchema,
   OracleTraceSchema,
 } from "./oracle-case-trace-schema.ts";
+import { decodeWithSchema, type OracleDecodeIssues } from "./oracle-decode.ts";
+import {
+  canonicalizeBatchInput,
+  canonicalizeCaseInput,
+  canonicalizeTraceInput,
+} from "./oracle-input-canonical.ts";
 
 /**
- * Builds a structural document schema from the encoded side of a canonical
- * Effect schema. Semantic refinements are not part of this document boundary;
- * the canonical schema remains responsible for semantic admission.
+ * Builds a structural document schema from the canonical Effect AST. The
+ * encoded and type sides of the Oracle schemas are JSON-shaped at this
+ * boundary; keeping the canonical AST here is important because Effect's
+ * `encodedSchema` erases refinements before their JSON Schema annotations can
+ * be projected. The projector below strips unannotated semantic refinements
+ * while retaining the explicitly documented structural predicates.
  */
 function documentSchema<A, I, R>(
   source: Schema.Schema<A, I, R>,
-): Schema.Schema<unknown> {
-  const encoded = Schema.encodedSchema(source);
-  return Schema.make<unknown>(projectDocumentAst(encoded.ast));
+): Schema.Schema<I> {
+  return Schema.make<I>(projectDocumentAst(source.ast));
 }
 
 /**
@@ -26,8 +34,8 @@ function documentSchema<A, I, R>(
  * are valid in isolation but collide when a document graph is compiled by an
  * independent validator, so only the root metadata is retained here.
  */
-export function documentJsonSchema(
-  schema: Schema.Schema<unknown>,
+export function documentJsonSchema<A, I, R>(
+  schema: Schema.Schema<A, I, R>,
 ): ReturnType<typeof JSONSchema.make> {
   return stripNestedJsonSchemaIds(
     JSONSchema.make(schema, { target: "jsonSchema2020-12" }),
@@ -55,7 +63,15 @@ function projectDocumentAst(root: AST.AST): AST.AST {
         );
       case "Refinement": {
         const projectedFrom = project(ast.from, path);
-        return annotate(projectedFrom, ast.annotations);
+        const jsonSchema = AST.getJSONSchemaAnnotation(ast);
+        if (Option.isNone(jsonSchema)) return projectedFrom;
+        const projected = new AST.Refinement(
+          projectedFrom,
+          ast.filter,
+          ast.annotations,
+        );
+        projectedByAst.set(ast, projected);
+        return projected;
       }
       case "TupleType": {
         const projected = new AST.TupleType(
@@ -207,9 +223,6 @@ function projectDocumentAst(root: AST.AST): AST.AST {
       value.isReadonly,
     );
 
-  const annotate = (ast: AST.AST, annotations: AST.Annotations): AST.AST =>
-    AST.annotations(ast, { ...ast.annotations, ...annotations });
-
   const suspendIdentifier = (ast: AST.Suspend): Option.Option<string> =>
     Option.orElse(AST.getJSONIdentifier(ast), () =>
       AST.getJSONIdentifier(ast.f()),
@@ -241,3 +254,40 @@ export const OracleTraceDocumentJsonSchema = documentJsonSchema(
 export const OracleEvaluationBatchDocumentJsonSchema = documentJsonSchema(
   OracleEvaluationBatchDocumentSchema,
 );
+
+export type OracleCaseDocument = Schema.Schema.Type<
+  typeof OracleCaseDocumentSchema
+>;
+export type OracleTraceDocument = Schema.Schema.Type<
+  typeof OracleTraceDocumentSchema
+>;
+export type OracleEvaluationBatchDocument = Schema.Schema.Type<
+  typeof OracleEvaluationBatchDocumentSchema
+>;
+
+export function decodeOracleCaseDocument(
+  input: unknown,
+): Either.Either<OracleCaseDocument, OracleDecodeIssues> {
+  return decodeWithSchema(
+    OracleCaseDocumentSchema,
+    canonicalizeCaseInput(input),
+  );
+}
+
+export function decodeOracleTraceDocument(
+  input: unknown,
+): Either.Either<OracleTraceDocument, OracleDecodeIssues> {
+  return decodeWithSchema(
+    OracleTraceDocumentSchema,
+    canonicalizeTraceInput(input),
+  );
+}
+
+export function decodeOracleEvaluationBatchDocument(
+  input: unknown,
+): Either.Either<OracleEvaluationBatchDocument, OracleDecodeIssues> {
+  return decodeWithSchema(
+    OracleEvaluationBatchDocumentSchema,
+    canonicalizeBatchInput(input),
+  );
+}

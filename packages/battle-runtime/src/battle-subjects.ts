@@ -663,6 +663,75 @@ export const BattleInterruptSubjectSchema = Schema.Union(
 );
 export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
 
+export const BattleReadyActionSubjectSchema = Schema.Union(
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("dash"),
+    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("disengage"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("dodge"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("helpAttack"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("hide"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("search"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("grapple"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shove"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("escapeGrapple"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("escapeSpellRestraint"),
+    ...RejectRedundantSpellProcedureSourceFields,
+    targetId: CombatantId,
+    effectRef: BattleActiveEffectExecutionRef,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shakeAwakeFromSleep"),
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("action"),
+    actorId: CombatantId,
+    action: Schema.Literal("shakeAwakeFromHypnoticPattern"),
+  }),
+);
+export type BattleReadyActionSubject =
+  typeof BattleReadyActionSubjectSchema.Type;
+
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
 // authored content, provenance, or a complete taxonomy of D&D actions.
@@ -709,32 +778,7 @@ export const BattleSubjectSchema = Schema.Union(
       exact: true,
     }),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("dash"),
-    speedKind: Schema.Literal(...BATTLE_MOVEMENT_SPEED_KINDS),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("disengage"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("dodge"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("helpAttack"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("hide"),
-  }),
+  BattleReadyActionSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
@@ -744,45 +788,7 @@ export const BattleSubjectSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("action"),
     actorId: CombatantId,
-    action: Schema.Literal("search"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
     action: Schema.Literal("ready"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("grapple"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("shove"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("escapeGrapple"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("escapeSpellRestraint"),
-    ...RejectRedundantSpellProcedureSourceFields,
-    targetId: CombatantId,
-    effectRef: BattleActiveEffectExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromSleep"),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("action"),
-    actorId: CombatantId,
-    action: Schema.Literal("shakeAwakeFromHypnoticPattern"),
   }),
   Schema.Union(
     Schema.Struct({
@@ -1231,21 +1237,6 @@ export const BattleSubjectSchema = Schema.Union(
 );
 type BattleSubjectWireValue = typeof BattleSubjectSchema.Type;
 export type BattleSubject = BattleSubjectWireValue;
-
-export type BattleReadyActionSubject = Exclude<
-  Extract<BattleSubject, { readonly tag: "action" }>,
-  { readonly action: "attack" | "multiattack" | "ready" }
->;
-
-export const BattleReadyActionSubjectSchema = BattleSubjectSchema.pipe(
-  Schema.filter(
-    (subject): subject is BattleReadyActionSubject =>
-      subject.tag === "action" &&
-      subject.action !== "attack" &&
-      subject.action !== "multiattack" &&
-      subject.action !== "ready",
-  ),
-);
 
 export const BattleReadyResponseSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("movement") }),
