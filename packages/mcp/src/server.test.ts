@@ -2967,6 +2967,121 @@ describe("MCP server route", () => {
     });
   });
 
+  test("initial Initiative setup preserves roster and runtime admission failures", () => {
+    const unavailableRoot = createMcpPlaySessionRoot();
+    const unavailable = readPayload(
+      handleToolCall(unavailableRoot, "start_battle", {
+        battleId: "battle:initial-initiative-missing-roster-source",
+        initiativeMode: "initialSetup",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_missing_initial_setup",
+            combatantId: "missing-initial-setup-stat-block",
+            initiative: 10,
+            ammunitionStocks: [],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+        companionAdmissions: [],
+      }),
+    );
+    expect(unavailable).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "statBlockSourceUnavailable",
+            ownerPath: ["initialCombatants", 0],
+            statBlockId: "stat_block_missing_initial_setup",
+            combatantId: "missing-initial-setup-stat-block",
+          },
+        ],
+      },
+    });
+    expect(unavailableRoot.sessionStore.battleState).toEqual({ tag: "none" });
+
+    const partiallyAdmittedRoot = createMcpPlaySessionRoot();
+    const partiallyAdmitted = readPayload(
+      handleToolCall(partiallyAdmittedRoot, "start_battle", {
+        battleId: "battle:initial-initiative-partial-roster",
+        initiativeMode: "initialSetup",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "initial-setup-goblin",
+            initiative: 10,
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_missing_initial_setup_partial",
+            combatantId: "missing-partial-stat-block",
+            initiative: 8,
+            ammunitionStocks: [],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+        companionAdmissions: [],
+      }),
+    );
+    expect(partiallyAdmitted).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "statBlockSourceUnavailable",
+            ownerPath: ["initialCombatants", 1],
+            statBlockId: "stat_block_missing_initial_setup_partial",
+            combatantId: "missing-partial-stat-block",
+          },
+        ],
+      },
+    });
+    expect(partiallyAdmittedRoot.sessionStore.battleState).toEqual({
+      tag: "none",
+    });
+
+    const runtimeFailureRoot = createMcpPlaySessionRoot();
+    const runtimeFailure = readPayload(
+      handleToolCall(runtimeFailureRoot, "start_battle", {
+        battleId: "battle:initial-initiative-runtime-failure",
+        initiativeMode: "initialSetup",
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "initial-setup-invalid-ammunition",
+            initiative: 10,
+            ammunitionStocks: [],
+            admissionSource: { kind: "encounterParticipant" },
+          },
+        ],
+        companionAdmissions: [],
+      }),
+    );
+    expect(runtimeFailure).toMatchObject({
+      details: {
+        code: "INVALID_BATTLE_COMBATANTS",
+        issues: [
+          {
+            kind: "battleInitialization",
+            ownerPath: ["initialCombatants", 0],
+            issueTag: "battleStateInitIssue",
+            reason: "ammunitionStockInvalid",
+            combatantId: "initial-setup-invalid-ammunition",
+            ammunition: "arrow",
+          },
+        ],
+      },
+    });
+    expect(runtimeFailureRoot.sessionStore.battleState).toEqual({
+      tag: "none",
+    });
+  });
+
   test("discovers and resolves Fighter Attack fills, then ends the Fighter turn", () => {
     const root = createMcpPlaySessionRoot();
     const draftId = "draft:mcp-fighter-battle-flow";
