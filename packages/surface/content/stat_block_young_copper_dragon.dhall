@@ -8,10 +8,10 @@ in  { challengeRating = 7
         { abilityScores = { str = 19, dex = 12, con = 17, int = 16, wis = 13, cha = 15 }
         , ac = { value = { kind = "literal", value = 17 } }
         , actions =
-            [ T.text 1 "Multiattack" "The dragon makes three Rend attacks. It can replace one attack with a use of Slowing Breath." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Rend" "melee" "str" +7 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 2 10 (Some +4) 15 ] (None Text))
-            , T.execSome 3 (T.save "Acid Breath" "dex" 14 (T.line 40 5) (T.damage "acid" 9 8 (None Integer) 40) { kind = "half_damage" } (None Text)) [ 1 ]
-            , T.text 4 "Slowing Breath" "Constitution Saving Throw: DC 14, each creature in a 30-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn." "unsupported_action_shape"
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The dragon makes three Rend attacks. It can replace one attack with a use of Slowing Breath.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +7, reachFeet = 10, onHit = [ T.damage { damageType = "slashing", dice = 2, dieSize = 10, flat = (Some +4), static = 15 } ] } }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = T.saveArea { name = "Acid Breath", ability = "dex", dc = 14, area = (T.line { lengthFeet = 40, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 9, dieSize = 8, flat = (None Integer), static = 40 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = [ 1 ] }
+            , T.textOnly { procedureOrdinal = 4, name = "Slowing Breath", description = "Constitution Saving Throw: DC 14, each creature in a 30-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.", reason = "unsupported_action_shape" }
             ]
         , alignment = { order = "chaotic", morality = "good" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Draconic" ] } }
@@ -26,6 +26,6 @@ in  { challengeRating = 7
         , skillModifiers = [ { skill = "deception", modifier = 5 }, { skill = "perception", modifier = 7 }, { skill = "stealth", modifier = 4 } ]
         , size = "large"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 40 }, hover = None Bool }, { kind = "climb", feet = { kind = "literal", value = 40 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 80 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) } ]
         }
     }

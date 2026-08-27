@@ -8,14 +8,22 @@ in  { challengeRating = 6
         { abilityScores = { str = 16, dex = 19, con = 18, int = 13, wis = 16, cha = 12 }
         , ac = { value = { kind = "literal", value = 19 } }
         , actions =
-            [ T.text 1 "Multiattack" "The drider makes three attacks, using Foreleg or Poison Burst in any combination." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Foreleg" "melee" "dex" +7 (Some 10) (None T.Range) (None Text) [ T.damage "piercing" 2 8 (Some +4) 13 ] (None Text))
-            , T.exec 3 (T.attack "Poison Burst" "ranged" "wis" +6 (None Natural) (Some { normal = 120, long = 120 }) (None Text) [ T.damage "poison" 3 6 (Some +3) 13 ] (None Text))
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The drider makes three attacks, using Foreleg or Poison Burst in any combination.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Foreleg", attackAbility = "dex", attackBonus = +7, reachFeet = 10, onHit = [ T.damage { damageType = "piercing", dice = 2, dieSize = 8, flat = (Some +4), static = 13 } ] } }
+            , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Poison Burst", attackAbility = "wis", attackBonus = +6, rangeFeet = { normal = 120, long = 120 }, ammunition = (None Text), onHit = [ T.damage { damageType = "poison", dice = 3, dieSize = 6, flat = (Some +3), static = 13 } ] } }
             ]
         , bonusActions =
-            [ T.textSome 1 "Magic of the Spider Queen (Recharge 5–6)" "The drider casts Darkness, Faerie Fire, or Web, requiring no Material components and using Wisdom as the spellcasting ability (spell save DC 14)." "unsupported_spellcasting_restriction" [ 1 ]
+            [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Magic of the Spider Queen (Recharge 5–6)", ability = "wis", spellSaveDc = (Some { kind = "fixed", dc = 14 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = [ T.limited { resourceOrdinals = [ 1 ], spells =
+                      [ -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen, Recharge 5–6: Darkness, Faerie Fire, or Web.
+                        T.spellRef { spellId = "darkness", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      , -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen can cast Faerie Fire.
+                        T.spellRef { spellId = "faerie_fire", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      , -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen can cast Web.
+                        T.spellRef { spellId = "web", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  ] } }
             ]
-        , traits = [ T.trait "Spider Climb" "The drider can climb difficult surfaces, including along ceilings, without needing to make an ability check.", T.trait "Sunlight Sensitivity" "While in sunlight, the drider has Disadvantage on ability checks and attack rolls.", T.trait "Web Walker" "The drider ignores movement restrictions caused by webs, and the drider knows the location of any other creature in contact with the same web." ]
+        , traits = [ T.trait { name = "Spider Climb", description = "The drider can climb difficult surfaces, including along ceilings, without needing to make an ability check.", effectKind = (None Text) }, T.trait { name = "Sunlight Sensitivity", description = "While in sunlight, the drider has Disadvantage on ability checks and attack rolls.", effectKind = (None Text) }, T.trait { name = "Web Walker", description = "The drider ignores movement restrictions caused by webs, and the drider knows the location of any other creature in contact with the same web.", effectKind = (None Text) } ]
         , alignment = { order = "chaotic", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Elvish", "Undercommon" ] } }
         , creatureType = "monstrosity"
@@ -27,6 +35,6 @@ in  { challengeRating = 6
         , skillModifiers = [ { skill = "perception", modifier = 6 }, { skill = "stealth", modifier = 10 } ]
         , size = "large"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "climb", feet = { kind = "literal", value = 30 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) } ]
         }
     }

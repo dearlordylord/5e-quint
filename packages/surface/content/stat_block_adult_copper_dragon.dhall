@@ -8,32 +8,30 @@ in  { challengeRating = 14
         { abilityScores = { str = 23, dex = 12, con = 21, int = 18, wis = 15, cha = 18 }
         , ac = { value = { kind = "literal", value = 18 } }
         , actions =
-            [ T.text 1 "Multiattack" "The dragon makes three Rend attacks. It can replace one attack with a use of (A) Slowing Breath or (B) Spellcasting to cast Mind Spike (level 4 version)." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Rend" "melee" "str" +11 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 2 10 (Some +6) 17, T.damage "acid" 1 8 (None Integer) 4 ] (None Text))
-            , T.execSome 3 (T.save "Acid Breath" "dex" 18 (T.line 60 5) (T.damage "acid" 12 8 (None Integer) 54) { kind = "half_damage" } (None Text)) [ 1 ]
-            , T.text 4 "Slowing Breath" "Constitution Saving Throw: DC 18, each creature in a 60-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn." "unsupported_action_shape"
-            , T.execSome 5
-                (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 17 }) (None { kind : Text, value : Integer }) T.noMaterial
-                  [ T.atWill
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The dragon makes three Rend attacks. It can replace one attack with a use of (A) Slowing Breath or (B) Spellcasting to cast Mind Spike (level 4 version).", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +11, reachFeet = 10, onHit = [ T.damage { damageType = "slashing", dice = 2, dieSize = 10, flat = (Some +6), static = 17 }, T.damage { damageType = "acid", dice = 1, dieSize = 8, flat = (None Integer), static = 4 } ] } }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = T.saveArea { name = "Acid Breath", ability = "dex", dc = 18, area = (T.line { lengthFeet = 60, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 12, dieSize = 8, flat = (None Integer), static = 54 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = [ 1 ] }
+            , T.textOnly { procedureOrdinal = 4, name = "Slowing Breath", description = "Constitution Saving Throw: DC 18, each creature in a 60-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 5, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = [ T.atWill { spells =
                       [ -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Detect Magic.
-                        T.spellRef "detect_magic" (None Natural) (None Natural) (None Text)
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Mind Spike.
-                        T.spellRef "mind_spike" (None Natural) (Some 4) (None Text)
+                        T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 4), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Minor Illusion.
-                        T.spellRef "minor_illusion" (None Natural) (None Natural) (None Text)
+                        T.spellRef { spellId = "minor_illusion", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:379-425 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
-                        T.spellRef "shapechange" (None Natural) (None Natural) (Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell")
-                      ]
-                  , T.limited [ 2 ]
+                        T.spellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = (Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell") }
+                      ] }
+                  , T.limited { resourceOrdinals = [ 2 ], spells =
                       [ -- RAW: Monsters/Monsters-C-D.md:379-425 — 1/Day Each: Greater Restoration.
-                        T.spellRef "greater_restoration" (None Natural) (None Natural) (None Text)
+                        T.spellRef { spellId = "greater_restoration", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:379-425 — 1/Day Each: Major Image.
-                        T.spellRef "major_image" (None Natural) (None Natural) (None Text)
-                      ]
-                  ]) [ 2 ]
+                        T.spellRef { spellId = "major_image", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  ] } }
             ]
-        , legendaryActions = { uses = 3, entries = [ T.text 1 "Giggling Magic" "Charisma Saving Throw: DC 17, one creature the dragon can see within 90 feet. Failure: 24 (7d6) Psychic damage. Until the end of its next turn, the target rolls 1d6 whenever it makes an ability check or attack roll and subtracts the number rolled from the D20 Test. Failure or Success: The dragon can't take this action again until the start of its next turn." "unsupported_action_shape", T.text 2 "Mind Jolt" "The dragon uses Spellcasting to cast Mind Spike (level 4 version). The dragon can't take this action again until the start of its next turn." "unsupported_action_shape", T.text 3 "Pounce" "The dragon moves up to half its Speed, and it makes one Rend attack." "unsupported_action_shape" ] }
-        , traits = [ T.trait "Legendary Resistance (3/Day, or 4/Day in Lair)" "If the dragon fails a saving throw, it can choose to succeed instead." ]
+        , legendaryActions = { uses = 3, entries = [ T.textOnly { procedureOrdinal = 1, name = "Giggling Magic", description = "Charisma Saving Throw: DC 17, one creature the dragon can see within 90 feet. Failure: 24 (7d6) Psychic damage. Until the end of its next turn, the target rolls 1d6 whenever it makes an ability check or attack roll and subtracts the number rolled from the D20 Test. Failure or Success: The dragon can't take this action again until the start of its next turn.", reason = "unsupported_action_shape" }, T.textOnly { procedureOrdinal = 2, name = "Mind Jolt", description = "The dragon uses Spellcasting to cast Mind Spike (level 4 version). The dragon can't take this action again until the start of its next turn.", reason = "unsupported_action_shape" }, T.textOnly { procedureOrdinal = 3, name = "Pounce", description = "The dragon moves up to half its Speed, and it makes one Rend attack.", reason = "unsupported_action_shape" } ] }
+        , traits = [ T.trait { name = "Legendary Resistance (3/Day, or 4/Day in Lair)", description = "If the dragon fails a saving throw, it can choose to succeed instead.", effectKind = (None Text) } ]
         , alignment = { order = "chaotic", morality = "good" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Draconic" ] } }
         , creatureType = "dragon"
@@ -47,6 +45,6 @@ in  { challengeRating = 14
         , skillModifiers = [ { skill = "deception", modifier = 9 }, { skill = "perception", modifier = 12 }, { skill = "stealth", modifier = 6 } ]
         , size = "huge"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 40 }, hover = None Bool }, { kind = "climb", feet = { kind = "literal", value = 40 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 80 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5), T.resource 2 "each" (T.daily 1) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) }, T.resource { ordinal = 2, ownership = "each", limit = (T.daily { uses = 1 }) } ]
         }
     }

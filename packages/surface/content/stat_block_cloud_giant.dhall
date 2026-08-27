@@ -8,36 +8,35 @@ in  { challengeRating = 9
         { abilityScores = { str = 27, dex = 10, con = 22, int = 12, wis = 16, cha = 16 }
         , ac = { value = { kind = "literal", value = 14 } }
         , actions =
-            [ T.text 1 "Multiattack" "The giant makes two attacks, using Thunderous Mace or Thundercloud in any combination. It can replace one attack with a use of Spellcasting to cast Fog Cloud." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Thunderous Mace" "melee" "str" +12 (Some 10) (None T.Range) (None Text) [ T.damage "bludgeoning" 3 8 (Some +8) 21, T.damage "thunder" 2 6 (None Integer) 7 ] (None Text))
-            , T.exec 3
-                (T.attack "Thundercloud" "ranged" "str" +12 (None Natural) (Some { normal = 240, long = 240 }) (None Text)
-                  [ T.damage "thunder" 3 6 (Some +8) 18
-                  , T.applyCondition "incapacitated" "end_of_next_turn"
-                  ]
-                  (None Text))
-            , T.execSome 4
-                (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 15 }) (None { kind : Text, value : Integer }) T.noMaterial
-                  [ T.atWill
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The giant makes two attacks, using Thunderous Mace or Thundercloud in any combination. It can replace one attack with a use of Spellcasting to cast Fog Cloud.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Thunderous Mace", attackAbility = "str", attackBonus = +12, reachFeet = 10, onHit = [ T.damage { damageType = "bludgeoning", dice = 3, dieSize = 8, flat = (Some +8), static = 21 }, T.damage { damageType = "thunder", dice = 2, dieSize = 6, flat = (None Integer), static = 7 } ] } }
+            , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Thundercloud", attackAbility = "str", attackBonus = +12, rangeFeet = { normal = 240, long = 240 }, ammunition = (None Text), onHit = [ T.damage { damageType = "thunder", dice = 3, dieSize = 6, flat = (Some +8), static = 18 }
+                  , T.applyCondition { condition = "incapacitated", duration = "end_of_next_turn" }
+                  ] } }
+            , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 15 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = [ T.atWill { spells =
                       [ -- RAW: Monsters/Monsters-C-D.md:228-261 — At Will: Detect Magic.
-                        T.spellRef "detect_magic" (None Natural) (None Natural) (None Text)
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:228-261 — At Will: Fog Cloud.
-                        T.spellRef "fog_cloud" (None Natural) (None Natural) (None Text)
+                        T.spellRef { spellId = "fog_cloud", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:228-261 — At Will: Light.
-                        T.spellRef "light" (None Natural) (None Natural) (None Text)
-                      ]
-                  , T.limited [ 1 ]
+                        T.spellRef { spellId = "light", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  , T.limited { resourceOrdinals = [ 1 ], spells =
                       [ -- RAW: Monsters/Monsters-C-D.md:228-261 — 1/Day Each: Control Weather.
-                        T.spellRef "control_weather" (None Natural) (None Natural) (None Text)
+                        T.spellRef { spellId = "control_weather", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:228-261 — 1/Day Each: Gaseous Form.
-                        T.spellRef "gaseous_form" (None Natural) (None Natural) (None Text)
+                        T.spellRef { spellId = "gaseous_form", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
                       , -- RAW: Monsters/Monsters-C-D.md:228-261 — 1/Day Each: Telekinesis.
-                        T.spellRef "telekinesis" (None Natural) (None Natural) (None Text)
-                      ]
-                  ]) [ 1 ]
+                        T.spellRef { spellId = "telekinesis", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  ] } }
             ]
         , bonusActions =
-            [ T.text 1 "Misty Step" "The giant casts the Misty Step spell, using the same spellcasting ability as Spellcasting." "unsupported_spellcasting_restriction"
+            [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Misty Step", ability = "cha", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.spellDefinitionComponents, groups = [ T.atWill { spells =
+                      [ -- RAW: Monsters/Monsters-C-D.md:228-261 — Misty Step, same spellcasting ability as Spellcasting.
+                        T.spellRef { spellId = "misty_step", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  ] } }
             ]
         , alignment = { order = "neutral", morality = "neutral" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Giant" ] } }
@@ -49,6 +48,6 @@ in  { challengeRating = 9
         , skillModifiers = [ { skill = "insight", modifier = 7 }, { skill = "perception", modifier = 11 } ]
         , size = "huge"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 40 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 20 }, hover = Some True } ]
-        , resources = [ T.resource 1 "each" (T.daily 1) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "each", limit = (T.daily { uses = 1 }) } ]
         }
     }

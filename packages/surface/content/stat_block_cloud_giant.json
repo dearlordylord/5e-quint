@@ -176,10 +176,7 @@
         },
         "procedureOrdinal": 4,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1
-          ]
+          "kind": "none"
         }
       }
     ],
@@ -189,11 +186,26 @@
     },
     "bonusActions": [
       {
-        "description": "The giant casts the Misty Step spell, using the same spellcasting ability as Spellcasting.",
-        "kind": "textOnly",
-        "name": "Misty Step",
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "misty_step"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Misty Step"
+        },
         "procedureOrdinal": 1,
-        "reason": "unsupported_spellcasting_restriction",
         "resourceRefs": {
           "kind": "none"
         }

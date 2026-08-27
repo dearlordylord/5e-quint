@@ -93,16 +93,37 @@
         }
       },
       {
-        "description": "The cloaker casts the Mirror Image spell, requiring no spell components and using Wisdom as the spellcasting ability. The spell ends early if the cloaker starts or ends its turn in Bright Light.",
-        "kind": "textOnly",
-        "name": "Phantasms",
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "components": {
+            "m": false,
+            "s": false,
+            "v": false
+          },
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "restriction": "The spell ends early if the cloaker starts or ends its turn in Bright Light",
+                  "spellId": "mirror_image"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Phantasms"
+        },
         "procedureOrdinal": 2,
-        "reason": "unsupported_action_shape",
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1
-          ]
+          "kind": "none"
         }
       }
     ],

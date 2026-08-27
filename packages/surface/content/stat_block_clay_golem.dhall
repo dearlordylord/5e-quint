@@ -8,13 +8,13 @@ in  { challengeRating = 9
         { abilityScores = { str = 20, dex = 9, con = 18, int = 3, wis = 8, cha = 1 }
         , ac = { value = { kind = "literal", value = 14 } }
         , actions =
-            [ T.text 1 "Multiattack" "The golem makes two Slam attacks, or it makes three Slam attacks if it used Hasten this turn." "unsupported_action_shape"
-            , T.text 2 "Slam" "Melee Attack Roll: +9, reach 5 ft. Hit: 10 (1d10 + 5) Bludgeoning damage plus 6 (1d12) Acid damage, and the target's Hit Point maximum decreases by an amount equal to the Acid damage taken." "unsupported_action_shape"
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The golem makes two Slam attacks, or it makes three Slam attacks if it used Hasten this turn.", reason = "unsupported_action_shape" }
+            , T.textOnly { procedureOrdinal = 2, name = "Slam", description = "Melee Attack Roll: +9, reach 5 ft. Hit: 10 (1d10 + 5) Bludgeoning damage plus 6 (1d12) Acid damage, and the target's Hit Point maximum decreases by an amount equal to the Acid damage taken.", reason = "unsupported_action_shape" }
             ]
         , bonusActions =
-            [ T.textSome 1 "Hasten" "The golem takes the Dash and Disengage actions." "unsupported_action_shape" [ 1 ]
+            [ T.resourceTextOnly { procedureOrdinal = 1, name = "Hasten", description = "The golem takes the Dash and Disengage actions.", reason = "unsupported_action_shape", resourceOrdinals = [ 1 ] }
             ]
-        , traits = [ T.trait "Acid Absorption" "Whenever the golem is subjected to Acid damage, it takes no damage and instead regains a number of Hit Points equal to the Acid damage dealt.", T.trait "Berserk" "Whenever the golem starts its turn Bloodied, roll 1d6. On a 6, the golem goes berserk. On each of its turns while berserk, the golem attacks the nearest creature it can see. If no creature is near enough to move to and attack, the golem attacks an object. Once the golem goes berserk, it continues to be berserk until it is destroyed or it is no longer Bloodied.", T.trait "Immutable Form" "The golem can't shape-shift.", T.trait "Magic Resistance" "The golem has Advantage on saving throws against spells and other magical effects." ]
+        , traits = [ T.trait { name = "Acid Absorption", description = "Whenever the golem is subjected to Acid damage, it takes no damage and instead regains a number of Hit Points equal to the Acid damage dealt.", effectKind = (None Text) }, T.trait { name = "Berserk", description = "Whenever the golem starts its turn Bloodied, roll 1d6. On a 6, the golem goes berserk. On each of its turns while berserk, the golem attacks the nearest creature it can see. If no creature is near enough to move to and attack, the golem attacks an object. Once the golem goes berserk, it continues to be berserk until it is destroyed or it is no longer Bloodied.", effectKind = (None Text) }, T.trait { name = "Immutable Form", description = "The golem can't shape-shift.", effectKind = (None Text) }, T.trait { name = "Magic Resistance", description = "The golem has Advantage on saving throws against spells and other magical effects.", effectKind = (None Text) } ]
         , alignment = "unaligned"
         , communication = { kind = "spoken_and_understood", languages = { kind = "named_plus_other_languages", languages = [ "Common" ], additionalLanguages = 1 } }
         , creatureType = "construct"
@@ -27,6 +27,6 @@ in  { challengeRating = 9
         , senses = [ { kind = "darkvision", rangeFeet = 60, qualifier = None Text } ]
         , size = "large"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) } ]
         }
     }

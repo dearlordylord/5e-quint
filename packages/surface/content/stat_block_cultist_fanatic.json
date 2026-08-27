@@ -69,17 +69,67 @@
         }
       },
       {
-        "description": "The cultist casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12, +4 to hit with spell attacks): At Will: Light, Thaumaturgy. 2/Day: Command. 1/Day: Hold Person.",
-        "kind": "textOnly",
-        "name": "Spellcasting",
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "light"
+                },
+                {
+                  "spellId": "thaumaturgy"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "command"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "hold_person"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellAttackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "spellSaveDc": {
+            "dc": 12,
+            "kind": "fixed"
+          }
+        },
         "procedureOrdinal": 2,
-        "reason": "unsupported_spellcasting_restriction",
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1,
-            2
-          ]
+          "kind": "none"
         }
       }
     ],
@@ -89,16 +139,35 @@
     },
     "bonusActions": [
       {
-        "description": "The cultist casts the Spiritual Weapon spell, using the same spellcasting ability as Spellcasting.",
-        "kind": "textOnly",
-        "name": "Spiritual Weapon (2/Day)",
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  3
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "spiritual_weapon"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spiritual Weapon (2/Day)",
+          "spellAttackBonus": {
+            "kind": "literal",
+            "value": 4
+          }
+        },
         "procedureOrdinal": 1,
-        "reason": "unsupported_spellcasting_restriction",
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            3
-          ]
+          "kind": "none"
         }
       }
     ],

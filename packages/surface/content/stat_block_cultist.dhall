@@ -8,7 +8,7 @@ in  { challengeRating = 0.125
         { abilityScores = { str = 11, dex = 12, con = 10, int = 10, wis = 11, cha = 10 }
         , ac = { value = { kind = "literal", value = 12 } }
         , actions =
-            [ T.exec 1 (T.attack "Ritual Sickle" "melee" "dex" +3 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 4 (Some +1) 3, T.staticDamage "necrotic" 1 ] (None Text))
+            [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Ritual Sickle", attackAbility = "dex", attackBonus = +3, reachFeet = 5, onHit = [ T.damage { damageType = "slashing", dice = 1, dieSize = 4, flat = (Some +1), static = 3 }, T.staticDamage { damageType = "necrotic", static = 1 } ] } }
             ]
         , alignment = { order = "neutral", morality = "neutral" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common" ] } }

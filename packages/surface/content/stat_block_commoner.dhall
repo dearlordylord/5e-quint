@@ -8,9 +8,9 @@ in  { challengeRating = 0
         { abilityScores = { str = 10, dex = 10, con = 10, int = 10, wis = 10, cha = 10 }
         , ac = { value = { kind = "literal", value = 10 } }
         , actions =
-            [ T.exec 1 (T.attack "Club" "melee" "str" +2 (Some 5) (None T.Range) (None Text) [ T.damage "bludgeoning" 1 4 (None Integer) 2 ] (None Text))
+            [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Club", attackAbility = "str", attackBonus = +2, reachFeet = 5, onHit = [ T.damage { damageType = "bludgeoning", dice = 1, dieSize = 4, flat = (None Integer), static = 2 } ] } }
             ]
-        , traits = [ T.trait "Training" "The commoner has proficiency in one skill of the GM's choice and has Advantage whenever it makes an ability check using that skill." ]
+        , traits = [ T.trait { name = "Training", description = "The commoner has proficiency in one skill of the GM's choice and has Advantage whenever it makes an ability check using that skill.", effectKind = (None Text) } ]
         , alignment = { order = "neutral", morality = "neutral" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common" ] } }
         , creatureType = "humanoid"

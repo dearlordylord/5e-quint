@@ -8,11 +8,29 @@ in  { challengeRating = 2
         { abilityScores = { str = 11, dex = 14, con = 12, int = 10, wis = 14, cha = 13 }
         , ac = { value = { kind = "literal", value = 13 } }
         , actions =
-            [ T.exec 1 (T.attack "Pact Blade" "melee" "dex" +4 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 8 (Some +2) 6, T.damage "necrotic" 2 6 (None Integer) 7 ] (None Text))
-            , T.textSome 2 "Spellcasting" "The cultist casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12, +4 to hit with spell attacks): At Will: Light, Thaumaturgy. 2/Day: Command. 1/Day: Hold Person." "unsupported_spellcasting_restriction" [ 1, 2 ]
+            [ T.executable { procedureOrdinal = 1, procedure = T.meleeAttack { name = "Pact Blade", attackAbility = "dex", attackBonus = +4, reachFeet = 5, onHit = [ T.damage { damageType = "slashing", dice = 1, dieSize = 8, flat = (Some +2), static = 6 }, T.damage { damageType = "necrotic", dice = 2, dieSize = 6, flat = (None Integer), static = 7 } ] } }
+            , T.executable { procedureOrdinal = 2, procedure = T.spellcasting { name = "Spellcasting", ability = "wis", spellSaveDc = (Some { kind = "fixed", dc = 12 }), spellAttackBonus = (Some { kind = "literal", value = +4 }), components = T.spellDefinitionComponents, groups = [ T.atWill { spells =
+                      [ -- RAW: Monsters/Monsters-C-D.md:577-608 — At Will: Light.
+                        T.spellRef { spellId = "light", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      , -- RAW: Monsters/Monsters-C-D.md:577-608 — At Will: Thaumaturgy.
+                        T.spellRef { spellId = "thaumaturgy", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  , T.limited { resourceOrdinals = [ 1 ], spells =
+                      [ -- RAW: Monsters/Monsters-C-D.md:577-608 — 2/Day: Command.
+                        T.spellRef { spellId = "command", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  , T.limited { resourceOrdinals = [ 2 ], spells =
+                      [ -- RAW: Monsters/Monsters-C-D.md:577-608 — 1/Day: Hold Person.
+                        T.spellRef { spellId = "hold_person", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  ] } }
             ]
         , bonusActions =
-            [ T.textSome 1 "Spiritual Weapon (2/Day)" "The cultist casts the Spiritual Weapon spell, using the same spellcasting ability as Spellcasting." "unsupported_spellcasting_restriction" [ 3 ]
+            [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Spiritual Weapon (2/Day)", ability = "wis", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (Some { kind = "literal", value = +4 }), components = T.spellDefinitionComponents, groups = [ T.limited { resourceOrdinals = [ 3 ], spells =
+                      [ -- RAW: Monsters/Monsters-C-D.md:577-608 — Spiritual Weapon, 2/Day, same spellcasting ability as Spellcasting.
+                        T.spellRef { spellId = "spiritual_weapon", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                      ] }
+                  ] } }
             ]
         , alignment = { order = "neutral", morality = "neutral" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common" ] } }
@@ -25,6 +43,6 @@ in  { challengeRating = 2
         , skillModifiers = [ { skill = "deception", modifier = 3 }, { skill = "persuasion", modifier = 3 }, { skill = "religion", modifier = 2 } ]
         , size = { kind = "alternatives", options = [ "medium", "small" ] }
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.daily 2), T.resource 2 "shared" (T.daily 1), T.resource 3 "shared" (T.daily 2) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.daily { uses = 2 }) }, T.resource { ordinal = 2, ownership = "shared", limit = (T.daily { uses = 1 }) }, T.resource { ordinal = 3, ownership = "shared", limit = (T.daily { uses = 2 }) } ]
         }
     }

@@ -114,17 +114,72 @@
         }
       },
       {
-        "description": "The druid casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 13): At Will: Druidcraft, Speak with Animals. 2/Day Each: Entangle, Thunderwave. 1/Day Each: Animal Messenger, Longstrider, Moonbeam.",
-        "kind": "textOnly",
-        "name": "Spellcasting",
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "druidcraft"
+                },
+                {
+                  "spellId": "speak_with_animals"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "entangle"
+                },
+                {
+                  "spellId": "thunderwave"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "animal_messenger"
+                },
+                {
+                  "spellId": "longstrider"
+                },
+                {
+                  "spellId": "moonbeam"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 13,
+            "kind": "fixed"
+          }
+        },
         "procedureOrdinal": 4,
-        "reason": "unsupported_spellcasting_restriction",
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1,
-            2
-          ]
+          "kind": "none"
         }
       }
     ],

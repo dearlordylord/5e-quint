@@ -8,9 +8,9 @@ in  { challengeRating = 3
         { abilityScores = { str = 14, dex = 14, con = 11, int = 5, wis = 10, cha = 4 }
         , ac = { value = { kind = "literal", value = 12 } }
         , actions =
-            [ T.text 1 "Swarm of Grasping Hands" "Melee Attack Roll: +4, reach 5 ft. Hit: 20 (4d8 + 2) Necrotic damage, or 11 (2d8 + 2) Necrotic damage if the swarm is Bloodied. If the target is a Medium or smaller creature, it has the Prone condition." "unsupported_action_shape"
+            [ T.textOnly { procedureOrdinal = 1, name = "Swarm of Grasping Hands", description = "Melee Attack Roll: +4, reach 5 ft. Hit: 20 (4d8 + 2) Necrotic damage, or 11 (2d8 + 2) Necrotic damage if the swarm is Bloodied. If the target is a Medium or smaller creature, it has the Prone condition.", reason = "unsupported_action_shape" }
             ]
-        , traits = [ T.trait "Swarm" "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny creature. The swarm can't regain Hit Points or gain Temporary Hit Points." ]
+        , traits = [ T.trait { name = "Swarm", description = "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny creature. The swarm can't regain Hit Points or gain Temporary Hit Points.", effectKind = (None Text) } ]
         , alignment = { order = "neutral", morality = "evil" }
         , communication = { kind = "understood_but_cannot_speak", languages = { kind = "named", languages = [ "Common" ] } }
         , creatureType = "undead"

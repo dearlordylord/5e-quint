@@ -162,6 +162,7 @@
               },
               "spells": [
                 {
+                  "restriction": "can create wine instead of water",
                   "spellId": "create_food_and_water"
                 },
                 {
@@ -208,11 +209,7 @@
         },
         "procedureOrdinal": 5,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1,
-            2
-          ]
+          "kind": "none"
         }
       }
     ],

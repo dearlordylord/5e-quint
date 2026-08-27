@@ -13,51 +13,52 @@ let Effect : Type = T.Effect
 let defaultAmount : Amount = T.defaultDiceAmount
 let defaultEffect : Effect = T.defaultEffect
 
-let damage : Text -> Natural -> Natural -> Optional Integer -> Natural -> Effect =
-      λ(damageType : Text) ->
-      λ(dice : Natural) ->
-      λ(dieSize : Natural) ->
-      λ(flat : Optional Integer) ->
-      λ(static : Natural) ->
+let DamageInput : Type =
+      { damageType : Text
+      , dice : Natural
+      , dieSize : Natural
+      , flat : Optional Integer
+      , static : Natural
+      }
+
+let damage : DamageInput -> Effect =
+      λ(input : DamageInput) ->
         defaultEffect
         //  { amount = Some
                 (defaultAmount
                  // { kind = "fixed"
-                    , expr = Some { dice = dice, dieSize = dieSize, flat = flat }
-                    , static = Some static
+                    , expr = Some { dice = input.dice, dieSize = input.dieSize, flat = input.flat }
+                    , static = Some input.static
                     })
-            , damageType = Some damageType
+            , damageType = Some input.damageType
             , kind = "damage"
             }
 
-let staticDamage : Text -> Natural -> Effect =
-      λ(damageType : Text) ->
-      λ(static : Natural) ->
+let StaticDamageInput : Type = { damageType : Text, static : Natural }
+
+let staticDamage : StaticDamageInput -> Effect =
+      λ(input : StaticDamageInput) ->
         defaultEffect
         //  { amount = Some
                 (defaultAmount
                  // { kind = "fixed"
                     , expr = None DiceExpr
-                    , static = Some static
+                    , static = Some input.static
                     })
-            , damageType = Some damageType
+            , damageType = Some input.damageType
             , kind = "damage"
             }
 
-let advantageDamage : Text -> Natural -> Natural -> Optional Integer -> Natural -> Effect =
-      λ(damageType : Text) ->
-      λ(dice : Natural) ->
-      λ(dieSize : Natural) ->
-      λ(flat : Optional Integer) ->
-      λ(static : Natural) ->
+let advantageDamage : DamageInput -> Effect =
+      λ(input : DamageInput) ->
         defaultEffect
         //  { amount = Some
                 (defaultAmount
                  // { kind = "fixed"
-                    , expr = Some { dice = dice, dieSize = dieSize, flat = flat }
-                    , static = Some static
+                    , expr = Some { dice = input.dice, dieSize = input.dieSize, flat = input.flat }
+                    , static = Some input.static
                     })
-            , damageType = Some damageType
+            , damageType = Some input.damageType
             , kind = "conditional_bonus_damage"
             , when = Some
                 { kind = "attack_roll_had_advantage"
@@ -65,44 +66,20 @@ let advantageDamage : Text -> Natural -> Natural -> Optional Integer -> Natural 
                 }
             }
 
-let conditionalDamage : List Text -> Text -> Natural -> Natural -> Optional Integer -> Natural -> Effect =
-      λ(types : List Text) ->
-      λ(damageType : Text) ->
-      λ(dice : Natural) ->
-      λ(dieSize : Natural) ->
-      λ(flat : Optional Integer) ->
-      λ(static : Natural) ->
+let applyCondition : { condition : Text, duration : Text } -> Effect =
+      λ(input : { condition : Text, duration : Text }) ->
         defaultEffect
-        //  { amount = Some
-                (defaultAmount
-                 // { kind = "fixed"
-                    , expr = Some { dice = dice, dieSize = dieSize, flat = flat }
-                    , static = Some static
-                    })
-            , damageType = Some damageType
-            , kind = "conditional_bonus_damage"
-            , when = Some
-                { kind = "target_creature_type"
-                , types = Some types
-                }
-            }
-
-let applyCondition : Text -> Text -> Effect =
-      λ(condition : Text) ->
-      λ(duration : Text) ->
-        defaultEffect
-        //  { condition = Some condition
-            , duration = Some duration
+        //  { condition = Some input.condition
+            , duration = Some input.duration
             , kind = "apply_condition"
             }
 
-let conditionIfSize : Text -> Text -> Effect =
-      λ(condition : Text) ->
-      λ(maxCreatureSize : Text) ->
+let conditionIfSize : { condition : Text, maxCreatureSize : Text } -> Effect =
+      λ(input : { condition : Text, maxCreatureSize : Text }) ->
         defaultEffect
-        //  { condition = Some condition
+        //  { condition = Some input.condition
             , kind = "apply_condition_if_target_size_at_most"
-            , maxCreatureSize = Some maxCreatureSize
+            , maxCreatureSize = Some input.maxCreatureSize
             }
 
 let Range : Type = { normal : Natural, long : Natural }
@@ -114,29 +91,20 @@ let Area : Type =
       , widthFeet : Optional Natural
       }
 
-let cone : Natural -> Area =
-      λ(lengthFeet : Natural) ->
+let cone : { lengthFeet : Natural } -> Area =
+      λ(input : { lengthFeet : Natural }) ->
         { kind = "cone"
-        , lengthFeet = Some lengthFeet
+        , lengthFeet = Some input.lengthFeet
         , radiusFeet = None Natural
         , widthFeet = None Natural
         }
 
-let line : Natural -> Natural -> Area =
-      λ(lengthFeet : Natural) ->
-      λ(widthFeet : Natural) ->
+let line : { lengthFeet : Natural, widthFeet : Natural } -> Area =
+      λ(input : { lengthFeet : Natural, widthFeet : Natural }) ->
         { kind = "line"
-        , lengthFeet = Some lengthFeet
+        , lengthFeet = Some input.lengthFeet
         , radiusFeet = None Natural
-        , widthFeet = Some widthFeet
-        }
-
-let emanation : Natural -> Area =
-      λ(radiusFeet : Natural) ->
-        { kind = "emanation"
-        , lengthFeet = None Natural
-        , radiusFeet = Some radiusFeet
-        , widthFeet = None Natural
+        , widthFeet = Some input.widthFeet
         }
 
 let ResourceRefs : Type =
@@ -158,20 +126,20 @@ let ResourceLimit : Type =
       , uses : Optional Natural
       }
 
-let recharge : Natural -> ResourceLimit =
-      λ(minimumRoll : Natural) ->
+let recharge : { minimumRoll : Natural } -> ResourceLimit =
+      λ(input : { minimumRoll : Natural }) ->
         { kind = "recharge"
-        , minimumRoll = Some minimumRoll
+        , minimumRoll = Some input.minimumRoll
         , rest = None Text
         , uses = None Natural
         }
 
-let daily : Natural -> ResourceLimit =
-      λ(uses : Natural) ->
+let daily : { uses : Natural } -> ResourceLimit =
+      λ(input : { uses : Natural }) ->
         { kind = "daily"
         , minimumRoll = None Natural
         , rest = None Text
-        , uses = Some uses
+        , uses = Some input.uses
         }
 
 let rest : ResourceLimit =
@@ -181,12 +149,10 @@ let rest : ResourceLimit =
       , uses = None Natural
       }
 
-let resource : Natural -> Text -> ResourceLimit ->
-      { ordinal : Natural, ownership : Text, limit : ResourceLimit } =
-      λ(ordinal : Natural) ->
-      λ(ownership : Text) ->
-      λ(limit : ResourceLimit) ->
-        { ordinal = ordinal, ownership = ownership, limit = limit }
+let Resource : Type =
+      { ordinal : Natural, ownership : Text, limit : ResourceLimit }
+
+let resource : Resource -> Resource = λ(input : Resource) -> input
 
 let SpellRef : Type =
       { spellId : Text
@@ -195,16 +161,7 @@ let SpellRef : Type =
       , restriction : Optional Text
       }
 
-let spellRef : Text -> Optional Natural -> Optional Natural -> Optional Text -> SpellRef =
-      λ(spellId : Text) ->
-      λ(count : Optional Natural) ->
-      λ(castAtLevel : Optional Natural) ->
-      λ(restriction : Optional Text) ->
-        { spellId = spellId
-        , count = count
-        , castAtLevel = castAtLevel
-        , restriction = restriction
-        }
+let spellRef : SpellRef -> SpellRef = λ(reference : SpellRef) -> reference
 
 let Group : Type =
       { kind : Text
@@ -212,18 +169,24 @@ let Group : Type =
       , spells : List SpellRef
       }
 
-let atWill : List SpellRef -> Group =
-      λ(spells : List SpellRef) ->
-        { kind = "at_will", resourceRefs = noneRefs, spells = spells }
+let atWill : { spells : List SpellRef } -> Group =
+      λ(input : { spells : List SpellRef }) ->
+        { kind = "at_will", resourceRefs = noneRefs, spells = input.spells }
 
-let limited : List Natural -> List SpellRef -> Group =
-      λ(ordinals : List Natural) ->
-      λ(spells : List SpellRef) ->
-        { kind = "limited", resourceRefs = someRefs ordinals, spells = spells }
+let LimitedSpells : Type =
+      { resourceOrdinals : List Natural, spells : List SpellRef }
+
+let limited : LimitedSpells -> Group =
+      λ(input : LimitedSpells) ->
+        { kind = "limited"
+        , resourceRefs = someRefs input.resourceOrdinals
+        , spells = input.spells
+        }
 
 let Components : Type = { v : Bool, s : Bool, m : Bool }
-let noComponents : Components = { v = False, s = False, m = False }
-let noMaterial : Components = { v = True, s = True, m = False }
+let spellDefinitionComponents : Optional Components = None Components
+let noComponents : Optional Components = Some { v = False, s = False, m = False }
+let noMaterialComponents : Optional Components = Some { v = True, s = True, m = False }
 
 let Dispatch : Type =
       { count : { kind : Text, value : Integer }
@@ -251,7 +214,6 @@ let Procedure : Type =
       , reachFeet : Optional Natural
       , spellAttackBonus : Optional { kind : Text, value : Integer }
       , spellSaveDc : Optional { kind : Text, dc : Natural }
-      , description : Optional Text
       }
 
 let defaultProcedure : Procedure =
@@ -275,75 +237,100 @@ let defaultProcedure : Procedure =
       , reachFeet = None Natural
       , spellAttackBonus = None { kind : Text, value : Integer }
       , spellSaveDc = None { kind : Text, dc : Natural }
-      , description = None Text
       }
 
-let attack : Text -> Text -> Text -> Integer -> Optional Natural -> Optional Range -> Optional Text -> List Effect -> Optional Text -> Procedure =
-      λ(name : Text) ->
-      λ(attackType : Text) ->
-      λ(attackAbility : Text) ->
-      λ(attackBonus : Integer) ->
-      λ(reachFeet : Optional Natural) ->
-      λ(rangeFeet : Optional Range) ->
-      λ(ammunition : Optional Text) ->
-      λ(onHit : List Effect) ->
-      λ(description : Optional Text) ->
+let MeleeAttack : Type =
+      { name : Text
+      , attackAbility : Text
+      , attackBonus : Integer
+      , reachFeet : Natural
+      , onHit : List Effect
+      }
+
+let meleeAttack : MeleeAttack -> Procedure =
+      λ(input : MeleeAttack) ->
         defaultProcedure
-        //  { ammunition = ammunition
-            , attackAbility = Some attackAbility
-            , attackBonus = Some { kind = "literal", value = attackBonus }
-            , attackType = Some attackType
+        //  { attackAbility = Some input.attackAbility
+            , attackBonus = Some { kind = "literal", value = input.attackBonus }
+            , attackType = Some "melee"
             , kind = "attack_roll"
-            , name = name
-            , onHit = Some onHit
-            , rangeFeet = rangeFeet
-            , reachFeet = reachFeet
-            , description = description
+            , name = input.name
+            , onHit = Some input.onHit
+            , reachFeet = Some input.reachFeet
             }
 
-let save : Text -> Text -> Natural -> Area -> Effect -> { kind : Text } -> Optional Text -> Procedure =
-      λ(name : Text) ->
-      λ(ability : Text) ->
-      λ(dc : Natural) ->
-      λ(area : Area) ->
-      λ(onFail : Effect) ->
-      λ(onSuccess : { kind : Text }) ->
-      λ(description : Optional Text) ->
+let RangedAttack : Type =
+      { name : Text
+      , attackAbility : Text
+      , attackBonus : Integer
+      , rangeFeet : Range
+      , ammunition : Optional Text
+      , onHit : List Effect
+      }
+
+let rangedAttack : RangedAttack -> Procedure =
+      λ(input : RangedAttack) ->
         defaultProcedure
-        //  { ability = Some ability
-            , area = Some area
-            , dc = Some { kind = "fixed", dc = dc }
+        //  { ammunition = input.ammunition
+            , attackAbility = Some input.attackAbility
+            , attackBonus = Some { kind = "literal", value = input.attackBonus }
+            , attackType = Some "ranged"
+            , kind = "attack_roll"
+            , name = input.name
+            , onHit = Some input.onHit
+            , rangeFeet = Some input.rangeFeet
+            }
+
+let SaveArea : Type =
+      { name : Text
+      , ability : Text
+      , dc : Natural
+      , area : Area
+      , onFail : Effect
+      , onSuccess : { kind : Text }
+      }
+
+let saveArea : SaveArea -> Procedure =
+      λ(input : SaveArea) ->
+        defaultProcedure
+        //  { ability = Some input.ability
+            , area = Some input.area
+            , dc = Some { kind = "fixed", dc = input.dc }
             , kind = "save"
-            , name = name
-            , onFail = Some onFail
-            , onSuccess = Some onSuccess
-            , description = description
+            , name = input.name
+            , onFail = Some input.onFail
+            , onSuccess = Some input.onSuccess
             }
 
-let multiattack : Text -> List Dispatch -> Procedure =
-      λ(name : Text) ->
-      λ(dispatches : List Dispatch) ->
+let Multiattack : Type = { name : Text, dispatches : List Dispatch }
+
+let multiattack : Multiattack -> Procedure =
+      λ(input : Multiattack) ->
         defaultProcedure
-        //  { dispatches = Some dispatches
+        //  { dispatches = Some input.dispatches
             , kind = "multiattack"
-            , name = name
+            , name = input.name
             }
 
-let spellcasting : Text -> Text -> Optional { kind : Text, dc : Natural } -> Optional { kind : Text, value : Integer } -> Components -> List Group -> Procedure =
-      λ(name : Text) ->
-      λ(ability : Text) ->
-      λ(spellSaveDc : Optional { kind : Text, dc : Natural }) ->
-      λ(spellAttackBonus : Optional { kind : Text, value : Integer }) ->
-      λ(components : Components) ->
-      λ(groups : List Group) ->
+let Spellcasting : Type =
+      { name : Text
+      , ability : Text
+      , spellSaveDc : Optional { kind : Text, dc : Natural }
+      , spellAttackBonus : Optional { kind : Text, value : Integer }
+      , components : Optional Components
+      , groups : List Group
+      }
+
+let spellcasting : Spellcasting -> Procedure =
+      λ(input : Spellcasting) ->
         defaultProcedure
-        //  { ability = Some ability
-            , components = Some components
-            , groups = Some groups
+        //  { ability = Some input.ability
+            , components = input.components
+            , groups = Some input.groups
             , kind = "spellcasting"
-            , name = name
-            , spellAttackBonus = spellAttackBonus
-            , spellSaveDc = spellSaveDc
+            , name = input.name
+            , spellAttackBonus = input.spellAttackBonus
+            , spellSaveDc = input.spellSaveDc
             }
 
 let Entry : Type =
@@ -356,68 +343,72 @@ let Entry : Type =
       , resourceRefs : ResourceRefs
       }
 
-let defaultAction : Entry =
-      { description = None Text
-      , kind = ""
-      , name = None Text
-      , procedure = None Procedure
-      , procedureOrdinal = 0
-      , reason = None Text
-      , resourceRefs = noneRefs
+let Executable : Type =
+      { procedureOrdinal : Natural, procedure : Procedure }
+
+let executable : Executable -> Entry =
+      λ(input : Executable) ->
+        { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some input.procedure
+        , procedureOrdinal = input.procedureOrdinal
+        , reason = None Text
+        , resourceRefs = noneRefs
+        }
+
+let ResourceExecutable : Type =
+      { procedureOrdinal : Natural
+      , procedure : Procedure
+      , resourceOrdinals : List Natural
       }
 
-let exec : Natural -> Procedure -> Entry =
-      λ(procedureOrdinal : Natural) ->
-      λ(procedure : Procedure) ->
+let resourceExecutable : ResourceExecutable -> Entry =
+      λ(input : ResourceExecutable) ->
         { description = None Text
         , kind = "executable"
         , name = None Text
-        , procedure = Some procedure
-        , procedureOrdinal = procedureOrdinal
+        , procedure = Some input.procedure
+        , procedureOrdinal = input.procedureOrdinal
         , reason = None Text
+        , resourceRefs = someRefs input.resourceOrdinals
+        }
+
+let TextOnly : Type =
+      { procedureOrdinal : Natural
+      , name : Text
+      , description : Text
+      , reason : Text
+      }
+
+let textOnly : TextOnly -> Entry =
+      λ(input : TextOnly) ->
+        { description = Some input.description
+        , kind = "textOnly"
+        , name = Some input.name
+        , procedure = None Procedure
+        , procedureOrdinal = input.procedureOrdinal
+        , reason = Some input.reason
         , resourceRefs = noneRefs
         }
 
-let execSome : Natural -> Procedure -> List Natural -> Entry =
-      λ(procedureOrdinal : Natural) ->
-      λ(procedure : Procedure) ->
-      λ(ordinals : List Natural) ->
-        { description = None Text
-        , kind = "executable"
-        , name = None Text
-        , procedure = Some procedure
-        , procedureOrdinal = procedureOrdinal
-        , reason = None Text
-        , resourceRefs = someRefs ordinals
-        }
+let ResourceTextOnly : Type =
+      { procedureOrdinal : Natural
+      , name : Text
+      , description : Text
+      , reason : Text
+      , resourceOrdinals : List Natural
+      }
 
-let text : Natural -> Text -> Text -> Text -> Entry =
-      λ(procedureOrdinal : Natural) ->
-      λ(name : Text) ->
-      λ(description : Text) ->
-      λ(reason : Text) ->
-        { description = Some description
+let resourceTextOnly : ResourceTextOnly -> Entry =
+      λ(input : ResourceTextOnly) ->
+        { description = Some input.description
         , kind = "textOnly"
-        , name = Some name
+        , name = Some input.name
         , procedure = None Procedure
-        , procedureOrdinal = procedureOrdinal
-        , reason = Some reason
-        , resourceRefs = noneRefs
-        }
-
-let textSome : Natural -> Text -> Text -> Text -> List Natural -> Entry =
-      λ(procedureOrdinal : Natural) ->
-      λ(name : Text) ->
-      λ(description : Text) ->
-      λ(reason : Text) ->
-      λ(ordinals : List Natural) ->
-        { description = Some description
-        , kind = "textOnly"
-        , name = Some name
-        , procedure = None Procedure
-        , procedureOrdinal = procedureOrdinal
-        , reason = Some reason
-        , resourceRefs = someRefs ordinals
+        , procedureOrdinal = input.procedureOrdinal
+        , reason = Some input.reason
+        , resourceRefs = someRefs input.resourceOrdinals
         }
 
 let Trait : Type =
@@ -426,67 +417,46 @@ let Trait : Type =
       , effect : Optional { kind : Text }
       }
 
-let trait : Text -> Text -> Trait =
-      λ(name : Text) ->
-      λ(description : Text) ->
-        { name = name
-        , description = description
-        , effect = None { kind : Text }
+let TraitInput : Type =
+      { name : Text, description : Text, effectKind : Optional Text }
+
+let trait : TraitInput -> Trait =
+      λ(input : TraitInput) ->
+        { name = input.name
+        , description = input.description
+        , effect =
+            merge
+              { None = None { kind : Text }
+              , Some = λ(effectKind : Text) -> Some { kind = effectKind }
+              }
+              input.effectKind
         }
 
-let typedTrait : Text -> Text -> Text -> Trait =
-      λ(name : Text) ->
-      λ(description : Text) ->
-      λ(effectKind : Text) ->
-        { name = name
-        , description = description
-        , effect = Some { kind = effectKind }
-        }
-
-in  { Amount
-    , Components
-    , Dispatch
-    , Effect
-    , Entry
-    , Group
-    , Procedure
-    , Range
-    , ResourceLimit
-    , ResourceRefs
-    , Trait
-    , advancedDamage = advantageDamage
-    , advantageDamage
-    , attack
+in  { advantageDamage
+    , meleeAttack
+    , rangedAttack
     , atWill
     , applyCondition
-    , conditionalDamage
     , conditionIfSize
     , cone
     , daily
     , damage
-    , defaultAction
-    , defaultAmount
-    , defaultEffect
-    , defaultProcedure
-    , emanation
-    , exec
-    , execSome
+    , executable
+    , resourceExecutable
     , limited
     , line
     , multiattack
     , noComponents
-    , noMaterial
-    , noneRefs
+    , noMaterialComponents
     , recharge
     , resource
     , rest
-    , save
-    , someRefs
+    , saveArea
     , spellRef
+    , spellDefinitionComponents
     , spellcasting
     , staticDamage
-    , text
-    , textSome
+    , textOnly
+    , resourceTextOnly
     , trait
-    , typedTrait
     }

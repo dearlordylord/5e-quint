@@ -8,11 +8,11 @@ in  { challengeRating = 6
         { abilityScores = { str = 19, dex = 11, con = 19, int = 3, wis = 14, cha = 10 }
         , ac = { value = { kind = "literal", value = 14 } }
         , actions =
-            [ T.text 1 "Multiattack" "The chimera makes one Ram attack, one Bite attack, and one Claw attack. It can replace the Claw attack with a use of Fire Breath if available." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Bite" "melee" "str" +7 (Some 5) (None T.Range) (None Text) [ T.damage "piercing" 2 6 (Some +4) 11, T.advantageDamage "piercing" 2 6 (None Integer) 7 ] (None Text))
-            , T.exec 3 (T.attack "Claw" "melee" "str" +7 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 6 (Some +4) 7 ] (None Text))
-            , T.exec 4 (T.attack "Ram" "melee" "str" +7 (Some 5) (None T.Range) (None Text) [ T.damage "bludgeoning" 1 12 (Some +4) 10, T.conditionIfSize "prone" "medium" ] (None Text))
-            , T.execSome 5 (T.save "Fire Breath" "dex" 15 (T.cone 15) (T.damage "fire" 7 8 (None Integer) 31) { kind = "half_damage" } (None Text)) [ 1 ]
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The chimera makes one Ram attack, one Bite attack, and one Claw attack. It can replace the Claw attack with a use of Fire Breath if available.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Bite", attackAbility = "str", attackBonus = +7, reachFeet = 5, onHit = [ T.damage { damageType = "piercing", dice = 2, dieSize = 6, flat = (Some +4), static = 11 }, T.advantageDamage { damageType = "piercing", dice = 2, dieSize = 6, flat = (None Integer), static = 7 } ] } }
+            , T.executable { procedureOrdinal = 3, procedure = T.meleeAttack { name = "Claw", attackAbility = "str", attackBonus = +7, reachFeet = 5, onHit = [ T.damage { damageType = "slashing", dice = 1, dieSize = 6, flat = (Some +4), static = 7 } ] } }
+            , T.executable { procedureOrdinal = 4, procedure = T.meleeAttack { name = "Ram", attackAbility = "str", attackBonus = +7, reachFeet = 5, onHit = [ T.damage { damageType = "bludgeoning", dice = 1, dieSize = 12, flat = (Some +4), static = 10 }, T.conditionIfSize { condition = "prone", maxCreatureSize = "medium" } ] } }
+            , T.resourceExecutable { procedureOrdinal = 5, procedure = T.saveArea { name = "Fire Breath", ability = "dex", dc = 15, area = (T.cone { lengthFeet = 15 }), onFail = (T.damage { damageType = "fire", dice = 7, dieSize = 8, flat = (None Integer), static = 31 }), onSuccess = { kind = "half_damage" } }, resourceOrdinals = [ 1 ] }
             ]
         , alignment = { order = "chaotic", morality = "evil" }
         , communication = { kind = "understood_but_cannot_speak", languages = { kind = "named", languages = [ "Draconic" ] } }
@@ -25,6 +25,6 @@ in  { challengeRating = 6
         , skillModifiers = [ { skill = "perception", modifier = 8 } ]
         , size = "large"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 60 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) } ]
         }
     }

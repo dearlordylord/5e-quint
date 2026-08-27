@@ -138,10 +138,7 @@
         },
         "procedureOrdinal": 3,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1
-          ]
+          "kind": "none"
         }
       }
     ],
@@ -186,10 +183,7 @@
         },
         "procedureOrdinal": 1,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            2
-          ]
+          "kind": "none"
         }
       }
     ],

@@ -109,16 +109,46 @@
     },
     "bonusActions": [
       {
-        "description": "The drider casts Darkness, Faerie Fire, or Web, requiring no Material components and using Wisdom as the spellcasting ability (spell save DC 14).",
-        "kind": "textOnly",
-        "name": "Magic of the Spider Queen (Recharge 5–6)",
+        "kind": "executable",
+        "procedure": {
+          "ability": "wis",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "darkness"
+                },
+                {
+                  "spellId": "faerie_fire"
+                },
+                {
+                  "spellId": "web"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Magic of the Spider Queen (Recharge 5–6)",
+          "spellSaveDc": {
+            "dc": 14,
+            "kind": "fixed"
+          }
+        },
         "procedureOrdinal": 1,
-        "reason": "unsupported_spellcasting_restriction",
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1
-          ]
+          "kind": "none"
         }
       }
     ],

@@ -140,10 +140,7 @@
         },
         "procedureOrdinal": 3,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            1
-          ]
+          "kind": "none"
         }
       }
     ],
@@ -153,16 +150,37 @@
     },
     "bonusActions": [
       {
-        "description": "The deva casts Cure Wounds, Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting.",
-        "kind": "textOnly",
-        "name": "Divine Aid (2/Day)",
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "cure_wounds"
+                },
+                {
+                  "spellId": "lesser_restoration"
+                },
+                {
+                  "spellId": "remove_curse"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Divine Aid (2/Day)"
+        },
         "procedureOrdinal": 1,
-        "reason": "unsupported_spellcasting_restriction",
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            2
-          ]
+          "kind": "none"
         }
       }
     ],
