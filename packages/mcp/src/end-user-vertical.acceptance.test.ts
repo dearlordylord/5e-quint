@@ -170,7 +170,7 @@ describe("end-user MCP vertical", () => {
         },
       ],
     });
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "fighter",
       turnOrder: ["fighter", "goblin"],
       combatants: [
@@ -211,7 +211,7 @@ describe("end-user MCP vertical", () => {
       value: [{ results: [5] }],
     });
     expect(fighterDamage.result.tag).toBe("resolved");
-    expect(fighterDamage.snapshot.combatants).toEqual([
+    expect(fighterDamage.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 12 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -219,7 +219,7 @@ describe("end-user MCP vertical", () => {
     const endedFighterTurn = callTool(root, "end_turn", {
       actorId: "fighter",
     });
-    expect(endedFighterTurn.snapshot.currentActorId).toBe("goblin");
+    expect(endedFighterTurn.envelope.checkpoint.currentActorId).toBe("goblin");
 
     expect(actionLabels(callTool(root, "discover_battle_acts", {}))).toEqual([
       "Attack",
@@ -242,7 +242,7 @@ describe("end-user MCP vertical", () => {
       holeId: "battle:attack:target",
       value: "fighter",
     });
-    const goblinAttackRoll = goblinTarget.result.holes.find(
+    const goblinAttackRoll = goblinTarget.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
     );
     if (goblinAttackRoll === undefined) {
@@ -265,7 +265,7 @@ describe("end-user MCP vertical", () => {
       value: [{ results: [5] }],
     });
     expect(goblinDamage.result.tag).toBe("resolved");
-    expect(goblinDamage.snapshot.combatants).toEqual([
+    expect(goblinDamage.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 5 }),
       expect.objectContaining({ combatantId: "goblin", hp: 2 }),
     ]);
@@ -393,7 +393,7 @@ describe("end-user MCP vertical", () => {
         },
       ],
     });
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "fighter",
       turnOrder: ["fighter", "wizard", "skeleton-a", "skeleton-b", "goblin"],
       combatants: [
@@ -404,7 +404,7 @@ describe("end-user MCP vertical", () => {
         { combatantId: "goblin", hp: 10 },
       ],
     });
-    expect(started.snapshot.combatants).toEqual([
+    expect(started.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({
         combatantId: "fighter",
         origin: expect.objectContaining({ kind: "character" }),
@@ -460,7 +460,7 @@ describe("end-user MCP vertical", () => {
       holeId: "battle:attack:damage-result:1d8+3-bludgeoning",
       value: [{ results: [1] }],
     });
-    expect(afterBludgeoning.snapshot.combatants).toEqual([
+    expect(afterBludgeoning.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({ combatantId: "wizard", hp: 14 }),
       expect.objectContaining({ combatantId: "skeleton-a", hp: 5 }),
@@ -479,7 +479,7 @@ describe("end-user MCP vertical", () => {
       "fighter_action_surge",
     );
     expect(surged.result.tag).toBe("resolved");
-    expect(surged.snapshot.combatants[0].origin.resources).toEqual(
+    expect(surged.envelope.checkpoint.combatants[0].origin.resources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           resourcePoolRef: actionSurgeResourcePoolRef,
@@ -511,7 +511,7 @@ describe("end-user MCP vertical", () => {
       value: { total: 1, naturalD20: 1 },
     });
     expect(afterSurgedAttack.result.tag).toBe("resolved");
-    expect(afterSurgedAttack.snapshot.combatants).toEqual([
+    expect(afterSurgedAttack.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({ combatantId: "wizard", hp: 14 }),
       expect.objectContaining({ combatantId: "skeleton-a", hp: 5 }),
@@ -520,13 +520,13 @@ describe("end-user MCP vertical", () => {
     ]);
 
     expect(
-      callTool(root, "end_turn", { actorId: "fighter" }).snapshot,
+      callTool(root, "end_turn", { actorId: "fighter" }).envelope.checkpoint,
     ).toMatchObject({
       currentActorId: "wizard",
     });
 
     const wizardActs = callTool(root, "discover_battle_acts", {});
-    expect(wizardActs.availableActs).toEqual(
+    expect(wizardActs.envelope.frontier.acts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           presentation: expect.objectContaining({
@@ -563,12 +563,12 @@ describe("end-user MCP vertical", () => {
     );
     expect(afterRayOfFrostTarget.result.tag).toBe("needsHoles");
     const rayOfFrostAttackRoll = requireHole(
-      afterRayOfFrostTarget.result.holes,
+      afterRayOfFrostTarget.envelope.frontier.holes,
       "attackRoll",
     );
     const afterRayOfFrostAttackRoll = fillBattleSubject(
       root,
-      afterRayOfFrostTarget.result.subject ?? rayOfFrostAct.subject,
+      afterRayOfFrostTarget.envelope.frontier.subject,
       {
         kind: "attackRoll",
         holeId: rayOfFrostAttackRoll.holeId,
@@ -576,19 +576,19 @@ describe("end-user MCP vertical", () => {
       },
     );
     const rayOfFrostDamage = requireHole(
-      afterRayOfFrostAttackRoll.result.holes,
+      afterRayOfFrostAttackRoll.envelope.frontier.holes,
       "rolledDice",
     );
     const afterRayDamage = fillBattleSubject(
       root,
-      afterRayOfFrostAttackRoll.result.subject ?? rayOfFrostAct.subject,
+      afterRayOfFrostAttackRoll.envelope.frontier.subject,
       {
         kind: "rolledDice",
         holeId: rayOfFrostDamage.holeId,
         value: [{ results: [4] }],
       },
     );
-    expect(afterRayDamage.snapshot.combatants).toEqual([
+    expect(afterRayDamage.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
@@ -607,13 +607,13 @@ describe("end-user MCP vertical", () => {
     ]);
 
     expect(
-      callTool(root, "end_turn", { actorId: "wizard" }).snapshot,
+      callTool(root, "end_turn", { actorId: "wizard" }).envelope.checkpoint,
     ).toMatchObject({
       currentActorId: "skeleton-a",
     });
 
     expect(
-      callTool(root, "end_turn", { actorId: "skeleton-a" }).snapshot,
+      callTool(root, "end_turn", { actorId: "skeleton-a" }).envelope.checkpoint,
     ).toMatchObject({
       currentActorId: "skeleton-b",
     });
@@ -624,7 +624,7 @@ describe("end-user MCP vertical", () => {
       "skeleton-b",
       "Shortsword",
     ).subject;
-    expect(skeletonActs.availableActs).toEqual(
+    expect(skeletonActs.envelope.frontier.acts).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Attack",
@@ -637,7 +637,7 @@ describe("end-user MCP vertical", () => {
       holeId: "battle:attack:target",
       value: "fighter",
     });
-    const skeletonAttackRoll = skeletonTarget.result.holes.find(
+    const skeletonAttackRoll = skeletonTarget.envelope.frontier.holes.find(
       (hole: { readonly kind?: string }) => hole.kind === "attackRoll",
     );
     if (skeletonAttackRoll === undefined) {
@@ -659,7 +659,7 @@ describe("end-user MCP vertical", () => {
       holeId: "battle:attack:damage-result:1d6+3-piercing",
       value: [{ results: [1] }],
     });
-    expect(afterSkeletonAttack.snapshot.combatants).toEqual([
+    expect(afterSkeletonAttack.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 16 }),
       expect.objectContaining({ combatantId: "wizard", hp: 14 }),
       expect.objectContaining({ combatantId: "skeleton-a", hp: 5 }),
@@ -667,29 +667,29 @@ describe("end-user MCP vertical", () => {
       expect.objectContaining({ combatantId: "goblin", hp: 10 }),
     ]);
     expect(
-      callTool(root, "end_turn", { actorId: "skeleton-b" }).snapshot,
+      callTool(root, "end_turn", { actorId: "skeleton-b" }).envelope.checkpoint,
     ).toMatchObject({
       currentActorId: "goblin",
     });
     expect(
-      callTool(root, "end_turn", { actorId: "goblin" }).snapshot,
+      callTool(root, "end_turn", { actorId: "goblin" }).envelope.checkpoint,
     ).toMatchObject({
       currentActorId: "fighter",
     });
 
     resolveSecondWind(root, "fighter", [2]);
-    expect(callTool(root, "read_battle_state", {}).snapshot.combatants).toEqual(
-      [
-        expect.objectContaining({ combatantId: "fighter", hp: 20 }),
-        expect.objectContaining({ combatantId: "wizard", hp: 14 }),
-        expect.objectContaining({ combatantId: "skeleton-a", hp: 5 }),
-        expect.objectContaining({ combatantId: "skeleton-b", hp: 9 }),
-        expect.objectContaining({ combatantId: "goblin", hp: 10 }),
-      ],
-    );
+    expect(
+      callTool(root, "read_battle_state", {}).envelope.checkpoint.combatants,
+    ).toEqual([
+      expect.objectContaining({ combatantId: "fighter", hp: 20 }),
+      expect.objectContaining({ combatantId: "wizard", hp: 14 }),
+      expect.objectContaining({ combatantId: "skeleton-a", hp: 5 }),
+      expect.objectContaining({ combatantId: "skeleton-b", hp: 9 }),
+      expect.objectContaining({ combatantId: "goblin", hp: 10 }),
+    ]);
 
     expect(
-      callTool(root, "end_turn", { actorId: "fighter" }).snapshot,
+      callTool(root, "end_turn", { actorId: "fighter" }).envelope.checkpoint,
     ).toMatchObject({
       currentActorId: "wizard",
     });
@@ -716,12 +716,12 @@ describe("end-user MCP vertical", () => {
       },
     );
     const magicMissileDamage = requireHole(
-      afterMagicMissileTargets.result.holes,
+      afterMagicMissileTargets.envelope.frontier.holes,
       "rolledDice",
     );
     const afterMagicMissile = fillBattleSubject(
       root,
-      afterMagicMissileTargets.result.subject ?? magicMissileAct.subject,
+      afterMagicMissileTargets.envelope.frontier.subject,
       {
         kind: "rolledDice",
         holeId: magicMissileDamage.holeId,
@@ -729,7 +729,7 @@ describe("end-user MCP vertical", () => {
       },
     );
     expect(afterMagicMissile.result.tag).toBe("resolved");
-    expect(afterMagicMissile.snapshot.combatants).toEqual([
+    expect(afterMagicMissile.envelope.checkpoint.combatants).toEqual([
       expect.objectContaining({ combatantId: "fighter", hp: 20 }),
       expect.objectContaining({
         combatantId: "wizard",
@@ -820,10 +820,10 @@ describe("end-user MCP vertical", () => {
         ]),
       ],
     });
-    if (started.snapshot === undefined) {
+    if (started.envelope === null) {
       throw new Error(JSON.stringify(started));
     }
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: "goblin-a",
       turnOrder: [
         "goblin-a",
@@ -1034,7 +1034,7 @@ describe("end-user MCP vertical", () => {
       naturalD20: 15,
       damageGroups: [[1]],
     });
-    expect(callTool(root, "read_battle_state", {}).snapshot.combatants).toEqual(
+    expect(callTool(root, "read_battle_state", {}).envelope.checkpoint.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           combatantId: "goblin-a",
@@ -1100,7 +1100,7 @@ describe("end-user MCP vertical", () => {
         ]),
       ],
     });
-    expect(started.snapshot).toMatchObject({
+    expect(started.envelope.checkpoint).toMatchObject({
       currentActorId: wizardCombatantId,
       turnOrder: [wizardCombatantId, goblinCombatantId],
     });
@@ -1136,7 +1136,7 @@ describe("end-user MCP vertical", () => {
     });
 
     expect(resolved.result.tag).toBe("resolved");
-    expect(resolved.snapshot.lightEmitters).toEqual([
+    expect(resolved.envelope.checkpoint.lightEmitters).toEqual([
       expect.objectContaining({
         sourceProcedureRef: lightAct.subject.procedureRef,
         sourceCombatantId: wizardCombatantId,
@@ -1274,9 +1274,14 @@ function requireCreationOption(
 }
 
 function actionLabels(payload: {
-  readonly availableActs: ReadonlyArray<{ readonly label: string }>;
+  readonly envelope: {
+    readonly frontier: {
+      readonly kind: "acts";
+      readonly acts: ReadonlyArray<{ readonly label: string }>;
+    };
+  };
 }) {
-  return payload.availableActs.map((act) => act.label);
+  return payload.envelope.frontier.acts.map((act) => act.label);
 }
 
 function createAndFinalizeFighterTwo(
@@ -1856,7 +1861,7 @@ function combatant(
     root,
     "read_battle_state",
     {},
-  ).snapshot.combatants.find(
+  ).envelope.checkpoint.combatants.find(
     (candidate: { readonly combatantId: string }) =>
       candidate.combatantId === combatantId,
   );
@@ -1911,8 +1916,12 @@ function requireBattleAct(
   predicate: (act: BattleActView) => boolean,
   label: string,
 ): BattleActView {
-  const act = callTool(root, "discover_battle_acts", {}).availableActs.find(
-    (candidate: BattleActView) => predicate(candidate),
+  const act = callTool(
+    root,
+    "discover_battle_acts",
+    {},
+  ).envelope.frontier.acts.find((candidate: BattleActView) =>
+    predicate(candidate),
   );
   if (act === undefined) throw new Error(`Expected battle act: ${label}`);
   return act;
@@ -1927,7 +1936,7 @@ function requireAttackAct(
     root,
     "discover_battle_acts",
     {},
-  ).availableActs.filter(
+  ).envelope.frontier.acts.filter(
     (act: BattleActView) =>
       act.subject.tag === "action" &&
       act.subject.actorId === actorId &&
@@ -2002,20 +2011,25 @@ type TriggeredSpellChoiceView = {
 
 function requireTriggeredSpellChoice(
   payload: {
-    readonly presentedInterruptChoices: readonly {
-      readonly choice: TriggeredSpellChoiceView;
-      readonly presentation: {
-        readonly kind: string;
-        readonly invocation?: {
-          readonly spellId: string;
-        };
+    readonly envelope: {
+      readonly frontier: {
+        readonly kind: "interruptDecision";
+        readonly choices: readonly {
+          readonly choice: TriggeredSpellChoiceView;
+          readonly presentation: {
+            readonly kind: string;
+            readonly invocation?: {
+              readonly spellId: string;
+            };
+          };
+        }[];
       };
-    }[];
+    };
   },
   reactorId: string,
   spellId: string,
 ): TriggeredSpellChoiceView {
-  const matchingChoices = payload.presentedInterruptChoices.filter(
+  const matchingChoices = payload.envelope.frontier.choices.filter(
     ({ choice, presentation }) => {
       if (
         choice.kind !== "castTriggeredReactionSpell" ||
@@ -2045,28 +2059,27 @@ function resolveAttackWithShieldReaction(
     holeId: requireHole(act.initialHoles, "targetChoice").holeId,
     value: "wizard",
   });
-  const attackRoll = requireHole(target.result.holes, "attackRoll");
-  const afterRoll = fillBattleSubject(
-    root,
-    target.result.subject ?? act.subject,
-    {
-      kind: "attackRoll",
-      holeId: attackRoll.holeId,
-      value: {
-        total: 14,
-        naturalD20: 10,
-        ...("rollMode" in attackRoll ? { rollMode: attackRoll.rollMode } : {}),
-      },
+  const attackRoll = requireHole(target.envelope.frontier.holes, "attackRoll");
+  const afterRoll = fillBattleSubject(root, act.subject, {
+    kind: "attackRoll",
+    holeId: attackRoll.holeId,
+    value: {
+      total: 14,
+      naturalD20: 10,
+      ...("rollMode" in attackRoll ? { rollMode: attackRoll.rollMode } : {}),
     },
-  );
-  const reactionHole = requireHole(afterRoll.result.holes, "interruptDecision");
+  });
+  if (afterRoll.envelope.frontier.kind !== "interruptDecision") {
+    throw new Error("Expected an attack-hit interrupt decision frontier.");
+  }
+  const reactionHole = afterRoll.envelope.frontier.decisionHole;
   const shieldChoice = requireTriggeredSpellChoice(
     afterRoll,
     "wizard",
     "shield",
   );
   return callTool(root, "fill_battle_hole", {
-    subject: afterRoll.result.subject ?? act.subject,
+    subject: act.subject,
     fill: {
       kind: "interruptDecision",
       holeId: reactionHole.holeId,
@@ -2180,10 +2193,10 @@ function resolveWeaponAttack(
     holeId: requireHole(act.initialHoles, "targetChoice").holeId,
     value: input.targetId,
   });
-  const attackRoll = requireHole(target.result.holes, "attackRoll");
+  const attackRoll = requireHole(target.envelope.frontier.holes, "attackRoll");
   const afterAttackRoll = fillBattleSubject(
     root,
-    target.result.subject ?? act.subject,
+    target.envelope.frontier.subject,
     {
       kind: "attackRoll",
       holeId: attackRoll.holeId,
@@ -2194,10 +2207,13 @@ function resolveWeaponAttack(
       },
     },
   );
-  const damage = requireHole(afterAttackRoll.result.holes, "rolledDice");
+  const damage = requireHole(
+    afterAttackRoll.envelope.frontier.holes,
+    "rolledDice",
+  );
   const afterDamage = fillBattleSubject(
     root,
-    afterAttackRoll.result.subject ?? act.subject,
+    afterAttackRoll.envelope.frontier.subject,
     {
       kind: "rolledDice",
       holeId: damage.holeId,
@@ -2205,13 +2221,13 @@ function resolveWeaponAttack(
     },
   );
   if (afterDamage.result?.tag !== "needsHoles") return afterDamage;
-  const disposition = afterDamage.result.holes.find(
+  const disposition = afterDamage.envelope.frontier.holes.find(
     (hole: { readonly kind: string }) =>
       hole.kind === "attackDamageDisposition",
   );
   if (disposition === undefined) return afterDamage;
   return callTool(root, "fill_battle_hole", {
-    subject: afterDamage.result.subject ?? act.subject,
+    subject: afterDamage.envelope.frontier.subject,
     fill: {
       kind: "attackDamageDisposition",
       holeId: disposition.holeId,
@@ -2242,8 +2258,11 @@ function castMagicMissile(
       sourceProcedureRef: act.subject.procedureRef,
     })),
   });
-  const damage = requireHole(afterTargets.result.holes, "rolledDice");
-  return fillBattleSubject(root, afterTargets.result.subject ?? act.subject, {
+  const damage = requireHole(
+    afterTargets.envelope.frontier.holes,
+    "rolledDice",
+  );
+  return fillBattleSubject(root, afterTargets.envelope.frontier.subject, {
     kind: "rolledDice",
     holeId: damage.holeId,
     value: [{ results: damageResults }],
@@ -2275,10 +2294,10 @@ function resolveSpellAttack(
       },
     ],
   });
-  const attackRoll = requireHole(target.result.holes, "attackRoll");
+  const attackRoll = requireHole(target.envelope.frontier.holes, "attackRoll");
   const afterAttackRoll = fillBattleSubject(
     root,
-    target.result.subject ?? act.subject,
+    target.envelope.frontier.subject,
     {
       kind: "attackRoll",
       holeId: attackRoll.holeId,
@@ -2289,16 +2308,15 @@ function resolveSpellAttack(
       },
     },
   );
-  const damage = requireHole(afterAttackRoll.result.holes, "rolledDice");
-  return fillBattleSubject(
-    root,
-    afterAttackRoll.result.subject ?? act.subject,
-    {
-      kind: "rolledDice",
-      holeId: damage.holeId,
-      value: [{ results: input.damageResults }],
-    },
+  const damage = requireHole(
+    afterAttackRoll.envelope.frontier.holes,
+    "rolledDice",
   );
+  return fillBattleSubject(root, afterAttackRoll.envelope.frontier.subject, {
+    kind: "rolledDice",
+    holeId: damage.holeId,
+    value: [{ results: input.damageResults }],
+  });
 }
 
 function endTurn(
@@ -2308,18 +2326,14 @@ function endTurn(
 ) {
   const result = callTool(root, "end_turn", { actorId });
   if (result.result?.tag !== "needsHoles") return result;
-  const deathSave = result.result.holes.find(
+  const deathSave = result.envelope.frontier.holes.find(
     (hole: { readonly kind: string }) => hole.kind === "deathSavingThrow",
   );
   if (deathSave === undefined || deathSaveRoll === undefined) {
     throw new Error(`Unexpected End Turn holes for ${actorId}`);
   }
   return callTool(root, "fill_battle_hole", {
-    subject: result.result.subject ?? {
-      tag: "runtimeCommand",
-      actorId,
-      command: "endTurn",
-    },
+    subject: result.envelope.frontier.subject,
     fill: {
       kind: "deathSavingThrow",
       holeId: deathSave.holeId,

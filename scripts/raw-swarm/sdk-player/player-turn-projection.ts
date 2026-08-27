@@ -1,7 +1,10 @@
 import { canonicalJson } from "../transcript.ts";
 import { createHash } from "node:crypto";
 import { Either, Match, Schema } from "effect";
-import { BattleHoleSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
+import {
+  BattleHoleSchema,
+  BattleInterruptDecisionFrontierSchema,
+} from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
 import {
   BattleId,
   BattleObjectId,
@@ -19,7 +22,7 @@ import {
   UseCountResourceSchema,
 } from "../../../packages/surface/src/surface/schema.ts";
 import type { JsonValue } from "./continuation-contract.ts";
-import { isJsonValue } from "./json-value.ts";
+import { isJsonValue, jsonValue } from "./json-value.ts";
 import type { SdkCallRecord } from "./sdk-transcript.ts";
 
 export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
@@ -389,11 +392,11 @@ export type PlayerCurrentTurnProjection = {
         readonly subject: PlayerSubjectProjection;
         readonly holes: readonly PlayerHoleOccurrence[];
       }
+    | PlayerInterruptDecisionProjection
     | {
         readonly kind: "rejected";
         readonly rejection: PlayerRejectionProjection;
-      }
-    | { readonly kind: "none" };
+      };
   readonly changes: readonly PlayerEntityChange[];
 };
 
@@ -1134,6 +1137,58 @@ function holeOccurrences(
     : undefined;
 }
 
+type PlayerInterruptDecisionProjection = {
+  readonly kind: "interruptDecision";
+  readonly trigger: string;
+  readonly decisionHole: JsonValue;
+  readonly choices: readonly JsonValue[];
+  readonly stackDepth: number;
+};
+
+function projectEnvelopeFrontier(
+  value: JsonValue | undefined,
+  source: PlayerHoleEvidenceSource,
+): PlayerCurrentTurnProjection["frontier"] | undefined {
+  if (!isJsonObject(value) || !isJsonObject(value.frontier)) return undefined;
+  const frontier = value.frontier;
+  if (frontier.kind === "acts") {
+    const projectedActs = projectPlayerActsFromEvidence(frontier.acts, source);
+    return projectedActs === undefined
+      ? undefined
+      : { kind: "acts", acts: projectedActs };
+  }
+  if (frontier.kind === "holes") {
+    if (frontier.subject === undefined) return undefined;
+    const subject = projectPlayerSubject(frontier.subject);
+    if (subject === undefined) return undefined;
+    const projectedHoles = holeOccurrences(subject, frontier.holes, source);
+    return projectedHoles === undefined
+      ? undefined
+      : {
+          kind: "holes",
+          subjectRef: stableRef("subject", subject),
+          subject,
+          holes: projectedHoles,
+        };
+  }
+  if (frontier.kind !== "interruptDecision") return undefined;
+  const decoded = Schema.decodeUnknownEither(
+    BattleInterruptDecisionFrontierSchema,
+    {
+      onExcessProperty:
+        source.kind === "recordedCurrentRuntime" ? "error" : "ignore",
+    },
+  )(frontier);
+  if (Either.isLeft(decoded)) return undefined;
+  return {
+    kind: "interruptDecision",
+    trigger: decoded.right.trigger,
+    decisionHole: jsonValue(decoded.right.decisionHole),
+    choices: decoded.right.choices.map(jsonValue),
+    stackDepth: decoded.right.stackDepth,
+  };
+}
+
 export function projectPlayerActs(
   value: unknown,
 ): readonly PlayerActProjection[] | undefined {
@@ -1192,22 +1247,6 @@ function frontier(
     if (!isJsonObject(result) || typeof result.tag !== "string") {
       return { tag: "invalid" };
     }
-    if (result.tag === "needsHoles") {
-      if (result.subject === undefined) return { tag: "invalid" };
-      const subject = projectPlayerSubject(result.subject);
-      if (subject === undefined) return { tag: "invalid" };
-      const projectedHoles = holeOccurrences(subject, result.holes, source);
-      if (projectedHoles === undefined) return { tag: "invalid" };
-      return {
-        tag: "frontier",
-        frontier: {
-          kind: "holes",
-          subjectRef: stableRef("subject", subject),
-          subject,
-          holes: projectedHoles,
-        },
-      };
-    }
     const rejection = playerRejectionProjection(result);
     if (rejection !== undefined) {
       return {
@@ -1215,9 +1254,11 @@ function frontier(
         frontier: { kind: "rejected", rejection },
       };
     }
-    return result.tag === "resolved"
-      ? { tag: "frontier", frontier: { kind: "none" } }
-      : { tag: "invalid" };
+    const projected = projectEnvelopeFrontier(result.envelope, source);
+    if (projected !== undefined) {
+      return { tag: "frontier", frontier: projected };
+    }
+    return { tag: "invalid" };
   };
   for (const call of [...calls].reverse()) {
     if (call.outcome !== "returned") continue;
@@ -1256,7 +1297,7 @@ function frontier(
     if (decision.tag === "invalid") return undefined;
     if (decision.tag === "frontier") return decision.frontier;
   }
-  return { kind: "none" };
+  return undefined;
 }
 
 export function reprojectSdkTranscriptTurns(input: {

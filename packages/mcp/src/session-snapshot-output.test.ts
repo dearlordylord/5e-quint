@@ -1,57 +1,28 @@
 import {
-  battleAttackExecutionScopeRef,
-  battleAttackProcedureExecutionRef,
-  battleCharacterExecutionScopeRef,
-  battleExecutionScopeOrdinal,
   battleId,
-  battleProcedureExecutionRef,
-  battlePresentedSnapshot,
+  battlePresentedCheckpointFrontierEnvelope,
   characterId,
   combatantId,
-  snapshotBattle,
-  type BattleRuntimeResolutionResult,
 } from "@dnd/battle-runtime";
-import { NonNegativeInteger } from "@dnd/shared/types";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
-import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 
-import { ListCharactersOutputSchema } from "./character-tool-output.ts";
 import { AdminSessionProjectionSchema } from "./admin-mirror-contract.ts";
 import {
-  BattleLifecycleOutputSchema,
   BattleResolutionOutputSchema,
   BattleSessionOutputSchema,
-  EndBattleOutputSchema,
   SelectStatBlockOutputSchema,
   StartBattleOutputSchema,
 } from "./battle-tool-output.ts";
-import type { McpSessionSnapshot } from "./session-store.ts";
-import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
+import { mcpOutputJsonSchema, schemaJsonContent } from "./schema-codec.ts";
 import { handleToolCall as handleWireToolCall } from "./server.ts";
-import { battleResolutionPayload } from "./battle-tool-payloads.ts";
-import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 import {
   McpSessionSnapshotSchema,
   McpSessionSummarySchema,
   mcpSessionSummary,
 } from "./session-snapshot-output.ts";
-
-const SESSION_SUMMARY_OUTPUT_SCHEMAS = [
-  SelectStatBlockOutputSchema,
-  StartBattleOutputSchema,
-  EndBattleOutputSchema,
-] as const satisfies ReadonlyArray<Schema.Schema.AnyNoContext>;
-
-const SESSION_SNAPSHOT_OUTPUT_SCHEMAS = [
-  BattleSessionOutputSchema,
-  BattleResolutionOutputSchema,
-] as const satisfies ReadonlyArray<Schema.Schema.AnyNoContext>;
-
-function outputJsonSchema(schema: Schema.Schema.AnyNoContext) {
-  return mcpOutputJsonSchema(schema);
-}
+import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
 
 const setupState = {
   tag: "initialInitiativeSetup",
@@ -63,247 +34,93 @@ const activeState = {
   battleId: "battle:projection-contract",
   currentActorId: "combatant:projection-contract",
 } as const;
-const noneState = { tag: "none" } as const;
-type ProjectionBattleState =
-  | typeof setupState
-  | typeof activeState
-  | typeof noneState;
 
-function sessionForProjectionState(battleState: ProjectionBattleState) {
+function sessionForProjectionState(
+  battleState:
+    | typeof setupState
+    | typeof activeState
+    | { readonly tag: "none" },
+) {
   return {
     draftIds: [],
     characterIds: [],
     selectedStatBlockId: null,
     battleState,
-    pendingBattleHoles: null,
   };
 }
-
-function resolutionSessionForProjectionState(
-  battleState: ProjectionBattleState,
-) {
-  return {
-    ...sessionForProjectionState(battleState),
-    transientBattleFills: null,
-  };
-}
-
-const presentation = {
-  availableActs: [],
-  admittedSpellPresentations: [],
-  presentedInterruptChoices: [],
-};
 
 describe("MCP session wire projections", () => {
-  const schemaValidationTimeoutMs = 120_000;
-  test("keeps battle fill definitions out of the session summary schema", () => {
+  test("keeps pending fills and consumer frontier copies out of session schemas", () => {
+    const summaryProperties = mcpOutputJsonSchema(
+      McpSessionSummarySchema,
+    ).properties;
+    const snapshotProperties = mcpOutputJsonSchema(
+      McpSessionSnapshotSchema,
+    ).properties;
+    for (const properties of [summaryProperties, snapshotProperties]) {
+      expect(properties).not.toHaveProperty("transientBattleFills");
+      expect(properties).not.toHaveProperty("pendingBattleHoles");
+      expect(properties).not.toHaveProperty("availableActs");
+      expect(properties).not.toHaveProperty("presentedInterruptChoices");
+    }
     expect(
-      mcpOutputJsonSchema(McpSessionSummarySchema).properties,
-    ).not.toHaveProperty("transientBattleFills");
-    expect(
-      mcpOutputJsonSchema(McpSessionSnapshotSchema).properties,
-    ).toHaveProperty("transientBattleFills");
+      Schema.decodeUnknownEither(McpSessionSnapshotSchema, {
+        onExcessProperty: "error",
+      })({
+        ...sessionForProjectionState({ tag: "none" }),
+        transientBattleFills: null,
+      }),
+    ).toEqual(Either.left(expect.anything()));
   });
 
-  test("uses the summary only where the result does not report battle fill progression", () => {
-    for (const schema of SESSION_SUMMARY_OUTPUT_SCHEMAS) {
-      expect(JSON.stringify(outputJsonSchema(schema))).not.toContain(
-        "transientBattleFills",
-      );
-    }
-
-    for (const schema of SESSION_SNAPSHOT_OUTPUT_SCHEMAS) {
-      expect(JSON.stringify(outputJsonSchema(schema))).toContain(
-        "transientBattleFills",
-      );
-    }
-  });
-
-  test(
-    "rejects battle output and admin projections with contradictory snapshots",
-    () => {
-      const jsonSchemaValidator = new AjvJsonSchemaValidator();
-      const validateStart = jsonSchemaValidator.getValidator(
-        mcpOutputJsonSchema(StartBattleOutputSchema),
-      );
-      expect(
-        validateStart({
-          ...presentation,
-          battleState: setupState,
-          snapshot: {},
-          session: sessionForProjectionState(setupState),
-        }).valid,
-      ).toBe(false);
-      expect(
-        validateStart({
-          ...presentation,
-          battleState: activeState,
+  test("does not accept legacy duplicate battle projections", () => {
+    const legacy = {
+      envelope: null,
+      battleState: setupState,
+      snapshot: {},
+      availableActs: [],
+      session: sessionForProjectionState(setupState),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(StartBattleOutputSchema, {
+          onExcessProperty: "error",
+        })(legacy),
+      ),
+    ).toBe(true);
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSessionOutputSchema, {
+          onExcessProperty: "error",
+        })({
+          envelope: null,
           snapshot: null,
-          session: sessionForProjectionState(activeState),
-        }).valid,
-      ).toBe(false);
-
-      const validateResolution = jsonSchemaValidator.getValidator(
-        mcpOutputJsonSchema(BattleResolutionOutputSchema),
-      );
-      expect(
-        validateResolution({
-          ...presentation,
-          battleState: noneState,
-          result: {},
-          snapshot: {},
-          session: resolutionSessionForProjectionState(noneState),
-        }).valid,
-      ).toBe(false);
-
-      const validateAdmin = jsonSchemaValidator.getValidator(
-        mcpOutputJsonSchema(AdminSessionProjectionSchema),
-      );
-      expect(
-        validateAdmin({
-          session: sessionForProjectionState(setupState),
-          battle: {},
-          characters: [],
-        }).valid,
-      ).toBe(false);
-      expect(
-        validateAdmin({
-          session: sessionForProjectionState(activeState),
-          battle: null,
-          characters: [],
-        }).valid,
-      ).toBe(false);
-    },
-    schemaValidationTimeoutMs,
-  );
-
-  test(
-    "accepts canonical active battle resolution projections",
-    () => {
-      const jsonSchemaValidator = new AjvJsonSchemaValidator();
-      const validateResolution = jsonSchemaValidator.getValidator(
-        mcpOutputJsonSchema(BattleResolutionOutputSchema),
-      );
-      const root = createMcpPlaySessionRoot();
-      handleWireToolCall(
-        root,
-        "start_battle",
-        battleToolWireArgs("start_battle", {
-          battleId: "battle:resolution-contract",
-          initiativeMode: "direct",
-          companionAdmissions: [],
-          initialCombatants: [
-            {
-              admissionSource: { kind: "encounterParticipant" },
-              combatantId: "goblin",
-              initiative: 10,
-              kind: "statBlock",
-              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-              statBlockId: "stat_block_goblin_warrior",
-            },
-            {
-              admissionSource: { kind: "encounterParticipant" },
-              combatantId: "skeleton",
-              initiative: 5,
-              kind: "statBlock",
-              ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
-              statBlockId: "stat_block_skeleton",
-            },
-          ],
+          session: sessionForProjectionState({ tag: "none" }),
         }),
-      );
-      const activeSession = root.sessionStore.battleSession;
-      if (activeSession === null) throw new Error("Expected active battle.");
-      const presented = battlePresentedSnapshot(activeSession);
-      if (Either.isLeft(presented))
-        throw new Error("Expected presented snapshot.");
-      const result = {
-        tag: "resolved",
-        session: activeSession,
-        snapshot: snapshotBattle(activeSession.state),
-        objectDamages: [],
-      } satisfies BattleRuntimeResolutionResult;
-      const activeResolution = Either.getOrThrow(
-        battleResolutionPayload(root, result),
-      );
-      const activeResolutionFixture = {
-        ...activeResolution,
-        availableActs: [],
-        admittedSpellPresentations: [],
-        presentedInterruptChoices: [],
-      };
+      ),
+    ).toBe(true);
+  });
 
-      const validateLifecycle = jsonSchemaValidator.getValidator(
-        mcpOutputJsonSchema(BattleLifecycleOutputSchema),
-      );
-      const setupOutput = {
-        ...presentation,
-        battleState: setupState,
-        snapshot: null,
-        session: sessionForProjectionState(setupState),
-      };
-      const activeRosterOutput = {
-        ...activeResolutionFixture,
-        result: {
-          tag: "combatantAdded" as const,
-          combatantId: "combatant:projection-contract",
-        },
-      };
-      const noBattleSuccessOutput = {
-        ...presentation,
-        battleState: noneState,
-        snapshot: null,
-        session: sessionForProjectionState(noneState),
-      };
-
-      expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(setupOutput),
-        ),
-      ).toBe(true);
-      expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
-            activeRosterOutput,
-          ),
-        ),
-      ).toBe(true);
-      expect(
-        Either.isLeft(
-          Schema.decodeUnknownEither(BattleLifecycleOutputSchema)(
-            noBattleSuccessOutput,
-          ),
-        ),
-      ).toBe(true);
-      expect(validateLifecycle(setupOutput).valid).toBe(true);
-      expect(validateLifecycle(noBattleSuccessOutput).valid).toBe(false);
-
-      const activeValidation = validateResolution(activeResolutionFixture);
-      expect(activeValidation.valid, activeValidation.errorMessage).toBe(true);
-      expect(
-        validateResolution({
-          ...activeResolutionFixture,
-          session: resolutionSessionForProjectionState(noneState),
-        }).valid,
-      ).toBe(false);
-      expect(
-        validateResolution({
-          ...activeResolutionFixture,
-          session: resolutionSessionForProjectionState(setupState),
-        }).valid,
-      ).toBe(false);
-      expect(
-        validateResolution({
-          ...presentation,
-          battleState: setupState,
-          result: {},
+  test("requires one presented envelope for active battle resolution", () => {
+    const schema = mcpOutputJsonSchema(BattleResolutionOutputSchema);
+    const properties = schema.properties as Record<string, unknown>;
+    expect(properties).toHaveProperty("envelope");
+    expect(properties).not.toHaveProperty("snapshot");
+    expect(properties).not.toHaveProperty("availableActs");
+    expect(properties).not.toHaveProperty("presentedInterruptChoices");
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+          result: { tag: "needsHoles" },
           snapshot: {},
-          session: resolutionSessionForProjectionState(setupState),
-        }).valid,
-      ).toBe(false);
-    },
-    schemaValidationTimeoutMs,
-  );
+          session: {
+            ...sessionForProjectionState(activeState),
+            battleState: activeState,
+          },
+        }),
+      ),
+    ).toBe(true);
+  });
 
   test("derives the session summary from the canonical snapshot", () => {
     const snapshot = {
@@ -315,148 +132,68 @@ describe("MCP session wire projections", () => {
         battleId: battleId("battle-projection-test"),
         currentActorId: combatantId("combatant:projection-test"),
       },
-      transientBattleFills: null,
-    } satisfies McpSessionSnapshot;
-
+    } as const;
+    expect(mcpSessionSummary(snapshot)).toEqual(snapshot);
     expect(
-      schemaJsonContent(ListCharactersOutputSchema, {
-        characters: [],
+      schemaJsonContent(SelectStatBlockOutputSchema, {
+        selectedStatBlock: {},
         session: mcpSessionSummary(snapshot),
       }).structuredContent,
-    ).toEqual({
-      characters: [],
-      session: {
-        draftIds: [],
-        characterIds: ["character:projection-test"],
-        selectedStatBlockId: null,
-        battleState: {
-          tag: "activeBattle",
-          battleId: "battle-projection-test",
-          currentActorId: "combatant:projection-test",
+    ).toMatchObject({ session: snapshot });
+  });
+
+  test("accepts a canonical active battle envelope", () => {
+    const root = createMcpPlaySessionRoot();
+    handleWireToolCall(
+      root,
+      "start_battle",
+      battleToolWireArgs("start_battle", {
+        battleId: "battle:resolution-contract",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            admissionSource: { kind: "encounterParticipant" },
+            combatantId: "goblin",
+            initiative: 10,
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_goblin_warrior",
+          },
+          {
+            admissionSource: { kind: "encounterParticipant" },
+            combatantId: "skeleton",
+            initiative: 5,
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_skeleton",
+          },
+        ],
+      }),
+    );
+    const session = root.sessionStore.battleSession;
+    if (session === null) throw new Error("Expected active battle.");
+    const envelope = battlePresentedCheckpointFrontierEnvelope(session);
+    if (Either.isLeft(envelope)) throw new Error("Expected presentation.");
+    expect(
+      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+        result: { tag: "needsHoles" },
+        envelope: envelope.right,
+        session: {
+          ...mcpSessionSummary(root.sessionStore.snapshot()),
+          battleState: {
+            tag: "activeBattle",
+            battleId: session.state.battleId,
+            currentActorId: session.state.initiative.stillToAct[0]?.creature,
+          },
         },
-        pendingBattleHoles: null,
-      },
-    });
+      }),
+    ).toSatisfy((result) => Either.isRight(result));
   });
 
-  test("rejects authored attack presentation in pending mechanical fills", () => {
-    const actorId = combatantId("combatant:presentation-correlation");
-    const scopeRef = battleAttackExecutionScopeRef(
-      battleId("battle:presentation-correlation"),
-      actorId,
-      battleExecutionScopeOrdinal(0),
-    );
-    const subjectProcedureRef = battleAttackProcedureExecutionRef(
-      scopeRef,
-      NonNegativeInteger(0),
-    );
-    const presentationProcedureRef = battleAttackProcedureExecutionRef(
-      scopeRef,
-      NonNegativeInteger(1),
-    );
-
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
-          draftIds: [],
-          characterIds: [],
-          selectedStatBlockId: null,
-          battleState: { tag: "none" },
-          transientBattleFills: {
-            subject: {
-              tag: "action",
-              action: "attack",
-              actorId,
-              procedureRef: subjectProcedureRef,
-              attackAbility: "dex",
-              attackDamageType: "force",
-            },
-            presentation: {
-              kind: "attack",
-              procedureRef: presentationProcedureRef,
-              name: "Synthetic Arc",
-            },
-            fills: [],
-          },
-        }),
-      ),
-    ).toBe(true);
-  });
-
-  test("rejects authored unit presentation in pending mechanical fills", () => {
-    const actorId = combatantId("combatant:spell-presentation-kind");
-    const procedureRef = battleProcedureExecutionRef(
-      battleCharacterExecutionScopeRef(
-        battleId("battle:spell-presentation-kind"),
-        actorId,
-        battleExecutionScopeOrdinal(0),
-      ),
-      NonNegativeInteger(0),
-    );
-
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
-          draftIds: [],
-          characterIds: [],
-          selectedStatBlockId: null,
-          battleState: { tag: "none" },
-          transientBattleFills: {
-            subject: {
-              tag: "actionSpell",
-              actorId,
-              procedureRef,
-              mode: { tag: "cast" },
-            },
-            presentation: {
-              kind: "unit",
-              procedureRef,
-              unitId: "synthetic_spell_mismatched_unit",
-            },
-            fills: [],
-          },
-        }),
-      ),
-    ).toBe(true);
-  });
-
-  test("rejects authored spell presentation in pending mechanical fills", () => {
-    const actorId = combatantId("combatant:unit-presentation-kind");
-    const procedureRef = battleProcedureExecutionRef(
-      battleCharacterExecutionScopeRef(
-        battleId("battle:unit-presentation-kind"),
-        actorId,
-        battleExecutionScopeOrdinal(0),
-      ),
-      NonNegativeInteger(0),
-    );
-
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(McpSessionSnapshotSchema)({
-          draftIds: [],
-          characterIds: [],
-          selectedStatBlockId: null,
-          battleState: { tag: "none" },
-          transientBattleFills: {
-            subject: {
-              tag: "unitFeature",
-              actorId,
-              procedureRef,
-            },
-            presentation: {
-              kind: "spell",
-              procedureRef,
-              invocation: {
-                tag: "cantrip",
-                spellId: "synthetic_unit_mismatched_spell",
-                procedure: "spellAttackDamage",
-              },
-            },
-            fills: [],
-          },
-        }),
-      ),
-    ).toBe(true);
+  test("admin projections use the same presented envelope owner", () => {
+    const schema = mcpOutputJsonSchema(AdminSessionProjectionSchema);
+    expect(JSON.stringify(schema)).toContain("checkpoint");
+    expect(JSON.stringify(schema)).not.toContain("availableActs");
   });
 });

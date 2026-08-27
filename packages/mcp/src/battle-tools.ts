@@ -1,11 +1,13 @@
 import {
   battleInitiativePosition,
   battleHoleAcceptsFill,
-  discoverBattleActs,
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   sameBattleSubject,
+  type BattleCheckpointFrontierEnvelope,
+  type BattleHole,
+  type BattleInterruptDecisionHole,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleFill,
@@ -34,6 +36,8 @@ import { handleBattleLifecycleToolCall } from "./battle-lifecycle-tool.ts";
 import { pendingTransactionForResult } from "./battle-pending-transaction.ts";
 import {
   battleResolutionPayload,
+  battleMechanicsEnvelopeForSession,
+  battlePresentationEnvelopeForSession,
   battleSessionPayload,
   battleSnapshotPresentationIssueContent,
   initialInitiativeSetupPayload,
@@ -104,17 +108,24 @@ export function handleBattleToolCall(
           requestedSubject: subject,
         });
       }
+      const frontier = battleMechanicsEnvelopeForSession(
+        root,
+        visibleSession.right,
+      ).frontier;
       const frontierIssue = pendingFillFrontierIssue(
-        previous,
+        frontier,
         matched.args.fill,
       );
       if (frontierIssue !== null) {
         return errorContent(frontierIssue.message, frontierIssue.details);
       }
-      const discoveredAct = discoverBattleActs(visibleSession.right).find(
-        (act) => sameBattleSubject(act.subject, subject),
-      );
-      if (previous === null && discoveredAct === undefined) {
+      const availableSubject =
+        frontier.kind === "acts"
+          ? frontier.acts.some((act) => sameBattleSubject(act.subject, subject))
+          : frontier.kind === "holes"
+            ? sameBattleSubject(frontier.subject, subject)
+            : previous !== null;
+      if (previous === null && !availableSubject) {
         return errorContent("Battle act is not currently available.", {
           code: "BATTLE_ACT_NOT_AVAILABLE",
           subject,
@@ -174,9 +185,19 @@ export function handleBattleToolCall(
           }),
         );
       }
-      const availableAct = discoverBattleActs(state.right).find((act) =>
-        sameBattleSubject(act.subject, matched.args.subject),
+      const presentation = battlePresentationEnvelopeForSession(
+        root,
+        state.right,
       );
+      if (Either.isLeft(presentation)) {
+        return battleSnapshotPresentationIssueContent(presentation.left);
+      }
+      const availableAct =
+        presentation.right.frontier.kind === "acts"
+          ? presentation.right.frontier.acts.find((act) =>
+              sameBattleSubject(act.subject, matched.args.subject),
+            )
+          : undefined;
       if (availableAct === undefined) {
         return errorContent("Battle act is not currently available.", {
           code: "BATTLE_ACT_NOT_AVAILABLE",
@@ -388,40 +409,38 @@ function activeBattleForTool(
 }
 
 export function pendingFillFrontierIssue(
-  pending: Pick<PendingBattleFillSession, "holes" | "fills"> | null,
+  frontier: BattleCheckpointFrontierEnvelope["frontier"],
   fill: BattleFill,
 ): {
   readonly message: string;
   readonly details:
     | {
         readonly code: "BATTLE_FILL_HOLE_MISMATCH";
-        readonly pendingHoles: PendingBattleFillSession["holes"];
+        readonly currentFrontier: BattleCheckpointFrontierEnvelope["frontier"];
         readonly requestedFill: BattleFill;
       }
     | {
         readonly code: "BATTLE_FILL_KIND_MISMATCH";
-        readonly pendingHole: PendingBattleFillSession["holes"][number];
+        readonly pendingHole: BattleHole | BattleInterruptDecisionHole;
         readonly requestedFill: BattleFill;
       };
 } | null {
-  if (pending === null) return null;
-  const matchingHoles = pending.holes.filter(
-    (hole) => hole.holeId === fill.holeId,
-  );
+  const holes =
+    frontier.kind === "holes"
+      ? frontier.holes
+      : frontier.kind === "interruptDecision"
+        ? [frontier.decisionHole]
+        : frontier.acts.flatMap((act) => act.initialHoles);
+  const matchingHoles = holes.filter((hole) => hole.holeId === fill.holeId);
   if (matchingHoles.length === 0) {
-    const wasAlreadyAccepted = pending.fills.some(
-      (acceptedFill) => acceptedFill.holeId === fill.holeId,
-    );
-    return wasAlreadyAccepted
-      ? null
-      : {
-          message: "Battle fill does not match the current Hole frontier.",
-          details: {
-            code: "BATTLE_FILL_HOLE_MISMATCH" as const,
-            pendingHoles: pending.holes,
-            requestedFill: fill,
-          },
-        };
+    return {
+      message: "Battle fill does not match the current Hole frontier.",
+      details: {
+        code: "BATTLE_FILL_HOLE_MISMATCH" as const,
+        currentFrontier: frontier,
+        requestedFill: fill,
+      },
+    };
   }
   const matchingKindHole = matchingHoles.find((hole) =>
     battleHoleAcceptsFill(hole, fill),

@@ -17,6 +17,7 @@ import {
   attackDamageDispositionFill,
   attackRollFill,
   attackTargetFill,
+  battleFrontierInterruptDecisionForState,
   battleId,
   characterBattleResourceIsUnlimited,
   characterBattleResourceIsUseCount,
@@ -495,24 +496,25 @@ describe("battle runtime: Paladin's Smite", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Paladin's Smite attack-hit window.");
     }
-    const smiteChoice =
-      awaitingReaction.snapshot.pendingInterrupt?.choices.find((choice) => {
-        if (
-          choice.kind !== "castAttackHitBonusActionSpell" ||
-          choice.reactorId !== fighterId
-        )
-          return false;
-        return (
-          characterSpellInvocationRefForProcedureRefForTest(
-            battleRuntimeSessionForTest({
-              state: awaitingReaction.state,
-              context: session.context,
-            }),
-            choice.reactorId,
-            choice.subject.procedureRef,
-          ).tag === "spellAccessFreeCast"
-        );
-      });
+    const smiteChoice = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    )?.choices.find((choice) => {
+      if (
+        choice.kind !== "castAttackHitBonusActionSpell" ||
+        choice.reactorId !== fighterId
+      )
+        return false;
+      return (
+        characterSpellInvocationRefForProcedureRefForTest(
+          battleRuntimeSessionForTest({
+            state: awaitingReaction.state,
+            context: session.context,
+          }),
+          choice.reactorId,
+          choice.subject.procedureRef,
+        ).tag === "spellAccessFreeCast"
+      );
+    });
     if (
       smiteChoice === undefined ||
       smiteChoice.kind !== "castAttackHitBonusActionSpell"
@@ -661,7 +663,9 @@ describe("battle runtime: Paladin's Smite", () => {
     }
 
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+      battleFrontierInterruptDecisionForState(
+        awaitingReaction.state,
+      )?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
@@ -678,7 +682,9 @@ describe("battle runtime: Paladin's Smite", () => {
       }),
     ).toBe(false);
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+      battleFrontierInterruptDecisionForState(
+        awaitingReaction.state,
+      )?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
@@ -734,7 +740,9 @@ describe("battle runtime: Paladin's Smite", () => {
     }
 
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+      battleFrontierInterruptDecisionForState(
+        awaitingReaction.state,
+      )?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({
@@ -751,7 +759,9 @@ describe("battle runtime: Paladin's Smite", () => {
       }),
     ).toBe(true);
     expect(
-      awaitingReaction.snapshot.pendingInterrupt?.choices.some((choice) => {
+      battleFrontierInterruptDecisionForState(
+        awaitingReaction.state,
+      )?.choices.some((choice) => {
         if (choice.kind !== "castAttackHitBonusActionSpell") return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           battleRuntimeSessionForTest({

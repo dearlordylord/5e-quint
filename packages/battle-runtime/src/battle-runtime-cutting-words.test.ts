@@ -33,6 +33,7 @@ import {
   resolveBattleInterrupt,
   resolveBattleSubject,
   resolveSuccessfulAbilityCheckReactionReduction,
+  battleFrontierInterruptDecisionForState,
   rolledDiceGroup,
   skeletonId,
   startBattleRight,
@@ -108,7 +109,7 @@ describe("battle runtime: Cutting Words", () => {
       throw new Error("Expected Cutting Words attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );
@@ -231,7 +232,7 @@ describe("battle runtime: Cutting Words", () => {
       }).criticalConsequence,
     ).toEqual({ kind: "criticalHit" });
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       cuttingWordsDamageOnly.id,
       "damageRollReduction",
     );

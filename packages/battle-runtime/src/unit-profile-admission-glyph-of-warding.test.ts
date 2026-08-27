@@ -181,7 +181,6 @@ import {
   hasCondition,
   resolveBattleInterrupt,
   resolveBattleSubject,
-  snapshotBattle,
   spellSaveDcForCaster,
 } from "./unit-profile-admission.test-support.ts";
 import {
@@ -191,6 +190,7 @@ import {
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
   battleActiveEffectExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
   combatantId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -2537,7 +2537,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     if (awaitingSaveFailedReaction.tag !== "needsHoles") return;
     expect(
-      snapshotBattle(awaitingSaveFailedReaction.state).pendingInterrupt
+      battleFrontierInterruptDecisionForState(awaitingSaveFailedReaction.state)
         ?.choices,
     ).toEqual(
       expect.arrayContaining([
@@ -2560,7 +2560,9 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
 
     expect(afterDecline.tag).toBe("resolved");
     if (afterDecline.tag !== "resolved") return;
-    expect(afterDecline.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(afterDecline.state),
+    ).toBeNull();
     const caster = requireCombatant(afterDecline.state, spellCasterId);
     const target = requireCombatant(afterDecline.state, spellTargetId);
     const control = target.activeEffects.find(

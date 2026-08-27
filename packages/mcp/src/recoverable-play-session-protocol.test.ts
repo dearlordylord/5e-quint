@@ -542,11 +542,15 @@ describe("recoverable Play Session protocol", () => {
         arguments: { playSessionId: directPlaySessionId },
       });
       expect(operationResult(directBattle)).toMatchObject({
-        battleState: {
-          tag: "activeBattle",
-          battleId: "battle:recoverable-direct-entry",
+        envelope: {
+          checkpoint: { battleId: "battle:recoverable-direct-entry" },
         },
-        snapshot: { battleId: "battle:recoverable-direct-entry" },
+        session: {
+          battleState: {
+            tag: "activeBattle",
+            battleId: "battle:recoverable-direct-entry",
+          },
+        },
       });
 
       const recoveredSetup = await callStructuredTool(firstSetupClient, {
@@ -554,11 +558,13 @@ describe("recoverable Play Session protocol", () => {
         arguments: { playSessionId: setupPlaySessionId },
       });
       expect(operationResult(recoveredSetup)).toMatchObject({
-        battleState: {
-          tag: "initialInitiativeSetup",
-          battleId: "battle:recoverable-initial-setup-entry",
+        envelope: null,
+        session: {
+          battleState: {
+            tag: "initialInitiativeSetup",
+            battleId: "battle:recoverable-initial-setup-entry",
+          },
         },
-        snapshot: null,
       });
 
       const finalize = (client: Client) =>
@@ -601,11 +607,17 @@ describe("recoverable Play Session protocol", () => {
         arguments: { playSessionId: setupPlaySessionId },
       });
       expect(operationResult(activeSetupBattle)).toMatchObject({
-        battleState: {
-          tag: "activeBattle",
-          battleId: "battle:recoverable-initial-setup-entry",
+        envelope: {
+          checkpoint: {
+            battleId: "battle:recoverable-initial-setup-entry",
+          },
         },
-        snapshot: { battleId: "battle:recoverable-initial-setup-entry" },
+        session: {
+          battleState: {
+            tag: "activeBattle",
+            battleId: "battle:recoverable-initial-setup-entry",
+          },
+        },
       });
     } finally {
       await Promise.all([
@@ -682,17 +694,23 @@ describe("recoverable Play Session protocol", () => {
       if (!isJsonObject(result.structuredContent)) {
         throw new Error("Expected a typed concurrent Battle fill result.");
       }
-      return objectField(operationResult(result.structuredContent), "result");
+      const operation = operationResult(result.structuredContent);
+      return "result" in operation && isJsonObject(operation.result)
+        ? operation.result
+        : operation;
     });
-    expect(attackRollResults.map((result) => result.tag).sort()).toEqual([
-      "invalid",
-      "needsHoles",
-    ]);
     expect(
-      attackRollResults.find((result) => result.tag === "invalid"),
+      attackRollResults.filter((result) => result.tag === "needsHoles"),
+    ).toHaveLength(1);
+    expect(
+      attackRollResults.find(
+        (result) =>
+          isJsonObject(result.details) &&
+          result.details.code === "BATTLE_FILL_HOLE_MISMATCH",
+      ),
     ).toMatchObject({
-      tag: "invalid",
-      reason: "invalidFill",
+      error: "Battle fill does not match the current Hole frontier.",
+      details: { code: "BATTLE_FILL_HOLE_MISMATCH" },
     });
 
     const rolled = await callStructuredTool(firstResolutionClient, {
@@ -719,9 +737,12 @@ describe("recoverable Play Session protocol", () => {
         ]),
       },
     });
-    const damageResult = objectField(operationResult(damageFilled), "result");
+    const damageOperation = operationResult(damageFilled);
+    const damageResult = objectField(damageOperation, "result");
     if (damageResult.tag === "needsHoles") {
-      expect(arrayField(damageResult, "holes")).toEqual(
+      const damageEnvelope = objectField(damageOperation, "envelope");
+      const damageFrontier = objectField(damageEnvelope, "frontier");
+      expect(arrayField(damageFrontier, "holes")).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
             kind: "attackDamageDisposition",
@@ -766,8 +787,9 @@ describe("recoverable Play Session protocol", () => {
       name: "read_battle_state",
       arguments: { playSessionId },
     });
-    const snapshot = objectField(operationResult(recoveredBattle), "snapshot");
-    const goblin = arrayField(snapshot, "combatants").find(
+    const envelope = objectField(operationResult(recoveredBattle), "envelope");
+    const checkpoint = objectField(envelope, "checkpoint");
+    const goblin = arrayField(checkpoint, "combatants").find(
       (combatant) =>
         isJsonObject(combatant) &&
         combatant.combatantId === "goblin-direct-entry",

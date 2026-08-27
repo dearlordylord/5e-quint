@@ -1,4 +1,4 @@
-import { BattlePresentedSnapshotSchema } from "@dnd/battle-runtime";
+import { BattlePresentedCheckpointFrontierEnvelopeSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
@@ -38,7 +38,6 @@ export const adminMirrorSequence: (value: number) => AdminMirrorSequence =
 const AdminMirrorSessionSummaryFields = {
   draftIds: McpSessionSnapshotSchema.fields.draftIds,
   selectedStatBlockId: McpSessionSnapshotSchema.fields.selectedStatBlockId,
-  transientBattleFills: McpSessionSnapshotSchema.fields.transientBattleFills,
 };
 export const AdminMirrorSessionSummarySchema = Schema.Struct({
   ...AdminMirrorSessionSummaryFields,
@@ -69,7 +68,7 @@ export const AdminSessionProjectionSchema = Schema.Union(
       ...AdminMirrorSessionSummaryFields,
       battleState: McpActiveBattleStateSnapshotSchema,
     }),
-    battle: BattlePresentedSnapshotSchema,
+    battle: BattlePresentedCheckpointFrontierEnvelopeSchema,
     characters: Schema.Array(CharacterSessionRowSchema),
   }),
 );

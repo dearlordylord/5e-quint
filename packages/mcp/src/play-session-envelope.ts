@@ -45,10 +45,12 @@ export function availablePlaySessionEnvelope(input: {
   readonly tenure: PlaySessionTenureProjection;
   readonly identity: PlaySessionRequestIdentity;
   readonly hasAvailableCharacterSession?: boolean;
+  /** Runtime-owned battle output used to recover continuation inputs on read. */
+  readonly battleOperationResult?: unknown;
   readonly isError?: boolean;
 }): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
   const projection = mcpSessionSummary(input.projection);
-  const unresolvedInputsResult = unresolvedInputsForEnvelope(input, projection);
+  const unresolvedInputsResult = unresolvedInputsForEnvelope(input);
   if (Either.isLeft(unresolvedInputsResult)) {
     return errorContent("MCP operation output projection failed.", {
       code: "INVALID_OPERATION_OUTPUT",
@@ -106,21 +108,17 @@ export function unavailablePlaySessionEnvelope(
   };
 }
 
-function unresolvedInputsForEnvelope(
-  input: {
-    readonly operationName: PlaySessionOperationName;
-    readonly operationResult: unknown;
-    readonly isError?: boolean;
-  },
-  projection: McpSessionSummary,
-): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  if (projection.pendingBattleHoles !== null) {
-    return Either.right([
-      {
-        sourcePath: "$.projection.pendingBattleHoles",
-        inputs: projection.pendingBattleHoles,
-      },
-    ]);
+function unresolvedInputsForEnvelope(input: {
+  readonly operationName: PlaySessionOperationName;
+  readonly operationResult: unknown;
+  readonly battleOperationResult?: unknown;
+  readonly isError?: boolean;
+}): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
+  if (input.battleOperationResult !== undefined) {
+    return unresolvedInputsFrom(
+      battleToolNames.readBattleState,
+      input.battleOperationResult,
+    );
   }
   if (input.isError === true) return Either.right([]);
   return unresolvedInputsFrom(input.operationName, input.operationResult);

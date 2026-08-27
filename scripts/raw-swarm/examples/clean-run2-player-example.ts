@@ -79,14 +79,22 @@ export const continueBattle: PlayerContinuation = async (context) => {
     };
   }
 
-  const damageHole = targetResult.holes.find(
+  if (targetResult.envelope.frontier.kind !== "holes") {
+    return {
+      kind: "continue",
+      session: targetResult.session,
+      tacticalNote: `Magic Missile returned an interrupt frontier instead of damage holes.`,
+    };
+  }
+
+  const damageHole = targetResult.envelope.frontier.holes.find(
     (hole) => hole.kind === "rolledDice",
   );
   if (damageHole === undefined) {
     return {
       kind: "continue",
       session: targetResult.session,
-      tacticalNote: `Magic Missile returned ${targetResult.tag}; holes: ${targetResult.holes.map((hole) => hole.kind).join(", ")}.`,
+      tacticalNote: `Magic Missile returned ${targetResult.tag}; holes: ${targetResult.envelope.frontier.holes.map((hole) => hole.kind).join(", ")}.`,
     };
   }
 
@@ -103,7 +111,7 @@ export const continueBattle: PlayerContinuation = async (context) => {
 
   const result = context.sdk.resolveBattleRuntimeSubject({
     session: targetResult.session,
-    subject: targetResult.subject,
+    subject: act.subject,
     fills: [targetFill, damageFill],
   });
 

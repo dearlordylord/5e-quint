@@ -20,6 +20,7 @@ import {
   difficultyClass,
   discoverBattleActs,
   fighterId,
+  battleFrontierInterruptDecisionForState,
   findAct,
   findHole,
   goblinAttacksReactionModifierCharacter,
@@ -796,7 +797,7 @@ describe("battle runtime: Bardic Inspiration", () => {
       throw new Error("Expected Cutting Words attack-hit Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       cuttingWordsAttackOnly.id,
       "attackRollReduction",
     );

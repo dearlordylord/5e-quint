@@ -1,9 +1,4 @@
-import {
-  BattleFillSchema,
-  BattleHoleSchema,
-  BattleSubjectSchema,
-  CombatantId,
-} from "@dnd/battle-runtime";
+import { CombatantId } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import type { McpSessionSnapshot } from "./session-store.ts";
@@ -51,29 +46,12 @@ const McpSessionSummaryFields = {
   battleState: McpBattleStateSnapshotSchema,
 };
 
-const McpTransientBattleFillsSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
-  fills: Schema.Array(BattleFillSchema),
-  holes: Schema.NonEmptyArray(BattleHoleSchema),
-  presentation: Schema.optionalWith(Schema.Never, { exact: true }),
-});
-
-const McpPendingBattleHolesSchema = Schema.Union(
-  Schema.NonEmptyArray(Schema.Unknown),
-  Schema.Null,
-);
-
 export const McpSessionSummarySchema = Schema.Struct({
   ...McpSessionSummaryFields,
-  pendingBattleHoles: McpPendingBattleHolesSchema,
 });
 
 export const McpSessionSnapshotSchema = Schema.Struct({
   ...McpSessionSummaryFields,
-  transientBattleFills: Schema.Union(
-    McpTransientBattleFillsSchema,
-    Schema.Null,
-  ),
 });
 
 export const McpActiveSessionSnapshotSchema = Schema.Struct({
@@ -81,10 +59,11 @@ export const McpActiveSessionSnapshotSchema = Schema.Struct({
   characterIds: Schema.Array(Schema.String),
   selectedStatBlockId: Schema.Union(Schema.String, Schema.Null),
   battleState: McpActiveBattleStateSnapshotSchema,
-  transientBattleFills: Schema.Union(
-    McpTransientBattleFillsSchema,
-    Schema.Null,
-  ),
+});
+
+export const McpInitialInitiativeSetupSessionSnapshotSchema = Schema.Struct({
+  ...McpSessionSummaryFields,
+  battleState: McpInitialInitiativeSetupSnapshotSchema,
 });
 
 export type McpSessionSummary = typeof McpSessionSummarySchema.Type;
@@ -99,9 +78,5 @@ export function mcpSessionSummary(
     characterIds: snapshot.characterIds,
     selectedStatBlockId: snapshot.selectedStatBlockId,
     battleState: snapshot.battleState,
-    pendingBattleHoles:
-      snapshot.transientBattleFills === null
-        ? null
-        : snapshot.transientBattleFills.holes,
   };
 }

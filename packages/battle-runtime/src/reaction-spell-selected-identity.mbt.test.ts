@@ -1,4 +1,7 @@
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay reaction-interruption shield hellish_rebuke counterspell
 // UNIT-IDENTITY-REPLAY: reaction-interruption shield doResolveShieldReactionSpellHit
 // UNIT-IDENTITY-REPLAY: reaction-interruption hellish_rebuke doResolveHellishRebukeFailedSavingThrow
@@ -965,22 +968,23 @@ function resolveShieldReactionChoice(
     { readonly tag: "needsHoles" }
   >,
 ): ReturnType<typeof resolveBattleInterrupt> {
-  const reactionChoice =
-    awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (
-        choice,
-      ): choice is Extract<
-        BattleInterruptProcedureChoice,
-        { readonly kind: "castTriggeredReactionSpell" }
-      > => {
-        if (
-          choice.kind !== "castTriggeredReactionSpell" ||
-          choice.reactorId !== reactorId
-        )
-          return false;
-        return true;
-      },
-    );
+  const reactionChoice = battleFrontierInterruptDecisionForState(
+    awaitingReaction.state,
+  )?.choices.find(
+    (
+      choice,
+    ): choice is Extract<
+      BattleInterruptProcedureChoice,
+      { readonly kind: "castTriggeredReactionSpell" }
+    > => {
+      if (
+        choice.kind !== "castTriggeredReactionSpell" ||
+        choice.reactorId !== reactorId
+      )
+        return false;
+      return true;
+    },
+  );
   if (reactionChoice === undefined) {
     throw new Error("Expected Shield Reaction spell choice.");
   }
@@ -1010,7 +1014,9 @@ function requireCounterspellChoice(
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<
@@ -1040,7 +1046,9 @@ function requireHellishRebukeChoice(
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

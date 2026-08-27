@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import type * as BattleRuntime from "@dnd/battle-runtime"
-import { battlePresentedSnapshot, combatantId } from "@dnd/battle-runtime"
+import { battlePresentedCheckpointFrontierEnvelope, combatantId } from "@dnd/battle-runtime"
 import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 
@@ -13,13 +13,13 @@ vi.mock("@dnd/battle-runtime", async (importOriginal) => {
   const { Either } = await import("effect")
   return {
     ...actual,
-    battlePresentedSnapshot: vi.fn(
+    battlePresentedCheckpointFrontierEnvelope: vi.fn(
       (
-        session: Parameters<typeof actual.battlePresentedSnapshot>[0]
-      ): ReturnType<typeof actual.battlePresentedSnapshot> => {
+        session: Parameters<typeof actual.battlePresentedCheckpointFrontierEnvelope>[0]
+      ): ReturnType<typeof actual.battlePresentedCheckpointFrontierEnvelope> => {
         const combatantId = session.state.combatants.keys().next().value
         return combatantId === undefined
-          ? actual.battlePresentedSnapshot(session)
+          ? actual.battlePresentedCheckpointFrontierEnvelope(session)
           : Either.left([
               {
                 tag: "battleSnapshotPresentationIssue",
@@ -57,9 +57,9 @@ describe("BattlePage presentation failure", () => {
 
   it("renders typed scene projection issues after snapshot projection succeeds", async () => {
     const actual = await vi.importActual<typeof BattleRuntime>("@dnd/battle-runtime")
-    const successfulSnapshot = actual.battlePresentedSnapshot(WIZARD_BATTLE_DEMO_STEPS[0].session)
-    expect(successfulSnapshot._tag).toBe("Right")
-    vi.mocked(battlePresentedSnapshot).mockReturnValueOnce(successfulSnapshot)
+    const successfulEnvelope = actual.battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[0].session)
+    expect(successfulEnvelope._tag).toBe("Right")
+    vi.mocked(battlePresentedCheckpointFrontierEnvelope).mockReturnValueOnce(successfulEnvelope)
 
     render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
 

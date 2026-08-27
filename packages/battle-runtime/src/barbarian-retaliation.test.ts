@@ -30,6 +30,7 @@ import {
   statBlockCreatureInit,
   targetFill,
   damageRollFill,
+  battleFrontierInterruptDecisionForState,
   unitLibrary,
 } from "./battle-runtime.test-support.ts";
 import type { BattleState } from "./battle-runtime.test-support.ts";
@@ -45,43 +46,13 @@ describe("battle runtime: Barbarian Retaliation", () => {
     expect(awaitingRetaliation).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "afterDamage",
-          choices: expect.arrayContaining([
-            expect.objectContaining({
-              kind: "retaliationAttack",
-              reactorId: fighterId,
-              subject: expect.objectContaining({
-                command: "retaliationAttack",
-                reactorId: fighterId,
-                targetId: goblinId,
-                procedureRef: expect.any(String),
-                attackDamageType: "slashing",
-              }),
-            }),
-            expect.objectContaining({
-              kind: "retaliationAttack",
-              reactorId: fighterId,
-              subject: expect.objectContaining({
-                command: "retaliationAttack",
-                reactorId: fighterId,
-                targetId: goblinId,
-                procedureRef: expect.any(String),
-                attackDamageType: "bludgeoning",
-              }),
-            }),
-          ]),
-        },
-      },
     });
     if (awaitingRetaliation.tag !== "needsHoles") {
       throw new Error("Expected Retaliation interrupt decision.");
     }
-    const retaliationChoice =
-      awaitingRetaliation.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "retaliationAttack",
-      );
+    const retaliationChoice = battleFrontierInterruptDecisionForState(
+      awaitingRetaliation.state,
+    )?.choices.find((choice) => choice.kind === "retaliationAttack");
     if (retaliationChoice === undefined) {
       throw new Error("Expected a Retaliation codec fixture.");
     }

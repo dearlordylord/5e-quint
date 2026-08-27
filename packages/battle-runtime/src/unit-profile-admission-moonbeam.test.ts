@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleFrontierInterruptDecisionForState,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
@@ -752,7 +755,9 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Moonbeam save Reaction.");
     }
-    const pendingInterrupt = awaitingReaction.snapshot.pendingInterrupt;
+    const pendingInterrupt = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
     if (pendingInterrupt === null) {
       throw new Error("Expected a pending failed-save interrupt.");
     }
@@ -766,7 +771,6 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(declined).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "rolledDice" }],
-      snapshot: { pendingInterrupt: null },
     });
   });
 

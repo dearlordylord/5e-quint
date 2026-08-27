@@ -8,6 +8,7 @@ import { describe, expect, test } from "vitest";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
   battleProcedureExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -824,7 +825,9 @@ function requireTriggeredReactionSpellChoice(input: {
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

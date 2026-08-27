@@ -7,6 +7,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   requireCharacterSpellProcedureRefForTest,
+  battleFrontierInterruptDecisionForState,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { decodeSpellRecordSync } from "@dnd/surface/surface/schema";
@@ -650,7 +651,6 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(countered).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         turn: { bonusActionQuotaAvailable: false },
       },
     });
@@ -840,7 +840,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         ],
       }),
     );
-    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingShield.state),
+    ).toMatchObject({
       trigger: "attackHit",
     });
     expect(
@@ -871,7 +873,6 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         turn: { bonusActionQuotaAvailable: false },
       },
     });
@@ -1647,7 +1648,9 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
         fills: repeatFills,
       }),
     );
-    expect(awaitingShield.snapshot.pendingInterrupt).toMatchObject({
+    expect(
+      battleFrontierInterruptDecisionForState(awaitingShield.state),
+    ).toMatchObject({
       trigger: "attackHit",
     });
 
@@ -1670,7 +1673,6 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        pendingInterrupt: null,
         turn: { bonusActionQuotaAvailable: false },
       },
     });
@@ -1895,7 +1897,9 @@ function requireTriggeredReactionSpellChoice(input: {
   BattleInterruptProcedureChoice,
   { readonly kind: "castTriggeredReactionSpell" }
 > {
-  const choice = input.result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    input.result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

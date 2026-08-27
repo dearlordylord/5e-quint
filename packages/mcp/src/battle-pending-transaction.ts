@@ -1,18 +1,18 @@
 import {
-  battleSubjectPresentation,
   sameBattleSubject,
   type BattleFill,
-  type BattleHole,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleSubject,
 } from "@dnd/battle-runtime";
-import { Match } from "effect";
 
-import type {
-  BattleFillSession,
-  PendingBattleFillSession,
-} from "./session-store-types.ts";
+import type { PendingBattleFillSession } from "./session-store-types.ts";
 
+/**
+ * Retain only the replay source, selected subject, and accepted fills.  The
+ * executable frontier is always re-read from the runtime envelope after a
+ * recovery or retry; storing holes here would create a second frontier owner.
+ */
 export function pendingTransactionForResult({
   result,
   filledSubject,
@@ -21,87 +21,52 @@ export function pendingTransactionForResult({
   replaySession,
 }: {
   readonly result: BattleRuntimeResolutionResult;
-  readonly filledSubject: BattleFillSession["subject"];
+  readonly filledSubject: BattleSubject;
   readonly previous: PendingBattleFillSession | null;
   readonly fills: readonly BattleFill[];
   readonly replaySession: BattleRuntimeSession;
 }): PendingBattleFillSession | null {
   if (result.tag !== "needsHoles") return null;
-  const resultPresentation = battleSubjectPresentation(
-    result.session,
-    result.subject,
-  );
-  if (resultPresentation === undefined) return null;
-  const firstHole = result.holes[0];
-  if (firstHole === undefined) return null;
-  const holes: readonly [BattleHole, ...BattleHole[]] = [
-    firstHole,
-    ...result.holes.slice(1),
-  ];
-  const transactionHistory = Match.value(result.checkpointBoundary.kind).pipe(
-    Match.when("durableInterruptCheckpoint", () => ({
-      kind: "durableInterruptCheckpoint" as const,
+
+  const frontier = result.envelope.frontier;
+  if (frontier.kind === "interruptDecision") {
+    return {
       baseSession: result.session,
+      subject: filledSubject,
       fills: [],
-    })),
-    Match.when("durableContinuationCheckpoint", () => ({
-      kind: "durableContinuationCheckpoint" as const,
-      baseSession: result.session,
-      fills: [],
-    })),
-    Match.when("ordinaryReplay", () =>
-      ordinaryContinuationHistory({
-        filledSubject,
-        previous,
-        replaySession,
-        result,
+    };
+  }
+
+  if (frontier.continuation.kind === "runtimeOwnedInterrupt") {
+    if (
+      previous !== null &&
+      sameBattleSubject(previous.subject, filledSubject) &&
+      sameBattleSubject(previous.subject, frontier.subject)
+    ) {
+      return {
+        baseSession: previous.baseSession,
+        subject: frontier.subject,
         fills,
-      }),
-    ),
-    Match.exhaustive,
-  );
-  return {
-    baseSession: transactionHistory.baseSession,
-    subject: result.subject,
-    fills: transactionHistory.fills,
-    holes,
-  };
-}
-
-function ordinaryContinuationHistory({
-  filledSubject,
-  previous,
-  replaySession,
-  result,
-  fills,
-}: {
-  readonly filledSubject: BattleFillSession["subject"];
-  readonly previous: PendingBattleFillSession | null;
-  readonly replaySession: BattleRuntimeSession;
-  readonly result: Extract<
-    BattleRuntimeResolutionResult,
-    { readonly tag: "needsHoles" }
-  >;
-  readonly fills: readonly BattleFill[];
-}): {
-  readonly kind: "ordinaryReplay";
-  readonly baseSession: BattleRuntimeSession;
-  readonly fills: readonly BattleFill[];
-} {
-  if (
-    previous !== null &&
-    !sameBattleSubject(previous.subject, filledSubject)
-  ) {
-    return { kind: "ordinaryReplay", baseSession: replaySession, fills };
+      };
+    }
+    return {
+      baseSession: result.session,
+      subject: frontier.subject,
+      fills: [],
+    };
   }
 
-  if (previous === null) {
-    return { kind: "ordinaryReplay", baseSession: result.session, fills };
+  if (previous !== null && sameBattleSubject(previous.subject, filledSubject)) {
+    return {
+      baseSession: previous.baseSession,
+      subject: frontier.subject,
+      fills,
+    };
   }
 
   return {
-    kind: "ordinaryReplay",
-    baseSession: previous.baseSession,
+    baseSession: previous === null ? result.session : replaySession,
+    subject: frontier.subject,
     fills,
   };
 }

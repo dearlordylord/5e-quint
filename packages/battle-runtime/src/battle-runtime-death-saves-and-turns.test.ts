@@ -26,6 +26,7 @@ import {
   damageRollFillWithGroups,
   deathSavingThrowFill,
   discoverBattleActs,
+  discoverBattleActCandidates,
   Either,
   endTurn,
   fighterAttackSubject,
@@ -1276,7 +1277,7 @@ describe("battle runtime: death saves and turns", () => {
     } satisfies BattleState;
 
     expect(
-      snapshotBattle(state).acts.map((act) => subjectName(act.subject)),
+      discoverBattleActCandidates(state).map((act) => subjectName(act.subject)),
     ).toEqual(["move", "endTurn"]);
   });
 

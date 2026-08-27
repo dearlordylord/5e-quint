@@ -18,6 +18,7 @@ import {
   characterBattleFeatureInitForTest,
   characterSeed,
   damageRollFill,
+  battleFrontierInterruptDecisionForState,
   damageRollFillWithGroups,
   findHole,
   fighterAttackSubject,
@@ -177,11 +178,6 @@ describe("GitHub #227 attack and damage coverage", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "attackHit",
-        },
-      },
     });
   });
 
@@ -270,7 +266,7 @@ describe("GitHub #227 attack and damage coverage", () => {
     }
     const unit = unitLibrary.requireUnit("monk_deflect_attacks");
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );

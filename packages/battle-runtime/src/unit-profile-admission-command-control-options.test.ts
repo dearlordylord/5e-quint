@@ -670,7 +670,6 @@ describe("QMBT14 deterministic Command control option admission", () => {
     expect(awaitingHaltSave.snapshot).toEqual(
       snapshotBattle(awaitingHaltSave.state),
     );
-    expect(awaitingHaltSave.snapshot.acts).toEqual([]);
     expect(awaitingHaltSave.state.currentTurnResources.commandHalt).toEqual({
       kind: "commandHalt",
     });

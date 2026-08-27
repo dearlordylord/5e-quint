@@ -1,24 +1,17 @@
 import {
-  BattleActPresentationSchema,
   BattleInitiativePositionSchema,
-  BattleInterruptProcedureChoiceSchema,
-  CombatantId,
-  BattleSpellPresentationSchema,
-  BattleDroppedObjectOutcomeSchema,
-  BattleHoleSchema,
   BattleObjectDamageOutcomeSchema,
   BattleObjectIgnitionOutcomeSchema,
+  BattleDroppedObjectOutcomeSchema,
   BattleShovePushOutcomeSchema,
-  BattlePresentedSnapshotSchema,
-  BattleSubjectSchema,
+  BattlePresentedCheckpointFrontierEnvelopeSchema,
+  CombatantId,
 } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
 import {
-  McpActiveBattleStateSnapshotSchema,
   McpActiveSessionSnapshotSchema,
-  McpInitialInitiativeSetupSnapshotSchema,
-  McpNoneBattleStateSnapshotSchema,
+  McpInitialInitiativeSetupSessionSnapshotSchema,
   McpSessionSnapshotSchema,
   McpSessionSummarySchema,
 } from "./session-snapshot-output.ts";
@@ -27,10 +20,10 @@ const JsonObjectSchema = Schema.Record({
   key: Schema.String,
   value: Schema.Any,
 });
+
 const BattleResolutionResultSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("resolved"),
-    snapshot: BattlePresentedSnapshotSchema,
     objectDamages: Schema.optionalWith(
       Schema.Array(BattleObjectDamageOutcomeSchema),
       { exact: true },
@@ -45,56 +38,31 @@ const BattleResolutionResultSchema = Schema.Union(
     ),
     shovePushes: Schema.optionalWith(
       Schema.Array(BattleShovePushOutcomeSchema),
-      {
-        exact: true,
-      },
+      { exact: true },
     ),
   }),
   Schema.Struct({
     tag: Schema.Literal("needsHoles"),
-    subject: BattleSubjectSchema,
-    holes: Schema.Array(BattleHoleSchema),
-    snapshot: BattlePresentedSnapshotSchema,
   }),
   Schema.Struct({
     tag: Schema.Literal("invalid"),
     reason: Schema.String,
     message: Schema.String,
-    snapshot: BattlePresentedSnapshotSchema,
   }),
 );
 
-const AvailableBattleActSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
-  initialHoles: Schema.Array(BattleHoleSchema),
-  label: Schema.NonEmptyTrimmedString,
-  summary: Schema.NonEmptyTrimmedString,
-  presentation: BattleActPresentationSchema,
-});
-
-const PresentedBattleInterruptChoiceSchema = Schema.Struct({
-  choice: BattleInterruptProcedureChoiceSchema,
-  presentation: BattleActPresentationSchema,
-});
-
-const BattlePresentationProjectionFields = {
-  availableActs: Schema.Array(AvailableBattleActSchema),
-  admittedSpellPresentations: Schema.Array(BattleSpellPresentationSchema),
-  presentedInterruptChoices: Schema.Array(PresentedBattleInterruptChoiceSchema),
-};
-
 const BattlePresentationBranches = {
   none: {
-    battleState: McpNoneBattleStateSnapshotSchema,
-    snapshot: Schema.Null,
+    envelope: Schema.Null,
+    session: McpSessionSnapshotSchema,
   },
   initialInitiativeSetup: {
-    battleState: McpInitialInitiativeSetupSnapshotSchema,
-    snapshot: Schema.Null,
+    envelope: Schema.Null,
+    session: McpSessionSummarySchema,
   },
   activeBattle: {
-    battleState: McpActiveBattleStateSnapshotSchema,
-    snapshot: BattlePresentedSnapshotSchema,
+    envelope: BattlePresentedCheckpointFrontierEnvelopeSchema,
+    session: McpActiveSessionSnapshotSchema,
   },
 } as const;
 
@@ -114,17 +82,14 @@ function battlePresentationOutputSchema(session: Schema.Schema.AnyNoContext) {
   return Schema.Union(
     Schema.Struct({
       ...BattlePresentationBranches.none,
-      ...BattlePresentationProjectionFields,
       session,
     }),
     Schema.Struct({
       ...BattlePresentationBranches.initialInitiativeSetup,
-      ...BattlePresentationProjectionFields,
       session,
     }),
     Schema.Struct({
       ...BattlePresentationBranches.activeBattle,
-      ...BattlePresentationProjectionFields,
       session,
     }),
   );
@@ -145,21 +110,17 @@ export const StartBattleOutputSchema = battlePresentationOutputSchema(
 
 const BattleLifecycleInitialInitiativeSetupOutputSchema = Schema.Struct({
   ...BattlePresentationBranches.initialInitiativeSetup,
-  ...BattlePresentationProjectionFields,
-  session: McpSessionSummarySchema,
+  session: McpInitialInitiativeSetupSessionSnapshotSchema,
 });
 
 const BattleLifecycleActiveSetupOutputSchema = Schema.Struct({
   ...BattlePresentationBranches.activeBattle,
-  ...BattlePresentationProjectionFields,
   session: McpSessionSummarySchema,
 });
 
 const BattleLifecycleActiveOutputSchema = Schema.Struct({
-  battleState: McpActiveBattleStateSnapshotSchema,
   result: BattleLifecycleResultSchema,
-  snapshot: BattlePresentedSnapshotSchema,
-  ...BattlePresentationProjectionFields,
+  envelope: BattlePresentedCheckpointFrontierEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
 });
 
@@ -170,10 +131,8 @@ export const BattleLifecycleOutputSchema = Schema.Union(
 );
 
 export const BattleResolutionOutputSchema = Schema.Struct({
-  battleState: McpActiveBattleStateSnapshotSchema,
   result: BattleResolutionResultSchema,
-  snapshot: BattlePresentedSnapshotSchema,
-  ...BattlePresentationProjectionFields,
+  envelope: BattlePresentedCheckpointFrontierEnvelopeSchema,
   session: McpActiveSessionSnapshotSchema,
 });
 

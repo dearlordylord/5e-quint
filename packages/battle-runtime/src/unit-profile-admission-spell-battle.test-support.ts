@@ -13,6 +13,7 @@ import { expect } from "vitest";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
   battleId,
+  battleFrontierInterruptDecisionForState,
   cantripSpellInvocationRef,
   endTurn,
   resolveBattleInterrupt,
@@ -347,7 +348,9 @@ export function declineTargetReadiedSpellAfterFailedSave(
   if (result.tag !== "needsHoles") {
     throw new Error("Expected a failed-save Reaction window.");
   }
-  const pendingInterrupt = result.snapshot.pendingInterrupt;
+  const pendingInterrupt = battleFrontierInterruptDecisionForState(
+    result.state,
+  );
   if (
     pendingInterrupt === null ||
     pendingInterrupt.trigger !== "saveFailed" ||
@@ -373,7 +376,7 @@ export function declineTargetReadiedSpellAfterFailedSave(
   if (declined.tag !== "resolved") {
     throw new Error("Expected the failed-save Reaction decline to resume.");
   }
-  if (declined.snapshot.pendingInterrupt !== null) {
+  if (battleFrontierInterruptDecisionForState(declined.state) !== null) {
     throw new Error("Expected the resumed spell to clear the Reaction window.");
   }
   return declined;

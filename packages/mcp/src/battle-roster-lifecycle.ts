@@ -140,12 +140,8 @@ function commitBattleLifecycleTransition(input: {
     session: committed.right,
   });
   return schemaJsonContent(BattleLifecycleOutputSchema, {
-    battleState,
     result: input.result,
-    snapshot: presentation.right.snapshot,
-    availableActs: presentation.right.availableActs,
-    admittedSpellPresentations: presentation.right.admittedSpellPresentations,
-    presentedInterruptChoices: presentation.right.presentedInterruptChoices,
+    envelope: presentation.right,
     session: { ...input.root.sessionStore.snapshot(), battleState },
   });
 }

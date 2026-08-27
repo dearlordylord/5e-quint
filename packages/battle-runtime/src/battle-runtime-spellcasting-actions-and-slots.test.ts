@@ -49,6 +49,7 @@ function wizardSpellListSource(): CharacterBattleSpellListFact {
 import {
   attackRollFill,
   battleId,
+  battleFrontierInterruptDecisionForState,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllSpellSlotsExpended,
@@ -1470,11 +1471,6 @@ describe("battle runtime: spellcasting actions and slots", () => {
       tag: "needsHoles",
       subject: healingWordReactionAct.subject,
       holes: [{ kind: "interruptDecision", trigger: "spellCast" }],
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "spellCast",
-        },
-      },
     });
     if (awaitingSpellCastReaction.tag !== "needsHoles") {
       throw new Error(
@@ -1484,7 +1480,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const afterDecline = resolveBattleInterrupt({
       state: awaitingSpellCastReaction.state,
       fill: interruptDecisionFill(
-        awaitingSpellCastReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(
+          awaitingSpellCastReaction.state,
+        )!.decisionHole,
         { kind: "decline", responderId: wizardId },
       ),
     });
@@ -1492,7 +1490,6 @@ describe("battle runtime: spellcasting actions and slots", () => {
       tag: "needsHoles",
       subject: healingWordReactionAct.subject,
       holes: [{ kind: "rolledDice", label: "Spell healing (2d4+3)" }],
-      snapshot: { pendingInterrupt: null },
     });
 
     const levelTwoState = startBattleSessionRight({
@@ -1653,11 +1650,6 @@ describe("battle runtime: spellcasting actions and slots", () => {
     expect(splitWithAfterDamageReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "afterDamage",
-        },
-      },
     });
     if (splitWithAfterDamageReaction.tag !== "needsHoles") {
       throw new Error("Expected first after-damage reaction window.");
@@ -1665,18 +1657,15 @@ describe("battle runtime: spellcasting actions and slots", () => {
     const secondAfterDamageReaction = resolveBattleInterrupt({
       state: splitWithAfterDamageReaction.state,
       fill: interruptDecisionFill(
-        splitWithAfterDamageReaction.snapshot.pendingInterrupt!.decisionHole,
+        battleFrontierInterruptDecisionForState(
+          splitWithAfterDamageReaction.state,
+        )!.decisionHole,
         { kind: "decline", responderId: secondWizardId },
       ),
     });
     expect(secondAfterDamageReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "afterDamage" }],
-      snapshot: {
-        pendingInterrupt: {
-          trigger: "afterDamage",
-        },
-      },
     });
 
     const rayState = wizardVsSkeletonBattle();

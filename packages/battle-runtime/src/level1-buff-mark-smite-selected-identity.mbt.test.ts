@@ -64,6 +64,7 @@ import type {
 
 import {
   battleId,
+  battleFrontierInterruptDecisionForState,
   battleReducerStartRouteEvent,
   characterId,
   combatantId,
@@ -3220,7 +3221,8 @@ function requireAttackHitWindow(
 ): Extract<BattleResolutionResult, { readonly tag: "needsHoles" }> {
   if (
     result.tag !== "needsHoles" ||
-    result.snapshot.pendingInterrupt?.trigger !== "attackHit"
+    battleFrontierInterruptDecisionForState(result.state)?.trigger !==
+      "attackHit"
   ) {
     throw new Error("Expected attack-hit reaction window.");
   }
@@ -3291,7 +3293,9 @@ function attackHitBonusActionSpellChoice(
   BattleInterruptProcedureChoice,
   { readonly kind: "castAttackHitBonusActionSpell" }
 > {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (
       candidate,
     ): candidate is Extract<

@@ -37,7 +37,7 @@ describe("wizard battle demo runtime guards", () => {
       requireNeedsReaction(
         {
           tag: "needsHoles",
-          snapshot: { pendingInterrupt: undefined }
+          envelope: { checkpoint: {}, frontier: { kind: "acts", acts: [] } }
         } as never,
         "Expected a spell-cast Reaction."
       )
@@ -46,8 +46,14 @@ describe("wizard battle demo runtime guards", () => {
       requireCounterspellChoice(
         {
           tag: "needsHoles",
-          snapshot: {
-            pendingInterrupt: { choices: [] }
+          envelope: {
+            checkpoint: {},
+            frontier: {
+              kind: "interruptDecision",
+              trigger: "spellCast",
+              decisionHole: {},
+              choices: []
+            }
           }
         } as never,
         {
@@ -61,8 +67,12 @@ describe("wizard battle demo runtime guards", () => {
       requireCounterspellChoice(
         {
           tag: "needsHoles",
-          snapshot: {
-            pendingInterrupt: {
+          envelope: {
+            checkpoint: {},
+            frontier: {
+              kind: "interruptDecision",
+              trigger: "spellCast",
+              decisionHole: {},
               choices: [{ kind: "synthetic:not-counterspell" }]
             }
           }

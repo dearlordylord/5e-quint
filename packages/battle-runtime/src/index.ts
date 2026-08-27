@@ -130,7 +130,10 @@ export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 
 export {
   BattleActPresentationSchema,
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
+  BattleInterruptDecisionFrontierSchema,
+  BattlePresentedCheckpointFrontierEnvelopeSchema,
   BattleSpellPresentationSchema,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
@@ -151,6 +154,16 @@ export {
   discoverBattleActs,
   presentBattleActs,
 } from "./battle-act-composition.ts";
+
+export {
+  battlePresentedCheckpointFrontierEnvelope,
+  presentBattleCheckpointFrontierEnvelope,
+  presentBattleInterruptChoices,
+} from "./battle-snapshot-presentation.ts";
+export type {
+  BattlePresentedCheckpointFrontierEnvelope,
+  BattlePresentedInterruptChoice,
+} from "./battle-snapshot-presentation.ts";
 
 export {
   combatantCanSee,
@@ -684,6 +697,11 @@ export {
   resolveBattleRuntimeInterrupt,
   resolveBattleRuntimeSubject,
   resolveBattleRuntimeSubjectWithTableD20TestCircumstances,
+  battleCheckpointFrontierEnvelope,
+  battleFrontierHoles,
+  battleFrontierInterruptDecision,
+  battleFrontierInterruptDecisionForState,
+  currentBattleCheckpointFrontierEnvelope,
   type BattleCheckpointFrontierEnvelope,
   type BattleResolvedCheckpointFrontierEnvelope,
   resolveBattleSubject,

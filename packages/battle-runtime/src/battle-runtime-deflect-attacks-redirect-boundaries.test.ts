@@ -22,6 +22,7 @@ import {
   interruptDecisionFill,
   monkDeflectAttacksFocusResource,
   reactionModifierChoice,
+  battleFrontierInterruptDecisionForState,
   reactionModifierReductionRollFill,
   reactionModifierUnitRefWithProfile,
   requireHole,
@@ -86,7 +87,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       );
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -161,7 +162,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -221,7 +222,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
       throw new Error("Expected Deflect Attacks Reaction window.");
     }
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );
@@ -295,7 +296,7 @@ describe("battle runtime: Deflect Attacks redirect boundaries", () => {
     }
     const unit = unitLibrary.requireUnit("monk_deflect_attacks");
     const choice = reactionModifierChoice(
-      setup.result.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(setup.result.state)!.choices,
       unit.id,
       "attackDamageReduction",
     );

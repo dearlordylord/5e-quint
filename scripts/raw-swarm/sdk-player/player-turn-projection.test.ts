@@ -10,6 +10,8 @@ import {
   projectPlayerActs,
   projectPlayerSubject,
 } from "./player-turn-projection.ts";
+import type { JsonValue } from "./continuation-contract.ts";
+import type { SdkCallRecord } from "./sdk-transcript.ts";
 
 type Mutable<T> = T extends object
   ? { -readonly [Key in keyof T]: Mutable<T[Key]> }
@@ -114,6 +116,27 @@ const beforeSession = {
   },
 } as const;
 
+function discoverBattleActsCall(
+  before: JsonValue,
+  after: JsonValue,
+): SdkCallRecord {
+  const result: readonly [] = [];
+  return {
+    type: "sdk-call",
+    seq: 1,
+    continuation: 1,
+    operation: "discoverBattleActs",
+    inputSession: before,
+    inputSessionSha256: sha256Canonical(before),
+    input: {},
+    outcome: "returned",
+    outputSession: after,
+    outputSessionSha256: sha256Canonical(after),
+    result,
+    resultSha256: sha256Canonical(result),
+  };
+}
+
 const attackProcedureRef = JSON.stringify({
   scopeRef: JSON.stringify({
     battleId: "battle",
@@ -195,7 +218,7 @@ describe("player current-turn projection", () => {
     expect(
       playerCurrentTurnProjection({
         continuation: 1,
-        calls: [],
+        calls: [discoverBattleActsCall(before, after)],
         beforeSession: before,
         afterSession: after,
         tacticalNote: "",
@@ -239,7 +262,7 @@ describe("player current-turn projection", () => {
     expect(
       playerCurrentTurnProjection({
         continuation: 1,
-        calls: [],
+        calls: [discoverBattleActsCall(before, malformed)],
         beforeSession: before,
         afterSession: malformed,
         tacticalNote: "",
@@ -319,7 +342,7 @@ describe("player current-turn projection", () => {
 
     const projection = playerCurrentTurnProjection({
       continuation: 1,
-      calls: [],
+      calls: [discoverBattleActsCall(before, after)],
       beforeSession: before,
       afterSession: after,
       tacticalNote: "",
@@ -397,7 +420,7 @@ describe("player current-turn projection", () => {
       expect(
         playerCurrentTurnProjection({
           continuation: 1,
-          calls: [],
+          calls: [discoverBattleActsCall(before, malformed)],
           beforeSession: before,
           afterSession: malformed,
           tacticalNote: "",
@@ -613,34 +636,42 @@ describe("player current-turn projection", () => {
       y: 1,
     };
     afterSession.battlefield.objects[0].damageDisposition.hitPoints = 3;
+    const resultSubject = {
+      tag: "action",
+      actorId: "fighter",
+      action: "dash",
+      speedKind: "walk",
+    } as const;
     const result = {
       tag: "needsHoles",
       session: afterSession,
-      subject: {
-        tag: "action",
-        actorId: "fighter",
-        action: "dash",
-        speedKind: "walk",
-      },
-      holes: [
-        {
-          kind: "targetChoice",
-          holeId: "battle:attack:target",
-          holeInstanceKey: "battle:attack:target",
-          label: "Attack target",
-          requiresTableSpatialFact: true,
-          attack: {
-            actorId: "fighter",
-            selection: {
-              procedureRef: attackProcedureRef,
-              attackAbility: "str",
-              attackDamageType: "bludgeoning",
+      envelope: {
+        checkpoint: {},
+        frontier: {
+          kind: "holes",
+          subject: resultSubject,
+          continuation: { kind: "ordinaryReplay" },
+          holes: [
+            {
+              kind: "targetChoice",
+              holeId: "battle:attack:target",
+              holeInstanceKey: "battle:attack:target",
+              label: "Attack target",
+              requiresTableSpatialFact: true,
+              attack: {
+                actorId: "fighter",
+                selection: {
+                  procedureRef: attackProcedureRef,
+                  attackAbility: "str",
+                  attackDamageType: "bludgeoning",
+                },
+                targetConstraint: { kind: "meleeReach", reachFeet: 5 },
+              },
+              choices: ["enemy"],
             },
-            targetConstraint: { kind: "meleeReach", reachFeet: 5 },
-          },
-          choices: ["enemy"],
+          ],
         },
-      ],
+      },
     };
     const call = {
       type: "sdk-call",
@@ -649,7 +680,7 @@ describe("player current-turn projection", () => {
       operation: "resolveBattleRuntimeSubject",
       inputSession: beforeSession,
       inputSessionSha256: sha256Canonical(beforeSession),
-      input: { subject: { tag: "action", actorId: "fighter" }, fills: [] },
+      input: { subject: resultSubject, fills: [] },
       outcome: "returned",
       outputSession: afterSession,
       outputSessionSha256: sha256Canonical(afterSession),
@@ -737,16 +768,24 @@ describe("player current-turn projection", () => {
   });
 
   test("rejects a hole outside the typed projection boundary", () => {
+    const resultSubject = {
+      tag: "action",
+      actorId: "fighter",
+      action: "dash",
+      speedKind: "walk",
+    } as const;
     const result = {
       tag: "needsHoles",
       session: beforeSession,
-      subject: {
-        tag: "action",
-        actorId: "fighter",
-        action: "dash",
-        speedKind: "walk",
+      envelope: {
+        checkpoint: {},
+        frontier: {
+          kind: "holes",
+          subject: resultSubject,
+          continuation: { kind: "ordinaryReplay" },
+          holes: [{ kind: "rolledDice", arbitraryPayload: "not a BattleHole" }],
+        },
       },
-      holes: [{ kind: "rolledDice", arbitraryPayload: "not a BattleHole" }],
     };
     const call = {
       type: "sdk-call",
@@ -755,7 +794,7 @@ describe("player current-turn projection", () => {
       operation: "resolveBattleRuntimeSubject",
       inputSession: beforeSession,
       inputSessionSha256: sha256Canonical(beforeSession),
-      input: { subject: result.subject, fills: [] },
+      input: { subject: resultSubject, fills: [] },
       outcome: "returned",
       outputSession: beforeSession,
       outputSessionSha256: sha256Canonical(beforeSession),
@@ -777,14 +816,20 @@ describe("player current-turn projection", () => {
     });
     const missingChoices = {
       ...result,
-      holes: [
-        {
-          kind: "targetChoice",
-          holeId: "battle:target",
-          holeInstanceKey: "battle:target",
-          label: "Target",
+      envelope: {
+        ...result.envelope,
+        frontier: {
+          ...result.envelope.frontier,
+          holes: [
+            {
+              kind: "targetChoice",
+              holeId: "battle:target",
+              holeInstanceKey: "battle:target",
+              label: "Target",
+            },
+          ],
         },
-      ],
+      },
     };
     expect(
       playerCurrentTurnProjection({
@@ -802,8 +847,23 @@ describe("player current-turn projection", () => {
       }),
     ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
     for (const malformedResult of [
-      { ...result, holes: { kind: "rolledDice" } },
-      { ...result, holes: undefined },
+      {
+        ...result,
+        envelope: {
+          ...result.envelope,
+          frontier: {
+            ...result.envelope.frontier,
+            holes: { kind: "rolledDice" },
+          },
+        },
+      },
+      {
+        ...result,
+        envelope: {
+          ...result.envelope,
+          frontier: { ...result.envelope.frontier, holes: undefined },
+        },
+      },
     ]) {
       const malformedCall = {
         ...call,
@@ -824,8 +884,8 @@ describe("player current-turn projection", () => {
       ...call,
       operation: "discoverBattleActs" as const,
       input: {},
-      result: { subject: result.subject },
-      resultSha256: sha256Canonical({ subject: result.subject }),
+      result: { subject: resultSubject },
+      resultSha256: sha256Canonical({ subject: resultSubject }),
     };
     expect(
       playerCurrentTurnProjection({
@@ -845,7 +905,10 @@ describe("player current-turn projection", () => {
       message:
         "Attack roll relationship facts do not match a requested attack-roll decision.",
       session: beforeSession,
-      snapshot: {},
+      envelope: {
+        checkpoint: {},
+        frontier: { kind: "acts", acts: [] },
+      },
     } as const;
     const call = {
       type: "sdk-call",

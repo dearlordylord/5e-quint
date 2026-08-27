@@ -17,6 +17,7 @@ import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra
 import { describe, expect, test } from "vitest";
 import {
   battleProcedureExecutionRefForTest,
+  battleFrontierInterruptDecisionForState,
   requireCharacterSpellProcedureRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -1166,7 +1167,6 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       endedEffect,
       reaction: {
         tag: "needsHoles",
-        snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
       },
     });
     if (fallWitness.tag !== "falls") {
@@ -1187,22 +1187,21 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     }
     const reactionState = fallWitness.reaction.state;
 
-    const featherFallChoice =
-      fallWitness.reaction.snapshot.pendingInterrupt?.choices.find(
-        (candidate) => {
-          if (candidate.kind !== "castTriggeredReactionSpell") return false;
-          const invocation = characterSpellInvocationRefForProcedureRefForTest(
-            battleRuntimeSessionForTest({ ...session, state: reactionState }),
-            candidate.reactorId,
-            candidate.subject.procedureRef,
-          );
-          return (
-            invocation.tag === "spellSlot" &&
-            invocation.spellId === featherFallUnitId &&
-            invocation.procedure === "featherFallMitigation"
-          );
-        },
+    const featherFallChoice = battleFrontierInterruptDecisionForState(
+      reactionState,
+    )?.choices.find((candidate) => {
+      if (candidate.kind !== "castTriggeredReactionSpell") return false;
+      const invocation = characterSpellInvocationRefForProcedureRefForTest(
+        battleRuntimeSessionForTest({ ...session, state: reactionState }),
+        candidate.reactorId,
+        candidate.subject.procedureRef,
       );
+      return (
+        invocation.tag === "spellSlot" &&
+        invocation.spellId === featherFallUnitId &&
+        invocation.procedure === "featherFallMitigation"
+      );
+    });
     if (
       featherFallChoice === undefined ||
       featherFallChoice.kind !== "castTriggeredReactionSpell"
@@ -1299,7 +1298,9 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       endedEffect: pendingEndedEffect,
       reaction: { tag: "resolved" },
     });
-    expect(fallWitness.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(fallWitness.state),
+    ).toBeNull();
   });
 
   test("fly recast replacement can record a hover-relevant reason instead of opening a fall", () => {
@@ -1335,7 +1336,6 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       targetId: spellCasterId,
       endedEffect,
       reason: "hovering",
-      snapshot: { pendingInterrupt: null },
     });
     expect(
       witness.state.combatants.get(spellCasterId)?.activeEffects,
@@ -1399,7 +1399,6 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
 
     expect(grounded).toMatchObject({
       tag: "notAloft",
-      snapshot: { pendingInterrupt: null },
     });
     expect(cannotStop).toMatchObject({
       tag: "falls",

@@ -5,7 +5,7 @@ import {
 } from "@dnd/character-creation-runtime";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
-import type { BattleToolName } from "./battle-tool-input.ts";
+import { battleToolNames, type BattleToolName } from "./battle-tool-input.ts";
 import {
   decodeGuestAccessGrant,
   type PlaySessionCaller,
@@ -42,6 +42,10 @@ import {
   availablePlaySessionEnvelope,
   unavailablePlaySessionEnvelope,
 } from "./play-session-envelope.ts";
+import {
+  battleSessionPayload,
+  initialInitiativeSetupPayload,
+} from "./battle-tool-payloads.ts";
 
 export {
   unresolvedInputsFrom,
@@ -120,12 +124,18 @@ export async function handleReadPlaySession(
   const result = await registry.run(
     routed.right.playSessionId,
     routed.right.caller,
-    (root) => ({
-      projection: root.sessionStore.snapshot(),
-      hasAvailableCharacterSession: Array.from(
-        root.sessionStore.characters.entries(),
-      ).some(([, session]) => session.tag !== "inBattle"),
-    }),
+    (root) => {
+      const battleOperationResult = battleOperationResultForRoot(root);
+      return {
+        projection: root.sessionStore.snapshot(),
+        ...(battleOperationResult === undefined
+          ? {}
+          : { battleOperationResult }),
+        hasAvailableCharacterSession: Array.from(
+          root.sessionStore.characters.entries(),
+        ).some(([, session]) => session.tag !== "inBattle"),
+      };
+    },
   );
   if (Either.isLeft(result)) {
     return result.left.tag === "playSessionUnavailable"
@@ -143,6 +153,9 @@ export async function handleReadPlaySession(
       playSessionId: routed.right.playSessionId,
     },
     projection: result.right.value.projection,
+    ...(result.right.value.battleOperationResult === undefined
+      ? {}
+      : { battleOperationResult: result.right.value.battleOperationResult }),
     hasAvailableCharacterSession:
       result.right.value.hasAvailableCharacterSession,
     tenure: result.right.tenure,
@@ -171,13 +184,27 @@ export async function handlePlaySessionOperation(input: {
   const result = await input.registry.run(
     routed.right.playSessionId,
     routed.right.caller,
-    async (root) => ({
-      operationContent: await input.handle(root, routed.right.operationArgs),
-      projection: root.sessionStore.snapshot(),
-      hasAvailableCharacterSession: Array.from(
-        root.sessionStore.characters.entries(),
-      ).some(([, session]) => session.tag !== "inBattle"),
-    }),
+    async (root) => {
+      const operationContent = await input.handle(
+        root,
+        routed.right.operationArgs,
+      );
+      const battleOperationResult =
+        root.sessionStore.pendingBattleFills !== null ||
+        isBattleStateProjectionOperation(input.operationName)
+          ? battleOperationResultForRoot(root)
+          : undefined;
+      return {
+        operationContent,
+        projection: root.sessionStore.snapshot(),
+        ...(battleOperationResult === undefined
+          ? {}
+          : { battleOperationResult }),
+        hasAvailableCharacterSession: Array.from(
+          root.sessionStore.characters.entries(),
+        ).some(([, session]) => session.tag !== "inBattle"),
+      };
+    },
     {
       commandFor: (operation) =>
         retainedPlaySessionCommand(
@@ -222,12 +249,48 @@ export async function handlePlaySessionOperation(input: {
         ? operationContent.structuredContent
         : jsonContentPayload(operationContent),
     projection: result.right.value.projection,
+    ...(result.right.value.battleOperationResult === undefined
+      ? {}
+      : { battleOperationResult: result.right.value.battleOperationResult }),
     hasAvailableCharacterSession:
       result.right.value.hasAvailableCharacterSession,
     isError: operationContent.isError === true,
     tenure: result.right.tenure,
     identity: input.identity ?? GUEST_ONLY_REQUEST_IDENTITY,
   });
+}
+
+const BATTLE_STATE_PROJECTION_OPERATION_NAMES = [
+  battleToolNames.startBattle,
+  battleToolNames.battleLifecycle,
+  battleToolNames.readBattleState,
+  battleToolNames.discoverBattleActs,
+  battleToolNames.fillBattleHole,
+  battleToolNames.resolveBattleAct,
+  battleToolNames.endTurn,
+  battleToolNames.endBattle,
+] as const satisfies readonly BattleToolName[];
+
+function isBattleStateProjectionOperation(
+  operationName: PlaySessionOperationName,
+): operationName is (typeof BATTLE_STATE_PROJECTION_OPERATION_NAMES)[number] {
+  return BATTLE_STATE_PROJECTION_OPERATION_NAMES.includes(
+    operationName as (typeof BATTLE_STATE_PROJECTION_OPERATION_NAMES)[number],
+  );
+}
+
+function battleOperationResultForRoot(
+  root: McpPlaySessionRoot,
+): unknown | undefined {
+  const battleState = root.sessionStore.battleState;
+  if (battleState.tag === "initialInitiativeSetup") {
+    return initialInitiativeSetupPayload(root);
+  }
+  const payload = battleSessionPayload(
+    root,
+    battleState.tag === "activeBattle" ? battleState.session : null,
+  );
+  return Either.isRight(payload) ? payload.right : undefined;
 }
 
 function operationShouldBeRetained(

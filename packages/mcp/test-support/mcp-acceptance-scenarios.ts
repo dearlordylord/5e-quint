@@ -417,7 +417,7 @@ const agentConversationScenarios = [
     agentReads:
       "end_battle takes empty args and returns endedBattleId, the closedAt SDK-derived Initiative position, character sessions, and session snapshot. list_characters returns available rows; inspect_character_session returns one selected canonical stored session and its core build-derived facts.",
     agentDecision:
-      "It calls end_battle only when no transient fills are pending, lists the durable sessions, and inspects the selected character to continue from its current HP and Spell Slot expenditure handoff.",
+      "It calls end_battle only when no accepted battle fills are pending, lists the durable sessions, and inspects the selected character to continue from its current HP and Spell Slot expenditure handoff.",
     executableCoverage: "verifyBaselineVertical and verifyWidthVertical",
     insufficiency:
       "Post-battle handoff currently rejects 0 HP characters; the first vertical cannot finish a battle where a character is at 0 HP.",
@@ -440,7 +440,7 @@ const agentConversationScenarios = [
     name: "Navigate result payloads without repository context",
     userSays: "Use whatever the MCP returns to decide the next step.",
     agentReads:
-      "Tool results arrive as JSON text content. Creation state is under holes/finalization/draft, battle options are under availableActs, follow-up battle holes are under result.holes, and pending fills are under session.transientBattleFills.",
+      "Tool results arrive as JSON text content. Creation state is under holes/finalization/draft, battle options are under envelope.frontier.acts, follow-up battle holes are under envelope.frontier.holes, and committed checkpoints are under envelope.checkpoint.",
     agentDecision:
       "It must parse the text payload as JSON, learn the response shape by inspection, and keep using returned holeIds, optionIds, subjects, revisions, actorIds, and result tags instead of inventing them.",
     executableCoverage:
@@ -491,23 +491,19 @@ export async function verifyToolContract(
   assert.match(startBattleOutputSchemaText, /initialInitiativeSetup/);
   assert.match(startBattleOutputSchemaText, /activeBattle/);
   assert.match(startBattleOutputSchemaText, /none/);
-  assert.match(startBattleOutputSchemaText, /snapshot/);
+  assert.match(startBattleOutputSchemaText, /checkpoint/);
   assert.match(startBattleOutputSchemaText, /session/);
 
   const validateStartBattleOutput = new AjvJsonSchemaValidator().getValidator(
     requireJsonSchema(startBattle.outputSchema, "start_battle outputSchema"),
   );
   const emptyStartBattleProjection = {
-    snapshot: null,
-    availableActs: [],
-    admittedSpellPresentations: [],
-    presentedInterruptChoices: [],
+    envelope: null,
     session: {
       draftIds: [],
       characterIds: [],
       selectedStatBlockId: null,
       battleState: { tag: "none" },
-      pendingBattleHoles: null,
     },
   };
   for (const battleState of [
@@ -520,7 +516,6 @@ export async function verifyToolContract(
   ] as const) {
     const operationResult = {
       ...emptyStartBattleProjection,
-      battleState,
       session: { ...emptyStartBattleProjection.session, battleState },
     };
     const envelope = {
@@ -618,7 +613,10 @@ export async function verifyToolContract(
 
   const workflow = await callTool(client, "describe_mcp_workflow", {});
   assert.ok((get(workflow, "lifecycle") as string[]).length > 0);
-  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
+  assert.equal(
+    get(workflow, "resultPaths.battleActs"),
+    "envelope.frontier.acts",
+  );
 
   const units = await callTool(client, "list_catalog_units", {});
   const unitGroups = Schema.decodeUnknownSync(CatalogUnitListProtocolSchema)(
@@ -862,11 +860,14 @@ export async function verifyBaselineVertical(
       },
     ],
   });
-  assert.deepEqual(get(started, "snapshot.turnOrder"), ["fighter", "goblin"]);
-  assert.equal(get(started, "snapshot.currentActorId"), "fighter");
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
+    "fighter",
+    "goblin",
+  ]);
+  assert.equal(get(started, "envelope.checkpoint.currentActorId"), "fighter");
 
   const read = await callTool(client, "read_battle_state", {});
-  assert.equal(get(read, "snapshot.currentActorId"), "fighter");
+  assert.equal(get(read, "envelope.checkpoint.currentActorId"), "fighter");
   const fighterActs = await callTool(client, "discover_battle_acts", {});
   assert.deepEqual(actionLabels(fighterActs), [
     "Attack",
@@ -905,7 +906,10 @@ export async function verifyBaselineVertical(
   const endedFighterTurn = await callTool(client, "end_turn", {
     actorId: "fighter",
   });
-  assert.equal(get(endedFighterTurn, "snapshot.currentActorId"), "goblin");
+  assert.equal(
+    get(endedFighterTurn, "envelope.checkpoint.currentActorId"),
+    "goblin",
+  );
   const goblinActs = await callTool(client, "discover_battle_acts", {});
   assert.deepEqual(actionLabels(goblinActs), [
     "Attack",
@@ -927,9 +931,10 @@ export async function verifyBaselineVertical(
     subject: goblinAttack,
     fill: attackTargetFill(goblinAttack, "fighter"),
   });
-  const goblinAttackRoll = jsonObjectArrayAt(goblinTarget, "result.holes").find(
-    (hole) => hole.kind === "attackRoll",
-  );
+  const goblinAttackRoll = jsonObjectArrayAt(
+    goblinTarget,
+    "envelope.frontier.holes",
+  ).find((hole) => hole.kind === "attackRoll");
   assert.ok(goblinAttackRoll);
   await callTool(client, "fill_battle_hole", {
     subject: goblinAttack,
@@ -1156,8 +1161,8 @@ export async function verifyCompleteNewcomerJourney(
   });
   assert.equal(get(active, "battleState.tag"), "activeBattle");
   const activeActorId = parseString(
-    get(active, "snapshot.currentActorId"),
-    "snapshot.currentActorId",
+    get(active, "envelope.checkpoint.currentActorId"),
+    "envelope.checkpoint.currentActorId",
   );
 
   const added = await callTool(client, "battle_lifecycle", {
@@ -1187,8 +1192,8 @@ export async function verifyCompleteNewcomerJourney(
     actorId: activeActorId,
   });
   const nextActorId = parseString(
-    get(endedFighterTurn, "snapshot.currentActorId"),
-    "snapshot.currentActorId",
+    get(endedFighterTurn, "envelope.checkpoint.currentActorId"),
+    "envelope.checkpoint.currentActorId",
   );
   await callTool(client, "end_turn", { actorId: nextActorId });
 
@@ -1309,7 +1314,7 @@ export async function verifyWidthVertical(client: Client) {
       ]),
     ],
   });
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     "fighter",
     "wizard",
     "skeleton-a",
@@ -1384,7 +1389,7 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(
     get(
       await callTool(client, "end_turn", { actorId: "fighter" }),
-      "snapshot.currentActorId",
+      "envelope.checkpoint.currentActorId",
     ),
     "wizard",
   );
@@ -1424,14 +1429,14 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(
     get(
       await callTool(client, "end_turn", { actorId: "wizard" }),
-      "snapshot.currentActorId",
+      "envelope.checkpoint.currentActorId",
     ),
     "skeleton-a",
   );
   assert.equal(
     get(
       await callTool(client, "end_turn", { actorId: "skeleton-a" }),
-      "snapshot.currentActorId",
+      "envelope.checkpoint.currentActorId",
     ),
     "skeleton-b",
   );
@@ -1459,21 +1464,21 @@ export async function verifyWidthVertical(client: Client) {
   assert.equal(
     get(
       await callTool(client, "end_turn", { actorId: "skeleton-b" }),
-      "snapshot.currentActorId",
+      "envelope.checkpoint.currentActorId",
     ),
     "goblin",
   );
   assert.equal(
     get(
       await callTool(client, "end_turn", { actorId: "goblin" }),
-      "snapshot.currentActorId",
+      "envelope.checkpoint.currentActorId",
     ),
     "fighter",
   );
   assert.equal(
     get(
       await callTool(client, "end_turn", { actorId: "fighter" }),
-      "snapshot.currentActorId",
+      "envelope.checkpoint.currentActorId",
     ),
     "wizard",
   );
@@ -1626,7 +1631,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
       statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8, []),
     ],
   });
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     "wizard-level-3",
     "sphinx",
   ]);
@@ -1662,7 +1667,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
     naturalD20: 13,
     damageRolls: [3, 4],
   });
-  assert.equal(combatantHp(next, "sphinx"), 32);
+  assert.equal(combatantHp(next, "sphinx"), 39);
   next = await fillAttackSequencePart(client, {
     subject: scorchingRaySubject,
     pending: next,
@@ -1670,7 +1675,7 @@ export async function verifyLevelThreeWizardVertical(client: Client) {
     naturalD20: 12,
     damageRolls: [2, 3],
   });
-  assert.equal(combatantHp(next, "sphinx"), 27);
+  assert.equal(combatantHp(next, "sphinx"), 39);
   next = await fillAttackSequencePart(client, {
     subject: scorchingRaySubject,
     pending: next,
@@ -1788,7 +1793,7 @@ export async function verifyLevelFourWizardVertical(client: Client) {
       statBlockCombatant("sphinx", "stat_block_sphinx_of_wonder", 8, []),
     ],
   });
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     "wizard-level-4",
     "sphinx",
   ]);
@@ -1877,10 +1882,13 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
   client: Client,
 ) {
   const workflow = await callTool(client, "describe_mcp_workflow", {});
-  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
+  assert.equal(
+    get(workflow, "resultPaths.battleActs"),
+    "envelope.frontier.acts",
+  );
   assert.equal(
     get(workflow, "resultPaths.battleCombatants"),
-    "snapshot.combatants",
+    "envelope.checkpoint.combatants",
   );
 
   const units = await callTool(client, "list_catalog_units", {});
@@ -1930,10 +1938,10 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
     ],
   });
   assert.equal(
-    get(started, "snapshot.battleId"),
+    get(started, "envelope.checkpoint.battleId"),
     levelFiveWizardFireballBattleId,
   );
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     levelFiveWizardFireballCombatantId,
     "sphinx",
   ]);
@@ -1944,7 +1952,7 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
 
   const wizardActs = await callTool(client, "discover_battle_acts", {});
   assert.equal(
-    get(wizardActs, "snapshot.currentActorId"),
+    get(wizardActs, "envelope.checkpoint.currentActorId"),
     levelFiveWizardFireballCombatantId,
   );
   const fireballAct = battleActByLabel(wizardActs, "Fireball");
@@ -1985,7 +1993,10 @@ export async function verifyLevelFiveWizardFireballBattleHandoff(
 
 export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
   const workflow = await callTool(client, "describe_mcp_workflow", {});
-  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
+  assert.equal(
+    get(workflow, "resultPaths.battleActs"),
+    "envelope.frontier.acts",
+  );
 
   const units = await callTool(client, "list_catalog_units", {});
   assert.ok(
@@ -2066,8 +2077,8 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
       },
     ],
   });
-  assert.equal(get(started, "snapshot.battleId"), iceKnifeBattleId);
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.equal(get(started, "envelope.checkpoint.battleId"), iceKnifeBattleId);
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     iceKnifeCasterCombatantId,
     iceKnifePrimaryCombatantId,
     iceKnifeSecondaryCombatantId,
@@ -2080,7 +2091,7 @@ export async function verifyWizardIceKnifeBattleHandoff(client: Client) {
 
   const casterActs = await callTool(client, "discover_battle_acts", {});
   assert.equal(
-    get(casterActs, "snapshot.currentActorId"),
+    get(casterActs, "envelope.checkpoint.currentActorId"),
     iceKnifeCasterCombatantId,
   );
   const iceKnifeAct = battleActByLabel(casterActs, "Ice Knife");
@@ -2213,10 +2224,13 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
   client: Client,
 ) {
   const workflow = await callTool(client, "describe_mcp_workflow", {});
-  assert.equal(get(workflow, "resultPaths.battleActs"), "availableActs");
+  assert.equal(
+    get(workflow, "resultPaths.battleActs"),
+    "envelope.frontier.acts",
+  );
   assert.equal(
     get(workflow, "resultPaths.battleCombatants"),
-    "snapshot.combatants",
+    "envelope.checkpoint.combatants",
   );
 
   const units = await callTool(client, "list_catalog_units", {});
@@ -2270,15 +2284,15 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
     ],
   });
   assert.equal(
-    get(started, "snapshot.battleId"),
+    get(started, "envelope.checkpoint.battleId"),
     levelSixRogueExpertiseBattleId,
   );
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     levelSixRogueExpertiseCombatantId,
     "goblin",
   ]);
   assert.equal(
-    get(started, "snapshot.currentActorId"),
+    get(started, "envelope.checkpoint.currentActorId"),
     levelSixRogueExpertiseCombatantId,
   );
   const startedRogue = battleCombatant(
@@ -2290,7 +2304,7 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
 
   const read = await callTool(client, "read_battle_state", {});
   assert.equal(
-    get(read, "snapshot.currentActorId"),
+    get(read, "envelope.checkpoint.currentActorId"),
     levelSixRogueExpertiseCombatantId,
   );
   assert.equal(
@@ -2303,7 +2317,7 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
 
   const rogueActs = await callTool(client, "discover_battle_acts", {});
   assert.equal(
-    get(rogueActs, "snapshot.currentActorId"),
+    get(rogueActs, "envelope.checkpoint.currentActorId"),
     levelSixRogueExpertiseCombatantId,
   );
   const steadyAimAct = battleActByLabel(
@@ -2329,7 +2343,10 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
     subject: steadyAimAct.subject,
   });
   assert.equal(get(aimed, "result.tag"), "resolved");
-  assert.equal(get(aimed, "snapshot.turn.bonusActionQuotaAvailable"), false);
+  assert.equal(
+    get(aimed, "envelope.checkpoint.turn.bonusActionQuotaAvailable"),
+    false,
+  );
   const aimedMovement = get(
     battleCombatant(aimed, levelSixRogueExpertiseCombatantId),
     "movement",
@@ -2458,15 +2475,15 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
     ],
   });
   assert.equal(
-    get(started, "snapshot.battleId"),
+    get(started, "envelope.checkpoint.battleId"),
     levelNineRangerExpertiseBattleId,
   );
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     levelNineRangerExpertiseCombatantId,
     "goblin",
   ]);
   assert.equal(
-    get(started, "snapshot.currentActorId"),
+    get(started, "envelope.checkpoint.currentActorId"),
     levelNineRangerExpertiseCombatantId,
   );
   assert.deepEqual(
@@ -2476,7 +2493,7 @@ export async function verifyLevelNineRangerExpertiseBattleHandoff(
 
   const rangerActs = await callTool(client, "discover_battle_acts", {});
   assert.equal(
-    get(rangerActs, "snapshot.currentActorId"),
+    get(rangerActs, "envelope.checkpoint.currentActorId"),
     levelNineRangerExpertiseCombatantId,
   );
   assert.ok(
@@ -2595,15 +2612,15 @@ export async function verifyLevelTenFighterChampionBattleHandoff(
     ],
   });
   assert.equal(
-    get(started, "snapshot.battleId"),
+    get(started, "envelope.checkpoint.battleId"),
     levelTenFighterChampionBattleId,
   );
-  assert.deepEqual(get(started, "snapshot.turnOrder"), [
+  assert.deepEqual(get(started, "envelope.checkpoint.turnOrder"), [
     levelTenFighterChampionCombatantId,
     "goblin",
   ]);
   assert.equal(
-    get(started, "snapshot.currentActorId"),
+    get(started, "envelope.checkpoint.currentActorId"),
     levelTenFighterChampionCombatantId,
   );
   assert.equal(
@@ -2616,7 +2633,7 @@ export async function verifyLevelTenFighterChampionBattleHandoff(
 
   const fighterActs = await callTool(client, "discover_battle_acts", {});
   assert.equal(
-    get(fighterActs, "snapshot.currentActorId"),
+    get(fighterActs, "envelope.checkpoint.currentActorId"),
     levelTenFighterChampionCombatantId,
   );
   assert.ok(
@@ -4099,7 +4116,7 @@ export function attackSubjectFromActs(
   actorId: string,
   attackName: string,
 ): JsonObject {
-  const acts = jsonObjectArrayAt(payload, "availableActs");
+  const acts = jsonObjectArrayAt(payload, "envelope.frontier.acts");
   const matchingActs = acts.filter((candidate) => {
     const subject = candidate.subject;
     if (!isJsonObject(subject)) return false;
@@ -4130,7 +4147,10 @@ function actionSubjectFromActs(
   actorId: string,
   label: string,
 ): JsonObject {
-  const matchingActs = jsonObjectArrayAt(payload, "availableActs").filter(
+  const matchingActs = jsonObjectArrayAt(
+    payload,
+    "envelope.frontier.acts",
+  ).filter(
     (candidate) =>
       candidate.label === label &&
       isJsonObject(candidate.subject) &&
@@ -4324,12 +4344,17 @@ function holeIds(payload: JsonObject) {
 
 function actionLabels(payload: JsonObject) {
   return (
-    get(payload, "availableActs") as ReadonlyArray<{ readonly label: string }>
+    get(payload, "envelope.frontier.acts") as ReadonlyArray<{
+      readonly label: string;
+    }>
   ).map((act) => act.label);
 }
 
 function combatantHp(payload: JsonObject, combatantId: string) {
-  const combatants = get(payload, "snapshot.combatants") as ReadonlyArray<{
+  const combatants = get(
+    payload,
+    "envelope.checkpoint.combatants",
+  ) as ReadonlyArray<{
     readonly combatantId: string;
     readonly hp: number;
   }>;
@@ -4341,7 +4366,10 @@ function combatantHp(payload: JsonObject, combatantId: string) {
 }
 
 function battleCombatant(payload: JsonObject, combatantId: string) {
-  const combatants = jsonObjectArrayAt(payload, "snapshot.combatants");
+  const combatants = jsonObjectArrayAt(
+    payload,
+    "envelope.checkpoint.combatants",
+  );
   const combatant = combatants.find(
     (candidate) => candidate.combatantId === combatantId,
   );
@@ -4350,7 +4378,7 @@ function battleCombatant(payload: JsonObject, combatantId: string) {
 }
 
 function resultHole(payload: JsonObject, kind: string) {
-  const holes = get(payload, "result.holes") as
+  const holes = get(payload, "envelope.frontier.holes") as
     | ReadonlyArray<{ readonly kind: string; readonly holeId: string }>
     | undefined;
   assert.ok(holes, "Expected result holes");
@@ -4364,7 +4392,10 @@ function wizardSpellSlots(payload: JsonObject) {
 }
 
 function wizardSpellSlotsFor(payload: JsonObject, combatantId: string) {
-  const combatants = get(payload, "snapshot.combatants") as ReadonlyArray<{
+  const combatants = get(
+    payload,
+    "envelope.checkpoint.combatants",
+  ) as ReadonlyArray<{
     readonly combatantId: string;
     readonly origin: {
       readonly spellcasting?: {
@@ -4381,7 +4412,7 @@ function wizardSpellSlotsFor(payload: JsonObject, combatantId: string) {
 
 function battleActByLabel(payload: JsonObject, label: string) {
   return (
-    get(payload, "availableActs") as ReadonlyArray<{
+    get(payload, "envelope.frontier.acts") as ReadonlyArray<{
       readonly label: string;
       readonly subject: JsonObject;
       readonly initialHoles: readonly JsonObject[];

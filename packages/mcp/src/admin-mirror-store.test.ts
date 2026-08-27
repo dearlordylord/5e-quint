@@ -165,7 +165,6 @@ function envelope(input: {
         battleState: { tag: "none" },
         draftIds: [],
         selectedStatBlockId: null,
-        transientBattleFills: null,
       },
     },
     publisherInstanceId: adminMirrorPublisherInstanceId(

@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import { classLevel } from "@dnd/shared/types";
 
 import {
+  battleFrontierInterruptDecisionForState,
   type BattleState,
   type CombatantId,
   openCreatureFallsInterruptWindow,
@@ -51,14 +52,13 @@ describe("Slow Fall Reaction", () => {
 
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
-      snapshot: { pendingInterrupt: { trigger: "creatureFalls" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected Slow Fall falling-trigger Reaction window.");
     }
 
     const choice = reactionModifierChoice(
-      awaitingReaction.snapshot.pendingInterrupt!.choices,
+      battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
       slowFallUnitId,
       "fallDamageReduction",
     );
@@ -91,7 +91,6 @@ describe("Slow Fall Reaction", () => {
 
     expect(declined).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 
@@ -167,7 +166,6 @@ describe("Slow Fall Reaction", () => {
 
     expect(result).toMatchObject({
       tag: "resolved",
-      snapshot: { pendingInterrupt: null },
     });
   });
 });
@@ -215,7 +213,7 @@ function resolveSlowFallReaction(state: BattleState): BattleState {
     throw new Error("Expected Slow Fall falling-trigger Reaction window.");
   }
   const choice = reactionModifierChoice(
-    awaitingReaction.snapshot.pendingInterrupt!.choices,
+    battleFrontierInterruptDecisionForState(awaitingReaction.state)!.choices,
     slowFallUnitId,
     "fallDamageReduction",
   );

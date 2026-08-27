@@ -24,8 +24,15 @@ function fixture() {
   const result = {
     tag: "needsHoles",
     session: outputSession,
-    snapshot: { large: "omitted" },
-    holes: [{ kind: "damageRoll", label: "Damage", choices: [1, 2] }],
+    envelope: {
+      checkpoint: {},
+      frontier: {
+        kind: "holes",
+        subject: { tag: "action", actorId: "a", action: "attack" },
+        continuation: { kind: "ordinaryReplay" },
+        holes: [{ kind: "damageRoll", label: "Damage", choices: [1, 2] }],
+      },
+    },
   };
   const header = {
     type: "sdk-player-header",
@@ -207,6 +214,7 @@ describe("SDK player derived audit evidence", () => {
       reason: "invalidFill",
       message: "The supplied roll mode is invalid.",
       session: call.outputSession,
+      envelope: call.result.envelope,
     };
     expect(
       sdkAuditTranscript({

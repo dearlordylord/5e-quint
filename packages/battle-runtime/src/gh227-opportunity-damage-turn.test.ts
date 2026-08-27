@@ -34,6 +34,7 @@ import {
   damageRollFill,
   goblinId,
   battleId,
+  battleFrontierInterruptDecisionForState,
 } from "./battle-runtime.test-support.ts";
 import type { BattleSubject } from "./battle-runtime.test-support.ts";
 
@@ -75,13 +76,14 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
     expect(awaitingReaction).toMatchObject({
       tag: "needsHoles",
       holes: [{ kind: "interruptDecision", trigger: "opportunityAttack" }],
-      snapshot: { pendingInterrupt: { trigger: "opportunityAttack" } },
     });
     if (awaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected the movement to offer an Opportunity Attack.");
     }
 
-    const pendingInterrupt = awaitingReaction.snapshot.pendingInterrupt;
+    const pendingInterrupt = battleFrontierInterruptDecisionForState(
+      awaitingReaction.state,
+    );
     if (pendingInterrupt === null) {
       throw new Error("Expected the Opportunity Attack decision window.");
     }
@@ -132,7 +134,7 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
         ],
       }),
     );
-    expect(completed.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(completed.state)).toBeNull();
     expect(completed.snapshot.readiedResponses.spells).toHaveLength(1);
     expect(completed.snapshot.readiedResponses.spells[0]).toMatchObject({
       casterId: wizardId,
@@ -226,8 +228,9 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
     if (firstAwaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected the resistant mover to offer an OA.");
     }
-    const firstPendingInterrupt =
-      firstAwaitingReaction.snapshot.pendingInterrupt;
+    const firstPendingInterrupt = battleFrontierInterruptDecisionForState(
+      firstAwaitingReaction.state,
+    );
     if (firstPendingInterrupt === null) {
       throw new Error("Expected the OA decision window.");
     }
@@ -264,7 +267,9 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
         ],
       }),
     );
-    expect(firstCompleted.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(firstCompleted.state),
+    ).toBeNull();
     expect(
       firstCompleted.snapshot.combatants.find(
         (combatant) => combatant.combatantId === skeletonId,
@@ -344,8 +349,9 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
     if (secondAwaitingReaction.tag !== "needsHoles") {
       throw new Error("Expected the reset goblin to offer a second OA.");
     }
-    const secondPendingInterrupt =
-      secondAwaitingReaction.snapshot.pendingInterrupt;
+    const secondPendingInterrupt = battleFrontierInterruptDecisionForState(
+      secondAwaitingReaction.state,
+    );
     if (secondPendingInterrupt === null) {
       throw new Error("Expected the second OA decision window.");
     }
@@ -398,7 +404,9 @@ describe("GitHub #227 opportunity attack, damage, and turn boundaries", () => {
         ],
       }),
     );
-    expect(secondCompleted.snapshot.pendingInterrupt).toBeNull();
+    expect(
+      battleFrontierInterruptDecisionForState(secondCompleted.state),
+    ).toBeNull();
     expect(
       secondCompleted.snapshot.combatants.find(
         (combatant) => combatant.combatantId === skeletonId,

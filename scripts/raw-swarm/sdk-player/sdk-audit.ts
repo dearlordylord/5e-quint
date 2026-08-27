@@ -412,9 +412,10 @@ function resolution(result: JsonValue): SdkCallReviewFacts | undefined {
   if (typeof tag !== "string" || !isOneOf(SDK_REVIEW_RESOLUTION_TAGS, tag)) {
     return undefined;
   }
+  const projectedHoles = resolutionFrontierHoles(result, tag);
   if (
-    (tag === "needsHoles" && !Array.isArray(result.holes)) ||
-    (tag !== "needsHoles" && result.holes !== undefined) ||
+    projectedHoles === undefined ||
+    result.holes !== undefined ||
     (result.objectDamages !== undefined &&
       !Array.isArray(result.objectDamages)) ||
     (result.movements !== undefined && !Array.isArray(result.movements)) ||
@@ -431,8 +432,6 @@ function resolution(result: JsonValue): SdkCallReviewFacts | undefined {
       result.message !== undefined)
   )
     return undefined;
-  const projectedHoles = holes(result.holes, "optional");
-  if (projectedHoles === undefined) return undefined;
   const reason = optionalString(result.reason);
   const message = optionalString(result.message);
   const issueTag =
@@ -477,6 +476,57 @@ function resolution(result: JsonValue): SdkCallReviewFacts | undefined {
     ),
     Match.exhaustive,
   );
+}
+
+function resolutionFrontierHoles(
+  result: JsonObject,
+  tag: string,
+): readonly SdkReviewHole[] | undefined {
+  if (result.envelope === undefined) {
+    return tag === "scenarioSessionConflict" ||
+      tag === "scenarioMovementRejected"
+      ? []
+      : undefined;
+  }
+  if (
+    !isJsonObject(result.envelope) ||
+    !isJsonObject(result.envelope.frontier)
+  ) {
+    return undefined;
+  }
+  const frontier = result.envelope.frontier;
+  if (frontier.kind === "acts") {
+    return Array.isArray(frontier.acts)
+      ? frontier.acts.reduce<readonly SdkReviewHole[] | undefined>(
+          (all, act) => {
+            if (all === undefined || !isJsonObject(act)) return undefined;
+            const actHoles = holes(act.initialHoles, "required");
+            return actHoles === undefined ? undefined : [...all, ...actHoles];
+          },
+          [],
+        )
+      : undefined;
+  }
+  if (frontier.kind === "holes") return holes(frontier.holes, "required");
+  if (frontier.kind !== "interruptDecision") return undefined;
+  if (!isJsonObject(frontier.decisionHole)) return undefined;
+  if (typeof frontier.decisionHole.kind !== "string") return undefined;
+  if (
+    frontier.decisionHole.choices !== undefined &&
+    !Array.isArray(frontier.decisionHole.choices)
+  )
+    return undefined;
+  return [
+    {
+      kind: frontier.decisionHole.kind,
+      ...(typeof frontier.decisionHole.label === "string"
+        ? { label: frontier.decisionHole.label }
+        : {}),
+      ...(Array.isArray(frontier.decisionHole.choices)
+        ? { choiceCount: frontier.decisionHole.choices.length }
+        : {}),
+    },
+  ];
 }
 
 function reviewFacts(

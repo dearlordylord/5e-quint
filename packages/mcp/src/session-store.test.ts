@@ -734,14 +734,9 @@ describe("MCP character sessions", () => {
     if (subjectAct === undefined) {
       throw new Error("Expected an active battle subject for pending fills.");
     }
-    const pendingHole = subjectAct.initialHoles[0];
-    if (pendingHole === undefined) {
-      throw new Error("Expected a current pending battle hole.");
-    }
     store.pendingBattleFills = {
       subject: subjectAct.subject,
       fills: [],
-      holes: [pendingHole],
       baseSession: active,
     };
     const beforeCommit = deepStoreState(store);

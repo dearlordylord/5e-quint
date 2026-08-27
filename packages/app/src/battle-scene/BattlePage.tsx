@@ -1,4 +1,4 @@
-import { battlePresentedSnapshot } from "@dnd/battle-runtime"
+import { battlePresentedCheckpointFrontierEnvelope } from "@dnd/battle-runtime"
 import { Either } from "effect"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -28,16 +28,16 @@ export function BattlePage({
   const headerRef = useRef<HTMLDivElement | null>(null)
   const step = steps[cursor]
   const lastStep = steps.length - 1
-  const presentedSnapshot = useMemo(() => battlePresentedSnapshot(step.session), [step.session])
+  const presentedEnvelope = useMemo(() => battlePresentedCheckpointFrontierEnvelope(step.session), [step.session])
   const projectionResult = useMemo(
     () =>
-      Either.flatMap(presentedSnapshot, (snapshot) =>
+      Either.flatMap(presentedEnvelope, (envelope) =>
         Either.mapLeft(
-          computeWizardBattleScene({ meta, snapshot, step, stepIndex: cursor }),
+          computeWizardBattleScene({ meta, snapshot: envelope.checkpoint, step, stepIndex: cursor }),
           (issue) => [issue] as const
         )
       ),
-    [cursor, meta, presentedSnapshot, step]
+    [cursor, meta, presentedEnvelope, step]
   )
   const logEntries: ReadonlyArray<EventLogEntry> = useMemo(
     () => steps.map((entry) => ({ detail: entry.detail, label: entry.title })),

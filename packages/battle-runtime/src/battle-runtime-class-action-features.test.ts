@@ -67,6 +67,7 @@ import {
   characterBattleResourceUsage,
   characterBattleFeatureInitForTest,
   difficultyClass,
+  battleCheckpointFrontierEnvelope,
   discoverBattleActCandidates,
   discoverBattleActs,
   endTurn,
@@ -262,6 +263,15 @@ describe("battle runtime: class action features", () => {
             },
           ],
         },
+      },
+    });
+
+    if (surged.tag !== "resolved") {
+      throw new Error(`Expected resolved Action Surge, got ${surged.tag}.`);
+    }
+    expect(battleCheckpointFrontierEnvelope(surged.state).frontier).toEqual(
+      expect.objectContaining({
+        kind: "acts",
         acts: expect.arrayContaining([
           expect.objectContaining({
             subject: expect.objectContaining({ action: "attack" }),
@@ -284,14 +294,12 @@ describe("battle runtime: class action features", () => {
             },
           }),
         ]),
-      },
-    });
-
-    if (surged.tag !== "resolved") {
-      throw new Error(`Expected resolved Action Surge, got ${surged.tag}.`);
-    }
+      }),
+    );
     expect(
-      surged.snapshot.acts.some((act) => act.subject.tag === "actionSpell"),
+      discoverBattleActCandidates(surged.state).some(
+        (act) => act.subject.tag === "actionSpell",
+      ),
     ).toBe(false);
     expect(
       resolveBattleSubject({

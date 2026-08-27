@@ -161,26 +161,47 @@ function battleSessionUnresolvedInputs(
 ): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
   const decoded = Schema.decodeUnknownEither(BattleSessionOutputSchema)(value);
   if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  const pending = decoded.right.session.transientBattleFills;
-  if (pending !== null) {
-    return Either.right(
-      nonEmptyInputGroup("$.session.transientBattleFills.holes", pending.holes),
-    );
-  }
   return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
 }
 
 function battlePresentationUnresolvedInputsFrom(value: {
-  readonly availableActs: readonly {
-    readonly initialHoles: readonly unknown[];
-  }[];
+  readonly envelope: {
+    readonly frontier:
+      | {
+          readonly kind: "acts";
+          readonly acts: readonly {
+            readonly initialHoles: readonly unknown[];
+          }[];
+        }
+      | {
+          readonly kind: "holes";
+          readonly holes: readonly unknown[];
+        }
+      | {
+          readonly kind: "interruptDecision";
+          readonly decisionHole: unknown;
+        };
+  } | null;
 }): readonly UnresolvedInputGroup[] {
-  return value.availableActs.flatMap((act, index) =>
-    nonEmptyInputGroup(
-      `$.availableActs[${index}].initialHoles`,
-      act.initialHoles,
-    ),
-  );
+  if (value.envelope === null) return [];
+  const frontier = value.envelope.frontier;
+  if (frontier.kind === "acts") {
+    return frontier.acts.flatMap((act, index) =>
+      nonEmptyInputGroup(
+        `$.envelope.frontier.acts[${index}].initialHoles`,
+        act.initialHoles,
+      ),
+    );
+  }
+  if (frontier.kind === "holes") {
+    return nonEmptyInputGroup("$.envelope.frontier.holes", frontier.holes);
+  }
+  return [
+    {
+      sourcePath: "$.envelope.frontier.decisionHole",
+      inputs: [frontier.decisionHole],
+    },
+  ];
 }
 
 function battleResolutionUnresolvedInputs(
@@ -190,20 +211,7 @@ function battleResolutionUnresolvedInputs(
     value,
   );
   if (Either.isLeft(decoded)) return operationProjectionIssue(decoded.left);
-  return Either.right(
-    Match.value(decoded.right.result).pipe(
-      Match.when({ tag: "needsHoles" }, (needsHoles) =>
-        nonEmptyInputGroup("$.result.holes", needsHoles.holes),
-      ),
-      Match.when({ tag: "resolved" }, () =>
-        battlePresentationUnresolvedInputsFrom(decoded.right),
-      ),
-      Match.when({ tag: "invalid" }, () =>
-        battlePresentationUnresolvedInputsFrom(decoded.right),
-      ),
-      Match.exhaustive,
-    ),
-  );
+  return Either.right(battlePresentationUnresolvedInputsFrom(decoded.right));
 }
 
 function finalizationHoleGroup(

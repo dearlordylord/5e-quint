@@ -8,7 +8,7 @@ import { classSpellListForClassName } from "@dnd/surface/surface/unit-catalog";
 import { describe, expect, test } from "vitest";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
-  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
+  assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest,
   attackRollFill,
   battleId,
   characterSeed,
@@ -311,7 +311,7 @@ function replayCatalogSpellAct(input: {
         message: result.message,
       };
     }
-    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+    assertBattleCheckpointFrontierEnvelopeCodecAcceptsHolesForSubjectForTest({
       snapshot: result.snapshot,
       subject: input.act.subject,
       holes: result.holes,

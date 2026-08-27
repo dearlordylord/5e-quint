@@ -8,6 +8,7 @@ import {
   battleSpellEffectOccurrenceId,
   battleObscurementZones,
   breakBattleConcentration,
+  battleFrontierInterruptDecisionForState,
   ATTACK_ACTION_ATTACK_COUNT_SCALING_SUPPORT_PROFILE,
   PASSIVE_SPEED_BONUS_SUPPORT_PROFILE,
   REACTION_ROLL_OR_DAMAGE_REDUCTION_SUPPORT_PROFILE,
@@ -890,7 +891,7 @@ describe("level 5 SDK tracer bullets", () => {
 
     expect(rogue.hp).toBe(Hp(Number(beforeHp) - expectedUncannyDodgeDamage));
     expect(rogue.reactionAvailable).toBe(false);
-    expect(resolved.snapshot.pendingInterrupt).toBeNull();
+    expect(battleFrontierInterruptDecisionForState(resolved.state)).toBeNull();
   });
 
   test("Haste casts from a level-5 spellcaster sheet and projects speed, AC, Dexterity save, action, slot, and lethargy behavior", () => {
@@ -1669,7 +1670,9 @@ describe("level 5 SDK tracer bullets", () => {
         counterspellTriggeringWizardId,
       );
 
-      expect(resolved.snapshot.pendingInterrupt).toBeNull();
+      expect(
+        battleFrontierInterruptDecisionForState(resolved.state),
+      ).toBeNull();
       expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
       expect(reactor.reactionAvailable).toBe(false);
       expect(reactor.origin.spellcasting?.spellSlots).toEqual(
@@ -3444,10 +3447,10 @@ function startCounterspellableMagicMissile(input: {
       ]),
     ],
   });
-  expect(result).toMatchObject({
-    tag: "needsHoles",
-    snapshot: { pendingInterrupt: { trigger: "spellCast" } },
-  });
+  expect(result.tag).toBe("needsHoles");
+  expect(battleFrontierInterruptDecisionForState(result.state)?.trigger).toBe(
+    "spellCast",
+  );
   if (result.tag !== "needsHoles") {
     throw new Error("Expected Counterspell Reaction window.");
   }
@@ -3522,28 +3525,28 @@ function requireCounterspellChoice(
   reactorId: CombatantId,
 ): CounterspellReactionChoice {
   const reactor = result.state.combatants.get(reactorId);
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (candidate): candidate is CounterspellReactionChoice => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== reactorId ||
-        reactor?.origin.kind !== "character"
-      ) {
-        return false;
-      }
-      const binding = characterProcedureBinding(
-        reactor.origin.execution,
-        candidate.subject.procedureRef,
-      );
-      return (
-        binding?.procedure.kind === "spellInvocation" &&
-        binding.procedure.execution.procedure === "counterspell" &&
-        binding.procedure.execution.resource.tag === "spellSlot" &&
-        Number(binding.procedure.execution.resource.slotLevel) ===
-          counterspellCastLevel
-      );
-    },
-  );
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find((candidate): candidate is CounterspellReactionChoice => {
+    if (
+      candidate.kind !== "castTriggeredReactionSpell" ||
+      candidate.reactorId !== reactorId ||
+      reactor?.origin.kind !== "character"
+    ) {
+      return false;
+    }
+    const binding = characterProcedureBinding(
+      reactor.origin.execution,
+      candidate.subject.procedureRef,
+    );
+    return (
+      binding?.procedure.kind === "spellInvocation" &&
+      binding.procedure.execution.procedure === "counterspell" &&
+      binding.procedure.execution.resource.tag === "spellSlot" &&
+      Number(binding.procedure.execution.resource.slotLevel) ===
+        counterspellCastLevel
+    );
+  });
   if (choice === undefined) {
     throw new Error("Expected Counterspell Reaction choice.");
   }
@@ -3555,7 +3558,9 @@ function requireUncannyDodgeAttackDamageChoice(
   reactorId: CombatantId,
 ): ReactionRollOrDamageReductionChoice {
   const reactor = result.state.combatants.get(reactorId);
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
+  const choice = battleFrontierInterruptDecisionForState(
+    result.state,
+  )?.choices.find(
     (candidate): candidate is ReactionRollOrDamageReductionChoice => {
       if (
         candidate.kind !== "reactionRollOrDamageReduction" ||
