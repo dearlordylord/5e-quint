@@ -1,0 +1,131 @@
+{
+  "challengeRating": 0,
+  "id": "stat_block_hyena",
+  "kind": "statBlock",
+  "name": "Hyena",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:1536-1560"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 12,
+      "dex": 13,
+      "int": 2,
+      "str": 11,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 11
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 2
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 3
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 5
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 13,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 3,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The hyena has Advantage on an attack roll against a creature if at least one of the hyena's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "effect": {
+          "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+        },
+        "name": "Pack Tactics"
+      }
+    ]
+  }
+}

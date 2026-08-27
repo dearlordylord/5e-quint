@@ -22,6 +22,7 @@ import {
   SRD_SURFACE_PUBLICATION_FILE_NAMES,
   SURFACE_PUBLICATION_MEMBERS,
 } from "../packages/surface/src/surface/publication-artifacts.ts";
+import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import { buildSrdSurfacePublication } from "./srd-surface-publication-artifacts.ts";
 
 const validRecord = readFileSync(
@@ -457,7 +458,10 @@ describe("Surface content publication checker", () => {
         result.statBlockParity.issues.filter(
           (issue) => issue.kind === "missing",
         ),
-      ).toHaveLength(309);
+      ).toHaveLength(
+        result.statBlockParity.discovery.identities.length -
+          srdStatBlockCollection.statBlocks.length,
+      );
     } finally {
       rmSync(contentDir, { force: true, recursive: true });
     }
