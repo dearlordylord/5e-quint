@@ -1,5 +1,15 @@
 import { statBlockId } from "@dnd/shared/game-facts";
-import { combatantId } from "@dnd/battle-runtime";
+import {
+  battleCreatureInitFromStatBlock,
+  combatantId,
+  BattleStatBlockProcedureExecutionRef,
+  discoverBattleActs,
+  endBattleRuntimeTurn,
+  initiativeScore,
+  startBattle,
+  type BattleFill,
+} from "@dnd/battle-runtime";
+import { movementFeet, resourceCount } from "@dnd/shared/types";
 import { Either, Option, Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
@@ -24,6 +34,7 @@ import {
   decodeOracleTraceJson,
   evaluateOracleBatch,
   evaluateOracleCase,
+  ORACLE_BATTLE_ID,
   oracleTraceSchema,
 } from "./index.ts";
 import {
@@ -62,6 +73,7 @@ const skeletonRecord = statBlockCatalog.getStatBlock("stat_block_skeleton");
 if (Option.isNone(skeletonRecord)) {
   throw new Error("SRD Skeleton Stat Block test fixture must be available.");
 }
+const skeletonStatBlock = skeletonRecord.value;
 const projectionFailureStatBlockCatalog: StatBlockCatalog = {
   ...statBlockCatalog,
   getStatBlock: (id) =>
@@ -87,6 +99,30 @@ const statBlockBattle = {
       statBlockId: statBlockId("stat_block_skeleton"),
       initiative: 0,
       ammunitionStocks: [{ ammunition: "arrow", remaining: 0 }],
+      conditions: [],
+      tempHp: 0,
+    },
+  ] as const,
+  attempts: [],
+};
+
+const twoSkeletonBattle = {
+  roster: [
+    {
+      origin: "statBlock" as const,
+      combatantId: combatantId("oracle:skeleton-a"),
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: 10,
+      ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
+      conditions: [],
+      tempHp: 0,
+    },
+    {
+      origin: "statBlock" as const,
+      combatantId: combatantId("oracle:skeleton-b"),
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: 0,
+      ammunitionStocks: [{ ammunition: "arrow" as const, remaining: 0 }],
       conditions: [],
       tempHp: 0,
     },
@@ -627,6 +663,166 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(Either.isRight(decodeOracleTrace(trace))).toBe(true);
   });
 
+  it("drives Move through an Opportunity Attack interrupt and retries after rejection", () => {
+    const initial = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: twoSkeletonBattle,
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const entered = initial.steps.at(-1);
+    expect(entered?.tag).toBe("battleEntered");
+    if (entered?.tag !== "battleEntered") return;
+
+    const moveSubject = entered.frontier.acts.find(
+      (subject) =>
+        subject.tag === "runtimeCommand" && subject.command === "move",
+    );
+    expect(moveSubject).toBeDefined();
+    if (
+      moveSubject?.tag !== "runtimeCommand" ||
+      moveSubject.command !== "move"
+    ) {
+      return;
+    }
+
+    const moveHoles = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...twoSkeletonBattle,
+          attempts: [
+            { kind: "ordinarySubject", subject: moveSubject, fills: [] },
+          ],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const ordinary = moveHoles.steps.at(-1);
+    expect(ordinary?.tag).toBe("battleProgressed");
+    if (
+      ordinary?.tag !== "battleProgressed" ||
+      ordinary.frontier.kind !== "ordinaryHoles"
+    ) {
+      return;
+    }
+    const movementHole = ordinary.frontier.holes.find(
+      (hole) => hole.kind === "movement",
+    );
+    expect(movementHole).toBeDefined();
+    if (movementHole?.kind !== "movement") return;
+
+    const movement = {
+      kind: "movement" as const,
+      holeId: movementHole.holeId,
+      value: {
+        speedKind: "walk" as const,
+        movementCostFeet: movementFeet(10),
+        provokedOpportunityAttacks: [
+          {
+            reactorId: combatantId("oracle:skeleton-b"),
+            distanceFeet: movementFeet(5),
+            procedureRef: skeletonShortswordProcedureRef(),
+          },
+        ],
+      },
+    } satisfies BattleFill;
+
+    const valid = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...twoSkeletonBattle,
+          attempts: [
+            {
+              kind: "ordinarySubject",
+              subject: moveSubject,
+              fills: [movement],
+            },
+          ],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const validFrontierStep = valid.steps.at(-1);
+    expect(validFrontierStep?.tag).toBe("battleProgressed");
+    if (
+      validFrontierStep?.tag !== "battleProgressed" ||
+      validFrontierStep.frontier.kind !== "interruptDecision"
+    ) {
+      return;
+    }
+    expect(validFrontierStep.frontier.decisionHole.trigger).toBe(
+      "opportunityAttack",
+    );
+    const opportunityAttack = validFrontierStep.frontier.choices.find(
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "opportunityAttack",
+    );
+    expect(opportunityAttack).toBeDefined();
+    if (
+      opportunityAttack?.kind !== "nestedProcedure" ||
+      opportunityAttack.subject.command !== "opportunityAttack"
+    ) {
+      return;
+    }
+    expect(opportunityAttack.subject.reactorId).toBe(
+      combatantId("oracle:skeleton-b"),
+    );
+    expect(opportunityAttack.initialHoles).toEqual([]);
+
+    const retry = evaluateDecodedCase({
+      case: {
+        creation: { fillBatches: completeCreationFillBatches() },
+        sheet: { tag: "ordinary" },
+        battle: {
+          ...twoSkeletonBattle,
+          attempts: [
+            {
+              kind: "ordinarySubject",
+              subject: {
+                ...moveSubject,
+                actorId: combatantId("oracle:wrong-actor"),
+              },
+              fills: [],
+            },
+            {
+              kind: "ordinarySubject",
+              subject: moveSubject,
+              fills: [movement],
+            },
+          ],
+        },
+      },
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const rejection = retry.steps.at(-2);
+    const retriedFrontierStep = retry.steps.at(-1);
+    expect(rejection?.tag).toBe("battleAttemptRejected");
+    expect(retriedFrontierStep?.tag).toBe("battleProgressed");
+    if (
+      rejection?.tag !== "battleAttemptRejected" ||
+      retriedFrontierStep?.tag !== "battleProgressed"
+    ) {
+      return;
+    }
+    expect(rejection.reason).toBe("wrongActor");
+    expect(rejection.checkpoint).toEqual(entered.checkpoint);
+    expect(rejection.frontier).toEqual(entered.frontier);
+    expect(retriedFrontierStep.frontier).toEqual(validFrontierStep.frontier);
+    expect(Either.isRight(decodeOracleTrace(valid))).toBe(true);
+    expect(Either.isRight(decodeOracleTrace(retry))).toBe(true);
+  });
+
   it("rejects stripped checkpoints with impossible identity or turn references", () => {
     const trace = evaluateDecodedCase({
       case: {
@@ -1155,6 +1351,62 @@ function evaluateDecodedBatch(input: {
     services: input.services,
     batch: { cases: [cases[0], ...cases.slice(1)] },
   });
+}
+
+function skeletonShortswordProcedureRef() {
+  const skeletonA = battleCreatureInitFromStatBlock({
+    combatantId: combatantId("oracle:skeleton-a"),
+    statBlock: skeletonStatBlock,
+    initiative: initiativeScore(10),
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
+    conditions: [],
+  });
+  const skeletonB = battleCreatureInitFromStatBlock({
+    combatantId: combatantId("oracle:skeleton-b"),
+    statBlock: skeletonStatBlock,
+    initiative: initiativeScore(0),
+    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
+    conditions: [],
+  });
+  if (Either.isLeft(skeletonA) || Either.isLeft(skeletonB)) {
+    throw new Error("test skeletons must initialize");
+  }
+  const started = startBattle({
+    battleId: ORACLE_BATTLE_ID,
+    combatants: [skeletonA.right, skeletonB.right],
+  });
+  if (Either.isLeft(started)) {
+    throw new Error("test skeletons must start a battle");
+  }
+  const ended = endBattleRuntimeTurn({
+    session: started.right,
+    actorId: combatantId("oracle:skeleton-a"),
+  });
+  if (ended.tag !== "resolved") {
+    throw new Error("test skeleton A turn must end");
+  }
+  const shortsword = discoverBattleActs(ended.session).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      act.presentation.kind === "attack" &&
+      act.presentation.name === "Shortsword" &&
+      !("statBlockDamageNotation" in act.subject),
+  );
+  if (
+    shortsword?.subject.tag !== "action" ||
+    shortsword.subject.action !== "attack" ||
+    "statBlockDamageNotation" in shortsword.subject
+  ) {
+    throw new Error("test skeleton B must expose canonical Shortsword");
+  }
+  const procedureRef = Schema.decodeUnknownEither(
+    BattleStatBlockProcedureExecutionRef,
+  )(shortsword.subject.procedureRef);
+  if (Either.isLeft(procedureRef)) {
+    throw new Error("test skeleton Shortsword ref must be canonical");
+  }
+  return procedureRef.right;
 }
 
 function choiceCombinations(
