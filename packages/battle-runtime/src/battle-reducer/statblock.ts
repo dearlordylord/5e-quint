@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.FEATURE.WILD_SHAPE_FORM_LIFECYCLE
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
   CharacterAttackExecutionSelection,
   StatBlockAttackExecutionSelection,
@@ -15,18 +16,33 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import {
+  type BattleCreatureState,
   type BattleState,
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
 import {
   statBlockProcedureBinding,
   spendStatBlockProcedureResources,
+  type StatBlockMultiattackProcedure,
+  type StatBlockProcedureBindingFor,
 } from "../stat-block-execution-state.ts";
 export { statBlockAttackActionOptions } from "../stat-block-execution-state.ts";
 import {
   activeDruidWildShape,
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
+import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
+
+export function statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+  actor: StatBlockBattleCreatureState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+): ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef> {
+  const [consumedProcedureRef, ...pendingProcedureRefs] =
+    binding.procedure.dispatchProcedureRefs;
+  const effectivePendingProcedureRefs =
+    slowActivePenaltiesEffects(actor).length > 0 ? [] : pendingProcedureRefs;
+  return [consumedProcedureRef, ...effectivePendingProcedureRefs];
+}
 
 export function attackActionOptionIsOrdinaryAttackAction(
   state: BattleState,
@@ -46,15 +62,25 @@ export function statBlockAttackProcedureSection(
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockAttackSection | null {
   const actor = state.combatants.get(actorId);
-  const execution =
-    actor?.origin.kind === "statBlock"
-      ? actor.origin.execution
-      : activeDruidWildShape(actor)?.admission.execution;
+  const execution = statBlockExecutionForActor(actor);
   if (execution === undefined) return null;
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  return binding?.procedure.kind === "attack"
-    ? binding.procedure.section
-    : null;
+  return statBlockAttackBindingSection(binding);
+}
+
+function statBlockExecutionForActor(actor: BattleCreatureState | undefined) {
+  if (actor?.origin.kind === "statBlock") return actor.origin.execution;
+  return activeDruidWildShape(actor)?.admission.execution;
+}
+
+function statBlockAttackBindingSection(
+  binding: ReturnType<typeof statBlockProcedureBinding>,
+): StatBlockAttackSection | null {
+  if (binding?.procedure.kind === "attack") return binding.procedure.section;
+  if (binding?.procedure.kind === "unarmedStrike") {
+    return binding.procedure.section;
+  }
+  return null;
 }
 
 export function spendStatBlockAttackResources(input: {

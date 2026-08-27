@@ -6,6 +6,7 @@ import {
   CreatureStatBlockProjectionSchema,
   StandaloneStatBlockSchema,
   StatBlockProcedureEntrySchema,
+  StatBlockProcedureSectionSchema,
 } from "./schema.ts";
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, input: unknown): A =>
@@ -47,10 +48,9 @@ const syntheticStandaloneStatBlock = {
         name: "Synthetic Routine",
         dispatches: [
           { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
-          { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
         ],
       },
-      resourceRefs: [],
+      resourceRefs: { kind: "none" },
     },
     {
       kind: "executable",
@@ -70,7 +70,7 @@ const syntheticStandaloneStatBlock = {
           },
         ],
       },
-      resourceRefs: [1],
+      resourceRefs: { kind: "some", ordinals: [1] },
     },
     {
       kind: "textOnly",
@@ -78,7 +78,7 @@ const syntheticStandaloneStatBlock = {
       name: "Synthetic Echo",
       description: "The warden emits a pulse adjudicated by the table.",
       reason: "required_table_adjudication",
-      resourceRefs: [],
+      resourceRefs: { kind: "none" },
     },
     {
       kind: "executable",
@@ -93,22 +93,22 @@ const syntheticStandaloneStatBlock = {
         groups: [
           {
             kind: "at_will",
-            resourceRefs: [],
+            resourceRefs: { kind: "none" },
             spells: [
               {
                 spellId: "unit_spell_synthetic_mending",
-                restriction: "self only",
+                restriction: "on itself",
               },
             ],
           },
           {
             kind: "limited",
-            resourceRefs: [2],
+            resourceRefs: { kind: "some", ordinals: [2] },
             spells: [{ spellId: "unit_spell_synthetic_command" }],
           },
         ],
       },
-      resourceRefs: [],
+      resourceRefs: { kind: "none" },
     },
   ],
   bonusActions: [
@@ -120,7 +120,7 @@ const syntheticStandaloneStatBlock = {
         name: "Synthetic Shift",
         options: ["disengage"],
       },
-      resourceRefs: [],
+      resourceRefs: { kind: "none" },
     },
   ],
   reactions: [
@@ -130,7 +130,7 @@ const syntheticStandaloneStatBlock = {
       name: "Synthetic Intercept",
       description: "The warden redirects an attack using an unresolved rule.",
       reason: "unsupported_procedure_family",
-      resourceRefs: [],
+      resourceRefs: { kind: "none" },
     },
   ],
   legendaryActions: {
@@ -142,7 +142,7 @@ const syntheticStandaloneStatBlock = {
         name: "Synthetic Echo",
         description: "The warden takes a legendary action.",
         reason: "unparsed_prose",
-        resourceRefs: [],
+        resourceRefs: { kind: "none" },
       },
     ],
   },
@@ -168,7 +168,7 @@ describe("standalone Stat Block procedure sections", () => {
       kind: "executable",
       procedure: {
         kind: "multiattack",
-        dispatches: [{ procedureOrdinal: 2 }, { procedureOrdinal: 3 }],
+        dispatches: [{ procedureOrdinal: 2 }],
       },
     });
     expect(decoded.actions?.[2]).toMatchObject({
@@ -182,12 +182,12 @@ describe("standalone Stat Block procedure sections", () => {
         groups: [
           {
             kind: "at_will",
-            resourceRefs: [],
+            resourceRefs: { kind: "none" },
             spells: [{ spellId: "unit_spell_synthetic_mending" }],
           },
           {
             kind: "limited",
-            resourceRefs: [2],
+            resourceRefs: { kind: "some", ordinals: [2] },
             spells: [{ spellId: "unit_spell_synthetic_command" }],
           },
         ],
@@ -211,6 +211,47 @@ describe("standalone Stat Block procedure sections", () => {
         ],
       }),
     ).toThrow();
+
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        actions: [
+          {
+            ...syntheticStandaloneStatBlock.actions[0],
+            procedure: {
+              ...syntheticStandaloneStatBlock.actions[0].procedure,
+              dispatches: [
+                { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
+                { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
+              ],
+            },
+          },
+          syntheticStandaloneStatBlock.actions[1],
+          syntheticStandaloneStatBlock.actions[2],
+          syntheticStandaloneStatBlock.actions[3],
+        ],
+      }),
+    ).toThrow();
+
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        actions: [
+          {
+            ...syntheticStandaloneStatBlock.actions[0],
+            procedure: {
+              ...syntheticStandaloneStatBlock.actions[0].procedure,
+              dispatches: [
+                { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
+              ],
+            },
+          },
+          syntheticStandaloneStatBlock.actions[1],
+          syntheticStandaloneStatBlock.actions[2],
+          syntheticStandaloneStatBlock.actions[3],
+        ],
+      }).actions?.[0],
+    ).toMatchObject({ procedure: { dispatches: [{ procedureOrdinal: 3 }] } });
 
     expect(() =>
       decode(StandaloneStatBlockSchema, {
@@ -261,6 +302,50 @@ describe("standalone Stat Block procedure sections", () => {
     ).toThrow();
   });
 
+  test("retains Multiattack references to save, spellcasting, and text-only entries", () => {
+    const saveEntry = {
+      kind: "executable",
+      procedureOrdinal: 3,
+      procedure: {
+        kind: "save",
+        name: "Synthetic Save",
+        ability: "dex",
+        dc: { kind: "fixed", dc: 14 },
+        onFail: {
+          kind: "damage",
+          damageType: "force",
+          amount: { kind: "fixed", expr: { dice: 1, dieSize: 6 } },
+        },
+        onSuccess: { kind: "half_damage" },
+        target: { kind: "one_creature_in_range", rangeFeet: 30 },
+      },
+      resourceRefs: { kind: "none" },
+    } as const;
+    const entries = [
+      {
+        ...syntheticStandaloneStatBlock.actions[0],
+        procedure: {
+          ...syntheticStandaloneStatBlock.actions[0].procedure,
+          dispatches: [
+            { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
+            { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
+            { procedureOrdinal: 4, count: { kind: "literal", value: 1 } },
+            { procedureOrdinal: 5, count: { kind: "literal", value: 1 } },
+          ],
+        },
+      },
+      syntheticStandaloneStatBlock.actions[1],
+      saveEntry,
+      syntheticStandaloneStatBlock.actions[3],
+      syntheticStandaloneStatBlock.actions[2],
+    ].map((entry, index) => ({
+      ...entry,
+      procedureOrdinal: index === 4 ? 5 : entry.procedureOrdinal,
+    }));
+
+    expect(decode(StatBlockProcedureSectionSchema, entries)).toEqual(entries);
+  });
+
   test("requires a precise reason for every text-only entry", () => {
     expect(() =>
       decode(StatBlockProcedureEntrySchema, {
@@ -268,7 +353,7 @@ describe("standalone Stat Block procedure sections", () => {
         procedureOrdinal: 1,
         name: "Synthetic Omission",
         description: "The source procedure remains inspectable.",
-        resourceRefs: [],
+        resourceRefs: { kind: "none" },
       }),
     ).toThrow();
   });
@@ -450,7 +535,7 @@ describe("standalone Stat Block procedure sections", () => {
         onSuccess: { kind: "half_damage" },
         area: { kind: "cone", lengthFeet: 30 },
       },
-      resourceRefs: [],
+      resourceRefs: { kind: "none" },
     } as const;
     expect(() =>
       decode(StatBlockProcedureEntrySchema, {
@@ -547,7 +632,7 @@ describe("standalone Stat Block procedure sections", () => {
       procedureOrdinal: 1,
       procedure: syntheticStandaloneStatBlock.actions[1].procedure,
       trigger: { kind: "hit_by_attack_roll" },
-      resourceRefs: [],
+      resourceRefs: { kind: "none" },
     } as const;
     expect(
       decode(StandaloneStatBlockSchema, {
@@ -563,7 +648,7 @@ describe("standalone Stat Block procedure sections", () => {
             kind: "executable",
             procedureOrdinal: 1,
             procedure: syntheticStandaloneStatBlock.actions[1].procedure,
-            resourceRefs: [],
+            resourceRefs: { kind: "none" },
           },
         ],
       }),

@@ -4881,11 +4881,18 @@ export const CreatureSenseSchema = Schema.Struct({
   rangeFeet: Schema.Number,
 });
 
-const StatBlockDamageNotationAmountSchema = Schema.Struct({
-  kind: Schema.Literal("fixed"),
-  expr: DiceExprSchema,
-  static: optionalExact(Schema.Number),
-});
+/** Runtime projections may preserve a static-only printed damage amount. */
+const StatBlockDamageNotationAmountSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    expr: DiceExprSchema,
+    static: optionalExact(Schema.Number),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("fixed"),
+    static: Schema.Number,
+  }),
+);
 
 const CreatureAttackEffectAtomSchema = Schema.Union(
   Schema.Struct({
@@ -5133,13 +5140,29 @@ export const StatBlockProcedureResourcesSchema = nonEmpty(
   }),
 );
 
-export const StatBlockProcedureResourceRefsSchema = Schema.Array(
-  StatBlockProcedureResourceOrdinalSchema,
-).pipe(
-  Schema.filter((refs) => new Set(refs).size === refs.length, {
-    message: () =>
-      "A Stat Block procedure must not reference one resource more than once.",
-  }),
+/**
+ * Resource references use a tagged empty branch because the Dhall publication
+ * encoder omits empty arrays under `--omit-empty`.  Keeping the empty spelling
+ * as a non-empty object makes authored JSON round-trip without a second
+ * representation while retaining a narrow list for the non-empty branch.
+ */
+const StatBlockProcedureNoResourceRefsSchema = strictStruct({
+  kind: Schema.Literal("none"),
+});
+
+const StatBlockProcedureSomeResourceRefsSchema = strictStruct({
+  kind: Schema.Literal("some"),
+  ordinals: nonEmpty(StatBlockProcedureResourceOrdinalSchema).pipe(
+    Schema.filter((refs) => new Set(refs).size === refs.length, {
+      message: () =>
+        "A Stat Block procedure must not reference one resource more than once.",
+    }),
+  ),
+});
+
+export const StatBlockProcedureResourceRefsSchema = Schema.Union(
+  StatBlockProcedureNoResourceRefsSchema,
+  StatBlockProcedureSomeResourceRefsSchema,
 );
 
 export const StatBlockProcedureDcSourceSchema = strictStruct({
@@ -5155,11 +5178,17 @@ const StatBlockProcedureDiceExprSchema = strictStruct({
   abilityModifier: optionalExact(AbilitySchema),
 });
 
-const StatBlockProcedureDamageAmountSchema = strictStruct({
-  kind: Schema.Literal("fixed"),
-  expr: StatBlockProcedureDiceExprSchema,
-  static: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-});
+const StatBlockProcedureDamageAmountSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    expr: StatBlockProcedureDiceExprSchema,
+    static: optionalExact(StatBlockProcedurePositiveIntegerSchema),
+  }),
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    static: StatBlockProcedurePositiveIntegerSchema,
+  }),
+);
 
 const AuthoredProcedureEffectAtomSchema = Schema.Union(
   strictStruct({
@@ -5342,12 +5371,12 @@ export const StatBlockSpellReferenceSchema = strictStruct({
 export const StatBlockSpellcastingGroupSchema = Schema.Union(
   strictStruct({
     kind: Schema.Literal("at_will"),
-    resourceRefs: Schema.Tuple(),
+    resourceRefs: StatBlockProcedureNoResourceRefsSchema,
     spells: nonEmpty(StatBlockSpellReferenceSchema),
   }),
   strictStruct({
     kind: Schema.Literal("limited"),
-    resourceRefs: nonEmpty(StatBlockProcedureResourceOrdinalSchema),
+    resourceRefs: StatBlockProcedureSomeResourceRefsSchema,
     spells: nonEmpty(StatBlockSpellReferenceSchema),
   }),
 );
@@ -5503,17 +5532,27 @@ const hasStrictlyIncreasingProcedureOrdinals = (
 const hasKnownMultiattackDispatches = (
   entries: ReadonlyArray<StatBlockProcedureEntry>,
 ): boolean => {
-  const ordinals = new Set(entries.map((entry) => entry.procedureOrdinal));
-  return entries.every(
-    (entry) =>
-      entry.kind !== "executable" ||
-      entry.procedure.kind !== "multiattack" ||
-      entry.procedure.dispatches.every(
-        (dispatch) =>
-          dispatch.procedureOrdinal !== entry.procedureOrdinal &&
-          ordinals.has(dispatch.procedureOrdinal),
-      ),
+  const entriesByOrdinal = new Map(
+    entries.map((entry) => [entry.procedureOrdinal, entry]),
   );
+  return entries.every((entry) => {
+    if (entry.kind !== "executable" || entry.procedure.kind !== "multiattack") {
+      return true;
+    }
+    const dispatches = entry.procedure.dispatches;
+    return (
+      hasStrictlyIncreasingProcedureOrdinals(dispatches) &&
+      new Set(dispatches.map((dispatch) => dispatch.procedureOrdinal)).size ===
+        dispatches.length &&
+      dispatches.every((dispatch) => {
+        const target = entriesByOrdinal.get(dispatch.procedureOrdinal);
+        return (
+          dispatch.procedureOrdinal !== entry.procedureOrdinal &&
+          target !== undefined
+        );
+      })
+    );
+  });
 };
 
 export const StatBlockProcedureSectionSchema = nonEmpty(
@@ -6057,6 +6096,25 @@ export const CreatureSavingThrowModifierSchema = Schema.Struct({
   modifier: Schema.Number.pipe(Schema.int()),
 });
 
+const MAX_SAVING_THROW_MODIFIERS = 6;
+
+const hasDistinctSavingThrowAbilities = (
+  modifiers: ReadonlyArray<
+    Schema.Schema.Type<typeof CreatureSavingThrowModifierSchema>
+  >,
+): boolean =>
+  new Set(modifiers.map(({ ability }) => ability)).size === modifiers.length;
+
+const CreatureSavingThrowModifiersSchema = nonEmpty(
+  CreatureSavingThrowModifierSchema,
+).pipe(
+  Schema.maxItems(MAX_SAVING_THROW_MODIFIERS),
+  Schema.filter(hasDistinctSavingThrowAbilities, {
+    message: () =>
+      "Stat Block saving throw modifiers must contain distinct abilities.",
+  }),
+);
+
 export const CreatureSkillModifierSchema = Schema.Struct({
   skill: SkillSchema,
   modifier: Schema.Number.pipe(Schema.int()),
@@ -6129,10 +6187,20 @@ export const StandaloneStatBlockAbilityScoresSchema = Schema.Struct({
  */
 const StandaloneStatBlockSenseRangeFeetSchema = PositiveIntegerSchema;
 
-export const StandaloneCreatureSenseSchema = Schema.Struct({
-  kind: CreatureSenseSchema.fields.kind,
-  rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
-});
+export const StandaloneCreatureSenseSchema = Schema.Union(
+  Schema.Struct({
+    kind: Schema.Literal("darkvision"),
+    rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
+    qualifier: Schema.optionalWith(
+      Schema.Literal("unimpeded_by_magical_darkness"),
+      { exact: true },
+    ),
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("blindsight", "tremorsense", "truesight"),
+    rangeFeet: StandaloneStatBlockSenseRangeFeetSchema,
+  }),
+);
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -6280,9 +6348,7 @@ const CreatureStatBlockProjectionFields = {
   speeds: nonEmpty(CreatureSpeedSchema),
   abilityScores: SixAbilityScoresSchema,
   initiativeModifier: optionalExact(StatBlockInitiativeModifierSchema),
-  savingThrowModifiers: optionalExact(
-    nonEmpty(CreatureSavingThrowModifierSchema),
-  ),
+  savingThrowModifiers: optionalExact(CreatureSavingThrowModifiersSchema),
   skillModifiers: optionalExact(nonEmpty(CreatureSkillModifierSchema)),
   saveProficiencies: optionalExact(nonEmpty(AbilitySchema)),
   vulnerabilities: optionalExact(CreatureVulnerabilityListSchema),
@@ -6338,6 +6404,12 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
   speeds: nonEmpty(StandaloneCreatureSpeedSchema),
   abilityScores: StandaloneStatBlockAbilityScoresSchema,
   initiative: StatBlockInitiativeSchema,
+  /**
+   * Preserve every Save value printed by the source. This stays optional
+   * because a source may omit a Saves section entirely; a full six-ability
+   * source table is not reduced to only values that differ from the ability
+   * modifier.
+   */
   savingThrowModifiers: CreatureStatBlockProjectionFields.savingThrowModifiers,
   skillModifiers: CreatureStatBlockProjectionFields.skillModifiers,
   saveProficiencies: CreatureStatBlockProjectionFields.saveProficiencies,
@@ -6383,13 +6455,18 @@ const hasKnownResourceRefs = (block: StandaloneStatBlockBase): boolean => {
   );
 
   return allProcedureEntries(block).every((entry) => {
-    const procedureResourceRefs = [...entry.resourceRefs];
+    const procedureResourceRefs =
+      entry.resourceRefs.kind === "none"
+        ? []
+        : [...entry.resourceRefs.ordinals];
     if (
       entry.kind === "executable" &&
       entry.procedure.kind === "spellcasting"
     ) {
       for (const group of entry.procedure.groups) {
-        procedureResourceRefs.push(...group.resourceRefs);
+        if (group.resourceRefs.kind === "some") {
+          procedureResourceRefs.push(...group.resourceRefs.ordinals);
+        }
       }
     }
     return procedureResourceRefs.every((resourceOrdinal) =>

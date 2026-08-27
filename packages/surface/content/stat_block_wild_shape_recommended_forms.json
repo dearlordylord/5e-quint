@@ -6,7 +6,7 @@
     "name": "Riding Horse",
     "provenance": {
       "kind": "srd-5.2.1",
-      "section": "Animals.md:2089-2128"
+      "section": "Animals.md:2089-2108"
     },
     "statBlock": {
       "abilityScores": {
@@ -18,18 +18,22 @@
         "wis": 11
       },
       "ac": {
-        "kind": "literal",
-        "value": 11
+        "value": {
+          "kind": "literal",
+          "value": 11
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "str",
             "attackBonus": {
               "kind": "literal",
               "value": 5
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Hooves",
             "onHit": [
               {
@@ -47,18 +51,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Riding Horse",
       "hp": {
         "kind": "literal",
         "value": 13
       },
-      "initiativeModifier": 1,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 1,
+        "score": 11
+      },
+      "passivePerception": 10,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": 3
+        },
+        {
+          "ability": "dex",
+          "modifier": 1
+        },
+        {
+          "ability": "con",
+          "modifier": 1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 0
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
       ],
       "size": "large",
       "speeds": [
@@ -91,18 +129,22 @@
         "wis": 12
       },
       "ac": {
-        "kind": "literal",
-        "value": 12
+        "value": {
+          "kind": "literal",
+          "value": 12
+        }
       },
-      "actions": {
-        "attacks": [
-          {
+      "actions": [
+        {
+          "kind": "executable",
+          "procedure": {
             "attackAbility": "str",
             "attackBonus": {
               "kind": "literal",
               "value": 4
             },
             "attackType": "melee",
+            "kind": "attack_roll",
             "name": "Bite",
             "onHit": [
               {
@@ -125,18 +167,52 @@
               }
             ],
             "reachFeet": 5
+          },
+          "procedureOrdinal": 1,
+          "resourceRefs": {
+            "kind": "none"
           }
-        ]
+        }
+      ],
+      "alignment": "unaligned",
+      "communication": {
+        "kind": "none"
       },
       "creatureType": "beast",
-      "displayName": "Wolf",
       "hp": {
         "kind": "literal",
         "value": 11
       },
-      "initiativeModifier": 2,
-      "languages": [
-        "None"
+      "initiative": {
+        "modifier": 2,
+        "score": 12
+      },
+      "passivePerception": 15,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": 2
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": 1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
       ],
       "senses": [
         {

@@ -22,8 +22,7 @@
     "packages/battle-runtime/src/battle-act-composition.ts": {
       "module/binding:characterProcedurePresentationJoin": 26,
       "module/binding:intrinsicActPresentation": 19,
-      "module/binding:intrinsicActPresentationText": 23,
-      "module/binding:intrinsicSubjectPresentation": 14,
+      "module/binding:intrinsicActPresentationText": 22,
       "module/binding:spellProcedurePresentationText": 13
     },
     "packages/battle-runtime/src/battle-reducer/action-spell-slot-expenditure.ts": {
@@ -148,7 +147,7 @@
       "module/binding:combatantHandUses": 18
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
-      "module/binding:battleCreatureStateAdmissionFromInit": 33
+      "module/binding:battleCreatureStateAdmissionFromInit": 31
     },
     "packages/battle-runtime/src/battle-reducer/cunning-strike.ts": {
       "module/binding:eligibleCunningStrikeContexts/call:execution.procedureBindings.flatMap:argument-0": 10,
@@ -862,7 +861,7 @@
     },
     "packages/battle-runtime/src/find-familiar-lifecycle.ts": {
       "module/binding:castResolvedFindFamiliar": 13,
-      "module/binding:castWildCompanion": 14,
+      "module/binding:castWildCompanion": 13,
       "module/binding:selectedStoredFormStatBlockId": 9,
       "module/binding:spendWildCompanionCost": 10
     },
@@ -883,20 +882,11 @@
       "module/binding:weaponAttackOverrideExecutor/binding:resolveWeaponAttackOverride": 9
     },
     "packages/battle-runtime/src/stat-block-combatant-admission.ts": {
-      "module/binding:admitBattleStatBlockCombatantSource": 15
+      "module/binding:admitBattleStatBlockCombatantSource": 14
     },
     "packages/battle-runtime/src/stat-block-execution.ts": {
-      "module/binding:admitStatBlock": 19,
-      "module/binding:allocateStatBlockExecution": 12,
-      "module/binding:persistedValuesEqual": 12,
-      "module/binding:restoreStatBlockExecutionAdmissions": 9
-    },
-    "packages/battle-runtime/src/stat-block-presentation.ts": {
-      "module/binding:attackActionOptionPresentationName": 21
-    },
-    "packages/battle-runtime/src/statblock-action-support.ts": {
-      "module/binding:attackHitEffectRiderCategory": 11,
-      "module/binding:wildShapeFormActionSurfaceCategories": 18
+      "module/binding:admitStatBlock": 12,
+      "module/binding:persistedValuesEqual": 12
     },
     "packages/battle-runtime/src/statblock-attack-damage-support.ts": {
       "module/binding:supportedStatBlockAttackDamage": 10
@@ -1244,9 +1234,6 @@
     },
     "packages/surface/src/interpreter/tracer-attachments.ts": {
       "module/binding:traceAttachment": 13
-    },
-    "packages/surface/src/interpreter/tracer-creature-actions.ts": {
-      "module/binding:traceCreatureActions": 10
     },
     "packages/surface/src/interpreter/tracer-duration.ts": {
       "module/binding:traceDuration": 9

@@ -816,7 +816,7 @@ describe("battle runtime: Opportunity Attack interrupt boundaries", () => {
         }),
         statBlockCreatureInit({
           combatantId: goblinId,
-          displayName: "Incapacitated-immune target",
+          statBlockName: "Incapacitated-immune target",
           initiative: 20,
           statBlock: incapacitatedImmuneTarget,
           currentHp: 20,

@@ -1,17 +1,35 @@
 import { optionalProperty } from "./optional-property.ts";
 import {
+  PositiveInteger,
   resourceCount,
   type DieRollResult,
+  type Integer as IntegerType,
+  type NonNegativeInteger as NonNegativeIntegerType,
+  type PositiveInteger as PositiveIntegerType,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
 } from "@dnd/shared/types";
+import type { Ability, CreatureType } from "@dnd/shared/game-facts";
 import { Brand } from "effect";
+import * as Either from "effect/Either";
 import type {
   ChallengeRating,
   CreatureLimitedUse,
+  CreatureSense,
+  CreatureImmunityList,
+  CreatureSavingThrowModifier,
+  CreatureSkillModifier,
+  SixAbilityScores,
+  StatBlockLiteralValue,
+  StatBlockTextOnlyReason,
+  CreatureResistanceList,
+  CreatureVulnerabilityList,
   StatBlockId,
-  StatBlockMechanics,
+  StatBlockProcedureOrdinal,
+  StatBlockProcedureResource,
+  StatBlockProcedureResourceOrdinal,
 } from "@dnd/surface/surface/types";
+import type { Size } from "@dnd/shared/types";
 import type {
   StatBlockAttackActionOption,
   StatBlockAttackSection,
@@ -30,18 +48,357 @@ import type {
   BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
 } from "./identity.ts";
+import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 
 export type BattleStatBlockExecutionSource = {
   readonly id: StatBlockId;
   readonly challengeRating: ChallengeRating;
-  readonly statBlock: StatBlockMechanics;
+  /** Parsed, source-free facts consumed by runtime admission. */
+  readonly statBlock: BattleStatBlockRuntimeFacts;
+  /** Ordered executable bindings produced by the authored projection. */
+  readonly procedures: readonly BattleStatBlockRuntimeProcedure[];
+  readonly resources: readonly BattleStatBlockRuntimeResource[];
+  readonly legendaryActionUses?: PositiveIntegerType;
 };
 
-export type StatBlockActionProjectionSection =
-  | "actions"
-  | "bonusActions"
-  | "reactions"
-  | "legendaryActions";
+/**
+ * Runtime Stat Block facts before the source boundary narrows optional use
+ * counts into the execution brand. External callers may only supply the
+ * unbranded numeric representation here.
+ */
+export type BattleStatBlockExecutionSourceInput = Omit<
+  BattleStatBlockExecutionSource,
+  "legendaryActionUses"
+> & {
+  readonly legendaryActionUses?: number;
+};
+
+export type StatBlockResourceGraphAdmissionFailure =
+  | {
+      readonly kind: "duplicateResourceOrdinal";
+      readonly ordinal: StatBlockProcedureResourceOrdinal;
+    }
+  | {
+      readonly kind: "missingResourceDeclaration";
+      readonly ordinal: StatBlockProcedureResourceOrdinal;
+    };
+
+/**
+ * A source whose procedure resource references have been closed over its
+ * declarations. The source boundary owns this fact before execution
+ * allocation can consume the resource graph.
+ */
+export type BattleStatBlockClosedResourceGraph<
+  TSource extends Pick<
+    BattleStatBlockExecutionSource,
+    "procedures" | "resources"
+  > = BattleStatBlockExecutionSource,
+> = Omit<TSource, "resources"> & {
+  readonly resources: readonly BattleStatBlockRuntimeResource[];
+};
+
+type StatBlockResourceDeclarationAnalysis = {
+  readonly declaredOrdinals: ReadonlySet<StatBlockProcedureResourceOrdinal>;
+  readonly duplicateIssues: readonly StatBlockResourceGraphAdmissionFailure[];
+};
+
+export function admitStatBlockResourceGraph<
+  TSource extends Pick<
+    BattleStatBlockExecutionSource,
+    "procedures" | "resources"
+  >,
+>(
+  source: TSource,
+): Either.Either<
+  BattleStatBlockClosedResourceGraph<TSource>,
+  ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>
+> {
+  const resources = source.resources;
+  const declarations = analyzeStatBlockResourceDeclarations(resources);
+  const issues = [
+    ...declarations.duplicateIssues,
+    ...missingResourceDeclarationIssues(
+      source.procedures,
+      declarations.declaredOrdinals,
+    ),
+  ];
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return Either.left([firstIssue, ...remainingIssues]);
+  }
+  const { resources: _resources, ...sourceWithoutResources } = source;
+  return Either.right({ ...sourceWithoutResources, resources });
+}
+
+function analyzeStatBlockResourceDeclarations(
+  resources: readonly BattleStatBlockRuntimeResource[],
+): StatBlockResourceDeclarationAnalysis {
+  const declaredOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
+  const duplicateOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
+  const duplicateIssues: StatBlockResourceGraphAdmissionFailure[] = [];
+  for (const resource of resources) {
+    if (!declaredOrdinals.has(resource.ordinal)) {
+      declaredOrdinals.add(resource.ordinal);
+      continue;
+    }
+    if (duplicateOrdinals.has(resource.ordinal)) continue;
+    duplicateOrdinals.add(resource.ordinal);
+    duplicateIssues.push({
+      kind: "duplicateResourceOrdinal",
+      ordinal: resource.ordinal,
+    });
+  }
+  return { declaredOrdinals, duplicateIssues };
+}
+
+function missingResourceDeclarationIssues(
+  procedures: readonly BattleStatBlockRuntimeProcedure[],
+  declaredOrdinals: ReadonlySet<StatBlockProcedureResourceOrdinal>,
+): readonly StatBlockResourceGraphAdmissionFailure[] {
+  const missingOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
+  const missingIssues: StatBlockResourceGraphAdmissionFailure[] = [];
+  for (const procedure of procedures) {
+    for (const ordinal of procedure.resourceRefs) {
+      if (declaredOrdinals.has(ordinal) || missingOrdinals.has(ordinal)) {
+        continue;
+      }
+      missingOrdinals.add(ordinal);
+      missingIssues.push({
+        kind: "missingResourceDeclaration",
+        ordinal,
+      });
+    }
+  }
+  return missingIssues;
+}
+
+export type StatBlockLegendaryActionUsesParseFailure = "invalidPositiveInteger";
+
+/**
+ * The one numeric boundary for optional Legendary Action uses. `PositiveInteger`
+ * owns the invariant; callers receive a typed failure instead of its throwing
+ * constructor when untrusted runtime data is malformed.
+ */
+export function parseStatBlockLegendaryActionUses(
+  value: number | undefined,
+): Either.Either<
+  PositiveIntegerType | undefined,
+  StatBlockLegendaryActionUsesParseFailure
+> {
+  if (value === undefined) return Either.right(undefined);
+  return Either.mapLeft(
+    PositiveInteger.either(value),
+    () => "invalidPositiveInteger" as const,
+  );
+}
+
+export type StatBlockLiteralValueParseFailure = "invalidLiteral";
+
+/** A literal Stat Block value after resolving the authored value union. */
+export type BattleStatBlockLiteralValue = Extract<
+  StatBlockLiteralValue,
+  { readonly kind: "literal" }
+>;
+
+/**
+ * Parse a runtime-facing literal value without trusting an object-shaped
+ * boundary supplied by a restore or test caller.
+ */
+export function parseStatBlockLiteralValue(
+  value: StatBlockLiteralValue,
+): Either.Either<
+  BattleStatBlockLiteralValue,
+  StatBlockLiteralValueParseFailure
+> {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("kind" in value) ||
+    value.kind !== "literal" ||
+    !("value" in value) ||
+    typeof value.value !== "number" ||
+    !Number.isFinite(value.value)
+  ) {
+    return Either.left("invalidLiteral");
+  }
+  return Either.right({ kind: "literal", value: value.value });
+}
+
+export type BattleStatBlockPositiveIntegerLiteral = Omit<
+  BattleStatBlockLiteralValue,
+  "value"
+> & {
+  readonly value: PositiveIntegerType;
+};
+
+export type StatBlockPositiveIntegerLiteralParseFailure =
+  | StatBlockLiteralValueParseFailure
+  | "invalidPositiveInteger";
+
+export function parseStatBlockPositiveIntegerLiteral(
+  value: StatBlockLiteralValue,
+): Either.Either<
+  BattleStatBlockPositiveIntegerLiteral,
+  StatBlockPositiveIntegerLiteralParseFailure
+> {
+  const literal = parseStatBlockLiteralValue(value);
+  if (Either.isLeft(literal)) return Either.left(literal.left);
+  const positiveInteger = PositiveInteger.either(literal.right.value);
+  if (Either.isLeft(positiveInteger)) {
+    return Either.left("invalidPositiveInteger");
+  }
+  return Either.right({ kind: "literal", value: positiveInteger.right });
+}
+
+export type BattleStatBlockRuntimeResource = {
+  readonly ordinal: StatBlockProcedureResourceOrdinal;
+  readonly ownership: "shared" | "each";
+  readonly limit:
+    | { readonly kind: "daily"; readonly uses: PositiveIntegerType }
+    | {
+        readonly kind: "recharge";
+        readonly minimumRoll: StatBlockRechargeMinimumRoll;
+      }
+    | { readonly kind: "recharge_after_rest" };
+};
+
+export const STAT_BLOCK_RECHARGE_MINIMUM_ROLLS = [
+  2, 3, 4, 5, 6,
+] as const satisfies ReadonlyArray<number>;
+export type StatBlockRechargeMinimumRoll =
+  (typeof STAT_BLOCK_RECHARGE_MINIMUM_ROLLS)[number];
+
+export type StatBlockRuntimeResourceParseFailure =
+  | "invalidDailyUses"
+  | "invalidRechargeMinimumRoll";
+
+/**
+ * Resolve one authored resource declaration into the source-free runtime
+ * shape. The surface decoder owns structure; this boundary narrows the daily
+ * and recharge numeric facts before execution receives them.
+ */
+export function parseStatBlockRuntimeResource(
+  resource: StatBlockProcedureResource,
+): Either.Either<
+  BattleStatBlockRuntimeResource,
+  StatBlockRuntimeResourceParseFailure
+> {
+  if (resource.limit.kind === "daily") {
+    const uses = PositiveInteger.either(resource.limit.uses);
+    if (Either.isLeft(uses)) {
+      return Either.left("invalidDailyUses");
+    }
+    return Either.right({
+      ordinal: resource.ordinal,
+      ownership: resource.ownership,
+      limit: { kind: "daily", uses: uses.right },
+    });
+  }
+  if (resource.limit.kind === "recharge") {
+    const minimumRoll = statBlockRechargeMinimumRoll(
+      resource.limit.minimumRoll,
+    );
+    if (minimumRoll === null) {
+      return Either.left("invalidRechargeMinimumRoll");
+    }
+    return Either.right({
+      ordinal: resource.ordinal,
+      ownership: resource.ownership,
+      limit: {
+        kind: "recharge",
+        minimumRoll,
+      },
+    });
+  }
+  return Either.right({
+    ordinal: resource.ordinal,
+    ownership: resource.ownership,
+    limit: { kind: "recharge_after_rest" },
+  });
+}
+
+function statBlockRechargeMinimumRoll(
+  value: number,
+): StatBlockRechargeMinimumRoll | null {
+  return (
+    STAT_BLOCK_RECHARGE_MINIMUM_ROLLS.find(
+      (minimumRoll): minimumRoll is StatBlockRechargeMinimumRoll =>
+        minimumRoll === value,
+    ) ?? null
+  );
+}
+
+export type BattleStatBlockRuntimeMultiattackDispatch = {
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
+  readonly count: PositiveIntegerType;
+};
+
+export type BattleStatBlockRuntimeFacts = {
+  readonly size: Size;
+  readonly creatureType: CreatureType;
+  readonly ac: StatBlockLiteralValue;
+  readonly hp: StatBlockLiteralValue;
+  readonly speeds: readonly BattleStatBlockRuntimeSpeed[];
+  readonly abilityScores: SixAbilityScores;
+  readonly initiativeModifier: IntegerType;
+  readonly initiativeScore: NonNegativeIntegerType;
+  readonly passivePerception: NonNegativeIntegerType;
+  readonly savingThrowModifiers?: readonly CreatureSavingThrowModifier[];
+  readonly skillModifiers?: readonly CreatureSkillModifier[];
+  readonly saveProficiencies?: readonly Ability[];
+  readonly vulnerabilities?: CreatureVulnerabilityList;
+  readonly resistances?: CreatureResistanceList;
+  readonly immunities?: CreatureImmunityList;
+  readonly senses?: readonly BattleStatBlockRuntimeSense[];
+};
+
+export type BattleStatBlockCombatantFacts = Omit<
+  BattleStatBlockRuntimeFacts,
+  "size" | "ac" | "hp"
+> & {
+  readonly size: Size;
+  readonly ac: BattleStatBlockLiteralValue;
+  readonly hp: BattleStatBlockPositiveIntegerLiteral;
+};
+
+export type BattleStatBlockRuntimeSpeed = {
+  readonly kind: "walk" | "burrow" | "climb" | "fly" | "swim";
+  readonly feet: StatBlockLiteralValue;
+  readonly hover?: true;
+};
+
+export type BattleStatBlockRuntimeSense = {
+  readonly kind: CreatureSense["kind"];
+  readonly rangeFeet: PositiveIntegerType;
+  readonly qualifier?: "unimpeded_by_magical_darkness";
+};
+
+export type BattleStatBlockRuntimeProcedure =
+  | {
+      readonly kind: "attack";
+      readonly section: Extract<
+        StatBlockAttackSection,
+        "actions" | "legendaryActions"
+      >;
+      readonly procedureOrdinal: StatBlockProcedureOrdinal;
+      readonly attack: SupportedCreatureAttackRollMechanics;
+      readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
+      readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
+    }
+  | {
+      readonly kind: "multiattack";
+      readonly section: "actions";
+      readonly procedureOrdinal: StatBlockProcedureOrdinal;
+      readonly dispatches: ReadonlyNonEmptyArray<BattleStatBlockRuntimeMultiattackDispatch>;
+      readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
+    }
+  | {
+      readonly kind: "bonusActionOption";
+      readonly section: "bonusActions";
+      readonly procedureOrdinal: StatBlockProcedureOrdinal;
+      readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
+      readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
+    };
 
 export type StatBlockActionProjectionShape =
   | "attack"
@@ -72,12 +429,15 @@ export type StatBlockProjectionIssue =
         readonly kind: "action";
         readonly section: StatBlockActionProjectionSection;
         readonly shape: StatBlockActionProjectionShape;
-        readonly nonExecutableReason: "unsupportedActionShape";
+        readonly nonExecutableReason:
+          | "unsupportedActionShape"
+          | StatBlockTextOnlyReason;
       };
     };
 
 export type StatBlockAttackProcedure = {
   readonly kind: "attack";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly section: Extract<
     StatBlockAttackSection,
     "actions" | "legendaryActions"
@@ -86,18 +446,30 @@ export type StatBlockAttackProcedure = {
   readonly traitAttackRollModes?: ReadonlyNonEmptyArray<StatBlockTraitAttackRollMode>;
 };
 
+/** Runtime-injected Unarmed Strike; it has no authored procedure ordinal. */
+export type StatBlockUnarmedStrikeProcedure = {
+  readonly kind: "unarmedStrike";
+  readonly section: "actions";
+  readonly attack: SupportedCreatureAttackRollMechanics;
+};
+
 export type StatBlockMultiattackProcedure = {
   readonly kind: "multiattack";
+  readonly section: "actions";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly dispatchProcedureRefs: ReadonlyNonEmptyArray<BattleStatBlockProcedureExecutionRef>;
 };
 
 export type StatBlockBonusActionOptionProcedure = {
   readonly kind: "bonusActionOption";
+  readonly section: "bonusActions";
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
   readonly standardActions: ReadonlyNonEmptyArray<SupportedStatBlockBonusActionStandardAction>;
 };
 
 export type StatBlockProcedure =
   | StatBlockAttackProcedure
+  | StatBlockUnarmedStrikeProcedure
   | StatBlockMultiattackProcedure
   | StatBlockBonusActionOptionProcedure;
 
@@ -117,12 +489,14 @@ export type StatBlockResourcePoolState =
   | {
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       readonly kind: "daily";
+      readonly ownership: "shared" | "each";
       readonly usesMax: ResourceCount;
       readonly usesRemaining: ResourceCount;
     }
   | {
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       readonly kind: "recharge";
+      readonly ownership: "shared" | "each";
       readonly minimumRoll: Extract<
         CreatureLimitedUse,
         { readonly kind: "recharge" }
@@ -132,6 +506,7 @@ export type StatBlockResourcePoolState =
   | {
       readonly resourcePoolRef: BattleResourcePoolExecutionRef;
       readonly kind: "recharge_after_rest";
+      readonly ownership: "shared" | "each";
       readonly available: boolean;
     }
   | {
@@ -176,17 +551,23 @@ export function statBlockAttackActionOptions(
   execution: StatBlockExecutionState,
 ): readonly StatBlockAttackActionOption[] {
   return execution.procedureBindings.flatMap((binding) => {
-    if (binding.procedure.kind !== "attack") return [];
+    if (
+      binding.procedure.kind !== "attack" &&
+      binding.procedure.kind !== "unarmedStrike"
+    ) {
+      return [];
+    }
     const attack = binding.procedure.attack;
     const damage = supportedStatBlockAttackDamage(attack);
+    const traitAttackRollModes =
+      binding.procedure.kind === "attack"
+        ? binding.procedure.traitAttackRollModes
+        : undefined;
     const base = {
       kind: "statBlockAttack" as const,
       procedureRef: binding.procedureRef,
       attack,
-      ...optionalProperty(
-        "traitAttackRollModes",
-        binding.procedure.traitAttackRollModes,
-      ),
+      ...optionalProperty("traitAttackRollModes", traitAttackRollModes),
     };
     return [
       ...(statBlockAttackDamageRequiresRoll(damage)
@@ -231,13 +612,58 @@ export function statBlockProcedureResourcesAvailable(
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): boolean {
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  return (
-    binding !== undefined &&
-    binding.resourcePoolRefs.every((resourcePoolRef) => {
-      const pool = statBlockResourcePool(execution, resourcePoolRef);
-      return pool !== undefined && resourcePoolAvailable(pool);
-    })
+  return binding !== undefined
+    ? statBlockResourcePoolUsesAvailable(
+        execution,
+        resourcePoolUsesForRefs(binding.resourcePoolRefs),
+      )
+    : false;
+}
+
+/**
+ * A Multiattack consumes each effective dispatched procedure in order. A
+ * shared or binary limited-use pool therefore has to cover every occurrence,
+ * rather than merely being available for each distinct procedure reference.
+ */
+export function statBlockMultiattackResourcesAvailable(
+  execution: StatBlockExecutionState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+  effectiveDispatchProcedureRefs: readonly BattleStatBlockProcedureExecutionRef[],
+): boolean {
+  const requiredUsesByPool = resourcePoolUsesForRefs(binding.resourcePoolRefs);
+  for (const procedureRef of effectiveDispatchProcedureRefs) {
+    const dispatchBinding = statBlockProcedureBinding(execution, procedureRef);
+    if (dispatchBinding === undefined) return false;
+    for (const resourcePoolRef of dispatchBinding.resourcePoolRefs) {
+      requiredUsesByPool.set(
+        resourcePoolRef,
+        (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+      );
+    }
+  }
+  return statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool);
+}
+
+/**
+ * A Multiattack spends its own resource declaration together with the first
+ * dispatched procedure when activation grants the remaining dispatches. The
+ * complete demand is checked above, while this operation spends only the
+ * activation portion and leaves pending dispatches to their own resolution.
+ */
+export function spendStatBlockMultiattackActivationResources(
+  execution: StatBlockExecutionState,
+  binding: StatBlockProcedureBindingFor<StatBlockMultiattackProcedure>,
+  consumedProcedureRef: BattleStatBlockProcedureExecutionRef,
+): StatBlockExecutionState {
+  const firstDispatchBinding = statBlockProcedureBinding(
+    execution,
+    consumedProcedureRef,
   );
+  if (firstDispatchBinding === undefined) return execution;
+  return spendStatBlockResourcePoolUses(execution, [
+    ...binding.resourcePoolRefs,
+    ...firstDispatchBinding.resourcePoolRefs,
+  ]);
 }
 
 export function spendStatBlockProcedureResources(
@@ -245,19 +671,9 @@ export function spendStatBlockProcedureResources(
   procedureRef: BattleStatBlockProcedureExecutionRef,
 ): StatBlockExecutionState {
   const binding = statBlockProcedureBinding(execution, procedureRef);
-  if (
-    binding === undefined ||
-    !statBlockProcedureResourcesAvailable(execution, procedureRef)
-  ) {
-    return execution;
-  }
-  const ownedPoolRefs = new Set(binding.resourcePoolRefs);
-  return admittedStatBlockExecutionState({
-    ...execution,
-    resourcePools: execution.resourcePools.map((pool) =>
-      ownedPoolRefs.has(pool.resourcePoolRef) ? spendResourcePool(pool) : pool,
-    ),
-  });
+  return binding === undefined
+    ? execution
+    : spendStatBlockResourcePoolUses(execution, binding.resourcePoolRefs);
 }
 
 export function refreshStatBlockStartTurnExecution(
@@ -310,19 +726,66 @@ function statBlockResourcePool(
   );
 }
 
-function resourcePoolAvailable(pool: StatBlockResourcePoolState): boolean {
+function resourcePoolAvailableUses(pool: StatBlockResourcePoolState): number {
   return pool.kind === "daily" || pool.kind === "legendaryActions"
-    ? pool.usesRemaining > 0
-    : pool.available;
+    ? Number(pool.usesRemaining)
+    : pool.available
+      ? 1
+      : 0;
+}
+
+function resourcePoolUsesForRefs(
+  resourcePoolRefs: readonly BattleResourcePoolExecutionRef[],
+): Map<BattleResourcePoolExecutionRef, number> {
+  const requiredUsesByPool = new Map<BattleResourcePoolExecutionRef, number>();
+  for (const resourcePoolRef of resourcePoolRefs) {
+    requiredUsesByPool.set(
+      resourcePoolRef,
+      (requiredUsesByPool.get(resourcePoolRef) ?? 0) + 1,
+    );
+  }
+  return requiredUsesByPool;
+}
+
+function statBlockResourcePoolUsesAvailable(
+  execution: StatBlockExecutionState,
+  requiredUsesByPool: ReadonlyMap<BattleResourcePoolExecutionRef, number>,
+): boolean {
+  return [...requiredUsesByPool].every(([resourcePoolRef, requiredUses]) => {
+    const pool = statBlockResourcePool(execution, resourcePoolRef);
+    return (
+      pool !== undefined && resourcePoolAvailableUses(pool) >= requiredUses
+    );
+  });
+}
+
+function spendStatBlockResourcePoolUses(
+  execution: StatBlockExecutionState,
+  resourcePoolRefs: readonly BattleResourcePoolExecutionRef[],
+): StatBlockExecutionState {
+  const requiredUsesByPool = resourcePoolUsesForRefs(resourcePoolRefs);
+  if (!statBlockResourcePoolUsesAvailable(execution, requiredUsesByPool)) {
+    return execution;
+  }
+  return admittedStatBlockExecutionState({
+    ...execution,
+    resourcePools: execution.resourcePools.map((pool) => {
+      const requiredUses = requiredUsesByPool.get(pool.resourcePoolRef);
+      return requiredUses === undefined
+        ? pool
+        : spendResourcePool(pool, requiredUses);
+    }),
+  });
 }
 
 function spendResourcePool(
   pool: StatBlockResourcePoolState,
+  requiredUses: number,
 ): StatBlockResourcePoolState {
   if (pool.kind === "daily" || pool.kind === "legendaryActions") {
     return {
       ...pool,
-      usesRemaining: resourceCount(Number(pool.usesRemaining) - 1),
+      usesRemaining: resourceCount(Number(pool.usesRemaining) - requiredUses),
     };
   }
   return { ...pool, available: false };

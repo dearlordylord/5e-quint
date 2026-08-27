@@ -72,10 +72,22 @@ export const setupScenario: ScenarioSetup = (context) => {
     );
   }
 
-  const wolf = context.statBlockCatalog.requireStatBlock("stat_block_wolf");
-  const goblin = context.statBlockCatalog.requireStatBlock(
-    "stat_block_goblin_warrior",
+  const wolf = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_wolf",
   );
+  const goblin = context.statBlocks.find(
+    (statBlock) => statBlock.id === "stat_block_goblin_warrior",
+  );
+  if (wolf === undefined || goblin === undefined) {
+    return obstructed(
+      "The supplied Stat Block catalog is missing a required scenario combatant.",
+      {
+        code: "missing-required-stat-block",
+        wolfFound: wolf !== undefined,
+        goblinWarriorFound: goblin !== undefined,
+      },
+    );
+  }
   const sharedWolfInitiative = sdk.initiativeScore(12);
 
   const wolfAInit = sdk.battleCreatureInitFromStatBlock({
@@ -87,7 +99,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(wolfAInit)) {
     return obstructed(
-      `The canonical battle projection rejected Wolf A: ${sdk.battleStateInitIssueMessage(wolfAInit.left)}`,
+      `The canonical battle projection rejected Wolf A: ${sdk.authoredStatBlockBattleInitIssueMessage(wolfAInit.left)}`,
       { code: "wolf-a-battle-projection-rejected" },
     );
   }
@@ -101,7 +113,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(wolfBInit)) {
     return obstructed(
-      `The canonical battle projection rejected Wolf B: ${sdk.battleStateInitIssueMessage(wolfBInit.left)}`,
+      `The canonical battle projection rejected Wolf B: ${sdk.authoredStatBlockBattleInitIssueMessage(wolfBInit.left)}`,
       { code: "wolf-b-battle-projection-rejected" },
     );
   }
@@ -115,7 +127,7 @@ export const setupScenario: ScenarioSetup = (context) => {
   });
   if (sdk.isLeft(goblinInit)) {
     return obstructed(
-      `The canonical battle projection rejected Goblin Warrior A: ${sdk.battleStateInitIssueMessage(goblinInit.left)}`,
+      `The canonical battle projection rejected Goblin Warrior A: ${sdk.authoredStatBlockBattleInitIssueMessage(goblinInit.left)}`,
       { code: "goblin-battle-projection-rejected" },
     );
   }

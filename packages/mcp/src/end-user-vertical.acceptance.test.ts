@@ -144,7 +144,7 @@ describe("end-user MCP vertical", () => {
     expect(selected.selectedStatBlock).toMatchObject({
       id: "stat_block_goblin_warrior",
       provenance: { kind: "srd-5.2.1" },
-      statBlock: { displayName: "Goblin Warrior" },
+      name: "Goblin Warrior",
     });
 
     const started = callTool(root, "start_battle", {
@@ -337,8 +337,8 @@ describe("end-user MCP vertical", () => {
     expect(selected.selectedStatBlock).toMatchObject({
       id: "stat_block_skeleton",
       provenance: { kind: "srd-5.2.1" },
+      name: "Skeleton",
       statBlock: {
-        displayName: "Skeleton",
         vulnerabilities: { damageTypes: ["bludgeoning"] },
         immunities: {
           damageTypes: ["poison"],

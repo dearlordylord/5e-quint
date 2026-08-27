@@ -23,7 +23,6 @@ import locateAnimalsOrPlantsInput from "../../content/locate_animals_or_plants.j
 import locateObjectInput from "../../content/locate_object.json";
 import bagOfHoldingInput from "../../content/magic_item_bag_of_holding.json";
 import chimeOfOpeningInput from "../../content/magic_item_chime_of_opening.json";
-import cloakOfProtectionInput from "../../content/magic_item_cloak_of_protection.json";
 import magicWeaponInput from "../../content/magic_weapon.json";
 import magicMouthInput from "../../content/magic_mouth.json";
 import moonbeamInput from "../../content/moonbeam.json";
@@ -312,17 +311,25 @@ describe("Surface trace interpreter", () => {
       },
       statBlock: {
         ...goblinWarriorInput.statBlock,
-        actions: {
+        actions: [
           ...goblinWarriorInput.statBlock.actions,
-          supports: [
-            {
+          {
+            kind: "executable",
+            procedureOrdinal: 3,
+            procedure: {
+              kind: "support",
               name: "Synthetic Support",
               target: "ally_in_range",
               rangeFeet: 30,
-              effect: cloakOfProtectionInput.mechanics.grants[0],
+              effect: {
+                kind: "apply_condition_if_target_size_at_most",
+                condition: "prone",
+                maxCreatureSize: "medium",
+              },
             },
-          ],
-        },
+            resourceRefs: { kind: "none" },
+          },
+        ],
       },
     });
 
@@ -336,6 +343,70 @@ describe("Surface trace interpreter", () => {
         }),
       ]),
     );
+  });
+
+  test("traces authored text-only and legendary procedures in source order", () => {
+    const statBlock = decodeStatBlockRecordSync({
+      ...goblinWarriorInput,
+      id: "synthetic_legendary_trace_stat_block",
+      name: "Synthetic Legendary Trace Creature",
+      provenance: {
+        kind: "synthetic-test",
+        section: "Synthetic Tests/Legendary Trace",
+      },
+      statBlock: {
+        ...goblinWarriorInput.statBlock,
+        actions: [
+          ...goblinWarriorInput.statBlock.actions,
+          {
+            kind: "textOnly",
+            procedureOrdinal: 3,
+            name: "Unmodeled Roar",
+            description: "A synthetic procedure retained for presentation.",
+            reason: "unsupported_procedure_family",
+            resourceRefs: { kind: "none" },
+          },
+        ],
+        legendaryActions: {
+          uses: 2,
+          entries: [
+            {
+              ...goblinWarriorInput.statBlock.actions[0],
+              procedureOrdinal: 1,
+            },
+          ],
+        },
+      },
+    });
+
+    const trace = traceStatBlock(statBlock);
+    const labels = trace.nodes.map((node) => node.label);
+
+    expect(labels).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("text_only [action 3: Unmodeled Roar]"),
+        expect.stringContaining("attack_roll [legendary_action 1: Scimitar]"),
+      ]),
+    );
+    expect(
+      labels.some((label) =>
+        label.includes("text_only [action 3: Unmodeled Roar]"),
+      ),
+    ).toBe(true);
+    expect(
+      labels.findIndex((label) =>
+        label.includes("text_only [action 3: Unmodeled Roar]"),
+      ),
+    ).toBeLessThan(
+      labels.findIndex((label) =>
+        label.includes("attack_roll [legendary_action 1: Scimitar]"),
+      ),
+    );
+    expect(
+      trace.nodes.find(
+        (node) => node.atomKind === "text_only_unsupported_procedure_family",
+      )?.category,
+    ).toBe("hole");
   });
 
   test("traces transfer mechanics retained inside a mark attachment hole", () => {

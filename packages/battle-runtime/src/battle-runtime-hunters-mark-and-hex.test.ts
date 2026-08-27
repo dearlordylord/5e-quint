@@ -1105,7 +1105,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
         }),
         statBlockCreatureInit({
           combatantId: skeletonId,
-          displayName: "Skeleton",
+          statBlockName: "Skeleton",
           initiative: 5,
         }),
       ],

@@ -109,13 +109,17 @@ export type {
   StatBlockResourcePoolState,
 } from "./stat-block-execution.ts";
 
-export { statBlockProjectionIssues } from "./stat-block-execution.ts";
-
 export {
   restoreStatBlockExecutionAdmission,
   restoreStatBlockExecutionAdmissions,
   statBlockExecutionSnapshot,
 } from "./stat-block-execution.ts";
+
+export {
+  projectAuthoredStatBlock,
+  type AuthoredStatBlockProjection,
+  type BattleStatBlockProjectionFailure,
+} from "./stat-block-authored-projection.ts";
 
 export type {
   CharacterZeroHpLifecycleInit,
@@ -381,10 +385,13 @@ export type {
 } from "./battle-action-options.ts";
 
 export type {
+  AuthoredStatBlockBattleInitInput,
+  AuthoredStatBlockBattleInitIssue,
   BattleDruidWildShapeKnownForm,
   BattleDruidWildShapeKnownFormIssue,
+  BattleDruidWildShapeKnownFormsIssue,
   BattleCreatureInit,
-  BattleStatBlockCreatureInitResult,
+  CharacterBattleCombatantInit,
   BattlePositiveHpUnconscious,
   BattleUnitRef,
   BattleWalkSpeed,
@@ -395,17 +402,27 @@ export type {
   CharacterBattleLoadoutRef,
   CharacterBattleWeaponMasterySelection,
   StatBlockBattleCreatureInit,
-  StatBlockBattleInitInput,
+  StatBlockBattleCombatantInit,
+  StatBlockBattleInitIssue,
   StatBlockInitialCondition,
 } from "./battle-init.ts";
 
 export type {
   StatBlockActionProjectionSection,
+  StatBlockAuthoredProcedurePresentationKind,
+  StatBlockExecutableProcedureKind,
+  StatBlockProcedurePresentationJoinIssue,
+  StatBlockProcedurePresentationKind,
+} from "./stat-block-presentation-contract.ts";
+
+export type {
   StatBlockActionProjectionShape,
   StatBlockProjectionIssue,
 } from "./stat-block-execution-state.ts";
 
 export {
+  authoredStatBlockBattleInitIssueMessage,
+  wildShapeKnownFormsIssueMessage,
   KNOCKED_OUT_UNCONSCIOUS,
   STAT_BLOCK_INITIAL_CONDITIONS,
   battleAvailableDruidWildShapeKnownForms,

@@ -179,7 +179,6 @@ import type {
   SpellMechanics,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
-import type * as Option from "effect/Option";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
   BoundCharacterWeaponAttackActionOption,
@@ -224,16 +223,18 @@ import type {
   CharacterBattleLoadoutRef,
   HeldWeaponLoadoutSlot,
 } from "./character-creature-execution-facts.ts";
-import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";
 import type { BattlePositiveHpUnconscious } from "./positive-hp-unconscious.ts";
 import type { StatBlockBattleOrigin } from "./stat-block-combatant-execution-state.ts";
 import type {
   BattleStatBlockExecutionSource,
   StatBlockExecutionAdmission,
   StatBlockExecutionSnapshot,
+  StatBlockResourceGraphAdmissionFailure,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 import type { BattleCompanionDurableId } from "./companion-state.ts";
+import type { StatBlockProcedurePresentationJoinIssue } from "./stat-block-presentation-contract.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -4045,7 +4046,7 @@ type BattleCreatureStateCommon = {
         readonly classLevels: CharacterBattleClassLevels;
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
         readonly d20Statistics: CharacterBattleD20Statistics;
-        readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[];
+        readonly druidWildShapeAvailableForms?: readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[];
         readonly weaponProficiencies: readonly WeaponProficiency[];
         readonly selectedLoadout: CharacterBattleLoadoutRef;
         readonly unarmoredArmorClassBases: CharacterBattleUnarmoredArmorClassBases;
@@ -4459,6 +4460,10 @@ export type BattleStateInitLeafIssue =
       readonly ownerPath?: readonly (string | number)[];
     }
   | {
+      readonly tag: "statBlockResourceGraphIssue";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>;
+    }
+  | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
       readonly ownerPath?: readonly (string | number)[];
@@ -4523,13 +4528,23 @@ export const ATTACK_PRESENTATION_JOIN_ISSUE_REASONS = [
   "weaponPresentationMissing",
   "statBlockAdmissionMissing",
   "statBlockPresentationMissing",
+  "statBlockProcedurePresentationJoin",
 ] as const;
 export type AttackPresentationJoinIssueReason =
   (typeof ATTACK_PRESENTATION_JOIN_ISSUE_REASONS)[number];
-export type AttackPresentationJoinIssue = {
-  readonly tag: "attackPresentationJoinIssue";
-  readonly reason: AttackPresentationJoinIssueReason;
-};
+export type AttackPresentationJoinIssue =
+  | {
+      readonly tag: "attackPresentationJoinIssue";
+      readonly reason: Exclude<
+        AttackPresentationJoinIssueReason,
+        "statBlockProcedurePresentationJoin"
+      >;
+    }
+  | {
+      readonly tag: "attackPresentationJoinIssue";
+      readonly reason: "statBlockProcedurePresentationJoin";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockProcedurePresentationJoinIssue>;
+    };
 
 export type BattleActPresentation =
   | { readonly kind: "intrinsic" }
@@ -4559,7 +4574,7 @@ export type BattleActPresentation =
       readonly procedureRef: BattleProcedureExecutionRef;
       readonly formExecutionRef: BattleStatBlockExecutionScopeRef;
       readonly unitId: string;
-      readonly formStatBlockId: BattleDruidWildShapeKnownForm["id"];
+      readonly formStatBlockId: BattleDruidWildShapeKnownFormRuntime["id"];
     };
 
 export type BattleActDiscoveryCandidate = BattleActExecution<BattleSubject>;

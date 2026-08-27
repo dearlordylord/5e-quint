@@ -96,6 +96,13 @@ Familiar its Reaction is already committed, so a caller cannot forge that
 state and later holes cannot bypass or double-spend it. Legendary-action window
 consumption and closure are centralized in
 `battle-reducer/legendary-action-window.ts` for every delegated procedure.
+The authored Stat Block lookup needed for familiar reappearance is owned by
+`find-familiar-stat-block-catalog.ts`; admission and presentation consume this
+narrow capability, while runtime state retains projected source-free execution
+facts and the presentation companion separately.
+Druid Wild Shape follows the same boundary: the authored form projection stays
+at admission/presentation, and source-free known-form facts live in
+`druid-wild-shape-known-form-runtime.ts` for execution consumers.
 
 Post-cast persistent spatial spell procedures are owned by
 `battle-reducer/persistent-spatial-spell-procedures.ts`. It owns the admitted
@@ -222,7 +229,7 @@ flowchart TD
   State["BattleState<br/>data: battle id, initiative, combatants, current-turn resources<br/>why: durable non-spatial legality/replay input<br/>without: discovery and resolution would not share one combat snapshot"]
   Creature["BattleCreatureState<br/>data: HP, temp HP, AC state, conditions, zero-HP lifecycle, origin<br/>why: shared combat view for Character-derived and Stat Block-derived creatures<br/>without: runtime branches on source objects instead of combat facts"]
   Origin["origin<br/>data: Character or Stat Block origin facts retained for supported act discovery<br/>why: source attribution without a second executable content language<br/>without: battle either loses selected capability facts or imports source package state"]
-  MonsterResources["StatBlockMutableResourceState<br/>source: mutable execution facts for authored StatBlockRecord controls<br/>data: remaining X/Day uses, unavailable Recharge parts, Legendary Action uses remaining<br/>why: monster resources are execution state, not Unit facts"]
+  MonsterResources["StatBlockMutableResourceState<br/>source: mutable execution facts for projected Stat Block controls<br/>data: remaining X/Day uses, unavailable Recharge parts, Legendary Action uses remaining<br/>why: monster resources are execution state, not Unit facts"]
   ArmorClass["ArmorClassState helpers<br/>input: combatant.armorClass<br/>success: current Armor Class<br/>why: attack rolls compare against derived AC without storing a duplicate scalar"]
   ActionEconomy["action-economy-algebra<br/>input: BattleTurnResources<br/>success: can spend/spend/reset action resources<br/>why: one turn-resource model; no scalar action quota"]
   AttackRoll["attack-roll-algebra<br/>input: AttackRollResult + Armor Class<br/>success: SRD natural 1/20 and AC hit fact<br/>why: one d20 attack-roll adjudication path"]
@@ -236,7 +243,7 @@ flowchart TD
   CommandApproach["Command Approach follow-up<br/>input: Movement fill with caller-supplied route/proximity facts<br/>success: Movement spend + pending effect cleanup; target End Turn only if within 5 ft<br/>why: Approach needs table route facts without storing pathfinding state"]
   CommandFlee["Command Flee follow-up<br/>input: Movement fill with caller-supplied fastest-available moving-away facts<br/>success: full selected Movement spend + pending effect cleanup + target End Turn<br/>why: Flee needs table route facts while Opportunity Attacks stay derived from actual movement"]
   Support["support gates/readers<br/>success: authored shape selects a supported procedure family<br/>invalid: unsupported authored shape fails before reducer replay"]
-  AttackOption["supported Attack action option<br/>source: character selected weapon or StatBlockRecord named attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from authored inputs"]
+  AttackOption["supported Attack action option<br/>source: character selected weapon or projected Stat Block attack<br/>why: attack bonus, damage, reach, normal/long range, and attack identity derive from admitted inputs"]
   MonsterControl["monster control resources<br/>success: spend X/Day or Recharge; discover Legendary Actions after another turn; refresh Legendary Actions and recharge rolls at start turn; pending Multiattack dispatches expose matching dispatch attacks, Movement, and End Turn<br/>why: reusable Stat Block limited-use protocol"]
   UnitFeature["Unit feature activation/passive support<br/>source: retained Unit + runtime use-count, turn-resource, spell-access grant, or support-profile state<br/>success: Action Surge grants one non-Magic action; Second Wind spends Bonus Action and heals; Innate Sorcery records a one-minute active window and projects active Sorcerer spell DC/attack benefits; Favored Enemy grants feature-prepared Hunter's Mark plus a retained Long Rest free-cast resource; Defense admits a passive Armor Class bonus profile; Savage Attacker chooses weapon damage dice"]
   SpellAct["spell act<br/>source: retained Spell Records + runtime Spell Slot/class-feature/invocation spell-access/effect state<br/>success: action-time spells consume Magic action; Magic Missile allocates darts and spends the selected slot; Armor of Shadows casts self-targeted Mage Armor with no Spell Slot through the persistent armor procedure; Eldritch Mind projects Advantage only onto damage-triggered Concentration maintenance Saving Throw holes; Favored Enemy casts Hunter's Mark through classFeatureFreeCastSpellInvocationRef without touching Spell Slots when free uses remain, otherwise the same spell can use ordinary slot invocation; Hex records Necrotic marked damage, the cast-time chosen ability, matching Ability Check Disadvantage, transfer after 0 HP, and slot-scaled Concentration duration; direct healing spells restore selected targets, including Mass Cure Wounds point-origin Sphere choices; Spare the Dying makes zero-HP non-dead Character Build targets Stable through death-save lifecycle state; Shield, Hellish Rebuke, and Feather Fall spend Reaction + slot from trigger windows; Feather Fall stores per-target mitigation and resolves caller-supplied landings as cleanup plus fall-damage/Falling-Prone prevention outcomes; Expeditious Retreat spends Bonus Action + slot, immediately resolves Dash, and stores concentration-owned Bonus Action Dash permission; Ray of Frost records Speed effect; Shocking Grasp denies Opportunity Attacks; True Strike hosts proficient weapon attack replay with spellcasting ability and Radiant cantrip damage; Eldritch Blast resolves character-level beams with independent creature-or-object targets, attack rolls, and Force damage; Guiding Bolt, Ray of Sickness, Vicious Mockery, and Sleep record source-owned timed attack-roll/condition/lifecycle riders; Grease records a timed ground hazard whose entry saves are caller-triggered from table area membership and whose end-turn saves resolve through End Turn; Animal Friendship, Ensnaring Strike, and Protection from Evil and Good record source-owned condition/protection effects; Searing Smite records source-owned timed burn damage plus Constitution save-to-end; Poison Spray, Starry Wisp, Sacred Flame, Acid Splash, Inflict Wounds, and Dissonant Whispers apply admitted spell damage; Chill Touch applies melee spell attack damage and blocks target Hit Point regain until the caster's next turn ends; Dissonant Whispers failed saves can spend target Reaction for caller-supplied movement and table-supplied Opportunity Attack threats; creature-or-object spell attacks consume caller-supplied object range, Armor Class, and damage disposition facts"]
@@ -290,7 +297,7 @@ flowchart TD
   UnitFeature["unitFeature<br/>success: spend retained feature resource, record an ongoing occurrence, or grant Bardic Inspiration dice<br/>invalid: no use remains, no Bonus Action, or already used this turn"]
   BardicDieUse["resolveBardicInspirationFailedD20Test<br/>success: expend held die after an already-failed attack roll, Saving Throw, or Ability Check<br/>invalid: no held die, prior success, or bad die roll"]
   Magic["actionSpell + spellId<br/>success: staged action-time spell replay via Magic action, including supported attack, save, damage, mixed attack-plus-burst, scalar buff, and creature-type protection/charm spells<br/>invalid: unsupported spell shape, no Magic action, no slot for prepared spell"]
-  AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or StatBlockRecord named attack<br/>why: selected attack identity and authored damage facts stay coupled"]
+  AttackOption["supported Attack action option<br/>source: BattleCreatureState.origin character weapon or projected Stat Block attack<br/>why: selected attack identity and source-free damage facts stay coupled"]
   Target["target choice<br/>caller/table supplies spatially legal target using authored reach/range metadata; ranged facts carry normal or long range band<br/>needsHoles until caller selects a combatant"]
   Roll["attack roll<br/>needsHoles until caller supplies AttackRollResult"]
   HitCheck["attackRollHits(roll, target AC)<br/>hit: ask/apply damage<br/>miss: spend action"]
@@ -350,13 +357,13 @@ flowchart TD
   state. Search, making an attack roll, and casting a spell with a Verbal
   component clear it.
 - Stat Block-derived creatures can be initialized, damaged, and use supported
-  named attacks derived from authored `StatBlockRecord` action sections.
-- Stat Block-derived control resources are initialized from
-  `StatBlockRecord` limited-use and Legendary Action fields. Mutable X/Day,
-  Recharge, and Legendary Action execution facts live in
-  `StatBlockMutableResourceState`; authored limits and thresholds are derived
-  from the retained `StatBlockRecord` when needed. No monster control resource
-  is inferred from UnitRecord facts.
+  named attacks from the source-free execution projection.
+- Stat Block-derived control resources are projected once from authored
+  `StatBlockRecord` limited-use and Legendary Action fields at admission.
+  Mutable X/Day, Recharge, and Legendary Action execution facts live in
+  `StatBlockMutableResourceState`; execution uses the projected limits and
+  thresholds rather than reading the authored record. No monster control
+  resource is inferred from UnitRecord facts.
 - Character-derived attacks come from a supported weapon Attack action option
   assembled at the composition boundary.
 - Supported melee attack damage can carry the attacker's Knock Out choice into
@@ -444,7 +451,7 @@ flowchart TD
   Charmed, or Frightened effects from scoped creature types; fresh spell-cast
   condition saves are not treated as that boundary.
 - Stat Block damage vulnerabilities, resistances, and immunities are read from
-  the retained `StatBlockRecord` at the HP mutation boundary.
+  the projected source-free combatant mechanics at the HP mutation boundary.
 - Optional attack damage riders are retained feature profiles, not named
   reducer branches. The Attack replay exposes eligible rider choices on the
   damage hole and stores once-per-turn rider use in turn resources; Sneak Attack

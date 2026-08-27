@@ -1,4 +1,8 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -81,7 +85,7 @@ const quarterstaffObjectId = battleObjectId("main:weapon_quarterstaff");
 const groundPositionId = battleTablePositionId(
   "wild-shape-ground-object-mbt-position",
 );
-const ridingHorseId = "stat_block_riding_horse";
+const ridingHorseId = statBlockId("stat_block_riding_horse");
 
 const driverSchema = {
   init: {},
@@ -212,7 +216,7 @@ function initialRuntimeState(): RuntimeState {
           classLevels: [{ className: "druid", level: 18 }],
           resources: [{ unit: unitLibrary.requireUnit("druid_wild_shape") }],
           druidWildShapeAvailableForms: [
-            statBlockCatalog.requireStatBlock(ridingHorseId),
+            assertStatBlockForTest(statBlockCatalog, ridingHorseId),
           ],
           selectedLoadout: {
             weapon: {

@@ -1,7 +1,10 @@
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import {
+  statBlockId as parseSharedStatBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import {
   BattleFillSchema,
   BattleHoleSchema,
@@ -51,6 +54,7 @@ import {
 } from "./battle-reducer/battle-codecs.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import {
   battleAreaId,
   battleLineDirectionId,
@@ -263,39 +267,71 @@ const left = (name: string, holeValue: EncodedHole): CodecCase => ({
   hole: holeValue,
 });
 
-function codecStaticDartStatBlock() {
+function codecStaticDartStatBlock(): StatBlockRecord {
   const base = monsterMultiattackStatBlock();
-  const shortbow = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Shortbow",
+  const shortbow = base.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Shortbow",
   );
-  if (shortbow === undefined) {
+  if (
+    shortbow === undefined ||
+    shortbow.kind !== "executable" ||
+    shortbow.procedure.kind !== "attack_roll"
+  ) {
     throw new Error("Expected the static codec Shortbow fixture.");
   }
   return {
-    ...base,
+    id: parseSharedStatBlockId("stat_block_codec_static_dart_monster"),
+    kind: "statBlock",
     name: "Codec Static Dart Monster",
+    challengeRating: 0.25,
+    provenance: {
+      kind: "synthetic-test",
+      section: "codec static damage fixture",
+    },
     statBlock: {
-      ...base.statBlock,
-      displayName: "Codec Static Dart Monster",
-      actions: {
-        ...base.statBlock.actions,
-        attacks: [
-          {
-            ...shortbow,
+      size: "small",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
+      actions: [
+        {
+          ...shortbow,
+          procedure: {
+            ...shortbow.procedure,
+            name: "Static Dart",
             onHit: [
               {
-                kind: "damage" as const,
-                damageType: "piercing" as const,
+                kind: "damage",
+                damageType: "piercing",
                 amount: {
-                  kind: "fixed" as const,
+                  kind: "fixed",
                   expr: { dice: 1, dieSize: 4 },
                   static: 3,
                 },
               },
-            ] as const,
+            ],
           },
-        ] as const,
-      },
+        },
+      ],
     },
   };
 }

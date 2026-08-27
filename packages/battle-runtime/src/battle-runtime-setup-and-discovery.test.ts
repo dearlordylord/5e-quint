@@ -93,6 +93,7 @@ describe("battle runtime: setup and discovery", () => {
 
     expect(battleRuntimeSessionFollows(session, session)).toBe(true);
     expect(battleRuntimeSessionFollows(successor, session)).toBe(true);
+    expect(successor.context).toBe(session.context);
     expect(battleRuntimeSessionFollows(session, successor)).toBe(false);
     expect(battleRuntimeSessionFollows(laterSuccessor, session)).toBe(false);
     expect(battleRuntimeSessionFollows(unrelated, session)).toBe(false);
@@ -342,12 +343,13 @@ describe("battle runtime: setup and discovery", () => {
         ],
       });
     const session = makeSession("damage");
-    const unarmedStrike = session.context.statBlocks
-      .get(skeletonId)
-      ?.procedures.find(
-        (procedure) =>
-          procedure.kind === "attack" && procedure.name === "Unarmed Strike",
-      );
+    const skeleton = session.state.combatants.get(skeletonId);
+    if (skeleton?.origin.kind !== "statBlock") {
+      throw new Error("Expected the Skeleton Stat Block origin.");
+    }
+    const unarmedStrike = skeleton.origin.execution.procedureBindings.find(
+      (binding) => binding.procedure.kind === "unarmedStrike",
+    );
 
     expect(unarmedStrike).toBeDefined();
     const attackAct = discoverBattleActs(session).find(
@@ -941,7 +943,7 @@ describe("battle runtime: setup and discovery", () => {
       state,
       combatant: statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Skeleton",
+        statBlockName: "Skeleton",
         initiative: 15,
       }),
     });

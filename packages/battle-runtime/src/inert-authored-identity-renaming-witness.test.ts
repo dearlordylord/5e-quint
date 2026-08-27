@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { describe, expect, test } from "vitest";
 import { initiativeOrder } from "@dnd/shared-algebras/initiative-algebra";
 import { characterId, combatantId, type CombatantId } from "./identity.ts";
@@ -27,7 +28,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { discoverBattleActs } from "./battle-act-composition.ts";
 import type { BattleRuntimeContext } from "./battle-runtime-context.ts";
-import type { BattleDruidWildShapeKnownForm } from "./druid-wild-shape-known-form-execution.ts";
+import type { BattleDruidWildShapeKnownFormRuntime } from "./druid-wild-shape-known-form-runtime.ts";
 import type { StatBlockExecutionAdmission } from "./stat-block-execution-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
@@ -100,7 +101,7 @@ function turnResourcesProjection(turnResources: BattleTurnResources) {
 
 function wildShapeAvailableFormsMechanicalProjection(
   forms:
-    | readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>[]
+    | readonly StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>[]
     | undefined,
 ) {
   if (forms === undefined) return undefined;
@@ -109,14 +110,9 @@ function wildShapeAvailableFormsMechanicalProjection(
   // size, speeds, procedures) remain compared.
   return forms.map((admission) => {
     const { id: _id, ...statBlockWithoutId } = admission.statBlock;
-    const { displayName: _displayName, ...innerStatBlockWithoutDisplayName } =
-      statBlockWithoutId.statBlock;
     return {
       ...admission,
-      statBlock: {
-        ...statBlockWithoutId,
-        statBlock: innerStatBlockWithoutDisplayName,
-      },
+      statBlock: statBlockWithoutId,
     };
   });
 }
@@ -341,23 +337,16 @@ function renameSnapshotInertIdentityFields(
 }
 
 function wildShapeFormAdmissionWithRenamedPresentationIdentity(
-  admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm>,
+  admission: StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime>,
   id: ReturnType<typeof statBlockId>,
-  displayName: string,
-): StatBlockExecutionAdmission<BattleDruidWildShapeKnownForm> {
-  // Only composition/selection identity (`statBlock.id` and nested
-  // `statBlock.statBlock.displayName`) is rewritten. After admission it is
-  // mechanically inert; mechanical facts and eligibility remain identical, so
-  // no type assertions are required.
+): StatBlockExecutionAdmission<BattleDruidWildShapeKnownFormRuntime> {
+  // Only the composition/selection identity (`statBlock.id`) is rewritten.
+  // Presentation labels are joined from the admitted runtime context below.
   return {
     ...admission,
     statBlock: {
       ...admission.statBlock,
       id,
-      statBlock: {
-        ...admission.statBlock.statBlock,
-        displayName,
-      },
     },
   };
 }
@@ -414,7 +403,6 @@ function renameFormStatBlockIdPresentationFields(
   const syntheticFormStatBlockId = statBlockId(
     "synthetic-form-stat-block-id-witness",
   );
-  const syntheticFormDisplayName = "Synthetic Form";
 
   const renamedCombatants = new Map(
     Array.from(state.combatants.entries()).map(([id, combatant]) => {
@@ -430,7 +418,6 @@ function renameFormStatBlockIdPresentationFields(
           wildShapeFormAdmissionWithRenamedPresentationIdentity(
             admission,
             syntheticFormStatBlockId,
-            syntheticFormDisplayName,
           ),
       );
       return [
@@ -455,6 +442,7 @@ function renameContextInertIdentityFields(
   const syntheticSpellId = "synthetic-spell-id-witness";
   const syntheticSpellName = "Synthetic Spell";
   const syntheticStatBlockDisplayName = "Synthetic Stat Block";
+  const syntheticFormDisplayName = "Synthetic Form";
   const syntheticProcedureLabel = "Synthetic Procedure";
 
   const characters = new Map(
@@ -475,6 +463,27 @@ function renameContextInertIdentityFields(
             },
           }),
         ),
+        ...(character.druidWildShapeFormPresentations === undefined
+          ? {}
+          : {
+              druidWildShapeFormPresentations: new Map(
+                Array.from(
+                  character.druidWildShapeFormPresentations.entries(),
+                ).map(([scopeRef, source]) => [
+                  scopeRef,
+                  {
+                    ...source,
+                    displayName: syntheticFormDisplayName,
+                    orderedProcedures: source.orderedProcedures.map(
+                      (procedure) => ({
+                        ...procedure,
+                        name: syntheticProcedureLabel,
+                      }),
+                    ),
+                  },
+                ]),
+              ),
+            }),
       },
     ]),
   );
@@ -485,11 +494,9 @@ function renameContextInertIdentityFields(
       {
         ...source,
         displayName: syntheticStatBlockDisplayName,
-        procedures: source.procedures.map((procedure) => ({
+        orderedProcedures: source.orderedProcedures.map((procedure) => ({
           ...procedure,
-          ...(procedure.kind === "attack"
-            ? { name: syntheticProcedureLabel }
-            : { label: syntheticProcedureLabel }),
+          name: syntheticProcedureLabel,
         })),
       },
     ]),
@@ -723,7 +730,10 @@ describe("inert authored identity renaming witness (#224)", () => {
           selectedLoadout: {},
           attack: null,
           druidWildShapeAvailableForms: [
-            statBlockCatalog.requireStatBlock("stat_block_cat"),
+            assertStatBlockForTest(
+              statBlockCatalog,
+              statBlockId("stat_block_cat"),
+            ),
           ],
         }),
         statBlockCreatureInit({ initiative: 10 }),
@@ -731,9 +741,10 @@ describe("inert authored identity renaming witness (#224)", () => {
     });
 
     const renamedState = renameFormStatBlockIdPresentationFields(session.state);
+    const renamedContext = renameContextInertIdentityFields(session.context);
     const renamedSession = battleRuntimeSessionForTest({
       state: renamedState,
-      context: session.context,
+      context: renamedContext,
     });
 
     const originalActs = discoverBattleActs(session);

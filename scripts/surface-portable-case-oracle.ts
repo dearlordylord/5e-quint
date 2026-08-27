@@ -397,6 +397,10 @@ function identityIssues(
     string,
     { readonly targetKind: PortableRecordKind; readonly path: string }
   >();
+  const seenStatBlockIdentities = new Map<
+    string,
+    { readonly targetId: string; readonly path: string }
+  >();
   const issues: PortableCaseIssue[] = [];
   for (const [family, targetKind] of [
     ["units", "unit"],
@@ -413,15 +417,36 @@ function identityIssues(
       const prior = seen.get(targetId);
       if (prior === undefined) {
         seen.set(targetId, { targetKind, path });
+      } else {
+        issues.push({
+          code: "duplicate-authored-identity",
+          path,
+          targetKind,
+          targetId,
+          priorPath: prior.path,
+        });
+      }
+
+      if (targetKind !== "statBlock" || typeof record.name !== "string") {
         continue;
       }
-      issues.push({
-        code: "duplicate-authored-identity",
-        path,
-        targetKind,
-        targetId,
-        priorPath: prior.path,
-      });
+      const normalizedIdentity = record.name
+        .normalize("NFKC")
+        .trim()
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+      const priorStatBlock = seenStatBlockIdentities.get(normalizedIdentity);
+      if (priorStatBlock === undefined) {
+        seenStatBlockIdentities.set(normalizedIdentity, { targetId, path });
+      } else if (priorStatBlock.targetId !== targetId) {
+        issues.push({
+          code: "duplicate-authored-identity",
+          path,
+          targetKind,
+          targetId,
+          priorPath: priorStatBlock.path,
+        });
+      }
     }
   }
   return issues;

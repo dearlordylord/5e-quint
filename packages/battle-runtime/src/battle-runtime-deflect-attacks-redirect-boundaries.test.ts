@@ -385,7 +385,7 @@ function deflectAttacksBattle(input?: {
       statBlockCreatureInit({ initiative: 20 }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Redirect target",
+        statBlockName: "Redirect target",
         initiative: 15,
         ...(input?.defeatedRedirectTarget === true ? { currentHp: 0 } : {}),
       }),

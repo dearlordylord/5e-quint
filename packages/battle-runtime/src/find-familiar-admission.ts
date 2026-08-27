@@ -2,10 +2,8 @@ import { Brand } from "effect";
 import * as Either from "effect/Either";
 import * as Option from "effect/Option";
 
-import type {
-  BattleStatBlockExecutionCatalog,
-  BattleState,
-} from "./battle-state-execution.ts";
+import type { BattleState } from "./battle-state-execution.ts";
+import type { FindFamiliarStatBlockCatalog } from "./find-familiar-stat-block-catalog.ts";
 import type { FindFamiliarCreatureTypeOverride } from "@dnd/shared/game-facts";
 import {
   findCompanionEntryByOwner,
@@ -13,22 +11,19 @@ import {
 } from "./companion-state.ts";
 import type { AdmittedFindFamiliarReappearance } from "./find-familiar-admission-state.ts";
 import type { BattleStatBlockPresentationSource } from "./battle-runtime-context.ts";
-import {
-  familiarStatBlockWithCreatureTypeOverride,
-  findFamiliarIdentityIssue,
-} from "./find-familiar-lifecycle-execution.ts";
+import { findFamiliarIdentityIssue } from "./find-familiar-lifecycle-execution.ts";
 import {
   battleExecutionScopeInitialOrNextOrdinal,
   type CombatantId,
 } from "./identity.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
 import type { BattleStatBlockExecutionSource } from "./stat-block-execution-state.ts";
-import { statBlockProjectionIssues } from "./stat-block-execution.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
-  statBlockLanguagePresentation,
-  statBlockProcedurePresentations,
-} from "./stat-block-presentation.ts";
+  battleStatBlockProjectionFailureMessage,
+  projectAuthoredStatBlockWithCreatureType,
+} from "./stat-block-authored-projection.ts";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 const AdmittedFindFamiliarReappearance =
   Brand.nominal<AdmittedFindFamiliarReappearance>();
@@ -36,7 +31,7 @@ const AdmittedFindFamiliarReappearance =
 export function admitFindFamiliarReappearance(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
-  readonly catalog: BattleStatBlockExecutionCatalog;
+  readonly catalog: FindFamiliarStatBlockCatalog;
 }): Either.Either<
   {
     readonly mechanics: AdmittedFindFamiliarReappearance;
@@ -75,9 +70,20 @@ export function admitFindFamiliarReappearance(input: {
   if (Either.isLeft(resolvedForm)) {
     return issue(input.state, resolvedForm.left);
   }
-  const statBlock = familiarStatBlockWithCreatureTypeOverride(
-    resolvedForm.right,
+  const projected = projectAuthoredStatBlockWithCreatureType(
+    resolvedForm.right.statBlock,
+    resolvedForm.right.creatureTypeOverride,
   );
+  if (Either.isLeft(projected)) {
+    return issue(
+      input.state,
+      battleStatBlockProjectionFailureMessage(
+        projected.left,
+        "Find Familiar form projection failed",
+      ),
+    );
+  }
+  const statBlock: BattleStatBlockExecutionSource = projected.right.runtime;
   const allocation = input.state.executionScopeCursors.get(
     familiar.reappearanceCombatantId,
   );
@@ -105,25 +111,17 @@ export function admitFindFamiliarReappearance(input: {
       },
       combatantAdmission: combatantAdmission.right,
     }),
-    presentation: {
-      displayName: statBlock.statBlock.displayName,
-      languages: statBlockLanguagePresentation(statBlock),
-      procedures: statBlockProcedurePresentations({
-        statBlock,
-        execution: combatantAdmission.right.origin.execution,
-      }),
-      projectionIssues: statBlockProjectionIssues(statBlock),
-    },
+    presentation: projected.right.presentation,
   });
 }
 
 function resolveStoredFindFamiliarReappearanceForm(input: {
-  readonly catalog: BattleStatBlockExecutionCatalog;
+  readonly catalog: FindFamiliarStatBlockCatalog;
   readonly storedForm: BattleCompanionStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
 }): Either.Either<
   {
-    readonly statBlock: BattleStatBlockExecutionSource;
+    readonly statBlock: StatBlockRecord;
     readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
   },
   string

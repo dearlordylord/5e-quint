@@ -94,7 +94,7 @@ export const setupScenario: ScenarioSetup = (context) => {
         kind: "obstructed",
         obstruction:
           "The canonical Skeleton Stat Block could not be initialized: " +
-          sdk.battleStateInitIssueMessage(projected.left),
+          sdk.authoredStatBlockBattleInitIssueMessage(projected.left),
         observation: {
           scenarioId: "sand-band-four-skeleton-skirmish",
           skeletonBattleInitializationSucceeded: false,

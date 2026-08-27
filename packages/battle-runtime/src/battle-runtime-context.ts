@@ -9,14 +9,21 @@ import type {
 } from "./character-execution-admission.ts";
 import type {
   BattleProcedureExecutionRef,
+  BattleStatBlockExecutionScopeRef,
   BattleStatBlockProcedureExecutionRef,
   CombatantId,
 } from "./identity.ts";
-import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { WeaponId } from "@dnd/shared/game-facts";
 import type { WeaponRecord } from "@dnd/surface/surface/types";
-import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
+import type {
+  CreatureTraitEffect,
+  StatBlockProcedureOrdinal,
+  StatBlockTextOnlyReason,
+} from "@dnd/surface/surface/types";
+import type { StatBlockCommunication } from "@dnd/surface/surface/types";
+import type { StatBlockProcedureResourceOrdinal } from "@dnd/surface/surface/types";
 import * as Either from "effect/Either";
+import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
 import type {
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormSelection,
@@ -49,6 +56,11 @@ export type CharacterBattleRuntimeContext = {
   readonly unitProcedureOwnership: readonly CharacterUnitProcedureOwnership[];
   readonly unitPresentationSources: readonly BattleUnitRef[];
   readonly retainedCompanionSelection?: RetainedCompanionBattleSelection;
+  /** Authored Wild Shape presentation joined only at the presentation boundary. */
+  readonly druidWildShapeFormPresentations?: ReadonlyMap<
+    BattleStatBlockExecutionScopeRef,
+    BattleStatBlockPresentationSource
+  >;
 };
 
 export type CharacterWeaponPresentationSourceIssue = {
@@ -69,17 +81,43 @@ export type BattleStatBlockProcedurePresentation =
       readonly label: string;
     };
 
+type BattleStatBlockProcedurePresentationBase = {
+  readonly section: StatBlockActionProjectionSection;
+  readonly procedureOrdinal: StatBlockProcedureOrdinal;
+  readonly name: string;
+  readonly resourceRefs: readonly StatBlockProcedureResourceOrdinal[];
+};
+
+export type BattleStatBlockAuthoredProcedurePresentation =
+  | (BattleStatBlockProcedurePresentationBase & {
+      readonly kind: "attack";
+      readonly description?: string;
+    })
+  | (BattleStatBlockProcedurePresentationBase & {
+      readonly kind: "multiattack";
+    })
+  | (BattleStatBlockProcedurePresentationBase & {
+      readonly kind: "bonusActionOption";
+    })
+  | (BattleStatBlockProcedurePresentationBase & {
+      readonly kind: "textOnly";
+      readonly description: string;
+      readonly reason: StatBlockTextOnlyReason;
+    });
+
+export type BattleStatBlockAuthoredTraitPresentation = {
+  readonly name: string;
+  readonly description: string;
+  readonly effect?: CreatureTraitEffect;
+};
+
 export type BattleStatBlockPresentationSource = {
   readonly displayName: string;
-  readonly procedures: readonly BattleStatBlockProcedurePresentation[];
-  readonly projectionIssues: readonly StatBlockProjectionIssue[];
-  readonly languages:
-    | { readonly kind: "absentStatBlockLanguages" }
-    | { readonly kind: "casterLanguagesReference" }
-    | {
-        readonly kind: "authoredStatBlockLanguageEntries";
-        readonly entries: ReadonlyNonEmptyArray<string>;
-      };
+  /** Authored communication is presentation data; no communication is explicit. */
+  readonly communication: StatBlockCommunication;
+  /** Authored trait facts retained for presentation-boundary diagnostics. */
+  readonly traits: readonly BattleStatBlockAuthoredTraitPresentation[];
+  readonly orderedProcedures: readonly BattleStatBlockAuthoredProcedurePresentation[];
 };
 
 export function characterWeaponPresentationSource(
@@ -185,7 +223,39 @@ export function battleRuntimeSessionWithState(
   session: BattleRuntimeSession,
   state: import("./battle-state-execution.ts").BattleState,
 ): BattleRuntimeSession {
-  return RuntimeSession.fromAdmittedContext(state, session.context, session);
+  return RuntimeSession.fromAdmittedContext(
+    state,
+    battleRuntimeContextForState(session.context, state),
+    session,
+  );
+}
+
+/**
+ * Keep authored presentation context aligned with the source-free combatant
+ * roster. Reducer transitions may remove a combatant (for example when a
+ * familiar dies); retaining its presentation would leave a stale authored
+ * lookup reachable from a later session.
+ */
+function battleRuntimeContextForState(
+  context: BattleRuntimeContext,
+  state: import("./battle-state-execution.ts").BattleState,
+): BattleRuntimeContext {
+  const rosterStillOwnsContext = [
+    ...context.characters.keys(),
+    ...context.statBlocks.keys(),
+  ].every((combatantId) => state.combatants.has(combatantId));
+  if (rosterStillOwnsContext) return context;
+  const characters = new Map(
+    [...context.characters].filter(([combatantId]) =>
+      state.combatants.has(combatantId),
+    ),
+  );
+  const statBlocks = new Map(
+    [...context.statBlocks].filter(([combatantId]) =>
+      state.combatants.has(combatantId),
+    ),
+  );
+  return new RuntimeContext(characters, statBlocks);
 }
 
 export function battleRuntimeSessionWithRetainedCompanionTransition(
@@ -200,12 +270,13 @@ export function battleRuntimeSessionWithRetainedCompanionTransition(
 ): BattleRuntimeSession | undefined {
   const ownerContext = session.context.characters.get(ownerId);
   if (ownerContext === undefined) return undefined;
-  const characters = new Map(session.context.characters);
+  const retainedContext = battleRuntimeContextForState(session.context, state);
+  const characters = new Map(retainedContext.characters);
   characters.set(ownerId, {
     ...ownerContext,
     retainedCompanionSelection: selection,
   });
-  const statBlocks = new Map(session.context.statBlocks);
+  const statBlocks = new Map(retainedContext.statBlocks);
   if (statBlockPresentation !== undefined) {
     statBlocks.set(
       statBlockPresentation.combatantId,
@@ -240,11 +311,12 @@ export function battleRuntimeSessionWithStatBlockPresentation(
   combatantId: CombatantId,
   presentation: BattleStatBlockPresentationSource,
 ): BattleRuntimeSession {
-  const statBlocks = new Map(session.context.statBlocks);
+  const retainedContext = battleRuntimeContextForState(session.context, state);
+  const statBlocks = new Map(retainedContext.statBlocks);
   statBlocks.set(combatantId, presentation);
   return RuntimeSession.fromAdmittedContext(
     state,
-    new RuntimeContext(session.context.characters, statBlocks),
+    new RuntimeContext(retainedContext.characters, statBlocks),
     session,
   );
 }

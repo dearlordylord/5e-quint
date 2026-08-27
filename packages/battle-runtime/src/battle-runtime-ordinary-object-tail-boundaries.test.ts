@@ -1,3 +1,4 @@
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { Either } from "effect";
 import { describe, expect, test } from "vitest";
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
@@ -31,6 +32,7 @@ import {
   statBlockCatalog,
   statBlockRecord,
   statBlockCreatureInit,
+  authoredProcedureOrdinal,
 } from "./battle-runtime.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -121,7 +123,10 @@ describe("battle runtime: ordinary object attack tail boundaries", () => {
         statBlockCreatureInit({
           combatantId: goblinId,
           initiative: 20,
-          statBlock: statBlockCatalog.requireStatBlock("stat_block_wolf"),
+          statBlock: assertStatBlockForTest(
+            statBlockCatalog,
+            parseSharedStatBlockId("stat_block_wolf"),
+          ),
         }),
         characterSeed({ combatantId: fighterId, initiative: 10 }),
       ],
@@ -402,13 +407,22 @@ function objectTargetFill(
 
 function pureDamageObjectTargetStatBlock(): StatBlockRecord {
   const base = statBlockRecord();
-  const scimitar = base.statBlock.actions?.attacks?.find(
-    (attack) => attack.name === "Scimitar",
+  const scimitar = base.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Scimitar",
   );
-  if (scimitar === undefined) {
+  if (
+    scimitar === undefined ||
+    scimitar.kind !== "executable" ||
+    scimitar.procedure.kind !== "attack_roll"
+  ) {
     throw new Error("Expected the pure-damage Stat Block attack fixture.");
   }
-  const baseDamage = scimitar.onHit.find((effect) => effect.kind === "damage");
+  const baseDamage = scimitar.procedure.onHit.find(
+    (effect) => effect.kind === "damage",
+  );
   if (baseDamage === undefined) {
     throw new Error("Expected a base damage effect for the test attack.");
   }
@@ -422,16 +436,17 @@ function pureDamageObjectTargetStatBlock(): StatBlockRecord {
     },
     statBlock: {
       ...base.statBlock,
-      displayName: "Pure Damage Object Target Test Monster",
-      actions: {
-        attacks: [
-          {
-            ...scimitar,
+      actions: [
+        {
+          ...scimitar,
+          procedureOrdinal: authoredProcedureOrdinal(1),
+          procedure: {
+            ...scimitar.procedure,
             name: "Calibration Strike",
             onHit: [baseDamage],
           },
-        ],
-      },
+        },
+      ],
     },
   };
 }

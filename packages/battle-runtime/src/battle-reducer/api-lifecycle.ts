@@ -1261,17 +1261,15 @@ function admitCharacterSpellExecution(input: {
   };
 }
 
-function statBlockPresentationProjectionForAdmission(
+function statBlockPresentationForAdmission(
   admission: Extract<
     ReturnType<typeof battleCreatureStateAdmissionFromInit>,
     { readonly tag: "admitted" }
   >,
-):
-  | { readonly statBlockPresentation: BattleStatBlockPresentationSource }
-  | Record<never, never> {
+): BattleStatBlockPresentationSource | undefined {
   return "statBlockPresentation" in admission
-    ? { statBlockPresentation: admission.statBlockPresentation }
-    : {};
+    ? admission.statBlockPresentation
+    : undefined;
 }
 
 function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
@@ -1361,7 +1359,10 @@ function admitBattleCombatant(input: AddBattleCombatantInput): Either.Either<
     ...(characterSpellAdmission === undefined
       ? {}
       : { characterContext: characterSpellAdmission.runtimeContext }),
-    ...statBlockPresentationProjectionForAdmission(admission),
+    ...optionalProperty(
+      "statBlockPresentation",
+      statBlockPresentationForAdmission(admission),
+    ),
   });
 }
 

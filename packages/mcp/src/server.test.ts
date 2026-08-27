@@ -2344,19 +2344,19 @@ describe("MCP server route", () => {
       expect.arrayContaining([
         expect.objectContaining({
           statBlockId: "stat_block_goblin_warrior",
-          displayName: "Goblin Warrior",
+          name: "Goblin Warrior",
           attacks: expect.arrayContaining([
             expect.objectContaining({ attackName: "Scimitar" }),
           ]),
         }),
         expect.objectContaining({
           statBlockId: "stat_block_skeleton",
-          displayName: "Skeleton",
+          name: "Skeleton",
           damageVulnerabilities: ["bludgeoning"],
         }),
         expect.objectContaining({
           statBlockId: "stat_block_owl",
-          displayName: "Owl",
+          name: "Owl",
         }),
       ]),
     );

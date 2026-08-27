@@ -1,81 +1,113 @@
-let SkillModifier = { modifier : Integer, skill : Text }
-
-let SpecialAction =
-      { description : Text
-      , limitedUse : Optional { kind : Text, uses : Natural }
-      , name : Text
-      }
-
-let SaveAction =
-      { ability : Text
-      , dc : { dc : Natural, kind : Text }
-      , description : Optional Text
-      , limitedUse : Optional { kind : Text, uses : Natural }
-      , multiattackCount : Optional { kind : Text, value : Natural }
-      , name : Text
-      , onFail :
-          { amount :
-              { expr : { dice : Natural, dieSize : Natural, flat : Optional Natural }
-              , kind : Text
-              }
-          , damageType : Text
-          , kind : Text
-          }
-      , onSuccess : { kind : Text }
-      , target : { kind : Text, rangeFeet : Natural }
-      }
-
-in  [ { challengeRating = 0.0
+[ { challengeRating = 0.0
   , id = "stat_block_bat"
   , kind = "statBlock"
   , name = "Bat"
   , provenance = { kind = "srd-5.2.1", section = "Animals.md:164-185" }
   , statBlock =
     { abilityScores = { cha = 4, con = 8, dex = 15, int = 2, str = 2, wis = 12 }
-    , ac = { kind = "literal", value = 12 }
+    , ac.value = { kind = "literal", value = 12 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 4 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 4 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Bite"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Bat"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 1 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 2
-    , skillModifiers = None (List SkillModifier)
-    , languages = [ "None" ]
+    , initiative = { modifier = 2, score = 12 }
+    , passivePerception = 11
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "blindsight", rangeFeet = 60 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 60 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -3 }
+      ]
     , size = "tiny"
+    , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
       [ { feet = { kind = "literal", value = 5 }, kind = "walk" }
       , { feet = { kind = "literal", value = 30 }, kind = "fly" }
@@ -91,53 +123,112 @@ in  [ { challengeRating = 0.0
   , statBlock =
     { abilityScores =
       { cha = 7, con = 10, dex = 15, int = 3, str = 3, wis = 12 }
-    , ac = { kind = "literal", value = 12 }
+    , ac.value = { kind = "literal", value = 12 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 4 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 4 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Scratch"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "slashing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Cat"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 2 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 2
-    , skillModifiers = Some
-      [ { modifier = +3, skill = "perception" }
-      , { modifier = +4, skill = "stealth" }
-      ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 2, score = 12 }
+    , passivePerception = 13
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 60 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +4 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some
+      [ { modifier = 3, skill = "perception" }
+      , { modifier = 4, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 40 }, kind = "walk" }
       , { feet = { kind = "literal", value = 40 }, kind = "climb" }
@@ -157,53 +248,112 @@ in  [ { challengeRating = 0.0
   , provenance = { kind = "srd-5.2.1", section = "Animals.md:612-638" }
   , statBlock =
     { abilityScores = { cha = 3, con = 8, dex = 13, int = 1, str = 1, wis = 8 }
-    , ac = { kind = "literal", value = 11 }
+    , ac.value = { kind = "literal", value = 11 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 3 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 3 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Bite"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Frog"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 1 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 1
-    , skillModifiers = Some
-      [ { modifier = +1, skill = "perception" }
-      , { modifier = +3, skill = "stealth" }
-      ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 1, score = 11 }
+    , passivePerception = 11
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 30 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -5 }
+      , { ability = "dex", modifier = +1 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = -1 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some
+      [ { modifier = 1, skill = "perception" }
+      , { modifier = 3, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
       , { feet = { kind = "literal", value = 20 }, kind = "swim" }
@@ -226,50 +376,110 @@ in  [ { challengeRating = 0.0
   , provenance = { kind = "srd-5.2.1", section = "Animals.md:1454-1475" }
   , statBlock =
     { abilityScores = { cha = 6, con = 8, dex = 16, int = 2, str = 5, wis = 14 }
-    , ac = { kind = "literal", value = 13 }
+    , ac.value = { kind = "literal", value = 13 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 5 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 5 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Talons"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "slashing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Hawk"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 1 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 3
-    , skillModifiers = Some [ { modifier = +6, skill = "perception" } ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 3, score = 13 }
+    , passivePerception = 16
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = None (List { kind : Text, rangeFeet : Natural })
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses =
+        None
+          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -3 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +2 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some [ { modifier = 6, skill = "perception" } ]
     , speeds =
       [ { feet = { kind = "literal", value = 10 }, kind = "walk" }
       , { feet = { kind = "literal", value = 60 }, kind = "fly" }
@@ -284,50 +494,109 @@ in  [ { challengeRating = 0.0
   , provenance = { kind = "srd-5.2.1", section = "Animals.md:1650-1676" }
   , statBlock =
     { abilityScores = { cha = 3, con = 10, dex = 11, int = 1, str = 2, wis = 8 }
-    , ac = { kind = "literal", value = 10 }
+    , ac.value = { kind = "literal", value = 10 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 2 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 2 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Bite"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Lizard"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 2 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 0
-    , skillModifiers = None (List SkillModifier)
-    , languages = [ "None" ]
+    , initiative = { modifier = 0, score = 10 }
+    , passivePerception = 9
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 30 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +0 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = -1 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
+    , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
       [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
       , { feet = { kind = "literal", value = 20 }, kind = "climb" }
@@ -348,53 +617,109 @@ in  [ { challengeRating = 0.0
   , statBlock =
     { abilityScores =
       { cha = 4, con = 11, dex = 15, int = 3, str = 4, wis = 10 }
-    , ac = { kind = "literal", value = 12 }
+    , ac.value = { kind = "literal", value = 12 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 4 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 4 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Tentacles"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "bludgeoning"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Octopus"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 3 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 2
-    , skillModifiers = Some
-      [ { modifier = +2, skill = "perception" }
-      , { modifier = +6, skill = "stealth" }
+    , initiative = { modifier = 2, score = 12 }
+    , passivePerception = 12
+    , reactions = Some
+      [ { description =
+            "Trigger: A creature ends its turn within 5 feet of the octopus while underwater. Response: The octopus releases ink that fills a 5-foot Cube centered on itself, and the octopus moves up to its Swim Speed. The Cube is Heavily Obscured for 1 minute or until a strong current or similar effect disperses the ink."
+        , kind = "textOnly"
+        , name = "Ink Cloud"
+        , procedureOrdinal = 1
+        , reason = "unsupported_procedure_family"
+        , resourceRefs = { kind = "some", ordinals = [ 1 ] }
+        }
       ]
-    , languages = [ "None" ]
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 30 } ]
+    , resources = Some
+      [ { limit = { kind = "daily", uses = 1 }
+        , ordinal = 1
+        , ownership = "shared"
+        }
+      ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -3 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -3 }
+      ]
     , size = "small"
+    , skillModifiers = Some
+      [ { modifier = 2, skill = "perception" }
+      , { modifier = 6, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 5 }, kind = "walk" }
       , { feet = { kind = "literal", value = 30 }, kind = "swim" }
@@ -417,53 +742,112 @@ in  [ { challengeRating = 0.0
   , provenance = { kind = "srd-5.2.1", section = "Animals.md:1791-1818" }
   , statBlock =
     { abilityScores = { cha = 7, con = 8, dex = 13, int = 2, str = 3, wis = 12 }
-    , ac = { kind = "literal", value = 11 }
+    , ac.value = { kind = "literal", value = 11 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 3 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 3 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Talons"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "slashing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Owl"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 1 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 1
-    , skillModifiers = Some
-      [ { modifier = +5, skill = "perception" }
-      , { modifier = +5, skill = "stealth" }
-      ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 1, score = 11 }
+    , passivePerception = 15
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 120 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +1 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some
+      [ { modifier = 5, skill = "perception" }
+      , { modifier = 5, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 5 }, kind = "walk" }
       , { feet = { kind = "literal", value = 60 }, kind = "fly" }
@@ -483,50 +867,109 @@ in  [ { challengeRating = 0.0
   , provenance = { kind = "srd-5.2.1", section = "Animals.md:1980-2005" }
   , statBlock =
     { abilityScores = { cha = 4, con = 9, dex = 11, int = 2, str = 2, wis = 10 }
-    , ac = { kind = "literal", value = 10 }
+    , ac.value = { kind = "literal", value = 10 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 2 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 2 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Bite"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Rat"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 1 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 0
-    , skillModifiers = Some [ { modifier = +2, skill = "perception" } ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 0, score = 10 }
+    , passivePerception = 12
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 30 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +0 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -3 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some [ { modifier = 2, skill = "perception" } ]
     , speeds =
       [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
       , { feet = { kind = "literal", value = 20 }, kind = "climb" }
@@ -547,50 +990,110 @@ in  [ { challengeRating = 0.0
   , statBlock =
     { abilityScores =
       { cha = 6, con = 10, dex = 14, int = 5, str = 2, wis = 13 }
-    , ac = { kind = "literal", value = 12 }
+    , ac.value = { kind = "literal", value = 12 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 4 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 4 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Beak"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Raven"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 2 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 2
-    , skillModifiers = Some [ { modifier = +3, skill = "perception" } ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 2, score = 12 }
+    , passivePerception = 13
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = None (List { kind : Text, rangeFeet : Natural })
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses =
+        None
+          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -3 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some [ { modifier = 3, skill = "perception" } ]
     , speeds =
       [ { feet = { kind = "literal", value = 10 }, kind = "walk" }
       , { feet = { kind = "literal", value = 50 }, kind = "fly" }
@@ -610,58 +1113,117 @@ in  [ { challengeRating = 0.0
   , provenance = { kind = "srd-5.2.1", section = "Animals.md:2197-2223" }
   , statBlock =
     { abilityScores = { cha = 2, con = 8, dex = 14, int = 1, str = 2, wis = 10 }
-    , ac = { kind = "literal", value = 12 }
+    , ac.value = { kind = "literal", value = 12 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 4 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 4 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Bite"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             , { amount =
-                { expr = { dice = 1, dieSize = 4, flat = None Natural }
+                { expr = Some { dice = 1, dieSize = 4, flat = None Natural }
                 , kind = "fixed"
-                , static = Some 2
+                , static = 2
                 }
               , damageType = "poison"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Spider"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 1 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 2
-    , skillModifiers = Some [ { modifier = +4, skill = "stealth" } ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 2, score = 12 }
+    , passivePerception = 10
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 30 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some [ { modifier = 4, skill = "stealth" } ]
     , speeds =
       [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
       , { feet = { kind = "literal", value = 20 }, kind = "climb" }
@@ -682,57 +1244,116 @@ in  [ { challengeRating = 0.0
   , id = "stat_block_weasel"
   , kind = "statBlock"
   , name = "Weasel"
-  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2563-2587" }
+  , provenance = { kind = "srd-5.2.1", section = "Animals.md:2563-2583" }
   , statBlock =
     { abilityScores = { cha = 3, con = 8, dex = 16, int = 2, str = 3, wis = 12 }
-    , ac = { kind = "literal", value = 13 }
+    , ac.value = { kind = "literal", value = 13 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 5 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 5 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Bite"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
+                { expr =
+                    None
+                      { dice : Natural
+                      , dieSize : Natural
+                      , flat : Optional Natural
+                      }
                 , kind = "fixed"
-                , static = Some 1
+                , static = 1
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Weasel"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 1 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 3
-    , skillModifiers = Some
-      [ { modifier = +5, skill = "acrobatics" }
-      , { modifier = +3, skill = "perception" }
-      , { modifier = +5, skill = "stealth" }
-      ]
-    , languages = [ "None" ]
+    , initiative = { modifier = 3, score = 13 }
+    , passivePerception = 13
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 60 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some
+      [ { modifier = 5, skill = "acrobatics" }
+      , { modifier = 3, skill = "perception" }
+      , { modifier = 5, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
       , { feet = { kind = "literal", value = 30 }, kind = "climb" }
@@ -748,58 +1369,112 @@ in  [ { challengeRating = 0.0
   , statBlock =
     { abilityScores =
       { cha = 3, con = 11, dex = 15, int = 1, str = 2, wis = 10 }
-    , ac = { kind = "literal", value = 12 }
+    , ac.value = { kind = "literal", value = 12 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 4 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 4 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Bite"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 1, dieSize = 4, flat = Some 2 }
+                { expr = Some { dice = 1, dieSize = 4, flat = Some 2 }
                 , kind = "fixed"
-                , static = Some 4
+                , static = 4
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             , { amount =
-                { expr = { dice = 1, dieSize = 6, flat = None Natural }
+                { expr = Some { dice = 1, dieSize = 6, flat = None Natural }
                 , kind = "fixed"
-                , static = Some 3
+                , static = 3
                 }
               , damageType = "poison"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
-            )
-      , saves = None (List SaveAction)
-      , specials = None (List SpecialAction)
-      }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.string "unaligned"
+    , communication =
+      { kind = "none", languages = None { kind : Text, languages : List Text } }
     , creatureType = "beast"
-    , displayName = "Venomous Snake"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 5 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 2
-    , skillModifiers = None (List SkillModifier)
-    , languages = [ "None" ]
+    , initiative = { modifier = 2, score = 12 }
+    , passivePerception = 10
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = Some [ { kind = "blindsight", rangeFeet = 10 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
+    , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
       [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
       , { feet = { kind = "literal", value = 30 }, kind = "swim" }
@@ -816,74 +1491,229 @@ in  [ { challengeRating = 0.0
   , statBlock =
     { abilityScores =
       { cha = 14, con = 13, dex = 17, int = 11, str = 6, wis = 12 }
-    , ac = { kind = "literal", value = 13 }
+    , ac.value = { kind = "literal", value = 13 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 5 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 5 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Sting"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 1, dieSize = 6, flat = Some 3 }
+                { expr = Some { dice = 1, dieSize = 6, flat = Some 3 }
                 , kind = "fixed"
-                , static = Some 6
+                , static = 6
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             , { amount =
-                { expr = { dice = 2, dieSize = 6, flat = None Natural }
+                { expr = Some { dice = 2, dieSize = 6, flat = None Natural }
                 , kind = "fixed"
-                , static = Some 7
+                , static = 7
                 }
               , damageType = "poison"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+        , kind = "textOnly"
+        , name = Some "Invisibility"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
+        , procedureOrdinal = 2
+        , reason = Some "unsupported_procedure_family"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "The imp shape-shifts to resemble a rat (Speed 20 ft.), a raven (20 ft., Fly 60 ft.), or a spider (20 ft., Climb 20 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed."
+        , kind = "textOnly"
+        , name = Some "Shape-Shift"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
+        , procedureOrdinal = 3
+        , reason = Some "unsupported_procedure_family"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.object
+            ( toMap
+                { morality = json.string "evil", order = json.string "lawful" }
             )
-      , saves = None (List SaveAction)
-      , specials = Some
-        [ { description =
-              "The imp casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
-          , limitedUse = None { kind : Text, uses : Natural }
-          , name = "Invisibility"
-          }
-        , { description =
-              "The imp shape-shifts to resemble a rat (Speed 20 ft.), a raven (20 ft., Fly 60 ft.), or a spider (20 ft., Climb 20 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed."
-          , limitedUse = None { kind : Text, uses : Natural }
-          , name = "Shape-Shift"
-          }
-        ]
+    , communication =
+      { kind = "spoken_and_understood"
+      , languages = Some
+        { kind = "named", languages = [ "Common", "Infernal" ] }
       }
     , creatureType = "fiend"
-    , displayName = "Imp"
+    , creatureTypeTags = Some [ "devil" ]
     , hp = { kind = "literal", value = 21 }
     , immunities = Some
       { conditions = [ "poisoned" ], damageTypes = [ "fire", "poison" ] }
-    , initiativeModifier = 3
-    , skillModifiers = Some
-      [ { modifier = +4, skill = "deception" }
-      , { modifier = +3, skill = "insight" }
-      , { modifier = +5, skill = "stealth" }
-      ]
-    , languages = [ "Common", "Infernal" ]
+    , initiative = { modifier = 3, score = 13 }
+    , passivePerception = 11
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = Some { damageTypes = [ "cold" ], kind = "fixed" }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 120 } ]
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses = Some
+      [ { kind = "darkvision"
+        , qualifier = Some "unimpeded_by_magical_darkness"
+        , rangeFeet = 120
+        }
+      ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -2 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = +1 }
+      , { ability = "int", modifier = +0 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = +2 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some
+      [ { modifier = 4, skill = "deception" }
+      , { modifier = 3, skill = "insight" }
+      , { modifier = 5, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 20 }, kind = "walk" }
       , { feet = { kind = "literal", value = 40 }, kind = "fly" }
@@ -901,77 +1731,215 @@ in  [ { challengeRating = 0.0
   , kind = "statBlock"
   , name = "Pseudodragon"
   , provenance =
-    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:292-323" }
+    { kind = "srd-5.2.1", section = "Monsters/Monsters-P-S.md:292-319" }
   , statBlock =
     { abilityScores =
       { cha = 10, con = 13, dex = 15, int = 10, str = 6, wis = 12 }
-    , ac = { kind = "literal", value = 14 }
+    , ac.value = { kind = "literal", value = 14 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 4 }
-          , attackType = "melee"
-          , description = None Text
-          , name = "Bite"
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = None Text
+          , attackBonus = None { kind : Text, value : Natural }
+          , attackType = None Text
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches = Some
+            [ { count = { kind = "literal", value = 2 }, procedureOrdinal = 2 }
+            ]
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "multiattack"
+          , name = "Multiattack"
           , onHit =
+              None
+                ( List
+                    { amount :
+                        { expr :
+                            Optional
+                              { dice : Natural
+                              , dieSize : Natural
+                              , flat : Optional Natural
+                              }
+                        , kind : Text
+                        , static : Natural
+                        }
+                    , damageType : Text
+                    , kind : Text
+                    }
+                )
+          , reachFeet = None Natural
+          }
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 4 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
+          , name = "Bite"
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 1, dieSize = 4, flat = Some 2 }
+                { expr = Some { dice = 1, dieSize = 4, flat = Some 2 }
                 , kind = "fixed"
-                , static = Some 4
+                , static = 4
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        ]
-      , multiattacks = Some
-        [ { dispatches =
-            [ { count = { kind = "literal", value = 2 }, name = "Bite" } ]
-          , name = "Multiattack"
-          }
-        ]
-      , saves = Some
-        [ { ability = "con"
-          , dc = { dc = 12, kind = "fixed" }
-          , description =
-              Some
-                "Failure: 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. Failure by 5 or More: While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it."
-          , limitedUse = None { kind : Text, uses : Natural }
-          , multiattackCount = None { kind : Text, value : Natural }
-          , name = "Sting"
-          , onFail =
-              { amount =
-                  { expr = { dice = 2, dieSize = 4, flat = None Natural }
-                  , kind = "fixed"
-                  }
-              , damageType = "poison"
-              , kind = "damage"
+        , procedureOrdinal = 2
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "Constitution Saving Throw: DC 12, one creature the pseudodragon can see within 5 feet. Failure: 5 (2d4) Poison damage, and the target has the Poisoned condition for 1 hour. Failure by 5 or More: While Poisoned, the target also has the Unconscious condition, which ends early if the target takes damage or a creature within 5 feet of it takes an action to wake it."
+        , kind = "textOnly"
+        , name = Some "Sting"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
               }
-          , onSuccess = { kind = "none" }
-          , target = { kind = "one_creature_in_range", rangeFeet = 5 }
-          }
-        ]
-      , specials = None (List SpecialAction)
+        , procedureOrdinal = 3
+        , reason = Some "unsupported_action_shape"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.object
+            ( toMap
+                { morality = json.string "good", order = json.string "neutral" }
+            )
+    , communication =
+      { kind = "understood_but_cannot_speak"
+      , languages = Some
+        { kind = "named", languages = [ "Common", "Draconic" ] }
       }
     , creatureType = "dragon"
-    , displayName = "Pseudodragon"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 10 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 2
-    , skillModifiers = Some
-      [ { modifier = +5, skill = "perception" }
-      , { modifier = +4, skill = "stealth" }
-      ]
-    , languages = [ "Understands Common and Draconic but can't speak" ]
+    , initiative = { modifier = 2, score = 12 }
+    , passivePerception = 15
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
     , senses = Some
-      [ { kind = "blindsight", rangeFeet = 10 }
-      , { kind = "darkvision", rangeFeet = 60 }
+      [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 }
+      , { kind = "darkvision", qualifier = None Text, rangeFeet = 60 }
+      ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -2 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +1 }
+      , { ability = "int", modifier = +0 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = +0 }
       ]
     , size = "tiny"
+    , skillModifiers = Some
+      [ { modifier = 5, skill = "perception" }
+      , { modifier = 4, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 15 }, kind = "walk" }
       , { feet = { kind = "literal", value = 60 }, kind = "fly" }
@@ -993,70 +1961,271 @@ in  [ { challengeRating = 0.0
   , statBlock =
     { abilityScores =
       { cha = 10, con = 10, dex = 17, int = 7, str = 5, wis = 10 }
-    , ac = { kind = "literal", value = 13 }
+    , ac.value = { kind = "literal", value = 13 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 5 }
-          , attackType = "melee"
-          , description =
-              Some
-                "Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn."
-          , name = "Rend"
-          , onHit =
-            [ { amount =
-                { expr = { dice = 1, dieSize = 4, flat = Some 3 }
-                , kind = "fixed"
-                , static = Some 5
-                }
-              , damageType = "slashing"
-              , kind = "damage"
+      [ { description = Some
+            "Melee Attack Roll: +5, reach 5 ft. Hit: 5 (1d4 + 3) Slashing damage, and the target has the Poisoned condition until the start of the quasit's next turn."
+        , kind = "textOnly"
+        , name = Some "Rend"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
               }
-            ]
-          , rangeFeet = None { long : Natural, normal : Natural }
-          , reachFeet = Some 5
-          }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
+        , procedureOrdinal = 1
+        , reason = Some "unsupported_action_shape"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+        , kind = "textOnly"
+        , name = Some "Invisibility"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
+        , procedureOrdinal = 2
+        , reason = Some "unsupported_procedure_family"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "Wisdom Saving Throw: DC 10, one creature within 20 feet. Failure: The target has the Frightened condition. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
+        , kind = "textOnly"
+        , name = Some "Scare"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
+        , procedureOrdinal = 3
+        , reason = Some "unsupported_action_shape"
+        , resourceRefs = { kind = "some", ordinals = Some [ 1 ] }
+        }
+      , { description = Some
+            "The quasit shape-shifts to resemble a bat (Speed 10 ft., Fly 40 ft.), a centipede (40 ft., Climb 40 ft.), or a toad (40 ft., Swim 40 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed."
+        , kind = "textOnly"
+        , name = Some "Shape-Shift"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
+        , procedureOrdinal = 4
+        , reason = Some "unsupported_procedure_family"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.object
+            ( toMap
+                { morality = json.string "evil", order = json.string "chaotic" }
             )
-      , saves = None (List SaveAction)
-      , specials = Some
-        [ { description =
-              "The quasit casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
-          , limitedUse = None { kind : Text, uses : Natural }
-          , name = "Invisibility"
-          }
-        , { description =
-              "Wisdom Saving Throw: DC 10, one creature within 20 feet. Failure: The target has the Frightened condition. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success. After 1 minute, it succeeds automatically."
-          , limitedUse = Some { kind = "daily", uses = 1 }
-          , name = "Scare"
-          }
-        , { description =
-              "The quasit shape-shifts to resemble a bat (Speed 10 ft., Fly 40 ft.), a centipede (40 ft., Climb 40 ft.), or a toad (40 ft., Swim 40 ft.), or it returns to its true form. Its game statistics are the same in each form, except for its Speed. Any equipment it is wearing or carrying isn't transformed."
-          , limitedUse = None { kind : Text, uses : Natural }
-          , name = "Shape-Shift"
-          }
-        ]
+    , communication =
+      { kind = "spoken_and_understood"
+      , languages = Some { kind = "named", languages = [ "Abyssal", "Common" ] }
       }
     , creatureType = "fiend"
-    , displayName = "Quasit"
+    , creatureTypeTags = Some [ "demon" ]
     , hp = { kind = "literal", value = 25 }
     , immunities = Some
       { conditions = [ "poisoned" ], damageTypes = [ "poison" ] }
-    , initiativeModifier = 3
-    , skillModifiers = Some [ { modifier = +5, skill = "stealth" } ]
-    , languages = [ "Abyssal", "Common" ]
+    , initiative = { modifier = 3, score = 13 }
+    , passivePerception = 10
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = Some
       { damageTypes = [ "cold", "fire", "lightning" ], kind = "fixed" }
-    , senses = Some [ { kind = "darkvision", rangeFeet = 120 } ]
+    , resources = Some
+      [ { limit = { kind = "daily", uses = 1 }
+        , ordinal = 1
+        , ownership = "shared"
+        }
+      ]
+    , senses = Some
+      [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -3 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -2 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = +0 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some [ { modifier = 5, skill = "stealth" } ]
     , speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" } ]
     , traits = Some
       [ { description =
@@ -1075,84 +2244,267 @@ in  [ { challengeRating = 0.0
   , statBlock =
     { abilityScores =
       { cha = 11, con = 10, dex = 18, int = 14, str = 3, wis = 13 }
-    , ac = { kind = "literal", value = 15 }
+    , ac.value = { kind = "literal", value = 15 }
     , actions =
-      { attacks =
-        [ { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 6 }
-          , attackType = "melee"
-          , description = None Text
+      [ { description = None Text
+        , kind = "executable"
+        , name = None Text
+        , procedure = Some
+          { ability = None Text
+          , attackAbility = Some "dex"
+          , attackBonus = Some { kind = "literal", value = 6 }
+          , attackType = Some "melee"
+          , components = None { m : Bool, s : Bool, v : Bool }
+          , dispatches =
+              None
+                ( List
+                    { count : { kind : Text, value : Natural }
+                    , procedureOrdinal : Natural
+                    }
+                )
+          , groups =
+              None
+                ( List
+                    { kind : Text
+                    , resourceRefs : { kind : Text }
+                    , spells : List { restriction : Text, spellId : Text }
+                    }
+                )
+          , kind = "attack_roll"
           , name = "Needle Sword"
-          , onHit =
+          , onHit = Some
             [ { amount =
-                { expr = { dice = 1, dieSize = 4, flat = Some 4 }
+                { expr = Some { dice = 1, dieSize = 4, flat = Some 4 }
                 , kind = "fixed"
-                , static = Some 6
+                , static = 6
                 }
               , damageType = "piercing"
               , kind = "damage"
               }
             ]
-          , rangeFeet = None { long : Natural, normal : Natural }
           , reachFeet = Some 5
           }
-        , { attackAbility = "dex"
-          , attackBonus = { kind = "literal", value = 6 }
-          , attackType = "ranged"
-          , description =
-              Some
-                "Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn."
-          , name = "Enchanting Bow"
-          , onHit =
-            [ { amount =
-                { expr = { dice = 0, dieSize = 1, flat = Some 1 }
-                , kind = "fixed"
-                , static = Some 1
-                }
-              , damageType = "piercing"
-              , kind = "damage"
+        , procedureOrdinal = 1
+        , reason = None Text
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "Ranged Attack Roll: +6, range 40/160 ft. Hit: 1 Piercing damage, and the target has the Charmed condition until the start of the sprite's next turn."
+        , kind = "textOnly"
+        , name = Some "Enchanting Bow"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
               }
-            ]
-          , rangeFeet = Some { long = 160, normal = 40 }
-          , reachFeet = None Natural
-          }
-        ]
-      , multiattacks =
-          None
-            ( List
-                { dispatches :
-                    List
-                      { count : { kind : Text, value : Natural }, name : Text }
-                , name : Text
-                }
+        , procedureOrdinal = 2
+        , reason = Some "unsupported_action_shape"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "Charisma Saving Throw: DC 10, one creature within 5 feet the sprite can see (Celestials, Fiends, and Undead automatically fail the save). Failure: The sprite knows the target's emotions and alignment."
+        , kind = "textOnly"
+        , name = Some "Heart Sight"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
+        , procedureOrdinal = 3
+        , reason = Some "unsupported_action_shape"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      , { description = Some
+            "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
+        , kind = "textOnly"
+        , name = Some "Invisibility"
+        , procedure =
+            None
+              { ability : Optional Text
+              , attackAbility : Optional Text
+              , attackBonus : Optional { kind : Text, value : Natural }
+              , attackType : Optional Text
+              , components : Optional { m : Bool, s : Bool, v : Bool }
+              , dispatches :
+                  Optional
+                    ( List
+                        { count : { kind : Text, value : Natural }
+                        , procedureOrdinal : Natural
+                        }
+                    )
+              , groups :
+                  Optional
+                    ( List
+                        { kind : Text
+                        , resourceRefs : { kind : Text }
+                        , spells : List { restriction : Text, spellId : Text }
+                        }
+                    )
+              , kind : Text
+              , name : Text
+              , onHit :
+                  Optional
+                    ( List
+                        { amount :
+                            { expr :
+                                Optional
+                                  { dice : Natural
+                                  , dieSize : Natural
+                                  , flat : Optional Natural
+                                  }
+                            , kind : Text
+                            , static : Natural
+                            }
+                        , damageType : Text
+                        , kind : Text
+                        }
+                    )
+              , reachFeet : Optional Natural
+              }
+        , procedureOrdinal = 4
+        , reason = Some "unsupported_procedure_family"
+        , resourceRefs = { kind = "none", ordinals = None (List Natural) }
+        }
+      ]
+    , alignment =
+        λ(JSON : Type) →
+        λ ( json
+          : { array : List JSON → JSON
+            , bool : Bool → JSON
+            , double : Double → JSON
+            , integer : Integer → JSON
+            , null : JSON
+            , object : List { mapKey : Text, mapValue : JSON } → JSON
+            , string : Text → JSON
+            }
+          ) →
+          json.object
+            ( toMap
+                { morality = json.string "good", order = json.string "neutral" }
             )
-      , saves = None (List SaveAction)
-      , specials = Some
-        [ { description =
-              "Charisma Saving Throw: DC 10, one creature within 5 feet the sprite can see (Celestials, Fiends, and Undead automatically fail the save). Failure: The sprite knows the target's emotions and alignment."
-          , limitedUse = None { kind : Text, uses : Natural }
-          , name = "Heart Sight"
-          }
-        , { description =
-              "The sprite casts Invisibility on itself, requiring no spell components and using Charisma as the spellcasting ability."
-          , limitedUse = None { kind : Text, uses : Natural }
-          , name = "Invisibility"
-          }
-        ]
+    , communication =
+      { kind = "spoken_and_understood"
+      , languages = Some
+        { kind = "named", languages = [ "Common", "Elvish", "Sylvan" ] }
       }
     , creatureType = "fey"
-    , displayName = "Sprite"
+    , creatureTypeTags = None (List Text)
     , hp = { kind = "literal", value = 10 }
     , immunities = None { conditions : List Text, damageTypes : List Text }
-    , initiativeModifier = 4
-    , skillModifiers = Some
-      [ { modifier = +3, skill = "perception" }
-      , { modifier = +8, skill = "stealth" }
-      ]
-    , languages = [ "Common", "Elvish", "Sylvan" ]
+    , initiative = { modifier = 4, score = 14 }
+    , passivePerception = 13
+    , reactions =
+        None
+          ( List
+              { description : Text
+              , kind : Text
+              , name : Text
+              , procedureOrdinal : Natural
+              , reason : Text
+              , resourceRefs : { kind : Text, ordinals : List Natural }
+              }
+          )
     , resistances = None { damageTypes : List Text, kind : Text }
-    , senses = None (List { kind : Text, rangeFeet : Natural })
+    , resources =
+        None
+          ( List
+              { limit : { kind : Text, uses : Natural }
+              , ordinal : Natural
+              , ownership : Text
+              }
+          )
+    , senses =
+        None
+          (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +4 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = +2 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = +0 }
+      ]
     , size = "tiny"
+    , skillModifiers = Some
+      [ { modifier = 3, skill = "perception" }
+      , { modifier = 8, skill = "stealth" }
+      ]
     , speeds =
       [ { feet = { kind = "literal", value = 10 }, kind = "walk" }
       , { feet = { kind = "literal", value = 40 }, kind = "fly" }

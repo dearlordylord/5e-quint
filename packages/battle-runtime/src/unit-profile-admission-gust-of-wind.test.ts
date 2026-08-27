@@ -788,12 +788,12 @@ function castHeightenedGustOfWindWithSelectedTarget(): BattleState {
       }),
       statBlockCreatureInit({
         combatantId: spellTargetId,
-        displayName: "Target",
+        statBlockName: "Target",
         initiative: 10,
       }),
       statBlockCreatureInit({
         combatantId: thunderwaveSecondTargetId,
-        displayName: "Second Target",
+        statBlockName: "Second Target",
         initiative: 9,
       }),
     ],

@@ -148,7 +148,9 @@ export const setupScenario: ScenarioSetup = (context) => {
   if (invalidCombatant !== undefined) {
     return {
       kind: "obstructed",
-      obstruction: sdk.battleStateInitIssueMessage(invalidCombatant.left),
+      obstruction: sdk.authoredStatBlockBattleInitIssueMessage(
+        invalidCombatant.left,
+      ),
       observation: {
         scenarioId: "table-authored-three-shove-cycle",
         obstruction: "stat-block-battle-initialization-failed",

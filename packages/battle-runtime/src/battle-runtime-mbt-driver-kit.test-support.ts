@@ -1,4 +1,8 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  statBlockId as parseSharedStatBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import * as path from "node:path";
 import {
@@ -22,6 +26,7 @@ import {
 } from "@firfi/quint-connect/effect";
 import { Either, Match, Schema } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
+import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
 import { expect } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import { type Ability, type SurfaceSkill } from "@dnd/shared/game-facts";
@@ -75,6 +80,7 @@ import {
   secondWizardId as interruptSecondWizardId,
   wizardId as interruptWizardId,
   resolveBattleSubject,
+  executableProcedureEntry,
   type BattleActSelectorForTest,
 } from "./battle-runtime.test-support.ts";
 import { admitCharacterWeaponAttackExecutionWeapon } from "./character-weapon-execution-admission.ts";
@@ -16026,14 +16032,26 @@ function skeletonShortswordSubject(
   BattleSubject,
   { readonly tag: "action"; readonly action: "attack" }
 > {
+  const skeleton = session.state.combatants.get(skeletonId);
+  if (skeleton?.origin.kind !== "statBlock") {
+    throw new Error("Expected the Skeleton Stat Block origin.");
+  }
+  const shortswordBinding = skeleton.origin.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "attack" &&
+      binding.procedure.section === "actions" &&
+      binding.procedure.procedureOrdinal === 1,
+  );
+  if (shortswordBinding === undefined) {
+    throw new Error("Expected the authored ordinal 1 Shortsword binding.");
+  }
   const matchingActs = discoverBattleActs(session).filter(
     (candidate) =>
       candidate.subject.tag === "action" &&
       candidate.subject.actorId === skeletonId &&
       candidate.subject.action === "attack" &&
-      candidate.subject.procedureRef !== undefined &&
-      candidate.subject.statBlockDamageNotation === undefined &&
-      candidate.summary === "Take the Attack action with Shortsword.",
+      candidate.subject.procedureRef === shortswordBinding.procedureRef &&
+      candidate.subject.statBlockDamageNotation === undefined,
   );
   if (matchingActs.length !== 1) {
     throw new Error("Expected one rolled Skeleton Shortsword attack act.");
@@ -18029,38 +18047,68 @@ function skeletonCreatureInit(input: {
 }): BattleCreatureInit {
   return {
     combatantId: skeletonId,
-    displayName: "Skeleton",
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
       source: Either.getOrThrow(
-        battleStatBlockCombatantSource(skeletonMultiattackStatBlock()),
+        battleStatBlockCombatantSource(
+          Either.getOrThrow(
+            projectAuthoredStatBlock(skeletonMultiattackStatBlock()),
+          ).runtime,
+        ),
       ),
       currentHp: Hp(13),
       tempHp: Hp(0),
       ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
       conditions: [],
+      presentation: {
+        displayName: "Skeleton",
+        communication: { kind: "none" },
+        traits: [],
+        orderedProcedures: [],
+      },
     },
   };
 }
 
 function skeletonMultiattackStatBlock(): StatBlockRecord {
-  const base = statBlockCatalog.requireStatBlock("stat_block_skeleton");
+  const base = assertStatBlockForTest(
+    statBlockCatalog,
+    parseSharedStatBlockId("stat_block_skeleton"),
+  );
+  const actions = base.statBlock.actions;
+  const shortsword = actions?.find(
+    (entry) =>
+      entry.kind === "executable" &&
+      entry.procedure.kind === "attack_roll" &&
+      entry.procedure.name === "Shortsword",
+  );
+  if (actions === undefined || shortsword === undefined) {
+    throw new Error("Expected canonical Skeleton Shortsword fixture.");
+  }
   return {
     ...base,
+    id: parseSharedStatBlockId("stat_block_synthetic_boneblade_multiattacker"),
+    name: "Synthetic Boneblade Multiattacker",
+    provenance: {
+      kind: "synthetic-test",
+      section: "Skeleton multiattack MBT fixture",
+    },
     statBlock: {
       ...base.statBlock,
-      actions: {
-        ...base.statBlock.actions,
-        multiattacks: [
-          {
-            name: "Multiattack",
-            dispatches: [
-              { name: "Shortsword", count: { kind: "literal", value: 2 } },
-            ],
-          },
-        ],
-      },
+      actions: [
+        ...actions,
+        executableProcedureEntry(3, {
+          kind: "multiattack",
+          name: "Multiattack",
+          dispatches: [
+            {
+              procedureOrdinal: shortsword.procedureOrdinal,
+              count: { kind: "literal", value: 2 },
+            },
+          ],
+        }),
+      ],
     },
   };
 }

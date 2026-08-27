@@ -25,7 +25,7 @@ import {
   type CharacterBattleClassLevels,
   type CharacterBattleRuntimeContext,
   type CharacterZeroHpLifecycleInit,
-  type StatBlockBattleInitInput,
+  type AuthoredStatBlockBattleInitInput,
   battleStateInitIssueMessage,
 } from "@dnd/battle-runtime";
 import {
@@ -303,12 +303,12 @@ export type BattleRosterCharacterSource =
 export type BattleRosterStatBlockSource =
   | {
       readonly kind: "available";
-      readonly input: StatBlockBattleInitInput;
+      readonly input: AuthoredStatBlockBattleInitInput;
     }
   | {
       readonly kind: "missing";
       readonly statBlockId: StatBlockRecord["id"];
-      readonly combatantId: StatBlockBattleInitInput["combatantId"];
+      readonly combatantId: AuthoredStatBlockBattleInitInput["combatantId"];
     };
 
 export type BattleRosterEntry =

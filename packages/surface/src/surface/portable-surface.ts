@@ -11,6 +11,7 @@ import {
   readSurfaceSchemaRole,
   type SurfaceSchemaFieldRole,
 } from "./schema-base.ts";
+import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 
 const STRICT_DECODE_OPTIONS = { onExcessProperty: "error" } as const;
 
@@ -338,6 +339,18 @@ function scanJsonMembers(text: string): JsonScanResult {
   return new JsonMemberScanner(text).scan();
 }
 
+type JsonParseResult =
+  | { readonly tag: "parsed"; readonly value: unknown }
+  | { readonly tag: "rejected"; readonly error: unknown };
+
+function parseJson(text: string): JsonParseResult {
+  try {
+    return { tag: "parsed", value: JSON.parse(text) };
+  } catch (error) {
+    return { tag: "rejected", error };
+  }
+}
+
 export function decodePortableSrdSurfaceText(
   text: string,
 ): PortableSrdSurfaceDecodeResult {
@@ -350,18 +363,16 @@ export function decodePortableSrdSurfaceText(
     );
   }
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
+  const parsed = parseJson(text);
+  if (parsed.tag === "rejected") {
     return rejected([
       jsonIssue(
         "$",
-        `Surface aggregate JSON could not be parsed: ${String(error)}`,
+        `Surface aggregate JSON could not be parsed: ${String(parsed.error)}`,
       ),
     ]);
   }
-  return decodePortableSrdSurface(parsed);
+  return decodePortableSrdSurface(parsed.value);
 }
 
 function unknownRootPropertyIssues(
@@ -467,6 +478,10 @@ function duplicateIdentityIssues(
     string,
     { readonly family: RecordFamilyLabel; readonly path: string }
   >();
+  const seenStatBlockIdentities = new Map<
+    string,
+    { readonly targetId: string; readonly path: string }
+  >();
   const issues: PortableSrdSurfaceIssue[] = [];
   for (const [family, entries, member] of [
     ["Unit", members.unitEntries, "units"] as const,
@@ -492,6 +507,31 @@ function duplicateIdentityIssues(
           family,
           path: `$.${member}[${index}].id`,
         });
+      }
+
+      if (member === "statBlocks") {
+        const targetId = String(record.id);
+        const normalizedIdentity = normalizeStatBlockIdentity(record.name);
+        const priorIdentity = seenStatBlockIdentities.get(normalizedIdentity);
+        if (priorIdentity === undefined) {
+          seenStatBlockIdentities.set(normalizedIdentity, {
+            targetId,
+            path: `$.${member}[${index}].id`,
+          });
+        } else if (priorIdentity.targetId !== targetId) {
+          issues.push(
+            duplicateIdentityIssue(
+              `$.${member}[${index}].id`,
+              `Stat Block normalized identity ${normalizedIdentity} duplicates ${priorIdentity.path}`,
+              {
+                code: "duplicate-authored-identity",
+                targetKind: "statBlock",
+                targetId,
+                priorPath: priorIdentity.path,
+              },
+            ),
+          );
+        }
       }
     });
   }

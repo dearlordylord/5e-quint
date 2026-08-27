@@ -161,9 +161,13 @@ import {
 import {
   spendStatBlockAttackResources,
   statBlockAttackProcedureSection,
+  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
   updateStatBlockActorResources,
 } from "./statblock.ts";
-import { statBlockProcedureResourcesAvailable } from "../stat-block-execution-state.ts";
+import {
+  spendStatBlockMultiattackActivationResources,
+  statBlockMultiattackResourcesAvailable,
+} from "../stat-block-execution-state.ts";
 import type {
   StatBlockBonusActionOptionProcedure,
   StatBlockMultiattackProcedure,
@@ -994,9 +998,16 @@ export function resolveMultiattack(
   const actor = input.actor;
   const origin = actor.origin;
   const multiattackBinding = input.multiattackBinding;
+  const [consumedProcedureRef, ...pendingProcedureRefs] =
+    statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+      actor,
+      multiattackBinding,
+    );
   if (
-    !multiattackBinding.procedure.dispatchProcedureRefs.every((procedureRef) =>
-      statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
+    !statBlockMultiattackResourcesAvailable(
+      origin.execution,
+      multiattackBinding,
+      [consumedProcedureRef, ...pendingProcedureRefs],
     )
   ) {
     return invalidResult(
@@ -1013,18 +1024,13 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
-  const [consumedDispatch, ...pendingDispatches] =
-    multiattackBinding.procedure.dispatchProcedureRefs;
-  const grantedPendingDispatches = combatantHasSlowActivePenalties(actor)
-    ? []
-    : pendingDispatches;
   const nextStateWithPendingDispatches = {
     ...input.state,
     currentTurnResources: {
       ...spent.right,
       actionResources: [
         ...spent.right.actionResources,
-        ...grantedPendingDispatches.map((dispatch) => ({
+        ...pendingProcedureRefs.map((dispatch) => ({
           kind: "action" as const,
           source: "statBlockMultiattack" as const,
           sourceOwnerId: input.subject.actorId,
@@ -1037,11 +1043,21 @@ export function resolveMultiattack(
       ],
     },
   };
-  const nextState = updateStatBlockActorResources(
-    nextStateWithPendingDispatches,
-    actor,
-    consumedDispatch,
+  const nextExecution = spendStatBlockMultiattackActivationResources(
+    origin.execution,
+    multiattackBinding,
+    consumedProcedureRef,
   );
+  const nextState = {
+    ...nextStateWithPendingDispatches,
+    combatants: new Map(nextStateWithPendingDispatches.combatants).set(
+      actor.combatantId,
+      {
+        ...actor,
+        origin: { ...actor.origin, execution: nextExecution },
+      },
+    ),
+  };
   return {
     tag: "resolved",
     state: nextState,

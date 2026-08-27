@@ -227,7 +227,7 @@ function battleWithTarget(input: HitPointDamageScenarioInput): {
         : [
             statBlockCreatureInit({
               combatantId: targetId,
-              displayName: "HP Damage Monster",
+              statBlockName: "HP Damage Monster",
               initiative: 20,
               currentHp: input.hitPoints,
               tempHp: input.temporaryHitPoints,

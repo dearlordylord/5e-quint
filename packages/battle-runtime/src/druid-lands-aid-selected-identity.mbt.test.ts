@@ -1,4 +1,8 @@
-import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
+import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
+import {
+  statBlockId,
+  unitId as parseSharedUnitId,
+} from "@dnd/shared/game-facts";
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.magic-action-area-save-damage-healing
@@ -489,14 +493,17 @@ function rolledDiceFill(
 
 function druidWildShapeAvailableForms(druidLevel: number) {
   const forms = [
-    statBlockCatalog.requireStatBlock("stat_block_rat"),
-    statBlockCatalog.requireStatBlock("stat_block_riding_horse"),
-    statBlockCatalog.requireStatBlock("stat_block_lizard"),
-    statBlockCatalog.requireStatBlock("stat_block_cat"),
-    statBlockCatalog.requireStatBlock("stat_block_bat"),
-    statBlockCatalog.requireStatBlock("stat_block_frog"),
-    statBlockCatalog.requireStatBlock("stat_block_hawk"),
-    statBlockCatalog.requireStatBlock("stat_block_owl"),
+    assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_rat")),
+    assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_riding_horse"),
+    ),
+    assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_lizard")),
+    assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_cat")),
+    assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_bat")),
+    assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_frog")),
+    assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_hawk")),
+    assertStatBlockForTest(statBlockCatalog, statBlockId("stat_block_owl")),
   ];
   const knownFormCount = druidLevel >= 8 ? 8 : druidLevel >= 4 ? 6 : 4;
   return forms.slice(0, knownFormCount);

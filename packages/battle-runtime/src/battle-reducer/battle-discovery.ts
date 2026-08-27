@@ -105,6 +105,7 @@ import { combatantInsideActiveAntimagicFieldAura } from "./antimagic-field-actio
 import {
   statBlockBonusActionOptionBindings,
   statBlockMultiattackBindings,
+  statBlockMultiattackResourcesAvailable,
   statBlockProcedureResourcesAvailable,
   statBlockAttackActionOptions,
 } from "../stat-block-execution-state.ts";
@@ -154,6 +155,7 @@ import {
 import {
   attackActionOptionIsOrdinaryAttackAction,
   attackSubjectPart,
+  statBlockMultiattackEffectiveDispatchProcedureRefsForActor,
   statBlockAttackProcedureSection,
 } from "./statblock.ts";
 import type {
@@ -1724,7 +1726,7 @@ export function statBlockMultiattackActs(
 ): readonly BattleActDiscoveryCandidate[] {
   const actor = state.combatants.get(actorId);
   if (
-    actor?.origin.kind !== "statBlock" ||
+    !isStatBlockBattleCreatureState(actor) ||
     !combatantCanTakeActions(actor) ||
     !hasTurnActionResource(state.currentTurnResources)
   ) {
@@ -1732,9 +1734,16 @@ export function statBlockMultiattackActs(
   }
   const origin = actor.origin;
   return statBlockMultiattackBindings(origin.execution).flatMap((binding) => {
+    const effectiveDispatchProcedureRefs =
+      statBlockMultiattackEffectiveDispatchProcedureRefsForActor(
+        actor,
+        binding,
+      );
     if (
-      !binding.procedure.dispatchProcedureRefs.every((procedureRef) =>
-        statBlockProcedureResourcesAvailable(origin.execution, procedureRef),
+      !statBlockMultiattackResourcesAvailable(
+        origin.execution,
+        binding,
+        effectiveDispatchProcedureRefs,
       )
     ) {
       return [];

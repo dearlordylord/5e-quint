@@ -4,10 +4,14 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";
+import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import srdGoblinWarriorInput from "../../surface/content/stat_block_goblin_warrior.json";
 import { decodeStatBlockRecordSync } from "../../surface/src/surface/schema.ts";
-import type { CreatureNamedAttackRoll } from "../../surface/src/surface/types.ts";
+import type {
+  AuthoredExecutableProcedure,
+  StatBlockRecord,
+} from "../../surface/src/surface/types.ts";
 
 import {
   ATTACK_ROLL_REQUIRED_BEFORE_DAMAGE_MESSAGE,
@@ -41,6 +45,7 @@ import { battleExecutionScopeOrdinal } from "./identity.ts";
 import { statBlockExecutionAdmissionCohort } from "./stat-block-execution.ts";
 import {
   DieRollResult,
+  admittedStatBlockSource,
   attackRollFill,
   attackTargetFill,
   battleId,
@@ -68,8 +73,12 @@ import {
 } from "./battle-runtime.test-support.ts";
 import type { AttackDamageRider } from "./battle-state-execution.ts";
 import type { BattleResolutionResult } from "./index.ts";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { StatBlockDamageNotation } from "./battle-action-options.ts";
+
+type StatBlockAttack = Extract<
+  AuthoredExecutableProcedure,
+  { readonly kind: "attack_roll" }
+>;
 
 type StatBlockActionOrderingStage =
   | "actSelection"
@@ -123,27 +132,74 @@ const multiattackDispatchAttackName = "Scimitar";
 const srdGoblinWarrior = decodeStatBlockRecordSync(srdGoblinWarriorInput);
 
 function admittedAttackOption(
-  attack: CreatureNamedAttackRoll,
+  attack: StatBlockAttack,
   damageNotation: StatBlockDamageNotation,
 ) {
+  const baseAttackEntry = srdGoblinWarrior.statBlock.actions?.find(
+    (entry) =>
+      entry.kind === "executable" && entry.procedure.kind === "attack_roll",
+  );
+  if (
+    baseAttackEntry === undefined ||
+    baseAttackEntry.kind !== "executable" ||
+    baseAttackEntry.procedure.kind !== "attack_roll"
+  ) {
+    throw new Error("Expected a canonical SRD Goblin Warrior attack entry.");
+  }
   const statBlock: StatBlockRecord = {
-    ...srdGoblinWarrior,
+    id: parseSharedStatBlockId("stat_block_synthetic_action_ordering_attack"),
+    kind: "statBlock",
+    name: "Synthetic Action Ordering Attack",
+    challengeRating: 0.25,
+    provenance: {
+      kind: "synthetic-test",
+      section: "Stat Block action ordering fixture",
+    },
     statBlock: {
-      ...srdGoblinWarrior.statBlock,
-      actions: { attacks: [attack] },
+      size: "small",
+      creatureType: "fey",
+      alignment: { order: "chaotic", morality: "neutral" },
+      ac: { value: { kind: "literal", value: 15 } },
+      hp: { kind: "literal", value: 10 },
+      speeds: [{ kind: "walk", feet: { kind: "literal", value: 30 } }],
+      abilityScores: {
+        cha: 8,
+        con: 10,
+        dex: 15,
+        int: 10,
+        str: 8,
+        wis: 8,
+      },
+      initiative: { modifier: 2, score: 12 },
+      passivePerception: 9,
+      communication: {
+        kind: "spoken_and_understood",
+        languages: { kind: "named", languages: ["Common", "Goblin"] },
+      },
+      actions: [{ ...baseAttackEntry, procedure: attack }],
     },
   };
   const admission = statBlockExecutionAdmissionCohort(
     battleId("stat-block-action-ordering-isolated-admission"),
     goblinId,
-    [statBlock],
+    [admittedStatBlockSource(statBlock)],
     battleExecutionScopeOrdinal(0),
   ).admissions[0];
   if (admission === undefined) {
     throw new Error("Expected the driver Stat Block admission.");
   }
+  const authoredProcedureRef = admission.execution.procedureBindings.find(
+    (binding) =>
+      binding.procedure.kind === "attack" &&
+      binding.procedure.procedureOrdinal === baseAttackEntry.procedureOrdinal,
+  )?.procedureRef;
+  if (authoredProcedureRef === undefined) {
+    throw new Error("Expected the admitted authored attack procedure.");
+  }
   return statBlockAttackActionOptions(admission.execution).find(
-    (option) => option.damageNotation === damageNotation,
+    (option) =>
+      option.procedureRef === authoredProcedureRef &&
+      option.damageNotation === damageNotation,
   );
 }
 
@@ -639,12 +695,20 @@ const statBlockActionOrderingRouteStateCheck = stateCheck(
 
 describe("Stat Block action ordering MBT", () => {
   it("keeps static Stat Block base damage while rolling damage riders", () => {
-    const scimitar = srdGoblinWarrior.statBlock.actions?.attacks?.find(
-      (attack) => attack.name === multiattackDispatchAttackName,
+    const scimitarEntry = srdGoblinWarrior.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" &&
+        entry.procedure.kind === "attack_roll" &&
+        entry.procedure.name === multiattackDispatchAttackName,
     );
-    if (scimitar === undefined) {
+    if (
+      scimitarEntry === undefined ||
+      scimitarEntry.kind !== "executable" ||
+      scimitarEntry.procedure.kind !== "attack_roll"
+    ) {
       throw new Error("Expected SRD Goblin Warrior Scimitar.");
     }
+    const scimitar = scimitarEntry.procedure;
     const attack = admittedAttackOption(scimitar, "static");
     if (attack === undefined) {
       throw new Error("Expected static SRD Goblin Warrior Scimitar.");
@@ -686,14 +750,22 @@ describe("Stat Block action ordering MBT", () => {
   });
 
   it("rejects static Stat Block attack options without static damage notation", () => {
-    const scimitar = srdGoblinWarrior.statBlock.actions?.attacks?.find(
-      (attack) => attack.name === multiattackDispatchAttackName,
+    const scimitarEntry = srdGoblinWarrior.statBlock.actions?.find(
+      (entry) =>
+        entry.kind === "executable" &&
+        entry.procedure.kind === "attack_roll" &&
+        entry.procedure.name === multiattackDispatchAttackName,
     );
-    if (scimitar === undefined) {
+    if (
+      scimitarEntry === undefined ||
+      scimitarEntry.kind !== "executable" ||
+      scimitarEntry.procedure.kind !== "attack_roll"
+    ) {
       throw new Error("Expected SRD Goblin Warrior Scimitar.");
     }
+    const scimitar = scimitarEntry.procedure;
     const [firstEffect, ...remainingEffects] = scimitar.onHit;
-    const rolledOnlyOnHit: CreatureNamedAttackRoll["onHit"] = [
+    const rolledOnlyOnHit: StatBlockAttack["onHit"] = [
       statBlockAttackEffectWithoutStaticDamage(firstEffect),
       ...remainingEffects.map(statBlockAttackEffectWithoutStaticDamage),
     ];
@@ -702,6 +774,7 @@ describe("Stat Block action ordering MBT", () => {
       onHit: rolledOnlyOnHit,
     };
 
+    expect(admittedAttackOption(rolledOnlyScimitar, "rolled")).toBeDefined();
     expect(admittedAttackOption(rolledOnlyScimitar, "static")).toBeUndefined();
   });
 
@@ -800,15 +873,16 @@ describe("Stat Block action ordering MBT", () => {
 });
 
 function statBlockAttackEffectWithoutStaticDamage(
-  effect: CreatureNamedAttackRoll["onHit"][number],
-): CreatureNamedAttackRoll["onHit"][number] {
+  effect: StatBlockAttack["onHit"][number],
+): StatBlockAttack["onHit"][number] {
   return (effect.kind === "damage" ||
     effect.kind === "conditional_bonus_damage") &&
-    effect.amount.kind === "fixed"
+    effect.amount.kind === "fixed" &&
+    "expr" in effect.amount
     ? {
         ...effect,
         amount: {
-          kind: "fixed" as const,
+          kind: "fixed",
           expr: effect.amount.expr,
         },
       }

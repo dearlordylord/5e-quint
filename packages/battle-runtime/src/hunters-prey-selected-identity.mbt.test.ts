@@ -230,7 +230,7 @@ function projectSkipThenUseColossusSlayer(): HuntersPreyProjection {
       statBlockCreatureInit({ initiative: 10, currentHp: 6 }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Second Target",
+        statBlockName: "Second Target",
         initiative: 9,
         currentHp: 6,
       }),
@@ -541,7 +541,7 @@ function hordeBreakerBattle() {
       statBlockCreatureInit({ initiative: 10 }),
       statBlockCreatureInit({
         combatantId: skeletonId,
-        displayName: "Second Target",
+        statBlockName: "Second Target",
         initiative: 9,
       }),
     ],
