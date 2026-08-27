@@ -1,5 +1,4 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.MIRROR_IMAGE_HIT_INTERCEPTION
-import { Schema } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -8,6 +7,7 @@ import {
   defineDriver,
   focusedMbtMaxSteps,
   mbtSpecPath,
+  mbtPickSchemas,
   mbtTraceCount,
   numberFromQuintInt,
   run,
@@ -29,11 +29,11 @@ const initialState: MirrorImageHitInterceptionState = {
 const driverSchema = {
   init: {},
   doResolveMirrorImageHitInterception: {
-    attackHits: Schema.standardSchemaV1(Schema.Boolean),
-    attackerBlinded: Schema.standardSchemaV1(Schema.Boolean),
-    attackerHasBlindsight: Schema.standardSchemaV1(Schema.Boolean),
-    attackerHasTruesight: Schema.standardSchemaV1(Schema.Boolean),
-    duplicateRollSucceeds: Schema.standardSchemaV1(Schema.Boolean),
+    attackHits: mbtPickSchemas.bool,
+    attackerBlinded: mbtPickSchemas.bool,
+    attackerHasBlindsight: mbtPickSchemas.bool,
+    attackerHasTruesight: mbtPickSchemas.bool,
+    duplicateRollSucceeds: mbtPickSchemas.bool,
   },
   step: {},
 } as const;
