@@ -126,10 +126,10 @@ function mapNonEmpty<T, U>(
   return [map(first), ...rest.map(map)];
 }
 
-test("restore closes an omitted Stat Block resource graph", () => {
-  const actorId = combatantId("execution-ref-normalized-source");
+test("restore retains an empty Stat Block resource graph", () => {
+  const actorId = combatantId("execution-ref-empty-resources");
   const source = projectedStatBlockRuntimeSource(statBlockRecord());
-  expect(source.resources).toBeUndefined();
+  expect(source.resources).toEqual([]);
   const admission = isolatedStatBlockAdmissions(actorId, [
     statBlockRecord(),
   ])[0];

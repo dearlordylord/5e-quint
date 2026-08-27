@@ -132,8 +132,9 @@ describe("Stat Block combatant admission capability", () => {
     );
   });
 
-  test("normalizes omitted Stat Block resources at the source admission boundary", () => {
+  test("retains the projected empty Stat Block resource collection", () => {
     const source = projectedStatBlockRuntimeSource(statBlockRecord());
+    expect(source.resources).toEqual([]);
     const admitted = battleStatBlockCombatantSource(source);
 
     expect(Either.isRight(admitted)).toBe(true);
@@ -144,9 +145,6 @@ describe("Stat Block combatant admission capability", () => {
   test("rejects a procedure resource reference without a declaration", () => {
     const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
     const resources = source.resources;
-    if (resources === undefined) {
-      throw new Error("Expected the resource-backed Stat Block fixture.");
-    }
 
     const admitted = battleStatBlockCombatantSource({
       ...source,
@@ -169,9 +167,6 @@ describe("Stat Block combatant admission capability", () => {
   test("rejects duplicate Stat Block resource declaration ordinals", () => {
     const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
     const resources = source.resources;
-    if (resources === undefined) {
-      throw new Error("Expected the resource-backed Stat Block fixture.");
-    }
     const [firstResource, ...remainingResources] = resources;
     if (firstResource === undefined) {
       throw new Error("Expected the first resource declaration.");
@@ -195,9 +190,6 @@ describe("Stat Block combatant admission capability", () => {
   test("accumulates duplicate and distinct missing resource graph issues", () => {
     const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
     const resources = source.resources;
-    if (resources === undefined) {
-      throw new Error("Expected the resource-backed Stat Block fixture.");
-    }
     const [firstResource, secondResource] = resources;
     if (firstResource === undefined || secondResource === undefined) {
       throw new Error("Expected both resource declarations.");

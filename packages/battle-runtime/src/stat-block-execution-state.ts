@@ -55,7 +55,7 @@ export type BattleStatBlockExecutionSource = {
   readonly statBlock: BattleStatBlockRuntimeFacts;
   /** Ordered executable bindings produced by the authored projection. */
   readonly procedures: readonly BattleStatBlockRuntimeProcedure[];
-  readonly resources?: readonly BattleStatBlockRuntimeResource[];
+  readonly resources: readonly BattleStatBlockRuntimeResource[];
   readonly legendaryActionUses?: PositiveIntegerType;
 };
 
@@ -106,7 +106,7 @@ export function admitStatBlockResourceGraph<
   BattleStatBlockClosedResourceGraph<TSource>,
   ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>
 > {
-  const resources = source.resources ?? [];
+  const resources = source.resources;
   const declaredOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
   const duplicateOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
   const duplicateIssues: StatBlockResourceGraphAdmissionFailure[] = [];

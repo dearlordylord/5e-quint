@@ -1,6 +1,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import * as Either from "effect/Either";
 import { Match } from "effect";
+import type { StandardActionKind } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
 import type {
   CreatureAttackRollMechanics,
@@ -174,7 +175,7 @@ function runtimeProjection(
   source: StandaloneStatBlock,
   size: Size,
   speeds: ReadonlyNonEmptyArray<BattleStatBlockRuntimeSpeed>,
-  resources: readonly BattleStatBlockRuntimeResource[] | undefined,
+  resources: readonly BattleStatBlockRuntimeResource[],
   procedures: readonly BattleStatBlockRuntimeProcedure[],
   legendaryActionUses: BattleStatBlockExecutionSource["legendaryActionUses"],
 ): BattleStatBlockExecutionSource {
@@ -183,7 +184,7 @@ function runtimeProjection(
     challengeRating: record.challengeRating,
     statBlock: runtimeStatBlockProjection(source, size, speeds),
     procedures,
-    ...(resources === undefined ? {} : { resources }),
+    resources,
     ...(legendaryActionUses === undefined ? {} : { legendaryActionUses }),
   };
 }
@@ -665,10 +666,10 @@ function procedureResourceRefs(
 function runtimeResources(
   resources: NonNullable<StandaloneStatBlock["resources"]> | undefined,
 ): Either.Either<
-  readonly BattleStatBlockRuntimeResource[] | undefined,
+  readonly BattleStatBlockRuntimeResource[],
   ReadonlyNonEmptyArray<BattleStatBlockInvalidResourceDeclaration>
 > {
-  if (resources === undefined) return Either.right(undefined);
+  if (resources === undefined) return Either.right([]);
   const projected: BattleStatBlockRuntimeResource[] = [];
   const issues: BattleStatBlockInvalidResourceDeclaration[] = [];
   for (const resource of resources) {
@@ -687,7 +688,7 @@ function runtimeResources(
 }
 
 function isSupportedBonusAction(
-  option: string,
+  option: StandardActionKind,
 ): option is SupportedStatBlockBonusActionStandardAction {
   return SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS.some(
     (supportedOption) => supportedOption === option,

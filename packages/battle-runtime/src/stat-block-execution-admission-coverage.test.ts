@@ -123,9 +123,6 @@ describe("Stat Block execution admission branch coverage", () => {
   test("accumulates duplicate declarations and distinct missing references", () => {
     const source = projectedStatBlockRuntimeSource(monsterResourceStatBlock());
     const resources = source.resources;
-    if (resources === undefined) {
-      throw new Error("Expected the resource-backed Stat Block fixture.");
-    }
     const [firstResource, secondResource] = resources;
     const firstProcedure = source.procedures[0];
     if (

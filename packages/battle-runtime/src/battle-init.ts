@@ -395,7 +395,6 @@ function battleDruidWildShapeFormProjectionStatBlock(
   }
   return Either.right({
     ...projection.runtime,
-    resources: projection.runtime.resources ?? [],
     presentation: projection.presentation,
     statBlock: {
       ...projection.runtime.statBlock,
