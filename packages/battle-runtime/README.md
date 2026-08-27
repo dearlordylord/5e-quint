@@ -138,8 +138,11 @@ checks.
    checkpoint and callers replay the same subject with accumulated fills. An
    interrupt opening or nested interrupt continuation returns its durable
    runtime-owned checkpoint. Rejected fills keep the unchanged session and the
-   preceding envelope for retry; accepted resolution commits exactly once and
-   returns the next checkpoint with an Acts frontier.
+   preceding envelope for retry. A successful ordinary resolution, or an
+   interrupt resolution that closes its window, commits exactly once and
+   returns the next checkpoint with an Acts frontier. If an interrupt decision
+   leaves responders, the resolved result instead carries the current durable
+   checkpoint with an `interruptDecision` frontier.
 
 Subject resolution is replay-from-root. Battle State stores durable combat facts,
 not partially answered forms or derivable projections.
@@ -147,8 +150,9 @@ not partially answered forms or derivable projections.
 The envelope has no terminal or victory variant. Under the ubiquitous language,
 battle end is a Table Decision, and the current runtime has no terminal state;
 an otherwise successful resolution therefore returns the Acts frontier (which
-may be empty) rather than inventing a terminal product state. Snapshot and Act
-presentation, labels, and transport codecs remain external projections.
+may be empty) once any interrupt window is closed, rather than inventing a
+terminal product state. Snapshot and Act presentation, labels, and transport
+codecs remain external projections.
 
 Reaction windows carry an `interruptStack` in returned durable state. The caller
 must commit that state before resolving or declining the Reaction. The runtime
