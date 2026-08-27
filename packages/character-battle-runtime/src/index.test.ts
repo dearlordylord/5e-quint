@@ -5974,7 +5974,7 @@ describe("Character Sheet battle handoff", () => {
     ]);
   });
 
-  test("rejects Sorcery Point handoff when point-pool capacity drifts", () => {
+  test("validates Sorcery Point handoff capacity and preserves untouched pools", () => {
     const sheet = rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:sorcery-point-capacity-drift"),
       build: sorcererMetamagicBuild(),
@@ -6081,6 +6081,39 @@ describe("Character Sheet battle handoff", () => {
           "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
       },
     });
+
+    const untouchedHandoff = expectRight(
+      settleHandoffBranchToCharacterSheet({
+        sheet: sheet.right,
+        unitLibrary,
+        resourceOwnership: [
+          {
+            resourcePoolRef,
+            unit: fontOfMagicUnit,
+            purpose: { tag: "unitResource" },
+          },
+        ],
+        combatant: handoffBranchCombatant({
+          origin: {
+            kind: "character",
+            characterId: characterId("character:sorcery-point-capacity-drift"),
+            classLevels: parsedClassLevelsForTest("sorcerer", 5),
+            resources: [
+              {
+                resourcePoolRef,
+                resource: fontOfMagicResource,
+                pointsRemaining: resourceCount(5),
+              },
+            ],
+          },
+          hp: Hp(24),
+          maxHp: sheetMaximumHp(sheet.right),
+          tempHp: Hp(0),
+          positiveHpUnconscious: null,
+        }),
+      }),
+    );
+    expect(untouchedHandoff.resourceExpenditures).toEqual([]);
   });
 
   test("persists Paladin's Smite free-cast spends for the next battle before Long Rest", () => {

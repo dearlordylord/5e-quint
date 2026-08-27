@@ -699,14 +699,15 @@ function settleBattleCombatantIntoCharacterSheet(input: {
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
   });
-  if (Either.isLeft(sheet)) return Either.left(sheet.left);
-  return spellSlotState.right === undefined
-    ? Either.right(sheet.right)
-    : replaceCharacterSheetSpellSlotSourceState({
-        sheet: sheet.right,
-        unitLibrary: input.unitLibrary,
-        spellSlotState: spellSlotState.right,
-      });
+  return Either.flatMap(sheet, (rebuiltSheet) =>
+    spellSlotState.right === undefined
+      ? Either.right(rebuiltSheet)
+      : replaceCharacterSheetSpellSlotSourceState({
+          sheet: rebuiltSheet,
+          unitLibrary: input.unitLibrary,
+          spellSlotState: spellSlotState.right,
+        }),
+  );
 }
 
 function characterSheetSpellSlotSourceStateFromBattle(input: {
@@ -1114,13 +1115,14 @@ function characterSheetPointPoolExpenditureFromBattle(input: {
       "Class feature point-pool remaining points exceed the battle resource cap during battle handoff.",
     );
   }
-  return expended > 0
-    ? Either.right({
-        tag: "pointPoolResource",
-        unitId: pointPoolUnitId,
-        expended: resourceCount(expended),
-      })
-    : Either.right(null);
+  if (expended > 0) {
+    return Either.right({
+      tag: "pointPoolResource",
+      unitId: pointPoolUnitId,
+      expended: resourceCount(expended),
+    });
+  }
+  return Either.right(null);
 }
 
 function characterSheetSpellAccessFreeCastExpenditureFromBattle(input: {
