@@ -29,7 +29,7 @@ import { actionSpellCastCandidate } from "../spell-cast-candidate.ts";
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -99,7 +99,7 @@ function mirrorImageHitInterceptionShape(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         activeEffect: {
@@ -108,7 +108,7 @@ function mirrorImageHitInterceptionShape(
           remainingDuplicates: MIRROR_IMAGE_INITIAL_DUPLICATES,
           expiresAt: {
             kind: "duration",
-            durationTicks: durationTicks.right,
+            durationTicks: durationTicks.success,
           },
         },
       };

@@ -13,7 +13,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import {
   type ActionSpellAct,
@@ -1187,13 +1187,13 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     );
     const conditionFill = spellConditionChoiceFill(conditionHole, "deafened");
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleHoleSchema)(conditionHole),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleHoleSchema)(conditionHole),
       ),
     ).toBe(true);
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleFillSchema)(conditionFill),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleFillSchema)(conditionFill),
       ),
     ).toBe(true);
     const savingThrow = requireResultHole(
@@ -1256,7 +1256,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       }),
     );
     expect(
-      Either.isRight(Schema.decodeUnknownEither(BattleHoleSchema)(repeatSave)),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleHoleSchema)(repeatSave),
+      ),
     ).toBe(true);
     const ended = endTurn({
       state: targetTurn.state,

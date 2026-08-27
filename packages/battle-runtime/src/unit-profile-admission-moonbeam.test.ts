@@ -26,7 +26,7 @@ import {
   BattleSnapshotSchema,
   characterSeed,
   concentrationSavingThrowFill,
-  Either,
+  Result,
   interruptDecisionFill,
   Schema,
   startBattleSessionRight,
@@ -176,11 +176,11 @@ describe("L12G deterministic Moonbeam admission", () => {
 
     const encodedHole = Schema.encodeSync(BattleHoleSchema)(area);
     const decodedHole =
-      Schema.decodeUnknownEither(BattleHoleSchema)(encodedHole);
-    if (Either.isLeft(decodedHole)) {
-      throw new Error(String(decodedHole.left));
+      Schema.decodeUnknownResult(BattleHoleSchema)(encodedHole);
+    if (Result.isFailure(decodedHole)) {
+      throw new Error(String(decodedHole.failure));
     }
-    expect(decodedHole.right).toEqual(
+    expect(decodedHole.success).toEqual(
       expect.objectContaining({
         kind: "spellAreaChoice",
         sourceProcedureRef: act.subject.procedureRef,
@@ -191,7 +191,7 @@ describe("L12G deterministic Moonbeam admission", () => {
         },
       }),
     );
-    expect(decodedHole.right).not.toHaveProperty("spell");
+    expect(decodedHole.success).not.toHaveProperty("spell");
 
     const resolved = resolveBattleSubject({
       state: state.state,
@@ -205,8 +205,8 @@ describe("L12G deterministic Moonbeam admission", () => {
       resolved.snapshot,
     );
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(encodedSnapshot),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(encodedSnapshot),
       ),
     ).toBe(true);
   });

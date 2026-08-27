@@ -12,7 +12,7 @@ import {
   type MovementFeet,
   type SpellSlotLevel,
 } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import { singleTargetSpellRangeFeet } from "../battle-reducer/spells-execution-facts.ts";
 
@@ -53,25 +53,25 @@ export function persistentArmorEffectExecutionFactsForSpell(
     spell.mechanics.duration.value,
   );
   const requiredDurationTicks = elapsedTimeTicksFromHours(8);
-  const baseArmorClass = Schema.decodeUnknownEither(ArmorClassSchema)(
+  const baseArmorClass = Schema.decodeUnknownResult(ArmorClassSchema)(
     operation.effect.formula.base,
   );
   const rangeFeet = singleTargetSpellRangeFeet(spell.mechanics.range);
   if (
-    Either.isLeft(durationTicks) ||
-    Either.isLeft(requiredDurationTicks) ||
-    Either.isLeft(baseArmorClass) ||
+    Result.isFailure(durationTicks) ||
+    Result.isFailure(requiredDurationTicks) ||
+    Result.isFailure(baseArmorClass) ||
     rangeFeet === null ||
-    Number(durationTicks.right) !== Number(requiredDurationTicks.right)
+    Number(durationTicks.success) !== Number(requiredDurationTicks.success)
   ) {
     return null;
   }
   return {
     rangeFeet,
     slotLevel: spellSlotLevel(spell.mechanics.level),
-    baseArmorClass: baseArmorClass.right,
+    baseArmorClass: baseArmorClass.success,
     ability: "dex",
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     earlyEnds: [{ kind: "targetDonsArmor" }],
   };
 }

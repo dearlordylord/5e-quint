@@ -10,7 +10,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import type { CombatantId } from "../identity.ts";
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import {
@@ -442,7 +442,7 @@ function battleStateAfterSpendingDragonsBreathMagicAction(
 ): BattleState {
   // The resolver proves Magic-action availability before processing fills, and
   // fill processing does not modify turn resources.
-  const spentResources = Either.getOrThrow(
+  const spentResources = Result.getOrThrow(
     spendAction(input.state.currentTurnResources, "magic"),
   );
   return battleStateAfterTargetActionEarlyEndForActor(

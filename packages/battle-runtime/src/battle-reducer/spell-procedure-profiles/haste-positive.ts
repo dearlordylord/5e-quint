@@ -22,7 +22,7 @@ import type {
   EffectAtom,
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
 import {
@@ -77,7 +77,7 @@ const HastePositiveExpirationSchema = Schema.Struct({
 
 const HastePositiveActionRestrictionSchema = Schema.Struct({
   kind: Schema.Literal("allow_only"),
-  actions: Schema.Tuple(
+  actions: Schema.Tuple([
     Schema.Struct({
       action: Schema.Literal("attack"),
       attackLimit: Schema.Struct({
@@ -89,7 +89,7 @@ const HastePositiveActionRestrictionSchema = Schema.Struct({
     Schema.Struct({ action: Schema.Literal("disengage") }),
     Schema.Struct({ action: Schema.Literal("hide") }),
     Schema.Struct({ action: Schema.Literal("utilize") }),
-  ),
+  ]),
 });
 
 function admitHastePositive(
@@ -163,7 +163,7 @@ function hastePositiveSpellProjection(
   const extraAction = onlyEffect(effects, "grant_extra_action");
   const spellEndLethargy = onlyEffect(effects, "effect_end_target_state");
   if (
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     effects.length !== 5 ||
     selection?.mode !== "one" ||
     !("disposition" in selection) ||
@@ -206,7 +206,7 @@ function hastePositiveSpellProjection(
   const expiresAt = {
     kind: "concentration" as const,
     combatantId: actorId,
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
   };
   return {
     targeting: {

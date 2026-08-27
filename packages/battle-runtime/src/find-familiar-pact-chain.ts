@@ -1,6 +1,6 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.find-familiar-lifecycle
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.FIND_FAMILIAR_COMPANION_LIFECYCLE
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 
 import type {
   BattleInterruptRouteOptions,
@@ -145,7 +145,7 @@ function spendPactOfTheChainFamiliarReactionAttack(input: {
   const spentOwnerAttack = spendAttackActionResource(
     input.state.currentTurnResources,
   );
-  if (Either.isLeft(spentOwnerAttack)) {
+  if (Result.isFailure(spentOwnerAttack)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -155,14 +155,14 @@ function spendPactOfTheChainFamiliarReactionAttack(input: {
 
   const stateWithSpentOwnerAttack = {
     ...input.state,
-    currentTurnResources: spentOwnerAttack.right.state,
+    currentTurnResources: spentOwnerAttack.success.state,
   };
   const stateWithOwnerExtraAttackOpened = {
     ...stateWithSpentOwnerAttack,
     currentTurnResources: openClassFeatureExtraAttackResource({
       state: stateWithSpentOwnerAttack,
       actorId: input.ownerId,
-      spentResource: spentOwnerAttack.right.spentResource,
+      spentResource: spentOwnerAttack.success.spentResource,
     }),
   };
   const stateWithReactionSpent = spendReaction(

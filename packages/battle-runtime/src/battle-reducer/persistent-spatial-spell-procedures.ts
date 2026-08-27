@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-grease-ground-hazard spell.invocation-web-restraint-hazard spell.invocation-sleet-storm-area-hazard spell.invocation-insect-plague-area-hazard spell.invocation-cloudkill-area-hazard spell.invocation-gust-of-wind-line spell.invocation-flaming-sphere-hazard-ram spell.invocation-moonbeam-movable-zone
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.WEB_RESTRAINT_HAZARD_LIFECYCLE BATTLE.SPELL.SLEET_STORM_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE BATTLE.SPELL.GUST_OF_WIND_LINE_LIFECYCLE BATTLE.SPELL.FLAMING_SPHERE_HAZARD_LIFECYCLE BATTLE.SPELL.MOONBEAM_MOVABLE_ZONE_LIFECYCLE
 
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   canSpendBonusAction,
   spendAction,
@@ -1159,7 +1159,7 @@ function resolveGustOfWindLineDirectionChangeCommand(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     /* v8 ignore next -- @preserve -- Defensive internal guard: the availability check above and this spend read the same turn resources, with no intervening state transition. */
     return invalidResult(
       input.state,
@@ -1170,7 +1170,7 @@ function resolveGustOfWindLineDirectionChangeCommand(
   const nextState = replaceGustOfWindLineDirection({
     state: {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
     },
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
@@ -1584,7 +1584,7 @@ function resolveFlamingSphereRepositionCommand(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1634,7 +1634,7 @@ function resolveFlamingSphereRepositionCommand(
   /* v8 ignore stop -- @preserve */
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -1878,7 +1878,7 @@ function resolveFlamingSphereRamCommand(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: admission proves the Bonus Action, and synchronous Flaming Sphere damage preserves current turn resources before this spend. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1888,7 +1888,7 @@ function resolveFlamingSphereRamCommand(
   /* v8 ignore stop -- @preserve */
   const nextState = {
     ...damaged,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -2413,7 +2413,7 @@ function resolveMoonbeamRepositionCommand(
   }
   /* v8 ignore stop -- @preserve */
   const spendResult = spendAction(input.state.currentTurnResources, "magic");
-  if (Either.isLeft(spendResult)) {
+  if (Result.isFailure(spendResult)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -2422,7 +2422,7 @@ function resolveMoonbeamRepositionCommand(
   }
   const nextState = {
     ...input.state,
-    currentTurnResources: spendResult.right,
+    currentTurnResources: spendResult.success,
   };
   return {
     tag: "resolved",

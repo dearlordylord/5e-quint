@@ -72,10 +72,10 @@ type AfterHitTimedDamageAndSaveInvocation =
 
 const SpellTurnStartDamageAndSaveEffectSchema = Schema.Struct({
   kind: Schema.Literal("spellTurnStartDamageAndSave"),
-  source: Schema.Literal(
+  source: Schema.Literals([
     "afterHitTimedDamageAndSave",
     "turnBoundaryEffectLifecycle",
-  ),
+  ]),
   sourceCombatantId: CombatantId,
   damage: Schema.Struct({
     expr: DiceExprSchema,

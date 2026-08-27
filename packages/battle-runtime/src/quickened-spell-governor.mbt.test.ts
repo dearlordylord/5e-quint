@@ -35,7 +35,7 @@ import {
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
 import type { SpellRecord } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, it } from "vitest";
 
 import { combatantEffectiveSize } from "./battle-reducer/druid-wild-shape.ts";
@@ -1876,11 +1876,11 @@ function expectInvalid(result: BattleResolutionResult, message: string): void {
   expect(result).toMatchObject({ tag: "invalid", message });
 }
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(result.left)}`);
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
+    throw new Error(`Expected Right, got ${JSON.stringify(result.failure)}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function normalizeQuickenedSpellGovernorQuintState(

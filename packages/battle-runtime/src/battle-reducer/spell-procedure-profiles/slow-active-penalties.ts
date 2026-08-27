@@ -28,7 +28,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
@@ -176,14 +176,14 @@ function slowActivePenaltiesSpell(
     spell.mechanics.phases.length !== 1 ||
     !isSlowActivePenaltiesPhase(phase) ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
   return {
     phase,
     rangeFeet: spell.mechanics.range.feet,
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     maxTargets: SLOW_ACTIVE_PENALTIES_MAX_TARGETS,
   };
 }

@@ -15,7 +15,7 @@ import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 
 import {
   attackDamageDispositionHole,
@@ -1000,13 +1000,13 @@ export function spendOffHandBonusAction(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Internal callers synchronously preflight the same turn resource, so failure requires bypassing the admitted resolver protocol. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return staleBonusActionResult(state);
   }
   /* v8 ignore stop -- @preserve */
   const nextState = normalizeBattleGrapples({
     ...state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   });
   return {
     tag: "resolved",
@@ -1016,7 +1016,7 @@ export function spendOffHandBonusAction(
 }
 
 function bonusActionCanBeSpent(state: BattleState): boolean {
-  return Either.isRight(
+  return Result.isSuccess(
     spendActivationResource(state.currentTurnResources, {
       kind: "bonusAction",
     }),

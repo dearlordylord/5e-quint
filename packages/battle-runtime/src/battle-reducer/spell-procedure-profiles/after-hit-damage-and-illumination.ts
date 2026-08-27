@@ -35,7 +35,7 @@ import type {
   DamageType,
   DiceAmount as SurfaceDiceAmount,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type AfterHitDamageAndIlluminationSpellInvocation,
@@ -189,7 +189,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     !sameStringSet(attackAdvantage.on, ["attack_roll"]) ||
     suppressInvisible?.kind !== "suppress_condition_benefit" ||
     suppressInvisible.condition !== "invisible" ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -200,7 +200,7 @@ function afterHitDamageAndIlluminationSpellProjection(
     expiresAt: {
       kind: "concentration",
       combatantId: actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
   };
 }

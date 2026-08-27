@@ -2,7 +2,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import { describe, expect, test } from "vitest";
 
@@ -111,8 +111,8 @@ describe("battle runtime: attack pipeline boundaries", () => {
         attackTargetDistanceFeet([], fighterId, goblinId, hole.attack),
       ).toBeNull();
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleHoleSchema, {
+        Result.isSuccess(
+          Schema.decodeUnknownResult(BattleHoleSchema, {
             onExcessProperty: "error",
           })(hole),
         ),
@@ -1138,15 +1138,15 @@ describe("battle runtime: attack pipeline boundaries", () => {
       actionResources: [],
     };
     const unavailable = spendAttackActionResource(noResourceState);
-    expect(unavailable).toEqual(Either.left("no action resource available"));
+    expect(unavailable).toEqual(Result.fail("no action resource available"));
 
     const spent = spendAttackActionResource({
       ...state.currentTurnResources,
       actionResources: [turn],
     });
     expect(spent).toMatchObject({
-      _tag: "Right",
-      right: { spentResource: turn },
+      _tag: "Success",
+      success: { spentResource: turn },
     });
   });
 });

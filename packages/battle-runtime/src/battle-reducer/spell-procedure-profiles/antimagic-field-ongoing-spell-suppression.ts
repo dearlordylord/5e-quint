@@ -31,7 +31,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
@@ -160,13 +160,13 @@ function antimagicFieldOngoingSpellSuppressionSpell(
       ANTIMAGIC_FIELD_SUPPRESSION_EXCEPT_SOURCES,
     ) ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
   return {
     radiusFeet: attachment.shape.radiusFeet,
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
   };
 }
 

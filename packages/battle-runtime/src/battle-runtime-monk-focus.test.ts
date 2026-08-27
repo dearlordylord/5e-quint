@@ -4,7 +4,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L110D-04-MONK-STEP-OF-WIND-CARRY monk_heightened_focus
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.monk-focus-battle-options
 import { describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { resolveReplayContinuationFromState } from "./battle-execution-composition.ts";
 import {
   actionSurgeResource,
@@ -685,8 +685,8 @@ describe("battle runtime: Monk's Focus battle options", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(forgedFocusOwner),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(forgedFocusOwner),
       ),
     ).toBe(true);
     const target = requireHole(

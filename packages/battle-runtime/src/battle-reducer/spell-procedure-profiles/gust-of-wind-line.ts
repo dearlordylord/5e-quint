@@ -29,7 +29,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -186,7 +186,7 @@ function gustOfWindLineSpell(
     spell.mechanics.duration.upTo.amount !== GUST_OF_WIND_DURATION_MINUTES ||
     spell.mechanics.operations.length !== GUST_OF_WIND_OPERATION_COUNT ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     lineArea?.kind !== "area" ||
     lineArea.origin.kind !== "self" ||
     lineArea.shape.kind !== "line" ||
@@ -205,7 +205,7 @@ function gustOfWindLineSpell(
     return null;
   }
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     lengthFeet: lineArea.shape.lengthFeet,
     widthFeet: lineArea.shape.widthFeet,
     pushDistanceFeet: initialSave.onFail.distanceFeet,

@@ -6,7 +6,7 @@ import {
   canSpendAction,
   canSpendBonusAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type {
   BattleCreatureState,
@@ -167,9 +167,9 @@ export function markQuickenedLevelOnePlusSpellCastThisTurn(
 export function markSpellSlotExpendedThisTurn(
   resources: BattleTurnResources,
   combatantId: CombatantId,
-): Either.Either<BattleTurnResources, "spell slot already expended this turn"> {
+): Result.Result<BattleTurnResources, "spell slot already expended this turn"> {
   if (combatantHasCommittedSpellSlotUseThisTurn(resources, combatantId)) {
-    return Either.left("spell slot already expended this turn" as const);
+    return Result.fail("spell slot already expended this turn" as const);
   }
   const pending = resources.spellSlotUsesThisTurn.some(
     (use) => use.kind === "pending" && use.combatantId === combatantId,
@@ -178,7 +178,7 @@ export function markSpellSlotExpendedThisTurn(
     kind: "committed",
     combatantId,
   };
-  return Either.right(
+  return Result.succeed(
     markLevelOnePlusSpellCastThisTurn(
       {
         ...resources,
@@ -198,10 +198,10 @@ export function markSpellSlotExpendedThisTurn(
 export function claimPendingSpellSlotUseThisTurn(
   resources: BattleTurnResources,
   combatantId: CombatantId,
-): Either.Either<BattleTurnResources, "spell slot already expended this turn"> {
+): Result.Result<BattleTurnResources, "spell slot already expended this turn"> {
   return combatantHasSpellSlotUseThisTurn(resources, combatantId)
-    ? Either.left("spell slot already expended this turn" as const)
-    : Either.right({
+    ? Result.fail("spell slot already expended this turn" as const)
+    : Result.succeed({
         ...resources,
         spellSlotUsesThisTurn: [
           ...resources.spellSlotUsesThisTurn,

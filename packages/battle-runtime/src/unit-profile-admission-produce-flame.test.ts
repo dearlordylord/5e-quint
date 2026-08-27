@@ -6,7 +6,7 @@ import {
   battleSubjectPresentation,
 } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { BattleHoleSchema } from "./index.ts";
 import {
   produceFlameUnitId,
@@ -474,8 +474,8 @@ describe("SRDINV32A deterministic Produce Flame held-light admission", () => {
     }
     expect(encoded).not.toHaveProperty("spell");
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...encoded,
           spell: { procedure: "heldLightHurl" },
         }),

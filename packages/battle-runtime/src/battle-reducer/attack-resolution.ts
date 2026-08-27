@@ -43,7 +43,7 @@ import { difficultyClass } from "@dnd/shared/types";
 import { Match } from "effect";
 import type { BattleProcedureExecutionRef } from "../identity.ts";
 
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 
 import type {
   BoundSupportedAttackActionOption,
@@ -357,7 +357,7 @@ export function resolveDash(
   }
   const spent = spendAction(input.state.currentTurnResources, "dash");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dash here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -369,7 +369,7 @@ export function resolveDash(
     input.state,
     actor,
     speedKind,
-    spent.right,
+    spent.success,
   );
   return {
     tag: "resolved",
@@ -393,7 +393,7 @@ export function resolveDisengage(
   /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "disengage");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Disengage here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -401,7 +401,7 @@ export function resolveDisengage(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const nextState = applyDisengage(input.state, spent.right);
+  const nextState = applyDisengage(input.state, spent.success);
   return {
     tag: "resolved",
     state: nextState,
@@ -453,7 +453,7 @@ function resolveAdmittedBonusActionDash(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Dash here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -465,7 +465,7 @@ function resolveAdmittedBonusActionDash(
     input.state,
     input.actor,
     input.subject.speedKind,
-    spent.right,
+    spent.success,
   );
   if (temporaryHitPointsResource !== null) {
     return resolveBonusActionDashTemporaryHitPoints(
@@ -531,7 +531,7 @@ export function resolveBonusActionDisengage(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing Disengage here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -539,7 +539,7 @@ export function resolveBonusActionDisengage(
     );
   }
   /* v8 ignore stop -- @preserve */
-  const nextState = applyDisengage(input.state, spent.right);
+  const nextState = applyDisengage(input.state, spent.success);
   return {
     tag: "resolved",
     state: nextState,
@@ -568,7 +568,7 @@ export function resolveDodge(
   /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "dodge");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Dodge here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -583,7 +583,7 @@ export function resolveDodge(
   const nextState = {
     ...input.state,
     combatants,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -623,7 +623,7 @@ export function resolveReady(
   /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "ready");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Ready here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -633,7 +633,7 @@ export function resolveReady(
   /* v8 ignore stop -- @preserve */
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     readiedResponses: new Map(input.state.readiedResponses).set(
       input.subject.actorId,
       {
@@ -736,7 +736,7 @@ export function resolveHelpAttack(
   /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "help");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Help here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -746,7 +746,7 @@ export function resolveHelpAttack(
   /* v8 ignore stop -- @preserve */
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     helpAttacks: [
       ...input.state.helpAttacks,
       {
@@ -816,7 +816,7 @@ export function resolveShakeAwakeFromSleep(
   }
   /* v8 ignore stop -- @preserve */
   const spent = spendTurnAction(input.state.currentTurnResources);
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -824,7 +824,7 @@ export function resolveShakeAwakeFromSleep(
     );
   }
   const nextState = removeSleepEffectsFromTarget(
-    { ...input.state, currentTurnResources: spent.right },
+    { ...input.state, currentTurnResources: spent.success },
     targetId,
   );
   return {
@@ -887,7 +887,7 @@ export function resolveShakeAwakeFromHypnoticPattern(
   }
   /* v8 ignore stop -- @preserve */
   const spent = spendTurnAction(input.state.currentTurnResources);
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -895,7 +895,7 @@ export function resolveShakeAwakeFromHypnoticPattern(
     );
   }
   const nextState = removeHypnoticPatternControlEffectsFromTarget(
-    { ...input.state, currentTurnResources: spent.right },
+    { ...input.state, currentTurnResources: spent.success },
     targetId,
   );
   return {
@@ -956,7 +956,7 @@ export function resolveHide(
         })
       : spendAction(input.state.currentTurnResources, "hide");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard- or Bonus Action resource admission rejects an exhausted resource before routing Hide here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -975,7 +975,7 @@ export function resolveHide(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   });
   return {
     tag: "resolved",
@@ -1002,7 +1002,7 @@ export function resolveMultiattack(
     );
   }
   const spent = spendTurnAction(input.state.currentTurnResources);
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1017,9 +1017,9 @@ export function resolveMultiattack(
   const nextStateWithPendingDispatches = {
     ...input.state,
     currentTurnResources: {
-      ...spent.right,
+      ...spent.success,
       actionResources: [
-        ...spent.right.actionResources,
+        ...spent.success.actionResources,
         ...grantedPendingDispatches.map((dispatch) => ({
           kind: "action" as const,
           source: "statBlockMultiattack" as const,
@@ -1112,7 +1112,7 @@ export function resolveSearch(
   }
   const spent = spendAction(input.state.currentTurnResources, "search");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing Search here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1128,7 +1128,7 @@ export function resolveSearch(
       target.combatantId,
       nextTarget,
     ),
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   });
   return {
     tag: "resolved",
@@ -1182,7 +1182,7 @@ export function resolveStatBlockBonusActionDisengage(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1193,7 +1193,7 @@ export function resolveStatBlockBonusActionDisengage(
   const nextState = updateStatBlockActorResources(
     {
       ...input.state,
-      currentTurnResources: { ...spent.right, disengaged: true },
+      currentTurnResources: { ...spent.success, disengaged: true },
     },
     actor,
     procedureRef,
@@ -1239,7 +1239,7 @@ export function resolveStatBlockBonusActionHide(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Bonus Action resource admission rejects an exhausted Bonus Action before routing the Stat Block option here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1254,7 +1254,7 @@ export function resolveStatBlockBonusActionHide(
   const nextState = updateStatBlockActorResources(
     normalizeBattleGrapples({
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(actor.combatantId, {
         ...actor,
         hidden,
@@ -1347,7 +1347,7 @@ export function resolveGrapple(
     input.state.currentTurnResources,
   );
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Grapple here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1358,7 +1358,7 @@ export function resolveGrapple(
   const nextState = applyGrappleSavingThrowOutcome({
     state: {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
     },
     link: link.link,
     relationshipFacts,
@@ -1490,7 +1490,7 @@ export function resolveShove(
     input.state.currentTurnResources,
   );
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher unarmed-strike resource admission rejects an exhausted compatible Action before routing Shove here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1507,7 +1507,7 @@ export function resolveShove(
   const afterEffect = applyShoveOutcome({
     state: {
       ...savingThrowExtendedState,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
     },
     targetId: fillSet.targetId,
     outcome: fillSet.outcome.value,
@@ -1568,7 +1568,7 @@ export function resolveEscapeGrapple(
     input.subject.actorId,
   );
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Escape Grapple admission rejects turn resources that cannot pay the action cost before routing here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1578,7 +1578,7 @@ export function resolveEscapeGrapple(
   /* v8 ignore stop -- @preserve */
   const nextState = normalizeBattleGrapples({
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     grapples: fillSet.outcome.value.succeeded
       ? input.state.grapples.filter((candidate) => candidate !== grapple)
       : input.state.grapples,
@@ -1675,7 +1675,7 @@ export function resolveEscapeSpellRestraint(
   /* v8 ignore stop -- @preserve */
   const spent = spendAction(input.state.currentTurnResources, "utilize");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher standard-action resource admission rejects an exhausted Action before routing this Utilize action here. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1688,14 +1688,14 @@ export function resolveEscapeSpellRestraint(
       ? resolveSuccessfulEscapeSpellRestraint(
           {
             ...input.state,
-            currentTurnResources: spent.right,
+            currentTurnResources: spent.success,
           },
           input.subject.targetId,
           effect,
         )
       : {
           ...input.state,
-          currentTurnResources: spent.right,
+          currentTurnResources: spent.success,
         };
   return {
     tag: "resolved",
@@ -2304,18 +2304,18 @@ export function compatibleAttackActionResource(
 
 export function spendAttackActionResource<T extends ActionEconomyState>(
   state: T,
-): Either.Either<
+): Result.Result<
   { readonly state: T; readonly spentResource: RuntimeActionResource },
   "no action resource available"
 > {
   if (!canSpendAction(state, "attack")) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
   const actionResource = compatibleAttackActionResource(state.actionResources);
   if (actionResource === null) {
-    return Either.left("no action resource available");
+    return Result.fail("no action resource available");
   }
-  return Either.right({
+  return Result.succeed({
     state: spendActionResourceAtIndex(state, actionResource.index),
     spentResource: actionResource.resource,
   });
@@ -2435,10 +2435,10 @@ export function spendAttackAction(
     attack,
     statBlockAttackSection,
   );
-  if (Either.isLeft(spent)) {
-    return invalidResult(state, "staleSubject", spent.left);
+  if (Result.isFailure(spent)) {
+    return invalidResult(state, "staleSubject", spent.failure);
   }
-  const { spentTurnResources, spentResource } = spent.right;
+  const { spentTurnResources, spentResource } = spent.success;
   const afterExtraAttackResource =
     spentResource === null
       ? spentTurnResources
@@ -2493,7 +2493,7 @@ function spendAttackTurnResources(
   actorId: CombatantId,
   attack: BoundSupportedAttackActionOption,
   statBlockAttackSection: ReturnType<typeof statBlockAttackProcedureSection>,
-): Either.Either<
+): Result.Result<
   {
     readonly spentTurnResources: BattleTurnResources;
     readonly spentResource: RuntimeActionResource | null;
@@ -2520,18 +2520,18 @@ function spendAttackTurnResources(
         attack.procedureRef !== undefined &&
         resource.attackProcedureRef === attack.procedureRef,
     );
-    return Either.isLeft(spent)
-      ? Either.left("Attack is no longer available for the current actor.")
-      : Either.right({
-          spentTurnResources: spent.right,
+    return Result.isFailure(spent)
+      ? Result.fail("Attack is no longer available for the current actor.")
+      : Result.succeed({
+          spentTurnResources: spent.success,
           spentResource: null,
         });
   }
   const spent = spendAttackActionResource(state.currentTurnResources);
-  return Either.isLeft(spent)
-    ? Either.left("Attack is no longer available for the current actor.")
-    : Either.right({
-        spentTurnResources: spent.right.state,
-        spentResource: spent.right.spentResource,
+  return Result.isFailure(spent)
+    ? Result.fail("Attack is no longer available for the current actor.")
+    : Result.succeed({
+        spentTurnResources: spent.success.state,
+        spentResource: spent.success.spentResource,
       });
 }

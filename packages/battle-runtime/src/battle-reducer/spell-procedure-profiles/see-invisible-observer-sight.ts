@@ -28,7 +28,7 @@ import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/
 //   - Duration expiry stays in the shared active-effect lifecycle.
 
 import { elapsedTimeTicksFromHours } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -82,7 +82,7 @@ function seeInvisibleObserverSightShape(
     phase.attachment.kind !== "self" ||
     effects.length !== 1 ||
     effect?.kind !== "see_invisible_and_ethereal" ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -92,7 +92,7 @@ function seeInvisibleObserverSightShape(
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
   };

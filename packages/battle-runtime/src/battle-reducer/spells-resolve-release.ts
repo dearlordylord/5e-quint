@@ -15,7 +15,7 @@ import {
   attackRollHits,
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   type ActionSpellBattleResolutionInput,
   type BattleActiveEffect,
@@ -300,9 +300,13 @@ export function resolveDancingLightsCastSpellAct(input: {
     placement,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (Either.isLeft(placementPlan)) {
+  if (Result.isFailure(placementPlan)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.input.state, "invalidFill", placementPlan.left);
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      placementPlan.failure,
+    );
   }
   /* v8 ignore stop -- @preserve */
   const spellCastReactionWindow = maybeOpenInterruptWindow(
@@ -333,7 +337,7 @@ export function resolveDancingLightsCastSpellAct(input: {
     resourced.state,
     input.actorId,
     input.invocation,
-    placementPlan.right,
+    placementPlan.success,
   );
   return {
     tag: "resolved",
@@ -399,21 +403,25 @@ export function resolveDancingLightsRepositionSpellAct(input: {
     placement,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (Either.isLeft(placementPlan)) {
+  if (Result.isFailure(placementPlan)) {
     /* v8 ignore next -- @preserve -- Malformed resolution input: this branch rejects fills that contradict the admitted subject's discovered holes or current typed runtime constraints. */
-    return invalidResult(input.input.state, "invalidFill", placementPlan.left);
+    return invalidResult(
+      input.input.state,
+      "invalidFill",
+      placementPlan.failure,
+    );
   }
   /* v8 ignore stop -- @preserve */
   const effected = repositionDancingLightsSpellEffect(
     input.input.state,
     input.actorId,
-    placementPlan.right,
+    placementPlan.success,
   );
   const spent = spendActivationResource(effected.currentTurnResources, {
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher admission proves the Bonus Action is available, and the preceding synchronous light reposition does not spend turn resources. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -423,7 +431,7 @@ export function resolveDancingLightsRepositionSpellAct(input: {
   /* v8 ignore stop -- @preserve */
   const state = {
     ...effected,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -443,16 +451,16 @@ function dancingLightsCastPlacementPlan(
     }
   >,
   placement: BattleDancingLightsPlacementValue,
-): Either.Either<DancingLightsCastPlan, string> {
+): Result.Result<DancingLightsCastPlan, string> {
   if (placement.mode !== "cast" || placement.form !== invocation.form) {
-    return Either.left(
+    return Result.fail(
       "Dancing Lights placement does not match the selected form.",
     );
   }
   if (placement.form === "combinedMediumForm") {
     return placement.light.distanceFromCasterFeet > invocation.rangeFeet
-      ? Either.left("Dancing Lights placement must be within the spell range.")
-      : Either.right({
+      ? Result.fail("Dancing Lights placement must be within the spell range.")
+      : Result.succeed({
           form: "combinedMediumForm",
           light: {
             lightId: battleDancingLightId(
@@ -464,7 +472,7 @@ function dancingLightsCastPlacementPlan(
   }
   const placements = oneToFourFromArray(placement.lights);
   if (placements === null) {
-    return Either.left(
+    return Result.fail(
       "Dancing Lights separate form requires one to four lights.",
     );
   }
@@ -474,9 +482,9 @@ function dancingLightsCastPlacementPlan(
     invocation.spacingFeet,
   );
   if (placementError !== null) {
-    return Either.left(placementError);
+    return Result.fail(placementError);
   }
-  return Either.right({
+  return Result.succeed({
     form: "separateLights",
     lights: mapOneToFour(placements, (light, index) => ({
       lightId: battleDancingLightId(
@@ -494,14 +502,14 @@ function dancingLightsRepositionPlacementPlan(
   >,
   effect: Extract<BattleActiveEffect, { readonly kind: "dancingLights" }>,
   placement: BattleDancingLightsPlacementValue,
-): Either.Either<DancingLightsRepositionPlan, string> {
+): Result.Result<DancingLightsRepositionPlan, string> {
   if (placement.mode !== "reposition") {
-    return Either.left(
+    return Result.fail(
       "Dancing Lights movement requires reposition placement.",
     );
   }
   if (placement.form !== effect.form) {
-    return Either.left(
+    return Result.fail(
       "Dancing Lights movement form does not match the active lights.",
     );
   }
@@ -514,7 +522,7 @@ function dancingLightsRepositionPlacementPlan(
       (candidate) => candidate.moveDistanceFeet > invocation.maxMoveFeet,
     )
   ) {
-    return Either.left("Dancing Lights can move a light up to 60 feet.");
+    return Result.fail("Dancing Lights can move a light up to 60 feet.");
   }
   const currentDancingLightIds = dancingLightsFromEffect(effect).map(
     (dancingLight) => dancingLight.lightId,
@@ -527,7 +535,7 @@ function dancingLightsRepositionPlacementPlan(
     placedLightIds.length !== currentDancingLightIds.length ||
     placedLightIds.some((lightId) => !currentDancingLightIds.includes(lightId))
   ) {
-    return Either.left(
+    return Result.fail(
       "Dancing Lights movement must place each active light identity.",
     );
   }
@@ -537,7 +545,7 @@ function dancingLightsRepositionPlacementPlan(
     ),
   );
   if (inRange === null) {
-    return Either.right({
+    return Result.succeed({
       kind: "removeEffect",
       effect,
     });
@@ -549,9 +557,9 @@ function dancingLightsRepositionPlacementPlan(
       invocation.spacingFeet,
     );
     if (placementError !== null) {
-      return Either.left(placementError);
+      return Result.fail(placementError);
     }
-    return Either.right({
+    return Result.succeed({
       kind: "replaceEffect",
       effect,
       effectShape: {
@@ -563,7 +571,7 @@ function dancingLightsRepositionPlacementPlan(
       },
     });
   }
-  return Either.right({
+  return Result.succeed({
     kind: "replaceEffect",
     effect,
     effectShape: {
@@ -778,7 +786,7 @@ export function resolveReadySpellAct(
   };
   const spent = spendAction(withConcentration.currentTurnResources, "magic");
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Magic-action admission runs before Ready resolution, and the preceding synchronous setup does not spend an Action. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -796,10 +804,10 @@ export function resolveReadySpellAct(
       : withConcentration;
   const nextTurnResources =
     invocation.resource.tag === "spellSlot"
-      ? markSpellSlotExpendedThisTurn(spent.right, input.subject.actorId)
-      : Either.right(spent.right);
+      ? markSpellSlotExpendedThisTurn(spent.success, input.subject.actorId)
+      : Result.succeed(spent.success);
   /* v8 ignore start -- @preserve -- Defensive internal guard: spell discovery and interrupt-checkpoint admission reject a second committed Spell Slot use before Ready resolution. */
-  if (Either.isLeft(nextTurnResources)) {
+  if (Result.isFailure(nextTurnResources)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -809,7 +817,7 @@ export function resolveReadySpellAct(
   /* v8 ignore stop -- @preserve */
   const nextState = {
     ...slotted,
-    currentTurnResources: nextTurnResources.right,
+    currentTurnResources: nextTurnResources.success,
   };
   return {
     tag: "resolved",

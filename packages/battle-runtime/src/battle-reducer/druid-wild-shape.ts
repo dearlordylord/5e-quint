@@ -20,7 +20,7 @@ import {
   type DieRollResult,
 } from "@dnd/shared/types";
 import type { Ability, Size, Skill } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { characterBattleLevel } from "../character-class-level.ts";
 
 import {
@@ -318,7 +318,7 @@ export function assumeDruidWildShapeForm(input: {
   const durationTicks = elapsedTimeTicksFromHours(
     druidWildShapeDurationHoursForClassLevel(Number(input.profile.classLevel)),
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     throw new Error("Druid Wild Shape duration must use whole-hour ticks.");
   }
   const nextActor: CharacterBattleCreatureState = {
@@ -335,7 +335,7 @@ export function assumeDruidWildShapeForm(input: {
         formScopeRef: input.formAdmission.execution.scopeRef,
         formLimbs: input.formLimbs,
         equipmentDisposition: input.equipmentDisposition,
-        expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+        expiresAt: { kind: "duration", durationTicks: durationTicks.success },
       },
     ),
   };

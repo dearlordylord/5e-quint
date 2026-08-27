@@ -51,7 +51,7 @@ import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
 } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -270,7 +270,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     lightOperation.effect.brightRadiusFeet === undefined ||
     lightOperation.effect.dimAdditionalFeet === undefined ||
     attackOperation === undefined ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -318,7 +318,7 @@ function spellCreatedHeldObjectActiveEffectProjection(input: {
     expiresAt: {
       kind: "concentration",
       combatantId: input.actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
   };
 }
@@ -568,7 +568,7 @@ function resolveSpellCreatedHeldObjectReEvoke(
     },
   );
   /* v8 ignore start -- @preserve -- The dispatcher rechecks the stored Bonus Action subject before invoking this synthesized profile; this fallback keeps direct callers of the action-economy operation total. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -577,7 +577,7 @@ function resolveSpellCreatedHeldObjectReEvoke(
   }
   /* v8 ignore stop -- @preserve */
   const reEvoked = setSpellCreatedHeldObjectState({
-    state: { ...input.input.state, currentTurnResources: spent.right },
+    state: { ...input.input.state, currentTurnResources: spent.success },
     actorId: input.actorId,
     effect: activeEffect,
     objectState: { kind: "held" },

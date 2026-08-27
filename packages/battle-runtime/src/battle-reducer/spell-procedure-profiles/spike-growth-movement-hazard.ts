@@ -28,7 +28,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -148,7 +148,7 @@ function spikeGrowthMovementHazardSpell(
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== SPIKE_GROWTH_DURATION_MINUTES ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     attachment.kind !== "hole" ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
@@ -169,7 +169,7 @@ function spikeGrowthMovementHazardSpell(
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     radiusFeet: area.shape.radiusFeet,
     rangeFeet: spell.mechanics.range.feet,
     damage: {

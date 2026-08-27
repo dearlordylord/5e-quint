@@ -262,7 +262,7 @@ const SaveGatedDamageCommonFields = {
     damageType: DamageTypeSchema,
   }),
   additionalDamageComponents: Schema.Array(SpellDamageSchema),
-  successDamage: Schema.Literal("none", "half"),
+  successDamage: Schema.Literals(["none", "half"]),
   rangeFeet: MovementFeet,
   failedSavePostDamageRiders: Schema.Array(
     SpellFailedSavePostDamageRiderSchema,
@@ -272,13 +272,11 @@ const SaveGatedDamageCommonFields = {
   ),
   failedSaveAbilityChoices: Schema.NullOr(Schema.Array(AbilitySchema)),
   saveRollModeRule: Schema.NullOr(SpellSavingThrowRollModeRuleSchema),
-  postSaveAreaEffect: Schema.optionalWith(SpellPostSaveAreaEffectSchema, {
-    exact: true,
-  }),
+  postSaveAreaEffect: Schema.optionalKey(SpellPostSaveAreaEffectSchema),
 } as const;
 
 const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -288,13 +286,13 @@ const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
-      castingTime: Schema.Union(
+      castingTime: Schema.Union([
         ActionSpellInvocationCastingTimeSchema,
         ReactionSpellInvocationCastingTimeSchema,
-      ),
+      ]),
       ...SaveGatedDamageCommonFields,
     }),
-  ),
+  ]),
 );
 export const saveGatedDamageProfile = {
   procedure: "saveGatedDamage",

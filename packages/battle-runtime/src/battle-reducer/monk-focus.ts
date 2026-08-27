@@ -7,7 +7,7 @@ import {
 } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
 import type {
   AdmittedMonkFocusOptionBattleResolutionInput,
@@ -127,7 +127,7 @@ export function resolveMonkFocusOption(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -138,14 +138,14 @@ export function resolveMonkFocusOption(
   return Match.value(input.subject).pipe(
     Match.discriminatorsExhaustive("option")({
       flurryOfBlows: () =>
-        resolveFlurryOfBlowsActivation(input, focus, spent.right),
+        resolveFlurryOfBlowsActivation(input, focus, spent.success),
       patientDefense: (subject) =>
         Match.value(subject.mode).pipe(
           Match.when("freeDisengage", () =>
-            resolved(applyDisengage(input.state, spent.right)),
+            resolved(applyDisengage(input.state, spent.success)),
           ),
           Match.when("focusDisengageDodge", () =>
-            resolvePatientDefenseFocus(input, focus, spent.right),
+            resolvePatientDefenseFocus(input, focus, spent.success),
           ),
           Match.exhaustive,
         ),
@@ -168,7 +168,7 @@ export function resolveMonkFocusOption(
                 input.state,
                 focus.actor,
                 subject.speedKind,
-                spent.right,
+                spent.success,
               ),
             );
           }),
@@ -179,7 +179,7 @@ export function resolveMonkFocusOption(
                 subject: { ...subject, mode },
               },
               focus,
-              spent.right,
+              spent.success,
               heightenedStepOfTheWindCarryRequest,
             ),
           ),

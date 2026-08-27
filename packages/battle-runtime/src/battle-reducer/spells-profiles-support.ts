@@ -26,7 +26,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import type { BattleSpellAdmissionSource } from "../battle-state-execution.ts";
 import { topLevelSpellCastingTime } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   BATTLE_SPECIAL_SPEED_KINDS,
   type BattleSpecialSpeedKind,
@@ -133,8 +133,8 @@ export function thaumaturgyBoomingVoiceProjection(
   const abilityFilter =
     effect.kind === "modify_roll_advantage" ? effect.abilityFilter : undefined;
   if (
-    Either.isLeft(durationTicks) ||
-    Number(durationTicks.right) !==
+    Result.isFailure(durationTicks) ||
+    Number(durationTicks.success) !==
       Number(THAUMATURGY_BOOMING_VOICE_DURATION_TICKS) ||
     operation.trigger.kind !== "passive" ||
     effect.kind !== "modify_roll_advantage" ||
@@ -154,7 +154,7 @@ export function thaumaturgyBoomingVoiceProjection(
       sourceCombatantId: actorId,
       expiresAt: {
         kind: "duration",
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
     rangeFeet: movementFeet(spell.mechanics.range.feet),
@@ -391,12 +391,12 @@ function scalarBuffSpecialSpeedGrantExpiration(
     return scalarBuffActiveEffectExpiration(actorId, duration);
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.upTo);
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         kind: "concentration",
         combatantId: actorId,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       };
 }
 
@@ -754,9 +754,9 @@ export function scalarBuffActiveEffectExpiration(
   }
   if (duration.kind === "timed") {
     const ticks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-    return Either.isLeft(ticks)
+    return Result.isFailure(ticks)
       ? null
-      : { kind: "duration", durationTicks: ticks.right };
+      : { kind: "duration", durationTicks: ticks.success };
   }
   return null;
 }

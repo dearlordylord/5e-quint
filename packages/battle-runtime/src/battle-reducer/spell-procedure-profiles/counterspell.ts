@@ -25,7 +25,7 @@ import {
   spendActivationResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleInterruptCheckpoint,
@@ -248,7 +248,7 @@ function resolveCounterspell(
         slotted.currentTurnResources,
         input.input.subject.reactorId,
       );
-      if (Either.isLeft(nextTurnResources)) {
+      if (Result.isFailure(nextTurnResources)) {
         return invalidResult(
           input.input.state,
           "staleSubject",
@@ -259,7 +259,7 @@ function resolveCounterspell(
         tag: "resolved" as const,
         state: {
           ...slotted,
-          currentTurnResources: nextTurnResources.right,
+          currentTurnResources: nextTurnResources.success,
         },
       };
     }),
@@ -316,8 +316,8 @@ function stateAfterCounteredSpellCast(
   }
   /* v8 ignore stop -- @preserve */
   const committedState = commitCounteredSpellPayment(state, frame);
-  if (Either.isLeft(committedState)) {
-    return { tag: "invalid", message: committedState.left };
+  if (Result.isFailure(committedState)) {
+    return { tag: "invalid", message: committedState.failure };
   }
   const releasedResources =
     frame.paymentCommitment.kind !== "pendingCasterSpellSlot"
@@ -331,27 +331,27 @@ function stateAfterCounteredSpellCast(
     frame,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (Either.isLeft(wastedResources)) {
+  if (Result.isFailure(wastedResources)) {
     return {
       tag: "invalid",
-      message: wastedResources.left,
+      message: wastedResources.failure,
     };
   }
   /* v8 ignore stop -- @preserve */
   const metamagicSpend = spendCounteredSpellMetamagic(
-    committedState.right,
-    wastedResources.right,
+    committedState.success,
+    wastedResources.success,
     frame,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (Either.isLeft(metamagicSpend)) {
-    return { tag: "invalid", message: metamagicSpend.left };
+  if (Result.isFailure(metamagicSpend)) {
+    return { tag: "invalid", message: metamagicSpend.failure };
   }
   /* v8 ignore stop -- @preserve */
   return {
     tag: "ok",
     state: {
-      ...metamagicSpend.right,
+      ...metamagicSpend.success,
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
         counterspellReactionInterruptFrame({
@@ -373,7 +373,7 @@ function spendCounteredSpellMetamagic(
   state: BattleState,
   currentTurnResources: BattleState["currentTurnResources"],
   frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
-): Either.Either<BattleState, string> {
+): Result.Result<BattleState, string> {
   return spendSpellCastMetamagicResources({
     state: { ...state, currentTurnResources },
     actorId: frame.casterId,
@@ -387,9 +387,9 @@ function spendCounteredSpellMetamagic(
 function commitCounteredSpellPayment(
   state: BattleState,
   frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
-): Either.Either<BattleState, string> {
+): Result.Result<BattleState, string> {
   if (frame.paymentCommitment.kind !== "spellAccessFreeCast") {
-    return Either.right(state);
+    return Result.succeed(state);
   }
   return commitSpellAccessFreeCastResourceUse({
     state,
@@ -401,24 +401,24 @@ function commitCounteredSpellPayment(
 function turnResourcesAfterWastedSpellCastingResource(
   resources: BattleTurnResources,
   frame: Extract<BattleInterruptCheckpoint, { readonly trigger: "spellCast" }>,
-): Either.Either<BattleTurnResources, string> {
+): Result.Result<BattleTurnResources, string> {
   if (frame.castingResource.kind === "magicAction") {
     const spent = spendAction(resources, "magic");
-    return Either.isLeft(spent)
-      ? Either.left(
+    return Result.isFailure(spent)
+      ? Result.fail(
           "Magic action is no longer available for the countered spell.",
         )
-      : Either.right(spent.right);
+      : Result.succeed(spent.success);
   }
   if (frame.castingResource.kind === "bonusAction") {
     const spent = spendActivationResource(resources, { kind: "bonusAction" });
-    return Either.isLeft(spent)
-      ? Either.left(
+    return Result.isFailure(spent)
+      ? Result.fail(
           "Bonus Action is no longer available for the countered spell.",
         )
-      : Either.right(spent.right);
+      : Result.succeed(spent.success);
   }
-  return Either.right(resources);
+  return Result.succeed(resources);
 }
 
 function counterspellReactionInterruptFrame(
@@ -433,7 +433,7 @@ const CounterspellInvocationSchema = spellProcedureExecutionSchema(
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("counterspell"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
-    triggerComponents: Schema.Array(Schema.Literal("V", "S", "M")),
+    triggerComponents: Schema.Array(Schema.Literals(["V", "S", "M"])),
     ability: Schema.Literal("con"),
     dc: DcSourceSchema,
     targeting: Schema.Struct({ kind: Schema.Literal("singleCombatant") }),

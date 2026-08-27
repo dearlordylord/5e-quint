@@ -46,7 +46,7 @@ import type {
   DiceExprDelta,
   EffectAtom,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleActiveEffect,
@@ -270,7 +270,7 @@ function spiritualWeaponSpell(spell: BattleSpellAdmissionSource) {
     spell.mechanics.duration.upTo.amount !== 1 ||
     extraOperations.length !== 0 ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     forceAttachment.kind !== "hole" ||
     forceAttachment.value.kind !== "location" ||
     initialAttack?.kind !== "attack_roll" ||
@@ -309,7 +309,7 @@ function spiritualWeaponSpell(spell: BattleSpellAdmissionSource) {
     return null;
   }
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet: 60,
     forceReachFeet: 5,
     repeatMoveMaxFeet: reposition.maxMoveFeet,
@@ -472,7 +472,7 @@ const SpiritualWeaponRepeatAttackInvocationSchema =
   spellProcedureExecutionSchema(
     Schema.Struct({
       procedure: Schema.Literal("spiritualWeaponRepeatAttack"),
-      spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+      spellRuleFacts: Schema.optionalKey(Schema.Never),
       activeEffectRef: BattleActiveEffectExecutionRef,
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),

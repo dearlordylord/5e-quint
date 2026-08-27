@@ -103,12 +103,12 @@ const SaveGatedAttackRollAdvantageInvocationSchema =
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       ability: AbilitySchema,
       dc: DcSourceSchema,
-      targeting: Schema.Union(
+      targeting: Schema.Union([
         Schema.Struct({
           kind: Schema.Literal("pointOriginCube"),
           sideFeet: MovementFeet,
         }),
-      ),
+      ]),
       effect: FailedSaveAttackRollAdvantageEffectSchema,
       rangeFeet: MovementFeet,
     }),

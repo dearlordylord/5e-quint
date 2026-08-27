@@ -39,7 +39,7 @@ import type {
   GlyphWardingTrigger,
   SpellMechanics,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   GLYPH_OF_WARDING_BASE_LEVEL,
   GLYPH_STORED_SPELL_HOSTILE_PLACEMENT_SUBJECTS,
@@ -2088,7 +2088,7 @@ function glyphStoredSpellFullDurationTicks(
     return null;
   }
   const ticks = elapsedTimeTicksFromTimeSpanDuration(duration.upTo);
-  return Either.isRight(ticks) ? ticks.right : null;
+  return Result.isSuccess(ticks) ? ticks.success : null;
 }
 
 function glyphOccurrenceRefs(

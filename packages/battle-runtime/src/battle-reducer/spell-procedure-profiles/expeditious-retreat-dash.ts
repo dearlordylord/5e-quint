@@ -18,7 +18,7 @@ import { ConcentrationBattleActiveEffectExpirationSchema } from "../../active-ef
 //     grants additional movement budget rather than changing Speed.
 
 import { spendActivationResource } from "@dnd/shared-algebras/action-economy-algebra";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -257,7 +257,7 @@ function resolveExpeditiousRetreatDash(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Internal preflight invariant: spellActTurnResourceAvailable immediately above proved the same unchanged action-economy state can spend this Bonus Action. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -274,7 +274,7 @@ function resolveExpeditiousRetreatDash(
       spendSpellAccessFreeCastResource(
         {
           ...afterPriorConcentration,
-          currentTurnResources: spent.right,
+          currentTurnResources: spent.success,
         },
         subject.actorId,
         resourcePoolRef,
@@ -284,11 +284,11 @@ function resolveExpeditiousRetreatDash(
     ),
     Match.when({ tag: "spellSlot" }, ({ slotLevel }) => {
       const slotTurnResources = markSpellSlotExpendedThisTurn(
-        spent.right,
+        spent.success,
         input.input.subject.actorId,
       );
       /* v8 ignore start -- @preserve -- Internal preflight invariant: spellActTurnResourceAvailable already proved this actor has no Spell Slot use in the unchanged turn-resource state. */
-      if (Either.isLeft(slotTurnResources)) {
+      if (Result.isFailure(slotTurnResources)) {
         return invalidResult(
           input.input.state,
           "staleSubject",
@@ -305,7 +305,7 @@ function resolveExpeditiousRetreatDash(
         tag: "resolved" as const,
         state: {
           ...slotted,
-          currentTurnResources: slotTurnResources.right,
+          currentTurnResources: slotTurnResources.success,
         },
       };
     }),

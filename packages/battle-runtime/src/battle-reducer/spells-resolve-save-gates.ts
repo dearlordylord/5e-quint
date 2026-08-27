@@ -18,7 +18,7 @@ import {
   type MovementFeet,
 } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
@@ -2274,7 +2274,7 @@ function failedSaveConcentrationDurationEffect(input: {
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     input.invocation.spellRuleFacts.duration.upTo,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   return {
@@ -2284,7 +2284,7 @@ function failedSaveConcentrationDurationEffect(input: {
     expiresAt: {
       kind: "concentration",
       combatantId: input.actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
   };
 }

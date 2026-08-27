@@ -1,4 +1,4 @@
-import { Either } from "effect";
+import { Result } from "effect";
 import type {
   BattleResolutionResult,
   BattleState,
@@ -25,7 +25,7 @@ export function completeReactionSpellSlotCast(input: {
     slotted.currentTurnResources,
     input.casterId,
   );
-  if (Either.isLeft(nextTurnResources)) {
+  if (Result.isFailure(nextTurnResources)) {
     return invalidResult(
       input.errorState,
       "staleSubject",
@@ -34,7 +34,7 @@ export function completeReactionSpellSlotCast(input: {
   }
   const nextState = {
     ...slotted,
-    currentTurnResources: nextTurnResources.right,
+    currentTurnResources: nextTurnResources.success,
   };
   return {
     tag: "resolved",

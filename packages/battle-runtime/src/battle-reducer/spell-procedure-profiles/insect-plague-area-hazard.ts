@@ -23,7 +23,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -152,7 +152,7 @@ function insectPlagueAreaHazardSpell(
     duration.upTo.unit !== "minute" ||
     duration.upTo.amount !== INSECT_PLAGUE_DURATION_MINUTES ||
     mechanics.operations.length !== INSECT_PLAGUE_OPERATION_COUNT ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "sphere" ||
@@ -168,7 +168,7 @@ function insectPlagueAreaHazardSpell(
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet: mechanics.range.feet,
     radiusFeet: area.shape.radiusFeet,
     damageAmount: initialDamageAmount,

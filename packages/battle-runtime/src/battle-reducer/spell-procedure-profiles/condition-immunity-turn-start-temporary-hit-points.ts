@@ -333,7 +333,7 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
         minTargets: Schema.Literal(1),
         maxTargets: Schema.Number,
       }),
-      activeEffects: Schema.Tuple(
+      activeEffects: Schema.Tuple([
         Schema.Struct({
           kind: Schema.Literal("conditionImmunity"),
           sourceCombatantId: CombatantId,
@@ -346,7 +346,7 @@ const ConditionImmunityAndTurnStartTemporaryHitPointsInvocationSchema =
           amount: Schema.Number,
           expiresAt: BattleActiveEffectExpirationSchema,
         }),
-      ),
+      ]),
       rangeFeet: MovementFeet,
     }),
   );

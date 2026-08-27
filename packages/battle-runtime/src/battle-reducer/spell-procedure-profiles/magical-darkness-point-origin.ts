@@ -26,7 +26,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -156,13 +156,13 @@ function magicalDarknessPointOriginSpell(
     area?.origin.kind !== "point_within_range" ||
     radius !== DARKNESS_RADIUS_FEET ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet,
     radiusFeet: radius,
     dispelledSpellCreatedLightMaxSpellLevel: maxSpellLevel,
