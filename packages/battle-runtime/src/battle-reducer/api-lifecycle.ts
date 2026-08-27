@@ -58,6 +58,7 @@ import { admittedSpellActs } from "./spells-profiles.ts";
 
 import {
   battleStateInitIssue,
+  battleStateInitIssueLeaves,
   battleStateInitIssues,
 } from "./domain-helpers.ts";
 
@@ -234,16 +235,24 @@ export function startBattle(
     CombatantId,
     import("../battle-runtime-context.ts").BattleStatBlockPresentationSource
   >();
+  const initializationIssues: BattleStateInitLeafIssue[] = [];
   for (const combatant of input.combatants) {
     if (combatants.has(combatant.combatantId)) {
-      return battleStateInitIssue(
-        `Duplicate combatant id: ${combatant.combatantId}`,
-      );
+      initializationIssues.push({
+        tag: "battleStateInitIssue",
+        message: `Duplicate combatant id: ${combatant.combatantId}`,
+      });
+      continue;
     }
     const positiveHpUnconsciousIssue =
       positiveHpUnconsciousInitIssue(combatant);
     if (positiveHpUnconsciousIssue !== null) {
-      return positiveHpUnconsciousIssue;
+      if (Result.isFailure(positiveHpUnconsciousIssue)) {
+        initializationIssues.push(
+          ...battleStateInitIssueLeaves(positiveHpUnconsciousIssue.failure),
+        );
+      }
+      continue;
     }
     const admission = battleCreatureStateAdmissionFromInit(
       input.battleId,
@@ -251,7 +260,17 @@ export function startBattle(
       battleExecutionScopeOrdinal(0),
     );
     if (admission.tag === "invalid") {
-      return battleStateInitIssueFromAdmissionIssues(admission.issues);
+      initializationIssues.push(
+        ...admission.issues.map(admissionIssueToInitIssue),
+      );
+      continue;
+    }
+    if (admission.nextScopeOrdinal <= 0) {
+      initializationIssues.push({
+        tag: "battleStateInitIssue",
+        message: `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
+      });
+      continue;
     }
     combatants.set(combatant.combatantId, admission.creature);
     if ("runtimeContext" in admission) {
@@ -263,15 +282,13 @@ export function startBattle(
         admission.statBlockPresentation,
       );
     }
-    if (admission.nextScopeOrdinal <= 0) {
-      return battleStateInitIssue(
-        `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
-      );
-    }
     executionScopeCursors.set(combatant.combatantId, {
       kind: "active",
       nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
     });
+  }
+  if (isNonEmptyReadonlyArray(initializationIssues)) {
+    return battleStateInitIssueFromAdmissionIssues(initializationIssues);
   }
   const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
     input.hidePrerequisites ?? new Map(),

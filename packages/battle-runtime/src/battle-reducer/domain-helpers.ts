@@ -44,6 +44,12 @@ export function battleStateInitIssueMessage(
       : issue.message;
 }
 
+export function battleStateInitIssueLeaves(
+  issue: BattleStateInitIssue,
+): readonly BattleStateInitLeafIssue[] {
+  return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
+}
+
 export function battleStateInitIssues(
   first: BattleStateInitLeafIssue,
   second: BattleStateInitLeafIssue,

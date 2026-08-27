@@ -25,9 +25,9 @@ import {
 describe("battle lifecycle admission issue aggregation", () => {
   const baseCombatant = characterSeed({ initiative: 20 });
 
-  function mismatchedMainHandCombatant() {
+  function mismatchedMainHandCombatant(id = "mismatched-main") {
     return characterSeed({
-      combatantId: combatantId("mismatched-main"),
+      combatantId: combatantId(id),
       initiative: 18,
       attack: testCharacterWeaponAttackForUnit(unitId("weapon_longsword")),
       selectedLoadout: {
@@ -149,6 +149,27 @@ describe("battle lifecycle admission issue aggregation", () => {
         issues: [
           { tag: "weaponLoadoutMismatch", slot: "main-hand" },
           { tag: "weaponLoadoutMismatch", slot: "off-hand" },
+        ],
+      });
+    }
+  });
+
+  test("startBattle accumulates independent admission failures across combatants", () => {
+    const result = startBattle({
+      battleId: battleId("aggregate-cross-combatant-issues"),
+      combatants: [
+        mismatchedMainHandCombatant(),
+        mismatchedMainHandCombatant("mismatched-main-second"),
+      ],
+    });
+
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toEqual({
+        tag: "battleStateInitIssues",
+        issues: [
+          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
+          { tag: "weaponLoadoutMismatch", slot: "main-hand" },
         ],
       });
     }
