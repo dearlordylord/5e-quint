@@ -481,6 +481,56 @@ describe("Stat Block projection boundary coverage", () => {
     }
   });
 
+  test("reports duplicate identities and challenge-rating eligibility at admission", () => {
+    const source = statBlockCatalog.requireStatBlock("stat_block_rat");
+    const profile = druidWildShapeKnownFormProfile();
+
+    const duplicate = battleAvailableDruidWildShapeKnownForms({
+      profile,
+      forms: [source, source],
+    });
+    expect(duplicate).toEqual(
+      Either.left({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: source.id,
+            reason: "duplicateFormIdentity",
+          },
+        ],
+      }),
+    );
+    if (Either.isLeft(duplicate)) {
+      expect(wildShapeKnownFormsIssueMessage(duplicate.left.issues)).toBe(
+        "Druid Wild Shape battle initialization requires distinct available known forms.",
+      );
+    }
+
+    const tooDifficult = battleAvailableDruidWildShapeKnownForms({
+      profile,
+      forms: [{ ...source, challengeRating: 1 }],
+    });
+    expect(tooDifficult).toEqual(
+      Either.left({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: source.id,
+            reason: "ineligible",
+            eligibilityIssue: "challengeRating",
+          },
+        ],
+      }),
+    );
+    if (Either.isLeft(tooDifficult)) {
+      expect(wildShapeKnownFormsIssueMessage(tooDifficult.left.issues)).toBe(
+        "Druid Wild Shape battle forms cannot exceed the Druid's maximum Challenge Rating.",
+      );
+    }
+  });
+
   test("accumulates independent Wild Shape resource failures across forms", () => {
     const source = monsterResourceStatBlock();
     const resources = source.statBlock.resources;
