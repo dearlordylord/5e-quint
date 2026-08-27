@@ -35,6 +35,7 @@ import {
   type AmmunitionKind,
 } from "@dnd/shared/game-facts";
 import { Index, SIZES } from "@dnd/shared/types";
+import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { CombatantId } from "@dnd/battle-runtime";
 
@@ -43,7 +44,9 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.greaterThanOrEqualTo(0),
 );
 const IntegerSchema = Schema.Number.pipe(Schema.int());
-const OracleIndexSchema = Schema.fromBrand(Index)(NonNegativeIntegerSchema);
+const OracleIndexSchema = Schema.fromBrand(Index, {
+  ...semanticRefinement("constraintFreeBrand"),
+})(NonNegativeIntegerSchema);
 type OracleIndex = Schema.Schema.Type<typeof OracleIndexSchema>;
 
 const CreationFillWithDistinctOptionIdsSchema = Schema.make<CreationFillFact>(
@@ -397,6 +400,7 @@ export const OracleBattleCheckpointSchema =
     Schema.filter(oracleBattleCheckpointInvariantsHold, {
       message: () =>
         "Battle checkpoint initiative entries must be unique and have valid hit points.",
+      ...semanticRefinement("checkpointFrontierCorrelation"),
     }),
   );
 export type OracleBattleCheckpoint = Schema.Schema.Type<
@@ -416,6 +420,7 @@ const OracleBattleEnteredCheckpointSchema =
     Schema.filter(oracleBattleCheckpointInvariantsHold, {
       message: () =>
         "Battle checkpoint initiative entries must be unique and have valid hit points.",
+      ...semanticRefinement("checkpointFrontierCorrelation"),
     }),
   );
 
@@ -565,6 +570,7 @@ export const OracleBattleContinuationSchema: Schema.suspend<
     Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
       message: () =>
         "Battle frontier references must agree with the projected checkpoint.",
+      ...semanticRefinement("checkpointFrontierCorrelation"),
     }),
   ),
 ).annotations({
@@ -605,6 +611,7 @@ const OracleBattleEnteredShapeSchema = Schema.Struct({
   Schema.filter(oracleBattleEnteredInvariantsHold, {
     message: () =>
       "Battle frontier subjects must reference combatants in the checkpoint.",
+    ...semanticRefinement("checkpointFrontierCorrelation"),
   }),
 );
 export const OracleBattleEnteredSchema =

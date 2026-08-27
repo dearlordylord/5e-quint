@@ -11,6 +11,7 @@ import {
   type CharacterStartingLanguages,
 } from "@dnd/shared/game-facts";
 import { AbilityScore } from "@dnd/shared/types";
+import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import {
   ARMOR_TRAINING_CATEGORIES,
@@ -52,7 +53,10 @@ const CreationChoiceOptionIdSchema = Schema.String.pipe(
 const CreationHoleIdSchema = Schema.String.pipe(
   Schema.filter(
     (value): value is CreationHoleIdText => parseCreationHoleId(value) !== null,
-    { message: () => "invalid Creation Hole id" },
+    {
+      message: () => "invalid Creation Hole id",
+      ...semanticRefinement("creationHoleIdSyntax"),
+    },
   ),
   Schema.brand("CreationHoleId"),
 );
@@ -112,6 +116,7 @@ const ChoiceCardinalitySchema = Schema.Union(
   }).pipe(
     Schema.filter(({ min, max }) => min <= max, {
       message: () => "cardinality maximum must be at least its minimum",
+      ...semanticRefinement("creationHoleCardinalityCorrelation"),
     }),
   ),
 );
@@ -178,6 +183,7 @@ export const CreationHoleFactSchema = Schema.Union(
 ).pipe(
   Schema.filter(({ holeId, source }) => holeId === holeIdForSource(source), {
     message: () => "Creation Hole identity must match its owner source",
+    ...semanticRefinement("creationHoleSourceCorrelation"),
   }),
 );
 export type CreationHoleFact = Schema.Schema.Type<
@@ -833,6 +839,7 @@ export const CharacterCreationBatchFactSchema = Schema.Union(
     {
       message: () =>
         "finalization blocker ids must be an ordered subsequence of the frontier",
+      ...semanticRefinement("creationFrontierCorrelation"),
     },
   ),
 );

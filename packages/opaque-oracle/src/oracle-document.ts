@@ -1,6 +1,10 @@
 import { Either, JSONSchema, Option, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import { stripNestedJsonSchemaIds } from "@dnd/shared/json-schema";
+import {
+  isSemanticRefinementReason,
+  SemanticRefinementAnnotationId,
+} from "@dnd/shared/semantic-refinement";
 
 import {
   OracleCaseSchema,
@@ -19,10 +23,10 @@ import {
  * encoded and type sides of the Oracle schemas are JSON-shaped at this
  * boundary; keeping the canonical AST here is important because Effect's
  * `encodedSchema` erases refinements before their JSON Schema annotations can
- * be projected. The projector below strips unannotated semantic refinements
- * while retaining the explicitly documented structural predicates.
+ * be projected. The projector below strips only source-marked semantic
+ * refinements while retaining the explicitly documented structural predicates.
  */
-function documentSchema<A, I, R>(
+export function documentSchema<A, I, R>(
   source: Schema.Schema<A, I, R>,
 ): Schema.Schema<I> {
   return Schema.make<I>(projectDocumentAst(source.ast));
@@ -65,12 +69,17 @@ function projectDocumentAst(root: AST.AST): AST.AST {
         const projectedFrom = project(ast.from, path);
         const jsonSchema = AST.getJSONSchemaAnnotation(ast);
         if (Option.isNone(jsonSchema)) {
-          // Refinement filters are semantic unless their JSON Schema
-          // annotation explicitly describes the structural predicate. The
-          // annotation map is still part of the surrounding boundary,
-          // though: identifiers and parse options must survive when the
-          // predicate itself is removed.
-          const projected = AST.annotations(projectedFrom, ast.annotations);
+          const reason = ast.annotations[SemanticRefinementAnnotationId];
+          if (!isSemanticRefinementReason(reason)) {
+            throw new Error(
+              reason === undefined
+                ? `Document schema has an unannotated refinement at ${path}; mark its semantic admission reason or add a JSON Schema annotation.`
+                : `Document schema has an invalid semantic refinement reason at ${path}.`,
+            );
+          }
+          const annotations = { ...ast.annotations };
+          delete annotations[SemanticRefinementAnnotationId];
+          const projected = AST.annotations(projectedFrom, annotations);
           projectedByAst.set(ast, projected);
           return projected;
         }

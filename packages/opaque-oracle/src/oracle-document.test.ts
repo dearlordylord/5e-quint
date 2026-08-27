@@ -1,5 +1,5 @@
 import Ajv2020 from "ajv/dist/2020.js";
-import { Either, Option } from "effect";
+import { Either, Option, Schema } from "effect";
 import * as AST from "effect/SchemaAST";
 import { describe, expect, it } from "vitest";
 
@@ -24,6 +24,7 @@ import {
   OracleEvaluationBatchDocumentSchema,
   OracleTraceDocumentJsonSchema,
   OracleTraceDocumentSchema,
+  documentSchema,
 } from "./oracle-document.ts";
 import {
   OracleCaseSchema,
@@ -33,6 +34,12 @@ import {
   canonicalStructuralKey,
   canonicalizeStringSet,
 } from "./oracle-canonical.ts";
+import {
+  isSemanticRefinementReason,
+  SEMANTIC_REFINEMENT_REASONS,
+  SemanticRefinementAnnotationId,
+  type SemanticRefinementReason,
+} from "@dnd/shared/semantic-refinement";
 
 const documentSchemas = [
   ["Case", OracleCaseDocumentJsonSchema],
@@ -330,84 +337,94 @@ function recursiveTrace(depth: number): unknown {
   };
 }
 
-const UNANNOTATED_SEMANTIC_REFINEMENT_ALLOWLIST = {
-  checkpointAndFrontierCorrelation: [
-    "Trace.creation.outcome|4.sheet|1.battle|1",
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|2.checkpoint",
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>",
-    "Trace.creation.outcome|4.sheet|1.battle|1.checkpoint",
-  ],
-  canonicalExecutionReferences: [
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|91.choices[]|2.procedureRef",
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|86.spellcastingAbilityCheck.effect|1.effectRef",
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|79.rechargeTargets[]",
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|27.attack|2|1.procedureRef",
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|9.formExecutionRef",
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|4.attack.selection|0.procedureRef",
-  ],
-  creationHoleIdentityAndCardinality: [
-    "Trace.creation.outcome|0.issues[]|0.holeId",
-    "Trace.creation.progression[].holes[]",
-    "Trace.creation.progression[].holes[]|0.cardinality|1",
-  ],
-  constraintFreeBrands: [
-    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|2.after|1.index",
-  ],
-} as const;
+function recursiveInterruptFill(depth: number): unknown {
+  let fill: unknown = {
+    kind: "interruptDecision",
+    holeId: "oracle:interrupt-hole",
+    value: {
+      kind: "decline",
+      responderId: "oracle:actor",
+    },
+  };
+  for (let index = 0; index < depth; index += 1) {
+    fill = {
+      kind: "interruptDecision",
+      holeId: "oracle:interrupt-hole",
+      value: {
+        kind: "resolve",
+        responderId: "oracle:actor",
+        choice: {
+          kind: "releaseReadiedMovement",
+          fills: [fill],
+        },
+      },
+    };
+  }
+  return fill;
+}
 
-function unannotatedSourceRefinementPaths(): readonly string[] {
-  const pending: Array<readonly [AST.AST, string]> = [
-    [OracleCaseSchema.ast, "Case"],
-    [OracleTraceSchema.ast, "Trace"],
-  ];
+function recursiveCase(depth: number): unknown {
+  return {
+    creation: { fillBatches: [] },
+    sheet: { tag: "ordinary" },
+    battle: {
+      roster: { tag: "statBlocks", entries: [] },
+      attempts: [
+        {
+          kind: "interruptDecision",
+          fill: recursiveInterruptFill(depth),
+        },
+      ],
+    },
+  };
+}
+
+function sourceSemanticRefinementReasonCounts(): Readonly<
+  Record<SemanticRefinementReason, number>
+> {
+  const counts = Object.fromEntries(
+    SEMANTIC_REFINEMENT_REASONS.map((reason) => [reason, 0]),
+  ) as Record<SemanticRefinementReason, number>;
+  const pending: AST.AST[] = [OracleCaseSchema.ast, OracleTraceSchema.ast];
   const visited = new Set<object>();
-  const paths: string[] = [];
   while (pending.length > 0) {
-    const current = pending.pop();
-    if (current === undefined) continue;
-    const [ast, path] = current;
-    if (visited.has(ast)) continue;
+    const ast = pending.pop();
+    if (ast === undefined || visited.has(ast)) continue;
     visited.add(ast);
     switch (ast._tag) {
-      case "Refinement":
+      case "Refinement": {
         if (Option.isNone(AST.getJSONSchemaAnnotation(ast))) {
-          paths.push(path);
+          const reason = ast.annotations[SemanticRefinementAnnotationId];
+          if (!isSemanticRefinementReason(reason)) {
+            throw new Error("Unmarked semantic refinement in source AST");
+          }
+          counts[reason] += 1;
         }
-        pending.push([ast.from, path]);
+        pending.push(ast.from);
         continue;
+      }
       case "TypeLiteral":
-        for (const property of ast.propertySignatures) {
-          pending.push([property.type, `${path}.${String(property.name)}`]);
-        }
+        for (const property of ast.propertySignatures)
+          pending.push(property.type);
         for (const index of ast.indexSignatures) {
-          pending.push([index.parameter, `${path}[*]`]);
-          pending.push([index.type, `${path}[*]`]);
+          pending.push(index.parameter, index.type);
         }
         continue;
       case "TupleType":
-        for (const [index, element] of ast.elements.entries()) {
-          pending.push([element.type, `${path}[${index}]`]);
-        }
-        for (const element of ast.rest) {
-          pending.push([element.type, `${path}[]`]);
-        }
+        for (const element of ast.elements) pending.push(element.type);
+        for (const element of ast.rest) pending.push(element.type);
         continue;
       case "Union":
-        for (const [index, member] of ast.types.entries()) {
-          pending.push([member, `${path}|${index}`]);
-        }
+        pending.push(...ast.types);
         continue;
       case "Transformation":
-        pending.push([ast.from, `${path}<from>`]);
-        pending.push([ast.to, `${path}<to>`]);
+        pending.push(ast.from, ast.to);
         continue;
       case "Suspend":
-        pending.push([ast.f(), `${path}<suspend>`]);
+        pending.push(ast.f());
         continue;
       case "TemplateLiteral":
-        for (const span of ast.spans) {
-          pending.push([span.type, `${path}<span>`]);
-        }
+        for (const span of ast.spans) pending.push(span.type);
         continue;
       case "AnyKeyword":
       case "UnknownKeyword":
@@ -427,7 +444,7 @@ function unannotatedSourceRefinementPaths(): readonly string[] {
         continue;
     }
   }
-  return paths.sort();
+  return counts;
 }
 
 const readyActionTrace = {
@@ -1461,20 +1478,28 @@ describe("Opaque Oracle document JSON Schemas", () => {
     }
   });
 
-  it("keeps a schema-shaped recursive Battle Trace total at hostile depth", () => {
+  it("keeps schema-shaped recursive Trace, Case, and Batch total at hostile depth", () => {
+    const recursiveControl = recursiveCase(2);
+    expect(documentValidators.case(recursiveControl)).toBe(true);
+    expect(Either.isRight(decodeOracleCaseDocument(recursiveControl))).toBe(
+      true,
+    );
+    expect(Either.isRight(decodeOracleCase(recursiveControl))).toBe(true);
+
     const deepTrace = recursiveTrace(20_000);
+    const deepCase = recursiveCase(20_000);
     const decoders: readonly [string, (value: unknown) => unknown, unknown][] =
       [
         ["Trace Document", decodeOracleTraceDocument, deepTrace],
         ["Trace", decodeOracleTrace, deepTrace],
-        ["Case Document", decodeOracleCaseDocument, deepTrace],
-        ["Case", decodeOracleCase, deepTrace],
+        ["Case Document", decodeOracleCaseDocument, deepCase],
+        ["Case", decodeOracleCase, deepCase],
         [
           "Batch Document",
           decodeOracleEvaluationBatchDocument,
-          { cases: [deepTrace] },
+          { cases: [deepCase] },
         ],
-        ["Batch", decodeOracleEvaluationBatch, { cases: [deepTrace] }],
+        ["Batch", decodeOracleEvaluationBatch, { cases: [deepCase] }],
       ];
     for (const [name, decoder, value] of decoders) {
       let result: unknown;
@@ -1583,14 +1608,15 @@ describe("Opaque Oracle document JSON Schemas", () => {
     expect(inventory.minItems).toBeGreaterThan(0);
     expect(inventory.identifiers).toContain("OracleBattleEntered");
 
-    const allowedSourceRefinements = Object.values(
-      UNANNOTATED_SEMANTIC_REFINEMENT_ALLOWLIST,
-    )
-      .flat()
-      .sort();
-    expect(unannotatedSourceRefinementPaths()).toEqual(
-      allowedSourceRefinements,
-    );
+    expect(sourceSemanticRefinementReasonCounts()).toEqual({
+      canonicalExecutionReferenceSyntax: 6,
+      creationHoleIdSyntax: 1,
+      creationHoleSourceCorrelation: 1,
+      creationHoleCardinalityCorrelation: 1,
+      creationFrontierCorrelation: 0,
+      checkpointFrontierCorrelation: 4,
+      constraintFreeBrand: 1,
+    });
 
     const schemaText = JSON.stringify({
       OracleCaseDocumentJsonSchema,
@@ -1606,6 +1632,13 @@ describe("Opaque Oracle document JSON Schemas", () => {
       expect(schemaText).toContain(`^${slot}:(?=\\\\S)`);
     }
     expect(schemaText).not.toContain('"steps"');
+  });
+
+  it("rejects an unmarked semantic refinement during Document projection", () => {
+    const unmarked = Schema.String.pipe(
+      Schema.filter((value) => value.length > 0),
+    );
+    expect(() => documentSchema(unmarked)).toThrow("unannotated refinement");
   });
 
   it("keeps canonical equality type-aware, order-aware, and set sorting non-deduplicating", () => {
