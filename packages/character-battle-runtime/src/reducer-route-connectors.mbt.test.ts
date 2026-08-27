@@ -57,6 +57,7 @@ import {
   createFreshCharacterSheet,
   finishLongRest,
   finishShortRest,
+  rebuildCharacterSheet,
   startLongRest,
   startShortRest,
   useMonkUncannyMetabolismWhenRollingInitiative,
@@ -1304,30 +1305,61 @@ function featureResourceSheetFixture(
     >
   >,
 ): CharacterSheet {
-  return expectRight(
+  const fresh = expectRight(
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: input.build,
-      currentHp: Hp(input.currentHp),
-      tempHp: Hp(input.tempHp ?? 0),
+      tempHp: Hp(0),
       hitPointMaximumReduction: Hp(0),
-      conditions: input.conditions ?? [],
+      conditions: [],
       unitLibrary,
-      ...(input.spellSlotExpenditures === undefined
-        ? {}
-        : { spellSlotExpenditures: input.spellSlotExpenditures }),
-      ...(input.resourceExpenditures === undefined
-        ? {}
-        : { resourceExpenditures: input.resourceExpenditures }),
-      ...(input.restFeatureUses === undefined
-        ? {}
-        : { restFeatureUses: input.restFeatureUses }),
-      ...(input.druidWildShapeKnownFormStatBlockIds === undefined
-        ? {}
-        : {
-            druidWildShapeKnownFormStatBlockIds:
-              input.druidWildShapeKnownFormStatBlockIds,
-          }),
+    }),
+  );
+  const rebuildInput = {
+    characterId: fresh.characterId,
+    currentHp: Hp(input.currentHp),
+    tempHp: Hp(input.tempHp ?? 0),
+    hitPointMaximumReduction: Hp(0),
+    conditions: input.conditions ?? [],
+    companion: fresh.companion,
+    unitLibrary,
+    ...(input.spellSlotExpenditures === undefined
+      ? {}
+      : { spellSlotExpenditures: input.spellSlotExpenditures }),
+    ...(input.resourceExpenditures === undefined
+      ? {}
+      : { resourceExpenditures: input.resourceExpenditures }),
+    ...(input.restFeatureUses === undefined
+      ? {}
+      : { restFeatureUses: input.restFeatureUses }),
+    ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+      ? {}
+      : {
+          druidWildShapeKnownFormStatBlockIds:
+            input.druidWildShapeKnownFormStatBlockIds,
+        }),
+  };
+  if ("bookOfShadowsPresence" in fresh) {
+    if (fresh.bookOfShadowsPresence === undefined) {
+      return expectRight(
+        rebuildCharacterSheet({
+          ...rebuildInput,
+          build: fresh.build,
+        }),
+      );
+    }
+    return expectRight(
+      rebuildCharacterSheet({
+        ...rebuildInput,
+        build: fresh.build,
+        bookOfShadowsPresence: fresh.bookOfShadowsPresence,
+      }),
+    );
+  }
+  return expectRight(
+    rebuildCharacterSheet({
+      ...rebuildInput,
+      build: fresh.build,
     }),
   );
 }
@@ -1527,7 +1559,6 @@ function characterSheetForBuild(build: CharacterBuild) {
   const sheet = createFreshCharacterSheet({
     characterId: characterSheetId("character:route-origin-feat"),
     build,
-    currentHp: Hp(10),
     tempHp: Hp(0),
     hitPointMaximumReduction: Hp(0),
     conditions: [],
