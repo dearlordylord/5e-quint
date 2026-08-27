@@ -3,7 +3,11 @@
 
 import { Result } from "effect";
 import type { CreatureType } from "@dnd/shared/game-facts";
-import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  type DifficultyClass,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type {
   BattleCreatureState,
   BattleStateInitIssue,
@@ -46,7 +50,7 @@ export function battleStateInitIssueMessage(
 
 export function battleStateInitIssueLeaves(
   issue: BattleStateInitIssue,
-): readonly BattleStateInitLeafIssue[] {
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
   return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
 }
 
