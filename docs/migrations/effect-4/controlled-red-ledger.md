@@ -568,26 +568,40 @@ or dependency graph.
 
 ## Issue #379 non-spell Battle lifecycle evidence snapshot
 
-Source HEAD: `463d601fcf05a444b6278f6d0a4cf634a53062e3` (the reviewed #378
-integration head). This snapshot records the ownership audit for turns,
-movement, conditions, resources, commands, interrupts, and reactions after the
-#378 Result migration. No #379 source or Quint model change was necessary:
-#378 already migrated the two non-spell Effect-3 consumers that were reachable
-in this capability set (`battle-reducer/action-resource-kinds.ts` and
+Runtime source baseline: `463d601fcf05a444b6278f6d0a4cf634a53062e3` (the
+reviewed #378 integration head). The generic MBT projection evidence was then
+corrected at `35c0787a5cde1ff0b43a0ad04f3d7c0d2b7389bb`; the later commits on
+this branch only refine this ledger and its manifest. This snapshot records the
+ownership audit for turns, movement, conditions, resources, commands,
+interrupts, and reactions after the #378 Result migration. No #379 lifecycle
+reducer, codec, schema, or Quint source change was necessary: #378 already
+migrated the two non-spell Effect-3 consumers reachable in this capability set
+(`battle-reducer/action-resource-kinds.ts` and
 `battle-reducer/interrupt-execution.ts`).
 
-| Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Result                                                                                                                                                                                                                                                                                                                                                                                        |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pnpm --filter @dnd/battle-runtime typecheck --pretty false` (re-run at this source HEAD)                                                                                                                                                                                                                                                                                                                                                                                                                                              | controlled red; exit 1 with exactly 20 diagnostics: 1 in #380-owned `battle-reducer/spell-procedure-profiles/execution-profile.ts`, and 19 in #381-owned `mirror-image-hit-interception.mbt.test.ts`, `moonbeam-movable-zone.mbt.test.ts`, `ray-of-enfeeblement-lifecycle.mbt.test.ts`, and `see-invisibility-observer-sight.mbt.test.ts`; zero diagnostics are in #379-owned lifecycle paths |
-| Registry-selected path-manifest audit: committed [`gh379-registry-path-manifest.json`](./gh379-registry-path-manifest.json), generated from `plans/rules-kernel-coverage/obligations.jsonl` for the eight non-spell #379 obligations, then `rg -uu` over both manifest arrays                                                                                                                                                                                                                                                          | pass; 47 registry-selected runtime/pure paths and 30 parity/fixture paths were enumerated; no `effect/Either`, `Either.*`, `Schema.optionalWith`, `Schema.decodeUnknownEither`, `Schema.standardSchemaV1`, `Schema.BigIntFromSelf`, `Schema.transform`, or `Schema.Schema.AnyNoContext` matches; shared files serving spell routes remain overlap, not #379 ownership                         |
-| Focused non-spell runtime suite (`battle-runtime-death-saves-and-turns`, `battle-runtime-movement-grapple-hide`, `battle-runtime-interrupt-lifecycle-continuation-boundaries`, `battle-runtime-opportunity-attack-interrupt-boundaries`, `battle-runtime-round-end-and-runtime-commands`, `battle-runtime-triggered-reaction-interrupt-boundaries`, `battle-resource-schema`, `character-battle-resource-execution`, `battle-reducer/turn-boundary-lifecycle`, `battle-reducer/interrupt-lifecycle`, `battle-runtime-stunning-strike`) | pass; 11 files, 130 tests                                                                                                                                                                                                                                                                                                                                                                     |
-| Effect fiber/scope/scheduling audit over #379-owned paths                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | pass; no `Fiber`, `Schedule`, `Layer`, `Stream`, `Queue`, `Deferred`, or `Ref` runtime APIs/imports; lifecycle reducers remain synchronous immutable transitions, so no synchronization or ownership test is required                                                                                                                                                                         |
-| Mapped public QNT/MBT matrix: `test:mbt:rule-core-movement`, `test:mbt:rule-core-reactions`, `test:mbt:command-option-next-turn`, `test:mbt:interrupt-stack-resume`, and `test:mbt:turn-boundary-effect-lifecycle`                                                                                                                                                                                                                                                                                                                     | pass under the required public MBT lock: movement 1 file/1 test; reactions 1/1; command option-next-turn 1/1; interrupt stack resume 1/2; turn-boundary effect lifecycle 1/8 (5 files, 13 tests total)                                                                                                                                                                                        |
-| Additional Battle parity witnesses under the required public MBT lock: `pnpm exec vitest run src/command-ordering.mbt.test.ts src/death-saving-throw.mbt.test.ts src/direct-condition-lifecycle.mbt.test.ts`                                                                                                                                                                                                                                                                                                                           | pass; 3 files, 8 tests (Command hole-frontier ordering, Character Battle Death Saving Throw, and condition lifecycle)                                                                                                                                                                                                                                                                         |
-| Shared reducer parity under the required public MBT lock: `pnpm --filter @dnd/shared-algebras run test:mbt`                                                                                                                                                                                                                                                                                                                                                                                                                            | pass; 1 file, 9 tests covering action economy/resource spend and reset, conditions, death saves, initiative, and typed malformed-state failures; repeated apply/spend/reset traces provide exact-once coverage                                                                                                                                                                                |
-| Explicit condition/resource/exact-once runtime bundle: `pnpm exec vitest run --pool forks --maxWorkers=1 --reporter=dot src/battle-runtime-death-saves-and-turns.test.ts src/battle-resource-schema.test.ts src/character-battle-resource-execution.test.ts src/battle-runtime-triggered-reaction-interrupt-boundaries.test.ts src/battle-runtime-round-end-and-runtime-commands.test.ts`                                                                                                                                              | pass; 5 files, 31 tests                                                                                                                                                                                                                                                                                                                                                                       |
-| Generic action/resource projection correction in `src/rule-core-spells.mbt.test.ts`: use canonical `state.currentTurnResources.currentHasBonusAction` rather than act-discoverability-gated `snapshot.turn.bonusActionAvailable`                                                                                                                                                                                                                                                                                                       | pass; QNT expects raw turn-resource availability (`true`); no spell procedure semantics changed, and common-state comparison intentionally strips readied-only fields for non-readied families                                                                                                                                                                                                |
-| Reproduced #380 mapped lanes after the correction: `test:mbt:rule-core-spell-damage`, `test:mbt:rule-core-spell-restoration`, and full `test:mbt:rule-core-spells` (covering defensive-effect and readied-response)                                                                                                                                                                                                                                                                                                                    | pass under the required public MBT lock: damage 1 active/1 passed (4 skipped), restoration 1 active/1 passed (4 skipped), full suite 1 file/5 tests passed                                                                                                                                                                                                                                    |
+The rules-kernel registry names `scripts/raw-swarm/sdk-player/scenario-session.ts`
+as a runtime owner because it projects the composed direct-SDK movement and
+table-decision boundary. Its Effect 3 `Either` call chain is nevertheless owned
+by #385, whose scope is the repository scripts and Raw Swarm/SDK-player
+migration. It is therefore not a #379 source/pure migration path. The related
+`scenario-setup-runtime.test.ts` remains a required #379 parity witness, but
+both script paths are listed in the manifest's `deferredScriptPaths` and are
+excluded from the #379 Effect API audit. #385 must migrate that complete script
+call chain and its fixture together; this is an ownership boundary, not a
+compatibility waiver.
+
+| Evidence                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm --filter @dnd/battle-runtime typecheck --pretty false` (re-run at this source HEAD)                                                                                                                                                                                                                                                                                                                                                                                                                                                 | controlled red; exit 1 with exactly 20 diagnostics: 1 in #380-owned `battle-reducer/spell-procedure-profiles/execution-profile.ts`, and 19 in #381-owned `mirror-image-hit-interception.mbt.test.ts`, `moonbeam-movable-zone.mbt.test.ts`, `ray-of-enfeeblement-lifecycle.mbt.test.ts`, and `see-invisibility-observer-sight.mbt.test.ts`; zero diagnostics are in #379-owned lifecycle paths                                                                                                                                                                                                                                                          |
+| Registry-selected path-manifest audit: committed [`gh379-registry-path-manifest.json`](./gh379-registry-path-manifest.json), generated from `plans/rules-kernel-coverage/obligations.jsonl` for the eight non-spell #379 obligations, then exact audits over the manifest's non-deferred paths                                                                                                                                                                                                                                            | pass; 47 source/pure paths and 30 parity/fixture paths were enumerated; 75 unique paths occur across those two categories (two paths are shared by both); the manifest separately records 2 deferred Raw Swarm script paths (one of them is retained as a parity witness); the non-deferred 74-path audit found no forbidden root `Either` import/member, `Schema.optionalWith`, `Schema.decodeUnknownEither`, `Schema.standardSchemaV1`, `Schema.BigIntFromSelf`, `Schema.transform`, or `Schema.Schema.AnyNoContext` matches; `action-resource-kinds.ts` is explicitly included, while the #385 script paths are not silently treated as #379 source |
+| Focused non-spell runtime suite (`battle-runtime-death-saves-and-turns`, `battle-runtime-movement-grapple-hide`, `battle-runtime-interrupt-lifecycle-continuation-boundaries`, `battle-runtime-opportunity-attack-interrupt-boundaries`, `battle-runtime-round-end-and-runtime-commands`, `battle-runtime-triggered-reaction-interrupt-boundaries`, `battle-resource-schema`, `character-battle-resource-execution`, `battle-reducer/turn-boundary-lifecycle`, `battle-reducer/interrupt-lifecycle`, `battle-runtime-stunning-strike`)    | pass; 11 files, 130 tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Effect fiber/scope/scheduling audit over #379-owned paths                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | pass; no `Fiber`, `Schedule`, `Layer`, `Stream`, `Queue`, `Deferred`, or `Ref` runtime APIs/imports; lifecycle reducers remain synchronous immutable transitions, so no synchronization or ownership test is required                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Mapped public QNT/MBT matrix: `pnpm --filter @dnd/battle-runtime run test:mbt:rule-core-movement`, `pnpm --filter @dnd/battle-runtime run test:mbt:rule-core-reactions`, `pnpm --filter @dnd/battle-runtime run test:mbt:command-option-next-turn`, `pnpm --filter @dnd/battle-runtime run test:mbt:interrupt-stack-resume`, and `pnpm --filter @dnd/battle-runtime run test:mbt:turn-boundary-effect-lifecycle`                                                                                                                          | pass; each is a public package script that acquires the required MBT lock: movement 1 file/1 test; reactions 1/1; command option-next-turn 1/1; interrupt stack resume 1/2; turn-boundary effect lifecycle 1/8 (5 files, 13 tests total)                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Additional Battle parity witnesses under the required MBT lock: `. scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm --dir packages/battle-runtime exec vitest run src/command-ordering.mbt.test.ts src/death-saving-throw.mbt.test.ts src/direct-condition-lifecycle.mbt.test.ts --reporter=dot`                                                                                                                                                                                                  | pass; 3 files, 8 tests (Command hole-frontier ordering, Character Battle Death Saving Throw, and condition lifecycle)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Shared reducer parity under the required public MBT lock: `pnpm --filter @dnd/shared-algebras run test:mbt`                                                                                                                                                                                                                                                                                                                                                                                                                               | pass; 1 file, 9 tests covering action economy/resource spend and reset, conditions, death saves, initiative, and typed malformed-state failures; repeated apply/spend/reset traces provide exact-once coverage                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Explicit condition/resource/exact-once runtime bundle under the required MBT lock: `. scripts/resource-lock-owner.sh && with_resource_lock_owner scripts/with-mbt-lock.sh pnpm --dir packages/battle-runtime exec vitest run --pool forks --maxWorkers=1 --reporter=dot src/battle-runtime-death-saves-and-turns.test.ts src/battle-resource-schema.test.ts src/character-battle-resource-execution.test.ts src/battle-runtime-triggered-reaction-interrupt-boundaries.test.ts src/battle-runtime-round-end-and-runtime-commands.test.ts` | pass; 5 files, 31 tests                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Generic action/resource projection correction in `src/rule-core-spells.mbt.test.ts`: use canonical `state.currentTurnResources.currentHasBonusAction` rather than act-discoverability-gated `snapshot.turn.bonusActionAvailable`                                                                                                                                                                                                                                                                                                          | pass; QNT expects raw turn-resource availability (`true`); no spell procedure semantics changed, and common-state comparison intentionally strips readied-only fields for non-readied families                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Reproduced #380 mapped lanes after the correction: `pnpm --filter @dnd/battle-runtime run test:mbt:rule-core-spell-damage`, `pnpm --filter @dnd/battle-runtime run test:mbt:rule-core-spell-restoration`, and `pnpm --filter @dnd/battle-runtime run test:mbt:rule-core-spells` (covering defensive-effect and readied-response)                                                                                                                                                                                                          | pass; each is a public package script that acquires the required MBT lock: damage 1 active/1 passed (4 skipped), restoration 1 active/1 passed (4 skipped), full suite 1 file/5 tests passed                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 The local SRD 5.2.1 passages inspected for this audit were `Playing-the-Game`
 Combat/Your Turn/Movement and Position/Reactions/Opportunity Attacks and
@@ -599,8 +613,10 @@ and rest/resource boundaries. The registry distinguishes semantic-core QNT
 owners from MBT parity fixtures. A representative, non-exhaustive enumeration
 of semantic-core owners for this audit is
 `battle-runtime-turn-advancement.qnt`, `battle-runtime-reaction-window.qnt`,
-`battle-runtime-command-ordering.qnt`, `movement-spatial-grapple.qnt`, and
-the bridge `battle-runtime-movement-bridge.qnt`; `battle-runtime-interrupt-stack-resume.mbt.qnt`,
+`battle-runtime-command-ordering.qnt`, and `movement-spatial-grapple.qnt`.
+The separate bridge `battle-runtime-movement-bridge.qnt` only projects those
+movement facts into the Battle Runtime and is bridge/parity evidence, not a
+semantic authority. `battle-runtime-interrupt-stack-resume.mbt.qnt`,
 `battle-runtime-command-ordering.mbt.qnt`, `battle-runtime-death-saving-throw.mbt.qnt`,
 `rule-core-movement.mbt.qnt`, `rule-core-reactions.mbt.qnt`, and
 `battle-runtime-turn-boundary-effect-lifecycle.mbt.qnt` are MBT parity fixtures,
@@ -609,45 +625,71 @@ not semantic authorities. Shared `action-economy-algebra-inductive.qnt`,
 remain the #374 pure-algebra proof owners; their passing inductive proof
 commands are recorded in the #374 closure section above.
 
-The reproducible fiber/scope audit uses the committed
-[`gh379-registry-path-manifest.json`](./gh379-registry-path-manifest.json) and
-searches exact runtime API/import forms for `Fiber`, `Scope`, `Schedule`,
-`Layer`, `Stream`, `Queue`, `Deferred`, and `Ref`, while excluding the domain
-field `executionScope`. It found no matches: reducers remain synchronous
-immutable transitions and no synchronization or ownership test is required.
-The exact manifest expansion and audit pipelines are:
+The reproducible audits use the committed
+[`gh379-registry-path-manifest.json`](./gh379-registry-path-manifest.json).
+They expand the 74 unique non-deferred paths only; the two deferred script
+paths are intentionally excluded because #385 owns their Effect 4 migration.
+The root-`Either` audit checks removed module imports, root named or
+namespace imports, and the removed `Either.*` members without banning native
+Effect 4 `Result` APIs. The exact executable commands are:
 
-```sh
-node -e 'const x=require("./docs/migrations/effect-4/gh379-registry-path-manifest.json"); process.stdout.write([...new Set([...x.sourceOrPurePaths,...x.parityOrFixturePaths])].join("\n"))' |
-  xargs -r rg -n -uu \
-    -e 'effect/Either' \
+```bash
+set -eu
+mapfile -t audit_paths < <(node -e 'const x=require("./docs/migrations/effect-4/gh379-registry-path-manifest.json"); const deferred=new Set(x.deferredScriptPaths); process.stdout.write([...new Set([...x.sourceOrPurePaths,...x.parityOrFixturePaths].filter((path)=>!deferred.has(path)))].join("\n"))')
+set +e
+rg -n -U -uu --pcre2 \
+    -e '(?:from|import\s*\()\s*(?:"effect/Either"|\x27effect/Either\x27)' \
+    -e 'import\s*\{[^}]*\bEither\b[^}]*\}\s*from\s*(?:"effect"|\x27effect\x27)' \
+    -e 'import\s+\*\s+as\s+Either\s+from\s*(?:"effect"|\x27effect\x27)' \
+    -e '\bEither\.[A-Za-z_][A-Za-z0-9_]*' \
     -e 'Schema\.optionalWith' \
     -e 'Schema\.decodeUnknownEither' \
     -e 'Schema\.standardSchemaV1' \
     -e 'Schema\.BigIntFromSelf' \
     -e 'Schema\.transform' \
     -e 'Schema\.Schema\.AnyNoContext' \
-    --
-node -e 'const x=require("./docs/migrations/effect-4/gh379-registry-path-manifest.json"); process.stdout.write([...new Set([...x.sourceOrPurePaths,...x.parityOrFixturePaths])].join("\n"))' |
-  xargs -r rg -n -uu \
-    -e 'effect/(Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)' \
-    -e '\b(Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)\.' \
-    --
+    -- "${audit_paths[@]}"
+audit_status=$?
+set -eu
+case "$audit_status" in
+  1) ;;
+  0) echo "forbidden Effect 3 API matches found" >&2; exit 1 ;;
+  *) exit "$audit_status" ;;
+esac
+set +e
+rg -n -U -uu --pcre2 \
+    -e 'from\s*(?:"effect/(?:Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)"|\x27effect/(?:Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)\x27)' \
+    -e 'import\s*\{[^}]*\b(?:Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)\b[^}]*\}\s*from\s*(?:"effect"|\x27effect\x27)' \
+    -e 'import\s+\*\s+as\s+(?:Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)\s+from\s*(?:"effect"|\x27effect\x27)' \
+    -e '\b(?:Fiber|Scope|Schedule|Layer|Stream|Queue|Deferred|Ref)\.(?:make|run|fork|forkScoped|scoped|provide|merge|from|emit|offer|take|get|set|update|unsafeRun|close|interrupt|schedule|spaced|forever)\b' \
+    -- "${audit_paths[@]}"
+audit_status=$?
+set -eu
+case "$audit_status" in
+  1) ;;
+  0) echo "Effect fiber/scope/scheduling API matches found" >&2; exit 1 ;;
+  *) exit "$audit_status" ;;
+esac
 ```
 
-Both pipelines produced zero matches.
+Both audits completed with zero matches. The deferred-path audit is
+separate and intentionally reports the still-unmigrated `Either` import/member
+uses in `scenario-session.ts` and `scenario-setup-runtime.test.ts`; those
+matches are evidence for #385, not evidence against the #379 Battle source
+closure.
 
-Reviewer-loop convergence at this HEAD: RAW anchors were rechecked against the
+Reviewer-loop convergence at this evidence revision: RAW anchors were rechecked against the
 local SRD corpus, ubiquitous-language terms remain the existing Battle terms,
 architecture/connascence review found no duplicated state or caller-ordering
 contract, PHB+ policy review found no protected identity or prose, and
-standards/spec/code review found only the authority distinction corrected in
-this snapshot.
+standards/spec/code review found only the #385 ownership/deferred-path and
+bridge-authority distinctions corrected in this snapshot.
 
-The #379 increment changes only the generic MBT projection in
-`src/rule-core-spells.mbt.test.ts`; no reducer, codec, schema, QNT, or spell
-procedure source changed. The projection now reads canonical raw turn-resource
-availability, preserving exact-once resource semantics while leaving public
+The only code change in this branch is the generic MBT projection correction in
+`src/rule-core-spells.mbt.test.ts`, which was needed to reproduce the dependent
+#380 spell lanes; no #379 reducer, codec, schema, QNT, or spell-procedure source
+changed. The projection reads canonical raw turn-resource availability,
+preserving exact-once resource semantics while leaving public
 act-discoverability projection unchanged. The remaining diagnostics are
 intentionally retained for #380/#381 follow-up and must not be attributed to
 this lifecycle owner.

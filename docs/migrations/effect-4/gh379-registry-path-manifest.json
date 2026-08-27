@@ -11,6 +11,7 @@
     "BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE"
   ],
   "sourceOrPurePaths": [
+    "packages/battle-runtime/src/battle-reducer/action-resource-kinds.ts",
     "packages/battle-runtime/src/battle-reducer/attack-damage-events.ts",
     "packages/battle-runtime/src/battle-reducer/attack-main.ts",
     "packages/battle-runtime/src/battle-reducer/attack-resolution.ts",
@@ -56,8 +57,7 @@
     "packages/shared-algebras/src/conditions-algebra.ts",
     "packages/shared-algebras/src/death-saves-algebra.ts",
     "packages/shared-algebras/src/initiative-algebra.ts",
-    "packages/shared-algebras/src/reducer-algebras.mbt.test.ts",
-    "scripts/raw-swarm/sdk-player/scenario-session.ts"
+    "packages/shared-algebras/src/reducer-algebras.mbt.test.ts"
   ],
   "parityOrFixturePaths": [
     "packages/battle-runtime/battle-runtime-command-option-next-turn.mbt.qnt",
@@ -89,6 +89,10 @@
     "packages/shared-algebras/proofs/death-saves-algebra-inductive.qnt",
     "packages/shared-algebras/src/reducer-algebras.mbt.test.ts",
     "scripts/raw-swarm/sdk-player/consumer-distribution.test.ts",
+    "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
+  ],
+  "deferredScriptPaths": [
+    "scripts/raw-swarm/sdk-player/scenario-session.ts",
     "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts"
   ]
 }
