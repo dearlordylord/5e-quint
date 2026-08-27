@@ -1,7 +1,7 @@
 import { Hp } from "@dnd/shared/types";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
@@ -41,9 +41,9 @@ describe("Stat Block combatant admission capability", () => {
       statBlock: source,
       startingScopeOrdinal: battleExecutionScopeOrdinal(0),
     });
-    if (Either.isLeft(admission))
-      throw new Error(battleStateInitIssueMessage(admission.left));
-    return { admission: admission.right, source };
+    if (Result.isFailure(admission))
+      throw new Error(battleStateInitIssueMessage(admission.failure));
+    return { admission: admission.success, source };
   }
 
   function destinationState(destinationBattleId: ReturnType<typeof battleId>) {
@@ -87,8 +87,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(admission)
-        ? battleStateInitIssueMessage(admission.left)
+      Result.isFailure(admission)
+        ? battleStateInitIssueMessage(admission.failure)
         : "admitted",
     ).toBe(
       "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
@@ -111,8 +111,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(admission)
-        ? battleStateInitIssueMessage(admission.left)
+      Result.isFailure(admission)
+        ? battleStateInitIssueMessage(admission.failure)
         : "admitted",
     ).toBe(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
@@ -136,8 +136,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(initialized)
-        ? battleStateInitIssueMessage(initialized.left)
+      Result.isFailure(initialized)
+        ? battleStateInitIssueMessage(initialized.failure)
         : "initialized",
     ).toBe("Battle runtime requires literal Stat Block Armor Class.");
   });
@@ -151,17 +151,17 @@ describe("Stat Block combatant admission capability", () => {
       conditions: ["prone"],
       statBlock: source,
     });
-    expect(Either.isRight(initialized)).toBe(true);
-    if (Either.isLeft(initialized)) return;
+    expect(Result.isSuccess(initialized)).toBe(true);
+    if (Result.isFailure(initialized)) return;
 
     const started = startBattle({
       battleId: battleId("initial-stat-block-condition"),
-      combatants: [initialized.right],
+      combatants: [initialized.success],
     });
-    expect(Either.isRight(started)).toBe(true);
-    if (Either.isLeft(started)) return;
+    expect(Result.isSuccess(started)).toBe(true);
+    if (Result.isFailure(started)) return;
 
-    const combatant = started.right.state.combatants.get(admittedCombatantId);
+    const combatant = started.success.state.combatants.get(admittedCombatantId);
     expect(combatant).toBeDefined();
     if (combatant === undefined) return;
     expect(hasCondition(combatant.conditions, "prone")).toBe(true);
@@ -193,8 +193,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(result)
-        ? battleStateInitIssueMessage(result.left)
+      Result.isFailure(result)
+        ? battleStateInitIssueMessage(result.failure)
         : "started",
     ).toBe("Stat Block combatant is immune to initial prone condition.");
   });
@@ -214,9 +214,11 @@ describe("Stat Block combatant admission capability", () => {
       combatants: [directInit],
     });
 
-    expect(Either.isRight(result)).toBe(true);
-    if (Either.isLeft(result)) return;
-    const combatant = result.right.state.combatants.get(directInit.combatantId);
+    expect(Result.isSuccess(result)).toBe(true);
+    if (Result.isFailure(result)) return;
+    const combatant = result.success.state.combatants.get(
+      directInit.combatantId,
+    );
     expect(combatant).toBeDefined();
     if (combatant === undefined) return;
     expect(hasCondition(combatant.conditions, "prone")).toBe(true);
@@ -239,8 +241,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(initialized)
-        ? battleStateInitIssueMessage(initialized.left)
+      Result.isFailure(initialized)
+        ? battleStateInitIssueMessage(initialized.failure)
         : "initialized",
     ).toBe("Stat Block combatant is immune to initial prone condition.");
   });
@@ -287,9 +289,9 @@ describe("Stat Block combatant admission capability", () => {
       },
     });
 
-    expect(Either.isRight(added)).toBe(true);
-    if (Either.isLeft(added)) return;
-    const combatant = added.right.combatants.get(admittedCombatantId);
+    expect(Result.isSuccess(added)).toBe(true);
+    if (Result.isFailure(added)) return;
+    const combatant = added.success.combatants.get(admittedCombatantId);
     expect(combatant?.origin.kind).toBe("statBlock");
     if (combatant?.origin.kind !== "statBlock") return;
     expect(Object.keys(combatant.origin)).toEqual([
@@ -331,8 +333,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(added)
-        ? battleStateInitIssueMessage(added.left)
+      Result.isFailure(added)
+        ? battleStateInitIssueMessage(added.failure)
         : "resolved",
     ).toBe("Stat Block combatant admission belongs to a different battle.");
   });
@@ -354,8 +356,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(added)
-        ? battleStateInitIssueMessage(added.left)
+      Result.isFailure(added)
+        ? battleStateInitIssueMessage(added.failure)
         : "resolved",
     ).toBe("Stat Block combatant admission belongs to a different combatant.");
   });
@@ -367,17 +369,17 @@ describe("Stat Block combatant admission capability", () => {
       state: destinationState(destinationBattleId),
       combatant: combatantFor(admission),
     });
-    if (Either.isLeft(first)) {
-      throw new Error(battleStateInitIssueMessage(first.left));
+    if (Result.isFailure(first)) {
+      throw new Error(battleStateInitIssueMessage(first.failure));
     }
 
     const duplicate = addBattleStatBlockCombatant({
-      state: first.right,
+      state: first.success,
       combatant: combatantFor(admission),
     });
     expect(
-      Either.isLeft(duplicate)
-        ? battleStateInitIssueMessage(duplicate.left)
+      Result.isFailure(duplicate)
+        ? battleStateInitIssueMessage(duplicate.failure)
         : "resolved",
     ).toBe(`Duplicate combatant id: ${admittedCombatantId}`);
   });
@@ -405,8 +407,8 @@ describe("Stat Block combatant admission capability", () => {
       combatant: combatantFor(mismatchedScopeAdmission),
     });
     expect(
-      Either.isLeft(added)
-        ? battleStateInitIssueMessage(added.left)
+      Result.isFailure(added)
+        ? battleStateInitIssueMessage(added.failure)
         : "resolved",
     ).toBe(
       "Stat Block combatant admission execution scope belongs to a different destination.",
@@ -420,11 +422,11 @@ describe("Stat Block combatant admission capability", () => {
       state: destinationState(destinationBattleId),
       combatant: combatantFor(admission),
     });
-    if (Either.isLeft(first)) {
-      throw new Error(battleStateInitIssueMessage(first.left));
+    if (Result.isFailure(first)) {
+      throw new Error(battleStateInitIssueMessage(first.failure));
     }
     const removed = removeBattleCombatantsRight({
-      state: first.right,
+      state: first.success,
       combatantIds: [admittedCombatantId],
     });
 
@@ -433,8 +435,8 @@ describe("Stat Block combatant admission capability", () => {
       combatant: combatantFor(admission),
     });
     expect(
-      Either.isLeft(replayed)
-        ? battleStateInitIssueMessage(replayed.left)
+      Result.isFailure(replayed)
+        ? battleStateInitIssueMessage(replayed.failure)
         : "resolved",
     ).toBe(
       "Stat Block combatant admission does not match the current execution-scope cursor.",
@@ -450,8 +452,8 @@ describe("Stat Block combatant admission capability", () => {
     });
 
     expect(
-      Either.isLeft(added)
-        ? battleStateInitIssueMessage(added.left)
+      Result.isFailure(added)
+        ? battleStateInitIssueMessage(added.failure)
         : "resolved",
     ).toBe("Battle initialization current HP exceeds max HP.");
   });
@@ -466,12 +468,14 @@ describe("Stat Block combatant admission capability", () => {
         initiative: initiativeScore(20),
       }),
     });
-    if (Either.isLeft(added)) {
-      throw new Error(battleStateInitIssueMessage(added.left));
+    if (Result.isFailure(added)) {
+      throw new Error(battleStateInitIssueMessage(added.failure));
     }
 
     expect(
-      initiativeEntries(added.right.initiative).map((entry) => entry.creature),
+      initiativeEntries(added.success.initiative).map(
+        (entry) => entry.creature,
+      ),
     ).toEqual([fighterId, admittedCombatantId]);
   });
 
@@ -490,22 +494,24 @@ describe("Stat Block combatant admission capability", () => {
         initiative: initiativeScore(10),
       }),
     });
-    if (Either.isLeft(withLowerInitiative)) {
-      throw new Error(battleStateInitIssueMessage(withLowerInitiative.left));
+    if (Result.isFailure(withLowerInitiative)) {
+      throw new Error(battleStateInitIssueMessage(withLowerInitiative.failure));
     }
     const admission = admittedFor(destinationBattleId).admission;
     const added = addBattleStatBlockCombatant({
-      state: withLowerInitiative.right,
+      state: withLowerInitiative.success,
       combatant: combatantFor(admission, {
         initiative: initiativeScore(20),
       }),
     });
-    if (Either.isLeft(added)) {
-      throw new Error(battleStateInitIssueMessage(added.left));
+    if (Result.isFailure(added)) {
+      throw new Error(battleStateInitIssueMessage(added.failure));
     }
 
     expect(
-      initiativeEntries(added.right.initiative).map((entry) => entry.creature),
+      initiativeEntries(added.success.initiative).map(
+        (entry) => entry.creature,
+      ),
     ).toEqual([fighterId, admittedCombatantId, otherCombatantId]);
   });
 });

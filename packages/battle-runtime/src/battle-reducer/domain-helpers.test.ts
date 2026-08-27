@@ -1,4 +1,4 @@
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -11,9 +11,9 @@ import {
 describe("BattleStateInitIssue helpers", () => {
   test("battleStateInitIssue produces a leaf issue", () => {
     const issue = battleStateInitIssue("test message");
-    expect(Either.isLeft(issue)).toBe(true);
-    if (Either.isLeft(issue)) {
-      expect(issue.left).toEqual({
+    expect(Result.isFailure(issue)).toBe(true);
+    if (Result.isFailure(issue)) {
+      expect(issue.failure).toEqual({
         tag: "battleStateInitIssue",
         message: "test message",
       });
@@ -22,9 +22,9 @@ describe("BattleStateInitIssue helpers", () => {
 
   test("weaponLoadoutMismatchIssue produces a leaf issue with slot", () => {
     const issue = weaponLoadoutMismatchIssue("main-hand");
-    expect(Either.isLeft(issue)).toBe(true);
-    if (Either.isLeft(issue)) {
-      expect(issue.left).toEqual({
+    expect(Result.isFailure(issue)).toBe(true);
+    if (Result.isFailure(issue)) {
+      expect(issue.failure).toEqual({
         tag: "weaponLoadoutMismatch",
         slot: "main-hand",
       });
@@ -32,26 +32,26 @@ describe("BattleStateInitIssue helpers", () => {
   });
 
   test("battleStateInitIssues requires at least two leaves and returns an aggregate", () => {
-    const firstEither = weaponLoadoutMismatchIssue("main-hand");
-    const secondEither = weaponLoadoutMismatchIssue("off-hand");
-    const thirdEither = battleStateInitIssue("another issue");
+    const firstResult = weaponLoadoutMismatchIssue("main-hand");
+    const secondResult = weaponLoadoutMismatchIssue("off-hand");
+    const thirdResult = battleStateInitIssue("another issue");
 
-    expect(Either.isLeft(firstEither)).toBe(true);
-    expect(Either.isLeft(secondEither)).toBe(true);
-    expect(Either.isLeft(thirdEither)).toBe(true);
+    expect(Result.isFailure(firstResult)).toBe(true);
+    expect(Result.isFailure(secondResult)).toBe(true);
+    expect(Result.isFailure(thirdResult)).toBe(true);
     if (
-      Either.isLeft(firstEither) &&
-      Either.isLeft(secondEither) &&
-      Either.isLeft(thirdEither)
+      Result.isFailure(firstResult) &&
+      Result.isFailure(secondResult) &&
+      Result.isFailure(thirdResult)
     ) {
-      const first = firstEither.left;
-      const second = secondEither.left;
-      const third = thirdEither.left;
+      const first = firstResult.failure;
+      const second = secondResult.failure;
+      const third = thirdResult.failure;
       const aggregate = battleStateInitIssues(first, second, third);
 
-      expect(Either.isLeft(aggregate)).toBe(true);
-      if (Either.isLeft(aggregate)) {
-        expect(aggregate.left).toEqual({
+      expect(Result.isFailure(aggregate)).toBe(true);
+      if (Result.isFailure(aggregate)) {
+        expect(aggregate.failure).toEqual({
           tag: "battleStateInitIssues",
           issues: [first, second, third],
         });
@@ -77,18 +77,18 @@ describe("BattleStateInitIssue helpers", () => {
   });
 
   test("battleStateInitIssueMessage recursively formats aggregate leaves", () => {
-    const firstEither = weaponLoadoutMismatchIssue("main-hand");
-    const secondEither = weaponLoadoutMismatchIssue("off-hand");
-    expect(Either.isLeft(firstEither)).toBe(true);
-    expect(Either.isLeft(secondEither)).toBe(true);
-    if (Either.isLeft(firstEither) && Either.isLeft(secondEither)) {
+    const firstResult = weaponLoadoutMismatchIssue("main-hand");
+    const secondResult = weaponLoadoutMismatchIssue("off-hand");
+    expect(Result.isFailure(firstResult)).toBe(true);
+    expect(Result.isFailure(secondResult)).toBe(true);
+    if (Result.isFailure(firstResult) && Result.isFailure(secondResult)) {
       const aggregate = battleStateInitIssues(
-        firstEither.left,
-        secondEither.left,
+        firstResult.failure,
+        secondResult.failure,
       );
-      expect(Either.isLeft(aggregate)).toBe(true);
-      if (Either.isLeft(aggregate)) {
-        expect(battleStateInitIssueMessage(aggregate.left)).toBe(
+      expect(Result.isFailure(aggregate)).toBe(true);
+      if (Result.isFailure(aggregate)) {
+        expect(battleStateInitIssueMessage(aggregate.failure)).toBe(
           "Character battle init main-hand weapon attack must match the selected loadout weapon.; Character battle init off-hand weapon attack must match the selected loadout weapon.",
         );
       }
