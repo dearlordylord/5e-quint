@@ -68,7 +68,7 @@ const routedOutputSchemas = new Map<
   WeakMap<object, McpOutputSchema>
 >();
 const embeddedBattleEnvelope = embeddedSchema(
-  mcpOutputJsonSchema(BattlePresentationEnvelopeSchema),
+  mcpModelOutputJsonSchema(BattlePresentationEnvelopeSchema),
   "BattleEnvelope",
 );
 

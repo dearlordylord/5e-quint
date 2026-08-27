@@ -14,11 +14,17 @@ export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
 };
 export type McpOutputSchema = Readonly<Record<string, unknown>>;
 
+const MODEL_OUTPUT_SCHEMA = Symbol("McpModelOutputSchema");
+
+export type McpModelOutputSchema = McpOutputSchema & {
+  readonly [MODEL_OUTPUT_SCHEMA]: true;
+};
+
 export type ToolError = ReturnType<typeof errorContent>;
 export type ToolInputResult<A> = Either.Either<A, ToolError>;
 
 const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
-const modelOutputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
+const modelOutputSchemaByCodec = new WeakMap<object, McpModelOutputSchema>();
 
 export function decodeToolArgs<A, I>(
   schema: Schema.Schema<A, I, never>,
@@ -155,7 +161,7 @@ export function mcpOutputJsonSchema<A, I>(
 
 export function mcpModelOutputJsonSchema<A, I>(
   schema: Schema.Schema<A, I, never>,
-): McpOutputSchema {
+): McpModelOutputSchema {
   const cached = modelOutputSchemaByCodec.get(schema);
   if (cached !== undefined) return cached;
 
@@ -166,9 +172,19 @@ export function mcpModelOutputJsonSchema<A, I>(
   const identified = {
     $id: outputSchemaId(projected),
     ...projected,
-  } satisfies McpOutputSchema;
+    [MODEL_OUTPUT_SCHEMA]: true as const,
+  } satisfies McpModelOutputSchema;
+  Object.defineProperty(identified, MODEL_OUTPUT_SCHEMA, {
+    enumerable: false,
+  });
   modelOutputSchemaByCodec.set(schema, identified);
   return identified;
+}
+
+export function isMcpModelOutputSchema(
+  schema: McpOutputSchema,
+): schema is McpModelOutputSchema {
+  return Reflect.get(schema, MODEL_OUTPUT_SCHEMA) === true;
 }
 
 export function schemaJsonContent<A, I>(
