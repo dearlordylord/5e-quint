@@ -1,0 +1,1052 @@
+{
+  "artifactKind": "character-sheet-persistence-fixed-point",
+  "formatVersion": 1,
+  "fixedPoint": {
+    "commit": "e8621156332b0b4bd65379043d0bc1bc32f3a0af",
+    "checkout": "clean detached worktree",
+    "parser": "packages/character-sheet-runtime/src/sheet-lifecycle.ts#parseCharacterSheet"
+  },
+  "projection": "Each expected value is the parser success projection or failure issue; Effect Either/Result tags are excluded.",
+  "scope": "Bounded representative persisted inputs from stored-sheet-parser and sheet-lifecycle tests; this is not an exhaustive compatibility matrix.",
+  "cases": [
+    {
+      "id": "nonspell-absent-optional-state",
+      "input": {
+        "tag": "available",
+        "characterId": "character:synthetic-nonspell-absent",
+        "build": {
+          "progression": {
+            "startingClass": "class_fighter",
+            "advancements": []
+          },
+          "background": "background_soldier",
+          "species": "species_orc",
+          "originLanguages": ["Common", "Dwarvish", "Goblin"],
+          "classFeatureLanguages": [],
+          "alignment": {
+            "order": "lawful",
+            "morality": "good"
+          },
+          "abilityScores": {
+            "str": 13,
+            "dex": 14,
+            "con": 13,
+            "int": 8,
+            "wis": 16,
+            "cha": 10
+          },
+          "proficiencyChoices": [],
+          "features": [],
+          "magicInitiateSpellAccesses": [],
+          "equipment": {
+            "startingEquipmentCurrencyRemainderCp": 0,
+            "owned": [],
+            "loadout": {}
+          }
+        },
+        "hitPointMaximumReduction": 0,
+        "hitPoints": {
+          "tag": "positive",
+          "currentHp": 1,
+          "tempHp": 0
+        },
+        "conditions": [],
+        "spentHitDice": [],
+        "resourceExpenditures": [],
+        "heroicInspiration": {
+          "tag": "none"
+        },
+        "companion": {
+          "tag": "none"
+        }
+      },
+      "expected": {
+        "outcome": "success",
+        "value": {
+          "tag": "available",
+          "characterId": "character:synthetic-nonspell-absent",
+          "hitPointMaximumReduction": 0,
+          "exhaustionLevel": 0,
+          "hitPoints": {
+            "tag": "positive",
+            "currentHp": 1,
+            "tempHp": 0
+          },
+          "conditions": [],
+          "spentHitDice": [],
+          "restFeatureUses": [],
+          "resourceExpenditures": [],
+          "heroicInspiration": {
+            "tag": "none"
+          },
+          "companion": {
+            "tag": "none"
+          },
+          "build": {
+            "progression": {
+              "startingClass": "class_fighter",
+              "advancements": []
+            },
+            "background": "background_soldier",
+            "species": "species_orc",
+            "originLanguages": ["Common", "Dwarvish", "Goblin"],
+            "classFeatureLanguages": [],
+            "alignment": {
+              "order": "lawful",
+              "morality": "good"
+            },
+            "abilityScores": {
+              "str": 13,
+              "dex": 14,
+              "con": 13,
+              "int": 8,
+              "wis": 16,
+              "cha": 10
+            },
+            "proficiencyChoices": [],
+            "features": [],
+            "magicInitiateSpellAccesses": [],
+            "equipment": {
+              "startingEquipmentCurrencyRemainderCp": 0,
+              "owned": [],
+              "loadout": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "nonspell-retained-resources",
+      "input": {
+        "tag": "available",
+        "characterId": "character:synthetic-nonspell-retained",
+        "build": {
+          "progression": {
+            "startingClass": "class_fighter",
+            "advancements": []
+          },
+          "background": "background_soldier",
+          "species": "species_orc",
+          "originLanguages": ["Common", "Dwarvish", "Goblin"],
+          "classFeatureLanguages": [],
+          "alignment": {
+            "order": "lawful",
+            "morality": "good"
+          },
+          "abilityScores": {
+            "str": 13,
+            "dex": 14,
+            "con": 13,
+            "int": 8,
+            "wis": 16,
+            "cha": 10
+          },
+          "proficiencyChoices": [],
+          "features": [],
+          "magicInitiateSpellAccesses": [],
+          "equipment": {
+            "startingEquipmentCurrencyRemainderCp": 0,
+            "owned": [],
+            "loadout": {}
+          }
+        },
+        "hitPointMaximumReduction": 0,
+        "hitPoints": {
+          "tag": "positive",
+          "currentHp": 1,
+          "tempHp": 0
+        },
+        "conditions": ["charmed", "poisoned"],
+        "spentHitDice": [
+          {
+            "classUnitId": "class_fighter",
+            "spent": 1
+          }
+        ],
+        "resourceExpenditures": [],
+        "heroicInspiration": {
+          "tag": "available"
+        },
+        "companion": {
+          "tag": "none"
+        },
+        "exhaustionLevel": 2
+      },
+      "expected": {
+        "outcome": "success",
+        "value": {
+          "tag": "available",
+          "characterId": "character:synthetic-nonspell-retained",
+          "hitPointMaximumReduction": 0,
+          "exhaustionLevel": 2,
+          "hitPoints": {
+            "tag": "positive",
+            "currentHp": 1,
+            "tempHp": 0
+          },
+          "conditions": ["charmed", "poisoned"],
+          "spentHitDice": [
+            {
+              "classUnitId": "class_fighter",
+              "spent": 1
+            }
+          ],
+          "restFeatureUses": [],
+          "resourceExpenditures": [],
+          "heroicInspiration": {
+            "tag": "available"
+          },
+          "companion": {
+            "tag": "none"
+          },
+          "build": {
+            "progression": {
+              "startingClass": "class_fighter",
+              "advancements": []
+            },
+            "background": "background_soldier",
+            "species": "species_orc",
+            "originLanguages": ["Common", "Dwarvish", "Goblin"],
+            "classFeatureLanguages": [],
+            "alignment": {
+              "order": "lawful",
+              "morality": "good"
+            },
+            "abilityScores": {
+              "str": 13,
+              "dex": 14,
+              "con": 13,
+              "int": 8,
+              "wis": 16,
+              "cha": 10
+            },
+            "proficiencyChoices": [],
+            "features": [],
+            "magicInitiateSpellAccesses": [],
+            "equipment": {
+              "startingEquipmentCurrencyRemainderCp": 0,
+              "owned": [],
+              "loadout": {}
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "spell-absent-optional-state",
+      "input": {
+        "tag": "available",
+        "characterId": "character:synthetic-spell-absent",
+        "build": {
+          "progression": {
+            "startingClass": "class_wizard",
+            "advancements": []
+          },
+          "background": "background_soldier",
+          "species": "species_orc",
+          "originLanguages": ["Common", "Dwarvish", "Goblin"],
+          "classFeatureLanguages": [],
+          "alignment": {
+            "order": "lawful",
+            "morality": "good"
+          },
+          "abilityScores": {
+            "str": 13,
+            "dex": 14,
+            "con": 13,
+            "int": 8,
+            "wis": 16,
+            "cha": 10
+          },
+          "proficiencyChoices": [],
+          "features": [],
+          "magicInitiateSpellAccesses": [],
+          "equipment": {
+            "startingEquipmentCurrencyRemainderCp": 0,
+            "owned": [],
+            "loadout": {}
+          },
+          "spellcasting": {
+            "sources": [
+              {
+                "sourceUnitId": "class_wizard",
+                "spellcastingAbility": "int",
+                "cantrips": [],
+                "spellbook": [],
+                "preparedSpells": [],
+                "spellcastingFocuses": ["arcane_focus"]
+              }
+            ],
+            "slotPools": {
+              "spellcasting": {
+                "kind": "spellcasting",
+                "slots": [
+                  {
+                    "spellLevel": 1,
+                    "count": 3
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "hitPointMaximumReduction": 0,
+        "hitPoints": {
+          "tag": "positive",
+          "currentHp": 1,
+          "tempHp": 0
+        },
+        "conditions": [],
+        "spentHitDice": [],
+        "resourceExpenditures": [],
+        "heroicInspiration": {
+          "tag": "none"
+        },
+        "companion": {
+          "tag": "none"
+        }
+      },
+      "expected": {
+        "outcome": "success",
+        "value": {
+          "tag": "available",
+          "characterId": "character:synthetic-spell-absent",
+          "hitPointMaximumReduction": 0,
+          "exhaustionLevel": 0,
+          "hitPoints": {
+            "tag": "positive",
+            "currentHp": 1,
+            "tempHp": 0
+          },
+          "conditions": [],
+          "spentHitDice": [],
+          "restFeatureUses": [],
+          "resourceExpenditures": [],
+          "heroicInspiration": {
+            "tag": "none"
+          },
+          "companion": {
+            "tag": "none"
+          },
+          "build": {
+            "progression": {
+              "startingClass": "class_wizard",
+              "advancements": []
+            },
+            "background": "background_soldier",
+            "species": "species_orc",
+            "originLanguages": ["Common", "Dwarvish", "Goblin"],
+            "classFeatureLanguages": [],
+            "alignment": {
+              "order": "lawful",
+              "morality": "good"
+            },
+            "abilityScores": {
+              "str": 13,
+              "dex": 14,
+              "con": 13,
+              "int": 8,
+              "wis": 16,
+              "cha": 10
+            },
+            "proficiencyChoices": [],
+            "features": [],
+            "spellcasting": {
+              "sources": [
+                {
+                  "sourceUnitId": "class_wizard",
+                  "spellcastingAbility": "int",
+                  "cantrips": [],
+                  "spellbook": [],
+                  "preparedSpells": [],
+                  "spellcastingFocuses": ["arcane_focus"]
+                }
+              ],
+              "slotPools": {
+                "spellcasting": {
+                  "kind": "spellcasting",
+                  "slots": [
+                    {
+                      "spellLevel": 1,
+                      "count": 3
+                    }
+                  ]
+                }
+              }
+            },
+            "magicInitiateSpellAccesses": [],
+            "equipment": {
+              "startingEquipmentCurrencyRemainderCp": 0,
+              "owned": [],
+              "loadout": {}
+            }
+          },
+          "spellSlotExpenditures": [],
+          "createdSpellSlots": []
+        }
+      }
+    },
+    {
+      "id": "spell-ordinary-slot-state",
+      "input": {
+        "tag": "available",
+        "characterId": "character:synthetic-spell-slot",
+        "build": {
+          "progression": {
+            "startingClass": "class_sorcerer",
+            "advancements": [
+              {
+                "classUnitId": "class_sorcerer",
+                "hitPointRule": {
+                  "tag": "fixedHigherLevelGain"
+                }
+              }
+            ]
+          },
+          "background": "background_soldier",
+          "species": "species_orc",
+          "originLanguages": ["Common", "Dwarvish", "Goblin"],
+          "classFeatureLanguages": [],
+          "alignment": {
+            "order": "lawful",
+            "morality": "good"
+          },
+          "abilityScores": {
+            "str": 13,
+            "dex": 14,
+            "con": 13,
+            "int": 8,
+            "wis": 16,
+            "cha": 10
+          },
+          "proficiencyChoices": [],
+          "features": [
+            {
+              "kind": "selectedSorcererMetamagicOption",
+              "selectedFromUnitId": "sorcerer_metamagic",
+              "optionId": "sorcerer_empowered_spell"
+            },
+            {
+              "kind": "selectedSorcererMetamagicOption",
+              "selectedFromUnitId": "sorcerer_metamagic",
+              "optionId": "sorcerer_heightened_spell"
+            }
+          ],
+          "magicInitiateSpellAccesses": [],
+          "equipment": {
+            "startingEquipmentCurrencyRemainderCp": 0,
+            "owned": [],
+            "loadout": {}
+          },
+          "spellcasting": {
+            "sources": [
+              {
+                "sourceUnitId": "class_sorcerer",
+                "spellcastingAbility": "cha",
+                "cantrips": ["light", "prestidigitation", "shocking_grasp"],
+                "spellbook": [],
+                "preparedSpells": ["burning_hands", "detect_magic"],
+                "spellcastingFocuses": ["arcane_focus"]
+              }
+            ],
+            "slotPools": {
+              "spellcasting": {
+                "kind": "spellcasting",
+                "slots": [
+                  {
+                    "spellLevel": 1,
+                    "count": 3
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "hitPointMaximumReduction": 0,
+        "hitPoints": {
+          "tag": "positive",
+          "currentHp": 1,
+          "tempHp": 0
+        },
+        "conditions": [],
+        "spentHitDice": [],
+        "resourceExpenditures": [],
+        "heroicInspiration": {
+          "tag": "none"
+        },
+        "companion": {
+          "tag": "none"
+        },
+        "spellSlotExpenditures": [
+          {
+            "spellLevel": 1,
+            "expended": 1
+          }
+        ]
+      },
+      "expected": {
+        "outcome": "success",
+        "value": {
+          "tag": "available",
+          "characterId": "character:synthetic-spell-slot",
+          "hitPointMaximumReduction": 0,
+          "exhaustionLevel": 0,
+          "hitPoints": {
+            "tag": "positive",
+            "currentHp": 1,
+            "tempHp": 0
+          },
+          "conditions": [],
+          "spentHitDice": [],
+          "restFeatureUses": [],
+          "resourceExpenditures": [],
+          "heroicInspiration": {
+            "tag": "none"
+          },
+          "companion": {
+            "tag": "none"
+          },
+          "build": {
+            "progression": {
+              "startingClass": "class_sorcerer",
+              "advancements": [
+                {
+                  "classUnitId": "class_sorcerer",
+                  "hitPointRule": {
+                    "tag": "fixedHigherLevelGain"
+                  }
+                }
+              ]
+            },
+            "background": "background_soldier",
+            "species": "species_orc",
+            "originLanguages": ["Common", "Dwarvish", "Goblin"],
+            "classFeatureLanguages": [],
+            "alignment": {
+              "order": "lawful",
+              "morality": "good"
+            },
+            "abilityScores": {
+              "str": 13,
+              "dex": 14,
+              "con": 13,
+              "int": 8,
+              "wis": 16,
+              "cha": 10
+            },
+            "proficiencyChoices": [],
+            "features": [
+              {
+                "kind": "selectedSorcererMetamagicOption",
+                "optionId": "sorcerer_empowered_spell",
+                "selectedFromUnitId": "sorcerer_metamagic"
+              },
+              {
+                "kind": "selectedSorcererMetamagicOption",
+                "optionId": "sorcerer_heightened_spell",
+                "selectedFromUnitId": "sorcerer_metamagic"
+              }
+            ],
+            "spellcasting": {
+              "sources": [
+                {
+                  "sourceUnitId": "class_sorcerer",
+                  "spellcastingAbility": "cha",
+                  "cantrips": ["light", "prestidigitation", "shocking_grasp"],
+                  "spellbook": [],
+                  "preparedSpells": ["burning_hands", "detect_magic"],
+                  "spellcastingFocuses": ["arcane_focus"]
+                }
+              ],
+              "slotPools": {
+                "spellcasting": {
+                  "kind": "spellcasting",
+                  "slots": [
+                    {
+                      "spellLevel": 1,
+                      "count": 3
+                    }
+                  ]
+                }
+              }
+            },
+            "magicInitiateSpellAccesses": [],
+            "equipment": {
+              "startingEquipmentCurrencyRemainderCp": 0,
+              "owned": [],
+              "loadout": {}
+            }
+          },
+          "spellSlotExpenditures": [
+            {
+              "spellLevel": 1,
+              "expended": 1
+            }
+          ],
+          "createdSpellSlots": []
+        }
+      }
+    },
+    {
+      "id": "spell-pact-slot-state",
+      "input": {
+        "tag": "available",
+        "characterId": "character:synthetic-pact-slot",
+        "build": {
+          "progression": {
+            "startingClass": "class_warlock",
+            "advancements": []
+          },
+          "background": "background_soldier",
+          "species": "species_orc",
+          "originLanguages": ["Common", "Dwarvish", "Goblin"],
+          "classFeatureLanguages": [],
+          "alignment": {
+            "order": "lawful",
+            "morality": "good"
+          },
+          "abilityScores": {
+            "str": 13,
+            "dex": 14,
+            "con": 13,
+            "int": 8,
+            "wis": 16,
+            "cha": 10
+          },
+          "proficiencyChoices": [],
+          "features": [],
+          "magicInitiateSpellAccesses": [],
+          "equipment": {
+            "startingEquipmentCurrencyRemainderCp": 0,
+            "owned": [],
+            "loadout": {}
+          },
+          "spellcasting": {
+            "sources": [
+              {
+                "sourceUnitId": "class_warlock",
+                "spellcastingAbility": "cha",
+                "cantrips": ["eldritch_blast"],
+                "spellbook": [],
+                "preparedSpells": [],
+                "spellcastingFocuses": ["arcane_focus"]
+              }
+            ],
+            "slotPools": {
+              "pactMagic": {
+                "kind": "pactMagic",
+                "slotLevel": 1,
+                "count": 1
+              }
+            }
+          }
+        },
+        "hitPointMaximumReduction": 0,
+        "hitPoints": {
+          "tag": "positive",
+          "currentHp": 1,
+          "tempHp": 0
+        },
+        "conditions": [],
+        "spentHitDice": [],
+        "resourceExpenditures": [],
+        "heroicInspiration": {
+          "tag": "none"
+        },
+        "companion": {
+          "tag": "none"
+        },
+        "spellSlotExpenditures": [],
+        "pactSlotExpenditure": {
+          "expended": 1
+        }
+      },
+      "expected": {
+        "outcome": "success",
+        "value": {
+          "tag": "available",
+          "characterId": "character:synthetic-pact-slot",
+          "hitPointMaximumReduction": 0,
+          "exhaustionLevel": 0,
+          "hitPoints": {
+            "tag": "positive",
+            "currentHp": 1,
+            "tempHp": 0
+          },
+          "conditions": [],
+          "spentHitDice": [],
+          "restFeatureUses": [],
+          "resourceExpenditures": [],
+          "heroicInspiration": {
+            "tag": "none"
+          },
+          "companion": {
+            "tag": "none"
+          },
+          "build": {
+            "progression": {
+              "startingClass": "class_warlock",
+              "advancements": []
+            },
+            "background": "background_soldier",
+            "species": "species_orc",
+            "originLanguages": ["Common", "Dwarvish", "Goblin"],
+            "classFeatureLanguages": [],
+            "alignment": {
+              "order": "lawful",
+              "morality": "good"
+            },
+            "abilityScores": {
+              "str": 13,
+              "dex": 14,
+              "con": 13,
+              "int": 8,
+              "wis": 16,
+              "cha": 10
+            },
+            "proficiencyChoices": [],
+            "features": [],
+            "spellcasting": {
+              "sources": [
+                {
+                  "sourceUnitId": "class_warlock",
+                  "spellcastingAbility": "cha",
+                  "cantrips": ["eldritch_blast"],
+                  "spellbook": [],
+                  "preparedSpells": [],
+                  "spellcastingFocuses": ["arcane_focus"]
+                }
+              ],
+              "slotPools": {
+                "pactMagic": {
+                  "kind": "pactMagic",
+                  "slotLevel": 1,
+                  "count": 1
+                }
+              }
+            },
+            "magicInitiateSpellAccesses": [],
+            "equipment": {
+              "startingEquipmentCurrencyRemainderCp": 0,
+              "owned": [],
+              "loadout": {}
+            }
+          },
+          "spellSlotExpenditures": [],
+          "createdSpellSlots": [],
+          "pactSlotExpenditure": {
+            "expended": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "spell-resource-expenditure-state",
+      "input": {
+        "tag": "available",
+        "characterId": "character:synthetic-resource",
+        "build": {
+          "progression": {
+            "startingClass": "class_sorcerer",
+            "advancements": [
+              {
+                "classUnitId": "class_sorcerer",
+                "hitPointRule": {
+                  "tag": "fixedHigherLevelGain"
+                }
+              }
+            ]
+          },
+          "background": "background_soldier",
+          "species": "species_orc",
+          "originLanguages": ["Common", "Dwarvish", "Goblin"],
+          "classFeatureLanguages": [],
+          "alignment": {
+            "order": "lawful",
+            "morality": "good"
+          },
+          "abilityScores": {
+            "str": 13,
+            "dex": 14,
+            "con": 13,
+            "int": 8,
+            "wis": 16,
+            "cha": 10
+          },
+          "proficiencyChoices": [],
+          "features": [
+            {
+              "kind": "selectedSorcererMetamagicOption",
+              "selectedFromUnitId": "sorcerer_metamagic",
+              "optionId": "sorcerer_empowered_spell"
+            },
+            {
+              "kind": "selectedSorcererMetamagicOption",
+              "selectedFromUnitId": "sorcerer_metamagic",
+              "optionId": "sorcerer_heightened_spell"
+            }
+          ],
+          "magicInitiateSpellAccesses": [],
+          "equipment": {
+            "startingEquipmentCurrencyRemainderCp": 0,
+            "owned": [],
+            "loadout": {}
+          },
+          "spellcasting": {
+            "sources": [
+              {
+                "sourceUnitId": "class_sorcerer",
+                "spellcastingAbility": "cha",
+                "cantrips": ["light", "prestidigitation", "shocking_grasp"],
+                "spellbook": [],
+                "preparedSpells": ["burning_hands", "detect_magic"],
+                "spellcastingFocuses": ["arcane_focus"]
+              }
+            ],
+            "slotPools": {
+              "spellcasting": {
+                "kind": "spellcasting",
+                "slots": [
+                  {
+                    "spellLevel": 1,
+                    "count": 3
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "hitPointMaximumReduction": 0,
+        "hitPoints": {
+          "tag": "positive",
+          "currentHp": 1,
+          "tempHp": 0
+        },
+        "conditions": [],
+        "spentHitDice": [],
+        "resourceExpenditures": [
+          {
+            "tag": "pointPoolResource",
+            "unitId": "sorcerer_font_of_magic",
+            "expended": 1
+          }
+        ],
+        "heroicInspiration": {
+          "tag": "none"
+        },
+        "companion": {
+          "tag": "none"
+        },
+        "spellSlotExpenditures": []
+      },
+      "expected": {
+        "outcome": "success",
+        "value": {
+          "tag": "available",
+          "characterId": "character:synthetic-resource",
+          "hitPointMaximumReduction": 0,
+          "exhaustionLevel": 0,
+          "hitPoints": {
+            "tag": "positive",
+            "currentHp": 1,
+            "tempHp": 0
+          },
+          "conditions": [],
+          "spentHitDice": [],
+          "restFeatureUses": [],
+          "resourceExpenditures": [
+            {
+              "tag": "pointPoolResource",
+              "unitId": "sorcerer_font_of_magic",
+              "expended": 1
+            }
+          ],
+          "heroicInspiration": {
+            "tag": "none"
+          },
+          "companion": {
+            "tag": "none"
+          },
+          "build": {
+            "progression": {
+              "startingClass": "class_sorcerer",
+              "advancements": [
+                {
+                  "classUnitId": "class_sorcerer",
+                  "hitPointRule": {
+                    "tag": "fixedHigherLevelGain"
+                  }
+                }
+              ]
+            },
+            "background": "background_soldier",
+            "species": "species_orc",
+            "originLanguages": ["Common", "Dwarvish", "Goblin"],
+            "classFeatureLanguages": [],
+            "alignment": {
+              "order": "lawful",
+              "morality": "good"
+            },
+            "abilityScores": {
+              "str": 13,
+              "dex": 14,
+              "con": 13,
+              "int": 8,
+              "wis": 16,
+              "cha": 10
+            },
+            "proficiencyChoices": [],
+            "features": [
+              {
+                "kind": "selectedSorcererMetamagicOption",
+                "optionId": "sorcerer_empowered_spell",
+                "selectedFromUnitId": "sorcerer_metamagic"
+              },
+              {
+                "kind": "selectedSorcererMetamagicOption",
+                "optionId": "sorcerer_heightened_spell",
+                "selectedFromUnitId": "sorcerer_metamagic"
+              }
+            ],
+            "spellcasting": {
+              "sources": [
+                {
+                  "sourceUnitId": "class_sorcerer",
+                  "spellcastingAbility": "cha",
+                  "cantrips": ["light", "prestidigitation", "shocking_grasp"],
+                  "spellbook": [],
+                  "preparedSpells": ["burning_hands", "detect_magic"],
+                  "spellcastingFocuses": ["arcane_focus"]
+                }
+              ],
+              "slotPools": {
+                "spellcasting": {
+                  "kind": "spellcasting",
+                  "slots": [
+                    {
+                      "spellLevel": 1,
+                      "count": 3
+                    }
+                  ]
+                }
+              }
+            },
+            "magicInitiateSpellAccesses": [],
+            "equipment": {
+              "startingEquipmentCurrencyRemainderCp": 0,
+              "owned": [],
+              "loadout": {}
+            }
+          },
+          "spellSlotExpenditures": [],
+          "createdSpellSlots": []
+        }
+      }
+    },
+    {
+      "id": "null-rejected",
+      "input": null,
+      "expected": {
+        "outcome": "failure",
+        "issue": {
+          "tag": "characterSheetIssue",
+          "message": "Expected Character Sheet."
+        }
+      }
+    },
+    {
+      "id": "empty-record-rejected",
+      "input": {},
+      "expected": {
+        "outcome": "failure",
+        "issue": {
+          "tag": "characterSheetIssue",
+          "message": "Expected available Character Sheet."
+        }
+      }
+    },
+    {
+      "id": "malformed-spell-slot-state-rejected",
+      "input": {
+        "tag": "available",
+        "characterId": "character:synthetic-malformed-slot",
+        "build": {
+          "progression": {
+            "startingClass": "class_wizard",
+            "advancements": []
+          },
+          "background": "background_soldier",
+          "species": "species_orc",
+          "originLanguages": ["Common", "Dwarvish", "Goblin"],
+          "classFeatureLanguages": [],
+          "alignment": {
+            "order": "lawful",
+            "morality": "good"
+          },
+          "abilityScores": {
+            "str": 13,
+            "dex": 14,
+            "con": 13,
+            "int": 8,
+            "wis": 16,
+            "cha": 10
+          },
+          "proficiencyChoices": [],
+          "features": [],
+          "magicInitiateSpellAccesses": [],
+          "equipment": {
+            "startingEquipmentCurrencyRemainderCp": 0,
+            "owned": [],
+            "loadout": {}
+          },
+          "spellcasting": {
+            "sources": [
+              {
+                "sourceUnitId": "class_wizard",
+                "spellcastingAbility": "int",
+                "cantrips": [],
+                "spellbook": [],
+                "preparedSpells": [],
+                "spellcastingFocuses": ["arcane_focus"]
+              }
+            ],
+            "slotPools": {
+              "spellcasting": {
+                "kind": "spellcasting",
+                "slots": [
+                  {
+                    "spellLevel": 1,
+                    "count": 3
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "hitPointMaximumReduction": 0,
+        "hitPoints": {
+          "tag": "positive",
+          "currentHp": 1,
+          "tempHp": 0
+        },
+        "conditions": [],
+        "spentHitDice": [],
+        "resourceExpenditures": [],
+        "heroicInspiration": {
+          "tag": "none"
+        },
+        "companion": {
+          "tag": "none"
+        },
+        "spellSlotExpenditures": null
+      },
+      "expected": {
+        "outcome": "failure",
+        "issue": {
+          "tag": "characterSheetIssue",
+          "message": "Spell Slot expenditure state must be a list."
+        }
+      }
+    }
+  ]
+}
