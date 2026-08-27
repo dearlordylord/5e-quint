@@ -37,13 +37,13 @@ import {
 import { Index, SIZES } from "@dnd/shared/types";
 import { CombatantId } from "@dnd/battle-runtime";
 
-import { validOracleTraceLifecycle } from "./oracle-lifecycle.ts";
-
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.greaterThanOrEqualTo(0),
 );
 const IntegerSchema = Schema.Number.pipe(Schema.int());
+const OracleIndexSchema = Schema.fromBrand(Index)(NonNegativeIntegerSchema);
+type OracleIndex = Schema.Schema.Type<typeof OracleIndexSchema>;
 
 const CreationFillWithDistinctOptionIdsSchema = Schema.make<CreationFillFact>(
   CreationFillFactSchema.ast,
@@ -222,17 +222,17 @@ export type OracleEvaluationBatch = Schema.Schema.Type<
 >;
 
 const CreationFillRejectionSchema = Schema.Struct({
-  tag: Schema.Literal("creationFillRejected"),
+  tag: Schema.Literal("fillRejected"),
   issues: Schema.NonEmptyArray(CreationBatchRejectionFactSchema),
 });
 
 const CreationFinalizationRejectionSchema = Schema.Struct({
-  tag: Schema.Literal("creationFinalizationRejected"),
+  tag: Schema.Literal("finalizationRejected"),
   issues: Schema.NonEmptyArray(CreationFinalizationIssueSchema),
 });
 
 const SheetConstructionRejectionSchema = Schema.Struct({
-  tag: Schema.Literal("characterSheetConstructionRejected"),
+  tag: Schema.Literal("rejected"),
   issues: Schema.NonEmptyArray(CharacterSheetConstructionIssueSchema),
 });
 
@@ -341,27 +341,12 @@ const BattleEntryIssueSchema = Schema.Union(
 );
 
 export const BattleEntryRejectionSchema = Schema.Struct({
-  tag: Schema.Literal("battleEntryRejected"),
+  tag: Schema.Literal("rejected"),
   issues: Schema.NonEmptyArray(BattleEntryIssueSchema),
 });
 export type OracleBattleEntryRejection = Schema.Schema.Type<
   typeof BattleEntryRejectionSchema
 >;
-
-export const WorkflowRejectionSchema = Schema.Union(
-  Schema.Struct({ code: Schema.Literal("creationInputExhausted") }),
-  Schema.Struct({
-    code: Schema.Literal("creationInputSurplus"),
-    firstUnusedBatchIndex: Schema.fromBrand(Index)(NonNegativeIntegerSchema),
-  }),
-  Schema.Struct({
-    code: Schema.Literal("battleInputSurplus"),
-    firstUnusedAttemptIndex: Schema.fromBrand(Index)(NonNegativeIntegerSchema),
-  }),
-).annotations({
-  identifier: "OracleWorkflowRejection",
-  parseOptions: { onExcessProperty: "error" },
-});
 
 const OracleBattleCreatureSnapshotSchema = Schema.Struct({
   combatantId: CombatantId,
@@ -424,128 +409,227 @@ export type OracleBattleNonterminalFrontier =
   | OracleBattleActsFrontier
   | BattleMechanicalFrontier;
 
+export const OracleBattleAttemptRejectionReasonSchema = Schema.Literal(
+  "staleSubject",
+  "wrongActor",
+  "missingCombatant",
+  "invalidFill",
+  "unsupportedSubject",
+  "unsupportedActOption",
+).annotations({ identifier: "OracleBattleAttemptRejectionReason" });
+export type OracleBattleAttemptRejectionReason = Schema.Schema.Type<
+  typeof OracleBattleAttemptRejectionReasonSchema
+>;
+
+export interface OracleBattleAttemptSegment {
+  readonly rejections: readonly OracleBattleAttemptRejectionReason[];
+  readonly outcome: OracleBattleAttemptSegmentOutcome;
+}
+
+export type OracleBattleResolutionAfter =
+  | { readonly tag: "complete" }
+  | { readonly tag: "surplus"; readonly index: OracleIndex };
+
+export type OracleBattleAttemptSegmentOutcome =
+  | { readonly tag: "awaitingInput" }
+  | {
+      readonly tag: "next";
+      readonly continuation: OracleBattleContinuation;
+    }
+  | {
+      readonly tag: "resolved";
+      readonly checkpoint: OracleBattleCheckpoint;
+      readonly after: OracleBattleResolutionAfter;
+    };
+
+export interface OracleBattleContinuation {
+  readonly checkpoint: OracleBattleCheckpoint;
+  readonly frontier: OracleBattleNonterminalFrontier;
+  readonly segment: OracleBattleAttemptSegment;
+}
+
+interface OracleBattleAttemptSegmentEncoded {
+  readonly rejections: readonly OracleBattleAttemptRejectionReason[];
+  readonly outcome:
+    | { readonly tag: "awaitingInput" }
+    | {
+        readonly tag: "next";
+        readonly continuation: OracleBattleContinuationEncoded;
+      }
+    | {
+        readonly tag: "resolved";
+        readonly checkpoint: Schema.Schema.Encoded<
+          typeof OracleBattleCheckpointSchema
+        >;
+        readonly after:
+          | { readonly tag: "complete" }
+          | { readonly tag: "surplus"; readonly index: number };
+      };
+}
+
+interface OracleBattleContinuationEncoded {
+  readonly checkpoint: Schema.Schema.Encoded<
+    typeof OracleBattleCheckpointSchema
+  >;
+  readonly frontier: Schema.Schema.Encoded<
+    typeof OracleBattleNonterminalFrontierSchema
+  >;
+  readonly segment: OracleBattleAttemptSegmentEncoded;
+}
+
+export interface OracleBattleEntered {
+  readonly tag: "entered";
+  readonly checkpoint: OracleBattleCheckpoint;
+  readonly frontier: OracleBattleActsFrontier;
+  readonly segment: OracleBattleAttemptSegment;
+}
+
+export type OracleBattleEntryOutcome =
+  | OracleBattleEntryRejection
+  | OracleBattleEntered;
+
+export type OracleSheetOutcome =
+  | Schema.Schema.Type<typeof SheetConstructionRejectionSchema>
+  | {
+      readonly tag: "constructed";
+      readonly sheet: Schema.Schema.Type<
+        typeof FreshCharacterSheetProjectionSchema
+      >;
+      readonly battle: OracleBattleEntryOutcome;
+    };
+
+export type OracleCreationOutcome =
+  | Schema.Schema.Type<typeof CreationFillRejectionSchema>
+  | Schema.Schema.Type<typeof CreationFinalizationRejectionSchema>
+  | { readonly tag: "inputExhausted" }
+  | {
+      readonly tag: "inputSurplus";
+      readonly build: CharacterBuildFact;
+      readonly index: Index;
+    }
+  | {
+      readonly tag: "built";
+      readonly build: CharacterBuildFact;
+      readonly sheet: OracleSheetOutcome;
+    };
+
+export interface OracleCreationTrace {
+  readonly started: CreationFrontierFact;
+  readonly progression: readonly CreationFrontierFact[];
+  readonly outcome: OracleCreationOutcome;
+}
+
+export const OracleBattleContinuationSchema: Schema.suspend<
+  OracleBattleContinuation,
+  OracleBattleContinuationEncoded,
+  never
+> = Schema.suspend(() =>
+  Schema.Struct({
+    checkpoint: OracleBattleCheckpointSchema,
+    frontier: OracleBattleNonterminalFrontierSchema,
+    segment: OracleBattleAttemptSegmentSchema,
+  }).pipe(
+    Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
+      message: () =>
+        "Battle frontier references must agree with the projected checkpoint.",
+    }),
+  ),
+).annotations({
+  identifier: "OracleBattleContinuation",
+  parseOptions: { onExcessProperty: "error" },
+});
+
+export const OracleBattleAttemptSegmentSchema = Schema.Struct({
+  rejections: Schema.Array(OracleBattleAttemptRejectionReasonSchema),
+  outcome: Schema.Union(
+    Schema.Struct({ tag: Schema.Literal("awaitingInput") }),
+    Schema.Struct({
+      tag: Schema.Literal("next"),
+      continuation: OracleBattleContinuationSchema,
+    }),
+    Schema.Struct({
+      tag: Schema.Literal("resolved"),
+      checkpoint: OracleBattleCheckpointSchema,
+      after: Schema.Union(
+        Schema.Struct({ tag: Schema.Literal("complete") }),
+        Schema.Struct({
+          tag: Schema.Literal("surplus"),
+          index: OracleIndexSchema,
+        }),
+      ),
+    }),
+  ),
+}).annotations({
+  identifier: "OracleBattleAttemptSegment",
+  parseOptions: { onExcessProperty: "error" },
+});
 const OracleBattleEnteredShapeSchema = Schema.Struct({
-  tag: Schema.Literal("battleEntered"),
+  tag: Schema.Literal("entered"),
   checkpoint: OracleBattleCheckpointSchema,
   frontier: OracleBattleActsFrontierSchema,
-}).annotations({ parseOptions: { onExcessProperty: "error" } });
-export const OracleBattleEnteredSchema = OracleBattleEnteredShapeSchema.pipe(
+  segment: OracleBattleAttemptSegmentSchema,
+}).pipe(
   Schema.filter(oracleBattleEnteredInvariantsHold, {
     message: () =>
       "Battle frontier subjects must reference combatants in the checkpoint.",
   }),
+);
+export const OracleBattleEnteredSchema =
+  OracleBattleEnteredShapeSchema.annotations({
+    identifier: "OracleBattleEntered",
+    parseOptions: { onExcessProperty: "error" },
+  });
+
+const OracleSheetConstructionSuccessSchema = Schema.Struct({
+  tag: Schema.Literal("constructed"),
+  sheet: FreshCharacterSheetProjectionSchema,
+  battle: Schema.Union(BattleEntryRejectionSchema, OracleBattleEnteredSchema),
+});
+
+export const OracleSheetOutcomeSchema = Schema.Union(
+  SheetConstructionRejectionSchema,
+  OracleSheetConstructionSuccessSchema,
 ).annotations({
-  identifier: "OracleBattleEntered",
+  identifier: "OracleSheetOutcome",
   parseOptions: { onExcessProperty: "error" },
 });
-export type OracleBattleEntered = Schema.Schema.Type<
-  typeof OracleBattleEnteredSchema
->;
 
-export const OracleBattleProgressedSchema = Schema.Struct({
-  tag: Schema.Literal("battleProgressed"),
-  checkpoint: OracleBattleCheckpointSchema,
-  frontier: OracleBattleNonterminalFrontierSchema,
-})
-  .pipe(
-    Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
-      message: () =>
-        "Battle frontier references must agree with the projected checkpoint.",
-    }),
-  )
-  .annotations({
-    identifier: "OracleBattleProgressed",
-    parseOptions: { onExcessProperty: "error" },
-  });
-export type OracleBattleProgressed = Schema.Schema.Type<
-  typeof OracleBattleProgressedSchema
->;
-
-export const OracleBattleAttemptRejectionSchema = Schema.Struct({
-  tag: Schema.Literal("battleAttemptRejected"),
-  checkpoint: OracleBattleCheckpointSchema,
-  frontier: OracleBattleNonterminalFrontierSchema,
-  reason: Schema.Literal(
-    "staleSubject",
-    "wrongActor",
-    "missingCombatant",
-    "invalidFill",
-    "unsupportedSubject",
-    "unsupportedActOption",
-  ),
-})
-  .pipe(
-    Schema.filter(oracleBattleCheckpointFrontierInvariantsHold, {
-      message: () =>
-        "Battle frontier references must agree with the projected checkpoint.",
-    }),
-  )
-  .annotations({
-    identifier: "OracleBattleAttemptRejection",
-    parseOptions: { onExcessProperty: "error" },
-  });
-export type OracleBattleAttemptRejection = Schema.Schema.Type<
-  typeof OracleBattleAttemptRejectionSchema
->;
-
-export const OracleBattleResolvedSchema = Schema.Struct({
-  tag: Schema.Literal("battleResolved"),
-  checkpoint: OracleBattleCheckpointSchema,
-}).annotations({
-  identifier: "OracleBattleResolved",
-  parseOptions: { onExcessProperty: "error" },
-});
-export type OracleBattleResolved = Schema.Schema.Type<
-  typeof OracleBattleResolvedSchema
->;
-
-export const OracleTraceStepSchema = Schema.Union(
-  Schema.Struct({
-    tag: Schema.Literal("creationStarted", "creationProgressed"),
-    frontier: CreationFrontierFactSchema,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("characterBuilt"),
-    build: CharacterBuildFactSchema,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("characterSheetConstructed"),
-    sheet: FreshCharacterSheetProjectionSchema,
-  }),
+export const OracleCreationOutcomeSchema = Schema.Union(
   CreationFillRejectionSchema,
   CreationFinalizationRejectionSchema,
-  SheetConstructionRejectionSchema,
-  BattleEntryRejectionSchema,
-  OracleBattleEnteredSchema,
-  OracleBattleProgressedSchema,
-  OracleBattleAttemptRejectionSchema,
-  OracleBattleResolvedSchema,
+  Schema.Struct({ tag: Schema.Literal("inputExhausted") }),
   Schema.Struct({
-    tag: Schema.Literal("workflowRejected"),
-    reason: WorkflowRejectionSchema,
+    tag: Schema.Literal("inputSurplus"),
+    build: CharacterBuildFactSchema,
+    index: OracleIndexSchema,
+  }),
+  Schema.Struct({
+    tag: Schema.Literal("built"),
+    build: CharacterBuildFactSchema,
+    sheet: OracleSheetOutcomeSchema,
   }),
 ).annotations({
-  identifier: "OracleTraceStep",
+  identifier: "OracleCreationOutcome",
   parseOptions: { onExcessProperty: "error" },
 });
 
-export type OracleTraceStep = Schema.Schema.Type<typeof OracleTraceStepSchema>;
-
-// This shape is deliberately private. Public callers only receive the
-// lifecycle-refined schema/type below, so an invalid sequence cannot be
-// constructed through a weaker exported alias.
-const OracleTraceShapeSchema = Schema.Struct({
-  steps: Schema.NonEmptyArray(OracleTraceStepSchema),
-}).annotations({ parseOptions: { onExcessProperty: "error" } });
-export const OracleTraceSchema = OracleTraceShapeSchema.pipe(
-  Schema.filter(validOracleTraceLifecycle, {
-    message: () => "trace steps do not form a valid Oracle lifecycle",
-  }),
-  Schema.brand("OracleTrace"),
-).annotations({
-  identifier: "OracleTrace",
+export const OracleCreationTraceSchema = Schema.Struct({
+  started: CreationFrontierFactSchema,
+  progression: Schema.Array(CreationFrontierFactSchema),
+  outcome: OracleCreationOutcomeSchema,
+}).annotations({
+  identifier: "OracleCreationTrace",
   parseOptions: { onExcessProperty: "error" },
 });
+
+export const OracleTraceSchema = Schema.Struct({
+  creation: OracleCreationTraceSchema,
+})
+  .pipe(Schema.brand("OracleTrace"))
+  .annotations({
+    identifier: "OracleTrace",
+    parseOptions: { onExcessProperty: "error" },
+  });
 export type OracleTrace = Schema.Schema.Type<typeof OracleTraceSchema>;
 
 export const oracleCaseSchema = OracleCaseSchema;

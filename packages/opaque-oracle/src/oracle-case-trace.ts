@@ -26,35 +26,36 @@ export {
   FreshSheetInputSchema,
   OracleBattleActsFrontierSchema,
   OracleBattleAttemptSchema,
-  OracleBattleAttemptRejectionSchema,
+  OracleBattleAttemptRejectionReasonSchema,
+  OracleBattleAttemptSegmentSchema,
   OracleBattleCheckpointSchema,
+  OracleBattleContinuationSchema,
   OracleBattleEnteredSchema,
   OracleBattleNonterminalFrontierSchema,
   OracleBattleInterruptDecisionFillSchema,
   OracleBattleInterruptAttemptSchema,
   OracleBattleOrdinaryAttemptSchema,
-  OracleBattleProgressedSchema,
   OracleBattleInputSchema,
   OracleBattleRosterEntrySchema,
-  OracleBattleResolvedSchema,
   OracleCaseSchema,
+  OracleCreationOutcomeSchema,
+  OracleCreationTraceSchema,
   OracleEvaluationBatchSchema,
   OracleTraceSchema,
-  OracleTraceStepSchema,
-  WorkflowRejectionSchema,
   oracleCaseSchema,
   oracleEvaluationBatchSchema,
   oracleTraceSchema,
   type CreationFillBatch,
   type FreshSheetInput,
   type OracleBattleAttempt,
-  type OracleBattleAttemptRejection,
+  type OracleBattleAttemptRejectionReason,
+  type OracleBattleAttemptSegment,
+  type OracleBattleContinuation,
   type OracleBattleInterruptDecisionFill,
   type OracleBattleNonterminalFrontier,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleTrace,
-  type OracleTraceStep,
 } from "./oracle-case-trace-schema.ts";
 export { canonicalizeStringSet } from "./oracle-canonical.ts";
 export {
@@ -83,29 +84,7 @@ export function decodeOracleEvaluationBatch(
 export function decodeOracleTrace(
   input: unknown,
 ): Either.Either<OracleTrace, readonly OracleDecodeIssue[]> {
-  const decoded = decodeWithSchema(
-    OracleTraceSchema,
-    canonicalizeTraceInput(input),
-    {
-      classifyRefinement: (actual, path) =>
-        (path === "" || path === "/steps") &&
-        typeof actual === "object" &&
-        actual !== null &&
-        "steps" in actual &&
-        Array.isArray(actual.steps) &&
-        actual.steps.length > 0
-          ? "invalidLifecycle"
-          : undefined,
-    },
-  );
-  if (Either.isRight(decoded)) return decoded;
-  return Either.left(
-    decoded.left.map((issue) =>
-      issue.code === "invalidLifecycle" && issue.path === ""
-        ? { ...issue, path: "/steps" }
-        : issue,
-    ),
-  );
+  return decodeWithSchema(OracleTraceSchema, canonicalizeTraceInput(input));
 }
 
 export function decodeOracleCaseJson(

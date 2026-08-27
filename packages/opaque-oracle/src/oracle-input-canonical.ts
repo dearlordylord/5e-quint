@@ -48,19 +48,30 @@ export function canonicalizeBatchInput(input: unknown): unknown {
 }
 
 export function canonicalizeTraceInput(input: unknown): unknown {
-  if (!isRecord(input) || !Array.isArray(input.steps)) return input;
+  if (!isRecord(input) || !isRecord(input.creation)) return input;
+  const creation = input.creation;
+  const outcome = isRecord(creation.outcome)
+    ? canonicalizeCreationOutcome(creation.outcome)
+    : creation.outcome;
   return {
     ...input,
-    steps: input.steps.map((step) => {
-      if (!isRecord(step)) return step;
-      if (step.tag === "characterSheetConstructed" && isRecord(step.sheet)) {
-        return {
-          ...step,
-          sheet: canonicalizeFreshSheetProjection(step.sheet),
-        };
-      }
-      return step;
-    }),
+    creation: {
+      ...creation,
+      ...(outcome === undefined ? {} : { outcome }),
+    },
+  };
+}
+
+function canonicalizeCreationOutcome(input: RecordInput): unknown {
+  if (input.tag !== "built" || !isRecord(input.sheet)) return input;
+  const sheet = input.sheet;
+  if (sheet.tag !== "constructed" || !isRecord(sheet.sheet)) return input;
+  return {
+    ...input,
+    sheet: {
+      ...sheet,
+      sheet: canonicalizeFreshSheetProjection(sheet.sheet),
+    },
   };
 }
 
