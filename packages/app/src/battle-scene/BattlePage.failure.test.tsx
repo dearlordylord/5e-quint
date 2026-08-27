@@ -69,12 +69,26 @@ describe("BattlePage presentation failure", () => {
 
   it("renders interrupt choice projection issues with their reactor context", async () => {
     const actual = await vi.importActual<typeof BattleRuntime>("@dnd/battle-runtime")
-    const checkpointFrontier = actual.battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[4].session)
+    const checkpointFrontier = WIZARD_BATTLE_DEMO_STEPS.map((step) =>
+      actual.battlePresentedCheckpointFrontierEnvelope(step.session)
+    ).find(
+      (candidate) =>
+        Either.isRight(candidate) &&
+        candidate.right.frontier.kind === "interruptDecision" &&
+        candidate.right.frontier.choices.some(
+          (presentedChoice) => presentedChoice.choice.kind !== "reactionRollOrDamageReduction"
+        )
+    )
+    if (checkpointFrontier === undefined) {
+      throw new Error("Expected the battle demo to expose a subject-bearing interrupt decision.")
+    }
     if (Either.isLeft(checkpointFrontier) || checkpointFrontier.right.frontier.kind !== "interruptDecision") {
       throw new Error("Expected the counterspell demo step to expose an interrupt decision.")
     }
-    const presentedChoice = checkpointFrontier.right.frontier.choices[0]
-    if (presentedChoice.choice.kind === "reactionRollOrDamageReduction") {
+    const presentedChoice = checkpointFrontier.right.frontier.choices.find(
+      (candidate) => candidate.choice.kind !== "reactionRollOrDamageReduction"
+    )
+    if (presentedChoice === undefined || presentedChoice.choice.kind === "reactionRollOrDamageReduction") {
       throw new Error("Expected the counterspell interrupt to carry a presented battle subject.")
     }
     const issue = {
