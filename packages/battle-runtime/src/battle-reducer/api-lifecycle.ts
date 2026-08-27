@@ -69,6 +69,10 @@ export { removeBattleCombatants } from "./combatant-removal.ts";
 
 import type {
   BattleCreatureState,
+  BattleInitializationIssueFact,
+  BattleInitializationIssue,
+  BattleInitializationIssueFacts,
+  BattleInitializationLeafIssue,
   BattleExecutionScopeAllocation,
   BattleHidePrerequisite,
   BattleState,
@@ -90,25 +94,77 @@ function admissionIssueToInitIssue(
   return issue;
 }
 
-function battleStateInitIssueWithOwnerPath(
-  issue: BattleStateInitLeafIssue,
-  ownerPath: readonly (string | number)[] | undefined,
-): BattleStateInitLeafIssue {
-  return ownerPath === undefined ? issue : { ...issue, ownerPath };
+function battleInitializationIssue(
+  facts: BattleInitializationIssueFacts,
+  message: string,
+  ownerPath?: readonly (string | number)[],
+): BattleInitializationLeafIssue {
+  return {
+    tag: "battleStateInitIssue",
+    message,
+    ...facts,
+    ...(ownerPath === undefined ? {} : { ownerPath }),
+  };
 }
 
-function battleStateInitIssueFromLeafIssues(
-  issues: readonly BattleStateInitLeafIssue[],
-): Either.Either<never, BattleStateInitIssue> {
-  if (issues.length === 0) {
-    return battleStateInitIssue("Battle initialization failed.");
+function battleInitializationLeafIssueFromStateIssue(
+  issue: BattleStateInitLeafIssue,
+  fallbackFacts: BattleInitializationIssueFacts,
+  ownerPath?: readonly (string | number)[],
+): BattleInitializationLeafIssue {
+  const resolvedOwnerPath = issue.ownerPath ?? ownerPath;
+  if (issue.tag === "weaponLoadoutMismatch") {
+    return resolvedOwnerPath === undefined
+      ? issue
+      : { ...issue, ownerPath: resolvedOwnerPath };
   }
+  if ("kind" in issue) {
+    return resolvedOwnerPath === undefined
+      ? issue
+      : { ...issue, ownerPath: resolvedOwnerPath };
+  }
+  return {
+    ...issue,
+    ...fallbackFacts,
+    ...(resolvedOwnerPath === undefined
+      ? {}
+      : { ownerPath: resolvedOwnerPath }),
+  };
+}
+
+function battleInitializationIssueFromLeafIssues(
+  issues: ReadonlyNonEmptyArray<BattleInitializationLeafIssue>,
+): Either.Either<never, BattleInitializationIssue> {
   const [first, second, ...rest] = issues;
-  if (first === undefined) {
-    return battleStateInitIssue("Battle initialization failed.");
-  }
-  if (second === undefined) return Either.left(first);
-  return battleStateInitIssues(first, second, ...rest);
+  return second === undefined
+    ? Either.left(first)
+    : Either.left({
+        tag: "battleStateInitIssues",
+        issues: [first, second, ...rest],
+      });
+}
+
+function battleInitializationFactsForAdmission(
+  combatant: BattleCreatureInit,
+  issue: BattleStateInitLeafIssue | BattleUnitSupportProfileIssue,
+  issueIndex: number,
+): BattleInitializationIssueFacts {
+  return issue.tag === "battleUnitSupportProfileIssue"
+    ? {
+        kind: "characterAdmissionInvalid",
+        combatantId: combatant.combatantId,
+        phase: "executionBindings",
+        issueIndex,
+      }
+    : {
+        kind: "runtimeAdmissionInvalid",
+        combatantId: combatant.combatantId,
+        origin:
+          combatant.creatureInit.kind === "character"
+            ? "character"
+            : "statBlock",
+        issueIndex,
+      };
 }
 
 export function battleStateInitIssueFromAdmissionIssues(
@@ -179,6 +235,160 @@ class InitialInitiativeSetupWorkflow {
   }
 }
 
+export function battleInitializationIssueLeaves(
+  issue: BattleInitializationIssue,
+): readonly BattleInitializationLeafIssue[] {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleStateInitIssues" }, ({ issues }) =>
+      issues.flatMap(battleInitializationIssueLeaves),
+    ),
+    Match.when({ tag: "battleStateInitIssue" }, (leaf) => [leaf]),
+    Match.when({ tag: "weaponLoadoutMismatch" }, (leaf) => [leaf]),
+    Match.exhaustive,
+  );
+}
+
+export function battleInitializationIssueFactFields(
+  facts: BattleInitializationIssueFacts,
+): BattleInitializationIssueFact {
+  return Match.value(facts).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      emptyRoster: ({ kind }) => ({ reason: kind }),
+      duplicateCombatantId: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      ammunitionStockInvalid: ({ kind, combatantId, ammunition }) => ({
+        reason: kind,
+        combatantId,
+        ammunition,
+      }),
+      currentHpExceedsMaximum: ({
+        kind,
+        combatantId,
+        currentHp,
+        maximumHp,
+      }) => ({
+        reason: kind,
+        combatantId,
+        currentHp,
+        maximumHp,
+      }),
+      positiveHpUnconsciousInvalid: ({ kind, combatantId, requirement }) => ({
+        reason: kind,
+        combatantId,
+        requirement,
+      }),
+      zeroHpLifecycleInvalid: ({ kind, combatantId, requirement }) => ({
+        reason: kind,
+        combatantId,
+        requirement,
+      }),
+      initialConditionImmune: ({ kind, combatantId, condition }) => ({
+        reason: kind,
+        combatantId,
+        condition,
+      }),
+      statBlockSourceInvalid: ({ kind, statBlockId, constraint }) => ({
+        reason: kind,
+        statBlockId,
+        constraint,
+      }),
+      statBlockCombatantInvalid: ({ kind, combatantId, constraint }) => ({
+        reason: kind,
+        combatantId,
+        constraint,
+      }),
+      characterClassLevelsInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterSupportProjectionInvalid: ({
+        kind,
+        combatantId,
+        issueIndex,
+      }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterResourceInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterFeatureInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterSpellcastingInvalid: ({ kind, combatantId, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        issueIndex,
+      }),
+      characterAdmissionInvalid: ({
+        kind,
+        combatantId,
+        phase,
+        issueIndex,
+      }) => ({
+        reason: kind,
+        combatantId,
+        phase,
+        issueIndex,
+      }),
+      executionScopeUnavailable: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      runtimeContextMissing: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      weaponPresentationUnavailable: ({
+        kind,
+        combatantId,
+        weaponUnitId,
+        availability,
+      }) => ({
+        reason: kind,
+        combatantId,
+        weaponUnitId,
+        availability,
+      }),
+      hidePrerequisiteReferencesUnknownCombatant: ({
+        kind,
+        combatantId,
+        referencedCombatantId,
+      }) => ({
+        reason: kind,
+        combatantId,
+        referencedCombatantId,
+      }),
+      hidePrerequisiteSelfReference: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      initialCombatantOrderMissing: ({ kind, combatantId }) => ({
+        reason: kind,
+        combatantId,
+      }),
+      initialInitiativeInvalid: ({ kind, initializationReason }) => ({
+        reason: kind,
+        initializationReason,
+      }),
+      runtimeAdmissionInvalid: ({ kind, combatantId, origin, issueIndex }) => ({
+        reason: kind,
+        combatantId,
+        origin,
+        issueIndex,
+      }),
+    }),
+  );
+}
+
 export type InitialInitiativeSetup = InitialInitiativeSetupWorkflow;
 
 export type BattleStartInput = {
@@ -193,7 +403,7 @@ export type BattleStartInput = {
 
 export function startBattleWithInitialInitiativeSetup(
   input: BattleStartInput,
-): Either.Either<InitialInitiativeSetup, BattleStateInitIssue> {
+): Either.Either<InitialInitiativeSetup, BattleInitializationIssue> {
   const session = startBattle(input);
   return Either.isLeft(session)
     ? Either.left(session.left)
@@ -238,12 +448,17 @@ export function requiredInitiativeRollModeForCombatant(
 
 export function startBattle(
   input: BattleStartInput,
-): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
+): Either.Either<BattleRuntimeSession, BattleInitializationIssue> {
   if (input.combatants.length === 0) {
-    return battleStateInitIssue("startBattle requires at least one combatant.");
+    return Either.left(
+      battleInitializationIssue(
+        { kind: "emptyRoster" },
+        "startBattle requires at least one combatant.",
+      ),
+    );
   }
 
-  const initializationIssues: BattleStateInitLeafIssue[] = [];
+  const initializationIssues: BattleInitializationLeafIssue[] = [];
   const seenCombatantIds = new Set<CombatantId>();
   const combatants = new Map<CombatantId, BattleCreatureState>();
   const executionScopeCursors = new Map<
@@ -259,16 +474,19 @@ export function startBattle(
     import("../battle-runtime-context.ts").BattleStatBlockPresentationSource
   >();
   for (const [index, combatant] of input.combatants.entries()) {
-    const ownerPath = input.ownerPathForCombatant?.(combatant, index);
+    const ownerPath =
+      input.ownerPathForCombatant?.(combatant, index) ??
+      (["initialCombatants", index] as const);
     const duplicate = seenCombatantIds.has(combatant.combatantId);
     seenCombatantIds.add(combatant.combatantId);
     if (duplicate) {
       initializationIssues.push(
-        battleStateInitIssueWithOwnerPath(
+        battleInitializationIssue(
           {
-            tag: "battleStateInitIssue",
-            message: `Duplicate combatant id: ${combatant.combatantId}`,
+            kind: "duplicateCombatantId",
+            combatantId: combatant.combatantId,
           },
+          `Duplicate combatant id: ${combatant.combatantId}`,
           ownerPath,
         ),
       );
@@ -281,7 +499,16 @@ export function startBattle(
     ) {
       initializationIssues.push(
         ...battleStateInitIssueLeaves(positiveHpUnconsciousIssue.left).map(
-          (issue) => battleStateInitIssueWithOwnerPath(issue, ownerPath),
+          (issue) =>
+            battleInitializationLeafIssueFromStateIssue(
+              issue,
+              {
+                kind: "positiveHpUnconsciousInvalid",
+                combatantId: combatant.combatantId,
+                requirement: "oneCurrentHp",
+              },
+              ownerPath,
+            ),
         ),
       );
     }
@@ -293,8 +520,21 @@ export function startBattle(
     if (admission.tag === "invalid") {
       initializationIssues.push(
         ...admission.issues
-          .map(admissionIssueToInitIssue)
-          .map((issue) => battleStateInitIssueWithOwnerPath(issue, ownerPath)),
+          .map((issue, issueIndex) =>
+            battleInitializationLeafIssueFromStateIssue(
+              admissionIssueToInitIssue(issue),
+              battleInitializationFactsForAdmission(
+                combatant,
+                issue,
+                issueIndex,
+              ),
+            ),
+          )
+          .map((issue) =>
+            issue.tag === "weaponLoadoutMismatch" || ownerPath === undefined
+              ? issue
+              : { ...issue, ownerPath },
+          ),
       );
       continue;
     }
@@ -315,11 +555,12 @@ export function startBattle(
     }
     if (admission.nextScopeOrdinal <= 0) {
       initializationIssues.push(
-        battleStateInitIssueWithOwnerPath(
+        battleInitializationIssue(
           {
-            tag: "battleStateInitIssue",
-            message: `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
+            kind: "executionScopeUnavailable",
+            combatantId: combatant.combatantId,
           },
+          `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
           ownerPath,
         ),
       );
@@ -338,11 +579,19 @@ export function startBattle(
     combatants,
   );
   initializationIssues.push(
-    ...hidePrerequisiteIssues.map(({ combatantId, issue }) =>
-      battleStateInitIssueWithOwnerPath(
-        issue,
-        ownerPathForAdmittedCombatant(input, combatantId),
-      ),
+    ...hidePrerequisiteIssues.map(
+      ({ kind, combatantId, referencedCombatantId, issue }) =>
+        battleInitializationLeafIssueFromStateIssue(
+          issue,
+          kind === "unknownCombatant"
+            ? {
+                kind: "hidePrerequisiteReferencesUnknownCombatant",
+                combatantId,
+                referencedCombatantId: referencedCombatantId ?? combatantId,
+              }
+            : { kind: "hidePrerequisiteSelfReference", combatantId },
+          ownerPathForAdmittedCombatant(input, combatantId),
+        ),
     ),
   );
 
@@ -352,15 +601,41 @@ export function startBattle(
   });
   if (Either.isLeft(initiative)) {
     if (combatants.size > 0) {
-      initializationIssues.push(...battleStateInitIssueLeaves(initiative.left));
+      initializationIssues.push(
+        ...battleStateInitIssueLeaves(initiative.left).map((issue) =>
+          battleInitializationLeafIssueFromStateIssue(
+            issue,
+            {
+              kind: "initialInitiativeInvalid",
+              initializationReason: "stackConstruction",
+            },
+            ["battleInitialization", "initiative"],
+          ),
+        ),
+      );
     }
     if (initializationIssues.length > 0) {
-      return battleStateInitIssueFromLeafIssues(initializationIssues);
+      if (isNonEmptyReadonlyArray(initializationIssues)) {
+        return battleInitializationIssueFromLeafIssues(initializationIssues);
+      }
     }
-    return Either.left(initiative.left);
+    return Either.left(
+      battleInitializationIssue(
+        {
+          kind: "initialInitiativeInvalid",
+          initializationReason: "emptyRoster",
+        },
+        initiative.left.tag === "battleStateInitIssue"
+          ? initiative.left.message
+          : "Battle initialization could not create an initiative stack.",
+        ["battleInitialization", "initiative"],
+      ),
+    );
   }
   if (initializationIssues.length > 0 && combatants.size === 0) {
-    return battleStateInitIssueFromLeafIssues(initializationIssues);
+    if (isNonEmptyReadonlyArray(initializationIssues)) {
+      return battleInitializationIssueFromLeafIssues(initializationIssues);
+    }
   }
   const state: BattleState = {
     battleId: input.battleId,
@@ -387,11 +662,9 @@ export function startBattle(
     const characterContext = characterContexts.get(combatantId);
     if (characterContext === undefined) {
       initializationIssues.push(
-        battleStateInitIssueWithOwnerPath(
-          {
-            tag: "battleStateInitIssue",
-            message: `Character ${combatantId} is missing its runtime context.`,
-          },
+        battleInitializationIssue(
+          { kind: "runtimeContextMissing", combatantId },
+          `Character ${combatantId} is missing its runtime context.`,
           ownerPathForAdmittedCombatant(input, combatantId),
         ),
       );
@@ -408,11 +681,14 @@ export function startBattle(
       );
       if (Either.isLeft(presentationSource)) {
         initializationIssues.push(
-          battleStateInitIssueWithOwnerPath(
+          battleInitializationIssue(
             {
-              tag: "battleStateInitIssue",
-              message: `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.left.reason} authored presentation source.`,
+              kind: "weaponPresentationUnavailable",
+              combatantId,
+              weaponUnitId: attack.weapon.weaponUnitId,
+              availability: presentationSource.left.reason,
             },
+            `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.left.reason} authored presentation source.`,
             ownerPathForAdmittedCombatant(input, combatantId),
           ),
         );
@@ -427,7 +703,9 @@ export function startBattle(
     characterContexts.set(combatantId, spellAdmission.runtimeContext);
   }
   if (initializationIssues.length > 0) {
-    return battleStateInitIssueFromLeafIssues(initializationIssues);
+    if (isNonEmptyReadonlyArray(initializationIssues)) {
+      return battleInitializationIssueFromLeafIssues(initializationIssues);
+    }
   }
   return Either.right(
     battleRuntimeSessionFromAdmittedContext(
@@ -446,15 +724,15 @@ export function startBattle(
 function ownerPathForAdmittedCombatant(
   input: BattleStartInput,
   combatantId: CombatantId,
-): readonly (string | number)[] | undefined {
-  if (input.ownerPathForCombatant === undefined) return undefined;
+): readonly (string | number)[] {
   const index = input.combatants.findIndex(
     (candidate) => candidate.combatantId === combatantId,
   );
   const combatant = input.combatants[index];
   return combatant === undefined
-    ? undefined
-    : input.ownerPathForCombatant(combatant, index);
+    ? (["battleInitialization", "combatant"] as const)
+    : (input.ownerPathForCombatant?.(combatant, index) ??
+        (["initialCombatants", index] as const));
 }
 
 type InitialInitiativeCombatant = Pick<

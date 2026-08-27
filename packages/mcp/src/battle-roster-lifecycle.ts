@@ -291,11 +291,14 @@ function lifecycleFailureFromToolError(failure: ToolError) {
     });
   }
   const details = isJsonObject(payload.details) ? payload.details : {};
+  const issues = Array.isArray(details.issues) ? details.issues : [];
+  const singleIssue =
+    issues.length === 1 && isJsonObject(issues[0]) ? issues[0] : undefined;
   return battleLifecycleError(
     typeof payload.error === "string"
       ? payload.error
       : "Battle lifecycle operation failed.",
-    details,
+    singleIssue ?? details,
   );
 }
 

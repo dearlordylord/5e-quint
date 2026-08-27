@@ -5,7 +5,10 @@ import type { StatBlockMechanics } from "@dnd/surface/surface/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
 
-import type { BattleStateInitLeafIssue } from "./battle-state-execution.ts";
+import type {
+  BattleInitializationIssueFacts,
+  BattleStateInitLeafIssue,
+} from "./battle-state-execution.ts";
 import {
   battleExecutionScopeCursor,
   type BattleExecutionScopeOrdinal,
@@ -41,6 +44,7 @@ const BattleStatBlockCombatantSource =
 export function statBlockInitialConditionImmunityIssue(
   source: BattleStatBlockCombatantSource,
   conditions: readonly Condition[],
+  combatantId: CombatantId,
 ): BattleStateInitLeafIssue | null {
   const immuneInitialCondition = conditions.find((condition) =>
     source.statBlock.immunities?.conditions?.includes(condition),
@@ -50,6 +54,9 @@ export function statBlockInitialConditionImmunityIssue(
     : {
         tag: "battleStateInitIssue",
         message: `Stat Block combatant is immune to initial ${immuneInitialCondition} condition.`,
+        kind: "initialConditionImmune",
+        combatantId,
+        condition: immuneInitialCondition,
       };
 }
 
@@ -77,11 +84,20 @@ export function admitBattleStatBlockCombatantSource(input: {
 }): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
   const statBlock = input.source;
   if (typeof statBlock.statBlock.creatureType !== "string") {
-    return issue("Battle runtime requires a concrete creature type.");
+    return issue("Battle runtime requires a concrete creature type.", {
+      kind: "statBlockCombatantInvalid",
+      combatantId: input.combatantId,
+      constraint: "concreteCreatureTypeRequired",
+    });
   }
   if (statBlock.statBlock.resistances?.kind === "choose_one_from") {
     return issue(
       "Battle runtime requires Stat Block resistance choices to be resolved before admission.",
+      {
+        kind: "statBlockCombatantInvalid",
+        combatantId: input.combatantId,
+        constraint: "resolvedResistanceChoiceRequired",
+      },
     );
   }
   const from = input.startingScopeOrdinal;
@@ -133,10 +149,18 @@ export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSource,
 ): Either.Either<BattleStatBlockCombatantSource, BattleStateInitLeafIssue> {
   if (statBlock.statBlock.ac.kind !== "literal") {
-    return issue("Battle runtime requires literal Stat Block Armor Class.");
+    return issue("Battle runtime requires literal Stat Block Armor Class.", {
+      kind: "statBlockSourceInvalid",
+      statBlockId: statBlock.id,
+      constraint: "literalArmorClassRequired",
+    });
   }
   if (statBlock.statBlock.hp.kind !== "literal") {
-    return issue("Battle runtime requires literal Stat Block maximum HP.");
+    return issue("Battle runtime requires literal Stat Block maximum HP.", {
+      kind: "statBlockSourceInvalid",
+      statBlockId: statBlock.id,
+      constraint: "literalMaximumHitPointsRequired",
+    });
   }
   if (
     !Number.isInteger(statBlock.statBlock.hp.value) ||
@@ -144,10 +168,19 @@ export function battleStatBlockCombatantSource(
   ) {
     return issue(
       "Battle runtime requires Stat Block maximum HP to be a positive integer.",
+      {
+        kind: "statBlockSourceInvalid",
+        statBlockId: statBlock.id,
+        constraint: "positiveMaximumHitPointsRequired",
+      },
     );
   }
   if (typeof statBlock.statBlock.size !== "string") {
-    return issue("Battle runtime requires a concrete creature Size.");
+    return issue("Battle runtime requires a concrete creature Size.", {
+      kind: "statBlockSourceInvalid",
+      statBlockId: statBlock.id,
+      constraint: "concreteSizeRequired",
+    });
   }
   return Either.right(
     BattleStatBlockCombatantSource({
@@ -164,6 +197,11 @@ export function battleStatBlockCombatantSource(
 
 function issue(
   message: string,
+  facts: BattleInitializationIssueFacts,
 ): Either.Either<never, BattleStateInitLeafIssue> {
-  return Either.left({ tag: "battleStateInitIssue", message });
+  return Either.left({
+    tag: "battleStateInitIssue",
+    message,
+    ...facts,
+  });
 }

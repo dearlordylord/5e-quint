@@ -85,6 +85,7 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(empty.left).toEqual({
         tag: "battleStateInitIssue",
         message: "startBattle requires at least one combatant.",
+        kind: "emptyRoster",
       });
     }
 
@@ -97,6 +98,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       expect(duplicate.left).toEqual({
         tag: "battleStateInitIssue",
         message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
+        kind: "duplicateCombatantId",
+        combatantId: baseCombatant.combatantId,
+        ownerPath: ["initialCombatants", 1],
       });
     }
   });

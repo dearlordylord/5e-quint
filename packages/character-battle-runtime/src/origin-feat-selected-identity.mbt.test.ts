@@ -354,7 +354,7 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
 
   return {
@@ -377,7 +377,7 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
-    throw new Error(projection.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(projection.left));
   }
 
   return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
@@ -414,8 +414,8 @@ function publicStartBattleSelectedReferenceRuntimeRoute(
       source: { kind: "available", input: statBlockEntryInput },
     },
   ]);
-  if (roster.issues.length > 0) {
-    throw new Error(`Roster admission failed: ${roster.issues[0]?.kind}`);
+  if (roster.tag === "rejected") {
+    throw new Error(`Roster admission failed: ${roster.issues[0].kind}`);
   }
   const session = startBattle({
     battleId: battleId("battle:origin-feat-runtime-entry"),
@@ -464,7 +464,7 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
   return score.right;
 }
