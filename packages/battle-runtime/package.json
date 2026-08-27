@@ -18,6 +18,7 @@
     "test": "vitest run --exclude \"**/*.mbt.test.ts\"",
     "test:qnt-proofs": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh pnpm run test:qnt-proofs:body",
     "test:qnt-proofs:body": "../../scripts/assert-resource-lock.sh mbt && RUN_QNT_PROOFS=1 vitest run src/battle-runtime-qnt-proofs.test.ts",
+    "typecheck:spell-procedure-execution-schema": "tsc --noEmit -p tsconfig.spell-procedure-execution-schema.typecheck.json",
     "test:mbt:acid-arrow-timing": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/acid-arrow-timing.mbt.test.ts",
     "test:mbt:after-hit-damage-riders": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/after-hit-damage-riders.mbt.test.ts",
     "test:mbt:weapon-hosted-attack-and-riders": ". ../../scripts/resource-lock-owner.sh && with_resource_lock_owner ../../scripts/with-mbt-lock.sh vitest run src/weapon-hosted-attack-and-riders.mbt.test.ts",
