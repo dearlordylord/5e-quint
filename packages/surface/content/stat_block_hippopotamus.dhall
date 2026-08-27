@@ -1,10 +1,74 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 4, id = "stat_block_hippopotamus", kind = "statBlock", name = "Hippopotamus", provenance = { kind = "srd-5.2.1", section = "Animals.md:1478-1504" }, statBlock = { abilityScores = { cha = 4, con = 15, dex = 7, int = 2, str = 21, wis = 12 }, ac = { value = { kind = "literal", value = 14 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { dispatches = Some [ { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 } ], kind = "multiattack", name = "Multiattack" }), procedureOrdinal = 1 }, defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +7, reach 5 ft. *Hit:* 16 (2d10 + 5) Piercing damage.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +7 }, attackType = Some "melee", kind = "attack_roll", name = "Bite", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 2, dieSize = 10, flat = Some +5 }, kind = "fixed", static = 16 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 2 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 82 }, initiative = { modifier = -2, score = 8 }, passivePerception = 13, savingThrowModifiers = [ { ability = "str", modifier = +7 }, { ability = "dex", modifier = -2 }, { ability = "con", modifier = +2 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -3 } ], size = "large", skillModifiers = [ { modifier = +3, skill = "perception" } ], speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" }, { feet = { kind = "literal", value = 30 }, kind = "swim" } ], traits = [ { description = "The hippopotamus can hold its breath for 10 minutes.", name = "Hold Breath" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
+in  { challengeRating = 4
+    , id = "stat_block_hippopotamus"
+    , kind = "statBlock"
+    , name = "Hippopotamus"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1478-1504" }
+    , statBlock =
+      { abilityScores =
+        { cha = 4, con = 15, dex = 7, int = 2, str = 21, wis = 12 }
+      , ac.value = { kind = "literal", value = 14 }
+      , actions =
+        [ S.executable
+            { procedureOrdinal = 1
+            , procedure =
+                S.multiattack
+                  { name = "Multiattack"
+                  , dispatches =
+                    [ { count = { kind = "literal", value = +2 }
+                      , procedureOrdinal = 2
+                      }
+                    ]
+                  }
+            }
+        , S.executable
+            { procedureOrdinal = 2
+            , procedure =
+                S.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +7
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.damage
+                        { damageType = "piercing"
+                        , dice = 2
+                        , dieSize = 10
+                        , flat = Some +5
+                        , static = 16
+                        }
+                    ]
+                  }
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 82 }
+      , initiative = { modifier = -2, score = 8 }
+      , passivePerception = 13
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +7 }
+        , { ability = "dex", modifier = -2 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , size = "large"
+      , skillModifiers = [ { modifier = +3, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 30 }, kind = "swim" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Hold Breath"
+            , description =
+                "The hippopotamus can hold its breath for 10 minutes."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

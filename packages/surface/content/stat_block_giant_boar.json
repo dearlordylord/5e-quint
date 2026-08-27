@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 5
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 10 (2d6 + 3) Piercing damage. If the target is a Large or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 7 (2d6) Piercing damage and has the Prone condition.",
-          "kind": "attack_roll",
-          "name": "Gore",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 6,
-                  "flat": 3
-                },
-                "kind": "fixed",
-                "static": 10
-              },
-              "damageType": "piercing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 10 (2d6 + 3) Piercing damage. If the target is a Large or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 7 (2d6) Piercing damage and has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Gore",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

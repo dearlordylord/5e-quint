@@ -32,7 +32,6 @@
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 10 (2d6 + 3) Piercing damage.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -59,6 +58,21 @@
       }
     ],
     "alignment": "unaligned",
+    "bonusActions": [
+      {
+        "description": "Immediately after dealing damage to a creature that was already Bloodied, the hyena can move up to half its Speed, and it makes one Bite attack.",
+        "kind": "textOnly",
+        "name": "Rampage",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
     "communication": {
       "kind": "none"
     },
@@ -72,6 +86,16 @@
       "score": 12
     },
     "passivePerception": 13,
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
     "savingThrowModifiers": [
       {
         "ability": "str",

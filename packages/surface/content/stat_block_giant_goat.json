@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 5
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",
-          "kind": "attack_roll",
-          "name": "Ram",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 6,
-                  "flat": 3
-                },
-                "kind": "fixed",
-                "static": 6
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature and the goat moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Ram",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

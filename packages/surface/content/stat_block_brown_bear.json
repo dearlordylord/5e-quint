@@ -59,7 +59,6 @@
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 7 (1d8 + 3) Piercing damage.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -93,7 +92,6 @@
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 5 (1d4 + 3) Slashing damage. If the target is a Large or smaller creature, it has the Prone condition.",
           "kind": "attack_roll",
           "name": "Claw",
           "onHit": [
@@ -109,6 +107,11 @@
               },
               "damageType": "slashing",
               "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
             }
           ],
           "reachFeet": 5

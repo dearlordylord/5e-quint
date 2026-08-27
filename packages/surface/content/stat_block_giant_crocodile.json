@@ -24,62 +24,21 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "dispatches": [
-            {
-              "count": {
-                "kind": "literal",
-                "value": 1
-              },
-              "procedureOrdinal": 2
-            },
-            {
-              "count": {
-                "kind": "literal",
-                "value": 1
-              },
-              "procedureOrdinal": 3
-            }
-          ],
-          "kind": "multiattack",
-          "name": "Multiattack"
-        },
+        "description": "The crocodile makes one Bite attack and one Tail attack.",
+        "kind": "textOnly",
+        "name": "Multiattack",
         "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 8
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +8, reach 5 ft. *Hit:* 21 (3d10 + 5) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 15). While Grappled, the target has the Restrained condition and can't be targeted by the crocodile's Tail.",
-          "kind": "attack_roll",
-          "name": "Bite",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 3,
-                  "dieSize": 10,
-                  "flat": 5
-                },
-                "kind": "fixed",
-                "static": 21
-              },
-              "damageType": "piercing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +8, reach 5 ft. *Hit:* 21 (3d10 + 5) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 15). While Grappled, the target has the Restrained condition and can't be targeted by the crocodile's Tail.",
+        "kind": "textOnly",
+        "name": "Bite",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
@@ -93,7 +52,6 @@
             "value": 8
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +8, reach 10 ft. *Hit:* 18 (3d8 + 5) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.",
           "kind": "attack_roll",
           "name": "Tail",
           "onHit": [
@@ -109,6 +67,11 @@
               },
               "damageType": "bludgeoning",
               "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
             }
           ],
           "reachFeet": 10

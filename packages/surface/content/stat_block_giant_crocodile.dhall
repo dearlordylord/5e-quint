@@ -1,10 +1,77 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 5, id = "stat_block_giant_crocodile", kind = "statBlock", name = "Giant Crocodile", provenance = { kind = "srd-5.2.1", section = "Animals.md:828-856" }, statBlock = { abilityScores = { cha = 7, con = 17, dex = 9, int = 2, str = 21, wis = 10 }, ac = { value = { kind = "literal", value = 14 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { dispatches = Some [ { count = { kind = "literal", value = +1 }, procedureOrdinal = 2 }, { count = { kind = "literal", value = +1 }, procedureOrdinal = 3 } ], kind = "multiattack", name = "Multiattack" }), procedureOrdinal = 1 }, defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +8, reach 5 ft. *Hit:* 21 (3d10 + 5) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 15). While Grappled, the target has the Restrained condition and can't be targeted by the crocodile's Tail.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +8 }, attackType = Some "melee", kind = "attack_roll", name = "Bite", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 3, dieSize = 10, flat = Some +5 }, kind = "fixed", static = 21 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 2 }, defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +8, reach 10 ft. *Hit:* 18 (3d8 + 5) Bludgeoning damage. If the target is a Large or smaller creature, it has the Prone condition.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +8 }, attackType = Some "melee", kind = "attack_roll", name = "Tail", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 3, dieSize = 8, flat = Some +5 }, kind = "fixed", static = 18 }, damageType = "bludgeoning" } ], reachFeet = Some 10 } ), procedureOrdinal = 3 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 85 }, initiative = { modifier = -1, score = 9 }, passivePerception = 10, savingThrowModifiers = [ { ability = "str", modifier = +5 }, { ability = "dex", modifier = -1 }, { ability = "con", modifier = +3 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -2 } ], size = "huge", skillModifiers = [ { modifier = +5, skill = "stealth" } ], speeds = [ { feet = { kind = "literal", value = 30 }, kind = "walk" }, { feet = { kind = "literal", value = 50 }, kind = "swim" } ], traits = [ { description = "The crocodile can hold its breath for 1 hour.", name = "Hold Breath" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
+in  { challengeRating = 5
+    , id = "stat_block_giant_crocodile"
+    , kind = "statBlock"
+    , name = "Giant Crocodile"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:828-856" }
+    , statBlock =
+      { abilityScores =
+        { cha = 7, con = 17, dex = 9, int = 2, str = 21, wis = 10 }
+      , ac.value = { kind = "literal", value = 14 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Multiattack"
+            , description =
+                "The crocodile makes one Bite attack and one Tail attack."
+            , reason = "unsupported_procedure_family"
+            }
+        , S.textOnly
+            { procedureOrdinal = 2
+            , name = "Bite"
+            , description =
+                "*Melee Attack Roll:* +8, reach 5 ft. *Hit:* 21 (3d10 + 5) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 15). While Grappled, the target has the Restrained condition and can't be targeted by the crocodile's Tail."
+            , reason = "unsupported_action_shape"
+            }
+        , S.executable
+            { procedureOrdinal = 3
+            , procedure =
+                S.meleeAttack
+                  { name = "Tail"
+                  , attackAbility = "str"
+                  , attackBonus = +8
+                  , reachFeet = 10
+                  , onHit =
+                    [ S.damage
+                        { damageType = "bludgeoning"
+                        , dice = 3
+                        , dieSize = 8
+                        , flat = Some +5
+                        , static = 18
+                        }
+                    , S.conditionIfSize
+                        { condition = "prone", maxCreatureSize = "large" }
+                    ]
+                  }
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 85 }
+      , initiative = { modifier = -1, score = 9 }
+      , passivePerception = 10
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +5 }
+        , { ability = "dex", modifier = -1 }
+        , { ability = "con", modifier = +3 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = -2 }
+        ]
+      , size = "huge"
+      , skillModifiers = [ { modifier = +5, skill = "stealth" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 50 }, kind = "swim" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Hold Breath"
+            , description = "The crocodile can hold its breath for 1 hour."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

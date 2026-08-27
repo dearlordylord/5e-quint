@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 6
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. *Hit:* 14 (3d6 + 4) Piercing damage.",
-          "kind": "attack_roll",
-          "name": "Bite",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 3,
-                  "dieSize": 6,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 14
-              },
-              "damageType": "piercing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +6 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. *Hit:* 14 (3d6 + 4) Piercing damage.",
+        "kind": "textOnly",
+        "name": "Bite",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

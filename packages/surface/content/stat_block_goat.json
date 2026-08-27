@@ -24,34 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 2
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +2, reach 5 ft. *Hit:* 1 Bludgeoning damage, or 2 (1d4) Bludgeoning damage if the goat moved 20+ feet straight toward the target immediately before the hit.",
-          "kind": "attack_roll",
-          "name": "Ram",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 4
-                },
-                "kind": "fixed",
-                "static": 2
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +2, reach 5 ft. *Hit:* 1 Bludgeoning damage, or 2 (1d4) Bludgeoning damage if the goat moved 20+ feet straight toward the target immediately before the hit.",
+        "kind": "textOnly",
+        "name": "Ram",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

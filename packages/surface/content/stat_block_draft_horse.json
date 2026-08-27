@@ -32,7 +32,6 @@
             "value": 6
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 6 (1d4 + 4) Bludgeoning damage.",
           "kind": "attack_roll",
           "name": "Hooves",
           "onHit": [

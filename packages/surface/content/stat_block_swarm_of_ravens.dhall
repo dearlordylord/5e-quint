@@ -1,12 +1,81 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 0.25, id = "stat_block_swarm_of_ravens", kind = "statBlock", name = "Swarm of Ravens", provenance = { kind = "srd-5.2.1", section = "Animals.md:2347-2375" }, statBlock = { abilityScores = { cha = 6, con = 12, dex = 14, int = 5, str = 6, wis = 12 }, ac = { value = { kind = "literal", value = 12 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +4 }, attackType = Some "melee", kind = "attack_roll", name = "Beaks", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 1, dieSize = 6, flat = Some +2 }, kind = "fixed", static = 5 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 1 }, defaultAction // { description = Some "*Wisdom Saving Throw:* DC 10, one creature in the swarm's space. *Failure:* The target has the Deafened condition until the start of the swarm's next turn. While Deafened, the target also has Disadvantage on ability checks and attack rolls.", kind = "textOnly", name = Some "Cacophony (Recharge 6)", procedureOrdinal = 2, reason = Some "unsupported_procedure_family" } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", creatureTypeTags = [ "swarm of tiny beasts" ], hp = { kind = "literal", value = 11 }, immunities = { conditions = [ "charmed", "frightened", "grappled", "paralyzed", "petrified", "prone", "restrained", "stunned" ] }, initiative = { modifier = +2, score = 12 }, passivePerception = 15, resistances = { damageTypes = [ "bludgeoning", "piercing", "slashing" ], kind = "fixed" }, savingThrowModifiers = [ { ability = "str", modifier = -2 }, { ability = "dex", modifier = +2 }, { ability = "con", modifier = +1 }, { ability = "int", modifier = -3 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -2 } ], size = "medium", skillModifiers = [ { modifier = +5, skill = "perception" } ], speeds = [ { feet = { kind = "literal", value = 10 }, kind = "walk" }, { feet = { kind = "literal", value = 50 }, kind = "fly" } ], traits = [ { description = "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny raven. The swarm can't regain Hit Points or gain Temporary Hit Points.", name = "Swarm" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 0.25
+    , id = "stat_block_swarm_of_ravens"
+    , kind = "statBlock"
+    , name = "Swarm of Ravens"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2347-2375" }
+    , statBlock =
+      { abilityScores =
+        { cha = 6, con = 12, dex = 14, int = 5, str = 6, wis = 12 }
+      , ac.value = { kind = "literal", value = 12 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Beaks"
+            , description =
+                "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied."
+            , reason = "unsupported_action_shape"
+            }
+        , S.resourceTextOnly
+            { procedureOrdinal = 2
+            , name = "Cacophony"
+            , description =
+                "*Wisdom Saving Throw:* DC 10, one creature in the swarm's space. *Failure:* The target has the Deafened condition until the start of the swarm's next turn. While Deafened, the target also has Disadvantage on ability checks and attack rolls."
+            , reason = "unsupported_procedure_family"
+            , resourceOrdinals = [ 1 ]
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , creatureTypeTags = [ "swarm of tiny beasts" ]
+      , hp = { kind = "literal", value = 11 }
+      , immunities.conditions
+        =
+        [ "charmed"
+        , "frightened"
+        , "grappled"
+        , "paralyzed"
+        , "petrified"
+        , "prone"
+        , "restrained"
+        , "stunned"
+        ]
+      , initiative = { modifier = +2, score = 12 }
+      , passivePerception = 15
+      , resistances =
+        { damageTypes = [ "bludgeoning", "piercing", "slashing" ]
+        , kind = "fixed"
+        }
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = -2 }
+        , { ability = "dex", modifier = +2 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = -3 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -2 }
+        ]
+      , size = "medium"
+      , skillModifiers = [ { modifier = +5, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 10 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 50 }, kind = "fly" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Swarm"
+            , description =
+                "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny raven. The swarm can't regain Hit Points or gain Temporary Hit Points."
+            , effectKind = None Text
+            }
+        ]
+      , resources =
+        [ S.resource
+            { ordinal = 1
+            , ownership = "shared"
+            , limit = S.recharge { minimumRoll = 6 }
+            }
+        ]
+      }
+    }

@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 3
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 6 (2d4 + 1) Poison damage, or 3 (1d4 + 1) Poison damage if the swarm is Bloodied.",
-          "kind": "attack_roll",
-          "name": "Bites",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 4,
-                  "flat": 1
-                },
-                "kind": "fixed",
-                "static": 6
-              },
-              "damageType": "poison",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 6 (2d4 + 1) Poison damage, or 3 (1d4 + 1) Poison damage if the swarm is Bloodied.",
+        "kind": "textOnly",
+        "name": "Bites",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

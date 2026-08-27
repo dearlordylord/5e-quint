@@ -32,7 +32,6 @@
             "value": 6
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 15 (2d10 + 4) Piercing damage.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -58,35 +57,11 @@
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 6
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 8 (1d8 + 4) Slashing damage. If the target is a Large or smaller creature and the allosaurus moved 30+ feet straight toward it immediately before the hit, the target has the Prone condition, and the allosaurus can make one Bite attack against it.",
-          "kind": "attack_roll",
-          "name": "Claws",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 8,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 8
-              },
-              "damageType": "slashing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 8 (1d8 + 4) Slashing damage. If the target is a Large or smaller creature and the allosaurus moved 30+ feet straight toward it immediately before the hit, the target has the Prone condition, and the allosaurus can make one Bite attack against it.",
+        "kind": "textOnly",
+        "name": "Claws",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

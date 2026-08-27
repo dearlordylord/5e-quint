@@ -26,16 +26,23 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "str",
+          "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 2
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +2, reach 5 ft. *Hit:* 1 Piercing damage plus 3 (1d6) Poison damage.",
           "kind": "attack_roll",
           "name": "Sting",
           "onHit": [
+            {
+              "amount": {
+                "kind": "fixed",
+                "static": 1
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
             {
               "amount": {
                 "expr": {

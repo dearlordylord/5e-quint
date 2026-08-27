@@ -1,109 +1,4 @@
-let Effect
-    : Type
-    = { amount :
-          { expr :
-              Optional
-                { dice : Natural, dieSize : Natural, flat : Optional Integer }
-          , kind : Text
-          , static : Natural
-          }
-      , damageType : Text
-      , kind : Text
-      }
-
-let Procedure
-    : Type
-    = { ability : Optional Text
-      , attackAbility : Optional Text
-      , attackBonus : Optional { kind : Text, value : Integer }
-      , attackType : Optional Text
-      , description : Optional Text
-      , components : Optional { m : Bool, s : Bool, v : Bool }
-      , dispatches :
-          Optional
-            ( List
-                { count : { kind : Text, value : Integer }
-                , procedureOrdinal : Natural
-                }
-            )
-      , groups :
-          Optional
-            ( List
-                { kind : Text
-                , resourceRefs : { kind : Text, ordinals : List Natural }
-                , spells : List { restriction : Text, spellId : Text }
-                }
-            )
-      , kind : Text
-      , name : Text
-      , onHit : Optional (List Effect)
-      , rangeFeet : Optional { long : Natural, normal : Natural }
-      , reachFeet : Optional Natural
-      }
-
-let defaultProcedure
-    : Procedure
-    = { ability = None Text
-      , attackAbility = None Text
-      , attackBonus = None { kind : Text, value : Integer }
-      , attackType = None Text
-      , description = None Text
-      , components = None { m : Bool, s : Bool, v : Bool }
-      , dispatches =
-          None
-            ( List
-                { count : { kind : Text, value : Integer }
-                , procedureOrdinal : Natural
-                }
-            )
-      , groups =
-          None
-            ( List
-                { kind : Text
-                , resourceRefs : { kind : Text, ordinals : List Natural }
-                , spells : List { restriction : Text, spellId : Text }
-                }
-            )
-      , kind = ""
-      , name = ""
-      , onHit = None (List Effect)
-      , rangeFeet = None { long : Natural, normal : Natural }
-      , reachFeet = None Natural
-      }
-
-let Action
-    : Type
-    = { description : Optional Text
-      , kind : Text
-      , name : Optional Text
-      , procedure : Optional Procedure
-      , procedureOrdinal : Natural
-      , reason : Optional Text
-      , resourceRefs : { kind : Text, ordinals : Optional (List Natural) }
-      }
-
-let defaultAction
-    : Action
-    = { description = None Text
-      , kind = ""
-      , name = None Text
-      , procedure = None Procedure
-      , procedureOrdinal = 0
-      , reason = None Text
-      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
-      }
-
-let defaultEffect
-    : Effect
-    = { amount =
-        { expr =
-            None { dice : Natural, dieSize : Natural, flat : Optional Integer }
-        , kind = "fixed"
-        , static = 1
-        }
-      , damageType = "bludgeoning"
-      , kind = "damage"
-      }
+let S = ./_stat_block_types.dhall
 
 in  { challengeRating = 0
     , id = "stat_block_giant_fire_beetle"
@@ -115,24 +10,18 @@ in  { challengeRating = 0
         { cha = 3, con = 12, dex = 10, int = 1, str = 8, wis = 7 }
       , ac.value = { kind = "literal", value = 13 }
       , actions =
-        [     defaultAction
-          //  { kind = "executable"
-              , procedure = Some
-                  (     defaultProcedure
-                    //  { attackAbility = Some "str"
-                        , attackBonus = Some { kind = "literal", value = +1 }
-                        , attackType = Some "melee"
-                        , description = Some
-                            "*Melee Attack Roll:* +1, reach 5 ft. *Hit:* 1 Fire damage."
-                        , kind = "attack_roll"
-                        , name = "Bite"
-                        , onHit = Some
-                          [ defaultEffect // { damageType = "fire" } ]
-                        , reachFeet = Some 5
-                        }
-                  )
-              , procedureOrdinal = 1
-              }
+        [ S.executable
+            { procedureOrdinal = 1
+            , procedure =
+                S.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +1
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.staticDamage { damageType = "fire", static = 1 } ]
+                  }
+            }
         ]
       , alignment = "unaligned"
       , communication.kind = "none"
@@ -156,10 +45,12 @@ in  { challengeRating = 0
         , { feet = { kind = "literal", value = 30 }, kind = "climb" }
         ]
       , traits =
-        [ { description =
-              "The beetle sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet."
-          , name = "Illumination"
-          }
+        [ S.trait
+            { name = "Illumination"
+            , description =
+                "The beetle sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet."
+            , effectKind = None Text
+            }
         ]
       }
     }

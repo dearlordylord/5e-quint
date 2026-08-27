@@ -26,13 +26,12 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "str",
+          "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 4
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +4, reach 5 feet. *Hit:* 4 (1d4 + 2) Slashing damage.",
           "kind": "attack_roll",
           "name": "Talons",
           "onHit": [
@@ -49,7 +48,8 @@
               "damageType": "slashing",
               "kind": "damage"
             }
-          ]
+          ],
+          "reachFeet": 5
         },
         "procedureOrdinal": 1,
         "resourceRefs": {

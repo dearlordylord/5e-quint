@@ -1,12 +1,57 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 0.5, id = "stat_block_giant_seahorse", kind = "statBlock", name = "Giant Seahorse", provenance = { kind = "srd-5.2.1", section = "Animals.md:1174-1201" }, statBlock = { abilityScores = { cha = 5, con = 11, dex = 12, int = 2, str = 15, wis = 12 }, ac = { value = { kind = "literal", value = 14 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 9 (2d6 + 2) Bludgeoning damage, or 11 (2d8 + 2) Bludgeoning damage if the seahorse moved 20+ feet straight toward the target immediately before the hit.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +4 }, attackType = Some "melee", kind = "attack_roll", name = "Ram", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 2, dieSize = 6, flat = Some +2 }, kind = "fixed", static = 9 }, damageType = "bludgeoning" } ], reachFeet = Some 5 } ), procedureOrdinal = 1 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 16 }, initiative = { modifier = +1, score = 11 }, passivePerception = 11, savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "dex", modifier = +1 }, { ability = "con", modifier = +0 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -3 } ], size = "large", speeds = [ { feet = { kind = "literal", value = 5 }, kind = "walk" }, { feet = { kind = "literal", value = 40 }, kind = "swim" } ], traits = [ { description = "The seahorse can breathe only underwater.", name = "Water Breathing" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 0.5
+    , id = "stat_block_giant_seahorse"
+    , kind = "statBlock"
+    , name = "Giant Seahorse"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1174-1201" }
+    , statBlock =
+      { abilityScores =
+        { cha = 5, con = 11, dex = 12, int = 2, str = 15, wis = 12 }
+      , ac.value = { kind = "literal", value = 14 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Ram"
+            , description =
+                "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 9 (2d6 + 2) Bludgeoning damage, or 11 (2d8 + 2) Bludgeoning damage if the seahorse moved 20+ feet straight toward the target immediately before the hit."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 16 }
+      , initiative = { modifier = +1, score = 11 }
+      , passivePerception = 11
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +2 }
+        , { ability = "dex", modifier = +1 }
+        , { ability = "con", modifier = +0 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , size = "large"
+      , speeds =
+        [ { feet = { kind = "literal", value = 5 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 40 }, kind = "swim" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Water Breathing"
+            , description = "The seahorse can breathe only underwater."
+            , effectKind = None Text
+            }
+        ]
+      , bonusActions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Bubble Dash"
+            , description =
+                "While underwater, the seahorse moves up to half its Swim Speed without provoking Opportunity Attacks."
+            , reason = "unsupported_procedure_family"
+            }
+        ]
+      }
+    }

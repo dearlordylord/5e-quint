@@ -1,10 +1,91 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 1, id = "stat_block_brown_bear", kind = "statBlock", name = "Brown Bear", provenance = { kind = "srd-5.2.1", section = "Animals.md:268-292" }, statBlock = { abilityScores = { cha = 7, con = 15, dex = 12, int = 2, str = 17, wis = 13 }, ac = { value = { kind = "literal", value = 11 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { dispatches = Some [ { count = { kind = "literal", value = +1 }, procedureOrdinal = 2 }, { count = { kind = "literal", value = +1 }, procedureOrdinal = 3 } ], kind = "multiattack", name = "Multiattack" }), procedureOrdinal = 1 }, defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 7 (1d8 + 3) Piercing damage.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +5 }, attackType = Some "melee", kind = "attack_roll", name = "Bite", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 1, dieSize = 8, flat = Some +3 }, kind = "fixed", static = 7 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 2 }, defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 5 (1d4 + 3) Slashing damage. If the target is a Large or smaller creature, it has the Prone condition.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +5 }, attackType = Some "melee", kind = "attack_roll", name = "Claw", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 1, dieSize = 4, flat = Some +3 }, kind = "fixed", static = 5 }, damageType = "slashing" } ], reachFeet = Some 5 } ), procedureOrdinal = 3 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 22 }, initiative = { modifier = +1, score = 11 }, passivePerception = 13, savingThrowModifiers = [ { ability = "str", modifier = +3 }, { ability = "dex", modifier = +1 }, { ability = "con", modifier = +2 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -2 } ], senses = [ { kind = "darkvision", rangeFeet = 60 } ], size = "large", skillModifiers = [ { modifier = +3, skill = "perception" } ], speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" }, { feet = { kind = "literal", value = 30 }, kind = "climb" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
+in  { challengeRating = 1
+    , id = "stat_block_brown_bear"
+    , kind = "statBlock"
+    , name = "Brown Bear"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:268-292" }
+    , statBlock =
+      { abilityScores =
+        { cha = 7, con = 15, dex = 12, int = 2, str = 17, wis = 13 }
+      , ac.value = { kind = "literal", value = 11 }
+      , actions =
+        [ S.executable
+            { procedureOrdinal = 1
+            , procedure =
+                S.multiattack
+                  { name = "Multiattack"
+                  , dispatches =
+                    [ { count = { kind = "literal", value = +1 }
+                      , procedureOrdinal = 2
+                      }
+                    , { count = { kind = "literal", value = +1 }
+                      , procedureOrdinal = 3
+                      }
+                    ]
+                  }
+            }
+        , S.executable
+            { procedureOrdinal = 2
+            , procedure =
+                S.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +5
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.damage
+                        { damageType = "piercing"
+                        , dice = 1
+                        , dieSize = 8
+                        , flat = Some +3
+                        , static = 7
+                        }
+                    ]
+                  }
+            }
+        , S.executable
+            { procedureOrdinal = 3
+            , procedure =
+                S.meleeAttack
+                  { name = "Claw"
+                  , attackAbility = "str"
+                  , attackBonus = +5
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.damage
+                        { damageType = "slashing"
+                        , dice = 1
+                        , dieSize = 4
+                        , flat = Some +3
+                        , static = 5
+                        }
+                    , S.conditionIfSize
+                        { condition = "prone", maxCreatureSize = "large" }
+                    ]
+                  }
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 22 }
+      , initiative = { modifier = +1, score = 11 }
+      , passivePerception = 13
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +3 }
+        , { ability = "dex", modifier = +1 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -2 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+      , size = "large"
+      , skillModifiers = [ { modifier = +3, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 40 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+        ]
+      }
+    }

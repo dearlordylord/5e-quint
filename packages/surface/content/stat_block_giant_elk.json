@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 6
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6, reach 10 ft. *Hit:* 11 (2d6 + 4) Bludgeoning damage plus 5 (2d4) Radiant damage. If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",
-          "kind": "attack_roll",
-          "name": "Ram",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 6,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 11
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 10
-        },
+        "description": "*Melee Attack Roll:* +6, reach 10 ft. *Hit:* 11 (2d6 + 4) Bludgeoning damage plus 5 (2d4) Radiant damage. If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Ram",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

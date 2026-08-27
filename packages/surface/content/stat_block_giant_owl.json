@@ -26,13 +26,12 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "str",
+          "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 4
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 7 (1d10 + 2) Slashing damage.",
           "kind": "attack_roll",
           "name": "Talons",
           "onHit": [
@@ -58,13 +57,16 @@
         }
       },
       {
-        "description": "The owl casts one of the following spells, requiring no spell components and using Wisdom as the spellcasting ability:",
+        "description": "The owl casts one of the following spells, requiring no spell components and using Wisdom as the spellcasting ability:\n\nAt Will: *Detect Evil and Good*, *Detect Magic*\n1/Day: *Clairvoyance*",
         "kind": "textOnly",
         "name": "Spellcasting",
         "procedureOrdinal": 2,
         "reason": "unsupported_procedure_family",
         "resourceRefs": {
-          "kind": "none"
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
         }
       }
     ],
@@ -101,6 +103,16 @@
       ],
       "kind": "fixed"
     },
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
     "savingThrowModifiers": [
       {
         "ability": "str",

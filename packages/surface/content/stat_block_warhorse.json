@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 6
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 9 (2d4 + 4) Bludgeoning damage. If the target is a Large or smaller creature and the horse moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",
-          "kind": "attack_roll",
-          "name": "Hooves",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 4,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 9
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 9 (2d4 + 4) Bludgeoning damage. If the target is a Large or smaller creature and the horse moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Hooves",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

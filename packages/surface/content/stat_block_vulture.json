@@ -26,13 +26,12 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "str",
+          "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 2
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +2, reach 5 ft. *Hit:* 2 (1d4) Piercing damage.",
           "kind": "attack_roll",
           "name": "Beak",
           "onHit": [
@@ -123,6 +122,9 @@
     "traits": [
       {
         "description": "The vulture has Advantage on an attack roll against a creature if at least one of the vulture's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "effect": {
+          "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+        },
         "name": "Pack Tactics"
       }
     ]

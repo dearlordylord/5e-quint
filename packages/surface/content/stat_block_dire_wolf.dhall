@@ -1,12 +1,66 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 1, id = "stat_block_dire_wolf", kind = "statBlock", name = "Dire Wolf", provenance = { kind = "srd-5.2.1", section = "Animals.md:457-481" }, statBlock = { abilityScores = { cha = 7, con = 15, dex = 15, int = 3, str = 17, wis = 12 }, ac = { value = { kind = "literal", value = 14 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 8 (1d10 + 3) Piercing damage. If the target is a Large or smaller creature, it has the Prone condition.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +5 }, attackType = Some "melee", kind = "attack_roll", name = "Bite", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 1, dieSize = 10, flat = Some +3 }, kind = "fixed", static = 8 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 1 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 22 }, initiative = { modifier = +2, score = 12 }, passivePerception = 15, savingThrowModifiers = [ { ability = "str", modifier = +3 }, { ability = "dex", modifier = +2 }, { ability = "con", modifier = +2 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -2 } ], senses = [ { kind = "darkvision", rangeFeet = 60 } ], size = "large", skillModifiers = [ { modifier = +5, skill = "perception" }, { modifier = +4, skill = "stealth" } ], speeds = [ { feet = { kind = "literal", value = 50 }, kind = "walk" } ], traits = [ { description = "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.", name = "Pack Tactics" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 1
+    , id = "stat_block_dire_wolf"
+    , kind = "statBlock"
+    , name = "Dire Wolf"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:457-481" }
+    , statBlock =
+      { abilityScores =
+        { cha = 7, con = 15, dex = 15, int = 3, str = 17, wis = 12 }
+      , ac.value = { kind = "literal", value = 14 }
+      , actions =
+        [ S.executable
+            { procedureOrdinal = 1
+            , procedure =
+                S.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +5
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.damage
+                        { damageType = "piercing"
+                        , dice = 1
+                        , dieSize = 10
+                        , flat = Some +3
+                        , static = 8
+                        }
+                    , S.conditionIfSize
+                        { condition = "prone", maxCreatureSize = "large" }
+                    ]
+                  }
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 22 }
+      , initiative = { modifier = +2, score = 12 }
+      , passivePerception = 15
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +3 }
+        , { ability = "dex", modifier = +2 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -2 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+      , size = "large"
+      , skillModifiers =
+        [ { modifier = +5, skill = "perception" }
+        , { modifier = +4, skill = "stealth" }
+        ]
+      , speeds = [ { feet = { kind = "literal", value = 50 }, kind = "walk" } ]
+      , traits =
+        [ S.trait
+            { name = "Pack Tactics"
+            , description =
+                "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+            , effectKind = Some
+                "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+            }
+        ]
+      }
+    }

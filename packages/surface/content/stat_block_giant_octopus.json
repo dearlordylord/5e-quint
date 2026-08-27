@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 5
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 10 ft. *Hit:* 10 (2d6 + 3) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 13) from all eight tentacles. While Grappled, the target has the Restrained condition.",
-          "kind": "attack_roll",
-          "name": "Tentacles",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 6,
-                  "flat": 3
-                },
-                "kind": "fixed",
-                "static": 10
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 10
-        },
+        "description": "*Melee Attack Roll:* +5, reach 10 ft. *Hit:* 10 (2d6 + 3) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 13) from all eight tentacles. While Grappled, the target has the Restrained condition.",
+        "kind": "textOnly",
+        "name": "Tentacles",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
@@ -72,6 +48,31 @@
       "score": 11
     },
     "passivePerception": 14,
+    "reactions": [
+      {
+        "description": "*Trigger:* The octopus takes damage while underwater. *Response:* The octopus releases ink that fills a 10-foot Cube centered on itself, and the octopus moves up to its Swim Speed. The Cube is Heavily Obscured for 1 minute or until a strong current or similar effect disperses the ink.",
+        "kind": "textOnly",
+        "name": "Ink Cloud",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
     "savingThrowModifiers": [
       {
         "ability": "str",

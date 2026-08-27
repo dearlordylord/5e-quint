@@ -32,7 +32,6 @@
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 8 (1d10 + 3) Piercing damage. If the target is a Large or smaller creature, it has the Prone condition.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -48,6 +47,11 @@
               },
               "damageType": "piercing",
               "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
             }
           ],
           "reachFeet": 5
@@ -127,6 +131,9 @@
     "traits": [
       {
         "description": "The wolf has Advantage on an attack roll against a creature if at least one of the wolf's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "effect": {
+          "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+        },
         "name": "Pack Tactics"
       }
     ]

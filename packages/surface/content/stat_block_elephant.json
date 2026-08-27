@@ -24,61 +24,39 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "dispatches": [
-            {
-              "count": {
-                "kind": "literal",
-                "value": 2
-              },
-              "procedureOrdinal": 2
-            }
-          ],
-          "kind": "multiattack",
-          "name": "Multiattack"
-        },
+        "description": "The elephant makes two Gore attacks.",
+        "kind": "textOnly",
+        "name": "Multiattack",
         "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 8
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +8, reach 5 ft. *Hit:* 15 (2d8 + 6) Piercing damage. If the target is a Huge or smaller creature and the elephant moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition.",
-          "kind": "attack_roll",
-          "name": "Gore",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 8,
-                  "flat": 6
-                },
-                "kind": "fixed",
-                "static": 15
-              },
-              "damageType": "piercing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +8, reach 5 ft. *Hit:* 15 (2d8 + 6) Piercing damage. If the target is a Huge or smaller creature and the elephant moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Gore",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
       }
     ],
     "alignment": "unaligned",
+    "bonusActions": [
+      {
+        "description": "*Dexterity Saving Throw:* DC 16, one creature within 5 feet that has the Prone condition. *Failure:* 17 (2d10 + 6) Bludgeoning damage. *Success:* Half damage.",
+        "kind": "textOnly",
+        "name": "Trample",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
     "communication": {
       "kind": "none"
     },

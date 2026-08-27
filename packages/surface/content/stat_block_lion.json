@@ -42,7 +42,6 @@
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 7 (1d8 + 3) Slashing damage.",
           "kind": "attack_roll",
           "name": "Rend",
           "onHit": [
@@ -147,6 +146,9 @@
     "traits": [
       {
         "description": "The lion has Advantage on an attack roll against a creature if at least one of the lion's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "effect": {
+          "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+        },
         "name": "Pack Tactics"
       },
       {

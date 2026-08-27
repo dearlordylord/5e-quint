@@ -32,7 +32,6 @@
             "value": 1
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +1, reach 5 ft. *Hit:* 1 (1d4 − 1) Piercing damage.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -118,6 +117,9 @@
     "traits": [
       {
         "description": "The baboon has Advantage on an attack roll against a creature if at least one of the baboon's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "effect": {
+          "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+        },
         "name": "Pack Tactics"
       }
     ]

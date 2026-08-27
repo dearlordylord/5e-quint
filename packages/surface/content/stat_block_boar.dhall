@@ -1,12 +1,46 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 0.25, id = "stat_block_boar", kind = "statBlock", name = "Boar", provenance = { kind = "srd-5.2.1", section = "Animals.md:241-264" }, statBlock = { abilityScores = { cha = 5, con = 14, dex = 11, int = 2, str = 13, wis = 9 }, ac = { value = { kind = "literal", value = 11 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 4 (1d6 + 1) Piercing damage. If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Piercing damage and has the Prone condition.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +3 }, attackType = Some "melee", kind = "attack_roll", name = "Gore", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 1, dieSize = 6, flat = Some +1 }, kind = "fixed", static = 4 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 1 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 13 }, initiative = { modifier = +0, score = 10 }, passivePerception = 9, savingThrowModifiers = [ { ability = "str", modifier = +1 }, { ability = "dex", modifier = +0 }, { ability = "con", modifier = +2 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = -1 }, { ability = "cha", modifier = -3 } ], size = "medium", speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" } ], traits = [ { description = "While Bloodied, the boar has Advantage on attack rolls.", name = "Bloodied Fury" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 0.25
+    , id = "stat_block_boar"
+    , kind = "statBlock"
+    , name = "Boar"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:241-264" }
+    , statBlock =
+      { abilityScores =
+        { cha = 5, con = 14, dex = 11, int = 2, str = 13, wis = 9 }
+      , ac.value = { kind = "literal", value = 11 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Gore"
+            , description =
+                "*Melee Attack Roll:* +3, reach 5 ft. *Hit:* 4 (1d6 + 1) Piercing damage. If the target is a Medium or smaller creature and the boar moved 20+ feet straight toward it immediately before the hit, the target takes an extra 3 (1d6) Piercing damage and has the Prone condition."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 13 }
+      , initiative = { modifier = +0, score = 10 }
+      , passivePerception = 9
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +1 }
+        , { ability = "dex", modifier = +0 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = -1 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , size = "medium"
+      , speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" } ]
+      , traits =
+        [ S.trait
+            { name = "Bloodied Fury"
+            , description =
+                "While Bloodied, the boar has Advantage on attack rolls."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

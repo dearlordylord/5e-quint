@@ -1,12 +1,69 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 0.5, id = "stat_block_reef_shark", kind = "statBlock", name = "Reef Shark", provenance = { kind = "srd-5.2.1", section = "Animals.md:2036-2062" }, statBlock = { abilityScores = { cha = 4, con = 13, dex = 15, int = 1, str = 14, wis = 10 }, ac = { value = { kind = "literal", value = 12 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 7 (2d4 + 2) Piercing damage.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +4 }, attackType = Some "melee", kind = "attack_roll", name = "Bite", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 2, dieSize = 4, flat = Some +2 }, kind = "fixed", static = 7 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 1 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 22 }, initiative = { modifier = +2, score = 12 }, passivePerception = 12, savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "dex", modifier = +2 }, { ability = "con", modifier = +1 }, { ability = "int", modifier = -5 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -3 } ], senses = [ { kind = "blindsight", rangeFeet = 30 } ], size = "medium", skillModifiers = [ { modifier = +2, skill = "perception" } ], speeds = [ { feet = { kind = "literal", value = 5 }, kind = "walk" }, { feet = { kind = "literal", value = 30 }, kind = "swim" } ], traits = [ { description = "The shark has Advantage on an attack roll against a creature if at least one of the shark's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.", name = "Pack Tactics" }, { description = "The shark can breathe only underwater.", name = "Water Breathing" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 0.5
+    , id = "stat_block_reef_shark"
+    , kind = "statBlock"
+    , name = "Reef Shark"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:2036-2062" }
+    , statBlock =
+      { abilityScores =
+        { cha = 4, con = 13, dex = 15, int = 1, str = 14, wis = 10 }
+      , ac.value = { kind = "literal", value = 12 }
+      , actions =
+        [ S.executable
+            { procedureOrdinal = 1
+            , procedure =
+                S.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +4
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.damage
+                        { damageType = "piercing"
+                        , dice = 2
+                        , dieSize = 4
+                        , flat = Some +2
+                        , static = 7
+                        }
+                    ]
+                  }
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 22 }
+      , initiative = { modifier = +2, score = 12 }
+      , passivePerception = 12
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +2 }
+        , { ability = "dex", modifier = +2 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = -5 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , senses = [ { kind = "blindsight", rangeFeet = 30 } ]
+      , size = "medium"
+      , skillModifiers = [ { modifier = +2, skill = "perception" } ]
+      , speeds =
+        [ { feet = { kind = "literal", value = 5 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 30 }, kind = "swim" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Pack Tactics"
+            , description =
+                "The shark has Advantage on an attack roll against a creature if at least one of the shark's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+            , effectKind = Some
+                "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+            }
+        , S.trait
+            { name = "Water Breathing"
+            , description = "The shark can breathe only underwater."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

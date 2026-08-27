@@ -1,12 +1,48 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 2, id = "stat_block_giant_elk", kind = "statBlock", name = "Giant Elk", provenance = { kind = "srd-5.2.1", section = "Animals.md:887-908" }, statBlock = { abilityScores = { cha = 10, con = 14, dex = 18, int = 7, str = 19, wis = 14 }, ac = { value = { kind = "literal", value = 14 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +6, reach 10 ft. *Hit:* 11 (2d6 + 4) Bludgeoning damage plus 5 (2d4) Radiant damage. If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +6 }, attackType = Some "melee", kind = "attack_roll", name = "Ram", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 2, dieSize = 6, flat = Some +4 }, kind = "fixed", static = 11 }, damageType = "bludgeoning" } ], reachFeet = Some 10 } ), procedureOrdinal = 1 } ], alignment = { morality = "good", order = "neutral" }, communication = { kind = "understood_but_cannot_speak", languages = { kind = "named", languages = [ "Celestial", "Common", "Elvish", "Sylvan" ] } }, creatureType = "celestial", hp = { kind = "literal", value = 42 }, initiative = { modifier = +6, score = 16 }, passivePerception = 14, resistances = { damageTypes = [ "necrotic", "radiant" ], kind = "fixed" }, savingThrowModifiers = [ { ability = "str", modifier = +6 }, { ability = "dex", modifier = +6 }, { ability = "con", modifier = +2 }, { ability = "int", modifier = -2 }, { ability = "wis", modifier = +2 }, { ability = "cha", modifier = +0 } ], senses = [ { kind = "darkvision", rangeFeet = 90 } ], size = "huge", skillModifiers = [ { modifier = +4, skill = "perception" } ], speeds = [ { feet = { kind = "literal", value = 60 }, kind = "walk" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 2
+    , id = "stat_block_giant_elk"
+    , kind = "statBlock"
+    , name = "Giant Elk"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:887-908" }
+    , statBlock =
+      { abilityScores =
+        { cha = 10, con = 14, dex = 18, int = 7, str = 19, wis = 14 }
+      , ac.value = { kind = "literal", value = 14 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Ram"
+            , description =
+                "*Melee Attack Roll:* +6, reach 10 ft. *Hit:* 11 (2d6 + 4) Bludgeoning damage plus 5 (2d4) Radiant damage. If the target is a Huge or smaller creature and the elk moved 20+ feet straight toward it immediately before the hit, the target takes an extra 5 (2d4) Bludgeoning damage and has the Prone condition."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = { morality = "good", order = "neutral" }
+      , communication =
+        { kind = "understood_but_cannot_speak"
+        , languages =
+          { kind = "named"
+          , languages = [ "Celestial", "Common", "Elvish", "Sylvan" ]
+          }
+        }
+      , creatureType = "celestial"
+      , hp = { kind = "literal", value = 42 }
+      , initiative = { modifier = +6, score = 16 }
+      , passivePerception = 14
+      , resistances =
+        { damageTypes = [ "necrotic", "radiant" ], kind = "fixed" }
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +6 }
+        , { ability = "dex", modifier = +6 }
+        , { ability = "con", modifier = +2 }
+        , { ability = "int", modifier = -2 }
+        , { ability = "wis", modifier = +2 }
+        , { ability = "cha", modifier = +0 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 90 } ]
+      , size = "huge"
+      , skillModifiers = [ { modifier = +4, skill = "perception" } ]
+      , speeds = [ { feet = { kind = "literal", value = 60 }, kind = "walk" } ]
+      }
+    }

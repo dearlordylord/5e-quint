@@ -32,7 +32,6 @@
             "value": 6
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6, reach 10 ft. *Hit:* 11 (2d6 + 4) Piercing damage.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [

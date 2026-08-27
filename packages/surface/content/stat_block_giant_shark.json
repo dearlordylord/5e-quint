@@ -24,55 +24,21 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "dispatches": [
-            {
-              "count": {
-                "kind": "literal",
-                "value": 2
-              },
-              "procedureOrdinal": 2
-            }
-          ],
-          "kind": "multiattack",
-          "name": "Multiattack"
-        },
+        "description": "The shark makes two Bite attacks.",
+        "kind": "textOnly",
+        "name": "Multiattack",
         "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 9
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +9 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. *Hit:* 22 (3d10 + 6) Piercing damage.",
-          "kind": "attack_roll",
-          "name": "Bite",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 3,
-                  "dieSize": 10,
-                  "flat": 6
-                },
-                "kind": "fixed",
-                "static": 22
-              },
-              "damageType": "piercing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +9 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. *Hit:* 22 (3d10 + 6) Piercing damage.",
+        "kind": "textOnly",
+        "name": "Bite",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

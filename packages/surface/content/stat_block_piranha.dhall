@@ -1,109 +1,4 @@
-let Effect
-    : Type
-    = { amount :
-          { expr :
-              Optional
-                { dice : Natural, dieSize : Natural, flat : Optional Integer }
-          , kind : Text
-          , static : Natural
-          }
-      , damageType : Text
-      , kind : Text
-      }
-
-let Procedure
-    : Type
-    = { ability : Optional Text
-      , attackAbility : Optional Text
-      , attackBonus : Optional { kind : Text, value : Integer }
-      , attackType : Optional Text
-      , description : Optional Text
-      , components : Optional { m : Bool, s : Bool, v : Bool }
-      , dispatches :
-          Optional
-            ( List
-                { count : { kind : Text, value : Integer }
-                , procedureOrdinal : Natural
-                }
-            )
-      , groups :
-          Optional
-            ( List
-                { kind : Text
-                , resourceRefs : { kind : Text, ordinals : List Natural }
-                , spells : List { restriction : Text, spellId : Text }
-                }
-            )
-      , kind : Text
-      , name : Text
-      , onHit : Optional (List Effect)
-      , rangeFeet : Optional { long : Natural, normal : Natural }
-      , reachFeet : Optional Natural
-      }
-
-let defaultProcedure
-    : Procedure
-    = { ability = None Text
-      , attackAbility = None Text
-      , attackBonus = None { kind : Text, value : Integer }
-      , attackType = None Text
-      , description = None Text
-      , components = None { m : Bool, s : Bool, v : Bool }
-      , dispatches =
-          None
-            ( List
-                { count : { kind : Text, value : Integer }
-                , procedureOrdinal : Natural
-                }
-            )
-      , groups =
-          None
-            ( List
-                { kind : Text
-                , resourceRefs : { kind : Text, ordinals : List Natural }
-                , spells : List { restriction : Text, spellId : Text }
-                }
-            )
-      , kind = ""
-      , name = ""
-      , onHit = None (List Effect)
-      , rangeFeet = None { long : Natural, normal : Natural }
-      , reachFeet = None Natural
-      }
-
-let Action
-    : Type
-    = { description : Optional Text
-      , kind : Text
-      , name : Optional Text
-      , procedure : Optional Procedure
-      , procedureOrdinal : Natural
-      , reason : Optional Text
-      , resourceRefs : { kind : Text, ordinals : Optional (List Natural) }
-      }
-
-let defaultAction
-    : Action
-    = { description = None Text
-      , kind = ""
-      , name = None Text
-      , procedure = None Procedure
-      , procedureOrdinal = 0
-      , reason = None Text
-      , resourceRefs = { kind = "none", ordinals = None (List Natural) }
-      }
-
-let defaultEffect
-    : Effect
-    = { amount =
-        { expr =
-            None { dice : Natural, dieSize : Natural, flat : Optional Integer }
-        , kind = "fixed"
-        , static = 1
-        }
-      , damageType = "bludgeoning"
-      , kind = "damage"
-      }
+let S = ./_stat_block_types.dhall
 
 in  { challengeRating = 0
     , id = "stat_block_piranha"
@@ -115,24 +10,13 @@ in  { challengeRating = 0
         { cha = 2, con = 9, dex = 16, int = 1, str = 2, wis = 7 }
       , ac.value = { kind = "literal", value = 13 }
       , actions =
-        [     defaultAction
-          //  { kind = "executable"
-              , procedure = Some
-                  (     defaultProcedure
-                    //  { attackAbility = Some "dex"
-                        , attackBonus = Some { kind = "literal", value = +5 }
-                        , attackType = Some "melee"
-                        , description = Some
-                            "*Melee Attack Roll:* +5 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. *Hit:* 1 Piercing damage."
-                        , kind = "attack_roll"
-                        , name = "Bite"
-                        , onHit = Some
-                          [ defaultEffect // { damageType = "piercing" } ]
-                        , reachFeet = Some 5
-                        }
-                  )
-              , procedureOrdinal = 1
-              }
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Bite"
+            , description =
+                "*Melee Attack Roll:* +5 (with Advantage if the target doesn't have all its Hit Points), reach 5 ft. *Hit:* 1 Piercing damage."
+            , reason = "unsupported_action_shape"
+            }
         ]
       , alignment = "unaligned"
       , communication.kind = "none"
@@ -155,9 +39,11 @@ in  { challengeRating = 0
         , { feet = { kind = "literal", value = 40 }, kind = "swim" }
         ]
       , traits =
-        [ { description = "The piranha can breathe only underwater."
-          , name = "Water Breathing"
-          }
+        [ S.trait
+            { name = "Water Breathing"
+            , description = "The piranha can breathe only underwater."
+            , effectKind = None Text
+            }
         ]
       }
     }

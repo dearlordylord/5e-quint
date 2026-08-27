@@ -1,12 +1,84 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 1, id = "stat_block_lion", kind = "statBlock", name = "Lion", provenance = { kind = "srd-5.2.1", section = "Animals.md:1616-1646" }, statBlock = { abilityScores = { cha = 8, con = 11, dex = 15, int = 3, str = 17, wis = 12 }, ac = { value = { kind = "literal", value = 12 } }, actions = [ defaultAction // { description = Some "The lion makes two Rend attacks. It can replace one attack with a use of Roar.", kind = "textOnly", name = Some "Multiattack", procedureOrdinal = 1, reason = Some "unsupported_procedure_family" }, defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 7 (1d8 + 3) Slashing damage.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +5 }, attackType = Some "melee", kind = "attack_roll", name = "Rend", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 1, dieSize = 8, flat = Some +3 }, kind = "fixed", static = 7 }, damageType = "slashing" } ], reachFeet = Some 5 } ), procedureOrdinal = 2 }, defaultAction // { description = Some "*Wisdom Saving Throw:* DC 11, one creature within 15 feet. *Failure:* The target has the Frightened condition until the start of the lion's next turn.", kind = "textOnly", name = Some "Roar", procedureOrdinal = 3, reason = Some "unsupported_procedure_family" } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 22 }, initiative = { modifier = +2, score = 12 }, passivePerception = 13, savingThrowModifiers = [ { ability = "str", modifier = +3 }, { ability = "dex", modifier = +2 }, { ability = "con", modifier = +0 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +1 }, { ability = "cha", modifier = -1 } ], senses = [ { kind = "darkvision", rangeFeet = 60 } ], size = "large", skillModifiers = [ { modifier = +3, skill = "perception" }, { modifier = +4, skill = "stealth" } ], speeds = [ { feet = { kind = "literal", value = 50 }, kind = "walk" } ], traits = [ { description = "The lion has Advantage on an attack roll against a creature if at least one of the lion's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.", name = "Pack Tactics" }, { description = "With a 10-foot running start, the lion can Long Jump up to 25 feet.", name = "Running Leap" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 1
+    , id = "stat_block_lion"
+    , kind = "statBlock"
+    , name = "Lion"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1616-1646" }
+    , statBlock =
+      { abilityScores =
+        { cha = 8, con = 11, dex = 15, int = 3, str = 17, wis = 12 }
+      , ac.value = { kind = "literal", value = 12 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Multiattack"
+            , description =
+                "The lion makes two Rend attacks. It can replace one attack with a use of Roar."
+            , reason = "unsupported_procedure_family"
+            }
+        , S.executable
+            { procedureOrdinal = 2
+            , procedure =
+                S.meleeAttack
+                  { name = "Rend"
+                  , attackAbility = "str"
+                  , attackBonus = +5
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.damage
+                        { damageType = "slashing"
+                        , dice = 1
+                        , dieSize = 8
+                        , flat = Some +3
+                        , static = 7
+                        }
+                    ]
+                  }
+            }
+        , S.textOnly
+            { procedureOrdinal = 3
+            , name = "Roar"
+            , description =
+                "*Wisdom Saving Throw:* DC 11, one creature within 15 feet. *Failure:* The target has the Frightened condition until the start of the lion's next turn."
+            , reason = "unsupported_procedure_family"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 22 }
+      , initiative = { modifier = +2, score = 12 }
+      , passivePerception = 13
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +3 }
+        , { ability = "dex", modifier = +2 }
+        , { ability = "con", modifier = +0 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +1 }
+        , { ability = "cha", modifier = -1 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+      , size = "large"
+      , skillModifiers =
+        [ { modifier = +3, skill = "perception" }
+        , { modifier = +4, skill = "stealth" }
+        ]
+      , speeds = [ { feet = { kind = "literal", value = 50 }, kind = "walk" } ]
+      , traits =
+        [ S.trait
+            { name = "Pack Tactics"
+            , description =
+                "The lion has Advantage on an attack roll against a creature if at least one of the lion's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition."
+            , effectKind = Some
+                "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+            }
+        , S.trait
+            { name = "Running Leap"
+            , description =
+                "With a 10-foot running start, the lion can Long Jump up to 25 feet."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

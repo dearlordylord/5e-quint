@@ -1,10 +1,53 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 6, id = "stat_block_mammoth", kind = "statBlock", name = "Mammoth", provenance = { kind = "srd-5.2.1", section = "Animals.md:1677-1702" }, statBlock = { abilityScores = { cha = 6, con = 21, dex = 9, int = 3, str = 24, wis = 11 }, ac = { value = { kind = "literal", value = 13 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { dispatches = Some [ { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 } ], kind = "multiattack", name = "Multiattack" }), procedureOrdinal = 1 }, defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +10, reach 10 ft. *Hit:* 18 (2d10 + 7) Piercing damage. If the target is a Huge or smaller creature and the mammoth moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +10 }, attackType = Some "melee", kind = "attack_roll", name = "Gore", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 2, dieSize = 10, flat = Some +7 }, kind = "fixed", static = 18 }, damageType = "piercing" } ], reachFeet = Some 10 } ), procedureOrdinal = 2 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 126 }, initiative = { modifier = +2, score = 12 }, passivePerception = 10, savingThrowModifiers = [ { ability = "str", modifier = +10 }, { ability = "dex", modifier = -1 }, { ability = "con", modifier = +8 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -2 } ], size = "huge", speeds = [ { feet = { kind = "literal", value = 50 }, kind = "walk" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
+in  { challengeRating = 6
+    , id = "stat_block_mammoth"
+    , kind = "statBlock"
+    , name = "Mammoth"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1677-1702" }
+    , statBlock =
+      { abilityScores =
+        { cha = 6, con = 21, dex = 9, int = 3, str = 24, wis = 11 }
+      , ac.value = { kind = "literal", value = 13 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Multiattack"
+            , description = "The mammoth makes two Gore attacks."
+            , reason = "unsupported_procedure_family"
+            }
+        , S.textOnly
+            { procedureOrdinal = 2
+            , name = "Gore"
+            , description =
+                "*Melee Attack Roll:* +10, reach 10 ft. *Hit:* 18 (2d10 + 7) Piercing damage. If the target is a Huge or smaller creature and the mammoth moved 20+ feet straight toward it immediately before the hit, the target has the Prone condition."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 126 }
+      , initiative = { modifier = +2, score = 12 }
+      , passivePerception = 10
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +10 }
+        , { ability = "dex", modifier = -1 }
+        , { ability = "con", modifier = +8 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = -2 }
+        ]
+      , size = "huge"
+      , speeds = [ { feet = { kind = "literal", value = 50 }, kind = "walk" } ]
+      , bonusActions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Trample"
+            , description =
+                "*Dexterity Saving Throw:* DC 18, one creature within 5 feet that has the Prone condition. *Failure:* 29 (4d10 + 7) Bludgeoning damage. *Success:* Half damage."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      }
+    }

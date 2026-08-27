@@ -24,62 +24,21 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "dispatches": [
-            {
-              "count": {
-                "kind": "literal",
-                "value": 2
-              },
-              "procedureOrdinal": 2
-            },
-            {
-              "count": {
-                "kind": "literal",
-                "value": 1
-              },
-              "procedureOrdinal": 3
-            }
-          ],
-          "kind": "multiattack",
-          "name": "Multiattack"
-        },
+        "description": "The scorpion makes two Claw attacks and one Sting attack.",
+        "kind": "textOnly",
+        "name": "Multiattack",
         "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
         "resourceRefs": {
           "kind": "none"
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 5
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13) from one of two claws.",
-          "kind": "attack_roll",
-          "name": "Claw",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 6,
-                  "flat": 3
-                },
-                "kind": "fixed",
-                "static": 6
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 6 (1d6 + 3) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13) from one of two claws.",
+        "kind": "textOnly",
+        "name": "Claw",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
@@ -93,7 +52,6 @@
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 7 (1d8 + 3) Piercing damage plus 11 (2d10) Poison damage.",
           "kind": "attack_roll",
           "name": "Sting",
           "onHit": [
@@ -108,6 +66,18 @@
                 "static": 7
               },
               "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10
+                },
+                "kind": "fixed",
+                "static": 11
+              },
+              "damageType": "poison",
               "kind": "damage"
             }
           ],

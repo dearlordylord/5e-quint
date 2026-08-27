@@ -52,7 +52,6 @@
             "value": 6
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 11 (2d6 + 4) Slashing damage.",
           "kind": "attack_roll",
           "name": "Rend",
           "onHit": [
@@ -79,6 +78,23 @@
       }
     ],
     "alignment": "unaligned",
+    "bonusActions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "kind": "action_option",
+          "name": "Nimble Escape",
+          "options": [
+            "disengage",
+            "hide"
+          ]
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
     "communication": {
       "kind": "none"
     },

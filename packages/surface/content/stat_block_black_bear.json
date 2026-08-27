@@ -52,7 +52,6 @@
             "value": 4
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Slashing damage.",
           "kind": "attack_roll",
           "name": "Rend",
           "onHit": [

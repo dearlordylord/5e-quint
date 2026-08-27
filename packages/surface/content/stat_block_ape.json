@@ -52,7 +52,6 @@
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 5 (1d4 + 3) Bludgeoning damage.",
           "kind": "attack_roll",
           "name": "Fist",
           "onHit": [
@@ -80,15 +79,14 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "dex",
+          "attackAbility": "str",
           "attackBonus": {
             "kind": "literal",
             "value": 5
           },
           "attackType": "ranged",
-          "description": "*Ranged Attack Roll:* +5, range 25/50 ft. *Hit:* 10 (2d6 + 3) Bludgeoning damage.",
           "kind": "attack_roll",
-          "name": "Rock (Recharge 6)",
+          "name": "Rock",
           "onHit": [
             {
               "amount": {
@@ -111,7 +109,10 @@
         },
         "procedureOrdinal": 3,
         "resourceRefs": {
-          "kind": "none"
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
         }
       }
     ],
@@ -129,6 +130,16 @@
       "score": 12
     },
     "passivePerception": 13,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 6
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
     "savingThrowModifiers": [
       {
         "ability": "str",

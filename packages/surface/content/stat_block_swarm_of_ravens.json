@@ -24,35 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 4
-          },
-          "attackType": "melee",
-          "description": "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied.",
-          "kind": "attack_roll",
-          "name": "Beaks",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 6,
-                  "flat": 2
-                },
-                "kind": "fixed",
-                "static": 5
-              },
-              "damageType": "piercing",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 5 (1d6 + 2) Piercing damage, or 2 (1d4) Piercing damage if the swarm is Bloodied.",
+        "kind": "textOnly",
+        "name": "Beaks",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
@@ -60,11 +36,14 @@
       {
         "description": "*Wisdom Saving Throw:* DC 10, one creature in the swarm's space. *Failure:* The target has the Deafened condition until the start of the swarm's next turn. While Deafened, the target also has Disadvantage on ability checks and attack rolls.",
         "kind": "textOnly",
-        "name": "Cacophony (Recharge 6)",
+        "name": "Cacophony",
         "procedureOrdinal": 2,
         "reason": "unsupported_procedure_family",
         "resourceRefs": {
-          "kind": "none"
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
         }
       }
     ],
@@ -105,6 +84,16 @@
       ],
       "kind": "fixed"
     },
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 6
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
     "savingThrowModifiers": [
       {
         "ability": "str",

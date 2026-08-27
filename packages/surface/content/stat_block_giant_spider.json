@@ -26,13 +26,12 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "str",
+          "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 ft. *Hit:* 7 (1d8 + 3) Piercing damage plus 7 (2d6) Poison damage.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -48,6 +47,18 @@
               },
               "damageType": "piercing",
               "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "poison",
+              "kind": "damage"
             }
           ],
           "reachFeet": 5
@@ -60,11 +71,14 @@
       {
         "description": "*Dexterity Saving Throw:* DC 13, one creature the spider can see within 60 feet. *Failure:* The target has the Restrained condition until the web is destroyed (AC 10; HP 5; Vulnerability to Fire damage; Immunity to Poison and Psychic damage).",
         "kind": "textOnly",
-        "name": "Web (Recharge 5–6)",
+        "name": "Web",
         "procedureOrdinal": 2,
         "reason": "unsupported_procedure_family",
         "resourceRefs": {
-          "kind": "none"
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
         }
       }
     ],
@@ -82,6 +96,16 @@
       "score": 13
     },
     "passivePerception": 14,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
     "savingThrowModifiers": [
       {
         "ability": "str",

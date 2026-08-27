@@ -1,12 +1,62 @@
-let Effect : Type = { amount : { expr : Optional { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind : Text, static : Natural }, damageType : Text, kind : Text }
-let Procedure : Type = { ability : Optional Text, attackAbility : Optional Text, attackBonus : Optional { kind : Text, value : Integer }, attackType : Optional Text, description : Optional Text, components : Optional { m : Bool, s : Bool, v : Bool }, dispatches : Optional (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups : Optional (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind : Text, name : Text, onHit : Optional (List Effect), rangeFeet : Optional { long : Natural, normal : Natural }, reachFeet : Optional Natural }
-let defaultProcedure : Procedure = { ability = None Text, attackAbility = None Text, attackBonus = None { kind : Text, value : Integer }, attackType = None Text, description = None Text, components = None { m : Bool, s : Bool, v : Bool }, dispatches = None (List { count : { kind : Text, value : Integer }, procedureOrdinal : Natural }), groups = None (List { kind : Text, resourceRefs : { kind : Text, ordinals : List Natural }, spells : List { restriction : Text, spellId : Text } }), kind = "", name = "", onHit = None (List Effect), rangeFeet = None { long : Natural, normal : Natural }, reachFeet = None Natural }
-let Action : Type = { description : Optional Text, kind : Text, name : Optional Text, procedure : Optional Procedure, procedureOrdinal : Natural, reason : Optional Text, resourceRefs : { kind : Text, ordinals : Optional (List Natural) } }
-let defaultAction : Action = { description = None Text, kind = "", name = None Text, procedure = None Procedure, procedureOrdinal = 0, reason = None Text, resourceRefs = { kind = "none", ordinals = None (List Natural) } }
-let defaultEffect : Effect = { amount = { expr = None { dice : Natural, dieSize : Natural, flat : Optional Integer }, kind = "fixed", static = 1 }, damageType = "bludgeoning", kind = "damage" }
-in { challengeRating = 0.25, id = "stat_block_giant_lizard", kind = "statBlock", name = "Giant Lizard", provenance = { kind = "srd-5.2.1", section = "Animals.md:1026-1049" }, statBlock = { abilityScores = { cha = 5, con = 13, dex = 12, int = 2, str = 15, wis = 10 }, ac = { value = { kind = "literal", value = 12 } }, actions = [ defaultAction // { description = None Text, kind = "executable", name = None Text, procedure = Some (defaultProcedure // { description = Some "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 6 (1d8 + 2) Piercing damage.", attackAbility = Some "str", attackBonus = Some { kind = "literal", value = +4 }, attackType = Some "melee", kind = "attack_roll", name = "Bite", onHit = Some [ defaultEffect // { amount = { expr = Some { dice = 1, dieSize = 8, flat = Some +2 }, kind = "fixed", static = 6 }, damageType = "piercing" } ], reachFeet = Some 5 } ), procedureOrdinal = 1 } ], alignment = "unaligned", communication = { kind = "none" }, creatureType = "beast", hp = { kind = "literal", value = 19 }, initiative = { modifier = +1, score = 11 }, passivePerception = 10, savingThrowModifiers = [ { ability = "str", modifier = +2 }, { ability = "dex", modifier = +3 }, { ability = "con", modifier = +1 }, { ability = "int", modifier = -4 }, { ability = "wis", modifier = +0 }, { ability = "cha", modifier = -3 } ], senses = [ { kind = "darkvision", rangeFeet = 60 } ], size = "large", speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" }, { feet = { kind = "literal", value = 40 }, kind = "climb" } ], traits = [ { description = "The lizard can climb difficult surfaces, including along ceilings, without needing to make an ability check.", name = "Spider Climb" } ] } }
+let S = ./_stat_block_types.dhall
 
-
-
-
-
+in  { challengeRating = 0.25
+    , id = "stat_block_giant_lizard"
+    , kind = "statBlock"
+    , name = "Giant Lizard"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:1026-1049" }
+    , statBlock =
+      { abilityScores =
+        { cha = 5, con = 13, dex = 12, int = 2, str = 15, wis = 10 }
+      , ac.value = { kind = "literal", value = 12 }
+      , actions =
+        [ S.executable
+            { procedureOrdinal = 1
+            , procedure =
+                S.meleeAttack
+                  { name = "Bite"
+                  , attackAbility = "str"
+                  , attackBonus = +4
+                  , reachFeet = 5
+                  , onHit =
+                    [ S.damage
+                        { damageType = "piercing"
+                        , dice = 1
+                        , dieSize = 8
+                        , flat = Some +2
+                        , static = 6
+                        }
+                    ]
+                  }
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 19 }
+      , initiative = { modifier = +1, score = 11 }
+      , passivePerception = 10
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = +2 }
+        , { ability = "dex", modifier = +3 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = -4 }
+        , { ability = "wis", modifier = +0 }
+        , { ability = "cha", modifier = -3 }
+        ]
+      , senses = [ { kind = "darkvision", rangeFeet = 60 } ]
+      , size = "large"
+      , speeds =
+        [ { feet = { kind = "literal", value = 40 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 40 }, kind = "climb" }
+        ]
+      , traits =
+        [ S.trait
+            { name = "Spider Climb"
+            , description =
+                "The lizard can climb difficult surfaces, including along ceilings, without needing to make an ability check."
+            , effectKind = None Text
+            }
+        ]
+      }
+    }

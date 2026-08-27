@@ -26,13 +26,12 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "str",
+          "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 5
           },
           "attackType": "melee",
-          "description": "*Melee Attack Roll:* +5, reach 5 feet. *Hit:* 5 (1d4 + 3) Piercing damage.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -49,7 +48,8 @@
               "damageType": "piercing",
               "kind": "damage"
             }
-          ]
+          ],
+          "reachFeet": 5
         },
         "procedureOrdinal": 1,
         "resourceRefs": {
@@ -129,6 +129,9 @@
     "traits": [
       {
         "description": "The rat has Advantage on an attack roll against a creature if at least one of the rat's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "effect": {
+          "kind": "attack_roll_advantage_when_non_incapacitated_ally_within_5_feet_of_target"
+        },
         "name": "Pack Tactics"
       }
     ]
