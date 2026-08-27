@@ -187,7 +187,11 @@ export function schemaJsonContent<A, I>(
 function jsonSchemaFromCodec<A, I>(
   schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
-  return stripSchemaIds(Schema.toStandardJSONSchemaV1(schema).jsonSchema);
+  return stripSchemaIds(
+    Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.output({
+      target: "draft-2020-12",
+    }),
+  );
 }
 
 function parseMcpObjectInputSchema(
