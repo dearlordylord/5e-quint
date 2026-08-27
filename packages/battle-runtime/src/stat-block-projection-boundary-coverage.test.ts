@@ -1,6 +1,8 @@
 import { ClassLevel } from "@dnd/shared/types";
+import { statBlockId } from "@dnd/shared/game-facts";
 import {
   StatBlockProcedureEntrySchema,
+  StatBlockProcedureResourceOrdinalSchema,
   StatBlockReactionSectionSchema,
 } from "@dnd/surface/surface/schema";
 import type {
@@ -463,5 +465,73 @@ describe("Stat Block projection boundary coverage", () => {
         }),
       );
     }
+  });
+
+  test("accumulates independent Wild Shape resource failures across forms", () => {
+    const source = monsterResourceStatBlock();
+    const resources = source.statBlock.resources;
+    const firstAction = source.statBlock.actions?.[0];
+    if (resources === undefined || firstAction === undefined) {
+      throw new Error("Expected synthetic resource-backed form fixture.");
+    }
+    const daily = resources.find((resource) => resource.limit.kind === "daily");
+    if (daily === undefined) throw new Error("Expected a daily resource.");
+    const invalidLimitForm: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic_wild_shape_invalid_limit_form"),
+      statBlock: {
+        ...source.statBlock,
+        resources: (() => {
+          const mapped = resources.map((resource) =>
+            resource.ordinal === daily.ordinal
+              ? { ...resource, limit: { kind: "daily" as const, uses: 0 } }
+              : resource,
+          );
+          return [mapped[0]!, ...mapped.slice(1)] as const;
+        })(),
+      },
+    };
+    const missingOrdinal = Schema.decodeUnknownSync(
+      StatBlockProcedureResourceOrdinalSchema,
+    )(99);
+    const graphFailureForm: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic_wild_shape_graph_failure_form"),
+      statBlock: {
+        ...source.statBlock,
+        actions: [
+          {
+            ...firstAction,
+            resourceRefs: { kind: "some", ordinals: [missingOrdinal] },
+          },
+          ...(source.statBlock.actions?.slice(1) ?? []),
+        ],
+      },
+    };
+    const result = battleAvailableDruidWildShapeKnownForms({
+      profile: druidWildShapeKnownFormProfile(),
+      forms: [invalidLimitForm, graphFailureForm],
+    });
+    expect(result).toEqual(
+      Either.left({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: invalidLimitForm.id,
+            reason: "invalidResourceLimit",
+            issues: [{ ordinal: daily.ordinal, reason: "invalidDailyUses" }],
+          },
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: graphFailureForm.id,
+            reason: "resourceGraph",
+            issues: [
+              { kind: "missingResourceDeclaration", ordinal: missingOrdinal },
+            ],
+          },
+        ],
+      }),
+    );
   });
 });
