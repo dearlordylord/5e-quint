@@ -10,7 +10,21 @@ in  { challengeRating = 10
         , actions =
             [ T.exec 1 (T.multiattack "Multiattack" [ { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 } ])
             , T.exec 2 (T.attack "Holy Mace" "melee" "str" +8 (Some 5) (None T.Range) (None Text) [ T.damage "bludgeoning" 1 6 (Some +4) 7, T.damage "radiant" 4 8 (None Integer) 18 ] (None Text))
-            , T.execSome 3 (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 17 }) (None { kind : Text, value : Integer }) T.noMaterial [ T.atWill [ T.spellRef "detect_evil_and_good" (None Natural) (None Natural) (None Text), T.spellRef "shapechange" (None Natural) (None Natural) (Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell") ], T.limited [ 1 ] [ T.spellRef "commune" (None Natural) (None Natural) (None Text), T.spellRef "raise_dead" (None Natural) (None Natural) (None Text) ] ]) [ 1 ]
+            , T.execSome 3
+                (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 17 }) (None { kind : Text, value : Integer }) T.noMaterial
+                  [ T.atWill
+                      [ -- RAW: Monsters/Monsters-C-D.md:669-708 — At Will: Detect Evil and Good.
+                        T.spellRef "detect_evil_and_good" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:669-708 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
+                        T.spellRef "shapechange" (None Natural) (None Natural) (Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell")
+                      ]
+                  , T.limited [ 1 ]
+                      [ -- RAW: Monsters/Monsters-C-D.md:669-708 — 1/Day Each: Commune.
+                        T.spellRef "commune" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:669-708 — 1/Day Each: Raise Dead.
+                        T.spellRef "raise_dead" (None Natural) (None Natural) (None Text)
+                      ]
+                  ]) [ 1 ]
             ]
         , bonusActions =
             [ T.textSome 1 "Divine Aid (2/Day)" "The deva casts Cure Wounds, Lesser Restoration, or Remove Curse, using the same spellcasting ability as Spellcasting." "unsupported_spellcasting_restriction" [ 2 ]

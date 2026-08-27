@@ -9,7 +9,7 @@ in  { challengeRating = 4
         , ac = { value = { kind = "literal", value = 16 } }
         , actions =
             [ T.text 1 "Multiattack" "The chuul makes two Pincer attacks and uses Paralyzing Tentacles." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Pincer" "melee" "str" +6 (Some 10) (None T.Range) (None Text) [ T.damage "bludgeoning" 1 10 (Some +4) 9, T.conditionIfSize "grappled" "large" ] (Some "If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two pincers."))
+            , T.text 2 "Pincer" "Melee Attack Roll: +6, reach 10 ft. Hit: 9 (1d10 + 4) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two pincers." "unsupported_action_shape"
             , T.text 3 "Paralyzing Tentacles" "Constitution Saving Throw: DC 13, one creature Grappled by the chuul. Failure: The target has the Poisoned condition and repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically. While Poisoned, the target has the Paralyzed condition." "unsupported_action_shape"
             ]
         , traits = [ T.trait "Amphibious" "The chuul can breathe air and water.", T.trait "Sense Magic" "The chuul senses magic within 120 feet of itself. This trait otherwise works like the Detect Magic spell but isn't itself magical." ]

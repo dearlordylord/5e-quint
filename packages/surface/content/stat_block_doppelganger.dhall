@@ -9,8 +9,14 @@ in  { challengeRating = 3
         , ac = { value = { kind = "literal", value = 14 } }
         , actions =
             [ T.text 1 "Multiattack" "The doppelganger makes two Slam attacks and uses Unsettling Visage if available." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Slam" "melee" "str" +6 (Some 5) (None T.Range) (None Text) [ T.damage "bludgeoning" 2 6 (Some +4) 11 ] (Some "The doppelganger has Advantage on this attack roll during the first round of each combat."))
-            , T.exec 3 (T.spellcasting "Read Thoughts" "cha" (Some { kind = "fixed", dc = 12 }) (None { kind : Text, value : Integer }) T.noComponents [ T.atWill [ T.spellRef "detect_thoughts" (None Natural) (None Natural) (None Text) ] ])
+            , T.text 2 "Slam" "Melee Attack Roll: +6 (with Advantage during the first round of each combat), reach 5 ft. Hit: 11 (2d6 + 4) Bludgeoning damage." "unsupported_action_shape"
+            , T.exec 3
+                (T.spellcasting "Read Thoughts" "cha" (Some { kind = "fixed", dc = 12 }) (None { kind : Text, value : Integer }) T.noComponents
+                  [ T.atWill
+                      [ -- RAW: Monsters/Monsters-C-D.md:758-789 — Read Thoughts casts Detect Thoughts.
+                        T.spellRef "detect_thoughts" (None Natural) (None Natural) (None Text)
+                      ]
+                  ])
             , T.textSome 4 "Unsettling Visage" "Wisdom Saving Throw: DC 12, each creature in a 15-foot Emanation originating from the doppelganger that can see the doppelganger. Failure: The target has the Frightened condition and repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically." "unsupported_action_shape" [ 1 ]
             ]
         , bonusActions =

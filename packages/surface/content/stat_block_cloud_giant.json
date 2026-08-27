@@ -87,7 +87,6 @@
             "value": 12
           },
           "attackType": "ranged",
-          "description": "The target has the Incapacitated condition until the end of its next turn.",
           "kind": "attack_roll",
           "name": "Thundercloud",
           "onHit": [
@@ -103,6 +102,11 @@
               },
               "damageType": "thunder",
               "kind": "damage"
+            },
+            {
+              "condition": "incapacitated",
+              "duration": "end_of_next_turn",
+              "kind": "apply_condition"
             }
           ],
           "rangeFeet": {

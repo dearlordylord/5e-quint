@@ -34,40 +34,11 @@
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 6
-          },
-          "attackType": "melee",
-          "description": "If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two pincers.",
-          "kind": "attack_roll",
-          "name": "Pincer",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 10,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 9
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            },
-            {
-              "condition": "grappled",
-              "kind": "apply_condition_if_target_size_at_most",
-              "maxCreatureSize": "large"
-            }
-          ],
-          "reachFeet": 10
-        },
+        "description": "Melee Attack Roll: +6, reach 10 ft. Hit: 9 (1d10 + 4) Bludgeoning damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two pincers.",
+        "kind": "textOnly",
+        "name": "Pincer",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

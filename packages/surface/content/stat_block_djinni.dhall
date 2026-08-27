@@ -12,7 +12,35 @@ in  { challengeRating = 11
             , T.exec 2 (T.attack "Storm Blade" "melee" "str" +9 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 2 6 (Some +5) 12, T.damage "lightning" 2 6 (None Integer) 7 ] (None Text))
             , T.exec 3 (T.attack "Storm Bolt" "ranged" "str" +9 (None Natural) (Some { normal = 120, long = 120 }) (None Text) [ T.damage "thunder" 3 8 (None Integer) 13, T.conditionIfSize "prone" "large" ] (None Text))
             , T.text 4 "Create Whirlwind" "The djinni conjures a whirlwind at a point it can see within 120 feet. The whirlwind fills a 20-foot-radius, 60-foot-high Cylinder centered on that point. The whirlwind lasts until the djinni's Concentration on it ends. The djinni can move the whirlwind up to 20 feet at the start of each of its turns. Whenever the whirlwind enters a creature's space or a creature enters the whirlwind, that creature is subjected to the following effect. Strength Saving Throw: DC 17 (a creature makes this save only once per turn, and the djinni is unaffected). Failure: While in the whirlwind, the target has the Restrained condition and moves with the whirlwind. At the start of each of its turns, the Restrained target takes 21 (6d6) Thunder damage. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success." "unsupported_action_shape"
-            , T.execSome 5 (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 17 }) (None { kind : Text, value : Integer }) T.noMaterial [ T.atWill [ T.spellRef "detect_evil_and_good" (None Natural) (None Natural) (None Text), T.spellRef "detect_magic" (None Natural) (None Natural) (None Text) ], T.limited [ 1 ] [ T.spellRef "create_food_and_water" (None Natural) (None Natural) (None Text), T.spellRef "tongues" (None Natural) (None Natural) (None Text), T.spellRef "wind_walk" (None Natural) (None Natural) (None Text) ], T.limited [ 2 ] [ T.spellRef "creation" (None Natural) (None Natural) (None Text), T.spellRef "gaseous_form" (None Natural) (None Natural) (None Text), T.spellRef "invisibility" (None Natural) (None Natural) (None Text), T.spellRef "major_image" (None Natural) (None Natural) (None Text), T.spellRef "plane_shift" (None Natural) (None Natural) (None Text) ] ]) [ 1, 2 ]
+            , T.execSome 5
+                (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 17 }) (None { kind : Text, value : Integer }) T.noMaterial
+                  [ T.atWill
+                      [ -- RAW: Monsters/Monsters-C-D.md:712-754 — At Will: Detect Evil and Good.
+                        T.spellRef "detect_evil_and_good" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:712-754 — At Will: Detect Magic.
+                        T.spellRef "detect_magic" (None Natural) (None Natural) (None Text)
+                      ]
+                  , T.limited [ 1 ]
+                      [ -- RAW: Monsters/Monsters-C-D.md:712-754 — 2/Day Each: Create Food and Water.
+                        T.spellRef "create_food_and_water" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:712-754 — 2/Day Each: Tongues.
+                        T.spellRef "tongues" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:712-754 — 2/Day Each: Wind Walk.
+                        T.spellRef "wind_walk" (None Natural) (None Natural) (None Text)
+                      ]
+                  , T.limited [ 2 ]
+                      [ -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Creation.
+                        T.spellRef "creation" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Gaseous Form.
+                        T.spellRef "gaseous_form" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Invisibility.
+                        T.spellRef "invisibility" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Major Image.
+                        T.spellRef "major_image" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Plane Shift.
+                        T.spellRef "plane_shift" (None Natural) (None Natural) (None Text)
+                      ]
+                  ]) [ 1, 2 ]
             ]
         , traits = [ T.trait "Elemental Restoration" "If the djinni dies outside the Elemental Plane of Air, its body dissolves into mist, and it gains a new body in 1d4 days, reviving with all its Hit Points somewhere in the Plane of Air.", T.trait "Magic Resistance" "The djinni has Advantage on saving throws against spells and other magical effects.", T.trait "Wishes" "The djinni has a 30 percent chance of knowing the Wish spell. If the djinni knows it, the djinni can cast it only on behalf of a non-genie creature who communicates a wish in a way the djinni can understand. If the djinni casts the spell for the creature, the djinni suffers none of the spell's stress. Once the djinni has cast it three times, the djinni can't do so again for 365 days." ]
         , alignment = { order = "neutral", morality = "neutral" }

@@ -9,7 +9,7 @@ in  { challengeRating = 1
         , ac = { value = { kind = "literal", value = 12 } }
         , actions =
             [ T.exec 1 (T.multiattack "Multiattack" [ { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 } ])
-            , T.exec 2 (T.attack "Bite" "melee" "str" +4 (Some 5) (None T.Range) (None Text) [ T.damage "piercing" 1 4 (Some +2) 4 ] (Some "If the target is a creature, it is subjected to the following effect. Constitution Saving Throw: DC 12. First Failure: The target has the Poisoned condition. While Poisoned, the target's Hit Point maximum doesn't return to normal when finishing a Long Rest, and it repeats the save every 24 hours that elapse, ending the effect on itself on a success. Subsequent Failures: The Poisoned target's Hit Point maximum decreases by 5 (1d10)."))
+            , T.text 2 "Bite" "Melee Attack Roll: +4, reach 5 ft. Hit: 4 (1d4 + 2) Piercing damage. If the target is a creature, it is subjected to the following effect. Constitution Saving Throw: DC 12. First Failure: The target has the Poisoned condition. While Poisoned, the target's Hit Point maximum doesn't return to normal when finishing a Long Rest, and it repeats the save every 24 hours that elapse, ending the effect on itself on a success. Subsequent Failures: The Poisoned target's Hit Point maximum decreases by 5 (1d10)." "unsupported_action_shape"
             ]
         , alignment = { order = "neutral", morality = "evil" }
         , communication = { kind = "none" }

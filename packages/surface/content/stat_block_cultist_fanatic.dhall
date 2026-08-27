@@ -8,7 +8,7 @@ in  { challengeRating = 2
         { abilityScores = { str = 11, dex = 14, con = 12, int = 10, wis = 14, cha = 13 }
         , ac = { value = { kind = "literal", value = 13 } }
         , actions =
-            [ T.exec 1 (T.attack "Pact Blade" "melee" "str" +4 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 8 (Some +2) 6, T.damage "necrotic" 2 6 (None Integer) 7 ] (None Text))
+            [ T.exec 1 (T.attack "Pact Blade" "melee" "dex" +4 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 8 (Some +2) 6, T.damage "necrotic" 2 6 (None Integer) 7 ] (None Text))
             , T.textSome 2 "Spellcasting" "The cultist casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12, +4 to hit with spell attacks): At Will: Light, Thaumaturgy. 2/Day: Command. 1/Day: Hold Person." "unsupported_spellcasting_restriction" [ 1, 2 ]
             ]
         , bonusActions =

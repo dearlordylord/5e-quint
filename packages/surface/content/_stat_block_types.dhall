@@ -87,6 +87,15 @@ let conditionalDamage : List Text -> Text -> Natural -> Natural -> Optional Inte
                 }
             }
 
+let applyCondition : Text -> Text -> Effect =
+      λ(condition : Text) ->
+      λ(duration : Text) ->
+        defaultEffect
+        //  { condition = Some condition
+            , duration = Some duration
+            , kind = "apply_condition"
+            }
+
 let conditionIfSize : Text -> Text -> Effect =
       λ(condition : Text) ->
       λ(maxCreatureSize : Text) ->
@@ -449,6 +458,7 @@ in  { Amount
     , advantageDamage
     , attack
     , atWill
+    , applyCondition
     , conditionalDamage
     , conditionIfSize
     , cone

@@ -12,7 +12,27 @@ in  { challengeRating = 21
             , T.exec 2 (T.attack "Rend" "melee" "str" +15 (Some 15) (None T.Range) (None Text) [ T.damage "slashing" 2 10 (Some +8) 19, T.damage "acid" 2 8 (None Integer) 9 ] (None Text))
             , T.execSome 3 (T.save "Acid Breath" "dex" 22 (T.line 90 10) (T.damage "acid" 14 8 (None Integer) 63) { kind = "half_damage" } (None Text)) [ 1 ]
             , T.text 4 "Slowing Breath" "Constitution Saving Throw: DC 22, each creature in a 90-foot Cone. Failure: The target can't take Reactions; its Speed is halved; and it can take either an action or a Bonus Action on its turn, not both. This effect lasts until the end of its next turn." "unsupported_action_shape"
-            , T.execSome 5 (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 21 }) (None { kind : Text, value : Integer }) T.noMaterial [ T.atWill [ T.spellRef "detect_magic" (None Natural) (None Natural) (None Text), T.spellRef "mind_spike" (None Natural) (Some 5) (None Text), T.spellRef "minor_illusion" (None Natural) (None Natural) (None Text), T.spellRef "shapechange" (None Natural) (None Natural) (Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell") ], T.limited [ 2 ] [ T.spellRef "greater_restoration" (None Natural) (None Natural) (None Text), T.spellRef "major_image" (None Natural) (None Natural) (None Text), T.spellRef "project_image" (None Natural) (None Natural) (None Text) ] ]) [ 2 ]
+            , T.execSome 5
+                (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 21 }) (None { kind : Text, value : Integer }) T.noMaterial
+                  [ T.atWill
+                      [ -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Detect Magic.
+                        T.spellRef "detect_magic" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Mind Spike.
+                        T.spellRef "mind_spike" (None Natural) (Some 5) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Minor Illusion.
+                        T.spellRef "minor_illusion" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — At Will: Shapechange, Beast or Humanoid form only with the printed restrictions.
+                        T.spellRef "shapechange" (None Natural) (None Natural) (Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell")
+                      ]
+                  , T.limited [ 2 ]
+                      [ -- RAW: Monsters/Monsters-C-D.md:429-475 — 1/Day Each: Greater Restoration.
+                        T.spellRef "greater_restoration" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — 1/Day Each: Major Image.
+                        T.spellRef "major_image" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:429-475 — 1/Day Each: Project Image.
+                        T.spellRef "project_image" (None Natural) (None Natural) (None Text)
+                      ]
+                  ]) [ 2 ]
             ]
         , legendaryActions = { uses = 3, entries = [ T.text 1 "Giggling Magic" "Charisma Saving Throw: DC 21, one creature the dragon can see within 120 feet. Failure: 31 (9d6) Psychic damage. Until the end of its next turn, the target rolls 1d8 whenever it makes an ability check or attack roll and subtracts the number rolled from the D20 Test. Failure or Success: The dragon can't take this action again until the start of its next turn." "unsupported_action_shape", T.text 2 "Mind Jolt" "The dragon uses Spellcasting to cast Mind Spike (level 5 version). The dragon can't take this action again until the start of its next turn." "unsupported_action_shape", T.text 3 "Pounce" "The dragon moves up to half its Speed, and it makes one Rend attack." "unsupported_action_shape" ] }
         , traits = [ T.trait "Legendary Resistance (4/Day, or 5/Day in Lair)" "If the dragon fails a saving throw, it can choose to succeed instead." ]

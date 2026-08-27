@@ -9,8 +9,8 @@ in  { challengeRating = 6
         , ac = { value = { kind = "literal", value = 19 } }
         , actions =
             [ T.text 1 "Multiattack" "The drider makes three attacks, using Foreleg or Poison Burst in any combination." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Foreleg" "melee" "str" +7 (Some 10) (None T.Range) (None Text) [ T.damage "piercing" 2 8 (Some +4) 13 ] (None Text))
-            , T.exec 3 (T.attack "Poison Burst" "ranged" "dex" +6 (None Natural) (Some { normal = 120, long = 120 }) (None Text) [ T.damage "poison" 3 6 (Some +3) 13 ] (None Text))
+            , T.exec 2 (T.attack "Foreleg" "melee" "dex" +7 (Some 10) (None T.Range) (None Text) [ T.damage "piercing" 2 8 (Some +4) 13 ] (None Text))
+            , T.exec 3 (T.attack "Poison Burst" "ranged" "wis" +6 (None Natural) (Some { normal = 120, long = 120 }) (None Text) [ T.damage "poison" 3 6 (Some +3) 13 ] (None Text))
             ]
         , bonusActions =
             [ T.textSome 1 "Magic of the Spider Queen (Recharge 5–6)" "The drider casts Darkness, Faerie Fire, or Web, requiring no Material components and using Wisdom as the spellcasting ability (spell save DC 14)." "unsupported_spellcasting_restriction" [ 1 ]

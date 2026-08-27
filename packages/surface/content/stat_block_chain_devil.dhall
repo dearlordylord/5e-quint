@@ -9,10 +9,7 @@ in  { challengeRating = 8
         , ac = { value = { kind = "literal", value = 15 } }
         , actions =
             [ T.text 1 "Multiattack" "The devil makes two Chain attacks and uses Conjure Infernal Chain." "unsupported_action_shape"
-            , T.exec 2
-                (T.attack "Chain" "melee" "str" +7 (Some 10) (None T.Range) (None Text)
-                  [ T.damage "slashing" 2 6 (Some +4) 11, T.conditionIfSize "grappled" "large" ]
-                  (Some "If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two chains, and it has the Restrained condition until the grapple ends."))
+            , T.text 2 "Chain" "Melee Attack Roll: +7, reach 10 ft. Hit: 11 (2d6 + 4) Slashing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two chains, and it has the Restrained condition until the grapple ends." "unsupported_action_shape"
             , T.text 3 "Conjure Infernal Chain" "The devil conjures a fiery chain to bind a creature. Dexterity Saving Throw: DC 15, one creature the devil can see within 60 feet. Failure: 9 (2d4 + 4) Fire damage, and the target has the Restrained condition until the end of the devil's next turn, at which point the chain disappears. If the target is Large or smaller, the devil moves the target up to 30 feet straight toward itself. Success: The chain disappears." "unsupported_action_shape"
             ]
         , reactions =

@@ -26,13 +26,12 @@
       {
         "kind": "executable",
         "procedure": {
-          "attackAbility": "str",
+          "attackAbility": "dex",
           "attackBonus": {
             "kind": "literal",
             "value": 7
           },
           "attackType": "melee",
-          "description": "The target has the Poisoned condition until the end of the couatl's next turn.",
           "kind": "attack_roll",
           "name": "Bite",
           "onHit": [
@@ -48,6 +47,11 @@
               },
               "damageType": "piercing",
               "kind": "damage"
+            },
+            {
+              "condition": "poisoned",
+              "duration": "end_of_caster_next_turn",
+              "kind": "apply_condition"
             }
           ],
           "reachFeet": 5

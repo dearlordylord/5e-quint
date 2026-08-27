@@ -8,7 +8,7 @@ in  { challengeRating = 0.5
         { abilityScores = { str = 6, dex = 12, con = 12, int = 2, wis = 13, cha = 5 }
         , ac = { value = { kind = "literal", value = 11 } }
         , actions =
-            [ T.exec 1 (T.attack "Petrifying Bite" "melee" "str" +3 (Some 5) (None T.Range) (None Text) [ T.damage "piercing" 1 4 (Some +1) 3 ] (Some "If the target is a creature, it is subjected to the following effect. Constitution Saving Throw: DC 11. First Failure: The target has the Restrained condition. The target repeats the save at the end of its next turn if it is still Restrained, ending the effect on a success. Second Failure: The target has the Petrified condition, instead of the Restrained condition, for 24 hours."))
+            [ T.text 1 "Petrifying Bite" "Melee Attack Roll: +3, reach 5 ft. Hit: 3 (1d4 + 1) Piercing damage. If the target is a creature, it is subjected to the following effect. Constitution Saving Throw: DC 11. First Failure: The target has the Restrained condition. The target repeats the save at the end of its next turn if it is still Restrained, ending the effect on a success. Second Failure: The target has the Petrified condition, instead of the Restrained condition, for 24 hours." "unsupported_action_shape"
             ]
         , alignment = "unaligned"
         , communication = { kind = "none" }

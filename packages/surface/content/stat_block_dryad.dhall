@@ -9,9 +9,25 @@ in  { challengeRating = 1
         , ac = { value = { kind = "literal", value = 16 } }
         , actions =
             [ T.text 1 "Multiattack" "The dryad makes one Vine Lash or Thorn Burst attack, and it can use Spellcasting to cast Charm Monster." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Vine Lash" "melee" "str" +6 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 1 8 (Some +4) 8 ] (None Text))
-            , T.exec 3 (T.attack "Thorn Burst" "ranged" "dex" +6 (None Natural) (Some { normal = 60, long = 60 }) (None Text) [ T.damage "piercing" 1 6 (Some +4) 7 ] (None Text))
-            , T.execSome 4 (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 14 }) (None { kind : Text, value : Integer }) T.noMaterial [ T.atWill [ T.spellRef "animal_friendship" (None Natural) (None Natural) (None Text), T.spellRef "charm_monster" (None Natural) (None Natural) (Some "lasts 24 hours; ends early if the dryad casts the spell again"), T.spellRef "druidcraft" (None Natural) (None Natural) (None Text) ], T.limited [ 1 ] [ T.spellRef "entangle" (None Natural) (None Natural) (None Text), T.spellRef "pass_without_trace" (None Natural) (None Natural) (None Text) ] ]) [ 1 ]
+            , T.exec 2 (T.attack "Vine Lash" "melee" "cha" +6 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 1 8 (Some +4) 8 ] (None Text))
+            , T.exec 3 (T.attack "Thorn Burst" "ranged" "cha" +6 (None Natural) (Some { normal = 60, long = 60 }) (None Text) [ T.damage "piercing" 1 6 (Some +4) 7 ] (None Text))
+            , T.execSome 4
+                (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 14 }) (None { kind : Text, value : Integer }) T.noMaterial
+                  [ T.atWill
+                      [ -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Animal Friendship.
+                        T.spellRef "animal_friendship" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Charm Monster, lasts 24 hours; ends early if the dryad casts it again.
+                        T.spellRef "charm_monster" (None Natural) (None Natural) (Some "lasts 24 hours; ends early if the dryad casts the spell again")
+                      , -- RAW: Monsters/Monsters-C-D.md:929-968 — At Will: Druidcraft.
+                        T.spellRef "druidcraft" (None Natural) (None Natural) (None Text)
+                      ]
+                  , T.limited [ 1 ]
+                      [ -- RAW: Monsters/Monsters-C-D.md:929-968 — 1/Day Each: Entangle.
+                        T.spellRef "entangle" (None Natural) (None Natural) (None Text)
+                      , -- RAW: Monsters/Monsters-C-D.md:929-968 — 1/Day Each: Pass without Trace.
+                        T.spellRef "pass_without_trace" (None Natural) (None Natural) (None Text)
+                      ]
+                  ]) [ 1 ]
             ]
         , bonusActions =
             [ T.text 1 "Tree Stride" "If within 5 feet of a Large or bigger tree, the dryad teleports to an unoccupied space within 5 feet of a second Large or bigger tree that is within 60 feet of the previous tree." "unsupported_action_shape"

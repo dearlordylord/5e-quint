@@ -9,9 +9,9 @@ in  { challengeRating = 17
         , ac = { value = { kind = "literal", value = 20 } }
         , actions =
             [ T.text 1 "Multiattack" "The dragon makes three Bite attacks. It can replace one attack with a Tail attack." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Bite" "melee" "str" +13 (Some 15) (None T.Range) (None Text) [ T.damage "piercing" 3 10 (Some +7) 23, T.damage "fire" 2 6 (None Integer) 7 ] (Some "Being underwater doesn't grant Resistance to this Fire damage."))
+            , T.text 2 "Bite" "Melee Attack Roll: +13, reach 15 ft. Hit: 23 (3d10 + 7) Piercing damage plus 7 (2d6) Fire damage. Being underwater doesn't grant Resistance to this Fire damage." "unsupported_action_shape"
             , T.exec 3 (T.attack "Tail" "melee" "str" +13 (Some 15) (None T.Range) (None Text) [ T.damage "bludgeoning" 2 10 (Some +7) 18, T.conditionIfSize "prone" "huge" ] (None Text))
-            , T.execSome 4 (T.save "Steam Breath" "con" 19 (T.cone 60) (T.damage "fire" 16 6 (None Integer) 56) { kind = "half_damage" } (Some "Being underwater doesn't grant Resistance to this Fire damage.")) [ 1 ]
+            , T.textSome 4 "Steam Breath" "Constitution Saving Throw: DC 19, each creature in a 60-foot Cone. Failure: 56 (16d6) Fire damage. Success: Half damage. Failure or Success: Being underwater doesn't grant Resistance to this Fire damage." "unsupported_action_shape" [ 1 ]
             ]
         , traits = [ T.trait "Amphibious" "The dragon can breathe air and water." ]
         , alignment = { order = "neutral", morality = "neutral" }

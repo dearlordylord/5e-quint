@@ -34,40 +34,11 @@
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 7
-          },
-          "attackType": "melee",
-          "description": "If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two chains, and it has the Restrained condition until the grapple ends.",
-          "kind": "attack_roll",
-          "name": "Chain",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 6,
-                  "flat": 4
-                },
-                "kind": "fixed",
-                "static": 11
-              },
-              "damageType": "slashing",
-              "kind": "damage"
-            },
-            {
-              "condition": "grappled",
-              "kind": "apply_condition_if_target_size_at_most",
-              "maxCreatureSize": "large"
-            }
-          ],
-          "reachFeet": 10
-        },
+        "description": "Melee Attack Roll: +7, reach 10 ft. Hit: 11 (2d6 + 4) Slashing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 14) from one of two chains, and it has the Restrained condition until the grapple ends.",
+        "kind": "textOnly",
+        "name": "Chain",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

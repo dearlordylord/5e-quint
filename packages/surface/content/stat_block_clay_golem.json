@@ -34,47 +34,11 @@
         }
       },
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 9
-          },
-          "attackType": "melee",
-          "description": "The target's Hit Point maximum decreases by an amount equal to the Acid damage taken.",
-          "kind": "attack_roll",
-          "name": "Slam",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 10,
-                  "flat": 5
-                },
-                "kind": "fixed",
-                "static": 10
-              },
-              "damageType": "bludgeoning",
-              "kind": "damage"
-            },
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 12
-                },
-                "kind": "fixed",
-                "static": 6
-              },
-              "damageType": "acid",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "Melee Attack Roll: +9, reach 5 ft. Hit: 10 (1d10 + 5) Bludgeoning damage plus 6 (1d12) Acid damage, and the target's Hit Point maximum decreases by an amount equal to the Acid damage taken.",
+        "kind": "textOnly",
+        "name": "Slam",
         "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

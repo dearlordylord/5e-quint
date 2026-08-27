@@ -9,7 +9,7 @@ in  { challengeRating = 9
         , ac = { value = { kind = "literal", value = 14 } }
         , actions =
             [ T.text 1 "Multiattack" "The golem makes two Slam attacks, or it makes three Slam attacks if it used Hasten this turn." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Slam" "melee" "str" +9 (Some 5) (None T.Range) (None Text) [ T.damage "bludgeoning" 1 10 (Some +5) 10, T.damage "acid" 1 12 (None Integer) 6 ] (Some "The target's Hit Point maximum decreases by an amount equal to the Acid damage taken."))
+            , T.text 2 "Slam" "Melee Attack Roll: +9, reach 5 ft. Hit: 10 (1d10 + 5) Bludgeoning damage plus 6 (1d12) Acid damage, and the target's Hit Point maximum decreases by an amount equal to the Acid damage taken." "unsupported_action_shape"
             ]
         , bonusActions =
             [ T.textSome 1 "Hasten" "The golem takes the Dash and Disengage actions." "unsupported_action_shape" [ 1 ]

@@ -24,40 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 4
-          },
-          "attackType": "melee",
-          "description": "The swarm's damage is 11 (2d8 + 2) Necrotic damage instead if the swarm is Bloodied.",
-          "kind": "attack_roll",
-          "name": "Swarm of Grasping Hands",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 4,
-                  "dieSize": 8,
-                  "flat": 2
-                },
-                "kind": "fixed",
-                "static": 20
-              },
-              "damageType": "necrotic",
-              "kind": "damage"
-            },
-            {
-              "condition": "prone",
-              "kind": "apply_condition_if_target_size_at_most",
-              "maxCreatureSize": "medium"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "Melee Attack Roll: +4, reach 5 ft. Hit: 20 (4d8 + 2) Necrotic damage, or 11 (2d8 + 2) Necrotic damage if the swarm is Bloodied. If the target is a Medium or smaller creature, it has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Swarm of Grasping Hands",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }
