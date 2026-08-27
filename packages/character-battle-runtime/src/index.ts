@@ -699,15 +699,14 @@ function settleBattleCombatantIntoCharacterSheet(input: {
       ? {}
       : { statBlockCatalog: input.statBlockCatalog }),
   });
-  return Either.flatMap(sheet, (rebuiltSheet) =>
-    spellSlotState.right === undefined
-      ? Either.right(rebuiltSheet)
-      : replaceCharacterSheetSpellSlotSourceState({
-          sheet: rebuiltSheet,
-          unitLibrary: input.unitLibrary,
-          spellSlotState: spellSlotState.right,
-        }),
-  );
+  if (Either.isLeft(sheet)) return Either.left(sheet.left);
+  return spellSlotState.right === undefined
+    ? Either.right(sheet.right)
+    : replaceCharacterSheetSpellSlotSourceState({
+        sheet: sheet.right,
+        unitLibrary: input.unitLibrary,
+        spellSlotState: spellSlotState.right,
+      });
 }
 
 function characterSheetSpellSlotSourceStateFromBattle(input: {
