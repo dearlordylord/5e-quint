@@ -1313,6 +1313,12 @@ function featureResourceSheetFixture(
       hitPointMaximumReduction: Hp(0),
       conditions: [],
       unitLibrary,
+      ...(input.druidWildShapeKnownFormStatBlockIds === undefined
+        ? {}
+        : {
+            druidWildShapeKnownFormStatBlockIds:
+              input.druidWildShapeKnownFormStatBlockIds,
+          }),
     }),
   );
   const rebuildInput = {
