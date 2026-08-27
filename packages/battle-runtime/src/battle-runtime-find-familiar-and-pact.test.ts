@@ -383,6 +383,11 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     ).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "characterAdmissionInvalid",
+        combatantId: wizardId,
+        phase: "executionBindings",
+        issueIndex: 0,
+        ownerPath: ["initialCombatants", 0],
         message:
           "Pact of the Chain Find Familiar access requires familiar form catalog references.",
       }),
@@ -426,6 +431,11 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
     ).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "characterAdmissionInvalid",
+        combatantId: wizardId,
+        phase: "executionBindings",
+        issueIndex: 0,
+        ownerPath: ["initialCombatants", 0],
         message: "Pact of the Chain Spell Access must grant Find Familiar.",
       }),
     );

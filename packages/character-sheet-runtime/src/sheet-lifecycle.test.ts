@@ -30,7 +30,9 @@ import {
 } from "./test-support.test-support.ts";
 import {
   characterSheetHitPoints,
+  characterSheetHitPointMaximumProjection,
   characterSheetHitPointsCurrentHp,
+  characterSheetHitPointMaximumProjectionWithIssues,
   recoverCharacterSheetHitPoints,
 } from "./hit-points.ts";
 import { parseStoredHitPoints } from "./stored-sheet-parser.ts";
@@ -308,6 +310,78 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         ),
       ).toBe(11);
     }
+  });
+
+  test("retains structured Character Build causes through HP maximum projection", () => {
+    const missingSpecies = authoredUnitId("synthetic:missing-hp-species");
+    const invalidBuild = { ...build, species: missingSpecies };
+    const structured = characterSheetHitPointMaximumProjectionWithIssues({
+      sheet: {
+        build: invalidBuild,
+        hitPointMaximumReduction: Hp(0),
+      },
+      unitLibrary,
+    });
+
+    expect(structured).toEqual(
+      Either.left([
+        {
+          tag: "characterBuildProjection",
+          cause: {
+            tag: "unknownUnit",
+            role: "species",
+            unitId: missingSpecies,
+          },
+        },
+      ]),
+    );
+    expect(
+      characterSheetHitPointMaximumProjection({
+        sheet: {
+          build: invalidBuild,
+          hitPointMaximumReduction: Hp(0),
+        },
+        unitLibrary,
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "characterSheetIssue",
+        message: expect.stringContaining(missingSpecies),
+      }),
+    );
+  });
+
+  test("reports structured HP projection success and effective-maximum failure", () => {
+    const successful = characterSheetHitPointMaximumProjectionWithIssues({
+      sheet: { build, hitPointMaximumReduction: Hp(0) },
+      unitLibrary,
+    });
+    expect(successful).toMatchObject({
+      _tag: "Right",
+      right: {
+        normalHitPointMaximum: 11,
+        effectiveHitPointMaximum: 11,
+        hitPointMaximumReduction: 0,
+      },
+    });
+
+    const invalidReduction = characterSheetHitPointMaximumProjectionWithIssues({
+      sheet: { build, hitPointMaximumReduction: Hp(11) },
+      unitLibrary,
+    });
+    expect(invalidReduction).toEqual(
+      Either.left({
+        tag: "characterSheetIssue",
+        message:
+          "Character Sheet Hit Point maximum reduction must leave a positive Hit Point maximum.",
+      }),
+    );
+    expect(
+      characterSheetHitPointMaximumProjection({
+        sheet: { build, hitPointMaximumReduction: Hp(11) },
+        unitLibrary,
+      }),
+    ).toEqual(invalidReduction);
   });
 
   test("rejects stale stored sheets with build-derived maximum HP", () => {

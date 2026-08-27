@@ -456,15 +456,14 @@ models. Those capacities must come from projections such as
 `characterSheetSpellSlots`, `characterSheetPactSlots`, and
 `characterSheetResources`; MCP must not maintain a parallel capacity table.
 
-This package also owns cross-runtime composition helpers. Character Build to
-creature-init mapping lives in `src/battle-creature-init.ts`, where finalized
-character facts and Unit lookups are projected into battle-owned
-initialization data before calling `startBattle`. This keeps character
-draft/session concepts out of `@dnd/battle-runtime` without introducing a new
-intermediate language. This is package ownership, not a domain term:
-`@dnd/mcp` may see Character Builds, authored Units, authored Stat Blocks, and
-battle creature-init APIs together because its job is wiring runtimes for
-tools.
+The character-battle-runtime package owns cross-runtime composition. MCP maps
+tool arguments and session/catalog lookups into the canonical arbitrary-roster
+operation in `@dnd/character-battle-runtime`, which projects Character Sheet
+and Stat Block origins, checks identity, and returns all independent admission
+issues before MCP asks `@dnd/battle-runtime` to initialize a session. Companion
+admissions use that package's companion-roster phase as well; MCP owns only the
+tool protocol and session commit. No MCP-private battle-creature-init helper,
+duplicate registry, or parallel admission algorithm is permitted.
 
 `start_battle` must receive caller-supplied Initiative scores for every
 combatant in `initialCombatants`. MCP must not derive Initiative as

@@ -77,6 +77,11 @@ const PUBLIC_ROUTE_LABELS: ReadonlyMap<string, string> = new Map([
   [PUBLIC_PLUGIN_DEMO_PATH, "plugin-demo"],
 ] as const);
 
+type FixedPublicRouteHandler = (
+  input: PublicHttpRequestInput,
+  pathname: string,
+) => Promise<PublicHttpRequestObservation | undefined>;
+
 async function handleFixedPublicRoute(
   input: PublicHttpRequestInput,
   pathname: string,
@@ -95,16 +100,22 @@ async function resolveFixedPublicRoute(
   input: PublicHttpRequestInput,
   pathname: string,
 ): Promise<PublicHttpRequestObservation | undefined> {
-  return (
-    (await handlePublisherSiteRoute(input, pathname)) ??
-    (await handlePluginDemoRoute(input, pathname)) ??
-    (await handleHealthRoute(input, pathname)) ??
-    (await handleVersionRoute(input, pathname)) ??
-    (await handleAppsChallengeRoute(input, pathname)) ??
-    (await handleMetricsRoute(input, pathname)) ??
-    (await handleProtectedResourceRoute(input, pathname))
-  );
+  for (const handler of FIXED_PUBLIC_ROUTE_HANDLERS) {
+    const observation = await handler(input, pathname);
+    if (observation !== undefined) return observation;
+  }
+  return undefined;
 }
+
+const FIXED_PUBLIC_ROUTE_HANDLERS: readonly FixedPublicRouteHandler[] = [
+  handlePublisherSiteRoute,
+  handlePluginDemoRoute,
+  handleHealthRoute,
+  handleVersionRoute,
+  handleAppsChallengeRoute,
+  handleMetricsRoute,
+  handleProtectedResourceRoute,
+] as const;
 
 async function handlePluginDemoRoute(
   input: PublicHttpRequestInput,

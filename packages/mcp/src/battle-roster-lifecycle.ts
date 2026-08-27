@@ -59,7 +59,11 @@ function addCombatant(
     { readonly kind: "addCombatant" }
   >["combatant"],
 ) {
-  const projection = projectBattleCombatant({ root, combatant });
+  const projection = projectBattleCombatant({
+    root,
+    combatant,
+    ownerPath: ["operation", "combatant"],
+  });
   if (Either.isLeft(projection)) {
     return lifecycleFailureFromToolError(projection.left);
   }
@@ -68,9 +72,9 @@ function addCombatant(
     McpBattleRosterOperation,
     { readonly kind: "addCharacter" | "addStatBlock" }
   > =
-    projection.right.tag === "characterSession"
-      ? { kind: "addCharacter", combatant: projection.right.creatureInit }
-      : { kind: "addStatBlock", combatant: projection.right.creatureInit };
+    projection.right.kind === "characterSheet"
+      ? { kind: "addCharacter", combatant: projection.right.combatant }
+      : { kind: "addStatBlock", combatant: projection.right.combatant };
   const planned = root.sessionStore.planActiveBattleRosterTransition(operation);
   if (Either.isLeft(planned)) return rosterTransitionFailure(planned.left);
 
@@ -172,6 +176,7 @@ function rosterTransitionFailure(issue: McpBattleRosterTransitionIssue) {
       battleLifecycleError("Battle combatant admission failed.", {
         code: "BATTLE_COMBATANT_ADMISSION_FAILED",
         combatantId: matched.combatantId,
+        ownerPath: matched.ownerPath,
         message: matched.message,
       }),
     ),
@@ -287,11 +292,14 @@ function lifecycleFailureFromToolError(failure: ToolError) {
     });
   }
   const details = isJsonObject(payload.details) ? payload.details : {};
+  const issues = Array.isArray(details.issues) ? details.issues : [];
+  const singleIssue =
+    issues.length === 1 && isJsonObject(issues[0]) ? issues[0] : undefined;
   return battleLifecycleError(
     typeof payload.error === "string"
       ? payload.error
       : "Battle lifecycle operation failed.",
-    details,
+    singleIssue ?? details,
   );
 }
 

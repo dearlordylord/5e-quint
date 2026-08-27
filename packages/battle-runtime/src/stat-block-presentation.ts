@@ -33,7 +33,7 @@ export function battleCreaturePresentationDisplayName(
   if (combatant === undefined) return null;
   return combatant.origin.kind === "statBlock"
     ? (context.statBlocks.get(combatantId)?.displayName ?? null)
-    : combatant.origin.displayName;
+    : (context.characters.get(combatantId)?.displayName ?? null);
 }
 
 export function statBlockLanguagePresentation(

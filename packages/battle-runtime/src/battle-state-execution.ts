@@ -233,6 +233,7 @@ import type {
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
+import type { BattleCompanionDurableId } from "./companion-state.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -379,6 +380,7 @@ import type {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
+  BattleCompanionFormId,
   BattleDancingLightId,
   BattleExecutionScopeCursor,
   BattleLineDirectionId,
@@ -4040,9 +4042,6 @@ type BattleCreatureStateCommon = {
         // Authored identity retained for settlement / catalog reference. The
         // reducer never dispatches on characterId.
         readonly characterId: CharacterId;
-        // Presentation label retained as a snapshot convenience. Not used by
-        // reducer execution.
-        readonly displayName: string;
         readonly execution: CharacterExecutionState;
         readonly classLevels: CharacterBattleClassLevels;
         readonly knownLanguages: ReadonlyNonEmptyArray<Language>;
@@ -4231,14 +4230,268 @@ export type SuccessfulAbilityCheckReactionReductionResolutionResult =
     })
   | Extract<BattleResolutionResult, { readonly tag: "invalid" }>;
 
+export type BattleInitializationIssueFacts =
+  | { readonly kind: "emptyRoster" }
+  | {
+      readonly kind: "duplicateCombatantId";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "ammunitionStockInvalid";
+      readonly combatantId: CombatantId;
+      readonly ammunition: BattleAmmunitionKind;
+    }
+  | {
+      readonly kind: "currentHpExceedsMaximum";
+      readonly combatantId: CombatantId;
+      readonly currentHp: Hp;
+      readonly maximumHp: Hp;
+    }
+  | {
+      readonly kind: "positiveHpUnconsciousInvalid";
+      readonly combatantId: CombatantId;
+      readonly requirement: "oneCurrentHp" | "unconsciousCondition";
+    }
+  | {
+      readonly kind: "zeroHpLifecycleInvalid";
+      readonly combatantId: CombatantId;
+      readonly requirement: "absentAtPositiveHp" | "validDeathSaves";
+    }
+  | {
+      readonly kind: "initialConditionImmune";
+      readonly combatantId: CombatantId;
+      readonly condition: Condition;
+    }
+  | {
+      readonly kind: "statBlockSourceInvalid";
+      readonly statBlockId: StatBlockId;
+      readonly constraint:
+        | "literalArmorClassRequired"
+        | "literalMaximumHitPointsRequired"
+        | "positiveMaximumHitPointsRequired"
+        | "concreteSizeRequired";
+    }
+  | {
+      readonly kind: "statBlockCombatantInvalid";
+      readonly combatantId: CombatantId;
+      readonly constraint:
+        | "concreteCreatureTypeRequired"
+        | "resolvedResistanceChoiceRequired";
+    }
+  | {
+      readonly kind: "characterClassLevelsInvalid";
+      readonly combatantId: CombatantId;
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterSupportProjectionInvalid";
+      readonly combatantId: CombatantId;
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterResourceInvalid";
+      readonly combatantId: CombatantId;
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterFeatureInvalid";
+      readonly combatantId: CombatantId;
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterSpellcastingInvalid";
+      readonly combatantId: CombatantId;
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "characterAdmissionInvalid";
+      readonly combatantId: CombatantId;
+      readonly phase:
+        | "weaponExecution"
+        | "resourceExecution"
+        | "spellExecution"
+        | "executionBindings";
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "executionScopeUnavailable";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "runtimeContextMissing";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "weaponPresentationUnavailable";
+      readonly combatantId: CombatantId;
+      readonly weaponUnitId: UnitId;
+      readonly availability: "missing" | "ambiguous";
+    }
+  | {
+      readonly kind: "hidePrerequisiteReferencesUnknownCombatant";
+      readonly combatantId: CombatantId;
+      readonly referencedCombatantId: CombatantId;
+    }
+  | {
+      readonly kind: "hidePrerequisiteSelfReference";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "initialCombatantOrderMissing";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly kind: "initialInitiativeInvalid";
+      readonly initializationReason: "emptyRoster" | "stackConstruction";
+    }
+  | {
+      readonly kind: "runtimeAdmissionInvalid";
+      readonly combatantId: CombatantId;
+      readonly origin: "character" | "statBlock";
+      readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "companionOwnerMissing";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionDurableIdentityMissing";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionOwnerAlreadyHasCompanion";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionDurableIdentityInUse";
+      readonly ownerId: CombatantId;
+      readonly durableCompanionId: BattleCompanionDurableId;
+      readonly existingOwnerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionManifestationInvalid";
+      readonly ownerId: CombatantId;
+      readonly requirement: "embodiedOutsideBattle" | "retainedIdentity";
+    }
+  | {
+      readonly kind: "companionFormStatBlockMissing";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly resolvedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionFormAccessMismatch";
+      readonly storedFormAccess: "findFamiliar" | "pactOfTheChain";
+      readonly eligibilityFormAccess: "findFamiliar" | "pactOfTheChain";
+    }
+  | {
+      readonly kind: "companionFormResolvedStatBlockMismatch";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly expectedStatBlockId: StatBlockId;
+      readonly resolvedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionFormSelectionStatBlockMissing";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly selectedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionFormSelectionStatBlockInvalid";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly selectedStatBlockId: StatBlockId;
+      readonly expectedCreatureType: "beast";
+      readonly expectedChallengeRating: 0;
+    }
+  | {
+      readonly kind: "companionFormSpecialFormUnknown";
+      readonly formAccess: "pactOfTheChain";
+      readonly formId: BattleCompanionFormId;
+    }
+  | {
+      readonly kind: "companionFormNormalFormIneligible";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly formId: BattleCompanionFormId;
+    }
+  | {
+      readonly kind: "companionCombatantAdmissionInvalid";
+      readonly ownerId: CombatantId;
+      readonly companionCombatantId: CombatantId;
+    }
+  | {
+      readonly kind: "companionInitialInitiativeInvalid";
+      readonly ownerId: CombatantId;
+      readonly companionCombatantId: CombatantId;
+      readonly requirement:
+        | "initialCombatantOrder"
+        | "nonEmptyRoster"
+        | "stackConstruction";
+    }
+  | {
+      readonly kind: "companionOwnerRuntimeContextMissing";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionPresentationStatBlockMissing";
+      readonly companionCombatantId: CombatantId;
+      readonly statBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionPresentationCombatantMissing";
+      readonly companionCombatantId: CombatantId;
+      readonly statBlockId: StatBlockId;
+    };
+
+/** A flat projection of one initialization fact for boundary payloads. */
+export type BattleInitializationIssueFact = {
+  [K in BattleInitializationIssueFacts["kind"]]: Omit<
+    Extract<BattleInitializationIssueFacts, { readonly kind: K }>,
+    "kind"
+  > & { readonly reason: K };
+}[BattleInitializationIssueFacts["kind"]];
+
 export type BattleStateInitLeafIssue =
+  | ({
+      readonly tag: "battleStateInitIssue";
+      readonly message: string;
+      readonly ownerPath?: readonly (string | number)[];
+    } & BattleInitializationIssueFacts)
   | {
       readonly tag: "battleStateInitIssue";
       readonly message: string;
+      readonly ownerPath?: readonly (string | number)[];
     }
   | {
       readonly tag: "weaponLoadoutMismatch";
       readonly slot: "main-hand" | "off-hand";
+      readonly ownerPath?: readonly (string | number)[];
+    };
+
+/** Initialization issues emitted while admitting a Stat Block combatant. */
+export type BattleStatBlockInitializationIssue = Extract<
+  BattleStateInitLeafIssue,
+  { readonly tag: "battleStateInitIssue" }
+>;
+
+export type BattleInitializationLeafIssue =
+  | ({
+      readonly tag: "battleStateInitIssue";
+      readonly message: string;
+      readonly ownerPath?: readonly (string | number)[];
+    } & BattleInitializationIssueFacts)
+  | {
+      readonly tag: "weaponLoadoutMismatch";
+      readonly slot: "main-hand" | "off-hand";
+      readonly ownerPath?: readonly (string | number)[];
+    };
+
+export type BattleInitializationIssue =
+  | BattleInitializationLeafIssue
+  | {
+      readonly tag: "battleStateInitIssues";
+      readonly issues: readonly [
+        BattleInitializationLeafIssue,
+        BattleInitializationLeafIssue,
+        ...BattleInitializationLeafIssue[],
+      ];
     };
 
 export type BattleStateInitIssue =
@@ -7088,7 +7341,6 @@ type BattleCreatureSnapshotCommon = {
 export type BattleCreatureSnapshot = BattleCreatureSnapshotCommon &
   (
     | {
-        readonly displayName: string;
         readonly origin: Extract<
           BattleCreatureOriginSnapshot,
           { readonly kind: "character" }
