@@ -73,7 +73,6 @@ export type CloudkillAreaHazardEffect = Extract<
 
 export type CloudkillMovementSaveDamageRequest = {
   readonly effect: CloudkillAreaHazardEffect;
-  readonly parentHoleId: BattleHoleId;
   readonly subject: CloudkillResolutionInput["subject"];
 };
 
@@ -89,10 +88,7 @@ type PersistentAreaResolutionContext =
       readonly kind: "replayParent";
       readonly parent: ReplayParentContinuation;
       readonly sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"];
-      readonly occurrence: Omit<
-        BattleCloudkillMovementSequenceResumeCheckpoint["occurrence"],
-        "saveHoleId"
-      >;
+      readonly occurrence: BattleCloudkillMovementSequenceResumeCheckpoint["occurrence"];
       readonly handledPosition:
         | BattleCloudkillMovementSequenceResumeCheckpoint
         | undefined;
@@ -303,7 +299,7 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
   let parentPositionMatched = handledCheckpoint === undefined;
   let state = input.advancedState;
 
-  for (const request of input.requests) {
+  for (const [requestIndex, request] of input.requests.entries()) {
     const requestParent =
       input.continuation.kind === "turnBoundaryReplay"
         ? input.parent
@@ -312,6 +308,16 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
             subject: input.parent.subject,
             fills: input.parent.fills,
           });
+    const activeEffect = activeEffectForArea(
+      state,
+      request.effect.areaId,
+      (candidate): candidate is CloudkillAreaHazardEffect =>
+        candidate.kind === "cloudkillAreaHazard" &&
+        candidate.sourceProcedureRef === request.effect.sourceProcedureRef,
+    );
+    if (requestIndex > 0 && activeEffect === undefined) {
+      break;
+    }
     const parsed = parsePersistentAreaSaveDamageProcedure({
       kind: "cloudkill",
       resolution: {
@@ -320,13 +326,7 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
         fills: input.parent.fills,
       },
       target: state.combatants.get(request.subject.actorId),
-      effect: activeEffectForArea(
-        state,
-        request.effect.areaId,
-        (candidate): candidate is CloudkillAreaHazardEffect =>
-          candidate.kind === "cloudkillAreaHazard" &&
-          candidate.sourceProcedureRef === request.effect.sourceProcedureRef,
-      ),
+      effect: activeEffect,
       trigger: persistentAreaTriggerFromMembershipFact(
         request.subject.areaMembershipTrigger,
       ),
@@ -344,7 +344,6 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
         parent: requestParent,
         sourceTurn: input.sourceTurn,
         occurrence: {
-          movementHoleId: request.parentHoleId,
           areaId: request.effect.areaId,
           sourceProcedureRef: request.effect.sourceProcedureRef,
           targetId: request.subject.actorId,
@@ -384,8 +383,6 @@ function sameCloudkillMovementSaveDamagePosition(
     left.kind === right.kind &&
     left.sourceTurn.actorId === right.sourceTurn.actorId &&
     left.sourceTurn.round === right.sourceTurn.round &&
-    left.occurrence.movementHoleId === right.occurrence.movementHoleId &&
-    left.occurrence.saveHoleId === right.occurrence.saveHoleId &&
     left.occurrence.areaId === right.occurrence.areaId &&
     left.occurrence.sourceProcedureRef ===
       right.occurrence.sourceProcedureRef &&
@@ -570,7 +567,7 @@ function resolvePersistentAreaSaveDamageStep(input: {
   }
   /* v8 ignore stop -- @preserve */
   const saveOutcome = parsedSave.outcome;
-  const replayPosition = persistentAreaReplayPosition(context, saveHole.holeId);
+  const replayPosition = persistentAreaReplayPosition(context);
   const matchedHandledPosition =
     replayPosition !== undefined &&
     persistentAreaHandledPositionMatches(context, replayPosition);
@@ -734,7 +731,6 @@ function persistentAreaStepResult(
 
 function persistentAreaReplayPosition(
   context: PersistentAreaResolutionContext,
-  saveHoleId: BattleHoleId,
 ): BattleCloudkillMovementSequenceResumeCheckpoint | undefined {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => undefined),
@@ -743,7 +739,7 @@ function persistentAreaReplayPosition(
       ({ occurrence, sourceTurn }) => ({
         kind: "cloudkillMovementSaveDamageSequence" as const,
         sourceTurn,
-        occurrence: { ...occurrence, saveHoleId },
+        occurrence,
       }),
     ),
     Match.exhaustive,

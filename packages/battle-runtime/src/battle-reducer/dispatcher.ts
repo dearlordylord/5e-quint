@@ -423,6 +423,11 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     interruptRouteOptions.replayParentPosition === undefined
       ? {}
       : { replayParentPosition: interruptRouteOptions.replayParentPosition };
+  const replayObjectOutcomesOption =
+    interruptRouteOptions.replayingInterruptedProcedure === true &&
+    interruptRouteOptions.objectOutcomes !== undefined
+      ? { replayObjectOutcomes: interruptRouteOptions.objectOutcomes }
+      : {};
   const interruptConsumerOptions =
     interruptRouteOptions.replayingInterruptedProcedure === true &&
     handledInterruptOccurrence !== undefined
@@ -727,6 +732,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
         subject,
         ...handledInterruptRouteOption,
         ...replayParentRouteOption,
+        ...replayObjectOutcomesOption,
       });
     }
     if (isMovementProcedureSubject(subject)) {

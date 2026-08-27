@@ -8,6 +8,7 @@ import type {
   AdmittedBattleResolutionInput,
   BattleDroppedObjectOutcome,
   BattleFill,
+  BattleObjectOutcomeAccumulation,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
   BattleCloudkillMovementSequenceResumeCheckpoint,
@@ -77,6 +78,7 @@ type CommandFollowUpSubject = Extract<
 type CommandReplayRoute = {
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
   readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+  readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
 };
 
 export function isCommandFollowUpSubject(
@@ -369,37 +371,51 @@ function resolveCommandDropCommand(
   }
   /* v8 ignore stop -- @preserve */
 
+  const droppedObjects: readonly BattleDroppedObjectOutcome[] = objectIds.map(
+    (objectId) => ({
+      kind: "objectDropped",
+      actorId: input.subject.actorId,
+      objectId,
+      source: {
+        kind: "spell",
+        sourceCombatantId: effect.sourceCombatantId,
+        sourceProcedureRef: effect.sourceProcedureRef,
+      },
+    }),
+  );
+  const replayObjectOutcomes: BattleObjectOutcomeAccumulation | undefined =
+    droppedObjects[0] === undefined
+      ? undefined
+      : {
+          droppedObjects: [droppedObjects[0], ...droppedObjects.slice(1)],
+        };
+
   const withoutPending = stateWithoutCommandPendingEffect(
     input.state,
     input.subject.actorId,
     effect,
   );
-  const endTurnResult = resolveDelegatedEndTurnCommand(input, {
-    state: withoutPending,
-    subject: {
-      tag: "runtimeCommand",
-      actorId: input.subject.actorId,
-      command: "endTurn",
+  const endTurnResult = resolveDelegatedEndTurnCommand(
+    {
+      ...input,
+      ...(replayObjectOutcomes === undefined ? {} : { replayObjectOutcomes }),
     },
-    fills: input.fills.filter((fill) => fill.kind !== "heldObjectFacts"),
-  });
+    {
+      state: withoutPending,
+      subject: {
+        tag: "runtimeCommand",
+        actorId: input.subject.actorId,
+        command: "endTurn",
+      },
+      fills: input.fills.filter((fill) => fill.kind !== "heldObjectFacts"),
+    },
+  );
   return Match.value(endTurnResult).pipe(
     Match.when({ tag: "needsHoles" }, (result) => result),
     Match.when({ tag: "invalid" }, (result) => result),
-    Match.when({ tag: "resolved" }, (result) => {
-      const droppedObjects: readonly BattleDroppedObjectOutcome[] =
-        objectIds.map((objectId) => ({
-          kind: "objectDropped",
-          actorId: input.subject.actorId,
-          objectId,
-          source: {
-            kind: "spell",
-            sourceCombatantId: effect.sourceCombatantId,
-            sourceProcedureRef: effect.sourceProcedureRef,
-          },
-        }));
-      return { ...result, droppedObjects };
-    }),
+    Match.when({ tag: "resolved" }, (result) =>
+      droppedObjects.length === 0 ? { ...result, droppedObjects } : result,
+    ),
     Match.exhaustive,
   );
 }

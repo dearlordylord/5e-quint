@@ -2450,6 +2450,17 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("cloudkillStartTurnOrder"),
+    actorId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    areaId: BattleAreaId,
+    choices: Schema.Tuple([
+      Schema.Literal("cloudkillMovement"),
+      Schema.Literal("startTurnEffects"),
+    ]),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("cloudkillMovement"),
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
@@ -3601,6 +3612,11 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "cloudkillStartTurnOrder";
+      readonly holeId: string;
+      readonly value: "cloudkillMovement" | "startTurnEffects";
+    }
+  | {
       readonly kind: "cloudkillMovement";
       readonly holeId: string;
       readonly value: {
@@ -4730,6 +4746,11 @@ export const BattleFillSchema: Schema.Codec<
       value: Schema.Struct({
         moveFeet: MovementFeet,
       }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("cloudkillStartTurnOrder"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Literals(["cloudkillMovement", "startTurnEffects"]),
     }),
     Schema.Struct({
       kind: Schema.Literal("cloudkillMovement"),
@@ -6823,6 +6844,9 @@ function serializedBattleHoleExecutionReferences(
       ],
       cloudkillMovement: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
+      ],
+      cloudkillStartTurnOrder: (value) => [
+        source(value.sourceProcedureRef, value.actorId),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),

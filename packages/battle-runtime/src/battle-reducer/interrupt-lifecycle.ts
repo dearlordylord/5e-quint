@@ -120,7 +120,7 @@ type InterruptLifecycleDecisionOutcome =
 
 type ResolvedObjectOutcomeSource = Pick<
   Extract<BattleResolutionResult, { readonly tag: "resolved" }>,
-  "objectDamages" | "objectIgnitions"
+  "objectDamages" | "objectIgnitions" | "droppedObjects"
 >;
 
 export function resolveInterruptLifecycleDecision(input: {
@@ -533,8 +533,7 @@ function advanceInterruptCheckpointAfterResponder(input: {
     input.execution.resumeContinuation({
       state: continuedState,
       continuation: completedFrame.continuation,
-      handledInterruptOccurrence:
-        handledInterruptOccurrenceFor(completedFrame),
+      handledInterruptOccurrence: handledInterruptOccurrenceFor(completedFrame),
     }),
     input.execution,
   );
@@ -582,6 +581,10 @@ function appendObjectOutcomesToContinuation(
       objectIgnitions: [
         ...continuation.objectIgnitions,
         ...(source.objectIgnitions ?? []),
+      ],
+      droppedObjects: [
+        ...continuation.droppedObjects,
+        ...(source.droppedObjects ?? []),
       ],
     };
   }
@@ -908,10 +911,7 @@ function handledInterruptOccurrenceFor(
     Match.when({ trigger: "saveFailed" }, (saveFailed) => ({
       trigger: "saveFailed" as const,
       targetId: saveFailed.targetId,
-      ...optionalProperty(
-        "sourceProcedureRef",
-        saveFailed.sourceProcedureRef,
-      ),
+      ...optionalProperty("sourceProcedureRef", saveFailed.sourceProcedureRef),
     })),
     Match.when({ trigger: "attackHit" }, () => ({
       trigger: "attackHit" as const,

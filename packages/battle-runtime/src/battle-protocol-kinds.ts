@@ -95,6 +95,10 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
         () => "movableZoneRepositionMovement" as const,
       ),
       byBattleFillKind("cloudkillMovement", () => "cloudkillMovement" as const),
+      byBattleFillKind(
+        "cloudkillStartTurnOrder",
+        () => "cloudkillStartTurnOrder" as const,
+      ),
       byBattleFillKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleFillKind("movement", () => "movement" as const),
       byBattleFillKind(

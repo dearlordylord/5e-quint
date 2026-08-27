@@ -314,13 +314,22 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (awaitingSave.tag !== "needsHoles") {
       throw new Error("Expected Command Grovel save frontier.");
     }
-    expect(awaitingSave.state).toEqual({
-      ...committedState,
+    expect(awaitingSave.state).toMatchObject({
       subjectResolutionPhase: {
         kind: "subjectContinuation",
         subject: grovelAct.subject,
       },
     });
+    expect(requireCombatant(awaitingSave.state, spellTargetId)).toMatchObject({
+      conditions: expect.objectContaining({ prone: true }),
+    });
+    expect(
+      requireCombatant(awaitingSave.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "grovel" }),
+      ]),
+    );
     expect(awaitingSave.snapshot).toEqual(snapshotBattle(awaitingSave.state));
     expect(requireCombatant(committedState, spellTargetId)).toMatchObject({
       conditions: expect.objectContaining({ prone: false }),
@@ -789,13 +798,19 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (awaitingEndTurnSave.tag !== "needsHoles") {
       throw new Error("Expected Command Drop save frontier.");
     }
-    expect(awaitingEndTurnSave.state).toEqual({
-      ...committedWithSave,
+    expect(awaitingEndTurnSave.state).toMatchObject({
       subjectResolutionPhase: {
         kind: "subjectContinuation",
         subject: dropSubject,
       },
     });
+    expect(
+      requireCombatant(awaitingEndTurnSave.state, spellTargetId).activeEffects,
+    ).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ kind: "commandPending", option: "drop" }),
+      ]),
+    );
     expect(awaitingEndTurnSave).not.toHaveProperty("droppedObjects");
     expect(awaitingEndTurnSave.snapshot).toEqual(
       snapshotBattle(awaitingEndTurnSave.state),
@@ -848,6 +863,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
     if (dropped.tag !== "resolved") {
       throw new Error("Expected Command Drop to resolve.");
     }
+    expect(dropped.droppedObjects).toHaveLength(1);
     expect(
       requireCombatant(dropped.state, spellTargetId).activeEffects,
     ).toEqual([]);

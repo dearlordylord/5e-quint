@@ -743,8 +743,6 @@ export type BattleCloudkillMovementSequenceResumeCheckpoint = {
     readonly round: RoundType;
   };
   readonly occurrence: {
-    readonly movementHoleId: BattleHoleId;
-    readonly saveHoleId: BattleHoleId;
     readonly areaId: BattleAreaId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly targetId: CombatantId;
@@ -4671,10 +4669,17 @@ export type BattleObjectOutcomeAccumulation =
   | {
       readonly objectDamages: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
       readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+      readonly droppedObjects?: ReadonlyNonEmptyArray<BattleDroppedObjectOutcome>;
     }
   | {
       readonly objectDamages?: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
       readonly objectIgnitions: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+      readonly droppedObjects?: ReadonlyNonEmptyArray<BattleDroppedObjectOutcome>;
+    }
+  | {
+      readonly objectDamages?: ReadonlyNonEmptyArray<BattleObjectDamageOutcome>;
+      readonly objectIgnitions?: ReadonlyNonEmptyArray<BattleObjectIgnitionOutcome>;
+      readonly droppedObjects: ReadonlyNonEmptyArray<BattleDroppedObjectOutcome>;
     };
 export type BattleFireballObjectIgnitionFact = {
   readonly objectId: BattleObjectId;
@@ -5916,6 +5921,16 @@ export type BattleCloudkillMovementHole = {
   readonly directionRequirement: "awayFromSource";
   readonly requiresTableSpatialFact: true;
 };
+export type BattleCloudkillStartTurnOrderHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "cloudkillStartTurnOrder";
+  readonly label: string;
+  readonly actorId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly areaId: BattleAreaId;
+  readonly choices: readonly ["cloudkillMovement", "startTurnEffects"];
+};
 type BattleMovementHoleCommon = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6183,6 +6198,7 @@ export type BattleHole =
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
   | BattleInterruptDecisionHole
+  | BattleCloudkillStartTurnOrderHole
   | BattleCloudkillMovementHole
   | BattleMovementHole
   | BattleLevitateAltitudeChangeHole
@@ -6305,6 +6321,11 @@ export type BattleCloudkillMovementFill = {
   readonly value: {
     readonly affectedCombatantIds: readonly CombatantId[];
   };
+};
+export type BattleCloudkillStartTurnOrderFill = {
+  readonly kind: "cloudkillStartTurnOrder";
+  readonly holeId: BattleHoleId;
+  readonly value: "cloudkillMovement" | "startTurnEffects";
 };
 export type BattleBrutalStrikeForcefulBlowMovementFill = {
   readonly kind: "movement";
@@ -6609,6 +6630,7 @@ export type BattleFill =
       readonly value: BattleInterruptDecision;
     }
   | BattleCloudkillMovementFill
+  | BattleCloudkillStartTurnOrderFill
   | BattleMovementFill
   | {
       readonly kind: "levitateAltitudeChange";
@@ -6851,6 +6873,7 @@ export type BattleInterruptRouteOptions =
   | (BattleHandledInterruptRouteProjection & {
       readonly replayingInterruptedProcedure: true;
       readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+      readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
     });

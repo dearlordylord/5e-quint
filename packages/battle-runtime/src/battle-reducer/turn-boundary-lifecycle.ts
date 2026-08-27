@@ -59,10 +59,12 @@ import type {
   BattleAttackDamageDispositionHole,
   BattleCreatureState,
   BattleCloudkillMovementHole,
+  BattleCloudkillStartTurnOrderHole,
   BattleFill,
   BattleFlySpeedGrantEndFallCleanupFrame,
   BattleHideousLaughterRepeatSavingThrowOutcomeHole,
   BattleHoleId,
+  BattleObjectOutcomeAccumulation,
   BattleResolutionInput,
   BattleResolutionResult,
   BattleCloudkillMovementSequenceResumeCheckpoint,
@@ -242,6 +244,7 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[];
+  readonly deferSpellTurnStartDamage: boolean;
 };
 
 const CLOUDKILL_START_TURN_MOVE_FEET = movementFeet(10);
@@ -276,6 +279,45 @@ function cloudkillStartTurnMovementHole(
     directionRequirement: "awayFromSource",
     requiresTableSpatialFact: true,
   };
+}
+
+const CLOUDKILL_START_TURN_ORDER_CHOICES = [
+  "cloudkillMovement",
+  "startTurnEffects",
+] as const;
+
+function cloudkillStartTurnOrderHole(
+  sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
+  effect: CloudkillAreaHazardEffect,
+): BattleCloudkillStartTurnOrderHole {
+  const key = `battle:cloudkill-start-turn-order:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${Number(sourceTurn.round)}`;
+  return {
+    kind: "cloudkillStartTurnOrder",
+    holeId: holeId(key),
+    holeInstanceKey: holeInstanceKey(key),
+    label: "Choose simultaneous Cloudkill start-turn order",
+    actorId: effect.sourceCombatantId,
+    sourceProcedureRef: effect.sourceProcedureRef,
+    areaId: effect.areaId,
+    choices: CLOUDKILL_START_TURN_ORDER_CHOICES,
+  };
+}
+
+function cloudkillMovementWasChosenBeforeStartTurnEffects(
+  fills: readonly BattleFill[],
+  sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
+  occurrence: Pick<
+    BattleCloudkillMovementSequenceResumeCheckpoint["occurrence"],
+    "areaId" | "sourceProcedureRef"
+  >,
+): boolean {
+  const key = `battle:cloudkill-start-turn-order:${sourceTurn.actorId}:${occurrence.sourceProcedureRef}:${occurrence.areaId}:${Number(sourceTurn.round)}`;
+  return fills.some(
+    (fill) =>
+      fill.kind === "cloudkillStartTurnOrder" &&
+      fill.holeId === holeId(key) &&
+      fill.value === "cloudkillMovement",
+  );
 }
 
 type CloudkillMovementFill = Extract<
@@ -384,13 +426,12 @@ function cloudkillMovementSaveDamageRequests(
   requests: readonly CloudkillMovementBoundaryRequest[],
 ): readonly CloudkillMovementSaveDamageRequest[] {
   const combatantOrder = initiativeOrder(state.initiative);
-  return requests.flatMap(({ effect, fill, hole }) => {
+  return requests.flatMap(({ effect, fill }) => {
     const affectedCombatantIds = new Set(fill.value.affectedCombatantIds);
     return combatantOrder
       .filter((targetId) => affectedCombatantIds.has(targetId))
       .map((targetId) => ({
         effect,
-        parentHoleId: hole.holeId,
         subject: cloudkillMovementSaveSubject(targetId, effect),
       }));
   });
@@ -401,7 +442,6 @@ function cloudkillMovementCheckpointMatchesRequest(
   request: CloudkillMovementSaveDamageRequest,
 ): boolean {
   return (
-    request.parentHoleId === checkpoint.occurrence.movementHoleId &&
     request.effect.areaId === checkpoint.occurrence.areaId &&
     request.effect.sourceProcedureRef ===
       checkpoint.occurrence.sourceProcedureRef &&
@@ -439,8 +479,7 @@ function resolveCloudkillMovementSequenceResume(input: {
     (fill): fill is CloudkillMovementFill => fill.kind === "cloudkillMovement",
   );
   const checkpointEffectStillActive = boundaries.some(
-    ({ effect, hole }) =>
-      hole.holeId === checkpoint.occurrence.movementHoleId &&
+    ({ effect }) =>
       effect.areaId === checkpoint.occurrence.areaId &&
       effect.sourceProcedureRef === checkpoint.occurrence.sourceProcedureRef,
   );
@@ -523,13 +562,25 @@ function resolveCloudkillMovementSequenceResume(input: {
       ? { kind: "advancedPrefixAtCheckpoint", checkpoint }
       : { kind: "advancedPrefixAfterCheckpoint" },
   });
-  return resumed.tag === "result"
-    ? resumed.result
-    : {
-        tag: "resolved",
-        state: resumed.state,
-        snapshot: snapshotBattle(resumed.state),
-      };
+  if (resumed.tag === "result") {
+    return resumed.result;
+  }
+  const finalizedState = cloudkillMovementWasChosenBeforeStartTurnEffects(
+    resolution.fills,
+    checkpoint.sourceTurn,
+    checkpoint.occurrence,
+  )
+    ? applyDeferredStartTurnSpellDamage(
+        resumed.state,
+        checkpoint.sourceTurn.actorId,
+        resolution.fills,
+      )
+    : resumed.state;
+  return {
+    tag: "resolved",
+    state: finalizedState,
+    snapshot: snapshotBattle(finalizedState),
+  };
 }
 
 function resolveEndTurn({
@@ -549,6 +600,7 @@ function resolveEndTurn({
   turnBoundaryHideousLaughterDamageRepeatSaves,
   concentrationSavingThrows,
   damageDispositions,
+  deferSpellTurnStartDamage,
 }: ResolvedTurnBoundaryFills): Extract<
   BattleResolutionResult,
   { readonly tag: "resolved" }
@@ -715,19 +767,21 @@ function resolveEndTurn({
     combatantsAfterCloudkillSaveReset,
     nextActorId,
   );
-  const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
-    {
-      ...state,
-      initiative,
-      combatants: combatantsAfterStartTurnEffects,
-    },
-    nextActorId,
-    spellTurnStartDamageRolls,
-    spellTurnStartSaves,
-    concentrationSavingThrows,
-    damageDispositions,
-    turnBoundaryHideousLaughterDamageRepeatSaves,
-  ).combatants;
+  const combatantsAfterSpellTurnStartDamage = deferSpellTurnStartDamage
+    ? combatantsAfterStartTurnEffects
+    : applyStartTurnSpellDamageFills(
+        {
+          ...state,
+          initiative,
+          combatants: combatantsAfterStartTurnEffects,
+        },
+        nextActorId,
+        spellTurnStartDamageRolls,
+        spellTurnStartSaves,
+        concentrationSavingThrows,
+        damageDispositions,
+        turnBoundaryHideousLaughterDamageRepeatSaves,
+      ).combatants;
   const durationTick =
     Number(initiative.round) > Number(state.initiative.round)
       ? tickDurationEffects(combatantsAfterSpellTurnStartDamage, {
@@ -2379,6 +2433,49 @@ function applyStartTurnSpellDamageFills(
   }, state);
 }
 
+function applyDeferredStartTurnSpellDamage(
+  state: BattleState,
+  actorId: CombatantId,
+  fills: readonly BattleFill[],
+): BattleState {
+  return applyStartTurnSpellDamageFills(
+    state,
+    actorId,
+    fills.filter(
+      (fill): fill is Extract<BattleFill, { readonly kind: "rolledDice" }> =>
+        fill.kind === "rolledDice",
+    ),
+    fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+    fills.filter(
+      (
+        fill,
+      ): fill is Extract<
+        BattleFill,
+        { readonly kind: "concentrationSavingThrow" }
+      > => fill.kind === "concentrationSavingThrow",
+    ),
+    fills.filter(
+      (
+        fill,
+      ): fill is Extract<
+        BattleFill,
+        { readonly kind: "attackDamageDisposition" }
+      > => fill.kind === "attackDamageDisposition",
+    ),
+    fills.filter(
+      (
+        fill,
+      ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+        fill.kind === "savingThrowOutcome",
+    ),
+  );
+}
+
 function applyEndTurnSpellDamageFills(
   state: BattleState,
   actorId: CombatantId,
@@ -2917,6 +3014,7 @@ export function resolveEndTurnCommand(
 export function resolveDelegatedEndTurnCommand(
   parentInput: BattleResolutionInput & {
     readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+    readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
   },
   endTurnInput: BattleResolutionInput,
 ): BattleResolutionResult {
@@ -2924,6 +3022,9 @@ export function resolveDelegatedEndTurnCommand(
     state: endTurnInput.state,
     subject: parentInput.subject,
     fills: parentInput.fills,
+    ...(parentInput.replayObjectOutcomes === undefined
+      ? {}
+      : { objectOutcomes: parentInput.replayObjectOutcomes }),
   });
   const result = resolveEndTurnCommandForParent(
     {
@@ -3122,6 +3223,72 @@ function resolveEndTurnCommandForParent(
   const startTurnSaveHoles = startTurnSaveRequests.map(
     (request) => request.hole,
   );
+  const nextSourceTurn = {
+    actorId: nextActorId,
+    round: initiative.round,
+  };
+  const preBoundaryCloudkillEffects = cloudkillStartTurnMovementEffects(
+    input.state,
+    nextActorId,
+  );
+  const cloudkillStartTurnOrderHoles =
+    startTurnDamageEffects.length === 0
+      ? []
+      : preBoundaryCloudkillEffects.map((effect) =>
+          cloudkillStartTurnOrderHole(nextSourceTurn, effect),
+        );
+  const cloudkillStartTurnOrderFills = input.fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "cloudkillStartTurnOrder" }
+    > => fill.kind === "cloudkillStartTurnOrder",
+  );
+  const unmatchedCloudkillStartTurnOrderFill =
+    cloudkillStartTurnOrderFills.find(
+      (fill) =>
+        !cloudkillStartTurnOrderHoles.some(
+          (hole) => hole.holeId === fill.holeId,
+        ),
+    );
+  if (
+    unmatchedCloudkillStartTurnOrderFill !== undefined ||
+    cloudkillStartTurnOrderHoles.some(
+      (hole) =>
+        cloudkillStartTurnOrderFills.filter(
+          (fill) => fill.holeId === hole.holeId,
+        ).length > 1,
+    )
+  ) {
+    return invalidResult(
+      input.state,
+      "invalidFill",
+      "Cloudkill start-turn ordering fills must match the current source-turn occurrence exactly once.",
+    );
+  }
+  const missingCloudkillStartTurnOrderHoles =
+    cloudkillStartTurnOrderHoles.filter(
+      (hole) =>
+        !cloudkillStartTurnOrderFills.some(
+          (fill) => fill.holeId === hole.holeId,
+        ),
+    );
+  if (missingCloudkillStartTurnOrderHoles.length > 0) {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      missingCloudkillStartTurnOrderHoles,
+    );
+  }
+  const cloudkillMovementBeforeStartTurnEffects =
+    preBoundaryCloudkillEffects.some((effect) =>
+      cloudkillMovementWasChosenBeforeStartTurnEffects(
+        input.fills,
+        nextSourceTurn,
+        effect,
+      ),
+    );
   const initialHoles = [
     ...sleepRepeatSaveHoles,
     ...hideousLaughterRepeatSaveHoles,
@@ -3863,6 +4030,7 @@ function resolveEndTurnCommandForParent(
       concentrationHoleIds.has(fill.holeId),
     ),
     damageDispositions: damageDispositionFills,
+    deferSpellTurnStartDamage: cloudkillMovementBeforeStartTurnEffects,
   });
   const cloudkillMovementBoundaries = cloudkillStartTurnMovementEffects(
     advancedTurn.state,
@@ -3960,16 +4128,24 @@ function resolveEndTurnCommandForParent(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const finalState = cloudkillMovementBeforeStartTurnEffects
+    ? applyDeferredStartTurnSpellDamage(
+        movementAffectedResolution.state,
+        nextActorId,
+        input.fills,
+      )
+    : movementAffectedResolution.state;
   return {
     tag: "resolved",
-    state: movementAffectedResolution.state,
-    snapshot: snapshotBattle(movementAffectedResolution.state),
+    state: finalState,
+    snapshot: snapshotBattle(finalState),
   };
 }
 
 const END_TURN_FILL_KINDS = [
   "attackDamageDisposition",
   "cloudkillMovement",
+  "cloudkillStartTurnOrder",
   "concentrationSavingThrow",
   "deathSavingThrow",
   "rolledDice",

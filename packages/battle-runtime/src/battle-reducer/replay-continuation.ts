@@ -9,6 +9,7 @@ import type {
   BattleInterruptCheckpoint,
   BattleInterruptRouteOptions,
   BattleInterruptedProcedure,
+  BattleObjectOutcomeAccumulation,
   BattleReplayContinuationFrame,
   BattleCloudkillMovementSequenceResumeCheckpoint,
   BattleResolutionResult,
@@ -48,11 +49,15 @@ export type ReplayParentContinuation = {
   readonly state: BattleState;
   readonly subject: BattleSubject;
   readonly fills: readonly BattleFill[];
+  readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
   readonly [replayParentContinuation]: true;
 };
 
 export function replayParentContinuationFor(
-  input: Pick<ReplayParentContinuation, "state" | "subject" | "fills">,
+  input: Pick<
+    ReplayParentContinuation,
+    "state" | "subject" | "fills" | "objectOutcomes"
+  >,
 ): ReplayParentContinuation {
   return { ...input, [replayParentContinuation]: true };
 }
@@ -66,6 +71,7 @@ export function replayParentProcedureAt(
     subject: parent.subject,
     fills: parent.fills,
     parentPosition: position,
+    ...optionalProperty("objectOutcomes", parent.objectOutcomes),
   };
 }
 
@@ -84,7 +90,9 @@ export function projectReplayChildResult(
     Match.when({ tag: "invalid" }, (result) =>
       invalidResult(parent.state, result.reason, result.message),
     ),
-    Match.when({ tag: "resolved" }, (result) => result),
+    Match.when({ tag: "resolved" }, (result) =>
+      mergeObjectOutcomeResult(result, parent.objectOutcomes),
+    ),
     Match.exhaustive,
   );
 }
@@ -377,6 +385,7 @@ function replayInterruptRouteOptions(
     replayingInterruptedProcedure: true,
     ...handledInterruptRouteProjection(handledInterruptOccurrence),
     ...optionalProperty("replayParentPosition", continuation.parentPosition),
+    ...optionalProperty("objectOutcomes", continuation.objectOutcomes),
     ...optionalProperty(
       "pendingAttackDamageReductions",
       continuation.attackDamageReductions,
