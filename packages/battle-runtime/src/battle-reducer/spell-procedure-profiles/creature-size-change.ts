@@ -33,7 +33,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { EffectAtom, OngoingEffect } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -206,7 +206,7 @@ function creatureSizeChangeSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return [];
   }
   return phase.onFail.options.flatMap(
@@ -225,7 +225,7 @@ function creatureSizeChangeSpellProjection(
         actorId,
         spell,
         option.effects,
-        durationTicks.right,
+        durationTicks.success,
       );
       if (activeEffect === null) {
         return [];
@@ -561,7 +561,7 @@ const CreatureSizeChangeExecutionSchemaFields = {
   activeEffect: Schema.Struct({
     kind: Schema.Literal("spellCreatureSizeChange"),
     sourceCombatantId: CombatantId,
-    direction: Schema.Literal("increase", "decrease"),
+    direction: Schema.Literals(["increase", "decrease"]),
     expiresAt: Schema.Struct({
       kind: Schema.Literal("concentration"),
       combatantId: CombatantId,

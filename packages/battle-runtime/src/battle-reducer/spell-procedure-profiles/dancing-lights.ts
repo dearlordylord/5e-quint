@@ -27,7 +27,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { MovementFeet, movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -206,10 +206,10 @@ function dancingLightsSpell(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
         dimRadiusFeet: DANCING_LIGHTS_DIM_LIGHT_RADIUS_FEET,
         rangeFeet: movementFeet(spell.mechanics.range.feet),
         maxMoveFeet: movementFeet(repositionOperation.effect.maxMoveFeet),

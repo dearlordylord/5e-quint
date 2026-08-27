@@ -29,7 +29,7 @@ import {
   damageRollFillWithGroups,
   difficultyClass,
   discoverBattleActs,
-  Either,
+  Result,
   elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
@@ -1384,8 +1384,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseSpell,
@@ -1397,8 +1397,8 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...baseHole,
           spell: {
             ...baseSpell,

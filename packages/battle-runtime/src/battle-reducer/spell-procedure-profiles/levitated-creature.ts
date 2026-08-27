@@ -24,7 +24,7 @@ import {
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, MovementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type ActionSpellBattleResolutionInput,
@@ -164,7 +164,7 @@ function levitatedCreatureSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   return {
@@ -182,7 +182,7 @@ function levitatedCreatureSpellProjection(
       expiresAt: {
         kind: "concentration",
         combatantId: actorId,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
   };

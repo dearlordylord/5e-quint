@@ -28,7 +28,7 @@ import {
   type ProficiencyBonus,
   resourceCount,
 } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import type {
   BattleActiveEffect,
@@ -153,7 +153,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
         applications: [application],
       }),
     ).toEqual(
-      Either.left(
+      Result.fail(
         "Metamagic selection requires a character with known Metamagic options.",
       ),
     );
@@ -164,7 +164,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
         applications: [application],
       }),
     ).toEqual(
-      Either.left("Metamagic requires enough unexpended Sorcery Points."),
+      Result.fail("Metamagic requires enough unexpended Sorcery Points."),
     );
 
     const characterSession = metamagicBattle();
@@ -175,7 +175,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
         applications: [application],
       }),
     ).toEqual(
-      Either.left(
+      Result.fail(
         "Metamagic selection requires a character with known Metamagic options.",
       ),
     );
@@ -250,7 +250,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
     if (sorceryPoints === undefined) {
       throw new Error("Expected Sorcery Point resource.");
     }
-    const spent = expectRight(
+    const spent = expectSuccess(
       spendCharacterPointPoolResource({
         resource: sorceryPoints,
         points: resourceCount(2),
@@ -258,7 +258,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
     );
     expect(spent.pointsRemaining).toBe(resourceCount(2));
     expect(
-      Either.isLeft(
+      Result.isFailure(
         spendCharacterPointPoolResource({
           resource: spent,
           points: resourceCount(3),
@@ -289,7 +289,7 @@ describe("battle runtime: Sorcerer Metamagic resource bridge", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message:
           "Point-pool character battle resource remaining points must not exceed its maximum.",
@@ -4643,11 +4643,11 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
   });
 });
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(result.left)}`);
+function expectSuccess<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
+    throw new Error(`Expected Success, got ${JSON.stringify(result.failure)}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function battleSessionAtState(
@@ -4736,7 +4736,7 @@ function admittedSubtleProjection(
 function magicActionSpent(state: BattleState): BattleState {
   return {
     ...state,
-    currentTurnResources: expectRight(
+    currentTurnResources: expectSuccess(
       spendAction(state.currentTurnResources, "magic"),
     ),
   };
@@ -4745,7 +4745,7 @@ function magicActionSpent(state: BattleState): BattleState {
 function bonusActionSpent(state: BattleState): BattleState {
   return {
     ...state,
-    currentTurnResources: expectRight(
+    currentTurnResources: expectSuccess(
       spendActivationResource(state.currentTurnResources, {
         kind: "bonusAction",
       }),

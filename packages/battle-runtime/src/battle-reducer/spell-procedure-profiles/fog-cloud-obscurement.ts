@@ -24,7 +24,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { LinearPerLevel } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -146,13 +146,13 @@ function fogCloudObscurementSpell(
     radius.base !== FOG_CLOUD_BASE_RADIUS_FEET ||
     radius.perLevel !== FOG_CLOUD_RADIUS_FEET_PER_SLOT_LEVEL ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     radius,
   };
 }

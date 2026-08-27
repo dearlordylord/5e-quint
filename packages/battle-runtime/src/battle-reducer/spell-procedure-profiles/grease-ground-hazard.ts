@@ -46,7 +46,7 @@ import {
   PreparedSpellAccessSchema,
   LeveledSpellInvocationResourceSchema,
 } from "../codec-building-blocks.ts";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 type GreaseGroundHazardSpellInvocation = Extract<
   SupportedSpellInvocation,
@@ -145,7 +145,7 @@ function greaseGroundHazardSpell(
     spell.mechanics.phases.length !== 1 ||
     !isGreaseGroundHazardPhase(phase) ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -156,7 +156,7 @@ function greaseGroundHazardSpell(
       kind: "pointOriginCube",
       sideFeet: movementFeet(phase.attachment.value.shape.sideFeet),
     },
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet: movementFeet(spell.mechanics.range.feet),
   };
 }

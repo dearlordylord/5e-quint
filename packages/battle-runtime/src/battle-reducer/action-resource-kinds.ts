@@ -4,7 +4,7 @@ import {
   type ActionEconomyState,
   type RuntimeActionResource,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import type { CombatantId } from "../identity.ts";
 import type {
   ClassFeatureExtraAttackActionResource,
@@ -35,13 +35,13 @@ export function canSpendEscapeGrappleActionResource(
   resources: ActionEconomyState,
   actorId: CombatantId,
 ): boolean {
-  return Either.isRight(spendEscapeGrappleActionResource(resources, actorId));
+  return Result.isSuccess(spendEscapeGrappleActionResource(resources, actorId));
 }
 
 export function spendEscapeGrappleActionResource<T extends ActionEconomyState>(
   resources: T,
   actorId: CombatantId,
-): Either.Either<T, ActionEconomySpendError> {
+): Result.Result<T, ActionEconomySpendError> {
   return spendMatchingActionResource(
     resources,
     "attack",

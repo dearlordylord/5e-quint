@@ -10,7 +10,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import type { SpellSlotLevel } from "@dnd/shared/types";
 import type { Attachment, EffectAtom } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   MAGIC_WEAPON_ENHANCEMENT_BONUSES,
@@ -125,12 +125,12 @@ function magicWeaponEnhancementProjection(
   if (
     operation?.trigger.kind !== "passive" ||
     operation.effect.kind !== "grant_magic_weapon_enhancement" ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     bonus: operation.effect.bonus,
   };
 }
@@ -336,7 +336,7 @@ export const MagicWeaponEnhancementInvocationSchema =
       procedure: Schema.Literal("magicWeaponEnhancement"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
-      bonus: Schema.Literal(1, 2, 3),
+      bonus: Schema.Literals([1, 2, 3]),
       durationTicks: ElapsedTimeTicksSchema,
     }),
   );

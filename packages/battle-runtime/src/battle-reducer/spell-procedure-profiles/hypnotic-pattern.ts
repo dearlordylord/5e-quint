@@ -20,7 +20,7 @@ import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elaps
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { ActivationPhase, EffectAtom } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { bindStoredSpellProcedureExecutionFacts } from "../../character-execution-queries.ts";
 import type { SpellProcedureExecution } from "../../character-execution.ts";
 import type {
@@ -191,11 +191,11 @@ function hypnoticPatternSpell(spell: HypnoticPatternSpellInvocation["spell"]): {
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         phase,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
         rangeFeet: spell.mechanics.range.feet,
       };
 }

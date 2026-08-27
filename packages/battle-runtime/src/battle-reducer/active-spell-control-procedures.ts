@@ -2,7 +2,7 @@ import {
   canSpendAction,
   spendAction,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import {
   spellActiveEffectForExecutionRef,
   spellActiveEffectExecutionRef,
@@ -132,7 +132,7 @@ export function resolveLevitateAltitudeControlCommand(
   /* v8 ignore stop -- @preserve */
   const spentState = {
     ...input.state,
-    currentTurnResources: Either.getOrThrow(
+    currentTurnResources: Result.getOrThrow(
       spendAction(input.state.currentTurnResources, "magic"),
     ),
   };
@@ -182,7 +182,7 @@ export function resolveReplaceSelfTransformationModeCommand(
       "Magic action is no longer available for the current actor.",
     );
   }
-  const spent = Either.getOrThrow(
+  const spent = Result.getOrThrow(
     spendAction(input.state.currentTurnResources, "magic"),
   );
   const selectedEffect = spellActiveEffectForExecutionRef(

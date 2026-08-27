@@ -15,7 +15,7 @@ import { CombatantId } from "../../identity.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -109,7 +109,7 @@ function chosenDamageResistanceSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
 
@@ -166,7 +166,7 @@ function chosenDamageResistanceSpellProjection(
     expiresAt: {
       kind: "concentration",
       combatantId: actorId,
-      durationTicks: durationTicks.right,
+      durationTicks: durationTicks.success,
     },
     rangeFeet: movementFeet(5),
   };

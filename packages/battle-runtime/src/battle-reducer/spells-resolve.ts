@@ -51,7 +51,7 @@ import {
   attackRollResultIsValid,
 } from "@dnd/shared-algebras/attack-roll-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   type AdmittedActionSpellBattleResolutionInput,
   type AdmittedBonusActionDashSpellBattleResolutionInput,
@@ -3597,7 +3597,7 @@ function spendSpellActResolutionResources(input: {
       spellAttackState.currentTurnResources,
       { kind: "bonusAction" },
     );
-    if (Either.isLeft(spent)) {
+    if (Result.isFailure(spent)) {
       return invalidResult(
         input.errorState,
         "staleSubject",
@@ -3609,7 +3609,7 @@ function spendSpellActResolutionResources(input: {
         ...spellAttackState,
         currentTurnResources:
           clearPendingAttackRollMissToHitReplacementSelection(
-            spent.right,
+            spent.success,
             input.actorId,
           ),
       },
@@ -3630,7 +3630,7 @@ function spendSpellActResolutionResources(input: {
     input.actorId,
   );
   const spent = spendAction(spellAttackState.currentTurnResources, "magic");
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.errorState,
       "staleSubject",
@@ -3640,7 +3640,7 @@ function spendSpellActResolutionResources(input: {
   const nextState = {
     ...spellAttackState,
     currentTurnResources: clearPendingAttackRollMissToHitReplacementSelection(
-      spent.right,
+      spent.success,
       input.actorId,
     ),
   };

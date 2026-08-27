@@ -25,7 +25,7 @@ import {
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, SpellSlotLevel } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -178,7 +178,7 @@ function dragonsBreathInitialSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     mechanics.duration.upTo,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         rangeFeet: movementFeet(5),
@@ -190,7 +190,7 @@ function dragonsBreathInitialSpellProjection(
           expiresAt: {
             kind: "concentration",
             combatantId: actorId,
-            durationTicks: durationTicks.right,
+            durationTicks: durationTicks.success,
           },
         },
       };

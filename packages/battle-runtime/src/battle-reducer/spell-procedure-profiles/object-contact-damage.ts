@@ -42,7 +42,7 @@ import type {
   DiceExprDelta,
   EffectAtom,
 } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   type BattleActDiscoveryCandidate,
   type BattleResolutionResult,
@@ -221,7 +221,7 @@ function objectContactDamageSpell(spell: BattleSpellAdmissionSource): {
     spell.mechanics.duration.upTo.unit !== "minute" ||
     spell.mechanics.duration.upTo.amount !== 1 ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     spell.mechanics.operations.length !== 1 ||
     !isManufacturedMetalObjectAttachment(attachment) ||
     initialPhase?.kind !== "direct" ||
@@ -242,7 +242,7 @@ function objectContactDamageSpell(spell: BattleSpellAdmissionSource): {
   return {
     damageAmount: initialEffect.amount,
     damageType: initialEffect.damageType,
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet: movementFeet(rangeFeet),
   };
 }
@@ -475,7 +475,7 @@ const ObjectContactDamageInvocationSchema = spellProcedureExecutionSchema(
 const ObjectContactDamageRepeatInvocationSchema = spellProcedureExecutionSchema(
   Schema.Struct({
     procedure: Schema.Literal("objectContactDamageRepeat"),
-    spellRuleFacts: Schema.optionalWith(Schema.Never, { exact: true }),
+    spellRuleFacts: Schema.optionalKey(Schema.Never),
     activeEffectRef: BattleActiveEffectExecutionRef,
     activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
   }),

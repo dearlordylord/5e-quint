@@ -22,7 +22,7 @@ import {
 } from "@dnd/shared-algebras/armor-class-algebra";
 import { proficiencyBonus } from "@dnd/shared/types";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import {
   activeEffectArmorClass,
@@ -604,8 +604,8 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
         : hole,
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)({
           ...Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot),
           acts: focusedSnapshot.acts.map((candidate) => ({
             ...candidate,

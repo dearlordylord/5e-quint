@@ -3,7 +3,11 @@
 
 import { Result } from "effect";
 import type { CreatureType } from "@dnd/shared/game-facts";
-import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
+import {
+  difficultyClass,
+  type DifficultyClass,
+  type ReadonlyNonEmptyArray,
+} from "@dnd/shared/types";
 import type {
   BattleCreatureState,
   BattleStateInitIssue,
@@ -42,6 +46,12 @@ export function battleStateInitIssueMessage(
     : issue.tag === "battleStateInitIssues"
       ? issue.issues.map(battleStateInitIssueMessage).join("; ")
       : issue.message;
+}
+
+export function battleStateInitIssueLeaves(
+  issue: BattleStateInitIssue,
+): ReadonlyNonEmptyArray<BattleStateInitLeafIssue> {
+  return issue.tag === "battleStateInitIssues" ? issue.issues : [issue];
 }
 
 export function battleStateInitIssues(

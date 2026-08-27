@@ -26,7 +26,7 @@ import { DiceExprSchema } from "@dnd/surface/surface/schema";
 
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -161,7 +161,7 @@ function cloudkillAreaHazardSpell(
       (earlyEnd) => earlyEnd.kind === "area_dispersed_by_strong_wind",
     ) !== true ||
     mechanics.operations.length !== CLOUDKILL_OPERATION_COUNT ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "sphere" ||
@@ -178,7 +178,7 @@ function cloudkillAreaHazardSpell(
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet: mechanics.range.feet,
     radiusFeet: area.shape.radiusFeet,
     damageAmount: initialDamageAmount,

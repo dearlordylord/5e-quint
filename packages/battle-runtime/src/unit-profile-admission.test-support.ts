@@ -44,7 +44,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import myceliumStepInput from "../../../plans/unit-profile-coverage/fixtures/classic-non-srd/mycelium_step.json";
 import eldritchBlastInput from "../../surface/content/eldritch_blast.json";
 import starryWispInput from "../../surface/content/starry_wisp.json";
@@ -320,7 +320,7 @@ export {
   difficultyClass,
   discoverBattleActCandidates,
   discoverBattleActs,
-  Either,
+  Result,
   elapsedTimeTicks,
   eldritchBlastInput,
   endTurn,

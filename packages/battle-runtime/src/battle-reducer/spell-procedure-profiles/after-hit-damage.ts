@@ -37,7 +37,7 @@ import type {
   DiceAmount as SurfaceDiceAmount,
   DiceExpr,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 
 import {
   type AfterHitDamageSpellInvocation,
@@ -274,7 +274,7 @@ function spendAfterHitDamageFreeCastResource(
   const spentBonusAction = spendActivationResource(state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spentBonusAction)) {
+  if (Result.isFailure(spentBonusAction)) {
     return invalidResult(
       state,
       "staleSubject",
@@ -284,7 +284,7 @@ function spendAfterHitDamageFreeCastResource(
   return spendSpellAccessFreeCastResource(
     {
       ...state,
-      currentTurnResources: spentBonusAction.right,
+      currentTurnResources: spentBonusAction.success,
     },
     casterId,
     resourcePoolRef,

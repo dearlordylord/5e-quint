@@ -21,7 +21,7 @@ import {
 } from "@dnd/shared/types";
 import type { ActivationPhase, SpellRecord } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
 import { allocateBattleActiveEffectRefForCreature } from "./active-effect/execution-ref.ts";
@@ -324,8 +324,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       }),
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...checkHole,
           spellcastingAbilityCheck: {
             ...checkHole.spellcastingAbilityCheck,
@@ -801,8 +801,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       ),
     };
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(focusedSnapshot),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(focusedSnapshot),
       ),
     ).toBe(true);
     const wrongOwnerSnapshot = {
@@ -821,8 +821,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(wrongOwnerSnapshot),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(wrongOwnerSnapshot),
       ),
     ).toBe(true);
 
@@ -990,8 +990,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     const encodedSnapshot =
       Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)({
           ...encodedSnapshot,
           combatants: encodedSnapshot.combatants.map((combatant) =>
             combatant.combatantId === spellCasterId
@@ -1063,7 +1063,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     ]);
     const snapshot = snapshotBattle(state.state);
 
-    const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)({
+    const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)({
       ...snapshot,
       lightEmitters: snapshot.lightEmitters.map((emitter) =>
         emitter.kind === "spellLightEmitter" && "sourceSpellLevel" in emitter
@@ -1072,7 +1072,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       ),
     });
 
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("deferred support boundary: untracked combatant effects remain untouched", () => {

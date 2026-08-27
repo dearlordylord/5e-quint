@@ -112,10 +112,10 @@ const SaveGatedConditionImmunityInvocationSchema =
         radiusFeet: MovementFeet,
       }),
       targetCreatureTypes: Schema.Array(CreatureTypeSchema),
-      activeEffects: Schema.Tuple(
+      activeEffects: Schema.Tuple([
         ConditionImmunityActiveEffectTemplateSchema,
         ConditionImmunityActiveEffectTemplateSchema,
-      ),
+      ]),
       rangeFeet: MovementFeet,
     }),
   );

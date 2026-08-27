@@ -74,9 +74,9 @@ const PersistentArmorEffectSchema = Schema.Struct({
   sourceCombatantId: CombatantId,
   base: ArmorClassSchema,
   ability: Schema.Literal("dex"),
-  earlyEnds: Schema.Tuple(
+  earlyEnds: Schema.Tuple([
     Schema.Struct({ kind: Schema.Literal("targetDonsArmor") }),
-  ),
+  ]),
   expiresAt: DurationBattleActiveEffectExpirationSchema,
 });
 type PersistentArmorSpellSource =
@@ -333,7 +333,7 @@ function resolvePersistentArmorEffect(
 }
 
 const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
@@ -350,7 +350,7 @@ const PersistentArmorEffectInvocationSchema = spellProcedureExecutionSchema(
       rangeFeet: MovementFeet,
       activeEffect: PersistentArmorEffectSchema,
     }),
-  ),
+  ]),
 );
 export const persistentArmorEffectProfile: SpellProcedureDeclaration<
   "persistentArmorEffect",

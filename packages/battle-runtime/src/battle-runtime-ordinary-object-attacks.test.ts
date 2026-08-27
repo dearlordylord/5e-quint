@@ -1,6 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { Either, Schema } from "effect";
-import * as ParseResult from "effect/ParseResult";
+import { Result, Schema } from "effect";
 import { damageAmount, difficultyClass, Hp, Round } from "@dnd/shared/types";
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -483,24 +482,24 @@ describe("battle runtime: ordinary object attacks", () => {
     );
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...targetHole,
           attack: { ...targetHole.attack, acceptsObjectTarget: false },
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...targetHole,
           attack: { ...targetHole.attack, targetConstraint: "meleeReach" },
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           ...fill,
           spatialFacts: [{ ...fill.spatialFacts[0], kind: "attackObject" }],
         }),
@@ -701,40 +700,38 @@ describe("battle runtime: ordinary object attacks", () => {
         Schema.encodeSync(BattleObjectDamageOutcomeSchema)(outcome),
       ),
     ).toEqual(outcome);
-    const inconsistentTotal = Schema.decodeUnknownEither(
+    const inconsistentTotal = Schema.decodeUnknownResult(
       BattleObjectDamageOutcomeSchema,
     )({
       ...outcome,
       rolledDamage: 15,
     });
-    expect(Either.isLeft(inconsistentTotal)).toBe(true);
-    if (!Either.isLeft(inconsistentTotal)) {
+    expect(Result.isFailure(inconsistentTotal)).toBe(true);
+    if (!Result.isFailure(inconsistentTotal)) {
       throw new Error("Expected inconsistent object damage to be rejected.");
     }
-    expect(
-      ParseResult.TreeFormatter.formatErrorSync(inconsistentTotal.left),
-    ).toContain(
+    expect(inconsistentTotal.failure.message).toContain(
       "Object damage components, totals, Hit Point transition, and destruction state must agree.",
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleObjectDamageOutcomeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleObjectDamageOutcomeSchema)({
           ...outcome,
           damageAfterImmunities: 16,
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleObjectDamageOutcomeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleObjectDamageOutcomeSchema)({
           ...outcome,
           damageThreshold: null,
         }),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleObjectDamageOutcomeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleObjectDamageOutcomeSchema)({
           ...outcome,
           effectiveDamage: 7,
           nextHitPoints: 30,
@@ -742,8 +739,8 @@ describe("battle runtime: ordinary object attacks", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleObjectDamageOutcomeSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleObjectDamageOutcomeSchema)({
           ...outcome,
           destroyed: true,
         }),

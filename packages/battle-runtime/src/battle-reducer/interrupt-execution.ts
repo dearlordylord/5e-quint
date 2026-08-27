@@ -4,7 +4,7 @@
 import { nonEmptyArrayProperty } from "../optional-property.ts";
 import { canSpendBonusAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { type BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { type BattleSubject } from "../battle-subjects.ts";
 import type { SupportedAttackActionOption } from "../battle-action-options.ts";
@@ -148,9 +148,9 @@ function stateForOpeningInterruptCheckpoint(
     castingState.currentTurnResources,
     combatantId,
   );
-  return Either.isLeft(claimed)
+  return Result.isFailure(claimed)
     ? null
-    : { ...castingState, currentTurnResources: claimed.right };
+    : { ...castingState, currentTurnResources: claimed.success };
 }
 
 type AttackHitBonusActionSpellInvocation = Extract<

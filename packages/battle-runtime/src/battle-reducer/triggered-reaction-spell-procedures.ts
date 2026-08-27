@@ -1,7 +1,7 @@
 import { optionalProperty } from "../optional-property.ts";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Match } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject, type BattleSubject } from "../battle-subjects.ts";
 import {
@@ -761,7 +761,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
     slotted.currentTurnResources,
     input.subject.reactorId,
   );
-  if (Either.isLeft(nextTurnResources)) {
+  if (Result.isFailure(nextTurnResources)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -770,7 +770,7 @@ export function resolveTriggeredReactionSaveGatedDamage(
   }
   const nextState = {
     ...slotted,
-    currentTurnResources: nextTurnResources.right,
+    currentTurnResources: nextTurnResources.success,
   };
   return openAfterDamageSequenceInterruptWindow({
     state: nextState,

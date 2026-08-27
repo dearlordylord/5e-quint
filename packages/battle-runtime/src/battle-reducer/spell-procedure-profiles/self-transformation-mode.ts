@@ -598,7 +598,7 @@ export const SelfTransformationModeInvocationSchema =
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       modeChoices: Schema.NonEmptyArray(
-        Schema.Literal(...SELF_TRANSFORMATION_MODE_KINDS),
+        Schema.Literals(SELF_TRANSFORMATION_MODE_KINDS),
       ),
       naturalWeaponFacts: Schema.Struct({
         damage: Schema.Struct({

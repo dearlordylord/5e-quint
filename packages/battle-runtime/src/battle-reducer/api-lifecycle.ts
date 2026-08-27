@@ -58,6 +58,7 @@ import { admittedSpellActs } from "./spells-profiles.ts";
 
 import {
   battleStateInitIssue,
+  battleStateInitIssueLeaves,
   battleStateInitIssues,
 } from "./domain-helpers.ts";
 
@@ -234,16 +235,26 @@ export function startBattle(
     CombatantId,
     import("../battle-runtime-context.ts").BattleStatBlockPresentationSource
   >();
+  const initializationIssues: BattleStateInitLeafIssue[] = [];
+  const seenCombatantIds = new Set<CombatantId>();
   for (const combatant of input.combatants) {
-    if (combatants.has(combatant.combatantId)) {
-      return battleStateInitIssue(
-        `Duplicate combatant id: ${combatant.combatantId}`,
-      );
+    const duplicateCombatantId = seenCombatantIds.has(combatant.combatantId);
+    seenCombatantIds.add(combatant.combatantId);
+    if (duplicateCombatantId) {
+      initializationIssues.push({
+        tag: "battleStateInitIssue",
+        message: `Duplicate combatant id: ${combatant.combatantId}`,
+      });
     }
     const positiveHpUnconsciousIssue =
       positiveHpUnconsciousInitIssue(combatant);
     if (positiveHpUnconsciousIssue !== null) {
-      return positiveHpUnconsciousIssue;
+      if (Result.isFailure(positiveHpUnconsciousIssue)) {
+        initializationIssues.push(
+          ...battleStateInitIssueLeaves(positiveHpUnconsciousIssue.failure),
+        );
+      }
+      continue;
     }
     const admission = battleCreatureStateAdmissionFromInit(
       input.battleId,
@@ -251,8 +262,19 @@ export function startBattle(
       battleExecutionScopeOrdinal(0),
     );
     if (admission.tag === "invalid") {
-      return battleStateInitIssueFromAdmissionIssues(admission.issues);
+      initializationIssues.push(
+        ...admission.issues.map(admissionIssueToInitIssue),
+      );
+      continue;
     }
+    if (admission.nextScopeOrdinal <= 0) {
+      initializationIssues.push({
+        tag: "battleStateInitIssue",
+        message: `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
+      });
+      continue;
+    }
+    if (duplicateCombatantId) continue;
     combatants.set(combatant.combatantId, admission.creature);
     if ("runtimeContext" in admission) {
       characterContexts.set(combatant.combatantId, admission.runtimeContext);
@@ -263,15 +285,40 @@ export function startBattle(
         admission.statBlockPresentation,
       );
     }
-    if (admission.nextScopeOrdinal <= 0) {
-      return battleStateInitIssue(
-        `Combatant ${combatant.combatantId} admission allocated no execution scope.`,
-      );
-    }
     executionScopeCursors.set(combatant.combatantId, {
       kind: "active",
       nextScopeOrdinal: battleExecutionScopeCursor(admission.nextScopeOrdinal),
     });
+  }
+  for (const [combatantId, combatant] of combatants) {
+    if (!isCharacterBattleCreatureState(combatant)) continue;
+    const characterContext = characterContexts.get(combatantId);
+    if (characterContext === undefined) {
+      initializationIssues.push({
+        tag: "battleStateInitIssue",
+        message: `Character ${combatantId} is missing its runtime context.`,
+      });
+      continue;
+    }
+    for (const attack of [
+      combatant.origin.attack,
+      combatant.origin.offHandAttack,
+    ]) {
+      if (attack == null) continue;
+      const presentationSource = characterWeaponPresentationSource(
+        characterContext,
+        attack.weapon.weaponUnitId,
+      );
+      if (Result.isFailure(presentationSource)) {
+        initializationIssues.push({
+          tag: "battleStateInitIssue",
+          message: `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
+        });
+      }
+    }
+  }
+  if (isNonEmptyReadonlyArray(initializationIssues)) {
+    return battleStateInitIssueFromAdmissionIssues(initializationIssues);
   }
   const hidePrerequisiteIssue = hidePrerequisitesReferenceCombatantsIssue(
     input.hidePrerequisites ?? new Map(),
@@ -307,26 +354,9 @@ export function startBattle(
   for (const [combatantId, combatant] of state.combatants) {
     if (!isCharacterBattleCreatureState(combatant)) continue;
     const characterContext = characterContexts.get(combatantId);
-    if (characterContext === undefined) {
-      return battleStateInitIssue(
-        `Character ${combatantId} is missing its runtime context.`,
-      );
-    }
-    for (const attack of [
-      combatant.origin.attack,
-      combatant.origin.offHandAttack,
-    ]) {
-      if (attack == null) continue;
-      const presentationSource = characterWeaponPresentationSource(
-        characterContext,
-        attack.weapon.weaponUnitId,
-      );
-      if (Result.isFailure(presentationSource)) {
-        return battleStateInitIssue(
-          `Character ${combatantId} weapon ${attack.weapon.weaponUnitId} has ${presentationSource.failure.reason} authored presentation source.`,
-        );
-      }
-    }
+    /* v8 ignore start -- @preserve -- The presentation-validation pass above rejects every admitted character without a runtime context before this execution pass. */
+    if (characterContext === undefined) continue;
+    /* v8 ignore stop -- @preserve */
     const spellAdmission = admitCharacterSpellExecution({
       combatant,
       state,

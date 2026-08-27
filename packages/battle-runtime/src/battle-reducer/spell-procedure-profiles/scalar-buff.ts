@@ -120,7 +120,7 @@ type ScalarBuffInvocation = Extract<
   { readonly procedure: "scalarBuff" }
 >;
 
-const ScalarBuffActiveEffectTemplateSchema = Schema.Union(
+const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("speedDelta"),
@@ -130,10 +130,10 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union(
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("specialSpeedGrant"),
-    speedKind: Schema.Literal(
+    speedKind: Schema.Literals([
       BATTLE_SPECIAL_SPEED_KINDS[0],
       BATTLE_SPECIAL_SPEED_KINDS[1],
-    ),
+    ]),
     speed: Schema.Struct({ kind: Schema.Literal("equalToSpeed") }),
     hover: Schema.Literal(false),
     expiresAt: BattleActiveEffectExpirationSchema,
@@ -162,7 +162,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union(
     floor: ArmorClassSchema,
     expiresAt: BattleActiveEffectExpirationSchema,
   }),
-);
+]);
 
 const HitPointMaximumIncreaseTemplateSchema = Schema.Struct({
   sourceCombatantId: CombatantId,
@@ -495,8 +495,8 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
     resource: LeveledSpellInvocationResourceSchema,
     procedure: Schema.Literal("scalarBuff"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
-    actionCost: Schema.Literal("magicAction", "bonusAction"),
-    targeting: Schema.Union(
+    actionCost: Schema.Literals(["magicAction", "bonusAction"]),
+    targeting: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("self"),
       }),
@@ -504,10 +504,10 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
         kind: Schema.Literal("targetList"),
         minTargets: Schema.Literal(1),
         maxTargets: Schema.Number,
-        requiredTargetDisposition: Schema.Literal("unrestricted", "willing"),
+        requiredTargetDisposition: Schema.Literals(["unrestricted", "willing"]),
       }),
-    ),
-    effect: Schema.Union(
+    ]),
+    effect: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("temporaryHitPoints"),
         amount: Schema.Struct({
@@ -522,7 +522,7 @@ const ScalarBuffInvocationSchema = spellProcedureExecutionSchema(
         kind: Schema.Literal("hitPointMaximumIncrease"),
         activeEffect: HitPointMaximumIncreaseTemplateSchema,
       }),
-    ),
+    ]),
     rangeFeet: MovementFeet,
   }),
 );

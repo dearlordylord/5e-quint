@@ -7,7 +7,7 @@ import {
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 
 import type { SpellRecord } from "@dnd/surface/surface/types";
@@ -77,9 +77,9 @@ describe("Thaumaturgy Booming Voice", () => {
     const state = battleWithThaumaturgy();
     const act = findAct(state, thaumaturgySubject);
     const countHole = findThaumaturgyCountHole(act.initialHoles);
-    const decodedHole = Schema.decodeUnknownEither(BattleHoleSchema)(countHole);
+    const decodedHole = Schema.decodeUnknownResult(BattleHoleSchema)(countHole);
     const fill = thaumaturgyCountFill(countHole, 0);
-    const decodedFill = Schema.decodeUnknownEither(BattleFillSchema)(fill);
+    const decodedFill = Schema.decodeUnknownResult(BattleFillSchema)(fill);
 
     expect(battleActSpellPresentation(act)?.invocation).toEqual(
       thaumaturgySubject.invocation,
@@ -94,8 +94,8 @@ describe("Thaumaturgy Booming Voice", () => {
         }),
       ]),
     );
-    expect(Either.isRight(decodedHole)).toBe(true);
-    expect(Either.isRight(decodedFill)).toBe(true);
+    expect(Result.isSuccess(decodedHole)).toBe(true);
+    expect(Result.isSuccess(decodedFill)).toBe(true);
   });
 
   test("requires the cap witness and rejects casts when three 1-minute effects are already active", () => {

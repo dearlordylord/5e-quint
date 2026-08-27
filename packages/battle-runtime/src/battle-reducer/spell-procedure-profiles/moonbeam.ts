@@ -27,7 +27,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -181,7 +181,7 @@ function moonbeamSpell(
     spell.mechanics.duration.upTo.amount !== MOONBEAM_DURATION_MINUTES ||
     spell.mechanics.operations.length !== MOONBEAM_OPERATION_COUNT ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     cylinderHole?.holeId !== "moonbeam_cylinder" ||
     cylinderArea?.kind !== "area" ||
     cylinderArea?.origin.kind !== "point_within_range" ||
@@ -201,7 +201,7 @@ function moonbeamSpell(
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     radiusFeet: cylinderArea.shape.radiusFeet,
     heightFeet: cylinderArea.shape.heightFeet,
     repositionMaxMoveFeet: repositionOperation.effect.maxMoveFeet,

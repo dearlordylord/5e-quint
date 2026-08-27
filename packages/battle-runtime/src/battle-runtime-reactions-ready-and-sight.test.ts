@@ -18,7 +18,7 @@ import {
   cantripSpellInvocationRef,
   concentrationSavingThrowFill,
   damageRollFill,
-  Either,
+  Result,
   fighterAttackSubject,
   fighterId,
   fighterTurnWithReadiedAcidAndSecondReadiedRay,
@@ -576,8 +576,8 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
 
   test("structured spell subjects reject Ready mode without a trigger", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSubjectSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSubjectSchema)({
           tag: "actionSpell",
           actorId: wizardId,
           invocation: cantripSpellInvocationRef(
@@ -771,7 +771,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("reaction decision schema parses nested reaction procedure fills", () => {
-    const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
+    const decoded = Schema.decodeUnknownResult(BattleFillSchema)({
       kind: "interruptDecision",
       holeId: "battle:interrupt:decision",
       value: {
@@ -791,7 +791,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       },
     });
 
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("snapshot codecs preserve the Readied Spell procedure binding", () => {
@@ -949,15 +949,15 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     };
 
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
           replaceReleaseChoice({ procedureRef: unboundRef }),
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)({
           ...encoded,
           readiedResponses: {
             ...encoded.readiedResponses,
@@ -974,15 +974,15 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
           replaceReleaseChoice({ procedureRef: wrongKindRef }),
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
           replaceReleaseChoice({
             procedureRef: releaseChoice.subject.procedureRef,
             reactorId: goblinId,
@@ -991,15 +991,15 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
           releaseChoiceWithUnboundHole,
         ),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
           releaseChoiceWithMismatchedSourceHole,
         ),
       ),
@@ -1038,11 +1038,11 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     };
 
     expect(
-      Either.isRight(Schema.decodeUnknownEither(BattleFillSchema)(decision)),
+      Result.isSuccess(Schema.decodeUnknownResult(BattleFillSchema)(decision)),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "interruptDecision",
           holeId: "battle:interrupt:decision",
           value: {
@@ -1061,7 +1061,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
   });
 
   test("attack sight spatial facts parse through target-choice fills", () => {
-    const decoded = Schema.decodeUnknownEither(BattleFillSchema)({
+    const decoded = Schema.decodeUnknownResult(BattleFillSchema)({
       kind: "targetChoice",
       holeId: "battle:attack:target",
       value: "goblin",
@@ -1079,10 +1079,10 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
       ],
     });
 
-    expect(Either.isRight(decoded)).toBe(true);
+    expect(Result.isSuccess(decoded)).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleFillSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleFillSchema)({
           kind: "targetChoice",
           holeId: "battle:attack:target",
           value: "goblin",

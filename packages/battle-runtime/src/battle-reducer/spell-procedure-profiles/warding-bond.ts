@@ -12,7 +12,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 // cast resolution.
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { WardingBondActiveEffectTemplateSchema } from "../../active-effect/codecs.ts";
 import {
@@ -123,7 +123,7 @@ function wardingBondSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         rangeFeet: WARDING_BOND_CAST_RANGE_FEET,
@@ -131,7 +131,7 @@ function wardingBondSpellProjection(
         activeEffect: {
           kind: "wardingBond",
           sourceCombatantId: actorId,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       };
 }

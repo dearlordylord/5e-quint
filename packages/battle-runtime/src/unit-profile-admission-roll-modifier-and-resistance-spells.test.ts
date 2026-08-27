@@ -103,7 +103,7 @@ import {
   requiredAbilityCheckRollMode,
 } from "./battle-reducer/hole-helpers.ts";
 import { BattleHoleSchema } from "./index.ts";
-import { Either, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { defineSelectedIdentityReplayWitness } from "./selected-identity-witness.test-support.ts";
 
 function withoutKnownWillingFacts<
@@ -1078,13 +1078,13 @@ describe("SRDINV30B deterministic roll modifier Spell Unit admission", () => {
       "cha",
     ]);
     expect(
-      Either.isRight(
-        Schema.decodeUnknownEither(BattleHoleSchema)(abilityByTargetHole),
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleHoleSchema)(abilityByTargetHole),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleHoleSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
           ...abilityByTargetHole,
           spell: { procedure: "rollModifier" },
         }),

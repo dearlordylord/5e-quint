@@ -19,7 +19,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet, type SpellSlotLevel } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -153,7 +153,7 @@ function jumpMovementReplacementSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         rangeFeet: movementFeet(5),
@@ -163,7 +163,7 @@ function jumpMovementReplacementSpellProjection(
           movementCostFeet: movementFeet(effect.movementCostFeet),
           maxJumpDistanceFeet: movementFeet(effect.maxJumpDistanceFeet),
           usedThisTurn: false,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       };
 }

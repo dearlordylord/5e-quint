@@ -155,21 +155,21 @@ const SpellAttackDamageInvocationCommonFields = {
   targeting: SpellAttackDamageTargetingSchema,
   damage: SpellAttackDamagePayloadSchema,
   rangeFeet: MovementFeet,
-  attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+  attackKind: Schema.Literals(["melee_spell_attack", "ranged_spell_attack"]),
   attackBonus: AttackBonus,
   missDamage: SpellAttackMissDamageSchema,
   laterDamage: Schema.NullOr(SpellDamageSchema),
   postDamageRiders: Schema.Array(SpellPostDamageRiderSchema),
-  objectHitEffect: Schema.Union(
+  objectHitEffect: Schema.Union([
     Schema.Struct({ kind: Schema.Literal("none") }),
     Schema.Struct({
       kind: Schema.Literal("igniteFlammableUnattended"),
     }),
-  ),
+  ]),
 } as const;
 
 export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       ...SpellAttackDamageInvocationCommonFields,
       access: CantripSpellAccessSchema,
@@ -180,7 +180,7 @@ export const SpellAttackDamageInvocationSchema = spellProcedureExecutionSchema(
       access: PreparedSpellAccessSchema,
       resource: LeveledSpellInvocationResourceSchema,
     }),
-  ),
+  ]),
 );
 export const spellAttackDamageProfile: SpellProcedureDeclaration<
   "spellAttackDamage",

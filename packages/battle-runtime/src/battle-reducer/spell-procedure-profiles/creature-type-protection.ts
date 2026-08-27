@@ -349,7 +349,7 @@ const CreatureTypeProtectionInvocationSchema = spellProcedureExecutionSchema(
     procedure: Schema.Literal("creatureTypeProtection"),
     spellRuleFacts: SpellRuleExecutionFactsSchema,
     actionCost: Schema.Literal("magicAction"),
-    targeting: Schema.Union(
+    targeting: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("self"),
       }),
@@ -359,14 +359,14 @@ const CreatureTypeProtectionInvocationSchema = spellProcedureExecutionSchema(
         maxTargets: Schema.Number,
         requiredTargetDisposition: Schema.Literal("willing"),
       }),
-    ),
+    ]),
     activeEffect: Schema.Struct({
       kind: Schema.Literal("creatureTypeProtection"),
       sourceCombatantId: CombatantId,
       attackRollMode: Schema.Literal("disadvantage"),
       protectedAgainstCreatureTypes: Schema.Array(CreatureTypeSchema),
       preventedConditions: Schema.Array(
-        Schema.Literal(...PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS),
+        Schema.Literals(PROTECTION_FROM_EVIL_AND_GOOD_PREVENTED_CONDITIONS),
       ),
       preventsPossession: Schema.Boolean,
       expiresAt: BattleActiveEffectExpirationSchema,

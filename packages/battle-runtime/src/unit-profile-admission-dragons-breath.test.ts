@@ -8,7 +8,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { spellExecutionFacts } from "./battle-reducer/spell-execution-facts.ts";
 import { supportedSpellActs } from "./battle-reducer/spells-profiles.ts";
 import { Schema } from "effect";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { Hp } from "@dnd/shared/types";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
@@ -286,8 +286,8 @@ describe("Dragon's Breath initial cast admission", () => {
       needsDamage.snapshot,
     );
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)({
           ...encodedSnapshot,
           acts: [{ subject: exhaleAct.subject, initialHoles: wrongOwnerHoles }],
         }),

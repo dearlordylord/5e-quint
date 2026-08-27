@@ -20,7 +20,7 @@ import { spellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { DurationBattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import {
@@ -155,7 +155,7 @@ function sanctuaryTargetingInterdictionProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         rangeFeet: movementFeet(30),
@@ -163,7 +163,7 @@ function sanctuaryTargetingInterdictionProjection(
           kind: "sanctuaryWard",
           sourceCombatantId: actorId,
           save: { ability: "wis", dc: operation.effect.dc },
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       };
 }

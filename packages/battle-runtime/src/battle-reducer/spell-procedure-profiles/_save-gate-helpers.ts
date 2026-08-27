@@ -25,7 +25,7 @@ import {
   isFixedDistancePointRange,
   topLevelSpellCastingTime,
 } from "@dnd/surface/surface/types";
-import { Either, Match } from "effect";
+import { Result, Match } from "effect";
 import {
   COLOR_SPRAY_FAILED_SAVE_CONDITION,
   ENTANGLE_FAILED_SAVE_CONDITION,
@@ -532,7 +532,7 @@ function abilityD20TestRollModeSaveGateSpell(
       RAY_OF_ENFEEBLEMENT_DURATION_AMOUNT ||
     spell.mechanics.phases.length !== 1 ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     !isRayOfEnfeeblementD20LifecyclePhase(phase)
   ) {
     return null;
@@ -556,7 +556,7 @@ function abilityD20TestRollModeSaveGateSpell(
       expiresAt: {
         kind: "concentration",
         combatantId: actorId,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
     failedSaveDamagePenaltyEffect: {
@@ -566,7 +566,7 @@ function abilityD20TestRollModeSaveGateSpell(
       expiresAt: {
         kind: "concentration",
         combatantId: actorId,
-        durationTicks: durationTicks.right,
+        durationTicks: durationTicks.success,
       },
     },
   };
@@ -793,7 +793,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
     repeatSave.onSuccess !== "ends_on_target" ||
     repeatSave.onFailAgain !== undefined ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -819,7 +819,7 @@ export function blindnessDeafnessSaveGateConditionSpell(
     effect: {
       kind: "choice",
       choices: BLINDNESS_DEAFNESS_FAILED_SAVE_CONDITION_CHOICES,
-      expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      expiresAt: { kind: "duration", durationTicks: durationTicks.success },
       escape: null,
       turnStartDamage: null,
       repeatSave: {
@@ -907,7 +907,7 @@ function paralyzedTargetListSaveGateConditionSpell(input: {
     repeatSave.onSuccess !== "ends_on_target" ||
     repeatSave.onFailAgain !== undefined ||
     durationTicks === null ||
-    Either.isLeft(durationTicks)
+    Result.isFailure(durationTicks)
   ) {
     return null;
   }
@@ -930,7 +930,10 @@ function paralyzedTargetListSaveGateConditionSpell(input: {
     effect: {
       kind: "fixed",
       condition: HOLD_PERSON_FAILED_SAVE_CONDITION,
-      expiresAt: { kind: "concentration", durationTicks: durationTicks.right },
+      expiresAt: {
+        kind: "concentration",
+        durationTicks: durationTicks.success,
+      },
       escape: null,
       turnStartDamage: null,
       repeatSave: {
@@ -1029,7 +1032,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   const targetCountBySlot = oneAdditionalTargetPerSpellSlotAboveBaseLevel(
@@ -1051,7 +1054,7 @@ function creatureTypeCharmedSaveGateConditionSpell(input: {
     effect: {
       kind: "fixed",
       condition: "charmed",
-      expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+      expiresAt: { kind: "duration", durationTicks: durationTicks.success },
       escape: { kind: "targetDamagedByCasterOrAlly" },
       turnStartDamage: null,
       repeatSave: null,
@@ -1669,7 +1672,7 @@ function contagionFailedSaveConditionSupport(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return null;
   }
   return {
@@ -1679,7 +1682,7 @@ function contagionFailedSaveConditionSupport(
         condition: "poisoned",
         expiresAt: {
           kind: "duration",
-          durationTicks: durationTicks.right,
+          durationTicks: durationTicks.success,
         },
         escape: null,
         turnStartDamage: null,

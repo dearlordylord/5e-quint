@@ -26,7 +26,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either, Match, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import {
   type AvailableBattleAct,
@@ -153,14 +153,14 @@ function featherFallMitigationSpellProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.value,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         rangeFeet: movementFeet(spell.mechanics.range.feet),
         activeEffect: {
           kind: "featherFallMitigation",
           sourceCombatantId: actorId,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       };
 }

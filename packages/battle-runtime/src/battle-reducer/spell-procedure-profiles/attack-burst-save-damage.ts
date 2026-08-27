@@ -112,7 +112,7 @@ const AttackBurstSaveDamageInvocationSchema = spellProcedureExecutionSchema(
     targeting: Schema.Struct({
       kind: Schema.Literal("singleCombatant"),
     }),
-    attackKind: Schema.Literal("melee_spell_attack", "ranged_spell_attack"),
+    attackKind: Schema.Literals(["melee_spell_attack", "ranged_spell_attack"]),
     attackBonus: AttackBonus,
     damage: Schema.Struct({
       expr: DiceExprSchema,

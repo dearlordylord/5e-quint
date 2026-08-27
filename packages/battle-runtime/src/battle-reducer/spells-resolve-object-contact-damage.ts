@@ -14,7 +14,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
 import { characterExecutionWithObjectContactDamageRepeat } from "../character-execution-queries.ts";
 import type { ObjectContactDamageRepeatSpellProcedureExecution } from "../character-execution.ts";
@@ -387,7 +387,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
     { kind: "bonusAction" },
   );
   /* v8 ignore start -- @preserve -- Repeat admission proves this spend; damage lifecycle cannot consume the caster's Bonus Action, and interruptions redispatch. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.input.state,
       "staleSubject",
@@ -396,7 +396,7 @@ export function resolveObjectContactDamageRepeatSpellAct(input: {
   }
   /* v8 ignore stop -- @preserve */
   return finishObjectContactDamageResolution({
-    state: { ...damageResolution.state, currentTurnResources: spent.right },
+    state: { ...damageResolution.state, currentTurnResources: spent.success },
     subject: input.input.subject,
     events: damageResolution.events,
     droppedObjects: damageResolution.droppedObjects,

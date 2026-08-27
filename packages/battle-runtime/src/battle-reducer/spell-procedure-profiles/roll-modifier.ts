@@ -113,20 +113,20 @@ import {
 const D20RollModifierEffectSchema = Schema.Struct({
   kind: Schema.Literal("d20RollModifier"),
   sourceCombatantId: CombatantId,
-  on: Schema.Array(Schema.Literal(...BATTLE_D20_ROLL_MODIFIER_KINDS)),
-  delta: Schema.Union(
+  on: Schema.Array(Schema.Literals(BATTLE_D20_ROLL_MODIFIER_KINDS)),
+  delta: Schema.Union([
     Schema.Struct({
       kind: Schema.Literal("fixedNumber"),
       amount: Schema.Number,
-      sign: Schema.Literal("+", "-"),
+      sign: Schema.Literals(["+", "-"]),
     }),
     Schema.Struct({
       dice: Schema.Number,
-      dieSize: Schema.Literal(...BATTLE_D20_ROLL_MODIFIER_DIE_SIZES),
-      sign: Schema.Literal("+", "-"),
+      dieSize: Schema.Literals(BATTLE_D20_ROLL_MODIFIER_DIE_SIZES),
+      sign: Schema.Literals(["+", "-"]),
     }),
-  ),
-  skill: Schema.NullOr(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+  ]),
+  skill: Schema.NullOr(Schema.Literals(BATTLE_SURFACE_SKILLS)),
   expiresAt: BattleActiveEffectExpirationSchema,
 });
 
@@ -401,11 +401,11 @@ function resolveRollModifier(
 }
 
 const RollModifierInvocationCommonFields = {
-  access: Schema.Union(PreparedSpellAccessSchema, CantripSpellAccessSchema),
-  resource: Schema.Union(
+  access: Schema.Union([PreparedSpellAccessSchema, CantripSpellAccessSchema]),
+  resource: Schema.Union([
     LeveledSpellInvocationResourceSchema,
     NoSpellInvocationResourceSchema,
-  ),
+  ]),
   procedure: Schema.Literal("rollModifier"),
   spellRuleFacts: SpellRuleExecutionFactsSchema,
   actionCost: Schema.Literal("magicAction"),
@@ -415,26 +415,24 @@ const RollModifierInvocationCommonFields = {
 } as const;
 
 const RollModifierInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: D20RollModifierEffectSchema,
       skillChoices: Schema.NullOr(
-        Schema.Array(Schema.Literal(...BATTLE_SURFACE_SKILLS)),
+        Schema.Array(Schema.Literals(BATTLE_SURFACE_SKILLS)),
       ),
-      abilityChoices: Schema.Literal(null),
-      abilityChoiceApplication: Schema.optionalWith(Schema.Never, {
-        exact: true,
-      }),
+      abilityChoices: Schema.Null,
+      abilityChoiceApplication: Schema.optionalKey(Schema.Never),
     }),
     Schema.Struct({
       ...RollModifierInvocationCommonFields,
       effect: AbilityCheckRollModeEffectSchema,
-      skillChoices: Schema.Literal(null),
-      abilityChoices: Schema.Array(Schema.Literal(...BATTLE_SURFACE_ABILITIES)),
-      abilityChoiceApplication: Schema.Literal("single", "perTarget"),
+      skillChoices: Schema.Null,
+      abilityChoices: Schema.Array(Schema.Literals(BATTLE_SURFACE_ABILITIES)),
+      abilityChoiceApplication: Schema.Literals(["single", "perTarget"]),
     }),
-  ),
+  ]),
 );
 export const rollModifierProfile: SpellProcedureDeclaration<
   "rollModifier",

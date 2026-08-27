@@ -28,7 +28,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
 
 import type { CombatantId } from "../../identity.ts";
@@ -125,7 +125,7 @@ function admitHeldLight(
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
   const hurl = heldLightHurlMechanicalFacts(spell, ctx);
-  return Either.isLeft(durationTicks) || hurl === null
+  return Result.isFailure(durationTicks) || hurl === null
     ? []
     : [
         {
@@ -143,7 +143,7 @@ function admitHeldLight(
             ),
           },
           hurl,
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       ];
 }

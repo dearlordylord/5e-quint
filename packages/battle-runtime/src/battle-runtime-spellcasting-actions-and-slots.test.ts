@@ -3,6 +3,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   battleActSpellPresentation,
   battleSelectedSpellInvocationForProcedure,
@@ -293,15 +294,15 @@ describe("battle runtime: spellcasting actions and slots", () => {
       resourcePoolRef,
     });
     expect(committed).toMatchObject({
-      _tag: "Right",
-      right: expect.objectContaining({
+      _tag: "Success",
+      success: expect.objectContaining({
         combatants: expect.any(Map),
       }),
     });
-    if (committed._tag !== "Right") {
+    if (Result.isFailure(committed)) {
       throw new Error("Expected the interrupted free cast to commit.");
     }
-    const committedActor = committed.right.combatants.get(fighterId);
+    const committedActor = committed.success.combatants.get(fighterId);
     expect(
       committedActor?.origin.kind === "character"
         ? committedActor.origin.resources.find(
@@ -316,8 +317,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
         resourcePoolRef,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: "Spell Access free cast is no longer available for the interrupted spell.",
+      _tag: "Failure",
+      failure:
+        "Spell Access free cast is no longer available for the interrupted spell.",
     });
     expect(
       commitSpellAccessFreeCastResourceUse({
@@ -326,8 +328,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
         resourcePoolRef,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: "Spell Access free cast is no longer available for the interrupted spell.",
+      _tag: "Failure",
+      failure:
+        "Spell Access free cast is no longer available for the interrupted spell.",
     });
 
     const slotSpent = spendSpellCastResources({

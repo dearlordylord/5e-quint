@@ -27,7 +27,7 @@ import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 
 import { type ElapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -169,7 +169,7 @@ function webRestraintHazardSpell(
     duration.upTo.unit !== "hour" ||
     duration.upTo.amount !== WEB_DURATION_HOURS ||
     mechanics.operations.length !== WEB_OPERATION_COUNT ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     area?.kind !== "area" ||
     area.origin.kind !== "point_within_range" ||
     area.shape.kind !== "cube" ||
@@ -187,7 +187,7 @@ function webRestraintHazardSpell(
   }
 
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     rangeFeet: mechanics.range.feet,
     sideFeet: area.shape.sideFeet,
   };

@@ -31,7 +31,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { MovementFeet, type DifficultyClass } from "@dnd/shared/types";
 import type { DiceExpr } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import * as Result from "effect/Result";
 import {
   resourceHasUsesRemaining,
   spendCharacterResourceUse,
@@ -346,7 +346,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
       "Sacred Weapon has no Channel Divinity uses remaining.",
     );
   }
-  const spentAction = Either.getOrThrow(
+  const spentAction = Result.getOrThrow(
     spendActivationResource(input.state.currentTurnResources, {
       kind: "action",
       action: unitFeature.sacredWeapon.activationCost.action,
@@ -357,7 +357,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
     amount: unitFeature.sacredWeapon.duration.amount,
   });
   /* v8 ignore start -- @preserve -- Admitted Sacred Weapon invariant: the support-profile parser accepts the SRD one-minute duration before producing execution facts. */
-  if (Either.isLeft(durationTicks)) {
+  if (Result.isFailure(durationTicks)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -383,7 +383,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
         weaponItemId: input.subject.weaponItemId,
         expiresAt: {
           kind: "duration",
-          durationTicks: durationTicks.right,
+          durationTicks: durationTicks.success,
         },
       },
     ],
@@ -480,7 +480,7 @@ function resolveRogueSteadyAimUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -522,7 +522,7 @@ function resolveRogueSteadyAimUnitFeature(
   ];
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants: new Map(input.state.combatants).set(actor.combatantId, {
       ...actor,
       activeEffects,
@@ -557,7 +557,7 @@ function resolveMagicActionHealingPoolUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -628,7 +628,7 @@ function resolveMagicActionHealingPoolUnitFeature(
   }
   const nextState = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants,
   };
   return {
@@ -679,7 +679,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -758,7 +758,7 @@ function resolveMagicActionAreaSaveDamageHealingUnitFeature(
   const stateAfterSpend = extendSavingThrowOngoingFeatures(
     {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
         actorAfterResourceSpend,
@@ -922,7 +922,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
     kind: "action",
     action: "magic",
   });
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -945,7 +945,7 @@ function resolveMagicActionSaveGatedConditionUnitFeature(
   const stateAfterSpend = extendSavingThrowOngoingFeatures(
     {
       ...input.state,
-      currentTurnResources: spent.right,
+      currentTurnResources: spent.success,
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
         actorAfterResourceSpend,
@@ -1009,7 +1009,7 @@ export function resolveDruidWildShapeUnitFeature(
       kind: "bonusAction",
     });
     /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
-    if (Either.isLeft(spent)) {
+    if (Result.isFailure(spent)) {
       return invalidResult(
         input.state,
         "staleSubject",
@@ -1018,7 +1018,7 @@ export function resolveDruidWildShapeUnitFeature(
     }
     /* v8 ignore stop -- @preserve */
     const nextState = dismissDruidWildShapeForm({
-      state: { ...input.state, currentTurnResources: spent.right },
+      state: { ...input.state, currentTurnResources: spent.success },
       actorId: actor.combatantId,
     });
     return {
@@ -1129,7 +1129,7 @@ export function resolveDruidWildShapeUnitFeature(
     kind: "bonusAction",
   });
   /* v8 ignore start -- @preserve -- Defensive internal guard: dispatcher Wild Shape eligibility calls canSpendBonusAction on these unchanged turn resources before routing. */
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1151,7 +1151,7 @@ export function resolveDruidWildShapeUnitFeature(
   };
   const stateWithResourceSpend = {
     ...input.state,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
     combatants: new Map(input.state.combatants).set(
       actor.combatantId,
       nextActor,
@@ -1243,7 +1243,7 @@ export function resolveBardicInspirationGrantUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
+  if (!resourceHasUsesRemaining(resource) || Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1402,7 +1402,7 @@ export function resolveBardicInspirationGrantUnitFeature(
   const nextState = {
     ...input.state,
     combatants,
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -1910,7 +1910,7 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
   }
 
   const spent = spendAttackActionResource(input.state.currentTurnResources);
-  if (Either.isLeft(spent)) {
+  if (Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -1935,10 +1935,10 @@ function resolveAttackActionAreaSaveDamageReplacementUnitFeature(
       currentTurnResources: openClassFeatureExtraAttackResource({
         state: {
           ...input.state,
-          currentTurnResources: spent.right.state,
+          currentTurnResources: spent.success.state,
         },
         actorId: actor.combatantId,
-        spentResource: spent.right.spentResource,
+        spentResource: spent.success.spentResource,
       }),
       combatants: new Map(input.state.combatants).set(
         actor.combatantId,
@@ -3131,11 +3131,11 @@ export function resolveExtraActionGrantUnitFeature(
     input.subject.procedureRef,
     unitFeature.restriction,
   );
-  if (Either.isLeft(granted)) {
+  if (Result.isFailure(granted)) {
     return invalidResult(
       input.state,
       "staleSubject",
-      granted.left === "unit-granted action resource already granted"
+      granted.failure === "unit-granted action resource already granted"
         ? "This Unit feature has already granted an action this turn."
         : "This Unit feature cannot grant an action for the current turn.",
     );
@@ -3162,7 +3162,7 @@ export function resolveExtraActionGrantUnitFeature(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: granted.right,
+    currentTurnResources: granted.success,
   };
   return {
     tag: "resolved",
@@ -3180,7 +3180,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
   const spent = spendActivationResource(input.state.currentTurnResources, {
     kind: "bonusAction",
   });
-  if (!resourceHasUsesRemaining(resource) || Either.isLeft(spent)) {
+  if (!resourceHasUsesRemaining(resource) || Result.isFailure(spent)) {
     return invalidResult(
       input.state,
       "staleSubject",
@@ -3222,7 +3222,7 @@ export function resolveSelfBonusActionHealingUnitFeature(
       input.subject.actorId,
       nextActor,
     ),
-    currentTurnResources: spent.right,
+    currentTurnResources: spent.success,
   };
   return {
     tag: "resolved",
@@ -3265,7 +3265,7 @@ export function resolveOngoingFeatureUnitFeature(
 
   const currentTurnResources =
     unitFeature.activationTrigger === "bonusAction"
-      ? Either.getOrThrow(
+      ? Result.getOrThrow(
           spendActivationResource(input.state.currentTurnResources, {
             kind: "bonusAction",
           }),

@@ -25,7 +25,7 @@ import {
   type ResourceCount,
 } from "@dnd/shared/types";
 import { isFixedDistancePointRange } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import { type BattleCreatureState } from "../battle-state-execution.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import type { RuntimeSpellProcedureExecution } from "../character-execution.ts";
@@ -664,14 +664,14 @@ export function extendedSpellDurationModifierFact(
       : duration.kind === "concentration"
         ? elapsedTimeTicksFromTimeSpanDuration(duration.upTo)
         : null;
-  if (baseDuration === null || Either.isLeft(baseDuration)) {
+  if (baseDuration === null || Result.isFailure(baseDuration)) {
     return null;
   }
-  if (Number(baseDuration.right) < ELAPSED_TIME_TICKS_PER_MINUTE) {
+  if (Number(baseDuration.success) < ELAPSED_TIME_TICKS_PER_MINUTE) {
     return null;
   }
   const durationTicks = elapsedTimeTicks(
-    Math.min(Number(baseDuration.right) * 2, ELAPSED_TIME_TICKS_PER_DAY),
+    Math.min(Number(baseDuration.success) * 2, ELAPSED_TIME_TICKS_PER_DAY),
   );
   return duration.kind === "concentration"
     ? {

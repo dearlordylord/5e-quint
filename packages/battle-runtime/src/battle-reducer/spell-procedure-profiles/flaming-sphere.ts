@@ -25,7 +25,7 @@ import {
   type ElapsedTimeTicks,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleResolutionResult,
@@ -181,7 +181,7 @@ function flamingSphereSpell(
     spell.mechanics.duration.upTo.amount !== FLAMING_SPHERE_DURATION_MINUTES ||
     spell.mechanics.operations.length !== FLAMING_SPHERE_OPERATION_COUNT ||
     durationTicks === null ||
-    Either.isLeft(durationTicks) ||
+    Result.isFailure(durationTicks) ||
     sphereHole?.holeId !== "flaming_sphere_area" ||
     sphereArea?.kind !== "area" ||
     sphereArea?.origin.kind !== "point_within_range" ||
@@ -204,7 +204,7 @@ function flamingSphereSpell(
     return null;
   }
   return {
-    durationTicks: durationTicks.right,
+    durationTicks: durationTicks.success,
     diameterFeet: FLAMING_SPHERE_DIAMETER_FEET,
     ramMaxMoveFeet: repositionOperation.effect.maxMoveFeet,
     damageAmount: endTurnOperation.effect.onFail.amount,

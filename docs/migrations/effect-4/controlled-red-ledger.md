@@ -477,6 +477,54 @@ barrel suites remain blocked by the excluded `druid-wild-shape.ts` Effect 3
 import; no test-only import workaround or duplicate production algorithm was
 added.
 
+## Issue #378 attack and damage evidence snapshot
+
+Source HEAD: `3ddfa3769618d0bae6e9b19abcd45cccc87251cc`. This entry records the ordinary attack, damage,
+hit-point, creature, object, and stat-block Effect 4 consumer migration plus
+the cross-combatant `startBattle` admission accumulation fix. The latest
+checkpoint also retains duplicate identity and presentation-source issues
+while preserving stable input order and avoiding duplicate state insertion.
+The generated inventory is
+`docs/migrations/effect-4/controlled-red-inventory.json`, SHA-256
+`2712ba38ae33ba1fa9e5071d2135b5ca675bc7829cbf05f746f79d6f5994a988`.
+
+| Evidence                                                                                                                                                                        | Result                                                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pnpm regenerate:effect4-controlled-red`                                                                                                                                        | pass under the required broad lock; 1,133 raw / 1,007 deduplicated diagnostics                                                                                                           |
+| Regenerated owner attribution                                                                                                                                                   | controlled red: `@dnd/app` 177, `@dnd/battle-runtime` 20, `@dnd/character-battle-runtime` 1, `@dnd/mcp` 935; all other owners 0                                                          |
+| `pnpm --filter @dnd/battle-runtime typecheck --pretty false`                                                                                                                    | controlled red; exit 1 with 20 parsed TypeScript diagnostics (27 output lines), all in untouched later-owner execution-profile or mirror-image/see-invisibility/moonbeam/ray MBT helpers |
+| Changed TypeScript path attribution against `4a062776e..3ddfa3769`                                                                                                              | 104 changed `.ts`/`.tsx` paths; zero package diagnostics on changed paths; app, character-battle, and MCP diagnostics are downstream closure, not changed #378 paths                     |
+| Focused native runtime suite (API lifecycle, attack rolls/routes, damage/HP, creature admission/origin/state, ordinary object attack/tail, attack pipeline, opportunity/light)  | pass; 12 files, 105 tests                                                                                                                                                                |
+| `pnpm --filter @dnd/battle-runtime test:mbt:ordinary-object-attack`                                                                                                             | pass; 1/1                                                                                                                                                                                |
+| `pnpm --filter @dnd/battle-runtime test:mbt:weapon-attack-ordering`                                                                                                             | pass; 1/1                                                                                                                                                                                |
+| `pnpm --filter @dnd/battle-runtime test:mbt:rule-core-hit-point-damage`                                                                                                         | pass; 1/1                                                                                                                                                                                |
+| `pnpm --filter @dnd/battle-runtime test:mbt:rule-core-stat-block-controls`                                                                                                      | pass; 1/1                                                                                                                                                                                |
+| `pnpm --filter @dnd/battle-runtime test:mbt:relationship-discovery`                                                                                                             | pass; 1/1                                                                                                                                                                                |
+| `pnpm --filter @dnd/battle-runtime test:mbt:interrupt-stack-resume`                                                                                                             | pass; 1 file, 2 tests                                                                                                                                                                    |
+| Focused relationship/continuation tests (`battle-runtime-damage-relationship-decisions`, replay continuation, interrupt lifecycle/continuation boundaries, attack rolls/damage) | pass; 4 files, 44 tests                                                                                                                                                                  |
+| `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-metamagic-resource.test.ts`                                                                               | pass; 1 file, 101 tests                                                                                                                                                                  |
+| `pnpm --filter @dnd/battle-runtime test:mbt:quickened-spell-governor`                                                                                                           | pass; 1 file, 10 tests                                                                                                                                                                   |
+| Focused admission/relationship suite (`api-lifecycle`, attack execution references, creature admission boundaries, stat-block admission, damage relationship decisions)         | pass; 5 files, 52 tests                                                                                                                                                                  |
+| Focused Prettier and `git diff --check`                                                                                                                                         | pass                                                                                                                                                                                     |
+
+`startBattle` now accumulates independent roster admission and presentation
+leaves in stable stage/input order while preserving one-leaf versus
+flat-aggregate output. The focused API lifecycle tests prove duplicate IDs are
+retained alongside admission failures and that admission plus presentation
+issues are both retained. `collectSelectedAttackFills` and
+`DamageRelationshipDecisionsByHole.parse` remain intentional stage gates: each
+rejects the whole malformed replay set, exposes a single invalid-message
+contract, and cannot be made executable by processing later fills. Their
+fail-fast behavior is therefore not a loss of independent admission issues.
+
+The local SRD 5.2.1 attack, Cover, object, hit-point, damage, critical,
+resistance/immunity, healing, zero-hit-point, and temporary-hit-point passages
+were inspected before implementation. No QNT or rule behavior was changed;
+the ordinary-object parity MBT and the three mapped attack/damage/stat-block
+MBT lanes remain green. The four remaining Battle typecheck helper files are
+owned by later #379/#380/#381 capability lanes and are retained as controlled
+red rather than claimed as #378 semantics.
+
 ## Closure conditions
 
 Close this controlled-red interval only when all of the following are true:

@@ -26,7 +26,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   battleSpellEffectOccurrenceId,
   type BattleObjectId,
@@ -183,7 +183,7 @@ function admitCantripObjectLight(
     return [];
   }
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(duration.value);
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? []
     : [
         {
@@ -204,7 +204,7 @@ function admitCantripObjectLight(
             brightRadiusFeet: movementFeet(lightEffect.brightRadiusFeet),
             dimAdditionalFeet: movementFeet(lightEffect.dimAdditionalFeet),
           },
-          expiresAt: { kind: "duration", durationTicks: durationTicks.right },
+          expiresAt: { kind: "duration", durationTicks: durationTicks.success },
         },
       ];
 }
@@ -492,7 +492,7 @@ function resolveObjectLight(
 }
 
 const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
-  Schema.Union(
+  Schema.Union([
     Schema.Struct({
       access: CantripSpellAccessSchema,
       resource: NoSpellInvocationResourceSchema,
@@ -532,7 +532,7 @@ const ObjectLightInvocationSchema = spellProcedureExecutionSchema(
       }),
       expiresAt: BattleActiveEffectExpirationSchema,
     }),
-  ),
+  ]),
 );
 export const objectLightProfile: SpellProcedureDeclaration<
   "objectLight",

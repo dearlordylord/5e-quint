@@ -15,7 +15,7 @@ import {
 } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type { TargetSelection } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
@@ -146,7 +146,7 @@ function directConditionProjection(
   const durationTicks = elapsedTimeTicksFromTimeSpanDuration(
     spell.mechanics.duration.upTo,
   );
-  return Either.isLeft(durationTicks)
+  return Result.isFailure(durationTicks)
     ? null
     : {
         selection,
@@ -158,7 +158,7 @@ function directConditionProjection(
           expiresAt: {
             kind: "concentration",
             combatantId: actorId,
-            durationTicks: durationTicks.right,
+            durationTicks: durationTicks.success,
           },
         },
       };
