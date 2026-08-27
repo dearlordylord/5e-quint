@@ -2,7 +2,8 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
-import { Random, Result, Schema } from "effect";
+import { Effect, Random, Result, Schema } from "effect";
+import type * as Context from "effect/Context";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -29,6 +30,32 @@ const request = {
     { dice: 1, dieSize: 4 },
   ],
 } as const;
+
+type RandomService = Context.Service.Shape<typeof Random.Random>;
+
+const fixedRandom = (values: readonly [number, ...number[]]): RandomService => {
+  let index = 0;
+  const nextDoubleUnsafe = () => {
+    const value = values[index % values.length] ?? 0;
+    index += 1;
+    return value;
+  };
+  return {
+    nextDoubleUnsafe,
+    nextIntUnsafe: () =>
+      Math.floor(
+        nextDoubleUnsafe() *
+          (Number.MAX_SAFE_INTEGER - Number.MIN_SAFE_INTEGER + 1),
+      ) + Number.MIN_SAFE_INTEGER,
+  };
+};
+
+const seededRandom = (seed: string): RandomService =>
+  Effect.runSync(
+    Effect.gen(function* () {
+      return yield* Random.Random;
+    }).pipe(Random.withSeed(seed)),
+  );
 
 describe("structured MCP bulk dice roller", () => {
   test("rejects empty groups and caller correlation/idempotency fields", () => {
@@ -111,7 +138,7 @@ describe("structured MCP bulk dice roller", () => {
   });
 
   test("returns ordered visible faces in each requested group", () => {
-    const result = rollDice(request, Random.fixed([1, 2, 3]));
+    const result = rollDice(request, fixedRandom([0, 1 / 6, 1 / 2]));
 
     expect(result.groups).toEqual([
       { dieSize: 6, results: [1, 2] },
@@ -154,8 +181,8 @@ describe("structured MCP bulk dice roller", () => {
   });
 
   test("reproduces a seeded sequence while separate streams remain isolated", () => {
-    const first = Random.make("dice-seed");
-    const second = Random.make("dice-seed");
+    const first = seededRandom("dice-seed");
+    const second = seededRandom("dice-seed");
 
     const firstCall = rollDice(request, first);
     const secondCall = rollDice(request, first);
@@ -171,7 +198,7 @@ describe("structured MCP bulk dice roller", () => {
     const root = createMcpPlaySessionRoot(
       services,
       services.configuredAdminMirrorSessionId,
-      Random.fixed([1]),
+      fixedRandom([0]),
     );
     const before = root.sessionStore.snapshot();
     const content = handleDiceToolCall(root, {
