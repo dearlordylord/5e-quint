@@ -367,10 +367,27 @@ describe("MCP server route", () => {
         hitPointMaximumReduction: Hp(0),
         unitLibrary: root.unitLibrary,
         druidWildShapeKnownFormStatBlockIds: [
-          statBlockId("stat_block_skeleton"),
+          statBlockId("stat_block_rat"),
+          statBlockId("stat_block_riding_horse"),
+          statBlockId("stat_block_spider"),
+          statBlockId("stat_block_wolf"),
         ],
       }),
     );
+    const stored = root.sessionStore.characters.get(characterId);
+    if (stored?.tag !== "available")
+      throw new Error("Expected character session.");
+    root.sessionStore.characters.set({
+      ...stored,
+      druidWildShapeKnownForms: {
+        statBlockIds: [
+          statBlockId("stat_block_rat"),
+          statBlockId("stat_block_riding_horse"),
+          statBlockId("stat_block_spider"),
+          statBlockId("stat_block_skeleton"),
+        ],
+      },
+    });
     const output = readPayload(
       handleToolCall(root, "start_battle", {
         battleId: "battle:mcp-wild-shape-diagnostics",
