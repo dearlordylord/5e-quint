@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
+import type { AttackPresentationJoinIssue } from "./attack-presentation-contract.ts";
 import type {
   AbilityCheckRollModeSpellEffect,
   BattleLightEmission,
