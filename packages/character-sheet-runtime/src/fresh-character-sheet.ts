@@ -112,8 +112,12 @@ type FreshSpellcastingCharacterSheetProjection = Schema.Schema.Type<
 type FreshNonSpellcastingCharacterSheetProjection = Schema.Schema.Type<
   typeof FreshNonSpellcastingCharacterSheetProjectionSchema
 >;
-export type FreshSpellcastingCharacterSheet = SpellcastingCharacterSheet &
-  FreshSpellcastingCharacterSheetProjection &
+export type FreshSpellcastingCharacterSheet = Omit<
+  SpellcastingCharacterSheet,
+  "pactSlotExpenditure"
+> & {
+  readonly pactSlotExpenditure: undefined;
+} & FreshSpellcastingCharacterSheetProjection &
   Brand.Brand<"FreshCharacterSheet">;
 export type FreshNonSpellcastingCharacterSheet = NonSpellcastingCharacterSheet &
   FreshNonSpellcastingCharacterSheetProjection &
@@ -234,14 +238,6 @@ export function characterSheetConstructionIssuesSummary(
 export function freshCharacterSheetProjection(
   sheet: FreshCharacterSheet,
 ): FreshCharacterSheetProjection {
-  if (
-    isSpellcastingBuild(sheet.build) &&
-    sheet.pactSlotExpenditure !== undefined
-  ) {
-    throw new Error(
-      "Fresh Character Sheet requires unspent initial play state.",
-    );
-  }
   const {
     tag: _tag,
     characterId: _characterId,

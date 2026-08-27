@@ -247,10 +247,6 @@ describe("fresh Character Sheet construction", () => {
     expect(freshCharacterSheetFromParsedState(spentPactSlot)).toEqual(
       Result.fail("Fresh Character Sheet requires unspent initial play state."),
     );
-    expect(() => freshCharacterSheetProjection(spentPactSlot)).toThrow(
-      "Fresh Character Sheet requires unspent initial play state.",
-    );
-
     const projection = freshCharacterSheetProjection(result.success);
     const serialized: unknown = JSON.parse(JSON.stringify(projection));
     expect(serialized).not.toHaveProperty("bookOfShadowsPresence");
