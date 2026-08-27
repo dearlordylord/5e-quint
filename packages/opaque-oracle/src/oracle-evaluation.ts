@@ -26,11 +26,7 @@ import {
   freshCharacterSheetProjection,
   type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
-import {
-  Hp,
-  Index,
-  resourceCount,
-} from "@dnd/shared/types";
+import { Hp, Index, resourceCount } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Option } from "effect";
 
@@ -77,7 +73,10 @@ export function evaluateOracleCase(
   ];
   let currentDraft = draft;
 
-  for (const [batchIndex, fillBatch] of oracleCase.creation.fillBatches.entries()) {
+  for (const [
+    batchIndex,
+    fillBatch,
+  ] of oracleCase.creation.fillBatches.entries()) {
     const result = fillCreationHoles({
       draft: currentDraft,
       unitLibrary,
@@ -229,7 +228,9 @@ function appendFreshSheetAndBattleSteps(
     tag: "battleEntered",
     checkpoint: strippedBattleCheckpoint(snapshot),
     frontier: {
-      acts: discoverBattleActs(entry.right.session).map(({ subject }) => subject),
+      acts: discoverBattleActs(entry.right.session).map(
+        ({ subject }) => subject,
+      ),
     },
   });
   return oracleTrace(steps);
@@ -328,53 +329,26 @@ function battleEntryRejection(
 function strippedBattleCheckpoint(
   snapshot: ReturnType<typeof snapshotBattle>,
 ): OracleBattleCheckpoint {
+  const combatants = snapshot.combatants.map((combatant) => ({
+    combatantId: combatant.combatantId,
+    origin: { kind: combatant.origin.kind },
+    initiative: combatant.initiative,
+    hp: combatant.hp,
+    maxHp: combatant.maxHp,
+    tempHp: combatant.tempHp,
+    armorClass: combatant.armorClass,
+    size: combatant.size,
+    conditions: combatant.conditions,
+  }));
+  const [firstCombatant, ...remainingCombatants] = combatants;
+  if (firstCombatant === undefined)
+    return defect("Battle snapshot combatant projection was empty");
   return OracleBattleCheckpointSchema.make({
     round: snapshot.round,
     currentActorId: snapshot.currentActorId,
     turnOrder: snapshot.turnOrder,
-    combatants: snapshot.combatants.map((combatant) =>
-      isCharacterBattleCreatureSnapshot(combatant)
-        ? stripCharacterBattleCreatureSnapshot(combatant)
-        : stripStatBlockBattleCreatureSnapshot(combatant),
-    ),
-    companions: snapshot.companions,
-    lightEmitters: snapshot.lightEmitters,
-    obscurementZones: snapshot.obscurementZones,
-    turn: snapshot.turn,
-    readiedResponses: snapshot.readiedResponses,
-    helpAttackMarkers: snapshot.helpAttackMarkers,
+    combatants: [firstCombatant, ...remainingCombatants],
   });
-}
-
-function isCharacterBattleCreatureSnapshot(
-  combatant: ReturnType<typeof snapshotBattle>["combatants"][number],
-): combatant is Extract<
-  ReturnType<typeof snapshotBattle>["combatants"][number],
-  { readonly origin: { readonly kind: "character" } }
-> {
-  return combatant.origin.kind === "character";
-}
-
-function stripCharacterBattleCreatureSnapshot(
-  combatant: Extract<
-    ReturnType<typeof snapshotBattle>["combatants"][number],
-    { readonly origin: { readonly kind: "character" } }
-  >,
-): OracleBattleCheckpoint["combatants"][number] {
-  const { displayName: ignoredDisplayName, origin, ...withoutDisplayName } =
-    combatant;
-  void ignoredDisplayName;
-  return { ...withoutDisplayName, origin };
-}
-
-function stripStatBlockBattleCreatureSnapshot(
-  combatant: Extract<
-    ReturnType<typeof snapshotBattle>["combatants"][number],
-    { readonly origin: { readonly kind: "statBlock" } }
-  >,
-): OracleBattleCheckpoint["combatants"][number] {
-  const { origin, ...withoutOrigin } = combatant;
-  return { ...withoutOrigin, origin };
 }
 
 function oracleTrace(

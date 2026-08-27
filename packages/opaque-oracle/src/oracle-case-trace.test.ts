@@ -47,7 +47,9 @@ const statBlockLibraryResult = buildStatBlockCatalog({
   collections: [srdStatBlockCollection],
 });
 if (statBlockLibraryResult.tag !== "ok") {
-  throw new Error("SRD Stat Block catalog test fixture must build successfully.");
+  throw new Error(
+    "SRD Stat Block catalog test fixture must build successfully.",
+  );
 }
 const statBlockCatalog = statBlockLibraryResult.catalog;
 const skeletonRecord = statBlockCatalog.getStatBlock("stat_block_skeleton");
@@ -354,9 +356,11 @@ describe("Opaque Oracle Case and Trace contract", () => {
     }
 
     const firstBatch = fillBatches[0];
-    if (firstBatch === undefined) throw new Error("test fills must be non-empty");
+    if (firstBatch === undefined)
+      throw new Error("test fills must be non-empty");
     const firstFill = firstBatch[0];
-    if (firstFill === undefined) throw new Error("test batch must be non-empty");
+    if (firstFill === undefined)
+      throw new Error("test batch must be non-empty");
     const surplus = evaluateOracleCase({
       case: {
         creation: {
@@ -395,12 +399,29 @@ describe("Opaque Oracle Case and Trace contract", () => {
     if (battleStep?.tag !== "battleEntered") {
       throw new Error("successful mixed roster must enter Battle");
     }
-    expect(battleStep.checkpoint).not.toHaveProperty("battleId");
-    expect(battleStep.checkpoint).not.toHaveProperty("executionScopeCursors");
-    expect(battleStep.checkpoint).not.toHaveProperty("acts");
-    expect(battleStep.checkpoint).not.toHaveProperty("pendingInterrupt");
+    expect(Object.keys(battleStep.checkpoint).sort()).toEqual([
+      "combatants",
+      "currentActorId",
+      "round",
+      "turnOrder",
+    ]);
     expect(
-      battleStep.checkpoint.combatants.map((combatant) => combatant.origin.kind),
+      Object.keys(battleStep.checkpoint.combatants[0] ?? {}).sort(),
+    ).toEqual([
+      "armorClass",
+      "combatantId",
+      "conditions",
+      "hp",
+      "initiative",
+      "maxHp",
+      "origin",
+      "size",
+      "tempHp",
+    ]);
+    expect(
+      battleStep.checkpoint.combatants.map(
+        (combatant) => combatant.origin.kind,
+      ),
     ).toEqual(["character", "statBlock"]);
     expect(battleStep.checkpoint.combatants[0]).not.toHaveProperty(
       "displayName",
@@ -430,9 +451,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(entered?.tag).toBe("battleEntered");
     if (entered?.tag === "battleEntered") {
       expect(entered.frontier.acts.length).toBeGreaterThan(0);
-      expect(entered.frontier.acts.every((subject) =>
-        !Object.prototype.hasOwnProperty.call(subject, "initialHoles"),
-      )).toBe(true);
+      expect(
+        entered.frontier.acts.every(
+          (subject) =>
+            !Object.prototype.hasOwnProperty.call(subject, "initialHoles"),
+        ),
+      ).toBe(true);
     }
 
     const empty = evaluateOracleCase({
@@ -480,6 +504,21 @@ describe("Opaque Oracle Case and Trace contract", () => {
     };
     const decoded = decodeOracleTrace(invalid);
     expect(Either.isLeft(decoded)).toBe(true);
+
+    const crossReference = {
+      ...trace,
+      steps: [
+        ...trace.steps.slice(0, -1),
+        {
+          ...entered,
+          checkpoint: {
+            ...entered.checkpoint,
+            targetId: combatantId("oracle:not-a-checkpoint-field"),
+          },
+        },
+      ],
+    };
+    expect(Either.isLeft(decodeOracleTrace(crossReference))).toBe(true);
   });
 
   it("isolates A/B/A batch evaluation from singleton evaluation", () => {
@@ -553,11 +592,12 @@ describe("Opaque Oracle Case and Trace contract", () => {
         "characterBattleEncounterProjectionIssues",
       );
       if (
-        projectionIssues?.tag ===
-        "characterBattleEncounterProjectionIssues"
+        projectionIssues?.tag === "characterBattleEncounterProjectionIssues"
       ) {
         expect(projectionIssues.issues).toHaveLength(2);
-        expect(projectionIssues.issues.map((issue) => issue.combatantId)).toEqual([
+        expect(
+          projectionIssues.issues.map((issue) => issue.combatantId),
+        ).toEqual([
           combatantId("oracle:broken-one"),
           combatantId("oracle:broken-two"),
         ]);

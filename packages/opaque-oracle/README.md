@@ -11,7 +11,8 @@ table fact that is not derivable from a finalized `CharacterBuild`:
 - an ordered sequence of non-empty creation fill batches; and
 - either an ordinary fresh sheet or a non-empty, duplicate-free Wild Shape
   known-form set; and
-- a non-empty arbitrary roster whose entries explicitly select a Character
+- an arbitrary roster (including empty, so the production owner can return its
+  typed empty-roster rejection) whose entries explicitly select a Character
   Sheet or Stat Block origin and carry their combatant, initiative, ammunition,
   and initial-condition facts.
 
