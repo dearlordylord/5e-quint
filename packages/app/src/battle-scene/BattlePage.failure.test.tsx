@@ -2,6 +2,7 @@
 import type * as BattleRuntime from "@dnd/battle-runtime"
 import { battlePresentedCheckpointFrontierEnvelope, combatantId } from "@dnd/battle-runtime"
 import { render, screen } from "@testing-library/react"
+import { Either } from "effect"
 import { describe, expect, it, vi } from "vitest"
 
 import type * as BattleSceneLayout from "./battle-scene-layout.ts"
@@ -64,5 +65,31 @@ describe("BattlePage presentation failure", () => {
     render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
 
     expect(screen.getByRole("alert").textContent).toContain("missingCurrentActor")
+  })
+
+  it("renders interrupt choice projection issues with their reactor context", async () => {
+    const actual = await vi.importActual<typeof BattleRuntime>("@dnd/battle-runtime")
+    const checkpointFrontier = actual.battlePresentedCheckpointFrontierEnvelope(WIZARD_BATTLE_DEMO_STEPS[4].session)
+    if (Either.isLeft(checkpointFrontier) || checkpointFrontier.right.frontier.kind !== "interruptDecision") {
+      throw new Error("Expected the counterspell demo step to expose an interrupt decision.")
+    }
+    const presentedChoice = checkpointFrontier.right.frontier.choices[0]
+    if (presentedChoice.choice.kind === "reactionRollOrDamageReduction") {
+      throw new Error("Expected the counterspell interrupt to carry a presented battle subject.")
+    }
+    const issue = {
+      tag: "battleInterruptChoicePresentationIssue",
+      reason: "missingSubjectPresentation",
+      reactorId: presentedChoice.choice.reactorId,
+      choiceKind: presentedChoice.choice.kind,
+      subject: presentedChoice.choice.subject
+    } as const
+    vi.mocked(battlePresentedCheckpointFrontierEnvelope).mockReturnValueOnce(Either.left([issue]))
+
+    render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
+
+    expect(screen.getByRole("alert").textContent).toBe(
+      `Battle interrupt choice presentation is unavailable for reactor ${issue.reactorId}: missingSubjectPresentation.`
+    )
   })
 })
