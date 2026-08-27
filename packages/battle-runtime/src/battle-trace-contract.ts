@@ -45,6 +45,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "spiritualWeaponForcePosition",
   "movableZoneRamMovement",
   "movableZoneRepositionMovement",
+  "cloudkillMovement",
   "savingThrowOutcome",
   "slowSomaticSpellFailureOutcome",
   "deathSavingThrow",

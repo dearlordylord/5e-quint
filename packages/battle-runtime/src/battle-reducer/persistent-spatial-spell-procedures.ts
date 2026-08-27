@@ -832,6 +832,13 @@ function resolveCloudkillAreaHazardSaveCommand(
     readonly handledInterruptTrigger?: BattleInterruptTrigger;
   },
 ): BattleResolutionResult {
+  if (input.subject.areaMembershipTrigger.kind === "areaMovesIntoSpace") {
+    return invalidResult(
+      input.state,
+      "staleSubject",
+      "Cloudkill movement saves resolve only through the source's start-turn boundary.",
+    );
+  }
   return resolveCloudkillAreaSaveDamage(input);
 }
 

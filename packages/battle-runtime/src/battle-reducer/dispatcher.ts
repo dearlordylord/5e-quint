@@ -672,8 +672,15 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     }
     if (subject.tag === "runtimeCommand" && subject.command === "endTurn") {
       return input.state.currentTurnResources.commandHalt === null
-        ? resolveEndTurnCommand(input)
-        : resolveCommandHaltEndTurn({ ...input, subject });
+        ? resolveEndTurnCommand({
+            ...input,
+            ...handledInterruptRouteOption,
+          })
+        : resolveCommandHaltEndTurn({
+            ...input,
+            subject,
+            ...handledInterruptRouteOption,
+          });
     }
     if (isCommandFollowUpSubject(subject)) {
       return resolveCommandFollowUp({

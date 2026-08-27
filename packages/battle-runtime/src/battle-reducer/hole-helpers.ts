@@ -215,6 +215,7 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
         "movableZoneRepositionMovement",
         () => "movableZoneRepositionMovement" as const,
       ),
+      byBattleHoleKind("cloudkillMovement", () => "cloudkillMovement" as const),
       byBattleHoleKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleHoleKind("movement", () => "movement" as const),
       byBattleHoleKind(

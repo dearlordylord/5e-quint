@@ -410,58 +410,6 @@ describe("L19E deterministic Cloudkill area-hazard admission", () => {
     expect(cloudkillSavedThisTurn(stateWithoutTarget)).toEqual([]);
   });
 
-  test("cloud movement, entry, and end-turn saves share the once-per-turn hazard ledger", () => {
-    const { targetTurn, session } = castCloudkill();
-    const moveAct = cloudkillAreaHazardSaveAct(
-      battleRuntimeSessionForTest({ ...session, state: targetTurn }),
-      spellTargetId,
-      "movesIntoSpace",
-    );
-    const saveHole = requireHole(moveAct.initialHoles, "savingThrowOutcome");
-    const pendingDamage = resolveBattleSubject({
-      state: targetTurn,
-      subject: moveAct.subject,
-      fills: [
-        singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
-      ],
-    });
-    if (pendingDamage.tag === "invalid") {
-      throw new Error(
-        `Expected Cloudkill movement save to request damage: ${JSON.stringify(pendingDamage)}`,
-      );
-    }
-    const damageHole = requireResultHole(pendingDamage, "rolledDice");
-    const movedIntoSpace = resolveBattleSubject({
-      state: targetTurn,
-      subject: moveAct.subject,
-      fills: [
-        singleTargetSavingThrowOutcomeFill(saveHole, spellTargetId, true),
-        damageRollFillWithGroups(damageHole, [[1, 1, 1, 1, 1]]),
-      ],
-    });
-    if (movedIntoSpace.tag !== "resolved") {
-      throw new Error("Expected Cloudkill movement save to resolve.");
-    }
-
-    expect(
-      resolveBattleSubject({
-        state: movedIntoSpace.state,
-        subject: cloudkillAreaHazardSaveAct(
-          battleRuntimeSessionForTest({
-            ...session,
-            state: movedIntoSpace.state,
-          }),
-          spellTargetId,
-          "entersArea",
-        ).subject,
-        fills: [],
-      }),
-    ).toMatchObject({
-      tag: "invalid",
-      message: "Cloudkill save was already resolved for this target this turn.",
-    });
-  });
-
   test("strong wind dispersal ends the active Cloudkill hazard", () => {
     const { cast } = castCloudkill();
     const subject = {

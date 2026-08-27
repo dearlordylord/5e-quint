@@ -5857,6 +5857,18 @@ export type BattleInterruptDecisionHole = {
   readonly trigger: BattleInterruptTrigger;
   readonly eligibleResponders: readonly CombatantId[];
 };
+export type BattleCloudkillMovementHole = {
+  readonly holeInstanceKey: HoleInstanceKey;
+  readonly holeId: BattleHoleId;
+  readonly kind: "cloudkillMovement";
+  readonly label: string;
+  readonly sourceCombatantId: CombatantId;
+  readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly areaId: BattleAreaId;
+  readonly distanceFeet: MovementFeet;
+  readonly directionRequirement: "awayFromSource";
+  readonly requiresTableSpatialFact: true;
+};
 type BattleMovementHoleCommon = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
@@ -6124,6 +6136,7 @@ export type BattleHole =
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
   | BattleInterruptDecisionHole
+  | BattleCloudkillMovementHole
   | BattleMovementHole
   | BattleLevitateAltitudeChangeHole
   | BattleLevitateInitialRiseHole
@@ -6238,6 +6251,15 @@ export type BattleMovementFill = {
   readonly kind: "movement";
   readonly holeId: BattleHoleId;
   readonly value: BattleMovementFillValue;
+};
+export type BattleCloudkillMovementFill = {
+  readonly kind: "cloudkillMovement";
+  readonly holeId: BattleHoleId;
+  readonly value: {
+    readonly directionId: BattleLineDirectionId;
+    readonly destinationId: BattleTablePositionId;
+    readonly affectedCombatantIds: readonly CombatantId[];
+  };
 };
 export type BattleBrutalStrikeForcefulBlowMovementFill = {
   readonly kind: "movement";
@@ -6541,6 +6563,7 @@ export type BattleFill =
       readonly holeId: BattleHoleId;
       readonly value: BattleInterruptDecision;
     }
+  | BattleCloudkillMovementFill
   | BattleMovementFill
   | {
       readonly kind: "levitateAltitudeChange";

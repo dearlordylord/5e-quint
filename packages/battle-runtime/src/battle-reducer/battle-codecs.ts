@@ -2450,6 +2450,16 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
+    kind: Schema.Literal("cloudkillMovement"),
+    sourceCombatantId: CombatantId,
+    sourceProcedureRef: BattleProcedureExecutionRef,
+    areaId: BattleAreaId,
+    distanceFeet: MovementFeet,
+    directionRequirement: Schema.Literal("awayFromSource"),
+    requiresTableSpatialFact: Schema.Literal(true),
+  }),
+  Schema.Struct({
+    ...BattleHoleBaseSchema,
     kind: Schema.Literal("savingThrowOutcome"),
     label: Schema.String,
     protectionRelevantEffectSave: Schema.Struct({
@@ -3591,6 +3601,15 @@ type BattleFillEncoded =
       };
     }
   | {
+      readonly kind: "cloudkillMovement";
+      readonly holeId: string;
+      readonly value: {
+        readonly directionId: string;
+        readonly destinationId: string;
+        readonly affectedCombatantIds: readonly string[];
+      };
+    }
+  | {
       readonly kind: "teleportDestination";
       readonly holeId: string;
       readonly value: {
@@ -4712,6 +4731,15 @@ export const BattleFillSchema: Schema.Codec<
       holeId: BattleHoleIdSchema,
       value: Schema.Struct({
         moveFeet: MovementFeet,
+      }),
+    }),
+    Schema.Struct({
+      kind: Schema.Literal("cloudkillMovement"),
+      holeId: BattleHoleIdSchema,
+      value: Schema.Struct({
+        directionId: BattleLineDirectionId,
+        destinationId: BattleTablePositionId,
+        affectedCombatantIds: Schema.Array(CombatantId),
       }),
     }),
     Schema.Struct({
@@ -6796,6 +6824,9 @@ function serializedBattleHoleExecutionReferences(
           value.movableZone.sourceProcedureRef,
           value.movableZone.sourceCombatantId,
         ),
+      ],
+      cloudkillMovement: (value) => [
+        source(value.sourceProcedureRef, value.sourceCombatantId),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),

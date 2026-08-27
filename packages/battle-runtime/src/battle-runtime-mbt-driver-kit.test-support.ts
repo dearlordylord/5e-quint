@@ -18902,6 +18902,11 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
         Match.when({ kind: "movement" }, () => {
           throw new Error("Battle runtime MBT does not model movement holes.");
         }),
+        Match.when({ kind: "cloudkillMovement" }, () => {
+          throw new Error(
+            "Generic battle runtime MBT leaves Cloudkill movement to its focused witness.",
+          );
+        }),
       )
       .pipe(
         Match.when({ kind: "toolPossessionFacts" }, () => {
