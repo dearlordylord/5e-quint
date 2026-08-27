@@ -1418,6 +1418,18 @@ function pairedBattleHoleNestedMember<
   };
 }
 
+function pairedBattleHoleNestedMemberVariants<
+  const LabeledFields extends Schema.Struct.Fields,
+  const MechanicalFields extends Schema.Struct.Fields,
+>(labeledFields: LabeledFields, mechanicalFields: MechanicalFields) {
+  return {
+    labeled: Schema.Struct(labeledFields),
+    mechanical: Schema.Struct(mechanicalFields).annotations({
+      parseOptions: { onExcessProperty: "error" },
+    }),
+  };
+}
+
 function pairedBattleHoleNestedArrayField<
   const Fields extends Schema.Struct.Fields,
 >(fields: Fields) {
@@ -1513,6 +1525,121 @@ const D20TestNaturalOneRerollHoleOptionsFields = (() => {
   return {
     labeled: { d20TestNaturalOneRerolls: schemas.labeled },
     mechanical: { d20TestNaturalOneRerolls: schemas.mechanical },
+  };
+})();
+
+const AttackRollFeatureActivationFields = (() => {
+  const schemas = pairedBattleHoleNestedMemberVariants(
+    {
+      procedureRef: BattleProcedureExecutionRef,
+      unitId: Schema.optionalWith(Schema.Never, { exact: true }),
+      label: Schema.optionalWith(Schema.Never, { exact: true }),
+      rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+    },
+    {
+      procedureRef: BattleProcedureExecutionRef,
+      rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
+    },
+  );
+  return {
+    labeled: {
+      ongoingFeatureActivations: Schema.optionalWith(
+        Schema.Array(schemas.labeled),
+        { exact: true },
+      ),
+    },
+    mechanical: {
+      ongoingFeatureActivations: Schema.optionalWith(
+        Schema.Array(schemas.mechanical),
+        { exact: true },
+      ),
+    },
+  };
+})();
+
+const AttackRollMissToHitReplacementFields = (() => {
+  const schemas = pairedBattleHoleNestedMemberVariants(
+    {
+      procedureRef: BattleProcedureExecutionRef,
+      unitId: Schema.optionalWith(Schema.Never, { exact: true }),
+      label: Schema.optionalWith(Schema.Never, { exact: true }),
+    },
+    { procedureRef: BattleProcedureExecutionRef },
+  );
+  return {
+    labeled: {
+      missToHitReplacements: Schema.optionalWith(
+        Schema.Array(schemas.labeled),
+        { exact: true },
+      ),
+    },
+    mechanical: {
+      missToHitReplacements: Schema.optionalWith(
+        Schema.Array(schemas.mechanical),
+        { exact: true },
+      ),
+    },
+  };
+})();
+
+const AttackDamageAbilityModifierChoiceHoleFields = (() => {
+  const schemas = pairedBattleHoleNestedMemberVariants(
+    {
+      procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+      unitIds: Schema.optionalWith(Schema.Never, { exact: true }),
+      appliedDamageAbilityModifier: AbilityModifier,
+      declinedDamageAbilityModifier: AbilityModifier,
+    },
+    {
+      procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
+      appliedDamageAbilityModifier: AbilityModifier,
+      declinedDamageAbilityModifier: AbilityModifier,
+    },
+  );
+  return {
+    labeled: {
+      attackDamageAbilityModifierChoice: Schema.optionalWith(schemas.labeled, {
+        exact: true,
+      }),
+    },
+    mechanical: {
+      attackDamageAbilityModifierChoice: Schema.optionalWith(
+        schemas.mechanical,
+        { exact: true },
+      ),
+    },
+  };
+})();
+
+const AttackDamageDispositionChoiceFields = (() => {
+  const labeled = Schema.Struct({
+    kind: Schema.Literal("zeroHitPointReplacement"),
+    procedureRef: BattleProcedureExecutionRef,
+    unitId: Schema.optionalWith(Schema.Never, { exact: true }),
+  });
+  const mechanical = Schema.Struct({
+    kind: Schema.Literal("zeroHitPointReplacement"),
+    procedureRef: BattleProcedureExecutionRef,
+  }).annotations({ parseOptions: { onExcessProperty: "error" } });
+  return {
+    labeled: {
+      choices: Schema.Array(
+        Schema.Union(
+          Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
+          Schema.Struct({ kind: Schema.Literal("knockOut") }),
+          labeled,
+        ),
+      ),
+    },
+    mechanical: {
+      choices: Schema.Array(
+        Schema.Union(
+          Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
+          Schema.Struct({ kind: Schema.Literal("knockOut") }),
+          mechanical,
+        ),
+      ),
+    },
   };
 })();
 
@@ -1842,38 +1969,23 @@ const BattleHolePayloadMembers = [
       rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
         exact: true,
       }),
-      ongoingFeatureActivations: Schema.optionalWith(
-        Schema.Array(
-          Schema.Struct({
-            procedureRef: BattleProcedureExecutionRef,
-            unitId: Schema.optionalWith(Schema.Never, { exact: true }),
-            label: Schema.optionalWith(Schema.Never, { exact: true }),
-            rollMode: Schema.Literal(...ATTACK_ROLL_MODES),
-          }),
-        ),
-        { exact: true },
-      ),
-      missToHitReplacements: Schema.optionalWith(
-        Schema.Array(
-          Schema.Struct({
-            procedureRef: BattleProcedureExecutionRef,
-            unitId: Schema.optionalWith(Schema.Never, { exact: true }),
-            label: Schema.optionalWith(Schema.Never, { exact: true }),
-          }),
-        ),
-        { exact: true },
-      ),
       relationshipFactRequest: Schema.optionalWith(
         BattleAttackRollRelationshipFactRequestSchema,
         { exact: true },
       ),
     },
     mergeBattleHoleFieldPairs(
-      {
-        labeled: {},
-        mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
-      },
-      D20TestNaturalOneRerollHoleOptionsFields,
+      mergeBattleHoleFieldPairs(
+        {
+          labeled: {},
+          mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
+        },
+        AttackRollFeatureActivationFields,
+      ),
+      mergeBattleHoleFieldPairs(
+        AttackRollMissToHitReplacementFields,
+        D20TestNaturalOneRerollHoleOptionsFields,
+      ),
     ),
   ),
   pairedBattleHoleMemberWithFields(
@@ -1885,20 +1997,13 @@ const BattleHolePayloadMembers = [
       rollMode: Schema.optionalWith(Schema.Literal(...ATTACK_ROLL_MODES), {
         exact: true,
       }),
-      missToHitReplacements: Schema.optionalWith(
-        Schema.Array(
-          Schema.Struct({
-            procedureRef: BattleProcedureExecutionRef,
-            unitId: Schema.optionalWith(Schema.Never, { exact: true }),
-            label: Schema.optionalWith(Schema.Never, { exact: true }),
-          }),
-        ),
-        { exact: true },
-      ),
     },
     mergeBattleHoleFieldPairs(
-      SpellAttackRerollHoleOptionsFields,
-      D20TestNaturalOneRerollHoleOptionsFields,
+      AttackRollMissToHitReplacementFields,
+      mergeBattleHoleFieldPairs(
+        SpellAttackRerollHoleOptionsFields,
+        D20TestNaturalOneRerollHoleOptionsFields,
+      ),
     ),
   ),
   pairedBattleHoleMemberWithFields(
@@ -1954,20 +2059,14 @@ const BattleHolePayloadMembers = [
         Schema.NonEmptyArray(BattleProcedureExecutionRef),
         { exact: true },
       ),
-      attackDamageAbilityModifierChoice: Schema.optionalWith(
-        Schema.Struct({
-          procedureRefs: Schema.NonEmptyArray(BattleProcedureExecutionRef),
-          unitIds: Schema.optionalWith(Schema.Never, { exact: true }),
-          appliedDamageAbilityModifier: AbilityModifier,
-          declinedDamageAbilityModifier: AbilityModifier,
-        }),
-        { exact: true },
-      ),
     },
-    {
-      labeled: {},
-      mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
-    },
+    mergeBattleHoleFieldPairs(
+      {
+        labeled: {},
+        mechanical: { attack: MechanicalSupportedAttackActionOptionSchema },
+      },
+      AttackDamageAbilityModifierChoiceHoleFields,
+    ),
   ),
   pairedBattleHoleMemberWithFields(
     {
@@ -2834,23 +2933,15 @@ const BattleHolePayloadMembers = [
     choices: Schema.Array(CombatantId),
     replacementTargetKind: Schema.Literal("nonAttack"),
   }),
-  pairedBattleHoleMember({
-    ...BattleHoleBaseFieldsSchema,
-    kind: Schema.Literal("attackDamageDisposition"),
-    attackerId: CombatantId,
-    targetId: CombatantId,
-    choices: Schema.Array(
-      Schema.Union(
-        Schema.Struct({ kind: Schema.Literal("ordinaryDamage") }),
-        Schema.Struct({ kind: Schema.Literal("knockOut") }),
-        Schema.Struct({
-          kind: Schema.Literal("zeroHitPointReplacement"),
-          procedureRef: BattleProcedureExecutionRef,
-          unitId: Schema.optionalWith(Schema.Never, { exact: true }),
-        }),
-      ),
-    ),
-  }),
+  pairedBattleHoleMemberWithFields(
+    {
+      ...BattleHoleBaseFieldsSchema,
+      kind: Schema.Literal("attackDamageDisposition"),
+      attackerId: CombatantId,
+      targetId: CombatantId,
+    },
+    AttackDamageDispositionChoiceFields,
+  ),
 ] as const;
 
 const [
@@ -6200,7 +6291,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
       "damageRollReduction",
     ),
     procedureRef: BattleProcedureExecutionRef,
-    label: Schema.optionalWith(Schema.Never, { exact: true }),
     reduction: Schema.Struct({
       kind: Schema.Literal("rolled"),
       dice: Schema.Literal(1),
@@ -6208,7 +6298,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
       dieSize: Schema.Literal(6, 8, 10, 12),
       spends: Schema.Struct({
         resourcePoolRef: BattleResourcePoolExecutionRef,
-        resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
         amount: Schema.Literal(1),
       }),
     }),
@@ -6216,7 +6305,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("attackDamageReduction"),
     procedureRef: BattleProcedureExecutionRef,
-    label: Schema.optionalWith(Schema.Never, { exact: true }),
     reduction: Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("halfDamage"),
@@ -6231,7 +6319,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
       Schema.Struct({
         spends: Schema.Struct({
           resourcePoolRef: BattleResourcePoolExecutionRef,
-          resourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
           amount: Schema.Literal(1),
         }),
         saveAbility: Schema.Literal("dex"),
@@ -6254,7 +6341,6 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("fallDamageReduction"),
     procedureRef: BattleProcedureExecutionRef,
-    label: Schema.optionalWith(Schema.Never, { exact: true }),
     reduction: Schema.Struct({
       kind: Schema.Literal("flat"),
       amount: DamageAmount,

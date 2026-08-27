@@ -1,4 +1,4 @@
-import { Either, Schema } from "effect";
+import { Either, JSONSchema, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -11,6 +11,7 @@ import {
 } from "./battle-mechanical-frontier.ts";
 import {
   combatantId,
+  attackTargetFill,
   fighterAttackSubject,
   fighterVsGoblinBattle,
   holeId,
@@ -96,6 +97,69 @@ type NeedsHolesResult = Extract<
   ReturnType<typeof resolveBattleSubject>,
   { readonly tag: "needsHoles" }
 >;
+
+type JsonObject = { readonly [key: string]: unknown };
+
+type JsonSchemaProperty = {
+  readonly path: string;
+  readonly schema: JsonObject;
+};
+
+function isJsonObject(value: unknown): value is JsonObject {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function recursivelyFindPropertySchemas(
+  value: unknown,
+  propertyName: string,
+): readonly JsonSchemaProperty[] {
+  const found: JsonSchemaProperty[] = [];
+  const visit = (current: unknown, path: string): void => {
+    if (Array.isArray(current)) {
+      current.forEach((child, index) => visit(child, `${path}/${index}`));
+      return;
+    }
+    if (!isJsonObject(current)) return;
+    const properties = current.properties;
+    if (isJsonObject(properties)) {
+      Object.entries(properties).forEach(([name, schema]) => {
+        const propertyPath = `${path}/properties/${name}`;
+        if (name === propertyName && isJsonObject(schema)) {
+          found.push({ path: propertyPath, schema });
+        }
+        visit(schema, propertyPath);
+      });
+    }
+    Object.entries(current).forEach(([key, child]) => {
+      if (key !== "properties") visit(child, `${path}/${key}`);
+    });
+  };
+  visit(value, "#");
+  return found;
+}
+
+function recursivelyCollectedPropertyNames(value: unknown): readonly string[] {
+  const names: string[] = [];
+  const visit = (current: unknown): void => {
+    if (Array.isArray(current)) {
+      current.forEach(visit);
+      return;
+    }
+    if (!isJsonObject(current)) return;
+    const properties = current.properties;
+    if (isJsonObject(properties)) {
+      Object.entries(properties).forEach(([name, schema]) => {
+        names.push(name);
+        visit(schema);
+      });
+    }
+    Object.entries(current).forEach(([key, child]) => {
+      if (key !== "properties") visit(child);
+    });
+  };
+  visit(value);
+  return names;
+}
 
 function ordinaryNeedsHolesResult(): NeedsHolesResult {
   const state = fighterVsGoblinBattle();
@@ -296,6 +360,57 @@ describe("battle mechanical frontier", () => {
     ).toBe(true);
   });
 
+  test("keeps removed presentation sentinels out of the mechanical frontier schema", () => {
+    const schema = JSONSchema.make(BattleMechanicalFrontierSchema, {
+      target: "jsonSchema2020-12",
+    });
+    const propertyNames = new Set(recursivelyCollectedPropertyNames(schema));
+    expect(propertyNames.has("label")).toBe(false);
+
+    const holePaths = (propertyName: string) =>
+      recursivelyFindPropertySchemas(schema, propertyName).filter(({ path }) =>
+        path.includes("/properties/holes/items/"),
+      );
+    for (const propertyName of [
+      "ongoingFeatureActivations",
+      "missToHitReplacements",
+    ]) {
+      const nestedSchemas = holePaths(propertyName);
+      expect(nestedSchemas.length, propertyName).toBeGreaterThan(0);
+      for (const { schema: propertySchema } of nestedSchemas) {
+        expect(
+          recursivelyCollectedPropertyNames(propertySchema.items),
+        ).not.toEqual(expect.arrayContaining(["label", "unitId"]));
+      }
+    }
+
+    const attackDamageChoiceSchemas = holePaths(
+      "attackDamageAbilityModifierChoice",
+    );
+    expect(attackDamageChoiceSchemas.length).toBeGreaterThan(0);
+    for (const { schema: propertySchema } of attackDamageChoiceSchemas) {
+      expect(recursivelyCollectedPropertyNames(propertySchema)).not.toContain(
+        "unitIds",
+      );
+    }
+
+    const reactionModifierSchemas = recursivelyFindPropertySchemas(
+      schema,
+      "modifier",
+    ).filter(({ path }) =>
+      path.includes("/properties/choices/items/anyOf/1/properties/modifier"),
+    );
+    expect(reactionModifierSchemas.length).toBeGreaterThan(0);
+    for (const { schema: propertySchema } of reactionModifierSchemas) {
+      expect(recursivelyCollectedPropertyNames(propertySchema)).not.toEqual(
+        expect.arrayContaining(["label", "resourceUnitId"]),
+      );
+    }
+
+    // Cunning Strike optionId is a fixed mechanical selection id, not presentation.
+    expect(propertyNames.has("optionId")).toBe(true);
+  });
+
   test("projects an ordinary frontier without a pending interrupt", () => {
     const result = ordinaryNeedsHolesResult();
 
@@ -312,6 +427,61 @@ describe("battle mechanical frontier", () => {
     }
     expect(frontier.right.holes).toHaveLength(result.holes.length);
     expect(frontier.right.acceptedFills).toEqual([]);
+  });
+
+  test("projects attack frontiers without presentation or authored weapon identity", () => {
+    const state = fighterVsGoblinBattle();
+    const subject = fighterAttackSubject(state);
+    const targetResult = resolveBattleSubject({
+      state,
+      subject,
+      fills: [],
+    });
+    if (targetResult.tag !== "needsHoles") {
+      throw new Error("Expected the fighter attack to request a target.");
+    }
+    const targetHole = targetResult.holes.find(
+      (hole) => hole.kind === "targetChoice",
+    );
+    if (targetHole === undefined || targetHole.kind !== "targetChoice") {
+      throw new Error("Expected the fighter attack target-choice hole.");
+    }
+
+    const attackResult = resolveBattleSubject({
+      state,
+      subject,
+      fills: [
+        attackTargetFill(targetHole, subject.actorId, combatantId("goblin")),
+      ],
+    });
+    if (attackResult.tag !== "needsHoles") {
+      throw new Error("Expected the fighter attack to request an attack roll.");
+    }
+    const frontier = battleMechanicalFrontier({
+      result: attackResult,
+      acceptedFills: [],
+    });
+    if (Either.isLeft(frontier)) {
+      throw new Error("Expected an ordinary attack mechanical frontier.");
+    }
+    if (frontier.right.kind !== "ordinaryHoles") {
+      throw new Error("Expected an ordinary attack mechanical frontier.");
+    }
+    const attackHole = frontier.right.holes.find(
+      (hole) => hole.kind === "attackRoll" && "attack" in hole,
+    );
+    if (
+      attackHole === undefined ||
+      attackHole.kind !== "attackRoll" ||
+      !("attack" in attackHole)
+    ) {
+      throw new Error("Expected a projected attack-roll hole.");
+    }
+    const serialized = JSON.stringify(frontier.right);
+    expect(serialized).not.toContain("label");
+    expect(serialized).not.toContain("weaponUnitId");
+    expect(attackHole.attack).toHaveProperty("weaponObjectId");
+    expect(attackHole.attack).not.toHaveProperty("weaponUnitId");
   });
 
   test("projects an interrupt frontier when its decision hole matches the checkpoint", () => {
