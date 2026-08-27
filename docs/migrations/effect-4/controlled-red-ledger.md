@@ -479,7 +479,7 @@ added.
 
 ## Issue #378 attack and damage evidence snapshot
 
-Source HEAD: `ebc0b1d4c376dab7433c17c53e120fcfe30becac`. This entry records the ordinary attack, damage,
+Source HEAD: `d6a80d404a3e8161763f7ae923601f576d8d83cd`. This entry records the ordinary attack, damage,
 hit-point, creature, object, and stat-block Effect 4 consumer migration plus
 the cross-combatant `startBattle` admission accumulation fix. The latest
 checkpoint also retains duplicate identity and presentation-source issues
