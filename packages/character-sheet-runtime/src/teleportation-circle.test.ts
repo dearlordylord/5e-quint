@@ -15,7 +15,7 @@ import {
   characterSheetTeleportationCircleSigilSequenceId,
   completedTeleportationCircleCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -91,7 +91,7 @@ describe("Character Sheet runtime / Teleportation Circle", () => {
   });
 
   test("Teleportation Circle spends a level-5 prepared spell slot and returns a same-plane portal contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTeleportationCircle({
         sheet: teleportationCircleBardSheet({
           preparedSpells: ["teleportation_circle"],
@@ -165,7 +165,7 @@ describe("Character Sheet runtime / Teleportation Circle", () => {
 
 const teleportationCircleSelectedIdentityActions = {
   doCastTeleportationCircle: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTeleportationCircle({
         sheet: teleportationCircleBardSheet({
           preparedSpells: ["teleportation_circle"],
@@ -200,7 +200,7 @@ const teleportationCircleSelectedIdentityActions = {
 >;
 
 const destinationCircle = {
-  sigilSequenceId: requireRight(
+  sigilSequenceId: requireSuccess(
     characterSheetTeleportationCircleSigilSequenceId(
       "sigil-sequence:material-plane-temple",
     ),
@@ -229,7 +229,7 @@ function teleportationCircleBardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:teleportation-circle-bard-9"),
       build: {

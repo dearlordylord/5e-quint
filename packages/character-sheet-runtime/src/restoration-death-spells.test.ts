@@ -25,7 +25,7 @@ import {
   greaterRestorationSheetSessionTestName,
   raiseDeadSheetSessionTestName,
   reincarnateSheetSessionTestName,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -160,7 +160,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       characterId: "character:greater-restoration-caster",
       spellId: "greater_restoration",
     });
-    const target = requireRight(
+    const target = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:greater-restoration-target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -171,7 +171,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       }),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       castGreaterRestorationOnSheet({
         caster,
         target,
@@ -197,7 +197,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
     expect(result.deferredMechanics).toEqual([]);
 
     const selfTarget = { ...caster, conditions: ["charmed"] as const };
-    const selfTargetResult = requireRight(
+    const selfTargetResult = requireSuccess(
       castGreaterRestorationOnSheet({
         caster: selfTarget,
         target: selfTarget,
@@ -224,7 +224,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       characterId: "character:raise-dead-caster",
       spellId: "raise_dead",
     });
-    const target = requireRight(
+    const target = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:raise-dead-target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -239,7 +239,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
       }),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       castRaiseDeadOnSheet({
         caster,
         target,
@@ -278,7 +278,7 @@ describe("Character Sheet runtime / restoration and death spells", () => {
     });
     const target = reincarnateTargetSheet();
 
-    const result = requireRight(
+    const result = requireSuccess(
       castReincarnateOnSheet({
         caster,
         target,
@@ -410,7 +410,7 @@ function projectGreaterRestoration(): RestorationDeathSelectedIdentityProjection
     spellId: "greater_restoration",
   });
   const target = greaterRestorationTargetSheet();
-  const result = requireRight(
+  const result = requireSuccess(
     castGreaterRestorationOnSheet({
       caster,
       target,
@@ -437,7 +437,7 @@ function projectRaiseDead(): RestorationDeathSelectedIdentityProjection {
     spellId: "raise_dead",
   });
   const target = raiseDeadTargetSheet();
-  const result = requireRight(
+  const result = requireSuccess(
     castRaiseDeadOnSheet({
       caster,
       target,
@@ -462,7 +462,7 @@ function projectReincarnate(): RestorationDeathSelectedIdentityProjection {
     spellId: "reincarnate",
   });
   const target = reincarnateTargetSheet();
-  const result = requireRight(
+  const result = requireSuccess(
     castReincarnateOnSheet({
       caster,
       target,
@@ -512,7 +512,7 @@ function projectRestorationDeathResult(input: {
 }
 
 function greaterRestorationTargetSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:greater-restoration-target"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -525,7 +525,7 @@ function greaterRestorationTargetSheet() {
 }
 
 function raiseDeadTargetSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:raise-dead-target"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -542,7 +542,7 @@ function raiseDeadTargetSheet() {
 }
 
 function reincarnateTargetSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:reincarnate-target"),
       build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -566,7 +566,7 @@ function restorationCasterSheet(input: {
     input.spellId === "reincarnate" ? "class_druid" : "class_cleric";
   const spellcastingFocus =
     input.spellId === "reincarnate" ? "druidic_focus" : "holy_symbol";
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId(input.characterId),
       build: {

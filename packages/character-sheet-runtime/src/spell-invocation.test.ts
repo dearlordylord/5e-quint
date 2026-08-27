@@ -16,7 +16,7 @@ import {
   ritualAdeptRejectsMissingFeatureTestName,
   ritualAdeptRejectsNonRitualSpellTestName,
   ritualAdeptRejectsPreparedOnlySpellTestName,
-  requireRight,
+  requireSuccess,
   spellbookRitualSheet,
   storedAvailableSheetInput,
   unitLibrary,
@@ -26,7 +26,7 @@ import { hasPreparedClassSpellAccess } from "./prepared-spell-access.ts";
 describe("Character Sheet runtime / spell invocation", () => {
   test("a non-spellcasting build has no spellbook Ritual Access", () => {
     const build = armorClassBuild({ startingClass: "class_fighter" });
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       parseCharacterSheet(
         storedAvailableSheetInput({
           characterId: "character:non-spellcaster-ritual",
@@ -36,7 +36,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       ),
     );
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build,
           unitLibrary,
@@ -72,7 +72,7 @@ describe("Character Sheet runtime / spell invocation", () => {
 
   test("invokes a Book of Shadows Ritual only while the book is on the character", () => {
     const bookSheet = (presence: "onPerson" | "notOnPerson") =>
-      requireRight(
+      requireSuccess(
         parseCharacterSheet(
           {
             ...storedAvailableSheetInput({
@@ -92,7 +92,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       );
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellInvocation({
           sheet: bookSheet("onPerson"),
           unitLibrary,
@@ -128,7 +128,7 @@ describe("Character Sheet runtime / spell invocation", () => {
     });
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellInvocation({
           sheet,
           unitLibrary,
@@ -158,7 +158,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       }),
     ).toBe(true);
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,
@@ -244,7 +244,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       ],
     });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,
@@ -274,7 +274,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       },
     });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,
@@ -305,7 +305,7 @@ describe("Character Sheet runtime / spell invocation", () => {
       },
     });
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetSpellbookRitualAccessesForBuild({
           build: sheet.build,
           unitLibrary,

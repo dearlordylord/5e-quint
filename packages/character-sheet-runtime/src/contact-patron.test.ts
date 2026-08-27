@@ -19,7 +19,7 @@ import {
   completeLongRest,
   contactPatronSessionInvocationTestName,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   unitLibrary,
 } from "./test-support.test-support.ts";
 
@@ -100,7 +100,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
   });
 
   test(contactPatronSessionInvocationTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:contact-patron-warlock-9"),
         build: {
@@ -169,7 +169,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
         },
       ]),
     );
-    expect(requireRight(characterSheetResources(sheet, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(sheet, unitLibrary))).toEqual(
       expect.arrayContaining([
         {
           sourceUnitId: authoredUnitId("warlock_contact_patron"),
@@ -181,7 +181,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
       ]),
     );
 
-    const result = requireRight(castContactPatron({ sheet, unitLibrary }));
+    const result = requireSuccess(castContactPatron({ sheet, unitLibrary }));
 
     expect(result.invocation).toMatchObject({
       tag: "contactPatron",
@@ -227,7 +227,7 @@ describe("Character Sheet runtime / Contact Patron", () => {
       );
     }
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: result.sheet, unitLibrary }),
     );
     expect(rested.resourceExpenditures).toEqual([]);
@@ -246,7 +246,7 @@ const contactPatronSelectedIdentityActions = {
 >;
 
 function projectContactPatronInvocation(): ContactPatronSelectedIdentityProjection {
-  const result = requireRight(
+  const result = requireSuccess(
     castContactPatron({
       sheet: contactPatronWarlockSheet(),
       unitLibrary,
@@ -281,7 +281,7 @@ function expectedContactPatronProjection(): ContactPatronSelectedIdentityProject
 }
 
 function contactPatronWarlockSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:contact-patron-warlock-9"),
       build: {

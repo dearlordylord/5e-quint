@@ -14,7 +14,7 @@ import {
   characterSheetId,
   characterSheetWallOfForceBarrierId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -97,7 +97,7 @@ describe("Character Sheet runtime / Wall of Force", () => {
   });
 
   test("Wall of Force spends a level-5 prepared spell slot and returns a table-facing barrier contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castWallOfForce({
         sheet: wallOfForceWizardSheet({
           preparedSpells: ["wall_of_force"],
@@ -146,7 +146,7 @@ describe("Character Sheet runtime / Wall of Force", () => {
   });
 
   test("Wall of Force accepts the globe-or-dome shape facts", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castWallOfForce({
         sheet: wallOfForceWizardSheet({
           preparedSpells: ["wall_of_force"],
@@ -203,7 +203,7 @@ describe("Character Sheet runtime / Wall of Force", () => {
 
 const wallOfForceSelectedIdentityActions = {
   doCastWallOfForce: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castWallOfForce({
         sheet: wallOfForceWizardSheet({
           preparedSpells: ["wall_of_force"],
@@ -245,7 +245,7 @@ const wallOfForceSelectedIdentityActions = {
 >;
 
 const wallOfForcePlacement = {
-  barrierId: requireRight(
+  barrierId: requireSuccess(
     characterSheetWallOfForceBarrierId("barrier:wall-of-force"),
   ),
   pointWithinRange: true,
@@ -294,7 +294,7 @@ function wallOfForceWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:wall-of-force-wizard-9"),
       build: {

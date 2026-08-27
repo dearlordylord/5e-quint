@@ -7,7 +7,7 @@ import {
   armorClassBuild,
   characterEquipmentItemId,
   characterEquipmentItemUnitId,
-  requireRight,
+  requireSuccess,
   sorcererFontOfMagicBuild,
   unitLibrary,
   warlockSpellcastingWithCantrips,
@@ -693,11 +693,11 @@ describe("stored Character Build parser", () => {
     const offHandWeaponUnitId = authoredUnitId("weapon_dagger");
     const mainWeaponItemId = characterEquipmentItemId({
       slot: "main",
-      unitId: requireRight(characterEquipmentItemUnitId(mainWeaponUnitId)),
+      unitId: requireSuccess(characterEquipmentItemUnitId(mainWeaponUnitId)),
     });
     const offHandWeaponItemId = characterEquipmentItemId({
       slot: "off",
-      unitId: requireRight(characterEquipmentItemUnitId(offHandWeaponUnitId)),
+      unitId: requireSuccess(characterEquipmentItemUnitId(offHandWeaponUnitId)),
     });
     const armed = {
       ...fighterBuild,
@@ -1213,7 +1213,7 @@ describe("stored Character Build parser", () => {
             weapon: {
               itemId: characterEquipmentItemId({
                 slot: "main",
-                unitId: requireRight(
+                unitId: requireSuccess(
                   characterEquipmentItemUnitId(
                     authoredUnitId("weapon_quarterstaff"),
                   ),

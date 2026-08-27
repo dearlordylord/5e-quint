@@ -14,7 +14,7 @@ import {
   characterSheetId,
   druidWildShapeFixtureKnownFormStatBlockIds,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   storedAvailableSheetInput,
   unitLibrary,
@@ -90,7 +90,7 @@ describe("Character Sheet runtime / Commune with Nature", () => {
       preparedSpells: ["commune_with_nature"],
       slots: 1,
     });
-    const first = requireRight(castCommuneWithNature({ sheet, unitLibrary }));
+    const first = requireSuccess(castCommuneWithNature({ sheet, unitLibrary }));
 
     expect(first.invocation).toEqual({
       tag: "communeWithNature",
@@ -147,7 +147,7 @@ describe("Character Sheet runtime / Commune with Nature", () => {
 
 const communeWithNatureSelectedIdentityActions = {
   doCastCommuneWithNature: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castCommuneWithNature({
         sheet: communeWithNatureDruidSheet({
           preparedSpells: ["commune_with_nature"],
@@ -195,7 +195,7 @@ function communeWithNatureDruidSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     parseCharacterSheet(
       {
         ...storedAvailableSheetInput({

@@ -15,7 +15,7 @@ import {
   parseCharacterSheet,
   completeLongRest,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -100,7 +100,7 @@ describe("Character Sheet runtime / Commune", () => {
 
   test("Commune spends a level-5 prepared spell slot and returns table-facing divine answer facts", () => {
     const sheet = communeClericSheet();
-    const first = requireRight(castCommune({ sheet, unitLibrary }));
+    const first = requireSuccess(castCommune({ sheet, unitLibrary }));
 
     expect(first.invocation).toEqual({
       tag: "commune",
@@ -133,11 +133,11 @@ describe("Character Sheet runtime / Commune", () => {
       },
     ]);
     expect(
-      requireRight(parseCharacterSheet(first.sheet, unitLibrary))
+      requireSuccess(parseCharacterSheet(first.sheet, unitLibrary))
         .restFeatureUses,
     ).toEqual(first.sheet.restFeatureUses);
 
-    const second = requireRight(
+    const second = requireSuccess(
       castCommune({ sheet: first.sheet, unitLibrary }),
     );
     expect(second.invocation.repeatedCasting).toEqual({
@@ -163,12 +163,14 @@ describe("Character Sheet runtime / Commune", () => {
       );
     }
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: second.sheet, unitLibrary }),
     );
     expect(rested.spellSlotExpenditures).toEqual([]);
     expect(rested.restFeatureUses).toEqual([]);
-    const afterRest = requireRight(castCommune({ sheet: rested, unitLibrary }));
+    const afterRest = requireSuccess(
+      castCommune({ sheet: rested, unitLibrary }),
+    );
     expect(afterRest.invocation.repeatedCasting).toEqual({
       previousCastCountSinceLongRest: 0,
       noAnswerChancePercent: 0,
@@ -187,13 +189,13 @@ const communeSelectedIdentityActions = {
 function projectCommuneInvocation(
   castCount: 1 | 2,
 ): CommuneSelectedIdentityProjection {
-  const first = requireRight(
+  const first = requireSuccess(
     castCommune({ sheet: communeClericSheet(), unitLibrary }),
   );
   const result =
     castCount === 1
       ? first
-      : requireRight(castCommune({ sheet: first.sheet, unitLibrary }));
+      : requireSuccess(castCommune({ sheet: first.sheet, unitLibrary }));
   return {
     spellId: result.invocation.spellId,
     spellSlotCost: result.invocation.spellSlotCost.kind,
@@ -227,7 +229,7 @@ function expectedCommuneProjection(input: {
 }
 
 function communeClericSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:commune-cleric-9"),
       build: {

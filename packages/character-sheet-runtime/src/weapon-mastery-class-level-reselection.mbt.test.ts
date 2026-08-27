@@ -14,7 +14,7 @@ import {
   characterSheetId,
   completeLongRest,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   selectedClassChoiceUnitIds,
   unitLibrary,
   weaponMasteryBuild,
@@ -340,7 +340,7 @@ function acceptedProjection(input: {
   readonly unchangedPreserved: boolean;
 }): WeaponMasteryClassLevelReselectionProjection {
   const sheet = weaponMasterySheet(input.profile);
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeLongRest({
       sheet,
       unitLibrary,
@@ -440,7 +440,7 @@ function projectionFromSelectedWeapons(input: {
 function weaponMasterySheet(
   profile: WeaponMasteryClassLevelReselectionProfile,
 ): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId(
         `character:${profile.featureUnitId}:class-level-reselection`,

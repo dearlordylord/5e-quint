@@ -15,7 +15,7 @@ import {
   characterSheetId,
   completedHallowCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -93,7 +93,7 @@ describe("Character Sheet runtime / Hallow", () => {
   });
 
   test("Hallow spends a level-5 prepared spell slot and returns a durable area contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castHallow({
         sheet: hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 }),
         unitLibrary,
@@ -195,7 +195,7 @@ describe("Character Sheet runtime / Hallow", () => {
   });
 
   test("Hallow accepts an extra effect with no creature-type selection", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castHallow({
         sheet: hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 }),
         unitLibrary,
@@ -212,7 +212,7 @@ describe("Character Sheet runtime / Hallow", () => {
 
 const hallowSelectedIdentityActions = {
   doCastHallow: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castHallow({
         sheet: hallowClericSheet({ preparedSpells: ["hallow"], slots: 1 }),
         unitLibrary,
@@ -254,7 +254,7 @@ const hallowSelectedIdentityActions = {
 >;
 
 const hallowArea = {
-  areaId: requireRight(characterSheetHallowAreaId("area:hallowed-sanctum")),
+  areaId: requireSuccess(characterSheetHallowAreaId("area:hallowed-sanctum")),
   radiusFeet: 60,
   touchedPointWithinReach: true,
   areaAlreadyHallowed: false,
@@ -292,7 +292,7 @@ function hallowClericSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:hallow-cleric-9"),
       build: {

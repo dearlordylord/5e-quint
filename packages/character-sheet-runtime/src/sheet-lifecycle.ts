@@ -345,7 +345,7 @@ function requireFreshConstructionFact<Value, Error>(
 ): Value {
   /* v8 ignore next -- @preserve -- Internal invariant: createFreshCharacterSheet calls this only after accumulating no issue from the same parsed fact. */
   if (Result.isSuccess(result)) return result.success;
-  /* v8 ignore start -- @preserve -- Internal invariant: the Left branch is unreachable after the immediately preceding no-issues gate. */
+  /* v8 ignore start -- @preserve -- Internal invariant: the failure branch is unreachable after the immediately preceding no-issues gate. */
   throw new Error("Fresh Character Sheet facts were already accumulated.");
   /* v8 ignore stop -- @preserve */
 }

@@ -14,7 +14,7 @@ import {
   characterSheetGeasTargetId,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -95,7 +95,7 @@ describe("Character Sheet runtime / Geas", () => {
   test("Geas spends a prepared level-5 spell slot and returns the failed-save command contract", () => {
     const target = geasTarget({ savingThrowOutcome: { tag: "failed" } });
     const command = geasCommand();
-    const result = requireRight(
+    const result = requireSuccess(
       castGeas({
         sheet: geasWizardSheet({ preparedSpells: ["geas"], slots: 1 }),
         unitLibrary,
@@ -147,7 +147,7 @@ describe("Character Sheet runtime / Geas", () => {
   });
 
   test("Geas returns no effect when the target cannot understand the command", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castGeas({
         sheet: geasWizardSheet({ preparedSpells: ["geas"], slots: 1 }),
         unitLibrary,
@@ -167,7 +167,7 @@ describe("Character Sheet runtime / Geas", () => {
   });
 
   test("Geas ends immediately when the table marks the command as suicidal", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castGeas({
         sheet: geasWizardSheet({ preparedSpells: ["geas"], slots: 1 }),
         unitLibrary,
@@ -188,7 +188,7 @@ describe("Character Sheet runtime / Geas", () => {
   });
 
   test("Geas leaves a target unaffected after a successful save", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castGeas({
         sheet: geasWizardSheet({ preparedSpells: ["geas"], slots: 1 }),
         unitLibrary,
@@ -238,7 +238,7 @@ describe("Character Sheet runtime / Geas", () => {
 
 const geasSelectedIdentityActions = {
   doCastGeas: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castGeas({
         sheet: geasWizardSheet({ preparedSpells: ["geas"], slots: 1 }),
         unitLibrary,
@@ -297,7 +297,7 @@ function geasTarget(input: {
   readonly savingThrowOutcome: CharacterSheetGeasSavingThrowOutcome;
 }): CharacterSheetGeasTarget {
   return {
-    targetId: requireRight(characterSheetGeasTargetId("geas-target:known")),
+    targetId: requireSuccess(characterSheetGeasTargetId("geas-target:known")),
     visibleByCaster: true,
     withinRangeFeet: 60,
     understandsCommand: true,
@@ -307,7 +307,7 @@ function geasTarget(input: {
 
 function geasTargetCannotUnderstand(): CharacterSheetGeasTarget {
   return {
-    targetId: requireRight(
+    targetId: requireSuccess(
       characterSheetGeasTargetId("geas-target:no-language"),
     ),
     visibleByCaster: true,
@@ -339,7 +339,7 @@ function geasWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:geas-wizard-9"),
       build: {

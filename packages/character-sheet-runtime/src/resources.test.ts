@@ -40,7 +40,7 @@ import {
   rebuildCharacterSheetFixture,
   parseCharacterSheet,
   prayerOfHealingClericBuild,
-  requireRight,
+  requireSuccess,
   resourceCount,
   sorcererFontOfMagicBuild,
   sorcererFontOfMagicLongRestRecoveryTestName,
@@ -79,7 +79,7 @@ describe("Character Sheet runtime / resources", () => {
       ],
     });
 
-    expect(requireRight(result)).toEqual([
+    expect(requireSuccess(result)).toEqual([
       { tag: "layOnHandsHealingPool", expended: 2 },
     ]);
   });
@@ -100,7 +100,7 @@ describe("Character Sheet runtime / resources", () => {
       },
     },
   ])("rejects a free-cast spend with an $name", ({ resource }) => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:free-cast-identity-gate"),
         build: armorClassBuild({ startingClass: "class_ranger" }),
@@ -125,7 +125,7 @@ describe("Character Sheet runtime / resources", () => {
   });
 
   test("projects no Monk-only facts for a non-Monk build", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:synthetic-no-monk-resources"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -135,10 +135,10 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(
-      requireRight(characterSheetMonksFocusSaveDc(sheet, unitLibrary)),
+      requireSuccess(characterSheetMonksFocusSaveDc(sheet, unitLibrary)),
     ).toBeUndefined();
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetMonkUncannyMetabolismUseState(sheet, unitLibrary),
       ),
     ).toBeUndefined();
@@ -147,7 +147,7 @@ describe("Character Sheet runtime / resources", () => {
   test("projects omitted class-feature resource expenditures as zero from build-derived capacity", () => {
     const cases = [
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-paladin"),
             build: armorClassBuild({ startingClass: "class_paladin" }),
@@ -163,7 +163,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-ranger"),
             build: armorClassBuild({ startingClass: "class_ranger" }),
@@ -181,7 +181,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-druid"),
             build: armorClassBuild({
@@ -207,7 +207,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-monk"),
             build: armorClassBuild({
@@ -227,7 +227,7 @@ describe("Character Sheet runtime / resources", () => {
         },
       },
       {
-        sheet: requireRight(
+        sheet: requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:resource-zero-sorcerer"),
             build: sorcererFontOfMagicBuild(),
@@ -246,9 +246,9 @@ describe("Character Sheet runtime / resources", () => {
     ];
 
     for (const { sheet, resource } of cases) {
-      expect(requireRight(characterSheetResources(sheet, unitLibrary))).toEqual(
-        expect.arrayContaining([expect.objectContaining(resource)]),
-      );
+      expect(
+        requireSuccess(characterSheetResources(sheet, unitLibrary)),
+      ).toEqual(expect.arrayContaining([expect.objectContaining(resource)]));
       expect(sheet.resourceExpenditures).toEqual([]);
     }
   });
@@ -516,7 +516,7 @@ describe("Character Sheet runtime / resources", () => {
   );
 
   test("Long Rest restores the Favored Enemy Hunter's Mark free-cast pool", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:ranger-rest"),
         build: armorClassBuild({ startingClass: "class_ranger" }),
@@ -535,7 +535,7 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(
-      requireRight(characterSheetResources(spent, unitLibrary)),
+      requireSuccess(characterSheetResources(spent, unitLibrary)),
     ).toMatchObject([
       {
         sourceUnitId: authoredUnitId("ranger_favored_enemy"),
@@ -545,13 +545,13 @@ describe("Character Sheet runtime / resources", () => {
       },
     ]);
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
     expect(
-      requireRight(characterSheetResources(rested, unitLibrary)),
+      requireSuccess(characterSheetResources(rested, unitLibrary)),
     ).toMatchObject([
       {
         sourceUnitId: authoredUnitId("ranger_favored_enemy"),
@@ -563,7 +563,7 @@ describe("Character Sheet runtime / resources", () => {
   });
 
   test("Long Rest restores the Paladin's Smite Divine Smite free-cast pool", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin-smite-rest"),
         build: armorClassBuild({
@@ -584,7 +584,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
@@ -595,12 +595,14 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(requireRight(characterSheetResources(rested, unitLibrary))).toEqual(
+    expect(
+      requireSuccess(characterSheetResources(rested, unitLibrary)),
+    ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           sourceUnitId: authoredUnitId("paladin_paladins_smite"),
@@ -626,7 +628,7 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-focus-rest"),
         build: monkBuild,
@@ -643,7 +645,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
@@ -655,18 +657,18 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
     expect(
-      requireRight(characterSheetMonksFocusSaveDc(spent, unitLibrary)),
+      requireSuccess(characterSheetMonksFocusSaveDc(spent, unitLibrary)),
     ).toMatchObject({
       unitId: MONK_MONKS_FOCUS_UNIT_ID,
       dc: 13,
     });
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
 
     expect(
-      requireRight(characterSheetResources(shortRested, unitLibrary)),
+      requireSuccess(characterSheetResources(shortRested, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -678,13 +680,13 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(
-      requireRight(characterSheetResources(longRested, unitLibrary)),
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -711,7 +713,7 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:sorcerer-font-rest"),
         build: sorcererBuild,
@@ -728,7 +730,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
@@ -744,13 +746,13 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(
-      requireRight(characterSheetResources(longRested, unitLibrary)),
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -767,7 +769,7 @@ describe("Character Sheet runtime / resources", () => {
     const sorcererBuild = sorcererFontOfMagicBuild({
       sorcererAdvancements: 4,
     });
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:sorcerer-sorcerous-restoration",
@@ -786,7 +788,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           tag: "pointPoolResource",
@@ -798,7 +800,7 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({
         sheet: spent,
         unitLibrary,
@@ -819,11 +821,11 @@ describe("Character Sheet runtime / resources", () => {
       { tag: "sorcerousRestoration", usedSinceLongRest: true },
     ]);
     expect(
-      requireRight(parseCharacterSheet(shortRested, unitLibrary))
+      requireSuccess(parseCharacterSheet(shortRested, unitLibrary))
         .restFeatureUses,
     ).toEqual(shortRested.restFeatureUses);
     expect(
-      requireRight(characterSheetResources(shortRested, unitLibrary)),
+      requireSuccess(characterSheetResources(shortRested, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -866,7 +868,7 @@ describe("Character Sheet runtime / resources", () => {
       },
     });
 
-    const lowerLevelSpent = requireRight(
+    const lowerLevelSpent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:sorcerer-no-sorcerous-restoration",
@@ -900,14 +902,14 @@ describe("Character Sheet runtime / resources", () => {
       },
     });
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: shortRested, unitLibrary }),
     );
 
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(longRested.restFeatureUses).toEqual([]);
     expect(
-      requireRight(characterSheetResources(longRested, unitLibrary)),
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -925,7 +927,7 @@ describe("Character Sheet runtime / resources", () => {
       startingClass: "class_monk",
       advancements: ["class_monk"],
     });
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-used"),
         build: monkBuild,
@@ -949,7 +951,7 @@ describe("Character Sheet runtime / resources", () => {
     );
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetMonkUncannyMetabolismUseState(spent, unitLibrary),
       ),
     ).toMatchObject({
@@ -974,7 +976,7 @@ describe("Character Sheet runtime / resources", () => {
       },
       usedSinceLongRest: true,
     });
-    expect(requireRight(characterSheetResources(spent, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(spent, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           tag: "useCountResource",
@@ -985,7 +987,7 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
 
@@ -993,7 +995,7 @@ describe("Character Sheet runtime / resources", () => {
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
     ]);
     expect(
-      requireRight(characterSheetResources(shortRested, unitLibrary)),
+      requireSuccess(characterSheetResources(shortRested, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1004,13 +1006,13 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: shortRested, unitLibrary }),
     );
 
     expect(longRested.restFeatureUses).toEqual([]);
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetMonkUncannyMetabolismUseState(longRested, unitLibrary),
       ),
     ).toMatchObject({
@@ -1024,7 +1026,7 @@ describe("Character Sheet runtime / resources", () => {
       startingClass: "class_monk",
       advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
     });
-    const spent = requireRight(
+    const spent = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-initiative"),
         build: monkBuild,
@@ -1041,7 +1043,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    const recovered = requireRight(
+    const recovered = requireSuccess(
       useMonkUncannyMetabolismWhenRollingInitiative({
         sheet: spent,
         unitLibrary,
@@ -1056,7 +1058,7 @@ describe("Character Sheet runtime / resources", () => {
       { tag: "uncannyMetabolism", usedSinceLongRest: true },
     ]);
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetMonkUncannyMetabolismUseState(recovered, unitLibrary),
       ),
     ).toMatchObject({
@@ -1067,7 +1069,7 @@ describe("Character Sheet runtime / resources", () => {
       usedSinceLongRest: true,
     });
     expect(
-      requireRight(characterSheetResources(recovered, unitLibrary)),
+      requireSuccess(characterSheetResources(recovered, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1079,7 +1081,7 @@ describe("Character Sheet runtime / resources", () => {
       ]),
     );
 
-    const nearMaximum = requireRight(
+    const nearMaximum = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-cap"),
         build: monkBuild,
@@ -1096,7 +1098,7 @@ describe("Character Sheet runtime / resources", () => {
       }),
     );
 
-    const capped = requireRight(
+    const capped = requireSuccess(
       useMonkUncannyMetabolismWhenRollingInitiative({
         sheet: nearMaximum,
         unitLibrary,
@@ -1116,7 +1118,7 @@ describe("Character Sheet runtime / resources", () => {
       startingClass: "class_monk",
       advancements: ["class_monk", "class_monk", "class_monk", "class_monk"],
     });
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:monk-uncanny-gates"),
         build: monkBuild,
@@ -1139,7 +1141,7 @@ describe("Character Sheet runtime / resources", () => {
       },
     });
 
-    const used = requireRight(
+    const used = requireSuccess(
       useMonkUncannyMetabolismWhenRollingInitiative({
         sheet,
         unitLibrary,

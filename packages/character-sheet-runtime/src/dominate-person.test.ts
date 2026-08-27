@@ -102,7 +102,7 @@ describe("Character Sheet runtime / Dominate Person", () => {
       savingThrowOutcome: { tag: "failed" },
       fightingCasterOrAllies: true,
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castDominatePerson({
         sheet: dominatePersonWizardSheet({
           preparedSpells: ["dominate_person"],
@@ -155,7 +155,7 @@ describe("Character Sheet runtime / Dominate Person", () => {
   });
 
   test("Dominate Person returns no effect on a successful Wisdom save", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castDominatePerson({
         sheet: dominatePersonWizardSheet({
           preparedSpells: ["dominate_person"],
@@ -196,7 +196,7 @@ describe("Character Sheet runtime / Dominate Person", () => {
 
 const dominatePersonSelectedIdentityActions = {
   doCastDominatePerson: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castDominatePerson({
         sheet: dominatePersonWizardSheet({
           preparedSpells: ["dominate_person"],
@@ -260,7 +260,7 @@ function dominatePersonTarget(input: {
   readonly fightingCasterOrAllies?: boolean;
 }): CharacterSheetDominatePersonTarget {
   return {
-    targetId: requireRight(
+    targetId: requireSuccess(
       characterSheetDominatePersonTargetId("dominate-person-target:humanoid"),
     ),
     visibleByCaster: true,
@@ -362,7 +362,7 @@ function armorClassBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful" as const, morality: "good" as const },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -383,11 +383,11 @@ function armorClassBuild(input: {
   };
 }
 
-function requireRight<A, E>(either: Result.Result<A, E>): A {
-  if (Result.isFailure(either)) {
+function requireSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Right, got Left: ${JSON.stringify(either.failure)}`,
+      `Expected Result success, got failure: ${JSON.stringify(result.failure)}`,
     );
   }
-  return either.success;
+  return result.success;
 }

@@ -24,7 +24,7 @@ import {
   druidWildShapeFixtureKnownFormStatBlockIds,
   empoweredEvocationDamageRollModifier,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   removeSelfRestorationConditionAtTurnEnd,
   unitLibrary,
   warlockMagicalCunningBuild,
@@ -150,7 +150,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(fiendishResiliencePassiveDefenseProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fiendish-resilience"),
         build: fiendWarlockLevelTenBuild(),
@@ -164,7 +164,7 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
       ),
     ).toMatchObject({
@@ -174,10 +174,11 @@ describe("Character Sheet runtime / passive defenses", () => {
       },
     });
     expect(
-      requireRight(parseCharacterSheet(sheet, unitLibrary)).fiendishResilience,
+      requireSuccess(parseCharacterSheet(sheet, unitLibrary))
+        .fiendishResilience,
     ).toEqual({ damageType: "fire" });
 
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({
         sheet,
         unitLibrary,
@@ -188,7 +189,7 @@ describe("Character Sheet runtime / passive defenses", () => {
       damageType: "cold",
     });
 
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({
         sheet: shortRested,
         unitLibrary,
@@ -201,7 +202,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(fiendishResiliencePassiveDefenseGateTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:fiendish-resilience-force"),
         build: fiendWarlockLevelTenBuild(),
@@ -252,12 +253,12 @@ describe("Character Sheet runtime / passive defenses", () => {
     });
 
     expect(
-      requireRight(parseStoredFiendishResilience({ damageType: "cold" })),
+      requireSuccess(parseStoredFiendishResilience({ damageType: "cold" })),
     ).toMatchObject({ damageType: "cold" });
   });
 
   test(naturesWardPassiveDefenseProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:natures-ward-temperate"),
         build: druidCircleLandBuild({ druidLevel: 10 }),
@@ -277,7 +278,7 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
       ),
     ).toMatchObject({
@@ -293,7 +294,7 @@ describe("Character Sheet runtime / passive defenses", () => {
       },
     });
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({
         sheet,
         unitLibrary,
@@ -302,7 +303,7 @@ describe("Character Sheet runtime / passive defenses", () => {
       }),
     );
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetPassiveDefenseProjection({
           sheet: rested,
           unitLibrary,
@@ -321,7 +322,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(auraOfCouragePassiveDefenseProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:aura-of-courage"),
         build: paladinLevelTenBuild(),
@@ -332,7 +333,7 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
       ),
     ).toMatchObject({
@@ -349,7 +350,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(selfRestorationConditionCleanupTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:self-restoration"),
         build: monkLevelTenBuild(),
@@ -361,7 +362,7 @@ describe("Character Sheet runtime / passive defenses", () => {
     );
 
     expect(
-      requireRight(
+      requireSuccess(
         characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
       ),
     ).toMatchObject({
@@ -372,7 +373,7 @@ describe("Character Sheet runtime / passive defenses", () => {
       },
     });
 
-    const restored = requireRight(
+    const restored = requireSuccess(
       removeSelfRestorationConditionAtTurnEnd({
         sheet,
         unitLibrary,
@@ -397,7 +398,7 @@ describe("Character Sheet runtime / passive defenses", () => {
   });
 
   test(empoweredEvocationDamageModifierProjectionTestName, () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:empowered-evocation"),
         build: wizardEvokerLevelTenBuild(),
@@ -409,7 +410,7 @@ describe("Character Sheet runtime / passive defenses", () => {
     const fireball = spellRecord("fireball");
 
     expect(
-      requireRight(
+      requireSuccess(
         empoweredEvocationDamageRollModifier({
           sheet,
           unitLibrary,
@@ -501,7 +502,7 @@ function wizardEvokerLevelTenBuild(): CharacterBuild {
         },
       ],
     }),
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 8,
         dex: 14,
@@ -554,7 +555,7 @@ function spellRecord(unitId: string) {
 
 const passiveDefenseSelectedIdentityActions = {
   doProjectDruidNaturesWard: (): PassiveDefenseSelectedIdentityProjection => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:natures-ward-replay"),
         build: druidCircleLandBuild({ druidLevel: 10 }),
@@ -572,10 +573,10 @@ const passiveDefenseSelectedIdentityActions = {
         statBlockCatalog,
       }),
     );
-    const projection = requireRight(
+    const projection = requireSuccess(
       characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
     );
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({
         sheet,
         unitLibrary,
@@ -583,7 +584,7 @@ const passiveDefenseSelectedIdentityActions = {
         statBlockCatalog,
       }),
     );
-    const restedProjection = requireRight(
+    const restedProjection = requireSuccess(
       characterSheetPassiveDefenseProjection({ sheet: rested, unitLibrary }),
     );
     if (restedProjection.naturesWard?.resistance.land !== "arid") {
@@ -598,7 +599,7 @@ const passiveDefenseSelectedIdentityActions = {
   },
   doSelectWarlockFiendishResilience:
     (): PassiveDefenseSelectedIdentityProjection => {
-      const sheet = requireRight(
+      const sheet = requireSuccess(
         rebuildCharacterSheetFixture({
           characterId: characterSheetId("character:fiendish-resilience-replay"),
           build: fiendWarlockLevelTenBuild(),
@@ -610,17 +611,17 @@ const passiveDefenseSelectedIdentityActions = {
           },
         }),
       );
-      const projection = requireRight(
+      const projection = requireSuccess(
         characterSheetPassiveDefenseProjection({ sheet, unitLibrary }),
       );
-      const shortRested = requireRight(
+      const shortRested = requireSuccess(
         completeShortRest({
           sheet,
           unitLibrary,
           fiendishResilienceDamageType: "cold",
         }),
       );
-      const longRested = requireRight(
+      const longRested = requireSuccess(
         completeLongRest({
           sheet: shortRested,
           unitLibrary,

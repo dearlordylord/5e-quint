@@ -14,7 +14,7 @@ import {
   characterSheetId,
   characterSheetTelepathicBondTargetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -86,7 +86,7 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
   });
 
   test("Telepathic Bond spends a level-5 prepared spell slot and returns a same-plane communication link contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTelepathicBond({
         sheet: telepathicBondBardSheet({
           preparedSpells: ["telepathic_bond"],
@@ -179,7 +179,7 @@ describe("Character Sheet runtime / Telepathic Bond", () => {
 
 const telepathicBondSelectedIdentityActions = {
   doCastTelepathicBond: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castTelepathicBond({
         sheet: telepathicBondBardSheet({
           preparedSpells: ["telepathic_bond"],
@@ -231,7 +231,7 @@ function telepathicBondTargets(
     { length: count },
     (_, index) =>
       ({
-        targetId: requireRight(
+        targetId: requireSuccess(
           characterSheetTelepathicBondTargetId(
             `telepathic-bond-target:${index + 1}`,
           ),
@@ -248,7 +248,7 @@ function telepathicBondBardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:telepathic-bond-bard-9"),
       build: {

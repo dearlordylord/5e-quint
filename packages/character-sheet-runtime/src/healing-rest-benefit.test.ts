@@ -32,7 +32,7 @@ import {
   prayerOfHealingRestBenefitApplicationTestName,
   prayerOfHealingStoredLockoutGateTestName,
   prayerOfHealingUnitLibraryWith,
-  requireRight,
+  requireSuccess,
   resourceCount,
   SORCERER_FONT_OF_MAGIC_UNIT_ID,
   sorcererFontOfMagicBuild,
@@ -47,7 +47,7 @@ import { isCharacterSheetWithSpellSlots } from "./spell-slots.ts";
 
 describe("Character Sheet runtime / healing and rest benefit spells", () => {
   test(layOnHandsSpendsHealingPoolTestName, () => {
-    const source = requireRight(
+    const source = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin"),
         build: armorClassBuild({
@@ -59,7 +59,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
-    const target = requireRight(
+    const target = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -70,7 +70,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       applyLayOnHandsWithRoute({
         source,
         target,
@@ -107,7 +107,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
     });
     expect(result.target.conditions).toEqual([]);
     expect(
-      requireRight(characterSheetResources(result.source, unitLibrary)),
+      requireSuccess(characterSheetResources(result.source, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -120,7 +120,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
   });
 
   test("Lay On Hands can spend only for Poisoned removal without restoring HP", () => {
-    const source = requireRight(
+    const source = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-paladin-poison-removal",
@@ -130,7 +130,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
-    const target = requireRight(
+    const target = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-poisoned-no-healing",
@@ -143,7 +143,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       applyLayOnHands({
         source,
         target,
@@ -158,7 +158,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
   });
 
   test("Short Rest benefit composition propagates an Arcane Recovery rejection", () => {
-    const fighter = requireRight(
+    const fighter = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-arcane-recovery-rejection",
@@ -180,7 +180,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
   });
 
   test("Short Rest benefit composition returns an accepted Arcane Recovery sheet", () => {
-    const wizard = requireRight(
+    const wizard = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-arcane-recovery-accepted",
@@ -194,7 +194,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       completeShortRestBenefits({
         sheet: wizard,
         unitLibrary,
@@ -214,7 +214,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
   });
 
   test(layOnHandsRejectsDivergentPoolsTestName, () => {
-    const target = requireRight(
+    const target = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin-self"),
         build: armorClassBuild({ startingClass: "class_paladin" }),
@@ -242,7 +242,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
   });
 
   test(layOnHandsLongRestRecoveryTestName, () => {
-    const source = requireRight(
+    const source = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:paladin-rest"),
         build: armorClassBuild({ startingClass: "class_paladin" }),
@@ -251,7 +251,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
-    const spent = requireRight(
+    const spent = requireSuccess(
       applyLayOnHands({
         source,
         target: source,
@@ -261,12 +261,14 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     ).source;
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: spent, unitLibrary }),
     );
 
     expect(rested.resourceExpenditures).toEqual([]);
-    expect(requireRight(characterSheetResources(rested, unitLibrary))).toEqual([
+    expect(
+      requireSuccess(characterSheetResources(rested, unitLibrary)),
+    ).toEqual([
       expect.objectContaining({
         unitId: authoredUnitId("paladin_lay_on_hands"),
         count: 5,
@@ -276,7 +278,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
   });
 
   test(prayerOfHealingRestBenefitApplicationTestName, () => {
-    const caster = requireRight(
+    const caster = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-caster"),
         build: prayerOfHealingClericBuild(),
@@ -288,7 +290,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         ],
       }),
     );
-    const woundedWizard = requireRight(
+    const woundedWizard = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-wizard"),
         build: wizardWarlockBuild(),
@@ -301,7 +303,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         pactSlots: { expended: resourceCount(1) },
       }),
     );
-    const woundedFighter = requireRight(
+    const woundedFighter = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-fighter"),
         build: armorClassBuild({ startingClass: "class_fighter" }),
@@ -310,7 +312,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
-    const woundedSorcerer = requireRight(
+    const woundedSorcerer = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-sorcerer"),
         build: sorcererFontOfMagicBuild({ sorcererAdvancements: 4 }),
@@ -327,7 +329,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       }),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       applyCharacterSheetSpellRestBenefit({
         caster,
         spellId: authoredUnitId("prayer_of_healing"),
@@ -387,13 +389,15 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       expended: 0,
     });
     expect(
-      requireRight(characterSheetHitDice(result.recipients[0], unitLibrary)),
+      requireSuccess(characterSheetHitDice(result.recipients[0], unitLibrary)),
     ).toEqual([
       { classUnitId: "class_wizard", dieSize: 6, total: 1, spent: 1 },
     ]);
     expect(characterSheetCurrentHp(result.recipients[1])).toBe(19);
     expect(
-      requireRight(characterSheetResources(result.recipients[1], unitLibrary)),
+      requireSuccess(
+        characterSheetResources(result.recipients[1], unitLibrary),
+      ),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -459,7 +463,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       },
     });
 
-    const longRestedRecipient = requireRight(
+    const longRestedRecipient = requireSuccess(
       completeLongRest({ sheet: result.recipients[0], unitLibrary }),
     );
     expect(longRestedRecipient.restFeatureUses).toEqual([]);
@@ -509,7 +513,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         },
       },
     };
-    const caster = requireRight(
+    const caster = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-created-slot-prayer-caster",
@@ -519,7 +523,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
-    const recipient = requireRight(
+    const recipient = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-created-slot-prayer-recipient",
@@ -530,7 +534,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
-    const ordinaryResult = requireRight(
+    const ordinaryResult = requireSuccess(
       applyCharacterSheetSpellRestBenefit({
         caster,
         spellId: authoredUnitId("prayer_of_healing"),
@@ -550,14 +554,14 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       { spellLevel: 2, expended: 1 },
     ]);
 
-    const casterWithFirstCreatedSlot = requireRight(
+    const casterWithFirstCreatedSlot = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet: caster,
         unitLibrary,
         spellLevel: spellSlotLevel(1),
       }),
     );
-    const casterWithCreatedSlot = requireRight(
+    const casterWithCreatedSlot = requireSuccess(
       convertFontOfMagicSorceryPointsToSpellSlot({
         sheet: casterWithFirstCreatedSlot,
         unitLibrary,
@@ -570,7 +574,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
       );
     }
 
-    const result = requireRight(
+    const result = requireSuccess(
       applyCharacterSheetSpellRestBenefit({
         caster: {
           ...casterWithCreatedSlot,
@@ -598,7 +602,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
   });
 
   test(prayerOfHealingRestBenefitAdmissionGateTestName, () => {
-    const caster = requireRight(
+    const caster = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-admission-caster"),
         build: prayerOfHealingClericBuild(),
@@ -607,7 +611,7 @@ describe("Character Sheet runtime / healing and rest benefit spells", () => {
         unitLibrary,
       }),
     );
-    const recipient = requireRight(
+    const recipient = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:prayer-admission-target"),
         build: armorClassBuild({ startingClass: "class_fighter" }),

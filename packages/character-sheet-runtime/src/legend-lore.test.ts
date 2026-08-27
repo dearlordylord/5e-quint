@@ -14,7 +14,7 @@ import {
   characterSheetId,
   completedLegendLoreCasting,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -88,7 +88,7 @@ describe("Character Sheet runtime / Legend Lore", () => {
       preparedSpells: ["legend_lore"],
       slots: 1,
     });
-    const result = requireRight(
+    const result = requireSuccess(
       castLegendLore({
         sheet,
         unitLibrary,
@@ -138,7 +138,7 @@ describe("Character Sheet runtime / Legend Lore", () => {
   });
 
   test("Legend Lore returns the not-famous failure outcome after spending the spell slot", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castLegendLore({
         sheet: legendLoreClericSheet({
           preparedSpells: ["legend_lore"],
@@ -186,7 +186,7 @@ describe("Character Sheet runtime / Legend Lore", () => {
 
 const legendLoreSelectedIdentityActions = {
   doCastLegendLore: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castLegendLore({
         sheet: legendLoreClericSheet({
           preparedSpells: ["legend_lore"],
@@ -243,7 +243,7 @@ function legendLoreClericSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:legend-lore-cleric-9"),
       build: {

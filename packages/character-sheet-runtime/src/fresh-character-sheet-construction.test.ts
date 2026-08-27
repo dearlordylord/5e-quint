@@ -71,6 +71,10 @@ describe("fresh Character Sheet construction", () => {
         })({ ...projection, displayName: "presentation must stay outside" }),
       ),
     ).toBe(true);
+    const projectionSchema = Schema.toStandardJSONSchemaV1(
+      FreshCharacterSheetProjectionSchema,
+    )["~standard"].jsonSchema.output({ target: "draft-2020-12" });
+    expect(JSON.stringify(projectionSchema)).toContain('"minItems":1');
   });
 
   test("parses a fresh nonspellcasting sheet and rejects retained play state", () => {
@@ -264,6 +268,16 @@ describe("fresh Character Sheet construction", () => {
         statBlockIds: druidLevelFiveWildShapeFixtureKnownFormStatBlockIds,
       },
     });
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
+          onExcessProperty: "error",
+        })({
+          ...freshCharacterSheetProjection(result.success),
+          druidWildShapeKnownForms: { statBlockIds: [] },
+        }),
+      ),
+    ).toBe(true);
   });
 
   test("returns one flat issue per independently invalid Wild Shape form", () => {

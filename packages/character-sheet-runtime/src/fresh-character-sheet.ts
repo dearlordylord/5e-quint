@@ -44,11 +44,7 @@ const CommonFreshCharacterSheetProjectionFields = {
   druidWildShapeKnownForms: Schema.optionalKey(
     Schema.Struct({
       statBlockIds: Schema.Array(NonEmptyTrimmedStringSchema).pipe(
-        Schema.check(
-          Schema.makeFilter((values) =>
-            values.length > 0 ? undefined : "expected a non-empty list",
-          ),
-        ),
+        Schema.check(Schema.isNonEmpty()),
       ),
     }),
   ),

@@ -99,7 +99,7 @@ describe("Character Sheet runtime / Antilife Shell", () => {
   });
 
   test("Antilife Shell spends a level-5 prepared spell slot and returns a table-facing barrier contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castAntilifeShell({
         sheet: antilifeShellDruidSheet({
           preparedSpells: ["antilife_shell"],
@@ -166,7 +166,7 @@ describe("Character Sheet runtime / Antilife Shell", () => {
 
 const antilifeShellSelectedIdentityActions = {
   doCastAntilifeShell: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castAntilifeShell({
         sheet: antilifeShellDruidSheet({
           preparedSpells: ["antilife_shell"],
@@ -202,7 +202,7 @@ const antilifeShellSelectedIdentityActions = {
 >;
 
 const antilifeShellPlacement = {
-  barrierId: requireRight(
+  barrierId: requireSuccess(
     characterSheetAntilifeShellBarrierId("barrier:antilife-shell"),
   ),
   casterOriginWitnessed: true,
@@ -302,7 +302,7 @@ function armorClassBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -333,10 +333,10 @@ const unitLibrary = minimalUnitCatalog([
   decodeUnitRecordSync(druidWildShapeInput),
 ]);
 
-function requireRight<R, L>(result: Result.Result<R, L>): R {
+function requireSuccess<R, L>(result: Result.Result<R, L>): R {
   if (Result.isSuccess(result)) return result.success;
   throw new Error(
-    `Expected Right, received Left: ${JSON.stringify(result.failure)}`,
+    `Expected Result success, received failure: ${JSON.stringify(result.failure)}`,
   );
 }
 

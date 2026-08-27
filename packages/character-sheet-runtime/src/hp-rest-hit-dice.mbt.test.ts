@@ -215,7 +215,7 @@ function rejectShortRestStartAtZeroHpProjection(): HpRestHitDiceProjection {
 
 function rejectShortRestDurationTooShortProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-short-too-short");
-  const rest = requireRight(startShortRest({ sheet }));
+  const rest = requireSuccess(startShortRest({ sheet }));
   const result = finishShortRest({
     rest,
     restedTicks: elapsedTimeTicks(Number(CHARACTER_SHEET_SHORT_REST_TICKS) - 1),
@@ -230,7 +230,7 @@ function rejectShortRestDurationTooShortProjection(): HpRestHitDiceProjection {
 
 function rejectLongRestDurationTooShortProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-long-too-short");
-  const rest = requireRight(
+  const rest = requireSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
   const result = finishLongRest({
@@ -251,7 +251,7 @@ function rejectLongRestDurationTooShortProjection(): HpRestHitDiceProjection {
 function rejectLongRestPhysicalExertionTooShortProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-long-physical-too-short");
   const result = interruptLongRest({
-    rest: requireRight(
+    rest: requireSuccess(
       startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
     ),
     unitLibrary,
@@ -306,7 +306,7 @@ function rejectLongRestBeforeSixteenHourWaitProjection(): HpRestHitDiceProjectio
 
 function spendShortRestHitPointDieProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-short-rest");
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeShortRest({
       completion: shortRestCompletionForSheet(sheet),
       unitLibrary,
@@ -324,7 +324,7 @@ function spendShortRestHitPointDieProjection(): HpRestHitDiceProjection {
 
 function spendShortRestHitPointDiceSequentiallyProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-short-rest-loop");
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeShortRest({
       completion: shortRestCompletionForSheet(sheet),
       unitLibrary,
@@ -344,7 +344,7 @@ function spendShortRestHitPointDiceSequentiallyProjection(): HpRestHitDiceProjec
 function rejectLongRestInterruptionAtRequiredDurationProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-long-interrupt-complete");
   const result = interruptLongRest({
-    rest: requireRight(
+    rest: requireSuccess(
       startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
     ),
     unitLibrary,
@@ -367,7 +367,7 @@ function rejectLongRestInterruptionAtRequiredDurationProjection(): HpRestHitDice
 function interruptShortRestNoBenefitProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-short-interrupt");
   const interrupted = interruptShortRest({
-    rest: requireRight(startShortRest({ sheet })),
+    rest: requireSuccess(startShortRest({ sheet })),
     interruption: "takeDamage",
   });
   return projectAccepted({
@@ -386,7 +386,7 @@ function completeLongRestRestoresHpHitPointDiceAndMaximumProjection(): HpRestHit
     hitPointMaximumReduction: 6,
     spentHitDice: 1,
   });
-  const rested = requireRight(
+  const rested = requireSuccess(
     completeLongRest({
       completion: longRestCompletionForSheet(sheet),
       unitLibrary,
@@ -401,9 +401,9 @@ function completeLongRestRestoresHpHitPointDiceAndMaximumProjection(): HpRestHit
 
 function interruptLongRestBeforeOneHourNoBenefitProjection(): HpRestHitDiceProjection {
   const sheet = woundedWizardSheet("character:hp-rest-long-early");
-  const interrupted = requireRight(
+  const interrupted = requireSuccess(
     interruptLongRest({
-      rest: requireRight(
+      rest: requireSuccess(
         startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
       ),
       unitLibrary,
@@ -427,9 +427,9 @@ function interruptLongRestBeforeOneHourNoBenefitProjection(): HpRestHitDiceProje
 }
 
 function interruptLongRestWithShortRestBenefitsProjection(): HpRestHitDiceProjection {
-  const interrupted = requireRight(
+  const interrupted = requireSuccess(
     interruptLongRest({
-      rest: requireRight(
+      rest: requireSuccess(
         startLongRest({
           sheet: woundedWizardSheet("character:hp-rest-long-short-benefit"),
           timing: { tag: "noPriorLongRest" },
@@ -471,17 +471,17 @@ function initialProjection(): HpRestHitDiceProjection {
 }
 
 function shortRestCompletionForSheet(sheet: CharacterSheet) {
-  const rest = requireRight(startShortRest({ sheet }));
-  return requireRight(
+  const rest = requireSuccess(startShortRest({ sheet }));
+  return requireSuccess(
     finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
   );
 }
 
 function longRestCompletionForSheet(sheet: CharacterSheet) {
-  const rest = requireRight(
+  const rest = requireSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  return requireRight(
+  return requireSuccess(
     finishLongRest({ rest, restedTicks: CHARACTER_SHEET_LONG_REST_BASE_TICKS }),
   );
 }
@@ -546,7 +546,7 @@ function projectFromSheet(input: {
     message: input.message,
     currentHp: Number(characterSheetCurrentHp(input.sheet)),
     hitPointMaximum: Number(
-      requireRight(
+      requireSuccess(
         characterSheetHitPointMaximum({
           sheet: input.sheet,
           unitLibrary,
@@ -563,7 +563,7 @@ function projectFromSheet(input: {
 }
 
 function spentHitDiceTotal(sheet: CharacterSheet): number {
-  return requireRight(characterSheetHitDice(sheet, unitLibrary)).reduce(
+  return requireSuccess(characterSheetHitDice(sheet, unitLibrary)).reduce(
     (total, pool) => total + Number(pool.spent),
     0,
   );
@@ -586,7 +586,7 @@ function sheetFixture(input: {
   readonly temporaryHitPoints?: number;
   readonly spentHitDice?: number;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterId),
       build: input.build,
@@ -649,7 +649,7 @@ function baseBuild(
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -795,10 +795,10 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Result.Result<A, E>): A {
-  if (Result.isSuccess(either)) return either.success;
+function requireSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isSuccess(result)) return result.success;
   throw new Error(
-    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+    `Expected Result success, got ${JSON.stringify(result.failure)}.`,
   );
 }
 

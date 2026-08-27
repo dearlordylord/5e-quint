@@ -10,7 +10,7 @@ import {
 } from "./index.ts";
 import {
   armorClassBuild,
-  requireRight,
+  requireSuccess,
   unitLibrary,
   weaponMasteryBuild,
 } from "./test-support.test-support.ts";
@@ -22,7 +22,7 @@ const unownedClassIssue =
 
 describe("Character Sheet runtime / Weapon Mastery selected references", () => {
   test("projects the selected proficient weapons and Surface choice profile", () => {
-    const projection = requireRight(
+    const projection = requireSuccess(
       characterSheetWeaponMasterySelectedReferenceProjection({
         sheet: freshSheet(
           weaponMasteryBuild({
@@ -90,7 +90,7 @@ describe("Character Sheet runtime / Weapon Mastery selected references", () => {
 function freshSheet(
   build: Parameters<typeof createFreshCharacterSheet>[0]["build"],
 ) {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId("character:weapon-mastery-projection"),
       build,

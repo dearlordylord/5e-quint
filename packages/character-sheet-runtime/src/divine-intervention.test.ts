@@ -18,7 +18,7 @@ import {
   characterSheetSpellSlots,
   completeLongRest,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -104,7 +104,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
   test("casts an action-time Cleric spell through Divine Intervention without slots or Material components", () => {
     const sheet = divineInterventionClericSheet();
 
-    expect(requireRight(characterSheetResources(sheet, unitLibrary))).toEqual(
+    expect(requireSuccess(characterSheetResources(sheet, unitLibrary))).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           unitId: authoredUnitId("cleric_divine_intervention"),
@@ -115,7 +115,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       ]),
     );
 
-    const result = requireRight(
+    const result = requireSuccess(
       castDivineIntervention({
         sheet,
         unitLibrary,
@@ -162,7 +162,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       );
     }
 
-    const rested = requireRight(
+    const rested = requireSuccess(
       completeLongRest({ sheet: result.sheet, unitLibrary }),
     );
     expect(rested.resourceExpenditures).toEqual([]);
@@ -186,7 +186,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
       }),
     ).toBe(5);
 
-    const invocation = requireRight(
+    const invocation = requireSuccess(
       castDivineIntervention({
         sheet: divineInterventionClericSheet(),
         unitLibrary,
@@ -202,7 +202,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
   });
 
   test("admits an action-time Cleric cantrip without a Spell Slot", () => {
-    const invocation = requireRight(
+    const invocation = requireSuccess(
       castDivineIntervention({
         sheet: divineInterventionClericSheet(),
         unitLibrary,
@@ -246,7 +246,7 @@ describe("Character Sheet runtime / Divine Intervention", () => {
   });
 
   test("rejects a sheet without the Divine Intervention feature", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId(
           "character:synthetic-no-divine-intervention",
@@ -283,7 +283,7 @@ const divineInterventionSelectedIdentityActions = {
 >;
 
 function projectDivineInterventionInvocation(): DivineInterventionSelectedIdentityProjection {
-  const result = requireRight(
+  const result = requireSuccess(
     castDivineIntervention({
       sheet: divineInterventionClericSheet(),
       unitLibrary,
@@ -319,7 +319,7 @@ function expectedDivineInterventionProjection(): DivineInterventionSelectedIdent
 }
 
 function divineInterventionClericSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:divine-intervention-cleric-10"),
       build: {

@@ -225,11 +225,11 @@ function projectHitPointMaximum(input: {
   readonly hitPointMaximumReduction?: number;
   readonly replayIndex: number;
 }): HitPointMaximumProjection {
-  const hitPoints = requireRight(
+  const hitPoints = requireSuccess(
     characterBuildHitPoints(input.build, unitLibrary),
   );
   const hitPointMaximumReduction = input.hitPointMaximumReduction ?? 0;
-  const freshSheet = requireRight(
+  const freshSheet = requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(`character:hp-maximum:${input.outcome}`),
       build: input.build,
@@ -243,7 +243,7 @@ function projectHitPointMaximum(input: {
   const sheet =
     hitPointMaximumReduction === 0
       ? freshSheet
-      : requireRight(
+      : requireSuccess(
           rebuildCharacterSheet({
             characterId: freshSheet.characterId,
             build: freshSheet.build,
@@ -260,7 +260,7 @@ function projectHitPointMaximum(input: {
     outcome: input.outcome,
     normalHitPointMaximum: Number(hitPoints.maximum),
     effectiveHitPointMaximum: Number(
-      requireRight(characterSheetHitPointMaximum({ sheet, unitLibrary })),
+      requireSuccess(characterSheetHitPointMaximum({ sheet, unitLibrary })),
     ),
     hitDiceTotal: hitPoints.hitDice.reduce(
       (total, pool) => total + Number(pool.total),
@@ -290,7 +290,7 @@ function buildFixture(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -401,10 +401,10 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Result.Result<A, E>): A {
-  if (Result.isSuccess(either)) return either.success;
+function requireSuccess<A, E>(result: Result.Result<A, E>): A {
+  if (Result.isSuccess(result)) return result.success;
   throw new Error(
-    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+    `Expected Result success, got ${JSON.stringify(result.failure)}.`,
   );
 }
 

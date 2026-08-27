@@ -13,7 +13,7 @@ import {
   castMislead,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -88,7 +88,7 @@ describe("Character Sheet runtime / Mislead", () => {
   });
 
   it("spends a prepared level-5 spell slot and returns the invisible-double contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castMislead({
         sheet: misleadWizardSheet({ preparedSpells: ["mislead"], slots: 1 }),
         unitLibrary,
@@ -182,7 +182,7 @@ describe("Character Sheet runtime / Mislead", () => {
 
 const misleadSelectedIdentityActions = {
   doCastMislead: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castMislead({
         sheet: misleadWizardSheet({ preparedSpells: ["mislead"], slots: 1 }),
         unitLibrary,
@@ -238,7 +238,7 @@ function misleadWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:mislead-wizard-9"),
       build: {

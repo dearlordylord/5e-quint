@@ -375,7 +375,7 @@ function initialProjection(): ClassFeatureSelectedIdentityProjection {
 }
 
 function bardJackOfAllTradesProjection(): ClassFeatureSelectedIdentityProjection {
-  const result = requireRight(
+  const result = requireSuccess(
     characterSheetAbilityCheckProficiencyBonus({
       build: classBuild({
         startingClass: authoredUnitId("class_bard"),
@@ -437,7 +437,7 @@ function clericLifeDomainSpellsProjection(): ClassFeatureSelectedIdentityProject
 }
 
 function druidCircleLandSpellsProjection(): ClassFeatureSelectedIdentityProjection {
-  const sheet = requireRight(
+  const sheet = requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId("character:b4-druid-circle-land"),
       build: druidCircleLandBuild(),
@@ -452,7 +452,7 @@ function druidCircleLandSpellsProjection(): ClassFeatureSelectedIdentityProjecti
     }),
   );
   const access = requireDefined(
-    requireRight(
+    requireSuccess(
       characterSheetDruidCircleLandPreparedSpellAccess({
         sheet,
         unitLibrary,
@@ -691,7 +691,7 @@ function classBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -852,18 +852,18 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Result.Result<T, E>): T {
+function requireSuccess<T, E>(result: Result.Result<T, E>): T {
   if (Result.isSuccess(result)) return result.success;
-  const left = result.failure;
+  const failure = result.failure;
   if (
-    left !== null &&
-    typeof left === "object" &&
-    "message" in left &&
-    typeof left.message === "string"
+    failure !== null &&
+    typeof failure === "object" &&
+    "message" in failure &&
+    typeof failure.message === "string"
   ) {
-    throw new Error(left.message);
+    throw new Error(failure.message);
   }
-  throw new Error(JSON.stringify(left));
+  throw new Error(JSON.stringify(failure));
 }
 
 function requireDefined<T>(value: T, message: string): NonNullable<T> {

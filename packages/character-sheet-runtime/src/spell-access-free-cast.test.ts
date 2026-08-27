@@ -21,7 +21,7 @@ import {
   completeLongRest,
   completeShortRest,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   unitLibrary,
   wizardBuild,
 } from "./test-support.test-support.ts";
@@ -45,7 +45,7 @@ function magicInitiateWizardBuild(): CharacterBuild {
 }
 
 function magicInitiateSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:synthetic-magic-initiate"),
       build: magicInitiateWizardBuild(),
@@ -129,7 +129,7 @@ describe("Character Sheet Spell Access free casts", () => {
   test("spends exactly one source-and-spell free cast without spending a Spell Slot", () => {
     const sheet = magicInitiateSheet();
     const slotsBefore = characterSheetSpellSlotSourceState(sheet);
-    const spent = requireRight(
+    const spent = requireSuccess(
       spendCharacterSheetSpellAccessFreeCast({
         sheet,
         unitLibrary,
@@ -163,7 +163,7 @@ describe("Character Sheet Spell Access free casts", () => {
   });
 
   test("Short Rest preserves and Long Rest restores a spent free cast", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       spendCharacterSheetSpellAccessFreeCast({
         sheet: magicInitiateSheet(),
         unitLibrary,
@@ -173,18 +173,18 @@ describe("Character Sheet Spell Access free casts", () => {
         },
       }),
     );
-    const shortRested = requireRight(
+    const shortRested = requireSuccess(
       completeShortRest({ sheet: spent, unitLibrary }),
     );
     expect(shortRested.resourceExpenditures).toEqual(
       spent.resourceExpenditures,
     );
-    const longRested = requireRight(
+    const longRested = requireSuccess(
       completeLongRest({ sheet: shortRested, unitLibrary }),
     );
     expect(longRested.resourceExpenditures).toEqual([]);
     expect(
-      requireRight(characterSheetResources(longRested, unitLibrary)),
+      requireSuccess(characterSheetResources(longRested, unitLibrary)),
     ).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -199,7 +199,7 @@ describe("Character Sheet Spell Access free casts", () => {
   });
 
   test("stored sheets round-trip the mandatory access and reject invalid access or expenditure keys", () => {
-    const spent = requireRight(
+    const spent = requireSuccess(
       spendCharacterSheetSpellAccessFreeCast({
         sheet: magicInitiateSheet(),
         unitLibrary,
@@ -210,7 +210,7 @@ describe("Character Sheet Spell Access free casts", () => {
       }),
     );
     expect(
-      requireRight(
+      requireSuccess(
         parseCharacterSheet(JSON.parse(JSON.stringify(spent)), unitLibrary),
       ),
     ).toEqual(spent);

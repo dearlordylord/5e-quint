@@ -42,7 +42,7 @@ import {
   resourceCount,
   Hp,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   spellbookRitualSheet,
   spellSlotLevel,
   storedAvailableSheetInput,
@@ -62,7 +62,7 @@ if (statBlockCatalogResult.tag !== "ok") {
 const statBlockCatalog = statBlockCatalogResult.catalog;
 
 function retainedCompanionId(value: string) {
-  return requireRight(parseCharacterSheetRetainedCompanionId(value));
+  return requireSuccess(parseCharacterSheetRetainedCompanionId(value));
 }
 
 function retainedCompanionInput(
@@ -108,7 +108,7 @@ function retainedCompanionProtocolInput(
 
 describe("Character Sheet runtime / companions", () => {
   test("replaces the companion slot as one typed sheet operation", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:replace-companion"),
         build,
@@ -120,13 +120,13 @@ describe("Character Sheet runtime / companions", () => {
     const companion = retainedCompanionInput();
 
     expect(
-      requireRight(replaceCharacterSheetCompanion({ sheet, companion }))
+      requireSuccess(replaceCharacterSheetCompanion({ sheet, companion }))
         .companion,
     ).toEqual(companion);
   });
 
   test("retains the empty durable companion state", () => {
-    expect(requireRight(companionFromInput({ tag: "none" }))).toEqual({
+    expect(requireSuccess(companionFromInput({ tag: "none" }))).toEqual({
       tag: "none",
     });
     expect(companionAfterLongRest({ tag: "none" })).toEqual({ tag: "none" });
@@ -151,7 +151,7 @@ describe("Character Sheet runtime / companions", () => {
     });
     expect(
       companionFromInput(
-        requireRight(
+        requireSuccess(
           parseStoredCharacterSheetCompanion(
             storedCompanion({
               manifestation: storedManifestation({
@@ -165,7 +165,7 @@ describe("Character Sheet runtime / companions", () => {
   });
 
   test("creates and parses an empty durable companion slot", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:no-companion"),
         build,
@@ -176,15 +176,15 @@ describe("Character Sheet runtime / companions", () => {
     );
 
     expect(characterSheetCompanion(sheet)).toEqual({ tag: "none" });
-    expect(requireRight(parseCharacterSheet(sheet, unitLibrary))).toMatchObject(
-      {
-        companion: { tag: "none" },
-      },
-    );
+    expect(
+      requireSuccess(parseCharacterSheet(sheet, unitLibrary)),
+    ).toMatchObject({
+      companion: { tag: "none" },
+    });
   });
 
   test("retains one familiar-like companion with resolved form proof", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:retained-companion"),
         build,
@@ -214,7 +214,7 @@ describe("Character Sheet runtime / companions", () => {
       spellbook: ["find_familiar"],
     });
 
-    const retained = requireRight(
+    const retained = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -248,7 +248,7 @@ describe("Character Sheet runtime / companions", () => {
       preparedSpells: ["find_familiar"],
     });
 
-    const retained = requireRight(
+    const retained = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -316,7 +316,7 @@ describe("Character Sheet runtime / companions", () => {
         },
       },
     };
-    const bookSheet = requireRight(
+    const bookSheet = requireSuccess(
       parseCharacterSheet(
         {
           ...storedAvailableSheetInput({
@@ -348,7 +348,7 @@ describe("Character Sheet runtime / companions", () => {
   });
 
   test("creates a Pact of the Chain special-form companion from invocation access", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:pact-chain-companion"),
         build: {
@@ -377,7 +377,7 @@ describe("Character Sheet runtime / companions", () => {
       }),
     );
 
-    const retained = requireRight(
+    const retained = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -410,7 +410,7 @@ describe("Character Sheet runtime / companions", () => {
   });
 
   test("creates a Wild Companion and spends one Wild Shape use", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:wild-companion-create"),
         build: druidCircleLandBuild({ druidLevel: 2 }),
@@ -423,7 +423,7 @@ describe("Character Sheet runtime / companions", () => {
       }),
     );
 
-    const retained = requireRight(
+    const retained = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -442,7 +442,7 @@ describe("Character Sheet runtime / companions", () => {
     );
 
     expect(
-      requireRight(characterSheetResources(retained, unitLibrary)),
+      requireSuccess(characterSheetResources(retained, unitLibrary)),
     ).toContainEqual(
       expect.objectContaining({
         tag: "useCountResource",
@@ -457,7 +457,7 @@ describe("Character Sheet runtime / companions", () => {
       characterIdText: "character:companion-recast",
       spellbook: ["find_familiar"],
     });
-    const first = requireRight(
+    const first = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -471,7 +471,7 @@ describe("Character Sheet runtime / companions", () => {
         creatureTypeOverrideChoiceId: "fey",
       }),
     );
-    const recast = requireRight(
+    const recast = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet: first,
         unitLibrary,
@@ -503,7 +503,7 @@ describe("Character Sheet runtime / companions", () => {
       characterIdText: "character:companion-identity-replacement",
       spellbook: ["find_familiar"],
     });
-    const occupied = requireRight(
+    const occupied = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -545,7 +545,7 @@ describe("Character Sheet runtime / companions", () => {
       characterIdText: "character:companion-disappeared-recast",
       spellbook: ["find_familiar"],
     });
-    const retained = requireRight(
+    const retained = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -563,7 +563,7 @@ describe("Character Sheet runtime / companions", () => {
     if (companion.tag !== "retainedOneAtATime") {
       throw new Error("Expected a retained companion test fixture.");
     }
-    const disappeared = requireRight(
+    const disappeared = requireSuccess(
       replaceCharacterSheetCompanion({
         sheet: retained,
         companion: {
@@ -583,7 +583,7 @@ describe("Character Sheet runtime / companions", () => {
       }),
     );
 
-    const recast = requireRight(
+    const recast = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet: disappeared,
         unitLibrary,
@@ -605,7 +605,7 @@ describe("Character Sheet runtime / companions", () => {
   });
 
   test("rejects Wild Companion creation after every Wild Shape use is spent", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:spent-wild-companion"),
         build: druidCircleLandBuild({ druidLevel: 2 }),
@@ -654,7 +654,7 @@ describe("Character Sheet runtime / companions", () => {
     {
       name: "a spell-slot cast by a non-spellcaster",
       sheet: () =>
-        requireRight(
+        requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId(
               "character:non-spellcaster-companion",
@@ -729,7 +729,7 @@ describe("Character Sheet runtime / companions", () => {
     {
       name: "invocation access without Pact of the Chain",
       sheet: () =>
-        requireRight(
+        requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:no-pact-chain"),
             build,
@@ -753,7 +753,7 @@ describe("Character Sheet runtime / companions", () => {
     {
       name: "an unowned class feature",
       sheet: () =>
-        requireRight(
+        requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:no-wild-companion"),
             build,
@@ -778,7 +778,7 @@ describe("Character Sheet runtime / companions", () => {
     {
       name: "an owned but unsupported class feature",
       sheet: () =>
-        requireRight(
+        requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId(
               "character:unsupported-companion-feature",
@@ -808,7 +808,7 @@ describe("Character Sheet runtime / companions", () => {
     {
       name: "a class-feature spend outside its options",
       sheet: () =>
-        requireRight(
+        requireSuccess(
           rebuildCharacterSheetFixture({
             characterId: characterSheetId("character:bad-wild-companion-spend"),
             build: druidCircleLandBuild({ druidLevel: 2 }),
@@ -1086,7 +1086,7 @@ describe("Character Sheet runtime / companions", () => {
       failure: { message: "Retained companion current HP must be positive." },
     });
 
-    const retained = requireRight(
+    const retained = requireSuccess(
       createRetainedFamiliarLikeCompanion({
         sheet,
         unitLibrary,
@@ -1205,7 +1205,7 @@ describe("Character Sheet runtime / companions", () => {
   );
 
   test("rejects a stored retained companion protocol with an unknown tag", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:unknown-companion-protocol"),
         build,
@@ -1240,7 +1240,9 @@ describe("Character Sheet runtime / companions", () => {
 
   test("parses only positive retained companion current Hit Points", () => {
     expect(
-      requireRight(parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(2))),
+      requireSuccess(
+        parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(2)),
+      ),
     ).toEqual(Hp(2));
     expect(
       parseCharacterSheetRetainedCompanionCurrentHitPoints(Hp(0)),
@@ -1285,7 +1287,7 @@ describe("Character Sheet runtime / companions", () => {
         storedCompanion({ manifestation, protocolTag }),
       );
 
-      expect(requireRight(result)).toMatchObject({
+      expect(requireSuccess(result)).toMatchObject({
         tag: "retainedOneAtATime",
         companion: { manifestation },
       });
@@ -1471,7 +1473,7 @@ describe("Character Sheet runtime / companions", () => {
   );
 
   test("removes owner-long-rest retained companions on Long Rest", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:wild-companion"),
         build,
@@ -1484,13 +1486,13 @@ describe("Character Sheet runtime / companions", () => {
       }),
     );
 
-    const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+    const rested = requireSuccess(completeLongRest({ sheet, unitLibrary }));
 
     expect(characterSheetCompanion(rested)).toEqual({ tag: "none" });
   });
 
   test("leaves a surviving retained companion's Hit Points and Temporary Hit Points unchanged on Long Rest (A46)", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:familiar-rest-temp-hp"),
         build,
@@ -1506,7 +1508,7 @@ describe("Character Sheet runtime / companions", () => {
       }),
     );
 
-    const rested = requireRight(completeLongRest({ sheet, unitLibrary }));
+    const rested = requireSuccess(completeLongRest({ sheet, unitLibrary }));
     const companion = characterSheetCompanion(rested);
 
     expect(companion).toMatchObject({
@@ -1610,7 +1612,7 @@ function unitLibraryReplacing(
 }
 
 function pactChainSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:pact-chain-helper"),
       build: {
@@ -1639,7 +1641,7 @@ function pactChainSheet() {
 }
 
 function druidWildCompanionSheet() {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:wild-companion-helper"),
       build: druidCircleLandBuild({ druidLevel: 2 }),

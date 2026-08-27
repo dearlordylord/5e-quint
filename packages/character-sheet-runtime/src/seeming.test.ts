@@ -14,7 +14,7 @@ import {
   characterSheetId,
   characterSheetSeemingTargetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -113,7 +113,7 @@ describe("Character Sheet runtime / Seeming", () => {
         apparentWeightChange: "unchanged",
       },
     );
-    const result = requireRight(
+    const result = requireSuccess(
       castSeeming({
         sheet: seemingWizardSheet({ preparedSpells: ["seeming"], slots: 1 }),
         unitLibrary,
@@ -234,7 +234,7 @@ describe("Character Sheet runtime / Seeming", () => {
 
 const seemingSelectedIdentityActions = {
   doCastSeeming: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castSeeming({
         sheet: seemingWizardSheet({ preparedSpells: ["seeming"], slots: 1 }),
         unitLibrary,
@@ -320,7 +320,7 @@ function seemingWillingTarget(
   },
 ): CharacterSheetSeemingWillingTarget {
   return {
-    targetId: requireRight(characterSheetSeemingTargetId(targetId)),
+    targetId: requireSuccess(characterSheetSeemingTargetId(targetId)),
     willingness: "willing",
     visibleByCaster: true,
     withinRangeFeet: 30,
@@ -337,7 +337,7 @@ function seemingUnwillingTarget(
   },
 ): CharacterSheetSeemingUnwillingTarget {
   return {
-    targetId: requireRight(characterSheetSeemingTargetId(targetId)),
+    targetId: requireSuccess(characterSheetSeemingTargetId(targetId)),
     willingness: "unwilling",
     visibleByCaster: true,
     withinRangeFeet: 30,
@@ -363,7 +363,7 @@ function seemingWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:seeming-wizard-9"),
       build: {

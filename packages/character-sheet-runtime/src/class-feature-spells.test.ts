@@ -10,7 +10,7 @@ import {
   characterSheetId,
   parseCharacterSheet,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   storedAvailableSheetInput,
   subclassPreparedSpellAccessBlocksBookOfShadowsDuplicateTestName,
   subclassPreparedSpellAccessProgressionTestName,
@@ -19,7 +19,7 @@ import {
 
 describe("Character Sheet runtime / class feature prepared spells", () => {
   test("projects retained class-feature selected references through the public route", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:class-feature-references"),
         build: armorClassBuild({

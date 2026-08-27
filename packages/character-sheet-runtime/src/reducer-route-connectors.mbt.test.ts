@@ -982,7 +982,7 @@ function projectPublicAbilityCheckRoute(input: {
   readonly expectedProjection: CharacterSheetAbilityCheckProficiencyBonus;
 }): RouteAppender {
   return (route) => {
-    const projectedRoute = requireRight(
+    const projectedRoute = requireSuccess(
       characterSheetAbilityCheckProficiencyBonusProjection({
         build: input.build,
         unitLibrary,
@@ -1005,7 +1005,7 @@ function projectHitPointMaximumRoute(input: {
 }): RouteAppender {
   return (route) => {
     const hitPointMaximumReduction = input.hitPointMaximumReduction ?? 0;
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:route-hit-point-maximum"),
         build: input.build,
@@ -1015,7 +1015,7 @@ function projectHitPointMaximumRoute(input: {
         unitLibrary,
       }),
     );
-    const projection = requireRight(
+    const projection = requireSuccess(
       characterSheetHitPointMaximumProjection({ sheet, unitLibrary }),
     );
     expect(Number(projection.normalHitPointMaximum)).toBe(
@@ -1065,7 +1065,7 @@ function baseBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -1092,7 +1092,7 @@ function projectPublicArmorClassRoute(input: {
   readonly expectedArmorClass: number;
 }): RouteAppender {
   return (route) => {
-    const projected = requireRight(
+    const projected = requireSuccess(
       characterSheetArmorClassProjection({
         build: input.build,
         unitLibrary,
@@ -1118,7 +1118,7 @@ function armorClassBuild(input: {
       ? undefined
       : characterEquipmentItemId({
           slot: "armor",
-          unitId: requireRight(
+          unitId: requireSuccess(
             characterEquipmentItemUnitId(authoredUnitId(input.armor)),
           ),
         });
@@ -1126,7 +1126,7 @@ function armorClassBuild(input: {
     input.shield === true
       ? characterEquipmentItemId({
           slot: "shield",
-          unitId: requireRight(
+          unitId: requireSuccess(
             characterEquipmentItemUnitId(authoredUnitId("equipment_shield")),
           ),
         })
@@ -1138,7 +1138,7 @@ function armorClassBuild(input: {
         ? {}
         : { advancements: input.advancements }),
     }),
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: input.dexterityScore ?? 14,
@@ -1183,7 +1183,7 @@ function projectPublicClassFeatureSelectedReferenceRoute(input: {
   readonly druidCircleLand?: CharacterSheetDruidCircleLand;
 }): RouteAppender {
   return (route) => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       createFreshCharacterSheet({
         characterId: characterSheetId(
           `character:route-${input.expectedClassFeatureUnitId}`,
@@ -1288,7 +1288,7 @@ function spendHealingResourceRoute(
   route: readonly CharacterSheetRouteEvent[],
 ): readonly CharacterSheetRouteEvent[] {
   const sheets = layOnHandsRouteSheets();
-  const projected = requireRight(
+  const projected = requireSuccess(
     applyLayOnHandsWithRoute({
       source: sheets.source,
       target: sheets.target,
@@ -1300,7 +1300,7 @@ function spendHealingResourceRoute(
   expect(currentHp(projected.source)).toBe(12);
   expect(currentHp(projected.target)).toBe(5);
   expect(projected.target.conditions).not.toContain("poisoned");
-  const pool = requireRight(
+  const pool = requireSuccess(
     characterSheetResources(projected.source, unitLibrary),
   ).find((resource) => resource.tag === "layOnHandsHealingPool");
   expect(pool).toMatchObject({ count: 10, expended: 7 });
@@ -1312,7 +1312,7 @@ function layOnHandsRouteSheets(): {
   readonly target: CharacterSheet;
 } {
   return {
-    source: requireRight(
+    source: requireSuccess(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:route-lay-on-hands-source"),
         build: baseBuild({
@@ -1326,7 +1326,7 @@ function layOnHandsRouteSheets(): {
         unitLibrary,
       }),
     ),
-    target: requireRight(
+    target: requireSuccess(
       createFreshCharacterSheet({
         characterId: characterSheetId("character:route-lay-on-hands-target"),
         build: baseBuild({ startingClass: "class_fighter" }),
@@ -1353,8 +1353,8 @@ function recoverSecondLevelSpellSlotRoute(
     pactSlotsExpended: 1,
     arcaneRecoveryUsedSinceLongRest: false,
   });
-  const rest = requireRight(startShortRest({ sheet }));
-  const completion = requireRight(
+  const rest = requireSuccess(startShortRest({ sheet }));
+  const completion = requireSuccess(
     finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
   );
   const projected = completeShortRestArcaneRecoveryWithRoute({
@@ -1387,10 +1387,10 @@ function resetArcaneRecoveryOnLongRestRoute(
     pactSlotsExpended: 1,
     arcaneRecoveryUsedSinceLongRest: true,
   });
-  const rest = requireRight(
+  const rest = requireSuccess(
     startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
   );
-  const completion = requireRight(
+  const completion = requireSuccess(
     finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
   );
   const projected = completeLongRestArcaneRecoveryResetWithRoute({
@@ -1415,7 +1415,7 @@ function arcaneRecoverySheet(input: {
   readonly pactSlotsExpended: number;
   readonly arcaneRecoveryUsedSinceLongRest: boolean;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId("character:route-arcane-recovery"),
       build: arcaneRecoveryBuildWithPactSlots(),
@@ -1518,8 +1518,8 @@ function rejectPactSlotArcaneRecoveryRoute(
     pactSlotsExpended: 1,
     arcaneRecoveryUsedSinceLongRest: false,
   });
-  const rest = requireRight(startShortRest({ sheet }));
-  const completion = requireRight(
+  const rest = requireSuccess(startShortRest({ sheet }));
+  const completion = requireSuccess(
     finishShortRest({ rest, restedTicks: CHARACTER_SHEET_SHORT_REST_TICKS }),
   );
   const projected = completeShortRestArcaneRecoveryWithRoute({
@@ -1748,7 +1748,7 @@ function spellbookRitualSheet(input: {
   readonly preparedSpells?: readonly string[];
   readonly startingClass?: string;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(input.characterIdText),
       build: {
@@ -1789,7 +1789,7 @@ function projectPublicWeaponMasterySelectedReferenceRoute(input: {
   readonly expectedLongRestChangeCount: number;
 }): RouteAppender {
   return (route) => {
-    const projection = requireRight(
+    const projection = requireSuccess(
       characterSheetWeaponMasterySelectedReferenceProjection({
         sheet: weaponMasteryRouteSheet(input),
         unitLibrary,
@@ -1810,10 +1810,10 @@ function completePublicWeaponMasteryReselectionRoute(input: {
 }): RouteAppender {
   return (route) => {
     const sheet = weaponMasteryRouteSheet(input);
-    const rest = requireRight(
+    const rest = requireSuccess(
       startLongRest({ sheet, timing: { tag: "noPriorLongRest" } }),
     );
-    const completion = requireRight(
+    const completion = requireSuccess(
       finishLongRest({ rest, restedTicks: rest.requiredRestTicks }),
     );
     const reselection = {
@@ -1829,7 +1829,7 @@ function completePublicWeaponMasteryReselectionRoute(input: {
     });
     expect(projected.tag).toBe(input.expectedTag);
     if (projected.tag === "accepted") {
-      const projection = requireRight(
+      const projection = requireSuccess(
         characterSheetWeaponMasterySelectedReferenceProjection({
           sheet: projected.sheet,
           unitLibrary,
@@ -1849,7 +1849,7 @@ function weaponMasteryRouteSheet(input: {
   readonly featureUnitId: string;
   readonly selectedWeaponUnitIds: WeaponMasteryRouteWeaponUnitIds;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(`character:route-${input.featureUnitId}`),
       build: {
@@ -2086,18 +2086,18 @@ function numberFromEnv(name: string, fallback: number): number {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
-function requireRight<T, E>(result: Result.Result<T, E>): T {
+function requireSuccess<T, E>(result: Result.Result<T, E>): T {
   if (Result.isSuccess(result)) return result.success;
-  const left = result.failure;
+  const failure = result.failure;
   if (
-    left !== null &&
-    typeof left === "object" &&
-    "message" in left &&
-    typeof left.message === "string"
+    failure !== null &&
+    typeof failure === "object" &&
+    "message" in failure &&
+    typeof failure.message === "string"
   ) {
-    throw new Error(left.message);
+    throw new Error(failure.message);
   }
-  throw new Error(JSON.stringify(left));
+  throw new Error(JSON.stringify(failure));
 }
 
 function normalizeCharacterSheetRouteQuintState(raw: unknown): RouteProjection {

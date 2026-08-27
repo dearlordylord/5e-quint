@@ -202,7 +202,7 @@ function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
   const caster = prayerCaster();
   const recipient = woundedFighter("character:prayer-recipient");
   const healingRolls = [DieRollResult(5), DieRollResult(6)] as const;
-  const result = requireRight(
+  const result = requireSuccess(
     applyCharacterSheetSpellRestBenefit({
       caster,
       spellId: authoredUnitId("prayer_of_healing"),
@@ -229,7 +229,7 @@ function projectPrayerOfHealingApplication(): SpellRestBenefitProjection {
     outcome: "applied",
     slotSpent: spellSlotExpended(result.caster, 2) === 1,
     shortRestBenefitApplied:
-      requireRight(characterSheetHitDice(recipientAfter, unitLibrary))[0]
+      requireSuccess(characterSheetHitDice(recipientAfter, unitLibrary))[0]
         ?.spent === 1,
     healingApplied:
       characterSheetCurrentHp(recipientAfter) >
@@ -272,7 +272,7 @@ function projectPrayerOfHealingRecipientLockoutRejection(): SpellRestBenefitProj
 }
 
 function projectLockedRecipient(): CharacterSheet {
-  const first = requireRight(
+  const first = requireSuccess(
     applyCharacterSheetSpellRestBenefit({
       caster: prayerCaster(),
       spellId: authoredUnitId("prayer_of_healing"),
@@ -291,7 +291,7 @@ function projectLockedRecipient(): CharacterSheet {
 }
 
 function prayerCaster(): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId("character:prayer-caster"),
       build: prayerOfHealingClericBuild(),
@@ -305,7 +305,7 @@ function prayerCaster(): CharacterSheet {
 }
 
 function woundedFighter(characterId: string): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     createFreshCharacterSheet({
       characterId: characterSheetId(characterId),
       build: characterBuild({ startingClass: "class_fighter" }),
@@ -331,7 +331,7 @@ function characterBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -507,18 +507,18 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<T, E>(result: Result.Result<T, E>): T {
+function requireSuccess<T, E>(result: Result.Result<T, E>): T {
   if (Result.isSuccess(result)) return result.success;
-  const left = result.failure;
+  const failure = result.failure;
   if (
-    left !== null &&
-    typeof left === "object" &&
-    "message" in left &&
-    typeof left.message === "string"
+    failure !== null &&
+    typeof failure === "object" &&
+    "message" in failure &&
+    typeof failure.message === "string"
   ) {
-    throw new Error(left.message);
+    throw new Error(failure.message);
   }
-  throw new Error(JSON.stringify(left));
+  throw new Error(JSON.stringify(failure));
 }
 
 function fail(message: string): never {

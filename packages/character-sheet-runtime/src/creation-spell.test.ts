@@ -14,7 +14,7 @@ import {
   characterSheetCreationObjectId,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -86,7 +86,7 @@ describe("Character Sheet runtime / Creation", () => {
   });
 
   test("Creation spends a level-5 prepared spell slot and returns a created-object lifecycle contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castCreation({
         sheet: creationWizardSheet({
           preparedSpells: ["creation"],
@@ -155,7 +155,7 @@ describe("Character Sheet runtime / Creation", () => {
 
 const creationSelectedIdentityActions = {
   doCastCreation: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castCreation({
         sheet: creationWizardSheet({
           preparedSpells: ["creation"],
@@ -187,7 +187,7 @@ const creationSelectedIdentityActions = {
 >;
 
 const mixedGemAndVegetableObject = {
-  objectId: requireRight(
+  objectId: requireSuccess(
     characterSheetCreationObjectId("object:shadow-gem-box"),
   ),
   materials: ["vegetable_matter", "gems"],
@@ -214,7 +214,7 @@ function creationWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }) {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:creation-wizard-9"),
       build: {

@@ -19,7 +19,7 @@ import {
   rebuildCharacterSheetFixture,
   druidLanguageBuild,
   parseCharacterSheet,
-  requireRight,
+  requireSuccess,
   rogueLanguageBuild,
   sorcererFontOfMagicBuild,
   sorcererMetamagicKnownOptionsGateTestName,
@@ -42,7 +42,7 @@ export const sorcererMetamagicKnownOptionsGateRuntimeTestName =
 
 describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   test("projects Knocked Out HP and treats zero healing as an identity operation", () => {
-    const knockedOut = requireRight(
+    const knockedOut = requireSuccess(
       characterSheetHitPoints({
         currentHp: Hp(1),
         tempHp: Hp(0),
@@ -52,7 +52,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
     expect(knockedOut).toEqual({ tag: "knockedOut", tempHp: Hp(0) });
     expect(characterSheetHitPointsCurrentHp(knockedOut)).toBe(Hp(1));
 
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:synthetic-zero-healing"),
         build,
@@ -62,7 +62,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       }),
     );
     expect(
-      requireRight(
+      requireSuccess(
         recoverCharacterSheetHitPoints({
           sheet,
           unitLibrary,
@@ -75,7 +75,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("retains nondefault stored sheet state", () => {
-    const parsed = requireRight(
+    const parsed = requireSuccess(
       parseCharacterSheet(
         {
           ...storedAvailableSheetInput({
@@ -120,7 +120,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   ] as const)(
     "retains $expectedTag Hit Point state through full sheet parsing",
     ({ characterId, hitPoints, expectedTag }) => {
-      const parsed = requireRight(
+      const parsed = requireSuccess(
         parseCharacterSheet(
           {
             ...storedAvailableSheetInput({ characterId, build }),
@@ -300,7 +300,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       });
       expect(characterSheetHitPointMaximum(sheet.success)).toBe(8);
       expect(
-        requireRight(
+        requireSuccess(
           characterSheetNormalHitPointMaximum({
             sheet: sheet.success,
             unitLibrary,
@@ -451,7 +451,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.originLanguages).toEqual([
       "Common",
       "Dwarvish",
@@ -475,7 +475,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.originLanguages).toEqual([
       "Common",
       "Dwarvish",
@@ -496,7 +496,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   });
 
   test("creates fresh sheets without merging class-feature languages into origin languages", () => {
-    const sheet = requireRight(
+    const sheet = requireSuccess(
       rebuildCharacterSheetFixture({
         characterId: characterSheetId("character:rogue-language-sheet"),
         build: rogueLanguageBuild("Elvish"),
@@ -750,7 +750,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.features).toEqual(
       expect.arrayContaining([
         {
@@ -793,7 +793,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
       unitLibrary,
     );
 
-    const parsed = requireRight(sheet);
+    const parsed = requireSuccess(sheet);
     expect(parsed.build.features).toEqual(
       expect.arrayContaining([
         {
@@ -808,7 +808,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         },
       ]),
     );
-    const metamagicFacts = requireRight(
+    const metamagicFacts = requireSuccess(
       characterBuildSorcererMetamagicFacts({
         build: parsed.build,
         unitLibrary,

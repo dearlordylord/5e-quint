@@ -15,7 +15,7 @@ import {
   characterSheetHitPointMaximum,
   characterSheetId,
   rebuildCharacterSheetFixture,
-  requireRight,
+  requireSuccess,
   spellSlotLevel,
   unitLibrary,
 } from "./test-support.test-support.ts";
@@ -99,7 +99,7 @@ describe("Character Sheet runtime / Arcane Hand", () => {
       slots: 1,
     });
     const casterHitPointMaximum = characterSheetHitPointMaximum(sheet);
-    const result = requireRight(
+    const result = requireSuccess(
       castArcaneHand({
         sheet,
         unitLibrary,
@@ -216,7 +216,7 @@ describe("Character Sheet runtime / Arcane Hand", () => {
 
 const arcaneHandSelectedIdentityActions = {
   doCastArcaneHand: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castArcaneHand({
         sheet: arcaneHandWizardSheet({
           preparedSpells: ["arcane_hand"],
@@ -257,7 +257,7 @@ const arcaneHandSelectedIdentityActions = {
 >;
 
 const arcaneHandSpace = {
-  objectId: requireRight(
+  objectId: requireSuccess(
     characterSheetArcaneHandObjectId("object:arcane-hand"),
   ),
   unoccupiedSpaceVisibleWithinRange: true,
@@ -295,7 +295,7 @@ function arcaneHandWizardSheet(input: {
   readonly preparedSpells: readonly string[];
   readonly slots: number;
 }): CharacterSheet {
-  return requireRight(
+  return requireSuccess(
     rebuildCharacterSheetFixture({
       characterId: characterSheetId("character:arcane-hand-wizard-9"),
       build: {

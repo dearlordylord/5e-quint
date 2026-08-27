@@ -105,7 +105,7 @@ describe("Character Sheet runtime / Wall of Stone", () => {
   });
 
   test("Wall of Stone spends a level-5 prepared spell slot and returns a table-facing wall contract", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castWallOfStone({
         sheet: wallOfStoneWizardSheet({
           preparedSpells: ["wall_of_stone"],
@@ -164,7 +164,7 @@ describe("Character Sheet runtime / Wall of Stone", () => {
   });
 
   test("Wall of Stone accepts the thin panel facts", () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castWallOfStone({
         sheet: wallOfStoneWizardSheet({
           preparedSpells: ["wall_of_stone"],
@@ -224,7 +224,7 @@ describe("Character Sheet runtime / Wall of Stone", () => {
 
 const wallOfStoneSelectedIdentityActions = {
   doCastWallOfStone: () => {
-    const result = requireRight(
+    const result = requireSuccess(
       castWallOfStone({
         sheet: wallOfStoneWizardSheet({
           preparedSpells: ["wall_of_stone"],
@@ -266,7 +266,7 @@ const wallOfStoneSelectedIdentityActions = {
 >;
 
 const wallOfStonePlacement = {
-  wallId: requireRight(characterSheetWallOfStoneWallId("wall:stone")),
+  wallId: requireSuccess(characterSheetWallOfStoneWallId("wall:stone")),
   pointWithinRange: true,
   geometry: "table_witnessed",
   mergesWithExistingStone: true,
@@ -383,7 +383,7 @@ function armorClassBuild(input: {
     originLanguages: ["Common", "Dwarvish", "Goblin"],
     classFeatureLanguages: [],
     alignment: { order: "lawful", morality: "good" },
-    abilityScores: requireRight(
+    abilityScores: requireSuccess(
       abilityScoreAssignment({
         str: 13,
         dex: 14,
@@ -413,10 +413,10 @@ const unitLibrary = minimalUnitCatalog([
   decodeUnitRecordSync(wizardScholarInput),
 ]);
 
-function requireRight<R, L>(result: Result.Result<R, L>): R {
+function requireSuccess<R, L>(result: Result.Result<R, L>): R {
   if (Result.isSuccess(result)) return result.success;
   throw new Error(
-    `Expected Right, received Left: ${JSON.stringify(result.failure)}`,
+    `Expected Result success, received failure: ${JSON.stringify(result.failure)}`,
   );
 }
 
