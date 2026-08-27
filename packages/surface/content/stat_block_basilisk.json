@@ -1,0 +1,154 @@
+{
+  "challengeRating": 3,
+  "id": "stat_block_basilisk",
+  "kind": "statBlock",
+  "name": "Basilisk",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-A-B.md:519-546"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 7,
+      "con": 15,
+      "dex": 8,
+      "int": 2,
+      "str": 16,
+      "wis": 8
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 10
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "poison",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "bonusActions": [
+      {
+        "description": "Constitution Saving Throw: DC 12, each creature in a 30-foot Cone. If the basilisk sees its reflection in the Cone, the basilisk must make this save. First Failure: The target has the Restrained condition and repeats the save at the end of its next turn, ending the effect on itself on a success. Second Failure: The target has the Petrified condition instead of the Restrained condition.",
+        "kind": "textOnly",
+        "name": "Petrifying Gaze (Recharge 4–6)",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "monstrosity",
+    "hp": {
+      "kind": "literal",
+      "value": 52
+    },
+    "initiative": {
+      "modifier": -1,
+      "score": 9
+    },
+    "passivePerception": 9,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 4
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}
