@@ -6149,7 +6149,7 @@ const BattleReactionModifierChoiceSchema = Schema.Union(
   }),
 );
 
-export const BattleInterruptProcedureChoiceSchema = Schema.Union(
+const BattleInterruptProcedureChoiceWithSubjectPayloadSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("releaseReadiedSpell"),
     reactorId: CombatantId,
@@ -6200,59 +6200,74 @@ export const BattleInterruptProcedureChoiceSchema = Schema.Union(
     subject: BattleSubjectSchema,
     initialHoles: Schema.Array(BattleHoleSchema),
   }),
-  Schema.Struct({
-    kind: Schema.Literal("reactionRollOrDamageReduction"),
-    reactorId: CombatantId,
-    choice: BattleReactionModifierChoiceSchema,
-    initialHoles: Schema.Array(BattleHoleSchema),
-  }),
-).pipe(
-  Schema.filter(
-    (choice) =>
-      Match.value(choice).pipe(
-        Match.discriminatorsExhaustive("kind")({
-          releaseReadiedSpell: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedSpell" &&
-            value.reactorId === value.readiedSpellCasterId &&
-            value.reactorId === value.subject.readiedSpellCasterId,
-          releaseReadiedMovement: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedMovement" &&
-            value.reactorId === value.readiedMovementActorId &&
-            value.reactorId === value.subject.readiedMovementActorId,
-          releaseReadiedAction: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedAction" &&
-            value.reactorId === value.subject.reactorId,
-          releaseReadiedAttack: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "releaseReadiedAttack" &&
-            value.reactorId === value.subject.reactorId,
-          castTriggeredReactionSpell: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "castTriggeredReactionSpell" &&
-            value.reactorId === value.subject.reactorId,
-          castAttackHitBonusActionSpell: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "castAttackHitBonusActionSpell" &&
-            value.reactorId === value.subject.casterId,
-          opportunityAttack: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "opportunityAttack" &&
-            value.reactorId === value.subject.reactorId,
-          retaliationAttack: (value) =>
-            value.subject.tag === "runtimeCommand" &&
-            value.subject.command === "retaliationAttack" &&
-            value.reactorId === value.subject.reactorId,
-          reactionRollOrDamageReduction: () => true,
-        }),
-      ),
-    {
-      message: () =>
-        "Interrupt choices must own the matching reference-bearing runtime subject.",
-    },
-  ),
+);
+
+export const BattleInterruptProcedureModifierChoiceSchema = Schema.Struct({
+  kind: Schema.Literal("reactionRollOrDamageReduction"),
+  reactorId: CombatantId,
+  choice: BattleReactionModifierChoiceSchema,
+  initialHoles: Schema.Array(BattleHoleSchema),
+});
+
+const battleInterruptProcedureChoiceInvariantAnnotations = {
+  message: () =>
+    "Interrupt choices must own the matching reference-bearing runtime subject.",
+};
+
+function battleInterruptProcedureChoiceInvariantHolds(
+  choice: typeof BattleInterruptProcedureChoiceWithSubjectPayloadSchema.Type,
+): boolean {
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      releaseReadiedSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedSpell" &&
+        value.reactorId === value.readiedSpellCasterId &&
+        value.reactorId === value.subject.readiedSpellCasterId,
+      releaseReadiedMovement: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedMovement" &&
+        value.reactorId === value.readiedMovementActorId &&
+        value.reactorId === value.subject.readiedMovementActorId,
+      releaseReadiedAction: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedAction" &&
+        value.reactorId === value.subject.reactorId,
+      releaseReadiedAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "releaseReadiedAttack" &&
+        value.reactorId === value.subject.reactorId,
+      castTriggeredReactionSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "castTriggeredReactionSpell" &&
+        value.reactorId === value.subject.reactorId,
+      castAttackHitBonusActionSpell: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "castAttackHitBonusActionSpell" &&
+        value.reactorId === value.subject.casterId,
+      opportunityAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "opportunityAttack" &&
+        value.reactorId === value.subject.reactorId,
+      retaliationAttack: (value) =>
+        value.subject.tag === "runtimeCommand" &&
+        value.subject.command === "retaliationAttack" &&
+        value.reactorId === value.subject.reactorId,
+    }),
+  );
+}
+
+export const BattleInterruptProcedureChoiceWithSubjectSchema =
+  BattleInterruptProcedureChoiceWithSubjectPayloadSchema.pipe(
+    Schema.filter(
+      battleInterruptProcedureChoiceInvariantHolds,
+      battleInterruptProcedureChoiceInvariantAnnotations,
+    ),
+  );
+
+export const BattleInterruptProcedureChoiceSchema = Schema.Union(
+  BattleInterruptProcedureChoiceWithSubjectSchema,
+  BattleInterruptProcedureModifierChoiceSchema,
 );
 
 const BattleDimLightEmissionSchema = Schema.Struct({
@@ -7082,7 +7097,7 @@ export const BattleSnapshotSchema = Schema.Struct({
   )
   .annotations({ identifier: "BattleSnapshot" });
 
-const BattleActDiscoveryCandidateSchema = Schema.Struct({
+export const BattleActDiscoveryCandidateSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   initialHoles: Schema.Array(BattleHoleSchema),
 });
@@ -7104,7 +7119,7 @@ export const BattleInterruptDecisionFrontierSchema = Schema.Struct({
   stackDepth: BattleReplayStackDepth,
 });
 
-const BattleCheckpointFrontierHolesSchema = Schema.Struct({
+export const BattleCheckpointFrontierHolesSchema = Schema.Struct({
   kind: Schema.Literal("holes"),
   subject: BattleSubjectSchema,
   holes: Schema.NonEmptyArray(BattleHoleSchema),
@@ -7274,96 +7289,4 @@ export const BattleCheckpointFrontierEnvelopeSchema = Schema.Struct({
     }),
   )
   .annotations({ identifier: "BattleCheckpointFrontierEnvelope" });
-
-const BattleAvailableActSchema = Schema.Struct({
-  subject: BattleSubjectSchema,
-  initialHoles: Schema.Array(BattleHoleSchema),
-  label: Schema.NonEmptyTrimmedString,
-  summary: Schema.NonEmptyTrimmedString,
-  presentation: BattleActPresentationSchema,
-});
-
-const BattlePresentedInterruptChoiceSchema = Schema.Union(
-  Schema.Struct({
-    choice: Schema.Struct({
-      kind: Schema.Literal("reactionRollOrDamageReduction"),
-      reactorId: CombatantId,
-      choice: BattleReactionModifierChoiceSchema,
-      initialHoles: Schema.Array(BattleHoleSchema),
-    }),
-  }),
-  Schema.Struct({
-    choice: Schema.Union(
-      Schema.Struct({
-        kind: Schema.Literal("releaseReadiedSpell"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-        readiedSpellCasterId: CombatantId,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("releaseReadiedMovement"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-        readiedMovementActorId: CombatantId,
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("releaseReadiedAction"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("releaseReadiedAttack"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("castTriggeredReactionSpell"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("castAttackHitBonusActionSpell"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("opportunityAttack"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-      }),
-      Schema.Struct({
-        kind: Schema.Literal("retaliationAttack"),
-        reactorId: CombatantId,
-        subject: BattleSubjectSchema,
-        initialHoles: Schema.Array(BattleHoleSchema),
-      }),
-    ),
-    presentation: BattleActPresentationSchema,
-  }),
-);
-
-export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
-  checkpoint: BattlePresentedSnapshotSchema,
-  frontier: Schema.Union(
-    Schema.Struct({
-      kind: Schema.Literal("acts"),
-      acts: Schema.Array(BattleAvailableActSchema),
-    }),
-    BattleCheckpointFrontierHolesSchema,
-    Schema.Struct({
-      kind: Schema.Literal("interruptDecision"),
-      trigger: Schema.Literal(...BATTLE_INTERRUPT_TRIGGERS),
-      decisionHole: BattleInterruptDecisionHoleSchema,
-      choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
-      stackDepth: BattleReplayStackDepth,
-    }),
-  ),
-}).annotations({ identifier: "BattlePresentedCheckpointFrontierEnvelope" });
 // KERNEL-COVERAGE: runtime-owner BATTLE.EQUIPMENT.AMMUNITION_LIFECYCLE

@@ -28,6 +28,45 @@ import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { snapshotBattle } from "./battle-reducer/battle-snapshot.ts";
 import { battleCreaturePresentationDisplayName } from "./stat-block-presentation.ts";
 import { BattleCreatureDisplayNameSchema } from "./battle-creature-display-name.ts";
+import {
+  BattleActDiscoveryCandidateSchema,
+  BattleActPresentationSchema,
+  BattleCheckpointFrontierHolesSchema,
+  BattleInterruptDecisionFrontierSchema,
+  BattleInterruptProcedureChoiceWithSubjectSchema,
+  BattleInterruptProcedureModifierChoiceSchema,
+  BattlePresentedSnapshotSchema,
+} from "./battle-reducer/battle-codecs.ts";
+
+const BattleAvailableActSchema = Schema.Struct({
+  ...BattleActDiscoveryCandidateSchema.fields,
+  label: Schema.NonEmptyTrimmedString,
+  summary: Schema.NonEmptyTrimmedString,
+  presentation: BattleActPresentationSchema,
+});
+
+const BattlePresentedInterruptChoiceSchema = Schema.Union(
+  Schema.Struct({ choice: BattleInterruptProcedureModifierChoiceSchema }),
+  Schema.Struct({
+    choice: BattleInterruptProcedureChoiceWithSubjectSchema,
+    presentation: BattleActPresentationSchema,
+  }),
+);
+
+export const BattlePresentedCheckpointFrontierEnvelopeSchema = Schema.Struct({
+  checkpoint: BattlePresentedSnapshotSchema,
+  frontier: Schema.Union(
+    Schema.Struct({
+      kind: Schema.Literal("acts"),
+      acts: Schema.Array(BattleAvailableActSchema),
+    }),
+    BattleCheckpointFrontierHolesSchema,
+    Schema.Struct({
+      ...BattleInterruptDecisionFrontierSchema.fields,
+      choices: Schema.NonEmptyArray(BattlePresentedInterruptChoiceSchema),
+    }),
+  ),
+}).annotations({ identifier: "BattlePresentedCheckpointFrontierEnvelope" });
 
 export type BattlePresentedInterruptChoice =
   | {

@@ -135,7 +135,6 @@ export {
   BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleInterruptDecisionFrontierSchema,
-  BattlePresentedCheckpointFrontierEnvelopeSchema,
   BattleSpellPresentationSchema,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
@@ -158,6 +157,7 @@ export {
 } from "./battle-act-composition.ts";
 
 export {
+  BattlePresentedCheckpointFrontierEnvelopeSchema,
   battlePresentedCheckpointFrontierEnvelope,
   presentBattleCheckpointFrontierEnvelope,
   presentBattleInterruptChoices,
