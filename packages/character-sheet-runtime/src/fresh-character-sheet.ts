@@ -164,6 +164,11 @@ export function freshCharacterSheetFromParsedState(
     );
   }
   if (isSpellcastingBuild(sheet.build)) {
+    if (sheet.pactSlotExpenditure !== undefined) {
+      return Result.fail(
+        "Fresh Character Sheet requires unspent initial play state.",
+      );
+    }
     const {
       bookOfShadowsPresence: _bookOfShadowsPresence,
       pactSlotExpenditure: _pactSlotExpenditure,
@@ -229,6 +234,14 @@ export function characterSheetConstructionIssuesSummary(
 export function freshCharacterSheetProjection(
   sheet: FreshCharacterSheet,
 ): FreshCharacterSheetProjection {
+  if (
+    isSpellcastingBuild(sheet.build) &&
+    sheet.pactSlotExpenditure !== undefined
+  ) {
+    throw new Error(
+      "Fresh Character Sheet requires unspent initial play state.",
+    );
+  }
   const {
     tag: _tag,
     characterId: _characterId,

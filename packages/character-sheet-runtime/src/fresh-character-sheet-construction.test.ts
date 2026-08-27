@@ -240,6 +240,17 @@ describe("fresh Character Sheet construction", () => {
     expect([ordinaryExpenditures, createdSlots]).toEqual([[], []]);
     expect(result.success.pactSlotExpenditure).toBeUndefined();
 
+    const spentPactSlot = {
+      ...result.success,
+      pactSlotExpenditure: { expended: resourceCount(1) },
+    };
+    expect(freshCharacterSheetFromParsedState(spentPactSlot)).toEqual(
+      Result.fail("Fresh Character Sheet requires unspent initial play state."),
+    );
+    expect(() => freshCharacterSheetProjection(spentPactSlot)).toThrow(
+      "Fresh Character Sheet requires unspent initial play state.",
+    );
+
     const projection = freshCharacterSheetProjection(result.success);
     const serialized: unknown = JSON.parse(JSON.stringify(projection));
     expect(serialized).not.toHaveProperty("bookOfShadowsPresence");
@@ -278,6 +289,14 @@ describe("fresh Character Sheet construction", () => {
         Schema.decodeUnknownResult(FreshCharacterSheetProjectionSchema, {
           onExcessProperty: "error",
         })(nullPactExpenditure),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        parseFreshCharacterSheet(
+          { ...result.success, pactSlotExpenditure: null },
+          unitLibrary,
+        ),
       ),
     ).toBe(true);
   });
