@@ -1,6 +1,7 @@
 import fc from "fast-check";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import type { StatBlockRecord } from "@dnd/surface/surface/types";
 
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import {
@@ -31,30 +32,75 @@ const malformedLegendaryActionUses = fc.oneof(
     .map(([whole, fraction]) => whole + fraction),
 );
 
-describe("Stat Block Legendary Action use-count boundaries", () => {
-  test("returns a typed failure for a structurally typed but malformed authored count", () => {
-    const authored = monsterResourceStatBlock();
-    const legendaryActions = authored.statBlock.legendaryActions;
-    expect(legendaryActions).toBeDefined();
-    if (legendaryActions === undefined) return;
+const fixedLegendaryActionUses = fc.integer({ min: 1, max: 10_000 });
+const lairBonusLegendaryActionUses = fc.record({
+  usesOutsideLair: fc.integer({ min: 1, max: 5_000 }),
+  additionalUsesInLair: fc.integer({ min: 1, max: 5_000 }),
+});
 
-    const malformed: typeof authored = {
-      ...authored,
-      statBlock: {
-        ...authored.statBlock,
-        legendaryActions: {
-          ...legendaryActions,
-          uses: 0,
+type AuthoredLegendaryActionUses = NonNullable<
+  StatBlockRecord["statBlock"]["legendaryActions"]
+>["uses"];
+
+function withLegendaryActionUses(
+  record: StatBlockRecord,
+  uses: AuthoredLegendaryActionUses,
+): StatBlockRecord {
+  const legendaryActions = record.statBlock.legendaryActions;
+  if (legendaryActions === undefined) {
+    throw new Error("Expected the Legendary Action property fixture.");
+  }
+  return {
+    ...record,
+    statBlock: {
+      ...record.statBlock,
+      legendaryActions: { ...legendaryActions, uses },
+    },
+  };
+}
+
+describe("Stat Block Legendary Action use-count boundaries", () => {
+  test("projects every positive fixed authored count without changing it", () => {
+    const authored = monsterResourceStatBlock();
+    fc.assert(
+      fc.property(fixedLegendaryActionUses, (uses) => {
+        const projection = projectAuthoredStatBlock(
+          withLegendaryActionUses(authored, { kind: "fixed", uses }),
+        );
+        expect(Either.isRight(projection)).toBe(true);
+        if (Either.isLeft(projection)) return;
+        expect(projection.right.runtime.legendaryActionUses).toBe(uses);
+      }),
+      PROPERTY_OPTIONS,
+    );
+  });
+
+  test("returns the precise unsupported-context failure for every valid lair bonus", () => {
+    const authored = monsterResourceStatBlock();
+    fc.assert(
+      fc.property(
+        lairBonusLegendaryActionUses,
+        ({ usesOutsideLair, additionalUsesInLair }) => {
+          const projection = projectAuthoredStatBlock(
+            withLegendaryActionUses(authored, {
+              kind: "lair_bonus",
+              usesOutsideLair,
+              additionalUsesInLair,
+            }),
+          );
+          expect(projection).toEqual(
+            Either.left({
+              tag: "battleStatBlockProjectionFailure",
+              reason: "unsupportedLairConditionalLegendaryActionUses",
+            }),
+          );
         },
+      ),
+      {
+        ...PROPERTY_OPTIONS,
+        examples: [[{ usesOutsideLair: 3, additionalUsesInLair: 1 }]],
       },
-    };
-    const projection = projectAuthoredStatBlock(malformed);
-    expect(Either.isLeft(projection)).toBe(true);
-    if (Either.isRight(projection)) return;
-    expect(projection.left).toEqual({
-      tag: "battleStatBlockProjectionFailure",
-      reason: "invalidLegendaryActionUses",
-    });
+    );
   });
 
   test("reject malformed counts without throwing or crossing admission boundaries", () => {

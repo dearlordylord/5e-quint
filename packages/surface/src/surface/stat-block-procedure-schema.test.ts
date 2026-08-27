@@ -6,6 +6,7 @@ import {
   CreatureStatBlockProjectionSchema,
   EffectAtomSchema,
   StandaloneStatBlockSchema,
+  StatBlockLegendaryActionSectionSchema,
   StatBlockProcedureEntrySchema,
   StatBlockProcedureSectionSchema,
 } from "./schema.ts";
@@ -135,7 +136,7 @@ const syntheticStandaloneStatBlock = {
     },
   ],
   legendaryActions: {
-    uses: 3,
+    uses: { kind: "fixed", uses: 3 },
     entries: [
       {
         kind: "textOnly",
@@ -150,6 +151,38 @@ const syntheticStandaloneStatBlock = {
 } as const;
 
 describe("standalone Stat Block procedure sections", () => {
+  test("models fixed and additive in-lair Legendary Action uses without correlated totals", () => {
+    const fixed = { kind: "fixed", uses: 3 } as const;
+    const lairBonus = {
+      kind: "lair_bonus",
+      usesOutsideLair: 3,
+      additionalUsesInLair: 1,
+    } as const;
+
+    const entries = syntheticStandaloneStatBlock.legendaryActions.entries;
+    expect(
+      decode(StatBlockLegendaryActionSectionSchema, { uses: fixed, entries }),
+    ).toMatchObject({ uses: fixed });
+    expect(
+      decode(StatBlockLegendaryActionSectionSchema, {
+        uses: lairBonus,
+        entries,
+      }),
+    ).toMatchObject({ uses: lairBonus });
+    expect(() =>
+      decode(StatBlockLegendaryActionSectionSchema, {
+        uses: { ...lairBonus, additionalUsesInLair: 0 },
+        entries,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockLegendaryActionSectionSchema, {
+        uses: { ...lairBonus, usesInLair: 4 },
+        entries,
+      }),
+    ).toThrow();
+  });
+
   test("preserves mixed source order, ordinal dispatch, text-only reasons, and spell refs", () => {
     const decoded = decode(
       StandaloneStatBlockSchema,
@@ -374,22 +407,22 @@ describe("standalone Stat Block procedure sections", () => {
     ).toThrow();
   });
 
-  test("shares timed apply_condition effects with the general effect schema", () => {
+  test("distinguishes source- and target-turn Stat Block condition expiration from spell duration", () => {
     const effects = [
       {
         kind: "apply_condition",
         condition: "incapacitated",
-        duration: "end_of_next_turn",
+        expiresAt: { kind: "target_next_turn_end" },
       },
       {
         kind: "apply_condition",
         condition: "poisoned",
-        duration: "end_of_caster_next_turn",
+        expiresAt: { kind: "source_next_turn_end" },
       },
     ] as const;
 
     for (const effect of effects) {
-      expect(decode(EffectAtomSchema, effect)).toEqual(effect);
+      expect(() => decode(EffectAtomSchema, effect)).toThrow();
       expect(
         decode(StatBlockProcedureEntrySchema, {
           kind: "executable",
@@ -408,11 +441,27 @@ describe("standalone Stat Block procedure sections", () => {
       ).toMatchObject({ procedure: { onHit: [effect] } });
     }
 
+    const spellRelativeEffect = {
+      kind: "apply_condition",
+      condition: "incapacitated",
+      duration: "end_of_next_turn",
+    } as const;
+    expect(decode(EffectAtomSchema, spellRelativeEffect)).toEqual(
+      spellRelativeEffect,
+    );
+
+    expect(decode(EffectAtomSchema, spellRelativeEffect)).toEqual(
+      spellRelativeEffect,
+    );
     const unsupportedDuration = {
-      ...effects[0],
+      ...spellRelativeEffect,
       duration: "end_of_target_next_turn",
     };
     expect(() => decode(EffectAtomSchema, unsupportedDuration)).toThrow();
+    const unsupportedExpiration = {
+      ...effects[0],
+      expiresAt: { kind: "current_turn_end" },
+    };
     expect(() =>
       decode(StatBlockProcedureEntrySchema, {
         kind: "executable",
@@ -424,9 +473,23 @@ describe("standalone Stat Block procedure sections", () => {
           attackAbility: "str",
           attackBonus: { kind: "literal", value: 4 },
           reachFeet: 5,
-          onHit: [unsupportedDuration],
+          onHit: [unsupportedExpiration],
         },
         resourceRefs: { kind: "none" },
+      }),
+    ).toThrow();
+
+    const damageWithAmbiguousTiming = {
+      ...syntheticStandaloneStatBlock.actions[1].procedure.onHit[0],
+      timing: "end_of_next_turn",
+    } as const;
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...syntheticStandaloneStatBlock.actions[1],
+        procedure: {
+          ...syntheticStandaloneStatBlock.actions[1].procedure,
+          onHit: [damageWithAmbiguousTiming],
+        },
       }),
     ).toThrow();
 
@@ -634,6 +697,15 @@ describe("standalone Stat Block procedure sections", () => {
         ...saveEntry,
         procedure: {
           ...saveEntry.procedure,
+          description: "Executable prose must use a text-only entry.",
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...saveEntry,
+        procedure: {
+          ...saveEntry.procedure,
           dc: { kind: "caster_spell_save_dc" },
         },
       }),
@@ -695,14 +767,31 @@ describe("standalone Stat Block procedure sections", () => {
         procedure: {
           ...attackEntry.procedure,
           reachFeet: 1001,
-          rangeFeet: { normal: 1001, long: 1002 },
         },
       }),
     ).toMatchObject({
       procedure: {
         reachFeet: 1001,
+      },
+    });
+
+    const rangedAttackEntry = {
+      ...attackEntry,
+      procedure: {
+        ...attackEntry.procedure,
+        attackType: "ranged",
         rangeFeet: { normal: 1001, long: 1002 },
       },
+    } as const;
+    const { reachFeet: _meleeReachFeet, ...rangedProcedure } =
+      rangedAttackEntry.procedure;
+    expect(
+      decode(StatBlockProcedureEntrySchema, {
+        ...rangedAttackEntry,
+        procedure: rangedProcedure,
+      }),
+    ).toMatchObject({
+      procedure: { rangeFeet: { normal: 1001, long: 1002 } },
     });
 
     for (const value of [0, -1, 1.5, NaN, Infinity, -Infinity] as const) {
@@ -716,6 +805,47 @@ describe("standalone Stat Block procedure sections", () => {
         }),
       ).toThrow();
     }
+
+    const { reachFeet: _requiredReachFeet, ...meleeWithoutReach } =
+      attackEntry.procedure;
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: meleeWithoutReach,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          rangeFeet: { normal: 30, long: 120 },
+        },
+      }),
+    ).toThrow();
+    const { rangeFeet: _requiredRangeFeet, ...rangedWithoutRange } =
+      rangedProcedure;
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...rangedAttackEntry,
+        procedure: rangedWithoutRange,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...rangedAttackEntry,
+        procedure: { ...rangedProcedure, reachFeet: 5 },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...attackEntry,
+        procedure: {
+          ...attackEntry.procedure,
+          description: "Executable prose must use a text-only entry.",
+        },
+      }),
+    ).toThrow();
   });
 
   test("requires a parsed trigger for executable reactions while retaining text-only reactions", () => {

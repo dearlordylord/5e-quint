@@ -1,0 +1,301 @@
+{
+  "challengeRating": 9,
+  "id": "stat_block_cloud_giant",
+  "kind": "statBlock",
+  "name": "Cloud Giant",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:228-261"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 22,
+      "dex": 10,
+      "int": 12,
+      "str": 27,
+      "wis": 16
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
+    },
+    "actions": [
+      {
+        "description": "The giant makes two attacks, using Thunderous Mace or Thundercloud in any combination. It can replace one attack with a use of Spellcasting to cast Fog Cloud.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 12
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Thunderous Mace",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 8,
+                  "flat": 8
+                },
+                "kind": "fixed",
+                "static": 21
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "thunder",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 12
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Thundercloud",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6,
+                  "flat": 8
+                },
+                "kind": "fixed",
+                "static": 18
+              },
+              "damageType": "thunder",
+              "kind": "damage"
+            },
+            {
+              "condition": "incapacitated",
+              "expiresAt": {
+                "kind": "target_next_turn_end"
+              },
+              "kind": "apply_condition"
+            }
+          ],
+          "rangeFeet": {
+            "long": 240,
+            "normal": 240
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "fog_cloud"
+                },
+                {
+                  "spellId": "light"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "control_weather"
+                },
+                {
+                  "spellId": "gaseous_form"
+                },
+                {
+                  "spellId": "telekinesis"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 15,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "misty_step"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Misty Step"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Giant"
+        ]
+      }
+    },
+    "creatureType": "giant",
+    "hp": {
+      "kind": "literal",
+      "value": 200
+    },
+    "initiative": {
+      "modifier": 4,
+      "score": 14
+    },
+    "passivePerception": 21,
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 8
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "con",
+        "modifier": 10
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "wis",
+        "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 3
+      }
+    ],
+    "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 7,
+        "skill": "insight"
+      },
+      {
+        "modifier": 11,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "hover": true,
+        "kind": "fly"
+      }
+    ]
+  }
+}
