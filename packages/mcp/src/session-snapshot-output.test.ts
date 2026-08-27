@@ -3,6 +3,9 @@ import {
   battlePresentedCheckpointFrontierEnvelope,
   characterId,
   combatantId,
+  discoverBattleActs,
+  presentBattleCheckpointFrontierEnvelope,
+  resolveBattleRuntimeSubject,
 } from "@dnd/battle-runtime";
 import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
@@ -103,11 +106,11 @@ describe("MCP session wire projections", () => {
 
   test("requires one presented envelope for active battle resolution", () => {
     const schema = mcpOutputJsonSchema(BattleResolutionOutputSchema);
-    const properties = schema.properties as Record<string, unknown>;
-    expect(properties).toHaveProperty("envelope");
-    expect(properties).not.toHaveProperty("snapshot");
-    expect(properties).not.toHaveProperty("availableActs");
-    expect(properties).not.toHaveProperty("presentedInterruptChoices");
+    const serialized = JSON.stringify(schema);
+    expect(serialized).toContain('"envelope"');
+    expect(serialized).not.toContain('"snapshot"');
+    expect(serialized).not.toContain('"availableActs"');
+    expect(serialized).not.toContain('"presentedInterruptChoices"');
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
@@ -177,7 +180,7 @@ describe("MCP session wire projections", () => {
     if (Either.isLeft(envelope)) throw new Error("Expected presentation.");
     expect(
       Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
-        result: { tag: "needsHoles" },
+        result: { tag: "resolved" },
         envelope: envelope.right,
         session: {
           ...mcpSessionSummary(root.sessionStore.snapshot()),
@@ -189,6 +192,97 @@ describe("MCP session wire projections", () => {
         },
       }),
     ).toSatisfy((result) => Either.isRight(result));
+  });
+
+  test("rejects forged session and result/frontier correlations", () => {
+    const root = createMcpPlaySessionRoot();
+    handleWireToolCall(
+      root,
+      "start_battle",
+      battleToolWireArgs("start_battle", {
+        battleId: "battle:forged-correlation",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            admissionSource: { kind: "encounterParticipant" },
+            combatantId: "goblin",
+            initiative: 10,
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_goblin_warrior",
+          },
+          {
+            admissionSource: { kind: "encounterParticipant" },
+            combatantId: "skeleton",
+            initiative: 5,
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_skeleton",
+          },
+        ],
+      }),
+    );
+    const session = root.sessionStore.battleSession;
+    if (session === null) throw new Error("Expected active battle.");
+    const presented = battlePresentedCheckpointFrontierEnvelope(session);
+    if (Either.isLeft(presented)) throw new Error("Expected presentation.");
+    const activeSession = {
+      ...mcpSessionSummary(root.sessionStore.snapshot()),
+      battleState: {
+        tag: "activeBattle" as const,
+        battleId: session.state.battleId,
+        currentActorId: session.state.initiative.stillToAct[0]!.creature,
+      },
+    };
+
+    expect(
+      Schema.decodeUnknownEither(BattleSessionOutputSchema)({
+        envelope: presented.right,
+        session: sessionForProjectionState({ tag: "none" }),
+      }),
+    ).toEqual(Either.left(expect.anything()));
+    expect(
+      Schema.decodeUnknownEither(BattleSessionOutputSchema)({
+        envelope: null,
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
+    expect(
+      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+        result: { tag: "needsHoles" },
+        envelope: presented.right,
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
+
+    const act = discoverBattleActs(session).find(
+      (candidate) => candidate.initialHoles.length > 0,
+    );
+    if (act === undefined) throw new Error("Expected an act with holes.");
+    const mechanics = resolveBattleRuntimeSubject({
+      session,
+      subject: act.subject,
+      fills: [],
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    if (mechanics.tag !== "needsHoles") {
+      throw new Error("Expected a holes frontier.");
+    }
+    const presentedHoles = presentBattleCheckpointFrontierEnvelope(
+      mechanics.session,
+      mechanics.envelope,
+    );
+    if (Either.isLeft(presentedHoles)) {
+      throw new Error("Expected holes presentation.");
+    }
+    expect(
+      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+        result: { tag: "resolved" },
+        envelope: presentedHoles.right,
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
   });
 
   test("admin projections use the same presented envelope owner", () => {

@@ -1,6 +1,7 @@
 import { Either } from "effect";
 
 import { battleToolNames } from "./battle-tool-input.ts";
+import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { PlaySessionTenureProjection } from "./play-session-access.ts";
 import {
   PLAY_SESSION_UNAVAILABLE,
@@ -21,6 +22,7 @@ import {
 import type { McpSessionSummary } from "./session-snapshot-output.ts";
 import {
   unresolvedInputsFrom,
+  unresolvedInputsFromBattleEnvelope,
   type OperationProjectionIssue,
   type UnresolvedInputGroup,
 } from "./play-session-operation-projection.ts";
@@ -30,12 +32,54 @@ import {
   type PlaySessionRequestIdentity,
 } from "./play-session-request-identity.ts";
 import { characterToolNames } from "./character-tool-input.ts";
+import { battleSessionPayload } from "./battle-tool-payloads.ts";
 
 export type PlaySessionProtocolResult = ReturnType<typeof jsonContent> & {
   readonly structuredContent: unknown;
   readonly isError?: true;
   readonly _meta?: Readonly<Record<string, unknown>>;
 };
+
+export function recoverableOperationResult(
+  root: McpPlaySessionRoot,
+  operationResult: unknown,
+  isError: boolean,
+): unknown {
+  if (
+    !isError ||
+    root.sessionStore.pendingBattleFills === null ||
+    root.sessionStore.battleState.tag !== "activeBattle"
+  ) {
+    return operationResult;
+  }
+  const battle = battleSessionPayload(
+    root,
+    root.sessionStore.battleState.session,
+  );
+  if (Either.isLeft(battle)) {
+    return {
+      error: "Battle presentation context is incomplete.",
+      details: {
+        code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE",
+        issues: battle.left,
+        operationResult,
+      },
+    };
+  }
+  if (isJsonObject(operationResult) && isJsonObject(operationResult.details)) {
+    return {
+      ...operationResult,
+      details: {
+        ...operationResult.details,
+        battleEnvelope: battle.right.envelope,
+      },
+    };
+  }
+  return {
+    result: operationResult,
+    battleEnvelope: battle.right.envelope,
+  };
+}
 
 export function availablePlaySessionEnvelope(input: {
   readonly playSessionId: PlaySessionId;
@@ -45,8 +89,6 @@ export function availablePlaySessionEnvelope(input: {
   readonly tenure: PlaySessionTenureProjection;
   readonly identity: PlaySessionRequestIdentity;
   readonly hasAvailableCharacterSession?: boolean;
-  /** Runtime-owned battle output used to recover continuation inputs on read. */
-  readonly battleOperationResult?: unknown;
   readonly isError?: boolean;
 }): PlaySessionProtocolResult | ReturnType<typeof errorContent> {
   const projection = mcpSessionSummary(input.projection);
@@ -111,17 +153,34 @@ export function unavailablePlaySessionEnvelope(
 function unresolvedInputsForEnvelope(input: {
   readonly operationName: PlaySessionOperationName;
   readonly operationResult: unknown;
-  readonly battleOperationResult?: unknown;
   readonly isError?: boolean;
 }): Either.Either<readonly UnresolvedInputGroup[], OperationProjectionIssue> {
-  if (input.battleOperationResult !== undefined) {
-    return unresolvedInputsFrom(
-      battleToolNames.readBattleState,
-      input.battleOperationResult,
+  const battleEnvelope = embeddedBattleEnvelope(input.operationResult);
+  if (battleEnvelope !== undefined) {
+    return unresolvedInputsFromBattleEnvelope(
+      battleEnvelope.value,
+      battleEnvelope.path,
     );
   }
   if (input.isError === true) return Either.right([]);
   return unresolvedInputsFrom(input.operationName, input.operationResult);
+}
+
+function embeddedBattleEnvelope(
+  value: unknown,
+): { readonly value: unknown; readonly path: string } | undefined {
+  if (!isJsonObject(value)) return undefined;
+  if (value.battleEnvelope !== undefined && value.battleEnvelope !== null) {
+    return { value: value.battleEnvelope, path: "$.battleEnvelope" };
+  }
+  return isJsonObject(value.details) &&
+    value.details.battleEnvelope !== undefined &&
+    value.details.battleEnvelope !== null
+    ? {
+        value: value.details.battleEnvelope,
+        path: "$.details.battleEnvelope",
+      }
+    : undefined;
 }
 
 function envelopeTenure(

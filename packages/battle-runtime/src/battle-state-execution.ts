@@ -7121,11 +7121,22 @@ export type BattlePresentedSnapshot = Omit<BattleSnapshot, "combatants"> & {
   readonly combatants: readonly BattlePresentedCreatureSnapshot[];
 };
 
-export type BattleSnapshotPresentationIssue = {
-  readonly tag: "battleSnapshotPresentationIssue";
-  readonly reason: "missingStatBlockPresentation" | "invalidDisplayName";
-  readonly combatantId: CombatantId;
-};
+export type BattleSnapshotPresentationIssue =
+  | {
+      readonly tag: "battleSnapshotPresentationIssue";
+      readonly reason: "missingStatBlockPresentation" | "invalidDisplayName";
+      readonly combatantId: CombatantId;
+    }
+  | {
+      readonly tag: "battleInterruptChoicePresentationIssue";
+      readonly reason: "missingSubjectPresentation";
+      readonly reactorId: CombatantId;
+      readonly choiceKind: Exclude<
+        BattleInterruptProcedureChoice,
+        { readonly kind: "reactionRollOrDamageReduction" }
+      >["kind"];
+      readonly subject: BattleSubject;
+    };
 
 export type BattleSnapshotPresentationIssues =
   ReadonlyNonEmptyArray<BattleSnapshotPresentationIssue>;

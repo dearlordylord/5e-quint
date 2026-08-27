@@ -1,6 +1,13 @@
-import { battlePresentedSnapshot, combatantId, snapshotBattle } from "@dnd/battle-runtime"
+import {
+  battlePresentedCheckpointFrontierEnvelope,
+  BattlePresentedCheckpointFrontierEnvelopeSchema,
+  battlePresentedSnapshot,
+  combatantId,
+  snapshotBattle
+} from "@dnd/battle-runtime"
+import { AdminSessionProjectionSchema } from "@dnd/mcp/experimental-admin-mirror-contract"
 import { Hp } from "@dnd/shared/types"
-import { Either } from "effect"
+import { Either, Schema } from "effect"
 import { describe, expect, test } from "vitest"
 
 import { computeWizardBattleScene } from "./battle-scene-layout.ts"
@@ -155,6 +162,52 @@ describe("wizard battle demo", () => {
           })
         )
       ).toBe(true)
+    }
+  })
+
+  test("carries each canonical MCP envelope frontier into the React scene model", () => {
+    const frontierKinds = ["acts", "holes", "interruptDecision"] as const
+
+    for (const frontierKind of frontierKinds) {
+      const candidate = WIZARD_BATTLE_DEMO_STEPS.map((step, stepIndex) => ({
+        envelope: battlePresentedCheckpointFrontierEnvelope(step.session),
+        step,
+        stepIndex
+      })).find((entry) => Either.isRight(entry.envelope) && entry.envelope.right.frontier.kind === frontierKind)
+      if (candidate === undefined || Either.isLeft(candidate.envelope)) {
+        throw new Error(`Expected a ${frontierKind} demo frontier.`)
+      }
+
+      const mcpProjection = Schema.decodeUnknownEither(AdminSessionProjectionSchema)({
+        session: {
+          draftIds: [],
+          selectedStatBlockId: null,
+          battleState: {
+            tag: "activeBattle",
+            battleId: candidate.envelope.right.checkpoint.battleId,
+            currentActorId: candidate.envelope.right.checkpoint.currentActorId
+          }
+        },
+        battle: candidate.envelope.right,
+        characters: []
+      })
+      expect(Either.isRight(mcpProjection)).toBe(true)
+      if (Either.isLeft(mcpProjection)) continue
+      const battle = mcpProjection.right.battle
+      expect(battle).not.toBeNull()
+      if (battle === null) continue
+      const canonicalEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(battle)
+      expect(canonicalEnvelope).toEqual(
+        Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(candidate.envelope.right)
+      )
+
+      const scene = computeWizardBattleScene({
+        meta: WIZARD_BATTLE_DEMO_META,
+        snapshot: candidate.envelope.right.checkpoint,
+        step: candidate.step,
+        stepIndex: candidate.stepIndex
+      })
+      expect(Either.isRight(scene)).toBe(true)
     }
   })
 })

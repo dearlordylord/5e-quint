@@ -9,6 +9,7 @@ import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Either } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
+import { characterDraftId } from "@dnd/character-creation-runtime";
 
 import {
   acceptancePlaySessionId,
@@ -17,9 +18,12 @@ import {
   attackRollFill,
   attackSubjectFromActs,
   attackTargetFill,
+  acceptancePlaySessionCaller,
+  createAndFinalizeElfWizardFiveWithCounterspell,
   createBaselineCharacterSession,
   rolledDiceFill,
 } from "../test-support/mcp-acceptance-scenarios.ts";
+import { characterIdFromDraftId } from "./session-store.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
 import { createDndMcpHttpServer } from "./public-http-server.ts";
 import { openSqlitePlaySessionRepository } from "./recoverable-play-session.ts";
@@ -80,6 +84,405 @@ describe("recoverable Play Session protocol", () => {
       repository.close();
     }
   });
+
+  test("retains a multi-responder interrupt through recovery and rejects duplicate responses", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "dnd-multi-responder-"));
+    temporaryDirectories.push(directory);
+    const databasePath = join(directory, "play-sessions.sqlite");
+    const repository = openRepository(databasePath);
+    const firstConnection = await connectClient(repository);
+    const secondConnection = await connectClient(repository);
+    const playSessionId = await acceptancePlaySessionId(firstConnection.client);
+    const firstCaller = await acceptancePlaySessionCaller(
+      firstConnection.client,
+    );
+    if (firstCaller.tag !== "guest") {
+      throw new Error("Expected a guest acceptance caller.");
+    }
+    retainAcceptancePlaySessionAccess(secondConnection.client, {
+      playSessionId,
+      guestAccessGrant: firstCaller.guestAccessGrant,
+    });
+    const firstDraftId = "draft:multi-shield-one";
+    const secondDraftId = "draft:multi-shield-two";
+    await createAndFinalizeElfWizardFiveWithCounterspell(
+      firstConnection.client,
+      firstDraftId,
+    );
+    await createAndFinalizeElfWizardFiveWithCounterspell(
+      firstConnection.client,
+      secondDraftId,
+    );
+    const firstCharacterId = String(
+      characterIdFromDraftId(characterDraftId(firstDraftId)),
+    );
+    const secondCharacterId = String(
+      characterIdFromDraftId(characterDraftId(secondDraftId)),
+    );
+
+    const startedResponse = await callToolWithAccess(firstConnection.client, {
+      name: "start_battle",
+      arguments: {
+        playSessionId,
+        battleId: "battle:multi-responder-recovery",
+        initiativeMode: "direct",
+        companionAdmissions: [],
+        initialCombatants: [
+          {
+            kind: "statBlock",
+            ammunitionStocks: [{ ammunition: "arrow", remaining: 20 }],
+            statBlockId: "stat_block_goblin_warrior",
+            combatantId: "multi-goblin",
+            initiative: 20,
+            admissionSource: { kind: "encounterParticipant" },
+          },
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId: firstCharacterId,
+            combatantId: "multi-shield-one",
+            initiative: 10,
+          },
+          {
+            kind: "characterSession",
+            ammunitionStocks: [],
+            characterId: secondCharacterId,
+            combatantId: "multi-shield-two",
+            initiative: 5,
+          },
+        ],
+      },
+    });
+    if (startedResponse.isError) {
+      throw new Error(JSON.stringify(startedResponse.structuredContent));
+    }
+    if (!isJsonObject(startedResponse.structuredContent)) {
+      throw new Error("Expected a start_battle response payload.");
+    }
+    const started = startedResponse.structuredContent;
+    expect(operationResult(started)).toMatchObject({
+      envelope: {
+        checkpoint: { currentActorId: "multi-goblin" },
+      },
+    });
+
+    const discovered = await callStructuredTool(firstConnection.client, {
+      name: "discover_battle_acts",
+      arguments: { playSessionId },
+    });
+    const subject = attackSubjectFromActs(
+      operationResult(discovered),
+      "multi-goblin",
+      "Scimitar",
+    );
+    await callStructuredTool(firstConnection.client, {
+      name: "fill_battle_hole",
+      arguments: {
+        playSessionId,
+        subject,
+        fill: attackTargetFill(subject, "multi-shield-one"),
+      },
+    });
+    const attackRoll = await callStructuredTool(firstConnection.client, {
+      name: "fill_battle_hole",
+      arguments: {
+        playSessionId,
+        subject,
+        fill: attackRollFill(14, 10),
+      },
+    });
+    const attackRollOperation = operationResult(attackRoll);
+    const attackRollEnvelope = objectField(attackRollOperation, "envelope");
+    const interruptFrontier = objectField(attackRollEnvelope, "frontier");
+    expect(interruptFrontier.kind).toBe("interruptDecision");
+    const interruptHole = objectField(interruptFrontier, "decisionHole");
+    const interruptChoices = arrayField(interruptFrontier, "choices");
+    const choiceFor = (
+      choices: readonly unknown[],
+      decisionHole: Readonly<Record<string, unknown>>,
+      reactorId: string,
+    ) => {
+      const presented = choices.find(
+        (candidate) =>
+          isJsonObject(candidate) &&
+          isJsonObject(candidate.choice) &&
+          candidate.choice.reactorId === reactorId &&
+          candidate.choice.kind === "castTriggeredReactionSpell",
+      );
+      if (!isJsonObject(presented) || !isJsonObject(presented.choice)) {
+        throw new Error(`Expected a Shield choice for ${reactorId}.`);
+      }
+      const choiceSubject = objectField(presented.choice, "subject");
+      return {
+        procedureRef: stringField(choiceSubject, "procedureRef"),
+        initialHoles: arrayField(presented.choice, "initialHoles"),
+        fill: {
+          kind: "interruptDecision" as const,
+          holeId: stringField(decisionHole, "holeId"),
+          value: {
+            kind: "resolve" as const,
+            responderId: reactorId,
+            choice: {
+              kind: "castTriggeredReactionSpell" as const,
+              procedureRef: stringField(choiceSubject, "procedureRef"),
+              fills: [],
+            },
+          },
+        },
+      };
+    };
+    const firstChoice = choiceFor(
+      interruptChoices,
+      interruptHole,
+      "multi-shield-one",
+    );
+    const factsHole = firstChoice.initialHoles.find(
+      (candidate) =>
+        isJsonObject(candidate) && candidate.kind === "targetSpatialFacts",
+    );
+    if (!isJsonObject(factsHole)) {
+      throw new Error("Expected Shield to expose Counterspell trigger facts.");
+    }
+    const procedureRefRecord = JSON.parse(firstChoice.procedureRef);
+    if (!isJsonObject(procedureRefRecord)) {
+      throw new Error("Expected a structured procedure reference.");
+    }
+    const scopeRefRecord = JSON.parse(
+      stringField(procedureRefRecord, "scopeRef"),
+    );
+    if (!isJsonObject(scopeRefRecord)) {
+      throw new Error("Expected a structured procedure scope reference.");
+    }
+    const secondProcedureRefCandidates = Array.from(
+      { length: 9 },
+      (_, scopeOrdinal) =>
+        Array.from({ length: 32 }, (_, procedureOrdinal) =>
+          JSON.stringify({
+            scopeRef: JSON.stringify({
+              ...scopeRefRecord,
+              combatantId: "multi-shield-two",
+              ordinal: scopeOrdinal,
+            }),
+            kind: "procedure",
+            ordinal: procedureOrdinal,
+          }),
+        ),
+    ).flat();
+    const firstFill = {
+      ...firstChoice.fill,
+      value: {
+        ...firstChoice.fill.value,
+        choice: {
+          ...firstChoice.fill.value.choice,
+          fills: [
+            {
+              kind: "targetSpatialFacts" as const,
+              holeId: stringField(factsHole, "holeId"),
+              spatialFacts: secondProcedureRefCandidates.map(
+                (sourceProcedureRef) => ({
+                  kind: "counterspellTriggerCasterVisibleWithinRange" as const,
+                  reactorId: "multi-shield-two",
+                  casterId: "multi-shield-one",
+                  sourceProcedureRef,
+                  rangeFeet: 60,
+                }),
+              ),
+            },
+          ],
+        },
+      },
+    };
+    const firstResponse = await callStructuredTool(firstConnection.client, {
+      name: "fill_battle_hole",
+      arguments: {
+        playSessionId,
+        subject,
+        fill: firstFill,
+      },
+    });
+    expect(operationResult(firstResponse)).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: { frontier: { kind: "interruptDecision" } },
+    });
+
+    await Promise.all([firstConnection.close(), secondConnection.close()]);
+    repository.close();
+
+    const recoveredRepository = openRepository(databasePath);
+    const recoveredConnection = await connectClient(recoveredRepository);
+    retainAcceptancePlaySessionAccess(recoveredConnection.client, {
+      playSessionId,
+      guestAccessGrant: firstCaller.guestAccessGrant,
+    });
+
+    const nestedOperation = operationResult(firstResponse);
+    const nestedEnvelope = objectField(nestedOperation, "envelope");
+    const nestedFrontier = objectField(nestedEnvelope, "frontier");
+    const nestedHole = objectField(nestedFrontier, "decisionHole");
+    const secondChoice = choiceFor(
+      arrayField(nestedFrontier, "choices"),
+      nestedHole,
+      "multi-shield-two",
+    );
+    const savingThrowHole = secondChoice.initialHoles.find(
+      (candidate) =>
+        isJsonObject(candidate) && candidate.kind === "savingThrowOutcome",
+    );
+    if (!isJsonObject(savingThrowHole)) {
+      throw new Error("Expected Counterspell to expose a saving throw hole.");
+    }
+    const secondFill = {
+      ...secondChoice.fill,
+      value: {
+        ...secondChoice.fill.value,
+        choice: {
+          ...secondChoice.fill.value.choice,
+          fills: [
+            {
+              kind: "savingThrowOutcome" as const,
+              holeId: stringField(savingThrowHole, "holeId"),
+              value: {
+                outcomes: [
+                  {
+                    targetId: "multi-shield-one",
+                    succeeded: false,
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    };
+
+    const resumed = await callStructuredTool(recoveredConnection.client, {
+      name: "read_play_session",
+      arguments: { playSessionId },
+    });
+    expect(resumed.unresolvedInputs).toEqual(
+      expect.arrayContaining([
+        {
+          sourcePath: "$.battleEnvelope.frontier.decisionHole",
+          inputs: [expect.objectContaining({ kind: "interruptDecision" })],
+        },
+      ]),
+    );
+    const secondResponse = await callStructuredTool(
+      recoveredConnection.client,
+      {
+        name: "fill_battle_hole",
+        arguments: {
+          playSessionId,
+          subject,
+          fill: secondFill,
+        },
+      },
+    );
+    expect(operationResult(secondResponse)).toMatchObject({
+      result: { tag: "needsHoles" },
+      envelope: { frontier: { kind: "holes" } },
+    });
+    const secondResponseEnvelope = objectField(
+      operationResult(secondResponse),
+      "envelope",
+    );
+    const damageHole = arrayField(
+      objectField(secondResponseEnvelope, "frontier"),
+      "holes",
+    ).find(
+      (candidate) => isJsonObject(candidate) && candidate.kind === "rolledDice",
+    );
+    if (!isJsonObject(damageHole)) {
+      throw new Error("Expected the resumed attack to expose a damage hole.");
+    }
+    const completedResponse = await callToolWithAccess(
+      recoveredConnection.client,
+      {
+        name: "fill_battle_hole",
+        arguments: {
+          playSessionId,
+          subject,
+          fill: {
+            kind: "rolledDice",
+            holeId: stringField(damageHole, "holeId"),
+            value: [{ results: [3] }],
+          },
+        },
+      },
+    );
+    if (completedResponse.isError) {
+      throw new Error(JSON.stringify(completedResponse.structuredContent));
+    }
+    if (!isJsonObject(completedResponse.structuredContent)) {
+      throw new Error("Expected the completed battle response payload.");
+    }
+    const completed = completedResponse.structuredContent;
+    expect(operationResult(completed)).toMatchObject({
+      result: { tag: "resolved" },
+      envelope: { frontier: { kind: "acts" } },
+    });
+
+    const duplicateResponse = await callToolWithAccess(
+      recoveredConnection.client,
+      {
+        name: "fill_battle_hole",
+        arguments: {
+          playSessionId,
+          subject,
+          fill: secondFill,
+        },
+      },
+    );
+    expect(duplicateResponse.isError).toBe(true);
+    expect(duplicateResponse.structuredContent).toMatchObject({
+      operation: {
+        result: {
+          details: { code: "BATTLE_FILL_HOLE_MISMATCH" },
+        },
+      },
+    });
+
+    await recoveredConnection.close();
+    recoveredRepository.close();
+
+    const finalRepository = openRepository(databasePath);
+    const finalConnection = await connectClient(finalRepository);
+    retainAcceptancePlaySessionAccess(finalConnection.client, {
+      playSessionId,
+      guestAccessGrant: firstCaller.guestAccessGrant,
+    });
+    try {
+      const recovered = await callStructuredTool(finalConnection.client, {
+        name: "read_battle_state",
+        arguments: { playSessionId },
+      });
+      expect(operationResult(recovered)).toMatchObject({
+        envelope: { frontier: { kind: "acts" } },
+      });
+      const recoveredDuplicate = await callToolWithAccess(
+        finalConnection.client,
+        {
+          name: "fill_battle_hole",
+          arguments: {
+            playSessionId,
+            subject,
+            fill: secondFill,
+          },
+        },
+      );
+      expect(recoveredDuplicate.isError).toBe(true);
+      expect(recoveredDuplicate.structuredContent).toMatchObject({
+        operation: {
+          result: {
+            details: { code: "BATTLE_FILL_HOLE_MISMATCH" },
+          },
+        },
+      });
+    } finally {
+      await finalConnection.close();
+      finalRepository.close();
+    }
+  }, 90_000);
 
   test("continues an accepted Character Draft mutation after reconstructing the application store", async () => {
     const directory = await mkdtemp(join(tmpdir(), "dnd-play-session-"));

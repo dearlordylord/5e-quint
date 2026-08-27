@@ -3074,6 +3074,42 @@ async function createAndFinalizeElfWizardFive(client: Client, draftId: string) {
   });
 }
 
+export async function createAndFinalizeElfWizardFiveWithCounterspell(
+  client: Client,
+  draftId: string,
+) {
+  return createAndFinalizeElfSoldierWizardWithAsi(client, draftId, {
+    progressionOptionId: levelFiveWizardProgressionOptionId,
+    wizardSpellbookOptionIds: [
+      "detect_magic",
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "sleep",
+      "thunderwave",
+      "chromatic_orb",
+      "scorching_ray",
+      "mirror_image",
+      "misty_step",
+      "acid_arrow",
+      "shatter",
+      "fireball",
+      "counterspell",
+    ],
+    wizardPreparedSpellOptionIds: [
+      "mage_armor",
+      "magic_missile",
+      "shield",
+      "chromatic_orb",
+      "scorching_ray",
+      "misty_step",
+      "acid_arrow",
+      "fireball",
+      "counterspell",
+    ],
+  });
+}
+
 async function createAndFinalizeOrcRogueSixWithExpertise(
   client: Client,
   draftId: string,

@@ -1158,7 +1158,12 @@ function projectEnvelopeFrontier(
       : { kind: "acts", acts: projectedActs };
   }
   if (frontier.kind === "holes") {
-    if (frontier.subject === undefined) return undefined;
+    if (
+      frontier.subject === undefined ||
+      !Array.isArray(frontier.holes) ||
+      frontier.holes.length === 0
+    )
+      return undefined;
     const subject = projectPlayerSubject(frontier.subject);
     if (subject === undefined) return undefined;
     const projectedHoles = holeOccurrences(subject, frontier.holes, source);
@@ -1187,6 +1192,43 @@ function projectEnvelopeFrontier(
     choices: decoded.right.choices.map(jsonValue),
     stackDepth: decoded.right.stackDepth,
   };
+}
+
+function resolutionEnvelopeForTag(
+  result: JsonObject,
+  tag: string,
+): JsonValue | undefined {
+  if (!isJsonObject(result.envelope) || !isJsonObject(result.envelope.frontier))
+    return undefined;
+  const frontier = result.envelope.frontier;
+  if (tag === "resolved") {
+    return frontier.kind === "acts" || frontier.kind === "interruptDecision"
+      ? result.envelope
+      : undefined;
+  }
+  if (tag === "needsHoles") {
+    if (frontier.kind === "interruptDecision") return result.envelope;
+    return frontier.kind === "holes" &&
+      Array.isArray(frontier.holes) &&
+      frontier.holes.length > 0
+      ? result.envelope
+      : undefined;
+  }
+  if (tag === "invalid") {
+    if (frontier.kind === "acts") {
+      return Array.isArray(frontier.acts) ? result.envelope : undefined;
+    }
+    if (frontier.kind === "holes") {
+      return Array.isArray(frontier.holes) && frontier.holes.length > 0
+        ? result.envelope
+        : undefined;
+    }
+    return frontier.kind === "interruptDecision" &&
+      Array.isArray(frontier.choices)
+      ? result.envelope
+      : undefined;
+  }
+  return undefined;
 }
 
 export function projectPlayerActs(
@@ -1248,17 +1290,27 @@ function frontier(
       return { tag: "invalid" };
     }
     const rejection = playerRejectionProjection(result);
-    if (rejection !== undefined) {
+    if (isPlayerRejectionTag(result.tag) && rejection === undefined) {
+      return { tag: "invalid" };
+    }
+    if (rejection !== undefined && rejection.tag !== "invalid") {
+      if (result.envelope !== undefined) return { tag: "invalid" };
       return {
         tag: "frontier",
         frontier: { kind: "rejected", rejection },
       };
     }
-    const projected = projectEnvelopeFrontier(result.envelope, source);
-    if (projected !== undefined) {
-      return { tag: "frontier", frontier: projected };
+    const envelope = resolutionEnvelopeForTag(result, result.tag);
+    if (envelope === undefined) return { tag: "invalid" };
+    const projected = projectEnvelopeFrontier(envelope, source);
+    if (projected === undefined) return { tag: "invalid" };
+    if (rejection?.tag === "invalid") {
+      return {
+        tag: "frontier",
+        frontier: { kind: "rejected", rejection },
+      };
     }
-    return { tag: "invalid" };
+    return { tag: "frontier", frontier: projected };
   };
   for (const call of [...calls].reverse()) {
     if (call.outcome !== "returned") continue;

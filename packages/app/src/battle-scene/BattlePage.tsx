@@ -1,12 +1,12 @@
-import { battlePresentedCheckpointFrontierEnvelope } from "@dnd/battle-runtime"
-import { Either } from "effect"
+import { battlePresentedCheckpointFrontierEnvelope, type BattleSnapshotPresentationIssue } from "@dnd/battle-runtime"
+import { Either, Match } from "effect"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { EventLog, type EventLogEntry } from "#/components/EventLog.tsx"
 import { PageShell } from "#/components/PageShell.tsx"
 import { BTN_SM } from "#/components/styles.ts"
 
-import { computeWizardBattleScene } from "./battle-scene-layout.ts"
+import { type BattleScenePresentationIssue, computeWizardBattleScene } from "./battle-scene-layout.ts"
 import { BattleField } from "./BattleField.tsx"
 import { InitiativeTracker } from "./InitiativeTracker.tsx"
 import type { WizardBattleDemoMeta, WizardBattleDemoStep } from "./wizard-battle-demo.ts"
@@ -117,9 +117,7 @@ export function BattlePage({
       <PageShell title="Battle Visualizer">
         <ul role="alert">
           {projectionResult.left.map((issue) => (
-            <li key={`${issue.combatantId}:${issue.reason}`}>
-              {`Battle presentation is unavailable for combatant ${issue.combatantId}: ${issue.reason}.`}
-            </li>
+            <li key={presentationIssueKey(issue)}>{presentationIssueMessage(issue)}</li>
           ))}
         </ul>
       </PageShell>
@@ -178,6 +176,37 @@ export function BattlePage({
         <EventLog entries={logEntries} cursor={cursor} onJumpTo={stepTo} />
       </div>
     </PageShell>
+  )
+}
+
+function presentationIssueKey(issue: BattleSnapshotPresentationIssue | BattleScenePresentationIssue): string {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleSnapshotPresentationIssue" }, (matched) => `${matched.combatantId}:${matched.reason}`),
+    Match.when({ tag: "battleScenePresentationIssue" }, (matched) => `${matched.combatantId}:${matched.reason}`),
+    Match.when(
+      { tag: "battleInterruptChoicePresentationIssue" },
+      (matched) => `${matched.reactorId}:${matched.choiceKind}:${matched.reason}`
+    ),
+    Match.exhaustive
+  )
+}
+
+function presentationIssueMessage(issue: BattleSnapshotPresentationIssue | BattleScenePresentationIssue): string {
+  return Match.value(issue).pipe(
+    Match.when(
+      { tag: "battleSnapshotPresentationIssue" },
+      (matched) => `Battle presentation is unavailable for combatant ${matched.combatantId}: ${matched.reason}.`
+    ),
+    Match.when(
+      { tag: "battleScenePresentationIssue" },
+      (matched) => `Battle scene presentation is unavailable for combatant ${matched.combatantId}: ${matched.reason}.`
+    ),
+    Match.when(
+      { tag: "battleInterruptChoicePresentationIssue" },
+      (matched) =>
+        `Battle interrupt choice presentation is unavailable for reactor ${matched.reactorId}: ${matched.reason}.`
+    ),
+    Match.exhaustive
   )
 }
 

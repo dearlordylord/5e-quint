@@ -952,6 +952,209 @@ describe("player current-turn projection", () => {
     });
   });
 
+  test("rejects a scenario rejection that also claims a battle envelope", () => {
+    const result = {
+      tag: "scenarioMovementRejected" as const,
+      message: "The route enters an unsupported occupied square.",
+      envelope: {
+        checkpoint: {},
+        frontier: { kind: "acts" as const, acts: [] },
+      },
+    };
+    const call = {
+      type: "sdk-call" as const,
+      seq: 1,
+      continuation: 1,
+      operation: "resolveScenarioMovement" as const,
+      inputSession: beforeSession,
+      inputSessionSha256: sha256Canonical(beforeSession),
+      input: { kind: "continue" as const, fills: [] },
+      outcome: "returned" as const,
+      outputSession: beforeSession,
+      outputSessionSha256: sha256Canonical(beforeSession),
+      result,
+      resultSha256: sha256Canonical(result),
+    };
+
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [call],
+        beforeSession,
+        afterSession: beforeSession,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+  });
+
+  test("preserves interrupt choices from the frontier and enforces result correlations", () => {
+    const interruptResult = {
+      tag: "needsHoles" as const,
+      session: beforeSession,
+      envelope: {
+        checkpoint: {},
+        frontier: {
+          kind: "interruptDecision" as const,
+          trigger: "attackHit" as const,
+          decisionHole: {
+            holeInstanceKey: "battle:interrupt",
+            holeId: "battle:interrupt",
+            kind: "interruptDecision" as const,
+            label: "Respond",
+            trigger: "attackHit" as const,
+            eligibleResponders: ["fighter"],
+          },
+          choices: [
+            {
+              kind: "reactionRollOrDamageReduction" as const,
+              reactorId: "fighter",
+              initialHoles: [],
+              choice: {
+                kind: "fallDamageReduction" as const,
+                procedureRef: attackProcedureRef,
+                reduction: { kind: "flat" as const, amount: 1 },
+              },
+            },
+          ],
+          stackDepth: 0,
+        },
+      },
+    };
+    const call = {
+      type: "sdk-call" as const,
+      seq: 1,
+      continuation: 1,
+      operation: "resolveBattleRuntimeInterrupt" as const,
+      inputSession: beforeSession,
+      inputSessionSha256: sha256Canonical(beforeSession),
+      input: { fill: {} },
+      outcome: "returned" as const,
+      outputSession: beforeSession,
+      outputSessionSha256: sha256Canonical(beforeSession),
+      result: interruptResult,
+      resultSha256: sha256Canonical(interruptResult),
+    };
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [call],
+        beforeSession,
+        afterSession: beforeSession,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({
+      tag: "valid",
+      projection: {
+        frontier: {
+          kind: "interruptDecision",
+          choices: [
+            {
+              kind: "reactionRollOrDamageReduction",
+              reactorId: "fighter",
+            },
+          ],
+        },
+      },
+    });
+
+    const { choices: frontierChoices, ...frontierWithoutChoices } =
+      interruptResult.envelope.frontier;
+    void frontierChoices;
+    const decisionHoleChoices = {
+      ...interruptResult,
+      envelope: {
+        ...interruptResult.envelope,
+        frontier: {
+          ...frontierWithoutChoices,
+          decisionHole: {
+            ...interruptResult.envelope.frontier.decisionHole,
+            choices: [{ kind: "decline" }],
+          },
+        },
+      },
+    };
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [
+          {
+            ...call,
+            result: decisionHoleChoices,
+            resultSha256: sha256Canonical(decisionHoleChoices),
+          },
+        ],
+        beforeSession,
+        afterSession: beforeSession,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+
+    for (const malformedResult of [
+      {
+        ...interruptResult,
+        envelope: {
+          ...interruptResult.envelope,
+          frontier: { kind: "acts" as const, acts: [] },
+        },
+      },
+      {
+        ...interruptResult,
+        envelope: {
+          ...interruptResult.envelope,
+          frontier: {
+            kind: "holes" as const,
+            subject: { tag: "action", actorId: "fighter", action: "dash" },
+            holes: [],
+          },
+        },
+      },
+      {
+        ...interruptResult,
+        tag: "resolved" as const,
+        envelope: {
+          ...interruptResult.envelope,
+          frontier: {
+            kind: "holes" as const,
+            subject: { tag: "action", actorId: "fighter", action: "dash" },
+            holes: [
+              {
+                kind: "targetChoice",
+                holeId: "battle:target",
+                holeInstanceKey: "battle:target",
+                label: "Target",
+                choices: ["goblin"],
+              },
+            ],
+          },
+        },
+      },
+      {
+        ...interruptResult,
+        tag: "invalid" as const,
+        envelope: {
+          ...interruptResult.envelope,
+          frontier: interruptResult.envelope.frontier,
+        },
+      },
+    ]) {
+      expect(
+        playerCurrentTurnProjection({
+          continuation: 1,
+          calls: [
+            {
+              ...call,
+              result: malformedResult,
+              resultSha256: sha256Canonical(malformedResult),
+            },
+          ],
+          beforeSession,
+          afterSession: beforeSession,
+          tacticalNote: "",
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+    }
+  });
+
   test("preserves canonical scenario rejections and rejects unknown conflicts", () => {
     const project = (result: {
       readonly tag: string;

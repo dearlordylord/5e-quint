@@ -8,7 +8,6 @@ import {
   type BattleCheckpointFrontierEnvelope,
   type BattleHole,
   type BattleInterruptDecisionHole,
-  type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleFill,
 } from "@dnd/battle-runtime";
@@ -26,7 +25,6 @@ import {
   settleCharacterSessionsFromBattle,
 } from "./battle-handoff.ts";
 import {
-  BattleResolutionOutputSchema,
   BattleSessionOutputSchema,
   EndBattleOutputSchema,
   SelectStatBlockOutputSchema,
@@ -35,7 +33,6 @@ import { handleStartBattleToolCall } from "./start-battle-tool.ts";
 import { handleBattleLifecycleToolCall } from "./battle-lifecycle-tool.ts";
 import { pendingTransactionForResult } from "./battle-pending-transaction.ts";
 import {
-  battleResolutionPayload,
   battleMechanicsEnvelopeForSession,
   battlePresentationEnvelopeForSession,
   battleSessionPayload,
@@ -45,14 +42,11 @@ import {
   pendingBattleFillsContent,
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
-import type {
-  McpBattleStateTransitionIssue,
-  PendingBattleFillSession,
-} from "./session-store.ts";
 import { schemaJsonContent, type ToolError } from "./schema-codec.ts";
 import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent } from "./tool-content.ts";
 import { battleStateTransitionErrorContent } from "./battle-state-transition.ts";
+import { storedBattleResolutionContent } from "./battle-resolution-storage.ts";
 
 export type BattleToolResult =
   | ReturnType<typeof schemaJsonContent>
@@ -314,71 +308,6 @@ function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
   return Either.isLeft(payload)
     ? battleSnapshotPresentationIssueContent(payload.left)
     : schemaJsonContent(BattleSessionOutputSchema, payload.right);
-}
-
-function battleResolutionContent(
-  root: McpPlaySessionRoot,
-  result: BattleRuntimeResolutionResult,
-): BattleToolResult {
-  const payload = battleResolutionPayload(root, result);
-  return Either.isLeft(payload)
-    ? battleSnapshotPresentationIssueContent(payload.left)
-    : schemaJsonContent(BattleResolutionOutputSchema, payload.right);
-}
-
-export function storeBattleResolution(
-  root: McpPlaySessionRoot,
-  result: BattleRuntimeResolutionResult,
-  pendingTransaction: PendingBattleFillSession | null,
-): Either.Either<
-  { readonly tag: "stored" } | { readonly tag: "invalidResultNotStored" },
-  | McpBattleStateTransitionIssue
-  | { readonly tag: "pendingBattleFillTransactionMissing" }
-> {
-  return Match.value(result).pipe(
-    Match.when({ tag: "resolved" }, (resolved) =>
-      Either.map(root.sessionStore.storeActiveBattle(resolved.session), () => {
-        root.sessionStore.pendingBattleFills = null;
-        return { tag: "stored" } as const;
-      }),
-    ),
-    Match.when({ tag: "needsHoles" }, (needsHoles) => {
-      if (pendingTransaction === null) {
-        return Either.left({
-          tag: "pendingBattleFillTransactionMissing" as const,
-        });
-      }
-      return Either.map(
-        root.sessionStore.storeActiveBattle(needsHoles.session),
-        () => {
-          root.sessionStore.pendingBattleFills = pendingTransaction;
-          return { tag: "stored" } as const;
-        },
-      );
-    }),
-    Match.when({ tag: "invalid" }, () =>
-      Either.right({ tag: "invalidResultNotStored" } as const),
-    ),
-    Match.exhaustive,
-  );
-}
-
-function storedBattleResolutionContent(
-  root: McpPlaySessionRoot,
-  result: BattleRuntimeResolutionResult,
-  pendingTransaction: PendingBattleFillSession | null,
-): BattleToolResult {
-  const stored = storeBattleResolution(root, result, pendingTransaction);
-  if (Either.isLeft(stored)) {
-    return errorContent("Battle state transition failed.", {
-      code: "BATTLE_STATE_TRANSITION_INVALID",
-      transition: stored.left,
-    });
-  }
-  if (stored.right.tag === "stored") {
-    publishAdminProjectionBestEffort(root);
-  }
-  return battleResolutionContent(root, result);
 }
 
 function activeBattleWithoutPendingFills(

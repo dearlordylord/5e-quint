@@ -488,6 +488,9 @@ function resolutionFrontierHoles(
       ? []
       : undefined;
   }
+  if (tag === "scenarioSessionConflict" || tag === "scenarioMovementRejected") {
+    return undefined;
+  }
   if (
     !isJsonObject(result.envelope) ||
     !isJsonObject(result.envelope.frontier)
@@ -496,6 +499,7 @@ function resolutionFrontierHoles(
   }
   const frontier = result.envelope.frontier;
   if (frontier.kind === "acts") {
+    if (tag === "needsHoles") return undefined;
     return Array.isArray(frontier.acts)
       ? frontier.acts.reduce<readonly SdkReviewHole[] | undefined>(
           (all, act) => {
@@ -507,24 +511,34 @@ function resolutionFrontierHoles(
         )
       : undefined;
   }
-  if (frontier.kind === "holes") return holes(frontier.holes, "required");
+  if (frontier.kind === "holes") {
+    if (tag === "resolved") return undefined;
+    const projected = holes(frontier.holes, "required");
+    return projected !== undefined && projected.length > 0
+      ? projected
+      : undefined;
+  }
   if (frontier.kind !== "interruptDecision") return undefined;
+  if (tag !== "resolved" && tag !== "needsHoles" && tag !== "invalid")
+    return undefined;
   if (!isJsonObject(frontier.decisionHole)) return undefined;
   if (typeof frontier.decisionHole.kind !== "string") return undefined;
+  if (frontier.decisionHole.choices !== undefined) return undefined;
+  if (!Array.isArray(frontier.choices)) return undefined;
   if (
-    frontier.decisionHole.choices !== undefined &&
-    !Array.isArray(frontier.decisionHole.choices)
-  )
+    !frontier.choices.every(
+      (choice) => isJsonObject(choice) && typeof choice.kind === "string",
+    )
+  ) {
     return undefined;
+  }
   return [
     {
       kind: frontier.decisionHole.kind,
       ...(typeof frontier.decisionHole.label === "string"
         ? { label: frontier.decisionHole.label }
         : {}),
-      ...(Array.isArray(frontier.decisionHole.choices)
-        ? { choiceCount: frontier.decisionHole.choices.length }
-        : {}),
+      choiceCount: frontier.choices.length,
     },
   ];
 }

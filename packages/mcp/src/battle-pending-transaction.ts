@@ -26,6 +26,17 @@ export function pendingTransactionForResult({
   readonly fills: readonly BattleFill[];
   readonly replaySession: BattleRuntimeSession;
 }): PendingBattleFillSession | null {
+  if (
+    result.tag === "resolved" &&
+    result.envelope.frontier.kind === "interruptDecision"
+  ) {
+    return {
+      baseSession: result.session,
+      subject: filledSubject,
+      fills: [],
+    };
+  }
+
   if (result.tag !== "needsHoles") return null;
 
   const frontier = result.envelope.frontier;
@@ -40,6 +51,7 @@ export function pendingTransactionForResult({
   if (frontier.continuation.kind === "runtimeOwnedInterrupt") {
     if (
       previous !== null &&
+      fills.at(-1)?.kind !== "interruptDecision" &&
       sameBattleSubject(previous.subject, filledSubject) &&
       sameBattleSubject(previous.subject, frontier.subject)
     ) {
@@ -49,6 +61,10 @@ export function pendingTransactionForResult({
         fills,
       };
     }
+    // The returned session already contains the accepted interrupt response.
+    // Reset the replay source at this durable boundary; replaying the nested
+    // interrupt fill as an ordinary subject fill would resurrect the old
+    // decision frontier on the next request or after recovery.
     return {
       baseSession: result.session,
       subject: frontier.subject,

@@ -50,6 +50,11 @@ export const McpSessionSummarySchema = Schema.Struct({
   ...McpSessionSummaryFields,
 });
 
+export const McpNoneSessionSnapshotSchema = Schema.Struct({
+  ...McpSessionSummaryFields,
+  battleState: McpNoneBattleStateSnapshotSchema,
+});
+
 export const McpSessionSnapshotSchema = Schema.Struct({
   ...McpSessionSummaryFields,
 });

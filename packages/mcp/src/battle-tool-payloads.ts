@@ -1,5 +1,4 @@
 import {
-  battlePresentedCheckpointFrontierEnvelope,
   currentBattleCheckpointFrontierEnvelope,
   presentBattleCheckpointFrontierEnvelope,
   resolveBattleRuntimeSubject,
@@ -19,20 +18,34 @@ import {
   type McpActiveSessionSnapshot,
   type McpSessionSummary,
 } from "./session-snapshot-output.ts";
+import type { BattleResolutionResultPayload } from "./battle-tool-output.ts";
 import { errorContent } from "./tool-content.ts";
 
 type BattlePayloadPresentationIssues = BattleSnapshotPresentationIssues;
 
 type BattleSessionPayload =
-  | { readonly envelope: null; readonly session: McpSessionSummary }
-  | { readonly envelope: null; readonly session: McpActiveSessionSnapshot }
+  | {
+      readonly envelope: null;
+      readonly session: Omit<McpSessionSummary, "battleState"> & {
+        readonly battleState: Extract<
+          McpSessionSummary["battleState"],
+          { readonly tag: "none" }
+        >;
+      };
+    }
+  | {
+      readonly envelope: null;
+      readonly session: Omit<McpSessionSummary, "battleState"> & {
+        readonly battleState: Extract<
+          McpSessionSummary["battleState"],
+          { readonly tag: "initialInitiativeSetup" }
+        >;
+      };
+    }
   | {
       readonly envelope: BattlePresentedCheckpointFrontierEnvelope;
       readonly session: McpActiveSessionSnapshot;
     };
-
-export type ActiveBattlePresentationProjection =
-  BattlePresentedCheckpointFrontierEnvelope;
 
 export function unknownStatBlockContent(statBlockId: string, error: unknown) {
   return errorContent(`Unknown Stat Block: ${statBlockId}`, {
@@ -63,6 +76,7 @@ export function battleSessionPayload(
   session: BattleRuntimeSession | null,
 ): Either.Either<BattleSessionPayload, BattleSnapshotPresentationIssues> {
   const snapshot = root.sessionStore.snapshot();
+  const sessionSummary = mcpSessionSummary(snapshot);
   const battleState = battleStateSnapshot(root.sessionStore.battleState);
   if (session === null) {
     if (battleState.tag !== "none") {
@@ -72,7 +86,7 @@ export function battleSessionPayload(
     }
     return Either.right({
       envelope: null,
-      session: snapshot,
+      session: { ...sessionSummary, battleState },
     });
   }
   if (battleState.tag !== "activeBattle") {
@@ -84,7 +98,7 @@ export function battleSessionPayload(
     battlePresentationEnvelopeForSession(root, session),
     (envelope) => ({
       envelope,
-      session: { ...snapshot, battleState },
+      session: { ...sessionSummary, battleState },
     }),
   );
 }
@@ -126,14 +140,28 @@ export function battleResolutionPayload(
     if (battleState.tag !== "activeBattle") {
       throw new Error("Battle resolution requires an active battle state.");
     }
-    const session = root.sessionStore.snapshot();
+    const session = {
+      ...root.sessionStore.snapshot(),
+      battleState,
+    };
+    if (result.tag === "resolved") {
+      return {
+        result: battleResolutionResultPayload(result),
+        envelope,
+        session,
+      };
+    }
+    if (result.tag === "needsHoles") {
+      return {
+        result: battleResolutionResultPayload(result),
+        envelope,
+        session,
+      };
+    }
     return {
       result: battleResolutionResultPayload(result),
       envelope,
-      session: {
-        ...session,
-        battleState,
-      },
+      session,
     };
   });
 }
@@ -146,23 +174,10 @@ export function battlePresentationEnvelopeForSession(
   BattlePresentedCheckpointFrontierEnvelope,
   BattleSnapshotPresentationIssues
 > {
-  const pending = root.sessionStore.pendingBattleFills;
-  if (pending === null) {
-    return battlePresentedCheckpointFrontierEnvelope(session);
-  }
-  const current = currentBattleCheckpointFrontierEnvelope(session);
-  if (current.frontier.kind === "interruptDecision") {
-    return presentBattleCheckpointFrontierEnvelope(session, current);
-  }
-  const replay = resolveBattleRuntimeSubject({
-    session: pending.baseSession,
-    subject: pending.subject,
-    fills: pending.fills,
-    statBlockCatalog: root.statBlockCatalog,
-  });
+  const source = battleEnvelopeSourceForSession(root, session);
   return presentBattleCheckpointFrontierEnvelope(
-    replay.session,
-    replay.envelope,
+    source.session,
+    source.envelope,
   );
 }
 
@@ -171,25 +186,37 @@ export function battleMechanicsEnvelopeForSession(
   root: McpPlaySessionRoot,
   session: BattleRuntimeSession,
 ): BattleCheckpointFrontierEnvelope {
+  return battleEnvelopeSourceForSession(root, session).envelope;
+}
+
+function battleEnvelopeSourceForSession(
+  root: McpPlaySessionRoot,
+  session: BattleRuntimeSession,
+): {
+  readonly session: BattleRuntimeSession;
+  readonly envelope: BattleCheckpointFrontierEnvelope;
+} {
   const pending = root.sessionStore.pendingBattleFills;
-  if (pending === null) return currentBattleCheckpointFrontierEnvelope(session);
+  if (pending === null) {
+    return {
+      session,
+      envelope: currentBattleCheckpointFrontierEnvelope(session),
+    };
+  }
   const current = currentBattleCheckpointFrontierEnvelope(session);
-  if (current.frontier.kind === "interruptDecision") return current;
-  return resolveBattleRuntimeSubject({
+  if (
+    current.frontier.kind === "interruptDecision" &&
+    pending.fills.length === 0
+  ) {
+    return { session, envelope: current };
+  }
+  const replay = resolveBattleRuntimeSubject({
     session: pending.baseSession,
     subject: pending.subject,
     fills: pending.fills,
     statBlockCatalog: root.statBlockCatalog,
-  }).envelope;
-}
-
-export function battlePresentationProjection(
-  session: BattleRuntimeSession,
-): Either.Either<
-  ActiveBattlePresentationProjection,
-  BattleSnapshotPresentationIssues
-> {
-  return battlePresentedCheckpointFrontierEnvelope(session);
+  });
+  return { session: replay.session, envelope: replay.envelope };
 }
 
 export function battleSnapshotPresentationIssueContent(
@@ -202,11 +229,23 @@ export function battleSnapshotPresentationIssueContent(
 }
 
 export function battleResolutionResultPayload(
+  result: Extract<BattleRuntimeResolutionResult, { readonly tag: "resolved" }>,
+): Extract<BattleResolutionResultPayload, { readonly tag: "resolved" }>;
+export function battleResolutionResultPayload(
+  result: Extract<
+    BattleRuntimeResolutionResult,
+    { readonly tag: "needsHoles" }
+  >,
+): Extract<BattleResolutionResultPayload, { readonly tag: "needsHoles" }>;
+export function battleResolutionResultPayload(
+  result: Extract<BattleRuntimeResolutionResult, { readonly tag: "invalid" }>,
+): Extract<BattleResolutionResultPayload, { readonly tag: "invalid" }>;
+export function battleResolutionResultPayload(
   result: BattleRuntimeResolutionResult,
-) {
+): BattleResolutionResultPayload {
   if (result.tag === "resolved") {
     return {
-      tag: result.tag,
+      tag: "resolved",
       ...(result.objectDamages === undefined
         ? {}
         : { objectDamages: result.objectDamages }),
@@ -222,10 +261,10 @@ export function battleResolutionResultPayload(
     };
   }
   if (result.tag === "needsHoles") {
-    return { tag: result.tag };
+    return { tag: "needsHoles" };
   }
   return {
-    tag: result.tag,
+    tag: "invalid",
     reason: result.reason,
     message: result.message,
   };

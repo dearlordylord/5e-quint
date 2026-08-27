@@ -10,6 +10,7 @@ import {
 } from "./play-session.ts";
 import { GuestAccessGrantSchema } from "./play-session-access.ts";
 import { playSessionCreationResultSchema } from "./play-session-creation-schema.ts";
+import { BattlePresentationEnvelopeSchema } from "./battle-tool-output.ts";
 import {
   modelFacingSessionProjectionSchema,
   modelFacingUnresolvedInputsSchema,
@@ -23,6 +24,7 @@ import {
 import { McpSessionSummarySchema } from "./session-snapshot-output.ts";
 import {
   PLAY_SESSION_NEXT_OPERATION_NAMES,
+  playSessionToolNames,
   type PlaySessionOperationName,
   type PlaySessionToolName,
 } from "./play-session-tool-names.ts";
@@ -65,6 +67,10 @@ const routedOutputSchemas = new Map<
   PlaySessionOperationName,
   WeakMap<object, McpOutputSchema>
 >();
+const embeddedBattleEnvelope = embeddedSchema(
+  mcpOutputJsonSchema(BattlePresentationEnvelopeSchema),
+  "BattleEnvelope",
+);
 
 export const deleteSavedPlaySessionOutputSchema: McpOutputSchema = {
   type: "object",
@@ -104,13 +110,27 @@ export function playSessionLifecycleOutputSchema(
   operationName: PlaySessionToolName,
   resultTag: "playSessionCreated" | "playSessionResumed",
 ): McpOutputSchema {
+  const resumedBattleEnvelope =
+    operationName === playSessionToolNames.read
+      ? {
+          battleEnvelope: embeddedBattleEnvelope.schema,
+        }
+      : {};
   const lifecycleResult = {
     type: "object",
     properties: {
       tag: { const: resultTag },
       playSessionId: playSessionIdJsonSchema,
+      ...resumedBattleEnvelope,
     },
-    required: ["tag", "playSessionId"],
+    required: [
+      "tag",
+      "playSessionId",
+      ...(operationName === playSessionToolNames.read
+        ? ["battleEnvelope"]
+        : []),
+    ],
+    $defs: embeddedBattleEnvelope.definitions,
     additionalProperties: false,
   } satisfies McpOutputSchema;
   return playSessionOperationOutputSchema(

@@ -1759,7 +1759,7 @@ describe("MCP protocol server", () => {
           restoration: { tag: "retained" },
           unresolvedInputs: [
             {
-              sourcePath: "$.envelope.frontier.holes",
+              sourcePath: "$.details.battleEnvelope.frontier.holes",
               inputs: [expect.objectContaining({ kind: "attackRoll" })],
             },
           ],
@@ -1771,14 +1771,14 @@ describe("MCP protocol server", () => {
         });
         expect(resumed.unresolvedInputs).toMatchObject([
           {
-            sourcePath: "$.envelope.frontier.holes",
+            sourcePath: "$.battleEnvelope.frontier.holes",
             inputs: [expect.objectContaining({ kind: "attackRoll" })],
           },
         ]);
         expect(resumed).toMatchObject({
           unresolvedInputs: [
             {
-              sourcePath: "$.envelope.frontier.holes",
+              sourcePath: "$.battleEnvelope.frontier.holes",
               inputs: [expect.objectContaining({ kind: "attackRoll" })],
             },
           ],

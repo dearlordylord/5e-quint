@@ -86,10 +86,10 @@ export function presentBattleCheckpointFrontierEnvelope(
   return Either.flatMap(
     presentBattleSnapshot(session, envelope.checkpoint),
     (checkpoint) =>
-      Either.right({
+      Either.map(presentFrontier(session, envelope.frontier), (frontier) => ({
         checkpoint,
-        frontier: presentFrontier(session, envelope.frontier),
-      }),
+        frontier,
+      })),
   );
 }
 
@@ -108,38 +108,60 @@ export function battlePresentedCheckpointFrontierEnvelope(
 function presentFrontier(
   session: BattleRuntimeSession,
   frontier: BattleCheckpointFrontierEnvelope["frontier"],
-): BattlePresentedCheckpointFrontierEnvelope["frontier"] {
+): Either.Either<
+  BattlePresentedCheckpointFrontierEnvelope["frontier"],
+  BattleSnapshotPresentationIssues
+> {
   if (frontier.kind === "acts") {
-    return {
+    return Either.right({
       kind: "acts",
       acts: presentBattleActs(session, frontier.acts),
-    };
+    });
   }
   if (frontier.kind === "holes") {
-    return frontier;
+    return Either.right(frontier);
   }
-  return {
-    ...frontier,
-    choices: presentBattleInterruptChoices(session, frontier.choices),
-  };
+  return Either.map(
+    presentBattleInterruptChoices(session, frontier.choices),
+    (choices) => ({ ...frontier, choices }),
+  );
 }
 
 export function presentBattleInterruptChoices(
   session: BattleRuntimeSession,
   choices: readonly BattleInterruptProcedureChoice[],
-): readonly BattlePresentedInterruptChoice[] {
-  return choices.flatMap(
-    (choice): readonly BattlePresentedInterruptChoice[] => {
-      if (choice.kind === "reactionRollOrDamageReduction") {
-        // Modifier-only choices are mechanics-owned and have no authored act
-        // presentation to join. They must remain visible in the frontier.
-        const presented: BattlePresentedInterruptChoice = { choice };
-        return [presented];
-      }
-      const presentation = battleSubjectPresentation(session, choice.subject);
-      return presentation === undefined ? [] : [{ choice, presentation }];
-    },
+): Either.Either<
+  readonly BattlePresentedInterruptChoice[],
+  BattleSnapshotPresentationIssues
+> {
+  return traverseValidation(choices, (choice) =>
+    presentBattleInterruptChoice(session, choice),
   );
+}
+
+function presentBattleInterruptChoice(
+  session: BattleRuntimeSession,
+  choice: BattleInterruptProcedureChoice,
+): Either.Either<
+  BattlePresentedInterruptChoice,
+  BattleSnapshotPresentationIssue
+> {
+  if (choice.kind === "reactionRollOrDamageReduction") {
+    // Modifier-only choices are mechanics-owned and have no authored act
+    // presentation to join. They must remain visible in the frontier.
+    return Either.right({ choice });
+  }
+  const presentation = battleSubjectPresentation(session, choice.subject);
+  if (presentation === undefined) {
+    return Either.left({
+      tag: "battleInterruptChoicePresentationIssue",
+      reason: "missingSubjectPresentation",
+      reactorId: choice.reactorId,
+      choiceKind: choice.kind,
+      subject: choice.subject,
+    });
+  }
+  return Either.right({ choice, presentation });
 }
 
 function presentedCombatant(

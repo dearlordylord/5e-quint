@@ -309,6 +309,33 @@ describe("SDK player derived audit evidence", () => {
         }).tag,
       ).toBe("invalid");
     }
+
+    const emptyHolesResult = {
+      ...call.result,
+      envelope: {
+        ...call.result.envelope,
+        frontier: {
+          ...call.result.envelope.frontier,
+          holes: [],
+        },
+      },
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          header,
+          {
+            ...call,
+            result: emptyHolesResult,
+            resultSha256: sha256Canonical(emptyHolesResult),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }).tag,
+    ).toBe("invalid");
   });
 
   test("rejects an AvailableBattleAct with missing initial holes", () => {
@@ -350,6 +377,116 @@ describe("SDK player derived audit evidence", () => {
       tag: "invalid",
       message: "SDK call seq 1 cannot be projected into typed audit facts.",
     });
+  });
+
+  test("counts interrupt choices at the frontier and rejects decision-hole impostors", () => {
+    const { header, call } = fixture();
+    const interruptFrontier = {
+      ...call.result.envelope.frontier,
+      kind: "interruptDecision" as const,
+      decisionHole: {
+        kind: "interruptDecision",
+        label: "Respond to the interruption",
+      },
+      choices: [{ kind: "decline" }, { kind: "castTriggeredReaction" }],
+    };
+    const interruptResult = {
+      ...call.result,
+      tag: "resolved" as const,
+      envelope: {
+        ...call.result.envelope,
+        frontier: interruptFrontier,
+      },
+    };
+    const interruptCall = {
+      ...call,
+      operation: "resolveBattleRuntimeInterrupt" as const,
+      result: interruptResult,
+      resultSha256: sha256Canonical(interruptResult),
+    };
+    const audited = sdkAuditTranscript({
+      records: [header, interruptCall],
+      transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+      transcriptByteLength: 123,
+      transcriptSha256: "3".repeat(64),
+      replaySupervisorSha256: "b".repeat(64),
+    });
+    expect(audited).toMatchObject({
+      tag: "valid",
+      audit: {
+        calls: [
+          {
+            reviewFacts: {
+              kind: "resolution",
+              tag: "resolved",
+              holes: [
+                {
+                  kind: "interruptDecision",
+                  label: "Respond to the interruption",
+                  choiceCount: 2,
+                },
+              ],
+            },
+          },
+        ],
+      },
+    });
+
+    const invalidInterruptResult = {
+      ...interruptResult,
+      tag: "invalid" as const,
+      reason: "invalidFill",
+      message: "The response no longer matches the interrupt frontier.",
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          header,
+          {
+            ...interruptCall,
+            result: invalidInterruptResult,
+            resultSha256: sha256Canonical(invalidInterruptResult),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }).tag,
+    ).toBe("valid");
+
+    const { choices: frontierChoices, ...frontierWithoutChoices } =
+      interruptFrontier;
+    void frontierChoices;
+    const decisionHoleChoices = {
+      ...interruptResult,
+      envelope: {
+        ...interruptResult.envelope,
+        frontier: {
+          ...frontierWithoutChoices,
+          decisionHole: {
+            ...interruptFrontier.decisionHole,
+            choices: [{ kind: "decline" }],
+          },
+        },
+      },
+    };
+    expect(
+      sdkAuditTranscript({
+        records: [
+          header,
+          {
+            ...interruptCall,
+            result: decisionHoleChoices,
+            resultSha256: sha256Canonical(decisionHoleChoices),
+          },
+        ],
+        transcriptPath: "scripts/raw-swarm/out/audit/evidence/sdk-calls.jsonl",
+        transcriptByteLength: 123,
+        transcriptSha256: "3".repeat(64),
+        replaySupervisorSha256: "b".repeat(64),
+      }).tag,
+    ).toBe("invalid");
   });
 
   test("preflights immutable bytes and extracts exact sequences with provenance", () => {

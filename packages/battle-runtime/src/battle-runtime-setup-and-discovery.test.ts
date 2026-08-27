@@ -538,7 +538,11 @@ describe("battle runtime: setup and discovery", () => {
       expect(result.left).toHaveLength(2);
       expect(
         new Set(
-          result.left.map((issue) => `${issue.combatantId}:${issue.reason}`),
+          result.left.map((issue) =>
+            issue.tag === "battleSnapshotPresentationIssue"
+              ? `${issue.combatantId}:${issue.reason}`
+              : `${issue.reactorId}:${issue.reason}`,
+          ),
         ),
       ).toEqual(
         new Set([
