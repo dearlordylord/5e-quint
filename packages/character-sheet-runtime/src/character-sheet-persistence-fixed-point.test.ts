@@ -32,12 +32,26 @@ type FixedPointCase = {
 };
 type FixedPointArtifact = {
   readonly fixedPoint: { readonly commit: string };
-  readonly provenance: { readonly certifiedBaseline: string };
+  readonly provenance: {
+    readonly certifiedBaseline: string;
+    readonly oldParserProbe: string;
+  };
   readonly cases: readonly FixedPointCase[];
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasExactKeys(
+  value: Record<string, unknown>,
+  keys: readonly string[],
+): boolean {
+  const actualKeys = Object.keys(value);
+  return (
+    actualKeys.length === keys.length &&
+    keys.every((key) => Object.hasOwn(value, key))
+  );
 }
 
 function fixedPointCaseId(value: unknown): FixedPointCaseId | undefined {
@@ -48,16 +62,37 @@ function fixedPointCaseId(value: unknown): FixedPointCaseId | undefined {
 }
 
 function parseFixedPointArtifact(value: unknown): FixedPointArtifact {
-  if (!isRecord(value))
-    throw new Error("Fixed-point artifact must be an object.");
+  if (
+    !isRecord(value) ||
+    !hasExactKeys(value, [
+      "artifactKind",
+      "formatVersion",
+      "fixedPoint",
+      "provenance",
+      "projection",
+      "scope",
+      "cases",
+    ]) ||
+    value.artifactKind !== "character-sheet-persistence-fixed-point" ||
+    value.formatVersion !== 1 ||
+    typeof value.projection !== "string" ||
+    typeof value.scope !== "string"
+  ) {
+    throw new Error("Fixed-point artifact envelope is invalid.");
+  }
   const fixedPoint = value.fixedPoint;
   const provenance = value.provenance;
   const cases = value.cases;
   if (
     !isRecord(fixedPoint) ||
+    !hasExactKeys(fixedPoint, ["commit", "checkout", "parser"]) ||
     typeof fixedPoint.commit !== "string" ||
+    typeof fixedPoint.checkout !== "string" ||
+    typeof fixedPoint.parser !== "string" ||
     !isRecord(provenance) ||
+    !hasExactKeys(provenance, ["certifiedBaseline", "oldParserProbe"]) ||
     typeof provenance.certifiedBaseline !== "string" ||
+    typeof provenance.oldParserProbe !== "string" ||
     !Array.isArray(cases) ||
     cases.length !== FIXED_POINT_CASE_IDS.length
   ) {
@@ -66,21 +101,23 @@ function parseFixedPointArtifact(value: unknown): FixedPointArtifact {
 
   const parsedCases: FixedPointCase[] = [];
   for (const [index, candidate] of cases.entries()) {
-    if (!isRecord(candidate))
-      throw new Error("Fixed-point case must be an object.");
+    if (
+      !isRecord(candidate) ||
+      !hasExactKeys(candidate, ["id", "input", "expected"])
+    )
+      throw new Error("Fixed-point case envelope is invalid.");
     const id = fixedPointCaseId(candidate.id);
     const expected = candidate.expected;
     if (
       id === undefined ||
       id !== FIXED_POINT_CASE_IDS[index] ||
-      !Object.hasOwn(candidate, "input") ||
       !isRecord(expected) ||
       (expected.outcome !== "success" && expected.outcome !== "failure")
     ) {
       throw new Error("Fixed-point case identity or shape is invalid.");
     }
     if (expected.outcome === "success") {
-      if (!Object.hasOwn(expected, "value")) {
+      if (!hasExactKeys(expected, ["outcome", "value"])) {
         throw new Error("Successful fixed-point case is missing its value.");
       }
       parsedCases.push({
@@ -89,7 +126,7 @@ function parseFixedPointArtifact(value: unknown): FixedPointArtifact {
         expected: { outcome: "success", value: expected.value },
       });
     } else {
-      if (!Object.hasOwn(expected, "issue")) {
+      if (!hasExactKeys(expected, ["outcome", "issue"])) {
         throw new Error("Failed fixed-point case is missing its issue.");
       }
       parsedCases.push({
@@ -101,7 +138,10 @@ function parseFixedPointArtifact(value: unknown): FixedPointArtifact {
   }
   return {
     fixedPoint: { commit: fixedPoint.commit },
-    provenance: { certifiedBaseline: provenance.certifiedBaseline },
+    provenance: {
+      certifiedBaseline: provenance.certifiedBaseline,
+      oldParserProbe: provenance.oldParserProbe,
+    },
     cases: parsedCases,
   };
 }
@@ -118,6 +158,7 @@ describe("character-sheet persistence fixed point", () => {
     expect(artifact.provenance.certifiedBaseline).toBe(
       "docs/migrations/effect-4/baseline-certification.md",
     );
+    expect(artifact.provenance.oldParserProbe).toContain("9/9 cases matched");
     expect(artifact.cases.map((testCase) => testCase.id)).toEqual(
       FIXED_POINT_CASE_IDS,
     );
@@ -129,5 +170,34 @@ describe("character-sheet persistence fixed point", () => {
         : { outcome: "failure" as const, issue: parsed.failure };
       expect(actual, testCase.id).toEqual(testCase.expected);
     }
+  });
+
+  test("rejects corrupted artifact envelopes and Result-shaped additions", () => {
+    const missingProbe = {
+      ...artifact,
+      provenance: { certifiedBaseline: artifact.provenance.certifiedBaseline },
+    };
+    expect(() => parseFixedPointArtifact(missingProbe)).toThrow();
+
+    const resultTag = {
+      ...artifact,
+      cases: artifact.cases.map((testCase, index) =>
+        index === 0
+          ? {
+              ...testCase,
+              expected: { ...testCase.expected, _tag: "Success" },
+            }
+          : testCase,
+      ),
+    };
+    expect(() => parseFixedPointArtifact(resultTag)).toThrow();
+
+    const extraCaseKey = {
+      ...artifact,
+      cases: artifact.cases.map((testCase, index) =>
+        index === 0 ? { ...testCase, payload: "unexpected" } : testCase,
+      ),
+    };
+    expect(() => parseFixedPointArtifact(extraCaseKey)).toThrow();
   });
 });
