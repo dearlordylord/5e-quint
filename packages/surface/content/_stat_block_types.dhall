@@ -281,16 +281,6 @@ let rangedAttack : RangedAttack -> Procedure =
             , rangeFeet = Some input.rangeFeet
             }
 
-let ActionOption : Type = { name : Text, options : List Text }
-
-let actionOption : ActionOption -> Procedure =
-      λ(input : ActionOption) ->
-        defaultProcedure
-        //  { kind = "action_option"
-            , name = input.name
-            , options = Some input.options
-            }
-
 let SaveArea : Type =
       { name : Text
       , ability : Text
@@ -320,6 +310,16 @@ let multiattack : Multiattack -> Procedure =
         //  { dispatches = Some input.dispatches
             , kind = "multiattack"
             , name = input.name
+            }
+
+let ActionOption : Type = { name : Text, options : List Text }
+
+let actionOption : ActionOption -> Procedure =
+      λ(input : ActionOption) ->
+        defaultProcedure
+        //  { kind = "action_option"
+            , name = input.name
+            , options = Some input.options
             }
 
 let Spellcasting : Type =
