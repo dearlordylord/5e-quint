@@ -11,6 +11,8 @@ import {
   type CharacterStartingLanguages,
 } from "@dnd/shared/game-facts";
 import { AbilityScore } from "@dnd/shared/types";
+import { semanticRefinement } from "@dnd/shared/semantic-refinement";
+import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import {
   ARMOR_TRAINING_CATEGORIES,
   SKILLS,
@@ -24,12 +26,10 @@ import {
   SUPPORTED_ABILITY_SCORE_METHODS,
   UNIT_CHOICE_KEYS,
   isCharacterBuildToolProficiencyId,
-  isCopperPieceAmount,
-  parseCharacterEquipmentItemId,
   parseCreationHoleId,
+  CHARACTER_BUILD_TOOL_PROFICIENCY_IDS,
   type CharacterBuild,
   type CharacterBuildProjectionCause,
-  type CharacterEquipmentItemIdText,
   type CharacterEquipmentItemSlot,
   type CreationChoiceOptionDecodeCause,
   type CreationBatchFillIssue,
@@ -53,7 +53,10 @@ const CreationChoiceOptionIdSchema = Schema.String.pipe(
 const CreationHoleIdSchema = Schema.String.pipe(
   Schema.filter(
     (value): value is CreationHoleIdText => parseCreationHoleId(value) !== null,
-    { message: () => "invalid Creation Hole id" },
+    {
+      message: () => "invalid Creation Hole id",
+      ...semanticRefinement("creationHoleIdSyntax"),
+    },
   ),
   Schema.brand("CreationHoleId"),
 );
@@ -74,7 +77,11 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.brand("NonNegativeInteger"),
 );
 const CopperPieceAmountSchema = Schema.Number.pipe(
-  Schema.filter(isCopperPieceAmount, {
+  Schema.int({ message: () => "invalid copper-piece amount" }),
+  Schema.greaterThanOrEqualTo(0, {
+    message: () => "invalid copper-piece amount",
+  }),
+  Schema.lessThanOrEqualTo(Number.MAX_SAFE_INTEGER, {
     message: () => "invalid copper-piece amount",
   }),
   Schema.brand("NonNegativeInteger"),
@@ -109,6 +116,7 @@ const ChoiceCardinalitySchema = Schema.Union(
   }).pipe(
     Schema.filter(({ min, max }) => min <= max, {
       message: () => "cardinality maximum must be at least its minimum",
+      ...semanticRefinement("creationHoleCardinalityCorrelation"),
     }),
   ),
 );
@@ -146,6 +154,15 @@ const CreationChoiceOptionFactSchema = Schema.Struct({
   unitRef: Schema.optionalWith(UnitRefSchema, { exact: true }),
 });
 
+const CreationFillOptionIdsSchema = Schema.Array(
+  CreationChoiceOptionIdSchema,
+).pipe(
+  Schema.filter((optionIds) => !hasDuplicateStructuralValues(optionIds), {
+    message: () => "choice optionIds must not contain duplicate members",
+    jsonSchema: { uniqueItems: true },
+  }),
+);
+
 export const CreationHoleFactSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("choice"),
@@ -166,6 +183,7 @@ export const CreationHoleFactSchema = Schema.Union(
 ).pipe(
   Schema.filter(({ holeId, source }) => holeId === holeIdForSource(source), {
     message: () => "Creation Hole identity must match its owner source",
+    ...semanticRefinement("creationHoleSourceCorrelation"),
   }),
 );
 export type CreationHoleFact = Schema.Schema.Type<
@@ -183,7 +201,7 @@ export const CreationFillFactSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("choice"),
     holeId: CreationHoleIdSchema,
-    optionIds: Schema.Array(CreationChoiceOptionIdSchema),
+    optionIds: CreationFillOptionIdsSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("abilityScores"),
@@ -207,15 +225,20 @@ const ProgressionSchema = Schema.Struct({
     }),
   ),
 });
-const OriginLanguagesSchema = Schema.Array(
+const OriginLanguagesSchema = Schema.Tuple(
+  Schema.Literal("Common").annotations({
+    message: () => "origin languages must contain Common and two others",
+  }),
+  Schema.Literal(...STANDARD_LANGUAGES),
   Schema.Literal(...STANDARD_LANGUAGES),
 ).pipe(
   Schema.filter(
     (languages): languages is CharacterStartingLanguages =>
-      languages.length === 3 &&
-      languages[0] === "Common" &&
-      new Set(languages).size === languages.length,
-    { message: () => "origin languages must contain Common and two others" },
+      !hasDuplicateStructuralValues(languages),
+    {
+      message: () => "origin languages must contain Common and two others",
+      jsonSchema: { minItems: 3, maxItems: 3, uniqueItems: true },
+    },
   ),
 );
 const SpeciesChoiceFactsSchema = Schema.Union(
@@ -331,14 +354,12 @@ const characterEquipmentItemIdSchema = <
   slot?: Slot,
 ) =>
   Schema.String.pipe(
-    Schema.filter(
-      (value): value is CharacterEquipmentItemIdText<Slot> => {
-        const parsed = parseCharacterEquipmentItemId(value);
-        return (
-          parsed._tag === "Right" &&
-          (slot === undefined || parsed.right.slot === slot)
-        );
-      },
+    Schema.pattern(
+      new RegExp(
+        slot === undefined
+          ? "^(?:armor|shield|main|off):(?=\\S)[\\s\\S]*\\S$"
+          : `^${slot}:(?=\\S)[\\s\\S]*\\S$`,
+      ),
       { message: () => "invalid Character Equipment Item id" },
     ),
     Schema.brand("CharacterEquipmentItemId"),
@@ -369,6 +390,9 @@ const EquipmentSchema = Schema.Struct({
         toolProficiencyId: Schema.String.pipe(
           Schema.filter(isCharacterBuildToolProficiencyId, {
             message: () => "invalid Character Build tool proficiency id",
+            jsonSchema: {
+              enum: [...CHARACTER_BUILD_TOOL_PROFICIENCY_IDS],
+            },
           }),
           Schema.brand("ToolProficiencyId"),
         ),
@@ -815,6 +839,7 @@ export const CharacterCreationBatchFactSchema = Schema.Union(
     {
       message: () =>
         "finalization blocker ids must be an ordered subsequence of the frontier",
+      ...semanticRefinement("creationFrontierCorrelation"),
     },
   ),
 );

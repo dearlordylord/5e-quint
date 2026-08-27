@@ -1,5 +1,6 @@
 import {
   characterCreationBatchFact,
+  characterBuildDisplayName,
   characterDraftId,
   createCharacterDraft,
   creationFrontierFact,
@@ -36,11 +37,16 @@ import {
   freshCharacterSheetProjection,
   type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
+import { AMMUNITION_KINDS, type AmmunitionKind } from "@dnd/shared/game-facts";
+import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Match, Option } from "effect";
 
-import { canonicalizeStringSet } from "./oracle-canonical.ts";
+import {
+  canonicalizeStringSet,
+  compareCodePoints,
+} from "./oracle-canonical.ts";
 import {
   OracleBattleCheckpointSchema,
   OracleTraceSchema,
@@ -48,17 +54,25 @@ import {
   type OracleBattleActsFrontier,
   type OracleBattleAttempt,
   type OracleBattleCheckpoint,
+  type OracleBattleEnteredCheckpoint,
   type OracleBattleCreatureInitIssue,
   type OracleBattleEntryRejection,
+  type OracleBattleAttemptSegment,
+  type OracleBattleAttemptSegmentOutcome,
+  type OracleBattleContinuation,
+  type OracleBattleAttemptRejectionReason,
   type OracleBattleNonterminalFrontier,
   type OracleBattleProjectionIssue,
-  type OracleBattleRosterEntry,
+  type OracleBattleRoster,
+  type OracleBattleStatBlockRosterEntry,
+  type OracleBattleCharacterSheetRosterEntry,
+  type OracleAmmunitionStocks,
   type OracleBattleStateInitLeafIssue,
   type OracleBattleStateInitIssue,
   type OracleCase,
   type OracleEvaluationBatch,
+  type OracleSheetOutcome,
   type OracleTrace,
-  type OracleTraceStep,
 } from "./oracle-case-trace-schema.ts";
 
 export type OracleEvaluationServices = {
@@ -85,9 +99,7 @@ export function evaluateOracleCase(
   const initialFrontier = creationFrontierFact(
     discoverCreationHoles({ draft, unitLibrary }),
   );
-  const steps: [OracleTraceStep, ...OracleTraceStep[]] = [
-    { tag: "creationStarted", frontier: initialFrontier },
-  ];
+  const progression: Array<ReturnType<typeof creationFrontierFact>> = [];
   let currentDraft = draft;
 
   for (const [
@@ -103,59 +115,67 @@ export function evaluateOracleCase(
     const projected = characterCreationBatchFactOrDefect(result);
 
     if (projected.tag === "rejected") {
-      steps.push({
-        tag: "creationFillRejected",
-        issues: projected.issues,
+      return oracleTrace({
+        started: initialFrontier,
+        progression,
+        outcome: { tag: "fillRejected", issues: projected.issues },
       });
-      return oracleTrace(steps);
     }
 
     currentDraft = result.draft;
     if (projected.finalization.tag === "incomplete") {
-      steps.push({
-        tag: "creationProgressed",
-        frontier: projected.frontier,
-      });
+      progression.push(projected.frontier);
       continue;
     }
     if (projected.finalization.tag === "invalid") {
-      steps.push({
-        tag: "creationFinalizationRejected",
-        issues: projected.finalization.issues,
-      });
-      return oracleTrace(steps);
-    }
-
-    steps.push({ tag: "characterBuilt", build: projected.finalization.build });
-    if (batchIndex + 1 < oracleCase.creation.fillBatches.length) {
-      steps.push({
-        tag: "workflowRejected",
-        reason: {
-          code: "creationInputSurplus",
-          firstUnusedBatchIndex: Index(batchIndex + 1),
+      return oracleTrace({
+        started: initialFrontier,
+        progression,
+        outcome: {
+          tag: "finalizationRejected",
+          issues: projected.finalization.issues,
         },
       });
-      return oracleTrace(steps);
     }
 
-    return appendFreshSheetAndBattleSteps(
-      steps,
-      result.finalization.tag === "ready"
-        ? result.finalization.build
-        : defect("ready finalization was narrowed inconsistently"),
-      oracleCase.sheet,
-      oracleCase.battle.roster,
-      oracleCase.battle.attempts,
-      unitLibrary,
-      statBlockCatalog,
-    );
+    const build = projected.finalization.build;
+    if (batchIndex + 1 < oracleCase.creation.fillBatches.length) {
+      return oracleTrace({
+        started: initialFrontier,
+        progression,
+        outcome: {
+          tag: "inputSurplus",
+          build,
+          index: Index(batchIndex + 1),
+        },
+      });
+    }
+
+    return oracleTrace({
+      started: initialFrontier,
+      progression,
+      outcome: {
+        tag: "built",
+        build,
+        sheet: appendFreshSheetAndBattle(
+          result.finalization.tag === "ready"
+            ? result.finalization.build
+            : defect("ready finalization was narrowed inconsistently"),
+          oracleCase.sheet,
+          oracleCase.battle.roster,
+          oracleCase.battle.attempts,
+          unitLibrary,
+          statBlockCatalog,
+        ),
+      },
+    });
   }
 
-  steps.push({
-    tag: "workflowRejected",
-    reason: { code: "creationInputExhausted" },
+  return oracleTrace({
+    started: initialFrontier,
+    progression,
+    outcome: { tag: "inputExhausted" },
   });
-  return oracleTrace(steps);
 }
 
 function defect(message: string): never {
@@ -183,15 +203,14 @@ function characterCreationBatchFactOrDefect(
   return projected.right;
 }
 
-function appendFreshSheetAndBattleSteps(
-  steps: [OracleTraceStep, ...OracleTraceStep[]],
+function appendFreshSheetAndBattle(
   build: CharacterBuild,
   sheetInput: FreshSheetInput,
-  rosterInput: readonly OracleBattleRosterEntry[],
+  rosterInput: OracleBattleRoster,
   attemptsInput: readonly OracleBattleAttempt[],
   unitLibrary: UnitCatalog,
   statBlockCatalog: StatBlockCatalog,
-): OracleTrace {
+): OracleSheetOutcome {
   const freshSheet = createFreshCharacterSheet({
     characterId: ORACLE_CHARACTER_SHEET_ID,
     build,
@@ -209,26 +228,18 @@ function appendFreshSheetAndBattleSteps(
       : {}),
   });
   if (Either.isLeft(freshSheet)) {
-    steps.push({
-      tag: "characterSheetConstructionRejected",
-      issues: freshSheet.left,
-    });
-    return oracleTrace(steps);
+    return { tag: "rejected", issues: freshSheet.left };
   }
 
-  steps.push({
-    tag: "characterSheetConstructed",
-    sheet: freshCharacterSheetProjection(freshSheet.right),
-  });
-
+  const sheet = freshCharacterSheetProjection(freshSheet.right);
   const roster = resolveBattleRoster({
     roster: rosterInput,
     sheet: freshSheet.right,
+    unitLibrary,
     statBlockCatalog,
   });
   if (Either.isLeft(roster)) {
-    steps.push(roster.left);
-    return oracleTrace(steps);
+    return { tag: "constructed", sheet, battle: roster.left };
   }
 
   const entry = startBattleFromCharacterBattleRoster({
@@ -238,173 +249,173 @@ function appendFreshSheetAndBattleSteps(
     statBlockCatalog,
   });
   if (Either.isLeft(entry)) {
-    steps.push(battleEntryRejection(entry.left));
-    return oracleTrace(steps);
+    return {
+      tag: "constructed",
+      sheet,
+      battle: battleEntryRejection(entry.left),
+    };
   }
 
   const snapshot = snapshotBattle(entry.right.session.state);
-  const initialFrontier = battleActsFrontier(entry.right.session);
-  steps.push({
-    tag: "battleEntered",
-    checkpoint: strippedBattleCheckpoint(snapshot),
-    frontier: initialFrontier,
-  });
-  return appendBattleAttempts(
-    steps,
-    {
-      session: entry.right.session,
-      checkpoint: strippedBattleCheckpoint(snapshot),
-      frontier: initialFrontier,
+  const checkpoint = strippedBattleEnteredCheckpoint(snapshot);
+  const frontier = battleActsFrontier(entry.right.session);
+  return {
+    tag: "constructed",
+    sheet,
+    battle: {
+      tag: "entered",
+      checkpoint,
+      frontier,
+      segment: appendBattleAttempts(
+        {
+          session: entry.right.session,
+          checkpoint,
+          frontier,
+          rejections: [],
+        },
+        attemptsInput,
+        statBlockCatalog,
+      ),
     },
-    attemptsInput,
-    statBlockCatalog,
-  );
+  };
 }
 
-type OracleBattleActiveContinuation = {
+type OracleBattleFrame = {
   readonly session: BattleRuntimeSession;
   readonly checkpoint: OracleBattleCheckpoint;
   readonly frontier: OracleBattleNonterminalFrontier;
+  readonly rejections: OracleBattleAttemptRejectionReason[];
 };
-
-type OracleBattleTerminalContinuation = {
-  readonly session: BattleRuntimeSession;
-  readonly frontier: { readonly kind: "terminal" };
-};
-
-type OracleBattleContinuation =
-  | OracleBattleActiveContinuation
-  | OracleBattleTerminalContinuation;
-
-type OracleBattleResolutionFrontier =
-  | OracleBattleActsFrontier
-  | { readonly kind: "terminal" };
-
-function isOracleBattleActiveContinuation(
-  continuation: OracleBattleContinuation,
-): continuation is OracleBattleActiveContinuation {
-  return continuation.frontier.kind !== "terminal";
-}
 
 function appendBattleAttempts(
-  steps: [OracleTraceStep, ...OracleTraceStep[]],
-  initial: OracleBattleContinuation,
+  initial: OracleBattleFrame,
   attempts: readonly OracleBattleAttempt[],
   statBlockCatalog: StatBlockCatalog,
-): OracleTrace {
+): OracleBattleAttemptSegment {
   let current = initial;
-  for (const [attemptIndex, attempt] of attempts.entries()) {
-    if (!isOracleBattleActiveContinuation(current)) {
-      steps.push({
-        tag: "workflowRejected",
-        reason: {
-          code: "battleInputSurplus",
-          firstUnusedAttemptIndex: Index(attemptIndex),
-        },
-      });
-      return oracleTrace(steps);
-    }
+  const priorFrames: OracleBattleFrame[] = [];
+  let terminal: OracleBattleAttemptSegmentOutcome | undefined;
 
+  for (const [attemptIndex, attempt] of attempts.entries()) {
     const result = resolveBattleAttempt({
       attempt,
       session: current.session,
       statBlockCatalog,
     });
-    current = appendBattleAttemptResult({
-      current,
-      attempt,
-      result,
-      steps,
-    });
-  }
-  return oracleTrace(steps);
-}
-
-function appendBattleAttemptResult(input: {
-  readonly current: OracleBattleActiveContinuation;
-  readonly attempt: OracleBattleAttempt;
-  readonly result: BattleRuntimeResolutionResult;
-  readonly steps: [OracleTraceStep, ...OracleTraceStep[]];
-}): OracleBattleContinuation {
-  return Match.value(input.result).pipe(
-    Match.discriminatorsExhaustive("tag")({
-      invalid: (result) => {
-        input.steps.push({
-          tag: "battleAttemptRejected",
-          checkpoint: input.current.checkpoint,
-          frontier: input.current.frontier,
-          reason: result.reason,
-        });
-        return input.current;
-      },
-      needsHoles: (result) => {
-        const projected = battleMechanicalFrontier({
-          result,
-          acceptedFills: acceptedFillsForAttempt(input.attempt),
-        });
-        if (Either.isLeft(projected)) {
-          return defect(
-            `Battle mechanical frontier projection defect: ${projected.left.tag}`,
+    const next = Match.value(result).pipe(
+      Match.discriminatorsExhaustive("tag")({
+        invalid: (invalidResult) => {
+          current.rejections.push(invalidResult.reason);
+          return undefined;
+        },
+        needsHoles: (needsHolesResult) => {
+          const projected = battleMechanicalFrontier({
+            result: needsHolesResult,
+            acceptedFills: acceptedFillsForAttempt(attempt),
+          });
+          if (Either.isLeft(projected)) {
+            return defect(
+              `Battle mechanical frontier projection defect: ${projected.left.tag}`,
+            );
+          }
+          priorFrames.push(current);
+          const checkpoint = strippedBattleCheckpoint(
+            needsHolesResult.snapshot,
           );
-        }
-        const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
-        const nextSession = battleSessionAfterNeedsHoles({
-          attempt: input.attempt,
-          current: input.current,
-          frontier: projected.right,
-          result,
-        });
-        const next = {
-          session: nextSession,
-          checkpoint: nextCheckpoint,
-          frontier: projected.right,
-        } satisfies OracleBattleActiveContinuation;
-        input.steps.push({
-          tag: "battleProgressed",
-          checkpoint: nextCheckpoint,
-          frontier: projected.right,
-        });
-        return next;
+          return {
+            session: battleSessionAfterNeedsHoles({
+              attempt,
+              current,
+              frontier: projected.right,
+              result: needsHolesResult,
+            }),
+            checkpoint,
+            frontier: projected.right,
+            rejections: [],
+          } satisfies OracleBattleFrame;
+        },
+        resolved: (resolvedResult) => {
+          const checkpoint = strippedBattleCheckpoint(resolvedResult.snapshot);
+          const nextFrontier = battleFrontierAfterResolution(
+            resolvedResult.session,
+          );
+          return Match.value(nextFrontier).pipe(
+            Match.discriminatorsExhaustive("kind")({
+              acts: (frontier) => {
+                priorFrames.push(current);
+                return {
+                  session: resolvedResult.session,
+                  checkpoint,
+                  frontier,
+                  rejections: [],
+                } satisfies OracleBattleFrame;
+              },
+              terminal: () => {
+                terminal = {
+                  tag: "resolved",
+                  checkpoint,
+                  after:
+                    attemptIndex + 1 < attempts.length
+                      ? {
+                          tag: "surplus",
+                          index: Index(attemptIndex + 1),
+                        }
+                      : { tag: "complete" },
+                };
+                return undefined;
+              },
+            }),
+          );
+        },
+      }),
+    );
+    if (next !== undefined) current = next;
+    if (terminal !== undefined) break;
+  }
+
+  const finalOutcome =
+    terminal ??
+    ({ tag: "awaitingInput" } satisfies OracleBattleAttemptSegmentOutcome);
+  let continuation: OracleBattleContinuation = {
+    checkpoint: current.checkpoint,
+    frontier: current.frontier,
+    segment: {
+      rejections: current.rejections,
+      outcome: finalOutcome,
+    },
+  };
+
+  const firstPriorFrame = priorFrames[0];
+  if (firstPriorFrame === undefined) {
+    return continuation.segment;
+  }
+
+  for (
+    let frameIndex = priorFrames.length - 1;
+    frameIndex >= 1;
+    frameIndex -= 1
+  ) {
+    const frame = priorFrames[frameIndex];
+    if (frame === undefined) return defect("Battle prior frame was missing");
+    continuation = {
+      checkpoint: frame.checkpoint,
+      frontier: frame.frontier,
+      segment: {
+        rejections: frame.rejections,
+        outcome: { tag: "next", continuation },
       },
-      resolved: (result) => {
-        const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
-        const nextFrontier = battleFrontierAfterResolution(result.session);
-        return Match.value(nextFrontier).pipe(
-          Match.discriminatorsExhaustive("kind")({
-            acts: (frontier) => {
-              const next = {
-                session: result.session,
-                checkpoint: nextCheckpoint,
-                frontier,
-              } satisfies OracleBattleActiveContinuation;
-              input.steps.push({
-                tag: "battleProgressed",
-                checkpoint: nextCheckpoint,
-                frontier,
-              });
-              return next;
-            },
-            terminal: () => {
-              const next = {
-                session: result.session,
-                frontier: { kind: "terminal" as const },
-              } satisfies OracleBattleTerminalContinuation;
-              input.steps.push({
-                tag: "battleResolved",
-                checkpoint: nextCheckpoint,
-              });
-              return next;
-            },
-          }),
-        );
-      },
-    }),
-  );
+    };
+  }
+
+  return {
+    rejections: firstPriorFrame.rejections,
+    outcome: { tag: "next", continuation },
+  };
 }
 
 function battleSessionAfterNeedsHoles(input: {
   readonly attempt: OracleBattleAttempt;
-  readonly current: OracleBattleActiveContinuation;
+  readonly current: OracleBattleFrame;
   readonly frontier: BattleMechanicalFrontier;
   readonly result: Extract<
     BattleRuntimeResolutionResult,
@@ -478,7 +489,7 @@ function battleActsFrontier(
 
 function battleFrontierAfterResolution(
   session: BattleRuntimeSession,
-): OracleBattleResolutionFrontier {
+): OracleBattleActsFrontier | { readonly kind: "terminal" } {
   const acts = discoverBattleActs(session).map(({ subject }) => subject);
   const [firstAct, ...remainingActs] = acts;
   return firstAct === undefined
@@ -486,9 +497,42 @@ function battleFrontierAfterResolution(
     : { kind: "acts", acts: [firstAct, ...remainingActs] };
 }
 
+type ResolvedOracleBattleRosterEntry =
+  | (OracleBattleCharacterSheetRosterEntry & {
+      readonly origin: "characterSheet";
+    })
+  | (OracleBattleStatBlockRosterEntry & { readonly origin: "statBlock" });
+
+function flattenOracleBattleRoster(
+  roster: OracleBattleRoster,
+): readonly ResolvedOracleBattleRosterEntry[] {
+  return Match.value(roster).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      statBlocks: ({ entries }) =>
+        entries.map((entry) => ({ ...entry, origin: "statBlock" as const })),
+      characterSheet: ({
+        precedingStatBlocks,
+        characterSheet,
+        followingStatBlocks,
+      }) => [
+        ...precedingStatBlocks.map((entry) => ({
+          ...entry,
+          origin: "statBlock" as const,
+        })),
+        { ...characterSheet, origin: "characterSheet" as const },
+        ...followingStatBlocks.map((entry) => ({
+          ...entry,
+          origin: "statBlock" as const,
+        })),
+      ],
+    }),
+  );
+}
+
 function resolveBattleRoster(input: {
-  readonly roster: readonly OracleBattleRosterEntry[];
+  readonly roster: OracleBattleRoster;
   readonly sheet: Parameters<typeof freshCharacterSheetProjection>[0];
+  readonly unitLibrary: UnitCatalog;
   readonly statBlockCatalog: StatBlockCatalog;
 }): Either.Either<
   readonly CharacterBattleEncounterParticipant[],
@@ -498,17 +542,17 @@ function resolveBattleRoster(input: {
   const missingStatBlocks: OracleBattleEntryIssue[] = [];
   const participants: CharacterBattleEncounterParticipant[] = [];
 
-  for (const entry of input.roster) {
-    const ammunitionStocks = entry.ammunitionStocks.map((stock) => ({
-      ammunition: stock.ammunition,
-      remaining: resourceCount(stock.remaining),
-    }));
+  for (const entry of flattenOracleBattleRoster(input.roster)) {
+    const ammunitionStocks = projectAmmunitionStocks(entry.ammunitionStocks);
     if (entry.origin === "characterSheet") {
       participants.push({
         origin: "characterSheet",
         sheet: input.sheet,
         combatantId: entry.combatantId,
-        displayName: entry.displayName,
+        displayName: characterBuildDisplayName(
+          input.unitLibrary,
+          input.sheet.build,
+        ),
         initiative: initiativeScore(entry.initiative),
         ammunitionStocks,
       });
@@ -542,11 +586,32 @@ function resolveBattleRoster(input: {
     if (firstMissing === undefined)
       return defect("missing Stat Block issue accumulation was empty");
     return Either.left({
-      tag: "battleEntryRejected",
+      tag: "rejected",
       issues: [firstMissing, ...remainingMissing],
     });
   }
   return Either.right(participants);
+}
+
+function projectAmmunitionStocks(stocks: OracleAmmunitionStocks): readonly {
+  readonly ammunition: AmmunitionKind;
+  readonly remaining: ReturnType<typeof resourceCount>;
+}[] {
+  const projected: Array<{
+    readonly ammunition: AmmunitionKind;
+    readonly remaining: ReturnType<typeof resourceCount>;
+  }> = [];
+  for (const key of Object.keys(stocks).sort(compareCodePoints)) {
+    const ammunition = AMMUNITION_KINDS.find((candidate) => candidate === key);
+    if (ammunition === undefined) {
+      return defect(`Unknown ammunition stock key ${key}`);
+    }
+    const remaining = stocks[ammunition];
+    if (remaining !== undefined) {
+      projected.push({ ammunition, remaining: resourceCount(remaining) });
+    }
+  }
+  return projected;
 }
 
 function battleEntryRejection(
@@ -560,7 +625,7 @@ function battleEntryRejection(
     if (firstProjectionIssue === undefined)
       return defect("Battle projection issue accumulation was empty");
     return {
-      tag: "battleEntryRejected",
+      tag: "rejected",
       issues: [
         {
           tag: "characterBattleEncounterProjectionIssues",
@@ -570,11 +635,11 @@ function battleEntryRejection(
     };
   }
   if (issue.tag === "characterBattleEncounterEmptyRoster") {
-    return { tag: "battleEntryRejected", issues: [issue] };
+    return { tag: "rejected", issues: [issue] };
   }
   if (issue.tag === "battleCreatureInitIssue") {
     return {
-      tag: "battleEntryRejected",
+      tag: "rejected",
       issues: [
         {
           tag: "battleCreatureInitRejected",
@@ -584,7 +649,7 @@ function battleEntryRejection(
     };
   }
   return {
-    tag: "battleEntryRejected",
+    tag: "rejected",
     issues: [
       {
         tag: "battleStateInitRejected",
@@ -619,14 +684,18 @@ function stripBattleProjectionIssue(
 function stripBattleCreatureInitIssue(
   issue: BattleCreatureInitIssue,
 ): OracleBattleCreatureInitIssue {
+  const spellAccessIssues =
+    issue.spellAccessIssues?.map(stripSpellAccessProjectionIssue) ?? [];
+  const firstSpellAccessIssue = spellAccessIssues[0];
   return {
     tag: "battleCreatureInitIssue" as const,
-    ...(issue.spellAccessIssues === undefined
+    ...(firstSpellAccessIssue === undefined
       ? {}
       : {
-          spellAccessIssues: issue.spellAccessIssues.map(
-            stripSpellAccessProjectionIssue,
-          ),
+          spellAccessIssues: [
+            firstSpellAccessIssue,
+            ...spellAccessIssues.slice(1),
+          ],
         }),
   };
 }
@@ -666,30 +735,70 @@ function stripBattleStateInitLeafIssue(
 function strippedBattleCheckpoint(
   snapshot: ReturnType<typeof snapshotBattle>,
 ): OracleBattleCheckpoint {
-  const combatants = snapshot.combatants.map((combatant) => ({
-    combatantId: combatant.combatantId,
-    origin: { kind: combatant.origin.kind },
-    initiative: combatant.initiative,
-    hp: combatant.hp,
-    maxHp: combatant.maxHp,
-    tempHp: combatant.tempHp,
-    armorClass: combatant.armorClass,
-    size: combatant.size,
-    conditions: combatant.conditions,
-  }));
-  const [firstCombatant, ...remainingCombatants] = combatants;
-  if (firstCombatant === undefined)
-    return defect("Battle snapshot combatant projection was empty");
+  const combatantsById = new Map(
+    snapshot.combatants.map((combatant) => [combatant.combatantId, combatant]),
+  );
+  if (combatantsById.size !== snapshot.combatants.length) {
+    return defect("Battle snapshot contained duplicate combatant identities");
+  }
+  const orderedEntries = snapshot.turnOrder.map((combatantId) => {
+    const combatant = combatantsById.get(combatantId);
+    if (combatant === undefined) {
+      return defect(
+        `Battle turn order referenced missing combatant ${combatantId}`,
+      );
+    }
+    return {
+      creature: {
+        combatantId: combatant.combatantId,
+        origin: { kind: combatant.origin.kind },
+        hp: combatant.hp,
+        maxHp: combatant.maxHp,
+        tempHp: combatant.tempHp,
+        armorClass: combatant.armorClass,
+        size: combatant.size,
+        conditions: combatant.conditions,
+      },
+      initiative: combatant.initiative,
+    };
+  });
+  if (orderedEntries.length === 0) {
+    return defect("Battle snapshot initiative order was empty");
+  }
+  if (hasDuplicateStructuralValues(snapshot.turnOrder)) {
+    return defect("Battle snapshot contained duplicate turn-order identities");
+  }
+  if (snapshot.combatants.length !== snapshot.turnOrder.length) {
+    return defect("Battle snapshot combatants and turn order diverged");
+  }
+  const currentActorIndex = snapshot.turnOrder.indexOf(snapshot.currentActorId);
+  if (currentActorIndex < 0) {
+    return defect("Battle snapshot current actor was not in turn order");
+  }
+  const stillToAct = orderedEntries.slice(currentActorIndex);
+  const [firstStillToAct, ...remainingStillToAct] = stillToAct;
+  if (firstStillToAct === undefined) {
+    return defect("Battle snapshot still-to-act initiative stack was empty");
+  }
   return OracleBattleCheckpointSchema.make({
     round: snapshot.round,
-    currentActorId: snapshot.currentActorId,
-    turnOrder: snapshot.turnOrder,
-    combatants: [firstCombatant, ...remainingCombatants],
+    alreadyActed: orderedEntries.slice(0, currentActorIndex),
+    stillToAct: [firstStillToAct, ...remainingStillToAct],
   });
 }
 
-function oracleTrace(
-  steps: [OracleTraceStep, ...OracleTraceStep[]],
-): OracleTrace {
-  return OracleTraceSchema.make({ steps });
+function strippedBattleEnteredCheckpoint(
+  snapshot: ReturnType<typeof snapshotBattle>,
+): OracleBattleEnteredCheckpoint {
+  const checkpoint = strippedBattleCheckpoint(snapshot);
+  if (checkpoint.alreadyActed.length !== 0) {
+    return defect(
+      "Battle entry snapshot current actor was not the first initiative entry",
+    );
+  }
+  return { ...checkpoint, alreadyActed: [] };
+}
+
+function oracleTrace(creation: OracleTrace["creation"]): OracleTrace {
+  return OracleTraceSchema.make({ creation });
 }

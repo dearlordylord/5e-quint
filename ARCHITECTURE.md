@@ -189,16 +189,21 @@ Character-creation terms live in
 call-local production evaluation. It composes the Character Creation reducer
 through `CharacterBuild`, fresh Character Sheet construction, and the existing
 arbitrary mixed-origin Character Battle handoff. It supplies deterministic
-call-local identities, projects only presentation-free owner facts, validates
-the stripped Battle checkpoint's surviving identity and cross-reference
-invariants, and returns typed workflow or owner rejections for exhausted or
-surplus creation input and invalid Battle entry. Its successful initial Battle
-frontier contains only typed subjects from production Act discovery; it does
-not publish presentation, Runtime Holes, continuation fills, interrupt state,
-sessions, caches, transport envelopes, Battle state ownership, or MCP
-composition. Effect Schema and its decoder are the sole Case/Trace authority;
-generated JSON Schema is not published because it cannot express these
-lifecycle and projection refinements faithfully.
+call-local identities, projects mechanics-relevant owner facts, validates the
+stripped Battle checkpoint's surviving identity and cross-reference invariants,
+and returns typed workflow or owner rejections for exhausted or surplus
+creation input and invalid Battle entry. Its successful initial Battle frontier
+contains only typed subjects from production Act discovery; it does not publish
+presentation, Runtime Holes, continuation fills, interrupt state, sessions,
+caches, transport envelopes, Battle state ownership, or MCP composition. A
+selected production `CharacterBuildFact` may retain authored selection identity
+such as an authored starting-item name; that is not an Oracle presentation
+field. Raw duplicate-aware scanning, structural Document decoding, semantic
+admission, and evaluation are distinct stages. The package publishes compact
+Draft 2020-12 Document schemas from the canonical structural graphs; raw JSON
+duplicates and arbitrary cross-record correlations remain scanner/admission
+responsibilities. See `packages/opaque-oracle/ARCHITECTURE.md` for the detailed
+boundary.
 
 `@dnd/battle-runtime` owns the battle reducer state:
 `BattleState`, `BattleCreatureState`, battle subjects, replay-from-root holes
@@ -383,7 +388,7 @@ weapon, feature, or Stat Block.
 | `@dnd/shared-algebras`            | Reusable reducer algebras such as action economy, Initiative, Armor Class, attack rolls, conditions, Death Saving Throw counters, runtime dice, and runtime hole identity.                                                                                                       | Unit support gates, act subjects, authored-content catalogs, MCP sessions, or complete character/battle reducers.                                                                                                                   |
 | `@dnd/character-creation-runtime` | Character Draft mutation, creation holes/fills, support gates, finalization, and `CharacterBuild` projection from Surface Unit facts.                                                                                                                                            | Battle initialization, battle state, current HP, in-play resource expenditure, or authored content provenance.                                                                                                                      |
 | `@dnd/battle-runtime`             | Battle initialization from caller-built creature inputs, durable battle state, act discovery, replay fills, action resources, damage/HP mutation, supported feature/spell/attack resolution, table-supplied spatial facts consumed or stored by those procedures, and snapshots. | Character draft legality, catalog installation, MCP transient fill storage, post-battle character-session persistence, or geometry inference such as grids, coordinates, LOS, pathfinding, cover calculation, and adjacency caches. |
-| `@dnd/opaque-oracle`              | Language-neutral Case/Trace validation, call-local creation and fresh-sheet evaluation, typed mixed-roster Battle entry, and its minimal presentation-free Battle checkpoint projection.                                                                                         | Battle reducer state, replay holes/fills, interrupt/session state, transport, MCP composition, or generated JSON Schema.                                                                                                            |
+| `@dnd/opaque-oracle`              | Language-neutral Case/Trace validation, call-local creation and fresh-sheet evaluation, typed mixed-roster Battle entry, its minimal mechanics-relevant Battle checkpoint projection, and the committed Draft 2020-12 Document schema artifacts.                                 | Battle reducer state, replay holes/fills, interrupt/session state, transport, MCP composition, or raw duplicate/cross-record semantic guarantees that standard JSON Schema cannot express.                                          |
 | `@dnd/mcp`                        | Tool schemas, session storage, installed Surface catalogs, Character Build to battle-init projection, selected Stat Block identity, transient battle fills, table/caller-provided spatial facts for tool calls, and cross-runtime workflow tests.                                | Reducer semantics, authored content rules, runtime QNT authority, duplicated executable content, or private geometry state that substitutes for table-supplied spatial facts.                                                       |
 
 The composition rule is direct use of owned package APIs, not an adapter layer.

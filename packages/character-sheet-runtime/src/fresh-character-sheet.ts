@@ -1,5 +1,6 @@
 import { DAMAGE_TYPES } from "@dnd/shared/types";
 import { Hp, type ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import {
   DRUID_WILD_SHAPE_IDENTIFIED_FORM_ISSUE_CODES,
   DRUID_WILD_SHAPE_KNOWN_FORM_ROSTER_ISSUE_CODES,
@@ -42,9 +43,15 @@ const CommonFreshCharacterSheetProjectionFields = {
   druidWildShapeKnownForms: Schema.optionalWith(
     Schema.Struct({
       statBlockIds: Schema.Array(Schema.NonEmptyTrimmedString).pipe(
-        Schema.filter((values) => values.length > 0, {
-          jsonSchema: { minItems: 1 },
-        }),
+        Schema.filter(
+          (values) =>
+            values.length > 0 && !hasDuplicateStructuralValues(values),
+          {
+            message: () =>
+              "druidWildShapeKnownForms.statBlockIds must be nonempty and must not contain duplicate members",
+            jsonSchema: { minItems: 1, uniqueItems: true },
+          },
+        ),
       ),
     }),
     { exact: true },

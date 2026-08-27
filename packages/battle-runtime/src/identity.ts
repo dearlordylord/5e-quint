@@ -5,6 +5,7 @@ import {
   NonNegativeInteger,
   ResourceCount,
 } from "@dnd/shared/types";
+import { semanticRefinement } from "@dnd/shared/semantic-refinement";
 
 export const CombatantId = CreatureId.pipe(Schema.brand("CombatantId"));
 export type CombatantId = typeof CombatantId.Type;
@@ -53,6 +54,7 @@ export type BattleSpellEffectOccurrenceId =
 export const BattleActiveEffectExecutionRef = Schema.NonEmptyTrimmedString.pipe(
   Schema.filter(battleActiveEffectExecutionReferenceIsCanonical, {
     message: () => "Invalid canonical Battle active-effect execution ref.",
+    ...semanticRefinement("canonicalExecutionReferenceSyntax"),
   }),
   Schema.brand("BattleActiveEffectExecutionRef"),
 );
@@ -112,6 +114,7 @@ export const BattleProcedureExecutionRef = Schema.NonEmptyTrimmedString.pipe(
     {
       /* v8 ignore next -- @preserve -- Only a malformed externally decoded reference requests this diagnostic; constructors emit the canonical nested identity shape. */
       message: () => "Invalid canonical Battle procedure execution ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
     },
   ),
   Schema.brand("BattleProcedureExecutionRef"),
@@ -134,6 +137,7 @@ export const BattleAttackProcedureExecutionRef =
   BattleProcedureExecutionRef.pipe(
     Schema.filter(attackProcedureExecutionReferenceIsCanonical, {
       message: () => "Invalid canonical Battle attack procedure execution ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
     }),
     Schema.brand("BattleAttackProcedureExecutionRef"),
   );
@@ -146,6 +150,7 @@ export const BattleStatBlockProcedureExecutionRef =
       /* v8 ignore next -- @preserve -- Only a malformed externally decoded Stat Block reference requests this diagnostic; the scoped constructor is canonical. */
       message: () =>
         "Invalid canonical Battle Stat Block procedure execution ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
     }),
     Schema.brand("BattleStatBlockProcedureExecutionRef"),
   );
@@ -155,6 +160,7 @@ export type BattleStatBlockProcedureExecutionRef =
 export const BattleResourcePoolExecutionRef = Schema.NonEmptyTrimmedString.pipe(
   Schema.filter(battleResourcePoolExecutionReferenceIsCanonical, {
     message: () => "Invalid canonical Battle resource-pool execution ref.",
+    ...semanticRefinement("canonicalExecutionReferenceSyntax"),
   }),
   Schema.brand("BattleResourcePoolExecutionRef"),
 );
@@ -175,6 +181,7 @@ export const BattleStatBlockExecutionScopeRef =
   Schema.NonEmptyTrimmedString.pipe(
     Schema.filter(battleStatBlockExecutionScopeReferenceIsCanonical, {
       message: () => "Invalid canonical Battle Stat Block execution scope ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
     }),
     Schema.brand("BattleStatBlockExecutionScopeRef"),
   );
@@ -185,6 +192,7 @@ export const BattleCharacterExecutionScopeRef =
   Schema.NonEmptyTrimmedString.pipe(
     Schema.filter(battleCharacterExecutionScopeReferenceIsCanonical, {
       message: () => "Invalid canonical Battle character execution scope ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
     }),
     Schema.brand("BattleCharacterExecutionScopeRef"),
   );
@@ -199,7 +207,10 @@ export const BattleAttackExecutionScopeRef = Schema.NonEmptyTrimmedString.pipe(
         "attackExecution",
       ),
     /* v8 ignore next -- @preserve -- Only a malformed externally decoded attack scope requests this diagnostic; the battle-owned scope constructor is canonical. */
-    { message: () => "Invalid canonical Battle attack execution scope ref." },
+    {
+      message: () => "Invalid canonical Battle attack execution scope ref.",
+      ...semanticRefinement("canonicalExecutionReferenceSyntax"),
+    },
   ),
   Schema.brand("BattleAttackExecutionScopeRef"),
 );

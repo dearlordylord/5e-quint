@@ -12,9 +12,17 @@ import {
 import {
   decodeWithSchema,
   parseJsonWithDuplicateDetection,
-  type OracleDecodeIssue,
   type OracleDecodeIssueCode,
+  type OracleDecodeIssues,
 } from "./oracle-decode.ts";
+import {
+  decodeOracleCaseDocument,
+  decodeOracleEvaluationBatchDocument,
+  decodeOracleTraceDocument,
+  type OracleCaseDocument,
+  type OracleEvaluationBatchDocument,
+  type OracleTraceDocument,
+} from "./oracle-document.ts";
 import {
   canonicalizeBatchInput,
   canonicalizeCaseInput,
@@ -26,91 +34,114 @@ export {
   FreshSheetInputSchema,
   OracleBattleActsFrontierSchema,
   OracleBattleAttemptSchema,
-  OracleBattleAttemptRejectionSchema,
+  OracleBattleAttemptRejectionReasonSchema,
+  OracleBattleAttemptSegmentSchema,
+  OracleBattleInitiativeEntrySchema,
+  OracleAmmunitionStocksSchema,
   OracleBattleCheckpointSchema,
+  OracleBattleContinuationSchema,
   OracleBattleEnteredSchema,
   OracleBattleNonterminalFrontierSchema,
   OracleBattleInterruptDecisionFillSchema,
   OracleBattleInterruptAttemptSchema,
   OracleBattleOrdinaryAttemptSchema,
-  OracleBattleProgressedSchema,
   OracleBattleInputSchema,
-  OracleBattleRosterEntrySchema,
-  OracleBattleResolvedSchema,
+  OracleBattleRosterSchema,
   OracleCaseSchema,
+  OracleCreationOutcomeSchema,
+  OracleCreationTraceSchema,
   OracleEvaluationBatchSchema,
   OracleTraceSchema,
-  OracleTraceStepSchema,
-  WorkflowRejectionSchema,
   oracleCaseSchema,
   oracleEvaluationBatchSchema,
   oracleTraceSchema,
   type CreationFillBatch,
   type FreshSheetInput,
   type OracleBattleAttempt,
-  type OracleBattleAttemptRejection,
+  type OracleBattleAttemptRejectionReason,
+  type OracleBattleAttemptSegment,
+  type OracleBattleContinuation,
+  type OracleBattleInitiativeEntry,
+  type OracleAmmunitionStocks,
   type OracleBattleInterruptDecisionFill,
   type OracleBattleNonterminalFrontier,
+  type OracleBattleRoster,
+  type OracleBattleCharacterSheetRosterEntry,
+  type OracleBattleStatBlockRosterEntry,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleTrace,
-  type OracleTraceStep,
 } from "./oracle-case-trace-schema.ts";
-export { canonicalizeStringSet } from "./oracle-canonical.ts";
+export {
+  canonicalizeStringSet,
+  canonicalStructuralKey,
+  hasDuplicateStructuralValues,
+} from "./oracle-canonical.ts";
 export {
   type OracleDecodeIssue,
   type OracleDecodeIssueCode,
+  type OracleDecodeIssues,
 } from "./oracle-decode.ts";
+export {
+  decodeOracleCaseDocument,
+  decodeOracleEvaluationBatchDocument,
+  decodeOracleTraceDocument,
+  type OracleCaseDocument,
+  type OracleEvaluationBatchDocument,
+  type OracleTraceDocument,
+} from "./oracle-document.ts";
 
 export type OracleCreationFillBatch = CreationFillBatch;
 export type OracleFreshSheetInput = FreshSheetInput;
 
 export function decodeOracleCase(
   input: unknown,
-): Either.Either<OracleCase, readonly OracleDecodeIssue[]> {
-  return decodeWithSchema(OracleCaseSchema, canonicalizeCaseInput(input));
+): Either.Either<OracleCase, OracleDecodeIssues> {
+  const document = decodeOracleCaseDocument(input);
+  if (Either.isLeft(document)) return Either.left(document.left);
+  return admitOracleCaseDocument(document.right);
 }
 
 export function decodeOracleEvaluationBatch(
   input: unknown,
-): Either.Either<OracleEvaluationBatch, readonly OracleDecodeIssue[]> {
-  return decodeWithSchema(
-    OracleEvaluationBatchSchema,
-    canonicalizeBatchInput(input),
-  );
+): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
+  const document = decodeOracleEvaluationBatchDocument(input);
+  if (Either.isLeft(document)) return Either.left(document.left);
+  return admitOracleEvaluationBatchDocument(document.right);
 }
 
 export function decodeOracleTrace(
   input: unknown,
-): Either.Either<OracleTrace, readonly OracleDecodeIssue[]> {
-  const decoded = decodeWithSchema(
-    OracleTraceSchema,
-    canonicalizeTraceInput(input),
-    {
-      classifyRefinement: (actual, path) =>
-        (path === "" || path === "/steps") &&
-        typeof actual === "object" &&
-        actual !== null &&
-        "steps" in actual &&
-        Array.isArray(actual.steps) &&
-        actual.steps.length > 0
-          ? "invalidLifecycle"
-          : undefined,
-    },
+): Either.Either<OracleTrace, OracleDecodeIssues> {
+  const document = decodeOracleTraceDocument(input);
+  if (Either.isLeft(document)) return Either.left(document.left);
+  return admitOracleTraceDocument(document.right);
+}
+
+export function admitOracleCaseDocument(
+  document: OracleCaseDocument,
+): Either.Either<OracleCase, OracleDecodeIssues> {
+  return decodeWithSchema(OracleCaseSchema, canonicalizeCaseInput(document));
+}
+
+export function admitOracleEvaluationBatchDocument(
+  document: OracleEvaluationBatchDocument,
+): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
+  return decodeWithSchema(
+    OracleEvaluationBatchSchema,
+    canonicalizeBatchInput(document),
   );
-  if (Either.isRight(decoded)) return decoded;
-  return Either.left(
-    decoded.left.map((issue) =>
-      issue.code === "invalidLifecycle" && issue.path === ""
-        ? { ...issue, path: "/steps" }
-        : issue,
-    ),
-  );
+}
+
+export function admitOracleTraceDocument(
+  document: OracleTraceDocument,
+): Either.Either<OracleTrace, OracleDecodeIssues> {
+  return decodeWithSchema(OracleTraceSchema, canonicalizeTraceInput(document));
 }
 
 export function decodeOracleCaseJson(
   input: string,
-): Either.Either<OracleCase, readonly OracleDecodeIssue[]> {
+): Either.Either<OracleCase, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
   return Either.isLeft(parsed)
     ? Either.left(parsed.left)
@@ -119,7 +150,7 @@ export function decodeOracleCaseJson(
 
 export function decodeOracleEvaluationBatchJson(
   input: string,
-): Either.Either<OracleEvaluationBatch, readonly OracleDecodeIssue[]> {
+): Either.Either<OracleEvaluationBatch, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
   return Either.isLeft(parsed)
     ? Either.left(parsed.left)
@@ -128,7 +159,7 @@ export function decodeOracleEvaluationBatchJson(
 
 export function decodeOracleTraceJson(
   input: string,
-): Either.Either<OracleTrace, readonly OracleDecodeIssue[]> {
+): Either.Either<OracleTrace, OracleDecodeIssues> {
   const parsed = parseJsonWithDuplicateDetection(input);
   return Either.isLeft(parsed)
     ? Either.left(parsed.left)

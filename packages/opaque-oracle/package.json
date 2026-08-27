@@ -11,6 +11,8 @@
     "#/*": "./src/*"
   },
   "scripts": {
+    "generate:schemas": "tsx scripts/generate-schemas.ts",
+    "check:schema-sync": "tsx scripts/check-schema-sync.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
@@ -26,7 +28,9 @@
   "devDependencies": {
     "@types/node": "^22.10.0",
     "@typescript/native": "npm:typescript@^7.0.2",
+    "ajv": "^8.18.0",
     "fast-check": "3.23.2",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vitest": "4.1.11"
   }
