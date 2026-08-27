@@ -118,7 +118,7 @@ type CharacterBattleBuildProjectionReasonFor<
     } & Omit<Cause, "tag" | "reason"> &
       (Cause extends { readonly reason: infer CauseReason }
         ? { readonly causeReason: CauseReason }
-        : {})
+        : Record<never, never>)
   : never;
 
 export type CharacterBattleInitIssueReason =
