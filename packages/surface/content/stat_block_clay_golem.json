@@ -1,0 +1,177 @@
+{
+  "challengeRating": 9,
+  "id": "stat_block_clay_golem",
+  "kind": "statBlock",
+  "name": "Clay Golem",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:146-183"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 1,
+      "con": 18,
+      "dex": 9,
+      "int": 3,
+      "str": 20,
+      "wis": 8
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
+    },
+    "actions": [
+      {
+        "description": "The golem makes two Slam attacks, or it makes three Slam attacks if it used Hasten this turn.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +9, reach 5 ft. Hit: 10 (1d10 + 5) Bludgeoning damage plus 6 (1d12) Acid damage, and the target's Hit Point maximum decreases by an amount equal to the Acid damage taken.",
+        "kind": "textOnly",
+        "name": "Slam",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "bonusActions": [
+      {
+        "description": "The golem takes the Dash and Disengage actions.",
+        "kind": "textOnly",
+        "name": "Hasten",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "additionalLanguages": 1,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "construct",
+    "hp": {
+      "kind": "literal",
+      "value": 123
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "exhaustion",
+        "frightened",
+        "paralyzed",
+        "petrified",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "acid",
+        "poison",
+        "psychic"
+      ]
+    },
+    "initiative": {
+      "modifier": 3,
+      "score": 13
+    },
+    "passivePerception": 9,
+    "resistances": {
+      "damageTypes": [
+        "bludgeoning",
+        "piercing",
+        "slashing"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 5
+      },
+      {
+        "ability": "dex",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 4
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": -5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "Whenever the golem is subjected to Acid damage, it takes no damage and instead regains a number of Hit Points equal to the Acid damage dealt.",
+        "name": "Acid Absorption"
+      },
+      {
+        "description": "Whenever the golem starts its turn Bloodied, roll 1d6. On a 6, the golem goes berserk. On each of its turns while berserk, the golem attacks the nearest creature it can see. If no creature is near enough to move to and attack, the golem attacks an object. Once the golem goes berserk, it continues to be berserk until it is destroyed or it is no longer Bloodied.",
+        "name": "Berserk"
+      },
+      {
+        "description": "The golem can't shape-shift.",
+        "name": "Immutable Form"
+      },
+      {
+        "description": "The golem has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}

@@ -160,6 +160,63 @@ describe("standalone Stat Block general facts", () => {
     ).toThrow();
   });
 
+  test("admits only the SRD aggregate and constituent Size pairs for a swarm", () => {
+    const mediumSwarm = {
+      ...syntheticStandaloneStatBlock,
+      size: "medium",
+      creatureType: "undead",
+      creatureTypeTags: undefined,
+      swarm: { constituentSize: "tiny" },
+    } as const;
+    const { creatureTypeTags: _omittedTags, ...authoredMediumSwarm } =
+      mediumSwarm;
+    const authoredLargeSwarm = {
+      ...authoredMediumSwarm,
+      size: "large",
+    } as const;
+
+    expect(
+      decode(StandaloneStatBlockSchema, authoredMediumSwarm),
+    ).toMatchObject({
+      size: "medium",
+      creatureType: "undead",
+      swarm: { constituentSize: "tiny" },
+    });
+    expect(decode(StandaloneStatBlockSchema, authoredLargeSwarm)).toMatchObject(
+      {
+        size: "large",
+        swarm: { constituentSize: "tiny" },
+      },
+    );
+
+    for (const forbiddenAggregateSize of ["tiny", "gargantuan"] as const) {
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...authoredMediumSwarm,
+          size: forbiddenAggregateSize,
+        }),
+      ).toThrow();
+    }
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredMediumSwarm,
+        creatureTypeTags: ["swarm"],
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredMediumSwarm,
+        swarm: { constituentSize: "medium" },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredMediumSwarm,
+        swarm: { constituentSize: "tiny", size: "medium" },
+      }),
+    ).toThrow();
+  });
+
   test("leaves grouped procedure sections to the procedure schema", () => {
     expect(() =>
       decode(StandaloneStatBlockSchema, {
@@ -182,7 +239,10 @@ describe("standalone Stat Block general facts", () => {
     expect(() =>
       decode(StandaloneStatBlockSchema, {
         ...syntheticStandaloneStatBlock,
-        legendaryActions: { uses: 1, actions: {} },
+        legendaryActions: {
+          uses: { kind: "fixed", uses: 1 },
+          actions: {},
+        },
       }),
     ).toThrow();
   });

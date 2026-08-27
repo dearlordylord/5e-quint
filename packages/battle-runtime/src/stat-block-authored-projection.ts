@@ -9,7 +9,6 @@ import {
 import type { StandardActionKind } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
 import type {
-  CreatureAttackRollMechanics,
   StatBlockProcedureEntry,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
@@ -30,7 +29,6 @@ import type {
   BattleStatBlockPresentationSource,
 } from "./battle-runtime-context.ts";
 import {
-  parseStatBlockLegendaryActionUses,
   parseStatBlockPositiveIntegerLiteral,
   parseStatBlockRuntimeResource,
   type BattleStatBlockExecutionSource,
@@ -42,11 +40,14 @@ import {
   type StatBlockRuntimeResourceParseFailure,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockActionProjectionSection } from "./stat-block-presentation-contract.ts";
-import type { StatBlockTraitAttackRollMode } from "./battle-action-options.ts";
+import type {
+  StatBlockTraitAttackRollMode,
+  SupportedCreatureAttackRollMechanics,
+} from "./battle-action-options.ts";
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
-  | "invalidLegendaryActionUses";
+  | "unsupportedLairConditionalLegendaryActionUses";
 
 export type BattleStatBlockInvalidResourceDeclaration = {
   readonly ordinal: StatBlockProcedureResourceOrdinal;
@@ -109,9 +110,9 @@ export function battleStatBlockProjectionFailureMessage(
       () => "battle initialization requires a concrete Size",
     ),
     Match.when(
-      "invalidLegendaryActionUses",
+      "unsupportedLairConditionalLegendaryActionUses",
       () =>
-        "battle initialization requires positive integer Legendary Action uses",
+        "battle initialization does not own the lair context needed to select Legendary Action uses",
     ),
     Match.when(
       "invalidResourceLimit",
@@ -141,11 +142,11 @@ export function projectAuthoredStatBlock(
   const size = literalSize(source.size);
   if (size === null) return Either.left(failure("nonLiteralSize"));
   const speeds = source.speeds.map(runtimeSpeed);
-  const legendaryActionUses = parseStatBlockLegendaryActionUses(
+  const legendaryActionUses = authoredLegendaryActionUses(
     source.legendaryActions?.uses,
   );
   if (Either.isLeft(legendaryActionUses)) {
-    return Either.left(failure("invalidLegendaryActionUses"));
+    return Either.left(legendaryActionUses.left);
   }
   const resources = runtimeResources(source.resources);
   if (Either.isLeft(resources)) {
@@ -360,7 +361,7 @@ function supportedAttackOrdinals(
     (entries ?? []).flatMap((entry) =>
       entry.kind === "executable" &&
       entry.procedure.kind === "attack_roll" &&
-      creatureAttackRollMechanicsAreSupported(
+      authoredAttackMechanicsAreSupported(
         authoredAttackMechanics(entry.procedure),
       )
         ? [entry.procedureOrdinal]
@@ -462,7 +463,7 @@ function runtimeAttackBinding(
   const attack = authoredAttackMechanics(procedure);
   if (
     (section !== "actions" && section !== "legendaryActions") ||
-    !creatureAttackRollMechanicsAreSupported(attack)
+    !authoredAttackMechanicsAreSupported(attack)
   )
     return Either.left(procedureBindingIssue(section, entry.procedureOrdinal));
   return Either.right({
@@ -588,9 +589,6 @@ function attackProcedurePresentation(
 > {
   return {
     ...procedurePresentationBase(section, entry, procedure.name),
-    ...(procedure.description === undefined
-      ? {}
-      : { description: procedure.description }),
     kind: "attack",
   };
 }
@@ -642,22 +640,43 @@ function procedurePresentationBase(
   };
 }
 
-function authoredAttackMechanics(
-  procedure: Extract<
-    Extract<
-      StatBlockProcedureEntry,
-      { readonly kind: "executable" }
-    >["procedure"],
-    { readonly kind: "attack_roll" }
-  >,
-): CreatureAttackRollMechanics {
-  const {
-    kind: _kind,
-    name: _name,
-    description: _description,
-    ...attack
-  } = procedure;
+type AuthoredAttackProcedure = Extract<
+  Extract<
+    StatBlockProcedureEntry,
+    { readonly kind: "executable" }
+  >["procedure"],
+  { readonly kind: "attack_roll" }
+>;
+
+function authoredAttackMechanics(procedure: AuthoredAttackProcedure) {
+  const { kind: _kind, name: _name, ...attack } = procedure;
   return attack;
+}
+
+type AuthoredAttackMechanics = ReturnType<typeof authoredAttackMechanics>;
+
+/**
+ * Authored timed conditions retain their explicit turn owner but are not yet
+ * an executable battle effect. Exhaustive matching prevents a future authored
+ * effect kind from entering the older creature-attack projection implicitly.
+ */
+function authoredAttackMechanicsAreSupported(
+  attack: AuthoredAttackMechanics,
+): attack is AuthoredAttackMechanics & SupportedCreatureAttackRollMechanics {
+  const authoredEffectsAreSupported = attack.onHit.every((effect) =>
+    Match.value(effect).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        apply_condition: () => false,
+        apply_condition_if_target_size_at_most: () => true,
+        conditional_bonus_damage: () => true,
+        damage: () => true,
+      }),
+    ),
+  );
+  return (
+    authoredEffectsAreSupported &&
+    creatureAttackRollMechanicsAreSupported(attack)
+  );
 }
 
 function procedureResourceRefs(
@@ -731,6 +750,26 @@ function runtimeSense(
 
 function literalSize(size: StandaloneStatBlock["size"]): Size | null {
   return typeof size === "string" ? size : null;
+}
+
+function authoredLegendaryActionUses(
+  uses:
+    | NonNullable<StandaloneStatBlock["legendaryActions"]>["uses"]
+    | undefined,
+): Either.Either<
+  BattleStatBlockExecutionSource["legendaryActionUses"],
+  BattleStatBlockProjectionFailure
+> {
+  if (uses === undefined) return Either.right(undefined);
+  return Match.value(uses).pipe(
+    Match.when({ kind: "fixed" }, ({ uses: fixedUses }) =>
+      Either.right(PositiveInteger(fixedUses)),
+    ),
+    Match.when({ kind: "lair_bonus" }, () =>
+      Either.left(failure("unsupportedLairConditionalLegendaryActionUses")),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function nonEmptyRuntimeValues<T>(

@@ -1,18 +1,18 @@
 {
   "version": 1,
-  "schemaSha256": "02cbcc49085f1564af6140e84a75a3754a77c3e94c40b77360ce04f8676fa953",
+  "schemaSha256": "d36e3e6f7d8d1d29a09527283b65beeec3d0eea4db347251dfca4b761ffb969e",
   "dependencyContractSha256": "b51a948f39405d371e528850fab0ba81f800add9af4bea84440ddba616cc50ef",
   "cases": [
     {
       "name": "valid published aggregate",
-      "inputSha256": "38793d4d5b6fd506e9ef1f0d26db819df2a9cd416c12571afbe1d5c377062bfb",
+      "inputSha256": "e617b3dd2fac6d4843cf8732d1c35ba96fb59118cdcee9b889ed544a92b0d886",
       "expected": {
         "tag": "accepted"
       }
     },
     {
       "name": "unknown field",
-      "inputSha256": "5acbec89ea41b336423174f1cbca94e169b94e2d8d4ad310853184546651bc48",
+      "inputSha256": "d19fa91ba9c6973ce1c586d09f9ed87c27a47d466636b37a1a2ab4f67331332d",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -25,7 +25,7 @@
     },
     {
       "name": "non-SRD provenance",
-      "inputSha256": "e255d866be5bd5fc3464db1268861415c461df75ed27e5268c521e8979da6f31",
+      "inputSha256": "4fc52906ade8b8c4e26296598e4ed3da2c7df4c55b8145cf3d2d2c13a5ff5bd9",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -38,7 +38,7 @@
     },
     {
       "name": "refinement violation",
-      "inputSha256": "2308e2fd2e3906c804aecd7084584edc148dc3604737cb7d88f978a8018d63a4",
+      "inputSha256": "a51464c23c540dbd7ae27ad202cd8c59d822517d2f935d317b85d6972e6fc16f",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -95,7 +95,7 @@
     },
     {
       "name": "duplicate identity within one family",
-      "inputSha256": "cb8cdcf52f740a0495351f5020abc703366ae1145c7e0e0fe82aaddb22779837",
+      "inputSha256": "08a78b808dfe386c4c37f4d73f966463e81bad42e960a7fe0a122d965a630137",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -223,7 +223,7 @@
     },
     {
       "name": "duplicate identity across record families",
-      "inputSha256": "70807b2ec67e43caeb54614a579ff6b32ae2f4c8bfce060e3d11ea7c769ae6d1",
+      "inputSha256": "70d6c8c0bee8093ee7116e623714944c7d97d31c15c78cc59fcfec14a16c2e82",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -239,7 +239,7 @@
     },
     {
       "name": "dangling authored dependency",
-      "inputSha256": "d1479e99f767c57b58fb21d543fe9f522425d6d4d9556c90b4bde66764a7b635",
+      "inputSha256": "1a373d1afd6f2fca6f7e656e25ec2376da17879e6a64e8dc0487e778f0569e65",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -255,7 +255,7 @@
     },
     {
       "name": "schema-invalid dependency target accumulates dangling issue",
-      "inputSha256": "d8c8d1cb9b6256b0d4d85e86879f6bfbdf8acb64c0b76bc8f4158309a08f0d04",
+      "inputSha256": "ddb77b4c78536b60d84206ad89953802b517abb20c66a81355dd156f69537632",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -275,7 +275,7 @@
     },
     {
       "name": "independent record failures accumulate",
-      "inputSha256": "81fed900f132aa997d0eb36b226c4841034a56e307efaaaffcb3df5c3f6736ab",
+      "inputSha256": "b94af683a20839620d1b2e5590fe3fe4b5456d67b57c5b0e8480d8dff3c13dbc",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -292,7 +292,7 @@
     },
     {
       "name": "schema and dependency failures accumulate",
-      "inputSha256": "14112e85294a5b5b41797277ad0025e75c8e4066f0974fb2b42a64111eaf53c3",
+      "inputSha256": "df2502cdc037e6919b853e12a47d6074e2f2a95b38afff072f36a89bbcdff11a",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -312,7 +312,7 @@
     },
     {
       "name": "all canonical dependency fields are checked",
-      "inputSha256": "1b3ae412ee5f60032fa0a58fe884a0a3a5ac86d7140968e2bca1449dc459f920",
+      "inputSha256": "c39190e32ceeb172c7c989135dd9908104c8a882ac5796b74af5a0c3cbc08346",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1315,7 +1315,7 @@
     },
     {
       "name": "canonical dependency role: unit.featureGrants[].unitId",
-      "inputSha256": "9e96895d901d06dcca29e7efc95725d37076ceff37acb6483dbc0adf3b695c43",
+      "inputSha256": "dde6192bc0c269237070f797c05188d4047813794f9b763b032f42fcb3f792b5",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1380,7 +1380,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.creature.normalForms[].statBlockId",
-      "inputSha256": "a4d2155e88ab3ce8778ef7528326608424ad6a7280a92508de42ecc6957a5de7",
+      "inputSha256": "2a5ec6da11a9808808ce746c76eac63252398b7e28247e8364ba4e9cacb6d167",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1466,7 +1466,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.grants[].spellId",
-      "inputSha256": "7bff33cffc7e996d5d4de68bde0285985ec7da0a2d49883bcf46c42fa6190b98",
+      "inputSha256": "0fe45c79bbd865946a01ada7958be933350ad32f384205a59ab8bd50517a3422",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1482,7 +1482,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.healing.amount.martialArtsUnitId",
-      "inputSha256": "303159b6361a09ab47ac75726353fdfedda72a3370e30509c3f1c5ee967db2a9",
+      "inputSha256": "4bdf4d362b6151b434bfaf63db2dd9228c16a002ffb12d0efe609692f6856b5d",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1505,7 +1505,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.modifiers[].zeroDamageRedirect.spends.resourceUnitId",
-      "inputSha256": "6143f29e186ed8115e5427a2ba9e293de9878865d1d1b849398ce74d2eb6c0f5",
+      "inputSha256": "33f6732f93c23c00cec4969310f087d9dcb4563618a053882974e8d1d83b24c2",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1521,7 +1521,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.options[].mechanics.grants[].spellId",
-      "inputSha256": "8d479fa35f6629af15d02c9916fbf95780c0e7b5cf4c91c45869783a2c4a230b",
+      "inputSha256": "fb9a371e40d7ba9ce9f75721d1f7c77ade14ede35f482fb0c28491ca7515df48",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1565,7 +1565,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.recovery.resourceUnitId",
-      "inputSha256": "303159b6361a09ab47ac75726353fdfedda72a3370e30509c3f1c5ee967db2a9",
+      "inputSha256": "4bdf4d362b6151b434bfaf63db2dd9228c16a002ffb12d0efe609692f6856b5d",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1588,7 +1588,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.resource.resourceUnitId",
-      "inputSha256": "20859bd40ca9ace16ff5f457d290a8f0a98c40d6fa20e23d8336e75d98ed5a15",
+      "inputSha256": "d9d4e48929440617c59f5b6d722af7237424434e121dcf48ba174cefea72ad2d",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1604,7 +1604,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.sourceUnitId",
-      "inputSha256": "5c7b2f22bf388173a9b79cebec295afa2ed29825365c39bd24a30191d123575b",
+      "inputSha256": "dbcbdea06561f276ed490799d31ed82b64baf0488e82692666a402872c9b1cd5",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1620,7 +1620,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.spellId",
-      "inputSha256": "0725f860dd8d9e354e14fe4ebf7c99c13d148919cda14e29f635ca7673e23518",
+      "inputSha256": "2e6a15923430709fe3ec53133e3948df6ee74c28409b191adc68a4a1976dc2dc",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1643,7 +1643,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.spendOptions[].resourceUnitId",
-      "inputSha256": "0725f860dd8d9e354e14fe4ebf7c99c13d148919cda14e29f635ca7673e23518",
+      "inputSha256": "2e6a15923430709fe3ec53133e3948df6ee74c28409b191adc68a4a1976dc2dc",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1666,7 +1666,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.spends.resourceUnitId",
-      "inputSha256": "3182e663638d82088a00e6dd84be48a29f59883b4936db493836afbeba0ae751",
+      "inputSha256": "c1a39b7fabb996285a9ce0d473e712aeaa8bafc0abef6c147131a6d1f58ab069",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1682,7 +1682,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.trigger.prerequisiteUnitId",
-      "inputSha256": "da071b887a93398d91ce8948bd19a8231069388efff46bf05fecc4a867d59ab5",
+      "inputSha256": "efdfd967b9ff41eaee04fd09278c640e01737e259c2bd99455803c53af14a382",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1698,7 +1698,7 @@
     },
     {
       "name": "canonical dependency role: unit.mechanics.trigger.sourceUnitId",
-      "inputSha256": "988974d48dba526495373920132cb0cef4ece1d784525bd2d2198f8721dbdd1a",
+      "inputSha256": "827995bb35f493bc6b54a95a455e2a79b2013d0c20fa2b139f954f0cb5a6ba6b",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1714,7 +1714,7 @@
     },
     {
       "name": "canonical dependency role: unit.originFeatId",
-      "inputSha256": "15abf65e5c6849b077094568f58b1700aadc4bc10862d5de8a83a0b3a71dde16",
+      "inputSha256": "e656e03519f070a276faae30751366aa5f46cf39a7a6b2da05884154ca1a0daa",
       "expected": {
         "tag": "rejected",
         "issues": [
@@ -1730,7 +1730,7 @@
     },
     {
       "name": "canonical dependency role: unit.startingEquipment[].items[].unitId",
-      "inputSha256": "65aae06d7dc519409ce0577a41b312fe5b659d5d5cb1952a4d661217d6b9a7b7",
+      "inputSha256": "8791ebee04c4e52e89f6fd9075843fefeede68ca3921d99dd90377529033c369",
       "expected": {
         "tag": "rejected",
         "issues": [

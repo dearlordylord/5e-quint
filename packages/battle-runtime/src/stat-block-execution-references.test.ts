@@ -1229,7 +1229,7 @@ describe("Stat Block execution references", () => {
         actions: [actionAttack, secondAction, multiattackEntry],
         legendaryActions: {
           ...base.statBlock.legendaryActions,
-          uses: 2,
+          uses: { kind: "fixed", uses: 2 },
           entries: [tailSwipe, wingSweep],
         },
       },
@@ -1327,7 +1327,7 @@ describe("Stat Block execution references", () => {
         ...statBlock.statBlock,
         legendaryActions: {
           ...statBlock.statBlock.legendaryActions,
-          uses: 2,
+          uses: { kind: "fixed", uses: 2 },
           entries: [
             {
               kind: "textOnly",
@@ -1389,7 +1389,10 @@ describe("Stat Block execution references", () => {
         ...base.statBlock,
         legendaryActions: {
           ...base.statBlock.legendaryActions,
-          uses: base.statBlock.legendaryActions?.uses ?? 2,
+          uses: base.statBlock.legendaryActions?.uses ?? {
+            kind: "fixed",
+            uses: 2,
+          },
           entries: [limitedLegendaryAttack],
         },
       },

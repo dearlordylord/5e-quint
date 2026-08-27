@@ -62,12 +62,6 @@ describe("Animals Stat Block procedure fidelity", () => {
 
         for (const entry of entries) {
           if (entry.kind !== "executable") continue;
-          if (entry.procedure.kind === "attack_roll") {
-            expect(
-              entry.procedure.description,
-              `${record.id} ${entry.procedure.name} retained untyped attack prose.`,
-            ).toBeUndefined();
-          }
           if (entry.procedure.kind === "multiattack") {
             for (const dispatch of entry.procedure.dispatches) {
               expect(

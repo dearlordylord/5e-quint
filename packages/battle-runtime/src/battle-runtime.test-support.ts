@@ -4081,10 +4081,36 @@ export function statBlockCreatureInit(input: {
   };
 }
 
-export function statBlockRecord(): StatBlockRecord {
-  return assertStatBlockForTest(
-    statBlockCatalog,
-    statBlockId("stat_block_goblin_warrior"),
+type SwarmStandaloneStatBlock = Extract<
+  StatBlockRecord["statBlock"],
+  { readonly swarm: unknown }
+>;
+
+type NonSwarmStandaloneStatBlock = Exclude<
+  StatBlockRecord["statBlock"],
+  SwarmStandaloneStatBlock
+>;
+
+type NonSwarmStatBlockRecord = Omit<StatBlockRecord, "statBlock"> & {
+  readonly statBlock: NonSwarmStandaloneStatBlock;
+};
+
+/** Narrow a catalog fixture before tests replace its aggregate Size. */
+export function requireNonSwarmStatBlockRecordForTest(
+  record: StatBlockRecord,
+): NonSwarmStatBlockRecord {
+  if (record.statBlock.swarm !== undefined) {
+    throw new Error("Expected a non-Swarm Stat Block test fixture.");
+  }
+  return { ...record, statBlock: record.statBlock };
+}
+
+export function statBlockRecord(): NonSwarmStatBlockRecord {
+  return requireNonSwarmStatBlockRecordForTest(
+    assertStatBlockForTest(
+      statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    ),
   );
 }
 
@@ -4233,7 +4259,7 @@ export function monsterResourceStatBlock(): StatBlockRecord {
         },
       ],
       legendaryActions: {
-        uses: 2,
+        uses: { kind: "fixed", uses: 2 },
         entries: [
           renamedAttackProcedureEntry({
             entry: scimitar,

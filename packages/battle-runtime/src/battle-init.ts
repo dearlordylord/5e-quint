@@ -157,7 +157,7 @@ export type BattleDruidWildShapeKnownFormIssue =
       readonly statBlockId: StatBlockId;
       readonly reason:
         | "nonLiteralSize"
-        | "invalidLegendaryActionUses"
+        | "unsupportedLairConditionalLegendaryActionUses"
         | "missingWalkSpeed";
     }
   | {
@@ -194,8 +194,8 @@ type WildShapeKnownFormScalarProjectionFailureReason = Exclude<
 
 const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
   nonLiteralSize: "Druid Wild Shape battle forms require literal Size.",
-  invalidLegendaryActionUses:
-    "Druid Wild Shape battle forms require positive integer Legendary Action uses.",
+  unsupportedLairConditionalLegendaryActionUses:
+    "Druid Wild Shape battle forms cannot select lair-conditional Legendary Action uses without lair context.",
   invalidResourceLimit:
     "Druid Wild Shape battle forms require valid Stat Block resource limits.",
 } as const satisfies Record<
@@ -329,14 +329,17 @@ function wildShapeProjectionDisposition(
         reason,
       },
     })),
-    Match.when({ reason: "invalidLegendaryActionUses" }, ({ reason }) => ({
-      kind: "issue" as const,
-      issue: {
-        tag: "battleDruidWildShapeKnownFormIssue" as const,
-        statBlockId,
-        reason,
-      },
-    })),
+    Match.when(
+      { reason: "unsupportedLairConditionalLegendaryActionUses" },
+      ({ reason }) => ({
+        kind: "issue" as const,
+        issue: {
+          tag: "battleDruidWildShapeKnownFormIssue" as const,
+          statBlockId,
+          reason,
+        },
+      }),
+    ),
     Match.when(
       { reason: "invalidResourceLimit" },
       ({ issues: resourceIssues }) => ({
@@ -384,9 +387,9 @@ export function wildShapeKnownFormsIssueMessage(
             WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.nonLiteralSize,
         ),
         Match.when(
-          { reason: "invalidLegendaryActionUses" },
+          { reason: "unsupportedLairConditionalLegendaryActionUses" },
           () =>
-            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.invalidLegendaryActionUses,
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedLairConditionalLegendaryActionUses,
         ),
         Match.when(
           { reason: "missingWalkSpeed" },

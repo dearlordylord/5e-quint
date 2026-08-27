@@ -91,7 +91,6 @@ type BattleStatBlockProcedurePresentationBase = {
 export type BattleStatBlockAuthoredProcedurePresentation =
   | (BattleStatBlockProcedurePresentationBase & {
       readonly kind: "attack";
-      readonly description?: string;
     })
   | (BattleStatBlockProcedurePresentationBase & {
       readonly kind: "multiattack";
