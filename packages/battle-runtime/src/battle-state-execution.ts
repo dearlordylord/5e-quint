@@ -179,6 +179,10 @@ import type {
   SpellMechanics,
   WeaponProficiency,
 } from "@dnd/surface/surface/types";
+import type {
+  FindFamiliarNormalFormRef,
+  PactOfTheChainSpecialFormRef,
+} from "@dnd/surface/surface/find-familiar-forms";
 import type * as Option from "effect/Option";
 import type {
   BoundCharacterUnarmedStrikeActionOption,
@@ -233,6 +237,7 @@ import type {
   StatBlockExecutionSnapshot,
 } from "./stat-block-execution-state.ts";
 import type { StatBlockId, UnitId } from "@dnd/shared/game-facts";
+import type { BattleCompanionDurableId } from "./companion-state.ts";
 
 export type BattleStatBlockExecutionCatalog = {
   readonly getStatBlock: (
@@ -4347,6 +4352,81 @@ export type BattleInitializationIssueFacts =
       readonly combatantId: CombatantId;
       readonly origin: "character" | "statBlock";
       readonly issueIndex: number;
+    }
+  | {
+      readonly kind: "companionOwnerMissing";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionDurableIdentityMissing";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionOwnerAlreadyHasCompanion";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionDurableIdentityInUse";
+      readonly ownerId: CombatantId;
+      readonly durableCompanionId: BattleCompanionDurableId;
+      readonly existingOwnerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionManifestationInvalid";
+      readonly ownerId: CombatantId;
+      readonly requirement: "embodiedOutsideBattle" | "retainedIdentity";
+    }
+  | {
+      readonly kind: "companionFormStatBlockMissing";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly resolvedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionFormAccessMismatch";
+      readonly storedFormAccess: "findFamiliar" | "pactOfTheChain";
+      readonly eligibilityFormAccess: "findFamiliar" | "pactOfTheChain";
+    }
+  | {
+      readonly kind: "companionFormResolvedStatBlockMismatch";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly expectedStatBlockId: StatBlockId;
+      readonly resolvedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionFormSelectionStatBlockMissing";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly selectedStatBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionFormSelectionStatBlockInvalid";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly selectedStatBlockId: StatBlockId;
+      readonly expectedCreatureType: "beast";
+      readonly expectedChallengeRating: 0;
+    }
+  | {
+      readonly kind: "companionFormSpecialFormUnknown";
+      readonly formAccess: "pactOfTheChain";
+      readonly formId: PactOfTheChainSpecialFormRef["formId"];
+    }
+  | {
+      readonly kind: "companionFormNormalFormIneligible";
+      readonly formAccess: "findFamiliar" | "pactOfTheChain";
+      readonly formId: FindFamiliarNormalFormRef["formId"];
+    }
+  | {
+      readonly kind: "companionCombatantAdmissionInvalid";
+      readonly ownerId: CombatantId;
+      readonly companionCombatantId: CombatantId;
+    }
+  | {
+      readonly kind: "companionInitialInitiativeInvalid";
+      readonly ownerId: CombatantId;
+      readonly companionCombatantId: CombatantId;
+      readonly requirement:
+        | "initialCombatantOrder"
+        | "nonEmptyRoster"
+        | "stackConstruction";
     };
 
 /** A flat projection of one initialization fact for boundary payloads. */

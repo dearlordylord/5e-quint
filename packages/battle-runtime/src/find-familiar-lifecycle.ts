@@ -39,9 +39,11 @@ import { findFamiliarDisappearedAtZeroHitPointsState } from "./companion-state.t
 import type {
   BattleAmmunitionStock,
   BattleCreatureState,
+  BattleInitializationIssueFacts,
   BattleResolutionResult,
   BattleState,
   BattleStateInitIssue,
+  BattleStateInitLeafIssue,
 } from "./battle-state-execution.ts";
 import {
   resourceHasUsesRemaining,
@@ -54,7 +56,7 @@ import {
 import { findFamiliarCompanionLifecycleRouteEvents } from "./battle-reducer/companion-routes.ts";
 import { createInitialInitiativeForCombatants } from "./battle-reducer/api-lifecycle.ts";
 import {
-  battleStateInitIssue,
+  battleStateInitIssueLeaves,
   battleStateInitIssueMessage,
 } from "./battle-reducer/domain-helpers.ts";
 import { admitBattleStatBlockCombatant } from "./stat-block-combatant-admission.ts";
@@ -116,7 +118,6 @@ import type {
   FindFamiliarCreatureTypeOverride,
   FindFamiliarCreatureTypeOverrideChoice,
   FindFamiliarFormEligibility,
-  FindFamiliarFormResolution,
   FindFamiliarResolvedForm,
   FindFamiliarFormSelection,
   PactOfTheChainFindFamiliarFormEligibility,
@@ -563,35 +564,92 @@ export function castWildCompanion(
   return resolvedFindFamiliarResult(nextState.state, []);
 }
 
+type CompanionFormResolutionFacts = Extract<
+  BattleInitializationIssueFacts,
+  {
+    readonly kind:
+      | "companionFormStatBlockMissing"
+      | "companionFormAccessMismatch"
+      | "companionFormResolvedStatBlockMismatch"
+      | "companionFormSelectionStatBlockMissing"
+      | "companionFormSelectionStatBlockInvalid"
+      | "companionFormSpecialFormUnknown"
+      | "companionFormNormalFormIneligible";
+  }
+>;
+
+type StoredFindFamiliarFormResolution =
+  | {
+      readonly tag: "resolved";
+      readonly form: FindFamiliarResolvedForm;
+    }
+  | {
+      readonly tag: "issue";
+      readonly message: string;
+      readonly facts: CompanionFormResolutionFacts;
+    };
+
+type CompanionFormResolutionFailure = {
+  readonly message: string;
+  readonly facts: CompanionFormResolutionFacts;
+};
+
+function companionStateInitIssue<TFacts extends BattleInitializationIssueFacts>(
+  facts: TFacts,
+  message: string,
+): Either.Either<
+  never,
+  Extract<BattleStateInitIssue, { readonly tag: "battleStateInitIssue" }> &
+    TFacts
+> {
+  return Either.left({ tag: "battleStateInitIssue", message, ...facts });
+}
+
 export function admitCompanionToBattle(
   input: CompanionBattleAdmissionInput,
 ): Either.Either<BattleState, BattleStateInitIssue> {
   /* v8 ignore start -- @preserve -- Malformed handoff: character-battle admission supplies an owner from the battle roster it just created. */
   if (!input.state.combatants.has(input.ownerId)) {
-    return battleStateInitIssue(
+    return companionStateInitIssue(
+      { kind: "companionOwnerMissing", ownerId: input.ownerId },
       "Companion admission owner is not in this battle.",
     );
   }
   /* v8 ignore stop -- @preserve */
   if (input.identity.durableCompanionId.length === 0) {
-    return battleStateInitIssue("Companion admission requires durable id.");
+    return companionStateInitIssue(
+      {
+        kind: "companionDurableIdentityMissing",
+        ownerId: input.ownerId,
+      },
+      "Companion admission requires durable id.",
+    );
   }
   /* v8 ignore start -- @preserve -- Malformed handoff: the one-at-a-time retained companion boundary cannot admit a second companion for the same owner. */
   if (
     findCompanionByOwner(input.state.companions, input.ownerId) !== undefined
   ) {
-    return battleStateInitIssue(
+    return companionStateInitIssue(
+      {
+        kind: "companionOwnerAlreadyHasCompanion",
+        ownerId: input.ownerId,
+      },
       "Companion admission requires at most one retained companion per owner.",
     );
   }
   /* v8 ignore stop -- @preserve */
-  if (
-    companionDurableIdentityInUse(
-      input.state.companions,
-      input.identity.durableCompanionId,
-    )
-  ) {
-    return battleStateInitIssue(
+  const existingOwnerId = companionOwnerForDurableIdentity(
+    input.state.companions,
+    input.identity.durableCompanionId,
+  );
+  if (existingOwnerId !== undefined) {
+    return companionStateInitIssue(
+      {
+        kind: "companionDurableIdentityInUse",
+        ownerId: input.ownerId,
+        durableCompanionId: input.identity.durableCompanionId,
+        existingOwnerId,
+      },
       "Companion admission identity is already used by another companion.",
     );
   }
@@ -602,7 +660,12 @@ export function admitCompanionToBattle(
   }
   /* v8 ignore start -- @preserve -- Type-level invariant: the companionId branch of CompanionBattleAdmissionInput requires an embodied manifestation. */
   if (input.manifestation.tag !== "embodiedOutsideBattle") {
-    return battleStateInitIssue(
+    return companionStateInitIssue(
+      {
+        kind: "companionManifestationInvalid",
+        ownerId: input.ownerId,
+        requirement: "embodiedOutsideBattle",
+      },
       "Present companion admission requires embodied manifestation.",
     );
   }
@@ -624,7 +687,7 @@ export function admitCompanionToBattle(
   });
   /* v8 ignore start -- @preserve -- Malformed handoff: retained companion authoring resolves and stores form proof against this same eligibility and catalog. */
   if (resolvedForm.tag === "issue") {
-    return battleStateInitIssue(resolvedForm.message);
+    return companionStateInitIssue(resolvedForm.facts, resolvedForm.message);
   }
   /* v8 ignore stop -- @preserve */
   const nextCompanion = findFamiliarPresentState({
@@ -650,11 +713,20 @@ export function admitCompanionToBattle(
   });
   /* v8 ignore start -- @preserve -- The resolved stored form and collision-checked companion identity satisfy Stat Block admission; failures remain a defensive typed propagation. */
   if (nextState.tag === "invalid") {
-    return battleStateInitIssue(nextState.message);
+    return companionStateInitIssue(
+      {
+        kind: "companionCombatantAdmissionInvalid",
+        ownerId: input.ownerId,
+        companionCombatantId: input.companionId,
+      },
+      nextState.message,
+    );
   }
   /* v8 ignore stop -- @preserve */
   return withInitialInitiativeOrder(
     nextState.state,
+    input.ownerId,
+    input.companionId,
     input.initialCombatantOrder,
   );
 }
@@ -718,15 +790,15 @@ function withAdmittedFindFamiliarCombatant(
   });
 }
 
-function companionDurableIdentityInUse(
+function companionOwnerForDurableIdentity(
   companions: BattleState["companions"],
   durableCompanionId: BattleCompanionDurableId,
-): boolean {
-  return companionEntries(companions).some(
+): CombatantId | undefined {
+  return companionEntries(companions).find(
     (entry) =>
       entry.companion.identity.tag === "retainedBetweenBattles" &&
       entry.companion.identity.durableCompanionId === durableCompanionId,
-  );
+  )?.ownerId;
 }
 
 function admitAbsentCompanionToBattle(
@@ -744,7 +816,7 @@ function admitAbsentCompanionToBattle(
     creatureTypeOverride: input.manifestation.creatureTypeOverride,
   });
   if (resolvedForm.tag === "issue") {
-    return battleStateInitIssue(resolvedForm.message);
+    return companionStateInitIssue(resolvedForm.facts, resolvedForm.message);
   }
   if (input.manifestation.tag === "temporarilyDismissed") {
     const identityIssue = findFamiliarIdentityStateInitIssue(
@@ -779,7 +851,12 @@ function admitAbsentCompanionToBattle(
         });
   /* v8 ignore start -- @preserve -- Type-level invariant: both absent-companion constructors above receive the retained identity required by this admission input. */
   if (companion.identity.tag !== "retainedBetweenBattles") {
-    return battleStateInitIssue(
+    return companionStateInitIssue(
+      {
+        kind: "companionManifestationInvalid",
+        ownerId: input.ownerId,
+        requirement: "retainedIdentity",
+      },
       "Retained companion admission requires retained identity.",
     );
   }
@@ -806,6 +883,8 @@ function executionStoredForm(
 
 function withInitialInitiativeOrder(
   state: BattleState,
+  ownerId: CombatantId,
+  companionCombatantId: CombatantId,
   initialCombatantOrder: ReadonlyMap<CombatantId, number>,
 ): Either.Either<BattleState, BattleStateInitIssue> {
   const initiative = createInitialInitiativeForCombatants({
@@ -815,10 +894,46 @@ function withInitialInitiativeOrder(
   });
   /* v8 ignore start -- @preserve -- Malformed handoff: the character-battle boundary supplies one unique initial-order entry for every admitted combatant. */
   if (Either.isLeft(initiative)) {
-    return Either.left(initiative.left);
+    const [firstIssue, ...restIssues] = battleStateInitIssueLeaves(
+      initiative.left,
+    );
+    const mapIssue = (
+      issue: BattleStateInitLeafIssue,
+    ): BattleStateInitLeafIssue =>
+      issue.tag === "battleStateInitIssue" && !("kind" in issue)
+        ? {
+            tag: "battleStateInitIssue" as const,
+            kind: "companionInitialInitiativeInvalid" as const,
+            ownerId,
+            companionCombatantId,
+            requirement: "initialCombatantOrder" as const,
+            message: issue.message,
+          }
+        : issue;
+    const mappedFirstIssue = mapIssue(firstIssue);
+    const mappedRestIssues = restIssues.map(mapIssue);
+    const mappedIssue: BattleStateInitIssue =
+      companionInitializationIssueFromLeaves(
+        mappedFirstIssue,
+        mappedRestIssues,
+      );
+    return Either.left(mappedIssue);
   }
   /* v8 ignore stop -- @preserve */
   return Either.right({ ...state, initiative: initiative.right });
+}
+
+function companionInitializationIssueFromLeaves(
+  firstIssue: BattleStateInitLeafIssue,
+  restIssues: readonly BattleStateInitLeafIssue[],
+): BattleStateInitIssue {
+  const [secondIssue, ...remainingIssues] = restIssues;
+  return secondIssue === undefined
+    ? firstIssue
+    : {
+        tag: "battleStateInitIssues",
+        issues: [firstIssue, secondIssue, ...remainingIssues],
+      };
 }
 
 function hitPointsForFindFamiliarCast(input: {
@@ -898,7 +1013,7 @@ function resolveStoredFindFamiliarForm(input: {
   readonly formEligibility?: CompanionBattleAdmissionFormEligibility;
   readonly storedForm: CompanionBattleAdmissionStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-}): FindFamiliarFormResolution {
+}): StoredFindFamiliarFormResolution {
   if (input.formEligibility !== undefined) {
     const issue = storedFormResolvedStatBlockIdIssue({
       catalog: input.catalog,
@@ -906,7 +1021,7 @@ function resolveStoredFindFamiliarForm(input: {
       formEligibility: input.formEligibility,
     });
     if (issue !== null) {
-      return { tag: "issue", message: issue };
+      return { tag: "issue", ...issue };
     }
   }
   const statBlock = input.catalog.getStatBlock(
@@ -916,6 +1031,11 @@ function resolveStoredFindFamiliarForm(input: {
   if (Option.isNone(statBlock)) {
     return {
       tag: "issue",
+      facts: {
+        kind: "companionFormStatBlockMissing",
+        formAccess: input.storedForm.formAccess,
+        resolvedStatBlockId: input.storedForm.resolvedStatBlockId,
+      },
       message: `Retained familiar form Stat Block is missing: ${input.storedForm.resolvedStatBlockId}.`,
     };
   }
@@ -933,24 +1053,40 @@ function storedFormResolvedStatBlockIdIssue(input: {
   readonly catalog: StatBlockCatalog;
   readonly storedForm: CompanionBattleAdmissionStoredForm;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
-}): string | null {
+}): CompanionFormResolutionFailure | null {
   /* v8 ignore start -- @preserve -- Malformed handoff: stored-form and eligibility variants are constructed together from one authored companion selection. */
   if (input.storedForm.formAccess !== input.formEligibility.formAccess) {
-    return "Retained familiar form proof access does not match admission eligibility.";
+    return {
+      message:
+        "Retained familiar form proof access does not match admission eligibility.",
+      facts: {
+        kind: "companionFormAccessMismatch",
+        storedFormAccess: input.storedForm.formAccess,
+        eligibilityFormAccess: input.formEligibility.formAccess,
+      },
+    };
   }
   /* v8 ignore stop -- @preserve */
   const expected = selectedStoredFormStatBlockId(input);
-  if (typeof expected !== "string") return expected.message;
+  if (typeof expected !== "string") return expected;
   return expected === input.storedForm.resolvedStatBlockId
     ? null
-    : `Retained familiar form proof resolved Stat Block mismatch: ${input.storedForm.resolvedStatBlockId}.`;
+    : {
+        message: `Retained familiar form proof resolved Stat Block mismatch: ${input.storedForm.resolvedStatBlockId}.`,
+        facts: {
+          kind: "companionFormResolvedStatBlockMismatch",
+          formAccess: input.storedForm.formAccess,
+          expectedStatBlockId: expected,
+          resolvedStatBlockId: input.storedForm.resolvedStatBlockId,
+        },
+      };
 }
 
 function selectedStoredFormStatBlockId(input: {
   readonly catalog: StatBlockCatalog;
   readonly storedForm: CompanionBattleAdmissionStoredForm;
   readonly formEligibility: CompanionBattleAdmissionFormEligibility;
-}): StatBlockRecord["id"] | { readonly message: string } {
+}): StatBlockRecord["id"] | CompanionFormResolutionFailure {
   const selection = input.storedForm.formSelection;
   if (selection.tag === "challengeRatingZeroBeast") {
     const statBlock = input.catalog.getStatBlock(selection.statBlockId);
@@ -958,6 +1094,11 @@ function selectedStoredFormStatBlockId(input: {
     if (Option.isNone(statBlock)) {
       return {
         message: `Retained familiar Challenge Rating 0 Beast form Stat Block is missing: ${selection.statBlockId}.`,
+        facts: {
+          kind: "companionFormSelectionStatBlockMissing",
+          formAccess: input.storedForm.formAccess,
+          selectedStatBlockId: selection.statBlockId,
+        },
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -967,6 +1108,13 @@ function selectedStoredFormStatBlockId(input: {
     ) {
       return {
         message: `Retained familiar Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block: ${selection.statBlockId}.`,
+        facts: {
+          kind: "companionFormSelectionStatBlockInvalid",
+          formAccess: input.storedForm.formAccess,
+          selectedStatBlockId: selection.statBlockId,
+          expectedCreatureType: "beast",
+          expectedChallengeRating: 0,
+        },
       };
     }
     return selection.statBlockId;
@@ -977,6 +1125,11 @@ function selectedStoredFormStatBlockId(input: {
       return {
         message:
           "Retained familiar Pact of the Chain special form requires Pact of the Chain eligibility.",
+        facts: {
+          kind: "companionFormAccessMismatch",
+          storedFormAccess: input.storedForm.formAccess,
+          eligibilityFormAccess: input.formEligibility.formAccess,
+        },
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -987,6 +1140,11 @@ function selectedStoredFormStatBlockId(input: {
     if (specialForm === undefined) {
       return {
         message: `Retained familiar Pact of the Chain special form is unknown: ${selection.formId}.`,
+        facts: {
+          kind: "companionFormSpecialFormUnknown",
+          formAccess: "pactOfTheChain",
+          formId: selection.formId,
+        },
       };
     }
     /* v8 ignore stop -- @preserve */
@@ -999,6 +1157,11 @@ function selectedStoredFormStatBlockId(input: {
   if (normalForm === undefined) {
     return {
       message: `Retained familiar normal form is not eligible: ${selection.formId}.`,
+      facts: {
+        kind: "companionFormNormalFormIneligible",
+        formAccess: input.storedForm.formAccess,
+        formId: selection.formId,
+      },
     };
   }
   /* v8 ignore stop -- @preserve */
