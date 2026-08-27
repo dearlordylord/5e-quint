@@ -123,6 +123,11 @@ checks.
 
 ## Runtime protocol
 
+Transport and session projections that only need protocol schemas can import
+`@dnd/battle-runtime/protocol-codecs`. This dependency-light boundary exposes
+the canonical Battle codecs and identity schemas without importing the full
+runtime API; the main package entry point remains the complete runtime surface.
+
 1. Call `startBattle(BattleCreatureInit[])` to create durable `BattleState`.
 2. Read `snapshotBattle(state)` and `discoverBattleActs(state)`.
 3. Choose a `BattleSubject` and call
