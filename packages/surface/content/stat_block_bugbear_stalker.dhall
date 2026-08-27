@@ -8,13 +8,13 @@ in  { challengeRating = 3
         { abilityScores = { str = 17, dex = 14, con = 14, int = 11, wis = 12, cha = 11 }
         , ac = { value = { kind = "literal", value = 15 } }
         , actions =
-            [ T.text 1 "Multiattack" "The bugbear makes two Javelin or Morningstar attacks." "unsupported_action_shape"
-            , T.text 2 "Javelin" "Melee or Ranged Attack Roll: +5, reach 10 ft. or range 30/120 ft. Hit: 13 (3d6 + 3) Piercing damage." "unsupported_action_shape"
-            , T.text 3 "Morningstar" "Melee Attack Roll: +5 (with Advantage if the target is Grappled by the bugbear), reach 10 ft. Hit: 12 (2d8 + 3) Piercing damage." "unsupported_action_shape"
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The bugbear makes two Javelin or Morningstar attacks.", reason = "unsupported_action_shape" }
+            , T.textOnly { procedureOrdinal = 2, name = "Javelin", description = "Melee or Ranged Attack Roll: +5, reach 10 ft. or range 30/120 ft. Hit: 13 (3d6 + 3) Piercing damage.", reason = "unsupported_action_shape" }
+            , T.textOnly { procedureOrdinal = 3, name = "Morningstar", description = "Melee Attack Roll: +5 (with Advantage if the target is Grappled by the bugbear), reach 10 ft. Hit: 12 (2d8 + 3) Piercing damage.", reason = "unsupported_action_shape" }
             ]
         , bonusActions =
-            [ T.text 1 "Quick Grapple" "Dexterity Saving Throw: DC 13, one Medium or smaller creature the bugbear can see within 10 feet. Failure: The target has the Grappled condition (escape DC 13)." "unsupported_action_shape" ]
-        , traits = [ T.trait "Abduct" "The bugbear needn't spend extra movement to move a creature it is grappling." ]
+            [ T.textOnly { procedureOrdinal = 1, name = "Quick Grapple", description = "Dexterity Saving Throw: DC 13, one Medium or smaller creature the bugbear can see within 10 feet. Failure: The target has the Grappled condition (escape DC 13).", reason = "unsupported_action_shape" } ]
+        , traits = [ T.trait { name = "Abduct", description = "The bugbear needn't spend extra movement to move a creature it is grappling.", effectKind = None Text } ]
         , alignment = { order = "chaotic", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Goblin" ] } }
         , creatureType = "fey"

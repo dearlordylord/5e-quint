@@ -8,15 +8,15 @@ in  { challengeRating = 5
         { abilityScores = { str = 16, dex = 17, con = 18, int = 12, wis = 14, cha = 14 }
         , ac = { value = { kind = "literal", value = 15 } }
         , actions =
-            [ T.text 1 "Multiattack" "The devil makes one Claws attack and one Tail attack, or it makes two Hurl Flame attacks." "unsupported_action_shape"
-            , T.text 2 "Claws" "Melee Attack Roll: +6, reach 5 ft. Hit: 10 (2d6 + 3) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13) from both claws." "unsupported_action_shape"
-            , T.exec 3 (T.attack "Tail" "melee" "str" +6 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 2 10 (Some +3) 14 ] (None Text))
-            , T.text 4 "Hurl Flame" "Ranged Attack Roll: +5, range 150 ft. Hit: 17 (5d6) Fire damage. If the target is a flammable object that isn't being worn or carried, it starts burning." "unsupported_action_shape"
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The devil makes one Claws attack and one Tail attack, or it makes two Hurl Flame attacks.", reason = "unsupported_action_shape" }
+            , T.textOnly { procedureOrdinal = 2, name = "Claws", description = "Melee Attack Roll: +6, reach 5 ft. Hit: 10 (2d6 + 3) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13) from both claws.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 3, procedure = (T.meleeAttack { name = "Tail", attackAbility = "str", attackBonus = +6, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 10, flat = (Some +3), static = 14 }, rest = [  ] : List T.Effect } }) }
+            , T.textOnly { procedureOrdinal = 4, name = "Hurl Flame", description = "Ranged Attack Roll: +5, range 150 ft. Hit: 17 (5d6) Fire damage. If the target is a flammable object that isn't being worn or carried, it starts burning.", reason = "unsupported_action_shape" }
             ]
         , traits =
-            [ T.trait "Barbed Hide" "At the start of each of its turns, the devil deals 5 (1d10) Piercing damage to any creature it is grappling or any creature grappling it."
-            , T.trait "Diabolical Restoration" "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells."
-            , T.trait "Magic Resistance" "The devil has Advantage on saving throws against spells and other magical effects."
+            [ T.trait { name = "Barbed Hide", description = "At the start of each of its turns, the devil deals 5 (1d10) Piercing damage to any creature it is grappling or any creature grappling it.", effectKind = None Text }
+            , T.trait { name = "Diabolical Restoration", description = "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.", effectKind = None Text }
+            , T.trait { name = "Magic Resistance", description = "The devil has Advantage on saving throws against spells and other magical effects.", effectKind = None Text }
             ]
         , alignment = { order = "lawful", morality = "evil" }
         , communication =

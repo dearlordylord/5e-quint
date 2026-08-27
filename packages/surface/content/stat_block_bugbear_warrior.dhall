@@ -8,10 +8,10 @@ in  { challengeRating = 1
         { abilityScores = { str = 15, dex = 14, con = 13, int = 8, wis = 11, cha = 9 }
         , ac = { value = { kind = "literal", value = 14 } }
         , actions =
-            [ T.text 1 "Grab" "Melee Attack Roll: +4, reach 10 ft. Hit: 9 (2d6 + 2) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 12)." "unsupported_action_shape"
-            , T.text 2 "Light Hammer" "Melee or Ranged Attack Roll: +4 (with Advantage if the target is Grappled by the bugbear), reach 10 ft. or range 20/60 ft. Hit: 9 (3d4 + 2) Bludgeoning damage." "unsupported_action_shape"
+            [ T.textOnly { procedureOrdinal = 1, name = "Grab", description = "Melee Attack Roll: +4, reach 10 ft. Hit: 9 (2d6 + 2) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Grappled condition (escape DC 12).", reason = "unsupported_action_shape" }
+            , T.textOnly { procedureOrdinal = 2, name = "Light Hammer", description = "Melee or Ranged Attack Roll: +4 (with Advantage if the target is Grappled by the bugbear), reach 10 ft. or range 20/60 ft. Hit: 9 (3d4 + 2) Bludgeoning damage.", reason = "unsupported_action_shape" }
             ]
-        , traits = [ T.trait "Abduct" "The bugbear needn't spend extra movement to move a creature it is grappling." ]
+        , traits = [ T.trait { name = "Abduct", description = "The bugbear needn't spend extra movement to move a creature it is grappling.", effectKind = None Text } ]
         , alignment = { order = "chaotic", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Goblin" ] } }
         , creatureType = "fey"

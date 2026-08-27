@@ -8,10 +8,10 @@ in  { challengeRating = 0.25
         { abilityScores = { str = 12, dex = 17, con = 12, int = 10, wis = 13, cha = 11 }
         , ac = { value = { kind = "literal", value = 13 } }
         , actions =
-            [ T.exec 1 (T.attack "Bite" "melee" "str" +5 (Some 5) (None T.Range) (None Text) [ T.damage "piercing" 1 4 (Some +3) 5 ] (None Text))
+            [ T.executable { procedureOrdinal = 1, procedure = (T.meleeAttack { name = "Bite", attackAbility = "str", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 4, flat = (Some +3), static = 5 }, rest = [  ] : List T.Effect } }) }
             ]
         , bonusActions =
-            [ T.textSome 1 "Teleport (Recharge 4–6)" "The dog teleports up to 40 feet to an unoccupied space it can see." "unsupported_action_shape" [ 1 ]
+            [ T.resourceTextOnly { procedureOrdinal = 1, name = "Teleport (Recharge 4–6)", description = "The dog teleports up to 40 feet to an unoccupied space it can see.", reason = "unsupported_action_shape", resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
             ]
         , alignment = { order = "lawful", morality = "good" }
         , communication =
@@ -28,6 +28,6 @@ in  { challengeRating = 0.25
         , skillModifiers = [ { skill = "perception", modifier = 5 }, { skill = "stealth", modifier = 5 } ]
         , size = "medium"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 40 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 4) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 4 }) } ]
         }
     }

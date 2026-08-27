@@ -3177,6 +3177,27 @@ export const ObjectContactDamageEffectSchema = strictStruct({
   }),
 });
 
+const ApplyConditionEffectSchema = strictStruct({
+  kind: Schema.Literal("apply_condition"),
+  condition: Schema.Union(
+    ConditionSchema,
+    nonEmpty(ConditionSchema),
+    strictStruct({
+      kind: Schema.Literal("choose"),
+      from: nonEmpty(ConditionSchema),
+    }),
+  ),
+  duration: optionalExact(
+    Schema.Literal(
+      "current_turn",
+      "end_of_next_turn",
+      "end_of_caster_next_turn",
+      "spell_duration",
+      "until_long_rest_or_greater_restoration",
+    ),
+  ),
+});
+
 export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
   Schema.suspend(() =>
     Schema.Union(
@@ -3315,26 +3336,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           Schema.Struct({ className: ClassNameSchema }),
         ),
       }),
-      Schema.Struct({
-        kind: Schema.Literal("apply_condition"),
-        condition: Schema.Union(
-          ConditionSchema,
-          nonEmpty(ConditionSchema),
-          Schema.Struct({
-            kind: Schema.Literal("choose"),
-            from: nonEmpty(ConditionSchema),
-          }),
-        ),
-        duration: optionalExact(
-          Schema.Literal(
-            "current_turn",
-            "end_of_next_turn",
-            "end_of_caster_next_turn",
-            "spell_duration",
-            "until_long_rest_or_greater_restoration",
-          ),
-        ),
-      }),
+      ApplyConditionEffectSchema,
       strictStruct({
         kind: Schema.Literal("apply_condition_while_in_area_or_until_escape"),
         condition: Schema.Literal("restrained"),
@@ -5190,12 +5192,28 @@ const StatBlockProcedureDamageAmountSchema = Schema.Union(
   }),
 );
 
+const StatBlockConditionExpirationSchema = Schema.Union(
+  strictStruct({ kind: Schema.Literal("source_next_turn_end") }),
+  strictStruct({ kind: Schema.Literal("target_next_turn_end") }),
+);
+
+/**
+ * Stat Block attacks name the creature whose next turn owns condition expiry.
+ * This is deliberately separate from spell-relative condition duration.
+ */
+const StatBlockApplyConditionEffectSchema = strictStruct({
+  kind: Schema.Literal("apply_condition"),
+  condition: ConditionSchema,
+  expiresAt: StatBlockConditionExpirationSchema,
+});
+
 const AuthoredProcedureEffectAtomSchema = Schema.Union(
+  ApplyConditionEffectSchema,
+  StatBlockApplyConditionEffectSchema,
   strictStruct({
     kind: Schema.Literal("damage"),
     damageType: DamageTypeSchema,
     amount: StatBlockProcedureDamageAmountSchema,
-    timing: optionalExact(Schema.Literal("end_of_next_turn")),
   }),
   strictStruct({
     kind: Schema.Literal("conditional_bonus_damage"),
@@ -5277,43 +5295,31 @@ const AuthoredAttackRollProcedureSchema = Schema.Union(
     kind: Schema.Literal("attack_roll"),
     attackAbility: AbilitySchema,
     attackBonus: StatBlockProcedureSignedValueSchema,
-    reachFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-    rangeFeet: optionalExact(
-      strictStruct({
-        normal: StatBlockProcedurePositiveIntegerSchema,
-        long: StatBlockProcedurePositiveIntegerSchema,
-      }),
-    ),
+    reachFeet: StatBlockProcedurePositiveIntegerSchema,
     onHit: nonEmpty(AuthoredProcedureEffectAtomSchema),
     multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
     attackType: Schema.Literal("melee"),
     name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-    description: optionalExact(surfaceExactProse(Schema.String)),
   }),
   strictStruct({
     kind: Schema.Literal("attack_roll"),
     attackAbility: AbilitySchema,
     attackBonus: StatBlockProcedureSignedValueSchema,
-    reachFeet: optionalExact(StatBlockProcedurePositiveIntegerSchema),
-    rangeFeet: optionalExact(
-      strictStruct({
-        normal: StatBlockProcedurePositiveIntegerSchema,
-        long: StatBlockProcedurePositiveIntegerSchema,
-      }),
-    ),
+    rangeFeet: strictStruct({
+      normal: StatBlockProcedurePositiveIntegerSchema,
+      long: StatBlockProcedurePositiveIntegerSchema,
+    }),
     onHit: nonEmpty(AuthoredProcedureEffectAtomSchema),
     multiattackCount: optionalExact(StatBlockProcedurePositiveValueSchema),
     attackType: Schema.Literal("ranged"),
     ammunition: optionalExact(AmmunitionKindSchema),
     name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-    description: optionalExact(surfaceExactProse(Schema.String)),
   }),
 );
 
 const AuthoredSaveGateProcedureBaseFields = {
   kind: Schema.Literal("save"),
   name: surfaceIdentity(Schema.NonEmptyTrimmedString, "name"),
-  description: optionalExact(surfaceExactProse(Schema.String)),
   ability: AbilitySchema,
   dc: StatBlockProcedureDcSourceSchema,
   onFail: AuthoredProcedureEffectAtomSchema,
@@ -5529,7 +5535,7 @@ const hasStrictlyIncreasingProcedureOrdinals = (
       entry.procedureOrdinal > entries[index - 1]!.procedureOrdinal,
   );
 
-const hasKnownMultiattackDispatches = (
+const hasExecutableMultiattackDispatches = (
   entries: ReadonlyArray<StatBlockProcedureEntry>,
 ): boolean => {
   const entriesByOrdinal = new Map(
@@ -5548,7 +5554,7 @@ const hasKnownMultiattackDispatches = (
         const target = entriesByOrdinal.get(dispatch.procedureOrdinal);
         return (
           dispatch.procedureOrdinal !== entry.procedureOrdinal &&
-          target !== undefined
+          target?.kind === "executable"
         );
       })
     );
@@ -5562,9 +5568,9 @@ export const StatBlockProcedureSectionSchema = nonEmpty(
     message: () =>
       "Stat Block procedure entries must have strictly increasing ordinals.",
   }),
-  Schema.filter(hasKnownMultiattackDispatches, {
+  Schema.filter(hasExecutableMultiattackDispatches, {
     message: () =>
-      "Stat Block Multiattack dispatches must reference an authored procedure ordinal in the same section.",
+      "Stat Block Multiattack dispatches must reference an executable authored procedure ordinal in the same section.",
   }),
 );
 
@@ -5578,14 +5584,28 @@ export const StatBlockReactionSectionSchema = nonEmpty(
     message: () =>
       "Stat Block procedure entries must have strictly increasing ordinals.",
   }),
-  Schema.filter(hasKnownMultiattackDispatches, {
+  Schema.filter(hasExecutableMultiattackDispatches, {
     message: () =>
-      "Stat Block Multiattack dispatches must reference an authored procedure ordinal in the same section.",
+      "Stat Block Multiattack dispatches must reference an executable authored procedure ordinal in the same section.",
   }),
 );
 
+const StatBlockLairBonusLegendaryActionUsesSchema = strictStruct({
+  kind: Schema.Literal("lair_bonus"),
+  usesOutsideLair: StatBlockProcedurePositiveIntegerSchema,
+  additionalUsesInLair: StatBlockProcedurePositiveIntegerSchema,
+});
+
+const StatBlockLegendaryActionUsesSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("fixed"),
+    uses: StatBlockProcedurePositiveIntegerSchema,
+  }),
+  StatBlockLairBonusLegendaryActionUsesSchema,
+);
+
 export const StatBlockLegendaryActionSectionSchema = strictStruct({
-  uses: StatBlockProcedurePositiveIntegerSchema,
+  uses: StatBlockLegendaryActionUsesSchema,
   entries: StatBlockProcedureSectionSchema,
 });
 
@@ -6387,16 +6407,32 @@ const StandaloneStatBlockProcedureFields = {
   legendaryActions: optionalExact(StatBlockLegendaryActionSectionSchema),
 } as const;
 
+const SWARM_STATUS_CREATURE_TYPE_TAGS = [
+  "swarm",
+  "swarm of tiny beasts",
+] as const;
+
+const encodesSwarmStatus = (tag: string): boolean => {
+  const normalizedTag = tag.trim().toLowerCase().replace(/\s+/g, " ");
+  return SWARM_STATUS_CREATURE_TYPE_TAGS.some(
+    (swarmStatusTag) => normalizedTag === swarmStatusTag,
+  );
+};
+
 /**
  * Standalone authored Stat Block facts. This shape owns source-descriptive
  * facts that a spawned/runtime projection intentionally does not carry.
  * Hit Dice notation is deliberately not represented here yet.
  */
-const StandaloneStatBlockBaseSchema = Schema.Struct({
-  size: StandaloneStatBlockSizeSchema,
+const StandaloneStatBlockSharedSchema = Schema.Struct({
   creatureType: CreatureTypeSchema,
   creatureTypeTags: optionalExact(
-    nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")),
+    nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")).pipe(
+      Schema.filter((tags) => tags.every((tag) => !encodesSwarmStatus(tag)), {
+        message: () =>
+          "A Stat Block swarm must use the swarm constituent-size field rather than a creature type tag.",
+      }),
+    ),
   ),
   alignment: StatBlockAlignmentSchema,
   ac: StatBlockArmorClassSchema,
@@ -6423,6 +6459,31 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
   ...StandaloneStatBlockProcedureFields,
   traits: CreatureStatBlockProjectionFields.traits,
 });
+
+/**
+ * The SRD authors only Medium/Large aggregates of Tiny constituents. The
+ * structural union makes a non-Swarm distinct from either valid Swarm pair;
+ * aggregate Size remains the canonical runtime projection fact.
+ */
+const StandaloneStatBlockSizeAndSwarmSchema = Schema.Union(
+  strictStruct({
+    size: StandaloneStatBlockSizeSchema,
+    swarm: optionalExact(ForbiddenValueSchema),
+  }),
+  strictStruct({
+    size: Schema.Literal("medium"),
+    swarm: strictStruct({ constituentSize: Schema.Literal("tiny") }),
+  }),
+  strictStruct({
+    size: Schema.Literal("large"),
+    swarm: strictStruct({ constituentSize: Schema.Literal("tiny") }),
+  }),
+);
+
+const StandaloneStatBlockBaseSchema = Schema.extend(
+  StandaloneStatBlockSharedSchema,
+  StandaloneStatBlockSizeAndSwarmSchema,
+);
 
 type StandaloneStatBlockProcedureFields = {
   readonly actions?: StatBlockProcedureSection;

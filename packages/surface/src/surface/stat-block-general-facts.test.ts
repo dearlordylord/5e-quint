@@ -1,6 +1,10 @@
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { statBlockId } from "@dnd/shared/game-facts";
+
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+
 import {
   CreatureImmunityListSchema,
   CreatureStatBlockProjectionSchema,
@@ -160,6 +164,136 @@ describe("standalone Stat Block general facts", () => {
     ).toThrow();
   });
 
+  test("admits only the SRD aggregate and constituent Size pairs for a swarm", () => {
+    const mediumSwarm = {
+      ...syntheticStandaloneStatBlock,
+      size: "medium",
+      creatureType: "undead",
+      creatureTypeTags: undefined,
+      swarm: { constituentSize: "tiny" },
+    } as const;
+    const { creatureTypeTags: _omittedTags, ...authoredMediumSwarm } =
+      mediumSwarm;
+    const authoredLargeSwarm = {
+      ...authoredMediumSwarm,
+      size: "large",
+    } as const;
+
+    expect(
+      decode(StandaloneStatBlockSchema, authoredMediumSwarm),
+    ).toMatchObject({
+      size: "medium",
+      creatureType: "undead",
+      swarm: { constituentSize: "tiny" },
+    });
+    expect(decode(StandaloneStatBlockSchema, authoredLargeSwarm)).toMatchObject(
+      {
+        size: "large",
+        swarm: { constituentSize: "tiny" },
+      },
+    );
+
+    for (const forbiddenAggregateSize of ["tiny", "gargantuan"] as const) {
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...authoredMediumSwarm,
+          size: forbiddenAggregateSize,
+        }),
+      ).toThrow();
+    }
+    for (const swarmStatusTag of [
+      "swarm",
+      "swarm of tiny beasts",
+      "SWARM   OF TINY BEASTS",
+    ]) {
+      for (const statBlock of [
+        syntheticStandaloneStatBlock,
+        authoredMediumSwarm,
+      ]) {
+        expect(() =>
+          decode(StandaloneStatBlockSchema, {
+            ...statBlock,
+            creatureTypeTags: [swarmStatusTag],
+          }),
+        ).toThrow();
+      }
+    }
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        creatureTypeTags: ["swarmkeeper"],
+      }),
+    ).toMatchObject({ creatureTypeTags: ["swarmkeeper"] });
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredMediumSwarm,
+        swarm: { constituentSize: "medium" },
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(StandaloneStatBlockSchema, {
+        ...authoredMediumSwarm,
+        swarm: { constituentSize: "tiny", size: "medium" },
+      }),
+    ).toThrow();
+  });
+
+  test("installs exactly the seven RAW structural swarms without legacy tag encoding", () => {
+    const structuralSwarms = srdStatBlockCollection.statBlocks
+      .filter((record) => record.statBlock.swarm !== undefined)
+      .map((record) => ({
+        id: record.id,
+        size: record.statBlock.size,
+        constituentSize: record.statBlock.swarm?.constituentSize,
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id));
+
+    expect(structuralSwarms).toEqual([
+      {
+        id: statBlockId("stat_block_swarm_of_bats"),
+        size: "large",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_crawling_claws"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_insects"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_piranhas"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_rats"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_ravens"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_venomous_snakes"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+    ]);
+    expect(
+      srdStatBlockCollection.statBlocks.filter((record) =>
+        record.statBlock.creatureTypeTags?.some((tag) =>
+          tag.toLowerCase().includes("swarm"),
+        ),
+      ),
+    ).toEqual([]);
+  });
+
   test("leaves grouped procedure sections to the procedure schema", () => {
     expect(() =>
       decode(StandaloneStatBlockSchema, {
@@ -182,7 +316,10 @@ describe("standalone Stat Block general facts", () => {
     expect(() =>
       decode(StandaloneStatBlockSchema, {
         ...syntheticStandaloneStatBlock,
-        legendaryActions: { uses: 1, actions: {} },
+        legendaryActions: {
+          uses: { kind: "fixed", uses: 1 },
+          actions: {},
+        },
       }),
     ).toThrow();
   });

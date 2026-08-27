@@ -77,7 +77,7 @@
         }
       },
       {
-        "description": "Whirlwind (Recharge 4–6). Strength Saving Throw: DC 13, one Medium or smaller creature in the elemental's space. Failure: 24 (4d10 + 2) Thunder damage, and the target is pushed up to 20 feet straight away from the elemental and has the Prone condition. Success: Half damage only.",
+        "description": "Strength Saving Throw: DC 13, one Medium or smaller creature in the elemental's space. Failure: 24 (4d10 + 2) Thunder damage, and the target is pushed up to 20 feet straight away from the elemental and has the Prone condition. Success: Half damage only.",
         "kind": "textOnly",
         "name": "Whirlwind",
         "procedureOrdinal": 3,
@@ -196,6 +196,12 @@
         },
         "hover": true,
         "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The elemental can enter a creature's space and stop there. It can move through a space as narrow as 1 inch without expending extra movement to do so.",
+        "name": "Air Form"
       }
     ]
   }

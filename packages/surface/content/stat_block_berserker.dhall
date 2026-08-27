@@ -8,9 +8,9 @@ in  { challengeRating = 2
         { abilityScores = { str = 16, dex = 12, con = 17, int = 9, wis = 11, cha = 9 }
         , ac = { value = { kind = "literal", value = 13 } }
         , actions =
-            [ T.exec 1 (T.attack "Greataxe" "melee" "str" +5 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 12 (Some +3) 9 ] (None Text))
+            [ T.executable { procedureOrdinal = 1, procedure = (T.meleeAttack { name = "Greataxe", attackAbility = "str", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 12, flat = (Some +3), static = 9 }, rest = [  ] : List T.Effect } }) }
             ]
-        , traits = [ T.trait "Bloodied Frenzy" "While Bloodied, the berserker has Advantage on attack rolls and saving throws." ]
+        , traits = [ T.trait { name = "Bloodied Frenzy", description = "While Bloodied, the berserker has Advantage on attack rolls and saving throws.", effectKind = None Text } ]
         , alignment = { order = "neutral", morality = "neutral" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common" ] } }
         , creatureType = "humanoid"

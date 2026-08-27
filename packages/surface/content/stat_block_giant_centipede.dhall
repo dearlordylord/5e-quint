@@ -1,0 +1,42 @@
+let S = ./_stat_block_types.dhall
+
+in  { challengeRating = 0.25
+    , id = "stat_block_giant_centipede"
+    , kind = "statBlock"
+    , name = "Giant Centipede"
+    , provenance = { kind = "srd-5.2.1", section = "Animals.md:749-768" }
+    , statBlock =
+      { abilityScores =
+        { cha = 3, con = 12, dex = 14, int = 1, str = 5, wis = 7 }
+      , ac.value = { kind = "literal", value = 14 }
+      , actions =
+        [ S.textOnly
+            { procedureOrdinal = 1
+            , name = "Bite"
+            , description =
+                "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 4 (1d4 + 2) Piercing damage, and the target has the Poisoned condition until the start of the centipede's next turn."
+            , reason = "unsupported_action_shape"
+            }
+        ]
+      , alignment = "unaligned"
+      , communication.kind = "none"
+      , creatureType = "beast"
+      , hp = { kind = "literal", value = 9 }
+      , initiative = { modifier = +2, score = 12 }
+      , passivePerception = 8
+      , savingThrowModifiers =
+        [ { ability = "str", modifier = -3 }
+        , { ability = "dex", modifier = +2 }
+        , { ability = "con", modifier = +1 }
+        , { ability = "int", modifier = -5 }
+        , { ability = "wis", modifier = -2 }
+        , { ability = "cha", modifier = -4 }
+        ]
+      , senses = [ { kind = "blindsight", rangeFeet = 30 } ]
+      , size = "small"
+      , speeds =
+        [ { feet = { kind = "literal", value = 30 }, kind = "walk" }
+        , { feet = { kind = "literal", value = 30 }, kind = "climb" }
+        ]
+      }
+    }

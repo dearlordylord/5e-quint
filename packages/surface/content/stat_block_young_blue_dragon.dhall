@@ -8,9 +8,9 @@ in  { challengeRating = 9
         { abilityScores = { str = 21, dex = 10, con = 19, int = 14, wis = 13, cha = 17 }
         , ac = { value = { kind = "literal", value = 18 } }
         , actions =
-            [ T.exec 1 (T.multiattack "Multiattack" [ { count = { kind = "literal", value = +3 }, procedureOrdinal = 2 } ])
-            , T.exec 2 (T.attack "Rend" "melee" "str" +9 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 2 6 (Some +5) 12, T.damage "lightning" 1 10 (None Integer) 5 ] (None Text))
-            , T.execSome 3 (T.save "Lightning Breath" "dex" 16 (T.line 60 5) (T.damage "lightning" 10 10 (None Integer) 55) { kind = "half_damage" } (None Text)) [ 1 ]
+            [ T.executable { procedureOrdinal = 1, procedure = (T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +3 }, procedureOrdinal = 2 }, rest = [  ] : List T.Dispatch } }) }
+            , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +9, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 6, flat = (Some +5), static = 12 }, rest = [ T.damage { damageType = "lightning", dice = 1, dieSize = 10, flat = (None Integer), static = 5 } ] : List T.Effect } }) }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = (T.saveArea { name = "Lightning Breath", ability = "dex", dc = 16, area = (T.line { lengthFeet = 60, widthFeet = 5 }), onFail = (T.damage { damageType = "lightning", dice = 10, dieSize = 10, flat = (None Integer), static = 55 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
             ]
         , alignment = { order = "lawful", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Draconic" ] } }
@@ -25,6 +25,6 @@ in  { challengeRating = 9
         , skillModifiers = [ { skill = "perception", modifier = 9 }, { skill = "stealth", modifier = 4 } ]
         , size = "large"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 40 }, hover = None Bool }, { kind = "burrow", feet = { kind = "literal", value = 20 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 80 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) } ]
         }
     }

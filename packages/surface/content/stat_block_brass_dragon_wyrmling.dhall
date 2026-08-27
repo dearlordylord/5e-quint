@@ -8,9 +8,9 @@ in  { challengeRating = 1
         { abilityScores = { str = 15, dex = 10, con = 13, int = 10, wis = 11, cha = 13 }
         , ac = { value = { kind = "literal", value = 15 } }
         , actions =
-            [ T.exec 1 (T.attack "Rend" "melee" "str" +4 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 10 (Some +2) 7 ] (None Text))
-            , T.execSome 2 (T.save "Fire Breath" "dex" 11 (T.line 20 5) (T.damage "fire" 4 6 (None Integer) 14) { kind = "half_damage" } (None Text)) [ 1 ]
-            , T.text 3 "Sleep Breath" "Constitution Saving Throw: DC 11, each creature in a 15-foot Cone. Failure: The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save. Second Failure: The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it." "unsupported_action_shape"
+            [ T.executable { procedureOrdinal = 1, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 10, flat = (Some +2), static = 7 }, rest = [  ] : List T.Effect } }) }
+            , T.resourceExecutable { procedureOrdinal = 2, procedure = (T.saveArea { name = "Fire Breath", ability = "dex", dc = 11, area = (T.line { lengthFeet = 20, widthFeet = 5 }), onFail = (T.damage { damageType = "fire", dice = 4, dieSize = 6, flat = (None Integer), static = 14 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
+            , T.textOnly { procedureOrdinal = 3, name = "Sleep Breath", description = "Constitution Saving Throw: DC 11, each creature in a 15-foot Cone. Failure: The target has the Incapacitated condition until the end of its next turn, at which point it repeats the save. Second Failure: The target has the Unconscious condition for 1 minute. This effect ends for the target if it takes damage or a creature within 5 feet of it takes an action to wake it.", reason = "unsupported_action_shape" }
             ]
         , alignment = { order = "chaotic", morality = "good" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Draconic" ] } }
@@ -25,6 +25,6 @@ in  { challengeRating = 1
         , skillModifiers = [ { skill = "perception", modifier = 4 }, { skill = "stealth", modifier = 2 } ]
         , size = "medium"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "burrow", feet = { kind = "literal", value = 15 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 60 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) } ]
         }
     }

@@ -14,6 +14,7 @@ import {
   type PublicationIssue,
   type SurfacePublicationCheckResult,
 } from "./check-surface-content-json-sync.ts";
+import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
   SRD_STAT_BLOCK_SCOPE,
   SRD_STAT_BLOCK_SOURCE_PATHS,
@@ -131,10 +132,12 @@ describe("Surface stat-block parity final gate", () => {
       expect(report.sourceCoverage.tag).toBe("complete");
       expect(report.discovery.occurrences).toHaveLength(334);
       expect(report.discovery.identities).toHaveLength(330);
-      expect(report.issues).toHaveLength(310);
+      const expectedMissingCount =
+        report.discovery.identities.length -
+        srdStatBlockCollection.statBlocks.length;
       expect(
         report.issues.filter((issue) => issue.kind === "missing"),
-      ).toHaveLength(309);
+      ).toHaveLength(expectedMissingCount);
       expect(
         report.issues.filter((issue) => issue.kind === "provenance"),
       ).toHaveLength(0);

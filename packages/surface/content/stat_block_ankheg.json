@@ -24,47 +24,11 @@
     },
     "actions": [
       {
-        "kind": "executable",
-        "procedure": {
-          "attackAbility": "str",
-          "attackBonus": {
-            "kind": "literal",
-            "value": 5
-          },
-          "attackType": "melee",
-          "description": "The ankheg has Advantage if the target is Grappled by the ankheg. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13).",
-          "kind": "attack_roll",
-          "name": "Bite",
-          "onHit": [
-            {
-              "amount": {
-                "expr": {
-                  "dice": 2,
-                  "dieSize": 6,
-                  "flat": 3
-                },
-                "kind": "fixed",
-                "static": 10
-              },
-              "damageType": "slashing",
-              "kind": "damage"
-            },
-            {
-              "amount": {
-                "expr": {
-                  "dice": 1,
-                  "dieSize": 6
-                },
-                "kind": "fixed",
-                "static": 3
-              },
-              "damageType": "acid",
-              "kind": "damage"
-            }
-          ],
-          "reachFeet": 5
-        },
+        "description": "Melee Attack Roll: +5 (with Advantage if the target is Grappled by the ankheg), reach 5 ft. Hit: 10 (2d6 + 3) Slashing damage plus 3 (1d6) Acid damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13).",
+        "kind": "textOnly",
+        "name": "Bite",
         "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
         "resourceRefs": {
           "kind": "none"
         }

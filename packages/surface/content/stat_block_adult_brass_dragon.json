@@ -259,7 +259,11 @@
           }
         }
       ],
-      "uses": 3
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
     },
     "passivePerception": 21,
     "resources": [

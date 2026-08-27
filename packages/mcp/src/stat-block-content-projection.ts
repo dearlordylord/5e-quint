@@ -1,4 +1,5 @@
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import { Match } from "effect";
 
 type StatBlockProcedureEntry =
   | NonNullable<StatBlockRecord["statBlock"]["actions"]>[number]
@@ -112,21 +113,25 @@ function procedureSummary(
 }
 
 function attackSummary(attack: StatBlockAttack) {
-  return {
+  const summary = {
     attackName: attack.name,
     attackType: attack.attackType,
     attackBonus: literalNumber(attack.attackBonus),
-    ...(typeof attack.reachFeet === "number"
-      ? { reachFeet: attack.reachFeet }
-      : {}),
-    ...(attack.rangeFeet === undefined
-      ? {}
-      : { normalRangeFeet: attack.rangeFeet.normal }),
-    ...(attack.rangeFeet === undefined
-      ? {}
-      : { longRangeFeet: attack.rangeFeet.long }),
     onHit: attack.onHit.map((effect) => JSON.stringify(effect)),
   };
+  return Match.value(attack).pipe(
+    Match.discriminatorsExhaustive("attackType")({
+      melee: (meleeAttack) => ({
+        ...summary,
+        reachFeet: meleeAttack.reachFeet,
+      }),
+      ranged: (rangedAttack) => ({
+        ...summary,
+        normalRangeFeet: rangedAttack.rangeFeet.normal,
+        longRangeFeet: rangedAttack.rangeFeet.long,
+      }),
+    }),
+  );
 }
 
 function literalNumber(

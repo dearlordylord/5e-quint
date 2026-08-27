@@ -8,38 +8,26 @@ in  { challengeRating = 16
         { abilityScores = { str = 25, dex = 10, con = 23, int = 16, wis = 15, cha = 20 }
         , ac = { value = { kind = "literal", value = 19 } }
         , actions =
-            [ T.text 1 "Multiattack" "The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Shatter." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Rend" "melee" "str" +12 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 2 8 (Some +7) 16, T.damage "lightning" 1 10 (None Integer) 5 ] (None Text))
-            , T.execSome 3 (T.save "Lightning Breath" "dex" 19 (T.line 90 5) (T.damage "lightning" 11 10 (None Integer) 60) { kind = "half_damage" } (None Text)) [ 1 ]
-            , T.execSome 4
-                (T.spellcasting "Spellcasting" "cha" (Some { kind = "fixed", dc = 18 }) (None { kind : Text, value : Integer }) T.noMaterial
-                  [ T.atWill
-                      [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef "detect_magic" (None Natural) (None Natural) (None Text)
-                      , -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef "invisibility" (None Natural) (None Natural) (None Text)
-                      , -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef "mage_hand" (None Natural) (None Natural) (None Text)
-                      , -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
-                        T.spellRef "shatter" (None Natural) (None Natural) (None Text)
-                      ]
-                  , T.limited [ 2 ]
-                      [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:998
-                        T.spellRef "scrying" (None Natural) (None Natural) (None Text)
-                      , -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:998
-                        T.spellRef "sending" (None Natural) (None Natural) (None Text)
-                      ]
-                  ]) [ 2 ]
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The dragon makes three Rend attacks. It can replace one attack with a use of Spellcasting to cast Shatter.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +12, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = (Some +7), static = 16 }, rest = [ T.damage { damageType = "lightning", dice = 1, dieSize = 10, flat = (None Integer), static = 5 } ] : List T.Effect } }) }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = (T.saveArea { name = "Lightning Breath", ability = "dex", dc = 19, area = (T.line { lengthFeet = 90, widthFeet = 5 }), onFail = (T.damage { damageType = "lightning", dice = 11, dieSize = 10, flat = (None Integer), static = 60 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
+            , T.resourceExecutable { procedureOrdinal = 4, procedure = (T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 18 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
+                        T.spellRef { spellId = "invisibility", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
+                        T.spellRef { spellId = "mage_hand", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }, -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:997
+                        T.spellRef { spellId = "shatter", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) } ] : List T.SpellRef } }, rest = [ T.limited { resourceOrdinals = { first = 2, rest = [  ] : List Natural }, spells = { first = -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:998
+                        T.spellRef { spellId = "scrying", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }, rest = [ -- RAW: .references/srd-5.2.1/Monsters/Monsters-A-B.md:998
+                        T.spellRef { spellId = "sending", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) } ] : List T.SpellRef } } ] : List T.Group } }), resourceOrdinals = { first = 2, rest = [  ] : List Natural } }
             ]
         , legendaryActions =
-            { uses = 3
+            { uses = { kind = "lair_bonus", usesOutsideLair = 3, additionalUsesInLair = 1 }
             , entries =
-                [ T.text 1 "Cloaked Flight" "The dragon uses Spellcasting to cast Invisibility on itself, and it can fly up to half its Fly Speed. The dragon can't take this action again until the start of its next turn." "unsupported_action_shape"
-                , T.text 2 "Sonic Boom" "The dragon uses Spellcasting to cast Shatter. The dragon can't take this action again until the start of its next turn." "unsupported_action_shape"
-                , T.exec 3 (T.multiattack "Tail Swipe" [ { count = { kind = "literal", value = +1 }, procedureOrdinal = 2 } ])
+                [ T.textOnly { procedureOrdinal = 1, name = "Cloaked Flight", description = "The dragon uses Spellcasting to cast Invisibility on itself, and it can fly up to half its Fly Speed. The dragon can't take this action again until the start of its next turn.", reason = "unsupported_action_shape" }
+                , T.textOnly { procedureOrdinal = 2, name = "Sonic Boom", description = "The dragon uses Spellcasting to cast Shatter. The dragon can't take this action again until the start of its next turn.", reason = "unsupported_action_shape" }
+                , T.textOnly { procedureOrdinal = 3, name = "Tail Swipe", description = "The dragon makes one Rend attack.", reason = "unsupported_action_shape" }
                 ]
             }
-        , traits = [ T.trait "Legendary Resistance (3/Day, or 4/Day in Lair)" "If the dragon fails a saving throw, it can choose to succeed instead." ]
+        , traits = [ T.trait { name = "Legendary Resistance (3/Day, or 4/Day in Lair)", description = "If the dragon fails a saving throw, it can choose to succeed instead.", effectKind = None Text } ]
         , alignment = { order = "lawful", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Draconic" ] } }
         , creatureType = "dragon"
@@ -53,6 +41,6 @@ in  { challengeRating = 16
         , skillModifiers = [ { skill = "perception", modifier = 12 }, { skill = "stealth", modifier = 5 } ]
         , size = "huge"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 40 }, hover = None Bool }, { kind = "burrow", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 80 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5), T.resource 2 "each" (T.daily 1) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) }, T.resource { ordinal = 2, ownership = "each", limit = (T.daily { uses = 1 }) } ]
         }
     }

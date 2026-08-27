@@ -8,11 +8,11 @@ in  { challengeRating = 2
         { abilityScores = { str = 15, dex = 14, con = 13, int = 10, wis = 11, cha = 13 }
         , ac = { value = { kind = "literal", value = 17 } }
         , actions =
-            [ T.exec 1 (T.multiattack "Multiattack" [ { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 } ])
-            , T.exec 2 (T.attack "Rend" "melee" "str" +4 (Some 5) (None T.Range) (None Text) [ T.damage "slashing" 1 6 (Some +2) 5, T.damage "acid" 1 4 (None Integer) 2 ] (None Text))
-            , T.execSome 3 (T.save "Acid Breath" "dex" 11 (T.line 20 5) (T.damage "acid" 5 8 (None Integer) 22) { kind = "half_damage" } (None Text)) [ 1 ]
+            [ T.executable { procedureOrdinal = 1, procedure = (T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 }, rest = [  ] : List T.Dispatch } }) }
+            , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 6, flat = (Some +2), static = 5 }, rest = [ T.damage { damageType = "acid", dice = 1, dieSize = 4, flat = (None Integer), static = 2 } ] : List T.Effect } }) }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = (T.saveArea { name = "Acid Breath", ability = "dex", dc = 11, area = (T.line { lengthFeet = 20, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 5, dieSize = 8, flat = (None Integer), static = 22 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
             ]
-        , traits = [ T.trait "Amphibious" "The dragon can breathe air and water." ]
+        , traits = [ T.trait { name = "Amphibious", description = "The dragon can breathe air and water.", effectKind = None Text } ]
         , alignment = { order = "chaotic", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Draconic" ] } }
         , creatureType = "dragon"
@@ -26,6 +26,6 @@ in  { challengeRating = 2
         , skillModifiers = [ { skill = "perception", modifier = 4 }, { skill = "stealth", modifier = 4 } ]
         , size = "medium"
         , speeds = [ { kind = "walk", feet = { kind = "literal", value = 30 }, hover = None Bool }, { kind = "fly", feet = { kind = "literal", value = 60 }, hover = None Bool }, { kind = "swim", feet = { kind = "literal", value = 30 }, hover = None Bool } ]
-        , resources = [ T.resource 1 "shared" (T.recharge 5) ]
+        , resources = [ T.resource { ordinal = 1, ownership = "shared", limit = (T.recharge { minimumRoll = 5 }) } ]
         }
     }

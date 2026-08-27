@@ -235,27 +235,21 @@
           }
         },
         {
-          "kind": "executable",
-          "procedure": {
-            "dispatches": [
-              {
-                "count": {
-                  "kind": "literal",
-                  "value": 1
-                },
-                "procedureOrdinal": 2
-              }
-            ],
-            "kind": "multiattack",
-            "name": "Tail Swipe"
-          },
+          "description": "The dragon makes one Rend attack.",
+          "kind": "textOnly",
+          "name": "Tail Swipe",
           "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
           "resourceRefs": {
             "kind": "none"
           }
         }
       ],
-      "uses": 3
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
     },
     "passivePerception": 22,
     "resources": [

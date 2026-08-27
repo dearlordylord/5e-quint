@@ -59,9 +59,6 @@ export const WILD_SHAPE_FORM_ACTION_SURFACE_CATEGORIES = [
 
 type WildShapeFormExecutableActionSurfaceCategory =
   (typeof WILD_SHAPE_FORM_EXECUTABLE_ACTION_SURFACE_CATEGORIES)[number];
-type WildShapeFormAttackHitRiderCategory =
-  | (typeof WILD_SHAPE_FORM_EXECUTABLE_ATTACK_HIT_RIDER_CATEGORIES)[number]
-  | (typeof WILD_SHAPE_FORM_CLOSED_ATTACK_HIT_RIDER_CATEGORIES)[number];
 type WildShapeFormClosedActionSurfaceCategory =
   (typeof WILD_SHAPE_FORM_CLOSED_ACTION_SURFACE_CATEGORIES)[number];
 export type WildShapeFormActionSurfaceCategory =
@@ -291,7 +288,6 @@ function addAttackRollActionSurfaceCategories(
     categories.add("multiDamageComponentsOnHit");
   }
   addAttackHitEffectCategories(categories, procedure);
-  addAttackDescriptionRiderCategories(categories, procedure.description);
 }
 
 function addAttackHitEffectCategories(
@@ -305,23 +301,4 @@ function addAttackHitEffectCategories(
       categories.add("attackHitOtherRider");
     }
   }
-}
-
-function addAttackDescriptionRiderCategories(
-  categories: Set<WildShapeFormActionSurfaceCategory>,
-  description: string | undefined,
-): void {
-  if (description === undefined) return;
-  for (const category of attackHitDescriptionRiderCategories(description)) {
-    categories.add(category);
-  }
-}
-
-function attackHitDescriptionRiderCategories(
-  description: string,
-): readonly WildShapeFormAttackHitRiderCategory[] {
-  // A description carries no typed destination/effect payload. Preserve the
-  // closed rider fact, but never infer its semantics from authored wording.
-  void description;
-  return ["attackHitOtherRider"];
 }

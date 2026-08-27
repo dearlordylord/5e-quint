@@ -8,12 +8,12 @@ in  { challengeRating = 5
         { abilityScores = { str = 19, dex = 11, con = 21, int = 2, wis = 10, cha = 5 }
         , ac = { value = { kind = "literal", value = 17 } }
         , actions =
-            [ T.exec 1 (T.multiattack "Multiattack" [ { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 } ])
-            , T.exec 2 (T.attack "Bite" "melee" "str" +7 (Some 5) (None T.Range) (None Text) [ T.damage "piercing" 2 12 (Some +4) 17 ] (None Text))
-            , T.text 3 "Deadly Leap" "The bulette spends 5 feet of movement to jump to a space within 15 feet that contains one or more Large or smaller creatures. Dexterity Saving Throw: DC 15, each creature in the bulette's destination space. Failure: 19 (3d12) Bludgeoning damage, and the target has the Prone condition. Success: Half damage, and the target is pushed 5 feet straight away from the bulette." "unsupported_action_shape"
+            [ T.executable { procedureOrdinal = 1, procedure = (T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 }, rest = [  ] : List T.Dispatch } }) }
+            , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Bite", attackAbility = "str", attackBonus = +7, reachFeet = 5, onHit = { first = T.damage { damageType = "piercing", dice = 2, dieSize = 12, flat = (Some +4), static = 17 }, rest = [  ] : List T.Effect } }) }
+            , T.textOnly { procedureOrdinal = 3, name = "Deadly Leap", description = "The bulette spends 5 feet of movement to jump to a space within 15 feet that contains one or more Large or smaller creatures. Dexterity Saving Throw: DC 15, each creature in the bulette's destination space. Failure: 19 (3d12) Bludgeoning damage, and the target has the Prone condition. Success: Half damage, and the target is pushed 5 feet straight away from the bulette.", reason = "unsupported_action_shape" }
             ]
         , bonusActions =
-            [ T.text 1 "Leap" "The bulette jumps up to 30 feet by spending 10 feet of movement." "unsupported_action_shape" ]
+            [ T.textOnly { procedureOrdinal = 1, name = "Leap", description = "The bulette jumps up to 30 feet by spending 10 feet of movement.", reason = "unsupported_action_shape" } ]
         , alignment = "unaligned"
         , communication = { kind = "none" }
         , creatureType = "monstrosity"

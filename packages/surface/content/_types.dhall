@@ -47,6 +47,7 @@ let Effect : Type =
       , damageType : Optional Text
       , amount : Optional DiceAmount
       , expiresAt : Optional Text
+      , duration : Optional Text
       , condition : Optional Text
       , feet : Optional Natural
       , actor : Optional Text
@@ -63,6 +64,7 @@ let defaultEffect : Effect =
       , damageType = None Text
       , amount = None DiceAmount
       , expiresAt = None Text
+      , duration = None Text
       , condition = None Text
       , feet = None Natural
       , actor = None Text

@@ -8,13 +8,13 @@ in  { challengeRating = 9
         { abilityScores = { str = 18, dex = 16, con = 18, int = 13, wis = 14, cha = 16 }
         , ac = { value = { kind = "literal", value = 16 } }
         , actions =
-            [ T.text 1 "Multiattack" "The devil makes two Claw attacks and one Infernal Sting attack." "unsupported_action_shape"
-            , T.exec 2 (T.attack "Claw" "melee" "str" +8 (Some 10) (None T.Range) (None Text) [ T.damage "slashing" 2 8 (Some +4) 13 ] (None Text))
-            , T.text 3 "Infernal Sting" "Melee Attack Roll: +8, reach 10 ft. Hit: 15 (2d10 + 4) Piercing damage plus 18 (4d8) Poison damage, and the target has the Poisoned condition until the start of the devil's next turn. While Poisoned, the target can't regain Hit Points." "unsupported_action_shape"
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The devil makes two Claw attacks and one Infernal Sting attack.", reason = "unsupported_action_shape" }
+            , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Claw", attackAbility = "str", attackBonus = +8, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 8, flat = (Some +4), static = 13 }, rest = [  ] : List T.Effect } }) }
+            , T.textOnly { procedureOrdinal = 3, name = "Infernal Sting", description = "Melee Attack Roll: +8, reach 10 ft. Hit: 15 (2d10 + 4) Piercing damage plus 18 (4d8) Poison damage, and the target has the Poisoned condition until the start of the devil's next turn. While Poisoned, the target can't regain Hit Points.", reason = "unsupported_action_shape" }
             ]
         , traits =
-            [ T.trait "Diabolical Restoration" "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells."
-            , T.trait "Magic Resistance" "The devil has Advantage on saving throws against spells and other magical effects."
+            [ T.trait { name = "Diabolical Restoration", description = "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.", effectKind = None Text }
+            , T.trait { name = "Magic Resistance", description = "The devil has Advantage on saving throws against spells and other magical effects.", effectKind = None Text }
             ]
         , alignment = { order = "lawful", morality = "evil" }
         , communication =

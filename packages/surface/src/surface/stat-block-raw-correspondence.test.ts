@@ -1,5 +1,14 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { Match, Schema } from "effect";
 import { describe, expect, test } from "vitest";
+
+import {
+  discoverSrdStatBlocks,
+  SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH,
+} from "../../../../scripts/srd521-stat-block-parity.ts";
 
 import {
   AuthoredExecutableProcedureSchema,
@@ -16,6 +25,7 @@ import {
   StatBlockTextOnlyReasonSchema,
 } from "./schema.ts";
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+import { normalizeStatBlockIdentity } from "./stat-block-identity.ts";
 import { bindRawCorrespondence } from "./stat-block-raw-correspondence-binding.test-support.ts";
 
 /*
@@ -346,8 +356,13 @@ const dailyResource = (
     limit: { kind: "daily", uses },
   });
 
-type StandaloneStatBlockInput = Omit<
+type EncodedStandaloneNonSwarmStatBlock = Extract<
   EncodedStandaloneStatBlock,
+  { readonly swarm?: never }
+>;
+
+type StandaloneStatBlockInput = Omit<
+  EncodedStandaloneNonSwarmStatBlock,
   "ac" | "hp"
 > & {
   readonly ac: number;
@@ -1616,20 +1631,24 @@ describe("SRD Stat Block source correspondence", () => {
     ).toMatchObject({ tag: "invalid", reason: "digest-mismatch" });
   });
 
-  test("matches every installed record against the independent all-facts matrix", () => {
+  test("matches installed pilot records against the independent all-facts matrix", () => {
     const expectedById = new Map(
       sourceCorrespondence.map(({ record }) => [record.id, record]),
     );
-    const actualIds = srdStatBlockCollection.statBlocks.map(
-      (record) => record.id,
-    );
+    const installedCorrespondenceRecords =
+      srdStatBlockCollection.statBlocks.filter((record) =>
+        expectedById.has(record.id),
+      );
+    const actualIds = installedCorrespondenceRecords.map((record) => record.id);
 
-    expect(sourceCorrespondence).toHaveLength(21);
-    expect(srdStatBlockCollection.statBlocks).toHaveLength(21);
-    expect(new Set(actualIds).size).toBe(21);
+    expect(sourceCorrespondence).toHaveLength(expectedById.size);
+    expect(installedCorrespondenceRecords).toHaveLength(
+      sourceCorrespondence.length,
+    );
+    expect(new Set(actualIds).size).toBe(sourceCorrespondence.length);
     expect([...actualIds].sort()).toEqual([...expectedById.keys()].sort());
 
-    for (const record of srdStatBlockCollection.statBlocks) {
+    for (const record of installedCorrespondenceRecords) {
       const expected = expectedById.get(record.id);
       expect(
         expected,
@@ -1637,5 +1656,37 @@ describe("SRD Stat Block source correspondence", () => {
       ).toBeDefined();
       expect(record).toEqual(expected);
     }
+  });
+
+  test("installs every canonical Animals identity present in the RAW denominator", () => {
+    const animalsSourcePath = SRD_ANIMALS_STAT_BLOCK_SOURCE_PATH;
+    const animalsDiscovery = discoverSrdStatBlocks([
+      {
+        sourcePath: animalsSourcePath,
+        contents: readFileSync(
+          join(
+            dirname(fileURLToPath(import.meta.url)),
+            "../../../../",
+            animalsSourcePath,
+          ),
+          "utf8",
+        ),
+      },
+    ]);
+    const animalsSourceIdentities = new Set(
+      animalsDiscovery.identities.map((identity) =>
+        normalizeStatBlockIdentity(identity.name),
+      ),
+    );
+    const installedAnimalsIdentities = new Set(
+      srdStatBlockCollection.statBlocks
+        .filter((record) => record.provenance.section.startsWith("Animals.md:"))
+        .map((record) => normalizeStatBlockIdentity(record.name)),
+    );
+
+    expect(animalsDiscovery.issues).toEqual([]);
+    expect([...installedAnimalsIdentities].sort()).toEqual(
+      [...animalsSourceIdentities].sort(),
+    );
   });
 });

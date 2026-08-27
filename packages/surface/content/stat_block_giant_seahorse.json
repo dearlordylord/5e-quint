@@ -1,0 +1,113 @@
+{
+  "challengeRating": 0.5,
+  "id": "stat_block_giant_seahorse",
+  "kind": "statBlock",
+  "name": "Giant Seahorse",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Animals.md:1174-1201"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 5,
+      "con": 11,
+      "dex": 12,
+      "int": 2,
+      "str": 15,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
+    },
+    "actions": [
+      {
+        "description": "*Melee Attack Roll:* +4, reach 5 ft. *Hit:* 9 (2d6 + 2) Bludgeoning damage, or 11 (2d8 + 2) Bludgeoning damage if the seahorse moved 20+ feet straight toward the target immediately before the hit.",
+        "kind": "textOnly",
+        "name": "Ram",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "bonusActions": [
+      {
+        "description": "While underwater, the seahorse moves up to half its Swim Speed without provoking Opportunity Attacks.",
+        "kind": "textOnly",
+        "name": "Bubble Dash",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_procedure_family",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "beast",
+    "hp": {
+      "kind": "literal",
+      "value": 16
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 11,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 2
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 5
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The seahorse can breathe only underwater.",
+        "name": "Water Breathing"
+      }
+    ]
+  }
+}
