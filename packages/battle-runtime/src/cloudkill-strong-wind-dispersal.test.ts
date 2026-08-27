@@ -1,7 +1,9 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 import { describe, expect, test } from "vitest";
 
+import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
+import { battleSubjectBoundExecutionReferences } from "./battle-subjects.ts";
 import {
   cloudkillAreaFill,
   spellAct,
@@ -64,6 +66,50 @@ function cloudkillDispersalAct() {
 }
 
 describe("Cloudkill strong-wind dispersal", () => {
+  test("binds the dispersal reference to the containing effect owner while retaining its source", () => {
+    const { session, state } = castCloudkill();
+    const caster = requireCombatant(state, spellCasterId);
+    const containingOwner = requireCombatant(state, spellTargetId);
+    const cloudkill = caster.activeEffects.find(
+      (effect) => effect.kind === "cloudkillAreaHazard",
+    );
+    if (cloudkill === undefined) {
+      throw new Error("Expected active Cloudkill effect.");
+    }
+    const combatants = new Map(state.combatants)
+      .set(spellCasterId, {
+        ...caster,
+        activeEffects: caster.activeEffects.filter(
+          (effect) => effect !== cloudkill,
+        ),
+      })
+      .set(spellTargetId, {
+        ...containingOwner,
+        activeEffects: [...containingOwner.activeEffects, cloudkill],
+      });
+    const relocatedState = { ...state, combatants };
+    const act = discoverBattleActs(
+      battleRuntimeSessionForTest({ ...session, state: relocatedState }),
+    ).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "disperseCloudkill",
+    );
+    if (act === undefined) {
+      throw new Error("Expected relocated Cloudkill dispersal act.");
+    }
+    const effectRef = spellActiveEffectExecutionRef(cloudkill);
+
+    expect(cloudkill.sourceCombatantId).toBe(spellCasterId);
+    expect(act.subject).toMatchObject({
+      effectOwnerId: spellTargetId,
+      effectRef,
+    });
+    expect(battleSubjectBoundExecutionReferences(act.subject)).toEqual([
+      { kind: "activeEffect", ownerId: spellTargetId, effectRef },
+    ]);
+  });
+
   test("requests the table-owned area wind fact before dispersal", () => {
     const { act, state } = cloudkillDispersalAct();
 

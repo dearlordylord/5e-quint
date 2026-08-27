@@ -1579,11 +1579,11 @@ function cloudkillStrongWindDispersalActs(
   state: BattleState,
   actorId: CombatantId,
 ): readonly BattleActDiscoveryCandidate[] {
-  return [...state.combatants.values()].flatMap((combatant) =>
+  return [...state.combatants].flatMap(([effectOwnerId, combatant]) =>
     combatant.activeEffects.flatMap(
       (effect): readonly BattleActDiscoveryCandidate[] =>
         effect.kind === "cloudkillAreaHazard"
-          ? [cloudkillStrongWindDispersalAct(actorId, effect)]
+          ? [cloudkillStrongWindDispersalAct(actorId, effectOwnerId, effect)]
           : [],
     ),
   );
@@ -1591,6 +1591,7 @@ function cloudkillStrongWindDispersalActs(
 
 function cloudkillStrongWindDispersalAct(
   actorId: CombatantId,
+  effectOwnerId: CombatantId,
   effect: CloudkillAreaHazardEffect,
 ): BattleActDiscoveryCandidate {
   return {
@@ -1598,7 +1599,7 @@ function cloudkillStrongWindDispersalAct(
       tag: "runtimeCommand",
       actorId,
       command: "disperseCloudkill",
-      effectOwnerId: effect.sourceCombatantId,
+      effectOwnerId,
       effectRef: spellActiveEffectExecutionRef(effect),
     },
     initialHoles: [
