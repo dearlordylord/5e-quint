@@ -6,6 +6,7 @@ import {
   snapshotBattle
 } from "@dnd/battle-runtime"
 import { AdminSessionProjectionSchema } from "@dnd/mcp/experimental-admin-mirror-contract"
+import { productionBattleConsumerSeam } from "@dnd/mcp/test-support/cross-boundary-battle"
 import { Hp } from "@dnd/shared/types"
 import { Either, Schema } from "effect"
 import { describe, expect, test } from "vitest"
@@ -210,4 +211,52 @@ describe("wizard battle demo", () => {
       expect(Either.isRight(scene)).toBe(true)
     }
   })
+
+  test("executes one Battle through runtime, MCP, and the React-facing model", async () => {
+    const cases = await productionBattleConsumerSeam()
+    expect(cases.map((candidate) => candidate.kind)).toEqual([
+      "acts",
+      "holes",
+      "rejected",
+      "interruptDecision",
+      "resolution"
+    ])
+
+    for (const [stepIndex, candidate] of cases.entries()) {
+      const runtimeEnvelope = candidate.runtimeEnvelope
+      expect(runtimeEnvelope, candidate.kind).toEqual(candidate.envelope)
+
+      const canonicalEnvelope = Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(
+        candidate.envelope
+      )
+      const operation = jsonRecord(candidate.operationResult)
+      const publishedEnvelope =
+        candidate.kind === "rejected"
+          ? jsonRecord(jsonRecord(operation.details).battleEnvelope)
+          : jsonRecord(operation.envelope)
+      expect(Schema.decodeUnknownSync(BattlePresentedCheckpointFrontierEnvelopeSchema)(publishedEnvelope)).toEqual(
+        canonicalEnvelope
+      )
+
+      const scene = computeWizardBattleScene({
+        meta: { combatants: {}, objectNames: {} },
+        snapshot: canonicalEnvelope.checkpoint,
+        step: {
+          cue: {},
+          detail: candidate.kind,
+          session: candidate.runtimeSession,
+          title: candidate.kind
+        },
+        stepIndex
+      })
+      expect(Either.isRight(scene)).toBe(true)
+    }
+  })
 })
+
+function jsonRecord(value: unknown): Readonly<Record<string, unknown>> {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    throw new Error("Expected a record at the MCP seam.")
+  }
+  return value as Readonly<Record<string, unknown>>
+}

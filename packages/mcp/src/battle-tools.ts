@@ -36,7 +36,7 @@ import {
   battleMechanicsEnvelopeForSession,
   battlePresentationEnvelopeForSession,
   battleSessionPayload,
-  battleSnapshotPresentationIssueContent,
+  battlePresentationIssueContent,
   initialInitiativeSetupPayload,
   noStoredBattleContent,
   pendingBattleFillsContent,
@@ -184,7 +184,7 @@ export function handleBattleToolCall(
         state.right,
       );
       if (Either.isLeft(presentation)) {
-        return battleSnapshotPresentationIssueContent(presentation.left);
+        return battlePresentationIssueContent(presentation.left);
       }
       const availableAct =
         presentation.right.frontier.kind === "acts"
@@ -301,12 +301,12 @@ function battleSessionContent(root: McpPlaySessionRoot): BattleToolResult {
   if (state.tag === "activeBattle") {
     const payload = battleSessionPayload(root, state.session);
     return Either.isLeft(payload)
-      ? battleSnapshotPresentationIssueContent(payload.left)
+      ? battlePresentationIssueContent(payload.left)
       : schemaJsonContent(BattleSessionOutputSchema, payload.right);
   }
   const payload = battleSessionPayload(root, null);
   return Either.isLeft(payload)
-    ? battleSnapshotPresentationIssueContent(payload.left)
+    ? battlePresentationIssueContent(payload.left)
     : schemaJsonContent(BattleSessionOutputSchema, payload.right);
 }
 

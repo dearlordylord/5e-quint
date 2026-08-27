@@ -7121,25 +7121,35 @@ export type BattlePresentedSnapshot = Omit<BattleSnapshot, "combatants"> & {
   readonly combatants: readonly BattlePresentedCreatureSnapshot[];
 };
 
-export type BattleSnapshotPresentationIssue =
-  | {
-      readonly tag: "battleSnapshotPresentationIssue";
-      readonly reason: "missingStatBlockPresentation" | "invalidDisplayName";
-      readonly combatantId: CombatantId;
-    }
-  | {
-      readonly tag: "battleInterruptChoicePresentationIssue";
-      readonly reason: "missingSubjectPresentation";
-      readonly reactorId: CombatantId;
-      readonly choiceKind: Exclude<
-        BattleInterruptProcedureChoice,
-        { readonly kind: "reactionRollOrDamageReduction" }
-      >["kind"];
-      readonly subject: BattleSubject;
-    };
+export type BattleSnapshotPresentationIssue = {
+  readonly tag: "battleSnapshotPresentationIssue";
+  readonly reason: "missingStatBlockPresentation" | "invalidDisplayName";
+  readonly combatantId: CombatantId;
+};
+
+export type BattleInterruptChoicePresentationIssue = {
+  readonly tag: "battleInterruptChoicePresentationIssue";
+  readonly reason: "missingSubjectPresentation";
+  readonly reactorId: CombatantId;
+  readonly choiceKind: Exclude<
+    BattleInterruptProcedureChoice,
+    { readonly kind: "reactionRollOrDamageReduction" }
+  >["kind"];
+  readonly subject: BattleSubject;
+};
+
+export type BattlePresentationIssue =
+  | BattleSnapshotPresentationIssue
+  | BattleInterruptChoicePresentationIssue;
 
 export type BattleSnapshotPresentationIssues =
   ReadonlyNonEmptyArray<BattleSnapshotPresentationIssue>;
+
+export type BattleInterruptChoicePresentationIssues =
+  ReadonlyNonEmptyArray<BattleInterruptChoicePresentationIssue>;
+
+export type BattlePresentationIssues =
+  ReadonlyNonEmptyArray<BattlePresentationIssue>;
 
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];

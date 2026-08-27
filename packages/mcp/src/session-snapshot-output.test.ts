@@ -104,6 +104,17 @@ describe("MCP session wire projections", () => {
     ).toBe(true);
   });
 
+  test("start battle cannot report an empty battle session", () => {
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(StartBattleOutputSchema)({
+          envelope: null,
+          session: sessionForProjectionState({ tag: "none" }),
+        }),
+      ),
+    ).toBe(true);
+  });
+
   test("requires one presented envelope for active battle resolution", () => {
     const schema = mcpOutputJsonSchema(BattleResolutionOutputSchema);
     const serialized = JSON.stringify(schema);
@@ -280,6 +291,53 @@ describe("MCP session wire projections", () => {
       Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
         result: { tag: "resolved" },
         envelope: presentedHoles.right,
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
+    expect(
+      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+        result: {
+          tag: "invalid",
+          reason: "invalidFill",
+          message: "Retry the current frontier.",
+        },
+        envelope: presented.right,
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
+
+    const forgedBattleIdEnvelope = {
+      ...presented.right,
+      checkpoint: {
+        ...presented.right.checkpoint,
+        battleId: battleId("battle:other-correlation"),
+      },
+    };
+    expect(
+      Schema.decodeUnknownEither(BattleSessionOutputSchema)({
+        envelope: forgedBattleIdEnvelope,
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
+    expect(
+      Schema.decodeUnknownEither(AdminSessionProjectionSchema)({
+        battle: forgedBattleIdEnvelope,
+        characters: [],
+        session: activeSession,
+      }),
+    ).toEqual(Either.left(expect.anything()));
+
+    const forgedActorEnvelope = {
+      ...presented.right,
+      checkpoint: {
+        ...presented.right.checkpoint,
+        currentActorId: combatantId("combatant:other-correlation"),
+      },
+    };
+    expect(
+      Schema.decodeUnknownEither(BattleResolutionOutputSchema)({
+        result: { tag: "resolved" },
+        envelope: forgedActorEnvelope,
         session: activeSession,
       }),
     ).toEqual(Either.left(expect.anything()));

@@ -22,6 +22,17 @@ export type SdkPlayerOperation = (typeof SDK_PLAYER_OPERATIONS)[number];
 export const SDK_SESSION_CONFLICT_MESSAGE =
   "SDK call supplied a stale or foreign scenario session.";
 
+function sdkOperationPublishesBattleEnvelope(
+  operation: SdkPlayerOperation,
+): boolean {
+  return operation !== "scenarioRelation" && operation !== "discoverBattleActs";
+}
+
+export type BattleEnvelopeSessionIdentityCheck = {
+  /** Whether the session's current actor must match the checkpoint actor. */
+  readonly kind: "battleOnly" | "battleAndCurrentActor";
+};
+
 const HashSchema = Schema.String.pipe(Schema.pattern(/^[0-9a-f]{64}$/));
 const PositiveIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -192,6 +203,69 @@ type ParseResult<A> =
   | { readonly tag: "valid"; readonly value: A }
   | { readonly tag: "invalid"; readonly message: string };
 
+/**
+ * Correlate the identity carried by a runtime envelope with a serialized
+ * scenario session. Battle ids must always agree; callers may defer the
+ * current-actor comparison when checking a pre-resolution session because a
+ * successful operation can advance the turn.
+ */
+export function battleEnvelopeMatchesSessionIdentity(
+  envelope: unknown,
+  session: unknown,
+  check: BattleEnvelopeSessionIdentityCheck = {
+    kind: "battleAndCurrentActor",
+  },
+): boolean {
+  if (!isJsonObject(envelope) || !isJsonObject(envelope.checkpoint)) {
+    return false;
+  }
+  const checkpoint = envelope.checkpoint;
+  const checkpointBattleId = checkpoint.battleId;
+  const checkpointCurrentActorId = checkpoint.currentActorId;
+  if (
+    typeof checkpointBattleId !== "string" ||
+    typeof checkpointCurrentActorId !== "string"
+  ) {
+    return false;
+  }
+  const state = jsonObjectAt(session, ["battle", "state"]);
+  if (!isJsonObject(state) || typeof state.battleId !== "string") {
+    return false;
+  }
+  if (state.battleId !== checkpointBattleId) {
+    return false;
+  }
+  if (check.kind === "battleOnly") {
+    return true;
+  }
+  const initiative = jsonObjectAt(state, ["initiative"]);
+  const stillToAct = initiative?.stillToAct;
+  const currentActor = Array.isArray(stillToAct) ? stillToAct[0] : undefined;
+  return (
+    isJsonObject(currentActor) &&
+    typeof currentActor.creature === "string" &&
+    currentActor.creature === checkpointCurrentActorId
+  );
+}
+
+function jsonObjectAt(
+  value: unknown,
+  keys: readonly string[],
+): Readonly<Record<string, unknown>> | undefined {
+  let cursor: unknown = value;
+  for (const key of keys) {
+    if (!isJsonObject(cursor)) return undefined;
+    cursor = cursor[key];
+  }
+  return isJsonObject(cursor) ? cursor : undefined;
+}
+
+function isJsonObject(
+  value: unknown,
+): value is Readonly<Record<string, unknown>> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 function parseSdkCallSequence(input: {
   readonly records: readonly unknown[];
   readonly initialSessionSha256: string;
@@ -233,6 +307,26 @@ function parseSdkCallSequence(input: {
       return {
         tag: "invalid",
         message: `SDK call seq ${call.seq} has a mismatched session hash.`,
+      };
+    }
+    if (
+      call.outcome === "returned" &&
+      sdkOperationPublishesBattleEnvelope(call.operation) &&
+      isJsonObject(call.result) &&
+      isJsonObject(call.result.envelope) &&
+      (!battleEnvelopeMatchesSessionIdentity(
+        call.result.envelope,
+        call.inputSession,
+        { kind: "battleOnly" },
+      ) ||
+        !battleEnvelopeMatchesSessionIdentity(
+          call.result.envelope,
+          call.outputSession,
+        ))
+    ) {
+      return {
+        tag: "invalid",
+        message: `SDK call seq ${call.seq} has a Battle envelope/session identity mismatch.`,
       };
     }
     const isRecordedSessionConflict =

@@ -5,7 +5,7 @@ import {
   type BattleCheckpointFrontierEnvelope,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
-  type BattleSnapshotPresentationIssues,
+  type BattlePresentationIssues,
   type BattlePresentedCheckpointFrontierEnvelope,
 } from "@dnd/battle-runtime";
 import { Either } from "effect";
@@ -20,8 +20,6 @@ import {
 } from "./session-snapshot-output.ts";
 import type { BattleResolutionResultPayload } from "./battle-tool-output.ts";
 import { errorContent } from "./tool-content.ts";
-
-type BattlePayloadPresentationIssues = BattleSnapshotPresentationIssues;
 
 type BattleSessionPayload =
   | {
@@ -74,7 +72,7 @@ export function pendingBattleFillsContent(
 export function battleSessionPayload(
   root: McpPlaySessionRoot,
   session: BattleRuntimeSession | null,
-): Either.Either<BattleSessionPayload, BattleSnapshotPresentationIssues> {
+): Either.Either<BattleSessionPayload, BattlePresentationIssues> {
   const snapshot = root.sessionStore.snapshot();
   const sessionSummary = mcpSessionSummary(snapshot);
   const battleState = battleStateSnapshot(root.sessionStore.battleState);
@@ -172,7 +170,7 @@ export function battlePresentationEnvelopeForSession(
   session: BattleRuntimeSession,
 ): Either.Either<
   BattlePresentedCheckpointFrontierEnvelope,
-  BattleSnapshotPresentationIssues
+  BattlePresentationIssues
 > {
   const source = battleEnvelopeSourceForSession(root, session);
   return presentBattleCheckpointFrontierEnvelope(
@@ -219,8 +217,8 @@ function battleEnvelopeSourceForSession(
   return { session: replay.session, envelope: replay.envelope };
 }
 
-export function battleSnapshotPresentationIssueContent(
-  issues: BattlePayloadPresentationIssues,
+export function battlePresentationIssueContent(
+  issues: BattlePresentationIssues,
 ) {
   return errorContent("Battle presentation context is incomplete.", {
     code: "BATTLE_SNAPSHOT_PRESENTATION_INCOMPLETE",

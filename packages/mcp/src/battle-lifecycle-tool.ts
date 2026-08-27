@@ -8,7 +8,7 @@ import {
 } from "./battle-roster-lifecycle.ts";
 import {
   battlePresentationEnvelopeForSession,
-  battleSnapshotPresentationIssueContent,
+  battlePresentationIssueContent,
   initialInitiativeSetupStartPayload,
 } from "./battle-tool-payloads.ts";
 import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
@@ -124,7 +124,7 @@ function finalizeSetup(root: McpPlaySessionRoot) {
         state.session,
       );
       if (Either.isLeft(envelope)) {
-        return battleSnapshotPresentationIssueContent(envelope.left);
+        return battlePresentationIssueContent(envelope.left);
       }
       const battleState = battleStateSnapshot(root.sessionStore.battleState);
       if (battleState.tag !== "activeBattle") {

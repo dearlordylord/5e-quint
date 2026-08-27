@@ -6,7 +6,7 @@ import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { BattleResolutionOutputSchema } from "./battle-tool-output.ts";
 import {
   battleResolutionPayload,
-  battleSnapshotPresentationIssueContent,
+  battlePresentationIssueContent,
 } from "./battle-tool-payloads.ts";
 import type {
   McpBattleStateTransitionIssue,
@@ -85,6 +85,6 @@ export function storedBattleResolutionContent(
   }
   const payload = battleResolutionPayload(root, result);
   return Either.isLeft(payload)
-    ? battleSnapshotPresentationIssueContent(payload.left)
+    ? battlePresentationIssueContent(payload.left)
     : schemaJsonContent(BattleResolutionOutputSchema, payload.right);
 }

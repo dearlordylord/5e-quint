@@ -1,4 +1,4 @@
-import { battlePresentedCheckpointFrontierEnvelope, type BattleSnapshotPresentationIssue } from "@dnd/battle-runtime"
+import { battlePresentedCheckpointFrontierEnvelope, type BattlePresentationIssue } from "@dnd/battle-runtime"
 import { Either, Match } from "effect"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -179,7 +179,7 @@ export function BattlePage({
   )
 }
 
-function presentationIssueKey(issue: BattleSnapshotPresentationIssue | BattleScenePresentationIssue): string {
+function presentationIssueKey(issue: BattlePresentationIssue | BattleScenePresentationIssue): string {
   return Match.value(issue).pipe(
     Match.when({ tag: "battleSnapshotPresentationIssue" }, (matched) => `${matched.combatantId}:${matched.reason}`),
     Match.when({ tag: "battleScenePresentationIssue" }, (matched) => `${matched.combatantId}:${matched.reason}`),
@@ -191,7 +191,7 @@ function presentationIssueKey(issue: BattleSnapshotPresentationIssue | BattleSce
   )
 }
 
-function presentationIssueMessage(issue: BattleSnapshotPresentationIssue | BattleScenePresentationIssue): string {
+function presentationIssueMessage(issue: BattlePresentationIssue | BattleScenePresentationIssue): string {
   return Match.value(issue).pipe(
     Match.when(
       { tag: "battleSnapshotPresentationIssue" },

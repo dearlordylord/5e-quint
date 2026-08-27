@@ -41,7 +41,7 @@ import {
 import { createdCharacterDraftId } from "./play-session-command.ts";
 import {
   battleSessionPayload,
-  battleSnapshotPresentationIssueContent,
+  battlePresentationIssueContent,
 } from "./battle-tool-payloads.ts";
 
 export {
@@ -124,7 +124,7 @@ export async function handleReadPlaySession(
     (root) => {
       const battleEnvelope = readBattleEnvelopeForRoot(root);
       if (Either.isLeft(battleEnvelope)) {
-        const operationContent = battleSnapshotPresentationIssueContent(
+        const operationContent = battlePresentationIssueContent(
           battleEnvelope.left,
         );
         return {

@@ -33,7 +33,7 @@ import { mcpSessionSummary } from "./session-snapshot-output.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import {
   battlePresentationEnvelopeForSession,
-  battleSnapshotPresentationIssueContent,
+  battlePresentationIssueContent,
 } from "./battle-tool-payloads.ts";
 import { startInitialInitiativeSetup } from "./initial-initiative-setup-start.ts";
 import { completeBattleStateTransition } from "./battle-state-transition.ts";
@@ -142,7 +142,7 @@ export function handleStartBattleToolCall(
         activeSession,
       );
       if (Either.isLeft(envelope)) {
-        return battleSnapshotPresentationIssueContent(envelope.left);
+        return battlePresentationIssueContent(envelope.left);
       }
       return schemaJsonContent(StartBattleOutputSchema, {
         envelope: envelope.right,

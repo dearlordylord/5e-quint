@@ -46,10 +46,15 @@ export function recoverableOperationResult(
   isError: boolean,
 ): unknown {
   if (
-    !isError ||
     root.sessionStore.pendingBattleFills === null ||
     root.sessionStore.battleState.tag !== "activeBattle"
   ) {
+    return operationResult;
+  }
+  // Battle operations already publish their canonical envelope. Preserve that
+  // operation shape; unrelated successful operations need an explicit
+  // recovery wrapper so the continuation is visible on the same result.
+  if (!isError && hasBattleEnvelope(operationResult)) {
     return operationResult;
   }
   const battle = battleSessionPayload(
@@ -79,6 +84,15 @@ export function recoverableOperationResult(
     result: operationResult,
     battleEnvelope: battle.right.envelope,
   };
+}
+
+function hasBattleEnvelope(value: unknown): boolean {
+  if (!isJsonObject(value)) return false;
+  return (
+    value.envelope !== undefined ||
+    value.battleEnvelope !== undefined ||
+    (isJsonObject(value.details) && value.details.battleEnvelope !== undefined)
+  );
 }
 
 export function availablePlaySessionEnvelope(input: {

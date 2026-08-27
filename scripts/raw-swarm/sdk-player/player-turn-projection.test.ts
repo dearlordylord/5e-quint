@@ -49,6 +49,7 @@ const resourcePoolRefs = {
 const beforeSession = {
   battle: {
     state: {
+      battleId: "battle",
       initiative: { round: 2, stillToAct: [{ creature: "fighter" }] },
       subjectResolutionPhase: { kind: "subjectSelection" },
       combatants: {
@@ -646,7 +647,7 @@ describe("player current-turn projection", () => {
       tag: "needsHoles",
       session: afterSession,
       envelope: {
-        checkpoint: {},
+        checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: {
           kind: "holes",
           subject: resultSubject,
@@ -778,7 +779,7 @@ describe("player current-turn projection", () => {
       tag: "needsHoles",
       session: beforeSession,
       envelope: {
-        checkpoint: {},
+        checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: {
           kind: "holes",
           subject: resultSubject,
@@ -906,7 +907,7 @@ describe("player current-turn projection", () => {
         "Attack roll relationship facts do not match a requested attack-roll decision.",
       session: beforeSession,
       envelope: {
-        checkpoint: {},
+        checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: { kind: "acts", acts: [] },
       },
     } as const;
@@ -957,7 +958,7 @@ describe("player current-turn projection", () => {
       tag: "scenarioMovementRejected" as const,
       message: "The route enters an unsupported occupied square.",
       envelope: {
-        checkpoint: {},
+        checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: { kind: "acts" as const, acts: [] },
       },
     };
@@ -992,7 +993,7 @@ describe("player current-turn projection", () => {
       tag: "needsHoles" as const,
       session: beforeSession,
       envelope: {
-        checkpoint: {},
+        checkpoint: { battleId: "battle", currentActorId: "fighter" },
         frontier: {
           kind: "interruptDecision" as const,
           trigger: "attackHit" as const,
@@ -1085,6 +1086,63 @@ describe("player current-turn projection", () => {
         ],
         beforeSession,
         afterSession: beforeSession,
+        tacticalNote: "",
+      }),
+    ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });
+
+    const correlatedBeforeSession = {
+      ...beforeSession,
+      battle: {
+        ...beforeSession.battle,
+        state: { ...beforeSession.battle.state, battleId: "battle" },
+      },
+    };
+    const correlatedAfterSession = correlatedBeforeSession;
+    const correlatedInterruptResult = {
+      ...interruptResult,
+      session: correlatedAfterSession,
+      envelope: {
+        ...interruptResult.envelope,
+        checkpoint: { battleId: "battle", currentActorId: "fighter" },
+      },
+    };
+    const correlatedCall = {
+      ...call,
+      inputSession: correlatedBeforeSession,
+      inputSessionSha256: sha256Canonical(correlatedBeforeSession),
+      outputSession: correlatedAfterSession,
+      outputSessionSha256: sha256Canonical(correlatedAfterSession),
+      result: correlatedInterruptResult,
+      resultSha256: sha256Canonical(correlatedInterruptResult),
+    };
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [correlatedCall],
+        beforeSession: correlatedBeforeSession,
+        afterSession: correlatedAfterSession,
+        tacticalNote: "",
+      }).tag,
+    ).toBe("valid");
+    const forgedCorrelatedResult = {
+      ...correlatedInterruptResult,
+      envelope: {
+        ...correlatedInterruptResult.envelope,
+        checkpoint: { battleId: "battle:other", currentActorId: "fighter" },
+      },
+    };
+    expect(
+      playerCurrentTurnProjection({
+        continuation: 1,
+        calls: [
+          {
+            ...correlatedCall,
+            result: forgedCorrelatedResult,
+            resultSha256: sha256Canonical(forgedCorrelatedResult),
+          },
+        ],
+        beforeSession: correlatedBeforeSession,
+        afterSession: correlatedAfterSession,
         tacticalNote: "",
       }),
     ).toMatchObject({ tag: "invalid", reason: "malformedProjectionSource" });

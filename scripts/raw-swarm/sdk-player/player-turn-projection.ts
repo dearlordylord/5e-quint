@@ -23,7 +23,10 @@ import {
 } from "../../../packages/surface/src/surface/schema.ts";
 import type { JsonValue } from "./continuation-contract.ts";
 import { isJsonValue, jsonValue } from "./json-value.ts";
-import type { SdkCallRecord } from "./sdk-transcript.ts";
+import {
+  battleEnvelopeMatchesSessionIdentity,
+  type SdkCallRecord,
+} from "./sdk-transcript.ts";
 
 export const PLAYER_TURN_PROJECTION_MAX_BYTES = 32 * 1024;
 export const PLAYER_TACTICAL_NOTE_MAX_BYTES = 4 * 1024;
@@ -1274,6 +1277,8 @@ function acts(
 function frontier(
   calls: readonly SdkCallRecord[],
   source: PlayerHoleEvidenceSource,
+  beforeSession: JsonValue,
+  afterSession: JsonValue,
 ): PlayerCurrentTurnProjection["frontier"] | undefined {
   type FrontierDecision =
     | {
@@ -1302,6 +1307,19 @@ function frontier(
     }
     const envelope = resolutionEnvelopeForTag(result, result.tag);
     if (envelope === undefined) return { tag: "invalid" };
+    if (
+      !battleEnvelopeMatchesSessionIdentity(envelope, call.inputSession, {
+        kind: "battleOnly",
+      }) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, result.session) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, call.outputSession) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, beforeSession, {
+        kind: "battleOnly",
+      }) ||
+      !battleEnvelopeMatchesSessionIdentity(envelope, afterSession)
+    ) {
+      return { tag: "invalid" };
+    }
     const projected = projectEnvelopeFrontier(envelope, source);
     if (projected === undefined) return { tag: "invalid" };
     if (rejection?.tag === "invalid") {
@@ -1515,7 +1533,12 @@ function playerCurrentTurnProjectionFromEvidence(input: {
     };
   }
   const projectedTurn = turn(input.afterSession);
-  const projectedFrontier = frontier(input.calls, input.holeEvidenceSource);
+  const projectedFrontier = frontier(
+    input.calls,
+    input.holeEvidenceSource,
+    input.beforeSession,
+    input.afterSession,
+  );
   const beforeCombatants = combatants(input.beforeSession);
   const afterCombatants = combatants(input.afterSession);
   const beforePositions = positions(input.beforeSession);

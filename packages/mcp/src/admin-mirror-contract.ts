@@ -1,6 +1,7 @@
 import { BattlePresentedCheckpointFrontierEnvelopeSchema } from "@dnd/battle-runtime";
 import { Schema } from "effect";
 
+import { battleEnvelopeMatchesActiveSession } from "./battle-envelope-correlation.ts";
 import { CharacterSessionRowSchema } from "./character-tool-output.ts";
 import {
   McpActiveBattleStateSnapshotSchema,
@@ -70,7 +71,19 @@ export const AdminSessionProjectionSchema = Schema.Union(
     }),
     battle: BattlePresentedCheckpointFrontierEnvelopeSchema,
     characters: Schema.Array(CharacterSessionRowSchema),
-  }),
+  }).pipe(
+    Schema.filter(
+      ({ battle, session }) =>
+        battleEnvelopeMatchesActiveSession({
+          envelope: battle,
+          session,
+        }),
+      {
+        message: () =>
+          "An active Battle envelope must match its session Battle and actor.",
+      },
+    ),
+  ),
 );
 export type AdminSessionProjection = typeof AdminSessionProjectionSchema.Type;
 

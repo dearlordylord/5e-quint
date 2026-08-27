@@ -8,7 +8,9 @@ import {
 } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 
-import { Match } from "effect";
+import { Either, Match, Schema } from "effect";
+
+import { BattleInterruptProcedureChoiceSchema } from "../../../packages/battle-runtime/src/battle-reducer/battle-codecs.ts";
 
 import {
   canonicalJson,
@@ -17,6 +19,7 @@ import {
   type ScenarioId,
 } from "../transcript.ts";
 import {
+  battleEnvelopeMatchesSessionIdentity,
   parseSdkTranscript,
   type SdkCallRecord,
   type SdkPlayerOperation,
@@ -406,13 +409,16 @@ function relation(result: JsonValue): SdkReviewRelation | undefined {
   };
 }
 
-function resolution(result: JsonValue): SdkCallReviewFacts | undefined {
+function resolution(
+  call: Extract<SdkCallRecord, { readonly outcome: "returned" }>,
+  result: JsonValue,
+): SdkCallReviewFacts | undefined {
   if (!isJsonObject(result)) return undefined;
   const tag = result.tag;
   if (typeof tag !== "string" || !isOneOf(SDK_REVIEW_RESOLUTION_TAGS, tag)) {
     return undefined;
   }
-  const projectedHoles = resolutionFrontierHoles(result, tag);
+  const projectedHoles = resolutionFrontierHoles(result, tag, call);
   if (
     projectedHoles === undefined ||
     result.holes !== undefined ||
@@ -481,6 +487,7 @@ function resolution(result: JsonValue): SdkCallReviewFacts | undefined {
 function resolutionFrontierHoles(
   result: JsonObject,
   tag: string,
+  call: Extract<SdkCallRecord, { readonly outcome: "returned" }>,
 ): readonly SdkReviewHole[] | undefined {
   if (result.envelope === undefined) {
     return tag === "scenarioSessionConflict" ||
@@ -494,6 +501,15 @@ function resolutionFrontierHoles(
   if (
     !isJsonObject(result.envelope) ||
     !isJsonObject(result.envelope.frontier)
+  ) {
+    return undefined;
+  }
+  if (
+    !battleEnvelopeMatchesSessionIdentity(result.envelope, call.inputSession, {
+      kind: "battleOnly",
+    }) ||
+    !battleEnvelopeMatchesSessionIdentity(result.envelope, result.session) ||
+    !battleEnvelopeMatchesSessionIdentity(result.envelope, call.outputSession)
   ) {
     return undefined;
   }
@@ -524,10 +540,16 @@ function resolutionFrontierHoles(
   if (!isJsonObject(frontier.decisionHole)) return undefined;
   if (typeof frontier.decisionHole.kind !== "string") return undefined;
   if (frontier.decisionHole.choices !== undefined) return undefined;
-  if (!Array.isArray(frontier.choices)) return undefined;
+  if (!Array.isArray(frontier.choices) || frontier.choices.length === 0) {
+    return undefined;
+  }
   if (
-    !frontier.choices.every(
-      (choice) => isJsonObject(choice) && typeof choice.kind === "string",
+    frontier.choices.some((choice) =>
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleInterruptProcedureChoiceSchema, {
+          onExcessProperty: "error",
+        })(choice),
+      ),
     )
   ) {
     return undefined;
@@ -566,10 +588,10 @@ function reviewFacts(
         : { kind: "relation" as const, relation: projected };
     }),
     Match.when("discoverBattleActs", () => actFrontier(result)),
-    Match.when("resolveBattleRuntimeSubject", () => resolution(result)),
-    Match.when("resolveScenarioMovement", () => resolution(result)),
-    Match.when("resolveBattleRuntimeInterrupt", () => resolution(result)),
-    Match.when("endBattleRuntimeTurn", () => resolution(result)),
+    Match.when("resolveBattleRuntimeSubject", () => resolution(call, result)),
+    Match.when("resolveScenarioMovement", () => resolution(call, result)),
+    Match.when("resolveBattleRuntimeInterrupt", () => resolution(call, result)),
+    Match.when("endBattleRuntimeTurn", () => resolution(call, result)),
     Match.exhaustive,
   );
 }

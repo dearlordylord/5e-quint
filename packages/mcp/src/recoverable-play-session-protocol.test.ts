@@ -1124,7 +1124,26 @@ describe("recoverable Play Session protocol", () => {
         groups: [{ dice: 1, dieSize: 8 }],
       },
     });
-    const rolledGroups = arrayField(operationResult(rolled), "groups");
+    expect(rolled).toMatchObject({
+      operation: {
+        result: {
+          result: { groups: expect.any(Array) },
+          battleEnvelope: { frontier: { kind: "holes" } },
+        },
+      },
+      unresolvedInputs: [
+        {
+          sourcePath: "$.battleEnvelope.frontier.holes",
+          inputs: expect.any(Array),
+        },
+      ],
+      nextOperations: expect.arrayContaining(["fill_battle_hole"]),
+    });
+    const rolledOperation = operationResult(rolled);
+    const rolledGroups = arrayField(
+      objectField(rolledOperation, "result"),
+      "groups",
+    );
     const rolledGroup = rolledGroups[0];
     if (!isJsonObject(rolledGroup)) {
       throw new Error("Expected the server-correlated damage roll.");

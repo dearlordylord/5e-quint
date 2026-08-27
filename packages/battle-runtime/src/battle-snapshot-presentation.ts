@@ -7,6 +7,9 @@ import type {
   BattleActPresentation,
   BattleInterruptDecisionFrontier,
   BattleInterruptProcedureChoice,
+  BattleInterruptChoicePresentationIssue,
+  BattleInterruptChoicePresentationIssues,
+  BattlePresentationIssues,
   BattlePresentedCreatureSnapshot,
   BattlePresentedSnapshot,
   BattleSnapshotPresentationIssue,
@@ -81,7 +84,7 @@ export function presentBattleCheckpointFrontierEnvelope(
   envelope: BattleCheckpointFrontierEnvelope,
 ): Either.Either<
   BattlePresentedCheckpointFrontierEnvelope,
-  BattleSnapshotPresentationIssues
+  BattlePresentationIssues
 > {
   return Either.flatMap(
     presentBattleSnapshot(session, envelope.checkpoint),
@@ -97,7 +100,7 @@ export function battlePresentedCheckpointFrontierEnvelope(
   session: BattleRuntimeSession,
 ): Either.Either<
   BattlePresentedCheckpointFrontierEnvelope,
-  BattleSnapshotPresentationIssues
+  BattlePresentationIssues
 > {
   return presentBattleCheckpointFrontierEnvelope(
     session,
@@ -110,7 +113,7 @@ function presentFrontier(
   frontier: BattleCheckpointFrontierEnvelope["frontier"],
 ): Either.Either<
   BattlePresentedCheckpointFrontierEnvelope["frontier"],
-  BattleSnapshotPresentationIssues
+  BattlePresentationIssues
 > {
   if (frontier.kind === "acts") {
     return Either.right({
@@ -132,7 +135,7 @@ export function presentBattleInterruptChoices(
   choices: readonly BattleInterruptProcedureChoice[],
 ): Either.Either<
   readonly BattlePresentedInterruptChoice[],
-  BattleSnapshotPresentationIssues
+  BattleInterruptChoicePresentationIssues
 > {
   return traverseValidation(choices, (choice) =>
     presentBattleInterruptChoice(session, choice),
@@ -144,7 +147,7 @@ function presentBattleInterruptChoice(
   choice: BattleInterruptProcedureChoice,
 ): Either.Either<
   BattlePresentedInterruptChoice,
-  BattleSnapshotPresentationIssue
+  BattleInterruptChoicePresentationIssue
 > {
   if (choice.kind === "reactionRollOrDamageReduction") {
     // Modifier-only choices are mechanics-owned and have no authored act

@@ -211,13 +211,22 @@ export function playSessionOperationOutputSchema(
       ...embeddedPlaySessionId.definitions,
       ...embeddedSessionProjection.definitions,
       ...embeddedOperationResult.definitions,
+      ...embeddedBattleEnvelope.definitions,
     },
     anyOf: [
       availableResultSchema({
         operationName,
         playSessionId: embeddedPlaySessionId.schema,
         operationResult: {
-          anyOf: [embeddedOperationResult.schema, operationErrorSchema],
+          anyOf: [
+            embeddedOperationResult.schema,
+            operationErrorSchema,
+            recoverableOperationResultSchema({
+              operationResult: embeddedOperationResult.schema,
+              battleEnvelope: embeddedBattleEnvelope.schema,
+              operationError: operationErrorSchema,
+            }),
+          ],
         },
         projection: embeddedSessionProjection.schema,
       }),
@@ -238,6 +247,24 @@ export function playSessionOperationOutputSchema(
   cache.set(operationResultSchema, identified);
   routedOutputSchemas.set(operationName, cache);
   return identified;
+}
+
+function recoverableOperationResultSchema(input: {
+  readonly operationResult: McpOutputSchema;
+  readonly operationError: McpOutputSchema;
+  readonly battleEnvelope: McpOutputSchema;
+}): McpOutputSchema {
+  return {
+    type: "object",
+    properties: {
+      result: {
+        anyOf: [input.operationResult, input.operationError],
+      },
+      battleEnvelope: input.battleEnvelope,
+    },
+    required: ["result", "battleEnvelope"],
+    additionalProperties: false,
+  };
 }
 
 function availableResultSchema(input: {

@@ -120,7 +120,7 @@ export function adminProjection(
   root: McpPlaySessionRoot,
 ): Either.Either<
   AdminSessionProjection,
-  string | import("@dnd/battle-runtime").BattleSnapshotPresentationIssues
+  string | import("@dnd/battle-runtime").BattlePresentationIssues
 > {
   const characters = characterListRows(root);
   if (Either.isLeft(characters)) return Either.left(characters.left);

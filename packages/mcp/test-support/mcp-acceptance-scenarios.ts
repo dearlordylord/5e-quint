@@ -490,7 +490,11 @@ export async function verifyToolContract(
   assert.match(startBattleOutputSchemaText, /battleState/);
   assert.match(startBattleOutputSchemaText, /initialInitiativeSetup/);
   assert.match(startBattleOutputSchemaText, /activeBattle/);
-  assert.match(startBattleOutputSchemaText, /none/);
+  assert.doesNotMatch(
+    startBattleOutputSchemaText,
+    /"const":"none"/,
+    "start_battle must not advertise an empty-battle success branch",
+  );
   assert.match(startBattleOutputSchemaText, /checkpoint/);
   assert.match(startBattleOutputSchemaText, /session/);
 
@@ -507,7 +511,6 @@ export async function verifyToolContract(
     },
   };
   for (const battleState of [
-    { tag: "none" },
     {
       tag: "initialInitiativeSetup",
       battleId: "battle:contract",
@@ -531,14 +534,7 @@ export async function verifyToolContract(
         save: { tag: "available" },
       },
       unresolvedInputs: [],
-      nextOperations:
-        battleState.tag === "initialInitiativeSetup"
-          ? ["battle_lifecycle", "read_battle_state"]
-          : [
-              "create_character_draft",
-              "list_catalog_units",
-              "list_stat_blocks",
-            ],
+      nextOperations: ["battle_lifecycle", "read_battle_state"],
       restoration: { tag: "retained" },
     };
     const validation = validateStartBattleOutput(envelope);

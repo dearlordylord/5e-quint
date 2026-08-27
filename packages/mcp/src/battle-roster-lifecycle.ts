@@ -5,7 +5,7 @@ import {
 } from "@dnd/battle-runtime";
 import { Either, Match } from "effect";
 import type { BattleLifecycleToolInput } from "./battle-lifecycle-tool-input.ts";
-import { battleSnapshotPresentationIssueContent } from "./battle-tool-payloads.ts";
+import { battlePresentationIssueContent } from "./battle-tool-payloads.ts";
 import { BattleLifecycleOutputSchema } from "./battle-tool-output.ts";
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import {
@@ -150,7 +150,7 @@ function commitBattleLifecycleTransition(input: {
 function battlePresentationForCommit(nextBattle: BattleRuntimeSession) {
   return Either.mapLeft(
     battlePresentedCheckpointFrontierEnvelope(nextBattle),
-    battleSnapshotPresentationIssueContent,
+    battlePresentationIssueContent,
   );
 }
 

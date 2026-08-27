@@ -17,7 +17,7 @@ import { describe, expect, test } from "vitest";
 import {
   battleResolutionResultPayload,
   battleSessionPayload,
-  battleSnapshotPresentationIssueContent,
+  battlePresentationIssueContent,
   noStoredBattleContent,
   pendingBattleFillsContent,
   unknownStatBlockContent,
@@ -81,7 +81,7 @@ describe("battle tool payload boundaries", () => {
       reason: "missingStatBlockPresentation",
       combatantId: combatantId("synthetic-missing-presentation"),
     } as const;
-    const content = battleSnapshotPresentationIssueContent([issue]);
+    const content = battlePresentationIssueContent([issue]);
     expect(content).toMatchObject({
       isError: true,
       content: [
