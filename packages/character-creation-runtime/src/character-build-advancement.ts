@@ -843,7 +843,8 @@ export function fightingStyleCantripUnitId(input: {
 }): Result.Result<FightingStyleCantripUnitId, CharacterBuildAdvancementIssue> {
   const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
   /* v8 ignore start -- @preserve -- The typed Fighting Style cantrip route was admitted from this exact class feature choice. */
-  if (Result.isFailure(featureChoice)) return Result.fail(featureChoice.failure);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   if (
@@ -931,7 +932,8 @@ export function weaponMasteryLevelGain(input: {
     unitLibrary: input.unitLibrary,
     unitId: input.featureUnitId,
   });
-  if (Result.isFailure(featureUnitId)) return Result.fail(featureUnitId.failure);
+  if (Result.isFailure(featureUnitId))
+    return Result.fail(featureUnitId.failure);
 
   const selectedWeaponUnitIds: WeaponMasteryWeaponUnitId[] = [];
   for (const unitId of input.selectedWeaponUnitIds) {
@@ -1025,7 +1027,8 @@ export function classLevelGainWithFightingStyleCantripReplacement(input: {
 > {
   const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
   /* v8 ignore start -- @preserve -- The typed Fighting Style replacement route was admitted from this exact cantrip feature choice. */
-  if (Result.isFailure(featureChoice)) return Result.fail(featureChoice.failure);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const replaceCantripId = fightingStyleCantripUnitId({
@@ -1104,7 +1107,9 @@ export function warlockLevelGain(input: {
     pactMagic: input.pactMagic ?? EMPTY_WARLOCK_PACT_MAGIC_LEVEL_GAIN,
     eldritchInvocations: {
       gainedInvocations: gainedInvocations.success,
-      ...(replacement === undefined ? {} : { replacement: replacement.success }),
+      ...(replacement === undefined
+        ? {}
+        : { replacement: replacement.success }),
     },
   });
 }
@@ -1128,7 +1133,8 @@ export function sorcererLevelGain(input: {
   /* v8 ignore stop -- @preserve */
 
   const gainedOptions = parseSorcererMetamagicOptionIds(input.gainedOptions);
-  if (Result.isFailure(gainedOptions)) return Result.fail(gainedOptions.failure);
+  if (Result.isFailure(gainedOptions))
+    return Result.fail(gainedOptions.failure);
 
   const replacement =
     input.replacement === undefined
@@ -1144,7 +1150,9 @@ export function sorcererLevelGain(input: {
     hitPointRule: input.hitPointRule,
     metamagic: {
       gainedOptions: gainedOptions.success,
-      ...(replacement === undefined ? {} : { replacement: replacement.success }),
+      ...(replacement === undefined
+        ? {}
+        : { replacement: replacement.success }),
     },
   });
 }
@@ -1810,7 +1818,8 @@ function parseSorcererMetamagicReplacement(input: {
   const replaceOptionId = parseKnownSorcererMetamagicOptionId(
     input.replaceOptionId,
   );
-  if (Result.isFailure(replaceOptionId)) return Result.fail(replaceOptionId.failure);
+  if (Result.isFailure(replaceOptionId))
+    return Result.fail(replaceOptionId.failure);
 
   const selectedOptionId = parseKnownSorcererMetamagicOptionId(
     input.selectedOptionId,
@@ -1885,7 +1894,8 @@ function plainClassLevelGainFeatures(input: {
     classUnitId: WarlockClassUnitId(input.levelGain.classUnitId),
   });
   /* v8 ignore start -- @preserve -- The typed plain-Warlock route was admitted from this exact invocation feature choice. */
-  if (Result.isFailure(featureChoice)) return Result.fail(featureChoice.failure);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const nextWarlockLevel =
@@ -1924,7 +1934,8 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
   /* v8 ignore start -- @preserve -- The supported Weapon Mastery route was admitted from this exact class feature. */
   if (Result.isFailure(feature)) return Result.fail(feature.failure);
   /* v8 ignore stop -- @preserve */
-  if (feature.success === undefined) return Result.succeed(input.build.features);
+  if (feature.success === undefined)
+    return Result.succeed(input.build.features);
 
   const currentClassLevel = classLevelForUnit(
     input.build.progression,
@@ -2436,7 +2447,8 @@ function updateFightingStyleCantrips(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed cantrip replacement route was admitted from this exact acquisition feature choice. */
-  if (Result.isFailure(featureChoice)) return Result.fail(featureChoice.failure);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const spellcasting = input.build.spellcasting;
@@ -2640,7 +2652,8 @@ function applyListPreparedSpellcastingLevelGain(input: {
     nextSpellcasting,
     unitLibrary: input.unitLibrary,
   });
-  if (Result.isFailure(preparedSpells)) return Result.fail(preparedSpells.failure);
+  if (Result.isFailure(preparedSpells))
+    return Result.fail(preparedSpells.failure);
 
   return Result.succeed({
     preparedSpells: preparedSpells.success,
@@ -2824,7 +2837,8 @@ function updateSorcererMetamagicOptions(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed Sorcerer level-gain route was admitted from this exact Metamagic feature choice. */
-  if (Result.isFailure(featureChoice)) return Result.fail(featureChoice.failure);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const sorcererLevel = classLevelForUnit(
@@ -2939,7 +2953,8 @@ function sorcererMetamagicCanRemainUnchanged(input: {
 }): Result.Result<void, CharacterBuildAdvancementIssue> {
   const featureChoice = sorcererMetamagicFeatureForSorcererClass(input);
   /* v8 ignore start -- @preserve -- The retained Sorcerer build was admitted from this exact Metamagic feature choice. */
-  if (Result.isFailure(featureChoice)) return Result.fail(featureChoice.failure);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const selectedOptionIds = selectedSorcererMetamagicOptionFeaturesForFeature(
@@ -3068,7 +3083,8 @@ function updateWarlockEldritchInvocations(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed Warlock level-gain route was admitted from this exact invocation feature choice. */
-  if (Result.isFailure(featureChoice)) return Result.fail(featureChoice.failure);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const currentWarlockLevel = classLevelForUnit(
@@ -3125,7 +3141,10 @@ function updateWarlockEldritchInvocations(input: {
     return Result.fail(replacedInvocations.failure);
   }
 
-  const finalInvocations = [...replacedInvocations.success, ...gainedInvocations];
+  const finalInvocations = [
+    ...replacedInvocations.success,
+    ...gainedInvocations,
+  ];
   const duplicateInvocationId =
     duplicateEldritchInvocationSelectionId(finalInvocations);
   if (duplicateInvocationId !== undefined) {
@@ -3303,7 +3322,8 @@ function updateWarlockPactMagic(input: {
     currentProgression,
     nextProgression,
   });
-  if (Result.isFailure(preparedSpells)) return Result.fail(preparedSpells.failure);
+  if (Result.isFailure(preparedSpells))
+    return Result.fail(preparedSpells.failure);
 
   return Result.succeed({
     ...spellcasting,

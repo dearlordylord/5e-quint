@@ -13,9 +13,7 @@ const NonEmptyTrimmedStringSchema = Schema.Trimmed.pipe(
 );
 const ListPreparedSpellcastingGainSchema = Schema.Struct({
   gainedPreparedSpells: Schema.Array(UnitId),
-  preparedSpellReplacement: Schema.optionalKey(
-    PreparedSpellReplacementSchema,
-  ),
+  preparedSpellReplacement: Schema.optionalKey(PreparedSpellReplacementSchema),
 });
 const CharacterBuildPlainClassLevelGainSchema = Schema.Struct({
   tag: Schema.Literal("classLevelGain"),

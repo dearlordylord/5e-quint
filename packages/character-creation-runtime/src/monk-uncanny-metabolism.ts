@@ -173,7 +173,8 @@ export function characterBuildMonkUncannyMetabolismFacts(input: {
     dieGrant: martialArtsDieGrant,
     monkLevel: monkLevel.success,
   });
-  if (Result.isFailure(martialArtsDie)) return Result.fail(martialArtsDie.failure);
+  if (Result.isFailure(martialArtsDie))
+    return Result.fail(martialArtsDie.failure);
 
   return Result.succeed({
     unitId: MONK_UNCANNY_METABOLISM_UNIT_ID,

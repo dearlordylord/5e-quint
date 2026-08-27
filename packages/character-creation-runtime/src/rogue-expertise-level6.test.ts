@@ -97,7 +97,9 @@ function testProgression(
     })),
   });
   if (Result.isFailure(result)) {
-    throw new Error(`Invalid test progression: ${JSON.stringify(result.failure)}`);
+    throw new Error(
+      `Invalid test progression: ${JSON.stringify(result.failure)}`,
+    );
   }
 
   return result.success;

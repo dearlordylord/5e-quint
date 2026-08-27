@@ -952,7 +952,10 @@ function finalizedSpeciesChoiceFacts(
     );
   }
   if (lineageSource.success !== undefined) {
-    return finalizedGnomishLineageChoiceFacts(selections, lineageSource.success);
+    return finalizedGnomishLineageChoiceFacts(
+      selections,
+      lineageSource.success,
+    );
   }
 
   return selections.draconicAncestry === undefined
@@ -1646,7 +1649,8 @@ export function buildCharacterBuild(input: {
     "background",
   );
   /* v8 ignore start -- @preserve -- The support gate already resolved this selected background in the same catalog. */
-  if (Result.isFailure(backgroundUnit)) return Result.fail([backgroundUnit.failure]);
+  if (Result.isFailure(backgroundUnit))
+    return Result.fail([backgroundUnit.failure]);
   /* v8 ignore stop -- @preserve */
   const backgroundFacts = readableForFinalization(
     readBackgroundCreationFacts(backgroundUnit.success),
@@ -1671,7 +1675,8 @@ export function buildCharacterBuild(input: {
     "species",
   );
   /* v8 ignore start -- @preserve -- The support gate already parsed this selected species's creation facts. */
-  if (Result.isFailure(speciesFacts)) return Result.fail([speciesFacts.failure]);
+  if (Result.isFailure(speciesFacts))
+    return Result.fail([speciesFacts.failure]);
   /* v8 ignore stop -- @preserve */
   const speciesChoiceFacts = finalizedSpeciesChoiceFacts(
     selections,
@@ -1697,7 +1702,8 @@ export function buildCharacterBuild(input: {
     selections,
   );
   /* v8 ignore start -- @preserve -- Supported choice holes and feat prerequisites already establish these feature increases. */
-  if (Result.isFailure(featureScores)) return Result.fail(featureScores.failure);
+  if (Result.isFailure(featureScores))
+    return Result.fail(featureScores.failure);
   /* v8 ignore stop -- @preserve */
   const finalAbilityScores = featureScores.success;
   const proficiencyChoices = selectedBuildProficiencyChoiceSubjects(
@@ -2247,7 +2253,8 @@ export function characterBuildProficiencies(
     build.background,
     "background",
   );
-  if (Result.isFailure(backgroundUnit)) return Result.fail([backgroundUnit.failure]);
+  if (Result.isFailure(backgroundUnit))
+    return Result.fail([backgroundUnit.failure]);
   const backgroundFacts = readableForFinalization(
     readBackgroundCreationFacts(backgroundUnit.success),
     build.background,
@@ -2265,7 +2272,8 @@ export function characterBuildProficiencies(
   const multiclassTools =
     finalizedBuildSurfaceToolProficiencyIds(multiclassSubjects);
   /* v8 ignore start -- @preserve -- Supported multiclass tool grants already carry ids admitted by the shared tool codec. */
-  if (Result.isFailure(multiclassTools)) return Result.fail(multiclassTools.failure);
+  if (Result.isFailure(multiclassTools))
+    return Result.fail(multiclassTools.failure);
   /* v8 ignore stop -- @preserve */
   const startingClassTools = finalizedBuildSurfaceToolProficiencyIds(
     fixedToolProficiencySubjects(startingClassFacts.toolProficiencies),

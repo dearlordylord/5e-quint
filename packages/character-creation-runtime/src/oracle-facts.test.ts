@@ -531,7 +531,10 @@ describe("Character Creation owner facts", () => {
         spellcastingFocusKind: "arcane",
       }),
     );
-    expect(decodeCharacterBuildFact(focusFact)).toHaveProperty("_tag", "Success");
+    expect(decodeCharacterBuildFact(focusFact)).toHaveProperty(
+      "_tag",
+      "Success",
+    );
 
     const gnomishFact = characterBuildFact({
       ...build,

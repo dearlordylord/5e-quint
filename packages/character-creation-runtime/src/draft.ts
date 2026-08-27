@@ -166,7 +166,10 @@ function parseDraftSelections(
   const languages =
     selections.success.languages === undefined
       ? Result.succeed(undefined)
-      : parseStartingLanguages(selections.success.languages, `${path}.languages`);
+      : parseStartingLanguages(
+          selections.success.languages,
+          `${path}.languages`,
+        );
   if (Result.isFailure(languages)) return failIssue(languages.failure);
 
   const alignment =
@@ -198,7 +201,8 @@ function parseDraftSelections(
     ...(backgroundAbilityScoreIncrease.success === undefined
       ? {}
       : {
-          backgroundAbilityScoreIncrease: backgroundAbilityScoreIncrease.success,
+          backgroundAbilityScoreIncrease:
+            backgroundAbilityScoreIncrease.success,
         }),
     ...(species.success === undefined
       ? {}
@@ -209,9 +213,15 @@ function parseDraftSelections(
     ...(draconicAncestry.success === undefined
       ? {}
       : { draconicAncestry: draconicAncestry.success }),
-    ...(languages.success === undefined ? {} : { languages: languages.success }),
-    ...(alignment.success === undefined ? {} : { alignment: alignment.success }),
-    ...(equipment.success === undefined ? {} : { equipment: equipment.success }),
+    ...(languages.success === undefined
+      ? {}
+      : { languages: languages.success }),
+    ...(alignment.success === undefined
+      ? {}
+      : { alignment: alignment.success }),
+    ...(equipment.success === undefined
+      ? {}
+      : { equipment: equipment.success }),
   });
 }
 
@@ -319,7 +329,9 @@ function parseAbilityScoreGeneration(
     return invalid(path, "Expected a supported ability score method.");
   }
 
-  const assignedScores = abilityScoreAssignment(selection.success.assignedScores);
+  const assignedScores = abilityScoreAssignment(
+    selection.success.assignedScores,
+  );
   return Result.isFailure(assignedScores)
     ? invalid(
         `${path}.assignedScores`,
@@ -410,7 +422,8 @@ function parseEquipmentSelection(
     "selectedUnitIds",
     `${path}.selectedUnitIds`,
   );
-  if (Result.isFailure(selectedUnitIds)) return failIssue(selectedUnitIds.failure);
+  if (Result.isFailure(selectedUnitIds))
+    return failIssue(selectedUnitIds.failure);
   const parsedUnitIds = collect(
     selectedUnitIds.success.map((unitId, index) =>
       parseString(unitId, `${path}.selectedUnitIds[${index}]`),
@@ -518,7 +531,8 @@ function parseLoadoutSelectionSource(
     "equipmentUnitId",
     `${path}.equipmentUnitId`,
   );
-  if (Result.isFailure(equipmentUnitId)) return failIssue(equipmentUnitId.failure);
+  if (Result.isFailure(equipmentUnitId))
+    return failIssue(equipmentUnitId.failure);
   const parsedEquipmentUnitId = loadoutEquipmentUnitId(equipmentUnitId.success);
   if (Result.isFailure(parsedEquipmentUnitId)) {
     return invalid(

@@ -559,7 +559,10 @@ function acceptedCreationFill(
     /* v8 ignore start -- @preserve -- Validation already admitted this fill against this exact Unit-sourced hole. */
     return Result.isFailure(acceptedFill)
       ? Result.fail(acceptedFill.failure)
-      : Result.succeed({ tag: "unitChoice", acceptedFill: acceptedFill.success });
+      : Result.succeed({
+          tag: "unitChoice",
+          acceptedFill: acceptedFill.success,
+        });
     /* v8 ignore stop -- @preserve */
   }
 
@@ -600,7 +603,8 @@ function acceptedDraftFill(
 
   const choiceFill = acceptedDraftChoiceFillForHole(hole, fill, fillIndex);
   /* v8 ignore next -- @preserve -- Validation already narrowed this to a matching draft choice fill. */
-  if (Result.isFailure(choiceFill)) return applyCreationFillIssue(choiceFill.failure);
+  if (Result.isFailure(choiceFill))
+    return applyCreationFillIssue(choiceFill.failure);
 
   if (path === "draft.progression.initial") {
     const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
@@ -749,7 +753,8 @@ function acceptedUnitFill(
 ): ApplyCreationFillResult<AcceptedUnitFill> {
   const choiceFill = acceptedUnitChoiceFillForHole(hole, fill, fillIndex);
   /* v8 ignore next -- @preserve -- Validation already narrowed this to a matching Unit choice fill. */
-  if (Result.isFailure(choiceFill)) return applyCreationFillIssue(choiceFill.failure);
+  if (Result.isFailure(choiceFill))
+    return applyCreationFillIssue(choiceFill.failure);
 
   if (hole.source.choiceKey === BACKGROUND_ABILITY_SCORE_INCREASE_CHOICE_KEY) {
     const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
@@ -828,11 +833,13 @@ function acceptedLoadoutFill(
 ): ApplyCreationFillResult<AcceptedLoadoutFill> {
   const choiceFill = acceptedLoadoutChoiceFillForHole(hole, fill, fillIndex);
   /* v8 ignore start -- @preserve -- Validation already narrowed this to a matching loadout choice fill. */
-  if (Result.isFailure(choiceFill)) return applyCreationFillIssue(choiceFill.failure);
+  if (Result.isFailure(choiceFill))
+    return applyCreationFillIssue(choiceFill.failure);
   /* v8 ignore stop -- @preserve */
   const singleFill = singleChoiceFill(choiceFill.success.fill, fillIndex);
   /* v8 ignore start -- @preserve -- Validation already enforced this loadout hole's exactly-one cardinality. */
-  if (Result.isFailure(singleFill)) return applyCreationFillIssue(singleFill.failure);
+  if (Result.isFailure(singleFill))
+    return applyCreationFillIssue(singleFill.failure);
   /* v8 ignore stop -- @preserve */
   const option = acceptedChoiceOption(
     choiceFill.success.hole,
@@ -1095,7 +1102,8 @@ function selectedSingleUnitId(
 }> {
   const singleFill = singleChoiceFill(fill, fillIndex);
   /* v8 ignore start -- @preserve -- Validation already enforced this Unit hole's exactly-one cardinality. */
-  if (Result.isFailure(singleFill)) return applyCreationFillIssue(singleFill.failure);
+  if (Result.isFailure(singleFill))
+    return applyCreationFillIssue(singleFill.failure);
   /* v8 ignore stop -- @preserve */
   const unitId = selectedUnitId(
     hole,
@@ -1191,7 +1199,11 @@ function startingLanguages(
     return Result.fail(invalidChoiceIssue(fill, fillIndex, second));
   }
   /* v8 ignore stop -- @preserve */
-  return Result.succeed(["Common", first, second] as CharacterStartingLanguages);
+  return Result.succeed([
+    "Common",
+    first,
+    second,
+  ] as CharacterStartingLanguages);
 }
 
 function backgroundAbilityScoreIncreaseSelection(

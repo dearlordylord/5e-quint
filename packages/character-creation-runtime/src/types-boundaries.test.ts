@@ -34,7 +34,9 @@ import {
 
 function expectRight<A, E>(result: Result.Result<A, E>): A {
   if (Result.isFailure(result)) {
-    expect.fail(`Expected a parsed fixture, received ${String(result.failure)}.`);
+    expect.fail(
+      `Expected a parsed fixture, received ${String(result.failure)}.`,
+    );
   }
   return result.success;
 }

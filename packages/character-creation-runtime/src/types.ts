@@ -637,7 +637,9 @@ function parseCreationHoleIdText(value: string): CreationHoleIdText | null {
   const loadoutPrefix = "cc:loadout-source:";
   if (!value.startsWith(loadoutPrefix)) return null;
   const source = parseLoadoutSourceKey(value.slice(loadoutPrefix.length));
-  return Result.isSuccess(source) ? loadoutSourceHoleIdText(source.success) : null;
+  return Result.isSuccess(source)
+    ? loadoutSourceHoleIdText(source.success)
+    : null;
 }
 
 export const CHARACTER_EQUIPMENT_ITEM_SLOTS = [

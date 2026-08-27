@@ -71,9 +71,11 @@ const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.brand("NonNegativeInteger"),
 );
 const CopperPieceAmountSchema = Schema.Number.pipe(
-  Schema.check(Schema.makeFilter((value) =>
-    isCopperPieceAmount(value) ? undefined : "invalid copper-piece amount",
-  )),
+  Schema.check(
+    Schema.makeFilter((value) =>
+      isCopperPieceAmount(value) ? undefined : "invalid copper-piece amount",
+    ),
+  ),
   Schema.brand("NonNegativeInteger"),
   Schema.brand("CopperPieceAmount"),
 );
@@ -429,7 +431,12 @@ const SpellcastingSchema = Schema.Struct({
         kind: Schema.Literal("spellcasting"),
         slots: Schema.Array(
           Schema.Struct({
-            spellLevel: Schema.Number.pipe(Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 9 }))),
+            spellLevel: Schema.Number.pipe(
+              Schema.check(
+                Schema.isInt(),
+                Schema.isBetween({ minimum: 1, maximum: 9 }),
+              ),
+            ),
             count: Schema.Number.pipe(
               Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
             ),
@@ -440,8 +447,15 @@ const SpellcastingSchema = Schema.Struct({
     pactMagic: Schema.optionalKey(
       Schema.Struct({
         kind: Schema.Literal("pactMagic"),
-        slotLevel: Schema.Number.pipe(Schema.check(Schema.isInt(), Schema.isBetween({ minimum: 1, maximum: 9 }))),
-        count: Schema.Number.pipe(Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0))),
+        slotLevel: Schema.Number.pipe(
+          Schema.check(
+            Schema.isInt(),
+            Schema.isBetween({ minimum: 1, maximum: 9 }),
+          ),
+        ),
+        count: Schema.Number.pipe(
+          Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+        ),
       }),
     ),
   }),
@@ -537,7 +551,11 @@ const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("invalidAbilityScoreIncreaseValue"),
     field: Schema.Literal("maximum"),
-    reason: Schema.Literals(["nonPositive", "unsafeInteger", "maximumOutOfRange"]),
+    reason: Schema.Literals([
+      "nonPositive",
+      "unsafeInteger",
+      "maximumOutOfRange",
+    ]),
   }),
   Schema.Struct({ tag: Schema.Literal("invalidAbilityScoreIncreaseEncoding") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedWeaponCategory") }),
@@ -799,10 +817,7 @@ export const CharacterCreationBatchFactSchema = Schema.Union([
   Schema.check(
     Schema.makeFilter(({ frontier, finalization }) =>
       finalization.tag !== "incomplete" ||
-      isOrderedBlockingHoleIdSubsequence(
-        frontier,
-        finalization.blockingHoleIds,
-      )
+      isOrderedBlockingHoleIdSubsequence(frontier, finalization.blockingHoleIds)
         ? undefined
         : "finalization blocker ids must be an ordered subsequence of the frontier",
     ),

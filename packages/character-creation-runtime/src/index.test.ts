@@ -728,7 +728,9 @@ function testProgression(
     })),
   });
   if (Result.isFailure(result)) {
-    throw new Error(`Invalid test progression: ${JSON.stringify(result.failure)}`);
+    throw new Error(
+      `Invalid test progression: ${JSON.stringify(result.failure)}`,
+    );
   }
 
   return result.success;
@@ -11680,9 +11682,9 @@ describe("character creation finalization", () => {
         decodeProficiencyGrantSubjectOptionId("weapon_category:future"),
       ),
     ).toBe(true);
-    expect(Result.isFailure(decodeProficiencyGrantSubjectOptionId("tool:"))).toBe(
-      true,
-    );
+    expect(
+      Result.isFailure(decodeProficiencyGrantSubjectOptionId("tool:")),
+    ).toBe(true);
     expect(
       Result.isFailure(decodeProficiencyGrantSubjectOptionId("tool:   ")),
     ).toBe(true);
