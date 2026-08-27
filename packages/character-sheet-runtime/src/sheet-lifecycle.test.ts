@@ -135,19 +135,19 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
   );
 
   test.each([
-    { value: null, expectedTag: "Left" },
-    { value: {}, expectedTag: "Left" },
+    { value: null, expectedTag: "Failure" },
+    { value: {}, expectedTag: "Failure" },
     {
       value: { tag: "positive", currentHp: "not-hp" },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: { tag: "positive", currentHp: 2, tempHp: "not-hp" },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     { value: { tag: "positive", currentHp: 2 }, expectedTag: "Right" },
     { value: { tag: "knockedOut", tempHp: 1 }, expectedTag: "Right" },
-    { value: { tag: "zero", lifecycle: null }, expectedTag: "Left" },
+    { value: { tag: "zero", lifecycle: null }, expectedTag: "Failure" },
     {
       value: {
         tag: "zero",
@@ -166,7 +166,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
         tag: "zero",
         lifecycle: { tag: "stable", recovery: null },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: {
@@ -176,7 +176,7 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           recovery: { kind: "unsupportedRecovery" },
         },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: {
@@ -206,14 +206,14 @@ describe("Character Sheet runtime / sheet lifecycle and stored parsing", () => {
           deathSaves: { successes: 0, failures: 4 },
         },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
     {
       value: {
         tag: "zero",
         lifecycle: { tag: "unstable", deathSaves: null },
       },
-      expectedTag: "Left",
+      expectedTag: "Failure",
     },
   ])("parses stored Hit Point boundary case %#", ({ value, expectedTag }) => {
     expect(parseStoredHitPoints(value)._tag).toBe(expectedTag);
