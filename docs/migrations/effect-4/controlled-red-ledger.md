@@ -7,7 +7,7 @@ Environment: Node `v24.18.0`, pnpm `10.29.3`, Linux
 
 Status: the dependency cutover is complete and the cohort gate is green. The
 repository remains intentionally controlled-red for downstream Effect 4 API
-migration: the current owner sweep records six failing package owners, while
+migration: the current owner sweep records five failing package owners, while
 `@dnd/shared-algebras` is at zero diagnostics after #374 and `@dnd/surface` is
 at zero after #373. This ledger is evidence, not a waiver, and does not claim
 product or rule behavior is green.
@@ -81,7 +81,7 @@ Quint Connect manifest consumer, and missing lockfile sections.
 | `pnpm install --frozen-lockfile --strict-peer-dependencies`                                                                                           | pass   | Installed 897 packages with pnpm `10.29.3`; the lockfile was accepted without peer errors. pnpm reported only its existing ignored-build-script notice for `msgpackr-extract`, `protobufjs`, and `unrs-resolver`; this was not a resource or verification failure.                             |
 | `pnpm check:effect4-cohort:self-test`                                                                                                                 | pass   | `Effect 4 cohort verifier self-tests passed`.                                                                                                                                                                                                                                                  |
 | `pnpm check:effect4-cohort`                                                                                                                           | pass   | `Effect 4 cohort verified: 4.0.0-rc.112`.                                                                                                                                                                                                                                                      |
-| `pnpm regenerate:effect4-controlled-red`                                                                                                              | pass   | Regenerated [`controlled-red-inventory.json`](./controlled-red-inventory.json) after #374: 25,223 raw and 11,721 source-keyed deduplicated diagnostics; output SHA-256 `72e8f6bc515e016dd58c934b0725e5179dee4cc773d6147cb3397c42c6ab0c66`.                                                     |
+| `pnpm regenerate:effect4-controlled-red`                                                                                                              | pass   | Regenerated [`controlled-red-inventory.json`](./controlled-red-inventory.json) after #375: 24,056 raw and 11,169 source-keyed deduplicated diagnostics; output SHA-256 `03995f44b977526cbe411e2c2d60258adabe3db890806016f9c68a4243b29ec2`.                                                     |
 | Installed declaration probe                                                                                                                           | pass   | `effect`, `effect/Result`, `effect/Schema`, `@effect/vitest`, and `@effect/platform-node` loaded from the installed tree; `effect/Either` was absent as required by the v4 declaration surface; `Schema.decodeUnknownResult` was present; D&D resolved `@firfi/quint-connect@2.0.2-effect4.2`. |
 | `node --check scripts/check-effect4-cohort.mjs`                                                                                                       | pass   | Verifier parses as valid Node module.                                                                                                                                                                                                                                                          |
 | `node --check scripts/regenerate-effect4-controlled-red.mjs`                                                                                          | pass   | Inventory generator parses as valid Node module.                                                                                                                                                                                                                                               |
@@ -138,8 +138,9 @@ The inventory ran each workspace `typecheck` script once in this order:
 @dnd/tactical-space-prototype
 ```
 
-The four prototype/tactical owners, `@dnd/shared`, `@dnd/shared-algebras`, and
-`@dnd/surface` passed. The six remaining Effect-consuming owners failed. The
+The four prototype/tactical owners, `@dnd/shared`, `@dnd/shared-algebras`,
+`@dnd/surface`, and `@dnd/character-creation-runtime` passed. The five
+remaining Effect-consuming owners failed. The
 raw counts below are
 the committed output's per-command counts; workspace-linked source is repeated
 when a dependent package typechecks it.
@@ -147,20 +148,20 @@ The deduplicated count is the durable closure baseline from the same output.
 
 | Package command owner             | Raw diagnostics |
 | --------------------------------- | --------------: |
-| `@dnd/app`                        |           4,548 |
+| `@dnd/app`                        |           4,426 |
 | `@dnd/battle-runtime`             |           7,723 |
-| `@dnd/character-battle-runtime`   |           5,292 |
-| `@dnd/character-creation-runtime` |             652 |
-| `@dnd/character-sheet-runtime`    |           1,522 |
-| `@dnd/mcp`                        |           5,486 |
+| `@dnd/character-battle-runtime`   |           5,169 |
+| `@dnd/character-creation-runtime` |               0 |
+| `@dnd/character-sheet-runtime`    |           1,365 |
+| `@dnd/mcp`                        |           5,373 |
 | `@dnd/shared`                     |               0 |
 | `@dnd/shared-algebras`            |               0 |
 | `@dnd/surface`                    |               0 |
 | Four prototype/tactical owners    |               0 |
-| **Raw total**                     |      **25,223** |
+| **Raw total**                     |      **24,056** |
 
 The raw total contains repeated linked-source diagnostics. After deduplication
-there are **11,721** diagnostics. The retained
+there are **11,169** diagnostics. The retained
 `scripts/effect3-baseline.ts` oracle remains included because it is imported by
 MCP; the output is authoritative for the complete source-keyed total.
 
@@ -175,16 +176,15 @@ output followed by deduplicated output.
 
 | Diagnostic family                  | Codes                                                                                  |        Raw | Deduplicated |
 | ---------------------------------- | -------------------------------------------------------------------------------------- | ---------: | -----------: |
-| Removed/renamed module entrypoints | TS2305, TS2307                                                                         |        877 |          411 |
-| Removed/renamed Effect API members | TS2551, TS2694, TS2724                                                                 |      2,102 |          753 |
-| Changed schema/type signatures     | TS2314, TS2344, TS2394, TS2554, TS2556, TS2558, TS2560, TS2740, TS2741, TS2749, TS2769 |      2,355 |          730 |
-| Downstream type/inference cascade  | All remaining codes below                                                              |     19,889 |        9,827 |
-| **Total**                          | **All diagnostics**                                                                    | **25,223** |   **11,721** |
+| Removed/renamed module entrypoints | TS2305, TS2307                                                                         |        731 |          357 |
+| Removed/renamed Effect API members | TS2551, TS2694, TS2724                                                                 |      1,797 |          692 |
+| Changed schema/type signatures     | TS2314, TS2344, TS2394, TS2554, TS2556, TS2558, TS2560, TS2740, TS2741, TS2749, TS2769 |      2,060 |          671 |
+| Downstream type/inference cascade  | All remaining codes below                                                              |     19,468 |        9,449 |
+| **Total**                          | **All diagnostics**                                                                    | **24,056** |   **11,169** |
 
-The six workspace owners still affected by the family inventory are
+The five workspace owners still affected by the family inventory are
 `@dnd/app`, `@dnd/battle-runtime`, `@dnd/character-battle-runtime`,
-`@dnd/character-creation-runtime`, `@dnd/character-sheet-runtime`,
-and `@dnd/mcp`.
+`@dnd/character-sheet-runtime`, and `@dnd/mcp`.
 
 ### TypeScript code counts
 
@@ -195,39 +195,39 @@ baseline.
 | Code    |   Raw | Deduplicated |
 | ------- | ----: | -----------: |
 | TS1360  |     2 |            2 |
-| TS18046 | 5,210 |        3,434 |
-| TS18047 |   346 |          118 |
-| TS18048 |    53 |           26 |
-| TS2305  |   684 |          324 |
-| TS2307  |   193 |           87 |
+| TS18046 | 5,122 |        3,346 |
+| TS18047 |   341 |          113 |
+| TS18048 |    36 |            9 |
+| TS2305  |   543 |          271 |
+| TS2307  |   188 |           86 |
 | TS2314  |    44 |           17 |
-| TS2322  | 2,813 |        1,403 |
-| TS2339  | 7,287 |        2,682 |
+| TS2322  | 2,584 |        1,214 |
+| TS2339  | 7,436 |        2,718 |
 | TS2344  |     5 |            2 |
-| TS2345  | 1,638 |          767 |
+| TS2345  | 1,580 |          717 |
 | TS2352  |     1 |            1 |
 | TS2353  |   331 |           94 |
 | TS2367  |     5 |            2 |
 | TS2375  |     2 |            2 |
 | TS2379  |     8 |            2 |
 | TS2488  |     6 |            3 |
-| TS2551  | 2,039 |          726 |
-| TS2554  | 1,556 |          430 |
-| TS2556  |    55 |           16 |
+| TS2551  | 1,734 |          665 |
+| TS2554  | 1,331 |          385 |
+| TS2556  |    40 |           13 |
 | TS2560  |    12 |            4 |
-| TS2571  |   371 |          362 |
+| TS2571  |   358 |          349 |
 | TS2638  |     7 |            7 |
 | TS2694  |    46 |           22 |
-| TS2698  |   330 |          276 |
+| TS2698  |   322 |          268 |
 | TS2700  |     1 |            1 |
 | TS2724  |    17 |            5 |
 | TS2739  |    16 |            4 |
-| TS2740  |   592 |          172 |
+| TS2740  |   537 |          161 |
 | TS2741  |     3 |            3 |
 | TS2749  |     7 |            5 |
 | TS2769  |    81 |           81 |
-| TS7006  | 1,283 |          576 |
-| TS7031  |   136 |           54 |
+| TS7006  | 1,181 |          542 |
+| TS7031  |    86 |           44 |
 | TS7053  |    43 |           11 |
 
 ## Focused reproductions and owners
@@ -352,6 +352,37 @@ waiting on an unrelated broad lock and produced no new result; the earlier
 focused 9/9 MBT pass remains the recorded evidence above. The #374
 reviewer-loop record therefore converged.
 
+## Issue #375 closure evidence
+
+The Character Creation runtime migration is complete at commit `0c03c6e83`.
+Its owner is now green in the regenerated inventory with `exitCode 0` and
+`rawDiagnostics 0`; this is package-scoped evidence and does not claim the
+workspace or the retained Effect 3 behavioral oracle is green. The migration
+uses native Effect 4 `Result` and `Schema` contracts without compatibility
+aliases, adapters, casts, or production behavior changes. The non-MBT test
+assertions were updated from Effect 3 `left`/`right` payloads to Effect 4
+`failure`/`success` payloads while preserving the existing behavioral,
+accumulation, and ordering assertions.
+
+| Command                                                                            | Result                                            |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `pnpm --filter @dnd/character-creation-runtime typecheck --pretty false`           | pass; zero diagnostics                            |
+| `pnpm --filter @dnd/character-creation-runtime test`                               | pass; 28 files, 474 passed, 2 skipped (476 total) |
+| `pnpm --filter @dnd/character-creation-runtime test:qnt-slice`                     | pass; 1 passed, 196 skipped                       |
+| `pnpm --filter @dnd/character-creation-runtime test:qnt-proofs`                    | pass; 3 passed                                    |
+| `pnpm --filter @dnd/character-creation-runtime test:mbt:weapon-mastery-level-gain` | pass; 3 passed                                    |
+| Focused Prettier and ESLint checks                                                 | pass                                              |
+
+The focused test migration initially exposed 97 stale Effect 3 shape
+assertions; after correction, the focused set passed 289/289 and the full
+package suite passed as recorded above. The QNT slice, proof, and MBT results
+are package-owned evidence. No workspace-wide green claim is implied; the
+five remaining failing owners and the historical `scripts/effect3-baseline.ts`
+oracle remain controlled-red.
+
+The independent Standards and Spec reviews found no actionable findings. The
+#375 reviewer loop therefore converged.
+
 ## Closure conditions
 
 Close this controlled-red interval only when all of the following are true:
@@ -360,7 +391,7 @@ Close this controlled-red interval only when all of the following are true:
    with the exact values in this ledger, and the lockfile still contains one
    `effect` version (`4.0.0-rc.112`) with no removed or unsupported Effect
    packages.
-2. The six currently affected workspace owners and `scripts/effect3-baseline.ts` have
+2. The five currently affected workspace owners and `scripts/effect3-baseline.ts` have
    zero deduplicated diagnostics. The code-count table is regenerated rather
    than manually decremented.
 3. Direct `pnpm build`, `pnpm typecheck`, and `pnpm test` pass under the public

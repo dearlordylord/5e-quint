@@ -1,5 +1,5 @@
 import { unitId as authoredUnitId } from "@dnd/shared/game-facts";
-import { Either, ParseResult } from "effect";
+import { Result, Schema, SchemaIssue } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -55,19 +55,19 @@ function projectedBatchFact(
   result: CreationBatchFillResult,
 ): CharacterCreationBatchFact {
   const projection = characterCreationBatchFact(result);
-  if (Either.isLeft(projection)) {
+  if (Result.isFailure(projection)) {
     throw new Error("Expected the synthetic owner result to project.");
   }
-  return projection.right;
+  return projection.success;
 }
 
 function parseErrorMessage(
-  result: Either.Either<unknown, ParseResult.ParseError>,
+  result: Result.Result<unknown, Schema.SchemaError>,
 ): string {
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected the synthetic malformed fact to be rejected.");
   }
-  return ParseResult.TreeFormatter.formatErrorSync(result.left);
+  return SchemaIssue.makeFormatterDefault()(result.failure.issue);
 }
 
 type ExpandProperty<Value, Key extends PropertyKey> =
@@ -233,7 +233,7 @@ describe("Character Creation owner facts", () => {
         },
       ],
     });
-    expect(decodeCreationFrontierFact(fact)._tag).toBe("Right");
+    expect(decodeCreationFrontierFact(fact)._tag).toBe("Success");
   });
 
   test("projects every durable Character Build fact shape", () => {
@@ -247,34 +247,34 @@ describe("Character Creation owner facts", () => {
       "sorcerer_empowered_spell",
     );
     for (const parsedUnitId of Object.values(parsedEquipmentUnitIds)) {
-      expect(Either.isRight(parsedUnitId)).toBe(true);
+      expect(Result.isSuccess(parsedUnitId)).toBe(true);
     }
-    expect(Either.isRight(parsedMetamagicOptionId)).toBe(true);
+    expect(Result.isSuccess(parsedMetamagicOptionId)).toBe(true);
     if (
-      Either.isLeft(parsedEquipmentUnitIds.armor) ||
-      Either.isLeft(parsedEquipmentUnitIds.shield) ||
-      Either.isLeft(parsedEquipmentUnitIds.main) ||
-      Either.isLeft(parsedEquipmentUnitIds.off) ||
-      Either.isLeft(parsedMetamagicOptionId)
+      Result.isFailure(parsedEquipmentUnitIds.armor) ||
+      Result.isFailure(parsedEquipmentUnitIds.shield) ||
+      Result.isFailure(parsedEquipmentUnitIds.main) ||
+      Result.isFailure(parsedEquipmentUnitIds.off) ||
+      Result.isFailure(parsedMetamagicOptionId)
     ) {
       expect.fail("Expected synthetic Character Build ids to parse.");
     }
 
     const armorItemId = characterEquipmentItemId({
       slot: "armor",
-      unitId: parsedEquipmentUnitIds.armor.right,
+      unitId: parsedEquipmentUnitIds.armor.success,
     });
     const shieldItemId = characterEquipmentItemId({
       slot: "shield",
-      unitId: parsedEquipmentUnitIds.shield.right,
+      unitId: parsedEquipmentUnitIds.shield.success,
     });
     const mainWeaponItemId = characterEquipmentItemId({
       slot: "main",
-      unitId: parsedEquipmentUnitIds.main.right,
+      unitId: parsedEquipmentUnitIds.main.success,
     });
     const offHandWeaponItemId = characterEquipmentItemId({
       slot: "off",
-      unitId: parsedEquipmentUnitIds.off.right,
+      unitId: parsedEquipmentUnitIds.off.success,
     });
     const syntheticUnitId = authoredUnitId("synthetic_unit");
     const build = {
@@ -364,7 +364,7 @@ describe("Character Creation owner facts", () => {
         {
           kind: "selectedSorcererMetamagicOption",
           selectedFromUnitId: syntheticUnitId,
-          optionId: parsedMetamagicOptionId.right,
+          optionId: parsedMetamagicOptionId.success,
         },
         {
           kind: "abilityCheckBonus",
@@ -465,7 +465,7 @@ describe("Character Creation owner facts", () => {
     } as const satisfies CharacterBuild;
 
     const fact = characterBuildFact(build);
-    expect(decodeCharacterBuildFact(fact)).toHaveProperty("_tag", "Right");
+    expect(decodeCharacterBuildFact(fact)).toHaveProperty("_tag", "Success");
     expect(fact).not.toHaveProperty("equipment.owned.0.unitId");
     expect(fact.speciesChoiceFacts).toEqual({
       draconicAncestry: {
@@ -531,7 +531,10 @@ describe("Character Creation owner facts", () => {
         spellcastingFocusKind: "arcane",
       }),
     );
-    expect(decodeCharacterBuildFact(focusFact)).toHaveProperty("_tag", "Right");
+    expect(decodeCharacterBuildFact(focusFact)).toHaveProperty(
+      "_tag",
+      "Success",
+    );
 
     const gnomishFact = characterBuildFact({
       ...build,
@@ -556,7 +559,7 @@ describe("Character Creation owner facts", () => {
     const fact = characterBuildFact(syntheticBuild());
 
     expect(fact.spellcasting).toBeUndefined();
-    expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Success");
   });
 
   test("round-trips exact Magic Initiate spell-access selections", () => {
@@ -583,7 +586,7 @@ describe("Character Creation owner facts", () => {
         levelOneSpell: "synthetic_level_one_spell",
       },
     ]);
-    expect(decodeCharacterBuildFact(fact)).toHaveProperty("_tag", "Right");
+    expect(decodeCharacterBuildFact(fact)).toHaveProperty("_tag", "Success");
     expect(
       decodeCharacterBuildFact({
         ...fact,
@@ -591,7 +594,7 @@ describe("Character Creation owner facts", () => {
           { ...fact.magicInitiateSpellAccesses[0], cantrips: ["only_one"] },
         ],
       }),
-    ).toHaveProperty("_tag", "Left");
+    ).toHaveProperty("_tag", "Failure");
   });
 
   test("omits only the absent spellcasting slot-pool variant", () => {
@@ -709,7 +712,7 @@ describe("Character Creation owner facts", () => {
         ],
       },
     });
-    expect(decodeCharacterCreationBatchFact(batchFact)._tag).toBe("Right");
+    expect(decodeCharacterCreationBatchFact(batchFact)._tag).toBe("Success");
   });
 
   test("reports each cross-field fact invariant in decoder diagnostics", () => {
@@ -825,15 +828,15 @@ describe("Character Creation owner facts", () => {
     const equipmentUnitId = loadoutEquipmentUnitId("synthetic_equipment");
     const between = boundedChoiceCardinality({ min: 1, max: 2 });
     const exact = exactChoiceCardinality(1);
-    expect(Either.isRight(unitId)).toBe(true);
-    expect(Either.isRight(choiceKey)).toBe(true);
-    expect(Either.isRight(equipmentUnitId)).toBe(true);
+    expect(Result.isSuccess(unitId)).toBe(true);
+    expect(Result.isSuccess(choiceKey)).toBe(true);
+    expect(Result.isSuccess(equipmentUnitId)).toBe(true);
     expect(between).toBeDefined();
     expect(exact).toBeDefined();
     if (
-      Either.isLeft(unitId) ||
-      Either.isLeft(choiceKey) ||
-      Either.isLeft(equipmentUnitId) ||
+      Result.isFailure(unitId) ||
+      Result.isFailure(choiceKey) ||
+      Result.isFailure(equipmentUnitId) ||
       between === undefined ||
       exact === undefined
     ) {
@@ -845,8 +848,8 @@ describe("Character Creation owner facts", () => {
       holeId: creationHoleId("cc:draft:draft.background"),
       source: {
         tag: "unitChoice",
-        unitId: unitId.right,
-        choiceKey: choiceKey.right,
+        unitId: unitId.success,
+        choiceKey: choiceKey.success,
       },
       cardinality: between,
       options: [
@@ -877,7 +880,7 @@ describe("Character Creation owner facts", () => {
       holeId: creationHoleId("cc:draft:draft.background"),
       source: {
         tag: "loadout",
-        equipmentUnitId: equipmentUnitId.right,
+        equipmentUnitId: equipmentUnitId.success,
         slot: "weapon",
       },
       cardinality: exact,
@@ -897,7 +900,7 @@ describe("Character Creation owner facts", () => {
 
     for (const hole of [unitChoiceHole, loadoutHole, abilityScoresHole]) {
       const fact = creationHoleFact(hole);
-      expect(decodeCreationHoleFact(fact)).toHaveProperty("_tag", "Right");
+      expect(decodeCreationHoleFact(fact)).toHaveProperty("_tag", "Success");
     }
     expect(
       creationFillFact({
@@ -944,7 +947,7 @@ describe("Character Creation owner facts", () => {
     ]);
     expect(
       decodeCreationFillFact({ ...fact, label: "presentation" })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
   });
 
   test("projects owner rejections without draft protocol state or prose", () => {
@@ -988,7 +991,7 @@ describe("Character Creation owner facts", () => {
       },
     });
     expect(fact).not.toHaveProperty("draft");
-    expect(decodeCharacterCreationBatchFact(fact)._tag).toBe("Right");
+    expect(decodeCharacterCreationBatchFact(fact)._tag).toBe("Success");
     expect(
       decodeCharacterCreationBatchFact({
         ...fact,
@@ -997,7 +1000,7 @@ describe("Character Creation owner facts", () => {
           blockingHoleIds: ["cc:draft:draft.species"],
         },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
     expect(
       decodeCharacterCreationBatchFact({
         ...fact,
@@ -1009,7 +1012,7 @@ describe("Character Creation owner facts", () => {
           ],
         },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
   });
 
   test("requires finalization blocker identity to follow frontier order", () => {
@@ -1035,7 +1038,7 @@ describe("Character Creation owner facts", () => {
     };
     const fact = projectedBatchFact(result);
 
-    expect(decodeCharacterCreationBatchFact(fact)._tag).toBe("Right");
+    expect(decodeCharacterCreationBatchFact(fact)._tag).toBe("Success");
     expect(
       decodeCharacterCreationBatchFact({
         ...fact,
@@ -1047,7 +1050,7 @@ describe("Character Creation owner facts", () => {
           ],
         },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
   });
 
   test("returns a typed projection failure for inconsistent owner results", () => {
@@ -1069,7 +1072,7 @@ describe("Character Creation owner facts", () => {
         holes: [frontierHole],
         finalization: { tag: "incomplete", holes: [absentBlockingHole] },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
   });
 
   test("distinguishes finalization blockers from the fillable frontier", () => {
@@ -1442,7 +1445,7 @@ describe("Character Creation owner facts", () => {
       }
       expect(
         decodeCreationFinalizationRejectionFact(projection.issues[0]),
-      ).toHaveProperty("_tag", "Right");
+      ).toHaveProperty("_tag", "Success");
     }
   });
 
@@ -1458,26 +1461,26 @@ describe("Character Creation owner facts", () => {
     } as const;
 
     expect(decodeCreationFinalizationRejectionFact(rejection)._tag).toBe(
-      "Right",
+      "Success",
     );
     expect(
       decodeCreationFinalizationRejectionFact({
         ...rejection,
         message: "presentation prose",
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
     expect(
       decodeCreationFinalizationRejectionFact({
         ...rejection,
         cause: { ...rejection.cause, excess: 0 },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
     expect(
       decodeCreationFinalizationRejectionFact({
         ...rejection,
         cause: { ...rejection.cause, maximum: 20 },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
     expect(
       decodeCreationFinalizationRejectionFact({
         tag: "characterBuildProjection",
@@ -1491,13 +1494,13 @@ describe("Character Creation owner facts", () => {
           },
         },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
     expect(
       decodeCreationFinalizationRejectionFact({
         ...rejection,
         cause: { ...rejection.cause, detail: "untyped detail" },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
     expect(
       decodeCreationFinalizationRejectionFact({
         tag: "characterBuildProjection",
@@ -1511,7 +1514,7 @@ describe("Character Creation owner facts", () => {
           },
         },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
     expect(
       decodeCreationFinalizationRejectionFact({
         tag: "characterBuildProjection",
@@ -1525,7 +1528,7 @@ describe("Character Creation owner facts", () => {
           },
         },
       })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
   });
 
   test("exhaustively projects nested count mismatch causes", () => {
@@ -1611,10 +1614,10 @@ describe("Character Creation owner facts", () => {
     const fact = characterBuildFact(syntheticBuild());
 
     expect(fact).toEqual(syntheticBuild());
-    expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Success");
     expect(
       decodeCharacterBuildFact({ ...fact, displayName: "Nope" })._tag,
-    ).toBe("Left");
+    ).toBe("Failure");
   });
 
   test("projects owned equipment once through its canonical item identity", () => {
@@ -1622,12 +1625,12 @@ describe("Character Creation owner facts", () => {
     const equipmentUnitId = characterEquipmentItemUnitId(
       authoredUnitId("weapon_synthetic"),
     );
-    if (equipmentUnitId._tag === "Left") {
+    if (equipmentUnitId._tag === "Failure") {
       throw new Error("Expected the synthetic equipment Unit id to parse.");
     }
     const itemId = characterEquipmentItemId({
       slot: "main",
-      unitId: equipmentUnitId.right,
+      unitId: equipmentUnitId.success,
     });
     const fact = characterBuildFact({
       ...build,
@@ -1649,6 +1652,6 @@ describe("Character Creation owner facts", () => {
     expect(fact.equipment.owned).toEqual([
       { kind: "catalogItem", itemId, quantity: 1 },
     ]);
-    expect(decodeCharacterBuildFact(fact)._tag).toBe("Right");
+    expect(decodeCharacterBuildFact(fact)._tag).toBe("Success");
   });
 });

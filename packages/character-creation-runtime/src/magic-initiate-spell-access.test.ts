@@ -6,7 +6,7 @@ import {
   type UnitCatalog,
 } from "@dnd/surface/surface/unit-catalog";
 import type { SpeciesTraitRecord } from "@dnd/surface/surface/types";
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { eldritchInvocationId } from "./types.ts";
@@ -160,9 +160,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.map((issue) => issue.message)).toContain(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.map((issue) => issue.message)).toContain(
         "Character Build cannot acquire Magic Initiate more than once for the same spell list.",
       );
     }
@@ -179,7 +179,7 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(result).toEqual(Either.right([wizardAccess, clericAccess]));
+    expect(result).toEqual(Result.succeed([wizardAccess, clericAccess]));
   });
 
   test("does not treat an unrelated selected feature as a Human grant", () => {
@@ -198,9 +198,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.map((issue) => issue.message)).toContain(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.map((issue) => issue.message)).toContain(
         "Magic Initiate Spell Access source Unit feat_magic_initiate_wizard is not owned by the Character Build.",
       );
     }
@@ -241,7 +241,7 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
         },
         unitLibrary: catalogWithMissingGrantedFeat,
       }),
-    ).toEqual(Either.right([]));
+    ).toEqual(Result.succeed([]));
   });
 
   test("rejects a non-array Magic Initiate access value at the boundary", () => {
@@ -252,7 +252,7 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
     });
 
     expect(result).toEqual(
-      Either.left([
+      Result.fail([
         { message: "Character Build requires Magic Initiate Spell Accesses." },
       ]),
     );
@@ -268,7 +268,7 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       });
 
       expect(result).toEqual(
-        Either.left([
+        Result.fail([
           {
             index: 0,
             message:
@@ -300,9 +300,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      const messages = result.left.map((issue) => issue.message);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      const messages = result.failure.map((issue) => issue.message);
       expect(messages).toContain(
         `Magic Initiate Spell Access source Unit ${featUnitId} is not owned by the Character Build.`,
       );
@@ -327,9 +327,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.map((issue) => issue.message)).toContain(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.map((issue) => issue.message)).toContain(
         "Magic Initiate cantrips must be two distinct cantrips from the selected spell list.",
       );
     }
@@ -350,9 +350,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.map((issue) => issue.message)).toContain(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.map((issue) => issue.message)).toContain(
         "Magic Initiate level-1 spell must come from the selected spell list.",
       );
     }
@@ -368,9 +368,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary: catalogWithoutSpellcastingClasses,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      const messages = result.left.map((issue) => issue.message);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      const messages = result.failure.map((issue) => issue.message);
       expect(messages).toContain(
         "Magic Initiate cantrips must be two distinct cantrips from the selected spell list.",
       );
@@ -391,7 +391,7 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
     });
 
     expect(result).toEqual(
-      Either.left([
+      Result.fail([
         {
           message:
             "Character Build requires exactly one Magic Initiate Spell Access for owned source Unit feat_magic_initiate_wizard.",
@@ -411,9 +411,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      const messages = result.left.map((issue) => issue.message);
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      const messages = result.failure.map((issue) => issue.message);
       expect(messages).toContain(
         "Character Build cannot acquire Magic Initiate more than once for the same spell list.",
       );
@@ -433,9 +433,9 @@ describe("creation-owned Magic Initiate Spell Access parsing", () => {
       unitLibrary,
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left.map((issue) => issue.message)).toContain(
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure.map((issue) => issue.message)).toContain(
         "Character Build Magic Initiate Spell Accesses must use distinct spell lists.",
       );
     }

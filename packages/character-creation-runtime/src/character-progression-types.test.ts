@@ -2,7 +2,7 @@ import {
   characterClassLevel,
   unitId as authoredUnitId,
 } from "@dnd/shared/game-facts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -34,21 +34,21 @@ describe("Character progression typed boundaries", () => {
         totalLevel: characterClassLevel(1),
         hitPointRule: levelOneHitPoints,
       }),
-    ).toHaveProperty("_tag", "Right");
+    ).toHaveProperty("_tag", "Success");
     expect(
       characterTotalLevelHitPointRule({
         totalLevel: characterClassLevel(2),
         hitPointRule: fixedHitPoints,
       }),
-    ).toHaveProperty("_tag", "Right");
+    ).toHaveProperty("_tag", "Success");
     expect(
       characterTotalLevelHitPointRule({
         totalLevel: characterClassLevel(2),
         hitPointRule: levelOneHitPoints,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "invalidHitPointRuleForLevel", totalLevel: 2 },
+      _tag: "Failure",
+      failure: { code: "invalidHitPointRuleForLevel", totalLevel: 2 },
     });
     expect(
       characterTotalLevelHitPointRule({
@@ -56,8 +56,8 @@ describe("Character progression typed boundaries", () => {
         hitPointRule: fixedHitPoints,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "invalidHitPointRuleForLevel", totalLevel: 1 },
+      _tag: "Failure",
+      failure: { code: "invalidHitPointRuleForLevel", totalLevel: 1 },
     });
   });
 
@@ -69,7 +69,7 @@ describe("Character progression typed boundaries", () => {
         hitPointRule: fixedHitPoints,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         classUnitId: fighterUnitId,
         hitPointRule: fixedHitPoints,
       }),
@@ -81,8 +81,8 @@ describe("Character progression typed boundaries", () => {
         hitPointRule: fixedHitPoints,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "invalidHitPointRuleForLevel" },
+      _tag: "Failure",
+      failure: { code: "invalidHitPointRuleForLevel" },
     });
   });
 
@@ -98,7 +98,7 @@ describe("Character progression typed boundaries", () => {
         hitPointRule: fixedHitPoints,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         startingClass: fighterUnitId,
         advancements: [
           { classUnitId: wizardUnitId, hitPointRule: fixedHitPoints },
@@ -120,7 +120,7 @@ describe("Character progression typed boundaries", () => {
         hitPointRule: fixedHitPoints,
       }),
     ).toEqual(
-      Either.left({ code: "invalidCharacterClassLevel", classLevel: 21 }),
+      Result.fail({ code: "invalidCharacterClassLevel", classLevel: 21 }),
     );
   });
 

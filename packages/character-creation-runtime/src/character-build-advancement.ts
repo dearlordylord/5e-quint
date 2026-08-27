@@ -4,7 +4,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.fighting-style-cantrip-advancement-replacement
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.weapon-mastery-level-gain
 // UNIT-PROFILE-COVERAGE: runtime-owner character-creation.bard-magical-secrets-spell-access
-import { Brand, Either, Match, Option } from "effect";
+import { Brand, Result, Match, Option } from "effect";
 import type { ClassName } from "@dnd/shared/game-facts";
 import { classCreationFacts } from "@dnd/surface/surface/character-creation-readers";
 import {
@@ -736,15 +736,15 @@ type PactMagicProgressionRow =
 export function fighterClassUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-}): Either.Either<FighterClassUnitId, CharacterBuildAdvancementIssue> {
+}): Result.Result<FighterClassUnitId, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   if (facts.className !== FIGHTER_CLASS_NAME) {
-    return Either.left({
+    return Result.fail({
       code: "nonFighterClassLevelGain",
       classUnitId: input.classUnitId,
       className: facts.className,
@@ -753,21 +753,21 @@ export function fighterClassUnitId(input: {
     });
   }
 
-  return Either.right(FighterClassUnitId(input.classUnitId));
+  return Result.succeed(FighterClassUnitId(input.classUnitId));
 }
 
 export function warlockClassUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-}): Either.Either<WarlockClassUnitId, CharacterBuildAdvancementIssue> {
+}): Result.Result<WarlockClassUnitId, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   if (facts.className !== WARLOCK_CLASS_NAME) {
-    return Either.left({
+    return Result.fail({
       code: "nonWarlockClassLevelGain",
       classUnitId: input.classUnitId,
       className: facts.className,
@@ -776,21 +776,21 @@ export function warlockClassUnitId(input: {
     });
   }
 
-  return Either.right(WarlockClassUnitId(input.classUnitId));
+  return Result.succeed(WarlockClassUnitId(input.classUnitId));
 }
 
 export function sorcererClassUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
-}): Either.Either<SorcererClassUnitId, CharacterBuildAdvancementIssue> {
+}): Result.Result<SorcererClassUnitId, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   if (facts.className !== SORCERER_CLASS_NAME) {
-    return Either.left({
+    return Result.fail({
       code: "nonSorcererClassLevelGain",
       classUnitId: input.classUnitId,
       className: facts.className,
@@ -799,16 +799,16 @@ export function sorcererClassUnitId(input: {
     });
   }
 
-  return Either.right(SorcererClassUnitId(input.classUnitId));
+  return Result.succeed(SorcererClassUnitId(input.classUnitId));
 }
 
 export function fightingStyleFeatUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly unitId: UnitRecord["id"];
-}): Either.Either<FightingStyleFeatUnitId, CharacterBuildAdvancementIssue> {
+}): Result.Result<FightingStyleFeatUnitId, CharacterBuildAdvancementIssue> {
   const unit = input.unitLibrary.getUnit(input.unitId);
   if (Option.isNone(unit)) {
-    return Either.left({
+    return Result.fail({
       code: "unknownUnitId",
       unitId: input.unitId,
       message: `Unknown Unit id ${input.unitId}.`,
@@ -816,7 +816,7 @@ export function fightingStyleFeatUnitId(input: {
   }
 
   if (unit.value.kind !== "feat") {
-    return Either.left({
+    return Result.fail({
       code: "nonFightingStyleFeat",
       unitId: input.unitId,
       unitKind: unit.value.kind,
@@ -825,7 +825,7 @@ export function fightingStyleFeatUnitId(input: {
   }
 
   if (unit.value.category !== FIGHTING_STYLE_FEAT_CATEGORY) {
-    return Either.left({
+    return Result.fail({
       code: "nonFightingStyleFeat",
       unitId: input.unitId,
       featCategory: unit.value.category,
@@ -833,27 +833,28 @@ export function fightingStyleFeatUnitId(input: {
     });
   }
 
-  return Either.right(FightingStyleFeatUnitId(input.unitId));
+  return Result.succeed(FightingStyleFeatUnitId(input.unitId));
 }
 
 export function fightingStyleCantripUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
   readonly unitId: UnitRecord["id"];
-}): Either.Either<FightingStyleCantripUnitId, CharacterBuildAdvancementIssue> {
+}): Result.Result<FightingStyleCantripUnitId, CharacterBuildAdvancementIssue> {
   const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
   /* v8 ignore start -- @preserve -- The typed Fighting Style cantrip route was admitted from this exact class feature choice. */
-  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   if (
     !allCantripsFromClassSpellList({
-      className: featureChoice.right.grant.spellList,
+      className: featureChoice.success.grant.spellList,
       spellIds: [input.unitId],
       unitLibrary: input.unitLibrary,
     })
   ) {
-    return Either.left({
+    return Result.fail({
       code: "invalidFightingStyleCantripReplacement",
       cantripId: input.unitId,
       message:
@@ -861,16 +862,16 @@ export function fightingStyleCantripUnitId(input: {
     });
   }
 
-  return Either.right(FightingStyleCantripUnitId(input.unitId));
+  return Result.succeed(FightingStyleCantripUnitId(input.unitId));
 }
 
 export function weaponMasteryFeatureUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly unitId: UnitRecord["id"];
-}): Either.Either<WeaponMasteryFeatureUnitId, CharacterBuildAdvancementIssue> {
+}): Result.Result<WeaponMasteryFeatureUnitId, CharacterBuildAdvancementIssue> {
   const unit = input.unitLibrary.getUnit(input.unitId);
   if (Option.isNone(unit)) {
-    return Either.left({
+    return Result.fail({
       code: "unknownUnitId",
       unitId: input.unitId,
       message: `Unknown Unit id ${input.unitId}.`,
@@ -878,7 +879,7 @@ export function weaponMasteryFeatureUnitId(input: {
   }
 
   if (!isWeaponMasteryChoiceFeature(unit.value)) {
-    return Either.left({
+    return Result.fail({
       code: "nonWeaponMasteryFeature",
       unitId: input.unitId,
       unitKind: unit.value.kind,
@@ -886,16 +887,16 @@ export function weaponMasteryFeatureUnitId(input: {
     });
   }
 
-  return Either.right(WeaponMasteryFeatureUnitId(input.unitId));
+  return Result.succeed(WeaponMasteryFeatureUnitId(input.unitId));
 }
 
 export function weaponMasteryWeaponUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly unitId: UnitRecord["id"];
-}): Either.Either<WeaponMasteryWeaponUnitId, CharacterBuildAdvancementIssue> {
+}): Result.Result<WeaponMasteryWeaponUnitId, CharacterBuildAdvancementIssue> {
   const unit = input.unitLibrary.getUnit(input.unitId);
   if (Option.isNone(unit)) {
-    return Either.left({
+    return Result.fail({
       code: "unknownUnitId",
       unitId: input.unitId,
       message: `Unknown Unit id ${input.unitId}.`,
@@ -903,7 +904,7 @@ export function weaponMasteryWeaponUnitId(input: {
   }
 
   if (unit.value.kind !== "weapon") {
-    return Either.left({
+    return Result.fail({
       code: "nonWeaponMasteryWeapon",
       unitId: input.unitId,
       unitKind: unit.value.kind,
@@ -911,7 +912,7 @@ export function weaponMasteryWeaponUnitId(input: {
     });
   }
 
-  return Either.right(WeaponMasteryWeaponUnitId(input.unitId));
+  return Result.succeed(WeaponMasteryWeaponUnitId(input.unitId));
 }
 
 export function weaponMasteryLevelGain(input: {
@@ -923,7 +924,7 @@ export function weaponMasteryLevelGain(input: {
   readonly fightingStyleReplacement?: {
     readonly selectedFeatUnitId: UnitRecord["id"];
   };
-}): Either.Either<
+}): Result.Result<
   CharacterBuildWeaponMasteryLevelGain,
   CharacterBuildAdvancementIssue
 > {
@@ -931,7 +932,8 @@ export function weaponMasteryLevelGain(input: {
     unitLibrary: input.unitLibrary,
     unitId: input.featureUnitId,
   });
-  if (Either.isLeft(featureUnitId)) return Either.left(featureUnitId.left);
+  if (Result.isFailure(featureUnitId))
+    return Result.fail(featureUnitId.failure);
 
   const selectedWeaponUnitIds: WeaponMasteryWeaponUnitId[] = [];
   for (const unitId of input.selectedWeaponUnitIds) {
@@ -939,44 +941,44 @@ export function weaponMasteryLevelGain(input: {
       unitLibrary: input.unitLibrary,
       unitId,
     });
-    if (Either.isLeft(selectedWeaponUnitId)) {
-      return Either.left(selectedWeaponUnitId.left);
+    if (Result.isFailure(selectedWeaponUnitId)) {
+      return Result.fail(selectedWeaponUnitId.failure);
     }
-    selectedWeaponUnitIds.push(selectedWeaponUnitId.right);
+    selectedWeaponUnitIds.push(selectedWeaponUnitId.success);
   }
 
   if (input.fightingStyleReplacement !== undefined) {
     const classUnitId = fighterClassUnitId(input);
-    if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+    if (Result.isFailure(classUnitId)) return Result.fail(classUnitId.failure);
 
     const selectedFeatUnitId = fightingStyleFeatUnitId({
       unitLibrary: input.unitLibrary,
       unitId: input.fightingStyleReplacement.selectedFeatUnitId,
     });
-    if (Either.isLeft(selectedFeatUnitId)) {
-      return Either.left(selectedFeatUnitId.left);
+    if (Result.isFailure(selectedFeatUnitId)) {
+      return Result.fail(selectedFeatUnitId.failure);
     }
 
-    return Either.right({
+    return Result.succeed({
       tag: "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement",
-      classUnitId: classUnitId.right,
+      classUnitId: classUnitId.success,
       hitPointRule: input.hitPointRule,
       weaponMastery: {
-        featureUnitId: featureUnitId.right,
+        featureUnitId: featureUnitId.success,
         selectedWeaponUnitIds,
       },
       fightingStyleReplacement: {
-        selectedFeatUnitId: selectedFeatUnitId.right,
+        selectedFeatUnitId: selectedFeatUnitId.success,
       },
     });
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "classLevelGainWithWeaponMasterySelection",
     classUnitId: input.classUnitId,
     hitPointRule: input.hitPointRule,
     weaponMastery: {
-      featureUnitId: featureUnitId.right,
+      featureUnitId: featureUnitId.success,
       selectedWeaponUnitIds,
     },
   });
@@ -987,27 +989,27 @@ export function fighterLevelGainWithFightingStyleReplacement(input: {
   readonly classUnitId: ClassUnitId;
   readonly hitPointRule: FixedHigherLevelClassHitPointRule;
   readonly selectedFeatUnitId: UnitRecord["id"];
-}): Either.Either<
+}): Result.Result<
   CharacterBuildFighterFightingStyleReplacementLevelGain,
   CharacterBuildAdvancementIssue
 > {
   const classUnitId = fighterClassUnitId(input);
-  if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+  if (Result.isFailure(classUnitId)) return Result.fail(classUnitId.failure);
 
   const selectedFeatUnitId = fightingStyleFeatUnitId({
     unitLibrary: input.unitLibrary,
     unitId: input.selectedFeatUnitId,
   });
-  if (Either.isLeft(selectedFeatUnitId)) {
-    return Either.left(selectedFeatUnitId.left);
+  if (Result.isFailure(selectedFeatUnitId)) {
+    return Result.fail(selectedFeatUnitId.failure);
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "fighterLevelGainWithFightingStyleReplacement",
-    classUnitId: classUnitId.right,
+    classUnitId: classUnitId.success,
     hitPointRule: input.hitPointRule,
     replacement: {
-      selectedFeatUnitId: selectedFeatUnitId.right,
+      selectedFeatUnitId: selectedFeatUnitId.success,
     },
   });
 }
@@ -1019,13 +1021,14 @@ export function classLevelGainWithFightingStyleCantripReplacement(input: {
   readonly replaceCantripId: UnitRecord["id"];
   readonly selectedCantripId: UnitRecord["id"];
   readonly preparedSpellcasting: CharacterBuildListPreparedSpellcastingLevelGain;
-}): Either.Either<
+}): Result.Result<
   CharacterBuildFightingStyleCantripReplacementLevelGain,
   CharacterBuildAdvancementIssue
 > {
   const featureChoice = fightingStyleCantripFeatureChoiceForClass(input);
   /* v8 ignore start -- @preserve -- The typed Fighting Style replacement route was admitted from this exact cantrip feature choice. */
-  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const replaceCantripId = fightingStyleCantripUnitId({
@@ -1034,8 +1037,8 @@ export function classLevelGainWithFightingStyleCantripReplacement(input: {
     unitId: input.replaceCantripId,
   });
   /* v8 ignore start -- @preserve -- The route parser already narrowed the replaced cantrip id against the retained Fighting Style selection. */
-  if (Either.isLeft(replaceCantripId))
-    return Either.left(replaceCantripId.left);
+  if (Result.isFailure(replaceCantripId))
+    return Result.fail(replaceCantripId.failure);
   /* v8 ignore stop -- @preserve */
 
   const selectedCantripId = fightingStyleCantripUnitId({
@@ -1043,17 +1046,17 @@ export function classLevelGainWithFightingStyleCantripReplacement(input: {
     classUnitId: input.classUnitId,
     unitId: input.selectedCantripId,
   });
-  if (Either.isLeft(selectedCantripId)) {
-    return Either.left(selectedCantripId.left);
+  if (Result.isFailure(selectedCantripId)) {
+    return Result.fail(selectedCantripId.failure);
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "classLevelGainWithFightingStyleCantripReplacement",
     classUnitId: input.classUnitId,
     hitPointRule: input.hitPointRule,
     replacement: {
-      replaceCantripId: replaceCantripId.right,
-      selectedCantripId: selectedCantripId.right,
+      replaceCantripId: replaceCantripId.success,
+      selectedCantripId: selectedCantripId.success,
     },
     preparedSpellcasting: input.preparedSpellcasting,
   });
@@ -1069,21 +1072,21 @@ export function warlockLevelGain(input: {
     readonly replaceInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
     readonly selectedInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
   };
-}): Either.Either<
+}): Result.Result<
   CharacterBuildWarlockLevelGain,
   CharacterBuildAdvancementIssue
 > {
   const classUnitId = warlockClassUnitId(input);
   /* v8 ignore start -- @preserve -- The typed Warlock route already established this selected class as Warlock. */
-  if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+  if (Result.isFailure(classUnitId)) return Result.fail(classUnitId.failure);
   /* v8 ignore stop -- @preserve */
 
   const gainedInvocations = parseEldritchInvocationSelections({
     unitLibrary: input.unitLibrary,
     selections: input.gainedInvocations,
   });
-  if (Either.isLeft(gainedInvocations)) {
-    return Either.left(gainedInvocations.left);
+  if (Result.isFailure(gainedInvocations)) {
+    return Result.fail(gainedInvocations.failure);
   }
 
   const replacement =
@@ -1093,18 +1096,20 @@ export function warlockLevelGain(input: {
           unitLibrary: input.unitLibrary,
           replacement: input.replacement,
         });
-  if (replacement !== undefined && Either.isLeft(replacement)) {
-    return Either.left(replacement.left);
+  if (replacement !== undefined && Result.isFailure(replacement)) {
+    return Result.fail(replacement.failure);
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "warlockLevelGain",
-    classUnitId: classUnitId.right,
+    classUnitId: classUnitId.success,
     hitPointRule: input.hitPointRule,
     pactMagic: input.pactMagic ?? EMPTY_WARLOCK_PACT_MAGIC_LEVEL_GAIN,
     eldritchInvocations: {
-      gainedInvocations: gainedInvocations.right,
-      ...(replacement === undefined ? {} : { replacement: replacement.right }),
+      gainedInvocations: gainedInvocations.success,
+      ...(replacement === undefined
+        ? {}
+        : { replacement: replacement.success }),
     },
   });
 }
@@ -1118,33 +1123,36 @@ export function sorcererLevelGain(input: {
     readonly replaceOptionId: string | SorcererMetamagicOptionId;
     readonly selectedOptionId: string | SorcererMetamagicOptionId;
   };
-}): Either.Either<
+}): Result.Result<
   CharacterBuildSorcererMetamagicLevelGain,
   CharacterBuildAdvancementIssue
 > {
   const classUnitId = sorcererClassUnitId(input);
   /* v8 ignore start -- @preserve -- The typed Sorcerer route already established this selected class as Sorcerer. */
-  if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+  if (Result.isFailure(classUnitId)) return Result.fail(classUnitId.failure);
   /* v8 ignore stop -- @preserve */
 
   const gainedOptions = parseSorcererMetamagicOptionIds(input.gainedOptions);
-  if (Either.isLeft(gainedOptions)) return Either.left(gainedOptions.left);
+  if (Result.isFailure(gainedOptions))
+    return Result.fail(gainedOptions.failure);
 
   const replacement =
     input.replacement === undefined
       ? undefined
       : parseSorcererMetamagicReplacement(input.replacement);
-  if (replacement !== undefined && Either.isLeft(replacement)) {
-    return Either.left(replacement.left);
+  if (replacement !== undefined && Result.isFailure(replacement)) {
+    return Result.fail(replacement.failure);
   }
 
-  return Either.right({
+  return Result.succeed({
     tag: "sorcererLevelGain",
-    classUnitId: classUnitId.right,
+    classUnitId: classUnitId.success,
     hitPointRule: input.hitPointRule,
     metamagic: {
-      gainedOptions: gainedOptions.right,
-      ...(replacement === undefined ? {} : { replacement: replacement.right }),
+      gainedOptions: gainedOptions.success,
+      ...(replacement === undefined
+        ? {}
+        : { replacement: replacement.success }),
     },
   });
 }
@@ -1153,20 +1161,20 @@ export function advanceCharacterBuildClassLevel(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildClassLevelGain;
-}): Either.Either<CharacterBuild, CharacterBuildAdvancementIssue> {
+}): Result.Result<CharacterBuild, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord({
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
   const spellcasting = updateSpellcastingForClassLevelGain(input);
-  if (Either.isLeft(spellcasting)) return Either.left(spellcasting.left);
+  if (Result.isFailure(spellcasting)) return Result.fail(spellcasting.failure);
   const buildForFeatureUpdate = characterBuildWithSpellcasting(
     input.build,
-    spellcasting.right,
+    spellcasting.success,
   );
 
   const features = Match.value(input.levelGain).pipe(
@@ -1246,7 +1254,7 @@ export function advanceCharacterBuildClassLevel(input: {
     ),
     Match.exhaustive,
   );
-  if (Either.isLeft(features)) return Either.left(features.left);
+  if (Result.isFailure(features)) return Result.fail(features.failure);
 
   const progression = characterProgressionWithClassLevelGain({
     progression: input.build.progression,
@@ -1254,19 +1262,19 @@ export function advanceCharacterBuildClassLevel(input: {
     hitPointRule: input.levelGain.hitPointRule,
   });
   /* v8 ignore start -- @preserve -- A parsed level gain cannot make its already-valid progression nonconsecutive; this reports malformed direct inputs. */
-  if (Either.isLeft(progression)) {
-    return Either.left({
+  if (Result.isFailure(progression)) {
+    return Result.fail({
       code: "invalidCharacterProgressionLevel",
-      issue: progression.left,
+      issue: progression.failure,
       message: "Cannot add class level to CharacterBuild progression.",
     });
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     ...buildForFeatureUpdate,
-    progression: progression.right,
-    features: features.right,
+    progression: progression.success,
+    features: features.success,
   });
 }
 
@@ -1354,7 +1362,7 @@ export function advanceCharacterBuildFightingStyleReplacementWithRoute<
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildFighterFightingStyleReplacementLevelGain;
   readonly route: readonly RouteEvent[];
-}): Either.Either<
+}): Result.Result<
   CharacterBuildFightingStyleReplacementRoute<RouteEvent>,
   CharacterBuildAdvancementIssue
 > {
@@ -1364,11 +1372,11 @@ export function advanceCharacterBuildFightingStyleReplacementWithRoute<
     levelGain: input.levelGain,
   });
   /* v8 ignore start -- @preserve -- The route constructor already admitted every class-level gain invariant consumed by the reducer. */
-  if (Either.isLeft(advanced)) return Either.left(advanced.left);
+  if (Result.isFailure(advanced)) return Result.fail(advanced.failure);
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
-    build: advanced.right,
+  return Result.succeed({
+    build: advanced.success,
     route: [...input.route, routeApplyFightingStyleReplacementFill()],
   });
 }
@@ -1380,7 +1388,7 @@ export function applyCharacterBuildWarlockLevelGainWithRoute<
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildWarlockLevelGain;
   readonly route: readonly RouteEvent[];
-}): Either.Either<
+}): Result.Result<
   CharacterBuildWarlockLevelGainRoute<RouteEvent>,
   CharacterBuildAdvancementIssue
 > {
@@ -1389,24 +1397,24 @@ export function applyCharacterBuildWarlockLevelGainWithRoute<
     unitLibrary: input.unitLibrary,
     levelGain: input.levelGain,
   });
-  if (Either.isRight(advanced)) {
-    return Either.right({
+  if (Result.isSuccess(advanced)) {
+    return Result.succeed({
       tag: "accepted",
-      build: advanced.right,
+      build: advanced.success,
       route: [...input.route, routeApplyWarlockLevelGainFill()],
     });
   }
 
-  if (isWarlockInvocationRouteRejectionIssue(advanced.left)) {
-    return Either.right({
+  if (isWarlockInvocationRouteRejectionIssue(advanced.failure)) {
+    return Result.succeed({
       tag: "rejected",
       build: input.build,
-      issue: advanced.left,
+      issue: advanced.failure,
       route: [...input.route, routeRejectWarlockInvocationSelectionFill()],
     });
   }
 
-  return Either.left(advanced.left);
+  return Result.fail(advanced.failure);
 }
 
 function characterBuildWithSpellcasting(
@@ -1463,7 +1471,7 @@ function updateSpellcastingForClassLevelGain(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildClassLevelGain;
-}): Either.Either<
+}): Result.Result<
   CharacterBuild["spellcasting"],
   CharacterBuildAdvancementIssue
 > {
@@ -1494,7 +1502,7 @@ function updateSpellcastingForClassLevelGain(input: {
   }
 
   if (input.levelGain.tag !== "classLevelGain") {
-    return Either.right(input.build.spellcasting);
+    return Result.succeed(input.build.spellcasting);
   }
 
   const classUnit = classUnitRecord({
@@ -1502,12 +1510,12 @@ function updateSpellcastingForClassLevelGain(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   if (facts.className !== WARLOCK_CLASS_NAME) {
-    return Either.right(input.build.spellcasting);
+    return Result.succeed(input.build.spellcasting);
   }
 
   const currentWarlockLevel = classLevelForUnit(
@@ -1527,16 +1535,16 @@ function updateSpellcastingForClassLevelGain(input: {
       : { spellcasting: warlockSpellcasting }),
   });
   /* v8 ignore stop -- @preserve */
-  if (Either.isLeft(unchanged)) return Either.left(unchanged.left);
+  if (Result.isFailure(unchanged)) return Result.fail(unchanged.failure);
 
-  return Either.right(input.build.spellcasting);
+  return Result.succeed(input.build.spellcasting);
 }
 
 function updateListPreparedSpellcasting(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildListPreparedSpellcastingOnlyLevelGain;
-}): Either.Either<
+}): Result.Result<
   CharacterBuild["spellcasting"],
   CharacterBuildAdvancementIssue
 > {
@@ -1545,7 +1553,7 @@ function updateListPreparedSpellcasting(input: {
     (candidate) => candidate.sourceUnitId === input.levelGain.classUnitId,
   );
   if (spellcasting === undefined || source === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingListPreparedSpellcasting",
       classUnitId: input.levelGain.classUnitId,
       message:
@@ -1560,11 +1568,11 @@ function updateListPreparedSpellcasting(input: {
     source,
     levelGain: input.levelGain.preparedSpellcasting,
   });
-  if (Either.isLeft(preparedSpellcasting)) {
-    return Either.left(preparedSpellcasting.left);
+  if (Result.isFailure(preparedSpellcasting)) {
+    return Result.fail(preparedSpellcasting.failure);
   }
 
-  return Either.right({
+  return Result.succeed({
     ...spellcasting,
     sources: mapCharacterBuildSpellcastingSources(
       spellcasting.sources,
@@ -1572,7 +1580,7 @@ function updateListPreparedSpellcasting(input: {
         candidate.sourceUnitId === input.levelGain.classUnitId
           ? {
               ...candidate,
-              preparedSpells: preparedSpellcasting.right.preparedSpells,
+              preparedSpells: preparedSpellcasting.success.preparedSpells,
             }
           : candidate,
     ),
@@ -1580,7 +1588,7 @@ function updateListPreparedSpellcasting(input: {
       ...spellcasting.slotPools,
       spellcasting: {
         kind: "spellcasting",
-        slots: preparedSpellcasting.right.spellSlots,
+        slots: preparedSpellcasting.success.spellSlots,
       },
     },
   });
@@ -1589,11 +1597,11 @@ function updateListPreparedSpellcasting(input: {
 function classUnitRecord(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: UnitRecord["id"];
-}): Either.Either<ClassRecord, CharacterBuildAdvancementIssue> {
+}): Result.Result<ClassRecord, CharacterBuildAdvancementIssue> {
   const unit = input.unitLibrary.getUnit(input.classUnitId);
   /* v8 ignore start -- @preserve -- Supported advancement routes admit a class id from this catalog before calling the typed core. */
   if (Option.isNone(unit)) {
-    return Either.left({
+    return Result.fail({
       code: "unknownUnitId",
       unitId: input.classUnitId,
       message: `Unknown Unit id ${input.classUnitId}.`,
@@ -1601,7 +1609,7 @@ function classUnitRecord(input: {
   }
 
   if (unit.value.kind !== "class") {
-    return Either.left({
+    return Result.fail({
       code: "nonClassUnit",
       unitId: input.classUnitId,
       unitKind: unit.value.kind,
@@ -1610,13 +1618,13 @@ function classUnitRecord(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right(unit.value);
+  return Result.succeed(unit.value);
 }
 
 function parseEldritchInvocationSelections(input: {
   readonly unitLibrary: UnitCatalog;
   readonly selections: readonly CharacterBuildWarlockEldritchInvocationSelectionInput[];
-}): Either.Either<
+}): Result.Result<
   readonly EldritchInvocationSelection[],
   CharacterBuildAdvancementIssue
 > {
@@ -1626,55 +1634,55 @@ function parseEldritchInvocationSelections(input: {
       unitLibrary: input.unitLibrary,
       selection,
     });
-    if (Either.isLeft(parsedSelection)) {
-      return Either.left(parsedSelection.left);
+    if (Result.isFailure(parsedSelection)) {
+      return Result.fail(parsedSelection.failure);
     }
-    parsed.push(parsedSelection.right);
+    parsed.push(parsedSelection.success);
   }
 
-  return Either.right(parsed);
+  return Result.succeed(parsed);
 }
 
 function parseEldritchInvocationSelection(input: {
   readonly unitLibrary: UnitCatalog;
   readonly selection: CharacterBuildWarlockEldritchInvocationSelectionInput;
-}): Either.Either<EldritchInvocationSelection, CharacterBuildAdvancementIssue> {
+}): Result.Result<EldritchInvocationSelection, CharacterBuildAdvancementIssue> {
   const invocationId = parseKnownEldritchInvocationId(
     input.selection.invocationId,
   );
-  if (Either.isLeft(invocationId)) return Either.left(invocationId.left);
+  if (Result.isFailure(invocationId)) return Result.fail(invocationId.failure);
 
-  const option = eldritchInvocationOptionForInvocationId(invocationId.right);
+  const option = eldritchInvocationOptionForInvocationId(invocationId.success);
   /* v8 ignore start -- @preserve -- The closed invocation-id parser and installed option table are defined from the same roster. */
   if (option === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "unknownEldritchInvocation",
-      invocationId: invocationId.right,
-      message: `Unknown Eldritch Invocation id ${invocationId.right}.`,
+      invocationId: invocationId.success,
+      message: `Unknown Eldritch Invocation id ${invocationId.success}.`,
     });
   }
   /* v8 ignore stop -- @preserve */
 
   if (option.repeatability.kind === "once") {
     if (input.selection.kind !== "nonRepeatable") {
-      return Either.left({
+      return Result.fail({
         code: "invalidRepeatableEldritchInvocationChoice",
-        invocationId: invocationId.right,
+        invocationId: invocationId.success,
         repeatableChoice: input.selection.repeatableChoice,
         message:
           "Only Repeatable Eldritch Invocations can carry an associated repeatable choice.",
       });
     }
-    return Either.right({
+    return Result.succeed({
       kind: "nonRepeatable",
-      invocationId: invocationId.right,
+      invocationId: invocationId.success,
     });
   }
 
   if (input.selection.kind !== "repeatable") {
-    return Either.left({
+    return Result.fail({
       code: "missingRepeatableEldritchInvocationChoice",
-      invocationId: invocationId.right,
+      invocationId: invocationId.success,
       message:
         "Repeatable Eldritch Invocation selections must include the associated cantrip or Origin feat choice.",
     });
@@ -1684,39 +1692,39 @@ function parseEldritchInvocationSelection(input: {
   if (
     !repeatableChoiceMatchesRule({
       unitLibrary: input.unitLibrary,
-      invocationId: invocationId.right,
+      invocationId: invocationId.success,
       repeatableChoice,
     })
   ) {
-    return Either.left({
+    return Result.fail({
       code: "invalidRepeatableEldritchInvocationChoice",
-      invocationId: invocationId.right,
+      invocationId: invocationId.success,
       repeatableChoice,
       message:
         "Repeatable Eldritch Invocation selection does not match that invocation's associated choice rule.",
     });
   }
 
-  return Either.right({
+  return Result.succeed({
     kind: "repeatable",
-    invocationId: invocationId.right,
+    invocationId: invocationId.success,
     repeatableChoice,
   });
 }
 
 function parseKnownEldritchInvocationId(
   invocationId: string | EldritchInvocationId,
-): Either.Either<EldritchInvocationId, CharacterBuildAdvancementIssue> {
+): Result.Result<EldritchInvocationId, CharacterBuildAdvancementIssue> {
   const parsed = eldritchInvocationId(invocationId);
   if (eldritchInvocationOptionForInvocationId(parsed) === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "unknownEldritchInvocation",
       invocationId: parsed,
       message: `Unknown Eldritch Invocation id ${parsed}.`,
     });
   }
 
-  return Either.right(parsed);
+  return Result.succeed(parsed);
 }
 
 function parseEldritchInvocationReplacement(input: {
@@ -1725,7 +1733,7 @@ function parseEldritchInvocationReplacement(input: {
     readonly replaceInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
     readonly selectedInvocation: CharacterBuildWarlockEldritchInvocationSelectionInput;
   };
-}): Either.Either<
+}): Result.Result<
   EldritchInvocationReplacement,
   CharacterBuildAdvancementIssue
 > {
@@ -1733,75 +1741,75 @@ function parseEldritchInvocationReplacement(input: {
     unitLibrary: input.unitLibrary,
     selection: input.replacement.replaceInvocation,
   });
-  if (Either.isLeft(replaceInvocation)) {
-    return Either.left(replaceInvocation.left);
+  if (Result.isFailure(replaceInvocation)) {
+    return Result.fail(replaceInvocation.failure);
   }
 
   const selectedInvocation = parseEldritchInvocationSelection({
     unitLibrary: input.unitLibrary,
     selection: input.replacement.selectedInvocation,
   });
-  if (Either.isLeft(selectedInvocation)) {
-    return Either.left(selectedInvocation.left);
+  if (Result.isFailure(selectedInvocation)) {
+    return Result.fail(selectedInvocation.failure);
   }
 
   if (
     eldritchInvocationSelectionsMatch(
-      replaceInvocation.right,
-      selectedInvocation.right,
+      replaceInvocation.success,
+      selectedInvocation.success,
     )
   ) {
-    return Either.left({
+    return Result.fail({
       code: "sameEldritchInvocationReplacement",
-      invocationId: selectedInvocation.right.invocationId,
+      invocationId: selectedInvocation.success.invocationId,
       message:
         "Eldritch Invocation replacement must choose a different invocation.",
     });
   }
 
-  return Either.right({
-    replaceInvocation: replaceInvocation.right,
-    selectedInvocation: selectedInvocation.right,
+  return Result.succeed({
+    replaceInvocation: replaceInvocation.success,
+    selectedInvocation: selectedInvocation.success,
   });
 }
 
 function parseSorcererMetamagicOptionIds(
   optionIds: readonly (string | SorcererMetamagicOptionId)[],
-): Either.Either<
+): Result.Result<
   readonly SorcererMetamagicOptionId[],
   CharacterBuildAdvancementIssue
 > {
   const parsed: SorcererMetamagicOptionId[] = [];
   for (const optionId of optionIds) {
     const parsedOptionId = parseKnownSorcererMetamagicOptionId(optionId);
-    if (Either.isLeft(parsedOptionId)) {
-      return Either.left(parsedOptionId.left);
+    if (Result.isFailure(parsedOptionId)) {
+      return Result.fail(parsedOptionId.failure);
     }
-    parsed.push(parsedOptionId.right);
+    parsed.push(parsedOptionId.success);
   }
 
-  return Either.right(parsed);
+  return Result.succeed(parsed);
 }
 
 function parseKnownSorcererMetamagicOptionId(
   optionId: string | SorcererMetamagicOptionId,
-): Either.Either<SorcererMetamagicOptionId, CharacterBuildAdvancementIssue> {
+): Result.Result<SorcererMetamagicOptionId, CharacterBuildAdvancementIssue> {
   const parsed = sorcererMetamagicOptionId(optionId);
-  if (Either.isLeft(parsed)) {
-    return Either.left({
+  if (Result.isFailure(parsed)) {
+    return Result.fail({
       code: "unknownSorcererMetamagicOption",
       optionId,
       message: `Unknown Sorcerer Metamagic option id ${optionId}.`,
     });
   }
 
-  return Either.right(parsed.right);
+  return Result.succeed(parsed.success);
 }
 
 function parseSorcererMetamagicReplacement(input: {
   readonly replaceOptionId: string | SorcererMetamagicOptionId;
   readonly selectedOptionId: string | SorcererMetamagicOptionId;
-}): Either.Either<
+}): Result.Result<
   NonNullable<
     CharacterBuildSorcererMetamagicLevelGain["metamagic"]["replacement"]
   >,
@@ -1810,27 +1818,28 @@ function parseSorcererMetamagicReplacement(input: {
   const replaceOptionId = parseKnownSorcererMetamagicOptionId(
     input.replaceOptionId,
   );
-  if (Either.isLeft(replaceOptionId)) return Either.left(replaceOptionId.left);
+  if (Result.isFailure(replaceOptionId))
+    return Result.fail(replaceOptionId.failure);
 
   const selectedOptionId = parseKnownSorcererMetamagicOptionId(
     input.selectedOptionId,
   );
-  if (Either.isLeft(selectedOptionId)) {
-    return Either.left(selectedOptionId.left);
+  if (Result.isFailure(selectedOptionId)) {
+    return Result.fail(selectedOptionId.failure);
   }
 
-  if (replaceOptionId.right === selectedOptionId.right) {
-    return Either.left({
+  if (replaceOptionId.success === selectedOptionId.success) {
+    return Result.fail({
       code: "sameSorcererMetamagicReplacement",
-      optionId: selectedOptionId.right,
+      optionId: selectedOptionId.success,
       message:
         "Metamagic replacement must choose a different Metamagic option.",
     });
   }
 
-  return Either.right({
-    replaceOptionId: replaceOptionId.right,
-    selectedOptionId: selectedOptionId.right,
+  return Result.succeed({
+    replaceOptionId: replaceOptionId.success,
+    selectedOptionId: selectedOptionId.success,
   });
 }
 
@@ -1838,7 +1847,7 @@ function plainClassLevelGainFeatures(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildPlainClassLevelGain;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
@@ -1847,10 +1856,10 @@ function plainClassLevelGainFeatures(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   if (facts.className === SORCERER_CLASS_NAME) {
     const sorcererClassUnitId = SorcererClassUnitId(
       input.levelGain.classUnitId,
@@ -1866,16 +1875,16 @@ function plainClassLevelGainFeatures(input: {
       sorcererLevel,
       nextSorcererLevel: sorcererLevel + 1,
     });
-    if (Either.isLeft(unchanged)) return Either.left(unchanged.left);
+    if (Result.isFailure(unchanged)) return Result.fail(unchanged.failure);
 
-    return Either.right(input.build.features);
+    return Result.succeed(input.build.features);
   }
 
   if (facts.className !== WARLOCK_CLASS_NAME) {
     return weaponMasterySelectionsCanRemainUnchanged({
       build: input.build,
       unitLibrary: input.unitLibrary,
-      classUnit: classUnit.right,
+      classUnit: classUnit.success,
       classUnitId: input.levelGain.classUnitId,
     });
   }
@@ -1885,23 +1894,24 @@ function plainClassLevelGainFeatures(input: {
     classUnitId: WarlockClassUnitId(input.levelGain.classUnitId),
   });
   /* v8 ignore start -- @preserve -- The typed plain-Warlock route was admitted from this exact invocation feature choice. */
-  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const nextWarlockLevel =
     classLevelForUnit(input.build.progression, input.levelGain.classUnitId) + 1;
   const expectedCount = eldritchInvocationCountAtLevel(
-    featureChoice.right.mechanics,
+    featureChoice.success.mechanics,
     nextWarlockLevel,
   );
   const selectedCount = selectedEldritchInvocationFeaturesForFeature(
     input.build.features,
-    featureChoice.right.featureUnitId,
+    featureChoice.success.featureUnitId,
   ).length;
 
   return selectedCount === expectedCount
-    ? Either.right(input.build.features)
-    : Either.left({
+    ? Result.succeed(input.build.features)
+    : Result.fail({
         code: "invalidEldritchInvocationSelectionCount",
         warlockLevel: nextWarlockLevel,
         expectedCount,
@@ -1916,22 +1926,23 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnit: ClassRecord;
   readonly classUnitId: ClassUnitId;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
   const feature = weaponMasteryFeatureForClass(input);
   /* v8 ignore start -- @preserve -- The supported Weapon Mastery route was admitted from this exact class feature. */
-  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (Result.isFailure(feature)) return Result.fail(feature.failure);
   /* v8 ignore stop -- @preserve */
-  if (feature.right === undefined) return Either.right(input.build.features);
+  if (feature.success === undefined)
+    return Result.succeed(input.build.features);
 
   const currentClassLevel = classLevelForUnit(
     input.build.progression,
     input.classUnitId,
   );
   const profile = weaponMasteryChoiceProfileForFeature({
-    featureUnitId: feature.right.id,
+    featureUnitId: feature.success.id,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- The admitted Weapon Mastery feature always has a projected profile. */
@@ -1942,7 +1953,7 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- The admitted Weapon Mastery feature supplies a profile covering its owning class level. */
   if (levelProfiles === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingWeaponMasteryFeatureChoice",
       classUnitId: input.classUnitId,
       message: "Cannot find the class Weapon Mastery choice feature.",
@@ -1953,13 +1964,13 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
 
   const selectedWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
     input.build.features,
-    feature.right.id,
+    feature.success.id,
   ).map((selectedFeature) => selectedFeature.unitId);
   if (selectedWeaponUnitIds.length !== currentProfile.choiceCount) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWeaponMasterySelectionCount",
       classLevel: currentClassLevel,
-      featureUnitId: feature.right.id,
+      featureUnitId: feature.success.id,
       expectedCount: currentProfile.choiceCount,
       actualCount: selectedWeaponUnitIds.length,
       message:
@@ -1967,19 +1978,19 @@ function weaponMasterySelectionsCanRemainUnchanged(input: {
     });
   }
   const duplicateSelection = duplicateWeaponMasterySelectionIssue(
-    feature.right.id,
+    feature.success.id,
     selectedWeaponUnitIds,
   );
   if (duplicateSelection !== undefined) {
-    return Either.left(duplicateSelection);
+    return Result.fail(duplicateSelection);
   }
 
   return currentProfile.choiceCount === nextProfile.choiceCount
-    ? Either.right(input.build.features)
-    : Either.left({
+    ? Result.succeed(input.build.features)
+    : Result.fail({
         code: "invalidWeaponMasterySelectionCount",
         classLevel: currentClassLevel + 1,
-        featureUnitId: feature.right.id,
+        featureUnitId: feature.success.id,
         expectedCount: nextProfile.choiceCount,
         actualCount: selectedWeaponUnitIds.length,
         message:
@@ -2018,7 +2029,7 @@ function updateWeaponMasterySelectedFeatures(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildWeaponMasteryLevelGain;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
@@ -2027,28 +2038,28 @@ function updateWeaponMasterySelectedFeatures(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
   const feature = weaponMasteryFeatureForClass({
     build: input.build,
     unitLibrary: input.unitLibrary,
-    classUnit: classUnit.right,
+    classUnit: classUnit.success,
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The supported Weapon Mastery level-gain route was admitted from this exact class feature. */
-  if (Either.isLeft(feature)) return Either.left(feature.left);
+  if (Result.isFailure(feature)) return Result.fail(feature.failure);
   /* v8 ignore stop -- @preserve */
-  if (feature.right === undefined) {
-    return Either.left({
+  if (feature.success === undefined) {
+    return Result.fail({
       code: "missingWeaponMasteryFeatureChoice",
       classUnitId: input.levelGain.classUnitId,
       message: "Cannot find the class Weapon Mastery choice feature.",
     });
   }
 
-  if (feature.right.id !== input.levelGain.weaponMastery.featureUnitId) {
-    return Either.left({
+  if (feature.success.id !== input.levelGain.weaponMastery.featureUnitId) {
+    return Result.fail({
       code: "weaponMasteryFeatureClassMismatch",
       classUnitId: input.levelGain.classUnitId,
       featureUnitId: input.levelGain.weaponMastery.featureUnitId,
@@ -2062,7 +2073,7 @@ function updateWeaponMasterySelectedFeatures(input: {
     input.levelGain.classUnitId,
   );
   const profile = weaponMasteryChoiceProfileForFeature({
-    featureUnitId: feature.right.id,
+    featureUnitId: feature.success.id,
     unitLibrary: input.unitLibrary,
   });
   /* v8 ignore start -- @preserve -- The admitted Weapon Mastery level-gain feature always has a projected profile. */
@@ -2073,7 +2084,7 @@ function updateWeaponMasterySelectedFeatures(input: {
   /* v8 ignore stop -- @preserve */
   /* v8 ignore start -- @preserve -- The admitted Weapon Mastery level-gain route supplies a profile covering both adjacent levels. */
   if (levelProfiles === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingWeaponMasteryFeatureChoice",
       classUnitId: input.levelGain.classUnitId,
       message: "Cannot find the class Weapon Mastery choice feature.",
@@ -2084,13 +2095,13 @@ function updateWeaponMasterySelectedFeatures(input: {
 
   const currentWeaponUnitIds = selectedWeaponMasteryFeaturesForFeature(
     input.build.features,
-    feature.right.id,
+    feature.success.id,
   ).map((feature) => feature.unitId);
   if (currentWeaponUnitIds.length !== currentProfile.choiceCount) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWeaponMasterySelectionCount",
       classLevel: currentClassLevel,
-      featureUnitId: feature.right.id,
+      featureUnitId: feature.success.id,
       expectedCount: currentProfile.choiceCount,
       actualCount: currentWeaponUnitIds.length,
       message:
@@ -2098,20 +2109,20 @@ function updateWeaponMasterySelectedFeatures(input: {
     });
   }
   const duplicateCurrentSelection = duplicateWeaponMasterySelectionIssue(
-    feature.right.id,
+    feature.success.id,
     currentWeaponUnitIds,
   );
   if (duplicateCurrentSelection !== undefined) {
-    return Either.left(duplicateCurrentSelection);
+    return Result.fail(duplicateCurrentSelection);
   }
 
   const selectedWeaponUnitIds =
     input.levelGain.weaponMastery.selectedWeaponUnitIds;
   if (selectedWeaponUnitIds.length !== nextProfile.choiceCount) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWeaponMasterySelectionCount",
       classLevel: currentClassLevel + 1,
-      featureUnitId: feature.right.id,
+      featureUnitId: feature.success.id,
       expectedCount: nextProfile.choiceCount,
       actualCount: selectedWeaponUnitIds.length,
       message:
@@ -2120,11 +2131,11 @@ function updateWeaponMasterySelectedFeatures(input: {
   }
 
   const duplicateSelectedWeapon = duplicateWeaponMasterySelectionIssue(
-    feature.right.id,
+    feature.success.id,
     selectedWeaponUnitIds,
   );
   if (duplicateSelectedWeapon !== undefined) {
-    return Either.left(duplicateSelectedWeapon);
+    return Result.fail(duplicateSelectedWeapon);
   }
   const selectedSet = new Set<UnitRecord["id"]>(selectedWeaponUnitIds);
 
@@ -2133,9 +2144,9 @@ function updateWeaponMasterySelectedFeatures(input: {
   );
   for (const weaponUnitId of selectedWeaponUnitIds) {
     if (!eligibleWeaponUnitIds.has(weaponUnitId)) {
-      return Either.left({
+      return Result.fail({
         code: "invalidWeaponMasterySelection",
-        featureUnitId: feature.right.id,
+        featureUnitId: feature.success.id,
         weaponUnitId,
         message:
           "Weapon Mastery level gain must choose eligible proficient weapons.",
@@ -2145,9 +2156,9 @@ function updateWeaponMasterySelectedFeatures(input: {
 
   for (const weaponUnitId of currentWeaponUnitIds) {
     if (!selectedSet.has(weaponUnitId)) {
-      return Either.left({
+      return Result.fail({
         code: "missingExistingWeaponMasterySelection",
-        featureUnitId: feature.right.id,
+        featureUnitId: feature.success.id,
         weaponUnitId,
         message:
           "Weapon Mastery level gain can add the new table choices but cannot replace existing mastered weapons.",
@@ -2158,13 +2169,13 @@ function updateWeaponMasterySelectedFeatures(input: {
   const weaponMasteryFeatures =
     characterBuildFeaturesWithWeaponMasterySelections(
       input.build.features,
-      feature.right.id,
+      feature.success.id,
       selectedWeaponUnitIds,
     );
 
   return input.levelGain.tag !==
     "fighterLevelGainWithWeaponMasterySelectionAndFightingStyleReplacement"
-    ? Either.right(weaponMasteryFeatures)
+    ? Result.succeed(weaponMasteryFeatures)
     : fightingStyleSelectedFeaturesReplaced({
         build: { ...input.build, features: weaponMasteryFeatures },
         unitLibrary: input.unitLibrary,
@@ -2221,7 +2232,7 @@ function weaponMasteryFeatureForClass(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnit: ClassRecord;
   readonly classUnitId: ClassUnitId;
-}): Either.Either<
+}): Result.Result<
   WeaponMasteryChoiceFeature | undefined,
   CharacterBuildAdvancementIssue
 > {
@@ -2239,7 +2250,7 @@ function weaponMasteryFeatureForClass(input: {
 
   /* v8 ignore start -- @preserve -- Supported class facts admit at most one Weapon Mastery choice feature for a class level. */
   if (featureUnitIds.length > 1) {
-    return Either.left({
+    return Result.fail({
       code: "ambiguousWeaponMasteryFeatureChoice",
       classUnitId: input.classUnitId,
       featureUnitIds,
@@ -2248,12 +2259,12 @@ function weaponMasteryFeatureForClass(input: {
   }
 
   const featureUnitId = featureUnitIds[0];
-  if (featureUnitId === undefined) return Either.right(undefined);
+  if (featureUnitId === undefined) return Result.succeed(undefined);
 
   const unit = input.unitLibrary.getUnit(featureUnitId);
   return Option.isSome(unit) && isWeaponMasteryChoiceFeature(unit.value)
-    ? Either.right(unit.value)
-    : Either.left({
+    ? Result.succeed(unit.value)
+    : Result.fail({
         code: "missingWeaponMasteryFeatureChoice",
         classUnitId: input.classUnitId,
         message: "Cannot find the class Weapon Mastery choice feature.",
@@ -2304,7 +2315,7 @@ function replaceFightingStyleSelectedFeature(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildFighterFightingStyleReplacementLevelGain;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
@@ -2314,21 +2325,21 @@ function replaceFightingStyleSelectedFeature(input: {
     classUnitId: input.levelGain.classUnitId,
     selectedFeatUnitId: input.levelGain.replacement.selectedFeatUnitId,
   });
-  if (Either.isLeft(replacedFeatures))
-    return Either.left(replacedFeatures.left);
+  if (Result.isFailure(replacedFeatures))
+    return Result.fail(replacedFeatures.failure);
 
   const classUnit = classUnitRecord({
     unitLibrary: input.unitLibrary,
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
   return weaponMasterySelectionsCanRemainUnchanged({
-    build: { ...input.build, features: replacedFeatures.right },
+    build: { ...input.build, features: replacedFeatures.success },
     unitLibrary: input.unitLibrary,
-    classUnit: classUnit.right,
+    classUnit: classUnit.success,
     classUnitId: input.levelGain.classUnitId,
   });
 }
@@ -2338,7 +2349,7 @@ function fightingStyleSelectedFeaturesReplaced(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: ClassUnitId;
   readonly selectedFeatUnitId: FightingStyleFeatUnitId;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
@@ -2347,21 +2358,21 @@ function fightingStyleSelectedFeaturesReplaced(input: {
     classUnitId: input.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed Fighting Style replacement route already established the Fighter class identity. */
-  if (Either.isLeft(classUnitId)) return Either.left(classUnitId.left);
+  if (Result.isFailure(classUnitId)) return Result.fail(classUnitId.failure);
   /* v8 ignore stop -- @preserve */
 
   const hole = fightingStyleFeatureChoiceHoleForFighterClass({
     unitLibrary: input.unitLibrary,
-    classUnitId: classUnitId.right,
+    classUnitId: classUnitId.success,
   });
   /* v8 ignore start -- @preserve -- The typed replacement route was admitted from this exact retained Fighting Style hole. */
-  if (Either.isLeft(hole)) return Either.left(hole.left);
+  if (Result.isFailure(hole)) return Result.fail(hole.failure);
   /* v8 ignore stop -- @preserve */
 
-  const featureUnitId = unitChoiceSourceUnitId(hole.right);
+  const featureUnitId = unitChoiceSourceUnitId(hole.success);
   /* v8 ignore start -- @preserve -- The admitted Fighting Style hole is Unit-sourced by its retained class feature. */
   if (featureUnitId === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingFightingStyleFeatureChoice",
       classUnitId: input.classUnitId,
       message:
@@ -2373,8 +2384,8 @@ function fightingStyleSelectedFeaturesReplaced(input: {
   const selectedFeatUnitId = input.selectedFeatUnitId;
   const selectedOptionId = creationChoiceOptionId(selectedFeatUnitId);
   /* v8 ignore start -- @preserve -- The replacement constructor admits only option ids from this exact Fighting Style hole. */
-  if (!choiceOptionIdsFitHole(hole.right, [selectedOptionId])) {
-    return Either.left({
+  if (!choiceOptionIdsFitHole(hole.success, [selectedOptionId])) {
+    return Result.fail({
       code: "invalidFightingStyleReplacement",
       selectedFeatUnitId,
       message: `${selectedFeatUnitId} is not supported for this Fighting Style replacement.`,
@@ -2387,7 +2398,7 @@ function fightingStyleSelectedFeaturesReplaced(input: {
   );
   const currentSelection = selectedFeatures[0];
   if (currentSelection === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingSelectedFightingStyle",
       featureUnitId,
       message:
@@ -2396,7 +2407,7 @@ function fightingStyleSelectedFeaturesReplaced(input: {
   }
 
   if (selectedFeatures.length > 1) {
-    return Either.left({
+    return Result.fail({
       code: "ambiguousSelectedFightingStyle",
       featureUnitId,
       count: selectedFeatures.length,
@@ -2406,7 +2417,7 @@ function fightingStyleSelectedFeaturesReplaced(input: {
   }
 
   if (currentSelection.unitId === selectedFeatUnitId) {
-    return Either.left({
+    return Result.fail({
       code: "sameFightingStyleReplacement",
       selectedFeatUnitId,
       message:
@@ -2414,7 +2425,7 @@ function fightingStyleSelectedFeaturesReplaced(input: {
     });
   }
 
-  return Either.right(
+  return Result.succeed(
     input.build.features.map((feature) =>
       isSelectedFromFeature(feature, featureUnitId)
         ? { ...feature, unitId: selectedFeatUnitId }
@@ -2427,7 +2438,7 @@ function updateFightingStyleCantrips(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildFightingStyleCantripReplacementLevelGain;
-}): Either.Either<
+}): Result.Result<
   CharacterBuild["spellcasting"],
   CharacterBuildAdvancementIssue
 > {
@@ -2436,7 +2447,8 @@ function updateFightingStyleCantrips(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed cantrip replacement route was admitted from this exact acquisition feature choice. */
-  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const spellcasting = input.build.spellcasting;
@@ -2444,7 +2456,7 @@ function updateFightingStyleCantrips(input: {
     (candidate) => candidate.sourceUnitId === input.levelGain.classUnitId,
   );
   if (spellcasting === undefined || source === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingFightingStyleCantripSpellcastingSource",
       classUnitId: input.levelGain.classUnitId,
       message:
@@ -2454,11 +2466,11 @@ function updateFightingStyleCantrips(input: {
 
   const cantrips = fightingStyleCantripsReplaced({
     currentCantrips: source.cantrips,
-    featureChoice: featureChoice.right,
+    featureChoice: featureChoice.success,
     replacement: input.levelGain.replacement,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(cantrips)) return Either.left(cantrips.left);
+  if (Result.isFailure(cantrips)) return Result.fail(cantrips.failure);
 
   const preparedSpellcasting = applyListPreparedSpellcastingLevelGain({
     build: input.build,
@@ -2468,12 +2480,12 @@ function updateFightingStyleCantrips(input: {
     levelGain: input.levelGain.preparedSpellcasting,
   });
   /* v8 ignore start -- @preserve -- The typed list-prepared route was admitted against this exact spellcasting source and level row. */
-  if (Either.isLeft(preparedSpellcasting)) {
-    return Either.left(preparedSpellcasting.left);
+  if (Result.isFailure(preparedSpellcasting)) {
+    return Result.fail(preparedSpellcasting.failure);
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     ...spellcasting,
     sources: mapCharacterBuildSpellcastingSources(
       spellcasting.sources,
@@ -2481,8 +2493,8 @@ function updateFightingStyleCantrips(input: {
         candidate.sourceUnitId === input.levelGain.classUnitId
           ? {
               ...candidate,
-              cantrips: cantrips.right,
-              preparedSpells: preparedSpellcasting.right.preparedSpells,
+              cantrips: cantrips.success,
+              preparedSpells: preparedSpellcasting.success.preparedSpells,
             }
           : candidate,
     ),
@@ -2490,7 +2502,7 @@ function updateFightingStyleCantrips(input: {
       ...spellcasting.slotPools,
       spellcasting: {
         kind: "spellcasting",
-        slots: preparedSpellcasting.right.spellSlots,
+        slots: preparedSpellcasting.success.spellSlots,
       },
     },
   });
@@ -2501,9 +2513,9 @@ function fightingStyleCantripsReplaced(input: {
   readonly featureChoice: FightingStyleCantripFeatureChoice;
   readonly replacement: CharacterBuildFightingStyleCantripReplacementLevelGain["replacement"];
   readonly unitLibrary: UnitCatalog;
-}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   if (input.currentCantrips.length !== input.featureChoice.grant.count) {
-    return Either.left({
+    return Result.fail({
       code: "invalidFightingStyleCantripSelectionCount",
       featureUnitId: input.featureChoice.featureUnitId,
       expectedCount: input.featureChoice.grant.count,
@@ -2522,7 +2534,7 @@ function fightingStyleCantripsReplaced(input: {
       }),
   );
   if (invalidCurrentCantrip !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "invalidFightingStyleCantripReplacement",
       cantripId: invalidCurrentCantrip,
       message:
@@ -2533,7 +2545,7 @@ function fightingStyleCantripsReplaced(input: {
   if (
     input.replacement.replaceCantripId === input.replacement.selectedCantripId
   ) {
-    return Either.left({
+    return Result.fail({
       code: "sameFightingStyleCantripReplacement",
       cantripId: input.replacement.selectedCantripId,
       message:
@@ -2542,7 +2554,7 @@ function fightingStyleCantripsReplaced(input: {
   }
 
   if (!input.currentCantrips.includes(input.replacement.replaceCantripId)) {
-    return Either.left({
+    return Result.fail({
       code: "missingFightingStyleCantripReplacement",
       cantripId: input.replacement.replaceCantripId,
       message:
@@ -2557,14 +2569,14 @@ function fightingStyleCantripsReplaced(input: {
   );
   const duplicateCantrip = duplicateValue(finalCantrips);
   if (duplicateCantrip !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateFightingStyleCantripSelection",
       cantripId: duplicateCantrip,
       message: "Fighting Style cantrip selections must be distinct.",
     });
   }
 
-  return Either.right(finalCantrips);
+  return Result.succeed(finalCantrips);
 }
 
 function applyListPreparedSpellcastingLevelGain(input: {
@@ -2573,7 +2585,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
   readonly classUnitId: ClassUnitId;
   readonly source: CharacterBuildSpellcastingSource;
   readonly levelGain: CharacterBuildListPreparedSpellcastingLevelGain;
-}): Either.Either<
+}): Result.Result<
   {
     readonly preparedSpells: readonly UnitRecord["id"][];
     readonly spellSlots: ListPreparedReadableSpellcasting["spellSlotProjection"]["slots"];
@@ -2582,12 +2594,12 @@ function applyListPreparedSpellcastingLevelGain(input: {
 > {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed route constructor already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   if (!("spellcasting" in facts)) {
-    return Either.left({
+    return Result.fail({
       code: "missingListPreparedSpellcasting",
       classUnitId: input.classUnitId,
       message:
@@ -2615,7 +2627,7 @@ function applyListPreparedSpellcastingLevelGain(input: {
     !isListPreparedSpellcastingCreation(nextSpellcasting) ||
     !isClassSpellListName(input.unitLibrary, facts.className)
   ) {
-    return Either.left({
+    return Result.fail({
       code: "missingListPreparedSpellcasting",
       classUnitId: input.classUnitId,
       message:
@@ -2640,10 +2652,11 @@ function applyListPreparedSpellcastingLevelGain(input: {
     nextSpellcasting,
     unitLibrary: input.unitLibrary,
   });
-  if (Either.isLeft(preparedSpells)) return Either.left(preparedSpells.left);
+  if (Result.isFailure(preparedSpells))
+    return Result.fail(preparedSpells.failure);
 
-  return Either.right({
-    preparedSpells: preparedSpells.right,
+  return Result.succeed({
+    preparedSpells: preparedSpells.success,
     spellSlots: nextSpellcasting.spellSlotProjection.slots,
   });
 }
@@ -2657,12 +2670,12 @@ function applyListPreparedSpellChanges(input: {
   readonly nextClassLevel: number;
   readonly currentSpellcasting: ListPreparedReadableSpellcasting;
   readonly nextSpellcasting: ListPreparedReadableSpellcasting;
-}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   if (
     input.currentPreparedSpells.length !==
     input.currentSpellcasting.preparedAccess.choose
   ) {
-    return Either.left({
+    return Result.fail({
       code: "invalidListPreparedSpellSelectionCount",
       classLevel: input.currentClassLevel,
       expectedCount: input.currentSpellcasting.preparedAccess.choose,
@@ -2676,7 +2689,7 @@ function applyListPreparedSpellChanges(input: {
     input.nextSpellcasting.preparedAccess.choose -
     input.currentSpellcasting.preparedAccess.choose;
   if (input.levelGain.gainedPreparedSpells.length !== expectedGains) {
-    return Either.left({
+    return Result.fail({
       code: "invalidListPreparedSpellGainCount",
       classLevel: input.nextClassLevel,
       expectedGains,
@@ -2690,12 +2703,12 @@ function applyListPreparedSpellChanges(input: {
     currentPreparedSpells: input.currentPreparedSpells,
     replacement: input.levelGain.preparedSpellReplacement,
   });
-  if (Either.isLeft(replacedPreparedSpells)) {
-    return Either.left(replacedPreparedSpells.left);
+  if (Result.isFailure(replacedPreparedSpells)) {
+    return Result.fail(replacedPreparedSpells.failure);
   }
 
   const finalPreparedSpells = [
-    ...replacedPreparedSpells.right,
+    ...replacedPreparedSpells.success,
     ...input.levelGain.gainedPreparedSpells,
   ];
   const availableSpellLevels = availableSpellSlotLevels(
@@ -2710,7 +2723,7 @@ function applyListPreparedSpellChanges(input: {
     return spellLevel === undefined || !availableSpellLevels.has(spellLevel);
   });
   if (invalidSpell !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "invalidListPreparedSpellChoice",
       spellId: invalidSpell,
       message:
@@ -2720,27 +2733,27 @@ function applyListPreparedSpellChanges(input: {
 
   const duplicateSpell = duplicateValue(finalPreparedSpells);
   if (duplicateSpell !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateListPreparedSpellSelection",
       spellId: duplicateSpell,
       message: "List-prepared spell choices must be distinct.",
     });
   }
 
-  return Either.right(finalPreparedSpells);
+  return Result.succeed(finalPreparedSpells);
 }
 
 function replaceListPreparedSpell(input: {
   readonly currentPreparedSpells: readonly UnitRecord["id"][];
   readonly replacement?: CharacterBuildListPreparedSpellcastingLevelGain["preparedSpellReplacement"];
-}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   if (input.replacement === undefined) {
-    return Either.right(input.currentPreparedSpells);
+    return Result.succeed(input.currentPreparedSpells);
   }
   const replacement = input.replacement;
 
   if (replacement.replaceSpellId === replacement.selectedSpellId) {
-    return Either.left({
+    return Result.fail({
       code: "sameListPreparedSpellReplacement",
       spellId: replacement.selectedSpellId,
       message: "List-prepared spell replacement must choose a different spell.",
@@ -2748,7 +2761,7 @@ function replaceListPreparedSpell(input: {
   }
 
   if (!input.currentPreparedSpells.includes(replacement.replaceSpellId)) {
-    return Either.left({
+    return Result.fail({
       code: "missingListPreparedSpellReplacement",
       spellId: replacement.replaceSpellId,
       message:
@@ -2756,7 +2769,7 @@ function replaceListPreparedSpell(input: {
     });
   }
 
-  return Either.right(
+  return Result.succeed(
     input.currentPreparedSpells.map((spellId) =>
       spellId === replacement.replaceSpellId
         ? replacement.selectedSpellId
@@ -2815,7 +2828,7 @@ function updateSorcererMetamagicOptions(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildSorcererMetamagicLevelGain;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
@@ -2824,7 +2837,8 @@ function updateSorcererMetamagicOptions(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed Sorcerer level-gain route was admitted from this exact Metamagic feature choice. */
-  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const sorcererLevel = classLevelForUnit(
@@ -2834,26 +2848,26 @@ function updateSorcererMetamagicOptions(input: {
   const nextSorcererLevel = sorcererLevel + 1;
   const selectedFeatures = selectedSorcererMetamagicOptionFeaturesForFeature(
     input.build.features,
-    featureChoice.right.featureUnitId,
+    featureChoice.success.featureUnitId,
   );
   const selectedOptionIds = selectedFeatures.map((feature) => feature.optionId);
   const selectionIssue = sorcererMetamagicSelectionCountIssue({
-    mechanics: featureChoice.right.mechanics,
+    mechanics: featureChoice.success.mechanics,
     sorcererLevel,
     selectedOptionIds,
   });
   if (selectionIssue !== undefined) {
-    return Either.left(selectionIssue);
+    return Result.fail(selectionIssue);
   }
 
   const nextExpectedCount = sorcererMetamagicCountAtLevel(
-    featureChoice.right.mechanics,
+    featureChoice.success.mechanics,
     nextSorcererLevel,
   );
   const expectedGains = nextExpectedCount - selectedOptionIds.length;
   const gainedOptions = input.levelGain.metamagic.gainedOptions;
   if (gainedOptions.length !== expectedGains) {
-    return Either.left({
+    return Result.fail({
       code: "invalidSorcererMetamagicGainCount",
       sorcererLevel: nextSorcererLevel,
       expectedGains,
@@ -2866,13 +2880,13 @@ function updateSorcererMetamagicOptions(input: {
   const invalidGain = gainedOptions.find(
     (optionId) =>
       !sorcererMetamagicOptionBelongsToFeature(
-        featureChoice.right.mechanics,
+        featureChoice.success.mechanics,
         optionId,
       ),
   );
   /* v8 ignore start -- @preserve -- The Metamagic level-gain parser admits gained option ids from this installed feature roster. */
   if (invalidGain !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "invalidSorcererMetamagicOption",
       optionId: invalidGain,
       message:
@@ -2885,7 +2899,7 @@ function updateSorcererMetamagicOptions(input: {
     selectedOptionIds.includes(optionId),
   );
   if (alreadyKnownGain !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateSorcererMetamagicOption",
       optionId: alreadyKnownGain,
       message:
@@ -2899,32 +2913,32 @@ function updateSorcererMetamagicOptions(input: {
       ? {}
       : { replacement: input.levelGain.metamagic.replacement }),
   });
-  if (Either.isLeft(replacedOptions)) {
-    return Either.left(replacedOptions.left);
+  if (Result.isFailure(replacedOptions)) {
+    return Result.fail(replacedOptions.failure);
   }
 
-  const finalOptions = [...replacedOptions.right, ...gainedOptions];
+  const finalOptions = [...replacedOptions.success, ...gainedOptions];
   const duplicateOption = duplicateValue(finalOptions);
   if (duplicateOption !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateSorcererMetamagicOption",
       optionId: duplicateOption,
       message: "Metamagic known options must remain distinct.",
     });
   }
 
-  return Either.right([
+  return Result.succeed([
     ...input.build.features.filter(
       (feature) =>
         !isSelectedSorcererMetamagicOptionFromFeature(
           feature,
-          featureChoice.right.featureUnitId,
+          featureChoice.success.featureUnitId,
         ),
     ),
     ...finalOptions.map((optionId) =>
       sorcererMetamagicOptionFeature(
         optionId,
-        featureChoice.right.featureUnitId,
+        featureChoice.success.featureUnitId,
       ),
     ),
   ]);
@@ -2936,32 +2950,33 @@ function sorcererMetamagicCanRemainUnchanged(input: {
   readonly classUnitId: SorcererClassUnitId;
   readonly sorcererLevel: number;
   readonly nextSorcererLevel: number;
-}): Either.Either<void, CharacterBuildAdvancementIssue> {
+}): Result.Result<void, CharacterBuildAdvancementIssue> {
   const featureChoice = sorcererMetamagicFeatureForSorcererClass(input);
   /* v8 ignore start -- @preserve -- The retained Sorcerer build was admitted from this exact Metamagic feature choice. */
-  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const selectedOptionIds = selectedSorcererMetamagicOptionFeaturesForFeature(
     input.build.features,
-    featureChoice.right.featureUnitId,
+    featureChoice.success.featureUnitId,
   ).map((feature) => feature.optionId);
   const selectionIssue = sorcererMetamagicSelectionCountIssue({
-    mechanics: featureChoice.right.mechanics,
+    mechanics: featureChoice.success.mechanics,
     sorcererLevel: input.sorcererLevel,
     selectedOptionIds,
   });
   if (selectionIssue !== undefined) {
-    return Either.left(selectionIssue);
+    return Result.fail(selectionIssue);
   }
 
   const nextExpectedCount = sorcererMetamagicCountAtLevel(
-    featureChoice.right.mechanics,
+    featureChoice.success.mechanics,
     input.nextSorcererLevel,
   );
   return selectedOptionIds.length === nextExpectedCount
-    ? Either.right(undefined)
-    : Either.left({
+    ? Result.succeed(undefined)
+    : Result.fail({
         code: "invalidSorcererMetamagicGainCount",
         sorcererLevel: input.nextSorcererLevel,
         expectedGains: nextExpectedCount - selectedOptionIds.length,
@@ -3019,17 +3034,17 @@ function sorcererMetamagicSelectionCountIssue(input: {
 function replaceSorcererMetamagicOptionSelection(input: {
   readonly selectedOptionIds: readonly SorcererMetamagicOptionId[];
   readonly replacement?: CharacterBuildSorcererMetamagicLevelGain["metamagic"]["replacement"];
-}): Either.Either<
+}): Result.Result<
   readonly SorcererMetamagicOptionId[],
   CharacterBuildAdvancementIssue
 > {
   if (input.replacement === undefined) {
-    return Either.right(input.selectedOptionIds);
+    return Result.succeed(input.selectedOptionIds);
   }
 
   const replacement = input.replacement;
   if (!input.selectedOptionIds.includes(replacement.replaceOptionId)) {
-    return Either.left({
+    return Result.fail({
       code: "missingSelectedSorcererMetamagicOption",
       optionId: replacement.replaceOptionId,
       message:
@@ -3038,7 +3053,7 @@ function replaceSorcererMetamagicOptionSelection(input: {
   }
 
   if (input.selectedOptionIds.includes(replacement.selectedOptionId)) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateSorcererMetamagicOption",
       optionId: replacement.selectedOptionId,
       message:
@@ -3046,7 +3061,7 @@ function replaceSorcererMetamagicOptionSelection(input: {
     });
   }
 
-  return Either.right(
+  return Result.succeed(
     input.selectedOptionIds.map((optionId) =>
       optionId === replacement.replaceOptionId
         ? replacement.selectedOptionId
@@ -3059,7 +3074,7 @@ function updateWarlockEldritchInvocations(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildWarlockLevelGain;
-}): Either.Either<
+}): Result.Result<
   readonly CharacterBuildFeature[],
   CharacterBuildAdvancementIssue
 > {
@@ -3068,7 +3083,8 @@ function updateWarlockEldritchInvocations(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed Warlock level-gain route was admitted from this exact invocation feature choice. */
-  if (Either.isLeft(featureChoice)) return Either.left(featureChoice.left);
+  if (Result.isFailure(featureChoice))
+    return Result.fail(featureChoice.failure);
   /* v8 ignore stop -- @preserve */
 
   const currentWarlockLevel = classLevelForUnit(
@@ -3078,14 +3094,14 @@ function updateWarlockEldritchInvocations(input: {
   const nextWarlockLevel = currentWarlockLevel + 1;
   const selectedFeatures = selectedEldritchInvocationFeaturesForFeature(
     input.build.features,
-    featureChoice.right.featureUnitId,
+    featureChoice.success.featureUnitId,
   );
   const currentExpectedCount = eldritchInvocationCountAtLevel(
-    featureChoice.right.mechanics,
+    featureChoice.success.mechanics,
     currentWarlockLevel,
   );
   if (selectedFeatures.length !== currentExpectedCount) {
-    return Either.left({
+    return Result.fail({
       code: "invalidEldritchInvocationSelectionCount",
       warlockLevel: currentWarlockLevel,
       expectedCount: currentExpectedCount,
@@ -3096,14 +3112,14 @@ function updateWarlockEldritchInvocations(input: {
   }
 
   const nextExpectedCount = eldritchInvocationCountAtLevel(
-    featureChoice.right.mechanics,
+    featureChoice.success.mechanics,
     nextWarlockLevel,
   );
   const expectedGains = nextExpectedCount - selectedFeatures.length;
   const gainedInvocations =
     input.levelGain.eldritchInvocations.gainedInvocations;
   if (gainedInvocations.length !== expectedGains) {
-    return Either.left({
+    return Result.fail({
       code: "invalidEldritchInvocationGainCount",
       warlockLevel: nextWarlockLevel,
       expectedGains,
@@ -3121,15 +3137,18 @@ function updateWarlockEldritchInvocations(input: {
       ? {}
       : { replacement: input.levelGain.eldritchInvocations.replacement }),
   });
-  if (Either.isLeft(replacedInvocations)) {
-    return Either.left(replacedInvocations.left);
+  if (Result.isFailure(replacedInvocations)) {
+    return Result.fail(replacedInvocations.failure);
   }
 
-  const finalInvocations = [...replacedInvocations.right, ...gainedInvocations];
+  const finalInvocations = [
+    ...replacedInvocations.success,
+    ...gainedInvocations,
+  ];
   const duplicateInvocationId =
     duplicateEldritchInvocationSelectionId(finalInvocations);
   if (duplicateInvocationId !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateEldritchInvocationSelection",
       invocationId: duplicateInvocationId,
       message:
@@ -3145,22 +3164,22 @@ function updateWarlockEldritchInvocations(input: {
     selectedInvocations: finalInvocations,
   });
   if (prerequisiteIssue !== undefined) {
-    return Either.left(prerequisiteIssue);
+    return Result.fail(prerequisiteIssue);
   }
 
-  return Either.right([
+  return Result.succeed([
     ...input.build.features.filter(
       (feature) =>
         !isSelectedEldritchInvocationFromFeature(
           feature,
-          featureChoice.right.featureUnitId,
+          featureChoice.success.featureUnitId,
         ),
     ),
     ...finalInvocations.map(
       (selection): CharacterBuildFeature =>
         eldritchInvocationSelectionFeature(
           selection,
-          featureChoice.right.featureUnitId,
+          featureChoice.success.featureUnitId,
         ),
     ),
   ]);
@@ -3169,12 +3188,12 @@ function updateWarlockEldritchInvocations(input: {
 function replaceEldritchInvocationSelection(input: {
   readonly selectedInvocations: readonly EldritchInvocationSelection[];
   readonly replacement?: EldritchInvocationReplacement;
-}): Either.Either<
+}): Result.Result<
   readonly EldritchInvocationSelection[],
   CharacterBuildAdvancementIssue
 > {
   if (input.replacement === undefined) {
-    return Either.right(input.selectedInvocations);
+    return Result.succeed(input.selectedInvocations);
   }
   const replacement = input.replacement;
 
@@ -3189,7 +3208,7 @@ function replaceEldritchInvocationSelection(input: {
   );
   const [replaceIndex, ...remainingMatchingIndexes] = matchingIndexes;
   if (replaceIndex === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingSelectedEldritchInvocation",
       invocationId: replacement.replaceInvocation.invocationId,
       message:
@@ -3198,7 +3217,7 @@ function replaceEldritchInvocationSelection(input: {
   }
   /* v8 ignore start -- @preserve -- Valid CharacterBuild features cannot contain the same nonrepeatable invocation selection more than once. */
   if (remainingMatchingIndexes.length > 0) {
-    return Either.left({
+    return Result.fail({
       code: "ambiguousSelectedEldritchInvocation",
       invocationId: replacement.replaceInvocation.invocationId,
       count: matchingIndexes.length,
@@ -3218,7 +3237,7 @@ function replaceEldritchInvocationSelection(input: {
     }),
   )?.invocationId;
   if (dependentInvocationId !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "lockedEldritchInvocationReplacement",
       replaceInvocationId: replacement.replaceInvocation.invocationId,
       dependentInvocationId,
@@ -3227,7 +3246,7 @@ function replaceEldritchInvocationSelection(input: {
     });
   }
 
-  return Either.right(
+  return Result.succeed(
     input.selectedInvocations.map((selection, index) =>
       index === replaceIndex ? replacement.selectedInvocation : selection,
     ),
@@ -3238,7 +3257,7 @@ function updateWarlockPactMagic(input: {
   readonly build: CharacterBuild;
   readonly unitLibrary: UnitCatalog;
   readonly levelGain: CharacterBuildWarlockLevelGain;
-}): Either.Either<CharacterBuildSpellcasting, CharacterBuildAdvancementIssue> {
+}): Result.Result<CharacterBuildSpellcasting, CharacterBuildAdvancementIssue> {
   const spellcasting = input.build.spellcasting;
   const source = warlockSpellcastingSource(
     input.build,
@@ -3249,12 +3268,12 @@ function updateWarlockPactMagic(input: {
     classUnitId: input.levelGain.classUnitId,
   });
   /* v8 ignore start -- @preserve -- The typed Warlock route was admitted from class facts containing Pact Magic. */
-  if (Either.isLeft(facts)) return Either.left(facts.left);
+  if (Result.isFailure(facts)) return Result.fail(facts.failure);
   /* v8 ignore stop -- @preserve */
 
   /* v8 ignore start -- @preserve -- An admitted Warlock level gain retains the class's existing Pact Magic source and spellcasting projection. */
   if (spellcasting === undefined || source === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingWarlockPactMagicSpellcasting",
       classUnitId: input.levelGain.classUnitId,
       message:
@@ -3268,11 +3287,11 @@ function updateWarlockPactMagic(input: {
     input.levelGain.classUnitId,
   );
   const currentProgression = pactMagicProgressionAtLevel(
-    facts.right,
+    facts.success,
     currentWarlockLevel,
   );
   const nextProgression = pactMagicProgressionAtLevel(
-    facts.right,
+    facts.success,
     currentWarlockLevel + 1,
   );
 
@@ -3285,7 +3304,7 @@ function updateWarlockPactMagic(input: {
       : { pactMagicSlotPool: spellcasting.slotPools.pactMagic }),
     /* v8 ignore stop -- @preserve */
   });
-  if (currentIssue !== undefined) return Either.left(currentIssue);
+  if (currentIssue !== undefined) return Result.fail(currentIssue);
 
   const cantrips = applyWarlockPactMagicCantripChanges({
     unitLibrary: input.unitLibrary,
@@ -3294,7 +3313,7 @@ function updateWarlockPactMagic(input: {
     currentProgression,
     nextProgression,
   });
-  if (Either.isLeft(cantrips)) return Either.left(cantrips.left);
+  if (Result.isFailure(cantrips)) return Result.fail(cantrips.failure);
 
   const preparedSpells = applyWarlockPactMagicPreparedSpellChanges({
     unitLibrary: input.unitLibrary,
@@ -3303,9 +3322,10 @@ function updateWarlockPactMagic(input: {
     currentProgression,
     nextProgression,
   });
-  if (Either.isLeft(preparedSpells)) return Either.left(preparedSpells.left);
+  if (Result.isFailure(preparedSpells))
+    return Result.fail(preparedSpells.failure);
 
-  return Either.right({
+  return Result.succeed({
     ...spellcasting,
     sources: mapCharacterBuildSpellcastingSources(
       spellcasting.sources,
@@ -3313,8 +3333,8 @@ function updateWarlockPactMagic(input: {
         candidate.sourceUnitId === input.levelGain.classUnitId
           ? {
               ...candidate,
-              cantrips: cantrips.right,
-              preparedSpells: preparedSpells.right,
+              cantrips: cantrips.success,
+              preparedSpells: preparedSpells.success,
             }
           : candidate,
     ),
@@ -3341,10 +3361,10 @@ function warlockPactMagicCanRemainUnchanged(input: {
   readonly currentWarlockLevel: number;
   readonly nextWarlockLevel: number;
   readonly spellcasting?: ClassSpellcastingCreation;
-}): Either.Either<void, CharacterBuildAdvancementIssue> {
+}): Result.Result<void, CharacterBuildAdvancementIssue> {
   /* v8 ignore start -- @preserve -- The typed plain-Warlock route retains Pact Magic class facts and its existing build source from support admission. */
   if (input.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
-    return Either.left({
+    return Result.fail({
       code: "missingWarlockPactMagicSpellcasting",
       classUnitId: input.classUnitId,
       message:
@@ -3355,7 +3375,7 @@ function warlockPactMagicCanRemainUnchanged(input: {
   const source = warlockSpellcastingSource(input.build, input.classUnitId);
   const pactMagicSlotPool = input.build.spellcasting?.slotPools.pactMagic;
   if (source === undefined || pactMagicSlotPool === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingWarlockPactMagicSpellcasting",
       classUnitId: input.classUnitId,
       message:
@@ -3378,11 +3398,11 @@ function warlockPactMagicCanRemainUnchanged(input: {
     progression: currentProgression,
   });
   /* v8 ignore start -- @preserve -- An admitted CharacterBuild already matches its current Pact Magic table row and slot projection. */
-  if (currentIssue !== undefined) return Either.left(currentIssue);
+  if (currentIssue !== undefined) return Result.fail(currentIssue);
   /* v8 ignore stop -- @preserve */
 
   if (source.cantrips.length !== nextProgression.cantripTotal) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicCantripGainCount",
       warlockLevel: input.nextWarlockLevel,
       expectedGains:
@@ -3393,7 +3413,7 @@ function warlockPactMagicCanRemainUnchanged(input: {
     });
   }
   if (source.preparedSpells.length !== nextProgression.preparedSpellTotal) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicPreparedSpellGainCount",
       warlockLevel: input.nextWarlockLevel,
       expectedGains:
@@ -3408,7 +3428,7 @@ function warlockPactMagicCanRemainUnchanged(input: {
     pactMagicSlotPool.count !== nextProgression.pactSlotCount ||
     pactMagicSlotPool.slotLevel !== nextProgression.pactSlotLevel
   ) {
-    return Either.left(
+    return Result.fail(
       invalidPactMagicSlotProjectionIssue({
         warlockLevel: input.nextWarlockLevel,
         progression: nextProgression,
@@ -3417,7 +3437,7 @@ function warlockPactMagicCanRemainUnchanged(input: {
     );
   }
 
-  return Either.right(undefined);
+  return Result.succeed(undefined);
 }
 
 function applyWarlockPactMagicCantripChanges(input: {
@@ -3426,10 +3446,10 @@ function applyWarlockPactMagicCantripChanges(input: {
   readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
   readonly currentProgression: PactMagicProgressionRow;
   readonly nextProgression: PactMagicProgressionRow;
-}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   /* v8 ignore start -- @preserve -- An admitted CharacterBuild stores the exact current Pact Magic cantrip table count. */
   if (input.currentCantrips.length !== input.currentProgression.cantripTotal) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicCantripSelectionCount",
       warlockLevel: input.currentProgression.atLevel,
       expectedCount: input.currentProgression.cantripTotal,
@@ -3443,7 +3463,7 @@ function applyWarlockPactMagicCantripChanges(input: {
   const expectedGains =
     input.nextProgression.cantripTotal - input.currentProgression.cantripTotal;
   if (input.pactMagic.gainedCantrips.length !== expectedGains) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicCantripGainCount",
       warlockLevel: input.nextProgression.atLevel,
       expectedGains,
@@ -3457,11 +3477,11 @@ function applyWarlockPactMagicCantripChanges(input: {
     currentCantrips: input.currentCantrips,
     replacement: input.pactMagic.cantripReplacement,
   });
-  if (Either.isLeft(replacedCantrips))
-    return Either.left(replacedCantrips.left);
+  if (Result.isFailure(replacedCantrips))
+    return Result.fail(replacedCantrips.failure);
 
   const finalCantrips = [
-    ...replacedCantrips.right,
+    ...replacedCantrips.success,
     ...input.pactMagic.gainedCantrips,
   ];
   const invalidCantrip = finalCantrips.find(
@@ -3472,7 +3492,7 @@ function applyWarlockPactMagicCantripChanges(input: {
       }),
   );
   if (invalidCantrip !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicCantripChoice",
       cantripId: invalidCantrip,
       message:
@@ -3482,7 +3502,7 @@ function applyWarlockPactMagicCantripChanges(input: {
 
   const duplicateCantrip = duplicateValue(finalCantrips);
   if (duplicateCantrip !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateWarlockPactMagicCantrip",
       cantripId: duplicateCantrip,
       message: "Warlock Pact Magic cantrips must be distinct.",
@@ -3491,8 +3511,8 @@ function applyWarlockPactMagicCantripChanges(input: {
 
   /* v8 ignore start -- @preserve -- Exact gain cardinality plus count-preserving replacement makes a different final count impossible. */
   return finalCantrips.length === input.nextProgression.cantripTotal
-    ? Either.right(finalCantrips)
-    : Either.left({
+    ? Result.succeed(finalCantrips)
+    : Result.fail({
         code: "invalidWarlockPactMagicCantripSelectionCount",
         warlockLevel: input.nextProgression.atLevel,
         expectedCount: input.nextProgression.cantripTotal,
@@ -3509,13 +3529,13 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
   readonly pactMagic: CharacterBuildWarlockPactMagicLevelGain;
   readonly currentProgression: PactMagicProgressionRow;
   readonly nextProgression: PactMagicProgressionRow;
-}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   /* v8 ignore start -- @preserve -- An admitted CharacterBuild stores the exact current Pact Magic prepared-spell table count. */
   if (
     input.currentPreparedSpells.length !==
     input.currentProgression.preparedSpellTotal
   ) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
       warlockLevel: input.currentProgression.atLevel,
       expectedCount: input.currentProgression.preparedSpellTotal,
@@ -3530,7 +3550,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
     input.nextProgression.preparedSpellTotal -
     input.currentProgression.preparedSpellTotal;
   if (input.pactMagic.gainedPreparedSpells.length !== expectedGains) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicPreparedSpellGainCount",
       warlockLevel: input.nextProgression.atLevel,
       expectedGains,
@@ -3544,12 +3564,12 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
     currentPreparedSpells: input.currentPreparedSpells,
     replacement: input.pactMagic.preparedSpellReplacement,
   });
-  if (Either.isLeft(replacedPreparedSpells)) {
-    return Either.left(replacedPreparedSpells.left);
+  if (Result.isFailure(replacedPreparedSpells)) {
+    return Result.fail(replacedPreparedSpells.failure);
   }
 
   const finalPreparedSpells = [
-    ...replacedPreparedSpells.right,
+    ...replacedPreparedSpells.success,
     ...input.pactMagic.gainedPreparedSpells,
   ];
   const invalidSpell = finalPreparedSpells.find(
@@ -3561,7 +3581,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
       }),
   );
   if (invalidSpell !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "invalidWarlockPactMagicPreparedSpellChoice",
       spellId: invalidSpell,
       message:
@@ -3571,7 +3591,7 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
 
   const duplicateSpell = duplicateValue(finalPreparedSpells);
   if (duplicateSpell !== undefined) {
-    return Either.left({
+    return Result.fail({
       code: "duplicateWarlockPactMagicPreparedSpell",
       spellId: duplicateSpell,
       message: "Warlock Pact Magic prepared spells must be distinct.",
@@ -3580,8 +3600,8 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
 
   /* v8 ignore start -- @preserve -- Exact gain cardinality plus count-preserving replacement makes a different final count impossible. */
   return finalPreparedSpells.length === input.nextProgression.preparedSpellTotal
-    ? Either.right(finalPreparedSpells)
-    : Either.left({
+    ? Result.succeed(finalPreparedSpells)
+    : Result.fail({
         code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
         warlockLevel: input.nextProgression.atLevel,
         expectedCount: input.nextProgression.preparedSpellTotal,
@@ -3595,14 +3615,14 @@ function applyWarlockPactMagicPreparedSpellChanges(input: {
 function replaceWarlockPactMagicCantrip(input: {
   readonly currentCantrips: readonly UnitRecord["id"][];
   readonly replacement?: CharacterBuildWarlockPactMagicLevelGain["cantripReplacement"];
-}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   if (input.replacement === undefined) {
-    return Either.right(input.currentCantrips);
+    return Result.succeed(input.currentCantrips);
   }
   const replacement = input.replacement;
 
   if (replacement.replaceCantripId === replacement.selectedCantripId) {
-    return Either.left({
+    return Result.fail({
       code: "sameWarlockPactMagicCantripReplacement",
       cantripId: replacement.selectedCantripId,
       message:
@@ -3611,7 +3631,7 @@ function replaceWarlockPactMagicCantrip(input: {
   }
 
   if (!input.currentCantrips.includes(replacement.replaceCantripId)) {
-    return Either.left({
+    return Result.fail({
       code: "missingWarlockPactMagicCantripReplacement",
       cantripId: replacement.replaceCantripId,
       message:
@@ -3619,7 +3639,7 @@ function replaceWarlockPactMagicCantrip(input: {
     });
   }
 
-  return Either.right(
+  return Result.succeed(
     input.currentCantrips.map((cantripId) =>
       cantripId === replacement.replaceCantripId
         ? replacement.selectedCantripId
@@ -3631,14 +3651,14 @@ function replaceWarlockPactMagicCantrip(input: {
 function replaceWarlockPactMagicPreparedSpell(input: {
   readonly currentPreparedSpells: readonly UnitRecord["id"][];
   readonly replacement?: CharacterBuildWarlockPactMagicLevelGain["preparedSpellReplacement"];
-}): Either.Either<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
+}): Result.Result<readonly UnitRecord["id"][], CharacterBuildAdvancementIssue> {
   if (input.replacement === undefined) {
-    return Either.right(input.currentPreparedSpells);
+    return Result.succeed(input.currentPreparedSpells);
   }
   const replacement = input.replacement;
 
   if (replacement.replaceSpellId === replacement.selectedSpellId) {
-    return Either.left({
+    return Result.fail({
       code: "sameWarlockPactMagicPreparedSpellReplacement",
       spellId: replacement.selectedSpellId,
       message:
@@ -3647,7 +3667,7 @@ function replaceWarlockPactMagicPreparedSpell(input: {
   }
 
   if (!input.currentPreparedSpells.includes(replacement.replaceSpellId)) {
-    return Either.left({
+    return Result.fail({
       code: "missingWarlockPactMagicPreparedSpellReplacement",
       spellId: replacement.replaceSpellId,
       message:
@@ -3655,7 +3675,7 @@ function replaceWarlockPactMagicPreparedSpell(input: {
     });
   }
 
-  return Either.right(
+  return Result.succeed(
     input.currentPreparedSpells.map((spellId) =>
       spellId === replacement.replaceSpellId
         ? replacement.selectedSpellId
@@ -3667,13 +3687,13 @@ function replaceWarlockPactMagicPreparedSpell(input: {
 function fightingStyleFeatureChoiceHoleForFighterClass(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: FighterClassUnitId;
-}): Either.Either<ChoiceCreationHole, CharacterBuildAdvancementIssue> {
+}): Result.Result<ChoiceCreationHole, CharacterBuildAdvancementIssue> {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed Fighting Style route already admitted this Fighter class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   const holes = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -3696,7 +3716,7 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
 
   /* v8 ignore start -- @preserve -- The supported Fighter catalog contains exactly one acquisition feature that owns the Fighting Style hole. */
   if (holes.length === 0) {
-    return Either.left({
+    return Result.fail({
       code: "missingFightingStyleFeatureChoice",
       classUnitId: input.classUnitId,
       message:
@@ -3705,7 +3725,7 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
   }
 
   if (holes.length > 1) {
-    return Either.left({
+    return Result.fail({
       code: "ambiguousFightingStyleFeatureChoice",
       classUnitId: input.classUnitId,
       featureUnitIds: holes.flatMap((hole) => {
@@ -3719,7 +3739,7 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
 
   const hole = holes[0];
   if (hole === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingFightingStyleFeatureChoice",
       classUnitId: input.classUnitId,
       message:
@@ -3728,22 +3748,22 @@ function fightingStyleFeatureChoiceHoleForFighterClass(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right(hole);
+  return Result.succeed(hole);
 }
 
 function fightingStyleCantripFeatureChoiceForClass(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: UnitRecord["id"];
-}): Either.Either<
+}): Result.Result<
   FightingStyleCantripFeatureChoice,
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed Fighting Style cantrip route already admitted this class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   const choices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -3788,7 +3808,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
 
   /* v8 ignore start -- @preserve -- An admitted Fighting Style cantrip replacement has exactly one matching acquisition grant in its class facts. */
   if (choices.length === 0) {
-    return Either.left({
+    return Result.fail({
       code: "missingFightingStyleCantripFeatureChoice",
       classUnitId: input.classUnitId,
       message:
@@ -3797,7 +3817,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
   }
 
   if (choices.length > 1) {
-    return Either.left({
+    return Result.fail({
       code: "ambiguousFightingStyleCantripFeatureChoice",
       classUnitId: input.classUnitId,
       featureUnitIds: choices.map((choice) => choice.featureUnitId),
@@ -3808,7 +3828,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
 
   const choice = choices[0];
   if (choice === undefined) {
-    return Either.left({
+    return Result.fail({
       code: "missingFightingStyleCantripFeatureChoice",
       classUnitId: input.classUnitId,
       message:
@@ -3817,7 +3837,7 @@ function fightingStyleCantripFeatureChoiceForClass(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right(choice);
+  return Result.succeed(choice);
 }
 
 function isClassSpellListName(
@@ -3833,16 +3853,16 @@ function isClassSpellListName(
 function eldritchInvocationFeatureForWarlockClass(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: WarlockClassUnitId;
-}): Either.Either<
+}): Result.Result<
   EldritchInvocationFeatureChoice,
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed Warlock route already admitted this Warlock class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   const featureChoices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -3864,7 +3884,7 @@ function eldritchInvocationFeatureForWarlockClass(input: {
 
   /* v8 ignore start -- @preserve -- The supported Warlock catalog contains exactly one feature choice with the invocation choice key. */
   if (featureChoices.length === 0) {
-    return Either.left({
+    return Result.fail({
       code: "missingEldritchInvocationFeatureChoice",
       classUnitId: input.classUnitId,
       message:
@@ -3873,7 +3893,7 @@ function eldritchInvocationFeatureForWarlockClass(input: {
   }
 
   if (featureChoices.length > 1) {
-    return Either.left({
+    return Result.fail({
       code: "ambiguousEldritchInvocationFeatureChoice",
       classUnitId: input.classUnitId,
       featureUnitIds: featureChoices.map((feature) => feature.featureUnitId),
@@ -3884,29 +3904,29 @@ function eldritchInvocationFeatureForWarlockClass(input: {
 
   const featureChoice = featureChoices[0];
   return featureChoice === undefined
-    ? Either.left({
+    ? Result.fail({
         code: "missingEldritchInvocationFeatureChoice",
         classUnitId: input.classUnitId,
         message:
           "Cannot find the Warlock class-feature Eldritch Invocation choice.",
       })
-    : Either.right(featureChoice);
+    : Result.succeed(featureChoice);
   /* v8 ignore stop -- @preserve */
 }
 
 function sorcererMetamagicFeatureForSorcererClass(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: SorcererClassUnitId;
-}): Either.Either<
+}): Result.Result<
   SorcererMetamagicFeatureChoice,
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed Sorcerer route already admitted this Sorcerer class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   const featureChoices = facts.featureGrants.flatMap((grant) => {
     const feature = input.unitLibrary.getUnit(grant.unitId);
     if (
@@ -3927,7 +3947,7 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
 
   /* v8 ignore start -- @preserve -- The supported Sorcerer catalog contains exactly one Metamagic option-choice feature. */
   if (featureChoices.length === 0) {
-    return Either.left({
+    return Result.fail({
       code: "missingSorcererMetamagicFeatureChoice",
       classUnitId: input.classUnitId,
       message:
@@ -3936,7 +3956,7 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
   }
 
   if (featureChoices.length > 1) {
-    return Either.left({
+    return Result.fail({
       code: "ambiguousSorcererMetamagicFeatureChoice",
       classUnitId: input.classUnitId,
       featureUnitIds: featureChoices.map((feature) => feature.featureUnitId),
@@ -3947,13 +3967,13 @@ function sorcererMetamagicFeatureForSorcererClass(input: {
 
   const featureChoice = featureChoices[0];
   return featureChoice === undefined
-    ? Either.left({
+    ? Result.fail({
         code: "missingSorcererMetamagicFeatureChoice",
         classUnitId: input.classUnitId,
         message:
           "Cannot find the Sorcerer class-feature Metamagic option choice.",
       })
-    : Either.right(featureChoice);
+    : Result.succeed(featureChoice);
   /* v8 ignore stop -- @preserve */
 }
 
@@ -4354,19 +4374,19 @@ function warlockSpellcastingSource(
 function warlockPactMagicSpellcastingForClass(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: WarlockClassUnitId;
-}): Either.Either<
+}): Result.Result<
   PactMagicSpellcastingCreation,
   CharacterBuildAdvancementIssue
 > {
   const classUnit = classUnitRecord(input);
   /* v8 ignore start -- @preserve -- The typed Pact Magic route already admitted this Warlock class id from the same catalog. */
-  if (Either.isLeft(classUnit)) return Either.left(classUnit.left);
+  if (Result.isFailure(classUnit)) return Result.fail(classUnit.failure);
   /* v8 ignore stop -- @preserve */
 
-  const facts = classCreationFacts(classUnit.right);
+  const facts = classCreationFacts(classUnit.success);
   /* v8 ignore start -- @preserve -- The branded Warlock class route is admitted only from class facts containing Pact Magic creation data. */
   if (facts.spellcasting?.kind !== "pact_magic_spellcasting_creation") {
-    return Either.left({
+    return Result.fail({
       code: "missingWarlockPactMagicSpellcasting",
       classUnitId: input.classUnitId,
       message: "Cannot find Warlock Pact Magic class spellcasting facts.",
@@ -4374,7 +4394,7 @@ function warlockPactMagicSpellcastingForClass(input: {
   }
   /* v8 ignore stop -- @preserve */
 
-  return Either.right(facts.spellcasting);
+  return Result.succeed(facts.spellcasting);
 }
 
 function pactMagicProgressionAtLevel(

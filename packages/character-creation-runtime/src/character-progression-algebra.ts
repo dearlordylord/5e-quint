@@ -1,4 +1,4 @@
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import {
   CHARACTER_CLASS_LEVELS,
   characterClassLevel,
@@ -39,13 +39,13 @@ export function parseCharacterProgressionShape(input: {
     readonly classUnitId: ClassUnitId;
     readonly hitPointRule: FixedHigherLevelClassHitPointRule;
   }[];
-}): Either.Either<
+}): Result.Result<
   CharacterProgression,
   ReadonlyNonEmptyArray<CharacterProgressionIssue>
 > {
   const totalLevel = 1 + input.advancements.length;
   if (!CHARACTER_CLASS_LEVELS.some((level) => level === totalLevel)) {
-    return Either.left([
+    return Result.fail([
       {
         code: "invalidCharacterClassLevel",
         classLevel: totalLevel,
@@ -61,35 +61,35 @@ export function parseCharacterProgressionShape(input: {
     }),
   );
   /* v8 ignore start -- @preserve -- Parsed progression entries have already satisfied this per-entry class-level boundary. */
-  if (Either.isLeft(advancements)) return Either.left(advancements.left);
+  if (Result.isFailure(advancements)) return Result.fail(advancements.failure);
   /* v8 ignore stop -- @preserve */
 
-  return Either.right({
+  return Result.succeed({
     startingClass: input.startingClass,
-    advancements: advancements.right,
+    advancements: advancements.success,
   });
 }
 
 export function classNameFromClassUnit(
   unit: UnitRecord,
-): Either.Either<ClassName, ClassUnitNameIssue> {
+): Result.Result<ClassName, ClassUnitNameIssue> {
   if (unit.kind !== "class") {
-    return Either.left({
+    return Result.fail({
       code: "nonClassUnit",
       unitId: unit.id,
       unitKind: unit.kind,
     });
   }
 
-  return Either.right(unit.className);
+  return Result.succeed(unit.className);
 }
 
 export function classUnitIdFromClassUnit(
   unit: UnitRecord,
-): Either.Either<ClassUnitId, ClassUnitNameIssue> {
+): Result.Result<ClassUnitId, ClassUnitNameIssue> {
   return unit.kind === "class"
-    ? Either.right(classUnitId(unit.id))
-    : Either.left({
+    ? Result.succeed(classUnitId(unit.id))
+    : Result.fail({
         code: "nonClassUnit",
         unitId: unit.id,
         unitKind: unit.kind,
@@ -99,11 +99,11 @@ export function classUnitIdFromClassUnit(
 export function classUnitIdToClassName(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: UnitRecord["id"];
-}): Either.Either<ClassName, ClassUnitNameIssue> {
+}): Result.Result<ClassName, ClassUnitNameIssue> {
   const unit = input.unitLibrary.getUnit(input.classUnitId);
 
   if (Option.isNone(unit)) {
-    return Either.left({
+    return Result.fail({
       code: "unknownUnitId",
       unitId: input.classUnitId,
     });
@@ -115,11 +115,11 @@ export function classUnitIdToClassName(input: {
 export function classUnitIdFromUnitId(input: {
   readonly unitLibrary: UnitCatalog;
   readonly classUnitId: UnitRecord["id"];
-}): Either.Either<ClassUnitId, ClassUnitNameIssue> {
+}): Result.Result<ClassUnitId, ClassUnitNameIssue> {
   const unit = input.unitLibrary.getUnit(input.classUnitId);
 
   if (Option.isNone(unit)) {
-    return Either.left({
+    return Result.fail({
       code: "unknownUnitId",
       unitId: input.classUnitId,
     });

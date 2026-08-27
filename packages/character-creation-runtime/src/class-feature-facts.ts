@@ -1,4 +1,4 @@
-import { Either, Option } from "effect";
+import { Result, Option } from "effect";
 import type { ClassFeatureRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "./types.ts";
 import type { CharacterBuild } from "./types.ts";
@@ -16,7 +16,7 @@ export function characterBuildClassFeatureOwnerLevel(input: {
   readonly build: Pick<CharacterBuild, "progression">;
   readonly unitLibrary: UnitCatalog;
   readonly feature: Pick<ClassFeatureRecord, "className" | "name">;
-}): Either.Either<number, CharacterBuildClassFeatureOwnerLevelIssue> {
+}): Result.Result<number, CharacterBuildClassFeatureOwnerLevelIssue> {
   for (const classUnitId of progressionClassUnitIds(input.build.progression)) {
     const classUnit = input.unitLibrary.getUnit(classUnitId);
     if (
@@ -24,12 +24,12 @@ export function characterBuildClassFeatureOwnerLevel(input: {
       classUnit.value.kind === "class" &&
       classUnit.value.className === input.feature.className
     ) {
-      return Either.right(
+      return Result.succeed(
         classLevelForUnit(input.build.progression, classUnitId),
       );
     }
   }
-  return Either.left({
+  return Result.fail({
     tag: "classFeatureOwnerLevelIssue",
     message: `${input.feature.name} projection requires ${classNameLabel(input.feature.className)} class progression.`,
   });

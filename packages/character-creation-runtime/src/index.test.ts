@@ -13,7 +13,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { describe, expect, it, test } from "vitest";
-import { Either, Match, Option } from "effect";
+import { Result, Match, Option } from "effect";
 import fc from "fast-check";
 import {
   buildUnitCatalog,
@@ -288,12 +288,12 @@ function testAbilityScoreAssignment(
   scores: RawAbilityScoreAssignment,
 ): AbilityScoreAssignment {
   const parsed = abilityScoreAssignment(scores);
-  if (Either.isLeft(parsed)) {
+  if (Result.isFailure(parsed)) {
     throw new Error(
       "Test fixture ability scores must be valid AbilityScore values.",
     );
   }
-  return parsed.right;
+  return parsed.success;
 }
 
 if (unitCatalogResult.tag !== "ok") {
@@ -316,15 +316,15 @@ const druidWildShapeFixtureKnownFormStatBlockIds = [
   authoredStatBlockId("stat_block_wolf"),
 ] as const;
 
-function expectRight<T, E>(result: Either.Either<T, E>): T {
-  if (Either.isLeft(result)) {
+function expectRight<T, E>(result: Result.Result<T, E>): T {
+  if (Result.isFailure(result)) {
     throw new Error(
-      `Expected Either.right, received ${JSON.stringify(result.left)}`,
+      `Expected Result.succeed, received ${JSON.stringify(result.failure)}`,
     );
   }
-  expect(Either.isRight(result)).toBe(true);
+  expect(Result.isSuccess(result)).toBe(true);
 
-  return result.right;
+  return result.success;
 }
 
 function finalizedCompleteManifestBuild(): CharacterBuild {
@@ -707,9 +707,9 @@ function testProgression(
     : { tag: "fixedHigherLevelGain" },
 ): CharacterProgression {
   const parsedClassUnitId = classUnitIdFromUnitId({ unitLibrary, classUnitId });
-  if (Either.isLeft(parsedClassUnitId)) {
+  if (Result.isFailure(parsedClassUnitId)) {
     throw new Error(
-      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.left)}`,
+      `Invalid test class Unit id: ${JSON.stringify(parsedClassUnitId.failure)}`,
     );
   }
   if (classLevel === 1 && hitPointRule.tag !== "levelOneMaximumHitDie") {
@@ -721,17 +721,19 @@ function testProgression(
     );
   }
   const result = parseCharacterProgressionShape({
-    startingClass: parsedClassUnitId.right,
+    startingClass: parsedClassUnitId.success,
     advancements: Array.from({ length: classLevel - 1 }, () => ({
-      classUnitId: parsedClassUnitId.right,
+      classUnitId: parsedClassUnitId.success,
       hitPointRule: { tag: "fixedHigherLevelGain" as const },
     })),
   });
-  if (Either.isLeft(result)) {
-    throw new Error(`Invalid test progression: ${JSON.stringify(result.left)}`);
+  if (Result.isFailure(result)) {
+    throw new Error(
+      `Invalid test progression: ${JSON.stringify(result.failure)}`,
+    );
   }
 
-  return result.right;
+  return result.success;
 }
 
 function expectedSameClassProgressionOptionIds(
@@ -760,36 +762,36 @@ function expectedFirstMulticlassLevelGainOptionId(
 
 function unitChoiceKeyRight(value: string) {
   const result = unitChoiceKey(value);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(`Invalid test Unit choice key: ${value}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function unitChoiceSourceUnitIdRight(value: string) {
   const result = unitChoiceSourceUnitId(value);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(`Invalid test Unit choice source Unit id: ${value}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function loadoutEquipmentUnitIdRight(value: string) {
   const result = loadoutEquipmentUnitId(value);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(`Invalid test loadout equipment Unit id: ${value}`);
   }
-  return result.right;
+  return result.success;
 }
 
 function characterEquipmentItemUnitIdRight(value: string) {
   const result = characterEquipmentItemUnitId(value);
-  if (Either.isLeft(result)) {
+  if (Result.isFailure(result)) {
     throw new Error(
       `Invalid test CharacterBuild equipment item Unit id: ${value}`,
     );
   }
-  return result.right;
+  return result.success;
 }
 
 function testCharacterEquipmentItemId<
@@ -844,7 +846,7 @@ describe("CharacterDraft parser", () => {
     });
 
     expect(parseCharacterDraft(JSON.parse(JSON.stringify(draft)))).toEqual(
-      Either.right(draft),
+      Result.succeed(draft),
     );
   });
 
@@ -861,7 +863,7 @@ describe("CharacterDraft parser", () => {
         },
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "invalidCharacterDraft",
         path: "$.selections.choices[0].source.unitId",
         message: "Expected a string.",
@@ -902,7 +904,7 @@ describe("UnitChoiceSourceKey", () => {
     expect(
       parseUnitChoiceSourceKey("u:13:class_fighter:c:not_a_choice"),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "unitChoiceSourceKeyUnsupportedChoiceKey",
         value: "u:13:class_fighter:c:not_a_choice",
         choiceKey: "not_a_choice",
@@ -914,7 +916,7 @@ describe("UnitChoiceSourceKey", () => {
     "rejects an invalid raw Unit id %j with a typed issue",
     (value) => {
       expect(unitChoiceSourceUnitId(value)).toEqual(
-        Either.left({ tag: "unitChoiceSourceUnitIdEmpty", value }),
+        Result.fail({ tag: "unitChoiceSourceUnitIdEmpty", value }),
       );
     },
   );
@@ -966,7 +968,7 @@ describe("LoadoutSourceKey", () => {
 
   test("rejects unsupported loadout slots with typed issues", () => {
     expect(parseLoadoutSourceKey("e:16:armor_chain_mail:s:carried")).toEqual(
-      Either.left({
+      Result.fail({
         tag: "loadoutSourceKeyUnsupportedSlot",
         value: "e:16:armor_chain_mail:s:carried",
         slot: "carried",
@@ -978,7 +980,7 @@ describe("LoadoutSourceKey", () => {
     "rejects an invalid raw equipment Unit id %j with a typed issue",
     (value) => {
       expect(loadoutEquipmentUnitId(value)).toEqual(
-        Either.left({ tag: "loadoutEquipmentUnitIdEmpty", value }),
+        Result.fail({ tag: "loadoutEquipmentUnitIdEmpty", value }),
       );
     },
   );
@@ -1019,20 +1021,20 @@ describe("CharacterEquipmentItemId", () => {
 
   test("returns typed issues for invalid item ids", () => {
     expect(parseCharacterEquipmentItemId("carried:weapon_longsword")).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterEquipmentItemIdSlotUnsupported",
         value: "carried:weapon_longsword",
       }),
     );
     expect(parseCharacterEquipmentItemId("main:")).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterEquipmentItemIdUnitIdEmpty",
         value: "main:",
         slot: "main",
       }),
     );
     expect(parseCharacterEquipmentItemId("main: ")).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterEquipmentItemIdUnitIdEmpty",
         value: "main: ",
         slot: "main",
@@ -1044,7 +1046,7 @@ describe("CharacterEquipmentItemId", () => {
     "rejects an invalid raw item Unit id %j with a typed issue",
     (value) => {
       expect(characterEquipmentItemUnitId(value)).toEqual(
-        Either.left({ tag: "characterEquipmentItemUnitIdEmpty", value }),
+        Result.fail({ tag: "characterEquipmentItemUnitIdEmpty", value }),
       );
     },
   );
@@ -1058,7 +1060,7 @@ const characterCreationRuntimeSliceTestsPath = fileURLToPath(
 describe("character creation hole discovery", () => {
   test("rejects unknown Unit choice keys at the protocol boundary", () => {
     expect(unitChoiceKey("future_choice")).toEqual(
-      Either.left({
+      Result.fail({
         tag: "unsupportedUnitChoiceKey",
         value: "future_choice",
       }),
@@ -5611,7 +5613,7 @@ describe("character creation finalization", () => {
     );
 
     expect(result).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterBuildProjection",
         cause: {
           tag: "abilityScoreCapExceeded",
@@ -5621,8 +5623,8 @@ describe("character creation finalization", () => {
         },
       }),
     );
-    if (Either.isLeft(result)) {
-      expect(characterCreationIssueMessage(result.left)).toBe(
+    if (Result.isFailure(result)) {
+      expect(characterCreationIssueMessage(result.failure)).toBe(
         "Cannot apply background ability-score increase: str 32 would exceed 20 by 12.",
       );
     }
@@ -5815,7 +5817,7 @@ describe("character creation finalization", () => {
       "stat_block_wolf",
     ]);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         replaceDruidWildShapeKnownForm({
           facts: wildShapeFacts,
           currentKnownFormStatBlockIds:
@@ -5831,7 +5833,7 @@ describe("character creation finalization", () => {
     expect(
       decodeAbilityScoreIncreaseOptionId("ability_score:str:+1:max0"),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "choiceOptionCodecIssue",
         optionId: "ability_score:str:+1:max0",
         cause: {
@@ -5844,7 +5846,7 @@ describe("character creation finalization", () => {
     expect(
       decodeAbilityScoreIncreaseOptionId("ability_score:str:+0:max20"),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "choiceOptionCodecIssue",
         optionId: "ability_score:str:+0:max20",
         cause: {
@@ -5859,7 +5861,7 @@ describe("character creation finalization", () => {
         "ability_score:str:+9007199254740992:max20",
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "choiceOptionCodecIssue",
         optionId: "ability_score:str:+9007199254740992:max20",
         cause: {
@@ -5872,7 +5874,7 @@ describe("character creation finalization", () => {
     expect(
       decodeAbilityScoreIncreaseOptionId("ability_score:str:+1:max31"),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "choiceOptionCodecIssue",
         optionId: "ability_score:str:+1:max31",
         cause: {
@@ -6292,8 +6294,8 @@ describe("character creation finalization", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "sameSorcererMetamagicReplacement" },
+      _tag: "Failure",
+      failure: { code: "sameSorcererMetamagicReplacement" },
     });
 
     const missingKnownOption = expectRight(
@@ -6315,8 +6317,8 @@ describe("character creation finalization", () => {
         levelGain: missingKnownOption,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "missingSelectedSorcererMetamagicOption" },
+      _tag: "Failure",
+      failure: { code: "missingSelectedSorcererMetamagicOption" },
     });
 
     const duplicateKnownOption = expectRight(
@@ -6338,8 +6340,8 @@ describe("character creation finalization", () => {
         levelGain: duplicateKnownOption,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "duplicateSorcererMetamagicOption" },
+      _tag: "Failure",
+      failure: { code: "duplicateSorcererMetamagicOption" },
     });
   });
 
@@ -6367,8 +6369,8 @@ describe("character creation finalization", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidSorcererMetamagicSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -6482,8 +6484,8 @@ describe("character creation finalization", () => {
         levelGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateSorcererMetamagicOption",
         optionId: "sorcerer_empowered_spell",
       },
@@ -6521,8 +6523,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidSorcererMetamagicGainCount",
         expectedGains: 2,
         actualGains: 1,
@@ -6556,8 +6558,8 @@ describe("character creation finalization", () => {
         levelGain: validGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateSorcererMetamagicOption",
         optionId: firstOption.optionId,
       },
@@ -6581,8 +6583,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateSorcererMetamagicOption",
         optionId: "sorcerer_subtle_spell",
       },
@@ -6599,8 +6601,8 @@ describe("character creation finalization", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidSorcererMetamagicGainCount",
         expectedGains: 2,
         actualGains: 0,
@@ -6725,8 +6727,8 @@ describe("character creation finalization", () => {
         route: ["seed"],
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         route: [
           "seed",
           {
@@ -6806,8 +6808,8 @@ describe("character creation finalization", () => {
     });
 
     expect(staleLevelFour).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         expectedCount: 4,
         actualCount: 3,
@@ -6876,8 +6878,8 @@ describe("character creation finalization", () => {
         levelGain: mismatchedFeatureGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "weaponMasteryFeatureClassMismatch",
         classUnitId: "class_fighter",
         featureUnitId: "barbarian_weapon_mastery",
@@ -6910,8 +6912,8 @@ describe("character creation finalization", () => {
         levelGain: validLevelGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         classLevel: 1,
         expectedCount: 3,
@@ -6944,8 +6946,8 @@ describe("character creation finalization", () => {
           levelGain,
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: {
+        _tag: "Failure",
+        failure: {
           code: "duplicateWeaponMasterySelection",
           featureUnitId: "fighter_weapon_mastery",
           weaponUnitId: "weapon_longsword",
@@ -6969,8 +6971,8 @@ describe("character creation finalization", () => {
         levelGain: tooFewSelectionsGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWeaponMasterySelectionCount",
         classLevel: 2,
         expectedCount: 3,
@@ -6998,8 +7000,8 @@ describe("character creation finalization", () => {
         levelGain: duplicateSelectionGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateWeaponMasterySelection",
         weaponUnitId: "weapon_longsword",
       },
@@ -7025,8 +7027,8 @@ describe("character creation finalization", () => {
         levelGain: replacementSelectionGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "missingExistingWeaponMasterySelection",
         weaponUnitId: "weapon_longsword",
       },
@@ -7131,8 +7133,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "nonFighterClassLevelGain" },
+      _tag: "Failure",
+      failure: { code: "nonFighterClassLevelGain" },
     });
   });
 
@@ -7216,8 +7218,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "sameFightingStyleReplacement" },
+      _tag: "Failure",
+      failure: { code: "sameFightingStyleReplacement" },
     });
   });
 
@@ -7237,8 +7239,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "nonFightingStyleFeat" },
+      _tag: "Failure",
+      failure: { code: "nonFightingStyleFeat" },
     });
   });
 
@@ -7258,8 +7260,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "nonFighterClassLevelGain" },
+      _tag: "Failure",
+      failure: { code: "nonFighterClassLevelGain" },
     });
   });
 
@@ -7360,8 +7362,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidFightingStyleCantripSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -7381,8 +7383,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidFightingStyleCantripReplacement",
         cantripId: "fire_bolt",
       },
@@ -7398,8 +7400,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "sameFightingStyleCantripReplacement",
         cantripId: "guidance",
       },
@@ -7415,8 +7417,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "missingFightingStyleCantripReplacement",
         cantripId: "resistance",
       },
@@ -7432,8 +7434,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateFightingStyleCantripSelection",
         cantripId: "sacred_flame",
       },
@@ -7495,16 +7497,16 @@ describe("character creation finalization", () => {
         { gainedPreparedSpells: [authoredUnitId("command")] },
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidListPreparedSpellSelectionCount",
         expectedCount: 3,
         actualCount: 2,
       },
     });
     expect(advance(build, { gainedPreparedSpells: [] })).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidListPreparedSpellGainCount",
         expectedGains: 1,
         actualGains: 0,
@@ -7519,8 +7521,8 @@ describe("character creation finalization", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "sameListPreparedSpellReplacement",
         spellId: "heroism",
       },
@@ -7534,8 +7536,8 @@ describe("character creation finalization", () => {
         },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "missingListPreparedSpellReplacement",
         spellId: "cure_wounds",
       },
@@ -7545,8 +7547,8 @@ describe("character creation finalization", () => {
         gainedPreparedSpells: [authoredUnitId("fire_bolt")],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidListPreparedSpellChoice",
         spellId: "fire_bolt",
       },
@@ -7556,8 +7558,8 @@ describe("character creation finalization", () => {
         gainedPreparedSpells: [authoredUnitId("heroism")],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateListPreparedSpellSelection",
         spellId: "heroism",
       },
@@ -7587,8 +7589,8 @@ describe("character creation finalization", () => {
         fighterClassUnitId,
       ),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "missingListPreparedSpellcasting" },
+      _tag: "Failure",
+      failure: { code: "missingListPreparedSpellcasting" },
     });
   });
 
@@ -7696,8 +7698,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "invalidFightingStyleCantripReplacement" },
+      _tag: "Failure",
+      failure: { code: "invalidFightingStyleCantripReplacement" },
     });
   });
 
@@ -7716,8 +7718,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "missingFightingStyleCantripFeatureChoice" },
+      _tag: "Failure",
+      failure: { code: "missingFightingStyleCantripFeatureChoice" },
     });
   });
 
@@ -7763,8 +7765,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "duplicateFightingStyleCantripSelection" },
+      _tag: "Failure",
+      failure: { code: "duplicateFightingStyleCantripSelection" },
     });
   });
 
@@ -7810,8 +7812,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "missingFightingStyleCantripReplacement" },
+      _tag: "Failure",
+      failure: { code: "missingFightingStyleCantripReplacement" },
     });
   });
 
@@ -8179,18 +8181,18 @@ describe("character creation finalization", () => {
 
     for (const option of options) {
       const decoded = decodeAbilityScoreIncreaseOptionId(option.optionId);
-      expect(Either.isRight(decoded)).toBe(true);
-      if (Either.isRight(decoded)) {
-        expect(decoded.right.length).toBeGreaterThan(0);
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (Result.isSuccess(decoded)) {
+        expect(decoded.success.length).toBeGreaterThan(0);
       }
     }
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeAbilityScoreIncreaseOptionId("ability_score:dex:2:max20"),
       ),
     ).toBe(true);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeAbilityScoreIncreaseOptionId(
           "ability_scores:str:+1;str:+1:max20",
         ),
@@ -8703,8 +8705,8 @@ describe("character creation finalization", () => {
         levelGain: levelGain(expectedGains),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidEldritchInvocationSelectionCount",
         expectedCount: 1,
         actualCount: 0,
@@ -8717,8 +8719,8 @@ describe("character creation finalization", () => {
         levelGain: levelGain([]),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidEldritchInvocationGainCount",
         expectedGains: 2,
         actualGains: 0,
@@ -8747,8 +8749,8 @@ describe("character creation finalization", () => {
         levelGain: missingReplacement,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "missingSelectedEldritchInvocation",
         invocationId: "eldritch_mind",
       },
@@ -8780,8 +8782,8 @@ describe("character creation finalization", () => {
         route: ["seed"],
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         tag: "accepted",
         route: [
           "seed",
@@ -8819,8 +8821,8 @@ describe("character creation finalization", () => {
         route: ["seed"],
       }),
     ).toMatchObject({
-      _tag: "Right",
-      right: {
+      _tag: "Success",
+      success: {
         tag: "rejected",
         issue: { code: "duplicateEldritchInvocationSelection" },
         route: [
@@ -8861,8 +8863,8 @@ describe("character creation finalization", () => {
         route: [],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
+      _tag: "Failure",
+      failure: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
     });
   });
 
@@ -8943,8 +8945,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWarlockPactMagicCantripSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -8963,8 +8965,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWarlockPactMagicCantripGainCount",
         expectedGains: 0,
         actualGains: 1,
@@ -9032,8 +9034,8 @@ describe("character creation finalization", () => {
           levelGain: levelGain(cantripCase.pactMagic),
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: cantripCase.issue,
+        _tag: "Failure",
+        failure: cantripCase.issue,
       });
     }
 
@@ -9050,8 +9052,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWarlockPactMagicPreparedSpellSelectionCount",
         expectedCount: 2,
         actualCount: 1,
@@ -9111,8 +9113,8 @@ describe("character creation finalization", () => {
           levelGain: levelGain(preparedSpellCase.pactMagic),
         }),
       ).toMatchObject({
-        _tag: "Left",
-        left: preparedSpellCase.issue,
+        _tag: "Failure",
+        failure: preparedSpellCase.issue,
       });
     }
 
@@ -9133,8 +9135,8 @@ describe("character creation finalization", () => {
         ),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidWarlockPactMagicSlotProjection",
         warlockLevel: 1,
         expectedCount: 1,
@@ -9335,8 +9337,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
+      _tag: "Failure",
+      failure: { code: "invalidWarlockPactMagicPreparedSpellGainCount" },
     });
   });
 
@@ -9366,8 +9368,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "unmetEldritchInvocationPrerequisite",
         invocationId: "ascendant_step",
       },
@@ -9401,8 +9403,8 @@ describe("character creation finalization", () => {
     });
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "lockedEldritchInvocationReplacement",
         replaceInvocationId: "pact_of_the_blade",
         dependentInvocationId: "thirsting_blade",
@@ -9444,8 +9446,8 @@ describe("character creation finalization", () => {
         levelGain: duplicateArmorLevelGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateEldritchInvocationSelection",
         invocationId: "armor_of_shadows",
       },
@@ -9472,8 +9474,8 @@ describe("character creation finalization", () => {
         levelGain: duplicateRepeatableLevelGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "duplicateEldritchInvocationSelection",
         invocationId: "repelling_blast",
       },
@@ -9629,8 +9631,8 @@ describe("character creation finalization", () => {
         levelGain,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         code: "invalidRepeatableEldritchInvocationChoice",
         invocationId: "repelling_blast",
       },
@@ -10078,8 +10080,8 @@ describe("character creation finalization", () => {
     );
 
     expect(result).toMatchObject({
-      _tag: "Right",
-      right: { startingEquipmentCurrencyRemainderCp: 10_471 },
+      _tag: "Success",
+      success: { startingEquipmentCurrencyRemainderCp: 10_471 },
     });
   });
 
@@ -10106,8 +10108,8 @@ describe("character creation finalization", () => {
     );
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "startingCurrencyInsufficientForEquipmentPurchases",
@@ -10148,8 +10150,8 @@ describe("character creation finalization", () => {
     );
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "currencySumOutsideCopperPieceAmountRange",
@@ -10206,8 +10208,8 @@ describe("character creation finalization", () => {
     );
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "currencySumOutsideCopperPieceAmountRange",
@@ -10251,8 +10253,8 @@ describe("character creation finalization", () => {
     );
 
     expect(result).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unsupportedStartingCurrency",
@@ -10294,8 +10296,8 @@ describe("character creation finalization", () => {
     expect(
       finalizedBuildEquipment(completeSelections, unsupportedGrantCatalog),
     ).toMatchObject({
-      _tag: "Left",
-      left: [
+      _tag: "Failure",
+      failure: [
         {
           cause: {
             tag: "unsupportedStartingCurrency",
@@ -10334,9 +10336,9 @@ describe("character creation finalization", () => {
     };
 
     const result = finalizedBuildEquipment(selections, unitLibrary);
-    expect(result).toHaveProperty("_tag", "Right");
-    if (Either.isLeft(result)) return;
-    expect(result.right.loadout.weapon).toEqual({
+    expect(result).toHaveProperty("_tag", "Success");
+    if (Result.isFailure(result)) return;
+    expect(result.success.loadout.weapon).toEqual({
       itemId: testCharacterEquipmentItemId("main", "weapon_quarterstaff"),
       grip: "one_handed",
     });
@@ -10420,9 +10422,9 @@ describe("character creation finalization", () => {
       unitLibrary,
     );
 
-    expect(projection).toMatchObject({ _tag: "Right" });
-    if (Either.isLeft(projection)) return;
-    expect(projection.right.loadout.weapon).toEqual({
+    expect(projection).toMatchObject({ _tag: "Success" });
+    if (Result.isFailure(projection)) return;
+    expect(projection.success.loadout.weapon).toEqual({
       itemId: testCharacterEquipmentItemId("main", "weapon_longsword"),
       grip: "one_handed",
     });
@@ -11670,21 +11672,21 @@ describe("character creation finalization", () => {
     for (const subject of subjects) {
       const option = proficiencyGrantSubjectOption(subject);
       const decoded = decodeProficiencyGrantSubjectOptionId(option.optionId);
-      expect(Either.isRight(decoded)).toBe(true);
-      if (Either.isRight(decoded)) {
-        expect(decoded.right).toEqual(subject);
+      expect(Result.isSuccess(decoded)).toBe(true);
+      if (Result.isSuccess(decoded)) {
+        expect(decoded.success).toEqual(subject);
       }
     }
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeProficiencyGrantSubjectOptionId("weapon_category:future"),
       ),
     ).toBe(true);
-    expect(Either.isLeft(decodeProficiencyGrantSubjectOptionId("tool:"))).toBe(
-      true,
-    );
     expect(
-      Either.isLeft(decodeProficiencyGrantSubjectOptionId("tool:   ")),
+      Result.isFailure(decodeProficiencyGrantSubjectOptionId("tool:")),
+    ).toBe(true);
+    expect(
+      Result.isFailure(decodeProficiencyGrantSubjectOptionId("tool:   ")),
     ).toBe(true);
     expect(
       proficiencyGrantSubjectOption({ kind: "skill", skill: "medicine" }),
@@ -12116,11 +12118,11 @@ function assertMulticlassProficienciesProjected(input: {
     expect(selectedSubjects, input.classUnitId).toHaveLength(choice.count);
     for (const optionId of selectedSubjects) {
       const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
-      expect(Either.isRight(decoded), input.classUnitId).toBe(true);
-      if (Either.isRight(decoded)) {
+      expect(Result.isSuccess(decoded), input.classUnitId).toBe(true);
+      if (Result.isSuccess(decoded)) {
         assertProficiencySubjectProjected({
           classUnitId: input.classUnitId,
-          subject: decoded.right,
+          subject: decoded.success,
           proficiencies: input.proficiencies,
           armorTraining: input.armorTraining,
         });
@@ -12160,11 +12162,11 @@ function assertClassToolProficienciesProjected(input: {
   );
   for (const optionId of selectedSubjects) {
     const decoded = decodeProficiencyGrantSubjectOptionId(optionId);
-    expect(Either.isRight(decoded), input.classUnitId).toBe(true);
-    if (Either.isRight(decoded)) {
+    expect(Result.isSuccess(decoded), input.classUnitId).toBe(true);
+    if (Result.isSuccess(decoded)) {
       assertProficiencySubjectProjected({
         classUnitId: input.classUnitId,
-        subject: decoded.right,
+        subject: decoded.success,
         proficiencies: input.proficiencies,
         armorTraining: [],
       });
@@ -12302,7 +12304,7 @@ function unitLibraryReplacingUnits(
 
   return {
     ...unitLibrary,
-    getUnit: (id) => Option.fromNullable(units.find((unit) => unit.id === id)),
+    getUnit: (id) => Option.fromNullishOr(units.find((unit) => unit.id === id)),
     listUnits: () => units,
     requireUnit: (id) => {
       const unit = units.find((candidate) => candidate.id === id);

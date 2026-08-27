@@ -1,4 +1,4 @@
-import { Either, Match, ParseResult, Schema } from "effect";
+import { Result, Match, Schema } from "effect";
 
 import { MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS } from "@dnd/surface/surface/character-creation-readers";
 import {
@@ -46,48 +46,45 @@ import {
 import { holeIdForSource } from "./hole-factories.ts";
 
 const UnitIdSchema = SharedUnitIdSchema;
-const AbilitySchema = Schema.Literal(...ABILITIES);
+const AbilitySchema = Schema.Literals(ABILITIES);
 const CreationChoiceOptionIdSchema = Schema.String.pipe(
   Schema.brand("CreationChoiceOptionId"),
 );
 const CreationHoleIdSchema = Schema.String.pipe(
-  Schema.filter(
+  Schema.refine(
     (value): value is CreationHoleIdText => parseCreationHoleId(value) !== null,
-    { message: () => "invalid Creation Hole id" },
+    { message: "invalid Creation Hole id" },
   ),
   Schema.brand("CreationHoleId"),
 );
 const ChoiceCountSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("ChoiceCount"),
 );
 const ChoiceMinimumCountSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("NonNegativeInteger"),
   Schema.brand("ChoiceMinimumCount"),
 );
 const NonNegativeIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("NonNegativeInteger"),
 );
 const CopperPieceAmountSchema = Schema.Number.pipe(
-  Schema.filter(isCopperPieceAmount, {
-    message: () => "invalid copper-piece amount",
-  }),
+  Schema.check(
+    Schema.makeFilter((value) =>
+      isCopperPieceAmount(value) ? undefined : "invalid copper-piece amount",
+    ),
+  ),
   Schema.brand("NonNegativeInteger"),
   Schema.brand("CopperPieceAmount"),
 );
 const PositiveIntegerSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(1),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(1)),
   Schema.brand("PositiveInteger"),
 );
 const FillIndexSchema = Schema.Number.pipe(
-  Schema.int(),
-  Schema.greaterThanOrEqualTo(0),
+  Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
   Schema.brand("Index"),
   Schema.brand("FillIndex"),
 );
@@ -100,53 +97,56 @@ const AbilityScoreAssignmentSchema = Schema.Struct({
   cha: AbilityScore,
 });
 
-const ChoiceCardinalitySchema = Schema.Union(
+const ChoiceCardinalitySchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("exactly"), count: ChoiceCountSchema }),
   Schema.Struct({
     tag: Schema.Literal("between"),
     min: ChoiceMinimumCountSchema,
     max: ChoiceCountSchema,
   }).pipe(
-    Schema.filter(({ min, max }) => min <= max, {
-      message: () => "cardinality maximum must be at least its minimum",
-    }),
+    Schema.check(
+      Schema.makeFilter(({ min, max }) =>
+        min <= max
+          ? undefined
+          : "cardinality maximum must be at least its minimum",
+      ),
+    ),
   ),
-);
-const ChoiceHoleSourceSchema = Schema.Union(
+]);
+const ChoiceHoleSourceSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("draft"),
-    path: Schema.Literal(...CHARACTER_DRAFT_CHOICE_PATHS),
+    path: Schema.Literals(CHARACTER_DRAFT_CHOICE_PATHS),
   }),
   Schema.Struct({
     tag: Schema.Literal("unitChoice"),
     unitId: UnitIdSchema.pipe(Schema.brand("UnitChoiceSourceUnitId")),
-    choiceKey: Schema.Literal(...UNIT_CHOICE_KEYS),
+    choiceKey: Schema.Literals(UNIT_CHOICE_KEYS),
   }),
   Schema.Struct({
     tag: Schema.Literal("loadout"),
     equipmentUnitId: UnitIdSchema.pipe(Schema.brand("LoadoutEquipmentUnitId")),
-    slot: Schema.Literal(...LOADOUT_SLOTS),
+    slot: Schema.Literals(LOADOUT_SLOTS),
   }),
-);
+]);
 const UnitRefSchema = Schema.Struct({
   unitId: UnitIdSchema,
-  selectedOption: Schema.optionalWith(
+  selectedOption: Schema.optionalKey(
     Schema.Struct({
       kind: Schema.Literal("huntersPrey"),
-      selection: Schema.Literal(
+      selection: Schema.Literals([
         "woundedTargetWeaponDamage",
         "nearbyDifferentTargetSameWeaponAttack",
-      ),
+      ]),
     }),
-    { exact: true },
   ),
 });
 const CreationChoiceOptionFactSchema = Schema.Struct({
   optionId: CreationChoiceOptionIdSchema,
-  unitRef: Schema.optionalWith(UnitRefSchema, { exact: true }),
+  unitRef: Schema.optionalKey(UnitRefSchema),
 });
 
-export const CreationHoleFactSchema = Schema.Union(
+export const CreationHoleFactSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("choice"),
     holeId: CreationHoleIdSchema,
@@ -161,12 +161,16 @@ export const CreationHoleFactSchema = Schema.Union(
       tag: Schema.Literal("draft"),
       path: Schema.Literal("draft.abilityScoreGeneration"),
     }),
-    methods: Schema.Array(Schema.Literal(...SUPPORTED_ABILITY_SCORE_METHODS)),
+    methods: Schema.Array(Schema.Literals(SUPPORTED_ABILITY_SCORE_METHODS)),
   }),
-).pipe(
-  Schema.filter(({ holeId, source }) => holeId === holeIdForSource(source), {
-    message: () => "Creation Hole identity must match its owner source",
-  }),
+]).pipe(
+  Schema.check(
+    Schema.makeFilter(({ holeId, source }) =>
+      holeId === holeIdForSource(source)
+        ? undefined
+        : "Creation Hole identity must match its owner source",
+    ),
+  ),
 );
 export type CreationHoleFact = Schema.Schema.Type<
   typeof CreationHoleFactSchema
@@ -179,7 +183,7 @@ export type CreationFrontierFact = Schema.Schema.Type<
   typeof CreationFrontierFactSchema
 >;
 
-export const CreationFillFactSchema = Schema.Union(
+export const CreationFillFactSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("choice"),
     holeId: CreationHoleIdSchema,
@@ -188,10 +192,10 @@ export const CreationFillFactSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("abilityScores"),
     holeId: CreationHoleIdSchema,
-    method: Schema.Literal(...SUPPORTED_ABILITY_SCORE_METHODS),
+    method: Schema.Literals(SUPPORTED_ABILITY_SCORE_METHODS),
     value: AbilityScoreAssignmentSchema,
   }),
-);
+]);
 export type CreationFillFact = Schema.Schema.Type<
   typeof CreationFillFactSchema
 >;
@@ -208,17 +212,17 @@ const ProgressionSchema = Schema.Struct({
   ),
 });
 const OriginLanguagesSchema = Schema.Array(
-  Schema.Literal(...STANDARD_LANGUAGES),
+  Schema.Literals(STANDARD_LANGUAGES),
 ).pipe(
-  Schema.filter(
+  Schema.refine(
     (languages): languages is CharacterStartingLanguages =>
       languages.length === 3 &&
       languages[0] === "Common" &&
       new Set(languages).size === languages.length,
-    { message: () => "origin languages must contain Common and two others" },
+    { message: "origin languages must contain Common and two others" },
   ),
 );
-const SpeciesChoiceFactsSchema = Schema.Union(
+const SpeciesChoiceFactsSchema = Schema.Union([
   Schema.Struct({
     draconicAncestry: Schema.Struct({
       kind: Schema.Literal("draconicAncestry"),
@@ -230,64 +234,63 @@ const SpeciesChoiceFactsSchema = Schema.Union(
   Schema.Struct({
     gnomishLineage: Schema.Struct({
       kind: Schema.Literal("gnomishLineage"),
-      lineageId: Schema.Literal("forest_gnome", "rock_gnome"),
-      spellcastingAbility: Schema.Literal("int", "wis", "cha"),
+      lineageId: Schema.Literals(["forest_gnome", "rock_gnome"]),
+      spellcastingAbility: Schema.Literals(["int", "wis", "cha"]),
     }),
   }),
-);
+]);
 const ClassFeatureLanguageSchema = Schema.Struct({
-  kind: Schema.Literal(
+  kind: Schema.Literals([
     "classFeatureLanguageGrant",
     "classFeatureLanguageChoice",
-  ),
+  ]),
   sourceUnitId: UnitIdSchema,
-  language: Schema.Literal(...LANGUAGES),
+  language: Schema.Literals(LANGUAGES),
 });
-const ProficiencyChoiceSchema = Schema.Union(
+const ProficiencyChoiceSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("skill"),
-    skill: Schema.Literal(...SKILLS),
+    skill: Schema.Literals(SKILLS),
   }),
   Schema.Struct({
     kind: Schema.Literal("skill_expertise"),
-    skill: Schema.Literal(...SKILLS),
+    skill: Schema.Literals(SKILLS),
   }),
   Schema.Struct({
     kind: Schema.Literal("weapon_category"),
-    category: Schema.Literal(...WEAPON_PROFICIENCY_CATEGORIES),
+    category: Schema.Literals(WEAPON_PROFICIENCY_CATEGORIES),
   }),
   Schema.Struct({
     kind: Schema.Literal("armor_category"),
-    category: Schema.Literal(...ARMOR_TRAINING_CATEGORIES),
+    category: Schema.Literals(ARMOR_TRAINING_CATEGORIES),
   }),
   Schema.Struct({
     kind: Schema.Literal("tool"),
     toolId: Schema.String.pipe(Schema.brand("ToolProficiencyId")),
   }),
-);
+]);
 const EldritchInvocationIdSchema = Schema.String.pipe(
   Schema.brand("EldritchInvocationId"),
 );
-const FeatureSchema = Schema.Union(
+const FeatureSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("selectedClassChoice"),
     selectedFromUnitId: UnitIdSchema,
     unitId: UnitIdSchema,
-    selectedOption: Schema.optionalWith(
+    selectedOption: Schema.optionalKey(
       Schema.Struct({
         kind: Schema.Literal("huntersPrey"),
-        selection: Schema.Literal(
+        selection: Schema.Literals([
           "woundedTargetWeaponDamage",
           "nearbyDifferentTargetSameWeaponAttack",
-        ),
+        ]),
       }),
-      { exact: true },
     ),
   }),
   Schema.Struct({
     kind: Schema.Literal("selectedEldritchInvocation"),
     selectedFromUnitId: UnitIdSchema,
-    selection: Schema.Union(
+    selection: Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("nonRepeatable"),
         invocationId: EldritchInvocationIdSchema,
@@ -295,7 +298,7 @@ const FeatureSchema = Schema.Union(
       Schema.Struct({
         kind: Schema.Literal("repeatable"),
         invocationId: EldritchInvocationIdSchema,
-        repeatableChoice: Schema.Union(
+        repeatableChoice: Schema.Union([
           Schema.Struct({
             kind: Schema.Literal("knownWarlockCantrip"),
             cantripId: UnitIdSchema,
@@ -304,9 +307,9 @@ const FeatureSchema = Schema.Union(
             kind: Schema.Literal("originFeat"),
             featUnitId: UnitIdSchema,
           }),
-        ),
+        ]),
       }),
-    ),
+    ]),
   }),
   Schema.Struct({
     kind: Schema.Literal("selectedSorcererMetamagicOption"),
@@ -317,36 +320,36 @@ const FeatureSchema = Schema.Union(
     kind: Schema.Literal("abilityCheckBonus"),
     selectedFromUnitId: UnitIdSchema,
     ability: AbilitySchema,
-    skills: Schema.Array(Schema.Literal(...SKILLS)),
+    skills: Schema.Array(Schema.Literals(SKILLS)),
     bonus: Schema.Struct({
       kind: Schema.Literal("abilityModifier"),
       ability: AbilitySchema,
-      minimum: Schema.Number.pipe(Schema.int()),
+      minimum: Schema.Number.pipe(Schema.check(Schema.isInt())),
     }),
   }),
-);
+]);
 const characterEquipmentItemIdSchema = <
   const Slot extends CharacterEquipmentItemSlot,
 >(
   slot?: Slot,
 ) =>
   Schema.String.pipe(
-    Schema.filter(
+    Schema.refine(
       (value): value is CharacterEquipmentItemIdText<Slot> => {
         const parsed = parseCharacterEquipmentItemId(value);
         return (
-          parsed._tag === "Right" &&
-          (slot === undefined || parsed.right.slot === slot)
+          Result.isSuccess(parsed) &&
+          (slot === undefined || parsed.success.slot === slot)
         );
       },
-      { message: () => "invalid Character Equipment Item id" },
+      { message: "invalid Character Equipment Item id" },
     ),
     Schema.brand("CharacterEquipmentItemId"),
   );
 const EquipmentSchema = Schema.Struct({
   startingEquipmentCurrencyRemainderCp: CopperPieceAmountSchema,
   owned: Schema.Array(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("catalogItem"),
         itemId: characterEquipmentItemIdSchema(),
@@ -367,32 +370,30 @@ const EquipmentSchema = Schema.Struct({
       Schema.Struct({
         kind: Schema.Literal("selectedToolItem"),
         toolProficiencyId: Schema.String.pipe(
-          Schema.filter(isCharacterBuildToolProficiencyId, {
-            message: () => "invalid Character Build tool proficiency id",
-          }),
+          Schema.check(
+            Schema.makeFilter((value) =>
+              isCharacterBuildToolProficiencyId(value)
+                ? undefined
+                : "invalid Character Build tool proficiency id",
+            ),
+          ),
           Schema.brand("ToolProficiencyId"),
         ),
         quantity: PositiveIntegerSchema,
       }),
-    ),
+    ]),
   ),
   loadout: Schema.Struct({
-    armor: Schema.optionalWith(characterEquipmentItemIdSchema("armor"), {
-      exact: true,
-    }),
-    shield: Schema.optionalWith(characterEquipmentItemIdSchema("shield"), {
-      exact: true,
-    }),
-    weapon: Schema.optionalWith(
+    armor: Schema.optionalKey(characterEquipmentItemIdSchema("armor")),
+    shield: Schema.optionalKey(characterEquipmentItemIdSchema("shield")),
+    weapon: Schema.optionalKey(
       Schema.Struct({
         itemId: characterEquipmentItemIdSchema("main"),
         grip: Schema.Literal("one_handed"),
       }),
-      { exact: true },
     ),
-    offHandWeapon: Schema.optionalWith(
+    offHandWeapon: Schema.optionalKey(
       Schema.Struct({ itemId: characterEquipmentItemIdSchema("off") }),
-      { exact: true },
     ),
   }),
 });
@@ -405,59 +406,67 @@ const SpellcastingSchema = Schema.Struct({
       spellbook: Schema.Array(UnitIdSchema),
       preparedSpells: Schema.Array(UnitIdSchema),
       spellcastingFocuses: Schema.Array(
-        Schema.Literal(
+        Schema.Literals([
           "arcane_focus",
           "druidic_focus",
           "holy_symbol",
           "musical_instrument",
           "book_of_shadows",
           "spellbook",
-        ),
+        ]),
       ),
-      bookOfShadows: Schema.optionalWith(
+      bookOfShadows: Schema.optionalKey(
         Schema.Struct({
           tag: Schema.Literal("bookOfShadows"),
-          cantrips: Schema.Tuple(UnitIdSchema, UnitIdSchema, UnitIdSchema),
-          ritualSpells: Schema.Tuple(UnitIdSchema, UnitIdSchema),
+          cantrips: Schema.Tuple([UnitIdSchema, UnitIdSchema, UnitIdSchema]),
+          ritualSpells: Schema.Tuple([UnitIdSchema, UnitIdSchema]),
           spellcastingFocus: Schema.Literal("book_of_shadows"),
         }),
-        { exact: true },
       ),
     }),
   ),
   slotPools: Schema.Struct({
-    spellcasting: Schema.optionalWith(
+    spellcasting: Schema.optionalKey(
       Schema.Struct({
         kind: Schema.Literal("spellcasting"),
         slots: Schema.Array(
           Schema.Struct({
-            spellLevel: Schema.Number.pipe(Schema.int(), Schema.between(1, 9)),
+            spellLevel: Schema.Number.pipe(
+              Schema.check(
+                Schema.isInt(),
+                Schema.isBetween({ minimum: 1, maximum: 9 }),
+              ),
+            ),
             count: Schema.Number.pipe(
-              Schema.int(),
-              Schema.greaterThanOrEqualTo(0),
+              Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
             ),
           }),
         ),
       }),
-      { exact: true },
     ),
-    pactMagic: Schema.optionalWith(
+    pactMagic: Schema.optionalKey(
       Schema.Struct({
         kind: Schema.Literal("pactMagic"),
-        slotLevel: Schema.Number.pipe(Schema.int(), Schema.between(1, 9)),
-        count: Schema.Number.pipe(Schema.int(), Schema.greaterThanOrEqualTo(0)),
+        slotLevel: Schema.Number.pipe(
+          Schema.check(
+            Schema.isInt(),
+            Schema.isBetween({ minimum: 1, maximum: 9 }),
+          ),
+        ),
+        count: Schema.Number.pipe(
+          Schema.check(Schema.isInt(), Schema.isGreaterThanOrEqualTo(0)),
+        ),
       }),
-      { exact: true },
     ),
   }),
 });
 
 const MagicInitiateSpellAccessSchema = Schema.Struct({
   featUnitId: UnitIdSchema,
-  spellcastingAbility: Schema.Literal(
+  spellcastingAbility: Schema.Literals([
     ...MAGIC_INITIATE_SPELLCASTING_ABILITY_OPTIONS,
-  ),
-  cantrips: Schema.Tuple(UnitIdSchema, UnitIdSchema),
+  ]),
+  cantrips: Schema.Tuple([UnitIdSchema, UnitIdSchema]),
   levelOneSpell: UnitIdSchema,
 });
 
@@ -465,22 +474,18 @@ export const CharacterBuildFactSchema = Schema.Struct({
   progression: ProgressionSchema,
   background: UnitIdSchema,
   species: UnitIdSchema,
-  speciesSize: Schema.optionalWith(Schema.Literal("medium", "small"), {
-    exact: true,
-  }),
-  speciesChoiceFacts: Schema.optionalWith(SpeciesChoiceFactsSchema, {
-    exact: true,
-  }),
+  speciesSize: Schema.optionalKey(Schema.Literals(["medium", "small"])),
+  speciesChoiceFacts: Schema.optionalKey(SpeciesChoiceFactsSchema),
   originLanguages: OriginLanguagesSchema,
   classFeatureLanguages: Schema.Array(ClassFeatureLanguageSchema),
   alignment: Schema.Struct({
-    order: Schema.Literal(...ALIGNMENT_ORDERS),
-    morality: Schema.Literal(...ALIGNMENT_MORALITIES),
+    order: Schema.Literals(ALIGNMENT_ORDERS),
+    morality: Schema.Literals(ALIGNMENT_MORALITIES),
   }),
   abilityScores: AbilityScoreAssignmentSchema,
   proficiencyChoices: Schema.Array(ProficiencyChoiceSchema),
   features: Schema.Array(FeatureSchema),
-  spellcasting: Schema.optionalWith(SpellcastingSchema, { exact: true }),
+  spellcasting: Schema.optionalKey(SpellcastingSchema),
   magicInitiateSpellAccesses: Schema.Array(MagicInitiateSpellAccessSchema),
   equipment: EquipmentSchema,
 });
@@ -492,21 +497,21 @@ const CreationFillIssueFactSchema = Schema.Struct({
   tag: Schema.Literal("illegalFill"),
   holeId: CreationHoleIdSchema,
   fillIndex: FillIndexSchema,
-  code: Schema.Literal(...CREATION_FILL_ISSUE_CODES),
+  code: Schema.Literals(CREATION_FILL_ISSUE_CODES),
 });
 const CreationBatchIssueFactSchema = Schema.Struct({
   tag: Schema.Literal("illegalBatch"),
-  code: Schema.Literal(...CREATION_BATCH_ISSUE_CODES),
+  code: Schema.Literals(CREATION_BATCH_ISSUE_CODES),
 });
-export const CreationBatchRejectionFactSchema = Schema.Union(
+export const CreationBatchRejectionFactSchema = Schema.Union([
   CreationFillIssueFactSchema,
   CreationBatchIssueFactSchema,
-);
+]);
 export type CreationBatchRejectionFact = Schema.Schema.Type<
   typeof CreationBatchRejectionFactSchema
 >;
 
-const CreationFinalizationIllegalCauseFactSchema = Schema.Union(
+const CreationFinalizationIllegalCauseFactSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("draftIncomplete") }),
   Schema.Struct({
     tag: Schema.Literal("conflictingSpeciesChoiceSources"),
@@ -530,23 +535,27 @@ const CreationFinalizationIllegalCauseFactSchema = Schema.Union(
   }),
   Schema.Struct({ tag: Schema.Literal("multipleSpellcastingSlotPools") }),
   Schema.Struct({ tag: Schema.Literal("multiplePactMagicSlotPools") }),
-);
+]);
 type CreationFinalizationIllegalCauseFact = Schema.Schema.Type<
   typeof CreationFinalizationIllegalCauseFactSchema
 >;
 
-const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union(
+const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("unsupportedAbility") }),
   Schema.Struct({ tag: Schema.Literal("duplicateAbilities") }),
   Schema.Struct({
     tag: Schema.Literal("invalidAbilityScoreIncreaseValue"),
     field: Schema.Literal("increase"),
-    reason: Schema.Literal("nonPositive", "unsafeInteger"),
+    reason: Schema.Literals(["nonPositive", "unsafeInteger"]),
   }),
   Schema.Struct({
     tag: Schema.Literal("invalidAbilityScoreIncreaseValue"),
     field: Schema.Literal("maximum"),
-    reason: Schema.Literal("nonPositive", "unsafeInteger", "maximumOutOfRange"),
+    reason: Schema.Literals([
+      "nonPositive",
+      "unsafeInteger",
+      "maximumOutOfRange",
+    ]),
   }),
   Schema.Struct({ tag: Schema.Literal("invalidAbilityScoreIncreaseEncoding") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedWeaponCategory") }),
@@ -556,7 +565,7 @@ const CreationChoiceOptionDecodeCauseFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("unsupportedCharacterBuildToolProficiencyId"),
   }),
-);
+]);
 type CreationChoiceOptionDecodeCauseFact = Schema.Schema.Type<
   typeof CreationChoiceOptionDecodeCauseFactSchema
 >;
@@ -565,15 +574,15 @@ const SurfaceReadIssueFactSchema = Schema.Struct({
   code: Schema.Literal("unsupportedUnitKind"),
 });
 
-const CharacterBuildProjectionCauseFactSchema = Schema.Union(
+const CharacterBuildProjectionCauseFactSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("missingStartingClassFacts"),
-    projection: Schema.Literal(
+    projection: Schema.Literals([
       "characterBuild",
       "hitPoints",
       "proficiencies",
       "armorTraining",
-    ),
+    ]),
     classUnitId: UnitIdSchema,
   }),
   Schema.Struct({
@@ -592,7 +601,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("duplicateClassFeatureLanguage"),
     featureUnitId: UnitIdSchema,
-    language: Schema.Literal(...LANGUAGES),
+    language: Schema.Literals(LANGUAGES),
   }),
   Schema.Struct({
     tag: Schema.Literal("missingClassFeatureLanguageChoice"),
@@ -601,7 +610,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("classFeatureLanguageChoiceCountMismatch"),
     featureUnitId: UnitIdSchema,
-    mismatch: Schema.Union(
+    mismatch: Schema.Union([
       Schema.Struct({
         tag: Schema.Literal("missing"),
         receivedCount: NonNegativeIntegerSchema,
@@ -612,7 +621,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
         expectedCount: PositiveIntegerSchema,
         extraCount: PositiveIntegerSchema,
       }),
-    ),
+    ]),
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedClassFeatureLanguageChoice"),
@@ -622,7 +631,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   Schema.Struct({
     tag: Schema.Literal("duplicateClassFeatureLanguageChoice"),
     featureUnitId: UnitIdSchema,
-    language: Schema.Literal(...LANGUAGES),
+    language: Schema.Literals(LANGUAGES),
   }),
   Schema.Struct({
     tag: Schema.Literal("unprojectableAbilityCheckBonus"),
@@ -645,10 +654,10 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("currencySumOutsideCopperPieceAmountRange"),
-    source: Schema.Literal(
+    source: Schema.Literals([
       "startingEquipmentGrants",
       "selectedEquipmentPurchases",
-    ),
+    ]),
     components: Schema.Array(CopperPieceAmountSchema),
   }),
   Schema.Struct({
@@ -658,13 +667,13 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("unreadableUnit"),
-    role: Schema.Literal("class", "background", "species"),
+    role: Schema.Literals(["class", "background", "species"]),
     unitId: UnitIdSchema,
     issues: Schema.NonEmptyArray(SurfaceReadIssueFactSchema),
   }),
   Schema.Struct({
     tag: Schema.Literal("unknownUnit"),
-    role: Schema.Literal("class", "background", "species", "feat"),
+    role: Schema.Literals(["class", "background", "species", "feat"]),
     unitId: UnitIdSchema,
   }),
   Schema.Struct({
@@ -682,7 +691,7 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
   }),
   Schema.Struct({
     tag: Schema.Literal("unsupportedToolProficiency"),
-    source: Schema.Literal("background", "surfaceGrant"),
+    source: Schema.Literals(["background", "surfaceGrant"]),
     toolId: Schema.String,
   }),
   Schema.Struct({
@@ -690,12 +699,12 @@ const CharacterBuildProjectionCauseFactSchema = Schema.Union(
     optionId: Schema.String,
     reason: CreationChoiceOptionDecodeCauseFactSchema,
   }),
-);
+]);
 type CharacterBuildProjectionCauseFact = Schema.Schema.Type<
   typeof CharacterBuildProjectionCauseFactSchema
 >;
 
-const CreationFinalizationUnsupportedCauseFactSchema = Schema.Union(
+const CreationFinalizationUnsupportedCauseFactSchema = Schema.Union([
   Schema.Struct({ tag: Schema.Literal("unsupportedBackground") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedSpecies") }),
   Schema.Struct({ tag: Schema.Literal("speciesSizeMismatch") }),
@@ -714,12 +723,12 @@ const CreationFinalizationUnsupportedCauseFactSchema = Schema.Union(
   Schema.Struct({ tag: Schema.Literal("preparedSpellSelectionMismatch") }),
   Schema.Struct({ tag: Schema.Literal("duplicateWizardSpellbookSelection") }),
   Schema.Struct({ tag: Schema.Literal("unsupportedEquipmentSelection") }),
-);
+]);
 type CreationFinalizationUnsupportedCauseFact = Schema.Schema.Type<
   typeof CreationFinalizationUnsupportedCauseFactSchema
 >;
 
-export const CreationFinalizationIssueSchema = Schema.Union(
+export const CreationFinalizationIssueSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("illegalFinalization"),
     cause: CreationFinalizationIllegalCauseFactSchema,
@@ -732,14 +741,14 @@ export const CreationFinalizationIssueSchema = Schema.Union(
     tag: Schema.Literal("unsupportedFinalization"),
     cause: CreationFinalizationUnsupportedCauseFactSchema,
   }),
-);
+]);
 export const CreationFinalizationRejectionFactSchema =
   CreationFinalizationIssueSchema;
 export type CreationFinalizationRejectionFact = Schema.Schema.Type<
   typeof CreationFinalizationRejectionFactSchema
 >;
 
-export const CreationFinalizationFactSchema = Schema.Union(
+export const CreationFinalizationFactSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("ready"),
     build: CharacterBuildFactSchema,
@@ -752,12 +761,12 @@ export const CreationFinalizationFactSchema = Schema.Union(
     tag: Schema.Literal("invalid"),
     issues: Schema.NonEmptyArray(CreationFinalizationRejectionFactSchema),
   }),
-);
+]);
 export type CreationFinalizationFact = Schema.Schema.Type<
   typeof CreationFinalizationFactSchema
 >;
 
-const CreationBatchFinalizationFactSchema = Schema.Union(
+const CreationBatchFinalizationFactSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("ready"),
     build: CharacterBuildFactSchema,
@@ -770,7 +779,7 @@ const CreationBatchFinalizationFactSchema = Schema.Union(
     tag: Schema.Literal("invalid"),
     issues: Schema.NonEmptyArray(CreationFinalizationRejectionFactSchema),
   }),
-);
+]);
 type CreationBatchFinalizationFact = Schema.Schema.Type<
   typeof CreationBatchFinalizationFactSchema
 >;
@@ -792,7 +801,7 @@ function isOrderedBlockingHoleIdSubsequence(
   return true;
 }
 
-export const CharacterCreationBatchFactSchema = Schema.Union(
+export const CharacterCreationBatchFactSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("accepted"),
     frontier: CreationFrontierFactSchema,
@@ -804,18 +813,14 @@ export const CharacterCreationBatchFactSchema = Schema.Union(
     issues: Schema.NonEmptyArray(CreationBatchRejectionFactSchema),
     finalization: CreationBatchFinalizationFactSchema,
   }),
-).pipe(
-  Schema.filter(
-    ({ frontier, finalization }) =>
+]).pipe(
+  Schema.check(
+    Schema.makeFilter(({ frontier, finalization }) =>
       finalization.tag !== "incomplete" ||
-      isOrderedBlockingHoleIdSubsequence(
-        frontier,
-        finalization.blockingHoleIds,
-      ),
-    {
-      message: () =>
-        "finalization blocker ids must be an ordered subsequence of the frontier",
-    },
+      isOrderedBlockingHoleIdSubsequence(frontier, finalization.blockingHoleIds)
+        ? undefined
+        : "finalization blocker ids must be an ordered subsequence of the frontier",
+    ),
   ),
 );
 export type CharacterCreationBatchFact = Schema.Schema.Type<
@@ -825,36 +830,36 @@ export type CharacterCreationBatchFact = Schema.Schema.Type<
 const strictDecodeOptions: { readonly onExcessProperty: "error" } = {
   onExcessProperty: "error",
 };
-export const decodeCreationHoleFact = Schema.decodeUnknownEither(
+export const decodeCreationHoleFact = Schema.decodeUnknownResult(
   CreationHoleFactSchema,
   strictDecodeOptions,
 );
-export const decodeCreationFrontierFact = Schema.decodeUnknownEither(
+export const decodeCreationFrontierFact = Schema.decodeUnknownResult(
   CreationFrontierFactSchema,
   strictDecodeOptions,
 );
-export const decodeCreationFillFact = Schema.decodeUnknownEither(
+export const decodeCreationFillFact = Schema.decodeUnknownResult(
   CreationFillFactSchema,
   strictDecodeOptions,
 );
-export const decodeCharacterBuildFact = Schema.decodeUnknownEither(
+export const decodeCharacterBuildFact = Schema.decodeUnknownResult(
   CharacterBuildFactSchema,
   strictDecodeOptions,
 );
-export const decodeCreationBatchRejectionFact = Schema.decodeUnknownEither(
+export const decodeCreationBatchRejectionFact = Schema.decodeUnknownResult(
   CreationBatchRejectionFactSchema,
   strictDecodeOptions,
 );
 export const decodeCreationFinalizationRejectionFact =
-  Schema.decodeUnknownEither(
+  Schema.decodeUnknownResult(
     CreationFinalizationRejectionFactSchema,
     strictDecodeOptions,
   );
-export const decodeCreationFinalizationFact = Schema.decodeUnknownEither(
+export const decodeCreationFinalizationFact = Schema.decodeUnknownResult(
   CreationFinalizationFactSchema,
   strictDecodeOptions,
 );
-export const decodeCharacterCreationBatchFact = Schema.decodeUnknownEither(
+export const decodeCharacterCreationBatchFact = Schema.decodeUnknownResult(
   CharacterCreationBatchFactSchema,
   strictDecodeOptions,
 );
@@ -2017,7 +2022,7 @@ function creationBatchFinalizationFact(
 
 export function characterCreationBatchFact(
   result: CreationBatchFillResult,
-): Either.Either<CharacterCreationBatchFact, ParseResult.ParseError> {
+): Result.Result<CharacterCreationBatchFact, Schema.SchemaError> {
   const candidate = Match.value(result).pipe(
     Match.when(
       { tag: "accepted" },
