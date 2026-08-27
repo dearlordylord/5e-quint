@@ -6,7 +6,7 @@ import fc from "fast-check";
 import { describe, expect, test } from "vitest";
 
 import cloudkillInput from "../../surface/content/cloudkill.json";
-import type { CombatantId } from "./identity.ts";
+import { battleId, type CombatantId } from "./identity.ts";
 import type {
   BattleActiveEffect,
   BattleCloudkillMovementHole,
@@ -51,8 +51,13 @@ import {
   battleActiveEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   concentrationSavingThrowFill,
+  characterSeed,
   damageRollFill,
+  DieRollResult,
+  monsterResourceStatBlock,
   reactionChoiceWithSubject,
+  startBattleRight,
+  statBlockCreatureInit,
   targetFill,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -113,6 +118,53 @@ function withSourceStartTurnDamage(state: BattleState): BattleState {
       ...source,
       activeEffects: [...source.activeEffects, effect],
     }),
+  };
+}
+
+function withUnavailableSourceRecharge(state: BattleState): {
+  readonly state: BattleState;
+  readonly resourcePoolRef: import("./identity.ts").BattleResourcePoolExecutionRef;
+} {
+  const fixture = startBattleRight({
+    battleId: battleId("cloudkill-source-recharge-fixture"),
+    combatants: [
+      statBlockCreatureInit({
+        combatantId: spellCasterId,
+        initiative: 20,
+        statBlock: monsterResourceStatBlock(),
+      }),
+      characterSeed({ combatantId: spellTargetId, initiative: 10 }),
+    ],
+  });
+  const fixtureSource = fixture.combatants.get(spellCasterId);
+  const source = state.combatants.get(spellCasterId);
+  if (fixtureSource?.origin.kind !== "statBlock" || source === undefined) {
+    throw new Error("Expected the Cloudkill source recharge fixture.");
+  }
+  const rechargePool = fixtureSource.origin.execution.resourcePools.find(
+    (pool) => pool.kind === "recharge",
+  );
+  if (rechargePool === undefined) {
+    throw new Error("Expected a recharge resource pool.");
+  }
+  const origin = {
+    ...fixtureSource.origin,
+    execution: {
+      ...fixtureSource.origin.execution,
+      resourcePools: fixtureSource.origin.execution.resourcePools.map((pool) =>
+        pool.kind === "recharge" ? { ...pool, available: false } : pool,
+      ),
+    },
+  };
+  return {
+    resourcePoolRef: rechargePool.resourcePoolRef,
+    state: {
+      ...state,
+      combatants: new Map(state.combatants).set(spellCasterId, {
+        ...source,
+        origin,
+      }),
+    },
   };
 }
 
@@ -785,9 +837,26 @@ describe("Cloudkill source-turn movement", () => {
         state: targetTurn.state,
       }),
     );
-    const movementFrontier = endTurn({
-      state: readied.state,
+    const recharging = withUnavailableSourceRecharge(readied.state);
+    const rechargeFrontier = endTurn({
+      state: recharging.state,
       actorId: spellTargetId,
+    });
+    const rechargeFill = {
+      kind: "statBlockRechargeRoll" as const,
+      holeId: requireResultHole(rechargeFrontier, "statBlockRechargeRoll")
+        .holeId,
+      value: [
+        {
+          target: recharging.resourcePoolRef,
+          roll: DieRollResult(5),
+        },
+      ],
+    };
+    const movementFrontier = endTurn({
+      state: recharging.state,
+      actorId: spellTargetId,
+      fills: [rechargeFill],
     });
     if (movementFrontier.tag !== "needsHoles") {
       throw new Error("Expected the Cloudkill movement frontier.");
@@ -797,9 +866,9 @@ describe("Cloudkill source-turn movement", () => {
       [spellTargetId],
     );
     const saveFrontier = endTurn({
-      state: readied.state,
+      state: recharging.state,
       actorId: spellTargetId,
-      fills: [movementFill],
+      fills: [rechargeFill, movementFill],
     });
     if (saveFrontier.tag !== "needsHoles") {
       throw new Error("Expected the movement-triggered save frontier.");
@@ -810,9 +879,9 @@ describe("Cloudkill source-turn movement", () => {
       false,
     );
     const interrupted = endTurn({
-      state: readied.state,
+      state: recharging.state,
       actorId: spellTargetId,
-      fills: [movementFill, saveFill],
+      fills: [rechargeFill, movementFill, saveFill],
     });
 
     expect(interrupted).toMatchObject({
@@ -868,6 +937,7 @@ describe("Cloudkill source-turn movement", () => {
       state: concentrationFrontier.state,
       subject: concentrationFrontier.subject,
       fills: [
+        rechargeFill,
         movementFill,
         saveFill,
         damageFill,
