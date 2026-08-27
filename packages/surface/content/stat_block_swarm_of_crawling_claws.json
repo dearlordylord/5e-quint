@@ -1,0 +1,175 @@
+{
+  "challengeRating": 3,
+  "id": "stat_block_swarm_of_crawling_claws",
+  "kind": "statBlock",
+  "name": "Swarm of Crawling Claws",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:521-546"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 4,
+      "con": 11,
+      "dex": 14,
+      "int": 5,
+      "str": 14,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 12
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "description": "The swarm's damage is 11 (2d8 + 2) Necrotic damage instead if the swarm is Bloodied.",
+          "kind": "attack_roll",
+          "name": "Swarm of Grasping Hands",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 4,
+                  "dieSize": 8,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 20
+              },
+              "damageType": "necrotic",
+              "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "medium"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "undead",
+    "creatureTypeTags": [
+      "swarm"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 49
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "exhaustion",
+        "frightened",
+        "grappled",
+        "incapacitated",
+        "paralyzed",
+        "petrified",
+        "poisoned",
+        "prone",
+        "restrained",
+        "stunned"
+      ],
+      "damageTypes": [
+        "necrotic",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 10,
+    "resistances": {
+      "damageTypes": [
+        "bludgeoning",
+        "piercing",
+        "slashing"
+      ],
+      "kind": "fixed"
+    },
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 2
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": -3
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 30
+      }
+    ],
+    "size": "medium",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "climb"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny creature. The swarm can't regain Hit Points or gain Temporary Hit Points.",
+        "name": "Swarm"
+      }
+    ]
+  }
+}

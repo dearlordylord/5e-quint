@@ -1,0 +1,256 @@
+{
+  "challengeRating": 17,
+  "id": "stat_block_dragon_turtle",
+  "kind": "statBlock",
+  "name": "Dragon Turtle",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:793-823"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 12,
+      "con": 20,
+      "dex": 10,
+      "int": 10,
+      "str": 25,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 20
+      }
+    },
+    "actions": [
+      {
+        "description": "The dragon makes three Bite attacks. It can replace one attack with a Tail attack.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 13
+          },
+          "attackType": "melee",
+          "description": "Being underwater doesn't grant Resistance to this Fire damage.",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 10,
+                  "flat": 7
+                },
+                "kind": "fixed",
+                "static": 23
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 15
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 13
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Tail",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10,
+                  "flat": 7
+                },
+                "kind": "fixed",
+                "static": 18
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "huge"
+            }
+          ],
+          "reachFeet": 15
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "con",
+          "area": {
+            "kind": "cone",
+            "lengthFeet": 60
+          },
+          "dc": {
+            "dc": 19,
+            "kind": "fixed"
+          },
+          "description": "Being underwater doesn't grant Resistance to this Fire damage.",
+          "kind": "save",
+          "name": "Steam Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 16,
+                "dieSize": 6
+              },
+              "kind": "fixed",
+              "static": 56
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Draconic",
+          "Primordial (Aquan)"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "hp": {
+      "kind": "literal",
+      "value": 356
+    },
+    "initiative": {
+      "modifier": 6,
+      "score": 16
+    },
+    "passivePerception": 11,
+    "resistances": {
+      "damageTypes": [
+        "fire"
+      ],
+      "kind": "fixed"
+    },
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 7
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "con",
+        "modifier": 11
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 1
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "gargantuan",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 20
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The dragon can breathe air and water.",
+        "name": "Amphibious"
+      }
+    ]
+  }
+}

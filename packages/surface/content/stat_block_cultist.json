@@ -1,0 +1,152 @@
+{
+  "challengeRating": 0.125,
+  "id": "stat_block_cultist",
+  "kind": "statBlock",
+  "name": "Cultist",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:552-573"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 10,
+      "con": 10,
+      "dex": 12,
+      "int": 10,
+      "str": 11,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 12
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 3
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Ritual Sickle",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 4,
+                  "flat": 1
+                },
+                "kind": "fixed",
+                "static": 3
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "kind": "fixed",
+                "static": 1
+              },
+              "damageType": "necrotic",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "gear": [
+      {
+        "item": "Leather Armor"
+      },
+      {
+        "item": "Sickle"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 9
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 10,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 0
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 2,
+        "skill": "deception"
+      },
+      {
+        "modifier": 2,
+        "skill": "religion"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

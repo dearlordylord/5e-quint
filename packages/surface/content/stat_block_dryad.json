@@ -1,0 +1,276 @@
+{
+  "challengeRating": 1,
+  "id": "stat_block_dryad",
+  "kind": "statBlock",
+  "name": "Dryad",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:929-968"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 18,
+      "con": 11,
+      "dex": 12,
+      "int": 14,
+      "str": 10,
+      "wis": 15
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 16
+      }
+    },
+    "actions": [
+      {
+        "description": "The dryad makes one Vine Lash or Thorn Burst attack, and it can use Spellcasting to cast Charm Monster.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Vine Lash",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 8
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "dex",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Thorn Burst",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            }
+          ],
+          "rangeFeet": {
+            "long": 60,
+            "normal": 60
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "animal_friendship"
+                },
+                {
+                  "restriction": "lasts 24 hours; ends early if the dryad casts the spell again",
+                  "spellId": "charm_monster"
+                },
+                {
+                  "spellId": "druidcraft"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "entangle"
+                },
+                {
+                  "spellId": "pass_without_trace"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 14,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "description": "If within 5 feet of a Large or bigger tree, the dryad teleports to an unoccupied space within 5 feet of a second Large or bigger tree that is within 60 feet of the previous tree.",
+        "kind": "textOnly",
+        "name": "Tree Stride",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Elvish",
+          "Sylvan"
+        ]
+      }
+    },
+    "creatureType": "fey",
+    "hp": {
+      "kind": "literal",
+      "value": 22
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 14,
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": 2
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 4
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 4,
+        "skill": "perception"
+      },
+      {
+        "modifier": 5,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The dryad has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      },
+      {
+        "description": "The dryad can communicate with Beasts and Plants as if they shared a language.",
+        "name": "Speak with Beasts and Plants"
+      }
+    ]
+  }
+}

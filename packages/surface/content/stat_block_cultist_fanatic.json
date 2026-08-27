@@ -1,0 +1,215 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_cultist_fanatic",
+  "kind": "statBlock",
+  "name": "Cultist Fanatic",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-C-D.md:577-608"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 13,
+      "con": 12,
+      "dex": 14,
+      "int": 10,
+      "str": 11,
+      "wis": 14
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Pact Blade",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 6
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "necrotic",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "The cultist casts one of the following spells, using Wisdom as the spellcasting ability (spell save DC 12, +4 to hit with spell attacks): At Will: Light, Thaumaturgy. 2/Day: Command. 1/Day: Hold Person.",
+        "kind": "textOnly",
+        "name": "Spellcasting",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_spellcasting_restriction",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1,
+            2
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "description": "The cultist casts the Spiritual Weapon spell, using the same spellcasting ability as Spellcasting.",
+        "kind": "textOnly",
+        "name": "Spiritual Weapon (2/Day)",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_spellcasting_restriction",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            3
+          ]
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "gear": [
+      {
+        "item": "Holy Symbol"
+      },
+      {
+        "item": "Leather Armor"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 44
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 12,
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 2
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 2
+        },
+        "ordinal": 3,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 4
+      },
+      {
+        "ability": "cha",
+        "modifier": 1
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 3,
+        "skill": "deception"
+      },
+      {
+        "modifier": 3,
+        "skill": "persuasion"
+      },
+      {
+        "modifier": 2,
+        "skill": "religion"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}
