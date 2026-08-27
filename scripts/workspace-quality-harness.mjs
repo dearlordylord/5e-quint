@@ -23,6 +23,7 @@ import {
   PRODUCTION_TYPESCRIPT_INCLUDE,
   sourceGlobsUnder,
 } from "./workspace-source-policy.mjs";
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "./shared-host-test-policy.mjs";
 
 const ROOT = resolve(import.meta.dirname, "..");
 const PACKAGE_ROOT = join(ROOT, "packages");
@@ -417,6 +418,7 @@ function coverageArguments(coverage) {
     `--coverage.thresholds.functions=${coverage.functions}`,
     `--coverage.thresholds.branches=${coverage.branches}`,
     "--maxWorkers=1",
+    `--testTimeout=${SHARED_HOST_TEST_TIMEOUT_MILLISECONDS}`,
   ];
 }
 
@@ -580,6 +582,9 @@ function selfTest() {
       const args = coverageArguments(policy.coverage);
       assert(
         args.includes(`--coverage.include=${PRODUCTION_TYPESCRIPT_INCLUDE}`),
+      );
+      assert(
+        args.includes(`--testTimeout=${SHARED_HOST_TEST_TIMEOUT_MILLISECONDS}`),
       );
       assert(
         !COMMON_COVERAGE_EXCLUDES.some(

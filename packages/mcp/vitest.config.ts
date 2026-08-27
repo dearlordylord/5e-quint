@@ -1,7 +1,7 @@
 import { defineConfig } from "vitest/config";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "./test-timeout.ts";
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../scripts/shared-host-test-policy.mjs";
 
 export default defineConfig({
   plugins: [tsconfigPaths({ projects: ["./tsconfig.json"] })],

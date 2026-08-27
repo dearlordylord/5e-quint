@@ -10,7 +10,7 @@ import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import { Either } from "effect";
 import { afterEach, describe, expect, test } from "vitest";
 
-import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS as TEST_TIMEOUT } from "../test-timeout.ts";
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS as TEST_TIMEOUT } from "../../../scripts/shared-host-test-policy.mjs";
 import {
   acceptancePlaySessionId,
   acceptancePlaySessionRoutedArgs,

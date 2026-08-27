@@ -16,7 +16,7 @@ import {
   unitHoleId,
 } from "../test-support/creation-hole-ids.ts";
 import { statBlockCombatant } from "../test-support/mcp-acceptance-scenarios.ts";
-import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../test-timeout.ts";
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../../scripts/shared-host-test-policy.mjs";
 
 describe("end-user MCP vertical", () => {
   test("creates an Orc Soldier Fighter, runs battle, ends battle, and lists reduced HP", () => {

@@ -16,7 +16,7 @@ import { Either, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 
-import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../test-timeout.ts";
+import { SHARED_HOST_TEST_TIMEOUT_MILLISECONDS } from "../../../scripts/shared-host-test-policy.mjs";
 import { ListCharactersOutputSchema } from "./character-tool-output.ts";
 import { AdminSessionProjectionSchema } from "./admin-mirror-contract.ts";
 import {
