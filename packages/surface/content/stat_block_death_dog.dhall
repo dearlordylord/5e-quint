@@ -8,7 +8,7 @@ in  { challengeRating = 1
         { abilityScores = { str = 15, dex = 14, con = 14, int = 3, wis = 13, cha = 6 }
         , ac = { value = { kind = "literal", value = 12 } }
         , actions =
-            [ T.exec 1 (T.multiattack "Multiattack" [ { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 } ])
+            [ T.text 1 "Multiattack" "The death dog makes two Bite attacks." "unsupported_action_shape"
             , T.text 2 "Bite" "Melee Attack Roll: +4, reach 5 ft. Hit: 4 (1d4 + 2) Piercing damage. If the target is a creature, it is subjected to the following effect. Constitution Saving Throw: DC 12. First Failure: The target has the Poisoned condition. While Poisoned, the target's Hit Point maximum doesn't return to normal when finishing a Long Rest, and it repeats the save every 24 hours that elapse, ending the effect on itself on a success. Subsequent Failures: The Poisoned target's Hit Point maximum decreases by 5 (1d10)." "unsupported_action_shape"
             ]
         , alignment = { order = "neutral", morality = "evil" }
