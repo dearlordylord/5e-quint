@@ -512,6 +512,28 @@ export function battleInitializationIssueFactFields(
         companionCombatantId,
         requirement,
       }),
+      companionOwnerRuntimeContextMissing: ({ kind, ownerId }) => ({
+        reason: kind,
+        ownerId,
+      }),
+      companionPresentationStatBlockMissing: ({
+        kind,
+        companionCombatantId,
+        statBlockId,
+      }) => ({
+        reason: kind,
+        companionCombatantId,
+        statBlockId,
+      }),
+      companionPresentationCombatantMissing: ({
+        kind,
+        companionCombatantId,
+        statBlockId,
+      }) => ({
+        reason: kind,
+        companionCombatantId,
+        statBlockId,
+      }),
     }),
   );
 }

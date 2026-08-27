@@ -4427,6 +4427,20 @@ export type BattleInitializationIssueFacts =
         | "initialCombatantOrder"
         | "nonEmptyRoster"
         | "stackConstruction";
+    }
+  | {
+      readonly kind: "companionOwnerRuntimeContextMissing";
+      readonly ownerId: CombatantId;
+    }
+  | {
+      readonly kind: "companionPresentationStatBlockMissing";
+      readonly companionCombatantId: CombatantId;
+      readonly statBlockId: StatBlockId;
+    }
+  | {
+      readonly kind: "companionPresentationCombatantMissing";
+      readonly companionCombatantId: CombatantId;
+      readonly statBlockId: StatBlockId;
     };
 
 /** A flat projection of one initialization fact for boundary payloads. */

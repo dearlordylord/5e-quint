@@ -1252,8 +1252,62 @@ describe("Find Familiar lifecycle", () => {
     ).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "companionOwnerRuntimeContextMissing",
+        ownerId: casterId,
         message:
           "Retained companion admission owner has no authored runtime context.",
+      }),
+    );
+
+    let presentationCatalogLookups = 0;
+    const presentationStatBlockMissing = admitCompanionToBattleRuntime({
+      session,
+      ownerId: casterId,
+      companionId: familiarId,
+      identity: {
+        tag: "retainedBetweenBattles",
+        durableCompanionId: "durable:presentation-missing-stat-block",
+      },
+      protocol: { tag: "ordinaryFamiliarLikeOneAtATime" },
+      catalog: {
+        ...statBlockCatalog,
+        getStatBlock: (statBlockId) => {
+          presentationCatalogLookups += 1;
+          return presentationCatalogLookups === 1
+            ? statBlockCatalog.getStatBlock(statBlockId)
+            : Option.none();
+        },
+      },
+      formEligibility: {
+        formAccess: "findFamiliar",
+        eligibility: familiarEligibility,
+      },
+      manifestation: {
+        tag: "embodiedOutsideBattle",
+        storedForm: {
+          formAccess: "findFamiliar",
+          formSelection: { tag: "normalNamedForm", formId: "cat" },
+          resolvedStatBlockId: parseSharedStatBlockId("stat_block_cat"),
+        },
+        creatureTypeOverride: firstTypeOverride.creatureType,
+        hitPoints: {
+          currentHp: positiveCompanionHp(1),
+          tempHp: Hp(0),
+        },
+        ammunitionStocks: [],
+        initiative: initiativeScore(14),
+        placement: { kind: "unoccupiedSpaceWithinSpellRange" },
+      },
+      initialCombatantOrder: initialCombatantOrder(casterId, familiarId),
+    });
+    expect(presentationStatBlockMissing).toEqual(
+      Either.left({
+        tag: "battleStateInitIssue",
+        kind: "companionPresentationStatBlockMissing",
+        companionCombatantId: familiarId,
+        statBlockId: parseSharedStatBlockId("stat_block_cat"),
+        message:
+          "Committed companion presentation Stat Block is missing from the catalog.",
       }),
     );
 
@@ -1733,9 +1787,7 @@ describe("Find Familiar lifecycle", () => {
       tag: "battleStateInitIssue",
       kind: "companionFormSelectionStatBlockInvalid",
       formAccess: "findFamiliar",
-      selectedStatBlockId: parseSharedStatBlockId(
-        "stat_block_goblin_warrior",
-      ),
+      selectedStatBlockId: parseSharedStatBlockId("stat_block_goblin_warrior"),
       expectedCreatureType: "beast",
       expectedChallengeRating: 0,
     });
