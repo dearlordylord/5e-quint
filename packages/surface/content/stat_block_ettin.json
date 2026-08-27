@@ -1,0 +1,159 @@
+{
+  "challengeRating": 4,
+  "id": "stat_block_ettin",
+  "kind": "statBlock",
+  "name": "Ettin",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:163-189"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 8,
+      "con": 17,
+      "dex": 8,
+      "int": 6,
+      "str": 21,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 12
+      }
+    },
+    "actions": [
+      {
+        "description": "The ettin makes one Battleaxe attack and one Morningstar attack.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 7
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Battleaxe",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 14
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +7, reach 5 ft. Hit: 14 (2d8 + 5) Piercing damage, and the target has Disadvantage on the next attack roll it makes before the end of its next turn.",
+        "kind": "textOnly",
+        "name": "Morningstar",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Giant"
+        ]
+      }
+    },
+    "creatureType": "giant",
+    "gear": [
+      {
+        "item": "Battleaxe"
+      },
+      {
+        "item": "Morningstar"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 85
+    },
+    "immunities": {
+      "conditions": [
+        "blinded",
+        "charmed",
+        "deafened",
+        "frightened",
+        "stunned",
+        "unconscious"
+      ]
+    },
+    "initiative": {
+      "modifier": -1,
+      "score": 9
+    },
+    "passivePerception": 14,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 5
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 4,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}
