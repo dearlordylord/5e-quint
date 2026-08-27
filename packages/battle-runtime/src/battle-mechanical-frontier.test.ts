@@ -3,11 +3,27 @@ import { describe, expect, test } from "vitest";
 
 import {
   BattleMechanicalFrontierSchema,
+  battleMechanicalFrontier,
   BattleMechanicalHoleSchema,
   BattleMechanicalInterruptChoiceSchema,
   BattleMechanicalInterruptDecisionHoleSchema,
   BattleMechanicalOrdinaryHoleSchema,
 } from "./battle-mechanical-frontier.ts";
+import {
+  combatantId,
+  fighterAttackSubject,
+  fighterVsGoblinBattle,
+  holeId,
+  holeInstanceKey,
+  resolveBattleSubject,
+} from "./battle-runtime.test-support.ts";
+import { battleReplayStackDepth } from "./identity.ts";
+import type {
+  BattleHole,
+  BattleInterruptDecisionHole,
+  BattleInterruptProcedureChoice,
+  BattleSnapshot,
+} from "./battle-state-execution.ts";
 
 const mechanicalHole = {
   holeInstanceKey: "mechanical-frontier-instance",
@@ -43,6 +59,71 @@ const mechanicalInterruptChoice = {
   },
   initialHoles: [mechanicalNestedHole],
 };
+
+const runtimeInterruptResponderId = combatantId("mechanical-frontier-reactor");
+
+const runtimeInterruptDecisionHole = {
+  holeInstanceKey: holeInstanceKey("mechanical-frontier-decision-instance"),
+  holeId: holeId("mechanical-frontier-decision-hole"),
+  kind: "interruptDecision" as const,
+  label: "After damage interrupt decision",
+  trigger: "afterDamage" as const,
+  eligibleResponders: [runtimeInterruptResponderId],
+} satisfies BattleInterruptDecisionHole;
+
+const runtimeInterruptChoice = {
+  kind: "nestedProcedure" as const,
+  subject: {
+    tag: "runtimeCommand" as const,
+    actorId: runtimeInterruptResponderId,
+    command: "releaseReadiedAction" as const,
+    reactorId: runtimeInterruptResponderId,
+  },
+  initialHoles: [],
+} satisfies Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+>;
+
+const runtimePendingInterrupt = {
+  trigger: runtimeInterruptDecisionHole.trigger,
+  decisionHole: runtimeInterruptDecisionHole,
+  choices: [runtimeInterruptChoice],
+  stackDepth: battleReplayStackDepth(1),
+} satisfies NonNullable<BattleSnapshot["pendingInterrupt"]>;
+
+type NeedsHolesResult = Extract<
+  ReturnType<typeof resolveBattleSubject>,
+  { readonly tag: "needsHoles" }
+>;
+
+function ordinaryNeedsHolesResult(): NeedsHolesResult {
+  const state = fighterVsGoblinBattle();
+  const result = resolveBattleSubject({
+    state,
+    subject: fighterAttackSubject(state),
+    fills: [],
+  });
+  if (result.tag !== "needsHoles") {
+    throw new Error(`Expected ordinary needsHoles result, got ${result.tag}.`);
+  }
+  return result;
+}
+
+function frontierInput(
+  result: NeedsHolesResult,
+  holes: readonly BattleHole[],
+  pendingInterrupt: BattleSnapshot["pendingInterrupt"],
+) {
+  return {
+    result: {
+      ...result,
+      holes,
+      snapshot: { ...result.snapshot, pendingInterrupt },
+    },
+    acceptedFills: [],
+  };
+}
 
 describe("battle mechanical frontier", () => {
   test("round-trips a presentation-free mechanical hole", () => {
@@ -197,5 +278,111 @@ describe("battle mechanical frontier", () => {
         }),
       ),
     ).toBe(true);
+  });
+
+  test("projects an ordinary frontier without a pending interrupt", () => {
+    const result = ordinaryNeedsHolesResult();
+
+    const frontier = battleMechanicalFrontier(
+      frontierInput(result, result.holes, null),
+    );
+
+    expect(Either.isRight(frontier)).toBe(true);
+    if (Either.isRight(frontier)) {
+      expect(frontier.right.kind).toBe("ordinaryHoles");
+      expect(frontier.right.holes).toHaveLength(result.holes.length);
+      expect(frontier.right.acceptedFills).toEqual([]);
+    }
+  });
+
+  test("projects an interrupt frontier when its decision hole matches the checkpoint", () => {
+    const result = ordinaryNeedsHolesResult();
+
+    const frontier = battleMechanicalFrontier(
+      frontierInput(
+        result,
+        [runtimeInterruptDecisionHole],
+        runtimePendingInterrupt,
+      ),
+    );
+
+    expect(Either.isRight(frontier)).toBe(true);
+    if (Either.isRight(frontier)) {
+      expect(frontier.right).toEqual({
+        kind: "interruptDecision",
+        decisionHole: {
+          holeInstanceKey: runtimeInterruptDecisionHole.holeInstanceKey,
+          holeId: runtimeInterruptDecisionHole.holeId,
+          kind: "interruptDecision",
+          trigger: runtimeInterruptDecisionHole.trigger,
+          eligibleResponders: runtimeInterruptDecisionHole.eligibleResponders,
+        },
+        choices: [runtimeInterruptChoice],
+      });
+    }
+  });
+
+  test("reports every mechanical frontier admission issue", () => {
+    const result = ordinaryNeedsHolesResult();
+    const [ordinaryHole] = result.holes;
+    if (ordinaryHole === undefined) {
+      throw new Error("Expected the ordinary test frontier to contain a hole.");
+    }
+    const emptyChoicesPendingInterrupt = {
+      ...runtimePendingInterrupt,
+      choices: [],
+    } satisfies NonNullable<BattleSnapshot["pendingInterrupt"]>;
+    const mismatchedPendingInterrupt = {
+      ...runtimePendingInterrupt,
+      decisionHole: {
+        ...runtimePendingInterrupt.decisionHole,
+        eligibleResponders: [],
+      },
+    } satisfies NonNullable<BattleSnapshot["pendingInterrupt"]>;
+    const issueCases = [
+      {
+        name: "empty hole frontier",
+        holes: [],
+        pendingInterrupt: null,
+        issue: { tag: "emptyHoleFrontier" },
+      },
+      {
+        name: "mixed interrupt and ordinary holes",
+        holes: [ordinaryHole, runtimeInterruptDecisionHole],
+        pendingInterrupt: null,
+        issue: { tag: "mixedInterruptAndOrdinaryHoles" },
+      },
+      {
+        name: "ordinary frontier with pending interrupt",
+        holes: result.holes,
+        pendingInterrupt: runtimePendingInterrupt,
+        issue: { tag: "ordinaryFrontierHasPendingInterrupt" },
+      },
+      {
+        name: "interrupt frontier missing checkpoint",
+        holes: [runtimeInterruptDecisionHole],
+        pendingInterrupt: null,
+        issue: { tag: "interruptFrontierMissingCheckpoint" },
+      },
+      {
+        name: "interrupt frontier with empty choices",
+        holes: [runtimeInterruptDecisionHole],
+        pendingInterrupt: emptyChoicesPendingInterrupt,
+        issue: { tag: "interruptFrontierChoiceSetEmpty" },
+      },
+      {
+        name: "interrupt frontier decision-hole mismatch",
+        holes: [runtimeInterruptDecisionHole],
+        pendingInterrupt: mismatchedPendingInterrupt,
+        issue: { tag: "interruptFrontierDecisionHoleMismatch" },
+      },
+    ] as const;
+
+    for (const issueCase of issueCases) {
+      const frontier = battleMechanicalFrontier(
+        frontierInput(result, issueCase.holes, issueCase.pendingInterrupt),
+      );
+      expect(frontier, issueCase.name).toEqual(Either.left(issueCase.issue));
+    }
   });
 });

@@ -8,6 +8,7 @@ import {
   BattleMechanicalOrdinaryHoleSchema as BattleMechanicalOrdinaryHoleCodecSchema,
 } from "./battle-reducer/battle-codecs.ts";
 import { battleHoleFamilyKind } from "./battle-reducer/hole-helpers.ts";
+import { sameDomainValue } from "./domain-value-equality.ts";
 import type {
   BattleHole,
   BattleInterruptProcedureChoice,
@@ -59,8 +60,10 @@ export type BattleMechanicalFrontier =
 export type BattleMechanicalFrontierIssue =
   | { readonly tag: "emptyHoleFrontier" }
   | { readonly tag: "mixedInterruptAndOrdinaryHoles" }
+  | { readonly tag: "ordinaryFrontierHasPendingInterrupt" }
   | { readonly tag: "interruptFrontierMissingCheckpoint" }
-  | { readonly tag: "interruptFrontierChoiceSetEmpty" };
+  | { readonly tag: "interruptFrontierChoiceSetEmpty" }
+  | { readonly tag: "interruptFrontierDecisionHoleMismatch" };
 
 export const BattleMechanicalInterruptChoiceSchema =
   BattleMechanicalInterruptProcedureChoiceSchema.annotations({
@@ -113,11 +116,17 @@ export function battleMechanicalFrontier(input: {
     if (pendingInterrupt.choices.length === 0) {
       return Either.left({ tag: "interruptFrontierChoiceSetEmpty" });
     }
+    if (!sameDomainValue(interruptHole, pendingInterrupt.decisionHole)) {
+      return Either.left({ tag: "interruptFrontierDecisionHoleMismatch" });
+    }
     return Either.right({
       kind: "interruptDecision",
       decisionHole: projectMechanicalInterruptHole(interruptHole),
       choices: projectMechanicalChoices(pendingInterrupt.choices),
     });
+  }
+  if (result.snapshot.pendingInterrupt !== null) {
+    return Either.left({ tag: "ordinaryFrontierHasPendingInterrupt" });
   }
   return Either.right({
     kind: "ordinaryHoles",
