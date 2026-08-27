@@ -1598,7 +1598,6 @@ function cloudkillStrongWindDispersalAct(
       tag: "runtimeCommand",
       actorId,
       command: "disperseCloudkill",
-      areaId: effect.areaId,
       effectOwnerId: effect.sourceCombatantId,
       effectRef: spellActiveEffectExecutionRef(effect),
     },

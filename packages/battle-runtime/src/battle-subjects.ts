@@ -1006,7 +1006,6 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("disperseCloudkill"),
     ...RejectRedundantSpellSourceFields,
-    areaId: BattleAreaId,
     effectOwnerId: CombatantId,
     effectRef: BattleActiveEffectExecutionRef,
   }),

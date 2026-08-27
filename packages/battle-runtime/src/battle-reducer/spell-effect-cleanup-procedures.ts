@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE
 import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
 import { Match } from "effect";
 import type { BattleSubject } from "../battle-subjects.ts";
@@ -94,7 +95,6 @@ export function resolveDisperseCloudkillCommand(
         { readonly kind: "cloudkillAreaHazard" }
       > =>
         effect.kind === "cloudkillAreaHazard" &&
-        effect.areaId === input.subject.areaId &&
         spellActiveEffectExecutionRef(effect) === input.subject.effectRef,
     );
   if (cloudkill === undefined) {

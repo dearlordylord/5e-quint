@@ -18630,6 +18630,9 @@ function reducerRouteHolesFromRuntimeHole(
   if (hole.kind === "gustOfWindLineDirectionChoice") {
     return ["gustOfWindLineDirectionChoice"];
   }
+  // Area wind strength is caller/table-supplied environmental evidence, not a
+  // durable reducer-route frontier.
+  if (hole.kind === "areaWindStrength") return [];
   // Held-object inventories are caller/table-supplied boundary facts, not a
   // durable reducer-route frontier.
   if (hole.kind === "heldObjectFacts") return [];

@@ -35,9 +35,20 @@ import {
   createWardedTargetInterdictionRouteDriver,
   createWeaponAttackOrderingRouteDriver,
   createWeaponMasteryPropertyRouteDriver,
+  reducerRouteDiscoverBattleActs,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
 
 describe("battle runtime deterministic driver replays", () => {
+  test("table-owned area wind strength stays outside the semantic route-hole frontier", () => {
+    expect(
+      reducerRouteDiscoverBattleActs({
+        subject: "spatialEffect",
+        holes: [{ kind: "areaWindStrength" }],
+        owner: "battleAreaShape",
+      }),
+    ).toMatchObject({ holes: [] });
+  });
+
   test("save-gated spell route accepts either independent fill ordering", () => {
     const driver = createSaveGatedSpellOrderingRouteDriver()();
 

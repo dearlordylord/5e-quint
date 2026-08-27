@@ -67,6 +67,7 @@ describe("Cloudkill strong-wind dispersal", () => {
   test("requests the table-owned area wind fact before dispersal", () => {
     const { act, state } = cloudkillDispersalAct();
 
+    expect(act.subject).not.toHaveProperty("areaId");
     expect(act.initialHoles).toEqual([
       expect.objectContaining({
         kind: "areaWindStrength",
