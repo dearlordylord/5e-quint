@@ -479,12 +479,12 @@ added.
 
 ## Issue #378 attack and damage evidence snapshot
 
-Source HEAD: `821070b7b88e7e5f55755fd88ac57b2f1db8f977`. This entry records the ordinary attack, damage,
+Source HEAD: `ebc0b1d4c376dab7433c17c53e120fcfe30becac`. This entry records the ordinary attack, damage,
 hit-point, creature, object, and stat-block Effect 4 consumer migration plus
-the cross-combatant `startBattle` admission accumulation fix. The follow-up
-checkpoint only renames two test helpers from Effect 3 Right terminology to
-Effect 4 Success terminology; it does not alter runtime or rule behavior. The
-generated inventory is
+the cross-combatant `startBattle` admission accumulation fix. The latest
+checkpoint also retains duplicate identity and presentation-source issues
+while preserving stable input order and avoiding duplicate state insertion.
+The generated inventory is
 `docs/migrations/effect-4/controlled-red-inventory.json`, SHA-256
 `2712ba38ae33ba1fa9e5071d2135b5ca675bc7829cbf05f746f79d6f5994a988`.
 
@@ -493,7 +493,7 @@ generated inventory is
 | `pnpm regenerate:effect4-controlled-red`                                                                                                                                        | pass under the required broad lock; 1,133 raw / 1,007 deduplicated diagnostics                                                                                                           |
 | Regenerated owner attribution                                                                                                                                                   | controlled red: `@dnd/app` 177, `@dnd/battle-runtime` 20, `@dnd/character-battle-runtime` 1, `@dnd/mcp` 935; all other owners 0                                                          |
 | `pnpm --filter @dnd/battle-runtime typecheck --pretty false`                                                                                                                    | controlled red; exit 1 with 20 parsed TypeScript diagnostics (27 output lines), all in untouched later-owner execution-profile or mirror-image/see-invisibility/moonbeam/ray MBT helpers |
-| Changed TypeScript path attribution against `4a062776e..821070b7b`                                                                                                              | 104 changed `.ts`/`.tsx` paths; zero package diagnostics on changed paths; app, character-battle, and MCP diagnostics are downstream closure, not changed #378 paths                     |
+| Changed TypeScript path attribution against `4a062776e..ebc0b1d4c`                                                                                                              | 104 changed `.ts`/`.tsx` paths; zero package diagnostics on changed paths; app, character-battle, and MCP diagnostics are downstream closure, not changed #378 paths                     |
 | Focused native runtime suite (API lifecycle, attack rolls/routes, damage/HP, creature admission/origin/state, ordinary object attack/tail, attack pipeline, opportunity/light)  | pass; 12 files, 105 tests                                                                                                                                                                |
 | `pnpm --filter @dnd/battle-runtime test:mbt:ordinary-object-attack`                                                                                                             | pass; 1/1                                                                                                                                                                                |
 | `pnpm --filter @dnd/battle-runtime test:mbt:weapon-attack-ordering`                                                                                                             | pass; 1/1                                                                                                                                                                                |
@@ -504,6 +504,7 @@ generated inventory is
 | Focused relationship/continuation tests (`battle-runtime-damage-relationship-decisions`, replay continuation, interrupt lifecycle/continuation boundaries, attack rolls/damage) | pass; 4 files, 44 tests                                                                                                                                                                  |
 | `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-runtime-metamagic-resource.test.ts`                                                                               | pass; 1 file, 101 tests                                                                                                                                                                  |
 | `pnpm --filter @dnd/battle-runtime test:mbt:quickened-spell-governor`                                                                                                           | pass; 1 file, 10 tests                                                                                                                                                                   |
+| `pnpm --filter @dnd/battle-runtime exec vitest run src/battle-reducer/api-lifecycle.test.ts src/attack-execution-references.test.ts`                                            | pass; 2 files, 23 tests                                                                                                                                                                  |
 | Focused Prettier and `git diff --check`                                                                                                                                         | pass                                                                                                                                                                                     |
 
 `startBattle` now accumulates independent roster admission leaves in stable
