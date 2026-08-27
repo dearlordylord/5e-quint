@@ -1,18 +1,13 @@
 import { type BattleCreatureInit, type CombatantId } from "@dnd/battle-runtime";
-import { type CharacterBattleEncounterParticipant } from "@dnd/character-battle-runtime";
 import { Either, Match } from "effect";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 
-import type {
-  CharacterBattleRosterCombatant,
-  StatBlockBattleRosterCombatant,
-} from "./battle-roster-session-types.ts";
 import type { ToolError } from "./schema-codec.ts";
 import { errorContent } from "./tool-content.ts";
 
-export type BattleCombatantCorrelationParticipant = Pick<
-  CharacterBattleEncounterParticipant,
-  "combatantId" | "origin"
->;
+export type BattleCombatantCorrelationParticipant =
+  | { readonly combatantId: CombatantId; readonly origin: "characterSheet" }
+  | { readonly combatantId: CombatantId; readonly origin: "statBlock" };
 
 export type BattleCombatantCorrelationInitialization = Pick<
   BattleCreatureInit,
@@ -23,44 +18,64 @@ export type BattleCombatantCorrelationInitialization = Pick<
 
 type CharacterBattleCombatantCorrelationPair<
   Initialization extends BattleCombatantCorrelationInitialization,
+  Participant extends BattleCombatantCorrelationParticipant,
 > = {
-  readonly participant: BattleCombatantCorrelationParticipant & {
+  readonly participant: Participant & {
     readonly origin: "characterSheet";
   };
   readonly initialization: Initialization & {
     readonly creatureInit: Extract<
       Initialization["creatureInit"],
-      CharacterBattleRosterCombatant["creatureInit"]
+      { readonly kind: "character" }
     >;
   };
 };
 
 type StatBlockBattleCombatantCorrelationPair<
   Initialization extends BattleCombatantCorrelationInitialization,
+  Participant extends BattleCombatantCorrelationParticipant,
 > = {
-  readonly participant: BattleCombatantCorrelationParticipant & {
+  readonly participant: Participant & {
     readonly origin: "statBlock";
   };
   readonly initialization: Initialization & {
     readonly creatureInit: Extract<
       Initialization["creatureInit"],
-      StatBlockBattleRosterCombatant["creatureInit"]
+      { readonly kind: "statBlock" }
     >;
   };
 };
 
 export type BattleCombatantCorrelationPair<
   Initialization extends BattleCombatantCorrelationInitialization,
+  Participant extends BattleCombatantCorrelationParticipant =
+    BattleCombatantCorrelationParticipant,
 > =
-  | CharacterBattleCombatantCorrelationPair<Initialization>
-  | StatBlockBattleCombatantCorrelationPair<Initialization>;
+  | (Participant extends { readonly origin: "characterSheet" }
+      ? CharacterBattleCombatantCorrelationPair<Initialization, Participant>
+      : never)
+  | (Participant extends { readonly origin: "statBlock" }
+      ? StatBlockBattleCombatantCorrelationPair<Initialization, Participant>
+      : never);
 
 type CharacterBattleCombatantCorrelationInitialization<
   Initialization extends BattleCombatantCorrelationInitialization,
-> = CharacterBattleCombatantCorrelationPair<Initialization>["initialization"];
+> = CharacterBattleCombatantCorrelationPair<
+  Initialization,
+  Extract<
+    BattleCombatantCorrelationParticipant,
+    { readonly origin: "characterSheet" }
+  >
+>["initialization"];
 type StatBlockBattleCombatantCorrelationInitialization<
   Initialization extends BattleCombatantCorrelationInitialization,
-> = StatBlockBattleCombatantCorrelationPair<Initialization>["initialization"];
+> = StatBlockBattleCombatantCorrelationPair<
+  Initialization,
+  Extract<
+    BattleCombatantCorrelationParticipant,
+    { readonly origin: "statBlock" }
+  >
+>["initialization"];
 
 function isCharacterBattleCombatantCorrelationInitialization<
   Initialization extends BattleCombatantCorrelationInitialization,
@@ -104,17 +119,17 @@ export type BattleCombatantCorrelationIssue =
 
 export function correlateBattleCombatantInitializations<
   const Initialization extends BattleCombatantCorrelationInitialization,
+  const Participant extends BattleCombatantCorrelationParticipant,
 >(input: {
-  readonly participants: readonly BattleCombatantCorrelationParticipant[];
-  readonly creatureInits: readonly Initialization[];
+  readonly participants: ReadonlyNonEmptyArray<Participant>;
+  readonly creatureInits: ReadonlyNonEmptyArray<Initialization>;
 }): Either.Either<
-  readonly BattleCombatantCorrelationPair<Initialization>[],
+  ReadonlyNonEmptyArray<
+    BattleCombatantCorrelationPair<Initialization, Participant>
+  >,
   BattleCombatantCorrelationIssue
 > {
-  const participantByCombatantId = new Map<
-    CombatantId,
-    BattleCombatantCorrelationParticipant
-  >();
+  const participantByCombatantId = new Map<CombatantId, Participant>();
   for (const participant of input.participants) {
     if (participantByCombatantId.has(participant.combatantId)) {
       return Either.left({
@@ -156,18 +171,19 @@ export function correlateBattleCombatantInitializations<
 
   // The MCP roster order is the caller's order; the owner output order is not
   // part of this join contract.
-  const orderedPairs: BattleCombatantCorrelationPair<Initialization>[] = [];
+  const orderedPairs: Array<
+    BattleCombatantCorrelationPair<Initialization, Participant>
+  > = [];
   for (const participant of input.participants) {
     const creatureInit = requiredBattleCombatantInitialization(
       initializationByCombatantId,
       participant.combatantId,
     );
-    const pair = Match.value(participant.origin).pipe(
-      Match.when("characterSheet", () =>
+    const pair = Match.value(participant).pipe(
+      Match.when({ origin: "characterSheet" }, (characterParticipant) =>
         isCharacterBattleCombatantCorrelationInitialization(creatureInit)
           ? Either.right({
-              participant:
-                participant as CharacterBattleCombatantCorrelationPair<Initialization>["participant"],
+              participant: characterParticipant,
               initialization: creatureInit,
             })
           : Either.left({
@@ -177,11 +193,10 @@ export function correlateBattleCombatantInitializations<
               actualOrigin: creatureInit.creatureInit.kind,
             }),
       ),
-      Match.when("statBlock", () =>
+      Match.when({ origin: "statBlock" }, (statBlockParticipant) =>
         isStatBlockBattleCombatantCorrelationInitialization(creatureInit)
           ? Either.right({
-              participant:
-                participant as StatBlockBattleCombatantCorrelationPair<Initialization>["participant"],
+              participant: statBlockParticipant,
               initialization: creatureInit,
             })
           : Either.left({
@@ -196,16 +211,23 @@ export function correlateBattleCombatantInitializations<
     if (Either.isLeft(pair)) return Either.left(pair.left);
     orderedPairs.push(pair.right);
   }
-  return Either.right(orderedPairs);
+  const [firstPair, ...restPairs] = orderedPairs;
+  if (firstPair === undefined) {
+    throw new Error(
+      "Internal invariant: non-empty participant correlation returned no pair.",
+    );
+  }
+  return Either.right([firstPair, ...restPairs]);
 }
 
 export function correlateSingleBattleCombatantInitialization<
   const Initialization extends BattleCombatantCorrelationInitialization,
+  const Participant extends BattleCombatantCorrelationParticipant,
 >(input: {
-  readonly participant: BattleCombatantCorrelationParticipant;
-  readonly creatureInits: readonly Initialization[];
+  readonly participant: Participant;
+  readonly creatureInits: ReadonlyNonEmptyArray<Initialization>;
 }): Either.Either<
-  BattleCombatantCorrelationPair<Initialization>,
+  BattleCombatantCorrelationPair<Initialization, Participant>,
   BattleCombatantCorrelationIssue
 > {
   const correlated = correlateBattleCombatantInitializations({
@@ -213,12 +235,7 @@ export function correlateSingleBattleCombatantInitialization<
     creatureInits: input.creatureInits,
   });
   if (Either.isLeft(correlated)) return Either.left(correlated.left);
-  const pair = correlated.right[0];
-  if (pair === undefined) {
-    throw new Error(
-      "Internal invariant: single-combatant correlation returned no pair.",
-    );
-  }
+  const [pair] = correlated.right;
   return Either.right(pair);
 }
 

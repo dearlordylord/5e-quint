@@ -25,7 +25,6 @@ import type { ToolError } from "./schema-codec.ts";
 import { errorContent, jsonContentPayload } from "./tool-content.ts";
 import {
   battleCombatantCorrelationIssueContent,
-  type BattleCombatantCorrelationPair,
   correlateBattleCombatantInitializations,
   correlateSingleBattleCombatantInitialization,
 } from "./battle-combatant-correlation.ts";
@@ -36,7 +35,7 @@ export type StartableCharacterSessionCombatant = {
 };
 
 export type StartableBattleCombatants = {
-  readonly creatureInits: readonly BattleCreatureInit[];
+  readonly creatureInits: ReadonlyNonEmptyArray<BattleCreatureInit>;
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];
 };
 
@@ -86,8 +85,11 @@ export function startableBattleCombatants(input: {
     );
   }
 
+  const orderedParticipants: ReadonlyNonEmptyArray<
+    ResolvedBattleCombatant["participant"]
+  > = [first.participant, ...rest.map(({ participant }) => participant)];
   const correlated = correlateBattleCombatantInitializations({
-    participants: resolved.right.map(({ participant }) => participant),
+    participants: orderedParticipants,
     creatureInits: composition.right.creatureInits,
   });
   if (Either.isLeft(correlated)) {
@@ -123,37 +125,41 @@ export function projectBattleCombatant(input: {
     const [firstIssue] = compositionToolErrors(composition.left);
     return Either.left(firstIssue);
   }
+  const correlationParticipant = Match.value(resolved.right).pipe(
+    Match.when({ participant: { origin: "characterSheet" } }, (character) => ({
+      ...character.participant,
+      characterSession: character.characterSession,
+    })),
+    Match.when(
+      { participant: { origin: "statBlock" } },
+      ({ participant }) => participant,
+    ),
+    Match.exhaustive,
+  );
   const correlated = correlateSingleBattleCombatantInitialization({
-    participant: resolved.right.participant,
+    participant: correlationParticipant,
     creatureInits: composition.right.creatureInits,
   });
   if (Either.isLeft(correlated)) {
     return Either.left(battleCombatantCorrelationIssueContent(correlated.left));
   }
   const correlatedPair = correlated.right;
-  return Match.value(correlatedPair.participant.origin).pipe(
-    Match.when("characterSheet", () => {
-      const characterPair = correlatedPair as Extract<
-        BattleCombatantCorrelationPair<BattleCreatureInit>,
-        { readonly participant: { readonly origin: "characterSheet" } }
-      >;
-      return Either.right({
-        tag: "characterSession" as const,
-        creatureInit: characterPair.initialization,
-        characterSession: (resolved.right as ResolvedCharacterBattleCombatant)
-          .characterSession,
-      });
-    }),
-    Match.when("statBlock", () => {
-      const statBlockPair = correlatedPair as Extract<
-        BattleCombatantCorrelationPair<BattleCreatureInit>,
-        { readonly participant: { readonly origin: "statBlock" } }
-      >;
-      return Either.right({
+  return Match.value(correlatedPair).pipe(
+    Match.when(
+      { participant: { origin: "characterSheet" } },
+      ({ participant, initialization }) =>
+        Either.right({
+          tag: "characterSession" as const,
+          creatureInit: initialization,
+          characterSession: participant.characterSession,
+        }),
+    ),
+    Match.when({ participant: { origin: "statBlock" } }, ({ initialization }) =>
+      Either.right({
         tag: "encounterCombatant" as const,
-        creatureInit: statBlockPair.initialization,
-      });
-    }),
+        creatureInit: initialization,
+      }),
+    ),
     Match.exhaustive,
   );
 }
