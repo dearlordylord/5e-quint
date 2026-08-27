@@ -22,8 +22,7 @@
     "packages/battle-runtime/src/battle-act-composition.ts": {
       "module/binding:characterProcedurePresentationJoin": 26,
       "module/binding:intrinsicActPresentation": 19,
-      "module/binding:intrinsicActPresentationText": 23,
-      "module/binding:intrinsicSubjectPresentation": 14,
+      "module/binding:intrinsicActPresentationText": 22,
       "module/binding:spellProcedurePresentationText": 13
     },
     "packages/battle-runtime/src/battle-reducer/action-spell-slot-expenditure.ts": {
@@ -144,7 +143,7 @@
       "module/binding:combatantHandUses": 18
     },
     "packages/battle-runtime/src/battle-reducer/creature-state.ts": {
-      "module/binding:battleCreatureStateAdmissionFromInit": 32
+      "module/binding:battleCreatureStateAdmissionFromInit": 31
     },
     "packages/battle-runtime/src/battle-reducer/cunning-strike.ts": {
       "module/binding:eligibleCunningStrikeContexts/call:execution.procedureBindings.flatMap:argument-0": 10,
@@ -879,16 +878,11 @@
       "module/binding:weaponAttackOverrideExecutor/binding:resolveWeaponAttackOverride": 9
     },
     "packages/battle-runtime/src/stat-block-combatant-admission.ts": {
-      "module/binding:admitBattleStatBlockCombatantSource": 15
+      "module/binding:admitBattleStatBlockCombatantSource": 14
     },
     "packages/battle-runtime/src/stat-block-execution.ts": {
-      "module/binding:admitStatBlock": 13,
-      "module/binding:allocateStatBlockExecution": 9,
-      "module/binding:persistedValuesEqual": 12,
-      "module/binding:restoreStatBlockExecutionAdmissions": 9
-    },
-    "packages/battle-runtime/src/stat-block-presentation.ts": {
-      "module/binding:attackActionOptionPresentationName": 21
+      "module/binding:admitStatBlock": 12,
+      "module/binding:persistedValuesEqual": 12
     },
     "packages/battle-runtime/src/statblock-attack-damage-support.ts": {
       "module/binding:supportedStatBlockAttackDamage": 10

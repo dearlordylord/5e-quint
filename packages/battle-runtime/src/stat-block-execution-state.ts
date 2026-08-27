@@ -95,6 +95,11 @@ export type BattleStatBlockClosedResourceGraph<
   readonly resources: readonly BattleStatBlockRuntimeResource[];
 };
 
+type StatBlockResourceDeclarationAnalysis = {
+  readonly declaredOrdinals: ReadonlySet<StatBlockProcedureResourceOrdinal>;
+  readonly duplicateIssues: readonly StatBlockResourceGraphAdmissionFailure[];
+};
+
 export function admitStatBlockResourceGraph<
   TSource extends Pick<
     BattleStatBlockExecutionSource,
@@ -107,25 +112,50 @@ export function admitStatBlockResourceGraph<
   ReadonlyNonEmptyArray<StatBlockResourceGraphAdmissionFailure>
 > {
   const resources = source.resources;
+  const declarations = analyzeStatBlockResourceDeclarations(resources);
+  const issues = [
+    ...declarations.duplicateIssues,
+    ...missingResourceDeclarationIssues(
+      source.procedures,
+      declarations.declaredOrdinals,
+    ),
+  ];
+  const [firstIssue, ...remainingIssues] = issues;
+  if (firstIssue !== undefined) {
+    return Either.left([firstIssue, ...remainingIssues]);
+  }
+  const { resources: _resources, ...sourceWithoutResources } = source;
+  return Either.right({ ...sourceWithoutResources, resources });
+}
+
+function analyzeStatBlockResourceDeclarations(
+  resources: readonly BattleStatBlockRuntimeResource[],
+): StatBlockResourceDeclarationAnalysis {
   const declaredOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
   const duplicateOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
   const duplicateIssues: StatBlockResourceGraphAdmissionFailure[] = [];
   for (const resource of resources) {
-    if (declaredOrdinals.has(resource.ordinal)) {
-      if (duplicateOrdinals.has(resource.ordinal)) continue;
-      duplicateOrdinals.add(resource.ordinal);
-      duplicateIssues.push({
-        kind: "duplicateResourceOrdinal",
-        ordinal: resource.ordinal,
-      });
+    if (!declaredOrdinals.has(resource.ordinal)) {
+      declaredOrdinals.add(resource.ordinal);
       continue;
     }
-    declaredOrdinals.add(resource.ordinal);
+    if (duplicateOrdinals.has(resource.ordinal)) continue;
+    duplicateOrdinals.add(resource.ordinal);
+    duplicateIssues.push({
+      kind: "duplicateResourceOrdinal",
+      ordinal: resource.ordinal,
+    });
   }
+  return { declaredOrdinals, duplicateIssues };
+}
 
+function missingResourceDeclarationIssues(
+  procedures: readonly BattleStatBlockRuntimeProcedure[],
+  declaredOrdinals: ReadonlySet<StatBlockProcedureResourceOrdinal>,
+): readonly StatBlockResourceGraphAdmissionFailure[] {
   const missingOrdinals = new Set<StatBlockProcedureResourceOrdinal>();
   const missingIssues: StatBlockResourceGraphAdmissionFailure[] = [];
-  for (const procedure of source.procedures) {
+  for (const procedure of procedures) {
     for (const ordinal of procedure.resourceRefs) {
       if (declaredOrdinals.has(ordinal) || missingOrdinals.has(ordinal)) {
         continue;
@@ -137,14 +167,7 @@ export function admitStatBlockResourceGraph<
       });
     }
   }
-
-  const issues = [...duplicateIssues, ...missingIssues];
-  const [firstIssue, ...remainingIssues] = issues;
-  if (firstIssue !== undefined) {
-    return Either.left([firstIssue, ...remainingIssues]);
-  }
-  const { resources: _resources, ...sourceWithoutResources } = source;
-  return Either.right({ ...sourceWithoutResources, resources });
+  return missingIssues;
 }
 
 export type StatBlockLegendaryActionUsesParseFailure = "invalidPositiveInteger";

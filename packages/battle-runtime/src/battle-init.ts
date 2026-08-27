@@ -202,6 +202,17 @@ const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
   string
 >;
 
+type DruidWildShapeKnownFormDisposition =
+  | { readonly kind: "skip" }
+  | {
+      readonly kind: "issue";
+      readonly issue: BattleDruidWildShapeKnownFormIssue;
+    }
+  | {
+      readonly kind: "admitted";
+      readonly form: BattleDruidWildShapeKnownForm;
+    };
+
 export function battleAvailableDruidWildShapeKnownForms(input: {
   readonly forms: readonly StatBlockRecord[];
   readonly profile: BattleDruidWildShapeKnownFormSupportProfile;
@@ -209,95 +220,18 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
   readonly BattleDruidWildShapeKnownForm[],
   BattleDruidWildShapeKnownFormsIssue
 > {
-  const issues: BattleDruidWildShapeKnownFormIssue[] = [];
-  const seenIds = new Set<StatBlockId>();
-  const duplicateIds = new Set<StatBlockId>();
-  for (const form of input.forms) {
-    if (seenIds.has(form.id)) duplicateIds.add(form.id);
-    seenIds.add(form.id);
-  }
-  for (const statBlockId of duplicateIds) {
-    issues.push({
-      tag: "battleDruidWildShapeKnownFormIssue",
-      statBlockId,
-      reason: "duplicateFormIdentity",
-    });
-  }
+  const issues = duplicateWildShapeKnownFormIssues(input.forms);
   const parsed: BattleDruidWildShapeKnownForm[] = [];
   for (const form of input.forms) {
-    const eligibilityIssue = wildShapeKnownFormEligibilityIssue({
-      form,
-      profile: input.profile,
-    });
-    if (eligibilityIssue !== undefined) {
-      issues.push({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        statBlockId: form.id,
-        reason: "ineligible",
-        eligibilityIssue: eligibilityIssue.code,
-      });
-      continue;
-    }
-    if (!statBlockTraitsAreSupported(form.statBlock.traits)) {
-      continue;
-    }
-    const projected = projectAuthoredStatBlock(form);
-    if (Either.isLeft(projected)) {
-      if (projected.left.reason === "invalidResourceLimit") {
-        issues.push({
-          tag: "battleDruidWildShapeKnownFormIssue",
-          statBlockId: form.id,
-          reason: "invalidResourceLimit",
-          issues: projected.left.issues,
-        });
-        continue;
-      }
-      const disposition = Match.value(projected.left.reason).pipe(
-        Match.when("unsupportedProcedureBinding", () => ({
-          kind: "skip" as const,
-        })),
-        Match.when("nonLiteralSize", (reason) => ({
-          kind: "failure" as const,
-          issue: {
-            tag: "battleDruidWildShapeKnownFormIssue" as const,
-            statBlockId: form.id,
-            reason,
-          },
-        })),
-        Match.when("invalidLegendaryActionUses", (reason) => ({
-          kind: "failure" as const,
-          issue: {
-            tag: "battleDruidWildShapeKnownFormIssue" as const,
-            statBlockId: form.id,
-            reason,
-          },
-        })),
-        Match.exhaustive,
-      );
-      if (disposition.kind === "skip") {
-        continue;
-      }
-      issues.push(disposition.issue);
-      continue;
-    }
-    const formProjection = battleDruidWildShapeFormProjectionStatBlock(
-      projected.right,
+    const disposition = admitDruidWildShapeKnownForm(form, input.profile);
+    Match.value(disposition).pipe(
+      Match.when({ kind: "skip" }, () => undefined),
+      Match.when({ kind: "issue" }, ({ issue }) => issues.push(issue)),
+      Match.when({ kind: "admitted" }, ({ form: admittedForm }) =>
+        parsed.push(admittedForm),
+      ),
+      Match.exhaustive,
     );
-    if (Either.isLeft(formProjection)) {
-      issues.push(formProjection.left);
-      continue;
-    }
-    const resourceGraph = admitStatBlockResourceGraph(formProjection.right);
-    if (Either.isLeft(resourceGraph)) {
-      issues.push({
-        tag: "battleDruidWildShapeKnownFormIssue",
-        statBlockId: form.id,
-        reason: "resourceGraph",
-        issues: resourceGraph.left,
-      });
-      continue;
-    }
-    parsed.push(battleDruidWildShapeKnownForm(resourceGraph.right));
   }
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
@@ -306,6 +240,116 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
         tag: "battleDruidWildShapeKnownFormsIssue",
         issues: [firstIssue, ...remainingIssues],
       });
+}
+
+function duplicateWildShapeKnownFormIssues(
+  forms: readonly StatBlockRecord[],
+): BattleDruidWildShapeKnownFormIssue[] {
+  const seenIds = new Set<StatBlockId>();
+  const duplicateIssues: BattleDruidWildShapeKnownFormIssue[] = [];
+  const duplicateIds = new Set<StatBlockId>();
+  for (const form of forms) {
+    if (seenIds.has(form.id) && !duplicateIds.has(form.id)) {
+      duplicateIds.add(form.id);
+      duplicateIssues.push({
+        tag: "battleDruidWildShapeKnownFormIssue",
+        statBlockId: form.id,
+        reason: "duplicateFormIdentity",
+      });
+    }
+    seenIds.add(form.id);
+  }
+  return duplicateIssues;
+}
+
+function admitDruidWildShapeKnownForm(
+  form: StatBlockRecord,
+  profile: BattleDruidWildShapeKnownFormSupportProfile,
+): DruidWildShapeKnownFormDisposition {
+  const eligibilityIssue = wildShapeKnownFormEligibilityIssue({
+    form,
+    profile,
+  });
+  if (eligibilityIssue !== undefined) {
+    return {
+      kind: "issue",
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue",
+        statBlockId: form.id,
+        reason: "ineligible",
+        eligibilityIssue: eligibilityIssue.code,
+      },
+    };
+  }
+  if (!statBlockTraitsAreSupported(form.statBlock.traits)) {
+    return { kind: "skip" };
+  }
+  const projected = projectAuthoredStatBlock(form);
+  if (Either.isLeft(projected)) {
+    return wildShapeProjectionDisposition(form.id, projected.left);
+  }
+  const formProjection = battleDruidWildShapeFormProjectionStatBlock(
+    projected.right,
+  );
+  if (Either.isLeft(formProjection)) {
+    return { kind: "issue", issue: formProjection.left };
+  }
+  const resourceGraph = admitStatBlockResourceGraph(formProjection.right);
+  if (Either.isLeft(resourceGraph)) {
+    return {
+      kind: "issue",
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue",
+        statBlockId: form.id,
+        reason: "resourceGraph",
+        issues: resourceGraph.left,
+      },
+    };
+  }
+  return {
+    kind: "admitted",
+    form: battleDruidWildShapeKnownForm(resourceGraph.right),
+  };
+}
+
+function wildShapeProjectionDisposition(
+  statBlockId: StatBlockId,
+  failure: BattleStatBlockProjectionFailure,
+): DruidWildShapeKnownFormDisposition {
+  return Match.value(failure).pipe(
+    Match.when({ reason: "unsupportedProcedureBinding" }, () => ({
+      kind: "skip" as const,
+    })),
+    Match.when({ reason: "nonLiteralSize" }, ({ reason }) => ({
+      kind: "issue" as const,
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue" as const,
+        statBlockId,
+        reason,
+      },
+    })),
+    Match.when({ reason: "invalidLegendaryActionUses" }, ({ reason }) => ({
+      kind: "issue" as const,
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue" as const,
+        statBlockId,
+        reason,
+      },
+    })),
+    Match.when(
+      { reason: "invalidResourceLimit" },
+      ({ issues: resourceIssues }) => ({
+        kind: "issue" as const,
+        issue: {
+          tag: "battleDruidWildShapeKnownFormIssue" as const,
+          statBlockId,
+          reason: "invalidResourceLimit" as const,
+          issues: resourceIssues,
+        },
+      }),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function battleDruidWildShapeKnownForm(
