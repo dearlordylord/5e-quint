@@ -4,6 +4,7 @@ import { describe, expect, test } from "vitest";
 import {
   AuthoredStatBlockReactionTriggerSchema,
   CreatureStatBlockProjectionSchema,
+  EffectAtomSchema,
   StandaloneStatBlockSchema,
   StatBlockProcedureEntrySchema,
   StatBlockProcedureSectionSchema,
@@ -353,6 +354,82 @@ describe("standalone Stat Block procedure sections", () => {
         procedureOrdinal: 1,
         name: "Synthetic Omission",
         description: "The source procedure remains inspectable.",
+        resourceRefs: { kind: "none" },
+      }),
+    ).toThrow();
+  });
+
+  test("shares timed apply_condition effects with the general effect schema", () => {
+    const effects = [
+      {
+        kind: "apply_condition",
+        condition: "incapacitated",
+        duration: "end_of_next_turn",
+      },
+      {
+        kind: "apply_condition",
+        condition: "poisoned",
+        duration: "end_of_caster_next_turn",
+      },
+    ] as const;
+
+    for (const effect of effects) {
+      expect(decode(EffectAtomSchema, effect)).toEqual(effect);
+      expect(
+        decode(StatBlockProcedureEntrySchema, {
+          kind: "executable",
+          procedureOrdinal: 1,
+          procedure: {
+            kind: "attack_roll",
+            name: "Synthetic Condition Attack",
+            attackType: "melee",
+            attackAbility: "str",
+            attackBonus: { kind: "literal", value: 4 },
+            reachFeet: 5,
+            onHit: [effect],
+          },
+          resourceRefs: { kind: "none" },
+        }),
+      ).toMatchObject({ procedure: { onHit: [effect] } });
+    }
+
+    const unsupportedDuration = {
+      ...effects[0],
+      duration: "end_of_target_next_turn",
+    };
+    expect(() => decode(EffectAtomSchema, unsupportedDuration)).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        kind: "executable",
+        procedureOrdinal: 1,
+        procedure: {
+          kind: "attack_roll",
+          name: "Synthetic Condition Attack",
+          attackType: "melee",
+          attackAbility: "str",
+          attackBonus: { kind: "literal", value: 4 },
+          reachFeet: 5,
+          onHit: [unsupportedDuration],
+        },
+        resourceRefs: { kind: "none" },
+      }),
+    ).toThrow();
+
+    const extraField = { ...effects[0], unsupported: true };
+    expect(() => decode(EffectAtomSchema, extraField)).toThrow();
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        kind: "executable",
+        procedureOrdinal: 1,
+        procedure: {
+          kind: "attack_roll",
+          name: "Synthetic Condition Attack",
+          attackType: "melee",
+          attackAbility: "str",
+          attackBonus: { kind: "literal", value: 4 },
+          reachFeet: 5,
+          onHit: [extraField],
+        },
         resourceRefs: { kind: "none" },
       }),
     ).toThrow();

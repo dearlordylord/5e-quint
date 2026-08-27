@@ -3177,6 +3177,27 @@ export const ObjectContactDamageEffectSchema = strictStruct({
   }),
 });
 
+const ApplyConditionEffectSchema = strictStruct({
+  kind: Schema.Literal("apply_condition"),
+  condition: Schema.Union(
+    ConditionSchema,
+    nonEmpty(ConditionSchema),
+    strictStruct({
+      kind: Schema.Literal("choose"),
+      from: nonEmpty(ConditionSchema),
+    }),
+  ),
+  duration: optionalExact(
+    Schema.Literal(
+      "current_turn",
+      "end_of_next_turn",
+      "end_of_caster_next_turn",
+      "spell_duration",
+      "until_long_rest_or_greater_restoration",
+    ),
+  ),
+});
+
 export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
   Schema.suspend(() =>
     Schema.Union(
@@ -3315,26 +3336,7 @@ export const EffectAtomSchema: Schema.suspend<EffectAtom, EffectAtom, never> =
           Schema.Struct({ className: ClassNameSchema }),
         ),
       }),
-      Schema.Struct({
-        kind: Schema.Literal("apply_condition"),
-        condition: Schema.Union(
-          ConditionSchema,
-          nonEmpty(ConditionSchema),
-          Schema.Struct({
-            kind: Schema.Literal("choose"),
-            from: nonEmpty(ConditionSchema),
-          }),
-        ),
-        duration: optionalExact(
-          Schema.Literal(
-            "current_turn",
-            "end_of_next_turn",
-            "end_of_caster_next_turn",
-            "spell_duration",
-            "until_long_rest_or_greater_restoration",
-          ),
-        ),
-      }),
+      ApplyConditionEffectSchema,
       strictStruct({
         kind: Schema.Literal("apply_condition_while_in_area_or_until_escape"),
         condition: Schema.Literal("restrained"),
@@ -5191,6 +5193,7 @@ const StatBlockProcedureDamageAmountSchema = Schema.Union(
 );
 
 const AuthoredProcedureEffectAtomSchema = Schema.Union(
+  ApplyConditionEffectSchema,
   strictStruct({
     kind: Schema.Literal("damage"),
     damageType: DamageTypeSchema,
