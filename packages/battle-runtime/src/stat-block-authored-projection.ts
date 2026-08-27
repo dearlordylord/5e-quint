@@ -1,3 +1,4 @@
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
 import * as Either from "effect/Either";
 import { Match } from "effect";
 import type { ReadonlyNonEmptyArray, Size } from "@dnd/shared/types";
