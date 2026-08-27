@@ -3,7 +3,7 @@ in  { challengeRating = 9
     , id = "stat_block_young_blue_dragon"
     , kind = "statBlock"
     , name = "Young Blue Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:931-960" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:931-958" }
     , statBlock =
         { abilityScores = { str = 21, dex = 10, con = 19, int = 14, wis = 13, cha = 17 }
         , ac = { value = { kind = "literal", value = 18 } }

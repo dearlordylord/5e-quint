@@ -136,6 +136,16 @@
         },
         "kind": "walk"
       }
+    ],
+    "traits": [
+      {
+        "description": "At the end of each of the azer's turns, each creature of the azer's choice in a 5-foot Emanation originating from the azer takes 5 (1d10) Fire damage unless the azer has the Incapacitated condition.",
+        "name": "Fire Aura"
+      },
+      {
+        "description": "The azer sheds Bright Light in a 10-foot radius and Dim Light for an additional 10 feet.",
+        "name": "Illumination"
+      }
     ]
   }
 }

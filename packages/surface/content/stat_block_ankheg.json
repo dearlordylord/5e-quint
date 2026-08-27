@@ -149,6 +149,12 @@
         },
         "kind": "burrow"
       }
+    ],
+    "traits": [
+      {
+        "description": "The ankheg can burrow through solid rock at half its Burrow Speed and leaves a 10-foot-diameter tunnel in its wake.",
+        "name": "Tunneler"
+      }
     ]
   }
 }

@@ -3,7 +3,7 @@ in  { challengeRating = 9
     , id = "stat_block_bone_devil"
     , kind = "statBlock"
     , name = "Bone Devil"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1062-1098" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1062-1096" }
     , statBlock =
         { abilityScores = { str = 18, dex = 16, con = 18, int = 13, wis = 14, cha = 16 }
         , ac = { value = { kind = "literal", value = 16 } }

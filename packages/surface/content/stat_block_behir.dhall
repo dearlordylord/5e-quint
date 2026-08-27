@@ -3,7 +3,7 @@ in  { challengeRating = 11
     , id = "stat_block_behir"
     , kind = "statBlock"
     , name = "Behir"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:583-620" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:583-618" }
     , statBlock =
         { abilityScores = { str = 23, dex = 16, con = 18, int = 7, wis = 14, cha = 12 }
         , ac = { value = { kind = "literal", value = 17 } }

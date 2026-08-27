@@ -11,7 +11,7 @@ in { challengeRating = 2
       , ac.value = { kind = "literal", value = 15 }
       , actions =
     [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The bandit makes two attacks, using Scimitar and Pistol in any combination.", reason = "unsupported_action_shape" }
-    , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Scimitar", attackAbility = "str", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 6, flat = Some +3, static = 6 }, rest = [] : List T.Effect } } }
+    , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Scimitar", attackAbility = "dex", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 6, flat = Some +3, static = 6 }, rest = [] : List T.Effect } } }
     , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Pistol", attackAbility = "dex", attackBonus = +5, rangeFeet = { normal = 30, long = 90 }, ammunition = Some "bullet", onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 10, flat = Some +3, static = 8 }, rest = [] : List T.Effect } } }
     ]
   , alignment = { morality = "neutral", order = "neutral" }

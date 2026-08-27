@@ -3,7 +3,7 @@ in  { challengeRating = 16
     , id = "stat_block_adult_blue_dragon"
     , kind = "statBlock"
     , name = "Adult Blue Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:962-1010" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:962-1008" }
     , statBlock =
         { abilityScores = { str = 25, dex = 10, con = 23, int = 16, wis = 15, cha = 20 }
         , ac = { value = { kind = "literal", value = 19 } }

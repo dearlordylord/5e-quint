@@ -3,7 +3,7 @@ in  { challengeRating = 5
     , id = "stat_block_barbed_devil"
     , kind = "statBlock"
     , name = "Barbed Devil"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:477-517" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:477-515" }
     , statBlock =
         { abilityScores = { str = 16, dex = 17, con = 18, int = 12, wis = 14, cha = 14 }
         , ac = { value = { kind = "literal", value = 15 } }

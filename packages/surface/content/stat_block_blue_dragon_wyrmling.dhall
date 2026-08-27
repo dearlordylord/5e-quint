@@ -3,7 +3,7 @@ in  { challengeRating = 3
     , id = "stat_block_blue_dragon_wyrmling"
     , kind = "statBlock"
     , name = "Blue Dragon Wyrmling"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:900-929" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:900-927" }
     , statBlock =
         { abilityScores = { str = 17, dex = 10, con = 15, int = 12, wis = 11, cha = 15 }
         , ac = { value = { kind = "literal", value = 17 } }

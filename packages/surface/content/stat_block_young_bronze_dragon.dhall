@@ -3,7 +3,7 @@ in  { challengeRating = 8
     , id = "stat_block_young_bronze_dragon"
     , kind = "statBlock"
     , name = "Young Bronze Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1309-1344" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1309-1342" }
     , statBlock =
         { abilityScores = { str = 21, dex = 10, con = 19, int = 14, wis = 13, cha = 17 }
         , ac = { value = { kind = "literal", value = 17 } }

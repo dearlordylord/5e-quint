@@ -3,12 +3,12 @@ in  { challengeRating = 0.25
     , id = "stat_block_blink_dog"
     , kind = "statBlock"
     , name = "Blink Dog"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:868-896" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:868-894" }
     , statBlock =
         { abilityScores = { str = 12, dex = 17, con = 12, int = 10, wis = 13, cha = 11 }
         , ac = { value = { kind = "literal", value = 13 } }
         , actions =
-            [ T.executable { procedureOrdinal = 1, procedure = (T.meleeAttack { name = "Bite", attackAbility = "str", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 4, flat = (Some +3), static = 5 }, rest = [  ] : List T.Effect } }) }
+            [ T.executable { procedureOrdinal = 1, procedure = (T.meleeAttack { name = "Bite", attackAbility = "dex", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "piercing", dice = 1, dieSize = 4, flat = (Some +3), static = 5 }, rest = [  ] : List T.Effect } }) }
             ]
         , bonusActions =
             [ T.resourceTextOnly { procedureOrdinal = 1, name = "Teleport (Recharge 4–6)", description = "The dog teleports up to 40 feet to an unoccupied space it can see.", reason = "unsupported_action_shape", resourceOrdinals = { first = 1, rest = [  ] : List Natural } }

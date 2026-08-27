@@ -3,7 +3,7 @@ in  { challengeRating = 7
     , id = "stat_block_young_black_dragon"
     , kind = "statBlock"
     , name = "Young Black Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:689-722" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:689-720" }
     , statBlock =
         { abilityScores = { str = 19, dex = 14, con = 17, int = 12, wis = 11, cha = 15 }
         , ac = { value = { kind = "literal", value = 18 } }

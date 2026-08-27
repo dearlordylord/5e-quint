@@ -3,7 +3,7 @@ in  { challengeRating = 4
     , id = "stat_block_black_pudding"
     , kind = "statBlock"
     , name = "Black Pudding"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:828-866" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:828-864" }
     , statBlock =
         { abilityScores = { str = 16, dex = 5, con = 16, int = 1, wis = 6, cha = 1 }
         , ac = { value = { kind = "literal", value = 7 } }

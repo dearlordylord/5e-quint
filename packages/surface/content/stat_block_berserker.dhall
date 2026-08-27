@@ -3,7 +3,7 @@ in  { challengeRating = 2
     , id = "stat_block_berserker"
     , kind = "statBlock"
     , name = "Berserker"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:622-650" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:622-648" }
     , statBlock =
         { abilityScores = { str = 16, dex = 12, con = 17, int = 9, wis = 11, cha = 9 }
         , ac = { value = { kind = "literal", value = 13 } }

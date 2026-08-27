@@ -3,7 +3,7 @@ in  { challengeRating = 3
     , id = "stat_block_basilisk"
     , kind = "statBlock"
     , name = "Basilisk"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:519-546" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:519-544" }
     , statBlock =
         { abilityScores = { str = 16, dex = 8, con = 15, int = 2, wis = 8, cha = 7 }
         , ac = { value = { kind = "literal", value = 15 } }

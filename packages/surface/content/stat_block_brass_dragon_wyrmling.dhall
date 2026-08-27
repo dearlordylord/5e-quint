@@ -3,7 +3,7 @@ in  { challengeRating = 1
     , id = "stat_block_brass_dragon_wyrmling"
     , kind = "statBlock"
     , name = "Brass Dragon Wyrmling"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1102-1131" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1102-1129" }
     , statBlock =
         { abilityScores = { str = 15, dex = 10, con = 13, int = 10, wis = 11, cha = 13 }
         , ac = { value = { kind = "literal", value = 15 } }

@@ -3,7 +3,7 @@ in  { challengeRating = 10
     , id = "stat_block_aboleth"
     , kind = "statBlock"
     , name = "Aboleth"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:5-59" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:5-57" }
     , statBlock =
         { abilityScores = { str = 21, dex = 9, con = 15, int = 18, wis = 15, cha = 18 }
         , ac = { value = { kind = "literal", value = 17 } }

@@ -3,7 +3,7 @@ in  { challengeRating = 2
     , id = "stat_block_bronze_dragon_wyrmling"
     , kind = "statBlock"
     , name = "Bronze Dragon Wyrmling"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1272-1307" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1272-1305" }
     , statBlock =
         { abilityScores = { str = 17, dex = 10, con = 15, int = 12, wis = 11, cha = 15 }
         , ac = { value = { kind = "literal", value = 15 } }

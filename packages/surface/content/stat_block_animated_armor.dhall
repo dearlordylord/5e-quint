@@ -4,7 +4,7 @@ in { challengeRating = 1
 , kind = "statBlock"
 , name = "Animated Armor"
 , provenance =
-  { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:98-123" }
+  { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:98-122" }
 , statBlock =
   { abilityScores = { cha = 1, con = 13, dex = 11, int = 1, str = 14, wis = 3 }
   , ac.value = { kind = "literal", value = 18 }

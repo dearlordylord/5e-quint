@@ -3,7 +3,7 @@ in  { challengeRating = 3
     , id = "stat_block_bearded_devil"
     , kind = "statBlock"
     , name = "Bearded Devil"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:548-581" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:548-579" }
     , statBlock =
         { abilityScores = { str = 16, dex = 15, con = 15, int = 9, wis = 11, cha = 14 }
         , ac = { value = { kind = "literal", value = 13 } }

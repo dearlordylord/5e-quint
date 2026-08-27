@@ -3,7 +3,7 @@ in  { challengeRating = 1
     , id = "stat_block_bugbear_warrior"
     , kind = "statBlock"
     , name = "Bugbear Warrior"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1495-1526" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:1495-1524" }
     , statBlock =
         { abilityScores = { str = 15, dex = 14, con = 13, int = 8, wis = 11, cha = 9 }
         , ac = { value = { kind = "literal", value = 14 } }

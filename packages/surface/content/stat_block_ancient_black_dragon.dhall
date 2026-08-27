@@ -3,7 +3,7 @@ in  { challengeRating = 21
     , id = "stat_block_ancient_black_dragon"
     , kind = "statBlock"
     , name = "Ancient Black Dragon"
-    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:776-826" }
+    , provenance = { kind = "srd-5.2.1", section = "Monsters/Monsters-A-B.md:776-824" }
     , statBlock =
         { abilityScores = { str = 27, dex = 14, con = 25, int = 16, wis = 15, cha = 22 }
         , ac = { value = { kind = "literal", value = 22 } }
