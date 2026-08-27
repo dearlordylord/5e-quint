@@ -186,7 +186,9 @@ export function schemaJsonContent<A, I>(
 function jsonSchemaFromCodec<A, I>(
   schema: Schema.Schema<A, I, never>,
 ): McpOutputSchema {
-  return stripNestedJsonSchemaIds(JSONSchema.make(schema));
+  return stripNestedJsonSchemaIds(JSONSchema.make(schema), {
+    preserveRootId: false,
+  });
 }
 
 function parseMcpObjectInputSchema(

@@ -16,13 +16,15 @@ const documentSchemas = [
 describe("Opaque Oracle document JSON Schemas", () => {
   it("compiles every derived document graph with an independent Ajv2020", () => {
     for (const [name, schema] of documentSchemas) {
-      expect(() =>
-        new Ajv2020({
-          strict: false,
-          inlineRefs: false,
-          code: { optimize: 0 },
-        }).compile(schema),
-      ).not.toThrow(`the ${name} document schema should compile`);
+      expect(
+        () =>
+          new Ajv2020({
+            strict: false,
+            inlineRefs: false,
+            code: { optimize: 0 },
+          }).compile(schema),
+        `the ${name} document schema should compile`,
+      ).not.toThrow();
     }
   }, 120_000);
 });
