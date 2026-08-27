@@ -1363,6 +1363,56 @@ export function battleSubjectProcedureRefs(
 export function battleSubjectProcedureRefsBelongToOwners(
   subject: BattleSubject,
 ): boolean {
+  const runtimeCommandOwner = (
+    value: Extract<BattleSubject, { readonly tag: "runtimeCommand" }>,
+  ): CombatantId =>
+    Match.value(value).pipe(
+      Match.discriminatorsExhaustive("command")({
+        endTurn: (v) => v.actorId,
+        endConcentration: (v) => v.actorId,
+        move: (v) => v.actorId,
+        standFromProne: (v) => v.actorId,
+        releaseReadiedSpell: (v) => v.readiedSpellCasterId,
+        releaseReadiedMovement: (v) => v.actorId,
+        reportReadyTrigger: (v) => v.actorId,
+        releaseReadiedAction: (v) => v.actorId,
+        releaseReadiedAttack: (v) => v.reactorId,
+        castTriggeredReactionSpell: (v) => v.reactorId,
+        castAttackHitBonusActionSpell: (v) => v.casterId,
+        releaseGrapple: (v) => v.actorId,
+        opportunityAttack: (v) => v.reactorId,
+        retaliationAttack: (v) => v.reactorId,
+        greaseGroundHazardSave: (v) => v.actorId,
+        webRestraintSave: (v) => v.actorId,
+        sleetStormAreaHazardSave: (v) => v.actorId,
+        insectPlagueAreaHazardSave: (v) => v.actorId,
+        cloudkillAreaHazardSave: (v) => v.actorId,
+        disperseCloudkill: (v) => v.actorId,
+        webRestrainedNoLongerInArea: (v) => v.actorId,
+        webAreaRemoved: (v) => v.actorId,
+        gustOfWindLineSave: (v) => v.actorId,
+        gustOfWindLineDirectionChange: (v) => v.actorId,
+        movableZoneSave: (v) => v.actorId,
+        moonbeamCylinderExit: (v) => v.actorId,
+        movableZoneReposition: (v) => v.actorId,
+        movableZoneRam: (v) => v.actorId,
+        releaseSpellCreatedHeldObject: (v) => v.actorId,
+        protectionRelevantEffectSave: (v) => v.actorId,
+        creatureTypeProtectionConditionAttempt: (v) => v.actorId,
+        creatureTypeProtectionPossessionAttempt: (v) => v.actorId,
+        disperseFogCloud: (v) => v.actorId,
+        wardingBondSeparation: (v) => v.actorId,
+        jumpMovementReplacement: (v) => v.actorId,
+        dragonsBreathExhale: (v) => v.actorId,
+        replaceSelfTransformationMode: (v) => v.actorId,
+        commandGrovel: (v) => v.actorId,
+        commandDrop: (v) => v.actorId,
+        commandApproach: (v) => v.actorId,
+        commandFlee: (v) => v.actorId,
+        levitateAltitudeControl: (v) => v.actorId,
+        creatureFalls: (v) => v.fallingCreatureId,
+      }),
+    );
   const ownerId = Match.value(subject).pipe(
     Match.discriminatorsExhaustive("tag")({
       action: (value) => value.actorId,
@@ -1380,12 +1430,7 @@ export function battleSubjectProcedureRefsBelongToOwners(
       companionLifecycle: (value) => value.actorId,
       findFamiliarSharedSenses: (value) => value.actorId,
       findFamiliarTouchSpell: (value) => value.actorId,
-      runtimeCommand: (value) =>
-        "readiedSpellCasterId" in value
-          ? value.readiedSpellCasterId
-          : "reactorId" in value
-            ? value.reactorId
-            : value.actorId,
+      runtimeCommand: runtimeCommandOwner,
     }),
   );
   return battleSubjectProcedureRefs(subject).every((procedureRef) =>
