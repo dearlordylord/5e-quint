@@ -1,4 +1,5 @@
 import type {
+  AttackPresentationJoinIssue,
   BattleActDiscoveryCandidate,
   BattleActPresentation,
   BattleState,
@@ -59,6 +60,20 @@ const byTag = Match.discriminator("tag");
 type IntrinsicBattleSubject = Exclude<
   BattleSubject,
   CharacterProcedureBattleSubject
+>;
+
+type IntrinsicAttackSubject = Extract<
+  IntrinsicBattleSubject,
+  | { readonly tag: "action"; readonly action: "attack" }
+  | { readonly tag: "bonusAction"; readonly action: "offHandAttack" }
+>;
+
+type IntrinsicRuntimeAttackSubject = Extract<
+  IntrinsicBattleSubject,
+  {
+    readonly tag: "runtimeCommand";
+    readonly command: "opportunityAttack" | "retaliationAttack";
+  }
 >;
 
 export function battleActSpellPresentation(
@@ -296,81 +311,200 @@ function intrinsicSubjectPresentation(
   context: BattleRuntimeContext,
   subject: IntrinsicBattleSubject,
 ): BattleActPresentation | undefined {
-  if (
-    subject.tag === "runtimeCommand" &&
-    (subject.command === "opportunityAttack" ||
-      subject.command === "retaliationAttack")
-  ) {
-    const attack = attackActionOptionsForActor(state, subject.reactorId).find(
-      (candidate) => candidate.procedureRef === subject.procedureRef,
-    );
-    if (attack === undefined) return undefined;
-    const name = attackActionOptionPresentationName(
-      state,
-      context,
-      subject.reactorId,
-      attack,
-    );
-    return Either.isLeft(name)
-      ? { kind: "presentationIssue", issue: name.left }
-      : {
-          kind: "attack",
-          procedureRef: subject.procedureRef,
-          name: name.right,
-        };
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      action: (value) =>
+        intrinsicActionSubjectPresentation(state, context, value),
+      bonusAction: (value) =>
+        intrinsicBonusActionSubjectPresentation(state, context, value),
+      runtimeCommand: (value) =>
+        intrinsicRuntimeCommandSubjectPresentation(state, context, value),
+      pactOfTheChainFamiliarAttack: intrinsicSubjectPresentationFallback,
+      monkFocusFlurryOfBlowsStrike: intrinsicSubjectPresentationFallback,
+      companionLifecycle: intrinsicSubjectPresentationFallback,
+      findFamiliarSharedSenses: intrinsicSubjectPresentationFallback,
+    }),
+  );
+}
+
+function intrinsicActionSubjectPresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: Extract<IntrinsicBattleSubject, { readonly tag: "action" }>,
+): BattleActPresentation | undefined {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("action")({
+      attack: (value) =>
+        intrinsicAttackSubjectPresentation(state, context, value),
+      multiattack: (value) =>
+        intrinsicStatBlockProcedurePresentation(state, context, value.actorId),
+      dash: intrinsicSubjectPresentationFallback,
+      disengage: intrinsicSubjectPresentationFallback,
+      dodge: intrinsicSubjectPresentationFallback,
+      helpAttack: intrinsicSubjectPresentationFallback,
+      hide: intrinsicSubjectPresentationFallback,
+      ready: intrinsicSubjectPresentationFallback,
+      search: intrinsicSubjectPresentationFallback,
+      grapple: intrinsicSubjectPresentationFallback,
+      shove: intrinsicSubjectPresentationFallback,
+      escapeGrapple: intrinsicSubjectPresentationFallback,
+      escapeSpellRestraint: intrinsicSubjectPresentationFallback,
+      shakeAwakeFromSleep: intrinsicSubjectPresentationFallback,
+      shakeAwakeFromHypnoticPattern: intrinsicSubjectPresentationFallback,
+    }),
+  );
+}
+
+function intrinsicBonusActionSubjectPresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: Extract<IntrinsicBattleSubject, { readonly tag: "bonusAction" }>,
+): BattleActPresentation | undefined {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("action")({
+      offHandAttack: (value) =>
+        intrinsicAttackSubjectPresentation(state, context, value),
+      statBlockActionOption: (value) =>
+        intrinsicStatBlockProcedurePresentation(state, context, value.actorId),
+      martialArtsUnarmedStrike: intrinsicSubjectPresentationFallback,
+    }),
+  );
+}
+
+function intrinsicRuntimeCommandSubjectPresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: Extract<IntrinsicBattleSubject, { readonly tag: "runtimeCommand" }>,
+): BattleActPresentation | undefined {
+  return Match.value(subject).pipe(
+    Match.discriminatorsExhaustive("command")({
+      opportunityAttack: (value) =>
+        intrinsicRuntimeAttackSubjectPresentation(state, context, value),
+      retaliationAttack: (value) =>
+        intrinsicRuntimeAttackSubjectPresentation(state, context, value),
+      endTurn: intrinsicSubjectPresentationFallback,
+      endConcentration: intrinsicSubjectPresentationFallback,
+      move: intrinsicSubjectPresentationFallback,
+      standFromProne: intrinsicSubjectPresentationFallback,
+      releaseReadiedSpell: intrinsicSubjectPresentationFallback,
+      releaseReadiedMovement: intrinsicSubjectPresentationFallback,
+      reportReadyTrigger: intrinsicSubjectPresentationFallback,
+      releaseReadiedAction: intrinsicSubjectPresentationFallback,
+      releaseReadiedAttack: intrinsicSubjectPresentationFallback,
+      castTriggeredReactionSpell: intrinsicSubjectPresentationFallback,
+      castAttackHitBonusActionSpell: intrinsicSubjectPresentationFallback,
+      releaseGrapple: intrinsicSubjectPresentationFallback,
+      greaseGroundHazardSave: intrinsicSubjectPresentationFallback,
+      webRestraintSave: intrinsicSubjectPresentationFallback,
+      sleetStormAreaHazardSave: intrinsicSubjectPresentationFallback,
+      insectPlagueAreaHazardSave: intrinsicSubjectPresentationFallback,
+      cloudkillAreaHazardSave: intrinsicSubjectPresentationFallback,
+      disperseCloudkill: intrinsicSubjectPresentationFallback,
+      webRestrainedNoLongerInArea: intrinsicSubjectPresentationFallback,
+      webAreaRemoved: intrinsicSubjectPresentationFallback,
+      gustOfWindLineSave: intrinsicSubjectPresentationFallback,
+      gustOfWindLineDirectionChange: intrinsicSubjectPresentationFallback,
+      movableZoneSave: intrinsicSubjectPresentationFallback,
+      moonbeamCylinderExit: intrinsicSubjectPresentationFallback,
+      movableZoneReposition: intrinsicSubjectPresentationFallback,
+      movableZoneRam: intrinsicSubjectPresentationFallback,
+      releaseSpellCreatedHeldObject: intrinsicSubjectPresentationFallback,
+      protectionRelevantEffectSave: intrinsicSubjectPresentationFallback,
+      creatureTypeProtectionConditionAttempt:
+        intrinsicSubjectPresentationFallback,
+      creatureTypeProtectionPossessionAttempt:
+        intrinsicSubjectPresentationFallback,
+      disperseFogCloud: intrinsicSubjectPresentationFallback,
+      wardingBondSeparation: intrinsicSubjectPresentationFallback,
+      jumpMovementReplacement: intrinsicSubjectPresentationFallback,
+      dragonsBreathExhale: intrinsicSubjectPresentationFallback,
+      replaceSelfTransformationMode: intrinsicSubjectPresentationFallback,
+      commandGrovel: intrinsicSubjectPresentationFallback,
+      commandDrop: intrinsicSubjectPresentationFallback,
+      commandApproach: intrinsicSubjectPresentationFallback,
+      commandFlee: intrinsicSubjectPresentationFallback,
+      levitateAltitudeControl: intrinsicSubjectPresentationFallback,
+      creatureFalls: intrinsicSubjectPresentationFallback,
+    }),
+  );
+}
+
+function intrinsicAttackSubjectPresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: IntrinsicAttackSubject,
+): BattleActPresentation | undefined {
+  const attackOptions =
+    subject.tag === "bonusAction"
+      ? offHandAttackActionOptionsForActor(state, subject.actorId)
+      : attackActionOptionsForActor(state, subject.actorId);
+  const attack = attackOptions.find((candidate) =>
+    boundAttackExecutionSelectionMatchesOption(subject, candidate),
+  );
+  if (attack === undefined) return undefined;
+  const name = attackActionOptionPresentationName(
+    state,
+    context,
+    subject.actorId,
+    attack,
+  );
+  return attackPresentationJoin(attack.procedureRef, name);
+}
+
+function intrinsicRuntimeAttackSubjectPresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  subject: IntrinsicRuntimeAttackSubject,
+): BattleActPresentation | undefined {
+  const attack = attackActionOptionsForActor(state, subject.reactorId).find(
+    (candidate) => candidate.procedureRef === subject.procedureRef,
+  );
+  if (attack === undefined) return undefined;
+  const name = attackActionOptionPresentationName(
+    state,
+    context,
+    subject.reactorId,
+    attack,
+  );
+  return attackPresentationJoin(attack.procedureRef, name);
+}
+
+function attackPresentationJoin(
+  procedureRef: Extract<
+    BattleActPresentation,
+    { readonly kind: "attack" }
+  >["procedureRef"],
+  name: Either.Either<string, AttackPresentationJoinIssue>,
+): BattleActPresentation {
+  return Either.isLeft(name)
+    ? { kind: "presentationIssue", issue: name.left }
+    : { kind: "attack", procedureRef, name: name.right };
+}
+
+function intrinsicStatBlockProcedurePresentation(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  actorId: CombatantId,
+): BattleActPresentation {
+  const presentations = statBlockProcedurePresentationsForActor(
+    state,
+    context,
+    actorId,
+  );
+  if (presentations === null || Either.isRight(presentations)) {
+    return intrinsicSubjectPresentationFallback();
   }
-  const attackSubject =
-    (subject.tag === "action" && subject.action === "attack") ||
-    (subject.tag === "bonusAction" && subject.action === "offHandAttack")
-      ? subject
-      : undefined;
-  if (attackSubject !== undefined) {
-    const attackOptions =
-      attackSubject.tag === "bonusAction"
-        ? offHandAttackActionOptionsForActor(state, attackSubject.actorId)
-        : attackActionOptionsForActor(state, attackSubject.actorId);
-    const attack = attackOptions.find((candidate) =>
-      boundAttackExecutionSelectionMatchesOption(attackSubject, candidate),
-    );
-    if (attack !== undefined) {
-      const name = attackActionOptionPresentationName(
-        state,
-        context,
-        attackSubject.actorId,
-        attack,
-      );
-      if (Either.isLeft(name)) {
-        return { kind: "presentationIssue", issue: name.left };
-      }
-      return {
-        kind: "attack",
-        procedureRef: attackSubject.procedureRef,
-        name: name.right,
-      };
-    }
-    return undefined;
-  }
-  if (
-    (subject.tag === "action" && subject.action === "multiattack") ||
-    (subject.tag === "bonusAction" &&
-      subject.action === "statBlockActionOption")
-  ) {
-    const presentations = statBlockProcedurePresentationsForActor(
-      state,
-      context,
-      subject.actorId,
-    );
-    if (presentations !== null && Either.isLeft(presentations)) {
-      return {
-        kind: "presentationIssue",
-        issue: {
-          tag: "attackPresentationJoinIssue",
-          reason: "statBlockProcedurePresentationJoin",
-          issues: presentations.left,
-        },
-      };
-    }
-  }
+  return {
+    kind: "presentationIssue",
+    issue: {
+      tag: "attackPresentationJoinIssue",
+      reason: "statBlockProcedurePresentationJoin",
+      issues: presentations.left,
+    },
+  };
+}
+
+function intrinsicSubjectPresentationFallback(): BattleActPresentation {
   return { kind: "intrinsic" };
 }
 

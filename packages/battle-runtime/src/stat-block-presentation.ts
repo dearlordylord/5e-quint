@@ -3,6 +3,7 @@ import { UNARMED_STRIKE_NAME } from "./battle-action-options.ts";
 import type {
   AttackPresentationJoinIssue,
   BattleState,
+  CharacterBattleCreatureState,
 } from "./battle-state-execution.ts";
 import {
   characterWeaponPresentationSource,
@@ -17,6 +18,7 @@ import { Match } from "effect";
 import type { Ability } from "@dnd/shared/game-facts";
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type { StatBlockProcedureOrdinal } from "@dnd/surface/surface/types";
+import type { WeaponRecord } from "@dnd/surface/surface/types";
 import type { StatBlockProjectionIssue } from "./stat-block-execution-state.ts";
 import { supportedStatBlockTraitAttackRollModes } from "./statblock-action-execution-support.ts";
 import type {
@@ -46,6 +48,16 @@ type ExecutableStatBlockProcedure = Exclude<
 export type StatBlockProcedurePresentationResult = Either.Either<
   readonly StatBlockProcedurePresentation[],
   ReadonlyNonEmptyArray<StatBlockProcedurePresentationJoinIssue>
+>;
+
+type CharacterWeaponAttackActionOption = Extract<
+  SupportedAttackActionOption,
+  { readonly kind: "weapon" }
+>;
+
+type CharacterBaseAttack = NonNullable<
+  | CharacterBattleCreatureState["origin"]["attack"]
+  | CharacterBattleCreatureState["origin"]["offHandAttack"]
 >;
 
 type ProcedureCoordinate = {
@@ -360,53 +372,114 @@ export function attackActionOptionPresentationName(
   actorId: CombatantId,
   attack: SupportedAttackActionOption,
 ): Either.Either<string, AttackPresentationJoinIssue> {
-  if (attack.kind === "unarmedStrike") {
-    return Either.right(attackActionOptionName(attack));
+  return Match.value(attack).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      unarmedStrike: (value) => Either.right(attackActionOptionName(value)),
+      weapon: (value) =>
+        characterWeaponAttackPresentationName(state, context, actorId, value),
+      statBlockAttack: (value) =>
+        statBlockAttackPresentationName(state, context, actorId, value),
+    }),
+  );
+}
+
+function characterWeaponAttackPresentationName(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  actorId: CombatantId,
+  attack: CharacterWeaponAttackActionOption,
+): Either.Either<string, AttackPresentationJoinIssue> {
+  const characterContext = context.characters.get(actorId);
+  if (characterContext === undefined) {
+    return Either.left({
+      tag: "attackPresentationJoinIssue",
+      reason: "characterContextMissing",
+    });
   }
-  if (attack.kind === "weapon") {
-    const characterContext = context.characters.get(actorId);
-    if (characterContext === undefined) {
-      return Either.left({
-        tag: "attackPresentationJoinIssue",
-        reason: "characterContextMissing",
-      });
-    }
-    const source = characterWeaponPresentationSource(
-      characterContext,
-      attack.weapon.weaponUnitId,
-    );
-    if (Either.isLeft(source)) {
-      return Either.left({
-        tag: "attackPresentationJoinIssue",
-        reason: "weaponPresentationMissing",
-      });
-    }
-    const actor = state.combatants.get(actorId);
-    const baseAttack =
-      actor?.origin.kind === "character"
-        ? actor.origin.attack?.weapon.weaponUnitId ===
-          attack.weapon.weaponUnitId
-          ? actor.origin.attack
-          : actor.origin.offHandAttack
-        : undefined;
-    const suffixes = [
-      ...(baseAttack !== undefined && baseAttack.ability !== attack.ability
-        ? [abilityPresentationName(attack.ability)]
-        : []),
-      ...(attack.weapon.damage.kind === "dice" &&
-      (baseAttack?.damageTypeChoices !== undefined ||
-        attack.damageTypeChoices !== undefined ||
-        (source.right.damage.kind === "dice" &&
-          source.right.damage.damageType !== attack.weapon.damage.damageType))
-        ? [attack.weapon.damage.damageType]
-        : []),
-    ];
-    return Either.right(
-      suffixes.length === 0
-        ? source.right.name
-        : `${source.right.name} (${suffixes.join(", ")})`,
-    );
+  const source = characterWeaponPresentationSource(
+    characterContext,
+    attack.weapon.weaponUnitId,
+  );
+  if (Either.isLeft(source)) {
+    return Either.left({
+      tag: "attackPresentationJoinIssue",
+      reason: "weaponPresentationMissing",
+    });
   }
+  const baseAttack = characterWeaponBaseAttack(
+    state,
+    actorId,
+    attack.weapon.weaponUnitId,
+  );
+  const suffixes = characterWeaponPresentationSuffixes(
+    attack,
+    baseAttack,
+    source.right,
+  );
+  return Either.right(
+    formatWeaponPresentationName(source.right.name, suffixes),
+  );
+}
+
+function characterWeaponBaseAttack(
+  state: BattleState,
+  actorId: CombatantId,
+  weaponUnitId: CharacterWeaponAttackActionOption["weapon"]["weaponUnitId"],
+): CharacterBaseAttack | undefined {
+  const actor = state.combatants.get(actorId);
+  if (actor?.origin.kind !== "character") return undefined;
+  return actor.origin.attack?.weapon.weaponUnitId === weaponUnitId
+    ? actor.origin.attack
+    : actor.origin.offHandAttack;
+}
+
+function characterWeaponPresentationSuffixes(
+  attack: CharacterWeaponAttackActionOption,
+  baseAttack: CharacterBaseAttack | undefined,
+  source: WeaponRecord,
+): readonly string[] {
+  const abilitySuffix =
+    baseAttack !== undefined && baseAttack.ability !== attack.ability
+      ? [abilityPresentationName(attack.ability)]
+      : [];
+  return [
+    ...abilitySuffix,
+    ...characterWeaponDamageTypeSuffix(attack, baseAttack, source),
+  ];
+}
+
+function characterWeaponDamageTypeSuffix(
+  attack: CharacterWeaponAttackActionOption,
+  baseAttack: CharacterBaseAttack | undefined,
+  source: WeaponRecord,
+): readonly string[] {
+  if (attack.weapon.damage.kind !== "dice") return [];
+  const sourceDamageTypeDiffers =
+    source.damage.kind === "dice" &&
+    source.damage.damageType !== attack.weapon.damage.damageType;
+  return baseAttack?.damageTypeChoices !== undefined ||
+    attack.damageTypeChoices !== undefined ||
+    sourceDamageTypeDiffers
+    ? [attack.weapon.damage.damageType]
+    : [];
+}
+
+function formatWeaponPresentationName(
+  name: string,
+  suffixes: readonly string[],
+): string {
+  return suffixes.length === 0 ? name : `${name} (${suffixes.join(", ")})`;
+}
+
+function statBlockAttackPresentationName(
+  state: BattleState,
+  context: BattleRuntimeContext,
+  actorId: CombatantId,
+  attack: Extract<
+    SupportedAttackActionOption,
+    { readonly kind: "statBlockAttack" }
+  >,
+): Either.Either<string, AttackPresentationJoinIssue> {
   const presentations = statBlockProcedurePresentationsForActor(
     state,
     context,
