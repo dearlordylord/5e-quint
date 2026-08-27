@@ -32,18 +32,22 @@ describe("battle combatant initialization correlation", () => {
     const secondId = combatantId("correlation-second");
     const first = statBlockInitialization(firstId, "First initialization");
     const second = statBlockInitialization(secondId, "Second initialization");
+    const participants = [
+      participant("statBlock", "correlation-first"),
+      participant("statBlock", "correlation-second"),
+    ];
 
     const correlated = correlateBattleCombatantInitializations({
-      participants: [
-        { origin: "statBlock", combatantId: firstId },
-        { origin: "statBlock", combatantId: secondId },
-      ],
+      participants,
       creatureInits: [second, first],
     });
 
     expect(Either.isRight(correlated)).toBe(true);
     if (Either.isLeft(correlated)) return;
-    expect(correlated.right).toEqual([first, second]);
+    expect(correlated.right).toEqual([
+      { participant: participants[0], initialization: first },
+      { participant: participants[1], initialization: second },
+    ]);
   });
 
   test("rejects an initialization whose id is not in the participant roster", () => {
