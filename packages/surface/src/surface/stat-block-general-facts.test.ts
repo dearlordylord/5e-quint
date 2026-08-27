@@ -201,12 +201,29 @@ describe("standalone Stat Block general facts", () => {
         }),
       ).toThrow();
     }
-    expect(() =>
+    for (const swarmStatusTag of [
+      "swarm",
+      "swarm of tiny beasts",
+      "SWARM   OF TINY BEASTS",
+    ]) {
+      for (const statBlock of [
+        syntheticStandaloneStatBlock,
+        authoredMediumSwarm,
+      ]) {
+        expect(() =>
+          decode(StandaloneStatBlockSchema, {
+            ...statBlock,
+            creatureTypeTags: [swarmStatusTag],
+          }),
+        ).toThrow();
+      }
+    }
+    expect(
       decode(StandaloneStatBlockSchema, {
-        ...authoredMediumSwarm,
-        creatureTypeTags: ["swarm"],
+        ...syntheticStandaloneStatBlock,
+        creatureTypeTags: ["swarmkeeper"],
       }),
-    ).toThrow();
+    ).toMatchObject({ creatureTypeTags: ["swarmkeeper"] });
     expect(() =>
       decode(StandaloneStatBlockSchema, {
         ...authoredMediumSwarm,
