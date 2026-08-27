@@ -220,7 +220,7 @@ export function createMcpSessionStore(input: {
         characterSessions,
         characters,
       });
-      if (Result.isFailure(committed)) return committed;
+      if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = committed.success;
       pendingBattleFills = null;
       return Result.succeed(undefined);
@@ -232,7 +232,7 @@ export function createMcpSessionStore(input: {
         characterSettlements,
         characters,
       });
-      if (Result.isFailure(committed)) return committed;
+      if (Result.isFailure(committed)) return Result.fail(committed.failure);
       battleState = committed.success;
       pendingBattleFills = null;
       return Result.succeed(undefined);
