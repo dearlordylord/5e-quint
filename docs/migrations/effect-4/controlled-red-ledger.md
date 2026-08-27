@@ -638,9 +638,9 @@ set -eu
 mapfile -t audit_paths < <(node -e 'const x=require("./docs/migrations/effect-4/gh379-registry-path-manifest.json"); const deferred=new Set(x.deferredScriptPaths); process.stdout.write([...new Set([...x.sourceOrPurePaths,...x.parityOrFixturePaths].filter((path)=>!deferred.has(path)))].join("\n"))')
 set +e
 rg -n -U -uu --pcre2 \
-    -e '(?:from|import\s*\()\s*(?:"effect/Either"|\x27effect/Either\x27)' \
-    -e 'import\s*\{[^}]*\bEither\b[^}]*\}\s*from\s*(?:"effect"|\x27effect\x27)' \
-    -e 'import\s+\*\s+as\s+Either\s+from\s*(?:"effect"|\x27effect\x27)' \
+    -e '(?:from|import\s*\(|require\s*\()\s*(?:"effect/Either"|\x27effect/Either\x27)' \
+    -e '(?:import|export)\s+(?:type\s+)?\{[^}]*\bEither\b[^}]*\}\s*from\s*(?:"effect"|\x27effect\x27)' \
+    -e '(?:import|export)\s+(?:type\s+)?\*\s+as\s+Either\s+from\s*(?:"effect"|\x27effect\x27)' \
     -e '\bEither\.[A-Za-z_][A-Za-z0-9_]*' \
     -e 'Schema\.optionalWith' \
     -e 'Schema\.decodeUnknownEither' \
