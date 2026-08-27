@@ -868,6 +868,11 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
     ).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "characterAdmissionInvalid",
+        combatantId: wizardId,
+        phase: "executionBindings",
+        issueIndex: 0,
+        ownerPath: ["initialCombatants", 0],
         message: "Armor of Shadows Spell Access must grant Mage Armor.",
       }),
     );
