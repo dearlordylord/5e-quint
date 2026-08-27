@@ -6693,6 +6693,46 @@ describe("Character Build battle projection", () => {
     });
   });
 
+  test("propagates a schema-valid non-literal Stat Block size failure", () => {
+    const source = assertStatBlockForTest(
+      statBlockCatalog,
+      authoredStatBlockId("stat_block_skeleton"),
+    );
+    const result = startBattleFromCharacterBuildAndStatBlock({
+      battleId: battleId("battle:non-literal-stat-block-size"),
+      character: {
+        combatantId: combatantId("non-literal-stat-block-character"),
+        characterId: characterId("character:non-literal-stat-block-size"),
+        displayName: "Non-literal Stat Block size character",
+        build,
+        initiative: initiativeScore(20),
+        ammunitionStocks: [],
+      },
+      statBlockBattleInput: {
+        combatantId: combatantId("non-literal-stat-block-monster"),
+        statBlock: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            size: { kind: "alternatives", options: ["small", "medium"] },
+          },
+        },
+        initiative: initiativeScore(10),
+        ammunitionStocks: [],
+        conditions: [],
+      },
+      unitLibrary,
+    });
+
+    expect(result).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "statBlockProjectionFailure",
+        failure: { reason: "nonLiteralSize" },
+      },
+    });
+  });
+
   test("reports missing Units referenced by armor and weapon projections", () => {
     const missingUnitId = authoredUnitId("synthetic:missing-equipment-unit");
     const missingItemId = characterEquipmentItemId({
