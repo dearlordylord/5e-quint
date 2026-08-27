@@ -320,7 +320,7 @@ let RangedAttack : Type =
       , attackBonus : Integer
       , rangeFeet : Range
       , ammunition : Optional Text
-      , onHit : List Effect
+      , onHit : NonEmpty Effect
       }
 
 let rangedAttack : RangedAttack -> Procedure =
@@ -332,7 +332,7 @@ let rangedAttack : RangedAttack -> Procedure =
             , attackType = Some "ranged"
             , kind = "attack_roll"
             , name = input.name
-            , onHit = Some input.onHit
+            , onHit = Some (nonEmptyToList Effect input.onHit)
             , rangeFeet = Some input.rangeFeet
             }
 
@@ -498,7 +498,6 @@ let trait : TraitInput -> Trait =
         }
 
 in  { Effect
-    , NonEmpty
     , Dispatch
     , SpellRef
     , Group

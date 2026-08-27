@@ -10,7 +10,7 @@ in  { challengeRating = 6
         , actions =
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The drider makes three attacks, using Foreleg or Poison Burst in any combination.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 2, procedure = T.meleeAttack { name = "Foreleg", attackAbility = "dex", attackBonus = +7, reachFeet = 10, onHit = { first = T.damage { damageType = "piercing", dice = 2, dieSize = 8, flat = (Some +4), static = 13 }, rest = [] : List T.Effect } } }
-            , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Poison Burst", attackAbility = "wis", attackBonus = +6, rangeFeet = { normal = 120, long = 120 }, ammunition = (None Text), onHit = [ T.damage { damageType = "poison", dice = 3, dieSize = 6, flat = (Some +3), static = 13 } ] } }
+            , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Poison Burst", attackAbility = "wis", attackBonus = +6, rangeFeet = { normal = 120, long = 120 }, ammunition = (None Text), onHit = { first = T.damage { damageType = "poison", dice = 3, dieSize = 6, flat = (Some +3), static = 13 }, rest = [] : List T.Effect } } }
             ]
         , bonusActions =
             [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Magic of the Spider Queen (Recharge 5–6)", ability = "wis", spellSaveDc = (Some { kind = "fixed", dc = 14 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.limited { resourceOrdinals = { first = 1, rest = [] : List Natural }, spells =

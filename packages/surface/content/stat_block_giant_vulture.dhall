@@ -30,7 +30,7 @@ in  { challengeRating = 1
                     , rest =
                       [ S.applyCondition
                           { condition = "poisoned"
-                          , duration = "end_of_next_turn"
+                          , expiresAt = S.targetNextTurnEnd
                           }
                       ]
                     }

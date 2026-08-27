@@ -449,10 +449,6 @@ describe("standalone Stat Block procedure sections", () => {
     expect(decode(EffectAtomSchema, spellRelativeEffect)).toEqual(
       spellRelativeEffect,
     );
-
-    expect(decode(EffectAtomSchema, spellRelativeEffect)).toEqual(
-      spellRelativeEffect,
-    );
     const unsupportedDuration = {
       ...spellRelativeEffect,
       duration: "end_of_target_next_turn",
