@@ -6724,11 +6724,13 @@ describe("Character Build battle projection", () => {
       unitLibrary,
     });
 
-    expect(result).toMatchObject({
-      _tag: "Left",
-      left: {
-        tag: "statBlockProjectionFailure",
-        failure: { reason: "nonLiteralSize" },
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isRight(result)) return;
+    expect(result.left).toEqual({
+      tag: "statBlockProjectionFailure",
+      failure: {
+        tag: "battleStatBlockProjectionFailure",
+        reason: "nonLiteralSize",
       },
     });
   });
