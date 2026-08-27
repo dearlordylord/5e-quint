@@ -322,18 +322,19 @@ describe("standalone Stat Block procedure sections", () => {
       },
       resourceRefs: { kind: "none" },
     } as const;
-    const executableEntries = [
-      {
-        ...syntheticStandaloneStatBlock.actions[0],
-        procedure: {
-          ...syntheticStandaloneStatBlock.actions[0].procedure,
-          dispatches: [
-            { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
-            { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
-            { procedureOrdinal: 4, count: { kind: "literal", value: 1 } },
-          ],
-        },
+    const multiattackEntry = {
+      ...syntheticStandaloneStatBlock.actions[0],
+      procedure: {
+        ...syntheticStandaloneStatBlock.actions[0].procedure,
+        dispatches: [
+          { procedureOrdinal: 2, count: { kind: "literal", value: 1 } },
+          { procedureOrdinal: 3, count: { kind: "literal", value: 1 } },
+          { procedureOrdinal: 4, count: { kind: "literal", value: 1 } },
+        ],
       },
+    } as const;
+    const executableEntries = [
+      multiattackEntry,
       syntheticStandaloneStatBlock.actions[1],
       saveEntry,
       syntheticStandaloneStatBlock.actions[3],
@@ -346,11 +347,11 @@ describe("standalone Stat Block procedure sections", () => {
     expect(() =>
       decode(StatBlockProcedureSectionSchema, [
         {
-          ...executableEntries[0],
+          ...multiattackEntry,
           procedure: {
-            ...executableEntries[0].procedure,
+            ...multiattackEntry.procedure,
             dispatches: [
-              ...executableEntries[0].procedure.dispatches,
+              ...multiattackEntry.procedure.dispatches,
               { procedureOrdinal: 5, count: { kind: "literal", value: 1 } },
             ],
           },
