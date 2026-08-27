@@ -46,7 +46,6 @@ import { Result } from "effect";
 import {
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
-  Either,
   elapsedTimeTicks,
   endTurn,
   hasCondition,
@@ -171,10 +170,10 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       targetTurn.state.currentTurnResources,
       "magic",
     );
-    expect(Either.isRight(ordinaryActionSpent)).toBe(true);
-    if (Either.isLeft(ordinaryActionSpent)) return;
-    expect(canSpendAction(ordinaryActionSpent.right, "magic")).toBe(false);
-    expect(canSpendAction(ordinaryActionSpent.right, "dash")).toBe(true);
+    expect(Result.isSuccess(ordinaryActionSpent)).toBe(true);
+    if (Result.isFailure(ordinaryActionSpent)) return;
+    expect(canSpendAction(ordinaryActionSpent.success, "magic")).toBe(false);
+    expect(canSpendAction(ordinaryActionSpent.success, "dash")).toBe(true);
 
     const noExtraAttackFromHasteAction = openClassFeatureExtraAttackResource({
       state: stateAfterSpendingResource(targetTurn.state, spellEffectResource),

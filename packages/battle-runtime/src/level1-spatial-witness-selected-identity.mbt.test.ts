@@ -10,7 +10,7 @@ import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-sup
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness produce_flame doProduceFlameHeldLightProjectionHurlCleanup
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness thunderwave doThunderwaveSavePushObjectsBoom
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.SAVE_GATED_ATTACK_ROLL_ADVANTAGE BATTLE.SPELL.GREASE_GROUND_HAZARD_LIFECYCLE BATTLE.SPELL.FOG_CLOUD_OBSCUREMENT_LIFECYCLE BATTLE.SPELL.OBJECT_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.HELD_LIGHT_EMITTER_LIFECYCLE BATTLE.SPELL.DANCING_LIGHTS_EMITTER_LIFECYCLE BATTLE.SPELL.FEATHER_FALL_MITIGATION_LIFECYCLE BATTLE.SPELL.JUMP_MOVEMENT_REPLACEMENT_LIFECYCLE
-import { Either, Result } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 import {
   resolveBattleSubject,
@@ -2829,18 +2829,18 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
 
 function requireElapsedHours(hours: number) {
   const ticks = elapsedTimeTicksFromHours(hours);
-  if (Either.isLeft(ticks)) {
+  if (Result.isFailure(ticks)) {
     throw new Error(`Expected valid elapsed hours: ${hours}.`);
   }
-  return ticks.right;
+  return ticks.success;
 }
 
 function requireElapsedMinutes(minutes: number) {
   const ticks = elapsedTimeTicksFromMinutes(minutes);
-  if (Either.isLeft(ticks)) {
+  if (Result.isFailure(ticks)) {
     throw new Error(`Expected valid elapsed minutes: ${minutes}.`);
   }
-  return ticks.right;
+  return ticks.success;
 }
 
 function expectedProjection(
