@@ -112,9 +112,7 @@ export function playSessionLifecycleOutputSchema(
 ): McpOutputSchema {
   const resumedBattleEnvelope =
     operationName === playSessionToolNames.read
-      ? {
-          battleEnvelope: embeddedBattleEnvelope.schema,
-        }
+      ? { battleEnvelope: embeddedBattleEnvelope.schema }
       : {};
   const lifecycleResult = {
     type: "object",
@@ -257,9 +255,7 @@ function recoverableOperationResultSchema(input: {
   return {
     type: "object",
     properties: {
-      result: {
-        anyOf: [input.operationResult, input.operationError],
-      },
+      result: { anyOf: [input.operationResult, input.operationError] },
       battleEnvelope: input.battleEnvelope,
     },
     required: ["result", "battleEnvelope"],
