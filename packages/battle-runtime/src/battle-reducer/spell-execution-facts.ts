@@ -12,7 +12,7 @@ import { spellInvocationIsSpellcasting } from "./spell-turn-resources.ts";
 import { isTriggeredReactionSpellInvocation } from "./spell-interrupt-procedure-kinds.ts";
 import { Match, Schema } from "effect";
 
-export const SpellExecutionFactsSchema = Schema.Union(
+export const SpellExecutionFactsSchema = Schema.Union([
   Schema.Struct({
     kind: Schema.Literal("actionSpell"),
     familiarTouchDelivery: Schema.Boolean,
@@ -25,7 +25,7 @@ export const SpellExecutionFactsSchema = Schema.Union(
   Schema.Struct({ kind: Schema.Literal("bonusActionDashSpell") }),
   Schema.Struct({ kind: Schema.Literal("triggeredReactionSpell") }),
   Schema.Struct({ kind: Schema.Literal("attackHitBonusActionSpell") }),
-);
+]);
 export type SpellExecutionFacts = typeof SpellExecutionFactsSchema.Type;
 
 type ActionSpellProcedureResolutionExecutionFacts =
