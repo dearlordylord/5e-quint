@@ -155,10 +155,10 @@ function startBattleFromTestRoster(input: {
   RouteCharacterBattleRuntimeEntryIssue
 > {
   const roster = composeBattleRoster(input.entries);
-  if (roster.issues.length > 0) {
+  if (roster.tag === "rejected") {
     return Either.left({
       tag: "battleStateInitIssue" as const,
-      message: `Roster admission failed: ${roster.issues[0]?.kind}`,
+      message: `Roster admission failed: ${roster.issues[0].kind}`,
       routeEvents: [],
     });
   }
@@ -1457,7 +1457,7 @@ function originFeatSelectedReferenceRetentionRoute(): readonly CharacterBattleRo
     ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
-    throw new Error(projection.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(projection.left));
   }
   return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
     (event) => event.owner === "characterBattleBuildProjection",
@@ -1547,7 +1547,7 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
   return score.right;
 }

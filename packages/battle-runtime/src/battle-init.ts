@@ -343,6 +343,7 @@ export function battleCreatureInitFromStatBlock(
   const initialConditionImmunityIssue = statBlockInitialConditionImmunityIssue(
     source.right,
     input.conditions,
+    input.combatantId,
   );
   if (initialConditionImmunityIssue !== null) {
     return Either.left(initialConditionImmunityIssue);

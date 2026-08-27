@@ -41,7 +41,9 @@ import {
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import { Either, Option } from "effect";
+import { isNonEmptyReadonlyArray } from "effect/Array";
 
 import {
   characterSheetBattleHandoffIssue,
@@ -88,35 +90,48 @@ export type BattleCompanionRosterRequest = {
 export type BattleCompanionRosterIssue =
   | {
       readonly kind: "duplicateCompanionOwner";
+      readonly reason: "duplicateOwner";
       readonly index: number;
       readonly ownerCharacterId: CharacterSheet["characterId"];
       readonly firstIndex: number;
     }
   | {
       readonly kind: "duplicateCompanionCombatantId";
+      readonly reason: "duplicateCombatantId";
       readonly index: number;
       readonly companionCombatantId: CombatantId;
       readonly firstIndex: number;
     }
   | {
       readonly kind: "companionOwnerUnavailable";
+      readonly reason: "ownerNotInRoster";
       readonly index: number;
       readonly ownerCharacterId: CharacterSheet["characterId"];
       readonly companionCombatantId?: CombatantId;
     }
   | {
       readonly kind: "companionAdmission";
+      readonly reason: "admissionRejected";
+      readonly issueTag: CharacterSheetBattleHandoffIssue["tag"];
       readonly index: number;
       readonly ownerCharacterId: CharacterSheet["characterId"];
       readonly companionCombatantId?: CombatantId;
-      readonly issueTag: CharacterSheetBattleHandoffIssue["tag"];
       readonly message: string;
     };
 
-export type BattleCompanionRosterComposition = {
-  readonly session: BattleRuntimeSession | undefined;
-  readonly issues: readonly BattleCompanionRosterIssue[];
-};
+export type BattleCompanionRosterComposition =
+  | {
+      readonly tag: "admitted";
+      readonly session: BattleRuntimeSession;
+    }
+  | {
+      readonly tag: "rejected";
+      readonly issues: ReadonlyNonEmptyArray<BattleCompanionRosterIssue>;
+    }
+  | {
+      readonly tag: "dependentUnavailable";
+      readonly issues: readonly BattleCompanionRosterIssue[];
+    };
 
 export function composeBattleCompanionRoster(input: {
   readonly session: BattleRuntimeSession | undefined;
@@ -140,6 +155,7 @@ export function composeBattleCompanionRoster(input: {
     if (duplicateOwner) {
       issues.push({
         kind: "duplicateCompanionOwner",
+        reason: "duplicateOwner",
         index,
         ownerCharacterId: request.ownerCharacterId,
         firstIndex: firstOwnerIndex,
@@ -157,6 +173,7 @@ export function composeBattleCompanionRoster(input: {
     if (duplicateCompanionCombatant && companionCombatantId !== undefined) {
       issues.push({
         kind: "duplicateCompanionCombatantId",
+        reason: "duplicateCombatantId",
         index,
         companionCombatantId,
         firstIndex: firstCompanionIndex,
@@ -169,6 +186,7 @@ export function composeBattleCompanionRoster(input: {
     if (owner === undefined) {
       issues.push({
         kind: "companionOwnerUnavailable",
+        reason: "ownerNotInRoster",
         index,
         ownerCharacterId: request.ownerCharacterId,
         ...(companionCombatantId === undefined ? {} : { companionCombatantId }),
@@ -206,10 +224,11 @@ export function composeBattleCompanionRoster(input: {
     if (Either.isLeft(admitted)) {
       issues.push({
         kind: "companionAdmission",
+        reason: "admissionRejected",
+        issueTag: admitted.left.tag,
         index,
         ownerCharacterId: request.ownerCharacterId,
         ...(companionCombatantId === undefined ? {} : { companionCombatantId }),
-        issueTag: admitted.left.tag,
         message: admitted.left.message,
       });
       continue;
@@ -217,7 +236,13 @@ export function composeBattleCompanionRoster(input: {
     session = admitted.right;
   }
 
-  return { session: issues.length === 0 ? session : undefined, issues };
+  if (session === undefined) {
+    return { tag: "dependentUnavailable", issues };
+  }
+  if (!isNonEmptyReadonlyArray(issues)) {
+    return { tag: "admitted", session };
+  }
+  return { tag: "rejected", issues };
 }
 
 export function admitCharacterSheetCompanionToBattle(

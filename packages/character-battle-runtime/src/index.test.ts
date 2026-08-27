@@ -150,12 +150,15 @@ import {
   characterBattleInitiativeScore,
   characterBattleResourceInitsFromBuild,
   composeBattleRoster,
+  composeBattleCompanionRoster,
   type BattleRosterEntries,
   characterBattleLoadoutFromBuild,
   characterOffHandAttackActionOption,
   characterSpellcasting as characterSpellcastingRuntime,
   settleCharacterSheetFromBattle,
   characterBattleRuntimeIssueMessage,
+  characterBattleInitIssueFactFields,
+  characterBattleInitIssueReasonFromFact,
 } from "./index.ts";
 import type { BattleRosterIssue } from "./index.ts";
 import {
@@ -272,10 +275,24 @@ function testIssueForBattleRosterIssue(
   issue: BattleRosterIssue,
 ): BattleCreatureInitIssue | BattleStateInitIssue {
   return Match.value(issue).pipe(
-    Match.when({ kind: "characterSheetProjection" }, ({ message }) => ({
-      tag: "battleCreatureInitIssue" as const,
-      message,
-    })),
+    Match.when({ kind: "characterSheetProjection" }, (matched) =>
+      matched.issueTag === "battleCreatureInitIssue"
+        ? {
+            tag: "battleCreatureInitIssue" as const,
+            message: matched.message,
+            ...characterBattleInitIssueFactFields(
+              characterBattleInitIssueReasonFromFact(matched),
+            ),
+          }
+        : {
+            tag: "battleCreatureInitIssue" as const,
+            message: matched.message,
+            ...characterBattleInitIssueFactFields({
+              kind: "characterBuildProjection" as const,
+              phase: "spellcasting" as const,
+            }),
+          },
+    ),
     Match.when({ kind: "statBlockProjection" }, (matched) =>
       matched.issueTag === "weaponLoadoutMismatch"
         ? {
@@ -312,6 +329,10 @@ function testIssueForBattleRosterIssue(
         Match.exhaustive,
       ),
     ),
+    Match.when({ kind: "rosterCompositionInvariant" }, ({ reason }) => ({
+      tag: "battleStateInitIssue" as const,
+      message: reason,
+    })),
     Match.exhaustive,
   );
 }
@@ -333,15 +354,8 @@ function startBattleFromTestRoster(input: {
       ? projection.left.routeEvents
       : projection.right.routeEvents;
   });
-  if (composition.issues.length > 0) {
-    const [issue] = composition.issues;
-    if (issue === undefined) {
-      return Either.left({
-        tag: "battleStateInitIssue",
-        message: "Character battle roster admission failed.",
-        routeEvents: [],
-      });
-    }
+  if (composition.tag === "rejected") {
+    const issue = composition.issues[0];
     return Either.left({
       ...testIssueForBattleRosterIssue(issue),
       routeEvents,
@@ -613,6 +627,8 @@ describe("Character Sheet battle handoff", () => {
       characterBattleRuntimeIssueMessage({
         tag: "battleCreatureInitIssue",
         message: "Synthetic character projection issue.",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
       }),
     ).toBe("Synthetic character projection issue.");
     expect(
@@ -1166,6 +1182,108 @@ describe("Character Sheet battle handoff", () => {
         ),
       },
     });
+  });
+
+  test("uses tagged roster and companion composition outcomes without partial products", () => {
+    const emptyRoster = composeBattleRoster(
+      [] as unknown as BattleRosterEntries,
+    );
+    expect(emptyRoster).toEqual({
+      tag: "rejected",
+      admissions: [],
+      issues: [
+        {
+          kind: "rosterCompositionInvariant",
+          index: 0,
+          reason: "nonEmptyInputProducedNoAdmissions",
+        },
+      ],
+    });
+
+    const unavailableCompanion = composeBattleCompanionRoster({
+      session: undefined,
+      owners: [],
+      requests: [
+        {
+          ownerCharacterId: characterSheetId("character:missing-owner"),
+          ammunitionStocks: [],
+        },
+      ],
+      unitLibrary,
+      initialCombatantOrder: new Map(),
+      statBlockCatalog,
+    });
+    expect(unavailableCompanion).toEqual({
+      tag: "dependentUnavailable",
+      issues: [
+        {
+          kind: "companionOwnerUnavailable",
+          reason: "ownerNotInRoster",
+          index: 0,
+          ownerCharacterId: characterSheetId("character:missing-owner"),
+        },
+      ],
+    });
+
+    const sheet = rebuildCharacterSheetFixture({
+      characterId: characterSheetId("character:companion-composition"),
+      build,
+      currentHp: Hp(10),
+      tempHp: Hp(0),
+      unitLibrary,
+    });
+    expect(Either.isRight(sheet)).toBe(true);
+    if (Either.isLeft(sheet)) return;
+    const init = characterSheetBattleInit({
+      sheet: sheet.right,
+      unitLibrary,
+      statBlockCatalog,
+      combatantId: combatantId("combatant:companion-composition"),
+      displayName: "Character",
+      initiative: initiativeScore(20),
+      ammunitionStocks: [],
+    });
+    expect(Either.isRight(init)).toBe(true);
+    if (Either.isLeft(init)) return;
+    const session = startBattle({
+      battleId: battleId("battle:companion-composition"),
+      combatants: [init.right],
+    });
+    expect(Either.isRight(session)).toBe(true);
+    if (Either.isLeft(session)) return;
+    const rejectedCompanion = composeBattleCompanionRoster({
+      session: session.right,
+      owners: [
+        {
+          characterId: sheet.right.characterId,
+          combatantId: init.right.combatantId,
+          sheet: sheet.right,
+        },
+      ],
+      requests: [
+        {
+          ownerCharacterId: sheet.right.characterId,
+          ammunitionStocks: [],
+        },
+      ],
+      unitLibrary,
+      initialCombatantOrder: new Map([[init.right.combatantId, 0]]),
+      statBlockCatalog,
+    });
+    expect(rejectedCompanion.tag).toBe("rejected");
+    if (rejectedCompanion.tag === "rejected") {
+      expect(rejectedCompanion).not.toHaveProperty("session");
+      expect(rejectedCompanion.issues).toEqual([
+        {
+          kind: "companionAdmission",
+          reason: "admissionRejected",
+          issueTag: "characterSheetBattleHandoffIssue",
+          index: 0,
+          ownerCharacterId: sheet.right.characterId,
+          message: "Character Sheet has no retained companion to admit.",
+        },
+      ]);
+    }
   });
 
   test("routes Character Sheet initialization failures from caller catalog drift", () => {
@@ -3393,6 +3511,8 @@ describe("Character Sheet battle handoff", () => {
     expect(init).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Character battle initialization max HP exceeds build-derived max HP.",
       }),
@@ -3520,6 +3640,8 @@ describe("Character Sheet battle handoff", () => {
     expect(init).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Druid Wild Shape battle forms require eligible Beast Stat Blocks.",
       }),
@@ -3542,6 +3664,8 @@ describe("Character Sheet battle handoff", () => {
     expect(init).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Druid Wild Shape battle initialization requires an available known-form subset.",
       }),
@@ -7164,27 +7288,27 @@ describe("Character Build battle projection", () => {
 
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Character Battle Spell Access projection contains invalid selections.",
-      );
-      expect(result.left.spellAccessIssues).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            accessIndex: 1,
-            featUnitId: authoredUnitId("class_fighter"),
-            cause: "invalidSpellSelection",
-            message: expect.stringContaining("class_fighter"),
-          }),
-          expect.objectContaining({
-            accessIndex: 2,
-            featUnitId: authoredUnitId("synthetic:missing-magic-initiate"),
-            cause: "invalidSpellSelection",
-            message: expect.stringContaining(
-              "synthetic:missing-magic-initiate",
-            ),
-          }),
-        ]),
-      );
+      expect(result.left.tag).toBe("battleCreatureInitIssues");
+      if (result.left.tag === "battleCreatureInitIssues") {
+        expect(result.left.issues).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              accessIndex: 1,
+              featUnitId: authoredUnitId("class_fighter"),
+              cause: "invalidSpellSelection",
+              message: expect.stringContaining("class_fighter"),
+            }),
+            expect.objectContaining({
+              accessIndex: 2,
+              featUnitId: authoredUnitId("synthetic:missing-magic-initiate"),
+              cause: "invalidSpellSelection",
+              message: expect.stringContaining(
+                "synthetic:missing-magic-initiate",
+              ),
+            }),
+          ]),
+        );
+      }
     }
   });
 
@@ -7203,26 +7327,26 @@ describe("Character Build battle projection", () => {
 
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isLeft(result)) {
-      expect(result.left.message).toBe(
-        "Character Battle Spell Access projection contains invalid selections.",
-      );
-      expect(result.left.spellAccessIssues).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({
-            accessIndex: 0,
-            featUnitId: authoredUnitId("feat_magic_initiate_wizard"),
-            cause: "invalidSpellSelection",
-            message: expect.stringContaining("selected spell list"),
-          }),
-          expect.objectContaining({
-            issueIndex: 2,
-            cause: "invalidBuildSpellAccess",
-            message: expect.stringContaining(
-              "requires exactly one Magic Initiate Spell Access",
-            ),
-          }),
-        ]),
-      );
+      expect(result.left.tag).toBe("battleCreatureInitIssues");
+      if (result.left.tag === "battleCreatureInitIssues") {
+        expect(result.left.issues).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              accessIndex: 0,
+              featUnitId: authoredUnitId("feat_magic_initiate_wizard"),
+              cause: "invalidSpellSelection",
+              message: expect.stringContaining("selected spell list"),
+            }),
+            expect.objectContaining({
+              issueIndex: 2,
+              cause: "invalidBuildSpellAccess",
+              message: expect.stringContaining(
+                "requires exactly one Magic Initiate Spell Access",
+              ),
+            }),
+          ]),
+        );
+      }
     }
   });
 
@@ -7495,6 +7619,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message: "Off-hand weapon loadout must reference a Weapon Unit.",
       }),
     );
@@ -7890,6 +8016,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Druid Wild Shape battle initialization supports exactly one Druid Wild Shape resource.",
       }),
@@ -8343,6 +8471,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
       }),
@@ -8359,6 +8489,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message: "Book of Shadows Spell Access requires Pact of the Tome.",
       }),
     );
@@ -8373,6 +8505,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Book of Shadows Spell Access requires Book of Shadows presence state.",
       }),
@@ -8391,6 +8525,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Book of Shadows Spell Access must be attached to the Warlock spellcasting source.",
       }),
@@ -8409,6 +8545,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message: "Book of Shadows Spell Access requires Pact of the Tome.",
       }),
     );
@@ -8437,6 +8575,8 @@ describe("Character Build battle projection", () => {
     ).toEqual(
       Either.left({
         tag: "battleCreatureInitIssue",
+        reason: "characterBuildProjection",
+        phase: "derivedState",
         message:
           "Book of Shadows Spell Access cannot select spells the character already has prepared or known.",
       }),

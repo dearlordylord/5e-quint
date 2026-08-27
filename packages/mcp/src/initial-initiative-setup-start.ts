@@ -1,5 +1,6 @@
 import { startBattleWithInitialInitiativeSetup } from "@dnd/battle-runtime";
-import { Either } from "effect";
+import { composeBattleCompanionRoster } from "@dnd/character-battle-runtime";
+import { Either, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
@@ -12,6 +13,7 @@ import { completeBattleStateTransition } from "./battle-state-transition.ts";
 import {
   battleRuntimeIssuePayload,
   battleStartIssuesContent,
+  battleCompanionRosterIssuePayload,
   battleRosterIssuePayload,
 } from "./battle-start-failure.ts";
 
@@ -20,8 +22,30 @@ export function startInitialInitiativeSetup(
   input: StartBattleToolInput,
   combatants: StartableBattleCombatants,
 ) {
-  const rosterIssues = combatants.issues.flatMap((issue) =>
-    battleRosterIssuePayload(issue),
+  const rosterIssues = Match.value(combatants.composition).pipe(
+    Match.when({ tag: "admitted" }, () => []),
+    Match.when({ tag: "rejected" }, ({ issues }) =>
+      issues.flatMap((issue) => battleRosterIssuePayload(issue)),
+    ),
+    Match.exhaustive,
+  );
+  const companionValidation = composeBattleCompanionRoster({
+    session: undefined,
+    owners: combatants.characterSessions.map(({ character, session }) => ({
+      characterId: character.characterId,
+      combatantId: character.combatantId,
+      sheet: session,
+    })),
+    requests: input.companionAdmissions,
+    unitLibrary: root.unitLibrary,
+    initialCombatantOrder: combatants.initialCombatantOrder,
+    statBlockCatalog: root.statBlockCatalog,
+  });
+  const companionIssues = Match.value(companionValidation).pipe(
+    Match.when({ tag: "admitted" }, () => []),
+    Match.when({ tag: "rejected" }, ({ issues }) => issues),
+    Match.when({ tag: "dependentUnavailable" }, ({ issues }) => issues),
+    Match.exhaustive,
   );
   if (input.companionAdmissions.length > 0) {
     return errorContent(
@@ -30,6 +54,7 @@ export function startInitialInitiativeSetup(
         code: "INITIAL_INITIATIVE_SETUP_COMPANIONS_UNSUPPORTED",
         issues: [
           ...rosterIssues,
+          ...companionIssues.flatMap(battleCompanionRosterIssuePayload),
           ...input.companionAdmissions.map((admission, index) => ({
             kind: "companionAdmissionUnsupported",
             ownerPath: ["companionAdmissions", index],
@@ -45,16 +70,22 @@ export function startInitialInitiativeSetup(
     );
   }
 
-  if (combatants.creatureInits.length === 0) {
+  const admissions = Match.value(combatants.composition).pipe(
+    Match.when({ tag: "admitted" }, ({ admissions }) => admissions),
+    Match.when({ tag: "rejected" }, ({ admissions }) => admissions),
+    Match.exhaustive,
+  );
+  if (admissions.length === 0) {
     return battleStartIssuesContent(rosterIssues);
   }
 
   const setup = startBattleWithInitialInitiativeSetup({
     battleId: input.battleId,
-    combatants: combatants.creatureInits,
+    combatants: admissions.map(({ combatant }) => combatant),
     ownerPathForCombatant: (combatant) =>
       combatants.ownerPaths.get(combatant.combatantId) ?? [
         "battleInitialization",
+        "combatant",
       ],
   });
   if (Either.isLeft(setup)) {
@@ -63,7 +94,7 @@ export function startInitialInitiativeSetup(
       ...battleRuntimeIssuePayload(setup.left),
     ]);
   }
-  if (combatants.issues.length > 0) {
+  if (combatants.composition.tag === "rejected") {
     return battleStartIssuesContent(rosterIssues);
   }
 

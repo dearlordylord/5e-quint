@@ -1,10 +1,12 @@
 import {
-  battleStateInitIssueLeaves,
-  battleStateInitIssueMessage,
-  type BattleStateInitIssue,
+  battleInitializationIssueFactFields,
+  battleInitializationIssueLeaves,
+  type BattleInitializationIssueFact,
+  type BattleInitializationIssue,
 } from "@dnd/battle-runtime";
 import {
   type BattleCompanionRosterIssue,
+  type CharacterBattleInitIssueFact,
   type BattleRosterIssue,
 } from "@dnd/character-battle-runtime";
 import { Match } from "effect";
@@ -17,6 +19,7 @@ type CompanionAdmissionOwnerPath = readonly ["companionAdmissions", number];
 
 const BATTLE_INITIALIZATION_OWNER_PATH = [
   "battleInitialization",
+  "global",
 ] as const satisfies OwnerPath;
 
 export function battleStartIssuesContent(
@@ -81,6 +84,13 @@ export function battleRosterIssuePayload(
         statBlockId: matched.statBlockId,
       },
     ]),
+    Match.when({ kind: "rosterCompositionInvariant" }, (matched) => [
+      {
+        kind: matched.kind,
+        ownerPath,
+        reason: matched.reason,
+      },
+    ]),
     Match.when({ kind: "characterSheetProjection" }, (matched) => [
       characterProjectionIssuePayload(matched, ownerPath),
     ]),
@@ -102,6 +112,8 @@ function characterProjectionIssuePayload(
       code: "CHARACTER_BATTLE_INIT_INVALID",
       characterId: matched.characterId,
       issueTag: matched.issueTag,
+      reason: matched.reason,
+      ...characterProjectionReasonPayload(matched),
       message: matched.message,
     })),
     Match.when({ cause: "invalidBuildSpellAccess" }, (matched) => ({
@@ -156,8 +168,51 @@ function characterProjectionIssuePayload(
       accessIndex: matched.accessIndex,
       featUnitId: matched.featUnitId,
       cause: matched.cause,
+      issueIndex: matched.issueIndex,
       message: matched.message,
     })),
+    Match.exhaustive,
+  );
+}
+
+function characterProjectionReasonPayload(
+  reason: CharacterBattleInitIssueFact,
+): Record<string, unknown> {
+  return Match.value(reason).pipe(
+    Match.when({ reason: "characterBuildProjection" }, ({ phase }) => ({
+      phase,
+    })),
+    Match.when({ reason: "characterBattleInput" }, ({ field, constraint }) => ({
+      field,
+      constraint,
+    })),
+    Match.when({ reason: "characterBattleInvariant" }, ({ invariant }) => ({
+      invariant,
+    })),
+    Match.when(
+      { reason: "characterBattleResourceProjection" },
+      ({ issueIndex }) => ({
+        issueIndex,
+      }),
+    ),
+    Match.when(
+      { reason: "characterBattleSupportProjection" },
+      ({ issueIndex }) => ({
+        issueIndex,
+      }),
+    ),
+    Match.when(
+      { reason: "characterBattleClassLevelsProjection" },
+      ({ issueIndex }) => ({
+        issueIndex,
+      }),
+    ),
+    Match.when(
+      { reason: "characterBattleSpellProjection" },
+      ({ issueIndex }) => ({
+        issueIndex,
+      }),
+    ),
     Match.exhaustive,
   );
 }
@@ -173,6 +228,7 @@ function statBlockProjectionIssuePayload(
       code: "STAT_BLOCK_BATTLE_INIT_INVALID",
       combatantId: matched.combatantId,
       issueTag: matched.issueTag,
+      ...initializationFactsPayload(matched),
       message: matched.message,
     })),
     Match.when({ issueTag: "weaponLoadoutMismatch" }, (matched) => ({
@@ -184,6 +240,152 @@ function statBlockProjectionIssuePayload(
       slot: matched.slot,
     })),
     Match.exhaustive,
+  );
+}
+
+function initializationFactsPayload(
+  facts: BattleInitializationIssueFact,
+): Record<string, unknown> {
+  return Match.value(facts).pipe(
+    Match.discriminatorsExhaustive("reason")({
+      emptyRoster: ({ reason }) => ({ reason }),
+      duplicateCombatantId: ({ reason, combatantId }) => ({
+        reason,
+        combatantId,
+      }),
+      ammunitionStockInvalid: ({ reason, combatantId, ammunition }) => ({
+        reason,
+        combatantId,
+        ammunition,
+      }),
+      currentHpExceedsMaximum: ({
+        reason,
+        combatantId,
+        currentHp,
+        maximumHp,
+      }) => ({
+        reason,
+        combatantId,
+        currentHp,
+        maximumHp,
+      }),
+      positiveHpUnconsciousInvalid: ({ reason, combatantId, requirement }) => ({
+        reason,
+        combatantId,
+        requirement,
+      }),
+      zeroHpLifecycleInvalid: ({ reason, combatantId, requirement }) => ({
+        reason,
+        combatantId,
+        requirement,
+      }),
+      initialConditionImmune: ({ reason, combatantId, condition }) => ({
+        reason,
+        combatantId,
+        condition,
+      }),
+      statBlockSourceInvalid: ({ reason, statBlockId, constraint }) => ({
+        reason,
+        statBlockId,
+        constraint,
+      }),
+      statBlockCombatantInvalid: ({ reason, combatantId, constraint }) => ({
+        reason,
+        combatantId,
+        constraint,
+      }),
+      characterClassLevelsInvalid: ({ reason, combatantId, issueIndex }) => ({
+        reason,
+        combatantId,
+        issueIndex,
+      }),
+      characterSupportProjectionInvalid: ({
+        reason,
+        combatantId,
+        issueIndex,
+      }) => ({
+        reason,
+        combatantId,
+        issueIndex,
+      }),
+      characterResourceInvalid: ({ reason, combatantId, issueIndex }) => ({
+        reason,
+        combatantId,
+        issueIndex,
+      }),
+      characterFeatureInvalid: ({ reason, combatantId, issueIndex }) => ({
+        reason,
+        combatantId,
+        issueIndex,
+      }),
+      characterSpellcastingInvalid: ({ reason, combatantId, issueIndex }) => ({
+        reason,
+        combatantId,
+        issueIndex,
+      }),
+      characterAdmissionInvalid: ({
+        reason,
+        combatantId,
+        phase,
+        issueIndex,
+      }) => ({
+        reason,
+        combatantId,
+        phase,
+        issueIndex,
+      }),
+      executionScopeUnavailable: ({ reason, combatantId }) => ({
+        reason,
+        combatantId,
+      }),
+      runtimeContextMissing: ({ reason, combatantId }) => ({
+        reason,
+        combatantId,
+      }),
+      weaponPresentationUnavailable: ({
+        reason,
+        combatantId,
+        weaponUnitId,
+        availability,
+      }) => ({
+        reason,
+        combatantId,
+        weaponUnitId,
+        availability,
+      }),
+      hidePrerequisiteReferencesUnknownCombatant: ({
+        reason,
+        combatantId,
+        referencedCombatantId,
+      }) => ({
+        reason,
+        combatantId,
+        referencedCombatantId,
+      }),
+      hidePrerequisiteSelfReference: ({ reason, combatantId }) => ({
+        reason,
+        combatantId,
+      }),
+      initialCombatantOrderMissing: ({ reason, combatantId }) => ({
+        reason,
+        combatantId,
+      }),
+      initialInitiativeInvalid: ({ reason, initializationReason }) => ({
+        reason,
+        initializationReason,
+      }),
+      runtimeAdmissionInvalid: ({
+        reason,
+        combatantId,
+        origin,
+        issueIndex,
+      }) => ({
+        reason,
+        combatantId,
+        origin,
+        issueIndex,
+      }),
+    }),
   );
 }
 
@@ -205,6 +407,7 @@ export function battleCompanionRosterIssuePayload(
         ownerPath,
         firstOwnerPath: firstOwnerPath(matched.firstIndex),
         ownerCharacterId: matched.ownerCharacterId,
+        reason: matched.reason,
       },
     ]),
     Match.when({ kind: "duplicateCompanionCombatantId" }, (matched) => [
@@ -213,6 +416,7 @@ export function battleCompanionRosterIssuePayload(
         ownerPath,
         firstOwnerPath: firstOwnerPath(matched.firstIndex),
         companionCombatantId: matched.companionCombatantId,
+        reason: matched.reason,
       },
     ]),
     Match.when({ kind: "companionOwnerUnavailable" }, (matched) => [
@@ -221,6 +425,7 @@ export function battleCompanionRosterIssuePayload(
         ownerPath,
         code: "COMPANION_OWNER_NOT_IN_ROSTER",
         ownerCharacterId: matched.ownerCharacterId,
+        reason: matched.reason,
         ...(matched.companionCombatantId === undefined
           ? {}
           : { companionCombatantId: matched.companionCombatantId }),
@@ -236,6 +441,7 @@ export function battleCompanionRosterIssuePayload(
           ? {}
           : { companionCombatantId: matched.companionCombatantId }),
         issueTag: matched.issueTag,
+        reason: matched.reason,
         message: matched.message,
       },
     ]),
@@ -244,16 +450,19 @@ export function battleCompanionRosterIssuePayload(
 }
 
 export function battleRuntimeIssuePayload(
-  issue: BattleStateInitIssue,
+  issue: BattleInitializationIssue,
 ): readonly Record<string, unknown>[] {
-  return battleStateInitIssueLeaves(issue).map((leaf) =>
+  return battleInitializationIssueLeaves(issue).map((leaf) =>
     Match.value(leaf).pipe(
       Match.when({ tag: "battleStateInitIssue" }, (matched) => ({
         kind: "battleInitialization",
         code: "BATTLE_INITIALIZATION_INVALID",
         ownerPath: matched.ownerPath ?? BATTLE_INITIALIZATION_OWNER_PATH,
         issueTag: matched.tag,
-        message: battleStateInitIssueMessage(matched),
+        ...initializationFactsPayload(
+          battleInitializationIssueFactFields(matched),
+        ),
+        message: matched.message,
       })),
       Match.when({ tag: "weaponLoadoutMismatch" }, (matched) => ({
         kind: "battleInitialization",

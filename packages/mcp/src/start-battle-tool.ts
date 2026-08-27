@@ -3,13 +3,14 @@ import {
   battleAdmittedSpellPresentations,
   discoverBattleActs,
   startBattle,
-  type BattleCreatureInit,
+  type BattleRuntimeSession,
   type CombatantId,
 } from "@dnd/battle-runtime";
 import {
   composeBattleRoster,
   composeBattleCompanionRoster,
   type BattleRosterAdmission,
+  type BattleRosterComposition,
   type BattleRosterEntries,
   type BattleRosterEntry,
   type BattleRosterIssue,
@@ -46,10 +47,10 @@ export type StartableCharacterSessionCombatant = {
 };
 
 export type StartableBattleCombatants = {
-  readonly creatureInits: readonly BattleCreatureInit[];
+  readonly composition: BattleRosterComposition;
   readonly characterSessions: readonly StartableCharacterSessionCombatant[];
-  readonly issues: readonly BattleRosterIssue[];
   readonly ownerPaths: ReadonlyMap<CombatantId, readonly (string | number)[]>;
+  readonly initialCombatantOrder: ReadonlyMap<CombatantId, number>;
 };
 
 export function handleStartBattleToolCall(
@@ -75,26 +76,27 @@ export function handleStartBattleToolCall(
   );
   if (activeBattleError !== null) return activeBattleError;
 
-  const initialCombatantOrder = initialCombatantOrderForStartInput(input);
-
   const combatants = startableBattleCombatants({
     root,
     initialCombatants: input.initialCombatants,
+    companionAdmissions: input.companionAdmissions,
   });
 
   if (input.initiativeMode === "initialSetup") {
     return startInitialInitiativeSetup(root, input, combatants);
   }
 
+  const admissions = battleRosterAdmissions(combatants.composition);
+  const rosterIssues = battleRosterIssues(combatants.composition);
   const session =
-    combatants.creatureInits.length === 0
+    admissions.length === 0
       ? undefined
       : startBattle({
           battleId: input.battleId,
-          combatants: combatants.creatureInits,
+          combatants: admissions.map(({ combatant }) => combatant),
           ownerPathForCombatant: (combatant) => {
             const ownerPath = combatants.ownerPaths.get(combatant.combatantId);
-            return ownerPath ?? ["battleInitialization"];
+            return ownerPath ?? ["battleInitialization", "combatant"];
           },
         });
   const companionRoster = composeBattleCompanionRoster({
@@ -111,64 +113,45 @@ export function handleStartBattleToolCall(
     ),
     requests: input.companionAdmissions,
     unitLibrary: root.unitLibrary,
-    initialCombatantOrder,
+    initialCombatantOrder: combatants.initialCombatantOrder,
     statBlockCatalog: root.statBlockCatalog,
   });
   const issues = [
-    ...combatants.issues.flatMap((issue) => battleRosterIssuePayload(issue)),
+    ...rosterIssues.flatMap((issue) => battleRosterIssuePayload(issue)),
     ...(session !== undefined && Either.isLeft(session)
       ? battleRuntimeIssuePayload(session.left)
       : []),
-    ...companionRoster.issues.flatMap(battleCompanionRosterIssuePayload),
+    ...battleCompanionIssues(companionRoster).flatMap(
+      battleCompanionRosterIssuePayload,
+    ),
   ];
   if (issues.length > 0) return battleStartIssuesContent(issues);
-  const admittedSession = companionRoster.session;
-  if (admittedSession === undefined) {
-    return battleStartIssuesContent([
-      {
-        kind: "battleInitialization",
-        code: "BATTLE_INITIALIZATION_INVALID",
-        ownerPath: ["battleInitialization"],
-        issueTag: "battleStateInitIssue",
-        message: "Battle start did not produce a runtime session.",
-      },
-    ]);
-  }
-  const snapshot = battlePresentedSnapshot(admittedSession);
-  if (Either.isLeft(snapshot)) {
-    return battleSnapshotPresentationIssueContent(snapshot.left);
-  }
-
-  return completeBattleStateTransition({
-    root,
-    transition: root.sessionStore.commitBattleStart({
-      nextBattleState: { tag: "activeBattle", session: admittedSession },
-      characterSessions: combatants.characterSessions.map(
-        ({ session }) => session,
+  return Match.value(companionRoster).pipe(
+    Match.when({ tag: "admitted" }, ({ session: admittedSession }) =>
+      commitActiveBattleStart({
+        root,
+        session: admittedSession,
+        characterSessions: combatants.characterSessions,
+      }),
+    ),
+    Match.when({ tag: "rejected" }, ({ issues: companionIssues }) =>
+      battleStartIssuesContent(
+        companionIssues.flatMap(battleCompanionRosterIssuePayload),
       ),
-    }),
-    output: () => {
-      const session = root.sessionStore.snapshot();
-      const battleState = battleStateSnapshot(root.sessionStore.battleState);
-      if (battleState.tag !== "activeBattle") {
-        throw new Error("Battle start payload requires owned active state.");
-      }
-      return schemaJsonContent(StartBattleOutputSchema, {
-        battleState,
-        snapshot: snapshot.right,
-        availableActs: discoverBattleActs(admittedSession),
-        admittedSpellPresentations:
-          battleAdmittedSpellPresentations(admittedSession),
-        presentedInterruptChoices: [],
-        session: { ...mcpSessionSummary(session), battleState },
-      });
-    },
-  });
+    ),
+    Match.when({ tag: "dependentUnavailable" }, ({ issues: companionIssues }) =>
+      battleStartIssuesContent(
+        companionIssues.flatMap(battleCompanionRosterIssuePayload),
+      ),
+    ),
+    Match.exhaustive,
+  );
 }
 
 function startableBattleCombatants(input: {
   readonly root: McpPlaySessionRoot;
   readonly initialCombatants: StartBattleToolInput["initialCombatants"];
+  readonly companionAdmissions: StartBattleToolInput["companionAdmissions"];
 }): StartableBattleCombatants {
   const characterSessionsByIndex = new Map<
     number,
@@ -204,24 +187,95 @@ function startableBattleCombatants(input: {
   const entries: BattleRosterEntries = [firstEntry.rosterEntry, ...restEntries];
   const composition = composeBattleRoster(entries);
   const ownerPaths = new Map<CombatantId, readonly (string | number)[]>();
-  for (const admission of composition.admissions) {
+  for (const admission of battleRosterAdmissions(composition)) {
     ownerPaths.set(admission.combatant.combatantId, [
       "initialCombatants",
       admission.index,
     ]);
   }
   return {
-    issues: composition.issues,
-    creatureInits: composition.admissions.map(
-      (admission) => admission.combatant,
+    composition,
+    characterSessions: battleRosterAdmissions(composition).flatMap(
+      (admission) => {
+        if (admission.kind !== "characterSheet") return [];
+        const session = characterSessionsByIndex.get(admission.index);
+        return session === undefined ? [] : [session];
+      },
     ),
-    characterSessions: composition.admissions.flatMap((admission) => {
-      if (admission.kind !== "characterSheet") return [];
-      const session = characterSessionsByIndex.get(admission.index);
-      return session === undefined ? [] : [session];
-    }),
     ownerPaths,
+    initialCombatantOrder: initialCombatantOrderForStartInput({
+      initialCombatants: input.initialCombatants,
+      companionAdmissions: input.companionAdmissions,
+    }),
   };
+}
+
+function battleRosterAdmissions(
+  composition: BattleRosterComposition,
+): readonly BattleRosterAdmission[] {
+  return Match.value(composition).pipe(
+    Match.when({ tag: "admitted" }, ({ admissions }) => admissions),
+    Match.when({ tag: "rejected" }, ({ admissions }) => admissions),
+    Match.exhaustive,
+  );
+}
+
+function battleRosterIssues(
+  composition: BattleRosterComposition,
+): readonly BattleRosterIssue[] {
+  return Match.value(composition).pipe(
+    Match.when({ tag: "admitted" }, () => []),
+    Match.when({ tag: "rejected" }, ({ issues }) => issues),
+    Match.exhaustive,
+  );
+}
+
+function battleCompanionIssues(
+  composition: ReturnType<typeof composeBattleCompanionRoster>,
+): readonly Parameters<typeof battleCompanionRosterIssuePayload>[0][] {
+  return Match.value(composition).pipe(
+    Match.when({ tag: "admitted" }, () => []),
+    Match.when({ tag: "rejected" }, ({ issues }) => issues),
+    Match.when({ tag: "dependentUnavailable" }, ({ issues }) => issues),
+    Match.exhaustive,
+  );
+}
+
+function commitActiveBattleStart(input: {
+  readonly root: McpPlaySessionRoot;
+  readonly session: BattleRuntimeSession;
+  readonly characterSessions: readonly StartableCharacterSessionCombatant[];
+}) {
+  const snapshot = battlePresentedSnapshot(input.session);
+  if (Either.isLeft(snapshot)) {
+    return battleSnapshotPresentationIssueContent(snapshot.left);
+  }
+  return completeBattleStateTransition({
+    root: input.root,
+    transition: input.root.sessionStore.commitBattleStart({
+      nextBattleState: { tag: "activeBattle", session: input.session },
+      characterSessions: input.characterSessions.map(({ session }) => session),
+    }),
+    output: () => {
+      const session = input.root.sessionStore.snapshot();
+      const battleState = battleStateSnapshot(
+        input.root.sessionStore.battleState,
+      );
+      if (battleState.tag !== "activeBattle") {
+        throw new Error("Battle start payload requires owned active state.");
+      }
+      return schemaJsonContent(StartBattleOutputSchema, {
+        battleState,
+        snapshot: snapshot.right,
+        availableActs: discoverBattleActs(input.session),
+        admittedSpellPresentations: battleAdmittedSpellPresentations(
+          input.session,
+        ),
+        presentedInterruptChoices: [],
+        session: { ...mcpSessionSummary(session), battleState },
+      });
+    },
+  });
 }
 
 export function projectBattleCombatant(input: {
@@ -235,7 +289,7 @@ export function projectBattleCombatant(input: {
     index: 0,
   });
   const composition = composeBattleRoster([rosterEntry.rosterEntry]);
-  if (composition.issues.length > 0) {
+  if (composition.tag === "rejected") {
     return Either.left(
       battleStartIssuesContent(
         composition.issues.flatMap((issue) =>
@@ -247,10 +301,7 @@ export function projectBattleCombatant(input: {
       ),
     );
   }
-  const admission = composition.admissions[0];
-  return admission === undefined
-    ? Either.left(errorContent("Battle combatant admission failed."))
-    : Either.right(admission);
+  return Either.right(composition.admissions[0]);
 }
 
 function rosterEntryForToolCombatant(input: {
@@ -348,7 +399,10 @@ function rosterEntryForToolCombatant(input: {
 }
 
 function initialCombatantOrderForStartInput(
-  input: StartBattleToolInput,
+  input: Pick<
+    StartBattleToolInput,
+    "initialCombatants" | "companionAdmissions"
+  >,
 ): ReadonlyMap<CombatantId, number> {
   return new Map(
     [
