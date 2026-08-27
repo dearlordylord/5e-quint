@@ -429,6 +429,20 @@ describe("battle mechanical frontier", () => {
     expect(frontier.right.acceptedFills).toEqual([]);
   });
 
+  test("accepts the narrow continuation facts exposed by Runtime resolution", () => {
+    const result = ordinaryNeedsHolesResult();
+    const frontier = battleMechanicalFrontier({
+      result: {
+        subject: result.subject,
+        holes: result.holes,
+        snapshot: result.snapshot,
+      },
+      acceptedFills: [],
+    });
+
+    expect(Either.isRight(frontier)).toBe(true);
+  });
+
   test("projects attack frontiers without presentation or authored weapon identity", () => {
     const state = fighterVsGoblinBattle();
     const subject = fighterAttackSubject(state);

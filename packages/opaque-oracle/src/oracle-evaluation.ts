@@ -26,7 +26,6 @@ import {
   snapshotBattle,
   type BattleFill,
   type BattleMechanicalFrontier,
-  type BattleResolutionResult,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
   type BattleStateInitIssue,
@@ -291,62 +290,116 @@ function appendBattleAttempts(
       session: current.session,
       statBlockCatalog,
     });
-    if (result.tag === "invalid") {
-      steps.push({
-        tag: "battleAttemptRejected",
-        checkpoint: current.checkpoint,
-        frontier: current.frontier,
-        reason: result.reason,
-      });
-      continue;
-    }
-
-    if (result.tag === "needsHoles") {
-      const mechanicalFrontier = projectBattleMechanicalFrontier(
-        result,
-        acceptedFillsForAttempt(attempt),
-      );
-      const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
-      const nextSession =
-        attempt.kind === "interruptDecision" ||
-        mechanicalFrontier.kind === "interruptDecision"
-          ? result.session
-          : current.session;
-      current = {
-        session: nextSession,
-        checkpoint: nextCheckpoint,
-        frontier: mechanicalFrontier,
-      };
-      steps.push({
-        tag: "battleProgressed",
-        checkpoint: nextCheckpoint,
-        frontier: mechanicalFrontier,
-      });
-      continue;
-    }
-
-    const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
-    const nextFrontier = battleFrontierAfterResolution(result.session);
-    current = {
-      session: result.session,
-      checkpoint: nextCheckpoint,
-      frontier: nextFrontier,
-    };
-    if (nextFrontier.kind === "terminal") {
-      steps.push({
-        tag: "battleResolved",
-        checkpoint: nextCheckpoint,
-        outcome: "resolved",
-      });
-    } else {
-      steps.push({
-        tag: "battleProgressed",
-        checkpoint: nextCheckpoint,
-        frontier: nextFrontier,
-      });
-    }
+    current = appendBattleAttemptResult({
+      current,
+      attempt,
+      result,
+      steps,
+    });
   }
   return oracleTrace(steps);
+}
+
+function appendBattleAttemptResult(input: {
+  readonly current: OracleBattleContinuation;
+  readonly attempt: OracleBattleAttempt;
+  readonly result: BattleRuntimeResolutionResult;
+  readonly steps: [OracleTraceStep, ...OracleTraceStep[]];
+}): OracleBattleContinuation {
+  return Match.value(input.result).pipe(
+    Match.discriminatorsExhaustive("tag")({
+      invalid: (result) => {
+        input.steps.push({
+          tag: "battleAttemptRejected",
+          checkpoint: input.current.checkpoint,
+          frontier: input.current.frontier,
+          reason: result.reason,
+        });
+        return input.current;
+      },
+      needsHoles: (result) => {
+        const projected = battleMechanicalFrontier({
+          result,
+          acceptedFills: acceptedFillsForAttempt(input.attempt),
+        });
+        if (Either.isLeft(projected)) {
+          return defect(
+            `Battle mechanical frontier projection defect: ${projected.left.tag}`,
+          );
+        }
+        const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
+        const nextSession = battleSessionAfterNeedsHoles({
+          attempt: input.attempt,
+          current: input.current,
+          frontier: projected.right,
+          result,
+        });
+        const next = {
+          session: nextSession,
+          checkpoint: nextCheckpoint,
+          frontier: projected.right,
+        } satisfies OracleBattleContinuation;
+        input.steps.push({
+          tag: "battleProgressed",
+          checkpoint: nextCheckpoint,
+          frontier: projected.right,
+        });
+        return next;
+      },
+      resolved: (result) => {
+        const nextCheckpoint = strippedBattleCheckpoint(result.snapshot);
+        const nextFrontier = battleFrontierAfterResolution(result.session);
+        const next = {
+          session: result.session,
+          checkpoint: nextCheckpoint,
+          frontier: nextFrontier,
+        } satisfies OracleBattleContinuation;
+        return Match.value(nextFrontier).pipe(
+          Match.discriminatorsExhaustive("kind")({
+            acts: () => {
+              input.steps.push({
+                tag: "battleProgressed",
+                checkpoint: nextCheckpoint,
+                frontier: nextFrontier,
+              });
+              return next;
+            },
+            terminal: () => {
+              input.steps.push({
+                tag: "battleResolved",
+                checkpoint: nextCheckpoint,
+                outcome: "resolved",
+              });
+              return next;
+            },
+          }),
+        );
+      },
+    }),
+  );
+}
+
+function battleSessionAfterNeedsHoles(input: {
+  readonly attempt: OracleBattleAttempt;
+  readonly current: OracleBattleContinuation;
+  readonly frontier: BattleMechanicalFrontier;
+  readonly result: Extract<
+    BattleRuntimeResolutionResult,
+    { readonly tag: "needsHoles" }
+  >;
+}): BattleRuntimeSession {
+  return Match.value(input.attempt).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      ordinarySubject: () =>
+        Match.value(input.frontier).pipe(
+          Match.discriminatorsExhaustive("kind")({
+            ordinaryHoles: () => input.current.session,
+            interruptDecision: () => input.result.session,
+          }),
+        ),
+      interruptDecision: () => input.result.session,
+    }),
+  );
 }
 
 function resolveBattleAttempt(input: {
@@ -379,41 +432,14 @@ function acceptedFillsForAttempt(
     Match.discriminatorsExhaustive("kind")({
       ordinarySubject: ({ fills }) => fills,
       interruptDecision: ({ fill }) =>
-        fill.value.kind === "resolve" ? fill.value.choice.fills : [],
+        Match.value(fill.value).pipe(
+          Match.discriminatorsExhaustive("kind")({
+            decline: () => [],
+            resolve: ({ choice }) => choice.fills,
+          }),
+        ),
     }),
   );
-}
-
-function projectBattleMechanicalFrontier(
-  result: Extract<
-    BattleRuntimeResolutionResult,
-    { readonly tag: "needsHoles" }
-  >,
-  acceptedFills: readonly BattleFill[],
-): BattleMechanicalFrontier {
-  const mechanicalResult: Extract<
-    BattleResolutionResult,
-    { readonly tag: "needsHoles" }
-  > = {
-    tag: "needsHoles",
-    state: result.session.state,
-    subject: result.subject,
-    holes: result.holes,
-    snapshot: result.snapshot,
-    ...(result.routeEvents === undefined
-      ? {}
-      : { routeEvents: result.routeEvents }),
-  };
-  const projected = battleMechanicalFrontier({
-    result: mechanicalResult,
-    acceptedFills,
-  });
-  if (Either.isLeft(projected)) {
-    return defect(
-      `Battle mechanical frontier projection defect: ${projected.left.tag}`,
-    );
-  }
-  return projected.right;
 }
 
 function battleActsFrontier(
@@ -429,7 +455,7 @@ function battleActsFrontier(
 
 function battleFrontierAfterResolution(
   session: BattleRuntimeSession,
-): OracleBattleFrontier {
+): Extract<OracleBattleFrontier, { readonly kind: "acts" | "terminal" }> {
   const acts = discoverBattleActs(session).map(({ subject }) => subject);
   const [firstAct, ...remainingActs] = acts;
   return firstAct === undefined

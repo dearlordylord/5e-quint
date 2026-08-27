@@ -6,6 +6,7 @@ export {
   BattleMechanicalOrdinaryHoleSchema,
   battleMechanicalFrontier,
   type BattleMechanicalFrontier,
+  type BattleMechanicalFrontierResult,
   type BattleMechanicalFrontierIssue,
   type BattleMechanicalHole,
   type BattleMechanicalInterruptDecisionHole,

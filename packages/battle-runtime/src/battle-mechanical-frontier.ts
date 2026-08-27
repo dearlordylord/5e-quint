@@ -58,6 +58,16 @@ export type BattleMechanicalFrontier =
   | BattleMechanicalOrdinaryFrontier
   | BattleMechanicalInterruptFrontier;
 
+/**
+ * The continuation facts required for a mechanical frontier projection.
+ * Runtime resolution wrappers may carry session and route metadata alongside
+ * these facts, but the frontier owner only consumes this stable projection.
+ */
+export type BattleMechanicalFrontierResult = Pick<
+  Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
+  "subject" | "holes" | "snapshot"
+>;
+
 export type BattleMechanicalFrontierIssue =
   | { readonly tag: "emptyHoleFrontier" }
   | { readonly tag: "mixedInterruptAndOrdinaryHoles" }
@@ -89,10 +99,7 @@ export const BattleMechanicalFrontierSchema = Schema.Union(
 });
 
 export function battleMechanicalFrontier(input: {
-  readonly result: Extract<
-    BattleResolutionResult,
-    { readonly tag: "needsHoles" }
-  >;
+  readonly result: BattleMechanicalFrontierResult;
   readonly acceptedFills: readonly BattleFill[];
 }): Either.Either<BattleMechanicalFrontier, BattleMechanicalFrontierIssue> {
   const { result } = input;
