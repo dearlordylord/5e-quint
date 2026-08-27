@@ -7057,26 +7057,38 @@ function serializedReadiedResponseIsBound(
   );
 }
 
+type SerializedLightEmitterSource =
+  | {
+      readonly kind: "spellLightEmitter";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    }
+  | {
+      readonly kind: "unitFeatureLightEmitter";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    }
+  | {
+      readonly kind: "objectInvisibleRevealLightEmitter";
+      readonly sourceCombatantId: CombatantId;
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    };
+
+function serializedLightEmitterSource(
+  emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
+): SerializedLightEmitterSource {
+  return {
+    kind: emitter.kind,
+    sourceCombatantId: emitter.sourceCombatantId,
+    sourceProcedureRef: emitter.sourceProcedureRef,
+  };
+}
+
 function serializedLightEmitterOwnsSource(
-  emitter:
-    | {
-        readonly kind: "spellLightEmitter";
-        readonly sourceCombatantId: CombatantId;
-        readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      }
-    | {
-        readonly kind: "unitFeatureLightEmitter";
-        readonly sourceCombatantId: CombatantId;
-        readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      }
-    | {
-        readonly kind: "objectInvisibleRevealLightEmitter";
-        readonly sourceCombatantId: CombatantId;
-        readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      },
+  emitter: Schema.Schema.Type<typeof BattleLightEmitterSchema>,
   combatants: readonly EncodedBattleCreatureSnapshot[],
 ): boolean {
-  return Match.value(emitter).pipe(
+  return Match.value(serializedLightEmitterSource(emitter)).pipe(
     Match.discriminatorsExhaustive("kind")({
       spellLightEmitter: (source) =>
         characterProcedureBindingKind(
