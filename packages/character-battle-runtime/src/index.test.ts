@@ -1277,6 +1277,54 @@ describe("Character Sheet battle handoff", () => {
       ]);
     }
 
+    const retained = retainedOrdinaryCompanionSheet({
+      characterIdValue: "character:companion-composition-collision",
+      companionIdValue: "companion:companion-composition-collision",
+      selectedForm: { tag: "normalNamedForm", formId: "cat" },
+      currentHp: Hp(2),
+      tempHp: Hp(0),
+    });
+    const collision = composeBattleCompanionRoster({
+      session: session.right,
+      owners: [
+        {
+          index: 0,
+          characterId: retained.characterId,
+          combatantId: init.right.combatantId,
+          sheet: retained,
+        },
+      ],
+      requests: [
+        {
+          ownerCharacterId: retained.characterId,
+          companionCombatantId: init.right.combatantId,
+          initiative: initiativeScore(14),
+          ammunitionStocks: [],
+        },
+      ],
+      unitLibrary,
+      initialCombatantOrder: new Map([[init.right.combatantId, 0]]),
+      statBlockCatalog,
+    });
+    expect(collision).toEqual({
+      tag: "rejected",
+      issues: [
+        {
+          kind: "companionAdmission",
+          admissionReason: "admissionRejected",
+          issueTag: "characterSheetBattleHandoffIssue",
+          index: 0,
+          ownerCharacterId: retained.characterId,
+          companionCombatantId: init.right.combatantId,
+          handoffReason: "battleInitialization",
+          reason: "duplicateCombatantId",
+          combatantId: init.right.combatantId,
+          message:
+            "Find Familiar familiar identity must be distinct from its caster.",
+        },
+      ],
+    });
+
     const duplicateOwnerSource = composeBattleCompanionRoster({
       session: session.right,
       owners: [
@@ -1309,6 +1357,142 @@ describe("Character Sheet battle handoff", () => {
           ownerCharacterId: sheet.right.characterId,
         },
       ],
+    });
+  });
+
+  test("accumulates later identity failures after an initial projection failure", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId(
+          "character:roster-projection-then-duplicate",
+        ),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const sharedCombatantId = combatantId(
+      "combatant:roster-projection-then-duplicate",
+    );
+    const projection = composeBattleRoster([
+      {
+        kind: "characterSheet",
+        source: {
+          kind: "available",
+          input: {
+            sheet,
+            unitLibrary: unitCatalogWithoutUnitIds(sheet.build.species),
+            statBlockCatalog,
+            combatantId: sharedCombatantId,
+            displayName: "Broken Character",
+            initiative: initiativeScore(20),
+            ammunitionStocks: [],
+          },
+        },
+      },
+      {
+        kind: "statBlock",
+        source: {
+          kind: "available",
+          input: {
+            combatantId: sharedCombatantId,
+            statBlock: statBlockCatalog.requireStatBlock("stat_block_skeleton"),
+            initiative: initiativeScore(10),
+            ammunitionStocks: [battleAmmunitionStock("arrow", 20)],
+            conditions: [],
+          },
+        },
+      },
+    ]);
+
+    expect(projection).toMatchObject({
+      tag: "rejected",
+      admissions: [],
+      issues: [
+        {
+          kind: "characterSheetProjection",
+          index: 0,
+          characterId: sheet.characterId,
+          issueTag: "battleCreatureInitIssue",
+          reason: "characterBuildProjection",
+          phase: "hitPoints",
+          cause: "unknownUnit",
+          role: "species",
+          unitId: sheet.build.species,
+        },
+        {
+          kind: "duplicateCombatantId",
+          index: 1,
+          combatantId: sharedCombatantId,
+          firstIndex: 0,
+        },
+      ],
+    });
+  });
+
+  test("retains every Character Build HP projection cause in a Character Sheet roster leaf", () => {
+    const sheet = expectRight(
+      rebuildCharacterSheetFixture({
+        characterId: characterSheetId("character:roster-hp-projection-causes"),
+        build,
+        currentHp: Hp(10),
+        tempHp: Hp(0),
+        unitLibrary,
+      }),
+    );
+    const missingFeatureUnitId = authoredUnitId(
+      "synthetic:missing-hit-point-grant",
+    );
+    const malformedSheet = {
+      ...sheet,
+      build: {
+        ...sheet.build,
+        features: [
+          ...sheet.build.features,
+          {
+            kind: "selectedClassChoice" as const,
+            selectedFromUnitId: authoredUnitId("synthetic:feature-source"),
+            unitId: missingFeatureUnitId,
+          },
+        ],
+      },
+    } as CharacterSheet;
+    const projection = characterSheetBattleInitWithRoute({
+      sheet: malformedSheet,
+      unitLibrary: unitCatalogWithoutUnitIds(
+        sheet.build.species,
+        missingFeatureUnitId,
+      ),
+      statBlockCatalog,
+      combatantId: combatantId("combatant:roster-hp-projection-causes"),
+      displayName: "Broken Character",
+      initiative: initiativeScore(20),
+      ammunitionStocks: [],
+    });
+
+    expect(projection).toMatchObject({
+      _tag: "Left",
+      left: {
+        tag: "battleCreatureInitIssues",
+        issues: [
+          {
+            tag: "battleCreatureInitIssue",
+            reason: "characterBuildProjection",
+            phase: "hitPoints",
+            cause: "unknownUnit",
+            role: "species",
+            unitId: sheet.build.species,
+          },
+          {
+            tag: "battleCreatureInitIssue",
+            reason: "characterBuildProjection",
+            phase: "hitPoints",
+            cause: "missingHitPointMaximumGrantSourceUnit",
+            sourceUnitId: missingFeatureUnitId,
+          },
+        ],
+      },
     });
   });
 
@@ -2996,6 +3180,10 @@ describe("Character Sheet battle handoff", () => {
     expect(admitted).toMatchObject({
       _tag: "Left",
       left: {
+        handoffReason: "companionFormProof",
+        check: "normalFormNotEligible",
+        formId: "goblin_warrior",
+        resolvedStatBlockId: authoredStatBlockId("stat_block_goblin_warrior"),
         message:
           "Retained companion normal form is not eligible for the familiar-like form catalog.",
       },
@@ -3133,6 +3321,10 @@ describe("Character Sheet battle handoff", () => {
     ).toMatchObject({
       _tag: "Left",
       left: {
+        handoffReason: "companionFormProof",
+        check: "challengeRatingZeroBeastSelectionMismatch",
+        statBlockId: authoredStatBlockId("stat_block_cat"),
+        resolvedStatBlockId: authoredStatBlockId("stat_block_rat"),
         message: expect.stringContaining(
           "does not match its resolved Stat Block id",
         ),
@@ -3170,6 +3362,10 @@ describe("Character Sheet battle handoff", () => {
     expect(admitted).toMatchObject({
       _tag: "Left",
       left: {
+        handoffReason: "companionFormProof",
+        check: "challengeRatingZeroBeastFactsMismatch",
+        statBlockId: authoredStatBlockId("stat_block_goblin_warrior"),
+        resolvedStatBlockId: authoredStatBlockId("stat_block_goblin_warrior"),
         message:
           "Retained companion Challenge Rating 0 Beast form must resolve to a CR 0 Beast Stat Block.",
       },

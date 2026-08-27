@@ -34,6 +34,7 @@ import {
   characterSheetCurrentHp,
   characterSheetDruidWildShapeKnownForms,
   characterSheetHitPointMaximum,
+  characterSheetHitPointMaximumProjectionWithIssues,
   characterSheetPactSlots,
   characterSheetResources,
   characterSheetSpellSlotSourceState,
@@ -55,6 +56,7 @@ import {
   type CharacterSheetSpellSlotSourceState,
   type CharacterSheetSpellSlotState,
   type CharacterSheetStableRecovery,
+  type CharacterSheetHitPointMaximumProjectionIssue,
   type CharacterSheetUseCountResourceUnitId,
   type CharacterSheetZeroHpLifecycleInput,
 } from "@dnd/character-sheet-runtime";
@@ -74,6 +76,7 @@ import {
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
+import type { CharacterBuildProjectionIssue } from "@dnd/character-creation-runtime";
 import { Either, Match, Option } from "effect";
 import { isNonEmptyReadonlyArray } from "effect/Array";
 
@@ -84,8 +87,9 @@ import {
 } from "./battle-creature-init.ts";
 import {
   type BattleCreatureInitIssue,
+  battleCreatureInitIssue,
   battleCreatureInitIssueMessage,
-  battleCreatureInitIssueFromCharacterBuildProjection,
+  battleCreatureInitIssuesFromCharacterBuildProjection,
   battleCreatureInitIssueLeaves,
   characterBattleInitIssueFactFields,
   type CharacterBattleInitIssueFact,
@@ -93,7 +97,7 @@ import {
 } from "./battle-character-build-projection.ts";
 import { characterBattleOriginFeatSelectedReferenceProjection } from "./origin-feat-selected-reference-projection.ts";
 import {
-  characterSheetBattleHandoffFactFromStateInit,
+  characterSheetBattleHandoffIssuesFromStateInit,
   characterSheetBattleHandoffIssue,
   characterSheetBattleHandoffIssueFromIssue,
   type CharacterSheetBattleHandoffValidationCheck,
@@ -546,40 +550,19 @@ export function characterSheetBattleInitWithRoute(
       routeEvents: rejectCharacterBattleInitProjectionRoute(),
     });
   }
-  if (Option.isNone(unitLibrary.getUnit(sheet.build.species))) {
-    const issue = battleCreatureInitIssueFromCharacterBuildProjection(
-      {
-        tag: "characterBuildProjection",
-        cause: {
-          tag: "unknownUnit",
-          role: "species",
-          unitId: sheet.build.species,
-        },
-      },
-      "hitPoints",
-    );
-    return Either.left({
-      ...issue,
-      routeEvents: rejectBuildHitPointBattleInitRoute(),
-    });
-  }
   const druidWildShapeAvailableForms =
     battleDruidWildShapeAvailableFormsFromSheet({
       sheet,
       statBlockCatalog,
     });
-  const hitPointMaximum = characterSheetHitPointMaximum({
+  const hitPointMaximum = characterSheetHitPointMaximumProjectionWithIssues({
     sheet,
     unitLibrary,
   });
   if (Either.isLeft(hitPointMaximum)) {
+    const issue = characterBattleHitPointMaximumIssue(hitPointMaximum.left);
     return Either.left({
-      tag: "battleCreatureInitIssue",
-      message: hitPointMaximum.left.message,
-      ...characterBattleInitIssueFactFields({
-        kind: "characterBuildProjection",
-        phase: "hitPoints",
-      }),
+      ...issue,
       routeEvents: rejectBuildHitPointBattleInitRoute(),
     });
   }
@@ -588,7 +571,7 @@ export function characterSheetBattleInitWithRoute(
     unitLibrary,
     build: sheet.build,
     characterId: sheet.characterId,
-    hitPointMaximum: hitPointMaximum.right,
+    hitPointMaximum: hitPointMaximum.right.effectiveHitPointMaximum,
     currentHp: characterSheetCurrentHp(sheet),
     tempHp: characterSheetTempHp(sheet),
     ...withDefinedCharacterBattleSheetState(sheet),
@@ -608,6 +591,31 @@ export function characterSheetBattleInitWithRoute(
   );
 }
 
+function characterBattleHitPointMaximumIssue(
+  issue: CharacterSheetHitPointMaximumProjectionIssue,
+): BattleCreatureInitIssue {
+  if (isCharacterBuildProjectionIssues(issue)) {
+    const projected = battleCreatureInitIssuesFromCharacterBuildProjection(
+      issue,
+      "hitPoints",
+    );
+    if (Either.isLeft(projected)) return projected.left;
+    return projected.right;
+  }
+  const projected = battleCreatureInitIssue(issue.message, {
+    kind: "characterBuildProjection",
+    phase: "hitPoints",
+  });
+  if (Either.isLeft(projected)) return projected.left;
+  return projected.right;
+}
+
+function isCharacterBuildProjectionIssues(
+  issue: CharacterSheetHitPointMaximumProjectionIssue,
+): issue is ReadonlyNonEmptyArray<CharacterBuildProjectionIssue> {
+  return Array.isArray(issue);
+}
+
 /**
  * Admit an arbitrary mixed-origin initial roster in caller order.  The
  * operation owns identity checks and source/projection admission so callers
@@ -618,7 +626,11 @@ export function composeBattleRoster(
 ): BattleRosterComposition {
   const combatantOwners = new Map<BattleCreatureInit["combatantId"], number>();
   const characterOwners = new Map<CharacterSheet["characterId"], number>();
-  const recordIdentity = (entry: BattleRosterEntry, index: number) => {
+  const recordIdentity = (
+    entry: BattleRosterEntry,
+    index: number,
+    issues: BattleRosterIssue[],
+  ) => {
     const combatantId = rosterEntryCombatantId(entry);
     const firstCombatantIndex = combatantOwners.get(combatantId);
     const duplicateCombatant = firstCombatantIndex !== undefined;
@@ -658,6 +670,7 @@ export function composeBattleRoster(
     const { duplicateCombatant, duplicateCharacter } = recordIdentity(
       entry,
       index,
+      issues,
     );
 
     const projection = projectBattleRosterEntry(entry, index);
@@ -670,7 +683,8 @@ export function composeBattleRoster(
   };
 
   const [firstEntry, ...restEntries] = entries;
-  recordIdentity(firstEntry, 0);
+  const firstIdentityIssues: BattleRosterIssue[] = [];
+  recordIdentity(firstEntry, 0, firstIdentityIssues);
   const firstProjection = projectBattleRosterEntry(firstEntry, 0);
   if (Either.isLeft(firstProjection)) {
     const [firstIssue, ...restIssues] = firstProjection.left;
@@ -678,6 +692,7 @@ export function composeBattleRoster(
       firstIssue,
       ...restIssues,
     ];
+    issues.unshift(...firstIdentityIssues);
     const admissions: BattleRosterAdmission[] = [];
     for (const [offset, entry] of restEntries.entries()) {
       processEntry(entry, offset + 1, issues, admissions);
@@ -1316,10 +1331,10 @@ function settleBattleCombatantIntoCharacterSheet(input: {
   }
   const knockedOut = combatantKnockedOutUnconscious(input.combatant);
   if (Either.isLeft(knockedOut)) {
-    return characterSheetBattleHandoffIssue(
-      characterSheetBattleHandoffFactFromStateInit(knockedOut.left),
-      battleStateInitIssueMessage(knockedOut.left),
+    const [firstIssue] = characterSheetBattleHandoffIssuesFromStateInit(
+      knockedOut.left,
     );
+    return Either.left(firstIssue);
   }
   const pactSlots = characterSheetPactSlots(input.sheet);
   const resourceExpenditures = characterResourceExpendituresFromBattle(input);

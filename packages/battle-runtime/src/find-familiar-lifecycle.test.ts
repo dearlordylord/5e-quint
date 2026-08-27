@@ -4819,6 +4819,8 @@ describe("Find Familiar lifecycle", () => {
     expect(admitted).toEqual(
       Either.left({
         tag: "battleStateInitIssue",
+        kind: "duplicateCombatantId",
+        combatantId: enemyId,
         message:
           "Find Familiar familiar identity must not identify an ordinary combatant.",
       }),
