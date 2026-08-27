@@ -555,13 +555,27 @@ describe("Opaque Oracle Case and Trace contract", () => {
       sheet: { tag: "ordinary" as const },
       battle: statBlockBattle,
     };
+    const battleB = {
+      roster: [
+        {
+          ...statBlockBattle.roster[0],
+          combatantId: combatantId("oracle:stat-block-b"),
+          initiative: 1,
+        },
+      ] as const,
+    };
     const caseB = {
-      creation: { fillBatches: [] },
+      creation: { fillBatches: completeCreationFillBatches() },
       sheet: { tag: "ordinary" as const },
-      battle: statBlockBattle,
+      battle: battleB,
     };
     const singletonA = evaluateDecodedCase({
       case: caseA,
+      unitLibrary,
+      statBlockCatalog,
+    });
+    const singletonB = evaluateDecodedCase({
+      case: caseB,
       unitLibrary,
       statBlockCatalog,
     });
@@ -572,10 +586,8 @@ describe("Opaque Oracle Case and Trace contract", () => {
     expect(batch).toHaveLength(3);
     expect(batch[0]).toEqual(singletonA);
     expect(batch[2]).toEqual(singletonA);
-    expect(batch[1].steps.at(-1)).toEqual({
-      tag: "workflowRejected",
-      reason: { code: "creationInputExhausted" },
-    });
+    expect(batch[1]).toEqual(singletonB);
+    expect(batch[1].steps.at(-1)?.tag).toBe("battleEntered");
   });
 
   it("accumulates independent projection failures and reports missing records as typed entry data", () => {

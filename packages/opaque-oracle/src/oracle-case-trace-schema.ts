@@ -22,7 +22,7 @@ import {
   StatBlockId as StatBlockIdSchema,
   UnitId as UnitIdSchema,
 } from "@dnd/shared/game-facts";
-import { Index } from "@dnd/shared/types";
+import { Index, SIZES } from "@dnd/shared/types";
 import { CombatantId } from "@dnd/battle-runtime";
 
 import { validOracleTraceLifecycle } from "./oracle-lifecycle.ts";
@@ -295,7 +295,7 @@ const OracleBattleCreatureSnapshotSchema = Schema.Struct({
   maxHp: NonNegativeIntegerSchema,
   tempHp: NonNegativeIntegerSchema,
   armorClass: Schema.Number,
-  size: Schema.String,
+  size: Schema.Literal(...SIZES),
   conditions: Schema.Array(Schema.Literal(...CONDITIONS)).pipe(
     Schema.filter(
       (conditions) => new Set(conditions).size === conditions.length,
@@ -421,6 +421,13 @@ function oracleBattleCheckpointInvariantsHold(checkpoint: {
     uniqueValues(combatantIds) &&
     uniqueValues(turnOrder) &&
     turnOrder.length === combatantIds.length &&
+    checkpoint.combatants.every(
+      (combatant) => combatant.hp <= combatant.maxHp,
+    ) &&
+    checkpoint.combatants.every(
+      (combatant, index) => combatant.combatantId === turnOrder[index],
+    ) &&
+    checkpoint.currentActorId === turnOrder[0] &&
     liveCombatantIds.has(checkpoint.currentActorId) &&
     turnOrder.every((combatantId) => liveCombatantIds.has(combatantId))
   );
@@ -430,37 +437,33 @@ function uniqueValues(values: readonly string[]): boolean {
   return new Set(values).size === values.length;
 }
 
-const BATTLE_SUBJECT_REFERENCE_PROPERTIES = new Set([
-  "actorId",
-  "allyId",
-  "attackerId",
-  "carriedCreatureId",
-  "carrierId",
-  "casterId",
-  "companionId",
-  "currentActorId",
-  "damagedId",
-  "fallingCreatureId",
-  "familiarId",
-  "grapplerId",
-  "helperId",
-  "moverId",
-  "observerId",
-  "occupantId",
-  "ownerId",
-  "previousTargetId",
-  "reactorId",
-  "readiedActorId",
-  "readiedMovementActorId",
-  "readiedSpellCasterId",
-  "responderId",
-  "shoverId",
-  "sourceCombatantId",
-  "targetEnemyId",
-  "targetId",
-  "triggeringCombatantId",
-  "wardedCombatantId",
-]);
+type CombatantReferenceProperty<Value> = Value extends unknown
+  ? {
+      [Property in keyof Value]-?: [NonNullable<Value[Property]>] extends [
+        never,
+      ]
+        ? never
+        : NonNullable<Value[Property]> extends
+              | CombatantId
+              | readonly CombatantId[]
+          ? Property
+          : never;
+    }[keyof Value]
+  : never;
+
+const BATTLE_SUBJECT_REFERENCE_PROPERTIES = {
+  actorId: true,
+  casterId: true,
+  companionId: true,
+  fallingCreatureId: true,
+  familiarId: true,
+  reactorId: true,
+  readiedActorId: true,
+  readiedMovementActorId: true,
+  readiedSpellCasterId: true,
+  sourceCombatantId: true,
+  targetId: true,
+} satisfies Record<CombatantReferenceProperty<BattleSubject>, true>;
 
 function oracleBattleEnteredInvariantsHold(entered: {
   readonly checkpoint: {
@@ -481,7 +484,12 @@ function battleSubjectReferencesAreLive(
   liveCombatantIds: ReadonlySet<string>,
 ): boolean {
   return Object.entries(subject).every(([property, value]) => {
-    if (!BATTLE_SUBJECT_REFERENCE_PROPERTIES.has(property)) return true;
-    return typeof value === "string" && liveCombatantIds.has(value);
+    if (!(property in BATTLE_SUBJECT_REFERENCE_PROPERTIES)) return true;
+    return Array.isArray(value)
+      ? value.every(
+          (reference) =>
+            typeof reference === "string" && liveCombatantIds.has(reference),
+        )
+      : typeof value === "string" && liveCombatantIds.has(value);
   });
 }
