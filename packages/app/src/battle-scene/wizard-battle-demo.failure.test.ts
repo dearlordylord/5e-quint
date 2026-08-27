@@ -2,13 +2,7 @@ import type * as BattleRuntime from "@dnd/battle-runtime"
 import { describe, expect, test, vi } from "vitest"
 
 const { recordDeathSaveFrontierReplacement } = vi.hoisted(() => ({
-  recordDeathSaveFrontierReplacement:
-    vi.fn<
-      (identity: {
-        readonly subjectActorId: BattleRuntime.CombatantId
-        readonly deathSavingThrowCombatantId: BattleRuntime.CombatantId
-      }) => void
-    >()
+  recordDeathSaveFrontierReplacement: vi.fn<() => void>()
 }))
 
 vi.mock("@dnd/battle-runtime", async (importOriginal) => {
@@ -27,10 +21,7 @@ vi.mock("@dnd/battle-runtime", async (importOriginal) => {
         subject.command === "endTurn" &&
         subject.actorId === input.actorId
       ) {
-        recordDeathSaveFrontierReplacement({
-          subjectActorId: subject.actorId,
-          deathSavingThrowCombatantId: deathSavingThrow.combatantId
-        })
+        recordDeathSaveFrontierReplacement()
         return {
           ...result,
           envelope: {
