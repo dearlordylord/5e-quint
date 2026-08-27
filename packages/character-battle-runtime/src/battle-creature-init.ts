@@ -70,6 +70,7 @@ import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
 import { Either, Option } from "effect";
 import {
   battleCreatureInitIssue,
+  battleCreatureInitIssueMessage,
   characterArmorClassState,
   characterUnarmoredArmorClassBases,
   characterAttackActionOption,
@@ -155,7 +156,9 @@ export function characterBattleInitiativeScore(input: {
     input.unitLibrary,
   );
   if (Either.isLeft(classLevels)) {
-    return battleCreatureInitIssue(classLevels.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(classLevels.left),
+    );
   }
   const supportProjection = characterBattleSupportProjection(
     input.build,
@@ -205,7 +208,9 @@ export function startBattleFromCharacterBuildAndStatBlock(input: {
     unitLibrary: input.unitLibrary,
   });
   if (Either.isLeft(characterInit)) {
-    return battleCreatureInitIssue(characterInit.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(characterInit.left),
+    );
   }
   const statBlockInit = battleCreatureInitFromStatBlock(
     input.statBlockBattleInput,
@@ -591,7 +596,9 @@ function characterBattleClassLevels(
   for (const entry of progressionClassLevels(build.progression)) {
     const classUnit = getRequiredUnit(unitLibrary, entry.classUnitId);
     if (Either.isLeft(classUnit)) {
-      return battleCreatureInitIssue(classUnit.left.message);
+      return battleCreatureInitIssue(
+        battleCreatureInitIssueMessage(classUnit.left),
+      );
     }
     if (classUnit.right.kind !== "class") {
       return battleCreatureInitIssue(
@@ -787,7 +794,7 @@ function characterBattleResourceInitsFromAdmittedUnits(
       druidWildShapeFacts,
     );
     if (Either.isLeft(init)) {
-      issues.push(init.left.message);
+      issues.push(battleCreatureInitIssueMessage(init.left));
     } else {
       resources.push(init.right);
     }

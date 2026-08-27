@@ -175,8 +175,6 @@ export type BattleDruidWildShapeKnownFormIssue =
 export type BattleDruidWildShapeKnownFormsIssue = {
   readonly tag: "battleDruidWildShapeKnownFormsIssue";
   readonly issues: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownFormIssue>;
-  /** Derived compatibility view; callers should prefer `issues`. */
-  readonly message: string;
 };
 
 const WILD_SHAPE_KNOWN_FORM_ELIGIBILITY_MESSAGES = {
@@ -304,24 +302,10 @@ export function battleAvailableDruidWildShapeKnownForms(input: {
   const [firstIssue, ...remainingIssues] = issues;
   return firstIssue === undefined
     ? Either.right(parsed)
-    : Either.left(wildShapeKnownFormsIssue([firstIssue, ...remainingIssues]));
-}
-
-function wildShapeKnownFormsIssue(
-  issues: ReadonlyNonEmptyArray<BattleDruidWildShapeKnownFormIssue>,
-): BattleDruidWildShapeKnownFormsIssue {
-  const aggregate = {
-    tag: "battleDruidWildShapeKnownFormsIssue" as const,
-    issues,
-  };
-  Object.defineProperty(aggregate, "message", {
-    configurable: false,
-    enumerable: false,
-    get: () => wildShapeKnownFormsIssueMessage(issues),
-  });
-  // The non-enumerable accessor derives the compatibility message from the
-  // retained issue array; no second diagnostic value is stored.
-  return aggregate as BattleDruidWildShapeKnownFormsIssue;
+    : Either.left({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [firstIssue, ...remainingIssues],
+      });
 }
 
 function battleDruidWildShapeKnownForm(

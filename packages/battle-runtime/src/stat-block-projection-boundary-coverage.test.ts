@@ -452,8 +452,14 @@ describe("Stat Block projection boundary coverage", () => {
       });
       expect(result).toEqual(
         Either.left({
-          tag: "battleDruidWildShapeKnownFormIssue",
-          message: projectionCase.message,
+          tag: "battleDruidWildShapeKnownFormsIssue",
+          issues: [
+            {
+              tag: "battleDruidWildShapeKnownFormIssue",
+              statBlockId: projectionCase.record.id,
+              reason: "invalidLegendaryActionUses",
+            },
+          ],
         }),
       );
     }

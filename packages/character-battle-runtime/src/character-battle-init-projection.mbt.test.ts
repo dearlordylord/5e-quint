@@ -50,6 +50,7 @@ import { describe, expect, it } from "vitest";
 import {
   battleCreatureInitFromCharacterBuild,
   characterSheetBattleInit,
+  characterBattleRuntimeIssueMessage,
 } from "./index.ts";
 
 import { battleCreatureInitFromStatBlock } from "./ammunition-stock.test-support.ts";
@@ -344,7 +345,9 @@ function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
   return projectFromParts({
     outcome: "mixed-spell-and-pact-slot-init-rejected",
     accepted: Either.isRight(result),
-    message: Either.isLeft(result) ? result.left.message : "none",
+    message: Either.isLeft(result)
+      ? characterBattleRuntimeIssueMessage(result.left)
+      : "none",
     replayIndex: 5,
   });
 }
@@ -365,7 +368,9 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
   return projectFromParts({
     outcome: "build-maximum-above-build-maximum-rejected",
     accepted: Either.isRight(result),
-    message: Either.isLeft(result) ? result.left.message : "none",
+    message: Either.isLeft(result)
+      ? characterBattleRuntimeIssueMessage(result.left)
+      : "none",
     replayIndex: 6,
   });
 }
@@ -399,7 +404,9 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
   return projectFromParts({
     outcome: "stable-recovery-progress-during-init-rejected",
     accepted: Either.isRight(result),
-    message: Either.isLeft(result) ? result.left.message : "none",
+    message: Either.isLeft(result)
+      ? characterBattleRuntimeIssueMessage(result.left)
+      : "none",
     replayIndex: 7,
   });
 }

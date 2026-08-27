@@ -7045,10 +7045,12 @@ describe("Character Build battle projection", () => {
     });
     expect(missingBothSpellKinds).toMatchObject({ _tag: "Left" });
     if (Either.isLeft(missingBothSpellKinds)) {
-      expect(missingBothSpellKinds.left.message).toContain(missingCantripId);
-      expect(missingBothSpellKinds.left.message).toContain(
-        missingPreparedSpellId,
-      );
+      expect(
+        characterBattleRuntimeIssueMessage(missingBothSpellKinds.left),
+      ).toContain(missingCantripId);
+      expect(
+        characterBattleRuntimeIssueMessage(missingBothSpellKinds.left),
+      ).toContain(missingPreparedSpellId);
     }
     expect(
       battleCreatureInitFromCharacterBuild({
@@ -7745,12 +7747,12 @@ describe("Character Build battle projection", () => {
     );
     expect(multiplyInvalidResources).toMatchObject({ _tag: "Left" });
     if (Either.isLeft(multiplyInvalidResources)) {
-      expect(multiplyInvalidResources.left.message).toContain(
-        "Druid Wild Shape expenditure exceeds",
-      );
-      expect(multiplyInvalidResources.left.message).toContain(
-        "use-count expenditure exceeds",
-      );
+      expect(
+        characterBattleRuntimeIssueMessage(multiplyInvalidResources.left),
+      ).toContain("Druid Wild Shape expenditure exceeds");
+      expect(
+        characterBattleRuntimeIssueMessage(multiplyInvalidResources.left),
+      ).toContain("use-count expenditure exceeds");
     }
 
     const barbarian = {

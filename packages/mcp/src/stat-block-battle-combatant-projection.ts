@@ -4,6 +4,7 @@ import {
   type BattleStatBlockProjectionFailure,
 } from "@dnd/battle-runtime";
 import { Either, Match, Option } from "effect";
+import type { StatBlockId } from "@dnd/shared/game-facts";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { StatBlockCombatantToolInput } from "./start-battle-tool-input.ts";
@@ -81,7 +82,7 @@ export function projectStatBlockBattleCombatant(input: {
 }
 
 function statBlockProjectionFailureContent(
-  statBlockId: string,
+  statBlockId: StatBlockId,
   failure: BattleStatBlockProjectionFailure,
 ) {
   const details = Match.value(failure).pipe(

@@ -387,8 +387,14 @@ export function battleCreatureInitFromCharacterBuildWithRoute(
 function characterBuildInitIssueRoute(
   issue: BattleCreatureInitIssue,
 ): readonly CharacterBattleRouteEvent[] {
-  return issue.message ===
-    CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE
+  const message = Match.value(issue).pipe(
+    Match.when({ tag: "battleCreatureInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "battleDruidWildShapeKnownFormsIssue" }, ({ issues }) =>
+      wildShapeKnownFormsIssueMessage(issues),
+    ),
+    Match.exhaustive,
+  );
+  return message === CHARACTER_BATTLE_INIT_MAX_HP_EXCEEDS_BUILD_MAX_MESSAGE
     ? rejectBuildHitPointBattleInitRoute()
     : rejectCharacterBattleInitProjectionRoute();
 }

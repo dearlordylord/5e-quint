@@ -27,6 +27,7 @@ import {
   admitCharacterWeaponExecutionWeapon,
   battleObjectId,
   characterBattleCreatureInitWeaponAttack,
+  wildShapeKnownFormsIssueMessage,
 } from "@dnd/battle-runtime";
 
 import {
@@ -84,7 +85,7 @@ import {
   spellcastingClassRecordForClassName,
 } from "@dnd/surface/surface/unit-catalog";
 import type { UnitCatalog } from "@dnd/surface/surface/unit-catalog";
-import { Either, Option } from "effect";
+import { Either, Match, Option } from "effect";
 import {
   classSpellChoiceIsRuntimeDetached,
   omitRuntimeDetachedClassSpellChoices,
@@ -98,6 +99,18 @@ export type BattleCreatureInitIssue =
       readonly message: string;
       readonly spellAccessIssues?: readonly CharacterBattleSpellAccessProjectionIssue[];
     };
+
+export function battleCreatureInitIssueMessage(
+  issue: BattleCreatureInitIssue,
+): string {
+  return Match.value(issue).pipe(
+    Match.when({ tag: "battleCreatureInitIssue" }, ({ message }) => message),
+    Match.when({ tag: "battleDruidWildShapeKnownFormsIssue" }, ({ issues }) =>
+      wildShapeKnownFormsIssueMessage(issues),
+    ),
+    Match.exhaustive,
+  );
+}
 
 type CharacterBattleSpellAccessProjectionIssueBase = {
   readonly tag: "characterBattleSpellAccessProjectionIssue";
@@ -144,7 +157,7 @@ export function characterArmorClassState(input: {
   )) {
     const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
     if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
+      return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
     }
     bonuses.push(...armorDefenseBonus(unit.right));
   }
@@ -264,7 +277,7 @@ export function characterOffHandAttackActionOption(
     pactBladeBondedWeaponItemId,
   );
   if (Either.isLeft(option)) {
-    return battleCreatureInitIssue(option.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(option.left));
   }
   return option.right === null
     ? battleCreatureInitIssue(
@@ -389,7 +402,7 @@ export function characterPactBladeBondedWeaponItemId(input: {
   const weaponUnitId = characterEquipmentItemSourceFromId(input.itemId).unitId;
   const unit = getRequiredUnit(input.unitLibrary, weaponUnitId);
   if (Either.isLeft(unit)) {
-    return battleCreatureInitIssue(unit.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
   }
   if (
     unit.right.kind !== "weapon" ||
@@ -417,7 +430,7 @@ function characterWeaponAttackActionOption(
 > {
   const unit = getRequiredUnit(unitLibrary, unitId);
   if (Either.isLeft(unit)) {
-    return battleCreatureInitIssue(unit.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
   }
   if (unit.right.kind !== "weapon" || unit.right.damage.kind !== "dice") {
     return Either.right(null);
@@ -440,7 +453,9 @@ function characterWeaponAttackActionOption(
     classLevels,
   });
   if (Either.isLeft(martialArts)) {
-    return battleCreatureInitIssue(martialArts.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(martialArts.left),
+    );
   }
   const projectedAttack =
     martialArts.right === null || !isMonkWeapon(unit.right)
@@ -487,7 +502,9 @@ export function characterBaseUnarmedStrikeActionOption(
     classLevels,
   });
   if (Either.isLeft(martialArts)) {
-    return battleCreatureInitIssue(martialArts.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(martialArts.left),
+    );
   }
   return Either.right(
     martialArts.right === null
@@ -654,7 +671,7 @@ function martialArtsAttackProjectionForBuild(input: {
   )) {
     const unit = getRequiredUnit(input.unitLibrary, featureUnitId);
     if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
+      return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
     }
     const profile = martialArtsAttackProjectionProfileForUnit(
       unit.right,
@@ -794,7 +811,7 @@ function spellcastingAllowedByArmorTraining(
             .unitId,
         );
   if (armor !== undefined && Either.isLeft(armor)) {
-    return battleCreatureInitIssue(armor.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(armor.left));
   }
   const armorTraining = characterBuildArmorTraining(build, unitLibrary);
   if (Either.isLeft(armorTraining)) {
@@ -843,7 +860,9 @@ export function characterSpellcasting(input: {
   const spellcasting = build.spellcasting;
   const canCastSpells = characterBattleSpellcastingCanCast(input);
   if (Either.isLeft(canCastSpells)) {
-    return battleCreatureInitIssue(canCastSpells.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(canCastSpells.left),
+    );
   }
   const sources =
     spellcasting === undefined
@@ -853,7 +872,9 @@ export function characterSpellcasting(input: {
           sources: spellcasting.sources,
         });
   if (Either.isLeft(sources)) {
-    return battleCreatureInitIssue(sources.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(sources.left),
+    );
   }
   const spellRecords = characterBattleSpellRecordsForSources({
     sources: sources.right,
@@ -988,7 +1009,9 @@ function characterBattleSpellRecordsForSources(input: {
           selectionKind: "leveledSpell",
         });
   const issues = [cantrips, preparedSpells].flatMap((projection) =>
-    Either.isLeft(projection) ? [projection.left.message] : [],
+    Either.isLeft(projection)
+      ? [battleCreatureInitIssueMessage(projection.left)]
+      : [],
   );
   return Either.isLeft(cantrips) || Either.isLeft(preparedSpells)
     ? battleCreatureInitIssue(issues.join("; "))
@@ -1162,7 +1185,7 @@ function projectCharacterBattleMagicInitiateSpellAccess(input: {
       accessIndex: input.accessIndex,
       featUnitId: input.access.featUnitId,
       cause: "invalidSpellSelection",
-      message: spells.left.message,
+      message: battleCreatureInitIssueMessage(spells.left),
     });
   }
   const spellList: CharacterBattleSpellListFact = {
@@ -1332,14 +1355,18 @@ function bookOfShadowsSpellAccess(input: {
   }
   const cantrips = spellRecordsForIds(input.unitLibrary, access.cantrips);
   if (Either.isLeft(cantrips)) {
-    return battleCreatureInitIssue(cantrips.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(cantrips.left),
+    );
   }
   const ritualSpells = spellRecordsForIds(
     input.unitLibrary,
     access.ritualSpells,
   );
   if (Either.isLeft(ritualSpells)) {
-    return battleCreatureInitIssue(ritualSpells.left.message);
+    return battleCreatureInitIssue(
+      battleCreatureInitIssueMessage(ritualSpells.left),
+    );
   }
   if (cantrips.right.some((spell) => spell.mechanics.level !== 0)) {
     return battleCreatureInitIssue(
@@ -1414,7 +1441,7 @@ function invocationSpellAccessForSpell(input: {
 > {
   const spell = getRequiredUnit(input.unitLibrary, input.spellId);
   if (Either.isLeft(spell)) {
-    return battleCreatureInitIssue(spell.left.message);
+    return battleCreatureInitIssue(battleCreatureInitIssueMessage(spell.left));
   }
   if (spell.right.kind !== "spell") {
     return battleCreatureInitIssue(`Expected spell Unit: ${input.spellId}`);
@@ -1454,7 +1481,9 @@ function featurePreparedSpellAccess(input: {
         authoredUnitId(grant.spellId),
       );
       if (Either.isLeft(spell)) {
-        return battleCreatureInitIssue(spell.left.message);
+        return battleCreatureInitIssue(
+          battleCreatureInitIssueMessage(spell.left),
+        );
       }
       if (spell.right.kind !== "spell") {
         return battleCreatureInitIssue(`Expected spell Unit: ${grant.spellId}`);
@@ -1532,7 +1561,7 @@ function spellRecordsForIds<const UnitIds extends readonly UnitRecord["id"][]>(
   for (const unitId of unitIds) {
     const unit = getRequiredUnit(unitLibrary, unitId);
     if (Either.isLeft(unit)) {
-      return battleCreatureInitIssue(unit.left.message);
+      return battleCreatureInitIssue(battleCreatureInitIssueMessage(unit.left));
     }
     if (unit.right.kind !== "spell") {
       return battleCreatureInitIssue(`Expected spell Unit: ${unitId}`);

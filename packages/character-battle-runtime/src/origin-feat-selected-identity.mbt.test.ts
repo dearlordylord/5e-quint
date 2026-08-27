@@ -353,7 +353,7 @@ function alertInitiativeHandoffProjection(): OriginFeatSelectedIdentityProjectio
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
 
   return {
@@ -376,7 +376,7 @@ function publicCharacterSheetBattleInitSelectedReferenceRetentionRoute(
     ammunitionStocks: [],
   });
   if (Either.isLeft(projection)) {
-    throw new Error(projection.left.issue.message);
+    throw new Error(characterBattleRuntimeIssueMessage(projection.left.issue));
   }
 
   return selectedReferenceRouteEvents(projection.right.routeEvents).filter(
@@ -445,7 +445,7 @@ function alertInitiativeScoreForBuild(build: CharacterBuild) {
     proficiencyBonusChoice: "add",
   });
   if (Either.isLeft(score)) {
-    throw new Error(score.left.message);
+    throw new Error(characterBattleRuntimeIssueMessage(score.left));
   }
   return score.right;
 }
