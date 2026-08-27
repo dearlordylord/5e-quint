@@ -35,9 +35,8 @@ import {
   type AmmunitionKind,
 } from "@dnd/shared/game-facts";
 import { Index, SIZES } from "@dnd/shared/types";
+import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { CombatantId } from "@dnd/battle-runtime";
-
-import { hasDuplicateStructuralValues } from "./oracle-canonical.ts";
 
 const NonNegativeIntegerSchema = Schema.Number.pipe(
   Schema.int(),
@@ -384,11 +383,14 @@ export type OracleBattleInitiativeEntry = Schema.Schema.Type<
   typeof OracleBattleInitiativeEntrySchema
 >;
 
-const OracleBattleCheckpointShapeSchema = Schema.Struct({
+const OracleBattleCheckpointFields = {
   round: NonNegativeIntegerSchema.pipe(Schema.greaterThan(0)),
   alreadyActed: Schema.Array(OracleBattleInitiativeEntrySchema),
   stillToAct: Schema.NonEmptyArray(OracleBattleInitiativeEntrySchema),
-});
+};
+const OracleBattleCheckpointShapeSchema = Schema.Struct(
+  OracleBattleCheckpointFields,
+);
 
 export const OracleBattleCheckpointSchema =
   OracleBattleCheckpointShapeSchema.pipe(
@@ -400,6 +402,22 @@ export const OracleBattleCheckpointSchema =
 export type OracleBattleCheckpoint = Schema.Schema.Type<
   typeof OracleBattleCheckpointSchema
 >;
+export type OracleBattleEnteredCheckpoint = Omit<
+  OracleBattleCheckpoint,
+  "alreadyActed"
+> & { readonly alreadyActed: readonly [] };
+
+const OracleBattleEnteredCheckpointShapeSchema = Schema.Struct({
+  ...OracleBattleCheckpointFields,
+  alreadyActed: Schema.Tuple(),
+});
+const OracleBattleEnteredCheckpointSchema =
+  OracleBattleEnteredCheckpointShapeSchema.pipe(
+    Schema.filter(oracleBattleCheckpointInvariantsHold, {
+      message: () =>
+        "Battle checkpoint initiative entries must be unique and have valid hit points.",
+    }),
+  );
 
 /** Available Battle subjects, without presentation or Runtime Hole details. */
 export const OracleBattleActsFrontierSchema = Schema.Struct({
@@ -494,7 +512,7 @@ interface OracleBattleContinuationEncoded {
 
 export interface OracleBattleEntered {
   readonly tag: "entered";
-  readonly checkpoint: OracleBattleCheckpoint;
+  readonly checkpoint: OracleBattleEnteredCheckpoint;
   readonly frontier: OracleBattleActsFrontier;
   readonly segment: OracleBattleAttemptSegment;
 }
@@ -580,7 +598,7 @@ export const OracleBattleAttemptSegmentSchema = Schema.Struct({
 });
 const OracleBattleEnteredShapeSchema = Schema.Struct({
   tag: Schema.Literal("entered"),
-  checkpoint: OracleBattleCheckpointSchema,
+  checkpoint: OracleBattleEnteredCheckpointSchema,
   frontier: OracleBattleActsFrontierSchema,
   segment: OracleBattleAttemptSegmentSchema,
 }).pipe(
@@ -672,7 +690,7 @@ function oracleBattleCheckpointInvariantsHold(checkpoint: {
 
   return (
     checkpoint.stillToAct.length > 0 &&
-    uniqueValues(combatantIds) &&
+    !hasDuplicateStructuralValues(combatantIds) &&
     stack.every((entry, index) => {
       if (index === 0) return true;
       const previous = stack[index - 1];
@@ -680,10 +698,6 @@ function oracleBattleCheckpointInvariantsHold(checkpoint: {
     }) &&
     stack.every(({ creature }) => creature.hp <= creature.maxHp)
   );
-}
-
-function uniqueValues(values: readonly string[]): boolean {
-  return new Set(values).size === values.length;
 }
 
 type CombatantReferenceProperty<Value> = Value extends unknown
@@ -727,13 +741,10 @@ function oracleBattleEnteredInvariantsHold(entered: {
     readonly acts: readonly [BattleSubject, ...BattleSubject[]];
   };
 }): boolean {
-  return (
-    entered.checkpoint.alreadyActed.length === 0 &&
-    oracleBattleCheckpointFrontierInvariantsHold({
-      checkpoint: entered.checkpoint,
-      frontier: entered.frontier,
-    })
-  );
+  return oracleBattleCheckpointFrontierInvariantsHold({
+    checkpoint: entered.checkpoint,
+    frontier: entered.frontier,
+  });
 }
 
 function oracleBattleCheckpointFrontierInvariantsHold(input: {

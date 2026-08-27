@@ -8,6 +8,7 @@
     "./elapsed-time": "./src/elapsed-time.ts",
     "./game-facts": "./src/game-facts.ts",
     "./json-schema": "./src/json-schema.ts",
+    "./structural-value": "./src/structural-value.ts",
     "./types": "./src/types.ts",
     "./wild-shape": "./src/wild-shape.ts"
   },

@@ -26,6 +26,10 @@ import {
   OracleTraceDocumentSchema,
 } from "./oracle-document.ts";
 import {
+  OracleCaseSchema,
+  OracleTraceSchema,
+} from "./oracle-case-trace-schema.ts";
+import {
   canonicalStructuralKey,
   canonicalizeStringSet,
 } from "./oracle-canonical.ts";
@@ -271,6 +275,160 @@ const builtTrace = {
     },
   },
 } as const;
+
+function traceWithBuild(build: unknown): unknown {
+  return {
+    ...builtTrace,
+    creation: {
+      ...builtTrace.creation,
+      outcome: {
+        ...builtTrace.creation.outcome,
+        build,
+      },
+    },
+  };
+}
+
+function traceWithEquipment(equipment: unknown): unknown {
+  return traceWithBuild({ ...validBuild, equipment });
+}
+
+function recursiveTrace(depth: number): unknown {
+  let continuation: unknown = {
+    checkpoint,
+    frontier: enteredBattle.frontier,
+    segment: enteredBattle.segment,
+  };
+  for (let index = 0; index < depth; index += 1) {
+    continuation = {
+      checkpoint,
+      frontier: enteredBattle.frontier,
+      segment: {
+        rejections: [],
+        outcome: { tag: "next", continuation },
+      },
+    };
+  }
+  return {
+    ...builtTrace,
+    creation: {
+      ...builtTrace.creation,
+      outcome: {
+        ...builtTrace.creation.outcome,
+        sheet: {
+          ...builtTrace.creation.outcome.sheet,
+          battle: {
+            ...enteredBattle,
+            segment: {
+              rejections: [],
+              outcome: { tag: "next", continuation },
+            },
+          },
+        },
+      },
+    },
+  };
+}
+
+const UNANNOTATED_SEMANTIC_REFINEMENT_ALLOWLIST = {
+  checkpointAndFrontierCorrelation: [
+    "Trace.creation.outcome|4.sheet|1.battle|1",
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|2.checkpoint",
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>",
+    "Trace.creation.outcome|4.sheet|1.battle|1.checkpoint",
+  ],
+  canonicalExecutionReferences: [
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|91.choices[]|2.procedureRef",
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|86.spellcastingAbilityCheck.effect|1.effectRef",
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|79.rechargeTargets[]",
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|27.attack|2|1.procedureRef",
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|9.formExecutionRef",
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|1.continuation<suspend>.frontier|1|1.choices[]|1.initialHoles[]|1|4.attack.selection|0.procedureRef",
+  ],
+  creationHoleIdentityAndCardinality: [
+    "Trace.creation.outcome|0.issues[]|0.holeId",
+    "Trace.creation.progression[].holes[]",
+    "Trace.creation.progression[].holes[]|0.cardinality|1",
+  ],
+  constraintFreeBrands: [
+    "Trace.creation.outcome|4.sheet|1.battle|1.segment.outcome|2.after|1.index",
+  ],
+} as const;
+
+function unannotatedSourceRefinementPaths(): readonly string[] {
+  const pending: Array<readonly [AST.AST, string]> = [
+    [OracleCaseSchema.ast, "Case"],
+    [OracleTraceSchema.ast, "Trace"],
+  ];
+  const visited = new Set<object>();
+  const paths: string[] = [];
+  while (pending.length > 0) {
+    const current = pending.pop();
+    if (current === undefined) continue;
+    const [ast, path] = current;
+    if (visited.has(ast)) continue;
+    visited.add(ast);
+    switch (ast._tag) {
+      case "Refinement":
+        if (Option.isNone(AST.getJSONSchemaAnnotation(ast))) {
+          paths.push(path);
+        }
+        pending.push([ast.from, path]);
+        continue;
+      case "TypeLiteral":
+        for (const property of ast.propertySignatures) {
+          pending.push([property.type, `${path}.${String(property.name)}`]);
+        }
+        for (const index of ast.indexSignatures) {
+          pending.push([index.parameter, `${path}[*]`]);
+          pending.push([index.type, `${path}[*]`]);
+        }
+        continue;
+      case "TupleType":
+        for (const [index, element] of ast.elements.entries()) {
+          pending.push([element.type, `${path}[${index}]`]);
+        }
+        for (const element of ast.rest) {
+          pending.push([element.type, `${path}[]`]);
+        }
+        continue;
+      case "Union":
+        for (const [index, member] of ast.types.entries()) {
+          pending.push([member, `${path}|${index}`]);
+        }
+        continue;
+      case "Transformation":
+        pending.push([ast.from, `${path}<from>`]);
+        pending.push([ast.to, `${path}<to>`]);
+        continue;
+      case "Suspend":
+        pending.push([ast.f(), `${path}<suspend>`]);
+        continue;
+      case "TemplateLiteral":
+        for (const span of ast.spans) {
+          pending.push([span.type, `${path}<span>`]);
+        }
+        continue;
+      case "AnyKeyword":
+      case "UnknownKeyword":
+      case "Declaration":
+      case "Enums":
+      case "Literal":
+      case "UniqueSymbol":
+      case "UndefinedKeyword":
+      case "VoidKeyword":
+      case "NeverKeyword":
+      case "StringKeyword":
+      case "NumberKeyword":
+      case "BooleanKeyword":
+      case "BigIntKeyword":
+      case "SymbolKeyword":
+      case "ObjectKeyword":
+        continue;
+    }
+  }
+  return paths.sort();
+}
 
 const readyActionTrace = {
   ...builtTrace,
@@ -751,6 +909,158 @@ describe("Opaque Oracle document JSON Schemas", () => {
     }
   });
 
+  it("keeps owner structural predicates in Ajv, Document, and full admission parity", () => {
+    const malformedEquipment = [
+      [
+        "catalog item armor prefix",
+        traceWithEquipment({
+          ...validBuild.equipment,
+          owned: [{ kind: "catalogItem", itemId: "armor:", quantity: 1 }],
+        }),
+      ],
+      [
+        "authored catalog shield prefix",
+        traceWithEquipment({
+          ...validBuild.equipment,
+          owned: [
+            {
+              kind: "authoredCatalogItem",
+              itemId: "shield:",
+              authoredItemId: "authored",
+              spellcastingFocusKind: "arcane",
+              quantity: 1,
+            },
+          ],
+        }),
+      ],
+      [
+        "armor loadout suffix",
+        traceWithEquipment({
+          ...validBuild.equipment,
+          loadout: { armor: "armor:" },
+        }),
+      ],
+      [
+        "shield loadout suffix",
+        traceWithEquipment({
+          ...validBuild.equipment,
+          loadout: { shield: "shield:" },
+        }),
+      ],
+      [
+        "main-hand loadout suffix",
+        traceWithEquipment({
+          ...validBuild.equipment,
+          loadout: { weapon: { itemId: "main:", grip: "one_handed" } },
+        }),
+      ],
+      [
+        "off-hand loadout suffix",
+        traceWithEquipment({
+          ...validBuild.equipment,
+          loadout: { offHandWeapon: { itemId: "off:" } },
+        }),
+      ],
+    ] as const;
+    const malformedBuilds = [
+      [
+        "origin language order",
+        { ...validBuild, originLanguages: ["Dwarvish", "Common", "Elvish"] },
+      ],
+      [
+        "origin language duplicate",
+        { ...validBuild, originLanguages: ["Common", "Dwarvish", "Dwarvish"] },
+      ],
+      [
+        "origin language short tuple",
+        { ...validBuild, originLanguages: ["Common", "Dwarvish"] },
+      ],
+      [
+        "origin language long tuple",
+        {
+          ...validBuild,
+          originLanguages: ["Common", "Dwarvish", "Elvish", "Giant"],
+        },
+      ],
+      [
+        "negative copper",
+        {
+          ...validBuild,
+          equipment: {
+            ...validBuild.equipment,
+            startingEquipmentCurrencyRemainderCp: -1,
+          },
+        },
+      ],
+      [
+        "unsafe copper",
+        {
+          ...validBuild,
+          equipment: {
+            ...validBuild.equipment,
+            startingEquipmentCurrencyRemainderCp: Number.MAX_SAFE_INTEGER + 1,
+          },
+        },
+      ],
+      [
+        "invalid selected tool",
+        {
+          ...validBuild,
+          equipment: {
+            ...validBuild.equipment,
+            owned: [
+              {
+                kind: "selectedToolItem",
+                toolProficiencyId: "not-a-tool",
+                quantity: 1,
+              },
+            ],
+          },
+        },
+      ],
+    ] as const;
+    const invalidValues = [
+      ...malformedBuilds.map(
+        ([name, build]) => [name, traceWithBuild(build)] as const,
+      ),
+      ...malformedEquipment,
+      [
+        "entered checkpoint already acted",
+        {
+          ...builtTrace,
+          creation: {
+            ...builtTrace.creation,
+            outcome: {
+              ...builtTrace.creation.outcome,
+              sheet: {
+                ...builtTrace.creation.outcome.sheet,
+                battle: {
+                  ...enteredBattle,
+                  checkpoint: {
+                    ...checkpoint,
+                    alreadyActed: [checkpoint.stillToAct[0]],
+                  },
+                },
+              },
+            },
+          },
+        },
+      ] as const,
+    ];
+    for (const [name, value] of invalidValues) {
+      const ajvAccepted = documentValidators.trace(value);
+      const documentAccepted = Either.isRight(decodeOracleTraceDocument(value));
+      const fullAccepted = Either.isRight(decodeOracleTrace(value));
+      expect(documentAccepted, `${name}: Document/Ajv parity`).toBe(
+        ajvAccepted,
+      );
+      expect(fullAccepted, `${name}: full admission/Ajv parity`).toBe(
+        ajvAccepted,
+      );
+      expect(ajvAccepted, `${name}: Ajv should reject`).toBe(false);
+    }
+  });
+
   it("keeps Batch Ajv and Effect Document admission in parity and accumulates paths", () => {
     const batches = [
       ["empty", { cases: [] }],
@@ -1151,6 +1461,33 @@ describe("Opaque Oracle document JSON Schemas", () => {
     }
   });
 
+  it("keeps a schema-shaped recursive Battle Trace total at hostile depth", () => {
+    const deepTrace = recursiveTrace(20_000);
+    const decoders: readonly [string, (value: unknown) => unknown, unknown][] =
+      [
+        ["Trace Document", decodeOracleTraceDocument, deepTrace],
+        ["Trace", decodeOracleTrace, deepTrace],
+        ["Case Document", decodeOracleCaseDocument, deepTrace],
+        ["Case", decodeOracleCase, deepTrace],
+        [
+          "Batch Document",
+          decodeOracleEvaluationBatchDocument,
+          { cases: [deepTrace] },
+        ],
+        ["Batch", decodeOracleEvaluationBatch, { cases: [deepTrace] }],
+      ];
+    for (const [name, decoder, value] of decoders) {
+      let result: unknown;
+      expect(() => {
+        result = decoder(value);
+      }, `${name} recursive input`).not.toThrow();
+      expect(
+        isLeftWithIssues(result),
+        `${name} should return typed issues`,
+      ).toBe(true);
+    }
+  }, 120_000);
+
   it("retains only closed, annotated structural AST refinements", () => {
     const inventory = {
       refinements: 0,
@@ -1246,6 +1583,15 @@ describe("Opaque Oracle document JSON Schemas", () => {
     expect(inventory.minItems).toBeGreaterThan(0);
     expect(inventory.identifiers).toContain("OracleBattleEntered");
 
+    const allowedSourceRefinements = Object.values(
+      UNANNOTATED_SEMANTIC_REFINEMENT_ALLOWLIST,
+    )
+      .flat()
+      .sort();
+    expect(unannotatedSourceRefinementPaths()).toEqual(
+      allowedSourceRefinements,
+    );
+
     const schemaText = JSON.stringify({
       OracleCaseDocumentJsonSchema,
       OracleTraceDocumentJsonSchema,
@@ -1253,6 +1599,11 @@ describe("Opaque Oracle document JSON Schemas", () => {
     });
     for (const field of ["session", "frame", "globalRole", "presentation"]) {
       expect(schemaText).not.toContain(`\"${field}\"`);
+    }
+    expect(schemaText).toContain('"maxItems":3');
+    expect(schemaText).toContain('"maximum":9007199254740991');
+    for (const slot of ["armor", "shield", "main", "off"]) {
+      expect(schemaText).toContain(`^${slot}:(?=\\\\S)`);
     }
     expect(schemaText).not.toContain('"steps"');
   });

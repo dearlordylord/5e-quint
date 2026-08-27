@@ -38,6 +38,7 @@ import {
   type CharacterSheetId,
 } from "@dnd/character-sheet-runtime";
 import { AMMUNITION_KINDS, type AmmunitionKind } from "@dnd/shared/game-facts";
+import { hasDuplicateStructuralValues } from "@dnd/shared/structural-value";
 import { Hp, Index, resourceCount } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import { Either, Match, Option } from "effect";
@@ -53,6 +54,7 @@ import {
   type OracleBattleActsFrontier,
   type OracleBattleAttempt,
   type OracleBattleCheckpoint,
+  type OracleBattleEnteredCheckpoint,
   type OracleBattleCreatureInitIssue,
   type OracleBattleEntryRejection,
   type OracleBattleAttemptSegment,
@@ -255,7 +257,7 @@ function appendFreshSheetAndBattle(
   }
 
   const snapshot = snapshotBattle(entry.right.session.state);
-  const checkpoint = strippedBattleCheckpoint(snapshot);
+  const checkpoint = strippedBattleEnteredCheckpoint(snapshot);
   const frontier = battleActsFrontier(entry.right.session);
   return {
     tag: "constructed",
@@ -763,7 +765,7 @@ function strippedBattleCheckpoint(
   if (orderedEntries.length === 0) {
     return defect("Battle snapshot initiative order was empty");
   }
-  if (new Set(snapshot.turnOrder).size !== snapshot.turnOrder.length) {
+  if (hasDuplicateStructuralValues(snapshot.turnOrder)) {
     return defect("Battle snapshot contained duplicate turn-order identities");
   }
   if (snapshot.combatants.length !== snapshot.turnOrder.length) {
@@ -783,6 +785,18 @@ function strippedBattleCheckpoint(
     alreadyActed: orderedEntries.slice(0, currentActorIndex),
     stillToAct: [firstStillToAct, ...remainingStillToAct],
   });
+}
+
+function strippedBattleEnteredCheckpoint(
+  snapshot: ReturnType<typeof snapshotBattle>,
+): OracleBattleEnteredCheckpoint {
+  const checkpoint = strippedBattleCheckpoint(snapshot);
+  if (checkpoint.alreadyActed.length !== 0) {
+    return defect(
+      "Battle entry snapshot current actor was not the first initiative entry",
+    );
+  }
+  return { ...checkpoint, alreadyActed: [] };
 }
 
 function oracleTrace(creation: OracleTrace["creation"]): OracleTrace {
