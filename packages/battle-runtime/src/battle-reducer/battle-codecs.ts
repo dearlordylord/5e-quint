@@ -6481,7 +6481,7 @@ type EncodedBattleInterruptProcedureChoice =
 
 type SerializedExecutionReferenceOwnership = {
   readonly ref: string;
-  readonly ownerId: CombatantId | undefined;
+  readonly ownerId: string | undefined;
   readonly subjectProcedure: boolean;
 };
 
@@ -6710,6 +6710,14 @@ function serializedBattleSubjectOwnsBoundProcedure(
 ): boolean {
   const procedureRefs = battleSubjectProcedureRefs(subject);
   if (procedureRefs.length === 0) return true;
+  const procedureRefsBelongToOwner = (
+    ownedSubject: EncodedBattleSubject,
+  ): boolean =>
+    serializedBattleSubjectProcedureRefsBelongToOwner(
+      ownedSubject,
+      procedureRefs,
+      combatants,
+    );
 
   return Match.value(subject).pipe(
     Match.when(
@@ -6734,13 +6742,23 @@ function serializedBattleSubjectOwnsBoundProcedure(
     Match.when({ tag: "monkFocusFlurryOfBlowsStrike" }, (strike) =>
       serializedMonkFocusStrikeOwnsBoundProcedures(strike, combatants),
     ),
-    Match.orElse((ownedSubject) =>
-      serializedBattleSubjectProcedureRefsBelongToOwner(
-        ownedSubject,
-        procedureRefs,
-        combatants,
-      ),
-    ),
+    Match.discriminatorsExhaustive("tag")({
+      action: procedureRefsBelongToOwner,
+      actionSpell: procedureRefsBelongToOwner,
+      bonusAction: procedureRefsBelongToOwner,
+      bonusActionDashSpell: procedureRefsBelongToOwner,
+      bonusActionSpell: procedureRefsBelongToOwner,
+      bonusActionStandardAction: procedureRefsBelongToOwner,
+      companionLifecycle: procedureRefsBelongToOwner,
+      druidWildShape: procedureRefsBelongToOwner,
+      findFamiliarSharedSenses: procedureRefsBelongToOwner,
+      findFamiliarTouchSpell: procedureRefsBelongToOwner,
+      monkFocusOption: procedureRefsBelongToOwner,
+      pactOfTheChainFamiliarAttack: procedureRefsBelongToOwner,
+      runtimeCommand: procedureRefsBelongToOwner,
+      unitFeature: procedureRefsBelongToOwner,
+      unitFeatureHeldWeaponActivation: procedureRefsBelongToOwner,
+    }),
   );
 }
 
@@ -6794,7 +6812,23 @@ function serializedBattleSubjectProcedureOwnerId(
       { tag: "runtimeCommand", command: "castAttackHitBonusActionSpell" },
       (command) => command.casterId,
     ),
-    Match.orElse((ownedSubject) => ownedSubject.actorId),
+    Match.discriminatorsExhaustive("tag")({
+      action: (ownedSubject) => ownedSubject.actorId,
+      actionSpell: (ownedSubject) => ownedSubject.actorId,
+      bonusAction: (ownedSubject) => ownedSubject.actorId,
+      bonusActionDashSpell: (ownedSubject) => ownedSubject.actorId,
+      bonusActionSpell: (ownedSubject) => ownedSubject.actorId,
+      bonusActionStandardAction: (ownedSubject) => ownedSubject.actorId,
+      companionLifecycle: (ownedSubject) => ownedSubject.actorId,
+      druidWildShape: (ownedSubject) => ownedSubject.actorId,
+      findFamiliarSharedSenses: (ownedSubject) => ownedSubject.actorId,
+      findFamiliarTouchSpell: (ownedSubject) => ownedSubject.actorId,
+      monkFocusFlurryOfBlowsStrike: (ownedSubject) => ownedSubject.actorId,
+      monkFocusOption: (ownedSubject) => ownedSubject.actorId,
+      runtimeCommand: (ownedSubject) => ownedSubject.actorId,
+      unitFeature: (ownedSubject) => ownedSubject.actorId,
+      unitFeatureHeldWeaponActivation: (ownedSubject) => ownedSubject.actorId,
+    }),
   );
 }
 
@@ -6837,9 +6871,9 @@ function serializedExecutionReferenceFieldName(key: string): boolean {
 }
 
 function serializedExecutionReferenceOwnerId(
-  fields: Readonly<Record<string, unknown>>,
+  fields: object,
   referenceKey: string,
-): CombatantId | undefined {
+): string | undefined {
   const ownerKeys = referenceKey.startsWith("source")
     ? ["sourceCombatantId", "sourceOwnerId"]
     : referenceKey.startsWith("triggering")
@@ -6854,10 +6888,12 @@ function serializedExecutionReferenceOwnerId(
             "ownerId",
             "beneficiaryId",
           ];
+  const entries = Object.entries(fields);
   for (const key of ownerKeys) {
-    const value = fields[key];
-    // Holes are already schema-decoded; these named owner fields carry CombatantId values.
-    if (typeof value === "string") return value as CombatantId;
+    const ownerEntry = entries.find(([fieldName]) => fieldName === key);
+    if (ownerEntry !== undefined && typeof ownerEntry[1] === "string") {
+      return ownerEntry[1];
+    }
   }
   return undefined;
 }
@@ -6865,7 +6901,7 @@ function serializedExecutionReferenceOwnerId(
 function serializedExecutionReferenceIsSubjectProcedure(
   depth: number,
   key: string,
-  ownerId: CombatantId | undefined,
+  ownerId: string | undefined,
 ): boolean {
   return (
     depth === 0 &&
@@ -6876,14 +6912,20 @@ function serializedExecutionReferenceIsSubjectProcedure(
 
 function appendSerializedExecutionReferences(input: {
   readonly references: SerializedExecutionReferenceOwnership[];
-  readonly fields: Readonly<Record<string, unknown>>;
+  readonly fields: object;
   readonly key: string;
   readonly field: unknown;
   readonly depth: number;
 }): void {
   const { references, fields, key, field, depth } = input;
   if (!serializedExecutionReferenceFieldName(key)) return;
-  if (key === "effectRef" && fields.kind === "spellMarkedDamageRider") return;
+  if (
+    key === "effectRef" &&
+    "kind" in fields &&
+    fields.kind === "spellMarkedDamageRider"
+  ) {
+    return;
+  }
   const ownerId = serializedExecutionReferenceOwnerId(fields, key);
   const values = Array.isArray(field) ? field : [field];
   for (const reference of values) {
@@ -6912,7 +6954,7 @@ function visitSerializedExecutionReferences(
     return;
   }
   if (value === null || typeof value !== "object") return;
-  const fields = value as Readonly<Record<string, unknown>>;
+  const fields = value;
   for (const [key, field] of Object.entries(fields)) {
     appendSerializedExecutionReferences({
       references,
@@ -6972,23 +7014,35 @@ function serializedInterruptChoiceOwnsBoundProcedure(input: {
   readonly readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[];
 }): boolean {
   const { choice, combatants, readiedSpells, readiedResponses } = input;
+  const subjectChoiceOwnsBoundProcedure = (
+    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
+  ): boolean =>
+    serializedBattleSubjectOwnsBoundProcedure(
+      subjectChoice.subject,
+      combatants,
+      readiedSpells,
+      readiedResponses,
+    ) &&
+    serializedReadiedInterruptChoiceOwnsResponse(
+      subjectChoice,
+      readiedResponses,
+    );
   return Match.value(choice).pipe(
-    Match.when({ kind: "reactionRollOrDamageReduction" }, (reaction) =>
-      serializedReactionReductionChoiceOwnsBoundProcedure(reaction, combatants),
-    ),
-    Match.orElse(
-      (subjectChoice) =>
-        serializedBattleSubjectOwnsBoundProcedure(
-          subjectChoice.subject,
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: subjectChoiceOwnsBoundProcedure,
+      castTriggeredReactionSpell: subjectChoiceOwnsBoundProcedure,
+      opportunityAttack: subjectChoiceOwnsBoundProcedure,
+      reactionRollOrDamageReduction: (reaction) =>
+        serializedReactionReductionChoiceOwnsBoundProcedure(
+          reaction,
           combatants,
-          readiedSpells,
-          readiedResponses,
-        ) &&
-        serializedReadiedInterruptChoiceOwnsResponse(
-          subjectChoice,
-          readiedResponses,
         ),
-    ),
+      releaseReadiedAction: subjectChoiceOwnsBoundProcedure,
+      releaseReadiedAttack: subjectChoiceOwnsBoundProcedure,
+      releaseReadiedMovement: subjectChoiceOwnsBoundProcedure,
+      releaseReadiedSpell: subjectChoiceOwnsBoundProcedure,
+      retaliationAttack: subjectChoiceOwnsBoundProcedure,
+    }),
   );
 }
 
@@ -7027,13 +7081,18 @@ function serializedReadiedInterruptChoiceOwnsResponse(
   readiedResponses: readonly EncodedBattleReadiedResponseSnapshot[],
 ): boolean {
   return Match.value(choice).pipe(
-    Match.when({ kind: "releaseReadiedMovement" }, (release) =>
-      serializedReadiedMovementChoiceOwnsResponse(release, readiedResponses),
-    ),
-    Match.when({ kind: "releaseReadiedAction" }, (release) =>
-      serializedReadiedActionChoiceOwnsResponse(release, readiedResponses),
-    ),
-    Match.orElse(() => true),
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: () => true,
+      castTriggeredReactionSpell: () => true,
+      opportunityAttack: () => true,
+      releaseReadiedAction: (release) =>
+        serializedReadiedActionChoiceOwnsResponse(release, readiedResponses),
+      releaseReadiedAttack: () => true,
+      releaseReadiedMovement: (release) =>
+        serializedReadiedMovementChoiceOwnsResponse(release, readiedResponses),
+      releaseReadiedSpell: () => true,
+      retaliationAttack: () => true,
+    }),
   );
 }
 
@@ -7304,8 +7363,17 @@ function serializedInterruptChoiceSubject(
   choice: EncodedBattleInterruptProcedureChoice,
 ): EncodedBattleSubject | undefined {
   return Match.value(choice).pipe(
-    Match.when({ kind: "reactionRollOrDamageReduction" }, () => undefined),
-    Match.orElse((subjectChoice) => subjectChoice.subject),
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: (subjectChoice) => subjectChoice.subject,
+      castTriggeredReactionSpell: (subjectChoice) => subjectChoice.subject,
+      opportunityAttack: (subjectChoice) => subjectChoice.subject,
+      reactionRollOrDamageReduction: () => undefined,
+      releaseReadiedAction: (subjectChoice) => subjectChoice.subject,
+      releaseReadiedAttack: (subjectChoice) => subjectChoice.subject,
+      releaseReadiedMovement: (subjectChoice) => subjectChoice.subject,
+      releaseReadiedSpell: (subjectChoice) => subjectChoice.subject,
+      retaliationAttack: (subjectChoice) => subjectChoice.subject,
+    }),
   );
 }
 
@@ -7336,22 +7404,47 @@ function serializedInterruptChoiceTargetIsLive(
           (combatant) => combatant.combatantId === targeted.targetId,
         ),
     ),
-    Match.orElse(() => true),
+    Match.discriminatorsExhaustive("tag")({
+      action: () => true,
+      actionSpell: () => true,
+      bonusAction: () => true,
+      bonusActionDashSpell: () => true,
+      bonusActionSpell: () => true,
+      bonusActionStandardAction: () => true,
+      companionLifecycle: () => true,
+      druidWildShape: () => true,
+      findFamiliarSharedSenses: () => true,
+      findFamiliarTouchSpell: () => true,
+      monkFocusFlurryOfBlowsStrike: () => true,
+      monkFocusOption: () => true,
+      pactOfTheChainFamiliarAttack: () => true,
+      runtimeCommand: () => true,
+      unitFeature: () => true,
+      unitFeatureHeldWeaponActivation: () => true,
+    }),
   );
 }
 
 function serializedInterruptChoiceExpectedProcedureRefs(
   choice: EncodedBattleInterruptProcedureChoice,
 ): ReadonlySet<BattleProcedureExecutionRef> {
+  const subjectProcedureRefs = (
+    subjectChoice: EncodedBattleSubjectInterruptProcedureChoice,
+  ): ReadonlySet<BattleProcedureExecutionRef> =>
+    new Set(battleSubjectProcedureRefs(subjectChoice.subject));
   return Match.value(choice).pipe(
-    Match.when(
-      { kind: "reactionRollOrDamageReduction" },
-      (reaction) => new Set([reaction.choice.procedureRef]),
-    ),
-    Match.orElse(
-      (subjectChoice) =>
-        new Set(battleSubjectProcedureRefs(subjectChoice.subject)),
-    ),
+    Match.discriminatorsExhaustive("kind")({
+      castAttackHitBonusActionSpell: subjectProcedureRefs,
+      castTriggeredReactionSpell: subjectProcedureRefs,
+      opportunityAttack: subjectProcedureRefs,
+      reactionRollOrDamageReduction: (reaction) =>
+        new Set([reaction.choice.procedureRef]),
+      releaseReadiedAction: subjectProcedureRefs,
+      releaseReadiedAttack: subjectProcedureRefs,
+      releaseReadiedMovement: subjectProcedureRefs,
+      releaseReadiedSpell: subjectProcedureRefs,
+      retaliationAttack: subjectProcedureRefs,
+    }),
   );
 }
 
