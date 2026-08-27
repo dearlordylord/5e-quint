@@ -30301,6 +30301,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -30397,8 +30423,28 @@
               },
               "savingThrowModifiers": [
                 {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
                   "ability": "dex",
                   "modifier": 4
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
                 }
               ],
               "skillModifiers": [
@@ -30511,6 +30557,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -5
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -30625,6 +30697,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 2
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -30719,6 +30817,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "senses": [
                 {
                   "kind": "darkvision",
@@ -30819,6 +30943,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -30958,6 +31108,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -31068,6 +31244,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -31174,6 +31376,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -3
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -31274,6 +31502,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "stealth",
@@ -31396,6 +31650,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "acrobatics",
@@ -31504,6 +31784,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -31621,6 +31927,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": 0
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "deception",
@@ -31798,6 +32130,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": 0
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -31953,6 +32311,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -2
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "stealth",
@@ -32110,6 +32494,32 @@
                 "modifier": 4,
                 "score": 14
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 4
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": 2
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -32244,6 +32654,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": 3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "passivePerception": 10,
               "communication": {
                 "kind": "none"
@@ -32330,6 +32766,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": 2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -32859,6 +33321,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": 2
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "arcana",
@@ -33185,6 +33673,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -33392,6 +33906,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -33599,6 +34139,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -34081,6 +34647,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -34518,6 +35110,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -34791,8 +35409,28 @@
               },
               "savingThrowModifiers": [
                 {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
                   "ability": "dex",
                   "modifier": 4
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
                 }
               ],
               "skillModifiers": [
@@ -34905,6 +35543,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -5
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -35019,6 +35683,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 2
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -35113,6 +35803,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "senses": [
                 {
                   "kind": "darkvision",
@@ -35213,6 +35929,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -35352,6 +36094,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -35462,6 +36230,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -35568,6 +36362,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -3
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -35668,6 +36488,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "stealth",
@@ -35790,6 +36636,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "acrobatics",
@@ -36075,6 +36947,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -36172,8 +37070,28 @@
               },
               "savingThrowModifiers": [
                 {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
                   "ability": "dex",
                   "modifier": 4
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
                 }
               ],
               "skillModifiers": [
@@ -36286,6 +37204,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -5
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -36400,6 +37344,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 2
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -36494,6 +37464,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "senses": [
                 {
                   "kind": "darkvision",
@@ -36594,6 +37590,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -36733,6 +37755,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -36843,6 +37891,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -36949,6 +38023,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -3
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -37049,6 +38149,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "stealth",
@@ -37171,6 +38297,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "acrobatics",
@@ -37460,6 +38612,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -37873,8 +39051,28 @@
               },
               "savingThrowModifiers": [
                 {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
                   "ability": "dex",
                   "modifier": 4
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
                 }
               ],
               "skillModifiers": [
@@ -37987,6 +39185,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -5
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -38101,6 +39325,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 2
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -38195,6 +39445,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": -1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "senses": [
                 {
                   "kind": "darkvision",
@@ -38295,6 +39571,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -38434,6 +39736,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -38544,6 +39872,32 @@
                 "modifier": 0,
                 "score": 10
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 0
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -38650,6 +40004,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -3
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -38750,6 +40130,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "stealth",
@@ -38872,6 +40278,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "acrobatics",
@@ -46348,6 +47780,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -48605,6 +50063,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -48974,6 +50458,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -5
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -4
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -49091,6 +50601,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": 0
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "deception",
@@ -49268,6 +50804,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": 0
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -49423,6 +50985,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": -2
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "stealth",
@@ -49580,6 +51168,32 @@
                 "modifier": 4,
                 "score": 14
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 4
+                },
+                {
+                  "ability": "con",
+                  "modifier": 0
+                },
+                {
+                  "ability": "int",
+                  "modifier": 2
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -49714,6 +51328,32 @@
                 "modifier": 1,
                 "score": 11
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": 3
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 0
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "passivePerception": 10,
               "communication": {
                 "kind": "none"
@@ -49800,6 +51440,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": 2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -2
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "perception",
@@ -50329,6 +51995,32 @@
                 "modifier": 3,
                 "score": 13
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -2
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 3
+                },
+                {
+                  "ability": "con",
+                  "modifier": 1
+                },
+                {
+                  "ability": "int",
+                  "modifier": 2
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": 0
+                }
+              ],
               "skillModifiers": [
                 {
                   "skill": "arcana",
@@ -50720,6 +52412,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -50884,6 +52602,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -51098,6 +52842,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -51337,6 +53107,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -51557,6 +53353,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -51727,6 +53549,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -51893,6 +53741,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -52062,6 +53936,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -52245,6 +54145,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -52418,6 +54344,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -52613,6 +54565,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -52836,6 +54814,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -53039,6 +55043,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",
@@ -54019,6 +56049,32 @@
                 "modifier": 2,
                 "score": 12
               },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": -4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 2
+                },
+                {
+                  "ability": "con",
+                  "modifier": -1
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
               "senses": [
                 {
                   "kind": "blindsight",

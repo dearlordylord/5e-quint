@@ -98,7 +98,14 @@
           )
     , senses = Some
       [ { kind = "blindsight", qualifier = None Text, rangeFeet = 60 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -3 }
+      ]
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -209,7 +216,14 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
-    , savingThrowModifiers = Some [ { ability = "dex", modifier = 4 } ]
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +4 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 3, skill = "perception" }
@@ -327,7 +341,14 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -5 }
+      , { ability = "dex", modifier = +1 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = -1 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 1, skill = "perception" }
@@ -449,7 +470,14 @@
     , senses =
         None
           (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -3 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +2 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 6, skill = "perception" } ]
     , speeds =
@@ -559,7 +587,14 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +0 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = -1 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -672,7 +707,14 @@
       ]
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -3 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -3 }
+      ]
     , size = "small"
     , skillModifiers = Some
       [ { modifier = 2, skill = "perception" }
@@ -793,7 +835,14 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +1 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "perception" }
@@ -911,7 +960,14 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +0 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -3 }
+      ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 2, skill = "perception" } ]
     , speeds =
@@ -1028,7 +1084,14 @@
     , senses =
         None
           (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -3 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -2 }
+      ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 3, skill = "perception" } ]
     , speeds =
@@ -1151,7 +1214,14 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 30 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 4, skill = "stealth" } ]
     , speeds =
@@ -1270,7 +1340,14 @@
           )
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 60 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = -1 }
+      , { ability = "int", modifier = -4 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "acrobatics" }
@@ -1388,7 +1465,14 @@
           )
     , senses = Some
       [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -5 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = -4 }
+      ]
     , size = "tiny"
     , skillModifiers = None (List { modifier : Natural, skill : Text })
     , speeds =
@@ -1616,7 +1700,14 @@
         , rangeFeet = 120
         }
       ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -2 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = +1 }
+      , { ability = "int", modifier = +0 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = +2 }
+      ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 4, skill = "deception" }
@@ -1836,7 +1927,14 @@
       [ { kind = "blindsight", qualifier = None Text, rangeFeet = 10 }
       , { kind = "darkvision", qualifier = None Text, rangeFeet = 60 }
       ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -2 }
+      , { ability = "dex", modifier = +2 }
+      , { ability = "con", modifier = +1 }
+      , { ability = "int", modifier = +0 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = +0 }
+      ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 5, skill = "perception" }
@@ -2118,7 +2216,14 @@
       ]
     , senses = Some
       [ { kind = "darkvision", qualifier = None Text, rangeFeet = 120 } ]
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -3 }
+      , { ability = "dex", modifier = +3 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = -2 }
+      , { ability = "wis", modifier = +0 }
+      , { ability = "cha", modifier = +0 }
+      ]
     , size = "tiny"
     , skillModifiers = Some [ { modifier = 5, skill = "stealth" } ]
     , speeds = [ { feet = { kind = "literal", value = 40 }, kind = "walk" } ]
@@ -2387,7 +2492,14 @@
     , senses =
         None
           (List { kind : Text, qualifier : Optional Text, rangeFeet : Natural })
-    , savingThrowModifiers = None (List { ability : Text, modifier : Natural })
+    , savingThrowModifiers = Some
+      [ { ability = "str", modifier = -4 }
+      , { ability = "dex", modifier = +4 }
+      , { ability = "con", modifier = +0 }
+      , { ability = "int", modifier = +2 }
+      , { ability = "wis", modifier = +1 }
+      , { ability = "cha", modifier = +0 }
+      ]
     , size = "tiny"
     , skillModifiers = Some
       [ { modifier = 3, skill = "perception" }

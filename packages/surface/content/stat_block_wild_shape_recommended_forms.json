@@ -72,6 +72,32 @@
         "score": 11
       },
       "passivePerception": 10,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": 3
+        },
+        {
+          "ability": "dex",
+          "modifier": 1
+        },
+        {
+          "ability": "con",
+          "modifier": 1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 0
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
+      ],
       "size": "large",
       "speeds": [
         {
@@ -162,6 +188,32 @@
         "score": 12
       },
       "passivePerception": 15,
+      "savingThrowModifiers": [
+        {
+          "ability": "str",
+          "modifier": 2
+        },
+        {
+          "ability": "dex",
+          "modifier": 2
+        },
+        {
+          "ability": "con",
+          "modifier": 1
+        },
+        {
+          "ability": "int",
+          "modifier": -4
+        },
+        {
+          "ability": "wis",
+          "modifier": 1
+        },
+        {
+          "ability": "cha",
+          "modifier": -2
+        }
+      ],
       "senses": [
         {
           "kind": "darkvision",

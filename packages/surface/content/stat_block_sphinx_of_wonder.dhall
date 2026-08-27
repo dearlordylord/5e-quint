@@ -49,6 +49,14 @@
   , hp = { kind = "literal", value = 39 }
   , initiative = { modifier = 3, score = 13 }
   , passivePerception = 11
+  , savingThrowModifiers =
+    [ { ability = "str", modifier = -2 }
+    , { ability = "dex", modifier = +3 }
+    , { ability = "con", modifier = +1 }
+    , { ability = "int", modifier = +2 }
+    , { ability = "wis", modifier = +1 }
+    , { ability = "cha", modifier = +0 }
+    ]
   , reactions =
     [ { description =
           "Trigger: The sphinx or another creature within 30 feet makes an ability check or a saving throw. Response: The sphinx adds 2 to the roll."

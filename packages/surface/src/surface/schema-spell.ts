@@ -6387,6 +6387,12 @@ const StandaloneStatBlockBaseSchema = Schema.Struct({
   speeds: nonEmpty(StandaloneCreatureSpeedSchema),
   abilityScores: StandaloneStatBlockAbilityScoresSchema,
   initiative: StatBlockInitiativeSchema,
+  /**
+   * Preserve every Save value printed by the source. This stays optional
+   * because a source may omit a Saves section entirely; a full six-ability
+   * source table is not reduced to only values that differ from the ability
+   * modifier.
+   */
   savingThrowModifiers: CreatureStatBlockProjectionFields.savingThrowModifiers,
   skillModifiers: CreatureStatBlockProjectionFields.skillModifiers,
   saveProficiencies: CreatureStatBlockProjectionFields.saveProficiencies,
