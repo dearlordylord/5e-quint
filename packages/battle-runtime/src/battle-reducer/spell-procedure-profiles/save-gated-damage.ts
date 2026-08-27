@@ -275,7 +275,7 @@ const SaveGatedDamageCommonFields = {
   postSaveAreaEffect: Schema.optionalKey(SpellPostSaveAreaEffectSchema),
 } as const;
 
-const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
+export const SaveGatedDamageInvocationSchema = spellProcedureExecutionSchema(
   Schema.Union([
     Schema.Struct({
       access: CantripSpellAccessSchema,
