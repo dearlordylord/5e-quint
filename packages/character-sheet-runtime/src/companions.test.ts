@@ -420,6 +420,13 @@ describe("Character Sheet runtime / companions", () => {
         druidWildShapeKnownFormStatBlockIds:
           druidWildShapeFixtureKnownFormStatBlockIds,
         statBlockCatalog,
+        resourceExpenditures: [
+          {
+            tag: "useCountResource",
+            unitId: authoredUnitId("druid_wild_shape"),
+            expended: resourceCount(1),
+          },
+        ],
       }),
     );
 
@@ -447,7 +454,7 @@ describe("Character Sheet runtime / companions", () => {
       expect.objectContaining({
         tag: "useCountResource",
         unitId: "druid_wild_shape",
-        expended: 1,
+        expended: 2,
       }),
     );
   });
