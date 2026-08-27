@@ -1,12 +1,18 @@
 import type * as BattleRuntime from "@dnd/battle-runtime"
 import { describe, expect, test, vi } from "vitest"
 
-let replacedDeathSaveFrontier = false
+const { recordDeathSaveFrontierReplacement } = vi.hoisted(() => ({
+  recordDeathSaveFrontierReplacement:
+    vi.fn<
+      (identity: {
+        readonly subjectActorId: BattleRuntime.CombatantId
+        readonly deathSavingThrowCombatantId: BattleRuntime.CombatantId
+      }) => void
+    >()
+}))
 
 vi.mock("@dnd/battle-runtime", async (importOriginal) => {
   const actual = await importOriginal<typeof BattleRuntime>()
-  const laserWizardId = actual.combatantId("A")
-  const mudScampId = actual.combatantId("D")
   return {
     ...actual,
     endBattleRuntimeTurn: vi.fn((input: Parameters<typeof actual.endBattleRuntimeTurn>[0]) => {
@@ -15,14 +21,16 @@ vi.mock("@dnd/battle-runtime", async (importOriginal) => {
       const deathSavingThrow = result.envelope.frontier.holes.find((hole) => hole.kind === "deathSavingThrow")
       const subject = result.envelope.frontier.subject
       if (
-        !replacedDeathSaveFrontier &&
-        input.actorId === laserWizardId &&
-        deathSavingThrow?.combatantId === mudScampId &&
+        recordDeathSaveFrontierReplacement.mock.calls.length === 0 &&
+        deathSavingThrow !== undefined &&
         subject.tag === "runtimeCommand" &&
         subject.command === "endTurn" &&
-        subject.actorId === laserWizardId
+        subject.actorId === input.actorId
       ) {
-        replacedDeathSaveFrontier = true
+        recordDeathSaveFrontierReplacement({
+          subjectActorId: subject.actorId,
+          deathSavingThrowCombatantId: deathSavingThrow.combatantId
+        })
         return {
           ...result,
           envelope: {
@@ -41,6 +49,6 @@ describe("wizard battle demo checkpoint protocol", () => {
     await expect(import("./wizard-battle-demo.ts")).rejects.toThrow(
       "Expected End Turn to expose a Runtime Hole frontier."
     )
-    expect(replacedDeathSaveFrontier).toBe(true)
+    expect(recordDeathSaveFrontierReplacement).toHaveBeenCalledOnce()
   })
 })
