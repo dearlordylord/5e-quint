@@ -37,6 +37,7 @@ import {
   type BattleCreatureInit,
   type BattleFill,
   type BattleHole,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
@@ -85,6 +86,16 @@ type StartedMagicMissile = NeedsHolesResult & {
 
 type ReactionSpellUnitId = "shield" | "hellish_rebuke" | "counterspell";
 type SrdSpellUnitId = ReactionSpellUnitId | "magic_missile";
+
+type TriggeredReactionSpellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
 
 type AttackAct = AvailableBattleAct & {
   readonly subject: Extract<
@@ -967,15 +978,11 @@ function resolveShieldReactionChoice(
 ): ReturnType<typeof resolveBattleInterrupt> {
   const reactionChoice =
     awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (
-        choice,
-      ): choice is Extract<
-        BattleInterruptProcedureChoice,
-        { readonly kind: "castTriggeredReactionSpell" }
-      > => {
+      (choice): choice is TriggeredReactionSpellChoice => {
         if (
-          choice.kind !== "castTriggeredReactionSpell" ||
-          choice.reactorId !== reactorId
+          choice.kind !== "nestedProcedure" ||
+          choice.subject.command !== "castTriggeredReactionSpell" ||
+          choice.subject.reactorId !== reactorId
         )
           return false;
         return true;
@@ -1006,20 +1013,13 @@ function requireCounterspellChoice(
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
   >,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+    (candidate): candidate is TriggeredReactionSpellChoice => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== reactorId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== reactorId
       )
         return false;
       return true;
@@ -1036,20 +1036,13 @@ function requireHellishRebukeChoice(
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
   >,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): TriggeredReactionSpellChoice {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+    (candidate): candidate is TriggeredReactionSpellChoice => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== reactorId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== reactorId
       )
         return false;
       return true;

@@ -283,7 +283,7 @@ describe("GitHub #227 attack and damage coverage", () => {
           responderId: deflectMonkId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "attackDamageReduction",
             fills: [reactionModifierReductionRollFill(choice, 10)],
           },

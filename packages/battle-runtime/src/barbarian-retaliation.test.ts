@@ -50,8 +50,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
           trigger: "afterDamage",
           choices: expect.arrayContaining([
             expect.objectContaining({
-              kind: "retaliationAttack",
-              reactorId: fighterId,
+              kind: "nestedProcedure",
               subject: expect.objectContaining({
                 command: "retaliationAttack",
                 reactorId: fighterId,
@@ -61,8 +60,7 @@ describe("battle runtime: Barbarian Retaliation", () => {
               }),
             }),
             expect.objectContaining({
-              kind: "retaliationAttack",
-              reactorId: fighterId,
+              kind: "nestedProcedure",
               subject: expect.objectContaining({
                 command: "retaliationAttack",
                 reactorId: fighterId,
@@ -80,7 +78,9 @@ describe("battle runtime: Barbarian Retaliation", () => {
     }
     const retaliationChoice =
       awaitingRetaliation.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "retaliationAttack",
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "retaliationAttack",
       );
     if (retaliationChoice === undefined) {
       throw new Error("Expected a Retaliation codec fixture.");
@@ -95,14 +95,27 @@ describe("battle runtime: Barbarian Retaliation", () => {
         Schema.encodeSync(BattleSnapshotSchema)(awaitingRetaliation.snapshot),
       ),
     ).not.toThrow();
+    const forgedRetaliationSnapshot = {
+      ...awaitingRetaliation.snapshot,
+      pendingInterrupt: {
+        ...awaitingRetaliation.snapshot.pendingInterrupt!,
+        choices: awaitingRetaliation.snapshot.pendingInterrupt!.choices.map(
+          (choice) =>
+            choice.kind === "nestedProcedure" &&
+            choice.subject.command === "retaliationAttack"
+              ? {
+                  ...choice,
+                  subject: { ...choice.subject, reactorId: goblinId },
+                }
+              : choice,
+        ),
+      },
+    };
     expect(() =>
-      Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)({
-        ...retaliationChoice,
-        reactorId: goblinId,
-      }),
-    ).toThrow(
-      "Interrupt choices must own the matching reference-bearing runtime subject.",
-    );
+      Schema.decodeUnknownSync(BattleSnapshotSchema)(
+        Schema.encodeSync(BattleSnapshotSchema)(forgedRetaliationSnapshot),
+      ),
+    ).toThrow();
     const longswordSelection = attackExecutionSelectionForSubjectForTest(
       fighterAttackSubject(awaitingRetaliation.state, "Longsword"),
     );
@@ -116,7 +129,6 @@ describe("battle runtime: Barbarian Retaliation", () => {
           responderId: fighterId,
           choice: {
             kind: "retaliationAttack",
-            reactorId: fighterId,
             selection: longswordSelection,
             fills: [
               {

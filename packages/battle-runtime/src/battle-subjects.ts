@@ -574,6 +574,95 @@ export const BattleInterruptAttackExecutionSelectionSchema = Schema.Union(
 export type BattleInterruptAttackExecutionSelection =
   typeof BattleInterruptAttackExecutionSelectionSchema.Type;
 
+const BattleInterruptReleaseReadiedSpellSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedSpell"),
+  readiedSpellCasterId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+});
+
+const BattleInterruptReleaseReadiedMovementSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedMovement"),
+  readiedMovementActorId: CombatantId,
+});
+
+const BattleInterruptReleaseReadiedActionSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedAction"),
+  reactorId: CombatantId,
+});
+
+const BattleInterruptReleaseReadiedAttackSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("releaseReadiedAttack"),
+  reactorId: CombatantId,
+  targetId: CombatantId,
+  procedureRef: Schema.Union(
+    BattleAttackProcedureExecutionRef,
+    BattleStatBlockProcedureExecutionRef,
+  ),
+  attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
+  attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
+});
+
+const BattleInterruptCastTriggeredReactionSpellSubjectSchema = Schema.Struct({
+  tag: Schema.Literal("runtimeCommand"),
+  actorId: CombatantId,
+  command: Schema.Literal("castTriggeredReactionSpell"),
+  reactorId: CombatantId,
+  procedureRef: BattleProcedureExecutionRef,
+});
+
+const BattleInterruptCastAttackHitBonusActionSpellSubjectSchema = Schema.Struct(
+  {
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("castAttackHitBonusActionSpell"),
+    casterId: CombatantId,
+    procedureRef: BattleProcedureExecutionRef,
+  },
+);
+
+const BattleInterruptOpportunityAttackSubjectSchema = Schema.extend(
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("opportunityAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+    distanceFeet: MovementFeet,
+  }),
+  BattleInterruptAttackExecutionSelectionSchema,
+);
+
+const BattleInterruptRetaliationAttackSubjectSchema = Schema.extend(
+  Schema.Struct({
+    tag: Schema.Literal("runtimeCommand"),
+    actorId: CombatantId,
+    command: Schema.Literal("retaliationAttack"),
+    reactorId: CombatantId,
+    targetId: CombatantId,
+  }),
+  BattleInterruptAttackExecutionSelectionSchema,
+);
+
+export const BattleInterruptSubjectSchema = Schema.Union(
+  BattleInterruptReleaseReadiedSpellSubjectSchema,
+  BattleInterruptReleaseReadiedMovementSubjectSchema,
+  BattleInterruptReleaseReadiedActionSubjectSchema,
+  BattleInterruptReleaseReadiedAttackSubjectSchema,
+  BattleInterruptCastTriggeredReactionSpellSubjectSchema,
+  BattleInterruptCastAttackHitBonusActionSpellSubjectSchema,
+  BattleInterruptOpportunityAttackSubjectSchema,
+  BattleInterruptRetaliationAttackSubjectSchema,
+);
+export type BattleInterruptSubject = typeof BattleInterruptSubjectSchema.Type;
+
 // BattleSubject is a replay key returned by discoverBattleActs and copied back
 // by callers. It identifies one discovered runtime act; it is not Surface
 // authored content, provenance, or a complete taxonomy of D&D actions.
@@ -887,85 +976,26 @@ export const BattleSubjectSchema = Schema.Union(
     actorId: CombatantId,
     command: Schema.Literal("standFromProne"),
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedSpell"),
-    readiedSpellCasterId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedMovement"),
-    readiedMovementActorId: CombatantId,
-  }),
+  BattleInterruptReleaseReadiedSpellSubjectSchema,
+  BattleInterruptReleaseReadiedMovementSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("reportReadyTrigger"),
     readiedActorId: CombatantId,
   }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedAction"),
-    reactorId: CombatantId,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("releaseReadiedAttack"),
-    reactorId: CombatantId,
-    targetId: CombatantId,
-    procedureRef: Schema.Union(
-      BattleAttackProcedureExecutionRef,
-      BattleStatBlockProcedureExecutionRef,
-    ),
-    attackAbility: Schema.optionalWith(Schema.Never, { exact: true }),
-    attackDamageType: Schema.optionalWith(Schema.Never, { exact: true }),
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("castTriggeredReactionSpell"),
-    reactorId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
-  Schema.Struct({
-    tag: Schema.Literal("runtimeCommand"),
-    actorId: CombatantId,
-    command: Schema.Literal("castAttackHitBonusActionSpell"),
-    casterId: CombatantId,
-    procedureRef: BattleProcedureExecutionRef,
-  }),
+  BattleInterruptReleaseReadiedActionSubjectSchema,
+  BattleInterruptReleaseReadiedAttackSubjectSchema,
+  BattleInterruptCastTriggeredReactionSpellSubjectSchema,
+  BattleInterruptCastAttackHitBonusActionSpellSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("releaseGrapple"),
     targetId: CombatantId,
   }),
-  Schema.extend(
-    Schema.Struct({
-      tag: Schema.Literal("runtimeCommand"),
-      actorId: CombatantId,
-      command: Schema.Literal("opportunityAttack"),
-      reactorId: CombatantId,
-      targetId: CombatantId,
-      distanceFeet: MovementFeet,
-    }),
-    BattleInterruptAttackExecutionSelectionSchema,
-  ),
-  Schema.extend(
-    Schema.Struct({
-      tag: Schema.Literal("runtimeCommand"),
-      actorId: CombatantId,
-      command: Schema.Literal("retaliationAttack"),
-      reactorId: CombatantId,
-      targetId: CombatantId,
-    }),
-    BattleInterruptAttackExecutionSelectionSchema,
-  ),
+  BattleInterruptOpportunityAttackSubjectSchema,
+  BattleInterruptRetaliationAttackSubjectSchema,
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,

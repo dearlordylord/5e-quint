@@ -85,7 +85,11 @@ export const shiningSmiteSelectedIdentityReplay = {
             const choice =
               awaitingReaction.snapshot.pendingInterrupt?.choices.find(
                 (candidate) => {
-                  if (candidate.kind !== "castAttackHitBonusActionSpell") {
+                  if (
+                    candidate.kind !== "nestedProcedure" ||
+                    candidate.subject.command !==
+                      "castAttackHitBonusActionSpell"
+                  ) {
                     return false;
                   }
                   return (
@@ -94,7 +98,7 @@ export const shiningSmiteSelectedIdentityReplay = {
                         state: awaitingReaction.state,
                         context: state.context,
                       }),
-                      candidate.reactorId,
+                      candidate.subject.casterId,
                       candidate.subject.procedureRef,
                     ).spellId === shiningSmiteUnitId
                   );
@@ -102,7 +106,8 @@ export const shiningSmiteSelectedIdentityReplay = {
               );
             if (
               choice === undefined ||
-              choice.kind !== "castAttackHitBonusActionSpell"
+              choice.kind !== "nestedProcedure" ||
+              choice.subject.command !== "castAttackHitBonusActionSpell"
             ) {
               throw new Error(
                 "Expected selected Shining Smite after-hit choice.",
@@ -115,7 +120,7 @@ export const shiningSmiteSelectedIdentityReplay = {
                   state: awaitingReaction.state,
                   context: state.context,
                 }),
-                choice.reactorId,
+                choice.subject.casterId,
                 selectedProcedureRef,
               ),
             ).toEqual(

@@ -188,7 +188,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
             responderId: wizardId,
             choice: {
               kind: "releaseReadiedSpell",
-              readiedSpellCasterId: wizardId,
               procedureRef: subject.procedureRef,
               fills: [],
             },
@@ -206,7 +205,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: choice.subject.procedureRef,
             fills: [],
           },
@@ -313,7 +311,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: releaseChoice.subject.procedureRef,
             fills: [],
           },
@@ -345,7 +342,13 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           stackDepth: 2,
           trigger: "saveFailed",
           choices: [
-            expect.objectContaining({ readiedSpellCasterId: secondWizardId }),
+            expect.objectContaining({
+              kind: "nestedProcedure",
+              subject: expect.objectContaining({
+                command: "releaseReadiedSpell",
+                readiedSpellCasterId: secondWizardId,
+              }),
+            }),
           ],
         },
       },
@@ -700,7 +703,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
           responderId: wizardId,
           choice: {
             kind: "releaseReadiedSpell",
-            readiedSpellCasterId: wizardId,
             procedureRef: choice.subject.procedureRef,
             fills: [],
           },
@@ -779,7 +781,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         responderId: "wizard",
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: "wizard",
           fills: [
             {
               kind: "notARealFill",
@@ -822,10 +823,12 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const pendingInterrupt = encoded.pendingInterrupt;
     const releaseChoice = pendingInterrupt.choices.find(
-      (choice) => choice.kind === "releaseReadiedSpell",
+      (choice) =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedSpell",
     );
     if (
-      releaseChoice?.kind !== "releaseReadiedSpell" ||
+      releaseChoice?.kind !== "nestedProcedure" ||
       releaseChoice.subject.tag !== "runtimeCommand" ||
       releaseChoice.subject.command !== "releaseReadiedSpell"
     ) {
@@ -864,21 +867,17 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
     }
     const replaceReleaseChoice = (input: {
       readonly procedureRef: string;
-      readonly reactorId?: string;
       readonly casterId?: string;
     }) => ({
       ...encoded,
       pendingInterrupt: {
         ...pendingInterrupt,
         choices: pendingInterrupt.choices.map((choice) =>
-          choice.kind === "releaseReadiedSpell" &&
+          choice.kind === "nestedProcedure" &&
           choice.subject.tag === "runtimeCommand" &&
           choice.subject.command === "releaseReadiedSpell"
             ? {
                 ...choice,
-                reactorId: input.reactorId ?? choice.reactorId,
-                readiedSpellCasterId:
-                  input.casterId ?? choice.readiedSpellCasterId,
                 subject: {
                   ...choice.subject,
                   readiedSpellCasterId:
@@ -985,7 +984,7 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         Schema.decodeUnknownEither(BattleSnapshotSchema)(
           replaceReleaseChoice({
             procedureRef: releaseChoice.subject.procedureRef,
-            reactorId: goblinId,
+            casterId: goblinId,
           }),
         ),
       ),
@@ -1030,7 +1029,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
         responderId: "synthetic-retaliator",
         choice: {
           kind: "retaliationAttack",
-          reactorId: "synthetic-retaliator",
           selection,
           fills: [targetSpatialFacts],
         },
@@ -1050,7 +1048,6 @@ describe("battle runtime: reactions, Ready, and sight facts", () => {
             responderId: "synthetic-retaliator",
             choice: {
               kind: "retaliationAttack",
-              reactorId: "synthetic-retaliator",
               attackName: "Synthetic Retaliation Strike",
               fills: [],
             },

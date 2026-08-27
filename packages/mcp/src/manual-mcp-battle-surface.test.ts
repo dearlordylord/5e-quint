@@ -17,6 +17,7 @@ import {
   initiativeScore,
   startBattle,
   battleStateInitIssueMessage,
+  interruptChoiceResponderId,
   type BattleCreatureInit,
   type BattleRuntimeSession,
   type BattleUnitRef,
@@ -1128,16 +1129,26 @@ type BattleToolOutputByName = {
 };
 type PresentedInterruptChoice =
   BattlePresentationOutput["presentedInterruptChoices"][number];
-type TriggeredSpellChoiceBase = Extract<
+type NestedProcedureChoice = Extract<
   PresentedInterruptChoice["choice"],
-  { readonly kind: "castTriggeredReactionSpell" }
+  { readonly kind: "nestedProcedure" }
 >;
-type TriggeredSpellChoice = Omit<TriggeredSpellChoiceBase, "subject"> & {
+type TriggeredSpellChoice = Omit<NestedProcedureChoice, "subject"> & {
   readonly subject: Extract<
-    TriggeredSpellChoiceBase["subject"],
-    { readonly procedureRef: unknown }
+    NestedProcedureChoice["subject"],
+    { readonly command: "castTriggeredReactionSpell" }
   >;
 };
+
+function isTriggeredSpellChoice(
+  choice: PresentedInterruptChoice["choice"],
+): choice is TriggeredSpellChoice {
+  return (
+    choice.kind === "nestedProcedure" &&
+    choice.subject.command === "castTriggeredReactionSpell"
+  );
+}
+
 type NeedsHolesResult = Extract<
   BattleResolutionOutput["result"],
   { readonly tag: "needsHoles" }
@@ -1171,8 +1182,8 @@ function requireTriggeredSpellChoice(
     (presented) => {
       const choice = presented.choice;
       if (
-        choice.kind !== "castTriggeredReactionSpell" ||
-        choice.reactorId !== reactorId
+        !isTriggeredSpellChoice(choice) ||
+        interruptChoiceResponderId(choice) !== reactorId
       ) {
         return false;
       }
@@ -1190,13 +1201,10 @@ function requireTriggeredSpellChoice(
   if (matchingChoices.length !== 1 || presented === undefined) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
   }
-  if (presented.choice.kind !== "castTriggeredReactionSpell") {
+  if (!isTriggeredSpellChoice(presented.choice)) {
     throw new Error(`Expected one ${spellId} triggered spell choice.`);
   }
-  if (!("procedureRef" in presented.choice.subject)) {
-    throw new Error(`Expected ${spellId} choice procedure.`);
-  }
-  return { ...presented.choice, subject: presented.choice.subject };
+  return presented.choice;
 }
 
 function requireNeedsHoles(response: BattleResolutionOutput): NeedsHolesResult {

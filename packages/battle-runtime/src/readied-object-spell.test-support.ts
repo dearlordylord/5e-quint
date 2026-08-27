@@ -155,7 +155,6 @@ export function resolveReadiedFireBoltObjectScenario(input: {
         responderId: wizardId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: wizardId,
           procedureRef: releaseSubject.procedureRef,
           fills: [],
         },

@@ -59,11 +59,16 @@ function afterHitChoiceMatchesSpell(
   candidate: BattleInterruptProcedureChoice,
   spellId: string,
 ): boolean {
-  if (candidate.kind !== "castAttackHitBonusActionSpell") return false;
+  if (
+    candidate.kind !== "nestedProcedure" ||
+    candidate.subject.command !== "castAttackHitBonusActionSpell"
+  ) {
+    return false;
+  }
   return (
     characterSpellInvocationRefForProcedureRefForTest(
       session,
-      candidate.reactorId,
+      candidate.subject.casterId,
       candidate.subject.procedureRef,
     ).spellId === spellId
   );
@@ -116,7 +121,8 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }
@@ -173,7 +179,8 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }
@@ -407,7 +414,8 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Searing Smite after-hit choice.");
     }
@@ -417,7 +425,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           ...state,
           state: awaitingReaction.state,
         }),
-        choice.reactorId,
+        choice.subject.casterId,
         choice.subject.procedureRef,
       ),
     ).toEqual(
@@ -801,7 +809,8 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }
@@ -943,7 +952,8 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }
@@ -975,8 +985,11 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
           trigger: "spellCast",
           choices: [
             expect.objectContaining({
-              kind: "releaseReadiedSpell",
-              readiedSpellCasterId: spellTargetId,
+              kind: "nestedProcedure",
+              subject: expect.objectContaining({
+                command: "releaseReadiedSpell",
+                readiedSpellCasterId: spellTargetId,
+              }),
             }),
           ],
         },
@@ -1130,7 +1143,8 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
     );
     if (
       choice === undefined ||
-      choice.kind !== "castAttackHitBonusActionSpell"
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Ensnaring Strike after-hit choice.");
     }

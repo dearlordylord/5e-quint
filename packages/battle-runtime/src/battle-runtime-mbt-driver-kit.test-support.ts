@@ -122,6 +122,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleInvalidReasonCode,
   type BattleProcedureExecutionRef,
   type BattleResolutionResult,
@@ -130,6 +131,7 @@ import {
   type BattleSubject,
   type CombatantId,
 } from "./index.ts";
+import { interruptChoiceResponderId } from "./battle-state-execution.ts";
 
 function requireAdmittedCharacterProcedureSubject(
   session: BattleRuntimeSession,
@@ -9799,7 +9801,6 @@ export function createInterruptStackResumeRouteDriver() {
               responderId: interruptWizardId,
               choice: {
                 kind: "releaseReadiedSpell",
-                readiedSpellCasterId: interruptWizardId,
                 procedureRef: releaseChoice.subject.procedureRef,
                 fills: [],
               },
@@ -9961,7 +9962,11 @@ function publicReplayContinuationAfterAttackDeclines(): {
     result.holes.some((hole) => hole.kind === "interruptDecision")
   ) {
     const pending = result.snapshot.pendingInterrupt;
-    const responderId = pending?.choices[0]?.reactorId;
+    const firstChoice = pending?.choices[0];
+    const responderId =
+      firstChoice === undefined
+        ? undefined
+        : interruptChoiceResponderId(firstChoice);
     if (pending == null || responderId === undefined) {
       throw new Error("Expected public interrupt decision responder.");
     }
@@ -16220,23 +16225,35 @@ function requireInterruptShieldReactionChoice(
   context: BattleRuntimeSession["context"],
 ): Extract<
   BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+} {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+      { readonly kind: "nestedProcedure" }
+    > & {
+      readonly subject: Extract<
+        BattleInterruptSubject,
+        { readonly command: "castTriggeredReactionSpell" }
+      >;
+    } => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== interruptShieldCasterId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.tag !== "runtimeCommand" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== interruptShieldCasterId
       )
         return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({ state: result.state, context }),
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (

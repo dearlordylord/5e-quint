@@ -136,9 +136,14 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
 
     const checkpoint = currentInterruptCheckpoint(result.state);
     const choice = checkpoint?.choices.find(
-      (candidate) => candidate.kind === "releaseReadiedSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedSpell",
     );
-    if (choice?.kind !== "releaseReadiedSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
       throw new Error("Expected a readied spell choice.");
     }
     const objectOutcomeExecution = InterruptLifecycleExecution.fromResolvers(
@@ -159,10 +164,9 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       state: result.state,
       fill: interruptDecisionFill(requireHole(result, "interruptDecision"), {
         kind: "resolve",
-        responderId: choice.reactorId,
+        responderId: choice.subject.readiedSpellCasterId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: choice.readiedSpellCasterId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
@@ -218,19 +222,23 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
       throw new Error("Expected the replay to open an attack-hit Reaction.");
     }
     const choice = currentInterruptCheckpoint(replay.state)?.choices.find(
-      (candidate) => candidate.kind === "releaseReadiedSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "releaseReadiedSpell",
     );
-    if (choice?.kind !== "releaseReadiedSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "releaseReadiedSpell"
+    ) {
       throw new Error("Expected a readied spell choice.");
     }
     const started = resolveBattleInterrupt({
       state: replay.state,
       fill: interruptDecisionFill(requireHole(replay, "interruptDecision"), {
         kind: "resolve",
-        responderId: choice.reactorId,
+        responderId: choice.subject.readiedSpellCasterId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: choice.readiedSpellCasterId,
           procedureRef: choice.subject.procedureRef,
           fills: [],
         },
@@ -420,7 +428,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "attackRollReduction",
           fills: [
             {
@@ -501,7 +509,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "attackRollReduction",
           fills: [
             {
@@ -584,7 +592,7 @@ describe("battle runtime: interrupt lifecycle and continuation boundaries", () =
           responderId: fighterId,
           choice: {
             kind: "reactionRollOrDamageReduction",
-            procedureRef: choice.choice.procedureRef,
+            procedureRef: choice.modifier.procedureRef,
             modifierKind: "damageRollReduction",
             fills: [
               {

@@ -1190,10 +1190,15 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
     const featherFallChoice =
       fallWitness.reaction.snapshot.pendingInterrupt?.choices.find(
         (candidate) => {
-          if (candidate.kind !== "castTriggeredReactionSpell") return false;
+          if (
+            candidate.kind !== "nestedProcedure" ||
+            candidate.subject.command !== "castTriggeredReactionSpell"
+          ) {
+            return false;
+          }
           const invocation = characterSpellInvocationRefForProcedureRefForTest(
             battleRuntimeSessionForTest({ ...session, state: reactionState }),
-            candidate.reactorId,
+            candidate.subject.reactorId,
             candidate.subject.procedureRef,
           );
           return (
@@ -1205,7 +1210,8 @@ describe("SRDINV30A deterministic scalar buff Spell Unit admission", () => {
       );
     if (
       featherFallChoice === undefined ||
-      featherFallChoice.kind !== "castTriggeredReactionSpell"
+      featherFallChoice.kind !== "nestedProcedure" ||
+      featherFallChoice.subject.command !== "castTriggeredReactionSpell"
     ) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }

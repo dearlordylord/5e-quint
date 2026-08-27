@@ -53,16 +53,20 @@ describe("Reaction spell route subjects", () => {
     }
     const choice = frame.choices.find(
       (candidate) =>
-        candidate.kind === "castTriggeredReactionSpell" &&
-        candidate.reactorId === spellCasterId,
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castTriggeredReactionSpell" &&
+        candidate.subject.reactorId === spellCasterId,
     );
-    if (choice?.kind !== "castTriggeredReactionSpell") {
+    if (
+      choice?.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected a Feather Fall Reaction spell choice.");
     }
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
         awaitingReaction.session,
-        choice.reactorId,
+        choice.subject.reactorId,
         choice.subject.procedureRef,
       ),
     ).toEqual(featherFallInvocation);

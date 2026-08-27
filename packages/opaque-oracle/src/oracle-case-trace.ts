@@ -25,10 +25,18 @@ export {
   CreationFillBatchSchema,
   FreshSheetInputSchema,
   OracleBattleActsFrontierSchema,
+  OracleBattleAttemptSchema,
+  OracleBattleAttemptRejectionSchema,
   OracleBattleCheckpointSchema,
   OracleBattleEnteredSchema,
+  OracleBattleNonterminalFrontierSchema,
+  OracleBattleInterruptDecisionFillSchema,
+  OracleBattleInterruptAttemptSchema,
+  OracleBattleOrdinaryAttemptSchema,
+  OracleBattleProgressedSchema,
   OracleBattleInputSchema,
   OracleBattleRosterEntrySchema,
+  OracleBattleResolvedSchema,
   OracleCaseSchema,
   OracleEvaluationBatchSchema,
   OracleTraceSchema,
@@ -39,6 +47,10 @@ export {
   oracleTraceSchema,
   type CreationFillBatch,
   type FreshSheetInput,
+  type OracleBattleAttempt,
+  type OracleBattleAttemptRejection,
+  type OracleBattleInterruptDecisionFill,
+  type OracleBattleNonterminalFrontier,
   type OracleCase,
   type OracleEvaluationBatch,
   type OracleTrace,
@@ -71,17 +83,21 @@ export function decodeOracleEvaluationBatch(
 export function decodeOracleTrace(
   input: unknown,
 ): Either.Either<OracleTrace, readonly OracleDecodeIssue[]> {
-  const decoded = decodeWithSchema(OracleTraceSchema, canonicalizeTraceInput(input), {
-    classifyRefinement: (actual, path) =>
-      (path === "" || path === "/steps") &&
-      typeof actual === "object" &&
-      actual !== null &&
-      "steps" in actual &&
-      Array.isArray(actual.steps) &&
-      actual.steps.length > 0
-        ? "invalidLifecycle"
-        : undefined,
-  });
+  const decoded = decodeWithSchema(
+    OracleTraceSchema,
+    canonicalizeTraceInput(input),
+    {
+      classifyRefinement: (actual, path) =>
+        (path === "" || path === "/steps") &&
+        typeof actual === "object" &&
+        actual !== null &&
+        "steps" in actual &&
+        Array.isArray(actual.steps) &&
+        actual.steps.length > 0
+          ? "invalidLifecycle"
+          : undefined,
+    },
+  );
   if (Either.isRight(decoded)) return decoded;
   return Either.left(
     decoded.left.map((issue) =>

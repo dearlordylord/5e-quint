@@ -548,6 +548,9 @@ importers:
       '@typescript/native':
         specifier: npm:typescript@^7.0.2
         version: typescript@7.0.2
+      fast-check:
+        specifier: 3.23.2
+        version: 3.23.2
       typescript:
         specifier: ^5.9.3
         version: 5.9.3

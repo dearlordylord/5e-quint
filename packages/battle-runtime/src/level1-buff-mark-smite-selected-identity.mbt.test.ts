@@ -81,6 +81,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleProcedureExecutionRef,
   type BattleReducerRouteEvent,
   type BattleResolutionResult,
@@ -3289,18 +3290,30 @@ function attackHitBonusActionSpellChoice(
   spellId: AttackHitBonusActionSpellId,
 ): Extract<
   BattleInterruptProcedureChoice,
-  { readonly kind: "castAttackHitBonusActionSpell" }
-> {
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castAttackHitBonusActionSpell" }
+  >;
+} {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
     (
       candidate,
     ): candidate is Extract<
       BattleInterruptProcedureChoice,
-      { readonly kind: "castAttackHitBonusActionSpell" }
-    > => {
+      { readonly kind: "nestedProcedure" }
+    > & {
+      readonly subject: Extract<
+        BattleInterruptSubject,
+        { readonly command: "castAttackHitBonusActionSpell" }
+      >;
+    } => {
       if (
-        candidate.kind !== "castAttackHitBonusActionSpell" ||
-        candidate.reactorId !== casterId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.tag !== "runtimeCommand" ||
+        candidate.subject.command !== "castAttackHitBonusActionSpell" ||
+        candidate.subject.casterId !== casterId
       )
         return false;
       return true;

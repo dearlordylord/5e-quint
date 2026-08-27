@@ -116,11 +116,14 @@ describe("Feather Fall Reaction spell", () => {
     }
     const reactionChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-        (choice) => choice.kind === "castTriggeredReactionSpell",
+        (choice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castTriggeredReactionSpell",
       );
     if (
       reactionChoice === undefined ||
-      reactionChoice.kind !== "castTriggeredReactionSpell"
+      reactionChoice.kind !== "nestedProcedure" ||
+      reactionChoice.subject.command !== "castTriggeredReactionSpell"
     ) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
@@ -247,10 +250,14 @@ describe("Feather Fall Reaction spell", () => {
 
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
       (candidate) => {
-        if (candidate.kind !== "castTriggeredReactionSpell") return false;
+        if (
+          candidate.kind !== "nestedProcedure" ||
+          candidate.subject.command !== "castTriggeredReactionSpell"
+        )
+          return false;
         const invocation = characterSpellInvocationRefForProcedureRefForTest(
           awaitingReaction.session,
-          candidate.reactorId,
+          candidate.subject.reactorId,
           candidate.subject.procedureRef,
         );
         return (
@@ -260,7 +267,11 @@ describe("Feather Fall Reaction spell", () => {
         );
       },
     );
-    if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+    if (
+      choice === undefined ||
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
@@ -420,9 +431,15 @@ describe("Feather Fall Reaction spell", () => {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) => candidate.kind === "castTriggeredReactionSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castTriggeredReactionSpell",
     );
-    if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+    if (
+      choice === undefined ||
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
 
@@ -459,9 +476,15 @@ describe("Feather Fall Reaction spell", () => {
       throw new Error("Expected Feather Fall falling-trigger Reaction window.");
     }
     const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
-      (candidate) => candidate.kind === "castTriggeredReactionSpell",
+      (candidate) =>
+        candidate.kind === "nestedProcedure" &&
+        candidate.subject.command === "castTriggeredReactionSpell",
     );
-    if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+    if (
+      choice === undefined ||
+      choice.kind !== "nestedProcedure" ||
+      choice.subject.command !== "castTriggeredReactionSpell"
+    ) {
       throw new Error("Expected Feather Fall Reaction choice.");
     }
     const targetList = requireHole(choice.initialHoles, "spellTargetList");
@@ -626,13 +649,17 @@ function castFeatherFallOn(
   }
   const choice = awaitingReaction.snapshot.pendingInterrupt?.choices.find(
     (candidate) => {
-      if (candidate.kind !== "castTriggeredReactionSpell") return false;
+      if (
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castTriggeredReactionSpell"
+      )
+        return false;
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({
           ...session,
           state: awaitingReaction.state,
         }),
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (
@@ -642,7 +669,11 @@ function castFeatherFallOn(
       );
     },
   );
-  if (choice === undefined || choice.kind !== "castTriggeredReactionSpell") {
+  if (
+    choice === undefined ||
+    choice.kind !== "nestedProcedure" ||
+    choice.subject.command !== "castTriggeredReactionSpell"
+  ) {
     throw new Error("Expected Feather Fall Reaction choice.");
   }
   const resolved = resolveBattleInterrupt({

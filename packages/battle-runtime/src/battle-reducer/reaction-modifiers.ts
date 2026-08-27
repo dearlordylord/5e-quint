@@ -88,9 +88,9 @@ function rolledReactionReductionChoice(
 ): readonly BattleInterruptProcedureChoice[] {
   return [
     {
-      kind: "reactionRollOrDamageReduction",
-      reactorId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: reactorId,
+      modifier: {
         kind,
         procedureRef,
         reduction: {
@@ -383,9 +383,9 @@ export function reactionRollOrDamageReductionChoiceForProfile(
           : undefined;
       return [
         {
-          kind: "reactionRollOrDamageReduction",
-          reactorId,
-          choice: {
+          kind: "reactionModifier",
+          responderId: reactorId,
+          modifier: {
             kind: "attackDamageReduction",
             procedureRef,
             reduction:
@@ -487,9 +487,9 @@ function reactionRollOrDamageReductionFallChoiceForProfile(
   }
   return [
     {
-      kind: "reactionRollOrDamageReduction",
-      reactorId,
-      choice: {
+      kind: "reactionModifier",
+      responderId: reactorId,
+      modifier: {
         kind: "fallDamageReduction",
         procedureRef,
         reduction: {

@@ -18,6 +18,7 @@ import {
   snapshotBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
+  type BattleInterruptProcedureChoice,
   type BattleSubject,
   type BattleRuntimeSession,
   type BattleState,
@@ -8966,18 +8967,16 @@ describe("MCP server route", () => {
       snapshot: { pendingInterrupt: { trigger: "attackHit" } },
       presentedInterruptChoices: [
         expect.objectContaining({
-          choice: expect.objectContaining({ kind: "releaseReadiedSpell" }),
+          choice: expect.objectContaining({ kind: "nestedProcedure" }),
         }),
       ],
     });
     const releaseChoices =
       afterAttackRoll.snapshot.pendingInterrupt.choices.filter(
-        (choice: {
-          readonly kind?: string;
-          readonly readiedSpellCasterId?: string;
-        }) =>
-          choice.kind === "releaseReadiedSpell" &&
-          choice.readiedSpellCasterId === "fighter",
+        (choice: BattleInterruptProcedureChoice) =>
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "releaseReadiedSpell" &&
+          choice.subject.readiedSpellCasterId === "fighter",
       );
     const [releaseChoice] = releaseChoices;
     if (releaseChoices.length !== 1 || releaseChoice === undefined) {
@@ -8995,7 +8994,6 @@ describe("MCP server route", () => {
             responderId: "fighter",
             choice: {
               kind: "releaseReadiedSpell",
-              readiedSpellCasterId: "fighter",
               procedureRef: releaseChoice.subject.procedureRef,
               fills: [],
             },

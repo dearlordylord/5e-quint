@@ -282,8 +282,11 @@ describe("SRDINV32A deterministic Dancing Lights admission", () => {
           trigger: "spellCast",
           choices: [
             expect.objectContaining({
-              kind: "releaseReadiedSpell",
-              readiedSpellCasterId: spellTargetId,
+              kind: "nestedProcedure",
+              subject: expect.objectContaining({
+                command: "releaseReadiedSpell",
+                readiedSpellCasterId: spellTargetId,
+              }),
             }),
           ],
         },

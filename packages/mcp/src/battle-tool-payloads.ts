@@ -11,7 +11,7 @@ import {
   type BattlePresentedSnapshot,
   type BattleSnapshotPresentationIssues,
 } from "@dnd/battle-runtime";
-import { Either } from "effect";
+import { Either, Match } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import type { BattleFillSession } from "./session-store.ts";
@@ -244,11 +244,21 @@ export function presentedInterruptChoices(
   session: BattleRuntimeSession,
   choices: readonly BattleInterruptProcedureChoice[],
 ) {
-  return choices.flatMap((choice) => {
-    if (choice.kind === "reactionRollOrDamageReduction") return [];
-    const presentation = battleSubjectPresentation(session, choice.subject);
-    return presentation === undefined ? [] : [{ choice, presentation }];
-  });
+  return choices.flatMap((choice) =>
+    Match.value(choice).pipe(
+      Match.when({ kind: "nestedProcedure" }, (nestedProcedure) => {
+        const presentation = battleSubjectPresentation(
+          session,
+          nestedProcedure.subject,
+        );
+        return presentation === undefined
+          ? []
+          : [{ choice: nestedProcedure, presentation }];
+      }),
+      Match.when({ kind: "reactionModifier" }, () => []),
+      Match.exhaustive,
+    ),
+  );
 }
 
 export function battleResolutionResultPayload(

@@ -1,4 +1,20 @@
 export {
+  BattleMechanicalFrontierSchema,
+  BattleMechanicalHoleSchema,
+  BattleMechanicalInterruptDecisionHoleSchema,
+  BattleMechanicalInterruptChoiceSchema,
+  BattleMechanicalOrdinaryHoleSchema,
+  battleMechanicalFrontier,
+  type BattleMechanicalFrontier,
+  type BattleMechanicalFrontierResult,
+  type BattleMechanicalFrontierIssue,
+  type BattleMechanicalHole,
+  type BattleMechanicalInterruptDecisionHole,
+  type BattleMechanicalInterruptChoice,
+  type BattleMechanicalOrdinaryHole,
+} from "./battle-mechanical-frontier.ts";
+
+export {
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
@@ -131,10 +147,13 @@ export { objectInvisibleBenefitDenied } from "./battle-reducer/attack-roll.ts";
 
 export {
   BattleActPresentationSchema,
+  BattleInterruptDecisionFillSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSpellPresentationSchema,
   BattleUnitSupportSourceSchema,
 } from "./battle-reducer/battle-codecs.ts";
+
+export { interruptChoiceResponderId } from "./battle-state-execution.ts";
 
 export {
   spellActiveEffectExecutionRef,
@@ -317,6 +336,7 @@ export {
   BATTLE_SUBJECT_ACTIONS,
   BATTLE_SUBJECT_BONUS_ACTIONS,
   CANTRIP_SPELL_PROCEDURES,
+  BattleInterruptSubjectSchema,
   BattleSubjectSchema,
   BattleReadyResponseSchema,
   ReadyTriggerDescription,
@@ -334,6 +354,7 @@ export {
   spellSlotInvocationRef,
   type BattleRuntimeCommand,
   type BattleMovementSpeedKind,
+  type BattleInterruptSubject,
   type BattleReadyResponse,
   type BattleSubject,
   type BattleSubjectAction,

@@ -4,6 +4,7 @@ import { optionalProperty } from "../optional-property.ts";
 import { Match } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import { sameBattleSubject } from "../battle-subjects.ts";
+import { interruptChoiceResponderId } from "../battle-state-execution.ts";
 import type {
   AdmittedBattleResolutionInput,
   BattleAttackDamageEvent,
@@ -215,11 +216,11 @@ export function resolveInterruptLifecycleDecision(input: {
       frame,
     ).find(
       (candidate): candidate is BattleInterruptProcedureModifierChoice =>
-        candidate.kind === "reactionRollOrDamageReduction" &&
-        candidate.reactorId === admittedChoice.choice.reactorId &&
-        candidate.choice.procedureRef ===
-          admittedChoice.choice.choice.procedureRef &&
-        candidate.choice.kind === admittedChoice.choice.choice.kind,
+        candidate.kind === "reactionModifier" &&
+        candidate.responderId === admittedChoice.choice.responderId &&
+        candidate.modifier.procedureRef ===
+          admittedChoice.choice.modifier.procedureRef &&
+        candidate.modifier.kind === admittedChoice.choice.modifier.kind,
     );
     if (currentChoice === undefined) {
       return withoutInterruptRoute(
@@ -367,12 +368,12 @@ function resolveReactionRollOrDamageReduction(input: {
   >;
   readonly execution: InterruptLifecycleExecution;
 }): BattleResolutionResult {
-  const reactor = input.state.combatants.get(input.choice.reactorId);
+  const reactor = input.state.combatants.get(input.choice.responderId);
   const sourceProcedure =
     reactor?.origin.kind === "character"
       ? reactor.origin.execution.procedureBindings.find(
           (binding) =>
-            binding.procedureRef === input.choice.choice.procedureRef,
+            binding.procedureRef === input.choice.modifier.procedureRef,
         )?.procedure
       : undefined;
   if (sourceProcedure?.kind !== "unitFeature") {
@@ -383,7 +384,7 @@ function resolveReactionRollOrDamageReduction(input: {
     );
   }
   const reductionRoll = reactionModifierReductionRoll(
-    input.choice.choice,
+    input.choice.modifier,
     input.selection.fills,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -394,7 +395,7 @@ function resolveReactionRollOrDamageReduction(input: {
   const reduction = reductionRoll.value;
   /* v8 ignore start -- @preserve -- Malformed resolution input: these guards reject selections that contradict their admitted trigger-specific choice. */
   if (
-    input.choice.choice.kind === "attackDamageReduction" &&
+    input.choice.modifier.kind === "attackDamageReduction" &&
     input.frame.trigger !== "attackHit"
   ) {
     return invalidResult(
@@ -404,9 +405,9 @@ function resolveReactionRollOrDamageReduction(input: {
     );
   }
   if (
-    input.choice.choice.kind === "attackDamageReduction" &&
+    input.choice.modifier.kind === "attackDamageReduction" &&
     input.frame.trigger === "attackHit" &&
-    (input.choice.reactorId !== input.frame.targetId ||
+    (input.choice.responderId !== input.frame.targetId ||
       reactor?.origin.kind !== "character")
   ) {
     return invalidResult(
@@ -416,7 +417,7 @@ function resolveReactionRollOrDamageReduction(input: {
     );
   }
   if (
-    input.choice.choice.kind === "damageRollReduction" &&
+    input.choice.modifier.kind === "damageRollReduction" &&
     (input.frame.trigger !== "attackDamage" ||
       input.frame.continuation.damageInput.kind !== "rolledDamage")
   ) {
@@ -427,7 +428,7 @@ function resolveReactionRollOrDamageReduction(input: {
     );
   }
   if (
-    input.choice.choice.kind === "fallDamageReduction" &&
+    input.choice.modifier.kind === "fallDamageReduction" &&
     input.frame.trigger !== "creatureFalls"
   ) {
     return invalidResult(
@@ -438,23 +439,23 @@ function resolveReactionRollOrDamageReduction(input: {
   }
   /* v8 ignore stop -- @preserve */
   const spent = spendReactionModifierResource(
-    spendReaction(input.state, input.choice.reactorId),
-    input.choice.reactorId,
+    spendReaction(input.state, input.choice.responderId),
+    input.choice.responderId,
     sourceProcedure.source,
-    input.choice.choice,
+    input.choice.modifier,
   );
   return advanceInterruptCheckpointAfterResponder({
     state: spent,
     frame: interruptCheckpointAfterReactionModifierCompletion(
       interruptCheckpointAfterModifier(
         input.frame,
-        input.choice.reactorId,
-        input.choice.choice,
+        input.choice.responderId,
+        input.choice.modifier,
         reduction,
       ),
-      input.choice.choice,
+      input.choice.modifier,
     ),
-    responderId: input.choice.reactorId,
+    responderId: input.choice.responderId,
     execution: input.execution,
   });
 }
@@ -761,9 +762,9 @@ type AdmittedInterruptChoice =
     }
   | {
       readonly tag: "procedure";
-      readonly choice: Exclude<
+      readonly choice: Extract<
         BattleInterruptProcedureChoice,
-        BattleInterruptProcedureModifierChoice
+        { readonly kind: "nestedProcedure" }
       >;
       readonly selection: Exclude<
         BattleInterruptProcedureSelection,
@@ -777,26 +778,36 @@ function admittedInterruptChoice(
 ): AdmittedInterruptChoice | null {
   const choice = frame.choices.find(
     (candidate) =>
-      candidate.kind === decision.choice.kind &&
-      candidate.reactorId === decision.responderId &&
-      sameInterruptProcedureChoice(candidate, decision.choice),
+      interruptChoiceResponderId(candidate) === decision.responderId &&
+      sameInterruptProcedureChoice(
+        candidate,
+        decision.responderId,
+        decision.choice,
+      ),
   );
   if (choice === undefined) {
     return null;
   }
-  if (
-    choice.kind === "reactionRollOrDamageReduction" &&
-    decision.choice.kind === "reactionRollOrDamageReduction"
-  ) {
-    return { tag: "modifier", choice, selection: decision.choice };
-  }
-  if (
-    choice.kind !== "reactionRollOrDamageReduction" &&
-    decision.choice.kind !== "reactionRollOrDamageReduction"
-  ) {
-    return { tag: "procedure", choice, selection: decision.choice };
-  }
-  return null;
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      nestedProcedure: (nestedChoice) =>
+        decision.choice.kind === "reactionRollOrDamageReduction"
+          ? null
+          : {
+              tag: "procedure" as const,
+              choice: nestedChoice,
+              selection: decision.choice,
+            },
+      reactionModifier: (modifierChoice) =>
+        decision.choice.kind !== "reactionRollOrDamageReduction"
+          ? null
+          : {
+              tag: "modifier" as const,
+              choice: modifierChoice,
+              selection: decision.choice,
+            },
+    }),
+  );
 }
 
 type BattleInterruptChoiceTurnResource = "none" | "reaction";
@@ -804,80 +815,84 @@ type BattleInterruptChoiceTurnResource = "none" | "reaction";
 function interruptChoiceTurnResource(
   choice: BattleInterruptProcedureChoice,
 ): BattleInterruptChoiceTurnResource {
-  return Match.value(choice.kind).pipe(
-    Match.when("releaseReadiedSpell", () => "reaction" as const),
-    Match.when("releaseReadiedMovement", () => "reaction" as const),
-    Match.when("releaseReadiedAction", () => "reaction" as const),
-    Match.when("releaseReadiedAttack", () => "reaction" as const),
-    Match.when("castTriggeredReactionSpell", () => "reaction" as const),
-    Match.when("castAttackHitBonusActionSpell", () => "none" as const),
-    Match.when("opportunityAttack", () => "reaction" as const),
-    Match.when("retaliationAttack", () => "reaction" as const),
-    Match.when("reactionRollOrDamageReduction", () => "reaction" as const),
-    Match.exhaustive,
+  return Match.value(choice).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      nestedProcedure: ({ subject }) =>
+        subject.command === "castAttackHitBonusActionSpell"
+          ? ("none" as const)
+          : ("reaction" as const),
+      reactionModifier: () => "reaction" as const,
+    }),
   );
 }
 
 function sameInterruptProcedureChoice(
   choice: BattleInterruptProcedureChoice,
+  responderId: CombatantId,
   decisionChoice: BattleInterruptProcedureSelection,
 ): boolean {
   return Match.value(decisionChoice).pipe(
     Match.when(
       { kind: "reactionRollOrDamageReduction" },
       (decision) =>
-        choice.kind === "reactionRollOrDamageReduction" &&
-        choice.choice.procedureRef === decision.procedureRef &&
-        choice.choice.kind === decision.modifierKind,
+        choice.kind === "reactionModifier" &&
+        choice.responderId === responderId &&
+        choice.modifier.procedureRef === decision.procedureRef &&
+        choice.modifier.kind === decision.modifierKind,
     ),
     Match.when(
       { kind: "releaseReadiedSpell" },
       (decision) =>
-        choice.kind === "releaseReadiedSpell" &&
-        choice.readiedSpellCasterId === decision.readiedSpellCasterId &&
-        choice.subject.tag === "runtimeCommand" &&
+        choice.kind === "nestedProcedure" &&
         choice.subject.command === "releaseReadiedSpell" &&
+        choice.subject.readiedSpellCasterId === responderId &&
         choice.subject.procedureRef === decision.procedureRef,
     ),
     Match.when(
       { kind: "releaseReadiedMovement" },
-      (decision) =>
-        choice.kind === "releaseReadiedMovement" &&
-        choice.readiedMovementActorId === decision.readiedMovementActorId,
+      () =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedMovement" &&
+        choice.subject.readiedMovementActorId === responderId,
     ),
     Match.when(
       { kind: "releaseReadiedAction" },
-      (decision) =>
-        choice.kind === "releaseReadiedAction" &&
-        choice.reactorId === decision.reactorId,
+      () =>
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "releaseReadiedAction" &&
+        choice.subject.reactorId === responderId,
     ),
     Match.when(
       { kind: "releaseReadiedAttack" },
       (decision) =>
-        choice.kind === "releaseReadiedAttack" &&
-        choice.reactorId === decision.reactorId &&
+        choice.kind === "nestedProcedure" &&
         choice.subject.command === "releaseReadiedAttack" &&
+        choice.subject.reactorId === responderId &&
         choice.subject.targetId === decision.targetId &&
         choice.subject.procedureRef === decision.procedureRef,
     ),
     Match.when(
       { kind: "castTriggeredReactionSpell" },
       (decision) =>
-        choice.kind === "castTriggeredReactionSpell" &&
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castTriggeredReactionSpell" &&
+        choice.subject.reactorId === responderId &&
         choice.subject.procedureRef === decision.procedureRef,
     ),
     Match.when(
       { kind: "castAttackHitBonusActionSpell" },
       (decision) =>
-        choice.kind === "castAttackHitBonusActionSpell" &&
+        choice.kind === "nestedProcedure" &&
+        choice.subject.command === "castAttackHitBonusActionSpell" &&
+        choice.subject.casterId === responderId &&
         choice.subject.procedureRef === decision.procedureRef,
     ),
     Match.when(
       { kind: "opportunityAttack" },
       (decision) =>
-        choice.kind === "opportunityAttack" &&
-        choice.reactorId === decision.reactorId &&
+        choice.kind === "nestedProcedure" &&
         choice.subject.command === "opportunityAttack" &&
+        choice.subject.reactorId === responderId &&
         interruptAttackExecutionSelectionsEqual(
           choice.subject,
           decision.selection,
@@ -886,9 +901,9 @@ function sameInterruptProcedureChoice(
     Match.when(
       { kind: "retaliationAttack" },
       (decision) =>
-        choice.kind === "retaliationAttack" &&
-        choice.reactorId === decision.reactorId &&
+        choice.kind === "nestedProcedure" &&
         choice.subject.command === "retaliationAttack" &&
+        choice.subject.reactorId === responderId &&
         interruptAttackExecutionSelectionsEqual(
           choice.subject,
           decision.selection,

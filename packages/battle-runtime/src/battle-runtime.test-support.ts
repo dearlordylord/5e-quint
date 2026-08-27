@@ -249,6 +249,7 @@ import {
   type BattleFill,
   type BattleHidePrerequisite,
   type BattleHole,
+  type BattleInterruptProcedureChoice,
   type BattleInterruptCheckpoint,
   type BattleInterruptProcedureSelection,
   type BattleReadiedSpellTrigger,
@@ -4844,7 +4845,7 @@ export function resolveGoblinScimitarHitReduction(input: {
         responderId: fighterId,
         choice: {
           kind: "reactionRollOrDamageReduction",
-          procedureRef: choice.choice.procedureRef,
+          procedureRef: choice.modifier.procedureRef,
           modifierKind: "attackDamageReduction",
           fills,
         },
@@ -4894,18 +4895,18 @@ export function reactionModifierChoice(
 ) {
   const choice = choices.find(
     (candidate) =>
-      candidate.kind === "reactionRollOrDamageReduction" &&
-      candidate.choice.kind === modifierKind,
+      candidate.kind === "reactionModifier" &&
+      candidate.modifier.kind === modifierKind,
   );
-  if (choice?.kind !== "reactionRollOrDamageReduction") {
+  if (choice?.kind !== "reactionModifier") {
     throw new Error(
       `Expected ${unitId} ${modifierKind} reaction choice among ${JSON.stringify(
         choices.map((candidate) =>
-          candidate.kind === "reactionRollOrDamageReduction"
+          candidate.kind === "reactionModifier"
             ? {
                 kind: candidate.kind,
-                procedureRef: candidate.choice.procedureRef,
-                modifierKind: candidate.choice.kind,
+                procedureRef: candidate.modifier.procedureRef,
+                modifierKind: candidate.modifier.kind,
               }
             : { kind: candidate.kind },
         ),
@@ -4941,14 +4942,14 @@ export function reactionChoiceWithSubject(
 }
 
 export function opportunityAttackProcedureSelectionForTest(
-  choice: ReturnType<typeof reactionChoiceWithSubject>,
+  choice: BattleInterruptProcedureChoice,
   fills: readonly BattleFill[] = [],
 ): Extract<
   BattleInterruptProcedureSelection,
   { readonly kind: "opportunityAttack" }
 > {
   if (
-    choice.kind !== "opportunityAttack" ||
+    choice.kind !== "nestedProcedure" ||
     choice.subject.command !== "opportunityAttack"
   ) {
     throw new Error("Expected an Opportunity Attack reaction choice.");
@@ -4964,7 +4965,6 @@ export function opportunityAttackProcedureSelectionForTest(
         };
   return {
     kind: "opportunityAttack",
-    reactorId: choice.reactorId,
     selection,
     fills,
   };

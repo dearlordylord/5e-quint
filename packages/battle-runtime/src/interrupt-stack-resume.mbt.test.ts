@@ -76,6 +76,7 @@ import {
   type BattleFill,
   type BattleHole,
   type BattleInterruptProcedureChoice,
+  type BattleInterruptSubject,
   type BattleInterruptedProcedure,
   type BattleResolutionResult,
   type BattleState,
@@ -90,6 +91,16 @@ const interruptStackResumeDriverSchema = {
   doReplayRecordedProcedureFromRoot: {},
   step: {},
 } as const;
+
+type ShieldReactionChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
 
 type InterruptStackResumeDriverAction = Exclude<
   keyof typeof interruptStackResumeDriverSchema,
@@ -309,7 +320,6 @@ function nestedDeclineResumesOuterInterrupt(): InterruptStackResumeRuntimeState 
         responderId: wizardId,
         choice: {
           kind: "releaseReadiedSpell",
-          readiedSpellCasterId: wizardId,
           procedureRef: releaseChoice.subject.procedureRef,
           fills: [],
         },
@@ -639,38 +649,36 @@ function requireHoleFromArray<K extends BattleHole["kind"]>(
 
 function requireShieldReactionChoice(
   result: Extract<BattleResolutionResult, { readonly tag: "needsHoles" }>,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
-  const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
-      if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== shieldCasterId
+): ShieldReactionChoice {
+  for (const candidate of result.snapshot.pendingInterrupt?.choices ?? []) {
+    if (!isShieldReactionChoice(candidate)) {
+      continue;
+    }
+    const reactor = result.state.combatants.get(candidate.subject.reactorId);
+    if (
+      reactor?.origin.kind === "character" &&
+      reactor.origin.execution.procedureBindings.some(
+        (binding) =>
+          binding.procedureRef === candidate.subject.procedureRef &&
+          binding.procedure.kind === "spellInvocation" &&
+          binding.procedure.execution.procedure === "shieldReaction",
       )
-        return false;
-      const reactor = result.state.combatants.get(candidate.reactorId);
-      return (
-        reactor?.origin.kind === "character" &&
-        reactor.origin.execution.procedureBindings.some(
-          (binding) =>
-            binding.procedureRef === candidate.subject.procedureRef &&
-            binding.procedure.kind === "spellInvocation" &&
-            binding.procedure.execution.procedure === "shieldReaction",
-        )
-      );
-    },
-  );
-  if (choice === undefined) {
-    throw new Error("Expected Shield Reaction choice.");
+    ) {
+      return candidate;
+    }
   }
-  return choice;
+  throw new Error("Expected Shield Reaction choice.");
+}
+
+function isShieldReactionChoice(
+  candidate: BattleInterruptProcedureChoice,
+): candidate is ShieldReactionChoice {
+  return (
+    candidate.kind === "nestedProcedure" &&
+    candidate.subject.tag === "runtimeCommand" &&
+    candidate.subject.command === "castTriggeredReactionSpell" &&
+    candidate.subject.reactorId === shieldCasterId
+  );
 }
 
 function shieldArmorClassBonusActive(

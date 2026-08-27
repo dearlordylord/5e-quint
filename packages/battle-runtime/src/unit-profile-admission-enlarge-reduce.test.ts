@@ -46,6 +46,7 @@ import {
 import {
   SPELL_CAST_REACTION_FACTS_HOLE_ID,
   type BattleFill,
+  type BattleInterruptSubject,
   type BattleInterruptProcedureChoice,
 } from "./index.ts";
 import {
@@ -1798,32 +1799,35 @@ function spellCastReactionFactsFill(
   };
 }
 
+type CounterspellChoice = Extract<
+  BattleInterruptProcedureChoice,
+  { readonly kind: "nestedProcedure" }
+> & {
+  readonly subject: Extract<
+    BattleInterruptSubject,
+    { readonly command: "castTriggeredReactionSpell" }
+  >;
+};
+
 function requireCounterspellChoice(
   result: Extract<
     ReturnType<typeof resolveBattleSubject>,
     { readonly tag: "needsHoles" }
   >,
   session: BattleRuntimeSession,
-): Extract<
-  BattleInterruptProcedureChoice,
-  { readonly kind: "castTriggeredReactionSpell" }
-> {
+): CounterspellChoice {
   const choice = result.snapshot.pendingInterrupt?.choices.find(
-    (
-      candidate,
-    ): candidate is Extract<
-      BattleInterruptProcedureChoice,
-      { readonly kind: "castTriggeredReactionSpell" }
-    > => {
+    (candidate): candidate is CounterspellChoice => {
       if (
-        candidate.kind !== "castTriggeredReactionSpell" ||
-        candidate.reactorId !== spellTargetId
+        candidate.kind !== "nestedProcedure" ||
+        candidate.subject.command !== "castTriggeredReactionSpell" ||
+        candidate.subject.reactorId !== spellTargetId
       ) {
         return false;
       }
       const invocation = characterSpellInvocationRefForProcedureRefForTest(
         session,
-        candidate.reactorId,
+        candidate.subject.reactorId,
         candidate.subject.procedureRef,
       );
       return (

@@ -323,8 +323,11 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     expect(awaitingReaction.snapshot.pendingInterrupt?.choices).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          kind: "castAttackHitBonusActionSpell",
-          reactorId: spellCasterId,
+          kind: "nestedProcedure",
+          subject: expect.objectContaining({
+            command: "castAttackHitBonusActionSpell",
+            casterId: spellCasterId,
+          }),
         }),
       ]),
     );
@@ -379,12 +382,14 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const smiteChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castAttackHitBonusActionSpell" &&
+          choice.subject.casterId === spellCasterId,
       );
     if (
       smiteChoice === undefined ||
-      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+      smiteChoice.kind !== "nestedProcedure" ||
+      smiteChoice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Divine Smite after-hit choice.");
     }
@@ -508,12 +513,14 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const smiteChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castAttackHitBonusActionSpell" &&
+          choice.subject.casterId === spellCasterId,
       );
     if (
       smiteChoice === undefined ||
-      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+      smiteChoice.kind !== "nestedProcedure" ||
+      smiteChoice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Divine Smite after-hit choice.");
     }
@@ -674,14 +681,20 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const smiteChoice =
       awaitingAttackHit.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castAttackHitBonusActionSpell" &&
+          choice.subject.casterId === spellCasterId,
       );
     if (
       smiteChoice === undefined ||
-      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+      smiteChoice.kind !== "nestedProcedure" ||
+      smiteChoice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Divine Smite after-hit choice.");
+    }
+    const smiteSubject = smiteChoice.subject;
+    if (smiteSubject.command !== "castAttackHitBonusActionSpell") {
+      throw new Error("Expected Divine Smite after-hit subject.");
     }
     const activeFrame =
       awaitingAttackHit.state.interruptStack[
@@ -699,7 +712,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
         ...activeFrame.frame,
         activeInterrupt: {
           responderId: spellCasterId,
-          subject: smiteChoice.subject,
+          subject: smiteSubject,
           fills: [],
         },
       },
@@ -724,7 +737,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       resolveCastAttackHitBonusActionSpellCommand(
         {
           state,
-          subject: smiteChoice.subject,
+          subject: smiteSubject,
           fills: [],
         },
         executionRegistry,
@@ -909,8 +922,11 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           trigger: "spellCast",
           choices: [
             expect.objectContaining({
-              kind: "releaseReadiedSpell",
-              readiedSpellCasterId: spellTargetId,
+              kind: "nestedProcedure",
+              subject: expect.objectContaining({
+                command: "releaseReadiedSpell",
+                readiedSpellCasterId: spellTargetId,
+              }),
             }),
           ],
         },
@@ -990,12 +1006,14 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const smiteChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castAttackHitBonusActionSpell" &&
+          choice.subject.casterId === spellCasterId,
       );
     if (
       smiteChoice === undefined ||
-      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+      smiteChoice.kind !== "nestedProcedure" ||
+      smiteChoice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Divine Smite after-hit choice.");
     }
@@ -1077,12 +1095,14 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
     const smiteChoice =
       awaitingReaction.snapshot.pendingInterrupt?.choices.find(
         (choice) =>
-          choice.kind === "castAttackHitBonusActionSpell" &&
-          choice.reactorId === spellCasterId,
+          choice.kind === "nestedProcedure" &&
+          choice.subject.command === "castAttackHitBonusActionSpell" &&
+          choice.subject.casterId === spellCasterId,
       );
     if (
       smiteChoice === undefined ||
-      smiteChoice.kind !== "castAttackHitBonusActionSpell"
+      smiteChoice.kind !== "nestedProcedure" ||
+      smiteChoice.subject.command !== "castAttackHitBonusActionSpell"
     ) {
       throw new Error("Expected Divine Smite after-hit choice.");
     }
