@@ -5,8 +5,7 @@ import { spellTargetListFillForTest } from "./spell-target-list.test-support.ts"
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-sanctuary-targeting-interdiction
 import { battleProcedureExecutionRefForSpellHoleForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
 import {
@@ -136,14 +135,14 @@ describe("Sanctuary targeting interdiction", () => {
       throw new Error("Expected Sanctuary Bonus Action spell act.");
     }
     const sanctuaryProcedureRef = act.subject.procedureRef;
-    const decoded = Schema.decodeUnknownEither(BattleHoleSchema)(
+    const decoded = Schema.decodeUnknownResult(BattleHoleSchema)(
       requireHole(act.initialHoles, "spellTargetList"),
     );
 
-    if (Either.isLeft(decoded)) {
-      throw new Error(String(decoded.left));
+    if (Result.isFailure(decoded)) {
+      throw new Error(String(decoded.failure));
     }
-    expect(decoded.right).toMatchObject({
+    expect(decoded.success).toMatchObject({
       kind: "spellTargetList",
     });
 
@@ -183,8 +182,8 @@ describe("Sanctuary targeting interdiction", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(wrongTargetListOwner),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(wrongTargetListOwner),
       ),
     ).toBe(true);
 
@@ -217,8 +216,8 @@ describe("Sanctuary targeting interdiction", () => {
       ),
     };
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(nestedWrongOwner),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(nestedWrongOwner),
       ),
     ).toBe(true);
   });
@@ -1757,11 +1756,11 @@ function battleWithSanctuary(
       characterCreature(replacementId, "Replacement", 9),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function castSanctuary(

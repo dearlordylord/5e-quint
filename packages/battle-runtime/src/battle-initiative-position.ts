@@ -8,7 +8,7 @@ import { CombatantId } from "./identity.ts";
 export const BattleInitiativePositionSchema = Schema.Struct({
   roundReached: BattleRoundSchema,
   activeTurnActorId: CombatantId,
-}).annotations({ identifier: "BattleInitiativePosition" });
+}).pipe(Schema.annotate({ identifier: "BattleInitiativePosition" }));
 
 export type BattleInitiativePosition =
   typeof BattleInitiativePositionSchema.Type;

@@ -17,6 +17,7 @@ import {
 } from "@dnd/shared/types";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND,
   type BattleFill,
@@ -45,7 +46,6 @@ import {
   battleUnitRefWithSupportProfiles,
   barbarianDangerSenseUnitId,
   D20_TEST_NATURAL_ONE_REROLL_SUPPORT_PROFILE,
-  Either,
   parseSupportedUnitFeatureProfile,
   speciesHalflingLuckUnitId,
   spellCasterId,
@@ -137,7 +137,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(speciesHalflingLuckUnitId),
         supportProfiles: [expectedSupport],
       }),
@@ -1068,15 +1068,15 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
       unitRef: { unitId: dangerSense.id },
       unit: dangerSense,
     });
-    expect(Either.isRight(dangerSenseRef)).toBe(true);
-    if (Either.isLeft(dangerSenseRef)) {
-      throw new Error(dangerSenseRef.left.message);
+    expect(Result.isSuccess(dangerSenseRef)).toBe(true);
+    if (Result.isFailure(dangerSenseRef)) {
+      throw new Error(dangerSenseRef.failure.message);
     }
     const spell = spellRecord(acidSplashUnitId);
     const session = spellBattle({
       cantrips: [spell],
       targetClassLevels: [{ className: "barbarian", level: classLevel(2) }],
-      targetUnitRefs: [halflingLuck.unitRef, dangerSenseRef.right],
+      targetUnitRefs: [halflingLuck.unitRef, dangerSenseRef.success],
       targetUnitFeatures: [
         characterBattleFeatureInitForTest(halflingLuck.unit),
         characterBattleFeatureInitForTest(dangerSense, [
@@ -1727,11 +1727,11 @@ function halflingLuckSelection() {
     unitRef: { unitId: unit.id },
     unit,
   });
-  expect(Either.isRight(unitRef)).toBe(true);
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  expect(Result.isSuccess(unitRef)).toBe(true);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return { unit, unitRef: unitRef.right };
+  return { unit, unitRef: unitRef.success };
 }
 
 function attackSubject(

@@ -1,4 +1,4 @@
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -120,7 +120,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockAdmissionMissing",
       }),
@@ -142,7 +142,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "statBlockPresentationMissing",
       }),
@@ -173,7 +173,7 @@ describe("battle presentation joins", () => {
         attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "weaponPresentationMissing",
       }),
@@ -193,7 +193,7 @@ describe("battle presentation joins", () => {
         attack.weapon.weaponUnitId,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "characterWeaponPresentationSourceIssue",
         reason: "ambiguous",
         weaponUnitId: attack.weapon.weaponUnitId,

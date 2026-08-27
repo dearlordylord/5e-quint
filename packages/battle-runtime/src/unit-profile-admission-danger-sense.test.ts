@@ -8,6 +8,7 @@ import {
   characterBattleFeatureInitForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import {
   applyCondition,
@@ -18,7 +19,6 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   elapsedTimeTicks,
-  Either,
   endTurn,
   greaseAreaId,
   greaseGroundHazardEndTurnAct,
@@ -66,7 +66,7 @@ describe("L12G deterministic Danger Sense admission", () => {
         unit,
       }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(barbarianDangerSenseUnitId),
         supportProfiles: [dangerSenseSupportProfile],
       }),
@@ -275,13 +275,13 @@ function dangerSenseBattle(): BattleRuntimeSession {
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(barbarianDangerSenseUnitId),
       supportProfiles: [dangerSenseSupportProfile],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattle({
     battleId: battleId("unit-profile-danger-sense-admission"),
@@ -301,15 +301,15 @@ function dangerSenseBattle(): BattleRuntimeSession {
             { className: "barbarian", level: classLevel(2) },
           ]),
         ],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function dangerSenseGreaseGroundHazardBattle(input?: {

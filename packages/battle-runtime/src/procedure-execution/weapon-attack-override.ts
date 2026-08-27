@@ -412,10 +412,10 @@ export function weaponAttackOverrideExecutor<
 }
 
 function exactSchema<Expected>() {
-  return <Encoded, Context, Actual extends Expected>(
-    schema: Schema.Schema<Actual, Encoded, Context> &
+  return <Encoded, Actual extends Expected>(
+    schema: Schema.Codec<Actual, Encoded, never, never> &
       ([Expected] extends [Actual] ? unknown : never),
-  ): Schema.Schema<Actual, Encoded, Context> => schema;
+  ): Schema.Codec<Actual, Encoded, never, never> => schema;
 }
 
 export const SpellWeaponAttackOverrideTemplateSchema =
@@ -427,7 +427,7 @@ export const SpellWeaponAttackOverrideTemplateSchema =
       spellcastingAbilityModifier: AbilityModifier,
       attackBonus: AttackBonus,
       damage: Schema.Struct({ expr: DiceExprSchema }),
-      damageTypeChoices: Schema.Tuple(DamageTypeSchema, DamageTypeSchema),
+      damageTypeChoices: Schema.Tuple([DamageTypeSchema, DamageTypeSchema]),
       expiresAt: DurationBattleActiveEffectExpirationSchema,
     }),
   );
@@ -441,7 +441,7 @@ export const WeaponAttackOverrideExecutionSchema =
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
       activeEffect: SpellWeaponAttackOverrideTemplateSchema,
-      attachedWeaponSlot: Schema.Literal(...HELD_WEAPON_LOADOUT_SLOTS),
+      attachedWeaponSlot: Schema.Literals(HELD_WEAPON_LOADOUT_SLOTS),
     }),
   );
 

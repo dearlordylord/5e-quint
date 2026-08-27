@@ -1,4 +1,4 @@
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import * as Option from "effect/Option";
 
 import {
@@ -33,42 +33,42 @@ export function admitCompanionToBattleRuntime(
   input: WithoutBattleState<CompanionBattleAdmissionInput> & {
     readonly session: BattleRuntimeSession;
   },
-): Either.Either<BattleRuntimeSession, BattleStateInitIssue> {
+): Result.Result<BattleRuntimeSession, BattleStateInitIssue> {
   const selection = retainedCompanionSelection(input.manifestation.storedForm);
   const admitted = admitCompanionToBattle({
     ...input,
     state: input.session.state,
   });
   /* v8 ignore start -- @preserve -- Admission issues are returned by the lifecycle parser itself; this wrapper only preserves that already-typed failure. */
-  if (Either.isLeft(admitted)) return Either.left(admitted.left);
+  if (Result.isFailure(admitted)) return Result.fail(admitted.failure);
   /* v8 ignore stop -- @preserve */
   const presentation =
     "companionId" in input &&
     input.manifestation.tag === "embodiedOutsideBattle"
       ? companionPresentationFromCatalog({
-          state: admitted.right,
+          state: admitted.success,
           combatantId: input.companionId,
           statBlockId: input.manifestation.storedForm.resolvedStatBlockId,
           catalog: input.catalog,
         })
-      : Either.right(undefined);
+      : Result.succeed(undefined);
   /* v8 ignore next -- @preserve -- Successful embodied admission proves the same catalog entry and Stat Block combatant consumed by presentation projection. */
-  if (Either.isLeft(presentation)) return Either.left(presentation.left);
+  if (Result.isFailure(presentation)) return Result.fail(presentation.failure);
   const session = battleRuntimeSessionWithRetainedCompanionTransition(
     input.session,
     input.ownerId,
-    admitted.right,
+    admitted.success,
     selection,
-    presentation.right,
+    presentation.success,
   );
   if (session === undefined) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateInitIssue" as const,
       message:
         "Retained companion admission owner has no authored runtime context.",
     });
   }
-  return Either.right(session);
+  return Result.succeed(session);
 }
 
 function retainedCompanionSelection(
@@ -178,12 +178,12 @@ export function castRetainedFindFamiliarRuntime(
     statBlock: resolvedForm.form.statBlock,
   });
   /* v8 ignore start -- @preserve -- A resolved familiar cast just admitted this combatant from the same resolved Stat Block source, so presentation cannot observe a missing/non-Stat-Block combatant. */
-  if (Either.isLeft(presentation)) {
+  if (Result.isFailure(presentation)) {
     return {
       tag: "invalid",
       session: input.session,
       reason: "invalidFill",
-      message: battleStateInitIssueMessage(presentation.left),
+      message: battleStateInitIssueMessage(presentation.failure),
       snapshot: snapshotBattle(input.session.state),
     };
   }
@@ -196,7 +196,7 @@ export function castRetainedFindFamiliarRuntime(
       formAccess: "findFamiliar",
       selectedForm: input.selection,
     },
-    presentation.right,
+    presentation.success,
   );
   /* v8 ignore start -- @preserve -- The retained-selection guard at function entry proves that the caster owns authored context in this session. */
   if (session === undefined) {
@@ -218,7 +218,7 @@ function companionPresentationFromCatalog(input: {
   readonly combatantId: CombatantId;
   readonly statBlockId: import("@dnd/shared/game-facts").StatBlockId;
   readonly catalog: import("./battle-state-execution.ts").BattleStatBlockExecutionCatalog;
-}): Either.Either<
+}): Result.Result<
   | {
       readonly combatantId: CombatantId;
       readonly source: BattleStatBlockPresentationSource;
@@ -229,7 +229,7 @@ function companionPresentationFromCatalog(input: {
   const statBlock = input.catalog.getStatBlock(input.statBlockId);
   /* v8 ignore start -- @preserve -- Companion admission resolved this exact stored Stat Block id through the same immutable catalog immediately before requesting presentation. */
   if (Option.isNone(statBlock)) {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateInitIssue",
       message:
         "Committed companion presentation Stat Block is missing from the catalog.",
@@ -247,7 +247,7 @@ function companionPresentationFromSource(input: {
   readonly state: import("./battle-state-execution.ts").BattleState;
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
-}): Either.Either<
+}): Result.Result<
   {
     readonly combatantId: CombatantId;
     readonly source: BattleStatBlockPresentationSource;
@@ -257,14 +257,14 @@ function companionPresentationFromSource(input: {
   const combatant = input.state.combatants.get(input.combatantId);
   /* v8 ignore start -- @preserve -- Both admission and recast call this projection only after successfully admitting the familiar as a Stat Block combatant. */
   if (combatant?.origin.kind !== "statBlock") {
-    return Either.left({
+    return Result.fail({
       tag: "battleStateInitIssue",
       message:
         "Committed companion presentation requires its Stat Block combatant.",
     });
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     combatantId: input.combatantId,
     source: {
       displayName: input.statBlock.statBlock.displayName,

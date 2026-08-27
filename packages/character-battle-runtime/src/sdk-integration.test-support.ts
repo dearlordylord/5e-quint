@@ -75,7 +75,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import { characterSheetBattleInit } from "./index.ts";
 import { testAmmunitionStocksForStatBlock } from "./ammunition-stock.test-support.ts";
@@ -1515,9 +1515,11 @@ export function characterResources(combatant: CharacterCombatantState) {
   return combatant.origin.resources;
 }
 
-export function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+export function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }
 
 function rolledDiceGroup(

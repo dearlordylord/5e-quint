@@ -3,7 +3,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 
 import { Hp, movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 
 import {
   type BattleFill,
@@ -300,10 +300,10 @@ function preserveLifeBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function preserveLifeAct(state: BattleState) {
@@ -443,11 +443,11 @@ function requirePreserveLifeUnitRef() {
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  expect(unitRef.right.supportProfiles).toContainEqual(
+  expect(unitRef.success.supportProfiles).toContainEqual(
     requiredMagicActionHealingPoolSupportProfile(preserveLifeUnit),
   );
-  return unitRef.right;
+  return unitRef.success;
 }

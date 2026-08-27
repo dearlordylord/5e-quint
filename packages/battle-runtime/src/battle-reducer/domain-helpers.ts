@@ -1,7 +1,7 @@
 // Pure leaf helpers that depend only on shared algebra and domain types.
 // RAW-COVERAGE: runtime-owner RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001
 
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type { CreatureType } from "@dnd/shared/game-facts";
 import { difficultyClass, type DifficultyClass } from "@dnd/shared/types";
 import type {
@@ -24,8 +24,8 @@ export function concentrationSavingThrowDc(
 
 export function battleStateInitIssue(
   message: string,
-): Either.Either<never, BattleStateInitLeafIssue> {
-  return Either.left({ tag: "battleStateInitIssue", message });
+): Result.Result<never, BattleStateInitLeafIssue> {
+  return Result.fail({ tag: "battleStateInitIssue", message });
 }
 
 export function weaponLoadoutMismatchMessage(
@@ -48,11 +48,11 @@ export function battleStateInitIssues(
   first: BattleStateInitLeafIssue,
   second: BattleStateInitLeafIssue,
   ...rest: ReadonlyArray<BattleStateInitLeafIssue>
-): Either.Either<
+): Result.Result<
   never,
   Extract<BattleStateInitIssue, { tag: "battleStateInitIssues" }>
 > {
-  return Either.left({
+  return Result.fail({
     tag: "battleStateInitIssues",
     issues: [first, second, ...rest],
   });
@@ -60,8 +60,8 @@ export function battleStateInitIssues(
 
 export function weaponLoadoutMismatchIssue(
   slot: "main-hand" | "off-hand",
-): Either.Either<never, BattleStateInitLeafIssue> {
-  return Either.left({
+): Result.Result<never, BattleStateInitLeafIssue> {
+  return Result.fail({
     tag: "weaponLoadoutMismatch",
     slot,
   });

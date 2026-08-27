@@ -64,6 +64,11 @@ import {
 } from "./druid-wild-shape.ts";
 
 export {
+  opportunityAttackThreatEqual,
+  opportunityAttackThreatIdentityEqual,
+} from "./opportunity-attack-equality.ts";
+
+export {
   baseWalkSpeed,
   battleCreatureSpeedFacts,
   battleSpecialSpeedCandidates,
@@ -325,26 +330,6 @@ export type BattleOpportunityAttackExecutionCandidate = Readonly<{
   readonly selection: BattleOpportunityAttackSelection;
   readonly reachFeet: MovementFeet;
 }>;
-
-export function opportunityAttackThreatEqual(
-  left: BattleOpportunityAttackThreat,
-  right: BattleOpportunityAttackThreat,
-): boolean {
-  return (
-    opportunityAttackThreatIdentityEqual(left, right) &&
-    Number(left.distanceFeet) === Number(right.distanceFeet)
-  );
-}
-
-export function opportunityAttackThreatIdentityEqual(
-  left: BattleOpportunityAttackThreat,
-  right: BattleOpportunityAttackThreat,
-): boolean {
-  return (
-    left.reactorId === right.reactorId &&
-    interruptAttackExecutionSelectionsEqual(left, right)
-  );
-}
 
 export function opportunityAttackLeavesReach(input: {
   readonly beforeDistanceFeet: MovementFeet;

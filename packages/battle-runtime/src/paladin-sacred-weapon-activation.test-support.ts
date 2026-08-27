@@ -9,7 +9,6 @@ import {
   battleUnitRefWithSupportProfiles,
   combatantId,
   discoverBattleActCandidates,
-  Either,
   requireResultHole,
   resolveBattleSubject,
   startBattle,
@@ -21,6 +20,7 @@ import {
   type BattleSubject,
   unitLibrary,
 } from "./unit-profile-admission.test-support.ts";
+import { Result } from "effect";
 import {
   paladinChannelDivinityUnitId,
   paladinSacredWeaponUnitId,
@@ -79,8 +79,8 @@ export function sacredWeaponSession(
     unitRef: { unitId: sacredWeapon.id },
     unit: sacredWeapon,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const mainWeaponUnitId = input.weaponUnitId ?? "weapon_longsword";
   const mainWeaponObjectId = battleObjectId(`main:${mainWeaponUnitId}`);
@@ -92,7 +92,7 @@ export function sacredWeaponSession(
         displayName: "Sacred Weapon Paladin",
         initiative: 18,
         characterUnitRefs:
-          input.selectedProfile === false ? [] : [unitRef.right],
+          input.selectedProfile === false ? [] : [unitRef.success],
         classLevels: [
           { className: "paladin", level: 3 },
           ...(input.includeActionSurgeResource === true
@@ -157,14 +157,14 @@ export function sacredWeaponSession(
       }),
     ],
   });
-  if (Either.isLeft(state)) {
-    throw new Error(battleStateInitIssueMessage(state.left));
+  if (Result.isFailure(state)) {
+    throw new Error(battleStateInitIssueMessage(state.failure));
   }
   return input.charismaScore === undefined
-    ? state.right
+    ? state.success
     : battleRuntimeSessionForTest({
-        ...state.right,
-        state: withCharismaScore(state.right.state, input.charismaScore),
+        ...state.success,
+        state: withCharismaScore(state.success.state, input.charismaScore),
       });
 }
 

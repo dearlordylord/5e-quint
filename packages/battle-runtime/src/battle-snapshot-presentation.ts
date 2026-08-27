@@ -1,5 +1,4 @@
-import * as Either from "effect/Either";
-import { Schema } from "effect";
+import { Result, Schema } from "effect";
 import { traverseValidation } from "@dnd/shared-algebras/validation-algebra";
 import type {
   BattleCreatureSnapshot,
@@ -15,15 +14,15 @@ import { BattleCreatureDisplayNameSchema } from "./battle-creature-display-name.
 
 export function battlePresentedSnapshot(
   session: BattleRuntimeSession,
-): Either.Either<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
+): Result.Result<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
   return presentBattleSnapshot(session, snapshotBattle(session.state));
 }
 
 export function presentBattleSnapshot(
   session: BattleRuntimeSession,
   snapshot: import("./battle-state-execution.ts").BattleSnapshot,
-): Either.Either<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
-  return Either.map(
+): Result.Result<BattlePresentedSnapshot, BattleSnapshotPresentationIssues> {
+  return Result.map(
     traverseValidation(snapshot.combatants, (combatant) =>
       presentedCombatant(session, combatant),
     ),
@@ -34,7 +33,7 @@ export function presentBattleSnapshot(
 function presentedCombatant(
   session: BattleRuntimeSession,
   combatant: BattleCreatureSnapshot,
-): Either.Either<
+): Result.Result<
   BattlePresentedCreatureSnapshot,
   BattleSnapshotPresentationIssue
 > {
@@ -44,15 +43,15 @@ function presentedCombatant(
     combatant.combatantId,
   );
   if (displayName === null) {
-    return Either.left({
+    return Result.fail({
       tag: "battleSnapshotPresentationIssue",
       reason: "missingStatBlockPresentation",
       combatantId: combatant.combatantId,
     });
   }
   return Schema.is(BattleCreatureDisplayNameSchema)(displayName)
-    ? Either.right({ ...combatant, displayName })
-    : Either.left({
+    ? Result.succeed({ ...combatant, displayName })
+    : Result.fail({
         tag: "battleSnapshotPresentationIssue",
         reason: "invalidDisplayName",
         combatantId: combatant.combatantId,

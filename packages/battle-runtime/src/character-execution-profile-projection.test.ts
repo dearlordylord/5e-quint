@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { CLASS_NAMES, unitId } from "@dnd/shared/game-facts";
 import { NonNegativeInteger, classLevel } from "@dnd/shared/types";
 import {
@@ -157,9 +157,9 @@ describe("character execution profile projection", () => {
         classLevels,
         sourceFacts,
       });
-      if (Either.isLeft(profiles)) continue;
+      if (Result.isFailure(profiles)) continue;
 
-      for (const profile of profiles.right) {
+      for (const profile of profiles.success) {
         const execution = unitSupportProcedureExecution(profile, {
           resourcePoolRefsByUnitId,
           unitFeatureProcedureRefsByUnitId: procedureRefsByUnitId,
@@ -218,9 +218,9 @@ describe("character execution profile projection", () => {
         classLevels,
         sourceFacts,
       });
-      if (Either.isLeft(profiles)) continue;
+      if (Result.isFailure(profiles)) continue;
 
-      for (const profile of profiles.right) {
+      for (const profile of profiles.success) {
         const execution = unitSupportProcedureExecution(profile, {
           resourcePoolRefsByUnitId: new Map(),
           unitFeatureProcedureRefsByUnitId: new Map(),
@@ -267,7 +267,7 @@ describe("character execution profile projection", () => {
     });
 
     expect(admission).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "battleUnitSupportProfileIssue",
           message:
@@ -297,7 +297,7 @@ describe("character execution profile projection", () => {
     });
 
     expect(admission).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "battleUnitSupportProfileIssue",
           message:
@@ -327,7 +327,7 @@ describe("character execution profile projection", () => {
     });
 
     expect(admission).toEqual(
-      Either.left([
+      Result.fail([
         {
           tag: "battleUnitSupportProfileIssue",
           message:
@@ -358,10 +358,10 @@ function requireSupportProfile(
     classLevels: focusedClassLevels,
     sourceFacts,
   });
-  if (Either.isLeft(profiles)) {
+  if (Result.isFailure(profiles)) {
     throw new Error(`Expected admitted support profiles for ${unit.id}.`);
   }
-  const profile = profiles.right.find(
+  const profile = profiles.success.find(
     (candidate) =>
       (typeof candidate === "string" ? candidate : candidate.kind) === kind,
   );

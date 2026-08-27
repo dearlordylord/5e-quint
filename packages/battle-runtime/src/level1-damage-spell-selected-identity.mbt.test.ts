@@ -9,7 +9,7 @@
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity starry_wisp doResolveStarryWispObjectSpellAttackDamageAndDimLight
 // UNIT-IDENTITY-REPLAY: level1-damage-spell-selected-identity vicious_mockery doResolveViciousMockeryWisdomSavingThrowPsychicDamageAndNextAttackDisadvantage
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 import {
   armorClass,
   defaultArmorClassState,
@@ -1168,10 +1168,10 @@ function level1DamageSpellBattle(spell: SpellRecord): BattleState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function level1DamageSpellCreature(input: {

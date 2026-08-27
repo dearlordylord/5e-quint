@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import { classLevel, DieRollResult } from "@dnd/shared/types";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import type { BattleFill } from "./battle-state-execution.ts";
@@ -6,7 +7,6 @@ import { D20_TEST_NATURAL_ONE_REROLL_EFFECT_KIND } from "./battle-state-executio
 import {
   battleUnitRefWithSupportProfiles,
   endTurn,
-  Either,
   speciesHalflingLuckUnitId,
   spellCasterId,
   spellTargetId,
@@ -112,13 +112,13 @@ function preparedFriendshipSession() {
       }),
     ],
   });
-  expect(Either.isRight(started)).toBe(true);
-  if (Either.isLeft(started)) {
+  expect(Result.isSuccess(started)).toBe(true);
+  if (Result.isFailure(started)) {
     throw new Error("Expected the relationship boundary battle to start.");
   }
   return battleRuntimeSessionForTest({
-    state: started.right.state,
-    context: started.right.context,
+    state: started.success.state,
+    context: started.success.context,
   });
 }
 
@@ -251,11 +251,11 @@ describe("battle runtime: spell attack sequence public boundaries", () => {
       unitRef: { unitId: unit.id },
       unit,
     });
-    expect(Either.isRight(unitRef)).toBe(true);
-    if (Either.isLeft(unitRef)) throw new Error(unitRef.left.message);
+    expect(Result.isSuccess(unitRef)).toBe(true);
+    if (Result.isFailure(unitRef)) throw new Error(unitRef.failure.message);
     const session = spellBattle({
       cantrips: [spellRecord(eldritchBlastUnitId)],
-      casterUnitRefs: [unitRef.right],
+      casterUnitRefs: [unitRef.success],
       casterUnitFeatures: [characterBattleFeatureInitForTest(unit)],
     });
     const act = spellAct({ session, spellId: eldritchBlastUnitId });

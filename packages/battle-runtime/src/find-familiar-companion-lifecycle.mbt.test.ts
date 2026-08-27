@@ -27,7 +27,7 @@ import {
   findFamiliarFormEligibilityForSpell,
   type FindFamiliarFormEligibility,
 } from "@dnd/surface/surface/find-familiar-forms";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -557,10 +557,10 @@ function initialRuntimeState(): FindFamiliarCompanionRuntimeState {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return { battle: result.right, lastResult: "init" };
+  return { battle: result.success, lastResult: "init" };
 }
 
 function createCatFamiliar(

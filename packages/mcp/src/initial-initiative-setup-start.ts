@@ -2,7 +2,7 @@ import {
   battleStateInitIssueMessage,
   startBattleWithInitialInitiativeSetup,
 } from "@dnd/battle-runtime";
-import { Either } from "effect";
+import { Result } from "effect";
 
 import type { McpPlaySessionRoot } from "./composition-root.ts";
 import { StartBattleOutputSchema } from "./battle-tool-output.ts";
@@ -31,10 +31,10 @@ export function startInitialInitiativeSetup(
     battleId: input.battleId,
     combatants: combatants.creatureInits,
   });
-  if (Either.isLeft(setup)) {
+  if (Result.isFailure(setup)) {
     return errorContent("Battle session start failed.", {
       code: "BATTLE_START_FAILED",
-      message: battleStateInitIssueMessage(setup.left),
+      message: battleStateInitIssueMessage(setup.failure),
     });
   }
 
@@ -43,7 +43,7 @@ export function startInitialInitiativeSetup(
     transition: root.sessionStore.commitBattleStart({
       nextBattleState: {
         tag: "initialInitiativeSetup",
-        setup: setup.right,
+        setup: setup.success,
       },
       characterSessions: combatants.characterSessions.map(
         ({ session }) => session,

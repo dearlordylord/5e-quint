@@ -1,7 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import fc from "fast-check";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 import { classLevel, resourceCount } from "@dnd/shared/types";
 import { unitId } from "@dnd/shared/game-facts";
@@ -459,7 +458,7 @@ describe("battle boundary admission owners", () => {
       ...snapshotBattle(codecSession.state),
       acts: [codecAct],
     });
-    type EncodedCodecHole = Schema.Schema.Encoded<typeof BattleHoleSchema>;
+    type EncodedCodecHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
     const encodedCodecHole = (value: unknown): EncodedCodecHole =>
       Schema.encodeSync(BattleHoleSchema)(
         Schema.decodeUnknownSync(BattleHoleSchema)(value),
@@ -632,8 +631,8 @@ describe("battle boundary admission owners", () => {
         })),
       };
       expect(
-        Either.isRight(
-          Schema.decodeUnknownEither(BattleSnapshotSchema)(candidate),
+        Result.isSuccess(
+          Schema.decodeUnknownResult(BattleSnapshotSchema)(candidate),
         ),
       ).toBe(true);
     }
@@ -1618,13 +1617,13 @@ describe("battle boundary admission owners", () => {
   test("stat-block and character execution admission reject malformed boundaries and round-trip valid snapshots", () => {
     const source = statBlockRecord();
     const valid = battleStatBlockCombatantSource(source);
-    expect(Either.isRight(valid)).toBe(true);
+    expect(Result.isSuccess(valid)).toBe(true);
     expect(
       battleStatBlockCombatantSource({
         ...source,
         statBlock: { ...source.statBlock, hp: { kind: "literal", value: 0 } },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       battleStatBlockCombatantSource({
         ...source,
@@ -1633,7 +1632,7 @@ describe("battle boundary admission owners", () => {
           ac: { kind: "caster_derived", source: "spell_save_dc" },
         },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       admitBattleStatBlockCombatant({
         battleId: battleId("boundary-stat-block-creature-type"),
@@ -1644,7 +1643,7 @@ describe("battle boundary admission owners", () => {
         },
         startingScopeOrdinal: battleExecutionScopeOrdinal(0),
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       admitBattleStatBlockCombatant({
         battleId: battleId("boundary-stat-block-resistance-choice"),
@@ -1658,13 +1657,13 @@ describe("battle boundary admission owners", () => {
         },
         startingScopeOrdinal: battleExecutionScopeOrdinal(0),
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       battleStatBlockCombatantSource({
         ...source,
         statBlock: { ...source.statBlock, size: 17 as never },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       battleStatBlockCombatantSource({
         ...source,
@@ -1673,7 +1672,7 @@ describe("battle boundary admission owners", () => {
           hp: { kind: "literal", value: 1.25 },
         },
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       admitBattleStatBlockCombatant({
         battleId: battleId("boundary-stat-block"),
@@ -1681,7 +1680,7 @@ describe("battle boundary admission owners", () => {
         statBlock: source,
         startingScopeOrdinal: battleExecutionScopeOrdinal(0),
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
 
     const executionSource = monsterResourceStatBlock();
     const cohort = statBlockExecutionAdmissionCohort(
@@ -1701,7 +1700,7 @@ describe("battle boundary admission owners", () => {
         executionSource,
         snapshot,
       ),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     expect(
       restoreStatBlockExecutionAdmissions(
         battleId("boundary-stat-execution"),
@@ -1716,7 +1715,7 @@ describe("battle boundary admission owners", () => {
           },
         ],
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
 
     const sectionAdmissions = statBlockExecutionAdmissionCohort(
       battleId("boundary-stat-sections"),
@@ -1765,7 +1764,7 @@ describe("battle boundary admission owners", () => {
           ],
         },
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-execution"),
@@ -1776,7 +1775,7 @@ describe("battle boundary admission owners", () => {
           resourcePools: snapshot.resourcePools.slice(1),
         },
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-other-battle"),
@@ -1784,7 +1783,7 @@ describe("battle boundary admission owners", () => {
         executionSource,
         snapshot,
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     expect(
       restoreStatBlockExecutionAdmission(
         battleId("boundary-stat-execution"),
@@ -1805,7 +1804,7 @@ describe("battle boundary admission owners", () => {
           ),
         },
       ),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
 
     expect(
       characterExecutionFromUnits({
@@ -1818,7 +1817,7 @@ describe("battle boundary admission owners", () => {
         unitRefs: [],
         classLevels: [],
       }),
-    ).toMatchObject({ _tag: "Right" });
+    ).toMatchObject({ _tag: "Success" });
     const tacticalMind = unitLibrary.requireUnit("fighter_tactical_mind");
     const fighterLevels = [
       { className: "fighter" as const, level: classLevel(2) },
@@ -1845,15 +1844,15 @@ describe("battle boundary admission owners", () => {
         unitRefs: [],
         classLevels: fighterLevels,
       }),
-    ).toMatchObject({ _tag: "Left" });
+    ).toMatchObject({ _tag: "Failure" });
     const supportProfiles = battleUnitSupportProfilesForUnit({
       unit: tacticalMind,
       classLevels: fighterLevels,
     });
-    if (Either.isLeft(supportProfiles)) {
+    if (Result.isFailure(supportProfiles)) {
       throw new Error("Expected Tactical Mind support profile admission.");
     }
-    const supportProfile = supportProfiles.right[0];
+    const supportProfile = supportProfiles.success[0];
     if (supportProfile === undefined) {
       throw new Error("Expected Tactical Mind support profile.");
     }
@@ -2695,8 +2694,8 @@ describe("battle boundary admission owners", () => {
         }),
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Knocked Out Unconscious initialization requires exactly 1 current HP.",
       },

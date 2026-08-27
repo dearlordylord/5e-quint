@@ -5,6 +5,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.DIRECT_CONDITION_LIFECYCLE
 import type { SpellRecord } from "@dnd/surface/surface/types";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import type { BattleProcedureExecutionRef } from "./identity.ts";
 import {
   battleProcedureExecutionRefForTest,
@@ -45,7 +46,6 @@ import {
   applyBattleHitPointDamage,
   battleId,
   combatantId,
-  Either,
   elapsedTimeTicks,
   endTurn,
   hasCondition,
@@ -757,11 +757,11 @@ function invisibilityReactionBattle(input: {
       ...input.extraCombatants,
     ],
   });
-  expect(Either.isRight(result)).toBe(true);
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  expect(Result.isSuccess(result)).toBe(true);
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 type NeedsHolesResult = Extract<

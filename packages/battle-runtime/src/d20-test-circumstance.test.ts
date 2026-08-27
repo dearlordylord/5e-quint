@@ -1,7 +1,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.D20_TEST.TABLE_CIRCUMSTANCE_DECISION
 // KERNEL-COVERAGE: parity-witness BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 import fc from "fast-check";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import {
   holeId,
@@ -536,8 +536,8 @@ describe("Table-authored per-test D20 circumstances", () => {
         decisions: [decision(stale, "advantage")],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { issues: [{ tag: "stale-d20-test-request" }] },
+      _tag: "Failure",
+      failure: { issues: [{ tag: "stale-d20-test-request" }] },
     });
     expect(
       admitTableD20TestCircumstanceDecisions({
@@ -545,8 +545,8 @@ describe("Table-authored per-test D20 circumstances", () => {
         decisions: [decision(attack, "advantage", "savingThrow")],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { issues: [{ tag: "d20-test-kind-mismatch" }] },
+      _tag: "Failure",
+      failure: { issues: [{ tag: "d20-test-kind-mismatch" }] },
     });
     expect(
       admitTableD20TestCircumstanceDecisions({
@@ -557,8 +557,8 @@ describe("Table-authored per-test D20 circumstances", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { issues: [{ tag: "duplicate-d20-test-decision" }] },
+      _tag: "Failure",
+      failure: { issues: [{ tag: "duplicate-d20-test-decision" }] },
     });
     expect(
       admitTableD20TestCircumstanceDecisions({
@@ -569,8 +569,8 @@ describe("Table-authored per-test D20 circumstances", () => {
         ],
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { issues: [{ tag: "contradictory-d20-test-decision" }] },
+      _tag: "Failure",
+      failure: { issues: [{ tag: "contradictory-d20-test-decision" }] },
     });
   });
 
@@ -592,11 +592,14 @@ describe("Table-authored per-test D20 circumstances", () => {
             requests,
             decisions,
           });
-          expect(Either.isRight(admitted)).toBe(true);
-          if (Either.isRight(admitted)) {
+          expect(Result.isSuccess(admitted)).toBe(true);
+          if (Result.isSuccess(admitted)) {
             expect(
               requests.map((request) =>
-                effectiveD20TestRollMode({ request, admitted: admitted.right }),
+                effectiveD20TestRollMode({
+                  request,
+                  admitted: admitted.success,
+                }),
               ),
             ).toEqual(["advantage", "advantage", "advantage"]);
           }
@@ -666,12 +669,12 @@ describe("Table-authored per-test D20 circumstances", () => {
       requests: [request],
       decisions: [tableDecision],
     });
-    expect(Either.isRight(admitted)).toBe(true);
-    if (Either.isLeft(admitted)) return;
+    expect(Result.isSuccess(admitted)).toBe(true);
+    if (Result.isFailure(admitted)) return;
     const projectedHoles = battleHolesWithTableD20TestCircumstances({
       holes: preliminary.holes,
       requests: preliminary.d20TestCircumstanceRequests,
-      admitted: admitted.right,
+      admitted: admitted.success,
     });
     const attackHole = projectedHoles.find(
       (hole) => hole.kind === "attackRoll",
@@ -889,8 +892,8 @@ describe("Table-authored per-test D20 circumstances", () => {
       unit,
       classLevels,
     });
-    expect(Either.isRight(unitRef)).toBe(true);
-    if (Either.isLeft(unitRef)) return;
+    expect(Result.isSuccess(unitRef)).toBe(true);
+    if (Result.isFailure(unitRef)) return;
     const support = battleMagicActionSaveGatedConditionSupportForUnit(
       unit,
       classLevels,
@@ -907,7 +910,7 @@ describe("Table-authored per-test D20 circumstances", () => {
           initiative: 20,
           classLevels,
           d20Statistics: testCharacterD20Statistics({ cha: 16, wis: 10 }),
-          characterUnitRefs: [unitRef.right],
+          characterUnitRefs: [unitRef.success],
           unitFeatures: [characterBattleFeatureInitForTest(unit, classLevels)],
           resources: [{ unit: paladinChannelDivinity, usesRemaining: 2 }],
           spellcasting: {

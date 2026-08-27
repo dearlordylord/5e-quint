@@ -1,5 +1,5 @@
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
-import { Either } from "effect";
+import { Result } from "effect";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, expect, test } from "vitest";
 
@@ -149,10 +149,10 @@ function startBattleRight(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function requireAttackAct(session: BattleRuntimeSession): AvailableBattleAct {
@@ -255,7 +255,13 @@ function statBlockCreatureInit(input: {
     initiative: initiativeScore(input.initiative),
     creatureInit: {
       kind: "statBlock",
-      source: Either.getOrThrow(battleStatBlockCombatantSource(statBlock)),
+      source: (() => {
+        const source = battleStatBlockCombatantSource(statBlock);
+        if (Result.isFailure(source)) {
+          throw new Error(battleStateInitIssueMessage(source.failure));
+        }
+        return source.success;
+      })(),
       currentHp: Hp(statBlock.statBlock.hp.value),
       tempHp: Hp(0),
       ammunitionStocks: [],

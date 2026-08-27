@@ -2,7 +2,7 @@ import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { AjvJsonSchemaValidator } from "@modelcontextprotocol/sdk/validation/ajv";
 import type { JsonSchemaType } from "@modelcontextprotocol/sdk/validation";
-import { Either, Random, Schema } from "effect";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -22,6 +22,7 @@ import { handleDiceToolCall, rollDice } from "./dice-tools.ts";
 import { mcpOutputJsonSchema } from "./schema-codec.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 import { createDndMcpProtocolServer } from "./protocol-server.ts";
+import { fixedRandom, seededRandom } from "./dice-random-test-support.ts";
 
 const request = {
   groups: [
@@ -33,8 +34,10 @@ const request = {
 describe("structured MCP bulk dice roller", () => {
   test("rejects empty groups and caller correlation/idempotency fields", () => {
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(RollDiceArgsSchema)({ groups: [] }),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(RollDiceArgsSchema))({
+          groups: [],
+        }),
       ),
     ).toBe(true);
 
@@ -42,7 +45,7 @@ describe("structured MCP bulk dice roller", () => {
       name: "roll_dice",
       args: { ...request, correlationId: "caller-supplied" },
     });
-    expect(Either.isLeft(decoded)).toBe(true);
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 
   test("enforces bounded per-group and aggregate work before allocation", () => {
@@ -54,7 +57,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(tooManyInOneGroup).valid).toBe(false);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: tooManyInOneGroup }),
       ),
     ).toBe(true);
@@ -64,7 +67,7 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(atPerGroupBoundary).valid).toBe(true);
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeDiceToolCall({ name: "roll_dice", args: atPerGroupBoundary }),
       ),
     ).toBe(true);
@@ -76,7 +79,7 @@ describe("structured MCP bulk dice roller", () => {
       })),
     };
     expect(
-      Either.isRight(
+      Result.isSuccess(
         decodeDiceToolCall({ name: "roll_dice", args: atAggregateBoundary }),
       ),
     ).toBe(true);
@@ -90,7 +93,7 @@ describe("structured MCP bulk dice roller", () => {
       ],
     };
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: overAggregateBoundary }),
       ),
     ).toBe(true);
@@ -102,14 +105,14 @@ describe("structured MCP bulk dice roller", () => {
     };
     expect(validateInput(tooManyGroups).valid).toBe(false);
     expect(
-      Either.isLeft(
+      Result.isFailure(
         decodeDiceToolCall({ name: "roll_dice", args: tooManyGroups }),
       ),
     ).toBe(true);
   });
 
   test("returns ordered visible faces in each requested group", () => {
-    const result = rollDice(request, Random.fixed([1, 2, 3]));
+    const result = rollDice(request, fixedRandom([0, 1 / 6, 1 / 2]));
 
     expect(result.groups).toEqual([
       { dieSize: 6, results: [1, 2] },
@@ -133,7 +136,11 @@ describe("structured MCP bulk dice roller", () => {
       groups: [{ dieSize: 6, results: [1, 7] }],
     };
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(RollDiceOutputSchema)(invalid)),
+      Result.isFailure(
+        Schema.decodeUnknownResult(Schema.toType(RollDiceOutputSchema))(
+          invalid,
+        ),
+      ),
     ).toBe(true);
 
     const validate = new AjvJsonSchemaValidator().getValidator(
@@ -148,8 +155,8 @@ describe("structured MCP bulk dice roller", () => {
   });
 
   test("reproduces a seeded sequence while separate streams remain isolated", () => {
-    const first = Random.make("dice-seed");
-    const second = Random.make("dice-seed");
+    const first = seededRandom("dice-seed");
+    const second = seededRandom("dice-seed");
 
     const firstCall = rollDice(request, first);
     const secondCall = rollDice(request, first);
@@ -165,7 +172,7 @@ describe("structured MCP bulk dice roller", () => {
     const root = createMcpPlaySessionRoot(
       services,
       services.configuredAdminMirrorSessionId,
-      Random.fixed([1]),
+      fixedRandom([0]),
     );
     const before = root.sessionStore.snapshot();
     const content = handleDiceToolCall(root, {

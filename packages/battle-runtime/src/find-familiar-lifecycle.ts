@@ -8,7 +8,7 @@ import {
 import { Hp, type SpellSlotLevel } from "@dnd/shared/types";
 import type { StatBlockCatalog } from "@dnd/surface/surface/stat-block-catalog";
 import type { StatBlockRecord } from "@dnd/surface/surface/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import * as Option from "effect/Option";
 export {
   applyFindFamiliarZeroHitPointDisappearance,
@@ -75,14 +75,14 @@ export function reappearTemporarilyDismissedFindFamiliar(
 ): BattleResolutionResult {
   const admission = admitFindFamiliarReappearance(input);
   /* v8 ignore start -- @preserve -- Reappearance admission owns malformed/stale input diagnostics; this lifecycle wrapper only preserves its typed issue as an invalid result. */
-  return Either.isLeft(admission)
+  return Result.isFailure(admission)
     ? invalidFindFamiliarResult(
         input.state,
         "invalidFill",
-        admission.left.message,
+        admission.failure.message,
       )
     : reappearAdmittedTemporarilyDismissedFindFamiliar({
-        admission: admission.right.mechanics,
+        admission: admission.success.mechanics,
         initiative: input.initiative,
         placement: input.placement,
       });
@@ -187,14 +187,14 @@ type FindFamiliarCastReactionIssue = {
 function findFamiliarPresentCombatant(input: {
   readonly state: BattleState;
   readonly familiarId: CombatantId;
-}): Either.Either<BattleCreatureState, FindFamiliarCastReactionIssue> {
+}): Result.Result<BattleCreatureState, FindFamiliarCastReactionIssue> {
   const combatant = input.state.combatants.get(input.familiarId);
   return combatant === undefined
-    ? Either.left({
+    ? Result.fail({
         tag: "missingLiveCombatant",
         message: "Present Find Familiar combatant is missing.",
       })
-    : Either.right(combatant);
+    : Result.succeed(combatant);
 }
 
 function findFamiliarCastPrior(
@@ -398,11 +398,11 @@ export function castResolvedFindFamiliar(
     prior,
   });
   /* v8 ignore start -- @preserve -- A stale present companion can retain identity after its live combatant is missing. */
-  if (Either.isLeft(reactionAvailable)) {
+  if (Result.isFailure(reactionAvailable)) {
     return invalidFindFamiliarResult(
       input.state,
       "missingCombatant",
-      reactionAvailable.left.message,
+      reactionAvailable.failure.message,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -414,7 +414,7 @@ export function castResolvedFindFamiliar(
     initiative: input.initiative,
     statBlock: familiarStatBlockWithCreatureTypeOverride(resolvedForm),
     ammunitionStocks: input.ammunitionStocks,
-    reactionAvailable: reactionAvailable.right,
+    reactionAvailable: reactionAvailable.success,
     ...(preservedHitPoints === null
       ? {}
       : {
@@ -526,11 +526,11 @@ export function castWildCompanion(
     prior,
   });
   /* v8 ignore start -- @preserve -- A stale present companion can retain identity after its live combatant is missing. */
-  if (Either.isLeft(reactionAvailable)) {
+  if (Result.isFailure(reactionAvailable)) {
     return invalidFindFamiliarResult(
       spent.state,
       "missingCombatant",
-      reactionAvailable.left.message,
+      reactionAvailable.failure.message,
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -545,7 +545,7 @@ export function castWildCompanion(
       creatureTypeOverride: "fey",
     }),
     ammunitionStocks: input.ammunitionStocks,
-    reactionAvailable: reactionAvailable.right,
+    reactionAvailable: reactionAvailable.success,
     ...(preservedHitPoints === null
       ? {}
       : {
@@ -563,7 +563,7 @@ export function castWildCompanion(
 
 export function admitCompanionToBattle(
   input: CompanionBattleAdmissionInput,
-): Either.Either<BattleState, BattleStateInitIssue> {
+): Result.Result<BattleState, BattleStateInitIssue> {
   /* v8 ignore start -- @preserve -- Malformed handoff: character-battle admission supplies an owner from the battle roster it just created. */
   if (!input.state.combatants.has(input.ownerId)) {
     return battleStateInitIssue(
@@ -673,11 +673,11 @@ function withAdmittedFindFamiliarCombatant(
     ),
   });
   /* v8 ignore start -- @preserve -- The stored form was resolved from the catalog immediately above; only a forged execution source can fail Stat Block combatant admission here. */
-  if (Either.isLeft(combatantAdmission)) {
+  if (Result.isFailure(combatantAdmission)) {
     return invalidFindFamiliarResult(
       input.state,
       "invalidFill",
-      battleStateInitIssueMessage(combatantAdmission.left),
+      battleStateInitIssueMessage(combatantAdmission.failure),
     );
   }
   /* v8 ignore stop -- @preserve */
@@ -687,7 +687,7 @@ function withAdmittedFindFamiliarCombatant(
     familiarId: input.familiarId,
     familiar: input.familiar,
     initiative: input.initiative,
-    combatantAdmission: combatantAdmission.right,
+    combatantAdmission: combatantAdmission.success,
     ammunitionStocks: input.ammunitionStocks,
     reactionAvailable: input.reactionAvailable,
     ...optionalProperty("currentHp", input.currentHp),
@@ -713,7 +713,7 @@ function admitAbsentCompanionToBattle(
       { readonly tag: "embodiedOutsideBattle" }
     >;
   },
-): Either.Either<BattleState, BattleStateInitIssue> {
+): Result.Result<BattleState, BattleStateInitIssue> {
   const resolvedForm = resolveStoredFindFamiliarForm({
     catalog: input.catalog,
     formEligibility: input.formEligibility,
@@ -759,7 +759,7 @@ function admitAbsentCompanionToBattle(
     );
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({
+  return Result.succeed({
     ...input.state,
     companions: setCompanion(input.state.companions, companion),
   });
@@ -782,18 +782,18 @@ function executionStoredForm(
 function withInitialInitiativeOrder(
   state: BattleState,
   initialCombatantOrder: ReadonlyMap<CombatantId, number>,
-): Either.Either<BattleState, BattleStateInitIssue> {
+): Result.Result<BattleState, BattleStateInitIssue> {
   const initiative = createInitialInitiativeForCombatants({
     combatants: [...state.combatants.values()],
     initialCombatantOrder,
     emptyRosterMessage: "Find Familiar admission requires combatants.",
   });
   /* v8 ignore start -- @preserve -- Malformed handoff: the character-battle boundary supplies one unique initial-order entry for every admitted combatant. */
-  if (Either.isLeft(initiative)) {
-    return Either.left(initiative.left);
+  if (Result.isFailure(initiative)) {
+    return Result.fail(initiative.failure);
   }
   /* v8 ignore stop -- @preserve */
-  return Either.right({ ...state, initiative: initiative.right });
+  return Result.succeed({ ...state, initiative: initiative.success });
 }
 
 function hitPointsForFindFamiliarCast(input: {
@@ -828,20 +828,20 @@ function hitPointsForFindFamiliarCast(input: {
 function reactionAvailableForFindFamiliarCast(input: {
   readonly state: BattleState;
   readonly prior: FindFamiliarCastPrior;
-}): Either.Either<boolean, FindFamiliarCastReactionIssue> {
+}): Result.Result<boolean, FindFamiliarCastReactionIssue> {
   if (input.prior.tag === "none" || input.prior.tag === "dismissedForever") {
-    return Either.right(true);
+    return Result.succeed(true);
   }
   if (input.prior.tag === "absent") {
-    return Either.right(input.prior.familiar.reactionAvailable);
+    return Result.succeed(input.prior.familiar.reactionAvailable);
   }
   const combatant = findFamiliarPresentCombatant({
     state: input.state,
     familiarId: input.prior.familiar.combatantId,
   });
-  return Either.isLeft(combatant)
-    ? Either.left(combatant.left)
-    : Either.right(combatant.right.reactionAvailable);
+  return Result.isFailure(combatant)
+    ? Result.fail(combatant.failure)
+    : Result.succeed(combatant.success.reactionAvailable);
 }
 
 function hitPointsForAdoptedFamiliarForm(input: {
@@ -1028,7 +1028,7 @@ function spendWildCompanionCost(input: {
       input.casterId,
     );
     /* v8 ignore start -- @preserve -- Stale subject: the once-per-turn Spell Slot marker is part of the same discovery gate as the Wild Companion spend option. */
-    if (Either.isLeft(markedSpellSlotUse)) {
+    if (Result.isFailure(markedSpellSlotUse)) {
       return invalidFindFamiliarResult(
         input.state,
         "staleSubject",
@@ -1038,7 +1038,7 @@ function spendWildCompanionCost(input: {
     /* v8 ignore stop -- @preserve */
     const stateWithMarkedSpellSlotUse = {
       ...spentAction.state,
-      currentTurnResources: markedSpellSlotUse.right,
+      currentTurnResources: markedSpellSlotUse.success,
     };
     return {
       tag: "resolved",

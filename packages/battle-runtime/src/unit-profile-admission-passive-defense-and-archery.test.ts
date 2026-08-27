@@ -4,6 +4,7 @@ import type { DiceDelta } from "@dnd/surface/surface/types";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT18 defense
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT27 feat_archery
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   archerySupportProfile,
   archeryUnitId,
@@ -23,7 +24,6 @@ import {
 } from "./unit-profile-admission-feature-fixture.test-support.ts";
 import {
   battleUnitRefWithSupportProfiles,
-  Either,
   parseSupportedUnitFeatureProfile,
   PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE,
 } from "./unit-profile-admission.test-support.ts";
@@ -41,7 +41,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(defenseUnitId),
         supportProfiles: [PASSIVE_ARMOR_CLASS_BONUS_SUPPORT_PROFILE],
       }),
@@ -68,7 +68,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(archeryUnitId),
         supportProfiles: [archerySupportProfile],
       }),
@@ -193,7 +193,7 @@ describe("QMBT18 deterministic unsupported feature profile slice", () => {
           unit: adjacentUnit,
         }),
       ).toEqual(
-        Either.left({
+        Result.fail({
           tag: "battleUnitSupportProfileIssue",
           message: `Unsupported battle passive ranged attack-roll bonus Unit hook: ${adjacentUnit.id}.`,
         }),

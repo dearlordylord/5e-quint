@@ -1,5 +1,4 @@
-import { Brand } from "effect";
-import * as Either from "effect/Either";
+import { Brand, Result } from "effect";
 import * as Option from "effect/Option";
 
 import type {
@@ -36,7 +35,7 @@ export function admitFindFamiliarReappearance(input: {
   readonly state: BattleState;
   readonly casterId: CombatantId;
   readonly catalog: BattleStatBlockExecutionCatalog;
-}): Either.Either<
+}): Result.Result<
   {
     readonly mechanics: AdmittedFindFamiliarReappearance;
     readonly presentation: BattleStatBlockPresentationSource;
@@ -71,11 +70,11 @@ export function admitFindFamiliarReappearance(input: {
     storedForm: familiar,
     creatureTypeOverride: familiar.creatureTypeOverride,
   });
-  if (Either.isLeft(resolvedForm)) {
-    return issue(input.state, resolvedForm.left);
+  if (Result.isFailure(resolvedForm)) {
+    return issue(input.state, resolvedForm.failure);
   }
   const statBlock = familiarStatBlockWithCreatureTypeOverride(
-    resolvedForm.right,
+    resolvedForm.success,
   );
   const allocation = input.state.executionScopeCursors.get(
     familiar.reappearanceCombatantId,
@@ -88,13 +87,13 @@ export function admitFindFamiliarReappearance(input: {
       allocation?.nextScopeOrdinal,
     ),
   });
-  if (Either.isLeft(combatantAdmission)) {
+  if (Result.isFailure(combatantAdmission)) {
     return issue(
       input.state,
-      battleStateInitIssueMessage(combatantAdmission.left),
+      battleStateInitIssueMessage(combatantAdmission.failure),
     );
   }
-  return Either.right({
+  return Result.succeed({
     mechanics: AdmittedFindFamiliarReappearance({
       state: input.state,
       subject: {
@@ -102,14 +101,14 @@ export function admitFindFamiliarReappearance(input: {
         actorId: input.casterId,
         action: "reappear",
       },
-      combatantAdmission: combatantAdmission.right,
+      combatantAdmission: combatantAdmission.success,
     }),
     presentation: {
       displayName: statBlock.statBlock.displayName,
       languages: statBlockLanguagePresentation(statBlock),
       procedures: statBlockProcedurePresentations({
         statBlock,
-        execution: combatantAdmission.right.origin.execution,
+        execution: combatantAdmission.success.origin.execution,
       }),
     },
   });
@@ -119,7 +118,7 @@ function resolveStoredFindFamiliarReappearanceForm(input: {
   readonly catalog: BattleStatBlockExecutionCatalog;
   readonly storedForm: BattleCompanionStoredForm;
   readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
-}): Either.Either<
+}): Result.Result<
   {
     readonly statBlock: BattleStatBlockExecutionSource;
     readonly creatureTypeOverride: FindFamiliarCreatureTypeOverride;
@@ -130,10 +129,10 @@ function resolveStoredFindFamiliarReappearanceForm(input: {
     input.storedForm.resolvedStatBlockId,
   );
   return Option.isNone(statBlock)
-    ? Either.left(
+    ? Result.fail(
         `Retained familiar form Stat Block is missing: ${input.storedForm.resolvedStatBlockId}.`,
       )
-    : Either.right({
+    : Result.succeed({
         statBlock: statBlock.value,
         creatureTypeOverride: input.creatureTypeOverride,
       });
@@ -142,14 +141,14 @@ function resolveStoredFindFamiliarReappearanceForm(input: {
 function issue(
   _state: BattleState,
   message: string,
-): Either.Either<
+): Result.Result<
   never,
   {
     readonly tag: "findFamiliarReappearanceAdmissionIssue";
     readonly message: string;
   }
 > {
-  return Either.left({
+  return Result.fail({
     tag: "findFamiliarReappearanceAdmissionIssue",
     message,
   });

@@ -1,4 +1,5 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
+import { Result } from "effect";
 import {
   startBattleSessionRight,
   characterSeed,
@@ -9,7 +10,6 @@ import {
   battleId,
   decodeUnitRecordSync,
   discoverBattleActs,
-  Either,
   findFamiliarFormEligibilityForSpell,
   findFamiliarInput,
   PACT_OF_THE_CHAIN_FIND_FAMILIAR_INVOCATION_MODE,
@@ -381,7 +381,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message:
           "Pact of the Chain Find Familiar access requires familiar form catalog references.",
@@ -424,7 +424,7 @@ describe("battle runtime: Find Familiar and Pact of the Chain", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message: "Pact of the Chain Spell Access must grant Find Familiar.",
       }),

@@ -42,10 +42,10 @@ import {
   spellAct,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
+import { Result } from "effect";
 import {
   battleUnitRefWithSupportProfiles,
   breakBattleConcentration,
-  Either,
   elapsedTimeTicks,
   endTurn,
   hasCondition,
@@ -170,10 +170,10 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       targetTurn.state.currentTurnResources,
       "magic",
     );
-    expect(Either.isRight(ordinaryActionSpent)).toBe(true);
-    if (Either.isLeft(ordinaryActionSpent)) return;
-    expect(canSpendAction(ordinaryActionSpent.right, "magic")).toBe(false);
-    expect(canSpendAction(ordinaryActionSpent.right, "dash")).toBe(true);
+    expect(Result.isSuccess(ordinaryActionSpent)).toBe(true);
+    if (Result.isFailure(ordinaryActionSpent)) return;
+    expect(canSpendAction(ordinaryActionSpent.success, "magic")).toBe(false);
+    expect(canSpendAction(ordinaryActionSpent.success, "dash")).toBe(true);
 
     const noExtraAttackFromHasteAction = openClassFeatureExtraAttackResource({
       state: stateAfterSpendingResource(targetTurn.state, spellEffectResource),
@@ -800,15 +800,15 @@ function extraAttackBattleUnitRef() {
     unit,
   });
   expect(unitRef).toEqual(
-    Either.right({
+    Result.succeed({
       unit: unitLibrary.requireUnit(fighterExtraAttackUnitId),
       supportProfiles: [extraAttackSupportProfile],
     }),
   );
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
-  return unitRef.right;
+  return unitRef.success;
 }
 
 function stateAfterSpendingResource(

@@ -45,7 +45,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -359,8 +359,8 @@ function rejectMixedSpellAndPactSlotInitProjection(): BattleInitProjection {
 
   return projectFromParts({
     outcome: "mixed-spell-and-pact-slot-init-rejected",
-    accepted: Either.isRight(result),
-    message: Either.isLeft(result) ? result.left.message : "none",
+    accepted: Result.isSuccess(result),
+    message: Result.isFailure(result) ? result.failure.message : "none",
     replayIndex: 5,
   });
 }
@@ -380,8 +380,8 @@ function rejectBuildMaximumAboveBuildMaximumProjection(): BattleInitProjection {
 
   return projectFromParts({
     outcome: "build-maximum-above-build-maximum-rejected",
-    accepted: Either.isRight(result),
-    message: Either.isLeft(result) ? result.left.message : "none",
+    accepted: Result.isSuccess(result),
+    message: Result.isFailure(result) ? result.failure.message : "none",
     replayIndex: 6,
   });
 }
@@ -414,8 +414,8 @@ function rejectStableRecoveryProgressDuringInitProjection(): BattleInitProjectio
 
   return projectFromParts({
     outcome: "stable-recovery-progress-during-init-rejected",
-    accepted: Either.isRight(result),
-    message: Either.isLeft(result) ? result.left.message : "none",
+    accepted: Result.isSuccess(result),
+    message: Result.isFailure(result) ? result.failure.message : "none",
     replayIndex: 7,
   });
 }
@@ -996,7 +996,9 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function expectRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+function expectRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }

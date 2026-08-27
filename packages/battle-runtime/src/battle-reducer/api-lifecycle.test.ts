@@ -1,4 +1,4 @@
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { unitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 
@@ -66,9 +66,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       combatants: [mismatchedMainHandCombatant()],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left).toEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toEqual({
         tag: "weaponLoadoutMismatch",
         slot: "main-hand",
       });
@@ -80,9 +80,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       battleId: battleId("empty-roster"),
       combatants: [],
     });
-    expect(Either.isLeft(empty)).toBe(true);
-    if (Either.isLeft(empty)) {
-      expect(empty.left).toEqual({
+    expect(Result.isFailure(empty)).toBe(true);
+    if (Result.isFailure(empty)) {
+      expect(empty.failure).toEqual({
         tag: "battleStateInitIssue",
         message: "startBattle requires at least one combatant.",
       });
@@ -92,9 +92,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       battleId: battleId("duplicate-roster"),
       combatants: [baseCombatant, baseCombatant],
     });
-    expect(Either.isLeft(duplicate)).toBe(true);
-    if (Either.isLeft(duplicate)) {
-      expect(duplicate.left).toEqual({
+    expect(Result.isFailure(duplicate)).toBe(true);
+    if (Result.isFailure(duplicate)) {
+      expect(duplicate.failure).toEqual({
         tag: "battleStateInitIssue",
         message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
       });
@@ -115,9 +115,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       initialCombatantOrder: new Map(),
       emptyRosterMessage: "synthetic empty roster",
     });
-    expect(Either.isLeft(incompleteOrder)).toBe(true);
-    if (Either.isLeft(incompleteOrder)) {
-      expect(incompleteOrder.left).toEqual({
+    expect(Result.isFailure(incompleteOrder)).toBe(true);
+    if (Result.isFailure(incompleteOrder)) {
+      expect(incompleteOrder.failure).toEqual({
         tag: "battleStateInitIssue",
         message: "Initial combatant order must include every combatant.",
       });
@@ -127,9 +127,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       combatants: [],
       emptyRosterMessage: "synthetic empty roster",
     });
-    expect(Either.isLeft(empty)).toBe(true);
-    if (Either.isLeft(empty)) {
-      expect(empty.left).toEqual({
+    expect(Result.isFailure(empty)).toBe(true);
+    if (Result.isFailure(empty)) {
+      expect(empty.failure).toEqual({
         tag: "battleStateInitIssue",
         message: "synthetic empty roster",
       });
@@ -142,9 +142,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       combatants: [mismatchedBothHandsCombatant()],
     });
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left).toEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toEqual({
         tag: "battleStateInitIssues",
         issues: [
           { tag: "weaponLoadoutMismatch", slot: "main-hand" },
@@ -164,9 +164,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       state,
       combatant: mismatchedMainHandCombatant(),
     });
-    expect(Either.isLeft(single)).toBe(true);
-    if (Either.isLeft(single)) {
-      expect(single.left).toEqual({
+    expect(Result.isFailure(single)).toBe(true);
+    if (Result.isFailure(single)) {
+      expect(single.failure).toEqual({
         tag: "weaponLoadoutMismatch",
         slot: "main-hand",
       });
@@ -176,9 +176,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       state,
       combatant: mismatchedBothHandsCombatant(),
     });
-    expect(Either.isLeft(aggregate)).toBe(true);
-    if (Either.isLeft(aggregate)) {
-      expect(aggregate.left).toEqual({
+    expect(Result.isFailure(aggregate)).toBe(true);
+    if (Result.isFailure(aggregate)) {
+      expect(aggregate.failure).toEqual({
         tag: "battleStateInitIssues",
         issues: [
           { tag: "weaponLoadoutMismatch", slot: "main-hand" },
@@ -193,65 +193,65 @@ describe("battle lifecycle admission issue aggregation", () => {
       battleId: battleId("runtime-roster-context"),
       combatants: [baseCombatant],
     });
-    expect(Either.isRight(started)).toBe(true);
-    if (Either.isLeft(started)) return;
+    expect(Result.isSuccess(started)).toBe(true);
+    if (Result.isFailure(started)) return;
 
     const addedCombatant = characterSeed({
       combatantId: combatantId("runtime-added-character"),
       initiative: 18,
     });
     const added = addBattleRuntimeCombatant({
-      session: started.right,
+      session: started.success,
       combatant: addedCombatant,
     });
-    expect(Either.isRight(added)).toBe(true);
-    if (Either.isLeft(added)) return;
-    expect(added.right.state.combatants.has(addedCombatant.combatantId)).toBe(
+    expect(Result.isSuccess(added)).toBe(true);
+    if (Result.isFailure(added)) return;
+    expect(added.success.state.combatants.has(addedCombatant.combatantId)).toBe(
       true,
     );
-    expect(added.right.context.characters.has(addedCombatant.combatantId)).toBe(
-      true,
-    );
+    expect(
+      added.success.context.characters.has(addedCombatant.combatantId),
+    ).toBe(true);
 
     const addedStatBlock = statBlockCreatureInit({
       combatantId: combatantId("runtime-added-stat-block"),
       initiative: 16,
     });
     const addedWithStatBlock = addBattleRuntimeCombatant({
-      session: added.right,
+      session: added.success,
       combatant: addedStatBlock,
     });
-    expect(Either.isRight(addedWithStatBlock)).toBe(true);
-    if (Either.isLeft(addedWithStatBlock)) return;
+    expect(Result.isSuccess(addedWithStatBlock)).toBe(true);
+    if (Result.isFailure(addedWithStatBlock)) return;
     expect(
-      addedWithStatBlock.right.context.statBlocks.has(
+      addedWithStatBlock.success.context.statBlocks.has(
         addedStatBlock.combatantId,
       ),
     ).toBe(true);
     expect(
-      addedWithStatBlock.right.context.characters.has(
+      addedWithStatBlock.success.context.characters.has(
         addedCombatant.combatantId,
       ),
     ).toBe(true);
 
     const removed = removeBattleRuntimeCombatants({
-      session: addedWithStatBlock.right,
+      session: addedWithStatBlock.success,
       combatantIds: [addedCombatant.combatantId, addedStatBlock.combatantId],
     });
-    expect(Either.isRight(removed)).toBe(true);
-    if (Either.isLeft(removed)) return;
-    expect(removed.right.state.combatants.has(addedCombatant.combatantId)).toBe(
-      false,
-    );
+    expect(Result.isSuccess(removed)).toBe(true);
+    if (Result.isFailure(removed)) return;
     expect(
-      removed.right.context.characters.has(addedCombatant.combatantId),
+      removed.success.state.combatants.has(addedCombatant.combatantId),
     ).toBe(false);
     expect(
-      removed.right.context.statBlocks.has(addedStatBlock.combatantId),
+      removed.success.context.characters.has(addedCombatant.combatantId),
+    ).toBe(false);
+    expect(
+      removed.success.context.statBlocks.has(addedStatBlock.combatantId),
     ).toBe(false);
     expect(
       requiredInitiativeRollModeForCombatant(
-        removed.right.state,
+        removed.success.state,
         baseCombatant.combatantId,
       ),
     ).toBeUndefined();
@@ -262,9 +262,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       { tag: "weaponLoadoutMismatch", slot: "main-hand" },
     ]);
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left).toEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toEqual({
         tag: "weaponLoadoutMismatch",
         slot: "main-hand",
       });
@@ -278,9 +278,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       { tag: "battleStateInitIssue", message: "third issue" },
     ]);
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left).toEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toEqual({
         tag: "battleStateInitIssues",
         issues: [
           { tag: "weaponLoadoutMismatch", slot: "main-hand" },
@@ -299,9 +299,9 @@ describe("battle lifecycle admission issue aggregation", () => {
       },
     ]);
 
-    expect(Either.isLeft(result)).toBe(true);
-    if (Either.isLeft(result)) {
-      expect(result.left).toEqual({
+    expect(Result.isFailure(result)).toBe(true);
+    if (Result.isFailure(result)) {
+      expect(result.failure).toEqual({
         tag: "battleStateInitIssue",
         message: "support profile mismatch",
       });
@@ -314,8 +314,8 @@ describe("battle lifecycle admission issue aggregation", () => {
       combatants: [],
     });
     expect(emptySetup).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         tag: "battleStateInitIssue",
         message: "startBattle requires at least one combatant.",
       },
@@ -329,10 +329,10 @@ describe("battle lifecycle admission issue aggregation", () => {
       battleId: battleId("initial-setup-boundaries"),
       combatants: [baseCombatant, statBlock],
     });
-    expect(Either.isRight(setupResult)).toBe(true);
-    if (Either.isLeft(setupResult)) return;
+    expect(Result.isSuccess(setupResult)).toBe(true);
+    if (Result.isFailure(setupResult)) return;
 
-    const setup = setupResult.right;
+    const setup = setupResult.success;
     expect(
       requiredInitiativeRollModeForCombatant(
         setup.state,
@@ -360,8 +360,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Initiative Swap requires a distinct willing ally.",
       },
     });
@@ -373,8 +373,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: "Initiative Swap source must be a combatant in this battle.",
       },
     });
@@ -386,8 +386,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Initiative Swap candidate must be a combatant in this battle.",
       },
@@ -400,8 +400,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message:
           "Initiative Swap source lacks an admitted Initiative swap support profile.",
       },
@@ -417,8 +417,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         candidateWitness: { tag: "willingAlly" },
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: { message: "Initial Initiative setup is already complete." },
+      _tag: "Failure",
+      failure: { message: "Initial Initiative setup is already complete." },
     });
 
     expect(
@@ -427,8 +427,8 @@ describe("battle lifecycle admission issue aggregation", () => {
         combatant: baseCombatant,
       }),
     ).toMatchObject({
-      _tag: "Left",
-      left: {
+      _tag: "Failure",
+      failure: {
         message: `Duplicate combatant id: ${baseCombatant.combatantId}`,
       },
     });

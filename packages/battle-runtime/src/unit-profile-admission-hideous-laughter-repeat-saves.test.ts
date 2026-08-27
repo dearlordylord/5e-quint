@@ -5,6 +5,7 @@ import {
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   colorSprayUnitId,
   eldritchBlastUnitId,
@@ -46,7 +47,6 @@ import {
   battleCreatureStateWithKnockOutPreservedConditions,
   battleId,
   classLevel,
-  Either,
   endTurn,
   hasCondition,
   Hp,
@@ -679,11 +679,11 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         }),
       ],
     });
-    expect(Either.isRight(baseStateResult)).toBe(true);
-    if (Either.isLeft(baseStateResult)) {
-      throw new Error(battleStateInitIssueMessage(baseStateResult.left));
+    expect(Result.isSuccess(baseStateResult)).toBe(true);
+    if (Result.isFailure(baseStateResult)) {
+      throw new Error(battleStateInitIssueMessage(baseStateResult.failure));
     }
-    const baseState = baseStateResult.right;
+    const baseState = baseStateResult.success;
     const target = requireCombatant(baseState.state, spellTargetId);
     const hideousLaughterEffect = {
       kind: "hideousLaughter",

@@ -11,7 +11,7 @@ import {
   BattleShovePushOutcomeSchema,
   BattlePresentedSnapshotSchema,
   BattleSubjectSchema,
-} from "@dnd/battle-runtime";
+} from "@dnd/battle-runtime/protocol-codecs";
 import { Schema } from "effect";
 
 import {
@@ -23,32 +23,21 @@ import {
   McpSessionSummarySchema,
 } from "./session-snapshot-output.ts";
 
-const JsonObjectSchema = Schema.Record({
-  key: Schema.String,
-  value: Schema.Any,
-});
-const BattleResolutionResultSchema = Schema.Union(
+const JsonObjectSchema = Schema.Record(Schema.String, Schema.Unknown);
+const BattleResolutionResultSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("resolved"),
     snapshot: BattlePresentedSnapshotSchema,
-    objectDamages: Schema.optionalWith(
+    objectDamages: Schema.optionalKey(
       Schema.Array(BattleObjectDamageOutcomeSchema),
-      { exact: true },
     ),
-    objectIgnitions: Schema.optionalWith(
+    objectIgnitions: Schema.optionalKey(
       Schema.Array(BattleObjectIgnitionOutcomeSchema),
-      { exact: true },
     ),
-    droppedObjects: Schema.optionalWith(
+    droppedObjects: Schema.optionalKey(
       Schema.Array(BattleDroppedObjectOutcomeSchema),
-      { exact: true },
     ),
-    shovePushes: Schema.optionalWith(
-      Schema.Array(BattleShovePushOutcomeSchema),
-      {
-        exact: true,
-      },
-    ),
+    shovePushes: Schema.optionalKey(Schema.Array(BattleShovePushOutcomeSchema)),
   }),
   Schema.Struct({
     tag: Schema.Literal("needsHoles"),
@@ -62,13 +51,13 @@ const BattleResolutionResultSchema = Schema.Union(
     message: Schema.String,
     snapshot: BattlePresentedSnapshotSchema,
   }),
-);
+]);
 
 const AvailableBattleActSchema = Schema.Struct({
   subject: BattleSubjectSchema,
   initialHoles: Schema.Array(BattleHoleSchema),
-  label: Schema.NonEmptyTrimmedString,
-  summary: Schema.NonEmptyTrimmedString,
+  label: Schema.Trimmed.check(Schema.isNonEmpty()),
+  summary: Schema.Trimmed.check(Schema.isNonEmpty()),
   presentation: BattleActPresentationSchema,
 });
 
@@ -98,7 +87,7 @@ const BattlePresentationBranches = {
   },
 } as const;
 
-const BattleLifecycleResultSchema = Schema.Union(
+const BattleLifecycleResultSchema = Schema.Union([
   Schema.Struct({
     tag: Schema.Literal("combatantAdded"),
     combatantId: CombatantId,
@@ -108,25 +97,27 @@ const BattleLifecycleResultSchema = Schema.Union(
     combatantId: CombatantId,
     removedCombatantIds: Schema.NonEmptyArray(CombatantId),
   }),
-);
+]);
 
-function battlePresentationOutputSchema(session: Schema.Schema.AnyNoContext) {
-  return Schema.Union(
-    Schema.Struct({
-      ...BattlePresentationBranches.none,
-      ...BattlePresentationProjectionFields,
-      session,
-    }),
-    Schema.Struct({
-      ...BattlePresentationBranches.initialInitiativeSetup,
-      ...BattlePresentationProjectionFields,
-      session,
-    }),
-    Schema.Struct({
-      ...BattlePresentationBranches.activeBattle,
-      ...BattlePresentationProjectionFields,
-      session,
-    }),
+function battlePresentationOutputSchema(session: Schema.Constraint) {
+  return Schema.toCodecIso(
+    Schema.Union([
+      Schema.Struct({
+        ...BattlePresentationBranches.none,
+        ...BattlePresentationProjectionFields,
+        session,
+      }),
+      Schema.Struct({
+        ...BattlePresentationBranches.initialInitiativeSetup,
+        ...BattlePresentationProjectionFields,
+        session,
+      }),
+      Schema.Struct({
+        ...BattlePresentationBranches.activeBattle,
+        ...BattlePresentationProjectionFields,
+        session,
+      }),
+    ]),
   );
 }
 
@@ -163,10 +154,12 @@ const BattleLifecycleActiveOutputSchema = Schema.Struct({
   session: McpActiveSessionSnapshotSchema,
 });
 
-export const BattleLifecycleOutputSchema = Schema.Union(
-  BattleLifecycleActiveOutputSchema,
-  BattleLifecycleInitialInitiativeSetupOutputSchema,
-  BattleLifecycleActiveSetupOutputSchema,
+export const BattleLifecycleOutputSchema = Schema.toCodecIso(
+  Schema.Union([
+    BattleLifecycleActiveOutputSchema,
+    BattleLifecycleInitialInitiativeSetupOutputSchema,
+    BattleLifecycleActiveSetupOutputSchema,
+  ]),
 );
 
 export const BattleResolutionOutputSchema = Schema.Struct({

@@ -10,6 +10,7 @@ import {
   requireCharacterUnitProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   greatWeaponFightingUnitId,
   spellCasterId,
@@ -30,7 +31,6 @@ import {
   ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE,
   battleAttackDamageDieFloorSupportForUnit,
   battleUnitRefWithSupportProfiles,
-  Either,
   elapsedTimeTicks,
   parseSupportedUnitFeatureProfile,
   resolveBattleSubject,
@@ -52,7 +52,7 @@ describe("L3-FOLLOWUP-GREAT-WEAPON-FIGHTING-RUNTIME deterministic profile slice"
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit: unitLibrary.requireUnit(greatWeaponFightingUnitId),
         supportProfiles: [ATTACK_DAMAGE_DIE_FLOOR_SUPPORT_PROFILE],
       }),

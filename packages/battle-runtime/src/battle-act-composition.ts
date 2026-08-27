@@ -7,7 +7,7 @@ import type {
 } from "./battle-state-execution.ts";
 import type { AuthoredSelectedSpellInvocation } from "./character-execution-admission.ts";
 import type { BattleUnitRef } from "./battle-init.ts";
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 import { isCharacterProcedureBattleSubject } from "./battle-subjects.ts";
 import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
@@ -267,12 +267,12 @@ function intrinsicSubjectPresentation(
       subject.reactorId,
       attack,
     );
-    return Either.isLeft(name)
-      ? { kind: "presentationIssue", issue: name.left }
+    return Result.isFailure(name)
+      ? { kind: "presentationIssue", issue: name.failure }
       : {
           kind: "attack",
           procedureRef: subject.procedureRef,
-          name: name.right,
+          name: name.success,
         };
   }
   const attackSubject =
@@ -295,13 +295,13 @@ function intrinsicSubjectPresentation(
         attackSubject.actorId,
         attack,
       );
-      if (Either.isLeft(name)) {
-        return { kind: "presentationIssue", issue: name.left };
+      if (Result.isFailure(name)) {
+        return { kind: "presentationIssue", issue: name.failure };
       }
       return {
         kind: "attack",
         procedureRef: attackSubject.procedureRef,
-        name: name.right,
+        name: name.success,
       };
     }
     return undefined;
@@ -680,10 +680,10 @@ function spellProcedurePresentationText(
       subject.actorId,
       invocation.componentWeapon.attack,
     );
-    if (Either.isLeft(weaponName)) return undefined;
+    if (Result.isFailure(weaponName)) return undefined;
     return {
-      label: `${invocation.spell.name} (${weaponName.right})`,
-      summary: `Cast ${invocation.spell.name} as a cantrip using ${weaponName.right}.`,
+      label: `${invocation.spell.name} (${weaponName.success})`,
+      summary: `Cast ${invocation.spell.name} as a cantrip using ${weaponName.success}.`,
     };
   }
   if (invocation.procedure === "spellCreatedHeldObjectReEvoke") {

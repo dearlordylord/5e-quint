@@ -1,6 +1,7 @@
 import { statBlockId } from "@dnd/shared/game-facts";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
+import { SrdUnitRecordSchema } from "@dnd/surface/surface/schema";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -10,10 +11,10 @@ import { handleToolCall } from "./server.ts";
 import { jsonContentPayload } from "./tool-content.ts";
 
 const CatalogUnitListSchema = Schema.Struct({
-  unitsByKind: Schema.Record({
-    key: Schema.String,
-    value: Schema.Array(Schema.Struct({ id: Schema.String })),
-  }),
+  unitsByKind: Schema.Record(
+    Schema.String,
+    Schema.Array(Schema.Struct({ id: Schema.String })),
+  ),
 });
 
 const StatBlockListSchema = Schema.Struct({
@@ -25,12 +26,14 @@ function payload(response: ReturnType<typeof handleToolCall>): unknown {
 }
 
 const UnitDetailOutputSchema = Schema.Struct({
-  unitRecordJson: Schema.parseJson(Schema.Unknown),
+  unitRecordJson: Schema.String,
 });
 
 function unitDetailPayload(response: ReturnType<typeof handleToolCall>) {
-  return Schema.decodeUnknownSync(UnitDetailOutputSchema)(payload(response))
-    .unitRecordJson;
+  const encoded = Schema.decodeUnknownSync(UnitDetailOutputSchema)(
+    payload(response),
+  ).unitRecordJson;
+  return Schema.decodeUnknownSync(SrdUnitRecordSchema)(JSON.parse(encoded));
 }
 
 describe("MCP Stat Block summaries", () => {

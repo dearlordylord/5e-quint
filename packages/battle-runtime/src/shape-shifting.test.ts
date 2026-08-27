@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect, test } from "vitest";
 
 import {
@@ -199,13 +199,13 @@ test("spell-effect shape-shift reversion reports a target removed through the pu
     }),
     combatantIds: [spellShapeTargetId],
   });
-  if (Either.isLeft(removed)) {
-    throw new Error(JSON.stringify(removed.left));
+  if (Result.isFailure(removed)) {
+    throw new Error(JSON.stringify(removed.failure));
   }
 
   expect(
     revertShapeShiftedRuntimeState({
-      state: removed.right.state,
+      state: removed.success.state,
       shapeShift,
     }),
   ).toMatchObject({

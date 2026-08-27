@@ -11,7 +11,7 @@ import { battleActUnitPresentation } from "./battle-act-composition.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ANTIMAGIC_FIELD_MAGICAL_EFFECT_INTERDICTION
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-antimagic-field-magical-effect-interdiction
 import { classLevel, Hp, movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -510,10 +510,10 @@ function preserveLifeBattle(): BattleRuntimeSession {
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function preserveLifeAct(session: BattleRuntimeSession) {
@@ -565,13 +565,13 @@ function preserveLifeUnitRefWithSupport() {
     unit: preserveLifeUnit,
     classLevels: [{ className: "cleric", level: classLevel(3) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support = battleMagicActionHealingPoolSupportForUnit(preserveLifeUnit);
   if (support === null || support === "unsupported") {
     throw new Error("Expected Preserve Life Magic Action support.");
   }
-  expect(unitRef.right.supportProfiles).toContainEqual(support);
-  return unitRef.right;
+  expect(unitRef.success.supportProfiles).toContainEqual(support);
+  return unitRef.success;
 }

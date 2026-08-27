@@ -6,7 +6,7 @@ import { battleActSpellPresentation } from "./battle-act-composition.ts";
 // UNIT-IDENTITY-REPLAY: attack-spell-shape guiding_bolt doGuidingBoltNextAttackAdvantage
 // UNIT-IDENTITY-REPLAY: attack-spell-shape inflict_wounds doInflictWoundsFailedSave doInflictWoundsSuccessfulSave
 // UNIT-IDENTITY-REPLAY: attack-spell-shape shocking_grasp doShockingGraspOpportunityAttackDenied
-import { Either } from "effect";
+import { Result } from "effect";
 import { expect, it } from "vitest";
 
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
@@ -768,10 +768,10 @@ function attackSpellShapeBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right;
+  return result.success;
 }
 
 function attackSpellShapeCreature(input: {

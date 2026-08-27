@@ -1,6 +1,7 @@
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay CRPI-BLOCK-007 barbarian_danger_sense
 // UNIT-IDENTITY-REPLAY: CRPI-BLOCK-007 barbarian_danger_sense doProjectDangerSenseDexterityAdvantage doSuppressDangerSenseWhileIncapacitated
 import { describe, expect, it } from "vitest";
+import { Result } from "effect";
 
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { defineSelectedIdentityReplayAndQntReplay } from "./selected-identity-witness.test-support.ts";
@@ -25,7 +26,6 @@ import {
   battleId,
   battleUnitRefWithSupportProfiles,
   classLevel,
-  Either,
   spellCasterId,
   spellTargetId,
   startBattle,
@@ -139,8 +139,8 @@ function dangerSenseBattle(): BattleState {
     unitRef: { unitId: unit.id },
     unit,
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const result = startBattle({
     battleId: battleId("b4-danger-sense-selected-identity"),
@@ -160,14 +160,14 @@ function dangerSenseBattle(): BattleState {
             { className: "barbarian", level: classLevel(2) },
           ]),
         ],
-        characterUnitRefs: [unitRef.right],
+        characterUnitRefs: [unitRef.success],
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function incapacitatedDangerSenseBattle(): BattleState {

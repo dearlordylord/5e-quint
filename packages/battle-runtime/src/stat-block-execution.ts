@@ -6,8 +6,7 @@ import {
   resourceCount,
   type ReadonlyNonEmptyArray,
 } from "@dnd/shared/types";
-import { Brand, Match } from "effect";
-import * as Either from "effect/Either";
+import { Brand, Match, Result } from "effect";
 import type {
   CreatureLimitedUse,
   CreatureNamedActionOption,
@@ -578,7 +577,7 @@ export function restoreStatBlockExecutionAdmissions<
   battleId: BattleId,
   combatantId: CombatantId,
   restorations: readonly [StatBlockExecutionRestoration<TStatBlock>],
-): Either.Either<
+): Result.Result<
   readonly [StatBlockExecutionAdmission<TStatBlock>],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 >;
@@ -589,7 +588,7 @@ export function restoreStatBlockExecutionAdmissions<
   battleId: BattleId,
   combatantId: CombatantId,
   restorations: readonly StatBlockExecutionRestoration<TStatBlock>[],
-): Either.Either<
+): Result.Result<
   readonly StatBlockExecutionAdmission<TStatBlock>[],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 >;
@@ -600,7 +599,7 @@ export function restoreStatBlockExecutionAdmissions<
   battleId: BattleId,
   combatantId: CombatantId,
   restorations: readonly StatBlockExecutionRestoration<TStatBlock>[],
-): Either.Either<
+): Result.Result<
   readonly StatBlockExecutionAdmission<TStatBlock>[],
   ReadonlyNonEmptyArray<StatBlockExecutionRestoreIssue>
 > {
@@ -691,9 +690,9 @@ export function restoreStatBlockExecutionAdmissions<
   }
   const firstIssue = issues[0];
   if (firstIssue !== undefined) {
-    return Either.left([firstIssue, ...issues.slice(1)]);
+    return Result.fail([firstIssue, ...issues.slice(1)]);
   }
-  return Either.right(restored);
+  return Result.succeed(restored);
 }
 
 function statBlockExecutionRestoreIssue(
@@ -716,7 +715,7 @@ export function restoreStatBlockExecutionAdmission<
   combatantId: CombatantId,
   statBlock: TStatBlock,
   snapshot: StatBlockExecutionSnapshot,
-): Either.Either<
+): Result.Result<
   StatBlockExecutionAdmission<TStatBlock>,
   StatBlockExecutionRestoreIssue
 > {
@@ -728,8 +727,8 @@ export function restoreStatBlockExecutionAdmission<
     combatantId,
     restoration,
   );
-  if (Either.isLeft(restored)) return Either.left(restored.left[0]);
-  return Either.right(restored.right[0]);
+  if (Result.isFailure(restored)) return Result.fail(restored.failure[0]);
+  return Result.succeed(restored.success[0]);
 }
 
 function resourcePoolStateIsOutOfBounds(

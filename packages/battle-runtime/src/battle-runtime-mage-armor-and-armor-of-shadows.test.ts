@@ -1,4 +1,5 @@
 import { holeId } from "@dnd/shared-algebras/runtime-hole-algebra";
+import { Result } from "effect";
 import { describe, expect, test } from "vitest";
 import type { BattleActiveEffect } from "./index.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -14,7 +15,6 @@ import {
   defaultArmorClassState,
   difficultyClass,
   discoverBattleActs,
-  Either,
   elapsedTimeTicks,
   endTurn,
   expendedLevelOneSlots,
@@ -866,7 +866,7 @@ describe("battle runtime: Mage Armor and Armor of Shadows", () => {
         ],
       }),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message: "Armor of Shadows Spell Access must grant Mage Armor.",
       }),

@@ -41,18 +41,18 @@ type ConcentrationBattleActiveEffectExpiration = Extract<
 >;
 
 function exactSchema<Expected>() {
-  return <Encoded, Context, Actual extends Expected>(
-    schema: Schema.Schema<Actual, Encoded, Context> &
+  return <Encoded, Actual extends Expected>(
+    schema: Schema.Codec<Actual, Encoded, never, never> &
       ([Expected] extends [Actual] ? unknown : never),
-  ): Schema.Schema<Actual, Encoded, Context> => schema;
+  ): Schema.Codec<Actual, Encoded, never, never> => schema;
 }
 
 export const MarkedDamageRiderTransferStateSchema =
   exactSchema<MarkedDamageRiderTransferState>()(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({
         kind: Schema.Literal("awaitingTargetDrop"),
-        retargetTiming: Schema.Literal("sameTurn", "laterTurn"),
+        retargetTiming: Schema.Literals(["sameTurn", "laterTurn"]),
       }),
       Schema.Struct({
         kind: Schema.Literal("available"),
@@ -66,12 +66,12 @@ export const MarkedDamageRiderTransferStateSchema =
           round: BattleRoundSchema,
         }),
       }),
-    ),
+    ]),
   );
 
 export const MarkedDamageRiderAbilityCheckBehaviorSchema =
   exactSchema<MarkedDamageRiderAbilityCheckBehavior>()(
-    Schema.Union(
+    Schema.Union([
       Schema.Struct({ kind: Schema.Literal("none") }),
       Schema.Struct({
         kind: Schema.Literal("abilityDisadvantage"),
@@ -80,12 +80,12 @@ export const MarkedDamageRiderAbilityCheckBehaviorSchema =
       Schema.Struct({
         kind: Schema.Literal("findingAdvantage"),
         ability: Schema.Literal("wis"),
-        skills: Schema.Tuple(
+        skills: Schema.Tuple([
           Schema.Literal(HUNTERS_MARK_FINDING_SKILLS[0]),
           Schema.Literal(HUNTERS_MARK_FINDING_SKILLS[1]),
-        ),
+        ]),
       }),
-    ),
+    ]),
   );
 
 type SpellWeaponDamageRider = Extract<

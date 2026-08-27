@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { Either, JSONSchema, Schema } from "effect";
+import { Effect, Result, Schema } from "effect";
 
 import {
   errorContent,
@@ -15,30 +15,32 @@ export type McpObjectInputSchema = Readonly<Record<string, unknown>> & {
 export type McpOutputSchema = Readonly<Record<string, unknown>>;
 
 export type ToolError = ReturnType<typeof errorContent>;
-export type ToolInputResult<A> = Either.Either<A, ToolError>;
+export type ToolInputResult<A> = Result.Result<A, ToolError>;
 
 const outputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
 const modelOutputSchemaByCodec = new WeakMap<object, McpOutputSchema>();
 
 export function decodeToolArgs<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
   args: unknown,
   toolName: string,
 ): ToolInputResult<A> {
   const input = args === undefined ? {} : args;
-  const decoded = Schema.decodeUnknownEither(schema, {
+  const decoded = Schema.decodeUnknownResult(Schema.toType(schema), {
     onExcessProperty: "error",
   })(input);
-  return Either.mapLeft(decoded, (error) =>
-    errorContent(`${toolName} expects valid arguments.`, {
-      code: "INVALID_ARGUMENTS",
-      message: error.message,
-    }),
-  );
+  return Result.isFailure(decoded)
+    ? Result.fail(
+        errorContent(`${toolName} expects valid arguments.`, {
+          code: "INVALID_ARGUMENTS",
+          message: decoded.failure.message,
+        }),
+      )
+    : Result.succeed(decoded.success);
 }
 
 export function mcpObjectJsonSchema<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpObjectInputSchema {
   const generated = parseMcpObjectInputSchema(
     omitRedundantImpossibleProperties(jsonSchemaFromCodec(schema)),
@@ -53,7 +55,7 @@ export function mcpObjectJsonSchema<A, I>(
 }
 
 export function mcpObjectJsonSchemaWithCopiedObjects<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
   copiedObjectDescriptions: Readonly<Record<string, string>>,
 ): McpObjectInputSchema {
   const generated = mcpObjectJsonSchema(schema);
@@ -137,7 +139,7 @@ export function omitRedundantImpossibleProperties(value: unknown): unknown {
 }
 
 export function mcpOutputJsonSchema<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
   const cached = outputSchemaByCodec.get(schema);
   if (cached !== undefined) return cached;
@@ -154,7 +156,7 @@ export function mcpOutputJsonSchema<A, I>(
 }
 
 export function mcpModelOutputJsonSchema<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
   const cached = modelOutputSchemaByCodec.get(schema);
   if (cached !== undefined) return cached;
@@ -171,11 +173,13 @@ export function mcpModelOutputJsonSchema<A, I>(
   return identified;
 }
 
-export function schemaJsonContent<A, I>(
-  schema: Schema.Schema<A, I, never>,
-  value: A,
+export function schemaJsonContent<T, E, RD>(
+  schema: Schema.ConstraintCodec<T, E, RD, never>,
+  value: NoInfer<T>,
 ) {
-  const encoded = jsonSerializablePayload(Schema.encodeSync(schema)(value));
+  const encoded = jsonSerializablePayload(
+    Effect.runSync(Schema.encodeEffect(schema)(value)),
+  );
   return {
     ...jsonContent(encoded),
     structuredContent: encoded,
@@ -183,9 +187,13 @@ export function schemaJsonContent<A, I>(
 }
 
 function jsonSchemaFromCodec<A, I>(
-  schema: Schema.Schema<A, I, never>,
+  schema: Schema.Codec<A, I, never>,
 ): McpOutputSchema {
-  return stripSchemaIds(JSONSchema.make(schema));
+  return stripSchemaIds(
+    Schema.toStandardJSONSchemaV1(schema)["~standard"].jsonSchema.output({
+      target: "draft-2020-12",
+    }),
+  );
 }
 
 function parseMcpObjectInputSchema(

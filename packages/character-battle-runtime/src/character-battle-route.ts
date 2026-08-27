@@ -1,4 +1,4 @@
-import { Either, Match } from "effect";
+import { Match, Result } from "effect";
 
 export const CHARACTER_BATTLE_ROUTE_SUBJECTS = [
   "sheetToBattleInit",
@@ -156,27 +156,27 @@ export type CharacterBattleRouteEvent =
 export type CharacterBattleFeatureResourceRouteObservation =
   | {
       readonly tag: "layOnHands";
-      readonly result: Either.Either<unknown, unknown>;
+      readonly result: Result.Result<unknown, unknown>;
     }
   | {
       readonly tag: "featureResourceRest";
-      readonly result: Either.Either<unknown, unknown>;
+      readonly result: Result.Result<unknown, unknown>;
     }
   | {
       readonly tag: "fontOfMagicSlotToPoints";
-      readonly result: Either.Either<unknown, unknown>;
+      readonly result: Result.Result<unknown, unknown>;
     }
   | {
       readonly tag: "fontOfMagicPointsToSlot";
-      readonly result: Either.Either<unknown, unknown>;
+      readonly result: Result.Result<unknown, unknown>;
     }
   | {
       readonly tag: "uncannyMetabolism";
-      readonly result: Either.Either<unknown, unknown>;
+      readonly result: Result.Result<unknown, unknown>;
     }
   | {
       readonly tag: "metamagicBattleBridgeAccepted";
-      readonly result: Either.Either<unknown, unknown>;
+      readonly result: Result.Result<unknown, unknown>;
     };
 
 export function projectCharacterSheetToBattleRoute(input: {
@@ -368,17 +368,17 @@ export function appendCharacterBattleFeatureResourceHandoffRoute(
 ): readonly CharacterBattleRouteEvent[] {
   return Match.value(observation).pipe(
     Match.when({ tag: "layOnHands" }, (observed) =>
-      Either.isRight(observed.result)
+      Result.isSuccess(observed.result)
         ? acceptedFeatureResourceWithHitPointRoute(route)
         : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
     ),
     Match.when({ tag: "featureResourceRest" }, (observed) =>
-      Either.isRight(observed.result)
+      Result.isSuccess(observed.result)
         ? acceptedFeatureResourceRoute(route)
         : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
     ),
     Match.when({ tag: "fontOfMagicSlotToPoints" }, (observed) =>
-      Either.isRight(observed.result)
+      Result.isSuccess(observed.result)
         ? acceptedSpellResourceRoute(route)
         : rejectedSpellResourceRoute(route, [
             "spellResourceProjection",
@@ -386,17 +386,17 @@ export function appendCharacterBattleFeatureResourceHandoffRoute(
           ]),
     ),
     Match.when({ tag: "fontOfMagicPointsToSlot" }, (observed) =>
-      Either.isRight(observed.result)
+      Result.isSuccess(observed.result)
         ? acceptedSpellResourceRoute(route)
         : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
     ),
     Match.when({ tag: "uncannyMetabolism" }, (observed) =>
-      Either.isRight(observed.result)
+      Result.isSuccess(observed.result)
         ? acceptedFeatureResourceWithHitPointRoute(route)
         : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
     ),
     Match.when({ tag: "metamagicBattleBridgeAccepted" }, (observed) =>
-      Either.isRight(observed.result)
+      Result.isSuccess(observed.result)
         ? metamagicBattleBridgeRoute(route)
         : rejectedFeatureResourceRoute(route, ["featureResourceProjection"]),
     ),

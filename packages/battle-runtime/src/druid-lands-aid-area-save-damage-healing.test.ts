@@ -4,7 +4,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { describe, expect, test } from "vitest";
 
 import { DieRollResult, movementFeet } from "@dnd/shared/types";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type { CharacterBattleClassLevelInits } from "./character-class-level.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
@@ -541,10 +541,10 @@ function landsAidBattle(
       }),
     ],
   });
-  if (Either.isLeft(result)) {
-    throw new Error(battleStateInitIssueMessage(result.left));
+  if (Result.isFailure(result)) {
+    throw new Error(battleStateInitIssueMessage(result.failure));
   }
-  return result.right.state;
+  return result.success.state;
 }
 
 function requireRageProcedureRef(
@@ -832,8 +832,8 @@ function requireLandsAidUnitRef(druidLevel = 3) {
     unit: landsAidUnit,
     classLevels: [{ className: "druid", level: classLevel(druidLevel) }],
   });
-  if (Either.isLeft(unitRef)) {
-    throw new Error(unitRef.left.message);
+  if (Result.isFailure(unitRef)) {
+    throw new Error(unitRef.failure.message);
   }
   const support = battleMagicActionAreaSaveDamageHealingSupportForUnit(
     landsAidUnit,
@@ -842,6 +842,6 @@ function requireLandsAidUnitRef(druidLevel = 3) {
   if (support === null || support === "unsupported") {
     throw new Error("Expected Land's Aid damage/healing support.");
   }
-  expect(unitRef.right.supportProfiles).toContainEqual(support);
-  return unitRef.right;
+  expect(unitRef.success.supportProfiles).toContainEqual(support);
+  return unitRef.success;
 }

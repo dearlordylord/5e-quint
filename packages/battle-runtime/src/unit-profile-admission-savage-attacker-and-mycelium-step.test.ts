@@ -2,6 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT31 feat_savage_attacker
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection QMBT21 mycelium_step
 import { describe, expect, test } from "vitest";
+import { Result } from "effect";
 import {
   characterAttackSubjectForTest,
   characterBattleFeatureInitForTest,
@@ -34,7 +35,6 @@ import {
   battleUnitRefWithSupportProfiles,
   classLevel,
   DieRollResult,
-  Either,
   mechanicsOnlyMyceliumStepUnit,
   myceliumStepInput,
   parseSupportedUnitFeatureProfile,
@@ -52,7 +52,7 @@ describe("QMBT31 deterministic Savage Attacker profile slice", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [WEAPON_DAMAGE_DICE_ROLL_CHOICE_SUPPORT_PROFILE],
       }),
@@ -626,7 +626,7 @@ describe("QMBT21 Classic non-SRD deterministic feature profile slice", () => {
     expect(
       battleUnitRefWithSupportProfiles({ unitRef: { unitId: unit.id }, unit }),
     ).toEqual(
-      Either.right({
+      Result.succeed({
         unit,
         supportProfiles: [
           {

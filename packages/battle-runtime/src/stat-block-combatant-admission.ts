@@ -2,8 +2,7 @@ import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import type { Condition } from "@dnd/shared/game-facts";
 import { Hp, type Size } from "@dnd/shared/types";
 import type { StatBlockMechanics } from "@dnd/surface/surface/types";
-import { Brand } from "effect";
-import * as Either from "effect/Either";
+import { Brand, Result } from "effect";
 
 import type { BattleStateInitLeafIssue } from "./battle-state-execution.ts";
 import {
@@ -58,13 +57,13 @@ export function admitBattleStatBlockCombatant(input: {
   readonly combatantId: CombatantId;
   readonly statBlock: BattleStatBlockExecutionSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
+}): Result.Result<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
   const source = battleStatBlockCombatantSource(input.statBlock);
-  if (Either.isLeft(source)) return Either.left(source.left);
+  if (Result.isFailure(source)) return Result.fail(source.failure);
   return admitBattleStatBlockCombatantSource({
     battleId: input.battleId,
     combatantId: input.combatantId,
-    source: source.right,
+    source: source.success,
     startingScopeOrdinal: input.startingScopeOrdinal,
   });
 }
@@ -74,7 +73,7 @@ export function admitBattleStatBlockCombatantSource(input: {
   readonly combatantId: CombatantId;
   readonly source: BattleStatBlockCombatantSource;
   readonly startingScopeOrdinal: BattleExecutionScopeOrdinal;
-}): Either.Either<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
+}): Result.Result<AdmittedBattleStatBlockCombatant, BattleStateInitLeafIssue> {
   const statBlock = input.source;
   if (typeof statBlock.statBlock.creatureType !== "string") {
     return issue("Battle runtime requires a concrete creature type.");
@@ -93,7 +92,7 @@ export function admitBattleStatBlockCombatantSource(input: {
     from,
   );
   const allocation = cohort.admissions[0];
-  return Either.right(
+  return Result.succeed(
     AdmittedBattleStatBlockCombatant({
       battleId: input.battleId,
       combatantId: input.combatantId,
@@ -131,7 +130,7 @@ export function admitBattleStatBlockCombatantSource(input: {
 
 export function battleStatBlockCombatantSource(
   statBlock: BattleStatBlockExecutionSource,
-): Either.Either<BattleStatBlockCombatantSource, BattleStateInitLeafIssue> {
+): Result.Result<BattleStatBlockCombatantSource, BattleStateInitLeafIssue> {
   if (statBlock.statBlock.ac.kind !== "literal") {
     return issue("Battle runtime requires literal Stat Block Armor Class.");
   }
@@ -149,7 +148,7 @@ export function battleStatBlockCombatantSource(
   if (typeof statBlock.statBlock.size !== "string") {
     return issue("Battle runtime requires a concrete creature Size.");
   }
-  return Either.right(
+  return Result.succeed(
     BattleStatBlockCombatantSource({
       ...statBlock,
       statBlock: {
@@ -164,6 +163,6 @@ export function battleStatBlockCombatantSource(
 
 function issue(
   message: string,
-): Either.Either<never, BattleStateInitLeafIssue> {
-  return Either.left({ tag: "battleStateInitIssue", message });
+): Result.Result<never, BattleStateInitLeafIssue> {
+  return Result.fail({ tag: "battleStateInitIssue", message });
 }

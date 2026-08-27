@@ -39,7 +39,7 @@ export type SpellRuleExecutionFacts = {
 };
 
 export const SpellRuleExecutionFactsSchema = Schema.Struct({
-  castingSource: Schema.Union(
+  castingSource: Schema.Union([
     Schema.Struct({
       tag: Schema.Literal("classSpellcasting"),
       className: ClassNameSchema,
@@ -50,7 +50,7 @@ export const SpellRuleExecutionFactsSchema = Schema.Struct({
       spellAccessRef: BattleSpellAccessExecutionRef,
       abilityModifier: AbilityModifier,
     }),
-  ),
+  ]),
   level: SpellLevelSchema,
   range: RangeSchema,
   duration: DurationSchema,
@@ -60,11 +60,11 @@ export const SpellRuleExecutionFactsSchema = Schema.Struct({
     hasMaterial: Schema.Boolean,
     hasPricedOrConsumedMaterial: Schema.Boolean,
   }),
-  twinnedTargetCount: Schema.Union(
+  twinnedTargetCount: Schema.Union([
     Schema.Struct({
       base: Schema.Number,
       baseLevel: Schema.Number,
     }),
     Schema.Null,
-  ),
+  ]),
 });

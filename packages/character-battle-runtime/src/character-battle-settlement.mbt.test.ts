@@ -55,7 +55,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -366,7 +366,7 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
     unitLibrary,
     combatant: battle.combatant,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error(
       "Expected mixed Spell Slot and Pact Slot handoff rejection.",
     );
@@ -374,7 +374,7 @@ function rejectMixedSpellAndPactSlotSettlement(): BattleSettlementProjection {
   return projectFromParts({
     outcome: "mixed-spell-and-pact-slot-settlement-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 3,
   });
 }
@@ -483,13 +483,13 @@ function rejectAmbiguousCreatedSpellSlotSource(): BattleSettlementProjection {
     unitLibrary,
     combatant: ambiguousCombatant,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected ambiguous created Spell Slot handoff rejection.");
   }
   return projectFromParts({
     outcome: "ambiguous-created-spell-slot-source-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     createdLevel3Capacity: createdSpellSlotCapacity(withCreatedSlot, 3),
     createdLevel3Expended: createdSpellSlotExpended(withCreatedSlot, 3),
     replayIndex: 5,
@@ -522,13 +522,13 @@ function rejectMismatchedCharacterIdentity(): BattleSettlementProjection {
     unitLibrary,
     combatant: mismatchedCombatant,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected mismatched identity handoff rejection.");
   }
   return projectFromParts({
     outcome: "mismatched-character-identity-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 6,
   });
 }
@@ -556,13 +556,13 @@ function rejectMaximumHpDrift(): BattleSettlementProjection {
     unitLibrary,
     combatant: driftedCombatant,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected maximum HP drift handoff rejection.");
   }
   return projectFromParts({
     outcome: "maximum-hp-drift-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 7,
   });
 }
@@ -615,13 +615,13 @@ function rejectActiveWildShapeHandoff(): BattleSettlementProjection {
     unitLibrary,
     combatant: activeWildShapeCombatant,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected active Wild Shape handoff rejection.");
   }
   return projectFromParts({
     outcome: "active-wild-shape-handoff-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 8,
   });
 }
@@ -667,13 +667,13 @@ function rejectActiveBattleStateHandoff(): BattleSettlementProjection {
     unitLibrary,
     combatant: activeStateCombatant,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected active battle-state handoff rejection.");
   }
   return projectFromParts({
     outcome: "active-battle-state-handoff-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     replayIndex: 9,
   });
 }
@@ -730,13 +730,13 @@ function rejectStableRecoveryProgressHandoff(): BattleSettlementProjection {
     unitLibrary,
     combatant: stableRecoveryCombatant,
   });
-  if (Either.isRight(result)) {
+  if (Result.isSuccess(result)) {
     throw new Error("Expected in-progress Stable recovery handoff rejection.");
   }
   return projectFromParts({
     outcome: "stable-recovery-progress-rejected",
     accepted: false,
-    message: result.left.message,
+    message: result.failure.message,
     zeroHpState: "stable",
     stableRecoveryElapsed: 1,
     replayIndex: 10,
@@ -1462,9 +1462,11 @@ function nullaryVariantTag(raw: unknown, field: string): string {
   throw new Error(`Expected Quint variant field ${field}.`);
 }
 
-function requireRight<A, E>(either: Either.Either<A, E>): A {
-  if (Either.isRight(either)) return either.right;
-  throw new Error(`Expected Either.right, got ${JSON.stringify(either.left)}.`);
+function requireRight<A, E>(either: Result.Result<A, E>): A {
+  if (Result.isSuccess(either)) return either.success;
+  throw new Error(
+    `Expected Result.succeed, got ${JSON.stringify(either.failure)}.`,
+  );
 }
 
 function recordField(

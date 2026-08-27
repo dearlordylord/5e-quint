@@ -10,9 +10,8 @@ import { Schema } from "effect";
 
 export const CharacterWeaponAttackExecutionWeaponSchema = Schema.Struct({
   weaponUnitId: UnitId,
-  attachedWeaponAttackOverrideEligibility: Schema.optionalWith(
+  attachedWeaponAttackOverrideEligibility: Schema.optionalKey(
     Schema.Struct({ kind: Schema.Literal("clubOrQuarterstaff") }),
-    { exact: true },
   ),
   category: WeaponCategorySchema,
   usage: WeaponUsageSchema,

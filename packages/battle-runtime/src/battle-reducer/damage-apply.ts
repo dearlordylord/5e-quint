@@ -38,8 +38,7 @@ import {
   damageAmount as toDamageAmount,
   type DamageAmount,
 } from "@dnd/shared/types";
-import { Match } from "effect";
-import * as Either from "effect/Either";
+import { Match, Result } from "effect";
 import {
   applyStatBlockRechargeRolls,
   unavailableStatBlockRechargePoolRefs,
@@ -848,9 +847,9 @@ function applyFindFamiliarZeroHitPointDisappearanceAfterDamage(input: {
     state: input.state,
     combatantIds: [input.targetId],
   });
-  const stateWithoutFamiliar = Either.isLeft(removed)
+  const stateWithoutFamiliar = Result.isFailure(removed)
     ? input.state
-    : removed.right;
+    : removed.success;
   return {
     ...stateWithoutFamiliar,
     companions: setCompanion(
@@ -870,9 +869,9 @@ function removeInvalidPresentFindFamiliarAfterZeroHitPointDamage(input: {
     state: input.state,
     combatantIds: [input.companionId],
   });
-  const stateWithoutCombatant = Either.isLeft(removed)
+  const stateWithoutCombatant = Result.isFailure(removed)
     ? input.state
-    : removed.right;
+    : removed.success;
   const companions = new Map(stateWithoutCombatant.companions);
   companions.delete(input.ownerId);
   return { ...stateWithoutCombatant, companions };

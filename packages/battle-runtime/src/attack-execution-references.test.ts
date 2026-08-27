@@ -1,8 +1,7 @@
 import { movementFeet } from "@dnd/shared/types";
 import { battleObjectId } from "./identity.ts";
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
-import { Schema } from "effect";
-import * as Either from "effect/Either";
+import { Result, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import {
@@ -111,7 +110,7 @@ describe("character attack execution references", () => {
       ],
     });
     expect(result).toEqual(
-      Either.left({
+      Result.fail({
         tag: "battleStateInitIssue",
         message:
           "Character fighter weapon weapon_longsword has missing authored presentation source.",
@@ -231,7 +230,7 @@ describe("character attack execution references", () => {
         renamedOrigin.attack,
       ),
     ).toEqual(
-      Either.left({
+      Result.fail({
         tag: "attackPresentationJoinIssue",
         reason: "characterContextMissing",
       }),
@@ -333,7 +332,9 @@ describe("character attack execution references", () => {
       ),
     };
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(BattleSnapshotSchema)(forged)),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(forged),
+      ),
     ).toBe(true);
   });
 
@@ -364,7 +365,9 @@ describe("character attack execution references", () => {
     };
 
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(BattleSnapshotSchema)(swapped)),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(swapped),
+      ),
     ).toBe(true);
   });
 
@@ -417,7 +420,9 @@ describe("character attack execution references", () => {
     };
 
     expect(
-      Either.isLeft(Schema.decodeUnknownEither(BattleSnapshotSchema)(forged)),
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(forged),
+      ),
     ).toBe(true);
   });
 
@@ -472,8 +477,8 @@ describe("character attack execution references", () => {
   test("rejects partial bound character attack replay keys", () => {
     const subject = fighterAttackSubject(identicalDaggerBattle(), "Dagger");
     expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSubjectSchema)({
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSubjectSchema)({
           tag: subject.tag,
           actorId: subject.actorId,
           action: subject.action,

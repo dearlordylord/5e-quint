@@ -51,7 +51,7 @@ import {
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
 import { defineDriver, run, stateCheck } from "@firfi/quint-connect";
-import { Either } from "effect";
+import { Result } from "effect";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -933,11 +933,11 @@ function damageRollFill(
   };
 }
 
-function expectRight<A, E>(value: Either.Either<A, E>): A {
-  if (Either.isLeft(value)) {
-    throw new Error(`Expected Right, got ${JSON.stringify(value.left)}.`);
+function expectRight<A, E>(value: Result.Result<A, E>): A {
+  if (Result.isFailure(value)) {
+    throw new Error(`Expected Right, got ${JSON.stringify(value.failure)}.`);
   }
-  return value.right;
+  return value.success;
 }
 
 function normalizeSheetDerivedQuintState(raw: unknown): SheetDerivedProjection {

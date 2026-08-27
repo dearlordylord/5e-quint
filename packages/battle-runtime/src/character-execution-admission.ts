@@ -27,7 +27,7 @@ export {
   unitSupportProfileKind,
   type CharacterUnitProcedureQuery,
 } from "./character-execution-queries.ts";
-import * as Either from "effect/Either";
+import { Result } from "effect";
 import type { CharacterBattleClassLevel } from "./character-class-level.ts";
 import {
   NonNegativeInteger,
@@ -223,7 +223,7 @@ export function characterExecutionFromUnits(input: {
     readonly supportProfiles: readonly BattleUnitSupportProfile[];
   }[];
   readonly classLevels: readonly CharacterBattleClassLevel[];
-}): Either.Either<
+}): Result.Result<
   CharacterExecutionAdmission,
   ReadonlyNonEmptyArray<BattleUnitSupportProfileIssue>
 > {
@@ -286,7 +286,7 @@ export function characterExecutionFromUnits(input: {
   });
   if (supportProfileIssues.length > 0) {
     const [firstIssue, ...remainingIssues] = supportProfileIssues;
-    return Either.left([firstIssue, ...remainingIssues]);
+    return Result.fail([firstIssue, ...remainingIssues]);
   }
   const allocatedUnitProcedures = allocateCharacterProcedureOccurrences(
     scopeRef,
@@ -364,7 +364,7 @@ export function characterExecutionFromUnits(input: {
   }
   if (supportProfileIssues.length > 0) {
     const [firstIssue, ...remainingIssues] = supportProfileIssues;
-    return Either.left([firstIssue, ...remainingIssues]);
+    return Result.fail([firstIssue, ...remainingIssues]);
   }
   const allocatedPrimarySupportProcedures =
     allocateCharacterProcedureOccurrences(
@@ -419,7 +419,7 @@ export function characterExecutionFromUnits(input: {
   }
   if (supportProfileIssues.length > 0) {
     const [firstIssue, ...remainingIssues] = supportProfileIssues;
-    return Either.left([firstIssue, ...remainingIssues]);
+    return Result.fail([firstIssue, ...remainingIssues]);
   }
   const allocatedGrantProcedures = allocateCharacterProcedureOccurrences(
     scopeRef,
@@ -427,7 +427,7 @@ export function characterExecutionFromUnits(input: {
     grantProcedures,
     ({ binding }) => binding,
   );
-  return Either.right({
+  return Result.succeed({
     execution: CharacterExecutionState({
       scopeRef,
       nextProcedureOrdinal: allocatedGrantProcedures.nextProcedureOrdinal,
