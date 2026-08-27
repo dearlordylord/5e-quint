@@ -10,7 +10,7 @@ import { battleId, type CombatantId } from "./identity.ts";
 import type {
   BattleActiveEffect,
   BattleCloudkillMovementHole,
-  BattleCloudkillStartTurnOrderHole,
+  BattleStartTurnOccurrenceOrderHole,
   BattleState,
 } from "./battle-state-execution.ts";
 import {
@@ -111,6 +111,29 @@ function withSourceStartTurnDamage(state: BattleState): BattleState {
       successEnds: "spell",
     },
     expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
+  } as const satisfies BattleActiveEffect;
+  return {
+    ...state,
+    combatants: new Map(state.combatants).set(spellCasterId, {
+      ...source,
+      activeEffects: [...source.activeEffects, effect],
+    }),
+  };
+}
+
+function withSourceTurnStartTemporaryHitPoints(state: BattleState): BattleState {
+  const source = state.combatants.get(spellCasterId);
+  if (source === undefined) {
+    throw new Error("Expected the Cloudkill source.");
+  }
+  const effect = {
+    kind: "turnStartTemporaryHitPoints",
+    sourceProcedureRef: battleProcedureExecutionRefForTest(
+      "cloudkill-simultaneous-turn-start-temporary-hit-points",
+    ),
+    sourceCombatantId: spellTargetId,
+    amount: 3,
+    expiresAt: { kind: "concentration", combatantId: spellTargetId },
   } as const satisfies BattleActiveEffect;
   return {
     ...state,
@@ -267,14 +290,37 @@ function cloudkillMovementFill(
   };
 }
 
-function cloudkillStartTurnOrderFill(
-  hole: BattleCloudkillStartTurnOrderHole,
+function startTurnOccurrenceOrderFill(
+  hole: BattleStartTurnOccurrenceOrderHole,
   value: "cloudkillMovement" | "startTurnEffects",
 ) {
+  const ordered = [...hole.occurrences].sort((left, right) => {
+    const leftMovement = left.kind === "cloudkillMovement";
+    const rightMovement = right.kind === "cloudkillMovement";
+    if (leftMovement === rightMovement) return 0;
+    return value === "cloudkillMovement"
+      ? leftMovement
+        ? -1
+        : 1
+      : leftMovement
+        ? 1
+        : -1;
+  });
+  const first = ordered[0];
+  const second = ordered[1];
+  if (first === undefined || second === undefined) {
+    throw new Error("Expected at least two start-turn occurrences.");
+  }
   return {
-    kind: "cloudkillStartTurnOrder" as const,
+    kind: "startTurnOccurrenceOrder" as const,
     holeId: hole.holeId,
-    value,
+    value: {
+      occurrenceIds: [
+        first.occurrenceId,
+        second.occurrenceId,
+        ...ordered.slice(2).map(({ occurrenceId }) => occurrenceId),
+      ] as const,
+    },
   };
 }
 
@@ -391,20 +437,42 @@ describe("Cloudkill source-turn movement", () => {
         tag: "needsHoles",
         holes: [
           {
-            kind: "cloudkillStartTurnOrder",
+            kind: "startTurnOccurrenceOrder",
             actorId: spellCasterId,
-            choices: ["cloudkillMovement", "startTurnEffects"],
+            occurrences: [
+              expect.objectContaining({ kind: "spellTurnStartDamageAndSave" }),
+              expect.objectContaining({ kind: "cloudkillMovement" }),
+            ],
           },
         ],
       });
-      const orderFill = cloudkillStartTurnOrderFill(
-        requireResultHole(orderFrontier, "cloudkillStartTurnOrder"),
+      const orderFill = startTurnOccurrenceOrderFill(
+        requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
         choice,
       );
       const orderHole = requireResultHole(
         orderFrontier,
-        "cloudkillStartTurnOrder",
+        "startTurnOccurrenceOrder",
       );
+      const firstOccurrence = orderHole.occurrences[0];
+      expect(
+        endTurn({
+          state: targetTurn.state,
+          actorId: spellTargetId,
+          fills: [
+            {
+              kind: "startTurnOccurrenceOrder",
+              holeId: orderHole.holeId,
+              value: {
+                occurrenceIds: [
+                  firstOccurrence.occurrenceId,
+                  firstOccurrence.occurrenceId,
+                ],
+              },
+            },
+          ],
+        }),
+      ).toMatchObject({ tag: "invalid", reason: "invalidFill" });
       expect(
         Schema.decodeUnknownSync(BattleHoleSchema)(
           Schema.encodeSync(BattleHoleSchema)(orderHole),
@@ -519,6 +587,91 @@ describe("Cloudkill source-turn movement", () => {
         ),
       ),
     ).toBe(false);
+  });
+
+  test("orders each start-turn Temporary Hit Point grant against Cloudkill movement", () => {
+    function resolveOrdering(choice: "cloudkillMovement" | "startTurnEffects") {
+      const cast = castCloudkill();
+      const targetTurn = endTurn({ state: cast.state, actorId: spellCasterId });
+      if (targetTurn.tag !== "resolved") {
+        throw new Error("Expected the target turn to start.");
+      }
+      const boundaryState = withSourceTurnStartTemporaryHitPoints(
+        targetTurn.state,
+      );
+      const orderFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+      });
+      const orderFill = startTurnOccurrenceOrderFill(
+        requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
+        choice,
+      );
+      const movementFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [orderFill],
+      });
+      const movementFill = cloudkillMovementFill(
+        requireResultHole(movementFrontier, "cloudkillMovement"),
+        [spellCasterId],
+      );
+      const saveFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [orderFill, movementFill],
+      });
+      const saveFill = singleTargetSavingThrowOutcomeFill(
+        requireResultHole(saveFrontier, "savingThrowOutcome"),
+        spellCasterId,
+        true,
+      );
+      const damageFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [orderFill, movementFill, saveFill],
+      });
+      const damageFill = damageRollFillWithGroups(
+        requireResultHole(damageFrontier, "rolledDice"),
+        [[1, 1, 1, 1, 1]],
+      );
+      const concentrationFrontier = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [orderFill, movementFill, saveFill, damageFill],
+      });
+      const concentrationFill = concentrationSavingThrowFill(
+        requireResultHole(
+          concentrationFrontier,
+          "concentrationSavingThrow",
+        ),
+        true,
+      );
+      const result = endTurn({
+        state: boundaryState,
+        actorId: spellTargetId,
+        fills: [
+          orderFill,
+          movementFill,
+          saveFill,
+          damageFill,
+          concentrationFill,
+        ],
+      });
+      if (result.tag !== "resolved") {
+        throw new Error("Expected ordered start-turn occurrences to resolve.");
+      }
+      return result.state.combatants.get(spellCasterId);
+    }
+
+    expect(resolveOrdering("startTurnEffects")).toMatchObject({
+      hp: 12,
+      tempHp: 1,
+    });
+    expect(resolveOrdering("cloudkillMovement")).toMatchObject({
+      hp: 10,
+      tempHp: 3,
+    });
   });
 
   test("opens the fixed-distance movement frontier only at the source's start-turn boundary", () => {
@@ -838,9 +991,18 @@ describe("Cloudkill source-turn movement", () => {
       }),
     );
     const recharging = withUnavailableSourceRecharge(readied.state);
+    const orderFrontier = endTurn({
+      state: recharging.state,
+      actorId: spellTargetId,
+    });
+    const orderFill = startTurnOccurrenceOrderFill(
+      requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
+      "startTurnEffects",
+    );
     const rechargeFrontier = endTurn({
       state: recharging.state,
       actorId: spellTargetId,
+      fills: [orderFill],
     });
     const rechargeFill = {
       kind: "statBlockRechargeRoll" as const,
@@ -856,7 +1018,7 @@ describe("Cloudkill source-turn movement", () => {
     const movementFrontier = endTurn({
       state: recharging.state,
       actorId: spellTargetId,
-      fills: [rechargeFill],
+      fills: [orderFill, rechargeFill],
     });
     if (movementFrontier.tag !== "needsHoles") {
       throw new Error("Expected the Cloudkill movement frontier.");
@@ -868,7 +1030,7 @@ describe("Cloudkill source-turn movement", () => {
     const saveFrontier = endTurn({
       state: recharging.state,
       actorId: spellTargetId,
-      fills: [rechargeFill, movementFill],
+      fills: [orderFill, rechargeFill, movementFill],
     });
     if (saveFrontier.tag !== "needsHoles") {
       throw new Error("Expected the movement-triggered save frontier.");
@@ -881,7 +1043,7 @@ describe("Cloudkill source-turn movement", () => {
     const interrupted = endTurn({
       state: recharging.state,
       actorId: spellTargetId,
-      fills: [rechargeFill, movementFill, saveFill],
+      fills: [orderFill, rechargeFill, movementFill, saveFill],
     });
 
     expect(interrupted).toMatchObject({
@@ -937,6 +1099,7 @@ describe("Cloudkill source-turn movement", () => {
       state: concentrationFrontier.state,
       subject: concentrationFrontier.subject,
       fills: [
+        orderFill,
         rechargeFill,
         movementFill,
         saveFill,
@@ -1998,8 +2161,8 @@ describe("Cloudkill source-turn movement", () => {
       state: secondaryTurn.state,
       actorId: cloudkillSecondaryTargetId,
     });
-    const orderFill = cloudkillStartTurnOrderFill(
-      requireResultHole(orderFrontier, "cloudkillStartTurnOrder"),
+    const orderFill = startTurnOccurrenceOrderFill(
+      requireResultHole(orderFrontier, "startTurnOccurrenceOrder"),
       "cloudkillMovement",
     );
     const startDamageFrontier = endTurn({

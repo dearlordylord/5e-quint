@@ -217,8 +217,8 @@ export function battleHoleFamilyKind(hole: BattleHole): BattleHoleFamilyKind {
       ),
       byBattleHoleKind("cloudkillMovement", () => "cloudkillMovement" as const),
       byBattleHoleKind(
-        "cloudkillStartTurnOrder",
-        () => "cloudkillStartTurnOrder" as const,
+        "startTurnOccurrenceOrder",
+        () => "startTurnOccurrenceOrder" as const,
       ),
       byBattleHoleKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleHoleKind("movement", () => "movement" as const),

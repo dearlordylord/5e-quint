@@ -18907,7 +18907,7 @@ function projectHole(hole: BattleHole): readonly MbtHole[] {
             "Generic battle runtime MBT leaves Cloudkill movement to its focused witness.",
           );
         }),
-        Match.when({ kind: "cloudkillStartTurnOrder" }, () => {
+        Match.when({ kind: "startTurnOccurrenceOrder" }, () => {
           throw new Error(
             "Generic battle runtime MBT leaves simultaneous Cloudkill start-turn ordering to its focused witness.",
           );

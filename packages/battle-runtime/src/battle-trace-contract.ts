@@ -45,7 +45,7 @@ export const BATTLE_TRACE_HOLE_KINDS = [
   "spiritualWeaponForcePosition",
   "movableZoneRamMovement",
   "movableZoneRepositionMovement",
-  "cloudkillStartTurnOrder",
+  "startTurnOccurrenceOrder",
   "cloudkillMovement",
   "savingThrowOutcome",
   "slowSomaticSpellFailureOutcome",

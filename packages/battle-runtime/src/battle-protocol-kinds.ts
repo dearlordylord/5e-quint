@@ -96,8 +96,8 @@ export function battleFillKind(fill: BattleFill): BattleFillKind {
       ),
       byBattleFillKind("cloudkillMovement", () => "cloudkillMovement" as const),
       byBattleFillKind(
-        "cloudkillStartTurnOrder",
-        () => "cloudkillStartTurnOrder" as const,
+        "startTurnOccurrenceOrder",
+        () => "startTurnOccurrenceOrder" as const,
       ),
       byBattleFillKind("readyDeclaration", () => "readyDeclaration" as const),
       byBattleFillKind("movement", () => "movement" as const),

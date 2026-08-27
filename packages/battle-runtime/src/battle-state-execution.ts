@@ -5921,15 +5921,29 @@ export type BattleCloudkillMovementHole = {
   readonly directionRequirement: "awayFromSource";
   readonly requiresTableSpatialFact: true;
 };
-export type BattleCloudkillStartTurnOrderHole = {
+export type BattleStartTurnOccurrenceOrderHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
-  readonly kind: "cloudkillStartTurnOrder";
+  readonly kind: "startTurnOccurrenceOrder";
   readonly label: string;
   readonly actorId: CombatantId;
-  readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly areaId: BattleAreaId;
-  readonly choices: readonly ["cloudkillMovement", "startTurnEffects"];
+  readonly occurrences: readonly [
+    BattleStartTurnOccurrenceOption,
+    BattleStartTurnOccurrenceOption,
+    ...BattleStartTurnOccurrenceOption[],
+  ];
+};
+export type BattleStartTurnOccurrenceKind =
+  | "deathSavingThrow"
+  | "statBlockRecharge"
+  | "turnStartTemporaryHitPoints"
+  | "spellConditionTurnStartDamage"
+  | "spellTurnStartDamageAndSave"
+  | "cloudkillMovement";
+export type BattleStartTurnOccurrenceOption = {
+  readonly occurrenceId: import("./identity.ts").BattleStartTurnOccurrenceId;
+  readonly kind: BattleStartTurnOccurrenceKind;
+  readonly label: string;
 };
 type BattleMovementHoleCommon = {
   readonly holeInstanceKey: HoleInstanceKey;
@@ -6198,7 +6212,7 @@ export type BattleHole =
   | BattleStatBlockRechargeRollHole
   | BattleConcentrationSavingThrowHole
   | BattleInterruptDecisionHole
-  | BattleCloudkillStartTurnOrderHole
+  | BattleStartTurnOccurrenceOrderHole
   | BattleCloudkillMovementHole
   | BattleMovementHole
   | BattleLevitateAltitudeChangeHole
@@ -6322,10 +6336,16 @@ export type BattleCloudkillMovementFill = {
     readonly affectedCombatantIds: readonly CombatantId[];
   };
 };
-export type BattleCloudkillStartTurnOrderFill = {
-  readonly kind: "cloudkillStartTurnOrder";
+export type BattleStartTurnOccurrenceOrderFill = {
+  readonly kind: "startTurnOccurrenceOrder";
   readonly holeId: BattleHoleId;
-  readonly value: "cloudkillMovement" | "startTurnEffects";
+  readonly value: {
+    readonly occurrenceIds: readonly [
+      import("./identity.ts").BattleStartTurnOccurrenceId,
+      import("./identity.ts").BattleStartTurnOccurrenceId,
+      ...import("./identity.ts").BattleStartTurnOccurrenceId[],
+    ];
+  };
 };
 export type BattleBrutalStrikeForcefulBlowMovementFill = {
   readonly kind: "movement";
@@ -6630,7 +6650,7 @@ export type BattleFill =
       readonly value: BattleInterruptDecision;
     }
   | BattleCloudkillMovementFill
-  | BattleCloudkillStartTurnOrderFill
+  | BattleStartTurnOccurrenceOrderFill
   | BattleMovementFill
   | {
       readonly kind: "levitateAltitudeChange";

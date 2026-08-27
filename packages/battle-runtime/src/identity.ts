@@ -54,6 +54,15 @@ export const BattleSpellEffectOccurrenceId = NonEmptyTrimmedStringSchema.pipe(
 export type BattleSpellEffectOccurrenceId =
   typeof BattleSpellEffectOccurrenceId.Type;
 
+export const BattleStartTurnOccurrenceId = NonEmptyTrimmedStringSchema.pipe(
+  Schema.brand("BattleStartTurnOccurrenceId"),
+);
+export type BattleStartTurnOccurrenceId =
+  typeof BattleStartTurnOccurrenceId.Type;
+export const battleStartTurnOccurrenceId: (
+  value: string,
+) => BattleStartTurnOccurrenceId = BattleStartTurnOccurrenceId.make;
+
 export const BattleActiveEffectExecutionRef = NonEmptyTrimmedStringSchema.pipe(
   Schema.check(
     Schema.makeFilter(battleActiveEffectExecutionReferenceIsCanonical, {

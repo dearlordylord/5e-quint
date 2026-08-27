@@ -20,7 +20,7 @@ export const BATTLE_CONTINUATION_COMPARABLE_FILL_KINDS = [
   "savingThrowOutcome",
   "movement",
   "cloudkillMovement",
-  "cloudkillStartTurnOrder",
+  "startTurnOccurrenceOrder",
   "toolPossessionFacts",
   "cunningStrikeEndTurnCoverFacts",
   "deathSavingThrow",
@@ -103,10 +103,13 @@ export function battleContinuationFillEquals(
           b.value.affectedCombatantIds,
           (leftId, rightId) => leftId === rightId,
         ),
-      cloudkillStartTurnOrder: (left) =>
-        b.kind === "cloudkillStartTurnOrder" &&
+      startTurnOccurrenceOrder: (left) =>
+        b.kind === "startTurnOccurrenceOrder" &&
         left.holeId === b.holeId &&
-        left.value === b.value,
+        arrayValuesEqual(
+          left.value.occurrenceIds,
+          b.value.occurrenceIds,
+        ),
       toolPossessionFacts: (left) =>
         b.kind === "toolPossessionFacts" &&
         left.holeId === b.holeId &&

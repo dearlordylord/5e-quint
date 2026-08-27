@@ -115,6 +115,7 @@ import {
   battleStatBlockExecutionScopeRefIsWellFormed,
   battleStatBlockExecutionScopeRefOrdinalIsBefore,
   BattleSpellEffectOccurrenceId,
+  BattleStartTurnOccurrenceId,
   BattleTablePositionId,
   CombatantId,
 } from "../identity.ts";
@@ -2450,14 +2451,48 @@ const BattleHolePayloadUnionSchema = Schema.Union([
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
-    kind: Schema.Literal("cloudkillStartTurnOrder"),
+    kind: Schema.Literal("startTurnOccurrenceOrder"),
     actorId: CombatantId,
-    sourceProcedureRef: BattleProcedureExecutionRef,
-    areaId: BattleAreaId,
-    choices: Schema.Tuple([
-      Schema.Literal("cloudkillMovement"),
-      Schema.Literal("startTurnEffects"),
-    ]),
+    occurrences: Schema.TupleWithRest(
+      Schema.Tuple([
+        Schema.Struct({
+          occurrenceId: BattleStartTurnOccurrenceId,
+          kind: Schema.Literals([
+            "deathSavingThrow",
+            "statBlockRecharge",
+            "turnStartTemporaryHitPoints",
+            "spellConditionTurnStartDamage",
+            "spellTurnStartDamageAndSave",
+            "cloudkillMovement",
+          ]),
+          label: Schema.String,
+        }),
+        Schema.Struct({
+          occurrenceId: BattleStartTurnOccurrenceId,
+          kind: Schema.Literals([
+            "deathSavingThrow",
+            "statBlockRecharge",
+            "turnStartTemporaryHitPoints",
+            "spellConditionTurnStartDamage",
+            "spellTurnStartDamageAndSave",
+            "cloudkillMovement",
+          ]),
+          label: Schema.String,
+        }),
+      ]),
+      [Schema.Struct({
+        occurrenceId: BattleStartTurnOccurrenceId,
+        kind: Schema.Literals([
+          "deathSavingThrow",
+          "statBlockRecharge",
+          "turnStartTemporaryHitPoints",
+          "spellConditionTurnStartDamage",
+          "spellTurnStartDamageAndSave",
+          "cloudkillMovement",
+        ]),
+        label: Schema.String,
+      })],
+    ),
   }),
   Schema.Struct({
     ...BattleHoleBaseSchema,
@@ -3612,9 +3647,11 @@ type BattleFillEncoded =
       };
     }
   | {
-      readonly kind: "cloudkillStartTurnOrder";
+      readonly kind: "startTurnOccurrenceOrder";
       readonly holeId: string;
-      readonly value: "cloudkillMovement" | "startTurnEffects";
+      readonly value: {
+        readonly occurrenceIds: readonly [string, string, ...string[]];
+      };
     }
   | {
       readonly kind: "cloudkillMovement";
@@ -4748,9 +4785,17 @@ export const BattleFillSchema: Schema.Codec<
       }),
     }),
     Schema.Struct({
-      kind: Schema.Literal("cloudkillStartTurnOrder"),
+      kind: Schema.Literal("startTurnOccurrenceOrder"),
       holeId: BattleHoleIdSchema,
-      value: Schema.Literals(["cloudkillMovement", "startTurnEffects"]),
+      value: Schema.Struct({
+        occurrenceIds: Schema.TupleWithRest(
+          Schema.Tuple([
+            BattleStartTurnOccurrenceId,
+            BattleStartTurnOccurrenceId,
+          ]),
+          [BattleStartTurnOccurrenceId],
+        ),
+      }),
     }),
     Schema.Struct({
       kind: Schema.Literal("cloudkillMovement"),
@@ -6845,9 +6890,7 @@ function serializedBattleHoleExecutionReferences(
       cloudkillMovement: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
       ],
-      cloudkillStartTurnOrder: (value) => [
-        source(value.sourceProcedureRef, value.actorId),
-      ],
+      startTurnOccurrenceOrder: () => [],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),
       spellcastingAbilityCheck: (value) => [
