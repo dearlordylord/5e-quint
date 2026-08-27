@@ -9,7 +9,7 @@ import type {
   SpellProcedureKey,
 } from "../../character-execution.ts";
 import type { CombatantId } from "../../identity.ts";
-import type { SpellProcedureExecutionCodec } from "./execution-profile.ts";
+import type { SpellProcedureExecutionCodec } from "./execution-schema-contract.ts";
 import type {
   SpellProcedureExecutionResolution,
   StoredGlyphSpellProcedureResolution,
