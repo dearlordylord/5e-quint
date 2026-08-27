@@ -1,6 +1,10 @@
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
+import { statBlockId } from "@dnd/shared/game-facts";
+
+import { srdStatBlockCollection } from "./stat-block-catalog.ts";
+
 import {
   CreatureImmunityListSchema,
   CreatureStatBlockProjectionSchema,
@@ -215,6 +219,62 @@ describe("standalone Stat Block general facts", () => {
         swarm: { constituentSize: "tiny", size: "medium" },
       }),
     ).toThrow();
+  });
+
+  test("installs exactly the seven RAW structural swarms without legacy tag encoding", () => {
+    const structuralSwarms = srdStatBlockCollection.statBlocks
+      .filter((record) => record.statBlock.swarm !== undefined)
+      .map((record) => ({
+        id: record.id,
+        size: record.statBlock.size,
+        constituentSize: record.statBlock.swarm?.constituentSize,
+      }))
+      .sort((left, right) => left.id.localeCompare(right.id));
+
+    expect(structuralSwarms).toEqual([
+      {
+        id: statBlockId("stat_block_swarm_of_bats"),
+        size: "large",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_crawling_claws"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_insects"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_piranhas"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_rats"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_ravens"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+      {
+        id: statBlockId("stat_block_swarm_of_venomous_snakes"),
+        size: "medium",
+        constituentSize: "tiny",
+      },
+    ]);
+    expect(
+      srdStatBlockCollection.statBlocks.filter((record) =>
+        record.statBlock.creatureTypeTags?.some((tag) =>
+          tag.toLowerCase().includes("swarm"),
+        ),
+      ),
+    ).toEqual([]);
   });
 
   test("leaves grouped procedure sections to the procedure schema", () => {

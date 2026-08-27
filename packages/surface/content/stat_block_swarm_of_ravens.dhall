@@ -29,7 +29,7 @@ in  { challengeRating = 0.25
       , alignment = "unaligned"
       , communication.kind = "none"
       , creatureType = "beast"
-      , creatureTypeTags = [ "swarm of tiny beasts" ]
+      , swarm = { constituentSize = "tiny" }
       , hp = { kind = "literal", value = 11 }
       , immunities.conditions
         =

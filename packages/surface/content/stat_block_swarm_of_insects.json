@@ -39,9 +39,6 @@
       "kind": "none"
     },
     "creatureType": "beast",
-    "creatureTypeTags": [
-      "swarm of tiny beasts"
-    ],
     "hp": {
       "kind": "literal",
       "value": 19
@@ -127,6 +124,9 @@
         "kind": "fly"
       }
     ],
+    "swarm": {
+      "constituentSize": "tiny"
+    },
     "traits": [
       {
         "description": "If the swarm has a Climb Speed, the swarm can climb difficult surfaces, including along ceilings, without needing to make an ability check.",

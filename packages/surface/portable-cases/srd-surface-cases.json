@@ -41192,9 +41192,6 @@
             "challengeRating": 0.25,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -41308,7 +41305,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny bat. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "large"
+              "size": "large",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -41323,9 +41323,6 @@
             "challengeRating": 0.5,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -41450,7 +41447,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny insect. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -41465,9 +41465,6 @@
             "challengeRating": 1,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -41585,7 +41582,10 @@
                   "description": "The swarm can breathe only underwater."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -41600,9 +41600,6 @@
             "challengeRating": 0.25,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -41716,7 +41713,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny rat. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -41731,9 +41731,6 @@
             "challengeRating": 0.25,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -41870,7 +41867,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny raven. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -41885,9 +41885,6 @@
             "challengeRating": 2,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -42001,7 +41998,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny snake. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -77141,9 +77141,6 @@
             "challengeRating": 0.25,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -77257,7 +77254,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny bat. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "large"
+              "size": "large",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -77272,9 +77272,6 @@
             "challengeRating": 0.5,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -77399,7 +77396,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny insect. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -77414,9 +77414,6 @@
             "challengeRating": 1,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -77534,7 +77531,10 @@
                   "description": "The swarm can breathe only underwater."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -77549,9 +77549,6 @@
             "challengeRating": 0.25,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -77665,7 +77662,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny rat. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -77680,9 +77680,6 @@
             "challengeRating": 0.25,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -77819,7 +77816,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny raven. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
@@ -77834,9 +77834,6 @@
             "challengeRating": 2,
             "statBlock": {
               "creatureType": "beast",
-              "creatureTypeTags": [
-                "swarm of tiny beasts"
-              ],
               "alignment": "unaligned",
               "ac": {
                 "value": {
@@ -77950,7 +77947,10 @@
                   "description": "The swarm can occupy another creature's space and vice versa, and the swarm can move through any opening large enough for a Tiny snake. The swarm can't regain Hit Points or gain Temporary Hit Points."
                 }
               ],
-              "size": "medium"
+              "size": "medium",
+              "swarm": {
+                "constituentSize": "tiny"
+              }
             },
             "provenance": {
               "kind": "srd-5.2.1",
