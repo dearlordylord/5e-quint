@@ -543,7 +543,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
 
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (resolved.tag !== "resolved") {
       throw new Error("Expected Gust of Wind direction change to resolve.");

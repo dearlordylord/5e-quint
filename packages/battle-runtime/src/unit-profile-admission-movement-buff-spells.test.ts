@@ -91,7 +91,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],
@@ -357,7 +357,7 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           dashMovementBonusFeet: 30,
         },
         combatants: expect.arrayContaining([
@@ -519,7 +519,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
       tag: "resolved",
       snapshot: {
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],

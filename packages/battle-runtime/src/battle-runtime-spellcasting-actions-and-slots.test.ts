@@ -1318,7 +1318,7 @@ describe("battle runtime: spellcasting actions and slots", () => {
         ],
       }),
     );
-    expect(healingWord.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(healingWord.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(healingWord.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: fighterId, hp: 12 }),

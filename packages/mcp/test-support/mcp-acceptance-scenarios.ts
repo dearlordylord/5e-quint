@@ -2329,7 +2329,7 @@ export async function verifyLevelSixRogueSteadyAimBattleHandoff(
     subject: steadyAimAct.subject,
   });
   assert.equal(get(aimed, "result.tag"), "resolved");
-  assert.equal(get(aimed, "snapshot.turn.bonusActionAvailable"), false);
+  assert.equal(get(aimed, "snapshot.turn.bonusActionQuotaAvailable"), false);
   const aimedMovement = get(
     battleCombatant(aimed, levelSixRogueExpertiseCombatantId),
     "movement",

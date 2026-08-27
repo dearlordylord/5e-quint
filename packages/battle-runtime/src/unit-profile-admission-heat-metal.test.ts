@@ -792,7 +792,7 @@ describe("TASK11 Heat Metal object-contact damage admission", () => {
 
     expect(repeated).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (repeated.tag !== "resolved") {
       throw new Error("Expected Heat Metal repeat damage to resolve.");

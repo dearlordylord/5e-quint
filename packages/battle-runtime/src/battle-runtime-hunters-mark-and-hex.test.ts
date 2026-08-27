@@ -909,7 +909,7 @@ describe("battle runtime: Hunter's Mark and Hex", () => {
       tag: "needsHoles",
       snapshot: {
         pendingInterrupt: { trigger: "spellCast" },
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (awaitingCounterspell.tag !== "needsHoles") {

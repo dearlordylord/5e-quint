@@ -651,7 +651,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "resolved",
       snapshot: {
         pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (countered.tag !== "resolved") {
@@ -872,7 +872,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "resolved",
       snapshot: {
         pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -939,7 +939,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(lost).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (lost.tag !== "resolved") {
       throw new Error("Expected Sanctuary-lost Spiritual Weapon to resolve.");
@@ -1671,7 +1671,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
       tag: "resolved",
       snapshot: {
         pendingInterrupt: null,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -1821,7 +1821,7 @@ describe("L12G deterministic Spiritual Weapon admission", () => {
 
     expect(lost).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (lost.tag !== "resolved") {
       throw new Error("Expected Sanctuary-lost repeat attack to resolve.");

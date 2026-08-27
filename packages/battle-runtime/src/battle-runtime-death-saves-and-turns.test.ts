@@ -1324,7 +1324,7 @@ describe("battle runtime: death saves and turns", () => {
         turnOrder: [fighterId, goblinId],
         turn: {
           actionResources: [{ kind: "action", source: "turn" }],
-          bonusActionAvailable: true,
+          bonusActionQuotaAvailable: true,
         },
       },
     });

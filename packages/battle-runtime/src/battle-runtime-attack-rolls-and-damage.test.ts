@@ -1504,7 +1504,7 @@ describe("battle runtime: attack rolls and damage", () => {
     expect(result).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
         combatants: [
           { combatantId: fighterId },
           { combatantId: goblinId, hp: 3 },

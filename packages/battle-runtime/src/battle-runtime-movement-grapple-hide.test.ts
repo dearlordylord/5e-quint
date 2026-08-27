@@ -4431,7 +4431,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       resolveBattleSubject({ state, subject: dashAct.subject, fills: [] }),
     );
     expect(dashed.snapshot.turn).toMatchObject({
-      bonusActionAvailable: false,
+      bonusActionQuotaAvailable: false,
       actionResources: [{ kind: "action", source: "turn" }],
       dashMovementBonusFeet: 30,
     });
@@ -4440,7 +4440,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       resolveBattleSubject({ state, subject: disengageAct.subject, fills: [] }),
     );
     expect(disengaged.snapshot.turn).toMatchObject({
-      bonusActionAvailable: false,
+      bonusActionQuotaAvailable: false,
       actionResources: [{ kind: "action", source: "turn" }],
       disengaged: true,
     });
@@ -4504,7 +4504,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       }),
     );
     expect(hidden.snapshot).toMatchObject({
-      turn: { bonusActionAvailable: false },
+      turn: { bonusActionQuotaAvailable: false },
       combatants: expect.arrayContaining([
         expect.objectContaining({ combatantId: fighterId }),
       ]),

@@ -2613,9 +2613,9 @@ describe("level 5 SDK tracer bullets", () => {
       ).toBe(
         Number(secondTargetBeforeHealing.hp) + massHealingWordHealingTotal,
       );
-      expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
-        false,
-      );
+      expect(
+        snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable,
+      ).toBe(false);
       expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual(
         [{ kind: "committed", combatantId: massHealingWordCase.casterId }],
       );

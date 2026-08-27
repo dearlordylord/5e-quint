@@ -500,7 +500,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
       false,
     );
     expect(targetTurn.snapshot.turn.actionResources).toEqual([]);
-    expect(targetTurn.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(targetTurn.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     const haltedTargetSnapshot = targetTurn.snapshot.combatants.find(
       (combatant) => combatant.combatantId === spellTargetId,
     );

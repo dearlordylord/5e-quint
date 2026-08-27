@@ -427,7 +427,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       tag: "resolved",
       snapshot: {
         currentActorId: spellCasterId,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {
@@ -539,7 +539,7 @@ describe("L12G deterministic Flaming Sphere admission", () => {
       tag: "resolved",
       snapshot: {
         currentActorId: spellCasterId,
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
     if (resolved.tag !== "resolved") {

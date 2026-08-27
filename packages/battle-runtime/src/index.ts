@@ -165,6 +165,7 @@ export {
 } from "./battle-reducer/attack-damage-apply.ts";
 
 export {
+  battleHoleAcceptsFill,
   battleHoleFamilyKind,
   thaumaturgyBoomingVoiceInfluenceAbilityCheckHole,
   type BattleHoleFamilyKind,

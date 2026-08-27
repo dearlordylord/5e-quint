@@ -7131,7 +7131,8 @@ export type BattleSnapshotPresentationIssues =
 
 export type BattleTurnSnapshot = {
   readonly actionResources: readonly RuntimeActionResource[];
-  readonly bonusActionAvailable: boolean;
+  /** The current turn's unspent Bonus Action quota, not discovered action availability. */
+  readonly bonusActionQuotaAvailable: boolean;
   readonly jumpDistanceMultiplier: BattleJumpDistanceMultiplier | null;
   readonly heightenedStepOfTheWindCarriedCreatures: readonly HeightenedStepOfTheWindCarriedCreature[];
   readonly spellSlotUsesThisTurn: readonly BattleTurnSpellSlotUse[];

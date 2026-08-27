@@ -161,7 +161,7 @@ describe("battle runtime: setup and discovery", () => {
       ],
       turn: {
         actionResources: [{ kind: "action", source: "turn" }],
-        bonusActionAvailable: false,
+        bonusActionQuotaAvailable: false,
         spellSlotUsesThisTurn: [],
         levelOnePlusSpellCastsThisTurn: [],
         quickenedLevelOnePlusSpellCastsThisTurn: [],
@@ -279,7 +279,7 @@ describe("battle runtime: setup and discovery", () => {
     });
     const skeletonSnapshot = snapshotBattle(skeletonBattle);
 
-    expect(skeletonSnapshot.turn.bonusActionAvailable).toBe(false);
+    expect(skeletonSnapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(
       skeletonSnapshot.acts.some(
         ({ subject }) => subject.tag === "bonusAction",
@@ -295,7 +295,7 @@ describe("battle runtime: setup and discovery", () => {
     });
     const goblinSnapshot = snapshotBattle(goblinBattle);
 
-    expect(goblinSnapshot.turn.bonusActionAvailable).toBe(true);
+    expect(goblinSnapshot.turn.bonusActionQuotaAvailable).toBe(true);
     expect(
       goblinSnapshot.acts.some(({ subject }) => subject.tag === "bonusAction"),
     ).toBe(true);

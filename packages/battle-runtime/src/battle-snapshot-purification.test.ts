@@ -29,6 +29,22 @@ import {
 } from "./battle-runtime.test-support.ts";
 
 describe("BattleSnapshot durable checkpoint", () => {
+  test("projects the current turn Bonus Action quota without discovering an ordinary action", () => {
+    const snapshot = snapshotBattle(
+      startBattleRight({
+        battleId: battleId("battle-snapshot-bonus-action-quota"),
+        combatants: [
+          statBlockCreatureInit({ combatantId: goblinId, initiative: 20 }),
+          characterSeed({ combatantId: wizardId, initiative: 10 }),
+        ],
+      }),
+    );
+
+    expect(snapshot.currentActorId).toBe(goblinId);
+    expect(snapshot.turn.bonusActionQuotaAvailable).toBe(true);
+    expect(snapshot.turn).not.toHaveProperty("bonusActionAvailable");
+  });
+
   test("projects committed mechanics without acts, frontiers, cursors, or labels", () => {
     const snapshot = snapshotBattle(fighterVsGoblinBattle());
     const character = snapshot.combatants.find(

@@ -416,7 +416,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       }),
     );
 
-    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(resolved.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ combatantId: goblinId, hp: 10 }),
@@ -489,7 +489,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
       }),
     );
 
-    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(resolved.state.combatants.get(wizardId)).toMatchObject({
       hp: 8,
       concentration: null,
@@ -631,7 +631,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 6 }),
         ]),
@@ -733,7 +733,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     expect(completed).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 10 }),
         ]),
@@ -1124,7 +1124,7 @@ describe("battle runtime: Light property and Opportunity Attacks", () => {
     if (completed.tag !== "resolved") {
       throw new Error(`Expected resolved, got ${completed.tag}.`);
     }
-    expect(completed.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(completed.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
     expect(completed.snapshot.combatants).toEqual(
       expect.arrayContaining([
         expect.objectContaining({

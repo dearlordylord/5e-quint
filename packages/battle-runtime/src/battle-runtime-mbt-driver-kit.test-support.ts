@@ -15685,7 +15685,7 @@ function projectAdrenalineRushMbtState(input: {
   }
   return {
     actorTempHp: actor.tempHp,
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     dashBonusFeet: Number(snapshot.turn.dashMovementBonusFeet),
     featureUsesRemaining: resourceUsesRemaining(
       battleRuntimeSessionForTest({
@@ -15727,7 +15727,7 @@ function projectRogueSteadyAimMbtState(input: {
         battleProcedureExecutionRefForTest("rogue_steady_aim"),
   );
   return {
-    bonusActionAvailable: snapshot.turn.bonusActionAvailable,
+    bonusActionAvailable: snapshot.turn.bonusActionQuotaAvailable,
     actorSpeedFeet: Number(actor.movement.speedFeet),
     nextAttackAdvantageActive,
     speedZeroActive,

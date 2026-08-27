@@ -1722,7 +1722,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     expect(resolved.state.currentTurnResources.currentHasBonusAction).toBe(
       false,
     );
-    expect(resolved.snapshot.turn.bonusActionAvailable).toBe(false);
+    expect(resolved.snapshot.turn.bonusActionQuotaAvailable).toBe(false);
   });
 
   test("lesser_restoration clears source Concentration when removing the last concentration condition effect", () => {

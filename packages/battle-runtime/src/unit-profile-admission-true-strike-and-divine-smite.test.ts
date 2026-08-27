@@ -539,7 +539,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
       snapshot: {
         pendingInterrupt: null,
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],
@@ -915,7 +915,7 @@ describe("SRDINV31 deterministic True Strike and Divine Smite admission", () => 
           ],
         },
         turn: {
-          bonusActionAvailable: false,
+          bonusActionQuotaAvailable: false,
           spellSlotUsesThisTurn: [
             { kind: "committed", combatantId: spellCasterId },
           ],

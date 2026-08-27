@@ -18,6 +18,8 @@ import {
   snapshotBattle,
   WEAPON_OR_UNARMED_CRITICAL_RANGE_19_SUPPORT_PROFILE,
   type BattleCreatureState,
+  type BattleFill,
+  type BattleHole,
   type BattleSubject,
   type BattleRuntimeSession,
   type BattleState,
@@ -71,7 +73,10 @@ import {
 } from "./server.ts";
 import { buildAdvertisedToolDefinitions } from "./protocol-server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
-import type { BattleToolResult } from "./battle-tools.ts";
+import {
+  pendingFillFrontierIssue,
+  type BattleToolResult,
+} from "./battle-tools.ts";
 import type { CharacterToolResult } from "./character-tools.ts";
 import {
   CharacterSessionDetailOutputSchema,
@@ -345,6 +350,35 @@ const fighterId = combatantId("fighter");
 const goblinId = combatantId("goblin");
 
 describe("MCP server route", () => {
+  test("accepts the runtime-mapped Spellcasting Ability Check fill and rejects an unrelated kind", () => {
+    // The MCP frontier guard reads only protocol kinds and Hole identity;
+    // payload details belong to the runtime procedure boundary.
+    const spellcastingAbilityCheckHole = {
+      holeId: "mcp:test:spellcasting-ability-check",
+      kind: "spellcastingAbilityCheck",
+    } as BattleHole;
+    const pending = {
+      holes: [spellcastingAbilityCheckHole],
+      fills: [],
+    };
+    const abilityCheckFill = {
+      holeId: spellcastingAbilityCheckHole.holeId,
+      kind: "abilityCheck",
+      value: { total: 14 },
+    } as BattleFill;
+
+    expect(pendingFillFrontierIssue(pending, abilityCheckFill)).toBeNull();
+    expect(
+      pendingFillFrontierIssue(pending, {
+        holeId: spellcastingAbilityCheckHole.holeId,
+        kind: "rolledDice",
+        value: [{ results: [14] }],
+      } as BattleFill),
+    ).toMatchObject({
+      details: { code: "BATTLE_FILL_KIND_MISMATCH" },
+    });
+  });
+
   test("falls back to canonical ids when optional authored display records are absent", () => {
     const root = createMcpPlaySessionRoot();
     const build = fighterCharacterBuild(root.unitLibrary);

@@ -527,7 +527,7 @@ describe("GitHub #227 attack and damage coverage", () => {
     expect(resolved).toMatchObject({
       tag: "resolved",
       snapshot: {
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
         combatants: expect.arrayContaining([
           expect.objectContaining({ combatantId: goblinId, hp: 6 }),
         ]),

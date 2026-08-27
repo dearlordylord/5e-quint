@@ -128,7 +128,7 @@ export function battleTurnSnapshot(state: BattleState): BattleTurnSnapshot {
   const resources = state.currentTurnResources;
   return {
     actionResources: resources.actionResources,
-    bonusActionAvailable: resources.currentHasBonusAction,
+    bonusActionQuotaAvailable: resources.currentHasBonusAction,
     jumpDistanceMultiplier: resources.jumpDistanceMultiplier,
     heightenedStepOfTheWindCarriedCreatures:
       resources.heightenedStepOfTheWindCarriedCreatures,

@@ -119,7 +119,7 @@ describe("manual MCP battle surface coverage", () => {
 
     expect(afterGrant.result).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     expect(afterGrant.result.snapshot.combatants).toEqual(
       expect.arrayContaining([
@@ -185,7 +185,7 @@ describe("manual MCP battle surface coverage", () => {
     });
     expect(afterInnate.result).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
 
     const burst = requireSpellAct(root, "sorcerous_burst");
@@ -283,7 +283,7 @@ describe("manual MCP battle surface coverage", () => {
           expect.objectContaining({ combatantId: "fighter" }),
           expect.objectContaining({ combatantId: "goblin", hp: 3 }),
         ],
-        turn: { bonusActionAvailable: false },
+        turn: { bonusActionQuotaAvailable: false },
       },
     });
   });

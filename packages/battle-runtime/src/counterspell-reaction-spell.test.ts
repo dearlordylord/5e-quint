@@ -1126,7 +1126,7 @@ describe("Counterspell Reaction spell", () => {
       tag: "resolved",
       snapshot: {
         pendingInterrupt: null,
-        turn: { bonusActionAvailable: false, dashMovementBonusFeet: 0 },
+        turn: { bonusActionQuotaAvailable: false, dashMovementBonusFeet: 0 },
       },
     });
     if (resolved.tag !== "resolved") {

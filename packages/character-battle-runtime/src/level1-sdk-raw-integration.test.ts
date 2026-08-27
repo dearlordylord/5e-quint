@@ -360,7 +360,7 @@ describe("level 1 SDK RAW integration", () => {
     );
 
     expect(requireCombatant(resolved.state, fighterId).hp).toBe(Hp(8));
-    expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
+    expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
       false,
     );
     expect(characterResources(fighter)).toEqual(
@@ -427,7 +427,9 @@ describe("level 1 SDK RAW integration", () => {
       authoredUnitId(barbarianRageUnitId),
     );
 
-    expect(snapshotBattle(raging.state).turn.bonusActionAvailable).toBe(false);
+    expect(snapshotBattle(raging.state).turn.bonusActionQuotaAvailable).toBe(
+      false,
+    );
     expect(characterResources(barbarian)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -668,7 +670,7 @@ describe("level 1 SDK RAW integration", () => {
       authoredUnitId(bardBardicInspirationUnitId),
     );
 
-    expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
+    expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
       false,
     );
     expect(characterResources(bard)).toEqual(
@@ -831,7 +833,9 @@ describe("level 1 SDK RAW integration", () => {
     ).state;
     const sorcerer = requireCharacterCombatant(activated, sorcererId);
 
-    expect(snapshotBattle(activated).turn.bonusActionAvailable).toBe(false);
+    expect(snapshotBattle(activated).turn.bonusActionQuotaAvailable).toBe(
+      false,
+    );
     expect(characterResources(sorcerer)).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -1756,7 +1760,7 @@ describe("level 1 SDK RAW integration", () => {
     );
     const caster = requireCharacterCombatant(resolved.state, hexWarlockId);
 
-    expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
+    expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
       false,
     );
     expect(caster.origin.spellcasting?.spellSlots).toEqual([
@@ -2234,7 +2238,7 @@ describe("level 1 SDK RAW integration", () => {
     });
 
     expect(requireCombatant(resolved.state, monsterId).hp).toBe(Hp(3));
-    expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(
+    expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
       false,
     );
   });
@@ -3298,7 +3302,7 @@ function assertLevelOneProduceFlame(input: {
         },
       },
     ],
-    turn: { bonusActionAvailable: false },
+    turn: { bonusActionQuotaAvailable: false },
   });
   expect(litCaster.origin.spellcasting?.spellSlots).toEqual(
     input.expectedSpellSlots,
@@ -3398,7 +3402,7 @@ function assertLevelOneProduceFlame(input: {
   expect(snapshotBattle(resolved.state).lightEmitters).toEqual([]);
   expect(snapshotBattle(resolved.state).turn).toMatchObject({
     actionResources: [],
-    bonusActionAvailable: false,
+    bonusActionQuotaAvailable: false,
   });
   expect(caster.origin.spellcasting?.spellSlots).toEqual(
     input.expectedSpellSlots,
@@ -3486,7 +3490,9 @@ function assertLevelOneShillelagh(input: {
       }),
     ]),
   );
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    false,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);
   expect(caster.concentration).toBeNull();
   expect(caster.origin.spellcasting?.spellSlots).toEqual(
@@ -4035,7 +4041,9 @@ function assertLevelOneSanctuary(input: {
       }),
     ]),
   );
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    false,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
     { kind: "committed", combatantId: input.casterId },
   ]);
@@ -4147,7 +4155,9 @@ function assertLevelOneBless(input: {
     effectKind: "spellEffect",
   });
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    true,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
     { kind: "committed", combatantId: input.casterId },
   ]);
@@ -4266,7 +4276,9 @@ function assertLevelOneShieldOfFaith(input: {
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual(
     expectedPreservedActionResources,
   );
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    false,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
     { kind: "committed", combatantId: input.casterId },
   ]);
@@ -4389,7 +4401,9 @@ function assertLevelOneHealingWord(input: {
   const caster = requireCharacterCombatant(resolved.state, input.casterId);
 
   expect(requireCombatant(resolved.state, input.targetId).hp).toBe(Hp(10));
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    false,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
     { kind: "committed", combatantId: input.casterId },
   ]);
@@ -4511,7 +4525,9 @@ function assertLevelOneCureWounds(input: {
     Hp(input.expectedResolvedHp),
   );
   expect(snapshotBattle(resolved.state).turn.actionResources).toEqual([]);
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(true);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    true,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
     { kind: "committed", combatantId: input.casterId },
   ]);
@@ -4763,7 +4779,9 @@ function assertLevelOneHuntersMark(input: {
   );
   const ranger = requireCharacterCombatant(resolved.state, input.casterId);
 
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    false,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([]);
   expect(ranger.origin.spellcasting?.spellSlots).toEqual([
     { spellLevel: 1, count: 2, expended: 0 },
@@ -4966,7 +4984,9 @@ function assertLevelOneHuntersMarkSpellSlot(input: {
   );
   const ranger = requireCharacterCombatant(resolved.state, input.casterId);
 
-  expect(snapshotBattle(resolved.state).turn.bonusActionAvailable).toBe(false);
+  expect(snapshotBattle(resolved.state).turn.bonusActionQuotaAvailable).toBe(
+    false,
+  );
   expect(resolved.state.currentTurnResources.spellSlotUsesThisTurn).toEqual([
     { kind: "committed", combatantId: input.casterId },
   ]);

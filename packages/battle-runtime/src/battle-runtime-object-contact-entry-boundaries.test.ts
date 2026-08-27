@@ -261,7 +261,7 @@ describe("Heat Metal object-contact public entry boundaries", () => {
     });
     expect(resolved).toMatchObject({
       tag: "resolved",
-      snapshot: { turn: { bonusActionAvailable: false } },
+      snapshot: { turn: { bonusActionQuotaAvailable: false } },
     });
     if (resolved.tag !== "resolved") return;
     expect(requireCombatant(resolved.state, spellTargetId).hp).toBe(Hp(20));

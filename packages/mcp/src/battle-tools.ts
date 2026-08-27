@@ -1,7 +1,6 @@
 import {
   battleInitiativePosition,
-  battleFillKind,
-  battleHoleFamilyKind,
+  battleHoleAcceptsFill,
   discoverBattleActs,
   openCreatureFallsRuntimeInterruptWindow,
   resolveBattleRuntimeInterrupt,
@@ -388,8 +387,8 @@ function activeBattleForTool(
   return Either.right(state.session);
 }
 
-function pendingFillFrontierIssue(
-  pending: PendingBattleFillSession | null,
+export function pendingFillFrontierIssue(
+  pending: Pick<PendingBattleFillSession, "holes" | "fills"> | null,
   fill: BattleFill,
 ): {
   readonly message: string;
@@ -424,8 +423,8 @@ function pendingFillFrontierIssue(
           },
         };
   }
-  const matchingKindHole = matchingHoles.find(
-    (hole) => battleHoleFamilyKind(hole) === battleFillKind(fill),
+  const matchingKindHole = matchingHoles.find((hole) =>
+    battleHoleAcceptsFill(hole, fill),
   );
   if (matchingKindHole !== undefined) return null;
   const pendingHole = matchingHoles[0];
