@@ -54,6 +54,14 @@ function hasExactKeys(
   );
 }
 
+function requireRecord(
+  value: unknown,
+  message: string,
+): Record<string, unknown> {
+  if (!isRecord(value)) throw new Error(message);
+  return value;
+}
+
 function fixedPointCaseId(value: unknown): FixedPointCaseId | undefined {
   for (const id of FIXED_POINT_CASE_IDS) {
     if (id === value) return id;
@@ -118,7 +126,7 @@ function parseFixedPointArtifact(value: unknown): FixedPointArtifact {
     }
     if (expected.outcome === "success") {
       if (!hasExactKeys(expected, ["outcome", "value"])) {
-        throw new Error("Successful fixed-point case is missing its value.");
+        throw new Error("Successful fixed-point case keys are invalid.");
       }
       parsedCases.push({
         id,
@@ -127,7 +135,7 @@ function parseFixedPointArtifact(value: unknown): FixedPointArtifact {
       });
     } else {
       if (!hasExactKeys(expected, ["outcome", "issue"])) {
-        throw new Error("Failed fixed-point case is missing its issue.");
+        throw new Error("Failed fixed-point case keys are invalid.");
       }
       parsedCases.push({
         id,
@@ -146,9 +154,8 @@ function parseFixedPointArtifact(value: unknown): FixedPointArtifact {
   };
 }
 
-const artifact = parseFixedPointArtifact(
-  JSON.parse(readFileSync(artifactPath, "utf8")),
-);
+const rawArtifact: unknown = JSON.parse(readFileSync(artifactPath, "utf8"));
+const artifact = parseFixedPointArtifact(rawArtifact);
 
 describe("character-sheet persistence fixed point", () => {
   test("replays the bounded old-parser matrix", () => {
@@ -173,31 +180,53 @@ describe("character-sheet persistence fixed point", () => {
   });
 
   test("rejects corrupted artifact envelopes and Result-shaped additions", () => {
+    const rawRecord = requireRecord(
+      rawArtifact,
+      "Raw fixed-point artifact must be an object.",
+    );
+    const rawProvenance = requireRecord(
+      rawRecord.provenance,
+      "Raw provenance must be an object.",
+    );
+    const rawCases = rawRecord.cases;
+    if (!Array.isArray(rawCases))
+      throw new Error("Raw cases must be an array.");
+    const firstCase = requireRecord(
+      rawCases[0],
+      "Raw first case must be an object.",
+    );
+    const firstExpected = requireRecord(
+      firstCase.expected,
+      "Raw first expected value must be an object.",
+    );
+    const { oldParserProbe: _oldParserProbe, ...rawProvenanceWithoutProbe } =
+      rawProvenance;
+
     const missingProbe = {
-      ...artifact,
-      provenance: { certifiedBaseline: artifact.provenance.certifiedBaseline },
+      ...rawRecord,
+      provenance: rawProvenanceWithoutProbe,
     };
-    expect(() => parseFixedPointArtifact(missingProbe)).toThrow();
+    expect(() => parseFixedPointArtifact(missingProbe)).toThrow(
+      "Fixed-point artifact metadata or case count is invalid.",
+    );
 
     const resultTag = {
-      ...artifact,
-      cases: artifact.cases.map((testCase, index) =>
-        index === 0
-          ? {
-              ...testCase,
-              expected: { ...testCase.expected, _tag: "Success" },
-            }
-          : testCase,
-      ),
+      ...rawRecord,
+      cases: [
+        { ...firstCase, expected: { ...firstExpected, _tag: "Success" } },
+        ...rawCases.slice(1),
+      ],
     };
-    expect(() => parseFixedPointArtifact(resultTag)).toThrow();
+    expect(() => parseFixedPointArtifact(resultTag)).toThrow(
+      "Successful fixed-point case keys are invalid.",
+    );
 
     const extraCaseKey = {
-      ...artifact,
-      cases: artifact.cases.map((testCase, index) =>
-        index === 0 ? { ...testCase, payload: "unexpected" } : testCase,
-      ),
+      ...rawRecord,
+      cases: [{ ...firstCase, payload: "unexpected" }, ...rawCases.slice(1)],
     };
-    expect(() => parseFixedPointArtifact(extraCaseKey)).toThrow();
+    expect(() => parseFixedPointArtifact(extraCaseKey)).toThrow(
+      "Fixed-point case envelope is invalid.",
+    );
   });
 });
