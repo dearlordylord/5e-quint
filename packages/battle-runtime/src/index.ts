@@ -1,12 +1,16 @@
 export {
   BattleMechanicalFrontierSchema,
   BattleMechanicalHoleSchema,
+  BattleMechanicalInterruptDecisionHoleSchema,
   BattleMechanicalInterruptChoiceSchema,
+  BattleMechanicalOrdinaryHoleSchema,
   battleMechanicalFrontier,
   type BattleMechanicalFrontier,
   type BattleMechanicalFrontierIssue,
   type BattleMechanicalHole,
+  type BattleMechanicalInterruptDecisionHole,
   type BattleMechanicalInterruptChoice,
+  type BattleMechanicalOrdinaryHole,
 } from "./battle-mechanical-frontier.ts";
 
 export {

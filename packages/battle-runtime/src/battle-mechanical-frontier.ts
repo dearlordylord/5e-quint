@@ -2,8 +2,10 @@ import { Either, Match, Schema } from "effect";
 
 import {
   BattleFillSchema,
+  BattleMechanicalInterruptDecisionHoleSchema as BattleMechanicalInterruptDecisionHoleCodecSchema,
   BattleMechanicalHoleSchema as BattleMechanicalHoleCodecSchema,
   BattleMechanicalInterruptProcedureChoiceSchema,
+  BattleMechanicalOrdinaryHoleSchema as BattleMechanicalOrdinaryHoleCodecSchema,
 } from "./battle-reducer/battle-codecs.ts";
 import { battleHoleFamilyKind } from "./battle-reducer/hole-helpers.ts";
 import type {
@@ -19,8 +21,20 @@ export const BattleMechanicalHoleSchema =
   BattleMechanicalHoleCodecSchema.annotations({
     parseOptions: { onExcessProperty: "error" },
   });
+export const BattleMechanicalOrdinaryHoleSchema =
+  BattleMechanicalOrdinaryHoleCodecSchema.annotations({
+    parseOptions: { onExcessProperty: "error" },
+  });
+export const BattleMechanicalInterruptDecisionHoleSchema =
+  BattleMechanicalInterruptDecisionHoleCodecSchema.annotations({
+    parseOptions: { onExcessProperty: "error" },
+  });
 
 export type BattleMechanicalHole = typeof BattleMechanicalHoleSchema.Type;
+export type BattleMechanicalOrdinaryHole =
+  typeof BattleMechanicalOrdinaryHoleSchema.Type;
+export type BattleMechanicalInterruptDecisionHole =
+  typeof BattleMechanicalInterruptDecisionHoleSchema.Type;
 
 export type BattleMechanicalInterruptChoice =
   typeof BattleMechanicalInterruptProcedureChoiceSchema.Type;
@@ -28,16 +42,13 @@ export type BattleMechanicalInterruptChoice =
 export type BattleMechanicalOrdinaryFrontier = {
   readonly kind: "ordinaryHoles";
   readonly subject: BattleSubject;
-  readonly holes: ReadonlyNonEmptyArray<BattleMechanicalHole>;
+  readonly holes: ReadonlyNonEmptyArray<BattleMechanicalOrdinaryHole>;
   readonly acceptedFills: readonly BattleFill[];
 };
 
 export type BattleMechanicalInterruptFrontier = {
   readonly kind: "interruptDecision";
-  readonly decisionHole: Extract<
-    BattleMechanicalHole,
-    { readonly kind: "interruptDecision" }
-  >;
+  readonly decisionHole: BattleMechanicalInterruptDecisionHole;
   readonly choices: ReadonlyNonEmptyArray<BattleMechanicalInterruptChoice>;
 };
 
@@ -60,21 +71,12 @@ export const BattleMechanicalFrontierSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("ordinaryHoles"),
     subject: BattleSubjectSchema,
-    holes: Schema.NonEmptyArray(BattleMechanicalHoleSchema),
+    holes: Schema.NonEmptyArray(BattleMechanicalOrdinaryHoleSchema),
     acceptedFills: Schema.Array(BattleFillSchema),
   }),
   Schema.Struct({
     kind: Schema.Literal("interruptDecision"),
-    decisionHole: BattleMechanicalHoleSchema.pipe(
-      Schema.filter(
-        (
-          hole,
-        ): hole is Extract<
-          BattleMechanicalHole,
-          { kind: "interruptDecision" }
-        > => hole.kind === "interruptDecision",
-      ),
-    ),
+    decisionHole: BattleMechanicalInterruptDecisionHoleSchema,
     choices: Schema.NonEmptyArray(BattleMechanicalInterruptChoiceSchema),
   }),
 ).annotations({ identifier: "BattleMechanicalFrontier" });
@@ -120,19 +122,29 @@ export function battleMechanicalFrontier(input: {
   return Either.right({
     kind: "ordinaryHoles",
     subject: result.subject,
-    holes: projectMechanicalHoles(result.holes),
+    holes: projectMechanicalOrdinaryHoles(result.holes),
     acceptedFills: input.acceptedFills,
   });
 }
 
-function projectMechanicalHoles(
+function isOrdinaryBattleHole(
+  hole: BattleHole,
+): hole is Exclude<BattleHole, { readonly kind: "interruptDecision" }> {
+  return hole.kind !== "interruptDecision";
+}
+
+function projectMechanicalOrdinaryHoles(
   holes: readonly BattleHole[],
-): ReadonlyNonEmptyArray<BattleMechanicalHole> {
-  const [first, ...rest] = holes;
+): ReadonlyNonEmptyArray<BattleMechanicalOrdinaryHole> {
+  const ordinaryHoles = holes.filter(isOrdinaryBattleHole);
+  const [first, ...rest] = ordinaryHoles;
   if (first === undefined) {
-    throw new Error("battle holes were proven nonempty");
+    throw new Error("ordinary battle holes were proven nonempty");
   }
-  return [projectMechanicalHole(first), ...rest.map(projectMechanicalHole)];
+  return [
+    projectMechanicalHole(first),
+    ...rest.map((hole) => projectMechanicalHole(hole)),
+  ];
 }
 
 function projectMechanicalChoices(
@@ -150,30 +162,32 @@ function projectMechanicalChoices(
 
 function projectMechanicalInterruptHole(
   hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
-): Extract<BattleMechanicalHole, { readonly kind: "interruptDecision" }> {
-  return Match.value(hole).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      interruptDecision: (value) => projectHoleWithoutPresentationLabel(value),
-    }),
-  );
+): BattleMechanicalInterruptDecisionHole {
+  return projectMechanicalHole(hole);
 }
 
+function projectMechanicalHole(
+  hole: Exclude<BattleHole, { readonly kind: "interruptDecision" }>,
+): BattleMechanicalOrdinaryHole;
+function projectMechanicalHole(
+  hole: Extract<BattleHole, { readonly kind: "interruptDecision" }>,
+): BattleMechanicalInterruptDecisionHole;
+function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole;
 function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
   return Match.value(hole).pipe(
     Match.discriminatorsExhaustive("kind")({
-      abilityCheck: (value) => projectHoleWithoutPresentationLabel(value),
+      abilityCheck: (value) => projectMechanicalD20Hole(value),
       abilityChoice: (value) => projectHoleWithoutPresentationLabel(value),
       attackDamageDisposition: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      attackRoll: (value) => projectHoleWithoutPresentationLabel(value),
+      attackRoll: (value) => projectMechanicalAttackRollHole(value),
       commandOptionChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
       companionReappearanceInitiative: (value) =>
         projectHoleWithoutPresentationLabel(value),
       companionReappearancePlacement: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      concentrationSavingThrow: (value) =>
-        projectHoleWithoutPresentationLabel(value),
+      concentrationSavingThrow: (value) => projectMechanicalD20Hole(value),
       conditionChoice: (value) => projectHoleWithoutPresentationLabel(value),
       cunningStrikeEndTurnCoverFacts: (value) =>
         projectHoleWithoutPresentationLabel(value),
@@ -182,7 +196,7 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       damageTypeChoice: (value) => projectHoleWithoutPresentationLabel(value),
       dancingLightsPlacement: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      deathSavingThrow: (value) => projectHoleWithoutPresentationLabel(value),
+      deathSavingThrow: (value) => projectMechanicalD20Hole(value),
       findFamiliarConnection: (value) =>
         projectHoleWithoutPresentationLabel(value),
       grappleOutcome: (value) => projectHoleWithoutPresentationLabel(value),
@@ -215,10 +229,10 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       objectTargetChoice: (value) => projectHoleWithoutPresentationLabel(value),
       ongoingSpellTargetChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      rolledDice: (value) => projectHoleWithoutPresentationLabel(value),
+      rolledDice: (value) => projectMechanicalRolledDiceHole(value),
       sanctuaryInterdictionOutcome: (value) =>
         projectHoleWithoutPresentationLabel(value),
-      savingThrowOutcome: (value) => projectHoleWithoutPresentationLabel(value),
+      savingThrowOutcome: (value) => projectMechanicalSavingThrowHole(value),
       selfTransformationModeChoice: (value) =>
         projectHoleWithoutPresentationLabel(value),
       slowSomaticSpellFailureOutcome: (value) =>
@@ -229,8 +243,7 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
       spellTargetAllocation: (value) =>
         projectHoleWithoutPresentationLabel(value),
       spellTargetList: (value) => projectHoleWithoutPresentationLabel(value),
-      spellcastingAbilityCheck: (value) =>
-        projectHoleWithoutPresentationLabel(value),
+      spellcastingAbilityCheck: (value) => projectMechanicalD20Hole(value),
       spiritualWeaponForcePosition: (value) =>
         projectHoleWithoutPresentationLabel(value),
       statBlockRechargeRoll: (value) =>
@@ -253,9 +266,6 @@ function projectMechanicalHole(hole: BattleHole): BattleMechanicalHole {
   );
 }
 
-type MechanicalHoleProjection<Hole extends { readonly label: string }> =
-  Hole extends unknown ? Omit<Hole, "label"> : never;
-
 function projectHoleWithoutPresentationLabel<
   Hole extends { readonly label: string },
 >(hole: Hole): MechanicalHoleProjection<Hole>;
@@ -264,6 +274,118 @@ function projectHoleWithoutPresentationLabel<
 >(hole: Hole) {
   const { label, ...mechanical } = hole;
   void label;
+  return mechanical;
+}
+
+function projectNestedPresentationLabel<
+  Option extends { readonly label: string },
+>(option: Option): Omit<Option, "label"> {
+  const { label, ...mechanical } = option;
+  void label;
+  return mechanical;
+}
+
+type MechanicalHoleProjection<Hole extends { readonly label: string }> =
+  Hole extends unknown ? Omit<Hole, "label"> : never;
+
+type BattleMechanicalD20Hole = Extract<
+  BattleMechanicalOrdinaryHole,
+  {
+    readonly kind:
+      | "abilityCheck"
+      | "concentrationSavingThrow"
+      | "deathSavingThrow"
+      | "spellcastingAbilityCheck";
+  }
+>;
+
+function projectMechanicalD20Hole(
+  hole: Extract<
+    BattleHole,
+    {
+      readonly kind:
+        | "abilityCheck"
+        | "concentrationSavingThrow"
+        | "deathSavingThrow"
+        | "spellcastingAbilityCheck";
+    }
+  >,
+): BattleMechanicalD20Hole {
+  const { label, d20TestNaturalOneRerolls, ...mechanical } = hole;
+  void label;
+  return {
+    ...mechanical,
+    ...(d20TestNaturalOneRerolls === undefined
+      ? {}
+      : {
+          d20TestNaturalOneRerolls: d20TestNaturalOneRerolls.map(
+            projectNestedPresentationLabel,
+          ),
+        }),
+  };
+}
+
+function projectMechanicalAttackRollHole(
+  hole: Extract<BattleHole, { readonly kind: "attackRoll" }>,
+): Extract<BattleMechanicalOrdinaryHole, { readonly kind: "attackRoll" }> {
+  const { label, d20TestNaturalOneRerolls, ...mechanical } = hole;
+  void label;
+  const mechanicalWithD20 = {
+    ...mechanical,
+    ...(d20TestNaturalOneRerolls === undefined
+      ? {}
+      : {
+          d20TestNaturalOneRerolls: d20TestNaturalOneRerolls.map(
+            projectNestedPresentationLabel,
+          ),
+        }),
+  };
+  if ("spellAttackRerolls" in hole && hole.spellAttackRerolls !== undefined) {
+    return {
+      ...mechanicalWithD20,
+      spellAttackRerolls: hole.spellAttackRerolls.map(
+        projectNestedPresentationLabel,
+      ),
+    };
+  }
+  return mechanicalWithD20;
+}
+
+function projectMechanicalRolledDiceHole(
+  hole: Extract<BattleHole, { readonly kind: "rolledDice" }>,
+): Extract<BattleMechanicalOrdinaryHole, { readonly kind: "rolledDice" }> {
+  const { label, ...mechanical } = hole;
+  void label;
+  if ("spellDamageRerolls" in hole && hole.spellDamageRerolls !== undefined) {
+    return {
+      ...mechanical,
+      spellDamageRerolls: hole.spellDamageRerolls.map(
+        projectNestedPresentationLabel,
+      ),
+    };
+  }
+  return mechanical;
+}
+
+function projectMechanicalSavingThrowHole(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): Extract<
+  BattleMechanicalOrdinaryHole,
+  { readonly kind: "savingThrowOutcome" }
+> {
+  const { label, ...mechanical } = hole;
+  void label;
+  if (
+    "d20TestNaturalOneRerolls" in hole &&
+    hole.d20TestNaturalOneRerolls !== undefined
+  ) {
+    return {
+      ...mechanical,
+      d20TestNaturalOneRerolls: hole.d20TestNaturalOneRerolls.map(
+        projectNestedPresentationLabel,
+      ),
+    };
+  }
   return mechanical;
 }
 
