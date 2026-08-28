@@ -150,7 +150,9 @@ export const defineRawStatBlockFidelityLane = (config: {
 
     test("matches every scoped general fact and named RAW entry symmetrically", () => {
       expect(discovery.issues).toEqual([]);
-      expect(projectAuthoredStatBlocks(records)).toEqual(rawProjection());
+      expect(projectAuthoredStatBlocks(records, equipmentSource)).toEqual(
+        rawProjection(),
+      );
     });
 
     test("keeps projections independent of catalog order", () => {
@@ -162,7 +164,9 @@ export const defineRawStatBlockFidelityLane = (config: {
             maxLength: records.length,
           }),
           (permutation) => {
-            expect(projectAuthoredStatBlocks(permutation)).toEqual(expected);
+            expect(
+              projectAuthoredStatBlocks(permutation, equipmentSource),
+            ).toEqual(expected);
           },
         ),
         { numRuns: 20 },
@@ -227,8 +231,12 @@ export const defineRawStatBlockFidelityLane = (config: {
           : record,
       );
 
-      expect(projectAuthoredStatBlocks(withoutEntry)).not.toEqual(expected);
-      expect(projectAuthoredStatBlocks(swappedEntries)).not.toEqual(expected);
+      expect(
+        projectAuthoredStatBlocks(withoutEntry, equipmentSource),
+      ).not.toEqual(expected);
+      expect(
+        projectAuthoredStatBlocks(swappedEntries, equipmentSource),
+      ).not.toEqual(expected);
     });
   });
 

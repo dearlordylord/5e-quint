@@ -30,7 +30,7 @@ const expectedRawProjection = () =>
 
 describe("H–L scoped RAW fidelity", () => {
   test("keeps the authored and RAW projections symmetric", () => {
-    expect(projectAuthoredStatBlocks(INSTALLED)).toEqual(
+    expect(projectAuthoredStatBlocks(INSTALLED, EQUIPMENT_SOURCE)).toEqual(
       projectRawStatBlocks(SOURCE, OCCURRENCES, INSTALLED, EQUIPMENT_SOURCE),
     );
   });
@@ -97,6 +97,7 @@ describe("H–L scoped RAW fidelity", () => {
           INSTALLED.map((record) =>
             record.id === mutated.id ? mutated : record,
           ),
+          EQUIPMENT_SOURCE,
         ),
       ).not.toEqual(expectedRawProjection());
     }
@@ -214,6 +215,7 @@ describe("H–L scoped RAW fidelity", () => {
           INSTALLED.map((record) =>
             record.id === mutated.id ? mutated : record,
           ),
+          EQUIPMENT_SOURCE,
         ),
       ).not.toEqual(expectedRawProjection());
     }
