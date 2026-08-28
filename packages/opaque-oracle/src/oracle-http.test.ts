@@ -171,6 +171,47 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     expect(Either.isRight(secondClose)).toBe(true);
   });
 
+  test("captures termination during readiness publication and closes cleanly", async () => {
+    let nodeServer: Server | undefined;
+    let readinessStarted!: () => void;
+    const readinessStartedPromise = new Promise<void>((resolve) => {
+      readinessStarted = resolve;
+    });
+    let releaseReadiness!: () => void;
+    const readinessReleasePromise = new Promise<void>((resolve) => {
+      releaseReadiness = resolve;
+    });
+    const sigintListeners = process.listenerCount("SIGINT");
+    const sigtermListeners = process.listenerCount("SIGTERM");
+    const service = runOracleHttpService({
+      application,
+      evaluate: productionEvaluator(),
+      host: ORACLE_LOOPBACK_HOST,
+      port: portZeroValue,
+      serverFactory: (handler) => {
+        const server = createServer(handler);
+        nodeServer = server;
+        return server;
+      },
+      writeReady: async () => {
+        readinessStarted();
+        await readinessReleasePromise;
+      },
+    });
+
+    await readinessStartedPromise;
+    expect(process.listenerCount("SIGINT")).toBe(sigintListeners + 1);
+    expect(process.listenerCount("SIGTERM")).toBe(sigtermListeners + 1);
+    process.emit("SIGTERM");
+    releaseReadiness();
+
+    const result = await service;
+    expect(Either.isRight(result)).toBe(true);
+    expect(nodeServer?.listening).toBe(false);
+    expect(process.listenerCount("SIGINT")).toBe(sigintListeners);
+    expect(process.listenerCount("SIGTERM")).toBe(sigtermListeners);
+  });
+
   test("keeps transport failures outside the Oracle response algebra", async () => {
     const server = await openServer();
     try {
@@ -354,6 +395,31 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     expect(Either.isLeft(result)).toBe(true);
     if (Either.isLeft(result)) expect(result.left.tag).toBe("listenerFailed");
     expect(process.listenerCount("SIGTERM")).toBe(signalListenerCount);
+  });
+
+  test("closes a server whose listening address is invalid before returning", async () => {
+    let nodeServer: Server | undefined;
+    let closeObserved = false;
+    const result = await listenOracleHttpServer({
+      application,
+      evaluate: productionEvaluator(),
+      host: ORACLE_LOOPBACK_HOST,
+      port: portZeroValue,
+      serverFactory: (handler) => {
+        const server = createServer(handler);
+        nodeServer = server;
+        server.once("close", () => {
+          closeObserved = true;
+        });
+        Object.defineProperty(server, "address", { value: () => null });
+        return server;
+      },
+    });
+
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) expect(result.left.tag).toBe("invalidAddress");
+    expect(closeObserved).toBe(true);
+    expect(nodeServer?.listening).toBe(false);
   });
 
   test("reports a typed bind failure when the requested port is occupied", async () => {

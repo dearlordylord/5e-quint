@@ -46,9 +46,15 @@ export type OracleCliCommand = {
 const oracleCliCommandUsage = (
   definition: OracleCliCommandDefinition,
 ): string =>
-  definition.arguments === "serve"
-    ? `oracle ${definition.tag} ${definition.hostFlag} ${ORACLE_LOOPBACK_HOST} ${definition.portFlag} <0..65535>`
-    : `oracle ${definition.tag}`;
+  Match.value(definition).pipe(
+    Match.when(
+      { arguments: "serve" },
+      ({ tag, hostFlag, portFlag }) =>
+        `oracle ${tag} ${hostFlag} ${ORACLE_LOOPBACK_HOST} ${portFlag} <0..65535>`,
+    ),
+    Match.when({ arguments: "none" }, ({ tag }) => `oracle ${tag}`),
+    Match.exhaustive,
+  );
 
 export const ORACLE_CLI_USAGE = `Usage: ${ORACLE_CLI_COMMAND_DEFINITIONS.map(
   oracleCliCommandUsage,
@@ -84,12 +90,17 @@ export function parseOracleCliCommand(
     (candidate) => candidate.tag === mode,
   );
   if (definition === undefined) return Either.left(invalidArguments());
-  if (definition.arguments === "serve") {
-    return parseOracleServeCommand(definition, remaining);
-  }
-  return remaining.length === 0
-    ? Either.right({ tag: definition.tag })
-    : Either.left(invalidArguments());
+  return Match.value(definition).pipe(
+    Match.when({ arguments: "serve" }, (serveDefinition) =>
+      parseOracleServeCommand(serveDefinition, remaining),
+    ),
+    Match.when({ arguments: "none" }, ({ tag }) =>
+      remaining.length === 0
+        ? Either.right({ tag })
+        : Either.left(invalidArguments()),
+    ),
+    Match.exhaustive,
+  );
 }
 
 /**

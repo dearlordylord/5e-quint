@@ -173,11 +173,8 @@ export function listenOracleHttpServer(input: {
         if (address === null || typeof address === "string") {
           settled = true;
           server.off("error", onListenError);
-          resolve(
-            Either.left({
-              tag: "invalidAddress",
-              message: "Oracle HTTP server did not bind a TCP address.",
-            }),
+          resolveInvalidAddressAfterClose(
+            "Oracle HTTP server did not bind a TCP address.",
           );
           return;
         }
@@ -194,12 +191,8 @@ export function listenOracleHttpServer(input: {
         });
         const decodedPort = decodeOracleListeningPort(address.port);
         if (Either.isLeft(decodedPort)) {
-          void closeOracleHttpNodeServer(server);
-          resolve(
-            Either.left({
-              tag: "invalidAddress",
-              message: "Oracle HTTP server returned an invalid TCP port.",
-            }),
+          resolveInvalidAddressAfterClose(
+            "Oracle HTTP server returned an invalid TCP port.",
           );
           return;
         }
@@ -216,6 +209,16 @@ export function listenOracleHttpServer(input: {
             }),
           ),
         );
+
+        function resolveInvalidAddressAfterClose(message: string): void {
+          void closeOracleHttpNodeServer(server).then((closed) => {
+            if (Either.isLeft(closed)) {
+              resolve(Either.left(closed.left));
+              return;
+            }
+            resolve(Either.left({ tag: "invalidAddress", message }));
+          });
+        }
       });
     } catch (cause) {
       onListenError(toError(cause));
@@ -235,11 +238,13 @@ export async function runOracleHttpService(
   if (Either.isLeft(listened)) return listened;
 
   const server = listened.right;
+  const termination = waitForTerminationSignal();
   try {
     await input.writeReady(
       `${encodeOracleHttpReadinessJson(server.readiness)}\n`,
     );
   } catch (cause) {
+    termination.cancel();
     const closed = await server.close();
     if (Either.isLeft(closed)) return closed;
     return Either.left({
@@ -248,7 +253,6 @@ export async function runOracleHttpService(
     });
   }
 
-  const termination = waitForTerminationSignal();
   const lifecycle = await Promise.race([
     server.listenerFailure.then((result) => ({
       tag: "listenerFailure" as const,
