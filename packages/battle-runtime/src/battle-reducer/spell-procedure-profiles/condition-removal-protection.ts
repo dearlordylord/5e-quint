@@ -45,6 +45,7 @@ import type {
 } from "./profile.ts";
 import { preparedSpellSlotInvocations } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -302,6 +303,7 @@ const ConditionRemovalProtectionInvocationSchema =
       }),
       protection: Schema.Struct({
         conditionSaveRollMode: Schema.Struct({
+          ...BattleEffectOccurrenceTemplateSchemaFields,
           kind: Schema.Literal("conditionSavingThrowRollMode"),
           sourceCombatantId: CombatantId,
           condition: Schema.Literal("poisoned"),
@@ -309,6 +311,7 @@ const ConditionRemovalProtectionInvocationSchema =
           expiresAt: BattleActiveEffectExpirationSchema,
         }),
         damageResistance: Schema.Struct({
+          ...BattleEffectOccurrenceTemplateSchemaFields,
           kind: Schema.Literal("damageResistance"),
           sourceCombatantId: CombatantId,
           damageType: Schema.Literal("poison"),

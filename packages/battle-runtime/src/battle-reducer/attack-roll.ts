@@ -72,7 +72,7 @@ import {
   type BattleShovePushOutcome,
   type BattleTargetChoiceHole,
   type BattleUnitFeatureDecisionHole,
-  type BattleLightEmitter,
+  type BattleLightEmitterMechanicalFacts,
   type BattleObjectOutline,
   type BattleSavingThrowRelationshipFact,
   type BattleState,
@@ -555,7 +555,7 @@ export function objectInvisibleBenefitDenied(
 }
 
 function objectLightEmitterDeniesInvisibleBenefit(
-  emitter: BattleLightEmitter,
+  emitter: BattleLightEmitterMechanicalFacts,
   targetObjectId: BattleObjectId,
 ): boolean {
   return (

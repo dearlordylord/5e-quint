@@ -104,6 +104,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -127,6 +128,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     kind: Schema.Literal("speedDelta"),
     deltaFeet: MovementDeltaFeet,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -138,6 +140,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     speed: Schema.Struct({ kind: Schema.Literal("equalToSpeed") }),
     hover: Schema.Literal(false),
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -149,6 +152,7 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     }),
     hover: Schema.Literal(true),
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
@@ -156,12 +160,14 @@ const ScalarBuffActiveEffectTemplateSchema = Schema.Union([
     bonus: Schema.Number,
     negatesRepeatedDamageAllocation: Schema.Boolean,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
   Schema.Struct({
     sourceCombatantId: CombatantId,
     kind: Schema.Literal("spellArmorClassFloor"),
     floor: ArmorClassSchema,
     expiresAt: BattleActiveEffectExpirationSchema,
+    ...BattleEffectOccurrenceTemplateSchemaFields,
   }),
 ]);
 
@@ -170,6 +176,7 @@ const HitPointMaximumIncreaseTemplateSchema = Schema.Struct({
   kind: Schema.Literal("hitPointMaximumIncrease"),
   amount: Schema.Number,
   expiresAt: BattleActiveEffectExpirationSchema,
+  ...BattleEffectOccurrenceTemplateSchemaFields,
 });
 type ScalarBuffResolveInput =
   SpellProcedureProfileResolveInput<ScalarBuffInvocation>;

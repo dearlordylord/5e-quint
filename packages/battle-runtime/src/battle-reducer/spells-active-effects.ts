@@ -52,6 +52,7 @@ import type {
 } from "../identity.ts";
 import {
   allocateBattleEffectOccurrenceForCreature,
+  allocateBattleStoredLightEmitterForCreature,
   type BattleSourcedEffectOccurrenceTemplate,
 } from "../effect-execution-ref.ts";
 import {
@@ -88,6 +89,7 @@ import {
   type BattleDancingLight,
   type BattleIllumination,
   type BattleLightEmitter,
+  type BattleLightEmitterMechanicalFacts,
   type BattleLightEmitterAttachment,
   type BattleLightEmitterProjection,
   type BattleLightEmitterProjectionFact,
@@ -104,6 +106,7 @@ import {
   type BattleState,
   type BattleExecutableSpellInvocation,
   type BattleStoredLightEmitter,
+  type BattleStoredLightEmitterTemplate,
   type SpiritualWeaponRepeatTargeting,
   type SpellCreatedHeldObjectActiveEffect,
   type SpellCreatedHeldObjectState,
@@ -492,7 +495,7 @@ export function battleLightEmitters(
       ),
   );
   const emitters = [
-    ...state.lightEmitters,
+    ...state.lightEmitters.map(projectStoredLightEmitter),
     ...outlineLightEmitters,
     ...state.objectOutlines.map(faerieFireObjectDimLightEmitter),
   ];
@@ -509,6 +512,14 @@ export function battleLightEmitters(
             )
           ),
       );
+}
+
+function projectStoredLightEmitter(
+  emitter: BattleStoredLightEmitter,
+): BattleLightEmitter {
+  const { effectRef, ...projection } = emitter;
+  void effectRef;
+  return projection;
 }
 
 export function battleLightEmitterProjection(
@@ -830,7 +841,7 @@ function spellCreatedHeldObjectHeldActor(input: {
 }
 
 function lightEmitterMatchesTarget(
-  emitter: BattleLightEmitter,
+  emitter: BattleLightEmitterMechanicalFacts,
   target: BattleLightEmitterAttachment,
 ): boolean {
   return Match.value(emitter).pipe(
@@ -882,7 +893,7 @@ function lightEmitterAttachmentMatchesTarget(
 }
 
 function lightEmitterOpaqueCoverBlocksEmission(
-  emitter: BattleLightEmitter,
+  emitter: BattleLightEmitterMechanicalFacts,
   fact: BattleLightEmitterProjectionFact,
 ): boolean {
   return (
@@ -1158,28 +1169,41 @@ export function applySpellLightEmitterEffects(
   if (lightRiders.length === 0) {
     return state;
   }
-  const nextEmitters = lightRiders.reduce<readonly BattleStoredLightEmitter[]>(
-    (emitters, rider): readonly BattleStoredLightEmitter[] => [
-      ...emitters.filter(
-        (emitter) =>
-          !(
-            emitter.kind === "spellLightEmitter" &&
-            emitter.sourceProcedureRef === invocation.sourceProcedureRef &&
-            emitter.sourceCombatantId === actorId &&
-            lightEmitterMatchesTarget(emitter, attachment)
-          ),
-      ),
-      lightEmitterFromPostDamageRider(
-        state,
+  return lightRiders.reduce<BattleState>((currentState, rider) => {
+    const owner = currentState.combatants.get(actorId);
+    if (owner === undefined) {
+      return currentState;
+    }
+    const allocation = allocateBattleStoredLightEmitterForCreature({
+      owner,
+      emitter: lightEmitterFromPostDamageRider(
+        currentState,
         actorId,
         attachment,
         invocation,
         rider,
       ),
-    ],
-    state.lightEmitters,
-  );
-  return { ...state, lightEmitters: nextEmitters };
+    });
+    return {
+      ...currentState,
+      combatants: new Map(currentState.combatants).set(
+        actorId,
+        allocation.owner,
+      ),
+      lightEmitters: [
+        ...currentState.lightEmitters.filter(
+          (emitter) =>
+            !(
+              emitter.kind === "spellLightEmitter" &&
+              emitter.sourceProcedureRef === invocation.sourceProcedureRef &&
+              emitter.sourceCombatantId === actorId &&
+              lightEmitterMatchesTarget(emitter, attachment)
+            ),
+        ),
+        allocation.emitter,
+      ],
+    };
+  }, state);
 }
 
 export function expireBattleLightEmitters(
@@ -1348,7 +1372,7 @@ function lightEmitterFromPostDamageRider(
     { readonly procedure: "spellAttackDamage" }
   >,
   rider: SpellLightEmissionPostDamageRider,
-): BattleStoredLightEmitter {
+): BattleStoredLightEmitterTemplate {
   const expiresAt = activeEffectExpirationForPostDamageRider(
     state,
     actorId,
@@ -2694,11 +2718,8 @@ function markSingleSaveAreaHazardSavedThisTurn(
       return activeEffects.map((current) => {
         const matches =
           !updated &&
-          ("effectRef" in effect
-            ? current.kind === effect.kind &&
-              "effectRef" in current &&
-              current.effectRef === effect.effectRef
-            : current === effect);
+          current.kind === effect.kind &&
+          current.effectRef === effect.effectRef;
         if (!matches) return current;
         updated = true;
         return {

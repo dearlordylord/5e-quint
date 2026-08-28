@@ -51,6 +51,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   preparedSpellSlotInvocations,
   SpellRuleExecutionFactsSchema,
@@ -64,6 +65,7 @@ import {
 } from "../codec-building-blocks.ts";
 
 const SanctuaryWardTemplateSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   sourceCombatantId: CombatantId,
   kind: Schema.Literal("sanctuaryWard"),
   save: Schema.Struct({

@@ -81,7 +81,7 @@ import type {
   CombatantId,
 } from "../identity.ts";
 import type { BattleSpellEffectLevel } from "../procedure-execution/spell-effect-level.ts";
-import type { SpellWeaponAttackOverrideEffect } from "../procedure-execution/weapon-attack-override.ts";
+import type { SourcedSpellWeaponAttackOverrideTemplate as SpellWeaponAttackOverrideEffect } from "../procedure-execution/weapon-attack-override.ts";
 import type { BattleActiveEffectExpiration } from "./expiration.ts";
 
 export type {
@@ -129,7 +129,9 @@ export type BattleReplayAddressableEffect = BattleEffectOccurrenceIdentity;
 /** Mechanical spell facts before Battle admission binds occurrence identity. */
 export type BattleSpellActiveEffectTemplate<E extends BattleSpellEffectBase> =
   E extends BattleSpellEffectBase
-    ? Omit<E, "sourceProcedureRef" | "effectRef">
+    ? Omit<E, "sourceProcedureRef" | "effectRef"> & {
+        readonly effectRef?: never;
+      }
     : never;
 /** Source-bound effect facts before Battle admission binds occurrence identity. */
 export type BattleSourcedActiveEffectTemplate<
@@ -386,7 +388,7 @@ export type ObjectContactPenaltyActiveEffect = BattleSpellEffectBase & {
     { readonly kind: "startOfTurn" }
   >;
 };
-export type BattleActiveEffect =
+export type BattleActiveEffect = (
   | (BattleUnitFeatureEffectBase & {
       readonly kind: "bardicInspirationDie";
       readonly dieSize: DamageDieSize;
@@ -1019,7 +1021,7 @@ export type BattleActiveEffect =
       };
       readonly expiresAt: BattleActiveEffectExpiration;
     })
-  | SpellWeaponAttackOverrideEffect
+  | Omit<SpellWeaponAttackOverrideEffect, "effectRef">
   | (BattleSpellEffectBase & {
       readonly kind: "spellMagicWeaponEnhancement";
       readonly holderCombatantId: CombatantId;
@@ -1135,7 +1137,9 @@ export type BattleActiveEffect =
         BattleActiveEffectExpiration,
         { readonly kind: "startOfTurn" }
       >;
-    });
+    })
+) &
+  BattleEffectOccurrenceIdentity;
 
 export type PersistentArmorSpellActiveEffect = Extract<
   BattleActiveEffect,

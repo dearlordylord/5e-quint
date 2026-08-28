@@ -52,6 +52,7 @@ import type {
   DiceExpr,
 } from "@dnd/surface/surface/types";
 import { Result, Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   type BattleActDiscoveryCandidate,
   type BattleExecutableSpellInvocation,
@@ -105,6 +106,7 @@ type SpellCreatedHeldObjectInvocation = Extract<
 >;
 
 const SpellCreatedHeldObjectTemplateSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("spellCreatedHeldObject"),
   sourceCombatantId: CombatantId,
   objectState: Schema.Struct({ kind: Schema.Literal("held") }),

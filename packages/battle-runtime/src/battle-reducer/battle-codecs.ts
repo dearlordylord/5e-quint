@@ -5811,7 +5811,18 @@ const BattleCreatureSnapshotCommonFields = {
   maxHp: Schema.Number,
   tempHp: Schema.Number,
   nextEffectOrdinal: BattleEffectExecutionOrdinal,
-  activeEffectRefs: Schema.Array(BattleEffectExecutionRef),
+  effectOccurrences: Schema.Array(
+    Schema.Union([
+      Schema.Struct({
+        kind: Schema.Literal("activeEffect"),
+        effectRef: BattleEffectExecutionRef,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("storedLightEmitter"),
+        effectRef: BattleEffectExecutionRef,
+      }),
+    ]),
+  ),
   armorClass: Schema.Number,
   size: Schema.String,
   zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshotSchema,
@@ -5933,7 +5944,8 @@ function battleCreatureSnapshotCommonInvariantsHold(
   snapshot: BattleCreatureSnapshotInvariantInput,
 ): boolean {
   if (
-    new Set(snapshot.activeEffectRefs).size !== snapshot.activeEffectRefs.length
+    new Set(snapshot.effectOccurrences.map(({ effectRef }) => effectRef))
+      .size !== snapshot.effectOccurrences.length
   ) {
     return false;
   }
@@ -5943,7 +5955,7 @@ function battleCreatureSnapshotCommonInvariantsHold(
   ) {
     return false;
   }
-  return snapshot.activeEffectRefs.every((effectRef) =>
+  return snapshot.effectOccurrences.every(({ effectRef }) =>
     battleEffectExecutionRefOrdinalIsBefore(
       effectRef,
       snapshot.origin.execution.scopeRef,
@@ -6286,6 +6298,7 @@ const BattleLightEmitterEndOfTurnExpirationSchema = Schema.Struct({
 });
 
 const BattleSpellLightEmitterFields = {
+  effectRef: Schema.optionalKey(Schema.Never),
   kind: Schema.Literal("spellLightEmitter"),
   sourceProcedureRef: BattleProcedureExecutionRef,
   sourceCombatantId: CombatantId,
@@ -6317,6 +6330,7 @@ const BattleLightEmitterSchema = Schema.Union([
     sourceSpellLevel: Schema.optionalKey(Schema.Never),
   }),
   Schema.Struct({
+    effectRef: Schema.optionalKey(Schema.Never),
     kind: Schema.Literal("unitFeatureLightEmitter"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceCombatantId: CombatantId,
@@ -6336,6 +6350,7 @@ const BattleLightEmitterSchema = Schema.Union([
     expiresAt: BattleActiveEffectExpirationSchema,
   }),
   Schema.Struct({
+    effectRef: Schema.optionalKey(Schema.Never),
     kind: Schema.Literal("objectInvisibleRevealLightEmitter"),
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceCombatantId: CombatantId,
@@ -6567,6 +6582,15 @@ function serializedBattleHoleExecutionReferences(
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
       ...bonuses,
     ];
+    const occurrenceSource = (owner: {
+      readonly sourceProcedureRef: BattleProcedureExecutionRef;
+      readonly sourceCombatantId: CombatantId;
+      readonly effectRef: BattleEffectExecutionRef;
+    }): readonly SerializedExecutionReferenceOwnership[] => [
+      source(owner.sourceProcedureRef, owner.sourceCombatantId),
+      bound(owner.effectRef),
+      ...bonuses,
+    ];
     return Match.value(value).pipe(
       Match.when({ sourceProcedureRef: Match.any }, (hole) => [
         source(hole.sourceProcedureRef),
@@ -6648,10 +6672,10 @@ function serializedBattleHoleExecutionReferences(
               procedureSource(matched.sleetStormAreaHazard),
             ),
             Match.when({ insectPlagueAreaHazard: Match.any }, (matched) =>
-              procedureSource(matched.insectPlagueAreaHazard),
+              occurrenceSource(matched.insectPlagueAreaHazard),
             ),
             Match.when({ cloudkillAreaHazard: Match.any }, (matched) =>
-              procedureSource(matched.cloudkillAreaHazard),
+              occurrenceSource(matched.cloudkillAreaHazard),
             ),
             Match.when({ gustOfWindLine: Match.any }, (matched) =>
               procedureSource(matched.gustOfWindLine),
@@ -6686,9 +6710,10 @@ function serializedBattleHoleExecutionReferences(
         source(hole.sourceProcedureRef),
         ...Match.value(hole).pipe(
           Match.when({ spellMarkedDamageRiders: Match.any }, (spellDamage) =>
-            (spellDamage.spellMarkedDamageRiders ?? []).map((rider) =>
+            (spellDamage.spellMarkedDamageRiders ?? []).flatMap((rider) => [
               owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-            ),
+              bound(rider.effectRef),
+            ]),
           ),
           Match.orElse(() => []),
         ),
@@ -6720,23 +6745,27 @@ function serializedBattleHoleExecutionReferences(
       Match.when({ spikeGrowthMovement: Match.any }, (hole) =>
         procedureSource(hole.spikeGrowthMovement),
       ),
-      Match.when({ insectPlagueAreaHazard: Match.any }, (hole) =>
-        procedureSource(hole.insectPlagueAreaHazard),
-      ),
-      Match.when({ cloudkillAreaHazard: Match.any }, (hole) =>
-        procedureSource(hole.cloudkillAreaHazard),
-      ),
+      Match.when({ insectPlagueAreaHazard: Match.any }, (hole) => [
+        ...procedureSource(hole.insectPlagueAreaHazard),
+        bound(hole.insectPlagueAreaHazard.effectRef),
+      ]),
+      Match.when({ cloudkillAreaHazard: Match.any }, (hole) => [
+        ...procedureSource(hole.cloudkillAreaHazard),
+        bound(hole.cloudkillAreaHazard.effectRef),
+      ]),
       Match.when({ attack: Match.any }, (hole) => [
         ...attackOptionReferences(hole.attack),
         ...(hole.attackDamageRiders ?? []).map((rider) =>
           owned(rider.procedureRef, rider.attackerId),
         ),
-        ...(hole.spellWeaponDamageRiders ?? []).map((rider) =>
+        ...(hole.spellWeaponDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-        ),
-        ...(hole.spellMarkedDamageRiders ?? []).map((rider) =>
+          bound(rider.effectRef),
+        ]),
+        ...(hole.spellMarkedDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-        ),
+          bound(rider.effectRef),
+        ]),
         ...(hole.cunningStrikeOptions ?? []).flatMap((option) => [
           bound(option.procedureRef),
           bound(option.sourceDamageRiderProcedureRef),
@@ -6893,6 +6922,7 @@ function serializedBattleHoleExecutionReferences(
       ],
       cloudkillMovement: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
+        bound(value.effectRef),
       ],
       startTurnOccurrenceOrder: () => [],
       temporaryHitPointChoice: (value) => [
@@ -6960,10 +6990,12 @@ function serializedStatBlockAuthoritativeExecutionReferences(
 function serializedCombatantAuthoritativeExecutionReferences(
   combatant: EncodedBattleCreatureSnapshot,
 ): readonly string[] {
-  const activeEffectRefs = combatant.activeEffectRefs;
+  const effectOccurrenceRefs = combatant.effectOccurrences.map(
+    ({ effectRef }) => effectRef,
+  );
   if (combatant.origin.kind === "statBlock") {
     return [
-      ...activeEffectRefs,
+      ...effectOccurrenceRefs,
       ...serializedStatBlockAuthoritativeExecutionReferences(
         combatant.origin.execution,
       ),
@@ -6971,7 +7003,7 @@ function serializedCombatantAuthoritativeExecutionReferences(
   }
   const origin = combatant.origin;
   return [
-    ...activeEffectRefs,
+    ...effectOccurrenceRefs,
     origin.execution.scopeRef,
     ...origin.execution.procedureBindings.map(
       (binding) => binding.procedureRef,
@@ -7589,7 +7621,11 @@ function serializedBattleSubjectOwnsBoundExecutionReferences(
         activeEffect: ({ ownerId, effectRef }) =>
           combatants
             .find((combatant) => combatant.combatantId === ownerId)
-            ?.activeEffectRefs.includes(effectRef) === true,
+            ?.effectOccurrences.some(
+              (occurrence) =>
+                occurrence.kind === "activeEffect" &&
+                occurrence.effectRef === effectRef,
+            ) === true,
         statBlockScope: ({ ownerId, scopeRef }) => {
           const combatant = combatants.find(
             (candidate) => candidate.combatantId === ownerId,
@@ -7982,8 +8018,12 @@ function battleSnapshotInvariantsHold(
       serializedCombatantAuthoritativeExecutionReferences,
     ),
   );
+  const effectOccurrenceRefs = snapshot.combatants.flatMap((combatant) =>
+    combatant.effectOccurrences.map(({ effectRef }) => effectRef),
+  );
   return (
     battleSnapshotLiveCombatantIdsAreUnique(snapshot, liveCombatantIds) &&
+    new Set(effectOccurrenceRefs).size === effectOccurrenceRefs.length &&
     new Set([...executionScopeRefs, ...retiredExecutionScopeRefs]).size ===
       executionScopeRefs.length + retiredExecutionScopeRefs.length &&
     cursorByCombatant.size === snapshot.executionScopeCursors.length &&

@@ -1096,7 +1096,7 @@ function activeEffectForRef<
     | undefined;
   for (const [effectOwnerId, combatant] of state.combatants) {
     for (const candidate of combatant.activeEffects) {
-      if (!("effectRef" in candidate) || candidate.effectRef !== effectRef) {
+      if (candidate.effectRef !== effectRef) {
         continue;
       }
       if (located !== undefined) return undefined;

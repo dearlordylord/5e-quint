@@ -35,6 +35,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -138,6 +139,7 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
       }),
       rangeFeet: MovementFeet,
       successEffect: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("nextAttackRollBySelf"),
         sourceCombatantId: CombatantId,
         mode: Schema.Literal("disadvantage"),
@@ -147,6 +149,7 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
         }),
       }),
       failedSaveEffect: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("abilityD20TestRollModeEndTurnSave"),
         sourceCombatantId: CombatantId,
         ability: Schema.Literal("str"),
@@ -162,6 +165,7 @@ const AbilityD20TestRollModeSaveGateInvocationSchema =
         }),
       }),
       failedSaveDamagePenaltyEffect: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("sourceDamageRollPenalty"),
         sourceCombatantId: CombatantId,
         amount: Schema.Struct({

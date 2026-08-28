@@ -22,7 +22,7 @@ import {
 import type { Ability, Size, Skill } from "@dnd/surface/surface/types";
 import * as Result from "effect/Result";
 import { characterBattleLevel } from "../character-class-level.ts";
-import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 import {
   activeEffectsWithShapeShiftOwnerReplaced,
@@ -322,28 +322,26 @@ export function assumeDruidWildShapeForm(input: {
   if (Result.isFailure(durationTicks)) {
     throw new Error("Druid Wild Shape duration must use whole-hour ticks.");
   }
-  const allocation = allocateBattleEffectExecutionRefForCreature({
+  const allocation = allocateBattleEffectOccurrenceForCreature({
     owner: input.actor,
+    effect: {
+      kind: "druidWildShapeForm",
+      sourceProcedureRef: input.procedureRef,
+      sourceCombatantId: input.actor.combatantId,
+      formScopeRef: input.formAdmission.execution.scopeRef,
+      formLimbs: input.formLimbs,
+      equipmentDisposition: input.equipmentDisposition,
+      expiresAt: { kind: "duration", durationTicks: durationTicks.success },
+    },
   });
-  const effect = {
-    kind: "druidWildShapeForm",
-    effectRef: allocation.effectRef,
-    sourceProcedureRef: input.procedureRef,
-    sourceCombatantId: input.actor.combatantId,
-    formScopeRef: input.formAdmission.execution.scopeRef,
-    formLimbs: input.formLimbs,
-    equipmentDisposition: input.equipmentDisposition,
-    expiresAt: { kind: "duration", durationTicks: durationTicks.success },
-  } as const;
   const nextActor: CharacterBattleCreatureState = {
-    ...input.actor,
-    nextEffectOrdinal: allocation.owner.nextEffectOrdinal,
+    ...allocation.owner,
     tempHp: Hp(
       Math.max(Number(input.actor.tempHp), Number(input.profile.classLevel)),
     ),
     activeEffects: activeEffectsWithShapeShiftOwnerReplaced(
-      input.actor.activeEffects,
-      effect,
+      allocation.owner.activeEffects,
+      allocation.effect,
     ),
   };
   return {

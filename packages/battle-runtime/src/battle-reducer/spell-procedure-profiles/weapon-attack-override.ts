@@ -33,6 +33,7 @@ import {
 import { spellCastInterruptFrame } from "../spell-cast-interrupt-frame.ts";
 import { spendSpellCastResources } from "../spells-resolve-resources.ts";
 import type { SpellProcedureDeclaration } from "./profile.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../../effect-execution-ref.ts";
 
 type WeaponAttackOverrideProfile = SpellProcedureDeclaration<
   "weaponAttackOverride",
@@ -83,16 +84,33 @@ function resolveWeaponAttackOverrideProfile(
       loadoutHeldWeaponSlotIsUsable,
       spellCastInterruptFrame,
       interruptWindowProgress,
-      commitWeaponAttackOverrideEffect: ({ authorization, activeEffects }) => ({
-        ...authorization.execution.state,
-        combatants: new Map(authorization.execution.state.combatants).set(
-          authorization.execution.caster.combatantId,
-          {
-            ...authorization.execution.caster,
-            activeEffects,
-          },
-        ),
-      }),
+      commitWeaponAttackOverrideEffect: ({
+        authorization,
+        effect: sourcedTemplate,
+      }) => {
+        const { caster, state } = authorization.execution;
+        const allocation = allocateBattleEffectOccurrenceForCreature({
+          owner: caster,
+          effect: sourcedTemplate,
+        });
+        return {
+          ...state,
+          combatants: new Map(state.combatants).set(caster.combatantId, {
+            ...allocation.owner,
+            activeEffects: [
+              ...allocation.owner.activeEffects.filter(
+                (existingEffect) =>
+                  existingEffect.kind !== "spellWeaponAttackOverride" ||
+                  existingEffect.sourceProcedureRef !==
+                    sourcedTemplate.sourceProcedureRef ||
+                  existingEffect.sourceCombatantId !==
+                    sourcedTemplate.sourceCombatantId,
+              ),
+              allocation.effect,
+            ],
+          }),
+        };
+      },
       spendSpellCastResources: ({ state, execution, errorState }) =>
         spendSpellCastResources({
           state,

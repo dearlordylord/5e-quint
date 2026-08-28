@@ -2791,6 +2791,9 @@ function glyphEndWitnessValidation(
 
 function isGlyphDurableOccurrence(
   effect: BattleActiveEffect,
-): effect is GlyphDurableOccurrenceActiveEffect {
+): effect is Extract<
+  BattleActiveEffect,
+  { readonly kind: "glyphDurableOccurrence" }
+> {
   return effect.kind === "glyphDurableOccurrence";
 }

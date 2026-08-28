@@ -72,6 +72,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -568,6 +569,7 @@ const CreatureSizeChangeExecutionSchemaFields = {
     maxTargets: Schema.Literal(1),
   }),
   activeEffect: Schema.Struct({
+    ...BattleEffectOccurrenceTemplateSchemaFields,
     kind: Schema.Literal("spellCreatureSizeChange"),
     sourceCombatantId: CombatantId,
     direction: Schema.Literals(["increase", "decrease"]),

@@ -61,6 +61,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -373,6 +374,7 @@ const LevitatedCreatureInvocationSchema = spellProcedureExecutionSchema(
       maxTargets: Schema.Literal(1),
     }),
     activeEffect: Schema.Struct({
+      ...BattleEffectOccurrenceTemplateSchemaFields,
       kind: Schema.Literal("spellLevitatedCreature"),
       sourceCombatantId: CombatantId,
       maxAltitudeChangeFeet: MovementFeet,

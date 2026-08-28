@@ -553,6 +553,20 @@ export function battleEffectExecutionRefOrdinalIsBefore(
   );
 }
 
+export function battleEffectExecutionRefBelongsToScope(
+  effectRef: BattleEffectExecutionRef,
+  scopeRef: BattleExecutionScopeRef,
+): boolean {
+  const decoded = parseExecutionReference(effectRef);
+  return (
+    decoded !== null &&
+    decoded.ownerScopeRef === scopeRef &&
+    decoded.kind === "effectOccurrence" &&
+    nonNegativeIntegerProperty(decoded, "ordinal") &&
+    battleEffectExecutionReferenceIsCanonical(effectRef)
+  );
+}
+
 function executionReferenceBelongsToScope(
   reference: string,
   kind: "procedure" | "resourcePool",

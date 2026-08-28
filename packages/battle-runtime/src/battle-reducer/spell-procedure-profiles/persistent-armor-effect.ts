@@ -53,6 +53,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -71,6 +72,7 @@ type PersistentArmorInvocation = Extract<
 >;
 
 const PersistentArmorEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("spellBaseArmorClass"),
   sourceCombatantId: CombatantId,
   base: ArmorClassSchema,

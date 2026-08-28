@@ -24,6 +24,7 @@ import {
 import type { BattleSubject } from "../battle-subjects.ts";
 import {
   battleAttackExecutionScopeRefForProcedureRef,
+  battleEffectExecutionRefBelongsToScope,
   type BattleObjectId,
   type CombatantId,
 } from "../identity.ts";
@@ -188,9 +189,25 @@ export function combatantSnapshot(
     maxHp: effectiveHitPointMaximum(combatant),
     tempHp: combatant.tempHp,
     nextEffectOrdinal: combatant.nextEffectOrdinal,
-    activeEffectRefs: combatant.activeEffects.flatMap((effect) =>
-      "effectRef" in effect ? [effect.effectRef] : [],
-    ),
+    effectOccurrences: [
+      ...combatant.activeEffects.map((effect) => ({
+        kind: "activeEffect" as const,
+        effectRef: effect.effectRef,
+      })),
+      ...state.lightEmitters.flatMap((emitter) =>
+        battleEffectExecutionRefBelongsToScope(
+          emitter.effectRef,
+          combatant.origin.execution.scopeRef,
+        )
+          ? [
+              {
+                kind: "storedLightEmitter" as const,
+                effectRef: emitter.effectRef,
+              },
+            ]
+          : [],
+      ),
+    ],
     armorClass: currentArmorClass(activeEffectArmorClass(state, combatant)),
     size: combatantEffectiveSize(combatant),
     zeroHpLifecycle: combatantZeroHpLifecycleSnapshot(combatant),

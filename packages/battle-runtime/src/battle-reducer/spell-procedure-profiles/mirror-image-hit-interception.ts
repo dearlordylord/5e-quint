@@ -54,6 +54,7 @@ import type {
   SpellProcedureProfileResolveInput,
 } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -202,6 +203,7 @@ const MirrorImageHitInterceptionInvocationSchema =
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("magicAction"),
       activeEffect: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("mirrorImageDuplicates"),
         sourceCombatantId: CombatantId,
         remainingDuplicates: Schema.Literal(MIRROR_IMAGE_INITIAL_DUPLICATES),

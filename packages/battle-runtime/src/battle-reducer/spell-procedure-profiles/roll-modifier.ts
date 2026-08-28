@@ -91,6 +91,7 @@ import type {
 } from "./profile.ts";
 import { cantripSpellAccessFor } from "./profile.ts";
 import { Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 import {
   SpellRuleExecutionFactsSchema,
   spellProcedureExecutionSchema,
@@ -112,6 +113,7 @@ import {
 } from "../domain-constants.ts";
 
 const D20RollModifierEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("d20RollModifier"),
   sourceCombatantId: CombatantId,
   on: Schema.Array(Schema.Literals(BATTLE_D20_ROLL_MODIFIER_KINDS)),
@@ -132,6 +134,7 @@ const D20RollModifierEffectSchema = Schema.Struct({
 });
 
 const AbilityCheckRollModeEffectSchema = Schema.Struct({
+  ...BattleEffectOccurrenceTemplateSchemaFields,
   kind: Schema.Literal("abilityCheckRollMode"),
   sourceCombatantId: CombatantId,
   mode: Schema.Literal("advantage"),

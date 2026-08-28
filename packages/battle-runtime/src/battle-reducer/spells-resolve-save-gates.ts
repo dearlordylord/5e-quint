@@ -25,6 +25,7 @@ import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
 import {
   allocateBattleEffectOccurrenceForCreature,
   allocateBattleEffectOccurrencesForCreature,
+  type BattleSourcedEffectOccurrenceTemplate,
 } from "../effect-execution-ref.ts";
 import { characterUnitProcedureBindings } from "../character-execution-queries.ts";
 import { isCantripSpellAccess } from "../procedure-execution/spell-invocation-vocabulary.ts";
@@ -124,7 +125,6 @@ import {
 } from "./movement-holes.ts";
 import {
   type ActionSpellBattleResolutionInput,
-  type BattleActiveEffect,
   type BattleAfterDamageEvent,
   type BattleCreatureState,
   type BattleExecutableSpellInvocation,
@@ -2264,8 +2264,8 @@ function potentCantripAppliesToSuccessfulSave(input: {
   );
 }
 
-type SpellConcentrationDurationEffect = Extract<
-  BattleActiveEffect,
+type SpellConcentrationDurationEffectTemplate = Extract<
+  BattleSourcedEffectOccurrenceTemplate,
   { readonly kind: "spellConcentrationDuration" }
 >;
 
@@ -2275,7 +2275,7 @@ function failedSaveConcentrationDurationEffect(input: {
     BattleExecutableSpellInvocation,
     { readonly procedure: "saveGatedDamage" }
   >;
-}): SpellConcentrationDurationEffect | null {
+}): SpellConcentrationDurationEffectTemplate | null {
   if (input.invocation.spellRuleFacts.duration.kind !== "concentration") {
     return null;
   }
@@ -2300,7 +2300,7 @@ function failedSaveConcentrationDurationEffect(input: {
 function withFailedSaveConcentrationDuration(
   result: BattleResolutionResult,
   actorId: CombatantId,
-  effect: SpellConcentrationDurationEffect | null,
+  effect: SpellConcentrationDurationEffectTemplate | null,
   options: { readonly replaceExistingSameSpellDuration: boolean } = {
     replaceExistingSameSpellDuration: true,
   },

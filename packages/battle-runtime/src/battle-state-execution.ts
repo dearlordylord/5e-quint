@@ -322,12 +322,13 @@ import type {
 } from "./companion-state.ts";
 import type { BattleReducerRouteEvents } from "./battle-reducer/reducer-route-protocol.ts";
 import type { ZeroHpLifecycle } from "./zero-hp-lifecycle.ts";
+import type { BattleActiveEffectSource } from "./active-effect/source.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
+  BattleEffectOccurrenceIdentity,
   BattleSpellEffectBase,
   BattleSpellActiveEffectTemplate,
-  BattleUnitFeatureEffectBase,
   MarkedDamageRiderRetargetTiming,
   PersistentArmorSpellActiveEffect,
   SelfTransformationNaturalWeaponFacts,
@@ -485,33 +486,42 @@ export type BattleLightEmitterOpaqueCoverInteraction =
   | {
       readonly kind: "doesNotBlockEmission";
     };
-type BattleSpellLightEmitterBase = BattleSpellEffectBase & {
+type BattleSpellLightEmitterFacts = BattleActiveEffectSource & {
   readonly kind: "spellLightEmitter";
   readonly attachment: BattleLightEmitterAttachment;
   readonly emission: BattleLightEmission;
   readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
-export type BattleTrackedOngoingSpellLightEmitter =
-  BattleSpellLightEmitterBase & {
-    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
-    readonly sourceSpellLevel: BattleSpellEffectLevel;
-  };
-export type BattleProjectedSpellLightEmitter = BattleSpellLightEmitterBase & {
-  readonly sourceEffectId?: never;
-  readonly sourceSpellLevel?: never;
+type BattleTrackedOngoingSpellLightEmitterFacts = {
+  readonly sourceEffectId: BattleSpellEffectOccurrenceId;
+  readonly sourceSpellLevel: BattleSpellEffectLevel;
 };
-export type BattleSpellLightEmitter =
-  | BattleTrackedOngoingSpellLightEmitter
-  | BattleProjectedSpellLightEmitter;
-export type BattleUnitFeatureLightEmitter = BattleUnitFeatureEffectBase & {
+export type BattleTrackedOngoingSpellLightEmitterMechanicalFacts =
+  BattleSpellLightEmitterFacts & BattleTrackedOngoingSpellLightEmitterFacts;
+type BattleSpellLightEmitterVariantFacts =
+  | BattleTrackedOngoingSpellLightEmitterFacts
+  | {
+      readonly sourceEffectId?: never;
+      readonly sourceSpellLevel?: never;
+    };
+export type BattleProjectedSpellLightEmitter = BattleSpellLightEmitterFacts &
+  BattleSpellLightEmitterVariantFacts & { readonly effectRef?: never };
+export type BattleTrackedOngoingSpellLightEmitter =
+  BattleTrackedOngoingSpellLightEmitterMechanicalFacts &
+    BattleEffectOccurrenceIdentity;
+export type BattleSpellLightEmitter = BattleSpellLightEmitterFacts &
+  BattleSpellLightEmitterVariantFacts &
+  BattleEffectOccurrenceIdentity;
+export type BattleUnitFeatureLightEmitter = BattleActiveEffectSource & {
+  readonly effectRef?: never;
   readonly kind: "unitFeatureLightEmitter";
   readonly attachment: BattleLightEmitterAttachment;
   readonly emission: BattleLightEmission;
   readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
   readonly expiresAt: BattleActiveEffectExpiration;
 };
-export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
+type BattleObjectInvisibleRevealLightEmitterFacts = BattleActiveEffectSource & {
   readonly kind: "objectInvisibleRevealLightEmitter";
   readonly objectId: BattleObjectId;
   readonly emission: Extract<BattleLightEmission, { readonly kind: "dim" }>;
@@ -520,11 +530,32 @@ export type BattleObjectInvisibleRevealLightEmitter = BattleSpellEffectBase & {
     { readonly kind: "endOfTurn" }
   >;
 };
+export type BattleObjectInvisibleRevealLightEmitter =
+  BattleObjectInvisibleRevealLightEmitterFacts & BattleEffectOccurrenceIdentity;
 export type BattleStoredLightEmitter =
   | BattleSpellLightEmitter
   | BattleObjectInvisibleRevealLightEmitter;
+export type BattleStoredLightEmitterTemplate =
+  BattleStoredLightEmitter extends infer Emitter
+    ? Emitter extends BattleStoredLightEmitter
+      ? Omit<Emitter, "effectRef"> & { readonly effectRef?: never }
+      : never
+    : never;
+export type BattleLightEmitterMechanicalFacts =
+  | (BattleSpellLightEmitterFacts & BattleSpellLightEmitterVariantFacts)
+  | BattleObjectInvisibleRevealLightEmitterFacts
+  | (BattleActiveEffectSource & {
+      readonly kind: "unitFeatureLightEmitter";
+      readonly attachment: BattleLightEmitterAttachment;
+      readonly emission: BattleLightEmission;
+      readonly opaqueCoverInteraction: BattleLightEmitterOpaqueCoverInteraction;
+      readonly expiresAt: BattleActiveEffectExpiration;
+    });
 export type BattleLightEmitter =
-  | BattleStoredLightEmitter
+  | BattleProjectedSpellLightEmitter
+  | (BattleObjectInvisibleRevealLightEmitterFacts & {
+      readonly effectRef?: never;
+    })
   | BattleUnitFeatureLightEmitter;
 export type BattleOngoingSpellTarget =
   | {
@@ -7241,7 +7272,10 @@ type BattleCreatureSnapshotCommon = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly nextEffectOrdinal: BattleEffectExecutionOrdinal;
-  readonly activeEffectRefs: readonly BattleEffectExecutionRef[];
+  readonly effectOccurrences: readonly {
+    readonly kind: "activeEffect" | "storedLightEmitter";
+    readonly effectRef: BattleEffectExecutionRef;
+  }[];
   readonly armorClass: ArmorClass;
   readonly size: Size;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;

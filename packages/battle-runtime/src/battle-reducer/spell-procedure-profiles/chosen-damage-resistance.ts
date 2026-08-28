@@ -3,6 +3,7 @@ import { resolveSpellActiveEffectCast } from "../spell-active-effect-resolution.
 import { actionSpellCastCandidatesForTargetHole } from "../spell-cast-candidate.ts";
 import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts";
 import { replaceTargetActiveEffect } from "../active-effect-replacement.ts";
+import type { BattleSourcedEffectOccurrenceTemplate } from "../../effect-execution-ref.ts";
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-chosen-damage-resistance
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
 import { CombatantId } from "../../identity.ts";
@@ -19,7 +20,6 @@ import { Result, Schema } from "effect";
 
 import {
   type BattleActDiscoveryCandidate,
-  type BattleActiveEffect,
   type BattleResolutionResult,
   type BattleState,
   type BattleExecutableSpellInvocation,
@@ -249,10 +249,7 @@ function applyChosenDamageResistanceEffect(input: {
     sourceCombatantId: input.actorId,
     damageType: input.damageType,
     expiresAt: input.invocation.expiresAt,
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "damageResistance" }
-  >;
+  } satisfies BattleSourcedEffectOccurrenceTemplate;
   return replaceTargetActiveEffect(
     input.state,
     input.targetId,

@@ -27,6 +27,7 @@ import type { BattleSpellAdmissionSource } from "../../battle-state-execution.ts
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { Result, Match, Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 
 import {
   type AvailableBattleAct,
@@ -251,6 +252,7 @@ const FeatherFallMitigationInvocationSchema = spellProcedureExecutionSchema(
       maxTargets: Schema.Literal(5),
     }),
     activeEffect: Schema.Struct({
+      ...BattleEffectOccurrenceTemplateSchemaFields,
       kind: Schema.Literal("featherFallMitigation"),
       sourceCombatantId: CombatantId,
       expiresAt: DurationBattleActiveEffectExpirationSchema,

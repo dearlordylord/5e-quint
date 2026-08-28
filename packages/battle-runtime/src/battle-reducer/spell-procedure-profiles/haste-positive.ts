@@ -23,6 +23,7 @@ import type {
 } from "@dnd/surface/surface/types";
 import { isEffectAtom } from "@dnd/surface/surface/types";
 import { Result, Schema } from "effect";
+import { BattleEffectOccurrenceTemplateSchemaFields } from "../../active-effect/template-codec.ts";
 
 import type { BattleActiveEffect } from "../../active-effect/types.ts";
 import {
@@ -507,6 +508,7 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
     }),
     activeEffects: Schema.Struct({
       speedRatio: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("speedRatio"),
         sourceCombatantId: CombatantId,
         numerator: Schema.Number,
@@ -514,6 +516,7 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
         expiresAt: HastePositiveExpirationSchema,
       }),
       armorClassBonus: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("spellArmorClassBonus"),
         sourceCombatantId: CombatantId,
         bonus: Schema.Number,
@@ -521,6 +524,7 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
         expiresAt: HastePositiveExpirationSchema,
       }),
       dexteritySavingThrowAdvantage: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("savingThrowRollMode"),
         sourceCombatantId: CombatantId,
         ability: Schema.Literal("dex"),
@@ -528,12 +532,14 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
         expiresAt: HastePositiveExpirationSchema,
       }),
       grantedActionResource: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("spellGrantedActionResource"),
         sourceCombatantId: CombatantId,
         restriction: HastePositiveActionRestrictionSchema,
         expiresAt: HastePositiveExpirationSchema,
       }),
       spellEndTargetState: Schema.Struct({
+        ...BattleEffectOccurrenceTemplateSchemaFields,
         kind: Schema.Literal("spellEndTargetState"),
         sourceCombatantId: CombatantId,
         condition: Schema.Literal("incapacitated"),

@@ -12,6 +12,8 @@ import {
 import type {
   BattleCreatureState,
   BattleState,
+  BattleStoredLightEmitter,
+  BattleStoredLightEmitterTemplate,
 } from "./battle-state-execution.ts";
 
 export type ReplayAddressableSpellActiveEffect = Extract<
@@ -42,11 +44,27 @@ export type BattleSourcedEffectOccurrence = Extract<
   BattleActiveEffect,
   BattleActiveEffectSource & BattleEffectOccurrenceIdentity
 >;
-type BattleAllocatedEffectOccurrence = Extract<
+export type BattleActiveEffectOccurrenceTemplate =
+  BattleActiveEffect extends infer Effect
+    ? Effect extends BattleActiveEffect
+      ? Omit<Effect, "effectRef"> & { readonly effectRef?: never }
+      : never
+    : never;
+type BattleAllocatedActiveEffectOccurrence = BattleActiveEffect &
+  BattleEffectOccurrenceIdentity;
+type BattleAllocatedSourcedEffectOccurrence = Extract<
   BattleActiveEffect,
   BattleActiveEffectSource
 > &
   BattleEffectOccurrenceIdentity;
+type AllocatedActiveEffectForTemplate<Template> =
+  Template extends BattleActiveEffectOccurrenceTemplate
+    ? Omit<Template, "effectRef"> & BattleEffectOccurrenceIdentity
+    : never;
+type AllocatedStoredLightEmitterForTemplate<Template> =
+  Template extends BattleStoredLightEmitterTemplate
+    ? Omit<Template, "effectRef"> & BattleEffectOccurrenceIdentity
+    : never;
 export type BattleSourcedEffectOccurrenceTemplate =
   BattleSourcedActiveEffectTemplate<
     Extract<BattleActiveEffect, BattleActiveEffectSource>
@@ -55,6 +73,24 @@ export type BattleSourcedEffectOccurrenceTemplateList = readonly [
   BattleSourcedEffectOccurrenceTemplate,
   ...BattleSourcedEffectOccurrenceTemplate[],
 ];
+export type BattleEffectOccurrenceAllocationTemplate =
+  | {
+      readonly kind: "activeEffect";
+      readonly effect: BattleActiveEffectOccurrenceTemplate;
+    }
+  | {
+      readonly kind: "storedLightEmitter";
+      readonly emitter: BattleStoredLightEmitterTemplate;
+    };
+export type BattleAllocatedEffectOccurrence =
+  | {
+      readonly kind: "activeEffect";
+      readonly effect: BattleAllocatedActiveEffectOccurrence;
+    }
+  | {
+      readonly kind: "storedLightEmitter";
+      readonly emitter: BattleStoredLightEmitter;
+    };
 export function spellActiveEffectExecutionRef(
   effect: ReplayAddressableSpellActiveEffect,
 ): BattleEffectExecutionRef {
@@ -67,7 +103,7 @@ export function spellActiveEffectForExecutionRef(
 ): ReplayAddressableSpellActiveEffect | undefined {
   return effects.find(
     (effect): effect is ReplayAddressableSpellActiveEffect =>
-      "effectRef" in effect && effect.effectRef === effectRef,
+      effect.effectRef === effectRef,
   );
 }
 
@@ -101,10 +137,12 @@ export function allocateBattleEffectExecutionRef(input: {
   };
 }
 
-export function allocateBattleEffectExecutionRefForCreature(input: {
-  readonly owner: BattleCreatureState;
+export function allocateBattleEffectExecutionRefForCreature<
+  Owner extends BattleCreatureState,
+>(input: {
+  readonly owner: Owner;
 }): {
-  readonly owner: BattleCreatureState;
+  readonly owner: Owner;
   readonly effectRef: BattleEffectExecutionRef;
 } {
   const ordinal = Number(input.owner.nextEffectOrdinal);
@@ -128,10 +166,10 @@ export function allocateBattleEffectOccurrencesForCreature(input: {
   readonly effects: BattleSourcedEffectOccurrenceTemplateList;
 }): {
   readonly owner: BattleCreatureState;
-  readonly effects: readonly BattleAllocatedEffectOccurrence[];
+  readonly effects: readonly BattleAllocatedSourcedEffectOccurrence[];
 } {
   let owner = input.owner;
-  const effects: BattleAllocatedEffectOccurrence[] = [];
+  const effects: BattleAllocatedSourcedEffectOccurrence[] = [];
   for (const effect of input.effects) {
     const allocation = allocateBattleEffectOccurrenceForCreature({
       owner,
@@ -143,12 +181,15 @@ export function allocateBattleEffectOccurrencesForCreature(input: {
   return { owner, effects };
 }
 
-export function allocateBattleEffectOccurrenceForCreature(input: {
-  readonly owner: BattleCreatureState;
-  readonly effect: BattleSourcedEffectOccurrenceTemplate;
+export function allocateBattleEffectOccurrenceForCreature<
+  Owner extends BattleCreatureState,
+  Effect extends BattleActiveEffectOccurrenceTemplate,
+>(input: {
+  readonly owner: Owner;
+  readonly effect: Effect;
 }): {
-  readonly owner: BattleCreatureState;
-  readonly effect: BattleAllocatedEffectOccurrence;
+  readonly owner: Owner;
+  readonly effect: AllocatedActiveEffectForTemplate<Effect>;
 } {
   const allocation = allocateBattleEffectExecutionRefForCreature({
     owner: input.owner,
@@ -157,4 +198,52 @@ export function allocateBattleEffectOccurrenceForCreature(input: {
     owner: allocation.owner,
     effect: { ...input.effect, effectRef: allocation.effectRef },
   };
+}
+
+export function allocateBattleStoredLightEmitterForCreature<
+  Owner extends BattleCreatureState,
+  Emitter extends BattleStoredLightEmitterTemplate,
+>(input: {
+  readonly owner: Owner;
+  readonly emitter: Emitter;
+}): {
+  readonly owner: Owner;
+  readonly emitter: AllocatedStoredLightEmitterForTemplate<Emitter>;
+} {
+  const allocation = allocateBattleEffectExecutionRefForCreature({
+    owner: input.owner,
+  });
+  return {
+    owner: allocation.owner,
+    emitter: { ...input.emitter, effectRef: allocation.effectRef },
+  };
+}
+
+export function allocateBattleEffectOccurrenceTemplatesForCreature<
+  Owner extends BattleCreatureState,
+>(input: {
+  readonly owner: Owner;
+  readonly occurrences: readonly BattleEffectOccurrenceAllocationTemplate[];
+}): {
+  readonly owner: Owner;
+  readonly occurrences: readonly BattleAllocatedEffectOccurrence[];
+} {
+  let owner = input.owner;
+  const occurrences: BattleAllocatedEffectOccurrence[] = [];
+  for (const occurrence of input.occurrences) {
+    const allocation = allocateBattleEffectExecutionRefForCreature({ owner });
+    owner = allocation.owner;
+    if (occurrence.kind === "activeEffect") {
+      occurrences.push({
+        kind: "activeEffect",
+        effect: { ...occurrence.effect, effectRef: allocation.effectRef },
+      });
+    } else {
+      occurrences.push({
+        kind: "storedLightEmitter",
+        emitter: { ...occurrence.emitter, effectRef: allocation.effectRef },
+      });
+    }
+  }
+  return { owner, occurrences };
 }

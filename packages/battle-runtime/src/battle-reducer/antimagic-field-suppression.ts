@@ -3,10 +3,10 @@
 import type {
   BattleActiveEffect,
   BattleAntimagicFieldOngoingSpellEffectRef,
-  BattleLightEmitter,
+  BattleLightEmitterMechanicalFacts,
   BattleOngoingSpellEffectRef,
   BattleState,
-  BattleTrackedOngoingSpellLightEmitter,
+  BattleTrackedOngoingSpellLightEmitterMechanicalFacts,
 } from "../battle-state-execution.ts";
 import type { BattleAreaId, CombatantId } from "../identity.ts";
 
@@ -20,7 +20,7 @@ type TrackedAntimagicFieldOngoingSpellActiveEffect = Extract<
 >;
 
 export function ongoingSpellEffectRefForEmitter(
-  emitter: BattleTrackedOngoingSpellLightEmitter,
+  emitter: BattleTrackedOngoingSpellLightEmitterMechanicalFacts,
 ): BattleOngoingSpellEffectRef {
   return {
     kind: "spellLightEmitter",
@@ -29,7 +29,7 @@ export function ongoingSpellEffectRefForEmitter(
 }
 
 export function antimagicFieldOngoingSpellEffectRefForEmitter(
-  emitter: BattleTrackedOngoingSpellLightEmitter,
+  emitter: BattleTrackedOngoingSpellLightEmitterMechanicalFacts,
 ): BattleAntimagicFieldOngoingSpellEffectRef {
   return {
     kind: "spellLightEmitter",
@@ -116,8 +116,8 @@ export function ongoingSpellEffectRefForAntimagicFieldAura(input: {
 }
 
 export function isTrackedOngoingSpellLightEmitter(
-  emitter: BattleLightEmitter,
-): emitter is BattleTrackedOngoingSpellLightEmitter {
+  emitter: BattleLightEmitterMechanicalFacts,
+): emitter is BattleTrackedOngoingSpellLightEmitterMechanicalFacts {
   return (
     emitter.kind === "spellLightEmitter" &&
     "sourceEffectId" in emitter &&
