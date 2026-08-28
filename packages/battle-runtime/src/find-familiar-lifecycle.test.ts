@@ -3057,6 +3057,16 @@ describe("Find Familiar lifecycle", () => {
     });
     expect(shared.tag).toBe("resolved");
     if (shared.tag !== "resolved") return;
+    const casterBeforeSharedSenses = cast.state.combatants.get(casterId);
+    const casterAfterSharedSenses = shared.state.combatants.get(casterId);
+    expect(
+      casterAfterSharedSenses?.activeEffects.find(
+        (effect) => effect.kind === "findFamiliarSharedSenses",
+      ),
+    ).toEqual(expect.objectContaining({ effectRef: expect.any(String) }));
+    expect(Number(casterAfterSharedSenses?.nextEffectOrdinal)).toBe(
+      Number(casterBeforeSharedSenses?.nextEffectOrdinal) + 1,
+    );
 
     const staleDelivery = resolveBattleSubject({
       state: shared.state,

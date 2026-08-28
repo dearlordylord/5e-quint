@@ -31,6 +31,7 @@ import type {
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 import {
   CHARACTER_UNIT_FEATURE_PROCEDURE_QUERY,
   characterUnitProcedure,
@@ -998,8 +999,18 @@ export function applyWeaponMasterySapOnHit(
   if (selection === null || target === undefined) {
     return state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "nextAttackRollBySelf",
+      sourceProcedureRef: selection.procedureRef,
+      sourceCombatantId: attackerId,
+      mode: "disadvantage",
+      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
+    },
+  });
   const activeEffects = [
-    ...target.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           effect.kind === "nextAttackRollBySelf" &&
@@ -1008,18 +1019,12 @@ export function applyWeaponMasterySapOnHit(
           effect.sourceCombatantId === attackerId
         ),
     ),
-    {
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: selection.procedureRef,
-      sourceCombatantId: attackerId,
-      mode: "disadvantage",
-      expiresAt: { kind: "startOfTurn", combatantId: attackerId },
-    } as const,
+    allocation.effect,
   ];
   return {
     ...state,
     combatants: new Map(state.combatants).set(targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects,
     }),
   };
@@ -1201,8 +1206,18 @@ export function applyWeaponMasterySlowAfterDamage(input: {
   if (selection === null || target === undefined) {
     return input.state;
   }
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "unitFeatureSpeedDelta",
+      sourceProcedureRef: selection.procedureRef,
+      sourceCombatantId: input.attackerId,
+      deltaFeet: movementDeltaFeet(-10),
+      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
+    },
+  });
   const activeEffects = [
-    ...target.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           effect.kind === "unitFeatureSpeedDelta" &&
@@ -1210,18 +1225,12 @@ export function applyWeaponMasterySlowAfterDamage(input: {
           effect.sourceProcedureRef === selection.procedureRef
         ),
     ),
-    {
-      kind: "unitFeatureSpeedDelta",
-      sourceProcedureRef: selection.procedureRef,
-      sourceCombatantId: input.attackerId,
-      deltaFeet: movementDeltaFeet(-10),
-      expiresAt: { kind: "startOfTurn", combatantId: input.attackerId },
-    } as const,
+    allocation.effect,
   ];
   return {
     ...input.state,
     combatants: new Map(input.state.combatants).set(input.targetId, {
-      ...target,
+      ...allocation.owner,
       activeEffects,
     }),
   };

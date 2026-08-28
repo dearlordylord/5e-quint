@@ -84,6 +84,8 @@ import type {
   GlyphStoredSpellInvocationCandidate,
   BattleResolutionResult,
 } from "../battle-state-execution.ts";
+import type { BattleEffectOccurrenceIdentity } from "../active-effect/types.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
 import { isTargetListSpellInvocation } from "./spells-invocation-guards.ts";
 import {
   resolveStoredGlyphSpellProcedure,
@@ -358,10 +360,17 @@ export type GlyphDurableOccurrenceEndWitness =
   | GlyphTriggerOccurrenceWitness
   | GlyphMovementInvalidationWitness;
 
+export type GlyphDurableOccurrenceTemplate = Omit<
+  GlyphDurableOccurrenceActiveEffect,
+  "effectRef"
+> & { readonly effectRef?: never };
+export type StoredGlyphDurableOccurrenceEffect =
+  GlyphDurableOccurrenceActiveEffect & BattleEffectOccurrenceIdentity;
+
 export type GlyphDurableOccurrenceEffectFromCompletedInscriptionResult =
   | {
       readonly tag: "created";
-      readonly effect: GlyphDurableOccurrenceActiveEffect;
+      readonly effect: GlyphDurableOccurrenceTemplate;
     }
   | {
       readonly tag: "sourceSpellLevelBelowMinimum";
@@ -406,7 +415,7 @@ export type AddGlyphDurableOccurrenceResult =
   | {
       readonly tag: "added";
       readonly state: BattleState;
-      readonly effect: GlyphDurableOccurrenceActiveEffect;
+      readonly effect: StoredGlyphDurableOccurrenceEffect;
     }
   | {
       readonly tag: "sourceCombatantNotFound";
@@ -1057,7 +1066,7 @@ export function releaseGlyphStoredSpell(input: {
 
 export function addGlyphDurableOccurrence(input: {
   readonly state: BattleState;
-  readonly effect: GlyphDurableOccurrenceActiveEffect;
+  readonly effect: GlyphDurableOccurrenceTemplate;
 }): AddGlyphDurableOccurrenceResult {
   if (
     glyphOccurrenceRefs(input.state, input.effect.sourceEffectId).length > 0
@@ -1078,6 +1087,13 @@ export function addGlyphDurableOccurrence(input: {
       sourceCombatantId: input.effect.sourceCombatantId,
     };
   }
+  const allocation = allocateBattleEffectExecutionRefForCreature({
+    owner: sourceCombatant,
+  });
+  const effect: StoredGlyphDurableOccurrenceEffect = {
+    ...input.effect,
+    effectRef: allocation.effectRef,
+  };
   return {
     tag: "added",
     state: {
@@ -1085,12 +1101,12 @@ export function addGlyphDurableOccurrence(input: {
       combatants: new Map(input.state.combatants).set(
         input.effect.sourceCombatantId,
         {
-          ...sourceCombatant,
-          activeEffects: [...sourceCombatant.activeEffects, input.effect],
+          ...allocation.owner,
+          activeEffects: [...allocation.owner.activeEffects, effect],
         },
       ),
     },
-    effect: input.effect,
+    effect,
   };
 }
 

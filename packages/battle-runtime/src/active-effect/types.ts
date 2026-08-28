@@ -598,30 +598,32 @@ export type BattleActiveEffect =
         readonly save: SpellConditionRepeatSave;
         readonly expiresAt: BattleActiveEffectExpiration;
       })
-  | (BattleSpellEffectBase & {
-      readonly kind: "sleepPendingRepeatSave";
-      readonly conditionHadNonSpellSource: boolean;
-      readonly save: {
-        readonly ability: Extract<Ability, "wis">;
-        readonly dc: DcSource;
-      };
-      readonly repeatAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "endOfTurn" }
-      >;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      >;
-    })
-  | (BattleSpellEffectBase & {
-      readonly kind: "sleepUnconscious";
-      readonly conditionHadNonSpellSource: boolean;
-      readonly expiresAt: Extract<
-        BattleActiveEffectExpiration,
-        { readonly kind: "concentration" }
-      >;
-    })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "sleepPendingRepeatSave";
+        readonly conditionHadNonSpellSource: boolean;
+        readonly save: {
+          readonly ability: Extract<Ability, "wis">;
+          readonly dc: DcSource;
+        };
+        readonly repeatAt: Extract<
+          BattleActiveEffectExpiration,
+          { readonly kind: "endOfTurn" }
+        >;
+        readonly expiresAt: Extract<
+          BattleActiveEffectExpiration,
+          { readonly kind: "concentration" }
+        >;
+      })
+  | (BattleSpellEffectBase &
+      BattleReplayAddressableEffect & {
+        readonly kind: "sleepUnconscious";
+        readonly conditionHadNonSpellSource: boolean;
+        readonly expiresAt: Extract<
+          BattleActiveEffectExpiration,
+          { readonly kind: "concentration" }
+        >;
+      })
   | (BattleSpellEffectBase & {
       readonly kind: "hideousLaughter";
       readonly conditionHadNonSpellProneSource: boolean;
@@ -1117,7 +1119,7 @@ export type BattleActiveEffect =
             readonly light: BattleDancingLight;
           }
       ))
-  | {
+  | (BattleReplayAddressableEffect & {
       readonly kind: "findFamiliarSharedSenses";
       readonly source: {
         readonly kind: "companionSharedSenses";
@@ -1133,7 +1135,7 @@ export type BattleActiveEffect =
         BattleActiveEffectExpiration,
         { readonly kind: "startOfTurn" }
       >;
-    };
+    });
 
 export type PersistentArmorSpellActiveEffect = Extract<
   BattleActiveEffect,

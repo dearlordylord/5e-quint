@@ -331,6 +331,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
     );
     const pendingSleep = {
       kind: "sleepPendingRepeatSave" as const,
+      effectRef: battleEffectExecutionRefForTest("pending-sleep-transition"),
       sourceProcedureRef,
       sourceCombatantId: fighterId,
       conditionHadNonSpellSource: false,
@@ -403,7 +404,10 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(failed.tag).toBe("resolved");
     if (failed.tag !== "resolved") return;
     expect(failed.state.combatants.get(goblinId)?.activeEffects).toEqual([
-      expect.objectContaining({ kind: "sleepUnconscious" }),
+      expect.objectContaining({
+        kind: "sleepUnconscious",
+        effectRef: pendingSleep.effectRef,
+      }),
     ]);
   });
 

@@ -7,6 +7,7 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { difficultyClass, movementFeet, SIZES } from "@dnd/shared/types";
 import type { Ability, Size } from "@dnd/surface/surface/types";
 import { Match } from "effect";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 import type { BattleMovementSpeedKind } from "../battle-subjects.ts";
 import type {
@@ -788,15 +789,36 @@ function applyCunningStrikeConditionEndTurnSaveFailure(
 ): BattleState {
   const target = state.combatants.get(context.targetId);
   if (target === undefined) return state;
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "unitFeatureConditionEndTurnSave",
+      sourceProcedureRef: context.procedureRef,
+      sourceCombatantId: context.attackerId,
+      condition: effect.onFail.condition,
+      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+        target,
+        effect.onFail.condition,
+      ),
+      save: {
+        ability: effect.save.ability,
+        dc: requireCunningStrikeSaveDc(state, context),
+      },
+      expiresAt: {
+        kind: "duration",
+        durationTicks: effect.onFail.durationTicks,
+      },
+    },
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(context.targetId, {
       ...battleCreatureStateWithKnockOutPreservedConditions(
-        target,
+        allocation.owner,
         applyCondition(target.conditions, effect.onFail.condition),
       ),
       activeEffects: [
-        ...target.activeEffects.filter(
+        ...allocation.owner.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "unitFeatureConditionEndTurnSave" &&
@@ -805,25 +827,7 @@ function applyCunningStrikeConditionEndTurnSaveFailure(
               candidate.condition === effect.onFail.condition
             ),
         ),
-        {
-          kind: "unitFeatureConditionEndTurnSave",
-          sourceProcedureRef: context.procedureRef,
-          sourceCombatantId: context.attackerId,
-          condition: effect.onFail.condition,
-          conditionHadNonSpellSource:
-            conditionHadNonSpellSourceBeforeSpellEffect(
-              target,
-              effect.onFail.condition,
-            ),
-          save: {
-            ability: effect.save.ability,
-            dc: requireCunningStrikeSaveDc(state, context),
-          },
-          expiresAt: {
-            kind: "duration",
-            durationTicks: effect.onFail.durationTicks,
-          },
-        },
+        allocation.effect,
       ],
     }),
   };

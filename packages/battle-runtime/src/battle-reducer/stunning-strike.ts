@@ -6,7 +6,10 @@ import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { isMonkWeapon } from "@dnd/shared-algebras/martial-arts-algebra";
 import { difficultyClass } from "@dnd/shared/types";
 import { Match } from "effect";
-import type { BattleActiveEffect } from "../active-effect/types.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  allocateBattleEffectOccurrencesForCreature,
+} from "../effect-execution-ref.ts";
 import {
   type CharacterProcedureBinding,
   type UnitFeatureProcedureExecution,
@@ -255,30 +258,33 @@ function applyStunningStrikeFailure(
   hit: StunningStrikeHit,
 ): BattleState {
   const target = hit.target;
-  const activeEffect: BattleActiveEffect = {
-    kind: "unitFeatureCondition",
-    sourceProcedureRef: hit.procedureRef,
-    sourceCombatantId: hit.actorId,
-    condition: hit.execution.stunningStrike.onFail.condition,
-    conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
-      target,
-      hit.execution.stunningStrike.onFail.condition,
-    ),
-    earlyEnd: null,
-    turnRestriction: null,
-    expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
-  };
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "unitFeatureCondition",
+      sourceProcedureRef: hit.procedureRef,
+      sourceCombatantId: hit.actorId,
+      condition: hit.execution.stunningStrike.onFail.condition,
+      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+        target,
+        hit.execution.stunningStrike.onFail.condition,
+      ),
+      earlyEnd: null,
+      turnRestriction: null,
+      expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
+    },
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(hit.targetId, {
       ...battleCreatureStateWithKnockOutPreservedConditions(
-        target,
+        allocation.owner,
         applyCondition(
           target.conditions,
           hit.execution.stunningStrike.onFail.condition,
         ),
       ),
-      activeEffects: [...target.activeEffects, activeEffect],
+      activeEffects: [...allocation.owner.activeEffects, allocation.effect],
     }),
   };
 }
@@ -288,24 +294,29 @@ function applyStunningStrikeSuccess(
   hit: StunningStrikeHit,
 ): BattleState {
   const target = hit.target;
-  const speedEffect: BattleActiveEffect = {
-    kind: "speedHalved",
-    sourceProcedureRef: hit.procedureRef,
-    sourceCombatantId: hit.actorId,
-    expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
-  };
-  const attackRollEffect: BattleActiveEffect = {
-    kind: "nextAttackRollAgainstSelf",
-    sourceProcedureRef: hit.procedureRef,
-    sourceCombatantId: hit.actorId,
-    mode: hit.execution.stunningStrike.onSuccess.attackRoll.mode,
-    expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
-  };
+  const allocation = allocateBattleEffectOccurrencesForCreature({
+    owner: target,
+    effects: [
+      {
+        kind: "speedHalved",
+        sourceProcedureRef: hit.procedureRef,
+        sourceCombatantId: hit.actorId,
+        expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
+      },
+      {
+        kind: "nextAttackRollAgainstSelf",
+        sourceProcedureRef: hit.procedureRef,
+        sourceCombatantId: hit.actorId,
+        mode: hit.execution.stunningStrike.onSuccess.attackRoll.mode,
+        expiresAt: { kind: "startOfTurn", combatantId: hit.actorId },
+      },
+    ],
+  });
   return {
     ...state,
     combatants: new Map(state.combatants).set(hit.targetId, {
-      ...target,
-      activeEffects: [...target.activeEffects, speedEffect, attackRollEffect],
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, ...allocation.effects],
     }),
   };
 }

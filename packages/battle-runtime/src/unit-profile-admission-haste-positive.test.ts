@@ -1,5 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
 } from "./battle-runtime.test-support.ts";
@@ -292,6 +293,10 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
       subject: act.subject,
       targetHole: requireHole(act.initialHoles, "targetChoice"),
     });
+    const targetBeforeLethargy = requireCombatant(
+      resolved.state,
+      spellTargetId,
+    );
 
     const ended = breakBattleConcentration(resolved.state, spellCasterId);
     const caster = requireCombatant(ended, spellCasterId);
@@ -303,6 +308,16 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(Number(effectiveWalkSpeed(ended, target))).toBe(0);
     expect(hasHasteLethargyCondition(target)).toBe(true);
     expect(hasHasteSpeedZero(target)).toBe(true);
+    const lethargyRefs = target.activeEffects.flatMap((effect) =>
+      (effect.kind === "spellCondition" || effect.kind === "spellSpeedZero") &&
+      "effectRef" in effect
+        ? [effect.effectRef]
+        : [],
+    );
+    expect(new Set(lethargyRefs).size).toBe(2);
+    expect(Number(target.nextEffectOrdinal)).toBe(
+      Number(targetBeforeLethargy.nextEffectOrdinal) + 2,
+    );
   });
 
   test("Haste lethargy Incapacitated breaks the target's own Concentration", () => {
@@ -565,9 +580,9 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(secondHasteRefs.every((ref) => !firstHasteRefs.includes(ref))).toBe(
       true,
     );
-    // Recasting first promotes one old Haste end-state occurrence, then binds
-    // five fresh positive effects.
-    expect(Number(target.nextEffectOrdinal)).toBe(ordinalBeforeRecast + 6);
+    // Recasting promotes the old Haste end-state into two occurrences, then
+    // binds five fresh positive effects.
+    expect(Number(target.nextEffectOrdinal)).toBe(ordinalBeforeRecast + 7);
   });
 
   test("Haste creation preserves a target-owned concentration effect", () => {
@@ -727,6 +742,9 @@ function stateWithSleepPendingRepeatSave(
   const combatant = requireCombatant(state, combatantId);
   const sleepPendingEffect: BattleActiveEffect = {
     kind: "sleepPendingRepeatSave",
+    effectRef: battleEffectExecutionRefForTest(
+      "synthetic-sleep-repeat-save-effect",
+    ),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "synthetic-sleep-repeat-save-fixture",
     ),

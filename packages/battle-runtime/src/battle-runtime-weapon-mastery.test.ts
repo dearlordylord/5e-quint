@@ -378,13 +378,15 @@ describe("battle runtime: Weapon Mastery", () => {
       }),
     );
 
-    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: expect.any(String),
-      sourceCombatantId: fighterId,
-      mode: "disadvantage",
-      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
-    });
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "nextAttackRollBySelf",
+        sourceProcedureRef: expect.any(String),
+        sourceCombatantId: fighterId,
+        mode: "disadvantage",
+        expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+      }),
+    );
 
     const goblinTurn = requireResolved(
       endTurn({ state: hit.state, actorId: fighterId }),
@@ -659,13 +661,15 @@ describe("battle runtime: Weapon Mastery", () => {
       "weaponMasterySap",
     );
 
-    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual({
-      kind: "unitFeatureSpeedDelta",
-      sourceProcedureRef: slowProcedureRef,
-      sourceCombatantId: fighterId,
-      deltaFeet: movementDeltaFeet(-10),
-      expiresAt: { kind: "startOfTurn", combatantId: fighterId },
-    });
+    expect(hit.state.combatants.get(goblinId)?.activeEffects).toContainEqual(
+      expect.objectContaining({
+        kind: "unitFeatureSpeedDelta",
+        sourceProcedureRef: slowProcedureRef,
+        sourceCombatantId: fighterId,
+        deltaFeet: movementDeltaFeet(-10),
+        expiresAt: { kind: "startOfTurn", combatantId: fighterId },
+      }),
+    );
     expect(
       hit.state.combatants.get(goblinId)?.activeEffects,
     ).not.toContainEqual(

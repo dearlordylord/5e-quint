@@ -2255,6 +2255,7 @@ function applySleepRepeatSaveFills(
       { readonly kind: "sleepUnconscious" }
     > = {
       kind: "sleepUnconscious" as const,
+      effectRef: effect.effectRef,
       sourceProcedureRef: effect.sourceProcedureRef,
       sourceCombatantId: effect.sourceCombatantId,
       conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(

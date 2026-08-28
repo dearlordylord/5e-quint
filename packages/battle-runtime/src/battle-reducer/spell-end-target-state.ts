@@ -4,7 +4,7 @@
 import { type Round as RoundType } from "@dnd/shared/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
-import { allocateBattleEffectExecutionRefForCreature } from "../effect-execution-ref.ts";
+import { allocateBattleEffectOccurrencesForCreature } from "../effect-execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -103,33 +103,32 @@ function battleCreatureWithSpellEndTargetStatePromotion(
     combatant.combatantId,
     timing,
   );
-  const allocation = allocateBattleEffectExecutionRefForCreature({
+  const allocation = allocateBattleEffectOccurrencesForCreature({
     owner: combatant,
+    effects: [
+      {
+        kind: "spellCondition",
+        sourceProcedureRef: effect.sourceProcedureRef,
+        sourceCombatantId: effect.sourceCombatantId,
+        condition: effect.condition,
+        conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
+          combatant,
+          effect.condition,
+        ),
+        escape: null,
+        turnStartDamage: null,
+        expiresAt,
+      },
+      {
+        kind: "spellSpeedZero",
+        sourceProcedureRef: effect.sourceProcedureRef,
+        sourceCombatantId: effect.sourceCombatantId,
+        expiresAt,
+      },
+    ],
   });
-  const promotedEffects: readonly BattleActiveEffect[] = [
-    {
-      kind: "spellCondition" as const,
-      effectRef: allocation.effectRef,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      condition: effect.condition,
-      conditionHadNonSpellSource: conditionHadNonSpellSourceBeforeSpellEffect(
-        combatant,
-        effect.condition,
-      ),
-      escape: null,
-      turnStartDamage: null,
-      expiresAt,
-    },
-    {
-      kind: "spellSpeedZero" as const,
-      sourceProcedureRef: effect.sourceProcedureRef,
-      sourceCombatantId: effect.sourceCombatantId,
-      expiresAt,
-    },
-  ];
   return battleCreatureWithSpellActiveEffects(allocation.owner, [
     ...allocation.owner.activeEffects,
-    ...promotedEffects,
+    ...allocation.effects,
   ]);
 }

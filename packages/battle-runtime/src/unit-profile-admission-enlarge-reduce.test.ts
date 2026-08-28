@@ -868,6 +868,9 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (enlarged.tag !== "resolved") {
       throw new Error("Expected Enlarge self cast to resolve.");
     }
+    const enlargedCaster = requireCombatant(enlarged.state, spellCasterId);
+    const enlargedEffect = sizeChangeEffects(enlarged.state, spellCasterId)[0];
+    expect(enlargedEffect).toHaveProperty("effectRef");
 
     const recastReady = {
       ...enlarged.state,
@@ -898,6 +901,21 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     if (reduced.tag !== "resolved") {
       throw new Error("Expected Reduce recast to resolve.");
     }
+    const reducedCaster = requireCombatant(reduced.state, spellCasterId);
+    const reducedEffect = sizeChangeEffects(reduced.state, spellCasterId)[0];
+    expect(reducedEffect).toHaveProperty("effectRef");
+    const enlargedEffectRef =
+      enlargedEffect !== undefined && "effectRef" in enlargedEffect
+        ? enlargedEffect.effectRef
+        : undefined;
+    const reducedEffectRef =
+      reducedEffect !== undefined && "effectRef" in reducedEffect
+        ? reducedEffect.effectRef
+        : undefined;
+    expect(reducedEffectRef).not.toBe(enlargedEffectRef);
+    expect(Number(reducedCaster.nextEffectOrdinal)).toBe(
+      Number(enlargedCaster.nextEffectOrdinal) + 1,
+    );
     expect(sizeChangeEffects(reduced.state, spellCasterId)).toEqual([
       expect.objectContaining({
         kind: "spellCreatureSizeChange",

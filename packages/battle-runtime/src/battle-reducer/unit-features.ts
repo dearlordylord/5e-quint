@@ -39,6 +39,10 @@ import {
 } from "../character-battle-resource-execution.ts";
 import { CombatantId, type BattleProcedureExecutionRef } from "../identity.ts";
 import {
+  allocateBattleEffectOccurrenceForCreature,
+  allocateBattleEffectOccurrencesForCreature,
+} from "../effect-execution-ref.ts";
+import {
   combatantCanSee,
   currentActorId,
   normalizeBattleGrapples,
@@ -365,10 +369,23 @@ export function resolveUnitFeatureHeldWeaponActivation(
     );
   }
   /* v8 ignore stop -- @preserve */
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner: actor,
+    effect: {
+      kind: "paladinSacredWeapon",
+      sourceProcedureRef: input.subject.procedureRef,
+      sourceCombatantId: actor.combatantId,
+      weaponItemId: input.subject.weaponItemId,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: durationTicks.success,
+      },
+    },
+  });
   const nextActor: CharacterBattleCreatureState = {
-    ...actor,
+    ...allocation.owner,
     activeEffects: [
-      ...actor.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (effect) =>
           !(
             effect.kind === "paladinSacredWeapon" &&
@@ -376,16 +393,7 @@ export function resolveUnitFeatureHeldWeaponActivation(
             effect.sourceCombatantId === actor.combatantId
           ),
       ),
-      {
-        kind: "paladinSacredWeapon",
-        sourceProcedureRef: input.subject.procedureRef,
-        sourceCombatantId: actor.combatantId,
-        weaponItemId: input.subject.weaponItemId,
-        expiresAt: {
-          kind: "duration",
-          durationTicks: durationTicks.success,
-        },
-      },
+      allocation.effect,
     ],
     origin: {
       ...actor.origin,
@@ -487,8 +495,34 @@ function resolveRogueSteadyAimUnitFeature(
       "Steady Aim Bonus Action is no longer available.",
     );
   }
+  const allocation = allocateBattleEffectOccurrencesForCreature({
+    owner: actor,
+    effects: [
+      {
+        kind: "nextAttackRollBySelf",
+        sourceProcedureRef: input.subject.procedureRef,
+        sourceCombatantId: actor.combatantId,
+        mode: unitFeature.steadyAim.attackRoll.mode,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: actor.combatantId,
+          round: input.state.initiative.round,
+        },
+      },
+      {
+        kind: "selfSpeedZero",
+        sourceProcedureRef: input.subject.procedureRef,
+        sourceCombatantId: actor.combatantId,
+        expiresAt: {
+          kind: "endOfTurn",
+          combatantId: actor.combatantId,
+          round: input.state.initiative.round,
+        },
+      },
+    ],
+  });
   const activeEffects = [
-    ...actor.activeEffects.filter(
+    ...allocation.owner.activeEffects.filter(
       (effect) =>
         !(
           "sourceProcedureRef" in effect &&
@@ -498,33 +532,13 @@ function resolveRogueSteadyAimUnitFeature(
             effect.kind === "selfSpeedZero")
         ),
     ),
-    {
-      kind: "nextAttackRollBySelf",
-      sourceProcedureRef: input.subject.procedureRef,
-      sourceCombatantId: actor.combatantId,
-      mode: unitFeature.steadyAim.attackRoll.mode,
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: actor.combatantId,
-        round: input.state.initiative.round,
-      },
-    } as const,
-    {
-      kind: "selfSpeedZero",
-      sourceProcedureRef: input.subject.procedureRef,
-      sourceCombatantId: actor.combatantId,
-      expiresAt: {
-        kind: "endOfTurn",
-        combatantId: actor.combatantId,
-        round: input.state.initiative.round,
-      },
-    } as const,
+    ...allocation.effects,
   ];
   const nextState = {
     ...input.state,
     currentTurnResources: spent.success,
     combatants: new Map(input.state.combatants).set(actor.combatantId, {
-      ...actor,
+      ...allocation.owner,
       activeEffects,
     }),
   };
@@ -1380,20 +1394,24 @@ export function resolveBardicInspirationGrantUnitFeature(
       ),
     },
   };
-  const nextTarget: BattleCreatureState = {
-    ...target,
-    activeEffects: [
-      ...target.activeEffects,
-      {
-        kind: "bardicInspirationDie",
-        sourceProcedureRef: input.subject.procedureRef,
-        sourceCombatantId: input.subject.actorId,
-        dieSize: unitFeature.dieSize,
-        expiresAt: {
-          kind: "duration",
-          durationTicks: unitFeature.durationTicks,
-        },
+  const targetAllocation = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
+    effect: {
+      kind: "bardicInspirationDie",
+      sourceProcedureRef: input.subject.procedureRef,
+      sourceCombatantId: input.subject.actorId,
+      dieSize: unitFeature.dieSize,
+      expiresAt: {
+        kind: "duration",
+        durationTicks: unitFeature.durationTicks,
       },
+    },
+  });
+  const nextTarget: BattleCreatureState = {
+    ...targetAllocation.owner,
+    activeEffects: [
+      ...targetAllocation.owner.activeEffects,
+      targetAllocation.effect,
     ],
   };
   const combatants = new Map(input.state.combatants)
@@ -2494,32 +2512,35 @@ function applyMagicActionSaveGatedConditionFailures(
   for (const targetId of targetIds) {
     const target = combatants.get(targetId);
     if (target === undefined) continue;
-    const activeEffect = {
-      kind: "unitFeatureCondition" as const,
-      sourceProcedureRef,
-      sourceCombatantId: actorId,
-      condition: unitFeature.condition.onFail.condition,
-      conditionHadNonSpellSource: hasCondition(
-        target.conditions,
-        unitFeature.condition.onFail.condition,
-      ),
-      earlyEnd: { kind: "targetTakesAnyDamage" as const },
-      turnRestriction: { kind: "moveActionOrBonusAction" as const },
-      expiresAt: {
-        kind: "duration" as const,
-        durationTicks: unitFeature.condition.onFail.durationTicks,
+    const allocation = allocateBattleEffectOccurrenceForCreature({
+      owner: target,
+      effect: {
+        kind: "unitFeatureCondition",
+        sourceProcedureRef,
+        sourceCombatantId: actorId,
+        condition: unitFeature.condition.onFail.condition,
+        conditionHadNonSpellSource: hasCondition(
+          target.conditions,
+          unitFeature.condition.onFail.condition,
+        ),
+        earlyEnd: { kind: "targetTakesAnyDamage" },
+        turnRestriction: { kind: "moveActionOrBonusAction" },
+        expiresAt: {
+          kind: "duration",
+          durationTicks: unitFeature.condition.onFail.durationTicks,
+        },
       },
-    };
+    });
     const nextTarget = {
       ...battleCreatureStateWithKnockOutPreservedConditions(
-        target,
+        allocation.owner,
         applyCondition(
           target.conditions,
           unitFeature.condition.onFail.condition,
         ),
       ),
       activeEffects: [
-        ...target.activeEffects.filter(
+        ...allocation.owner.activeEffects.filter(
           (candidate) =>
             !(
               candidate.kind === "unitFeatureCondition" &&
@@ -2528,7 +2549,7 @@ function applyMagicActionSaveGatedConditionFailures(
               candidate.condition === unitFeature.condition.onFail.condition
             ),
         ),
-        activeEffect,
+        allocation.effect,
       ],
     };
     combatants.set(targetId, nextTarget);

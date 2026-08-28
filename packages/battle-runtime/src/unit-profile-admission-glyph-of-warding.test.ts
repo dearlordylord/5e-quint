@@ -693,7 +693,12 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     });
     expect(added.tag).toBe("added");
     if (added.tag !== "added") return;
-    expect(glyphEffects(added.state)).toEqual([effect]);
+    expect("effectRef" in effect).toBe(false);
+    expect(added.effect.effectRef).toBeDefined();
+    expect(glyphEffects(added.state)).toEqual([added.effect]);
+    expect(
+      Number(added.state.combatants.get(spellCasterId)?.nextEffectOrdinal),
+    ).toBe(Number(state.combatants.get(spellCasterId)?.nextEffectOrdinal) + 1);
     expect(
       addGlyphDurableOccurrence({ state: added.state, effect }),
     ).toMatchObject({

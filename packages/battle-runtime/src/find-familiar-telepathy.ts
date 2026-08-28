@@ -19,7 +19,12 @@ import { spellInvocationIsSpellcasting } from "./battle-reducer/spell-turn-resou
 import { characterSpellProcedure } from "./character-execution-queries.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import { findFamiliarCompanionEntryForOwner } from "./find-familiar-state.ts";
-import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
+import type {
+  BattleEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "./identity.ts";
 
 export const FIND_FAMILIAR_TELEPATHY_RANGE_FEET = movementFeet(100);
 
@@ -120,15 +125,19 @@ export function shareFindFamiliarSenses(input: {
       "Find Familiar shared senses require an available Bonus Action.",
     );
   }
+  const allocation = allocateBattleEffectExecutionRefForCreature({
+    owner: caster,
+  });
   const effect = findFamiliarSharedSensesEffect({
     casterId: input.casterId,
     familiarId: connection.familiarId,
     familiarSenses: familiar.origin.mechanics.specialSenses,
+    effectRef: allocation.effectRef,
   });
   const nextCaster = {
-    ...caster,
+    ...allocation.owner,
     activeEffects: [
-      ...caster.activeEffects.filter(
+      ...allocation.owner.activeEffects.filter(
         (candidate) => candidate.kind !== "findFamiliarSharedSenses",
       ),
       effect,
@@ -372,9 +381,11 @@ function findFamiliarSharedSensesEffect(input: {
   readonly casterId: CombatantId;
   readonly familiarId: CombatantId;
   readonly familiarSenses: readonly CreatureSense[];
+  readonly effectRef: BattleEffectExecutionRef;
 }): FindFamiliarSharedSensesEffect {
   return {
     kind: "findFamiliarSharedSenses",
+    effectRef: input.effectRef,
     source: {
       kind: "companionSharedSenses",
       ownerId: input.casterId,

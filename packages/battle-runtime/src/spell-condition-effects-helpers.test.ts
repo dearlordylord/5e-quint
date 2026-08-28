@@ -111,6 +111,9 @@ describe("spell condition effect source ownership", () => {
     } as const satisfies BattleActiveEffect;
     const sharedSenseEffect = {
       kind: "findFamiliarSharedSenses",
+      effectRef: battleEffectExecutionRefForTest(
+        "synthetic-shared-senses-effect",
+      ),
       source: {
         kind: "companionSharedSenses" as const,
         ownerId: fighterId,
@@ -348,6 +351,7 @@ describe("spell condition effect source ownership", () => {
 
     const sleepEffect = {
       kind: "sleepUnconscious",
+      effectRef: battleEffectExecutionRefForTest("synthetic-sleep-unconscious"),
       sourceProcedureRef: battleProcedureExecutionRefForTest("synthetic-sleep"),
       sourceCombatantId: fighterId,
       conditionHadNonSpellSource: false,

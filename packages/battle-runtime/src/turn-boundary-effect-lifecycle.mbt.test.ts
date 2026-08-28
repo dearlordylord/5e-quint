@@ -13,7 +13,10 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 // Boundary: bounded source/target fixture; not exhaustive same-timing ordering.
 // Death Saving Throw ordering is intentionally outside this witness; this
 // fixture does not assert a same-timing ordering for that lifecycle.
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleEffectExecutionRefForTest,
+  battleProcedureExecutionRefForTest,
+} from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   difficultyClass,
@@ -896,6 +899,7 @@ function battleWithCurrentActorEndTurnDamageAndConcentration(): BattleState {
 function sleepPendingRepeatSaveEffect(): BattleActiveEffect {
   return {
     kind: "sleepPendingRepeatSave",
+    effectRef: battleEffectExecutionRefForTest("mbt-sleep-pending-effect"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(syntheticSpellId("synthetic_turn_boundary_sleep_repeat")),
     ),

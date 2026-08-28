@@ -18,6 +18,7 @@ import {
 } from "../optional-property.ts";
 import { currentArmorClass } from "@dnd/shared-algebras/armor-class-algebra";
 import { Match } from "effect";
+import { allocateBattleEffectOccurrenceForCreature } from "../effect-execution-ref.ts";
 
 import { attackRollResultIsValid } from "@dnd/shared-algebras/attack-roll-algebra";
 
@@ -659,22 +660,23 @@ function resolveBrutalStrikeAfterDamage(input: {
         ),
         Match.exhaustive,
       );
-      const activeEffects = [
-        ...retainedActiveEffects,
-        {
+      const allocation = allocateBattleEffectOccurrenceForCreature({
+        owner: target,
+        effect: {
           kind: "brutalStrikeHamstring",
           sourceProcedureRef: input.selection.procedureRef,
           sourceCombatantId: input.selection.attackerId,
           effect: hamstring,
           expiresAt: { kind: "startOfSourceTurn" },
-        } as const,
-      ];
+        },
+      });
+      const activeEffects = [...retainedActiveEffects, allocation.effect];
       return {
         tag: "ok" as const,
         state: {
           ...input.state,
           combatants: new Map(input.state.combatants).set(input.targetId, {
-            ...target,
+            ...allocation.owner,
             activeEffects,
           }),
         },

@@ -55,6 +55,7 @@ import {
   creatureSizeChangeProcedure,
 } from "../creature-size-change-effects.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
+import { allocateBattleEffectExecutionRefForCreature } from "../../effect-execution-ref.ts";
 
 import {
   invalidResult,
@@ -478,17 +479,25 @@ function applyCreatureSizeChangeEffect(
   );
   const target = state.combatants.get(targetId);
   if (target === undefined) return state;
+  const allocation = allocateBattleEffectExecutionRefForCreature({
+    owner: target,
+  });
   const nextEffect = {
     ...activeEffect,
+    effectRef: allocation.effectRef,
     sourceProcedureRef: invocation.sourceProcedureRef,
     sourceCombatantId: actorId,
-  };
+  } as const;
   const replacement = activeEffectsWithCreatureSizeChangeReplaced(
-    target.activeEffects,
+    allocation.owner.activeEffects,
     nextEffect,
   );
+  const allocatedState = {
+    ...state,
+    combatants: new Map(state.combatants).set(targetId, allocation.owner),
+  };
   return replaceTargetActiveEffectsEndingDisplacedConcentrations(
-    state,
+    allocatedState,
     targetId,
     replacement.activeEffects,
     replacement.displacedEffects,

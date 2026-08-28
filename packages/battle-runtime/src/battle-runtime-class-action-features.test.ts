@@ -747,6 +747,20 @@ describe("battle runtime: class action features", () => {
     const aimed = requireResolved(
       resolveBattleSubject({ state, subject: act.subject, fills: [] }),
     );
+    const actorBeforeAim = state.combatants.get(fighterId);
+    const actorAfterAim = aimed.state.combatants.get(fighterId);
+    const steadyAimRefs =
+      actorAfterAim?.activeEffects.flatMap((effect) =>
+        (effect.kind === "nextAttackRollBySelf" ||
+          effect.kind === "selfSpeedZero") &&
+        "effectRef" in effect
+          ? [effect.effectRef]
+          : [],
+      ) ?? [];
+    expect(new Set(steadyAimRefs).size).toBe(2);
+    expect(Number(actorAfterAim?.nextEffectOrdinal)).toBe(
+      Number(actorBeforeAim?.nextEffectOrdinal) + 2,
+    );
     expect(aimed.snapshot.turn.bonusActionAvailable).toBe(false);
     expect(
       aimed.snapshot.combatants.find(
@@ -4122,7 +4136,7 @@ describe("battle runtime: class action features", () => {
           (effect) => effect.kind === "brutalStrikeHamstring",
         ) ?? [];
     expect(hamstrings).toEqual([
-      {
+      expect.objectContaining({
         kind: "brutalStrikeHamstring",
         sourceProcedureRef: requireCharacterUnitProcedureRefForTest(
           session,
@@ -4137,7 +4151,7 @@ describe("battle runtime: class action features", () => {
           expires: "startOfYourNextTurn",
         },
         expiresAt: { kind: "startOfSourceTurn" },
-      },
+      }),
     ]);
     const hamstrungTarget = resolved.state.combatants.get(goblinId);
     if (hamstrungTarget === undefined) {
