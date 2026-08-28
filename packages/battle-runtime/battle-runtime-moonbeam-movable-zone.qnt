@@ -173,7 +173,7 @@ module battleRuntimeMoonbeamMovableZone {
           not(areaEffectTriggerCanResolve(
             true,
             true,
-            moonbeamOnceAcrossQualifiedTriggersProfile(zone.savedThisTurn),
+            onceAcrossQualifiedAreaTriggersProfile(zone.savedThisTurn),
             moonbeamSaveTriggerTiming(trigger),
           )) or
           not(moonbeamDamageRollAccepted(fills.rolledDamage, zone.damageDice))

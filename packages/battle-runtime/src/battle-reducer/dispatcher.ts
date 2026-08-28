@@ -185,7 +185,7 @@ import {
 import { resolveEndTurnCommand } from "./turn-boundary-lifecycle.ts";
 import {
   isPersistentSpatialSpellProcedureSubject,
-  isPersistentAreaAppearanceSubject,
+  isPersistentAreaSubjectAllowedOutsideCurrentActorTurn,
   resolvePersistentSpatialSpellProcedureCommand,
 } from "./persistent-spatial-spell-procedures.ts";
 import { resolveEndConcentrationCommand } from "./concentration-procedures.ts";
@@ -472,7 +472,7 @@ function resolveBattleSubjectAfterD20TestNaturalOneReroll(
     interruptRouteOptions.replayParentPosition === undefined &&
     !isLegendaryAttackSubject(input.state, input.subject) &&
     !isReleaseGrappleSubject(input.subject) &&
-    !isPersistentAreaAppearanceSubject(input.subject)
+    !isPersistentAreaSubjectAllowedOutsideCurrentActorTurn(input.subject)
   ) {
     return invalidResult(
       input.state,

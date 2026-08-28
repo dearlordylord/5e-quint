@@ -15,8 +15,8 @@ module battleRuntimeAreaTriggerTimingTests {
   }
 
   run test_area_trigger_once_per_turn_profile_shares_ledger_across_qualified_triggers = {
-    val openProfile = moonbeamOnceAcrossQualifiedTriggersProfile(false)
-    val resolvedProfile = moonbeamOnceAcrossQualifiedTriggersProfile(true)
+    val openProfile = onceAcrossQualifiedAreaTriggersProfile(false)
+    val resolvedProfile = onceAcrossQualifiedAreaTriggersProfile(true)
     all {
       assert(areaEffectTriggerCanResolve(true, true, openProfile, AreaAppearsInSpace)),
       assert(areaEffectTriggerCanResolve(true, true, openProfile, CreatureEntersArea)),
