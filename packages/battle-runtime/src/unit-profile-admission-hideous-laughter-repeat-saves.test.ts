@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-hideous-laughter-repeat-save-lifecycle
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -97,7 +97,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
           {
             kind: "spellCondition",
             effectRef:
-              battleActiveEffectExecutionRefForTest("laughter-condition"),
+              battleEffectExecutionRefForTest("laughter-condition"),
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(ensnaringStrikeUnitId),
             ),

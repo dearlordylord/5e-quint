@@ -6,7 +6,7 @@ import * as Result from "effect/Result";
 import {
   spellActiveEffectForExecutionRef,
   spellActiveEffectExecutionRef,
-} from "../active-effect/execution-ref.ts";
+} from "../effect-execution-ref.ts";
 import type { BattleSubject } from "../battle-subjects.ts";
 import type {
   BattleResolutionInputForSubject,

@@ -47,10 +47,10 @@ import {
   zeroAbilityWeaponAttack,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { allocateBattleActiveEffectRefForCreature } from "./active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "./effect-execution-ref.ts";
 import {
   attackRollFill,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   concentrationSavingThrowFill,
   characterSeed,
@@ -284,7 +284,7 @@ function withCommandGrovel(
   if (target === undefined) {
     throw new Error("Expected the Command Grovel target.");
   }
-  const effectRef = battleActiveEffectExecutionRefForTest(
+  const effectRef = battleEffectExecutionRefForTest(
     "cloudkill-command-grovel",
   );
   const effect = {
@@ -327,7 +327,7 @@ function withCommandDrop(
   if (target === undefined) {
     throw new Error("Expected the Command Drop target.");
   }
-  const effectRef = battleActiveEffectExecutionRefForTest(
+  const effectRef = battleEffectExecutionRefForTest(
     "cloudkill-command-drop",
   );
   const effect = {

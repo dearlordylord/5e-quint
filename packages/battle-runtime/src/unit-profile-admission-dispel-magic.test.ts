@@ -5,7 +5,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // RAW: .references/srd-5.2.1/Spells/Descriptions-A-D.md#Dispel-Magic
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -24,7 +24,7 @@ import { Schema } from "effect";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { allocateBattleActiveEffectRefForCreature } from "./active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "./effect-execution-ref.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import type {
   BattleActiveEffect,
@@ -812,7 +812,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           ? {
               ...combatant,
               activeEffectRefs: [
-                battleActiveEffectExecutionRefForTest(
+                battleEffectExecutionRefForTest(
                   "wrong-owner-spiritual-weapon",
                 ),
               ],
@@ -1384,7 +1384,7 @@ function heatMetalObjectContactDamageEffect(input: {
   const sourceCombatantId = input.sourceCombatantId ?? spellCasterId;
   return {
     kind: "spellObjectContactDamage",
-    effectRef: battleActiveEffectExecutionRefForTest(
+    effectRef: battleEffectExecutionRefForTest(
       input.effectId ??
         `${sourceCombatantId}:${heatMetalUnitId}:${input.objectId}`,
     ),
@@ -1414,7 +1414,7 @@ function spiritualWeaponEffect(input: {
 }): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
   return {
     kind: "spiritualWeapon",
-    effectRef: battleActiveEffectExecutionRefForTest(input.sourceEffectId),
+    effectRef: battleEffectExecutionRefForTest(input.sourceEffectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),
     ),

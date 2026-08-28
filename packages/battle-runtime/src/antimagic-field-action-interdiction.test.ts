@@ -1,7 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -430,7 +430,7 @@ function spiritualWeaponActiveEffect(
   }
   return {
     kind: "spiritualWeapon",
-    effectRef: battleActiveEffectExecutionRefForTest(
+    effectRef: battleEffectExecutionRefForTest(
       "antimagic-action-spiritual-weapon",
     ),
     sourceProcedureRef,

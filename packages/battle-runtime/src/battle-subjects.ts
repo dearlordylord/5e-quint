@@ -28,7 +28,7 @@ import type { DamageType } from "@dnd/surface/surface/types";
 import { BATTLE_READIED_SPELL_TRIGGERS } from "./battle-interrupt-triggers.ts";
 import {
   BattleAreaId,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleAttackProcedureExecutionRef,
   BattleLineDirectionId,
   BattleObjectId,
@@ -182,19 +182,19 @@ export const BattleInsectPlagueAreaMembershipTriggerSchema = Schema.Union([
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("appearsInArea"),
     areaId: BattleAreaId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("firstEntryOnTurn"),
     areaId: BattleAreaId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("turnEndInArea"),
     areaId: BattleAreaId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
 ]);
 export type BattleInsectPlagueAreaMembershipTrigger =
@@ -205,25 +205,25 @@ export const BattleCloudkillAreaMembershipTriggerSchema = Schema.Union([
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("appearsInArea"),
     areaId: BattleAreaId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("areaMovesIntoSpace"),
     areaId: BattleAreaId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("firstEntryOnTurn"),
     areaId: BattleAreaId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     ...RejectRedundantSpellSourceFields,
     kind: Schema.Literal("turnEndInArea"),
     areaId: BattleAreaId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
 ]);
 export type BattleCloudkillAreaMembershipTrigger =
@@ -703,7 +703,7 @@ export const BattleSubjectSchema = Schema.Union([
     action: Schema.Literal("escapeSpellRestraint"),
     ...RejectRedundantSpellProcedureSourceFields,
     targetId: CombatantId,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("action"),
@@ -745,7 +745,7 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     procedureRef: BattleProcedureExecutionRef,
     sourceUnitId: Schema.optionalKey(Schema.Never),
-    sourceEffectRef: BattleActiveEffectExecutionRef,
+    sourceEffectRef: BattleEffectExecutionRef,
     action: Schema.Literal("dash"),
     speedKind: Schema.Literals(BATTLE_MOVEMENT_SPEED_KINDS),
   }),
@@ -1095,14 +1095,14 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("releaseSpellCreatedHeldObject"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("protectionRelevantEffectSave"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     relevantEffect: Schema.Literals(["charmed", "frightened", "possession"]),
   }),
   Schema.Struct({
@@ -1130,7 +1130,7 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("wardingBondSeparation"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     targetId: CombatantId,
   }),
   Schema.Struct({
@@ -1138,21 +1138,21 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("jumpMovementReplacement"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("dragonsBreathExhale"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("replaceSelfTransformationMode"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     mode: Schema.Literals(SELF_TRANSFORMATION_NON_NATURAL_WEAPON_MODE_KINDS),
   }),
   Schema.Struct({
@@ -1160,7 +1160,7 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("replaceSelfTransformationMode"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     mode: Schema.Literal(SELF_TRANSFORMATION_NATURAL_WEAPONS_MODE_KIND),
     naturalWeaponDamageType: DamageTypeSchema,
   }),
@@ -1169,35 +1169,35 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("commandGrovel"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandDrop"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandApproach"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("commandFlee"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
     actorId: CombatantId,
     command: Schema.Literal("levitateAltitudeControl"),
     ...RejectRedundantSpellSourceFields,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     targetId: CombatantId,
   }),
   Schema.Struct({
@@ -1372,7 +1372,7 @@ export type BattleSubjectBoundExecutionReference =
   | {
       readonly kind: "activeEffect";
       readonly ownerId: CombatantId;
-      readonly effectRef: BattleActiveEffectExecutionRef;
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
       readonly kind: "statBlockScope";
@@ -1452,7 +1452,7 @@ function battleRuntimeCommandBoundExecutionReferences(
 ): readonly BattleSubjectBoundExecutionReference[] {
   const actorEffect = (value: {
     readonly actorId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
   }): readonly BattleSubjectBoundExecutionReference[] => [
     {
       kind: "activeEffect",
@@ -1462,7 +1462,7 @@ function battleRuntimeCommandBoundExecutionReferences(
   ];
   const targetEffect = (value: {
     readonly targetId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
   }): readonly BattleSubjectBoundExecutionReference[] => [
     {
       kind: "activeEffect",

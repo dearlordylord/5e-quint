@@ -1,5 +1,5 @@
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { Schema } from "effect";
@@ -69,7 +69,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
+    const effectRef = battleEffectExecutionRefForTest(
       "runtime-command-effect",
     );
     const areaId = "runtime-command-area";
@@ -207,7 +207,7 @@ describe("BattleSubject identity", () => {
       ),
       NonNegativeInteger(0),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
+    const effectRef = battleEffectExecutionRefForTest(
       "action-subject-effect",
     );
     const actionExtras = {
@@ -290,7 +290,7 @@ describe("BattleSubject identity", () => {
       actorId,
       battleExecutionScopeOrdinal(3),
     );
-    const effectRef = battleActiveEffectExecutionRefForTest(
+    const effectRef = battleEffectExecutionRefForTest(
       "reference-bearing-subject-effect",
     );
     const candidates = [

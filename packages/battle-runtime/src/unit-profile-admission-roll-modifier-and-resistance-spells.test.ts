@@ -11,7 +11,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-roll-modifier spell.invocation-damage-reduction spell.invocation-condition-removal-protection spell.invocation-chosen-damage-resistance
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.ROLL_MODIFIER_ACTIVE_EFFECTS BATTLE.SPELL.CONDITION_REMOVAL_AND_PROTECTION
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   concentrationSavingThrowFill,
   testCharacterD20Statistics,
@@ -2229,7 +2229,7 @@ describe("L12G Protection from Poison deterministic Spell Unit admission", () =>
               ...target.activeEffects,
               {
                 kind: "spellCondition" as const,
-                effectRef: battleActiveEffectExecutionRefForTest(
+                effectRef: battleEffectExecutionRefForTest(
                   "poison-spell-condition",
                 ),
                 sourceProcedureRef: battleProcedureExecutionRefForTest(

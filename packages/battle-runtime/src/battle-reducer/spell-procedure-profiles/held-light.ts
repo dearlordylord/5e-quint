@@ -29,7 +29,7 @@ import { spellCastCandidate } from "../spell-cast-candidate.ts";
 import { elapsedTimeTicksFromTimeSpanDuration } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { attackBonus, movementFeet } from "@dnd/shared/types";
 import { Result } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../effect-execution-ref.ts";
 
 import type { CombatantId } from "../../identity.ts";
 import {

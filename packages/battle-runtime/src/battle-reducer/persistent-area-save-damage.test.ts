@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import {
   battleId,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   characterSeed,
   fighterId,
   startBattleRight,
@@ -33,7 +33,7 @@ const unrelatedFill = {
   value: "fire",
 } satisfies BattleFill;
 
-const persistentAreaEffectRef = battleActiveEffectExecutionRefForTest(
+const persistentAreaEffectRef = battleEffectExecutionRefForTest(
   "persistent-area-save-damage-effect",
 );
 

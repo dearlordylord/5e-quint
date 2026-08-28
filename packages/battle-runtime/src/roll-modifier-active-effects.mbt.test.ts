@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
@@ -1555,7 +1555,7 @@ function withCharismaDisadvantageAgainstCaster(
   const source = requireCombatant(state, spellTargetId);
   const hexEffect = {
     kind: "spellMarkedDamageRider",
-    effectRef: battleActiveEffectExecutionRefForTest("roll-modifier-hex"),
+    effectRef: battleEffectExecutionRefForTest("roll-modifier-hex"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(String("hex")),
     sourceCombatantId: spellTargetId,
     targetCombatantId: spellCasterId,

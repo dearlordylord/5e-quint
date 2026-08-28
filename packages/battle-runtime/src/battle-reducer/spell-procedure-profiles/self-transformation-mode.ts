@@ -40,7 +40,7 @@ import {
 import { snapshotBattle } from "../interrupt-execution.ts";
 import { type SelfTransformationModeKind } from "../domain-constants.ts";
 import { CombatantId } from "../../identity.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../effect-execution-ref.ts";
 import { breakBattleConcentration } from "../damage-apply.ts";
 import { SELF_TRANSFORMATION_MODE_KINDS } from "../domain-constants.ts";
 

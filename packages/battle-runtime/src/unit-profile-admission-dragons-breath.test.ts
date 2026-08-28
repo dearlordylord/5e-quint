@@ -56,7 +56,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   testCharacterD20Statistics,
@@ -373,7 +373,7 @@ describe("Dragon's Breath initial cast admission", () => {
           ...caster.activeEffects,
           {
             kind: "wardingBond",
-            effectRef: battleActiveEffectExecutionRefForTest("dragon-ward-one"),
+            effectRef: battleEffectExecutionRefForTest("dragon-ward-one"),
             sourceProcedureRef: dragonsBreathSourceProcedureRef(
               endedCasterTurn.state,
             ),
@@ -1116,7 +1116,7 @@ function stateWithWardingBondTarget(
   const target = requireCombatant(state, targetId);
   const wardingBondEffect = {
     kind: "wardingBond",
-    effectRef: battleActiveEffectExecutionRefForTest("dragon-ward-two"),
+    effectRef: battleEffectExecutionRefForTest("dragon-ward-two"),
     sourceProcedureRef: dragonsBreathSourceProcedureRef(state),
     sourceCombatantId: sourceId,
     expiresAt: {

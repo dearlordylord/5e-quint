@@ -1,4 +1,4 @@
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay level1-spatial-witness dancing_lights faerie_fire feather_fall fog_cloud grease jump light produce_flame thunderwave
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness dancing_lights doDancingLightsMovableDimLight
 // UNIT-IDENTITY-REPLAY: level1-spatial-witness faerie_fire doFaerieFireOutlineAdvantageInvisibleDimLight
@@ -5377,7 +5377,7 @@ function produceFlameHeldLightEffectValue(
 ): Extract<BattleActiveEffect, { readonly kind: "heldLight" }> {
   return {
     kind: "heldLight",
-    effectRef: battleActiveEffectExecutionRefForTest(
+    effectRef: battleEffectExecutionRefForTest(
       "synthetic-produce-flame-held-light",
     ),
     sourceProcedureRef,

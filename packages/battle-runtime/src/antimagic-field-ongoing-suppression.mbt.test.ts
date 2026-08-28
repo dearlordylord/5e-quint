@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -72,7 +72,7 @@ const antimagicFieldAreaId = battleAreaId("focused-antimagic-field-area");
 const spiritualWeaponEffectId = battleSpellEffectOccurrenceId(
   "focused-antimagic-spiritual-weapon",
 );
-const spiritualWeaponEffectRef = battleActiveEffectExecutionRefForTest(
+const spiritualWeaponEffectRef = battleEffectExecutionRefForTest(
   String(spiritualWeaponEffectId),
 );
 

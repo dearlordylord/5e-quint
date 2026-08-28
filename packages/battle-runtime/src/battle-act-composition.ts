@@ -13,7 +13,7 @@ import { discoverBattleActCandidates } from "./battle-execution-composition.ts";
 import { battleReducerRouteEventsForDiscoveredAct } from "./battle-reducer/reducer-route.ts";
 import { supportedSpellInvocationRef } from "./battle-reducer/spells-invocation-ref.ts";
 import type { BattleProcedureExecutionRef, CombatantId } from "./identity.ts";
-import { spellActiveEffectForExecutionRef } from "./active-effect/execution-ref.ts";
+import { spellActiveEffectForExecutionRef } from "./effect-execution-ref.ts";
 import { boundAttackExecutionSelectionMatchesOption } from "./battle-action-options.ts";
 import {
   attackActionOptionsForActor,

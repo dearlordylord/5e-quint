@@ -23,7 +23,7 @@ import type { Ability, Skill } from "@dnd/surface/surface/types";
 import { isPresentFindFamiliarCombatant } from "../find-familiar-state.ts";
 import { mechanicalD20TestRollMode } from "../d20-test-circumstance.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -1058,7 +1058,7 @@ export function alternateActionCostProfilesForActor(
     | {
         readonly kind: "spellEffect";
         readonly procedureRef: BattleProcedureExecutionRef;
-        readonly effectRef: BattleActiveEffectExecutionRef;
+        readonly effectRef: BattleEffectExecutionRef;
       };
   readonly profile: Extract<
     UnitSupportProcedureExecution,

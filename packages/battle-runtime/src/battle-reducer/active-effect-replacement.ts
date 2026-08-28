@@ -4,13 +4,13 @@ import type {
   BattleState,
 } from "../battle-state-execution.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
 import type { BattleActiveEffectSource } from "../active-effect/source.ts";
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
-import { allocateBattleActiveEffectRef } from "../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRef } from "../effect-execution-ref.ts";
 import { combatantsAfterConcentrationSpellEffectsEndedIfNoEffects } from "./spell-condition-effects-helpers.ts";
 
 /**
@@ -114,7 +114,7 @@ export function replaceAllocatedTargetSpellActiveEffects(
   targetId: CombatantId,
   replaces: (effect: BattleActiveEffect) => boolean,
   replacements: (
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   ) => readonly BattleActiveEffect[],
 ): BattleState {
   const allocation = allocateBattleActiveEffectRef({

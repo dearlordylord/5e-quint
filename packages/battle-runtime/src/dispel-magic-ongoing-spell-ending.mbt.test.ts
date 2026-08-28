@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -553,7 +553,7 @@ function dispelProjection(
     ),
     highLevelEffectActive:
       highLevelEffect?.effectRef ===
-      battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
+      battleEffectExecutionRefForTest(String(highLevelEffectId)),
     antimagicAuraActive: requireCombatant(
       state.battle.state,
       spellTargetId,
@@ -628,7 +628,7 @@ function highLevelObjectContactEffect(): Extract<
 > {
   return {
     kind: "spellObjectContactDamage",
-    effectRef: battleActiveEffectExecutionRefForTest(String(highLevelEffectId)),
+    effectRef: battleEffectExecutionRefForTest(String(highLevelEffectId)),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(heatMetalUnitId),
     ),

@@ -4,7 +4,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 
 import { optionalProperty } from "../optional-property.ts";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import {
   canSpendMovement,
   markMovementSpentForMovementActionBonusActionExclusion,

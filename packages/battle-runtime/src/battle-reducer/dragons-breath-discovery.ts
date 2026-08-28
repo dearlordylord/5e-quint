@@ -4,7 +4,7 @@ import {
   holeInstanceKey,
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import type { CombatantId } from "../identity.ts";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   BattleActDiscoveryCandidate,
   BattleCreatureState,

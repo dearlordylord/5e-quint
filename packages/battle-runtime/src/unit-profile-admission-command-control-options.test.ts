@@ -1,7 +1,7 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV50D2 command
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-command-drop-held-object spell.invocation-command-halt-grovel
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { battleStateWithSyntheticWeakeningEndTurnSave } from "./command-delegated-end-turn.test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -623,7 +623,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellTargetId,
         command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRefForTest(
+        effectRef: battleEffectExecutionRefForTest(
           "stale-command-grovel",
         ),
       },
@@ -1139,7 +1139,7 @@ describe("QMBT14 deterministic Command control option admission", () => {
         tag: "runtimeCommand",
         actorId: spellCasterId,
         command: "commandGrovel",
-        effectRef: battleActiveEffectExecutionRefForTest(
+        effectRef: battleEffectExecutionRefForTest(
           "premature-command-grovel",
         ),
       },

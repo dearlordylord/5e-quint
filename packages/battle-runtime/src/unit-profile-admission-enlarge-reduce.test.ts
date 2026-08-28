@@ -1,7 +1,7 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSpellInvocationRefForProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -1638,7 +1638,7 @@ function withSyntheticMarkedDamageRider(state: BattleState): BattleState {
   const caster = requireCombatant(state, spellCasterId);
   const markedRider = {
     kind: "spellMarkedDamageRider",
-    effectRef: battleActiveEffectExecutionRefForTest("reduce-floor-mark"),
+    effectRef: battleEffectExecutionRefForTest("reduce-floor-mark"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spellId("synthetic_reduce_floor_mark")),
     ),

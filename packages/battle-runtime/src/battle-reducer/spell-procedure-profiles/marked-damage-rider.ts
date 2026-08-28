@@ -37,7 +37,7 @@ import {
   type EffectAtom,
 } from "@dnd/surface/surface/types";
 import { Result, Match } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../../effect-execution-ref.ts";
 import { BattleActiveEffectExpirationSchema } from "../../active-effect/codecs.ts";
 import { characterExecutionWithMarkedDamageRiderTransfer } from "../../character-execution-queries.ts";
 import type { MarkedDamageRiderTransferSpellProcedureExecution } from "../../character-execution.ts";
@@ -56,7 +56,7 @@ import {
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
@@ -804,7 +804,7 @@ const MarkedDamageRiderInvocationSchema = spellProcedureExecutionSchema(
       procedure: Schema.Literal("markedDamageRider"),
       action: Schema.Literal("transfer"),
       spellRuleFacts: Schema.optionalKey(Schema.Never),
-      activeEffectRef: BattleActiveEffectExecutionRef,
+      activeEffectRef: BattleEffectExecutionRef,
       activeEffectSourceProcedureRef: BattleProcedureExecutionRef,
     }),
   ]),

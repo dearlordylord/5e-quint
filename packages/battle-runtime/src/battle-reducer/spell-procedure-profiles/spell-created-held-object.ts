@@ -63,12 +63,12 @@ import {
 } from "../../battle-state-execution.ts";
 import { snapshotBattle } from "../interrupt-execution.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../../identity.ts";
 import { ElapsedTimeTicksSchema } from "@dnd/shared/elapsed-time";
-import { allocateBattleActiveEffectRef } from "../../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRef } from "../../effect-execution-ref.ts";
 import { invalidResult } from "../result-helpers.ts";
 import { fillsBelongToSpellCastHoles } from "../fill-hole-protocol.ts";
 import { spellCreatedHeldObjectHasFreeHand } from "../spell-created-held-object.ts";
@@ -652,7 +652,7 @@ const SpellCreatedHeldObjectAttackInvocationSchema =
       rangeFeet: MovementFeet,
       attackKind: Schema.Literal("melee_spell_attack"),
       attackBonus: AttackBonus,
-      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceEffectRef: BattleEffectExecutionRef,
       sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );
@@ -665,7 +665,7 @@ const SpellCreatedHeldObjectReEvokeInvocationSchema =
       procedure: Schema.Literal("spellCreatedHeldObjectReEvoke"),
       spellRuleFacts: SpellRuleExecutionFactsSchema,
       actionCost: Schema.Literal("bonusAction"),
-      sourceEffectRef: BattleActiveEffectExecutionRef,
+      sourceEffectRef: BattleEffectExecutionRef,
       sourceHeldObjectProcedureRef: BattleProcedureExecutionRef,
     }),
   );

@@ -10,7 +10,7 @@ import type {
   BattleState,
 } from "./battle-state-execution.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   combatantId,
   elapsedTimeTicks,
@@ -96,7 +96,7 @@ describe("spell condition effect source ownership", () => {
     );
     const spellConditionEffect = {
       kind: "spellCondition",
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "synthetic-condition-effect",
       ),
       sourceProcedureRef,
@@ -228,7 +228,7 @@ describe("spell condition effect source ownership", () => {
     }
     const charmedSourceEffect = {
       kind: "spellCondition",
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "synthetic-charmed-source",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -265,7 +265,7 @@ describe("spell condition effect source ownership", () => {
 
     const repeatSaveEffect = {
       kind: "spellConditionRepeatSave",
-      effectRef: battleActiveEffectExecutionRefForTest("synthetic-repeat-save"),
+      effectRef: battleEffectExecutionRefForTest("synthetic-repeat-save"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-repeat-save-procedure",
       ),
@@ -283,7 +283,7 @@ describe("spell condition effect source ownership", () => {
     } as const satisfies BattleActiveEffect;
     const possessionEffect = {
       kind: "possession",
-      effectRef: battleActiveEffectExecutionRefForTest("synthetic-possession"),
+      effectRef: battleEffectExecutionRefForTest("synthetic-possession"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-possession-procedure",
       ),

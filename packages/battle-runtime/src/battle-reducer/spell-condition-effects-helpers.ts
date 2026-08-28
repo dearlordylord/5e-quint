@@ -19,10 +19,10 @@ import type { CreatureType } from "@dnd/shared/game-facts";
 import type { Condition } from "@dnd/shared/types";
 import type { CombatantId } from "../identity.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
 } from "../identity.ts";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,
@@ -545,7 +545,7 @@ export function spellRestraintEffectEntries(
 export function spellRestraintEffectFor(
   state: BattleState,
   combatantId: CombatantId,
-  effectRef: BattleActiveEffectExecutionRef,
+  effectRef: BattleEffectExecutionRef,
 ):
   | Extract<BattleActiveEffect, { readonly kind: "spellCondition" }>
   | undefined {

@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -212,7 +212,7 @@ function endSelectedMagicalEffectActiveEffect(): DispelMagicRuntimeState {
             effect: {
               kind: "spellActiveEffect",
               activeEffectKind: "spellObjectContactDamage",
-              effectRef: battleActiveEffectExecutionRefForTest(
+              effectRef: battleEffectExecutionRefForTest(
                 String(selectedActiveEffectId),
               ),
             },
@@ -397,7 +397,7 @@ function heatMetalObjectContactDamageEffect(input: {
 }): Extract<BattleActiveEffect, { readonly kind: "spellObjectContactDamage" }> {
   return {
     kind: "spellObjectContactDamage",
-    effectRef: battleActiveEffectExecutionRefForTest(String(input.effectId)),
+    effectRef: battleEffectExecutionRefForTest(String(input.effectId)),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(heatMetalUnitId),
     ),
@@ -454,7 +454,7 @@ function hasActiveEffect(
       (effect) =>
         effect.kind === "spellObjectContactDamage" &&
         effect.effectRef ===
-          battleActiveEffectExecutionRefForTest(String(effectId)),
+          battleEffectExecutionRefForTest(String(effectId)),
     ),
   );
 }

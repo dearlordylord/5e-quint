@@ -76,10 +76,10 @@ import {
   run,
   type ReducerRouteEvent,
 } from "./battle-runtime-mbt-driver-kit.test-support.ts";
-import type { ReplayAddressableSpellActiveEffect } from "./active-effect/execution-ref.ts";
+import type { ReplayAddressableSpellActiveEffect } from "./effect-execution-ref.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
   statBlockProcedurePresentationsForStateForTest,
@@ -1780,7 +1780,7 @@ function protectionRelevantCharmEffect(): Extract<
 > {
   return {
     kind: "spellConditionRepeatSave",
-    effectRef: battleActiveEffectExecutionRefForTest("relevant-charm"),
+    effectRef: battleEffectExecutionRefForTest("relevant-charm"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       "creature-type-protection-and-charm-selected-identity-relevant-charm",
     ),

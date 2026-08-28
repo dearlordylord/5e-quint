@@ -39,12 +39,12 @@ import {
 } from "./battle-runtime.test-support.ts";
 import {
   BattleCharacterExecutionScopeRef,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   BattleResourcePoolExecutionRef,
   BattleStatBlockExecutionScopeRef,
   battleCharacterExecutionScopeRef,
-  battleActiveEffectExecutionRef,
+  battleEffectExecutionRef,
   battleProcedureExecutionRef,
   battleResourcePoolExecutionRef,
   battleExecutionScopeOrdinal,
@@ -158,7 +158,7 @@ describe("Stat Block execution references", () => {
   });
 
   test("rejects noncanonical replay occurrence references", () => {
-    const activeEffectRef = battleActiveEffectExecutionRef(
+    const activeEffectRef = battleEffectExecutionRef(
       JSON.stringify({
         kind: "activeEffectOccurrence",
         ownerScopeRef: battleCharacterExecutionScopeRef(
@@ -169,14 +169,14 @@ describe("Stat Block execution references", () => {
         ordinal: 0,
       }),
     );
-    expect(BattleActiveEffectExecutionRef.make(activeEffectRef)).toBe(
+    expect(BattleEffectExecutionRef.make(activeEffectRef)).toBe(
       activeEffectRef,
     );
     expect(() =>
-      BattleActiveEffectExecutionRef.make("active-effect-0"),
+      BattleEffectExecutionRef.make("active-effect-0"),
     ).toThrow();
     expect(() =>
-      BattleActiveEffectExecutionRef.make(
+      BattleEffectExecutionRef.make(
         JSON.stringify({
           kind: "activeEffectOccurrence",
           battleId: "battle-reference-codec",
@@ -186,7 +186,7 @@ describe("Stat Block execution references", () => {
       ),
     ).toThrow();
     expect(() =>
-      BattleActiveEffectExecutionRef.make(
+      BattleEffectExecutionRef.make(
         JSON.stringify({
           battleId: "battle-reference-codec",
           kind: "activeEffectOccurrence",
@@ -1588,7 +1588,7 @@ describe("Stat Block execution references", () => {
       decodedOrigin.execution.scopeRef,
       NonNegativeInteger(999),
     );
-    const unboundEffectRef = battleActiveEffectExecutionRef(
+    const unboundEffectRef = battleEffectExecutionRef(
       JSON.stringify({
         kind: "activeEffectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
@@ -1611,18 +1611,18 @@ describe("Stat Block execution references", () => {
     if (encodedActor?.origin.kind !== "statBlock") {
       throw new Error("Expected the serialized Stat Block combatant.");
     }
-    const fighterEffectRef = battleActiveEffectExecutionRef(
+    const fighterEffectRef = battleEffectExecutionRef(
       JSON.stringify({
         kind: "activeEffectOccurrence",
         ownerScopeRef: encodedFighter.origin.execution.scopeRef,
-        ordinal: encodedFighter.nextActiveEffectOrdinal,
+        ordinal: encodedFighter.nextEffectOrdinal,
       }),
     );
-    const actorEffectRef = battleActiveEffectExecutionRef(
+    const actorEffectRef = battleEffectExecutionRef(
       JSON.stringify({
         kind: "activeEffectOccurrence",
         ownerScopeRef: decodedOrigin.execution.scopeRef,
-        ordinal: encodedActor.nextActiveEffectOrdinal,
+        ordinal: encodedActor.nextEffectOrdinal,
       }),
     );
     const escapeSubject = {
@@ -1634,14 +1634,14 @@ describe("Stat Block execution references", () => {
     };
     const snapshotWithEffectOwner = (
       ownerId: CombatantId,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
     ) => ({
       ...encoded,
       combatants: encoded.combatants.map((combatant) =>
         combatant.combatantId === ownerId
           ? {
               ...combatant,
-              nextActiveEffectOrdinal: combatant.nextActiveEffectOrdinal + 1,
+              nextEffectOrdinal: combatant.nextEffectOrdinal + 1,
               activeEffectRefs: [...combatant.activeEffectRefs, effectRef],
             }
           : combatant,

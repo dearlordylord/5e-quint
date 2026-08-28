@@ -7,7 +7,7 @@ import {
 } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
@@ -276,7 +276,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
       },
       {
         kind: "jumpMovementReplacement" as const,
-        effectRef: battleActiveEffectExecutionRefForTest(
+        effectRef: battleEffectExecutionRefForTest(
           "turn-start-jump-refresh",
         ),
         sourceProcedureRef: jumpProcedureRef,

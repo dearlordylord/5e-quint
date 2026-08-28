@@ -11,7 +11,7 @@ import type { BattleRuntimeSession } from "./battle-runtime-context.ts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleCreatureWithSpellActiveEffects } from "./active-effect/lifecycle.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterSeed,
@@ -128,7 +128,7 @@ describe("battle runtime: spell damage lifecycle replay", () => {
     }
     const relationshipEffect = {
       kind: "spellCondition" as const,
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "spell-damage-relationship-condition",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(

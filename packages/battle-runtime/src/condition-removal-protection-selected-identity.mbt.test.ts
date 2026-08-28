@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
@@ -350,7 +350,7 @@ function resolveProtectionFromPoisonBattle(): BattleState {
             {
               kind: "spellCondition" as const,
               effectRef:
-                battleActiveEffectExecutionRefForTest("poison-condition"),
+                battleEffectExecutionRefForTest("poison-condition"),
               sourceProcedureRef: battleProcedureExecutionRefForTest(
                 String(poisonSprayUnitId),
               ),

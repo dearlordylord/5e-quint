@@ -92,7 +92,7 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -173,7 +173,7 @@ function withWardingBondTargetAndConcentratingCaster(
           ...target.activeEffects,
           {
             kind: "wardingBond" as const,
-            effectRef: battleActiveEffectExecutionRefForTest("mastery-ward"),
+            effectRef: battleEffectExecutionRefForTest("mastery-ward"),
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(wardingBondUnitId),
             ),

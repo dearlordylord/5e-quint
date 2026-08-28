@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   attackExecutionSelectionForSubjectForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterAttackSubjectForTest,
   testShortswordAttack,
@@ -789,7 +789,7 @@ describe("SRDINV53 deterministic Jump movement replacement admission", () => {
           ...caster.activeEffects,
           {
             kind: "jumpMovementReplacement" as const,
-            effectRef: battleActiveEffectExecutionRefForTest(
+            effectRef: battleEffectExecutionRefForTest(
               "synthetic-jump-prior",
             ),
             sourceProcedureRef: act.subject.procedureRef,

@@ -1,5 +1,5 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleActiveEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import { battleEffectExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
   resolveBattleSubject,
@@ -768,7 +768,7 @@ describe("weapon-hosted reducer route call segments", () => {
       { readonly kind: "spellMarkedDamageRider" }
     > = {
       kind: "spellMarkedDamageRider",
-      effectRef: battleActiveEffectExecutionRefForTest("weapon-route-mark"),
+      effectRef: battleEffectExecutionRefForTest("weapon-route-mark"),
       sourceProcedureRef: shillelaghAct.subject.procedureRef,
       sourceCombatantId: spellCasterId,
       targetCombatantId: spellTargetId,

@@ -3,25 +3,25 @@ import {
   fighterVsGoblinBattle,
   goblinId,
   characterSeed,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
-} from "../battle-runtime.test-support.ts";
+} from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
 
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 
-import { combatantId, type BattleProcedureExecutionRef } from "../identity.ts";
+import { combatantId, type BattleProcedureExecutionRef } from "./identity.ts";
 import {
   addBattleCombatant,
   removeBattleCombatants,
-} from "../battle-reducer/api-lifecycle.ts";
+} from "./battle-reducer/api-lifecycle.ts";
 import { Result } from "effect";
-import type { SpellActiveEffect } from "./execution-ref.ts";
+import type { SpellActiveEffect } from "./effect-execution-ref.ts";
 import {
   allocateBattleActiveEffectRef,
   spellActiveEffectExecutionRef,
   spellActiveEffectForExecutionRef,
-} from "./execution-ref.ts";
+} from "./effect-execution-ref.ts";
 
 const sourceId = combatantId("effect-source");
 
@@ -31,7 +31,7 @@ function syntheticEffect(
 ): SpellActiveEffect {
   return {
     kind: "spellCondition",
-    effectRef: battleActiveEffectExecutionRefForTest(
+    effectRef: battleEffectExecutionRefForTest(
       `${sourceProcedureRef}:${condition}`,
     ),
     sourceProcedureRef,
@@ -82,8 +82,8 @@ describe("spell active-effect execution references", () => {
     expect(second.owner.activeEffects).toEqual(
       initial.combatants.get(fighterId)?.activeEffects,
     );
-    expect(Number(second.owner.nextActiveEffectOrdinal)).toBe(
-      Number(initial.combatants.get(fighterId)?.nextActiveEffectOrdinal) + 2,
+    expect(Number(second.owner.nextEffectOrdinal)).toBe(
+      Number(initial.combatants.get(fighterId)?.nextEffectOrdinal) + 2,
     );
   });
 
@@ -157,7 +157,7 @@ describe("spell active-effect execution references", () => {
     expect(
       spellActiveEffectForExecutionRef(
         [charm, frightened],
-        battleActiveEffectExecutionRefForTest("missing-effect"),
+        battleEffectExecutionRefForTest("missing-effect"),
       ),
     ).toBeUndefined();
   });

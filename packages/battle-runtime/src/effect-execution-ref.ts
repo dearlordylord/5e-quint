@@ -1,16 +1,16 @@
-import type { BattleActiveEffect } from "./types.ts";
+import type { BattleActiveEffect } from "./active-effect/types.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   CombatantId,
-} from "../identity.ts";
+} from "./identity.ts";
 import {
-  battleActiveEffectExecutionRef,
-  battleActiveEffectExecutionOrdinal,
-} from "../identity.ts";
+  battleEffectExecutionRef,
+  battleEffectExecutionOrdinal,
+} from "./identity.ts";
 import type {
   BattleCreatureState,
   BattleState,
-} from "../battle-state-execution.ts";
+} from "./battle-state-execution.ts";
 
 export type ReplayAddressableSpellActiveEffect = Extract<
   BattleActiveEffect,
@@ -38,13 +38,13 @@ export type ReplayAddressableSpellActiveEffect = Extract<
 export type SpellActiveEffect = ReplayAddressableSpellActiveEffect;
 export function spellActiveEffectExecutionRef(
   effect: ReplayAddressableSpellActiveEffect,
-): BattleActiveEffectExecutionRef {
+): BattleEffectExecutionRef {
   return effect.effectRef;
 }
 
 export function spellActiveEffectForExecutionRef(
   effects: readonly BattleActiveEffect[],
-  effectRef: BattleActiveEffectExecutionRef,
+  effectRef: BattleEffectExecutionRef,
 ): ReplayAddressableSpellActiveEffect | undefined {
   return effects.find(
     (effect): effect is ReplayAddressableSpellActiveEffect =>
@@ -60,7 +60,7 @@ export function allocateBattleActiveEffectRef(input: {
       readonly tag: "allocated";
       readonly state: BattleState;
       readonly owner: BattleCreatureState;
-      readonly effectRef: BattleActiveEffectExecutionRef;
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | { readonly tag: "ownerNotFound"; readonly ownerId: CombatantId } {
   const owner = input.state.combatants.get(input.ownerId);
@@ -86,15 +86,15 @@ export function allocateBattleActiveEffectRefForCreature(input: {
   readonly owner: BattleCreatureState;
 }): {
   readonly owner: BattleCreatureState;
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
 } {
-  const ordinal = Number(input.owner.nextActiveEffectOrdinal);
+  const ordinal = Number(input.owner.nextEffectOrdinal);
   return {
     owner: {
       ...input.owner,
-      nextActiveEffectOrdinal: battleActiveEffectExecutionOrdinal(ordinal + 1),
+      nextEffectOrdinal: battleEffectExecutionOrdinal(ordinal + 1),
     },
-    effectRef: battleActiveEffectExecutionRef(
+    effectRef: battleEffectExecutionRef(
       JSON.stringify({
         kind: "activeEffectOccurrence",
         ownerScopeRef: input.owner.origin.execution.scopeRef,

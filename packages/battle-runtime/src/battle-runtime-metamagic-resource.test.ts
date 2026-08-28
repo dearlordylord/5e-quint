@@ -2,7 +2,7 @@ import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
@@ -2302,7 +2302,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
     });
     const state = withActiveEffect(baseSession.state, wizardId, {
       kind: "spellMarkedDamageRider",
-      effectRef: battleActiveEffectExecutionRefForTest("empowered-mark"),
+      effectRef: battleEffectExecutionRefForTest("empowered-mark"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(spellRecord("hunters_mark").id),
       ),

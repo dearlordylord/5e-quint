@@ -2,7 +2,7 @@
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
 
 import { grantSpellEffectActionResource } from "@dnd/shared-algebras/action-economy-algebra";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import type { RuntimeActionResource } from "@dnd/shared-algebras/action-economy-algebra";
 import { Result } from "effect";
 

@@ -14,7 +14,7 @@ import type {
   Skill,
 } from "@dnd/surface/surface/types";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleObjectId,
   BattleProcedureExecutionRef,
   CombatantId,
@@ -427,7 +427,7 @@ export type DancingLightsRepositionSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: CantripSpellAccess;
     readonly actionCost: "bonusAction";
-    readonly activeEffectRef: BattleActiveEffectExecutionRef;
+    readonly activeEffectRef: BattleEffectExecutionRef;
     readonly sourceDancingLightsProcedureRef: BattleProcedureExecutionRef;
     readonly maxMoveFeet: MovementFeet;
     readonly procedure: "dancingLightsReposition";
@@ -661,7 +661,7 @@ export type HeldLightHurlSpellProcedureExecution =
     readonly procedure: "heldLightHurl";
     readonly rangeFeet: MovementFeet;
     readonly resource: NoSpellInvocationResource;
-    readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+    readonly sourceEffectRef: BattleEffectExecutionRef;
     readonly sourceHeldLightProcedureRef: BattleProcedureExecutionRef;
     readonly targeting: { readonly kind: "singleCreatureOrObject" };
   };
@@ -803,7 +803,7 @@ export type MarkedDamageRiderCastSpellProcedureExecution =
 
 export type MarkedDamageRiderTransferSpellProcedureExecution = {
   readonly action: "transfer";
-  readonly activeEffectRef: BattleActiveEffectExecutionRef;
+  readonly activeEffectRef: BattleEffectExecutionRef;
   readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
   readonly procedure: "markedDamageRider";
 };
@@ -853,7 +853,7 @@ export type ObjectContactDamageSpellProcedureExecution =
   };
 
 export type ObjectContactDamageRepeatSpellProcedureExecution = {
-  readonly activeEffectRef: BattleActiveEffectExecutionRef;
+  readonly activeEffectRef: BattleEffectExecutionRef;
   readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
   readonly procedure: "objectContactDamageRepeat";
 };
@@ -1269,7 +1269,7 @@ export type SpellCreatedHeldObjectSpellProcedureExecution =
 export type SpellCreatedHeldObjectAttackSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: SpellEffectSpellAccess;
-    readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+    readonly sourceEffectRef: BattleEffectExecutionRef;
     readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;
     readonly attackBonus: AttackBonus;
     readonly attackKind: "melee_spell_attack";
@@ -1287,7 +1287,7 @@ export type SpellCreatedHeldObjectReEvokeSpellProcedureExecution =
   SpellRuleExecutionFactsOwner & {
     readonly access: SpellEffectSpellAccess;
     readonly actionCost: "bonusAction";
-    readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+    readonly sourceEffectRef: BattleEffectExecutionRef;
     readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;
     readonly procedure: "spellCreatedHeldObjectReEvoke";
     readonly resource: NoSpellInvocationResource;
@@ -1348,7 +1348,7 @@ export type SpiritualWeaponAttackProxySpellProcedureExecution =
   };
 
 export type SpiritualWeaponRepeatAttackSpellProcedureExecution = {
-  readonly activeEffectRef: BattleActiveEffectExecutionRef;
+  readonly activeEffectRef: BattleEffectExecutionRef;
   readonly activeEffectSourceProcedureRef: BattleProcedureExecutionRef;
   readonly procedure: "spiritualWeaponRepeatAttack";
 };

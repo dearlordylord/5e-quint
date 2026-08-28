@@ -71,7 +71,7 @@ import type {
   SelfTransformationNonNaturalWeaponModeKind,
 } from "../battle-reducer/domain-constants.ts";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleAreaId,
   BattleLineDirectionId,
   BattleObjectId,
@@ -123,7 +123,7 @@ export type MarkedDamageRiderAbilityCheckBehavior =
   | { readonly kind: "abilityDisadvantage"; readonly ability: Ability }
   | MarkedDamageRiderFindingAdvantage;
 export type BattleReplayAddressableEffect = {
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
 };
 /** Mechanical spell facts before Battle admission binds occurrence identity. */
 export type BattleSpellActiveEffectTemplate<E extends BattleSpellEffectBase> =
@@ -372,7 +372,7 @@ export type GlyphDurableOccurrenceActiveEffect = BattleSpellEffectBase & {
 };
 export type ObjectContactPenaltyActiveEffect = BattleSpellEffectBase & {
   readonly kind: "selfAttackRollAndAbilityCheckRollMode";
-  readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+  readonly sourceEffectRef: BattleEffectExecutionRef;
   readonly mode: Extract<AttackRollMode, "disadvantage">;
   readonly expiresAt: Extract<
     BattleActiveEffectExpiration,

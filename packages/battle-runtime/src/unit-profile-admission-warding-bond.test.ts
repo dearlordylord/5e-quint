@@ -61,7 +61,7 @@ import {
   wardingBondSpellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "./effect-execution-ref.ts";
 import {
   applyBattleHitPointDamage,
   applyCondition,

@@ -15,7 +15,7 @@ import {
   requireResultHole,
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { requireResolved } from "./battle-runtime.test-support.ts";
-import { allocateBattleActiveEffectRefForCreature } from "./active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "./effect-execution-ref.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import {
   cloudkillAreaFill,

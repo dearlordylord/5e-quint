@@ -24,7 +24,7 @@ import {
   attackDamageDispositionHoleAfterDamage,
   attackDamageDispositionHoleAfterFills,
   attackDamageDispositionFill,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   characterSeed,
   combatantId,
@@ -204,7 +204,7 @@ describe("battle runtime: attack rolls and damage", () => {
 
     const markedRider = {
       kind: "spellMarkedDamageRider",
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "synthetic-statblock-mark",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(

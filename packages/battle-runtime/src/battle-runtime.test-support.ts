@@ -144,13 +144,13 @@ import {
 } from "./battle-subjects.ts";
 import {
   battleCharacterExecutionScopeRef,
-  battleActiveEffectExecutionRef,
+  battleEffectExecutionRef,
   battleExecutionScopeOrdinal,
   battleProcedureExecutionRef,
   BattleProcedureExecutionRef,
   spellId,
 } from "./identity.ts";
-import type { BattleActiveEffectExecutionRef } from "./identity.ts";
+import type { BattleEffectExecutionRef } from "./identity.ts";
 import {
   battleRuntimeContextFromCharacterAdmission,
   type BattleRuntimeContext,
@@ -403,7 +403,7 @@ type BonusActionStandardActionSelectorForTest =
       readonly tag: "bonusActionStandardAction";
       readonly actorId: CombatantId;
       readonly sourceProcedureRef: BattleProcedureExecutionRef;
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly action: "dash";
       readonly speedKind: Extract<
         CharacterProcedureSubjectForTest,
@@ -549,14 +549,14 @@ export function battleProcedureExecutionRefForSpellHoleForTest(
   );
 }
 
-export function battleActiveEffectExecutionRefForTest(
+export function battleEffectExecutionRefForTest(
   discriminator: string,
-): BattleActiveEffectExecutionRef {
+): BattleEffectExecutionRef {
   let ordinal = 2_166_136_261;
   for (const character of discriminator) {
     ordinal = Math.imul(ordinal ^ character.charCodeAt(0), 16_777_619) >>> 0;
   }
-  return battleActiveEffectExecutionRef(
+  return battleEffectExecutionRef(
     JSON.stringify({
       kind: "activeEffectOccurrence",
       ownerScopeRef: battleCharacterExecutionScopeRef(

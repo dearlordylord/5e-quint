@@ -190,7 +190,7 @@ import {
 } from "./identity.ts";
 import {
   battleProcedureExecutionRefForSpellHoleForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   combatantId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -3419,7 +3419,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
     const target = requireCombatant(release.state, spellTargetId);
     const relationshipEffect = {
       kind: "spellCondition" as const,
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "spiritual-weapon-relationship-condition",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(

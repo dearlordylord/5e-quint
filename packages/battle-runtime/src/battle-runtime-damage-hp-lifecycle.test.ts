@@ -3,7 +3,7 @@ import { describe, expect, test } from "vitest";
 
 import type { BattleActiveEffect } from "./battle-state-execution.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   combatantId,
   concentrationSavingThrowFill,
@@ -483,7 +483,7 @@ describe("damage and hit point lifecycle helpers", () => {
     expect(releasedKnockout.positiveHpUnconscious).toBeNull();
     const escapeEffect = {
       kind: "spellCondition",
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "synthetic-charm-effect",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(

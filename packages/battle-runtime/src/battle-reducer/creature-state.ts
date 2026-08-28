@@ -39,7 +39,7 @@ import type { UnitId } from "@dnd/shared/game-facts";
 import type { UnitRecord } from "@dnd/surface/surface/types";
 import type { ZeroHpLifecycle } from "../zero-hp-lifecycle.ts";
 import {
-  battleActiveEffectExecutionOrdinal,
+  battleEffectExecutionOrdinal,
   battleExecutionScopeOrdinal,
   type BattleId,
   type BattleExecutionScopeOrdinal,
@@ -285,7 +285,7 @@ export function battleCreatureStateAdmissionFromInit(
     tempHp: creatureInit.tempHp,
     ...initialKnockOutLifecycleFields(creatureInit, initialConditions),
     activeEffects: [],
-    nextActiveEffectOrdinal: battleActiveEffectExecutionOrdinal(0),
+    nextEffectOrdinal: battleEffectExecutionOrdinal(0),
     activeOngoingFeatureOccurrences: new Map(),
     attackRollMissToHitReplacementsUsedSinceTurnStart: [],
     concentration: null,

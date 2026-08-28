@@ -46,7 +46,7 @@ import rayOfFrostInput from "../../surface/content/ray_of_frost.json";
 import { decodeUnitRecordSync } from "@dnd/surface/surface/schema";
 import type { SpellRecord, UnitRecord } from "@dnd/surface/surface/types";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleProcedureExecutionRefForSpellHoleForTest,
   characterBattleFeatureInitForTest,
@@ -1207,7 +1207,7 @@ function withWardingBondSharedCasterLifecycle(state: BattleState): BattleState {
   }
   const wardingBondEffect = {
     kind: "wardingBond",
-    effectRef: battleActiveEffectExecutionRefForTest("chromatic-ward"),
+    effectRef: battleEffectExecutionRefForTest("chromatic-ward"),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String("warding_bond"),
     ),

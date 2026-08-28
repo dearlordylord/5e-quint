@@ -8,7 +8,7 @@ import { movementFeet, type Hp } from "@dnd/shared/types";
 import { Result } from "effect";
 
 import {
-  battleActiveEffectExecutionOrdinal,
+  battleEffectExecutionOrdinal,
   battleExecutionScopeCursor,
   battleExecutionScopeInitialOrNextOrdinal,
   battleStatBlockExecutionScopeRefBelongsToBattle,
@@ -75,7 +75,7 @@ export function addBattleStatBlockCombatant(input: {
     conditions: EMPTY_CONDITION_STATE,
     positiveHpUnconscious: null,
     activeEffects: [],
-    nextActiveEffectOrdinal: battleActiveEffectExecutionOrdinal(0),
+    nextEffectOrdinal: battleEffectExecutionOrdinal(0),
     activeOngoingFeatureOccurrences: new Map(),
     attackRollMissToHitReplacementsUsedSinceTurnStart: [],
     concentration: null,

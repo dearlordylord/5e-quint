@@ -10,7 +10,7 @@ import type {
   BattleWardingBondSeparationFactsHole,
   SupportedSpellInvocation,
 } from "../battle-state-execution.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../effect-execution-ref.ts";
 import type { CombatantId } from "../identity.ts";
 import {
   WARDING_BOND_CONNECTION_RANGE_FEET,

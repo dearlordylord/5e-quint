@@ -11,7 +11,7 @@ import {
   applyCondition,
   assertBattleSnapshotCodecRoundTripForTest,
   attackRollFill,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   BattleSnapshotSchema,
@@ -1292,7 +1292,7 @@ function withJumpMovementReplacementEffect(state: BattleState): BattleState {
         ...monk.activeEffects,
         {
           kind: "jumpMovementReplacement",
-          effectRef: battleActiveEffectExecutionRefForTest("monk-jump"),
+          effectRef: battleEffectExecutionRefForTest("monk-jump"),
           sourceCombatantId: fighterId,
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             String("jump"),

@@ -4,7 +4,7 @@
 import { type Round as RoundType } from "@dnd/shared/types";
 
 import { battleCreatureWithSpellActiveEffects } from "../active-effect/lifecycle.ts";
-import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../effect-execution-ref.ts";
 import type {
   BattleActiveEffect,
   BattleActiveEffectExpiration,

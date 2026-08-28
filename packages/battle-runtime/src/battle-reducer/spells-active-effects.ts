@@ -43,7 +43,7 @@ import {
 } from "@dnd/shared/types";
 import type { DamageType } from "@dnd/surface/surface/types";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleAreaId,
   BattleLineDirectionId,
   BattleProcedureExecutionRef,
@@ -53,7 +53,7 @@ import type {
 import {
   allocateBattleActiveEffectRef,
   allocateBattleActiveEffectRefForCreature,
-} from "../active-effect/execution-ref.ts";
+} from "../effect-execution-ref.ts";
 import {
   activeEffectProcedureMatches,
   activeEffectHasSourceCombatant,
@@ -768,7 +768,7 @@ export function setSpellCreatedHeldObjectState(input: {
 export function releaseSpellCreatedHeldObjectState(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
 }):
   | { readonly tag: "updated"; readonly state: BattleState }
   | { readonly tag: "invalid"; readonly message: string } {
@@ -1430,7 +1430,7 @@ export function applySelfTransformationModeEffect(input: {
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly modeEffect: SelfTransformationModeEffectPayload;
   readonly expiresAt: SelfTransformationModeActiveEffect["expiresAt"];
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
 }): BattleState {
   const actor = input.state.combatants.get(input.actorId);
   /* v8 ignore start -- @preserve -- Defensive internal guard: the selected self-transformation target is admitted from the combatant map and retained through effect application. */

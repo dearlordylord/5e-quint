@@ -15,7 +15,7 @@ import {
 } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { damageAmount as toDamageAmount } from "@dnd/shared/types";
 import { Result } from "effect";
-import { allocateBattleActiveEffectRefForCreature } from "../active-effect/execution-ref.ts";
+import { allocateBattleActiveEffectRefForCreature } from "../effect-execution-ref.ts";
 import { characterExecutionWithObjectContactDamageRepeat } from "../character-execution-queries.ts";
 import type { ObjectContactDamageRepeatSpellProcedureExecution } from "../character-execution.ts";
 import {
@@ -43,7 +43,7 @@ import { spellReplayContinuation } from "./spell-reaction-continuation.ts";
 import { snapshotBattle } from "./battle-snapshot.ts";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import {
-  type BattleActiveEffectExecutionRef,
+  type BattleEffectExecutionRef,
   type BattleObjectId,
   type BattleProcedureExecutionRef,
   type CombatantId,
@@ -1365,7 +1365,7 @@ function applyObjectContactPenalties(input: {
 function objectContactDamageEffectIsActive(input: {
   readonly state: BattleState;
   readonly actorId: CombatantId;
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
 }): boolean {
   const actor = input.state.combatants.get(input.actorId);
   return (

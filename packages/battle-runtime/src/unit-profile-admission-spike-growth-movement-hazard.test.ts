@@ -51,7 +51,7 @@ import {
 } from "./unit-profile-admission-catalog.test-support.ts";
 import { EMPOWERED_SPELL_REROLL_UNSUPPORTED_DAMAGE_ROLL_OWNER_MESSAGE } from "./battle-reducer/spell-reroll-issues.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   attackExecutionSelectionForSubjectForTest,
   battleAreaId,
   battleProcedureExecutionRefForTest,
@@ -239,7 +239,7 @@ function stateWithCommandPending(
         ...target.activeEffects,
         {
           kind: "commandPending" as const,
-          effectRef: battleActiveEffectExecutionRefForTest("command-pending"),
+          effectRef: battleEffectExecutionRefForTest("command-pending"),
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: battleProcedureExecutionRefForTest(
             String(spikeGrowthUnitId),
@@ -1116,7 +1116,7 @@ describe("L12G deterministic Spike Growth movement-hazard admission", () => {
           ...target.activeEffects,
           {
             kind: "jumpMovementReplacement" as const,
-            effectRef: battleActiveEffectExecutionRefForTest("spike-jump"),
+            effectRef: battleEffectExecutionRefForTest("spike-jump"),
             sourceCombatantId: spellCasterId,
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(spikeGrowthUnitId),

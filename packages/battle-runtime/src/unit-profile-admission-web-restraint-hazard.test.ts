@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-WEB-TERRAIN-OBSCUREMENT-FIRE web
@@ -722,7 +722,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
           actorId: ensnaringStrikeHelperId,
           action: "escapeSpellRestraint",
           targetId: spellTargetId,
-          effectRef: battleActiveEffectExecutionRefForTest(
+          effectRef: battleEffectExecutionRefForTest(
             "stale-web-restraint",
           ),
         },

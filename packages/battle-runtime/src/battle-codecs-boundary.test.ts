@@ -31,7 +31,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   attackRollFill,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   skeletonId,
   statBlockCreatureInit,
@@ -179,7 +179,7 @@ function codecFixture() {
   return {
     snapshot,
     sourceProcedureRef: sourceBinding.procedureRef,
-    effectRef: battleActiveEffectExecutionRefForTest("codec-marked-rider"),
+    effectRef: battleEffectExecutionRefForTest("codec-marked-rider"),
   };
 }
 

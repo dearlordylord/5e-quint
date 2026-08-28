@@ -86,8 +86,8 @@ import {
 } from "../battle-subjects.ts";
 import {
   BattleAreaId,
-  BattleActiveEffectExecutionRef,
-  BattleActiveEffectExecutionOrdinal,
+  BattleEffectExecutionRef,
+  BattleEffectExecutionOrdinal,
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
   BattleCharacterExecutionScopeRef,
@@ -103,7 +103,7 @@ import {
   BattleExecutionScopeCursor,
   battleProcedureExecutionRefBelongsToScope,
   battleProcedureExecutionRefOrdinalIsBefore,
-  battleActiveEffectExecutionRefOrdinalIsBefore,
+  battleEffectExecutionRefOrdinalIsBefore,
   battleCharacterExecutionScopeRefBelongsToBattle,
   battleCharacterExecutionScopeRefBelongsToCombatant,
   battleCharacterExecutionScopeRefOrdinalIsBefore,
@@ -1320,7 +1320,7 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union([
       "spellObjectContactDamage",
       "spiritualWeapon",
     ]),
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     kind: Schema.Literal("antimagicFieldAura"),
@@ -1339,7 +1339,7 @@ const BattleAntimagicFieldOngoingSpellEffectRefSchema = Schema.Union([
       "spellObjectContactDamage",
       "spiritualWeapon",
     ]),
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
   }),
 ]);
 
@@ -1954,7 +1954,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     insectPlagueAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -1973,7 +1973,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("rolledDice"),
     cloudkillAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2229,7 +2229,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     insectPlagueAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2253,7 +2253,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     cloudkillAreaHazard: Schema.Struct({
       ...BattleProcedureSourceSchema,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       areaId: BattleAreaId,
       trigger: Schema.Literals([
         "appearsInArea",
@@ -2493,7 +2493,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     kind: Schema.Literal("cloudkillMovement"),
     sourceCombatantId: CombatantId,
     sourceProcedureRef: BattleProcedureExecutionRef,
-    effectRef: BattleActiveEffectExecutionRef,
+    effectRef: BattleEffectExecutionRef,
     areaId: BattleAreaId,
     distanceFeet: MovementFeet,
     directionRequirement: Schema.Literal("awayFromSource"),
@@ -5377,7 +5377,7 @@ export const RuntimeActionResourceSchema = Schema.Union([
     kind: Schema.Literal("action"),
     source: Schema.Literal("spellEffect"),
     sourceOwnerId: Schema.String,
-    sourceEffectRef: BattleActiveEffectExecutionRef,
+    sourceEffectRef: BattleEffectExecutionRef,
     sourceProcedureRef: Schema.optionalKey(Schema.Never),
     restriction: BattleActionRestrictionSchema,
   }),
@@ -5810,8 +5810,8 @@ const BattleCreatureSnapshotCommonFields = {
   hp: Schema.Number,
   maxHp: Schema.Number,
   tempHp: Schema.Number,
-  nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal,
-  activeEffectRefs: Schema.Array(BattleActiveEffectExecutionRef),
+  nextEffectOrdinal: BattleEffectExecutionOrdinal,
+  activeEffectRefs: Schema.Array(BattleEffectExecutionRef),
   armorClass: Schema.Number,
   size: Schema.String,
   zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshotSchema,
@@ -5944,10 +5944,10 @@ function battleCreatureSnapshotCommonInvariantsHold(
     return false;
   }
   return snapshot.activeEffectRefs.every((effectRef) =>
-    battleActiveEffectExecutionRefOrdinalIsBefore(
+    battleEffectExecutionRefOrdinalIsBefore(
       effectRef,
       snapshot.origin.execution.scopeRef,
-      snapshot.nextActiveEffectOrdinal,
+      snapshot.nextEffectOrdinal,
     ),
   );
 }

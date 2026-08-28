@@ -50,7 +50,7 @@ import {
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   assertBattleSnapshotCodecRoundTripForTest,
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -58,7 +58,7 @@ import {
 function effectRefForTest(
   effectId: ReturnType<typeof battleSpellEffectOccurrenceId>,
 ) {
-  return battleActiveEffectExecutionRefForTest(String(effectId));
+  return battleEffectExecutionRefForTest(String(effectId));
 }
 
 const antimagicFieldAreaId = battleAreaId("unit-profile-antimagic-field-area");

@@ -13,7 +13,7 @@ import {
 } from "@dnd/shared/game-facts";
 import type {
   BattleProcedureExecutionRef,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleStatBlockProcedureExecutionRef,
   CreatureId,
 } from "@dnd/shared/types";
@@ -35,7 +35,7 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "spellEffect";
       readonly sourceOwnerId: CreatureId;
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly restriction: ActionRestriction;
     }
   | {
@@ -669,7 +669,7 @@ export function hasUnitActionResource(
 export function hasSpellEffectActionResource(
   state: ActionEconomyState,
   sourceOwnerId: CreatureId,
-  sourceEffectRef: BattleActiveEffectExecutionRef,
+  sourceEffectRef: BattleEffectExecutionRef,
 ): boolean {
   return state.actionResources.some(
     (resource) =>
@@ -713,7 +713,7 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
 export function grantSpellEffectActionResource<T extends ActionEconomyState>(
   state: T,
   sourceOwnerId: CreatureId,
-  sourceEffectRef: BattleActiveEffectExecutionRef,
+  sourceEffectRef: BattleEffectExecutionRef,
   restriction: ActionRestriction,
 ): Result.Result<T, ActionEconomySpendError> {
   if (hasSpellEffectActionResource(state, sourceOwnerId, sourceEffectRef)) {

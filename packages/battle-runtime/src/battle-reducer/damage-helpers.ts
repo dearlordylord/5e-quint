@@ -21,7 +21,7 @@ import {
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
 import { Match } from "effect";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -889,7 +889,7 @@ export function activeSpellWeaponDamageRiders(
 
 export function activeMarkedDamageRiderEffect(
   attacker: BattleCreatureState | undefined,
-  effectRef: BattleActiveEffectExecutionRef,
+  effectRef: BattleEffectExecutionRef,
 ): SpellMarkedDamageRider | null {
   return (
     attacker?.activeEffects.find(

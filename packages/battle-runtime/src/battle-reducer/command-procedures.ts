@@ -1,7 +1,7 @@
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-command-approach-route spell.invocation-command-drop-held-object spell.invocation-command-flee-route
 // KERNEL-COVERAGE: runtime-owner BATTLE.COMMAND.OPTION_AND_NEXT_TURN
 
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Match } from "effect";
 import type { BattleInterruptTrigger } from "../battle-interrupt-triggers.ts";
 import type {

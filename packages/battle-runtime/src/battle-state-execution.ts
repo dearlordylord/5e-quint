@@ -374,8 +374,8 @@ import type {
 } from "./battle-reducer/knocked-out-state.ts";
 import { spellDamageRerollUnsupportedIssue } from "./battle-reducer/spell-reroll-issues.ts";
 import type {
-  BattleActiveEffectExecutionOrdinal,
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionOrdinal,
+  BattleEffectExecutionRef,
   BattleAreaId,
   BattleAttackExecutionScopeRef,
   BattleAttackProcedureExecutionRef,
@@ -763,7 +763,7 @@ export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   };
   readonly child: {
     readonly kind: "cloudkillMovementSaveDamageSequence";
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly targetId: CombatantId;
   };
 };
@@ -2905,7 +2905,7 @@ export type HeldLightHurlSpellInvocation = HeldLightHurlMechanicalFacts & {
   readonly access: CantripSpellAccess;
   readonly resource: NoSpellInvocationResource;
   readonly procedure: "heldLightHurl";
-  readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+  readonly sourceEffectRef: BattleEffectExecutionRef;
   readonly sourceHeldLightProcedureRef: BattleProcedureExecutionRef;
   readonly spell: BattleSpellAdmissionSource;
 };
@@ -2948,7 +2948,7 @@ export type DancingLightsSpellInvocation =
       readonly procedure: "dancingLightsReposition";
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "bonusAction";
-      readonly activeEffectRef: BattleActiveEffectExecutionRef;
+      readonly activeEffectRef: BattleEffectExecutionRef;
       readonly sourceDancingLightsProcedureRef: BattleProcedureExecutionRef;
       readonly maxMoveFeet: MovementFeet;
       readonly rangeFeet: MovementFeet;
@@ -2978,7 +2978,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly rangeFeet: MovementFeet;
       readonly attackKind: SpellCreatedHeldObjectActiveEffect["attack"]["attackKind"];
       readonly attackBonus: SpellCreatedHeldObjectActiveEffect["attack"]["attackBonus"];
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;
     }
   | {
@@ -2987,7 +2987,7 @@ export type SpellCreatedHeldObjectSpellInvocation =
       readonly procedure: "spellCreatedHeldObjectReEvoke";
       readonly spell: BattleSpellAdmissionSource;
       readonly actionCost: "bonusAction";
-      readonly sourceEffectRef: BattleActiveEffectExecutionRef;
+      readonly sourceEffectRef: BattleEffectExecutionRef;
       readonly sourceHeldObjectProcedureRef: BattleProcedureExecutionRef;
     };
 export type ObjectContactDamageSpellInvocation =
@@ -4084,7 +4084,7 @@ type BattleCreatureStateCommon = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly activeEffects: readonly BattleActiveEffect[];
-  readonly nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal;
+  readonly nextEffectOrdinal: BattleEffectExecutionOrdinal;
   readonly activeOngoingFeatureOccurrences: ReadonlyMap<
     OngoingFeatureSourceKey,
     ActiveOngoingFeatureOccurrence
@@ -5231,7 +5231,7 @@ export type BattleInsectPlagueAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly insectPlagueAreaHazard: {
     readonly targetId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5254,7 +5254,7 @@ export type BattleCloudkillAreaHazardSavingThrowOutcomeHole = {
   readonly label: string;
   readonly cloudkillAreaHazard: {
     readonly targetId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5276,7 +5276,7 @@ export type BattleInsectPlagueAreaHazardDamageRollHole = Extract<
 > & {
   readonly insectPlagueAreaHazard: {
     readonly targetId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5294,7 +5294,7 @@ export type BattleCloudkillAreaHazardDamageRollHole = Extract<
 > & {
   readonly cloudkillAreaHazard: {
     readonly targetId: CombatantId;
-    readonly effectRef: BattleActiveEffectExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly areaId: BattleAreaId;
@@ -5939,7 +5939,7 @@ export type BattleCloudkillMovementHole = {
   readonly label: string;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
-  readonly effectRef: BattleActiveEffectExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly areaId: BattleAreaId;
   readonly distanceFeet: MovementFeet;
   readonly directionRequirement: "awayFromSource";
@@ -7240,8 +7240,8 @@ type BattleCreatureSnapshotCommon = {
   readonly hp: Hp;
   readonly maxHp: Hp;
   readonly tempHp: Hp;
-  readonly nextActiveEffectOrdinal: BattleActiveEffectExecutionOrdinal;
-  readonly activeEffectRefs: readonly BattleActiveEffectExecutionRef[];
+  readonly nextEffectOrdinal: BattleEffectExecutionOrdinal;
+  readonly activeEffectRefs: readonly BattleEffectExecutionRef[];
   readonly armorClass: ArmorClass;
   readonly size: Size;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;

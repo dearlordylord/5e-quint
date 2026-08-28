@@ -2,7 +2,7 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV60A protection_from_evil_and_good
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
 } from "./battle-runtime.test-support.ts";
 import { describe, expect, test } from "vitest";
@@ -29,8 +29,8 @@ import {
   spellTargetFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
-import { spellActiveEffectExecutionRef } from "./active-effect/execution-ref.ts";
-import type { SpellActiveEffect } from "./active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "./effect-execution-ref.ts";
+import type { SpellActiveEffect } from "./effect-execution-ref.ts";
 import {
   applyCondition,
   applyFailedSaveSpellConditionEffects,
@@ -743,7 +743,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     const protectedTarget = requireCombatant(targetTurn.state, spellTargetId);
     const charmedEffect = {
       kind: "spellCondition",
-      effectRef: battleActiveEffectExecutionRefForTest("protected-charm"),
+      effectRef: battleEffectExecutionRefForTest("protected-charm"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),
@@ -756,7 +756,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     } as const satisfies BattleActiveEffect;
     const repeatCharmedEffect = {
       kind: "spellConditionRepeatSave",
-      effectRef: battleActiveEffectExecutionRefForTest(
+      effectRef: battleEffectExecutionRefForTest(
         "protected-repeat-charm",
       ),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -770,7 +770,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     } as const satisfies BattleActiveEffect;
     const repeatFrightenedEffect = {
       ...repeatCharmedEffect,
-      effectRef: battleActiveEffectExecutionRefForTest("protected-repeat-fear"),
+      effectRef: battleEffectExecutionRefForTest("protected-repeat-fear"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-fear-effect"),
       ),
@@ -778,7 +778,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     } as const satisfies BattleActiveEffect;
     const possessionEffect = {
       kind: "possession",
-      effectRef: battleActiveEffectExecutionRefForTest("protected-possession"),
+      effectRef: battleEffectExecutionRefForTest("protected-possession"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-possession-effect"),
       ),
@@ -788,7 +788,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
     } as const satisfies BattleActiveEffect;
     const humanoidCharmEffect = {
       ...repeatCharmedEffect,
-      effectRef: battleActiveEffectExecutionRefForTest("humanoid-repeat-charm"),
+      effectRef: battleEffectExecutionRefForTest("humanoid-repeat-charm"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-humanoid-charm-effect"),
       ),

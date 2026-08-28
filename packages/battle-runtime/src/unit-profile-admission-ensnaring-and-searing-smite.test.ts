@@ -1,6 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleActiveEffectExecutionRefForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   readyDeclarationFillForTest,
   requireCharacterSpellProcedureRefForTest,
@@ -521,7 +521,7 @@ describe("SRDINV31 deterministic Ensnaring Strike and Searing Smite admission", 
                 "unrelated-escapable-condition",
               ),
               sourceCombatantId: spellCasterId,
-              effectRef: battleActiveEffectExecutionRefForTest(
+              effectRef: battleEffectExecutionRefForTest(
                 "unrelated-escapable-condition",
               ),
               condition: "restrained" as const,

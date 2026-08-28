@@ -26,7 +26,7 @@ import {
   canSpendUnarmedStrikeActionResource,
   spendActionResourceAtIndex,
 } from "@dnd/shared-algebras/action-economy-algebra";
-import { spellActiveEffectExecutionRef } from "../active-effect/execution-ref.ts";
+import { spellActiveEffectExecutionRef } from "../effect-execution-ref.ts";
 import { Result } from "effect";
 import type {
   BattleMovementSpeedKind,

@@ -7,7 +7,7 @@ import type { DamageType, DiceExpr } from "@dnd/surface/surface/types";
 import { Schema } from "effect";
 import { HUNTERS_MARK_FINDING_SKILLS } from "../battle-reducer/domain-constants.ts";
 import {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleProcedureExecutionRef,
   CombatantId,
 } from "../identity.ts";
@@ -160,7 +160,7 @@ export const SpellMarkedDamageRiderSchema =
   exactSchema<SpellMarkedDamageRider>()(
     Schema.Struct({
       sourceProcedureRef: BattleProcedureExecutionRef,
-      effectRef: BattleActiveEffectExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       ...SpellMarkedDamageRiderMechanicalFields,
     }),
   );

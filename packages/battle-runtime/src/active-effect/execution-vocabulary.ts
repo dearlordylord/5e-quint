@@ -4,7 +4,7 @@ import type {
   DcSource,
 } from "@dnd/surface/surface/types";
 import type {
-  BattleActiveEffectExecutionRef,
+  BattleEffectExecutionRef,
   BattleAreaId,
   BattleDancingLightId,
   BattleSpellEffectOccurrenceId,
@@ -83,7 +83,7 @@ export type BattleOngoingSpellEffectRef =
   | {
       readonly kind: "spellActiveEffect";
       readonly activeEffectKind: "spellObjectContactDamage" | "spiritualWeapon";
-      readonly effectRef: BattleActiveEffectExecutionRef;
+      readonly effectRef: BattleEffectExecutionRef;
     }
   | {
       readonly kind: "antimagicFieldAura";
