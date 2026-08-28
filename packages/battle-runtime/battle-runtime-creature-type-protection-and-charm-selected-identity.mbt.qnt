@@ -22,6 +22,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
     qUnscopedPossessionUnprevented: bool,
     qRelevantCharmSaveHasAdvantage: bool,
     qRelevantCharmSaveCleared: bool,
+    qRelevantCharmSiblingPreserved: bool,
     qTargetCharmed: bool,
     qAnimalFriendshipEffectPresent: bool,
     qActionAvailable: bool,
@@ -45,6 +46,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
   pure def qUnscopedPossessionUnprevented: bool = qState.qUnscopedPossessionUnprevented
   pure def qRelevantCharmSaveHasAdvantage: bool = qState.qRelevantCharmSaveHasAdvantage
   pure def qRelevantCharmSaveCleared: bool = qState.qRelevantCharmSaveCleared
+  pure def qRelevantCharmSiblingPreserved: bool = qState.qRelevantCharmSiblingPreserved
   pure def qTargetCharmed: bool = qState.qTargetCharmed
   pure def qAnimalFriendshipEffectPresent: bool = qState.qAnimalFriendshipEffectPresent
   pure def qActionAvailable: bool = qState.qActionAvailable
@@ -66,6 +68,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
     unscopedPossessionUnprevented: bool,
     relevantCharmSaveHasAdvantage: bool,
     relevantCharmSaveCleared: bool,
+    relevantCharmSiblingPreserved: bool,
     targetCharmed: bool,
     animalFriendshipEffectPresent: bool,
     actionAvailable: bool,
@@ -87,6 +90,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       qUnscopedPossessionUnprevented: unscopedPossessionUnprevented,
       qRelevantCharmSaveHasAdvantage: relevantCharmSaveHasAdvantage,
       qRelevantCharmSaveCleared: relevantCharmSaveCleared,
+      qRelevantCharmSiblingPreserved: relevantCharmSiblingPreserved,
       qTargetCharmed: targetCharmed,
       qAnimalFriendshipEffectPresent: animalFriendshipEffectPresent,
       qActionAvailable: actionAvailable,
@@ -97,6 +101,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
   }
 
   action init = recordProjection(
+    false,
     false,
     false,
     false,
@@ -136,6 +141,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       false,
+      false,
       true,
       0,
       Discovered,
@@ -147,6 +153,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
     qScenarioOutcome == Init,
     recordProjection(
       true,
+      false,
       false,
       false,
       false,
@@ -187,6 +194,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       false,
+      false,
       1,
       DamageBreakResolved,
     witnessResolved(CreatureTypeProtectionCharm),
@@ -201,6 +209,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       true,
       true,
       true,
+      false,
       false,
       false,
       false,
@@ -237,6 +246,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       false,
+      false,
       1,
       ProtectionAttackProjected,
     witnessResolved(CreatureTypeProtectionCharm),
@@ -262,6 +272,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       false,
+      false,
       1,
       ProtectionCharmPrevented,
     witnessResolved(CreatureTypeProtectionCharm),
@@ -282,6 +293,7 @@ module battleRuntimeCreatureTypeProtectionAndCharmSelectedIdentityMbt {
       false,
       false,
       false,
+      true,
       true,
       true,
       false,

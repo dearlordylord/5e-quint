@@ -42,28 +42,43 @@ module battleRuntimeCreatureTypeProtection {
     else
       PossessionUnprevented
 
-  pure def protectionRelevantEffectHasSource(effect: ActiveEffect): bool =
-    match effect {
-      | ProtectionRelevantCharmed(_) => true
-      | ProtectionRelevantFrightened(_) => true
-      | ProtectionRelevantPossession(_) => true
-      | _ => false
-    }
+  pure def protectionRelevantEffectSourceIsScoped(
+    creatureTypesByActor: Actor -> RuntimeCreatureType,
+    source: Actor,
+  ): bool =
+    if (creatureTypesByActor.keys().contains(source))
+      protectionFromEvilAndGoodCreatureTypeIsScoped(creatureTypesByActor.get(source))
+    else
+      false
 
   pure def protectionFromEvilAndGoodRelevantEffectSaveRollMode(
-    sourceCreatureType: RuntimeCreatureType,
+    creatureTypesByActor: Actor -> RuntimeCreatureType,
     targetEffects: Set[ActiveEffect],
     relevantEffect: ActiveEffect,
   ): SavingThrowRollMode =
     if (
       targetEffects.contains(ProtectionFromEvilAndGoodCreatureTypeProtection)
       and targetEffects.contains(relevantEffect)
-      and protectionFromEvilAndGoodCreatureTypeIsScoped(sourceCreatureType)
-      and protectionRelevantEffectHasSource(relevantEffect)
-    )
-      AdvantageSavingThrow
-    else
-      NormalSavingThrow
+    ) {
+      match relevantEffect {
+        | ProtectionRelevantCharmed(effect) =>
+            if (protectionRelevantEffectSourceIsScoped(creatureTypesByActor, effect.source))
+              AdvantageSavingThrow
+            else
+              NormalSavingThrow
+        | ProtectionRelevantFrightened(effect) =>
+            if (protectionRelevantEffectSourceIsScoped(creatureTypesByActor, effect.source))
+              AdvantageSavingThrow
+            else
+              NormalSavingThrow
+        | ProtectionRelevantPossession(effect) =>
+            if (protectionRelevantEffectSourceIsScoped(creatureTypesByActor, effect.source))
+              AdvantageSavingThrow
+            else
+              NormalSavingThrow
+        | _ => NormalSavingThrow
+      }
+    } else NormalSavingThrow
 
   pure def saveGatedConditionPreventedByCreatureTypeProtection(
     invocation: SaveGatedConditionInvocation,
