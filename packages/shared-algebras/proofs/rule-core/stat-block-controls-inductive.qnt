@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
-// RAW-COVERAGE: verification-owner:qnt-proof RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
-// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.attack-procedure stat-block.multiattack stat-block.resource-lifecycle
+// RAW-COVERAGE: verification-owner:qnt-proof RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.multiattack stat-block.resource-lifecycle
 
 module statBlockControlsInductive {
   import attackDamageComposition.* from "./attack-damage-composition"

@@ -1,8 +1,8 @@
 {
   "summary": {
     "total": 161,
-    "covered": 144,
-    "open": 11,
+    "covered": 143,
+    "open": 12,
     "nonSemantic": 6,
     "byRuntime": {
       "shared-algebras": 1,
@@ -12,8 +12,8 @@
       "character-battle": 4
     },
     "byStatus": {
-      "covered": 144,
-      "needs-qnt-owner": 11,
+      "covered": 143,
+      "needs-qnt-owner": 12,
       "needs-parity-witness": 0,
       "needs-surface-evidence": 0,
       "boundary-only": 5,
@@ -2776,24 +2776,13 @@
       "kind": "profile-procedure",
       "parityWitnesses": [
         {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ],
       "profiles": ["stat-block.action-lifecycle"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
       ],
       "reason": "Typed Stat Block Action sections spend the ordinary Action resource without authored-identity dispatch.",
       "runtime": "battle",
@@ -2817,24 +2806,13 @@
       "kind": "profile-procedure",
       "parityWitnesses": [
         {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ],
       "profiles": ["stat-block.bonus-action-lifecycle"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
       ],
       "reason": "Typed Bonus Action procedures use the shared turn resource and retain their procedure shape.",
       "runtime": "battle",
@@ -2858,25 +2836,15 @@
       "kind": "profile-procedure",
       "parityWitnesses": [
         {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ],
       "profiles": ["stat-block.legendary-action-lifecycle"],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-legendary-actions.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
+        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-legendary-actions.qnt"
       ],
       "reason": "Legendary Action windows and refreshing uses are modeled independently from ordinary Actions.",
       "runtime": "battle",
@@ -2896,42 +2864,18 @@
       "title": "Battle Stat Block Legendary Action windows and resources"
     },
     {
+      "followUpTaskIds": ["GH-427"],
       "id": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
       "kind": "profile-procedure",
       "parityWitnesses": [
         {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/stat-block-multi-damage.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime-stat-block-multi-damage.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/stat-block-size-gated-condition-rider.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/battle-runtime-stat-block-size-gated-condition-rider.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ],
       "profiles": ["stat-block.attack-procedure"],
-      "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
-      ],
-      "reason": "Typed attack notation drives target, Attack Roll, damage, and admitted hit-rider continuations without catalog identity.",
+      "qntOwners": [],
+      "reason": "Production runtime executes the 252 checked Attack Procedure rows, but #427 owns the missing identity-independent QNT semantics and parity for attack rolls, multiple damage components, and admitted typed hit riders.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/stat-block-authored-projection.ts",
@@ -2947,7 +2891,7 @@
         "packages/battle-runtime/src/statblock-attack-hit-condition-support.ts",
         "packages/battle-runtime/src/battle-reducer/statblock-attack-hit-condition-riders.ts"
       ],
-      "status": "covered",
+      "status": "needs-qnt-owner",
       "surfaceEvidence": [
         ".references/srd-5.2.1/Monsters/Overview.md#Parts-of-a-Stat-Block",
         "UBIQUITOUS_LANGUAGE.md#Creatures-and-Stat-Blocks"
@@ -2967,16 +2911,11 @@
         {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ],
       "profiles": ["stat-block.multiattack"],
       "qntOwners": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
       ],
       "reason": "Multiattack dispatch follows typed procedure references and continuation state rather than names.",
       "runtime": "battle",
@@ -3002,25 +2941,15 @@
       "kind": "profile-procedure",
       "parityWitnesses": [
         {
-          "kind": "focused-mbt",
-          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts",
-          "qntSpecPath": "packages/battle-runtime/rule-core-stat-block-controls.mbt.qnt",
-          "stepAction": "step"
-        },
-        {
           "kind": "runtime-test",
           "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
-        },
-        {
-          "kind": "runtime-test",
-          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ],
       "profiles": ["stat-block.resource-lifecycle"],
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt",
-        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt"
+        "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
+        "packages/battle-runtime/battle-runtime-turn-advancement-recharge.qnt"
       ],
       "reason": "Daily, recharge, rest, and shared-resource availability is derived from typed resource declarations and references.",
       "runtime": "battle",
@@ -5865,14 +5794,13 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
-      "followUpTaskIds": [],
+      "followUpTaskIds": ["GH-427"],
       "holeKind": "attackRoll",
       "id": "BattleAttackRollHole",
-      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is now split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control.",
+      "reason": "Attack Roll results drive hit, miss, Critical Hit, replacement, and post-hit continuation semantics across attacks and feature riders; generic attack branch coverage is now split from feature-specific follow-ups. The protocol ordering obligation also owns the Stat Block Attack Roll position after Stat Block target choice or Multiattack dispatch control. Formal semantics for the existing executable Stat Block attack/damage/rider family remain explicitly owned by GH-427.",
       "subject": "battle-hole-family"
     },
     {
@@ -6400,15 +6328,14 @@
       "classification": "semantic-frontier",
       "coveredByObligationIds": [
         "BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS",
-        "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
         "BATTLE.DAMAGE.ATTACK_BRANCHES",
         "BATTLE.DAMAGE.SPELL_SAVE_ATTACK_BRANCHES",
         "BATTLE.PROTOCOL.HOLE_FRONTIER_ORDERING"
       ],
       "fillKind": "attackRoll",
-      "followUpTaskIds": [],
+      "followUpTaskIds": ["GH-427"],
       "id": "attackRoll",
-      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics. The protocol ordering obligation also owns Stat Block Attack Roll fills after Stat Block target choice or Multiattack dispatch control.",
+      "reason": "Attack Roll fills drive hit, miss, Critical Hit, replacement, and downstream attack or spell damage/continuation semantics. The protocol ordering obligation also owns Stat Block Attack Roll fills after Stat Block target choice or Multiattack dispatch control. Formal semantics for the existing executable Stat Block attack/damage/rider family remain explicitly owned by GH-427.",
       "subject": "battle-fill-kind"
     },
     {
@@ -9680,7 +9607,6 @@
       "evidence": "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt is the covered obligation QNT owner carrying executable reducer semantics.",
       "obligationIds": [
         "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
         "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
         "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
         "BATTLE.STAT_BLOCK.MULTIATTACK",
@@ -10293,11 +10219,7 @@
     {
       "evidence": "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt projects rule-core Stat Block controls into the battle runtime shape for registered Stat Block obligations.",
       "obligationIds": [
-        "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
-        "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
         "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
-        "BATTLE.STAT_BLOCK.MULTIATTACK",
         "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE"
       ],
       "ownerPath": "packages/battle-runtime/battle-runtime-stat-block-bridge.qnt",
@@ -16370,38 +16292,6 @@
         "membership"
       ],
       "obligationId": "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
-      "proofOnly": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",
-        "packages/battle-runtime/battle-runtime-turn-advancement-recharge-tests.qnt"
-      ],
-      "semanticCore": [
-        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
-      ],
-      "status": "generation-subset-clean"
-    },
-    {
-      "blockedBy": [],
-      "generatorSubset": [
-        "import",
-        "variant",
-        "record",
-        "record-update",
-        "pure-def",
-        "constant-def",
-        "int",
-        "bool",
-        "if-expression",
-        "let-binding",
-        "arithmetic",
-        "comparison",
-        "boolean-connective",
-        "all-block",
-        "pattern-match",
-        "set",
-        "membership"
-      ],
-      "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
       "proofOnly": [
         "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt",
         "packages/shared-algebras/proofs/rule-core/stat-block-controls-examples.qnt",

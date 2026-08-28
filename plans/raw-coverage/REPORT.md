@@ -209,10 +209,11 @@
 - SRD span classification: 23966 / 23966 = 100.00%
 - Non-fluff span closure: 22730 / 22730 = 100.00%
 - Executable requirements: 24
-- QNT modeled: 15 / 24 = 62.50%
-- QNT proved: 15 / 24 = 62.50%
+- QNT modeled: 13 / 24 = 54.17%
+- QNT proved: 13 / 24 = 54.17%
 - Runtime mapped: 15 / 24 = 62.50%
-- Runtime parity covered: 15 / 24 = 62.50%
+- Runtime tested: 7 / 24 = 29.17%
+- Runtime parity covered: 9 / 24 = 37.50%
 - Out of promoted scope spans: 1731
 - Ambiguous spans: 0
 - RAW-reviewed sections: 2920 / 2920 = 100.00%
@@ -3142,9 +3143,9 @@
 | srd521-spells-gaining-and-casting-0178 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Gaining-and-Casting.md, UBIQUITOUS_LANGUAGE.md |
 | srd521-spells-gaining-and-casting-0184 | raw-review-agent | pass | .references/srd-5.2.1/Spells/Gaining-and-Casting.md, UBIQUITOUS_LANGUAGE.md |
 
-## Tracker Task Claims
+## Historical Evidence Claims
 
-| Task | Coverage metric | Requirements |
+| Evidence | Coverage metric | Requirements |
 | --- | --- | --- |
 | QCORE7 | qnt-proof | RAW-QCORE7-MOVEMENT-GRAPPLE-001 |
 | QCORE8 | qnt-proof | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
@@ -3155,8 +3156,16 @@
 | QMBT3 | runtime-parity | RAW-PTG-REACTIONS-002, RAW-PTG-REACTIONS-004, RAW-PTG-REACTIONS-005, RAW-PTG-REACTIONS-006, RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 |
 | QMBT4 | runtime-parity | RAW-QCORE9-UNIT-FEATURE-PROFILES-001 |
 | QMBT5 | runtime-parity | RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 |
-| QCORE11 | qnt-proof | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001, RAW-STAT-BLOCK-MULTIATTACK-001, RAW-STAT-BLOCK-LIMITED-USAGE-001 |
-| QMBT6 | runtime-parity | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001, RAW-STAT-BLOCK-MULTIATTACK-001, RAW-STAT-BLOCK-LIMITED-USAGE-001 |
+| SB-CONTROLS-INDUCTIVE | qnt-proof | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-MULTIATTACK-001, RAW-STAT-BLOCK-LIMITED-USAGE-001 |
+| SB-ACTIONS-RUNTIME-TEST | runtime-test | RAW-STAT-BLOCK-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001, RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001, RAW-STAT-BLOCK-MULTIATTACK-001, RAW-STAT-BLOCK-LIMITED-USAGE-001 |
+| SB-MULTIATTACK-MBT | runtime-parity | RAW-STAT-BLOCK-MULTIATTACK-001 |
+
+## Tracker Follow-up Claims
+
+GitHub owns tracker status. These rows only join checked coverage gaps to stable issue identities.
+
+| Tracker | Gap metric | Requirements |
+| --- | --- | --- |
 | GH-418 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 |
 | GH-419 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 |
 | GH-420 | missing-runtime-owner | RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 |
@@ -3166,85 +3175,86 @@
 | GH-424 | missing-runtime-owner | RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 |
 | GH-425 | missing-runtime-owner | RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 |
 | GH-426 | missing-runtime-owner | RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 |
+| GH-427 | missing-qnt-owner | RAW-STAT-BLOCK-ATTACK-PROCEDURE-001, RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 |
 
 ## Requirement Rows
 
-| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime parity | Task claims |
-| --- | --- | --- | --- | --- | --- | --- |
-| RAW-PTG-REACTIONS-001 | definition | no | no | no | no |  |
-| RAW-PTG-REACTIONS-002 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-PTG-REACTIONS-003 | definition | yes | no | yes | yes |  |
-| RAW-PTG-REACTIONS-004 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-PTG-REACTIONS-005 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-PTG-REACTIONS-006 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 | executable | yes | yes | yes | yes | QCORE8, QMBT1, QMBT3 |
-| RAW-DATA-ANIMALS | authored-data | no | no | no | no |  |
-| RAW-DATA-CHARACTER-CREATION | authored-data | no | no | no | no |  |
-| RAW-DATA-CHARACTER-ORIGINS | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-BARBARIAN | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-BARD | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-CLERIC | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-DRUID | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-FIGHTER | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-MONK | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-PALADIN | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-RANGER | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-ROGUE | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-SORCERER | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-WARLOCK | authored-data | no | no | no | no |  |
-| RAW-DATA-CLASSES-WIZARD | authored-data | no | no | no | no |  |
-| RAW-DATA-EQUIPMENT | authored-data | no | no | no | no |  |
-| RAW-DATA-FEATS | authored-data | no | no | no | no |  |
-| RAW-DATA-GAMEPLAY-TOOLBOX | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-ITEMS-A-H | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-ITEMS-I-P | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-ITEMS-Q-Z | authored-data | no | no | no | no |  |
-| RAW-DATA-MAGIC-ITEMS-OVERVIEW | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-A-B | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-C-D | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-E-G | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-H-L | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-M-O | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-P-S | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-MONSTERS-T-Z | authored-data | no | no | no | no |  |
-| RAW-DATA-MONSTERS-OVERVIEW | authored-data | no | no | no | no |  |
-| RAW-DATA-PLAYING-THE-GAME | authored-data | no | no | no | no |  |
-| RAW-DATA-RULES-GLOSSARY | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-A-D | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-E-L | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-M-P | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-Q-R | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-DESCRIPTIONS-S-Z | authored-data | no | no | no | no |  |
-| RAW-DATA-SPELLS-GAINING-AND-CASTING | authored-data | no | no | no | no |  |
-| RAW-QCORE7-MOVEMENT-GRAPPLE-001 | executable | yes | yes | yes | yes | QCORE7, QMBT1, QMBT2 |
-| RAW-QCORE9-UNIT-FEATURE-PROFILES-001 | executable | yes | yes | yes | yes | QCORE9, QMBT1, QMBT4 |
-| RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 | executable | yes | yes | yes | yes | QCORE10, QMBT5 |
-| RAW-STAT-BLOCK-SCHEMA-DEFINITION-001 | definition | no | no | no | no |  |
-| RAW-STAT-BLOCK-TRAIT-PRESENTATION-001 | definition | no | no | no | no |  |
-| RAW-STAT-BLOCK-RUNNING-GUIDANCE-001 | table-caller-responsibility | no | no | no | no |  |
-| RAW-STAT-BLOCK-CATALOG-IDENTITY-A-B | authored-data | no | no | no | no |  |
-| RAW-STAT-BLOCK-CATALOG-IDENTITY-C-D | authored-data | no | no | no | no |  |
-| RAW-STAT-BLOCK-CATALOG-IDENTITY-E-G | authored-data | no | no | no | no |  |
-| RAW-STAT-BLOCK-CATALOG-IDENTITY-H-L | authored-data | no | no | no | no |  |
-| RAW-STAT-BLOCK-CATALOG-IDENTITY-M-O | authored-data | no | no | no | no |  |
-| RAW-STAT-BLOCK-CATALOG-IDENTITY-P-S | authored-data | no | no | no | no |  |
-| RAW-STAT-BLOCK-CATALOG-IDENTITY-T-Z | authored-data | no | no | no | no |  |
-| RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | QCORE11, QMBT6 |
-| RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | QCORE11, QMBT6 |
-| RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | QCORE11, QMBT6 |
-| RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 | executable | yes | yes | yes | yes | QCORE11, QMBT6 |
-| RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 | executable | yes | yes | yes | yes | QCORE11, QMBT6 |
-| RAW-STAT-BLOCK-MULTIATTACK-001 | executable | yes | yes | yes | yes | QCORE11, QMBT6 |
-| RAW-STAT-BLOCK-LIMITED-USAGE-001 | executable | yes | yes | yes | yes | QCORE11, QMBT6 |
-| RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 | executable | no | no | no | no | GH-418 |
-| RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 | executable | no | no | no | no | GH-419 |
-| RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 | executable | no | no | no | no | GH-420 |
-| RAW-STAT-BLOCK-SAVE-PROCEDURE-001 | executable | no | no | no | no | GH-421 |
-| RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 | executable | no | no | no | no | GH-422 |
-| RAW-STAT-BLOCK-REACTION-LIFECYCLE-001 | executable | no | no | no | no | GH-423 |
-| RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 | executable | no | no | no | no | GH-424 |
-| RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 | executable | no | no | no | no | GH-425 |
-| RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 | executable | no | no | no | no | GH-426 |
+| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime tested | Runtime parity | Evidence | Follow-up |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| RAW-PTG-REACTIONS-001 | definition | no | no | no | no | no |  |  |
+| RAW-PTG-REACTIONS-002 | executable | yes | yes | yes | no | yes | QCORE8, QMBT1, QMBT3 |  |
+| RAW-PTG-REACTIONS-003 | definition | yes | no | yes | no | yes |  |  |
+| RAW-PTG-REACTIONS-004 | executable | yes | yes | yes | no | yes | QCORE8, QMBT1, QMBT3 |  |
+| RAW-PTG-REACTIONS-005 | executable | yes | yes | yes | no | yes | QCORE8, QMBT1, QMBT3 |  |
+| RAW-PTG-REACTIONS-006 | executable | yes | yes | yes | no | yes | QCORE8, QMBT1, QMBT3 |  |
+| RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001 | executable | yes | yes | yes | no | yes | QCORE8, QMBT1, QMBT3 |  |
+| RAW-DATA-ANIMALS | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CHARACTER-CREATION | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CHARACTER-ORIGINS | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-BARBARIAN | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-BARD | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-CLERIC | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-DRUID | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-FIGHTER | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-MONK | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-PALADIN | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-RANGER | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-ROGUE | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-SORCERER | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-WARLOCK | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-CLASSES-WIZARD | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-EQUIPMENT | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-FEATS | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-GAMEPLAY-TOOLBOX | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-ITEMS-A-H | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-ITEMS-I-P | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-ITEMS-Q-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MAGIC-ITEMS-OVERVIEW | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-A-B | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-C-D | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-E-G | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-H-L | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-M-O | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-P-S | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-MONSTERS-T-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-MONSTERS-OVERVIEW | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-PLAYING-THE-GAME | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-RULES-GLOSSARY | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-A-D | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-E-L | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-M-P | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-Q-R | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-DESCRIPTIONS-S-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-DATA-SPELLS-GAINING-AND-CASTING | authored-data | no | no | no | no | no |  |  |
+| RAW-QCORE7-MOVEMENT-GRAPPLE-001 | executable | yes | yes | yes | no | yes | QCORE7, QMBT1, QMBT2 |  |
+| RAW-QCORE9-UNIT-FEATURE-PROFILES-001 | executable | yes | yes | yes | no | yes | QCORE9, QMBT1, QMBT4 |  |
+| RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001 | executable | yes | yes | yes | no | yes | QCORE10, QMBT5 |  |
+| RAW-STAT-BLOCK-SCHEMA-DEFINITION-001 | definition | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-TRAIT-PRESENTATION-001 | definition | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-RUNNING-GUIDANCE-001 | table-caller-responsibility | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-A-B | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-C-D | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-E-G | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-H-L | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-M-O | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-P-S | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-CATALOG-IDENTITY-T-Z | authored-data | no | no | no | no | no |  |  |
+| RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-CONTROLS-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-CONTROLS-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 | executable | yes | yes | yes | yes | no | SB-CONTROLS-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 | executable | no | no | yes | yes | no | SB-ACTIONS-RUNTIME-TEST | GH-427 |
+| RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 | executable | no | no | yes | yes | no | SB-ACTIONS-RUNTIME-TEST | GH-427 |
+| RAW-STAT-BLOCK-MULTIATTACK-001 | executable | yes | yes | yes | yes | yes | SB-CONTROLS-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST, SB-MULTIATTACK-MBT |  |
+| RAW-STAT-BLOCK-LIMITED-USAGE-001 | executable | yes | yes | yes | yes | no | SB-CONTROLS-INDUCTIVE, SB-ACTIONS-RUNTIME-TEST |  |
+| RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001 | executable | no | no | no | no | no |  | GH-418 |
+| RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001 | executable | no | no | no | no | no |  | GH-419 |
+| RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001 | executable | no | no | no | no | no |  | GH-420 |
+| RAW-STAT-BLOCK-SAVE-PROCEDURE-001 | executable | no | no | no | no | no |  | GH-421 |
+| RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001 | executable | no | no | no | no | no |  | GH-422 |
+| RAW-STAT-BLOCK-REACTION-LIFECYCLE-001 | executable | no | no | no | no | no |  | GH-423 |
+| RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001 | executable | no | no | no | no | no |  | GH-424 |
+| RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001 | executable | no | no | no | no | no |  | GH-425 |
+| RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001 | executable | no | no | no | no | no |  | GH-426 |
 
 ## Out Of Promoted Scope
 

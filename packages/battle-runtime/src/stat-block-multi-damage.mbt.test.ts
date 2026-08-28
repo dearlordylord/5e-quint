@@ -5,7 +5,6 @@ import {
   projectedStatBlockRuntimeSource,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 import { isDeepStrictEqual } from "node:util";
 
 import { Either } from "effect";

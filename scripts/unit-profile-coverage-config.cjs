@@ -193,6 +193,10 @@ const completedRuntimeParityKinds = new Set([
   "completed-runtime-parity",
   "runtime-parity",
 ]);
+const runtimeVerificationKinds = new Set([
+  ...completedRuntimeParityKinds,
+  "runtime-evidence",
+]);
 const skippedClaimScanDirs = new Set([
   ".git",
   ".ralph",
@@ -393,6 +397,7 @@ module.exports = {
   nearCanonicalDenyList,
   profileKinds,
   protectedExpressionFields,
+  runtimeVerificationKinds,
   rulesKernelProfileKindClassificationIssues,
   rulesKernelProfileKindClassificationReasons,
   rulesKernelProfileKindClassifications,

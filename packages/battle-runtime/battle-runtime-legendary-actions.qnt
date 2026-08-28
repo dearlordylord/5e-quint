@@ -1,5 +1,7 @@
 // -*- mode: Bluespec; -*-
 
+// RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001
+// UNIT-PROFILE-COVERAGE: qnt-owner stat-block.legendary-action-lifecycle
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE
 module battleRuntimeLegendaryActions {
   import battleRuntimeStatBlockBridge.* from "./battle-runtime-stat-block-bridge"

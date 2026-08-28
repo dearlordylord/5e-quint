@@ -1,4 +1,6 @@
 // -*- mode: Bluespec; -*-
+// RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-LIMITED-USAGE-001
+// UNIT-PROFILE-COVERAGE: qnt-owner stat-block.resource-lifecycle
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 
 module battleRuntimeTurnAdvancementRecharge {

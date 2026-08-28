@@ -25517,10 +25517,11 @@
     "closedNonFluffSpans": 22730,
     "requirements": 74,
     "executableRequirements": 24,
-    "qntModeled": 15,
-    "qntProved": 15,
+    "qntModeled": 13,
+    "qntProved": 13,
     "runtimeMapped": 15,
-    "runtimeParityCovered": 15,
+    "runtimeTested": 7,
+    "runtimeParityCovered": 9,
     "outOfScopeSpans": 1731,
     "ambiguousSpans": 0,
     "rawReviewedSections": 2920
@@ -51807,16 +51808,16 @@
       ]
     }
   ],
-  "taskClaims": [
+  "evidenceClaims": [
     {
-      "taskId": "QCORE7",
+      "evidenceId": "QCORE7",
       "coverageMetric": "qnt-proof",
       "requirementIds": [
         "RAW-QCORE7-MOVEMENT-GRAPPLE-001"
       ]
     },
     {
-      "taskId": "QCORE8",
+      "evidenceId": "QCORE8",
       "coverageMetric": "qnt-proof",
       "requirementIds": [
         "RAW-PTG-REACTIONS-002",
@@ -51827,21 +51828,21 @@
       ]
     },
     {
-      "taskId": "QCORE9",
+      "evidenceId": "QCORE9",
       "coverageMetric": "qnt-proof",
       "requirementIds": [
         "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
       ]
     },
     {
-      "taskId": "QCORE10",
+      "evidenceId": "QCORE10",
       "coverageMetric": "qnt-proof",
       "requirementIds": [
         "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
       ]
     },
     {
-      "taskId": "QMBT1",
+      "evidenceId": "QMBT1",
       "coverageMetric": "runtime-parity",
       "requirementIds": [
         "RAW-QCORE7-MOVEMENT-GRAPPLE-001",
@@ -51854,14 +51855,14 @@
       ]
     },
     {
-      "taskId": "QMBT2",
+      "evidenceId": "QMBT2",
       "coverageMetric": "runtime-parity",
       "requirementIds": [
         "RAW-QCORE7-MOVEMENT-GRAPPLE-001"
       ]
     },
     {
-      "taskId": "QMBT3",
+      "evidenceId": "QMBT3",
       "coverageMetric": "runtime-parity",
       "requirementIds": [
         "RAW-PTG-REACTIONS-002",
@@ -51872,35 +51873,33 @@
       ]
     },
     {
-      "taskId": "QMBT4",
+      "evidenceId": "QMBT4",
       "coverageMetric": "runtime-parity",
       "requirementIds": [
         "RAW-QCORE9-UNIT-FEATURE-PROFILES-001"
       ]
     },
     {
-      "taskId": "QMBT5",
+      "evidenceId": "QMBT5",
       "coverageMetric": "runtime-parity",
       "requirementIds": [
         "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001"
       ]
     },
     {
-      "taskId": "QCORE11",
+      "evidenceId": "SB-CONTROLS-INDUCTIVE",
       "coverageMetric": "qnt-proof",
       "requirementIds": [
         "RAW-STAT-BLOCK-ACTION-LIFECYCLE-001",
         "RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001",
         "RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001",
-        "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
-        "RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001",
         "RAW-STAT-BLOCK-MULTIATTACK-001",
         "RAW-STAT-BLOCK-LIMITED-USAGE-001"
       ]
     },
     {
-      "taskId": "QMBT6",
-      "coverageMetric": "runtime-parity",
+      "evidenceId": "SB-ACTIONS-RUNTIME-TEST",
+      "coverageMetric": "runtime-test",
       "requirementIds": [
         "RAW-STAT-BLOCK-ACTION-LIFECYCLE-001",
         "RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001",
@@ -51912,66 +51911,83 @@
       ]
     },
     {
-      "taskId": "GH-418",
+      "evidenceId": "SB-MULTIATTACK-MBT",
+      "coverageMetric": "runtime-parity",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-MULTIATTACK-001"
+      ]
+    }
+  ],
+  "trackerClaims": [
+    {
+      "trackerId": "GH-418",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001"
       ]
     },
     {
-      "taskId": "GH-419",
+      "trackerId": "GH-419",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELLCASTING-PROCEDURE-001"
       ]
     },
     {
-      "taskId": "GH-420",
+      "trackerId": "GH-420",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELLCASTING-LIMITED-GROUP-001"
       ]
     },
     {
-      "taskId": "GH-421",
+      "trackerId": "GH-421",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SAVE-PROCEDURE-001"
       ]
     },
     {
-      "taskId": "GH-422",
+      "trackerId": "GH-422",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELLCASTING-AT-WILL-GROUP-001"
       ]
     },
     {
-      "taskId": "GH-423",
+      "trackerId": "GH-423",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-REACTION-LIFECYCLE-001"
       ]
     },
     {
-      "taskId": "GH-424",
+      "trackerId": "GH-424",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-SPELL-INVOCATION-RESTRICTED-001"
       ]
     },
     {
-      "taskId": "GH-425",
+      "trackerId": "GH-425",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-ATTACK-ADDITIONAL-EFFECT-001"
       ]
     },
     {
-      "taskId": "GH-426",
+      "trackerId": "GH-426",
       "coverageMetric": "missing-runtime-owner",
       "requirementIds": [
         "RAW-STAT-BLOCK-STANDARD-ACTION-OPTION-001"
+      ]
+    },
+    {
+      "trackerId": "GH-427",
+      "coverageMetric": "missing-qnt-owner",
+      "requirementIds": [
+        "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
+        "RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001"
       ]
     }
   ],
@@ -51987,8 +52003,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-PTG-REACTIONS-002",
@@ -52000,12 +52018,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE8",
         "QMBT1",
         "QMBT3"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-PTG-REACTIONS-003",
@@ -52017,8 +52037,10 @@
       "qntModeled": true,
       "qntProved": false,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-PTG-REACTIONS-004",
@@ -52030,12 +52052,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE8",
         "QMBT1",
         "QMBT3"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-PTG-REACTIONS-005",
@@ -52047,12 +52071,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE8",
         "QMBT1",
         "QMBT3"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-PTG-REACTIONS-006",
@@ -52064,12 +52090,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE8",
         "QMBT1",
         "QMBT3"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-RULES-GLOSSARY-CONCENTRATION-DAMAGE-001",
@@ -52083,12 +52111,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE8",
         "QMBT1",
         "QMBT3"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-ANIMALS",
@@ -53690,8 +53720,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CHARACTER-CREATION",
@@ -53939,8 +53971,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CHARACTER-ORIGINS",
@@ -54144,8 +54178,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-BARBARIAN",
@@ -54274,8 +54310,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-BARD",
@@ -54544,8 +54582,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-CLERIC",
@@ -54818,8 +54858,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-DRUID",
@@ -55156,8 +55198,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-FIGHTER",
@@ -55258,8 +55302,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-MONK",
@@ -55397,8 +55443,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-PALADIN",
@@ -55613,8 +55661,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-RANGER",
@@ -55797,8 +55847,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-ROGUE",
@@ -55925,8 +55977,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-SORCERER",
@@ -56254,8 +56308,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-WARLOCK",
@@ -56569,8 +56625,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-CLASSES-WIZARD",
@@ -56951,8 +57009,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-EQUIPMENT",
@@ -57680,8 +57740,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-FEATS",
@@ -57782,8 +57844,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-GAMEPLAY-TOOLBOX",
@@ -57864,8 +57928,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MAGIC-ITEMS-ITEMS-A-H",
@@ -58960,8 +59026,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MAGIC-ITEMS-ITEMS-I-P",
@@ -59524,8 +59592,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MAGIC-ITEMS-ITEMS-Q-Z",
@@ -60488,8 +60558,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MAGIC-ITEMS-OVERVIEW",
@@ -60739,8 +60811,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-MONSTERS-A-B",
@@ -61815,8 +61889,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-MONSTERS-C-D",
@@ -62490,8 +62566,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-MONSTERS-E-G",
@@ -63440,8 +63518,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-MONSTERS-H-L",
@@ -63944,8 +64024,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-MONSTERS-M-O",
@@ -64567,8 +64649,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-MONSTERS-P-S",
@@ -65705,8 +65789,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-MONSTERS-T-Z",
@@ -66674,8 +66760,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-MONSTERS-OVERVIEW",
@@ -66852,8 +66940,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-PLAYING-THE-GAME",
@@ -66976,8 +67066,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-RULES-GLOSSARY",
@@ -67105,8 +67197,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-SPELLS-DESCRIPTIONS-A-D",
@@ -68408,8 +68502,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-SPELLS-DESCRIPTIONS-E-L",
@@ -69627,8 +69723,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-SPELLS-DESCRIPTIONS-M-P",
@@ -70411,8 +70509,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-SPELLS-DESCRIPTIONS-Q-R",
@@ -70577,8 +70677,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-SPELLS-DESCRIPTIONS-S-Z",
@@ -71648,8 +71750,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-DATA-SPELLS-GAINING-AND-CASTING",
@@ -71680,8 +71784,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-QCORE7-MOVEMENT-GRAPPLE-001",
@@ -71760,12 +71866,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE7",
         "QMBT1",
         "QMBT2"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-QCORE9-UNIT-FEATURE-PROFILES-001",
@@ -74896,12 +75004,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE9",
         "QMBT1",
         "QMBT4"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-QCORE10-SPELL-PROCEDURE-PROFILES-001",
@@ -79922,11 +80032,13 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": false,
       "runtimeParityCovered": true,
-      "taskClaims": [
+      "evidenceClaims": [
         "QCORE10",
         "QMBT5"
-      ]
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-SCHEMA-DEFINITION-001",
@@ -79964,8 +80076,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-TRAIT-PRESENTATION-001",
@@ -79978,8 +80092,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-RUNNING-GUIDANCE-001",
@@ -79995,8 +80111,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-CATALOG-IDENTITY-A-B",
@@ -80142,8 +80260,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-CATALOG-IDENTITY-C-D",
@@ -80239,8 +80359,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-CATALOG-IDENTITY-E-G",
@@ -80375,8 +80497,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-CATALOG-IDENTITY-H-L",
@@ -80460,8 +80584,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-CATALOG-IDENTITY-M-O",
@@ -80556,8 +80682,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-CATALOG-IDENTITY-P-S",
@@ -80728,8 +80856,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-CATALOG-IDENTITY-T-Z",
@@ -80868,8 +80998,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": []
+      "evidenceClaims": [],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-ACTION-LIFECYCLE-001",
@@ -80882,11 +81014,13 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
-      "runtimeParityCovered": true,
-      "taskClaims": [
-        "QCORE11",
-        "QMBT6"
-      ]
+      "runtimeTested": true,
+      "runtimeParityCovered": false,
+      "evidenceClaims": [
+        "SB-CONTROLS-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001",
@@ -80900,11 +81034,13 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
-      "runtimeParityCovered": true,
-      "taskClaims": [
-        "QCORE11",
-        "QMBT6"
-      ]
+      "runtimeTested": true,
+      "runtimeParityCovered": false,
+      "evidenceClaims": [
+        "SB-CONTROLS-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001",
@@ -80922,11 +81058,13 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
-      "runtimeParityCovered": true,
-      "taskClaims": [
-        "QCORE11",
-        "QMBT6"
-      ]
+      "runtimeTested": true,
+      "runtimeParityCovered": false,
+      "evidenceClaims": [
+        "SB-CONTROLS-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-ATTACK-PROCEDURE-001",
@@ -80940,13 +81078,16 @@
         "SRD521-MONSTERS-OVERVIEW-0209-005",
         "SRD521-MONSTERS-OVERVIEW-0209-006"
       ],
-      "qntModeled": true,
-      "qntProved": true,
+      "qntModeled": false,
+      "qntProved": false,
       "runtimeMapped": true,
-      "runtimeParityCovered": true,
-      "taskClaims": [
-        "QCORE11",
-        "QMBT6"
+      "runtimeTested": true,
+      "runtimeParityCovered": false,
+      "evidenceClaims": [
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "trackerClaims": [
+        "GH-427"
       ]
     },
     {
@@ -80959,13 +81100,16 @@
         "SRD521-MONSTERS-OVERVIEW-0225-003",
         "SRD521-MONSTERS-OVERVIEW-0225-004"
       ],
-      "qntModeled": true,
-      "qntProved": true,
+      "qntModeled": false,
+      "qntProved": false,
       "runtimeMapped": true,
-      "runtimeParityCovered": true,
-      "taskClaims": [
-        "QCORE11",
-        "QMBT6"
+      "runtimeTested": true,
+      "runtimeParityCovered": false,
+      "evidenceClaims": [
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "trackerClaims": [
+        "GH-427"
       ]
     },
     {
@@ -80981,11 +81125,14 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
+      "runtimeTested": true,
       "runtimeParityCovered": true,
-      "taskClaims": [
-        "QCORE11",
-        "QMBT6"
-      ]
+      "evidenceClaims": [
+        "SB-CONTROLS-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST",
+        "SB-MULTIATTACK-MBT"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-LIMITED-USAGE-001",
@@ -81007,11 +81154,13 @@
       "qntModeled": true,
       "qntProved": true,
       "runtimeMapped": true,
-      "runtimeParityCovered": true,
-      "taskClaims": [
-        "QCORE11",
-        "QMBT6"
-      ]
+      "runtimeTested": true,
+      "runtimeParityCovered": false,
+      "evidenceClaims": [
+        "SB-CONTROLS-INDUCTIVE",
+        "SB-ACTIONS-RUNTIME-TEST"
+      ],
+      "trackerClaims": []
     },
     {
       "id": "RAW-STAT-BLOCK-SPELL-INVOCATION-UNRESTRICTED-001",
@@ -81031,8 +81180,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-418"
       ]
     },
@@ -81054,8 +81205,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-419"
       ]
     },
@@ -81088,8 +81241,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-420"
       ]
     },
@@ -81105,8 +81260,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-421"
       ]
     },
@@ -81128,8 +81285,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-422"
       ]
     },
@@ -81145,8 +81304,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-423"
       ]
     },
@@ -81168,8 +81329,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-424"
       ]
     },
@@ -81188,8 +81351,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-425"
       ]
     },
@@ -81204,8 +81369,10 @@
       "qntModeled": false,
       "qntProved": false,
       "runtimeMapped": false,
+      "runtimeTested": false,
       "runtimeParityCovered": false,
-      "taskClaims": [
+      "evidenceClaims": [],
+      "trackerClaims": [
         "GH-426"
       ]
     }

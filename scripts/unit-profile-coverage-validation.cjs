@@ -4,12 +4,12 @@ const {
   battleReadinessClosureKinds,
   claimTags,
   collectionIds,
-  completedRuntimeParityKinds,
   executableProfileKinds,
   fungiTerms,
   nearCanonicalDenyList,
   profileKinds,
   protectedExpressionFields,
+  runtimeVerificationKinds,
   rulesKernelProfileKindClassificationIssues,
   selectedIdentityReplayEvidenceTag,
   selectedIdentityNonApplicableDispositionTag,
@@ -914,9 +914,9 @@ function validateOwnerClaims(
     taskClaims,
     (claimKind) => claimKind === "qnt-proof",
   );
-  const runtimeParityTaskClaimProfileIds = taskClaimProfileIds(
+  const runtimeVerificationClaimProfileIds = taskClaimProfileIds(
     taskClaims,
-    (claimKind) => completedRuntimeParityKinds.has(claimKind),
+    (claimKind) => runtimeVerificationKinds.has(claimKind),
   );
   for (const replay of scannedUnitEvidence.selectedUnitIdentityReplays) {
     if (replay.reducerReachability?.reachable !== true) {
@@ -1171,10 +1171,10 @@ function validateOwnerClaims(
     }
     if (
       hasRuntimeParityOwner(profile) &&
-      !runtimeParityTaskClaimProfileIds.has(profile.id)
+      !runtimeVerificationClaimProfileIds.has(profile.id)
     ) {
       issues.push(
-        `${profile.id} has runtime parity verification ownership but no completed runtime parity task claim.`,
+        `${profile.id} has runtime verification ownership but no runtime evidence claim.`,
       );
     }
     for (const taskId of profile.taskRefs ?? []) {
@@ -1215,14 +1215,14 @@ function validateOwnerClaims(
         }
       }
     }
-    if (completedRuntimeParityKinds.has(taskClaim.claimKind)) {
+    if (runtimeVerificationKinds.has(taskClaim.claimKind)) {
       for (const profileId of taskClaim.profileIds ?? []) {
         const profile = profiles.find(
           (candidate) => candidate.id === profileId,
         );
         if (profile !== undefined && !hasRuntimeParityOwner(profile)) {
           issues.push(
-            `Completed runtime parity claim ${taskClaim.taskId} for ${profileId} has no MBT/runtime-test owner.`,
+            `Runtime evidence claim ${taskClaim.taskId} for ${profileId} has no MBT/runtime-test owner.`,
           );
         }
       }

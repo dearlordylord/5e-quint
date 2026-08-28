@@ -27,9 +27,9 @@ const obligationsPath = path.join(
   root,
   "plans/rules-kernel-coverage/obligations.jsonl",
 );
-const rawTaskClaimsPath = path.join(
+const rawTrackerClaimsPath = path.join(
   root,
-  "plans/raw-coverage/task-claims.jsonl",
+  "plans/raw-coverage/tracker-claims.jsonl",
 );
 const profileTaskClaimsPath = path.join(
   root,
@@ -120,6 +120,8 @@ const semanticFamilyDefinitions = [
     ],
     profileId: "stat-block.attack-procedure",
     obligationId: "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
+    formalEvidenceState: "needs-qnt-owner",
+    proofFollowUpIssueNumber: 427,
   },
   {
     id: "stat-block.multiattack",
@@ -283,6 +285,10 @@ function assertUnique(values, label) {
 
 function proposalMembership(pressure) {
   const memberships = new Map();
+  assertUnique(
+    pressure.capabilityProposals.map(({ rank }) => rank),
+    "Capability proposal rank",
+  );
   for (const proposal of pressure.capabilityProposals) {
     for (const rowId of proposal.memberRowIds) {
       if (memberships.has(rowId)) {
@@ -434,23 +440,43 @@ function buildReconciliation(pressure, requirePopulatedFamilies = true) {
   };
 }
 
-function validateCoverageJoin(reconciliation) {
-  const requirementIds = new Set(
-    readJsonl(requirementsPath).map(({ id }) => id),
+function readCoverageJoinInputs() {
+  return {
+    requirements: readJsonl(requirementsPath),
+    profiles: readJsonl(profilesPath),
+    obligations: readJsonl(obligationsPath),
+    rawTrackerClaims: readJsonl(rawTrackerClaimsPath),
+    profileTaskClaims: readJsonl(profileTaskClaimsPath),
+  };
+}
+
+function sameMembers(actual, expected) {
+  return (
+    actual.length === expected.length &&
+    expected.every((member) => actual.includes(member))
+  );
+}
+
+function validateCoverageJoin(
+  reconciliation,
+  inputs = readCoverageJoinInputs(),
+) {
+  const requirements = new Map(
+    inputs.requirements.map((requirement) => [requirement.id, requirement]),
   );
   const profiles = new Map(
-    readJsonl(profilesPath).map((profile) => [profile.id, profile]),
+    inputs.profiles.map((profile) => [profile.id, profile]),
   );
   const obligations = new Map(
-    readJsonl(obligationsPath).map((obligation) => [obligation.id, obligation]),
+    inputs.obligations.map((obligation) => [obligation.id, obligation]),
   );
-  const rawTaskClaims = new Map(
-    readJsonl(rawTaskClaimsPath).map((claim) => [claim.taskId, claim]),
+  const rawTrackerClaims = new Map(
+    inputs.rawTrackerClaims.map((claim) => [claim.trackerId, claim]),
   );
   const profileTaskClaims = new Map(
-    readJsonl(profileTaskClaimsPath).map((claim) => [claim.taskId, claim]),
+    inputs.profileTaskClaims.map((claim) => [claim.taskId, claim]),
   );
-  if (requirementIds.has("RAW-QCORE11-STAT-BLOCK-CONTROLS-001")) {
+  if (requirements.has("RAW-QCORE11-STAT-BLOCK-CONTROLS-001")) {
     fail("Retired catch-all RAW-QCORE11-STAT-BLOCK-CONTROLS-001 still exists.");
   }
   if (profiles.has("stat-block.attack-control")) {
@@ -463,7 +489,7 @@ function validateCoverageJoin(reconciliation) {
   }
   for (const family of reconciliation.families) {
     for (const requirementId of family.rawRequirementIds ?? []) {
-      if (!requirementIds.has(requirementId)) {
+      if (!requirements.has(requirementId)) {
         fail(
           `${family.id} references missing RAW requirement ${requirementId}.`,
         );
@@ -480,17 +506,65 @@ function validateCoverageJoin(reconciliation) {
         `${family.id} references missing obligation ${family.obligationId}.`,
       );
     }
-    if (
-      family.state === "executable" &&
-      (profile.qntOwners.length === 0 ||
+    const familyRequirements = (family.rawRequirementIds ?? []).map((id) =>
+      requirements.get(id),
+    );
+    if (family.state === "executable") {
+      if (
         profile.runtimeOwners.length === 0 ||
         profile.verificationOwners.length === 0 ||
-        obligation.qntOwners.length === 0 ||
         obligation.runtimeOwners.length === 0 ||
+        familyRequirements.some(
+          (requirement) => requirement.runtimeOwners.length === 0,
+        )
+      ) {
+        fail(`${family.id} executable runtime ownership is incomplete.`);
+      }
+      if (family.formalEvidenceState === "needs-qnt-owner") {
+        const trackerId = `GH-${family.proofFollowUpIssueNumber}`;
+        const rawTrackerClaim = rawTrackerClaims.get(trackerId);
+        const profileTaskClaim = profileTaskClaims.get(trackerId);
+        if (
+          profile.qntOwnershipStatus !== "needs-qnt-owner" ||
+          profile.qntOwners.length > 0 ||
+          obligation.status !== "needs-qnt-owner" ||
+          obligation.qntOwners.length > 0 ||
+          !sameMembers(obligation.followUpTaskIds ?? [], [trackerId]) ||
+          familyRequirements.some(
+            (requirement) => requirement.qntOwners.length > 0,
+          ) ||
+          rawTrackerClaim?.coverageMetric !== "missing-qnt-owner" ||
+          !sameMembers(
+            rawTrackerClaim?.requirementIds ?? [],
+            family.rawRequirementIds,
+          ) ||
+          profileTaskClaim?.claimKind !== "missing-qnt-owner" ||
+          !sameMembers(profileTaskClaim?.profileIds ?? [], [
+            family.profileId,
+          ]) ||
+          !(profile.taskRefs ?? []).includes(trackerId)
+        ) {
+          fail(`${family.id} does not expose formal gap ${trackerId} exactly.`);
+        }
+      } else if (
+        profile.qntOwnershipStatus === "needs-qnt-owner" ||
+        profile.qntOwners.length === 0 ||
+        !profile.verificationOwners.some(
+          (owner) => owner.kind === "qnt-proof",
+        ) ||
+        obligation.status !== "covered" ||
+        obligation.qntOwners.length === 0 ||
         obligation.parityWitnesses.length === 0 ||
-        obligation.status !== "covered")
-    ) {
-      fail(`${family.id} executable ownership is incomplete.`);
+        familyRequirements.some(
+          (requirement) =>
+            requirement.qntOwners.length === 0 ||
+            !requirement.verificationOwners.some(
+              (owner) => owner.kind === "qnt-proof",
+            ),
+        )
+      ) {
+        fail(`${family.id} covered formal ownership is incomplete.`);
+      }
     }
     if (
       family.state === "missingOwner" &&
@@ -507,18 +581,17 @@ function validateCoverageJoin(reconciliation) {
     }
     if (family.state === "missingOwner") {
       const taskId = `GH-${family.issueNumber}`;
-      const rawTaskClaim = rawTaskClaims.get(taskId);
+      const rawTrackerClaim = rawTrackerClaims.get(taskId);
       const profileTaskClaim = profileTaskClaims.get(taskId);
       if (
         profile.taskRefs.length !== 1 ||
         profile.taskRefs[0] !== taskId ||
         obligation.followUpTaskIds.length !== 1 ||
         obligation.followUpTaskIds[0] !== taskId ||
-        rawTaskClaim?.coverageMetric !== "missing-runtime-owner" ||
-        rawTaskClaim.requirementIds.length !==
-          family.rawRequirementIds.length ||
-        !family.rawRequirementIds.every((id) =>
-          rawTaskClaim.requirementIds.includes(id),
+        rawTrackerClaim?.coverageMetric !== "missing-runtime-owner" ||
+        !sameMembers(
+          rawTrackerClaim?.requirementIds ?? [],
+          family.rawRequirementIds,
         ) ||
         profileTaskClaim?.claimKind !== "missing-runtime-owner" ||
         profileTaskClaim.profileIds.length !== 1 ||
@@ -548,11 +621,11 @@ function renderReport(reconciliation) {
     "",
     "## Generic families",
     "",
-    "| Family | State | Rows | Stat Blocks | Profile | Obligation | Issue |",
-    "| --- | --- | ---: | ---: | --- | --- | ---: |",
+    "| Family | Runtime state | Formal evidence | Rows | Stat Blocks | Profile | Obligation | Follow-up |",
+    "| --- | --- | --- | ---: | ---: | --- | --- | ---: |",
     ...reconciliation.families.map(
       (family) =>
-        `| ${family.id} | ${family.state} | ${family.occurrenceCount} | ${family.statBlockCount} | ${family.profileId ?? "—"} | ${family.obligationId ?? "—"} | ${family.issueNumber === undefined ? "—" : `#${family.issueNumber}`} |`,
+        `| ${family.id} | ${family.state} | ${family.formalEvidenceState ?? (family.state === "executable" ? "covered" : "not-applicable")} | ${family.occurrenceCount} | ${family.statBlockCount} | ${family.profileId ?? "—"} | ${family.obligationId ?? "—"} | ${family.issueNumber === undefined ? (family.proofFollowUpIssueNumber === undefined ? "—" : `#${family.proofFollowUpIssueNumber}`) : `#${family.issueNumber}`} |`,
     ),
     "",
     "The JSON companion owns the complete row-to-family assignments and each family's complete member-row list. GitHub #114 owns the nine missing-owner child issues; #351 is their reconciliation blocker until this checked mapping is integrated.",
@@ -577,7 +650,17 @@ async function formatArtifact(contents, filePath) {
   return prettier.format(contents, { ...configuration, filepath: filePath });
 }
 
-function runSelfTest() {
+function assertThrowsWith(label, fn, expectedMessage) {
+  try {
+    fn();
+  } catch (error) {
+    if (error.message.includes(expectedMessage)) return;
+    fail(`${label} threw the wrong error: ${error.message}`);
+  }
+  fail(`${label} did not throw.`);
+}
+
+async function runSelfTest() {
   const occurrences = [
     {
       rowId: "synthetic-executable",
@@ -634,11 +717,102 @@ function runSelfTest() {
   ) {
     fail("Synthetic reconciliation did not preserve exact membership.");
   }
+
+  const realPressure = readJson(pressurePath);
+  const realReconciliation = buildReconciliation(realPressure);
+  const realCoverage = readCoverageJoinInputs();
+  validateCoverageJoin(realReconciliation, realCoverage);
+
+  const catchallCoverage = structuredClone(realCoverage);
+  catchallCoverage.requirements.push({
+    id: "RAW-QCORE11-STAT-BLOCK-CONTROLS-001",
+  });
+  assertThrowsWith(
+    "retired catch-all survival",
+    () => validateCoverageJoin(realReconciliation, catchallCoverage),
+    "Retired catch-all RAW-QCORE11-STAT-BLOCK-CONTROLS-001 still exists",
+  );
+
+  const contradictoryCoverage = structuredClone(realCoverage);
+  contradictoryCoverage.profiles.find(
+    ({ id }) => id === "stat-block.action-lifecycle",
+  ).qntOwnershipStatus = "needs-qnt-owner";
+  assertThrowsWith(
+    "contradictory covered profile",
+    () => validateCoverageJoin(realReconciliation, contradictoryCoverage),
+    "stat-block.action-lifecycle covered formal ownership is incomplete",
+  );
+
+  const brokenRuntimeTrackerCoverage = structuredClone(realCoverage);
+  brokenRuntimeTrackerCoverage.rawTrackerClaims.find(
+    ({ trackerId }) => trackerId === "GH-418",
+  ).requirementIds = [];
+  assertThrowsWith(
+    "broken missing-runtime tracker join",
+    () =>
+      validateCoverageJoin(realReconciliation, brokenRuntimeTrackerCoverage),
+    "does not join exactly to tracker task GH-418",
+  );
+
+  const hiddenFormalGapCoverage = structuredClone(realCoverage);
+  hiddenFormalGapCoverage.obligations.find(
+    ({ id }) => id === "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
+  ).status = "covered";
+  assertThrowsWith(
+    "hidden attack formal gap",
+    () => validateCoverageJoin(realReconciliation, hiddenFormalGapCoverage),
+    "does not expose formal gap GH-427 exactly",
+  );
+
+  const duplicateRankPressure = structuredClone(realPressure);
+  duplicateRankPressure.capabilityProposals[1].rank =
+    duplicateRankPressure.capabilityProposals[0].rank;
+  assertThrowsWith(
+    "duplicate proposal rank",
+    () => buildReconciliation(duplicateRankPressure),
+    "Capability proposal rank repeats",
+  );
+
+  const duplicateMembershipPressure = structuredClone(realPressure);
+  duplicateMembershipPressure.capabilityProposals[1].memberRowIds.push(
+    duplicateMembershipPressure.capabilityProposals[0].memberRowIds[0],
+  );
+  assertThrowsWith(
+    "duplicate proposal row membership",
+    () => buildReconciliation(duplicateMembershipPressure),
+    "belongs to multiple proposals",
+  );
+
+  const expectedInventory = await formatArtifact(
+    `${JSON.stringify(realReconciliation, null, 2)}\n`,
+    inventoryPath,
+  );
+  const expectedReport = await formatArtifact(
+    renderReport(realReconciliation),
+    reportPath,
+  );
+  assertCurrent(inventoryPath, expectedInventory);
+  assertCurrent(reportPath, expectedReport);
+
+  const staleFixtureDirectory = fs.mkdtempSync(
+    path.join(root, ".stat-block-reconciliation-self-test-"),
+  );
+  try {
+    const stalePath = path.join(staleFixtureDirectory, "inventory.json");
+    fs.writeFileSync(stalePath, "{}\n");
+    assertThrowsWith(
+      "stale artifact bytes",
+      () => assertCurrent(stalePath, expectedInventory),
+      "is stale",
+    );
+  } finally {
+    fs.rmSync(staleFixtureDirectory, { recursive: true, force: true });
+  }
 }
 
 async function main() {
   if (selfTest) {
-    runSelfTest();
+    await runSelfTest();
     console.log("Stat Block execution reconciliation self-test passed.");
     return;
   }

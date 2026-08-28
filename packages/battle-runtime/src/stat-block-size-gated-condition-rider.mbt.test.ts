@@ -1,6 +1,5 @@
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet } from "@dnd/shared/types";
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 import { isDeepStrictEqual } from "node:util";
 
 import { describe, expect, it } from "vitest";
