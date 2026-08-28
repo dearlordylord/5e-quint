@@ -18,6 +18,10 @@ import {
   type StatBlockProcedurePressureReport,
   type StatBlockProcedurePressureWitness,
 } from "../packages/battle-runtime/src/stat-block-procedure-pressure.ts";
+import {
+  discoverSrdStatBlocks,
+  SRD_STAT_BLOCK_SOURCE_PATHS,
+} from "./srd521-stat-block-parity.ts";
 
 export const STAT_BLOCK_PROCEDURE_PRESSURE_ARTIFACT_PATHS = {
   json: "plans/stat-block-procedure-pressure/inventory.json",
@@ -40,8 +44,20 @@ export type StatBlockProcedurePressureArtifacts = {
 };
 
 export async function buildStatBlockProcedurePressureArtifacts(): Promise<StatBlockProcedurePressureArtifacts> {
+  const sourceDiscovery = discoverSrdStatBlocks(
+    SRD_STAT_BLOCK_SOURCE_PATHS.map((sourcePath) => ({
+      sourcePath,
+      contents: readFileSync(join(process.cwd(), sourcePath), "utf8"),
+    })),
+  );
+  if (sourceDiscovery.issues.length > 0) {
+    throw new Error(
+      `RAW SRD denominator is not complete: ${JSON.stringify(sourceDiscovery.issues)}`,
+    );
+  }
   const report = analyzeStatBlockProcedurePressure(
     srdStatBlockCollection.statBlocks,
+    sourceDiscovery.occurrences.map(({ anchor }) => anchor),
   );
   return {
     json: await format(JSON.stringify(report), { parser: "json" }),
@@ -129,7 +145,7 @@ function renderStatBlockProcedurePressureMarkdown(
     "| ---: | --- | --- | --- | ---: | ---: | ---: | --- |",
     ...report.capabilityProposals.map(
       (proposal) =>
-        `| ${String(proposal.rank)} | ${proposal.occurrenceKind} | ${escapeTableCell(proposal.surfaceShape)} | ${escapeTableCell(proposal.failedFacts.join(", "))} | ${String(proposal.occurrenceCount)} | ${String(proposal.statBlockCount)} | ${String(proposal.pressureScore)} | ${proposal.exampleWitnesses.map(sourceWitnessMarkdown).join(", ")} |`,
+        `| ${String(proposal.rank)} | ${proposal.occurrenceKind} | ${escapeTableCell(JSON.stringify(proposal.surfaceShape))} | ${escapeTableCell(proposal.failedFacts.join(", "))} | ${String(proposal.occurrenceCount)} | ${String(proposal.statBlockCount)} | ${String(proposal.pressureScore)} | ${proposal.exampleWitnesses.map(sourceWitnessMarkdown).join(", ")} |`,
     ),
     "",
     "The JSON companion contains every occurrence, its identity-free structural shape, closed disposition, source witness, structural frequency group, and the same bounded proposal ranking.",

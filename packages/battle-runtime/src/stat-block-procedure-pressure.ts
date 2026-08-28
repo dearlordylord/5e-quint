@@ -3,22 +3,34 @@ import * as Either from "effect/Either";
 
 import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
 import type {
+  AuthoredExecutableProcedure,
   AuthoredStatBlockReactionTrigger,
+  CreatureTraitEffect,
   StatBlockProcedureEntry,
   StatBlockProcedureOrdinal,
   StatBlockProcedureResource,
   StatBlockProcedureResourceOrdinal,
   StatBlockRecord,
   StatBlockSpellcastingGroup,
+  StatBlockSpellReference,
   StatBlockTextOnlyReason,
 } from "@dnd/surface/surface/types";
+import {
+  parseSourceSection,
+  sourceSectionMatchesAnchor,
+  type SourceSectionAnchorRange,
+} from "@dnd/surface/surface/source-section-anchor";
 
 import {
   authoredStatBlockProcedureExecutionDecision,
   type AuthoredStatBlockProcedureExecutionDecision,
+  type StatBlockProcedureExecutionFailedFact,
 } from "./stat-block-authored-projection.ts";
 import { statBlockTraitSupport } from "./statblock-action-execution-support.ts";
-import { parseStatBlockRuntimeResource } from "./stat-block-execution-state.ts";
+import {
+  parseStatBlockRuntimeResource,
+  type StatBlockRuntimeResourceParseFailure,
+} from "./stat-block-execution-state.ts";
 import {
   STAT_BLOCK_ACTION_PROJECTION_SECTIONS,
   type StatBlockActionProjectionSection,
@@ -54,11 +66,109 @@ export type StatBlockProcedurePressureTextOnlyReason =
   | StatBlockTextOnlyReason
   | "untypedTrait";
 
+export const STAT_BLOCK_PROCEDURE_PRESSURE_EXECUTION_OWNERS = [
+  "battle-runtime Legendary Action resource pool",
+  "battle-runtime Stat Block Action lifecycle",
+  "battle-runtime Stat Block Bonus Action lifecycle",
+  "battle-runtime Stat Block Legendary Action lifecycle",
+  "battle-runtime Stat Block Multiattack dispatch graph",
+  "battle-runtime Stat Block resource graph",
+  "battle-runtime Stat Block resource pool",
+  "battle-runtime Stat Block trait attack-roll mode",
+  "battle-runtime delegated Bonus Action procedure",
+  "battle-runtime generic Stat Block Multiattack control",
+  "battle-runtime generic Stat Block attack procedure",
+] as const;
+
+export type StatBlockProcedurePressureExecutionOwner =
+  (typeof STAT_BLOCK_PROCEDURE_PRESSURE_EXECUTION_OWNERS)[number];
+
+export const STAT_BLOCK_PROCEDURE_PRESSURE_RUNTIME_SHAPES = [
+  "actions",
+  "attack",
+  "attackProcedureReference",
+  "bonusActionOption",
+  "bonusActions",
+  "conditionalAttackRollMode",
+  "daily",
+  "legendaryActions",
+  "multiattack",
+  "recharge",
+  "recharge_after_rest",
+  "resourceReference",
+] as const;
+
+export type StatBlockProcedurePressureRuntimeShape =
+  (typeof STAT_BLOCK_PROCEDURE_PRESSURE_RUNTIME_SHAPES)[number];
+
+type ReactionTriggerStructuralShape =
+  | {
+      readonly kind: "any_of";
+      readonly triggers: ReadonlyNonEmptyArray<ReactionTriggerStructuralShape>;
+    }
+  | {
+      readonly kind: Exclude<
+        AuthoredStatBlockReactionTrigger["kind"],
+        "any_of"
+      >;
+    };
+
+export type StatBlockProcedurePressureTableFact =
+  | { readonly kind: "lairPresenceForLegendaryActionUses" }
+  | { readonly kind: "procedureAdjudication" }
+  | {
+      readonly kind: "reactionTrigger";
+      readonly trigger: ReactionTriggerStructuralShape;
+    };
+
+export type StatBlockProcedurePressureSurfaceShape =
+  | {
+      readonly kind: "procedure";
+      readonly procedureKind: AuthoredExecutableProcedure["kind"];
+    }
+  | {
+      readonly kind: "trait";
+      readonly effectKind: CreatureTraitEffect["kind"];
+    }
+  | { readonly kind: "reactionSection" }
+  | {
+      readonly kind: "spellcastingGroup";
+      readonly groupKind: StatBlockSpellcastingGroup["kind"];
+    }
+  | {
+      readonly kind: "spellReference";
+      readonly restrictionPresence: "absent" | "present";
+    }
+  | { readonly kind: "multiattackProcedureReference" };
+
+export const STAT_BLOCK_PROCEDURE_PRESSURE_OWN_FAILED_FACTS = [
+  "missingTypedTraitEffectOwner",
+  "reactionTriggerAndResourceLifecycle",
+  "missingStatBlockSpellcastingGroupOwner",
+  "missingStatBlockSpellInvocationOwner",
+  "referencedProcedureNotExecutable",
+] as const;
+
+export type StatBlockProcedurePressureFailedFact =
+  | StatBlockProcedureExecutionFailedFact
+  | (typeof STAT_BLOCK_PROCEDURE_PRESSURE_OWN_FAILED_FACTS)[number];
+
+export type StatBlockProcedurePressureMalformedIssue =
+  | {
+      readonly kind: "invalidResourceDeclaration";
+      readonly reason: StatBlockRuntimeResourceParseFailure;
+    }
+  | { readonly kind: "missingResourceDeclaration" }
+  | {
+      readonly kind: "unresolvedSourceSection";
+      readonly section: string;
+    };
+
 export type StatBlockProcedurePressureDisposition =
   | {
       readonly kind: "executable";
-      readonly owner: string;
-      readonly runtimeShape: string;
+      readonly owner: StatBlockProcedurePressureExecutionOwner;
+      readonly runtimeShape: StatBlockProcedurePressureRuntimeShape;
     }
   | {
       readonly kind: "textOnly";
@@ -66,21 +176,20 @@ export type StatBlockProcedurePressureDisposition =
     }
   | {
       readonly kind: "tableOwned";
-      readonly explicitTableFact: string;
+      readonly explicitTableFact: StatBlockProcedurePressureTableFact;
     }
   | {
       readonly kind: "missingOwner";
-      readonly surfaceShape: string;
-      readonly failedFacts: ReadonlyNonEmptyArray<string>;
+      readonly surfaceShape: StatBlockProcedurePressureSurfaceShape;
+      readonly failedFacts: ReadonlyNonEmptyArray<StatBlockProcedurePressureFailedFact>;
     }
   | {
       readonly kind: "malformed";
       readonly stage:
         | "resourceDeclaration"
         | "resourceReference"
-        | "sourceLink"
-        | "section";
-      readonly issues: ReadonlyNonEmptyArray<string>;
+        | "sourceLink";
+      readonly issues: ReadonlyNonEmptyArray<StatBlockProcedurePressureMalformedIssue>;
     };
 
 export type StatBlockProcedurePressureSource =
@@ -183,8 +292,8 @@ export type StatBlockProcedurePressureCapabilityProposal = {
   readonly rank: number;
   readonly structuralKey: string;
   readonly occurrenceKind: StatBlockProcedurePressureOccurrenceKind;
-  readonly surfaceShape: string;
-  readonly failedFacts: ReadonlyNonEmptyArray<string>;
+  readonly surfaceShape: StatBlockProcedurePressureSurfaceShape;
+  readonly failedFacts: ReadonlyNonEmptyArray<StatBlockProcedurePressureFailedFact>;
   readonly occurrenceCount: number;
   readonly statBlockCount: number;
   readonly pressureScore: number;
@@ -210,10 +319,21 @@ export type StatBlockProcedurePressureReport = {
 const MAX_EXAMPLE_WITNESSES = 3;
 const MAX_CAPABILITY_PROPOSALS = 24;
 
-type AuthoredProcedureSection = {
-  readonly section: StatBlockActionProjectionSection;
-  readonly entries: readonly StatBlockProcedurePressureEntry[];
-};
+type AuthoredProcedureSection =
+  | {
+      readonly section: Exclude<
+        StatBlockActionProjectionSection,
+        "legendaryActions"
+      >;
+      readonly entries: readonly StatBlockProcedurePressureEntry[];
+    }
+  | {
+      readonly section: "legendaryActions";
+      readonly entries: readonly StatBlockProcedurePressureEntry[];
+      readonly uses: NonNullable<
+        StatBlockRecord["statBlock"]["legendaryActions"]
+      >["uses"];
+    };
 
 type StatBlockProcedurePressureEntry =
   | StatBlockProcedureEntry
@@ -221,11 +341,16 @@ type StatBlockProcedurePressureEntry =
 
 export function analyzeStatBlockProcedurePressure(
   records: readonly StatBlockRecord[],
+  sourceAnchors: readonly SourceSectionAnchorRange[],
 ): StatBlockProcedurePressureReport {
   const recordOccurrences = records.map((record, index) => ({
     record,
     recordOrdinal: index + 1,
-    occurrences: statBlockProcedurePressureOccurrences(record, index + 1),
+    occurrences: statBlockProcedurePressureOccurrences(
+      record,
+      index + 1,
+      sourceAnchors,
+    ),
   }));
   const occurrences = recordOccurrences.flatMap(
     ({ occurrences: values }) => values,
@@ -238,7 +363,10 @@ export function analyzeStatBlockProcedurePressure(
         recordOrdinal,
         statBlockId: record.id,
         statBlockName: record.name,
-        source: statBlockProcedurePressureSource(record.provenance.section),
+        source: statBlockProcedurePressureSource(
+          record.provenance.section,
+          sourceAnchors,
+        ),
         occurrenceCount: values.length,
       }),
     ),
@@ -254,11 +382,12 @@ export function analyzeStatBlockProcedurePressure(
 export function statBlockProcedurePressureOccurrences(
   record: StatBlockRecord,
   recordOrdinal: number,
+  sourceAnchors: readonly SourceSectionAnchorRange[],
 ): readonly StatBlockProcedurePressureOccurrence[] {
   const occurrences: StatBlockProcedurePressureOccurrence[] = [];
   const add = occurrenceAppender(
     occurrences,
-    procedurePressureOccurrenceBuilder(record, recordOrdinal),
+    procedurePressureOccurrenceBuilder(record, recordOrdinal, sourceAnchors),
   );
   const resourceContext = addResourceDeclarationOccurrences(record, add);
   addTraitOccurrences(record, add);
@@ -276,8 +405,12 @@ type ProcedurePressureOccurrenceBuilder = (
 function procedurePressureOccurrenceBuilder(
   record: StatBlockRecord,
   recordOrdinal: number,
+  sourceAnchors: readonly SourceSectionAnchorRange[],
 ): ProcedurePressureOccurrenceBuilder {
-  const source = statBlockProcedurePressureSource(record.provenance.section);
+  const source = statBlockProcedurePressureSource(
+    record.provenance.section,
+    sourceAnchors,
+  );
   return (kind, location, structuralSubject, disposition) => ({
     kind,
     structuralShape: structuralShape(structuralSubject),
@@ -287,7 +420,9 @@ function procedurePressureOccurrenceBuilder(
         : {
             kind: "malformed",
             stage: "sourceLink",
-            issues: [source.section],
+            issues: [
+              { kind: "unresolvedSourceSection", section: source.section },
+            ],
           },
     witness: {
       recordOrdinal,
@@ -377,12 +512,13 @@ function addAuthoredSectionOccurrences(
   add: AddOccurrence,
   resourceContext: StatBlockProcedurePressureResourceContext,
 ): void {
-  for (const { section, entries } of authoredProcedureSections(record)) {
+  for (const authoredSection of authoredProcedureSections(record)) {
+    const { section, entries } = authoredSection;
     add(
       "section",
       { kind: "section", section },
-      sectionShape(record, section),
-      sectionDisposition(record, section),
+      sectionShape(authoredSection),
+      sectionDisposition(authoredSection),
     );
     const decisions = new Map(
       entries.map((entry) => [
@@ -523,74 +659,95 @@ function authoredProcedureSections(
   record: StatBlockRecord,
 ): readonly AuthoredProcedureSection[] {
   return STAT_BLOCK_ACTION_PROJECTION_SECTIONS.flatMap((section) => {
-    const entries = Match.value(section).pipe(
-      Match.when("actions", () => record.statBlock.actions),
-      Match.when("bonusActions", () => record.statBlock.bonusActions),
-      Match.when("reactions", () => record.statBlock.reactions),
-      Match.when(
-        "legendaryActions",
-        () => record.statBlock.legendaryActions?.entries,
+    return Match.value(section).pipe(
+      Match.when("actions", () =>
+        ordinaryAuthoredProcedureSection("actions", record.statBlock.actions),
       ),
+      Match.when("bonusActions", () =>
+        ordinaryAuthoredProcedureSection(
+          "bonusActions",
+          record.statBlock.bonusActions,
+        ),
+      ),
+      Match.when("reactions", () =>
+        ordinaryAuthoredProcedureSection(
+          "reactions",
+          record.statBlock.reactions,
+        ),
+      ),
+      Match.when("legendaryActions", () => {
+        const legendaryActions = record.statBlock.legendaryActions;
+        return legendaryActions === undefined
+          ? []
+          : [
+              {
+                section: "legendaryActions" as const,
+                entries: legendaryActions.entries,
+                uses: legendaryActions.uses,
+              },
+            ];
+      }),
       Match.exhaustive,
     );
-    return entries === undefined ? [] : [{ section, entries }];
   });
 }
 
-function sectionShape(
-  record: StatBlockRecord,
-  section: StatBlockActionProjectionSection,
-): unknown {
-  return Match.value(section).pipe(
-    Match.when("legendaryActions", () => ({
-      section,
-      uses: record.statBlock.legendaryActions?.uses,
+function ordinaryAuthoredProcedureSection(
+  section: Exclude<StatBlockActionProjectionSection, "legendaryActions">,
+  entries: readonly StatBlockProcedurePressureEntry[] | undefined,
+): readonly AuthoredProcedureSection[] {
+  return entries === undefined ? [] : [{ section, entries }];
+}
+
+function sectionShape(authoredSection: AuthoredProcedureSection): unknown {
+  return Match.value(authoredSection).pipe(
+    Match.when({ section: "legendaryActions" }, ({ uses }) => ({
+      section: "legendaryActions",
+      uses,
     })),
-    Match.when("actions", () => ({ section })),
-    Match.when("bonusActions", () => ({ section })),
-    Match.when("reactions", () => ({ section })),
+    Match.when({ section: "actions" }, () => ({ section: "actions" })),
+    Match.when({ section: "bonusActions" }, () => ({
+      section: "bonusActions",
+    })),
+    Match.when({ section: "reactions" }, () => ({ section: "reactions" })),
     Match.exhaustive,
   );
 }
 
 function sectionDisposition(
-  record: StatBlockRecord,
-  section: StatBlockActionProjectionSection,
+  authoredSection: AuthoredProcedureSection,
 ): StatBlockProcedurePressureDisposition {
-  return Match.value(section).pipe(
-    Match.when("actions", () => ({
+  return Match.value(authoredSection).pipe(
+    Match.when({ section: "actions" }, () => ({
       kind: "executable" as const,
-      owner: "battle-runtime Stat Block Action lifecycle",
-      runtimeShape: "actions",
+      owner: "battle-runtime Stat Block Action lifecycle" as const,
+      runtimeShape: "actions" as const,
     })),
-    Match.when("bonusActions", () => ({
+    Match.when({ section: "bonusActions" }, () => ({
       kind: "executable" as const,
-      owner: "battle-runtime Stat Block Bonus Action lifecycle",
-      runtimeShape: "bonusActions",
+      owner: "battle-runtime Stat Block Bonus Action lifecycle" as const,
+      runtimeShape: "bonusActions" as const,
     })),
-    Match.when("reactions", () => ({
+    Match.when({ section: "reactions" }, () => ({
       kind: "missingOwner" as const,
-      surfaceShape: "reactions",
+      surfaceShape: { kind: "reactionSection" } as const,
       failedFacts: ["reactionTriggerAndResourceLifecycle"] as const,
     })),
-    Match.when("legendaryActions", () =>
-      record.statBlock.legendaryActions === undefined
+    Match.when({ section: "legendaryActions" }, ({ uses }) => {
+      return uses.kind === "fixed"
         ? {
-            kind: "malformed" as const,
-            stage: "section" as const,
-            issues: ["missingLegendaryActionSection"] as const,
+            kind: "executable" as const,
+            owner:
+              "battle-runtime Stat Block Legendary Action lifecycle" as const,
+            runtimeShape: "legendaryActions" as const,
           }
-        : record.statBlock.legendaryActions.uses.kind === "fixed"
-          ? {
-              kind: "executable" as const,
-              owner: "battle-runtime Stat Block Legendary Action lifecycle",
-              runtimeShape: "legendaryActions",
-            }
-          : {
-              kind: "tableOwned" as const,
-              explicitTableFact: "lairPresenceForLegendaryActionUses",
+        : {
+            kind: "tableOwned" as const,
+            explicitTableFact: {
+              kind: "lairPresenceForLegendaryActionUses" as const,
             },
-    ),
+          };
+    }),
     Match.exhaustive,
   );
 }
@@ -603,7 +760,7 @@ function procedureDisposition(
       entry.reason === "required_table_adjudication"
         ? {
             kind: "tableOwned" as const,
-            explicitTableFact: "procedureAdjudication",
+            explicitTableFact: { kind: "procedureAdjudication" as const },
           }
         : {
             kind: "textOnly" as const,
@@ -619,7 +776,7 @@ function procedureDisposition(
       { kind: "executable", procedureKind: "attack_roll" },
       ({ runtime }) => ({
         kind: "executable" as const,
-        owner: "battle-runtime generic Stat Block attack procedure",
+        owner: "battle-runtime generic Stat Block attack procedure" as const,
         runtimeShape: runtime.kind,
       }),
     ),
@@ -627,7 +784,7 @@ function procedureDisposition(
       { kind: "executable", procedureKind: "multiattack" },
       ({ runtime }) => ({
         kind: "executable" as const,
-        owner: "battle-runtime generic Stat Block Multiattack control",
+        owner: "battle-runtime generic Stat Block Multiattack control" as const,
         runtimeShape: runtime.kind,
       }),
     ),
@@ -635,7 +792,7 @@ function procedureDisposition(
       { kind: "executable", procedureKind: "action_option" },
       ({ runtime }) => ({
         kind: "executable" as const,
-        owner: "battle-runtime delegated Bonus Action procedure",
+        owner: "battle-runtime delegated Bonus Action procedure" as const,
         runtimeShape: runtime.kind,
       }),
     ),
@@ -643,10 +800,10 @@ function procedureDisposition(
   );
 }
 
-function procedureSurfaceShape(entry: StatBlockProcedureEntry): string {
-  return entry.kind === "textOnly"
-    ? `textOnly:${entry.reason}`
-    : entry.procedure.kind;
+function procedureSurfaceShape(
+  entry: Extract<StatBlockProcedureEntry, { readonly kind: "executable" }>,
+): StatBlockProcedurePressureSurfaceShape {
+  return { kind: "procedure", procedureKind: entry.procedure.kind };
 }
 
 function traitDisposition(
@@ -663,12 +820,12 @@ function traitDisposition(
     })),
     Match.when({ kind: "supported" }, () => ({
       kind: "executable" as const,
-      owner: "battle-runtime Stat Block trait attack-roll mode",
-      runtimeShape: "conditionalAttackRollMode",
+      owner: "battle-runtime Stat Block trait attack-roll mode" as const,
+      runtimeShape: "conditionalAttackRollMode" as const,
     })),
     Match.when({ kind: "unsupported" }, ({ effect }) => ({
       kind: "missingOwner" as const,
-      surfaceShape: `trait:${effect.kind}`,
+      surfaceShape: { kind: "trait" as const, effectKind: effect.kind },
       failedFacts: ["missingTypedTraitEffectOwner"] as const,
     })),
     Match.exhaustive,
@@ -680,34 +837,42 @@ function reactionTriggerDisposition(
 ): StatBlockProcedurePressureDisposition {
   return {
     kind: "tableOwned",
-    explicitTableFact: `reactionTrigger:${reactionTriggerShape(trigger)}`,
+    explicitTableFact: {
+      kind: "reactionTrigger",
+      trigger: reactionTriggerShape(trigger),
+    },
   };
 }
 
 function reactionTriggerShape(
   trigger: AuthoredStatBlockReactionTrigger,
-): string {
+): ReactionTriggerStructuralShape {
   return Match.value(trigger).pipe(
-    Match.when(
-      { kind: "any_of" },
-      ({ triggers }) =>
-        `any_of(${triggers.map(reactionTriggerShape).join(",")})`,
-    ),
-    Match.when({ kind: "hit_by_attack_roll" }, () => "hit_by_attack_roll"),
-    Match.when(
-      { kind: "takes_damage_from_creature" },
-      () => "takes_damage_from_creature",
-    ),
-    Match.when(
-      { kind: "self_or_visible_creature_falls" },
-      () => "self_or_visible_creature_falls",
-    ),
-    Match.when(
-      { kind: "targeted_by_named_spell" },
-      () => "targeted_by_named_spell",
-    ),
-    Match.when({ kind: "creature_casts_spell" }, () => "creature_casts_spell"),
-    Match.when({ kind: "spell_save_outcome" }, () => "spell_save_outcome"),
+    Match.when({ kind: "any_of" }, ({ triggers: [first, ...remaining] }) => ({
+      kind: "any_of" as const,
+      triggers: [
+        reactionTriggerShape(first),
+        ...remaining.map(reactionTriggerShape),
+      ] as const,
+    })),
+    Match.when({ kind: "hit_by_attack_roll" }, () => ({
+      kind: "hit_by_attack_roll" as const,
+    })),
+    Match.when({ kind: "takes_damage_from_creature" }, () => ({
+      kind: "takes_damage_from_creature" as const,
+    })),
+    Match.when({ kind: "self_or_visible_creature_falls" }, () => ({
+      kind: "self_or_visible_creature_falls" as const,
+    })),
+    Match.when({ kind: "targeted_by_named_spell" }, () => ({
+      kind: "targeted_by_named_spell" as const,
+    })),
+    Match.when({ kind: "creature_casts_spell" }, () => ({
+      kind: "creature_casts_spell" as const,
+    })),
+    Match.when({ kind: "spell_save_outcome" }, () => ({
+      kind: "spell_save_outcome" as const,
+    })),
     Match.exhaustive,
   );
 }
@@ -719,13 +884,13 @@ function resourceDeclarationDisposition(
   return Either.isRight(parsed)
     ? {
         kind: "executable",
-        owner: "battle-runtime Stat Block resource pool",
+        owner: "battle-runtime Stat Block resource pool" as const,
         runtimeShape: parsed.right.limit.kind,
       }
     : {
         kind: "malformed",
         stage: "resourceDeclaration",
-        issues: [parsed.left],
+        issues: [{ kind: "invalidResourceDeclaration", reason: parsed.left }],
       };
 }
 
@@ -735,12 +900,14 @@ function legendaryActionResourceDisposition(
   return Match.value(uses).pipe(
     Match.when({ kind: "fixed" }, () => ({
       kind: "executable" as const,
-      owner: "battle-runtime Legendary Action resource pool",
-      runtimeShape: "legendaryActions",
+      owner: "battle-runtime Legendary Action resource pool" as const,
+      runtimeShape: "legendaryActions" as const,
     })),
     Match.when({ kind: "lair_bonus" }, () => ({
       kind: "tableOwned" as const,
-      explicitTableFact: "lairPresenceForLegendaryActionUses",
+      explicitTableFact: {
+        kind: "lairPresenceForLegendaryActionUses" as const,
+      },
     })),
     Match.exhaustive,
   );
@@ -809,7 +976,10 @@ function addSpellcastingOccurrences(
       group,
       {
         kind: "missingOwner",
-        surfaceShape: `spellcastingGroup:${group.kind}`,
+        surfaceShape: {
+          kind: "spellcastingGroup",
+          groupKind: group.kind,
+        },
         failedFacts: ["missingStatBlockSpellcastingGroupOwner"],
       },
     );
@@ -843,7 +1013,7 @@ function addSpellcastingOccurrences(
           spellOrdinal: spellIndex + 1,
         },
         spell,
-        spellReferenceDisposition(),
+        spellReferenceDisposition(spell),
       );
     }
   }
@@ -861,7 +1031,7 @@ function resourceReferenceDisposition(
     return {
       kind: "malformed",
       stage: "resourceReference",
-      issues: ["missingResourceDeclaration"],
+      issues: [{ kind: "missingResourceDeclaration" }],
     };
   }
   return declaration.kind === "malformed"
@@ -872,8 +1042,8 @@ function resourceReferenceDisposition(
       }
     : {
         kind: "executable",
-        owner: "battle-runtime Stat Block resource graph",
-        runtimeShape: "resourceReference",
+        owner: "battle-runtime Stat Block resource graph" as const,
+        runtimeShape: "resourceReference" as const,
       };
 }
 
@@ -884,46 +1054,46 @@ function procedureReferenceDisposition(
     decision.procedureKind === "attack_roll"
     ? {
         kind: "executable",
-        owner: "battle-runtime Stat Block Multiattack dispatch graph",
-        runtimeShape: "attackProcedureReference",
+        owner: "battle-runtime Stat Block Multiattack dispatch graph" as const,
+        runtimeShape: "attackProcedureReference" as const,
       }
     : {
         kind: "missingOwner",
-        surfaceShape: "multiattackProcedureReference",
+        surfaceShape: { kind: "multiattackProcedureReference" },
         failedFacts: ["referencedProcedureNotExecutable"],
       };
 }
 
-function spellReferenceDisposition(): StatBlockProcedurePressureDisposition {
+function spellReferenceDisposition(
+  spell: StatBlockSpellReference,
+): StatBlockProcedurePressureDisposition {
   return {
     kind: "missingOwner",
-    surfaceShape: "statBlockSpellReference",
+    surfaceShape: {
+      kind: "spellReference",
+      restrictionPresence:
+        spell.restriction === undefined ? "absent" : "present",
+    },
     failedFacts: ["missingStatBlockSpellInvocationOwner"],
   };
 }
 
 function statBlockProcedurePressureSource(
   section: string,
+  sourceAnchors: readonly SourceSectionAnchorRange[],
 ): StatBlockProcedurePressureSource {
-  const match = /^(.*\.md):(\d+)(?:-(\d+))?$/.exec(section);
-  if (match === null) return { kind: "unresolved", section };
-  const relativePath = match[1];
-  const firstLine = Number(match[2]);
-  const lastLine = Number(match[3] ?? match[2]);
-  if (
-    relativePath === undefined ||
-    relativePath.startsWith("/") ||
-    relativePath.split("/").includes("..") ||
-    firstLine < 1 ||
-    lastLine < firstLine
-  ) {
-    return { kind: "unresolved", section };
-  }
+  const parsedSection = parseSourceSection(section);
+  if (parsedSection.tag === "malformed") return { kind: "unresolved", section };
+  const claimedSection = parsedSection.section;
+  const sourceAnchor = sourceAnchors.find((candidate) =>
+    sourceSectionMatchesAnchor(claimedSection, candidate),
+  );
+  if (sourceAnchor === undefined) return { kind: "unresolved", section };
   return {
     kind: "linked",
-    path: `.references/srd-5.2.1/${relativePath}`,
-    firstLine,
-    lastLine,
+    path: sourceAnchor.sourcePath,
+    firstLine: claimedSection.lineStart,
+    lastLine: claimedSection.lineEnd,
   };
 }
 
@@ -933,7 +1103,6 @@ const AUTHORED_EXPRESSION_KEYS = new Set([
   "label",
   "name",
   "provenance",
-  "restriction",
   "spellId",
 ]);
 
@@ -949,7 +1118,12 @@ function normalizeStructuralValue(value: unknown): unknown {
     Object.entries(value)
       .filter(([key]) => !AUTHORED_EXPRESSION_KEYS.has(key))
       .sort(([left], [right]) => left.localeCompare(right))
-      .map(([key, child]) => [key, normalizeStructuralValue(child)]),
+      .map(([key, child]) => [
+        key,
+        key === "restriction"
+          ? { kind: "authoredExpressionPresent" }
+          : normalizeStructuralValue(child),
+      ]),
   );
 }
 
@@ -1039,8 +1213,8 @@ function capabilityProposals(
     string,
     {
       readonly occurrenceKind: StatBlockProcedurePressureOccurrenceKind;
-      readonly surfaceShape: string;
-      readonly failedFacts: ReadonlyNonEmptyArray<string>;
+      readonly surfaceShape: StatBlockProcedurePressureSurfaceShape;
+      readonly failedFacts: ReadonlyNonEmptyArray<StatBlockProcedurePressureFailedFact>;
       readonly witnesses: StatBlockProcedurePressureWitness[];
     }
   >();

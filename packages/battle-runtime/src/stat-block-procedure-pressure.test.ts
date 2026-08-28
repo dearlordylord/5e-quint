@@ -5,7 +5,11 @@ import { describe, expect, it } from "vitest";
 
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";
-import type { StatBlockRecord } from "@dnd/surface/surface/types";
+import type {
+  StatBlockRecord,
+  StatBlockSpellReference,
+} from "@dnd/surface/surface/types";
+import type { SourceSectionAnchorRange } from "@dnd/surface/surface/source-section-anchor";
 
 import {
   analyzeStatBlockProcedurePressure,
@@ -26,10 +30,13 @@ const EXPECTED_OCCURRENCE_COUNTS = {
   procedureReference: 45,
 } as const;
 
+const SOURCE_ANCHORS = sourceAnchors(srdStatBlockCollection.statBlocks);
+
 describe("complete-catalog Stat Block procedure pressure", () => {
   it("enumerates every authored procedure-bearing occurrence in RAW catalog order", () => {
     const report = analyzeStatBlockProcedurePressure(
       srdStatBlockCollection.statBlocks,
+      SOURCE_ANCHORS,
     );
 
     expect(report.recordCount).toBe(330);
@@ -43,22 +50,45 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     expect(report.occurrenceCounts).toEqual(EXPECTED_OCCURRENCE_COUNTS);
     expect(report.occurrences).toEqual(
       srdStatBlockCollection.statBlocks.flatMap((record, index) =>
-        statBlockProcedurePressureOccurrences(record, index + 1),
+        statBlockProcedurePressureOccurrences(
+          record,
+          index + 1,
+          SOURCE_ANCHORS,
+        ),
       ),
     );
     expect(report.capabilityProposals.length).toBeLessThanOrEqual(24);
     expect(report.capabilityProposals[0]).toMatchObject({
       rank: 1,
       occurrenceKind: "spellReference",
-      surfaceShape: "statBlockSpellReference",
+      surfaceShape: {
+        kind: "spellReference",
+        restrictionPresence: "absent",
+      },
       failedFacts: ["missingStatBlockSpellInvocationOwner"],
-      occurrenceCount: 309,
+      occurrenceCount: 286,
+    });
+    expect(
+      report.capabilityProposals.find(
+        ({ surfaceShape }) =>
+          surfaceShape.kind === "spellReference" &&
+          surfaceShape.restrictionPresence === "present",
+      ),
+    ).toMatchObject({
+      occurrenceKind: "spellReference",
+      surfaceShape: {
+        kind: "spellReference",
+        restrictionPresence: "present",
+      },
+      occurrenceCount: 23,
+      statBlockCount: 21,
     });
   });
 
   it("keeps all five dispositions distinct and source-links every catalog occurrence", () => {
     const report = analyzeStatBlockProcedurePressure(
       srdStatBlockCollection.statBlocks,
+      SOURCE_ANCHORS,
     );
 
     expect(report.dispositionCounts).toEqual({
@@ -89,6 +119,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
   it("accounts for every ordinary and Legendary Action resource declaration and reference", () => {
     const report = analyzeStatBlockProcedurePressure(
       srdStatBlockCollection.statBlocks,
+      SOURCE_ANCHORS,
     );
     const declarations = report.occurrences.filter(
       (occurrence) => occurrence.kind === "resourceDeclaration",
@@ -127,8 +158,14 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     const renamedRecords = sourceRecords.map((record, index) =>
       syntheticIdentityRecord(record, index + 1),
     );
-    const sourceReport = analyzeStatBlockProcedurePressure(sourceRecords);
-    const renamedReport = analyzeStatBlockProcedurePressure(renamedRecords);
+    const sourceReport = analyzeStatBlockProcedurePressure(
+      sourceRecords,
+      SOURCE_ANCHORS,
+    );
+    const renamedReport = analyzeStatBlockProcedurePressure(
+      renamedRecords,
+      SOURCE_ANCHORS,
+    );
 
     expect(renamedReport.occurrenceCounts).toEqual(
       sourceReport.occurrenceCounts,
@@ -144,6 +181,76 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     ).toEqual(proposalsWithoutWitnesses(sourceReport.capabilityProposals));
   });
 
+  it("preserves spell-restriction presence without retaining protected expression", () => {
+    const source = srdStatBlockCollection.statBlocks.find((record) => {
+      const spells = statBlockSpellReferences(record);
+      return spells.length === 1 && spells[0]?.restriction === undefined;
+    });
+    if (source === undefined) {
+      throw new Error("Expected one single-spell unrestricted Stat Block.");
+    }
+    const restricted = withFirstSpellRestriction(source);
+    const unrestrictedOccurrence = analyzeStatBlockProcedurePressure(
+      [source],
+      SOURCE_ANCHORS,
+    ).occurrences.find(({ kind }) => kind === "spellReference");
+    const restrictedOccurrence = analyzeStatBlockProcedurePressure(
+      [restricted],
+      SOURCE_ANCHORS,
+    ).occurrences.find(({ kind }) => kind === "spellReference");
+
+    expect(unrestrictedOccurrence?.disposition).toMatchObject({
+      kind: "missingOwner",
+      surfaceShape: {
+        kind: "spellReference",
+        restrictionPresence: "absent",
+      },
+    });
+    expect(restrictedOccurrence?.disposition).toMatchObject({
+      kind: "missingOwner",
+      surfaceShape: {
+        kind: "spellReference",
+        restrictionPresence: "present",
+      },
+    });
+    expect(restrictedOccurrence?.structuralShape).not.toBe(
+      unrestrictedOccurrence?.structuralShape,
+    );
+    expect(restrictedOccurrence?.structuralShape).toContain(
+      "authoredExpressionPresent",
+    );
+    expect(restrictedOccurrence?.structuralShape).not.toContain(
+      "Synthetic table restriction",
+    );
+  });
+
+  it("rejects plausible wrong-path and out-of-range source anchors", () => {
+    const source = srdStatBlockCollection.statBlocks[0];
+    if (source === undefined) throw new Error("Expected one SRD Stat Block.");
+    const anchor = SOURCE_ANCHORS[0];
+    if (anchor === undefined)
+      throw new Error("Expected one SRD source anchor.");
+    const mutations = [
+      "Animals.md:1-1",
+      `Synthetic.md:${String(anchor.lineStart)}-${String(anchor.lineEnd)}`,
+      `${anchor.sourcePath}:${String(anchor.lineStart)}-${String(anchor.spanEnd + 1)}`,
+    ].map(
+      (section): StatBlockRecord => ({
+        ...source,
+        provenance: { ...source.provenance, section },
+      }),
+    );
+
+    const report = analyzeStatBlockProcedurePressure(mutations, SOURCE_ANCHORS);
+
+    expect(report.dispositionCounts.malformed).toBe(report.occurrenceCount);
+    expect(
+      report.records.every(
+        ({ source: recordSource }) => recordSource.kind === "unresolved",
+      ),
+    ).toBe(true);
+  });
+
   it("accumulates malformed source evidence across independent records", () => {
     const mutated = srdStatBlockCollection.statBlocks.slice(0, 2).map(
       (record, index): StatBlockRecord => ({
@@ -154,7 +261,7 @@ describe("complete-catalog Stat Block procedure pressure", () => {
         },
       }),
     );
-    const report = analyzeStatBlockProcedurePressure(mutated);
+    const report = analyzeStatBlockProcedurePressure(mutated, SOURCE_ANCHORS);
 
     expect(report.dispositionCounts.malformed).toBe(report.occurrenceCount);
     expect(
@@ -164,7 +271,13 @@ describe("complete-catalog Stat Block procedure pressure", () => {
     expect(
       new Set(
         report.occurrences.flatMap(({ disposition }) =>
-          disposition.kind === "malformed" ? disposition.issues : [],
+          disposition.kind === "malformed"
+            ? disposition.issues.map((issue) =>
+                issue.kind === "unresolvedSourceSection"
+                  ? issue.section
+                  : issue.kind,
+              )
+            : [],
         ),
       ),
     ).toEqual(
@@ -205,7 +318,10 @@ describe("complete-catalog Stat Block procedure pressure", () => {
         ],
       },
     });
-    const report = analyzeStatBlockProcedurePressure([synthetic]);
+    const report = analyzeStatBlockProcedurePressure(
+      [synthetic],
+      SOURCE_ANCHORS,
+    );
     const trigger = report.occurrences.find(
       (occurrence) => occurrence.kind === "reactionTrigger",
     );
@@ -218,7 +334,10 @@ describe("complete-catalog Stat Block procedure pressure", () => {
 
     expect(trigger?.disposition).toEqual({
       kind: "tableOwned",
-      explicitTableFact: "reactionTrigger:hit_by_attack_roll",
+      explicitTableFact: {
+        kind: "reactionTrigger",
+        trigger: { kind: "hit_by_attack_roll" },
+      },
     });
     expect(reaction?.disposition).toMatchObject({
       kind: "missingOwner",
@@ -266,6 +385,42 @@ function syntheticIdentityRecord(
   return decodeStatBlockRecordSync(renamedUnknown);
 }
 
+function statBlockSpellReferences(
+  record: StatBlockRecord,
+): readonly StatBlockSpellReference[] {
+  return [
+    ...(record.statBlock.actions ?? []),
+    ...(record.statBlock.bonusActions ?? []),
+    ...(record.statBlock.reactions ?? []),
+    ...(record.statBlock.legendaryActions?.entries ?? []),
+  ].flatMap((entry) =>
+    entry.kind === "executable" && entry.procedure.kind === "spellcasting"
+      ? entry.procedure.groups.flatMap(({ spells }) => spells)
+      : [],
+  );
+}
+
+function withFirstSpellRestriction(record: StatBlockRecord): StatBlockRecord {
+  const encoded: unknown = JSON.parse(JSON.stringify(record));
+  if (!addFirstSpellRestriction(encoded)) {
+    throw new Error("Expected an unrestricted spell reference.");
+  }
+  return decodeStatBlockRecordSync(encoded);
+}
+
+function addFirstSpellRestriction(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  if (Array.isArray(value)) {
+    return value.some((child) => addFirstSpellRestriction(child));
+  }
+  const record = value as Record<string, unknown>;
+  if (typeof record.spellId === "string" && record.restriction === undefined) {
+    record.restriction = "Synthetic table restriction.";
+    return true;
+  }
+  return Object.values(record).some((child) => addFirstSpellRestriction(child));
+}
+
 function groupsWithoutWitnesses(
   groups: readonly StatBlockProcedurePressureGroup[],
 ): readonly Omit<StatBlockProcedurePressureGroup, "exampleWitnesses">[] {
@@ -283,6 +438,25 @@ function proposalsWithoutWitnesses(
   return proposals.map(
     ({ exampleWitnesses: _exampleWitnesses, ...proposal }) => proposal,
   );
+}
+
+function sourceAnchors(
+  records: readonly StatBlockRecord[],
+): readonly SourceSectionAnchorRange[] {
+  return records.map((record) => {
+    const match = /^(.*):(\d+)-(\d+)$/.exec(record.provenance.section);
+    if (match === null || match[1] === undefined) {
+      throw new Error("Expected canonical SRD source section.");
+    }
+    const lineStart = Number(match[2]);
+    const lineEnd = Number(match[3]);
+    return {
+      sourcePath: `.references/srd-5.2.1/${match[1]}`,
+      lineStart,
+      lineEnd,
+      spanEnd: lineEnd,
+    };
+  });
 }
 
 function typeScriptFiles(directory: string): readonly string[] {
