@@ -1,0 +1,184 @@
+{
+  "challengeRating": 5,
+  "id": "stat_block_hill_giant",
+  "kind": "statBlock",
+  "name": "Hill Giant",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:135-158"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 6,
+      "con": 19,
+      "dex": 8,
+      "int": 5,
+      "str": 21,
+      "wis": 9
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 13
+      }
+    },
+    "actions": [
+      {
+        "description": "The giant makes two attacks, using Tree Club or Trash Lob in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Tree Club",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 8,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 18
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "condition": "prone",
+              "kind": "apply_condition_if_target_size_at_most",
+              "maxCreatureSize": "large"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 8
+          },
+          "attackType": "ranged",
+          "kind": "attack_roll",
+          "name": "Trash Lob",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 10,
+                  "flat": 5
+                },
+                "kind": "fixed",
+                "static": 16
+              },
+              "damageType": "bludgeoning",
+              "kind": "damage"
+            },
+            {
+              "condition": "poisoned",
+              "expiresAt": {
+                "kind": "target_next_turn_end"
+              },
+              "kind": "apply_condition"
+            }
+          ],
+          "rangeFeet": {
+            "long": 240,
+            "normal": 60
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Giant"
+        ]
+      }
+    },
+    "creatureType": "giant",
+    "hp": {
+      "kind": "literal",
+      "value": 105
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 12,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 5
+      },
+      {
+        "ability": "dex",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 4
+      },
+      {
+        "ability": "int",
+        "modifier": -3
+      },
+      {
+        "ability": "wis",
+        "modifier": -1
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
+      }
+    ],
+    "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 2,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

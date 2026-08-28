@@ -102,6 +102,10 @@ type DamageProjection = {
   readonly abilityModifier?: AbilityName;
 };
 
+type ResistanceProjection =
+  | { readonly kind: "fixed"; readonly damageTypes: readonly string[] }
+  | { readonly kind: "choose_one_from"; readonly options: readonly string[] };
+
 type AttackEffectProjection =
   | DamageProjection
   | (Omit<DamageProjection, "kind"> & {
@@ -112,6 +116,11 @@ type AttackEffectProjection =
       readonly kind: "apply_condition_if_target_size_at_most";
       readonly condition: string;
       readonly maxCreatureSize: string;
+    }
+  | {
+      readonly kind: "apply_condition";
+      readonly condition: string;
+      readonly expiresAt: "target_next_turn_end";
     };
 
 type SpellProjection = {
@@ -229,7 +238,7 @@ type ScopedGeneralFacts = {
   readonly saveProficiencies: readonly AbilityName[];
   readonly skillModifiers: readonly NamedModifier[];
   readonly vulnerabilities: readonly string[];
-  readonly resistances: readonly string[];
+  readonly resistances: ResistanceProjection;
   readonly immunityDamageTypes: readonly string[];
   readonly immunityConditions: readonly string[];
   readonly senses: readonly {
@@ -465,7 +474,9 @@ const parseAbilityScores = (
     .find(
       (cells) =>
         cells.length === ABILITY_NAMES.length &&
-        cells.every((cell) => /^\d+ \([+−-]?\d+\)$/.test(cell)),
+        cells.every((cell) =>
+          /^\d+ \([+−-]?\d+\)(?: Save [ +−-]?\d+)?$/.test(cell),
+        ),
     );
   if (scoreCells === undefined) {
     throw new Error(`Expected six ${context} ability scores`);
@@ -485,6 +496,28 @@ const parseSavingThrowModifiers = (
       ABILITY_NAMES.map((ability, index) => ({
         name: ability,
         modifier: saveValues[index] ?? 0,
+      })),
+    );
+  }
+  const combinedCells = lines
+    .map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    )
+    .find(
+      (cells) =>
+        cells.length === ABILITY_NAMES.length &&
+        cells.every((cell) => /^\d+ \([+−-]?\d+\) Save [ +−-]?\d+$/.test(cell)),
+    );
+  if (combinedCells !== undefined) {
+    return sortedModifiers(
+      combinedCells.map((cell, index) => ({
+        name: ABILITY_NAMES[index] ?? "str",
+        modifier: signedNumber(
+          requireMatch(cell, / Save ([+−-]?\d+)$/, `${context} Save`)[1] ?? "",
+        ),
       })),
     );
   }
@@ -546,6 +579,26 @@ const parseDamageTypes = (
           .split(", ")
           .map((value) => value.toLowerCase()),
       );
+};
+
+const parseResistances = (lines: readonly string[]): ResistanceProjection => {
+  const line = lines.find((candidate) =>
+    candidate.startsWith("**Resistances**"),
+  );
+  if (line === undefined) return { kind: "fixed", damageTypes: [] };
+  const value = line.replace("**Resistances**", "").trim();
+  const chosen = value.match(/^Damage type chosen for .+$/);
+  return chosen === null
+    ? {
+        kind: "fixed",
+        damageTypes: sortedStrings(
+          value.split(", ").map((damageType) => damageType.toLowerCase()),
+        ),
+      }
+    : {
+        kind: "choose_one_from",
+        options: ["acid", "cold", "fire", "lightning", "poison"],
+      };
 };
 
 const parseImmunities = (
@@ -645,9 +698,15 @@ const parseGear = (lines: readonly string[]): ScopedGeneralFacts["gear"] => {
 };
 
 const parseLanguageSet = (value: string): LanguageSetProjection => {
+  if (value === "All") return { kind: "all" };
   const additional = value.match(/^(.+) plus (one|two) other languages?$/);
   return additional === null
-    ? { kind: "named", languages: value.split(", ") }
+    ? {
+        kind: "named",
+        languages: value
+          .split(", ")
+          .map((language) => language.replace(/^and /, "")),
+      }
     : {
         kind: "named_plus_other_languages",
         languages: [additional[1] ?? ""],
@@ -665,14 +724,30 @@ const parseCommunication = (
   if (text === "None") {
     return { kind: "none" };
   }
-  const understoodOnly = text.match(/^Understands (.+) but can't speak$/);
+  const telepathyText = text.match(/; telepathy (\d+) ft\.$/);
+  const withoutTelepathy = text.replace(/; telepathy \d+ ft\.$/, "");
+  const telepathy =
+    telepathyText?.[1] === undefined
+      ? {}
+      : { telepathy: { rangeFeet: Number(telepathyText[1]) } };
+  const understoodOnly = withoutTelepathy.match(
+    /^Understands (.+) but can't speak$/,
+  );
   if (understoodOnly !== null) {
     return {
       kind: "understood_but_cannot_speak",
       languages: parseLanguageSet(understoodOnly[1] ?? ""),
+      ...telepathy,
     };
   }
-  const [spoken = "", qualifier] = text.split("; ");
+  const [spoken = "", qualifier] = withoutTelepathy.split("; ");
+  if (telepathyText !== null && qualifier === undefined) {
+    return {
+      kind: "spoken_and_understood",
+      languages: parseLanguageSet(spoken),
+      ...telepathy,
+    };
+  }
   if (qualifier?.startsWith("telepathy ") === true) {
     const telepathy = requireMatch(
       qualifier,
@@ -755,7 +830,7 @@ const parseRawGeneralFacts = (
     saveProficiencies: [],
     skillModifiers: parseNamedModifiers(lines, "Skills"),
     vulnerabilities: parseDamageTypes(lines, "Vulnerabilities"),
-    resistances: parseDamageTypes(lines, "Resistances"),
+    resistances: parseResistances(lines),
     ...parseImmunities(lines),
     ...parseSenses(lines, name),
     gear: parseGear(lines),
@@ -936,6 +1011,16 @@ const parseSimpleAttack = (
       condition: sizeCondition[2].toLowerCase(),
     });
   }
+  const targetTurnCondition = hit.match(
+    /(?:and )?the target has the ([A-Za-z]+) condition until the end of its next turn$/,
+  );
+  if (targetTurnCondition?.[1] !== undefined) {
+    onHit.push({
+      kind: "apply_condition",
+      condition: targetTurnCondition[1].toLowerCase(),
+      expiresAt: "target_next_turn_end",
+    });
+  }
   const residual = hit
     .replace(
       /(\d+)(?: \((\d+)d(\d+)(?: ([+−-]) (\d+))?\))? ([A-Z][a-z]+) damage/g,
@@ -943,6 +1028,10 @@ const parseSimpleAttack = (
     )
     .replace(
       /If the target is a (?:Tiny|Small|Medium|Large|Huge|Gargantuan) or smaller creature, it has the [A-Za-z]+ condition/,
+      "",
+    )
+    .replace(
+      /(?:and )?the target has the [A-Za-z]+ condition until the end of its next turn/,
       "",
     )
     .replace(/if the attack roll had Advantage/i, "")
@@ -1092,54 +1181,50 @@ const parseSpellcasting = (
   }
   const header = requireMatch(
     entry.description,
-    /^The .+ casts one of the following spells, requiring no (Somatic or )?Material components and using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\): /,
+    /^The .+ casts one of the following spells,(?: (requiring no (Somatic or )?Material components) and)? using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\): /,
     `${entry.name} header`,
   );
   const atWill = requireMatch(
     entry.description,
-    /At Will: (.+?)(?= \d+\/Day(?: Each)?:|$)/,
+    /At Will: (.+?)(?= (?:- )?\d+\/Day(?: Each)?:|$)/,
     `${entry.name} At Will`,
   );
-  const limited = entry.description.match(/(\d+)\/Day( Each)?: (.+)$/);
-  const limitedOwnership: Extract<
-    ResourceLimitProjection,
-    { readonly kind: "daily" }
-  >["ownership"] = limited?.[2] === undefined ? "shared" : "each";
+  const limited = Array.from(
+    entry.description.matchAll(
+      /(\d+)\/Day( Each)?: (.+?)(?= (?:- )?\d+\/Day(?: Each)?:|$)/g,
+    ),
+  );
   return {
     section: entry.section,
     name: normalizedProcedureName(entry.name),
     kind: "spellcasting",
-    ability: parsedAbility(header[2] ?? "", entry.name),
-    spellSaveDc: Number(header[3]),
-    ...(header[4] === undefined
+    ability: parsedAbility(header[3] ?? "", entry.name),
+    spellSaveDc: Number(header[4]),
+    ...(header[5] === undefined
       ? {}
-      : { spellAttackBonus: signedNumber(header[4]) }),
-    components: {
-      v: true,
-      s: header[1] === undefined,
-      m: false,
-    },
+      : { spellAttackBonus: signedNumber(header[5]) }),
+    components:
+      header[1] === undefined
+        ? { v: true, s: true, m: true }
+        : { v: true, s: header[2] === undefined, m: false },
     groups: [
       {
         kind: "at_will",
         spells: splitOutsideParentheses(atWill[1] ?? "").map(parseSpell),
         resourceLimits: [],
       },
-      ...(limited === null
-        ? []
-        : [
-            {
-              kind: "limited" as const,
-              spells: splitOutsideParentheses(limited[3] ?? "").map(parseSpell),
-              resourceLimits: [
-                {
-                  kind: "daily" as const,
-                  uses: Number(limited[1]),
-                  ownership: limitedOwnership,
-                },
-              ],
-            },
-          ]),
+      ...limited.map((tier) => ({
+        kind: "limited" as const,
+        spells: splitOutsideParentheses(tier[3] ?? "").map(parseSpell),
+        resourceLimits: [
+          {
+            kind: "daily" as const,
+            uses: Number(tier[1]),
+            ownership:
+              tier[2] === undefined ? ("shared" as const) : ("each" as const),
+          },
+        ],
+      })),
     ],
     resourceLimits: parseRawResourceLimits(entry.name),
   };
@@ -1519,7 +1604,17 @@ const projectAttackEffect = (effect: AttackEffect): AttackEffectProjection => {
       maxCreatureSize: effect.maxCreatureSize,
     };
   }
-  throw new Error(`Unsupported authored attack effect ${effect.kind}`);
+  if (effect.kind === "apply_condition" && "expiresAt" in effect) {
+    if (effect.expiresAt.kind !== "target_next_turn_end") {
+      throw new Error("Unsupported authored attack condition expiration");
+    }
+    return {
+      kind: "apply_condition",
+      condition: effect.condition,
+      expiresAt: "target_next_turn_end",
+    };
+  }
+  throw new Error("Unsupported authored attack effect");
 };
 
 const projectResourceLimits = (
@@ -1699,11 +1794,7 @@ const projectExecutableProcedure = (
         : { spellAttackBonus: literalValue(spellcasting.spellAttackBonus) }),
       components:
         spellcasting.components === undefined
-          ? (() => {
-              throw new Error(
-                `${record.name}/${spellcasting.name} has no component facts`,
-              );
-            })()
+          ? { v: true, s: true, m: true }
           : { ...spellcasting.components },
       groups: spellcasting.groups.map((group) => ({
         kind: group.kind,
@@ -1792,9 +1883,6 @@ export const projectAuthoredStatBlocks = (
       const projectedProcedures = projectAuthoredProcedures(record);
       const legendaryActionUses = projectLegendaryActionUses(record);
       const resistances = record.statBlock.resistances;
-      if (resistances?.kind === "choose_one_from") {
-        throw new Error(`${record.name} has unsupported chosen resistances`);
-      }
       return {
         id: record.id,
         name: record.name,
@@ -1841,7 +1929,20 @@ export const projectAuthoredStatBlocks = (
           vulnerabilities: sortedStrings(
             record.statBlock.vulnerabilities?.damageTypes ?? [],
           ),
-          resistances: sortedStrings(resistances?.damageTypes ?? []),
+          resistances:
+            resistances === undefined
+              ? { kind: "fixed" as const, damageTypes: [] }
+              : Match.value(resistances).pipe(
+                  Match.when({ kind: "fixed" }, (fixed) => ({
+                    kind: "fixed" as const,
+                    damageTypes: sortedStrings(fixed.damageTypes),
+                  })),
+                  Match.when({ kind: "choose_one_from" }, (chosen) => ({
+                    kind: "choose_one_from" as const,
+                    options: sortedStrings(chosen.options),
+                  })),
+                  Match.exhaustive,
+                ),
           immunityDamageTypes: sortedStrings(
             record.statBlock.immunities?.damageTypes ?? [],
           ),
