@@ -9,9 +9,9 @@ import { resolveReplayContinuationFromState } from "./battle-execution-compositi
 import {
   advanceToActorNextTurnForTest,
   castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
 } from "./spell-effect-fixture.test-support.ts";
 import { knownWillingSpellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import {
   actionSurgeResource,
   applyCondition,
@@ -1314,16 +1314,10 @@ function withJumpMovementReplacementEffect(
   session: BattleRuntimeSession,
 ): BattleState {
   const expected = spellSlotInvocationRef("jump", 1, "jumpMovementReplacement");
-  const act = discoverBattleActs(session).find((candidate) => {
-    const invocation = battleActSpellPresentation(candidate)?.invocation;
-    return (
-      candidate.subject.actorId === fighterId &&
-      candidate.subject.tag === "bonusActionSpell" &&
-      invocation?.tag === "spellSlot" &&
-      invocation.spellId === expected.spellId &&
-      invocation.procedure === expected.procedure &&
-      invocation.slotLevel === 1
-    );
+  const act = requireActorAdmittedSpellActForTest({
+    session,
+    actorId: fighterId,
+    invocationRef: expected,
   });
   if (act?.subject.tag !== "bonusActionSpell") {
     throw new Error("Expected the Monk's admitted Jump invocation.");

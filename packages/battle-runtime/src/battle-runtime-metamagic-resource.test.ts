@@ -643,7 +643,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       resolveBattleSubject({
         state,
         subject: act.subject,
-        fills: [spellTargetListFill(targetHole, "invisibility", [fighterId])],
+        fills: [spellTargetListFill(targetHole, [fighterId])],
       }),
     );
 
@@ -675,7 +675,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
       resolveBattleSubject({
         state,
         subject: act.subject,
-        fills: [spellTargetListFill(targetHole, "bless", [fighterId])],
+        fills: [spellTargetListFill(targetHole, [fighterId])],
       }),
     );
 
@@ -1808,7 +1808,7 @@ describe("battle runtime: Sorcerer Metamagic cast governor and Quickened Spell",
         state,
         subject: act.subject,
         fills: [
-          spellTargetListFill(targetHole, "bless", [
+          spellTargetListFill(targetHole, [
             wizardId,
             fighterId,
             skeletonId,
@@ -4196,7 +4196,7 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       "Spell targets",
     );
     const commandOptionHole = findHole(act.initialHoles, "commandOptionChoice");
-    const targetFill = spellTargetListFill(targetHole, "command", [skeletonId]);
+    const targetFill = spellTargetListFill(targetHole, [skeletonId]);
     const optionFill: Extract<
       BattleFill,
       { readonly kind: "commandOptionChoice" }
@@ -4251,12 +4251,10 @@ describe("battle runtime: Sorcerer save-affecting Metamagic", () => {
       maxTargets: 3,
     });
 
-    const targetFill = spellTargetListFill(targetHole, "command", [skeletonId]);
-    const protectedTargetsFill = spellTargetListFill(
-      protectedTargetsHole,
-      "command",
-      [skeletonId],
-    );
+    const targetFill = spellTargetListFill(targetHole, [skeletonId]);
+    const protectedTargetsFill = spellTargetListFill(protectedTargetsHole, [
+      skeletonId,
+    ]);
     const optionFill: Extract<
       BattleFill,
       { readonly kind: "commandOptionChoice" }
@@ -4770,7 +4768,7 @@ function withSanctuaryWard(
     resolveBattleSubject({
       state: session.state,
       subject: act.subject,
-      fills: [spellTargetListFill(target, "sanctuary", [wardedId])],
+      fills: [spellTargetListFill(target, [wardedId])],
     }),
   );
   return advanceToActorNextTurnForTest(cast.state, wizardId);
@@ -5103,7 +5101,7 @@ function saveMetamagicBattle(input: {
   }[];
   readonly d20Statistics?: ReturnType<typeof testCharacterD20Statistics>;
   readonly spellcastingAbilityModifier?: number;
-  readonly mirrorImageAllyCaster?: boolean;
+  readonly mirrorImageAllyCaster?: true;
 }): BattleRuntimeSession {
   return startBattleSessionRight({
     battleId: battleId("battle:sorcerer-metamagic-save"),
@@ -6222,12 +6220,6 @@ function findSpellTargetListHole(
 
 function spellTargetListFill(
   hole: Extract<BattleHole, { readonly kind: "spellTargetList" }>,
-  _spellId:
-    | "bless"
-    | "burning_hands"
-    | "command"
-    | "invisibility"
-    | "sanctuary",
   targetIds: readonly ReturnType<typeof combatantId>[],
 ): Extract<BattleFill, { readonly kind: "spellTargetList" }> {
   const relationshipFactRequest = hole.relationshipFactRequest;

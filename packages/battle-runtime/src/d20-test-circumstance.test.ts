@@ -26,7 +26,6 @@ import {
 import {
   attackRollFill,
   battleId,
-  battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
   characterSeed,
   damageRollFillWithGroups,
@@ -35,6 +34,7 @@ import {
   goblinId,
   discoverBattleActs,
   findHole,
+  requireCharacterSpellProcedureRefForTest,
   requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill,
   startBattleSessionRight,
@@ -60,6 +60,7 @@ import {
   spellConditionChoiceFill,
   spellTargetListFill,
 } from "./unit-profile-admission-spell-fill.test-support.ts";
+import { requireActorAdmittedSpellActForTest } from "./spell-effect-fixture.test-support.ts";
 import { attackRollHasAdvantageSource } from "./battle-reducer/attack-roll.ts";
 import { uniqueSavingThrowRollModeProjections } from "./battle-reducer/saving-throw-roll-mode-projections.ts";
 import {
@@ -91,16 +92,10 @@ function requireSaveConditionSpellAct(
     2,
     "saveGatedCondition",
   );
-  const act = discoverBattleActs(session).find((candidate) => {
-    const invocation = battleActSpellPresentation(candidate)?.invocation;
-    return (
-      candidate.subject.actorId === fighterId &&
-      candidate.subject.tag === "actionSpell" &&
-      invocation?.tag === "spellSlot" &&
-      invocation.spellId === expected.spellId &&
-      invocation.procedure === expected.procedure &&
-      invocation.slotLevel === 2
-    );
+  const act = requireActorAdmittedSpellActForTest({
+    session,
+    actorId: fighterId,
+    invocationRef: expected,
   });
   if (act?.subject.tag !== "actionSpell") {
     throw new Error(`Expected the admitted ${selectedSpellId} invocation.`);
@@ -766,25 +761,39 @@ describe("Table-authored per-test D20 circumstances", () => {
     }
   });
 
-  test("keeps no-roll concentration saves out of Table circumstance requests", () => {
+  test("keeps no-roll saves from a low-level injected concentration boundary out of Table circumstance requests", () => {
     const baseSession = startBattleSessionRight({
       battleId: battleId("synthetic-table-no-roll-concentration"),
       combatants: [
         characterSeed({ initiative: 20 }),
-        statBlockCreatureInit({ initiative: 10 }),
+        characterSeed({
+          combatantId: goblinId,
+          displayName: "Low-Level Concentration Target",
+          initiative: 10,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 5 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
       ],
     });
+    // This unit owns only the Table/no-roll interaction. It intentionally
+    // injects the lower-layer concentration flag without claiming a cast or
+    // lifecycle history. The procedure ref is admission-backed only to retain
+    // valid owner/cursor identity, not as evidence that Fly was cast.
     const target = baseSession.state.combatants.get(goblinId);
-    if (target === undefined) {
-      throw new Error("Expected Goblin target.");
-    }
+    if (target === undefined) throw new Error("Expected concentration target.");
     const session = battleRuntimeSessionWithState(baseSession, {
       ...baseSession.state,
       combatants: new Map(baseSession.state.combatants).set(goblinId, {
         ...target,
         concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "synthetic-concentration",
+          sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
+            baseSession,
+            goblinId,
+            spellSlotInvocationRef("fly", 3, "scalarBuff"),
           ),
           effectKind: "spellEffect" as const,
         },

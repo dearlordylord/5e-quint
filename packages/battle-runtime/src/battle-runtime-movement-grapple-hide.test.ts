@@ -12,11 +12,12 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L3-FOLLOWUP-CREATURE-SPACE-TABLE-SPATIAL-DERIVATION species_halfling_nimbleness
 import { abilityModifier, Hp } from "@dnd/shared/types";
 import { Result } from "effect";
+import { battleActUnitPresentation } from "./battle-act-composition.ts";
 import {
-  battleActSpellPresentation,
-  battleActUnitPresentation,
-} from "./battle-act-composition.ts";
-import { advanceToActorNextTurnForTest } from "./spell-effect-fixture.test-support.ts";
+  advanceToActorNextTurnForTest,
+  castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
+} from "./spell-effect-fixture.test-support.ts";
 import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { describe, expect, test } from "vitest";
 import {
@@ -3715,19 +3716,11 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       2,
       "creatureSizeIncrease",
     );
-    const sizeChangeAct = discoverBattleActs(wizardSession).find(
-      (candidate) => {
-        const invocation = battleActSpellPresentation(candidate)?.invocation;
-        return (
-          candidate.subject.actorId === wizardId &&
-          candidate.subject.tag === "actionSpell" &&
-          invocation?.tag === "spellSlot" &&
-          invocation.spellId === expectedSizeChange.spellId &&
-          invocation.procedure === expectedSizeChange.procedure &&
-          invocation.slotLevel === 2
-        );
-      },
-    );
+    const sizeChangeAct = requireActorAdmittedSpellActForTest({
+      session: wizardSession,
+      actorId: wizardId,
+      invocationRef: expectedSizeChange,
+    });
     if (sizeChangeAct?.subject.tag !== "actionSpell") {
       throw new Error("Expected the admitted Enlarge invocation.");
     }
@@ -4333,26 +4326,53 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   });
 
   test("staged verbal spell damage keeps the caster revealed while requesting Concentration saves", () => {
-    const session = wizardVsSkeletonBattle();
+    const baseSession = startBattleSessionRight({
+      battleId: battleId("battle-hidden-caster-concentration-save"),
+      combatants: [
+        characterSeed({
+          combatantId: skeletonId,
+          displayName: "Concentrating Target",
+          initiative: 20,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 5 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
+        }),
+        characterSeed({
+          combatantId: wizardId,
+          displayName: "Hidden Missile Caster",
+          initiative: 10,
+          attack: null,
+          classLevels: [{ className: "wizard", level: 1 }],
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("magic_missile")],
+            spellSlots: [{ spellLevel: 1, count: 1 }],
+          }),
+        }),
+      ],
+    });
+    const concentratingTargetTurn = castFlyAndAdvanceToCasterTurnForTest({
+      session: baseSession,
+      casterId: skeletonId,
+      targetId: skeletonId,
+    }).state;
+    const wizardTurn = requireResolved(
+      endTurn({ state: concentratingTargetTurn, actorId: skeletonId }),
+    ).state;
+    const session = battleRuntimeSessionForTest({
+      ...baseSession,
+      state: wizardTurn,
+    });
     const state = session.state;
     const wizard = state.combatants.get(wizardId)!;
-    const skeleton = state.combatants.get(skeletonId)!;
     const hiddenState: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(wizardId, {
-          ...wizard,
-          hidden: { discoveryDc: difficultyClass(17) },
-        })
-        .set(skeletonId, {
-          ...skeleton,
-          concentration: {
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("mage_armor"),
-            ),
-            effectKind: "spellEffect",
-          },
-        }),
+      combatants: new Map(state.combatants).set(wizardId, {
+        ...wizard,
+        hidden: { discoveryDc: difficultyClass(17) },
+      }),
     };
     const subject = findAct(session, magicSubject("magic_missile")).subject;
     const target = requireHole(

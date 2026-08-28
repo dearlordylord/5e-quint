@@ -1052,31 +1052,31 @@ describe("battle runtime: class action features", () => {
           initiative: 20,
           classLevels: [
             { className: "barbarian", level: 1 },
-            { className: "wizard", level: 1 },
+            { className: "wizard", level: 5 },
           ],
           resources: [rageResource()],
-          spellcasting: wizardSpellcasting(),
+          spellcasting: wizardSpellcasting({
+            preparedSpells: [spellRecord("fly")],
+            spellSlots: [{ spellLevel: 3, count: 1 }],
+          }),
         }),
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const state = session.state;
-    const concentratingActor = state.combatants.get(fighterId);
-    if (concentratingActor === undefined) {
-      throw new Error("Expected barbarian caster.");
+    const concentratingState = castFlyAndAdvanceToCasterTurnForTest({
+      session,
+      casterId: fighterId,
+      targetId: fighterId,
+    }).state;
+    const flyEffectRef = concentratingState.combatants
+      .get(fighterId)
+      ?.activeEffects.find(
+        (effect) =>
+          effect.kind === "specialSpeedGrant" && effect.speedKind === "fly",
+      )?.effectRef;
+    if (flyEffectRef === undefined) {
+      throw new Error("Expected the production-cast Fly occurrence.");
     }
-    const concentratingState = {
-      ...state,
-      combatants: new Map(state.combatants).set(fighterId, {
-        ...concentratingActor,
-        concentration: {
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String("mage_armor"),
-          ),
-          effectKind: "spellEffect" as const,
-        },
-      }),
-    };
     const rayOfFrostProcedureRef = requireCharacterSpellProcedureRefForTest(
       battleRuntimeSessionForTest({ ...session, state: concentratingState }),
       fighterId,
@@ -1099,6 +1099,11 @@ describe("battle runtime: class action features", () => {
       }),
     );
     expect(raging.state.combatants.get(fighterId)?.concentration).toBeNull();
+    expect(
+      raging.state.combatants
+        .get(fighterId)
+        ?.activeEffects.some((effect) => effect.effectRef === flyEffectRef),
+    ).toBe(false);
     expect(
       discoverBattleActCandidates(raging.state).map((act) => act.subject),
     ).not.toEqual(

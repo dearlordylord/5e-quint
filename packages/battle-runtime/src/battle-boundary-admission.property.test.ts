@@ -6,7 +6,10 @@ import { classLevel, resourceCount } from "@dnd/shared/types";
 import { unitId } from "@dnd/shared/game-facts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { castFlyAndAdvanceToCasterTurnForTest } from "./spell-effect-fixture.test-support.ts";
+import {
+  castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
+} from "./spell-effect-fixture.test-support.ts";
 import { spellTargetListFill } from "./unit-profile-admission-spell-fill.test-support.ts";
 
 import {
@@ -141,6 +144,8 @@ import type {
 import {
   damageRollFill,
   damageRollFillWithGroups,
+  attackRollFill,
+  cantripSpellInvocationRef,
   characterSeed,
   fighterId,
   fighterAttackSubject,
@@ -1151,21 +1156,6 @@ describe("battle boundary admission owners", () => {
         statBlockCreatureInit({ initiative: 10 }),
       ],
     });
-    const effectProducerActs = discoverBattleActs(projectionSession);
-    const flyAct = effectProducerActs.find(
-      (act) => battleActSpellPresentation(act)?.invocation.spellId === "fly",
-    );
-    const shockingGraspAct = effectProducerActs.find(
-      (act) =>
-        battleActSpellPresentation(act)?.invocation.spellId ===
-        "shocking_grasp",
-    );
-    if (
-      flyAct?.subject.tag !== "actionSpell" ||
-      shockingGraspAct?.subject.tag !== "actionSpell"
-    ) {
-      throw new Error("Expected admitted Fly and Shocking Grasp procedures.");
-    }
     const specialState = castFlyAndAdvanceToCasterTurnForTest({
       session: projectionSession,
       casterId: fighterId,
@@ -1232,21 +1222,57 @@ describe("battle boundary admission owners", () => {
         owner: "battleMovementResource",
       },
     ]);
-    const deniedState = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: projectionSession.state,
-      occurrences: [
-        {
-          kind: "activeEffect",
-          ownerId: goblinId,
-          effect: {
-            kind: "opportunityAttackDenied",
-            sourceCombatantId: fighterId,
-            sourceProcedureRef: shockingGraspAct.subject.procedureRef,
-            expiresAt: { kind: "startOfTurn", combatantId: goblinId },
-          },
-        },
-      ],
-    }).state;
+    const shockingGraspSession = battleRuntimeSessionForTest({
+      ...projectionSession,
+      state: specialState,
+    });
+    const shockingGraspAct = requireActorAdmittedSpellActForTest({
+      session: shockingGraspSession,
+      actorId: fighterId,
+      invocationRef: cantripSpellInvocationRef(
+        "shocking_grasp",
+        "spellAttackDamage",
+      ),
+    });
+    if (shockingGraspAct.subject.tag !== "actionSpell") {
+      throw new Error("Expected admitted Shocking Grasp action spell.");
+    }
+    const shockingTarget = findHole(
+      shockingGraspAct.initialHoles,
+      "targetChoice",
+    );
+    const shockingTargetFill = targetFill(shockingTarget, goblinId);
+    const shockingAttack = requireHole(
+      resolveBattleSubject({
+        state: specialState,
+        subject: shockingGraspAct.subject,
+        fills: [shockingTargetFill],
+      }),
+      "attackRoll",
+    );
+    const shockingAttackFill = attackRollFill(shockingAttack, {
+      total: 20,
+      naturalD20: 12,
+    });
+    const shockingDamage = requireHole(
+      resolveBattleSubject({
+        state: specialState,
+        subject: shockingGraspAct.subject,
+        fills: [shockingTargetFill, shockingAttackFill],
+      }),
+      "rolledDice",
+    );
+    const deniedState = requireResolved(
+      resolveBattleSubject({
+        state: specialState,
+        subject: shockingGraspAct.subject,
+        fills: [
+          shockingTargetFill,
+          shockingAttackFill,
+          damageRollFillWithGroups(shockingDamage, [[1, 1]]),
+        ],
+      }),
+    ).state;
     const candidateKinds = (
       reactorId: typeof fighterId | typeof goblinId,
       moverId: typeof fighterId | typeof goblinId,

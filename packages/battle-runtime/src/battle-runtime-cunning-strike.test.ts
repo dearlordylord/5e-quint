@@ -16,9 +16,9 @@ import {
 import {
   advanceToActorNextTurnForTest,
   castFlyAndAdvanceToCasterTurnForTest,
+  requireActorAdmittedSpellActForTest,
 } from "./spell-effect-fixture.test-support.ts";
 import { knownWillingSpellTargetFill } from "./unit-profile-admission-spell-fill.test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { describe, expect, test } from "vitest";
 import {
   type BattleDamageRollHole,
@@ -48,7 +48,6 @@ import {
   cunningStrikeFeature,
   cunningStrikeUnitRefs,
   damageRollFillWithGroups,
-  discoverBattleActs,
   elapsedTimeTicks,
   endTurn,
   fighterAttackSubject,
@@ -1417,16 +1416,10 @@ function castCunningStrikeSizeChange(
     2,
     direction === "increase" ? "creatureSizeIncrease" : "creatureSizeDecrease",
   );
-  const act = discoverBattleActs(session).find((candidate) => {
-    const invocation = battleActSpellPresentation(candidate)?.invocation;
-    return (
-      candidate.subject.actorId === fighterId &&
-      candidate.subject.tag === "actionSpell" &&
-      invocation?.tag === "spellSlot" &&
-      invocation.spellId === expected.spellId &&
-      invocation.procedure === expected.procedure &&
-      invocation.slotLevel === 2
-    );
+  const act = requireActorAdmittedSpellActForTest({
+    session,
+    actorId: fighterId,
+    invocationRef: expected,
   });
   if (act?.subject.tag !== "actionSpell") {
     throw new Error("Expected the admitted Enlarge/Reduce size-change act.");

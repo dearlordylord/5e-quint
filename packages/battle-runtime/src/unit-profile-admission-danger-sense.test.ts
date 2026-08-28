@@ -5,14 +5,13 @@ import { passiveSavingThrowRollModeRouteEvents } from "./index.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.passive-saving-throw-roll-mode
 import {
   characterBattleFeatureInitForTest,
-  discoverBattleActs,
   requireResolved,
   resolveBattleSubject,
   spellRecord,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import { spellSlotInvocationRef } from "./index.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import { requireActorAdmittedSpellActForTest } from "./spell-effect-fixture.test-support.ts";
 import { describe, expect, test } from "vitest";
 import { Result } from "effect";
 import { savingThrowRollModeProjections } from "./battle-reducer/spells-damage-fills.ts";
@@ -335,16 +334,10 @@ function dangerSenseGreaseGroundHazardBattle(input?: {
     1,
     "greaseGroundHazard",
   );
-  const act = discoverBattleActs(session).find((candidate) => {
-    const invocation = battleActSpellPresentation(candidate)?.invocation;
-    return (
-      candidate.subject.actorId === spellCasterId &&
-      candidate.subject.tag === "actionSpell" &&
-      invocation?.tag === "spellSlot" &&
-      invocation.spellId === expected.spellId &&
-      invocation.procedure === expected.procedure &&
-      invocation.slotLevel === 1
-    );
+  const act = requireActorAdmittedSpellActForTest({
+    session,
+    actorId: spellCasterId,
+    invocationRef: expected,
   });
   if (act?.subject.tag !== "actionSpell") {
     throw new Error("Expected the admitted Grease invocation.");
