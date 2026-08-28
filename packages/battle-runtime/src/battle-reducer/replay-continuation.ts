@@ -11,7 +11,7 @@ import type {
   BattleInterruptedProcedure,
   BattleObjectOutcomeAccumulation,
   BattleReplayContinuationFrame,
-  BattleCloudkillMovementSequenceResumeCheckpoint,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleResolutionResult,
   BattleState,
   GlyphStoredSpellReleaseReplayContext,
@@ -67,7 +67,7 @@ export function replayParentContinuationFor(
 
 export function replayParentProcedureAt(
   parent: ReplayParentContinuation,
-  position: BattleCloudkillMovementSequenceResumeCheckpoint,
+  position: BattleStartTurnOccurrenceSequenceCheckpoint,
 ): Extract<BattleInterruptedProcedure, { readonly kind: "replay" }> {
   return {
     kind: "replay",

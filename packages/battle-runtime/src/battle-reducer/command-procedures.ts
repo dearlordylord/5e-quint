@@ -11,7 +11,7 @@ import type {
   BattleObjectOutcomeAccumulation,
   BattleResolutionInputForSubject,
   BattleResolutionResult,
-  BattleCloudkillMovementSequenceResumeCheckpoint,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleResolvedMovement,
   BattleState,
 } from "../battle-state-execution.ts";
@@ -77,7 +77,7 @@ type CommandFollowUpSubject = Extract<
 
 type CommandReplayRoute = {
   readonly handledInterruptTrigger?: BattleInterruptTrigger;
-  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
   readonly replayObjectOutcomes?: BattleObjectOutcomeAccumulation;
 };
 
@@ -563,7 +563,7 @@ function resolveCommandApproachAfterMovement(input: {
   readonly movedWithinFiveFeetOfCaster: boolean;
   readonly parentFills: readonly BattleFill[];
   readonly endTurnFills: readonly BattleFill[];
-  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
 }): BattleResolutionResult {
   const effect = commandPendingEffectForSubject(
     input.state,
@@ -783,7 +783,7 @@ function resolveCommandFleeAfterMovement(input: {
   readonly movement: BattleResolvedMovement;
   readonly parentFills: readonly BattleFill[];
   readonly endTurnFills: readonly BattleFill[];
-  readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+  readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
 }): BattleResolutionResult {
   const effect = commandPendingEffectForSubject(
     input.state,

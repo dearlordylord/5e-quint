@@ -736,13 +736,16 @@ export type BattleAttackDamageInterruptionFrame = {
   readonly phase: "attackDamage";
   readonly continuation: BattleAttackDamageInterruptionContinuation;
 };
-export type BattleCloudkillMovementSequenceResumeCheckpoint = {
-  readonly kind: "cloudkillMovementSaveDamageSequence";
+export type BattleStartTurnOccurrenceSequenceCheckpoint = {
+  readonly kind: "startTurnOccurrenceSequence";
   readonly sourceTurn: {
     readonly actorId: CombatantId;
     readonly round: RoundType;
   };
-  readonly occurrence: {
+  readonly orderHoleId: BattleHoleId;
+  readonly currentOccurrenceId: import("./identity.ts").BattleStartTurnOccurrenceId;
+  readonly child: {
+    readonly kind: "cloudkillMovementSaveDamageSequence";
     readonly areaId: BattleAreaId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly targetId: CombatantId;
@@ -763,7 +766,7 @@ export type BattleInterruptedProcedure =
       readonly kind: "replay";
       readonly subject: BattleSubject;
       readonly fills: readonly BattleFill[];
-      readonly parentPosition: BattleCloudkillMovementSequenceResumeCheckpoint;
+      readonly parentPosition: BattleStartTurnOccurrenceSequenceCheckpoint;
       readonly glyphStoredSpellReleaseReplay?: never;
       readonly attackDamageReductions?: never;
       readonly attackDamageAdditions?: never;
@@ -6895,7 +6898,7 @@ export type BattleInterruptRouteOptions =
     }
   | (BattleHandledInterruptRouteProjection & {
       readonly replayingInterruptedProcedure: true;
-      readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+      readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
       readonly objectOutcomes?: BattleObjectOutcomeAccumulation;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
@@ -6911,7 +6914,7 @@ export type BattleInterruptConsumerOptions =
   | {
       readonly replayingInterruptedProcedure: true;
       readonly handledInterruptTrigger: BattleInterruptTrigger;
-      readonly replayParentPosition?: BattleCloudkillMovementSequenceResumeCheckpoint;
+      readonly replayParentPosition?: BattleStartTurnOccurrenceSequenceCheckpoint;
       readonly pendingAttackDamageReductions?: ReadonlyNonEmptyArray<BattlePendingAttackDamageReduction>;
       readonly pendingAttackDamageAdditions?: ReadonlyNonEmptyArray<AttackSpellDamageAddition>;
     };

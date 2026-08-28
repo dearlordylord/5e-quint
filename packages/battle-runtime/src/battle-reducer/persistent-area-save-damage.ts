@@ -17,7 +17,7 @@ import type {
   BattleCloudkillAreaHazardDamageRollHole,
   BattleCloudkillAreaHazardSavingThrowOutcomeHole,
   BattleCloudkillAreaHazardTrigger,
-  BattleCloudkillMovementSequenceResumeCheckpoint,
+  BattleStartTurnOccurrenceSequenceCheckpoint,
   BattleConcentrationSavingThrowHole,
   BattleCreatureState,
   BattleFill,
@@ -88,10 +88,12 @@ type PersistentAreaResolutionContext =
   | {
       readonly kind: "replayParent";
       readonly parent: ReplayParentContinuation;
-      readonly sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"];
-      readonly occurrence: BattleCloudkillMovementSequenceResumeCheckpoint["occurrence"];
+      readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+      readonly orderHoleId: BattleStartTurnOccurrenceSequenceCheckpoint["orderHoleId"];
+      readonly currentOccurrenceId: BattleStartTurnOccurrenceSequenceCheckpoint["currentOccurrenceId"];
+      readonly occurrence: BattleStartTurnOccurrenceSequenceCheckpoint["child"];
       readonly handledPosition:
-        | BattleCloudkillMovementSequenceResumeCheckpoint
+        | BattleStartTurnOccurrenceSequenceCheckpoint
         | undefined;
     };
 
@@ -124,7 +126,7 @@ type CloudkillMovementSequenceContinuation =
   | { readonly kind: "turnBoundaryReplay" }
   | {
       readonly kind: "advancedPrefixAtCheckpoint";
-      readonly checkpoint: BattleCloudkillMovementSequenceResumeCheckpoint;
+      readonly checkpoint: BattleStartTurnOccurrenceSequenceCheckpoint;
     }
   | { readonly kind: "advancedPrefixAfterCheckpoint" };
 
@@ -287,7 +289,9 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
   readonly advancedState: BattleState;
   readonly parent: ReplayParentContinuation;
   readonly requests: readonly CloudkillMovementSaveDamageRequest[];
-  readonly sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"];
+  readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
+  readonly orderHoleId: BattleStartTurnOccurrenceSequenceCheckpoint["orderHoleId"];
+  readonly currentOccurrenceId: BattleStartTurnOccurrenceSequenceCheckpoint["currentOccurrenceId"];
   readonly continuation: CloudkillMovementSequenceContinuation;
 }): CloudkillMovementSaveDamageSequenceResult {
   const saveHoleIds = new Set<BattleHoleId>();
@@ -344,7 +348,10 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
         kind: "replayParent",
         parent: requestParent,
         sourceTurn: input.sourceTurn,
+        orderHoleId: input.orderHoleId,
+        currentOccurrenceId: input.currentOccurrenceId,
         occurrence: {
+          kind: "cloudkillMovementSaveDamageSequence",
           areaId: request.effect.areaId,
           sourceProcedureRef: request.effect.sourceProcedureRef,
           targetId: request.subject.actorId,
@@ -377,17 +384,18 @@ export function resolveCloudkillMovementSaveDamageSequence(input: {
 }
 
 function sameCloudkillMovementSaveDamagePosition(
-  left: BattleCloudkillMovementSequenceResumeCheckpoint,
-  right: BattleCloudkillMovementSequenceResumeCheckpoint,
+  left: BattleStartTurnOccurrenceSequenceCheckpoint,
+  right: BattleStartTurnOccurrenceSequenceCheckpoint,
 ): boolean {
   return (
     left.kind === right.kind &&
     left.sourceTurn.actorId === right.sourceTurn.actorId &&
     left.sourceTurn.round === right.sourceTurn.round &&
-    left.occurrence.areaId === right.occurrence.areaId &&
-    left.occurrence.sourceProcedureRef ===
-      right.occurrence.sourceProcedureRef &&
-    left.occurrence.targetId === right.occurrence.targetId
+    left.orderHoleId === right.orderHoleId &&
+    left.currentOccurrenceId === right.currentOccurrenceId &&
+    left.child.areaId === right.child.areaId &&
+    left.child.sourceProcedureRef === right.child.sourceProcedureRef &&
+    left.child.targetId === right.child.targetId
   );
 }
 
@@ -736,15 +744,17 @@ function persistentAreaStepResult(
 
 function persistentAreaReplayPosition(
   context: PersistentAreaResolutionContext,
-): BattleCloudkillMovementSequenceResumeCheckpoint | undefined {
+): BattleStartTurnOccurrenceSequenceCheckpoint | undefined {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => undefined),
     byPersistentAreaResolutionContextKind(
       "replayParent",
-      ({ occurrence, sourceTurn }) => ({
-        kind: "cloudkillMovementSaveDamageSequence" as const,
+      ({ occurrence, sourceTurn, orderHoleId, currentOccurrenceId }) => ({
+        kind: "startTurnOccurrenceSequence" as const,
         sourceTurn,
-        occurrence,
+        orderHoleId,
+        currentOccurrenceId,
+        child: occurrence,
       }),
     ),
     Match.exhaustive,
@@ -753,7 +763,7 @@ function persistentAreaReplayPosition(
 
 function persistentAreaHandledPositionMatches(
   context: PersistentAreaResolutionContext,
-  position: BattleCloudkillMovementSequenceResumeCheckpoint,
+  position: BattleStartTurnOccurrenceSequenceCheckpoint,
 ): boolean {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => false),
@@ -770,7 +780,7 @@ function persistentAreaHandledPositionMatches(
 function persistentAreaInterruptContinuation(
   context: PersistentAreaResolutionContext,
   resolution: InsectPlagueResolutionInput | CloudkillResolutionInput,
-  replayPosition: BattleCloudkillMovementSequenceResumeCheckpoint | undefined,
+  replayPosition: BattleStartTurnOccurrenceSequenceCheckpoint | undefined,
 ) {
   return Match.value(context).pipe(
     byPersistentAreaResolutionContextKind("standalone", () => ({
@@ -1107,7 +1117,7 @@ export function cloudkillAreaHazardSavingThrowOutcomeHole(
   targetId: CombatantId,
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
-  sourceTurn?: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
+  sourceTurn?: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
 ): BattleCloudkillAreaHazardSavingThrowOutcomeHole {
   const key = `battle:cloudkill-area-hazard-save:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}${cloudkillMovementSourceTurnKey(trigger, sourceTurn)}`;
   return {
@@ -1131,7 +1141,7 @@ function cloudkillAreaHazardDamageRollHole(
   targetId: CombatantId,
   effect: CloudkillAreaHazardEffect,
   trigger: BattleCloudkillAreaHazardTrigger,
-  sourceTurn?: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
+  sourceTurn?: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
 ): BattleCloudkillAreaHazardDamageRollHole {
   const expr = `${effect.damage.expr.dice}d${effect.damage.expr.dieSize}`;
   const key = `battle:cloudkill-area-hazard-damage:${targetId}:${effect.sourceCombatantId}:${effect.sourceProcedureRef}:${effect.areaId}:${trigger}${persistentAreaAppearanceOccurrenceKey(effect, trigger)}${cloudkillMovementSourceTurnKey(trigger, sourceTurn)}:${expr}`;
@@ -1155,7 +1165,7 @@ function cloudkillAreaHazardDamageRollHole(
 function cloudkillMovementSourceTurnKey(
   trigger: BattleCloudkillAreaHazardTrigger,
   sourceTurn:
-    | BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"]
+    | BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"]
     | undefined,
 ): string {
   return trigger === "movesIntoSpace" && sourceTurn !== undefined
