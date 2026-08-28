@@ -358,6 +358,14 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     if (allocatedEmitter?.kind !== "spellLightEmitter") {
       throw new Error("Expected allocated higher-level spell emitter.");
     }
+    const allocatedOtherEmitter = allocated.state.lightEmitters.find(
+      (candidate) =>
+        candidate.kind === "spellLightEmitter" &&
+        candidate.sourceEffectId === otherEmitter.sourceEffectId,
+    );
+    if (allocatedOtherEmitter?.kind !== "spellLightEmitter") {
+      throw new Error("Expected the other-owner spell emitter.");
+    }
     expect(checkHole).toEqual(
       expect.objectContaining({
         dc: 14,
@@ -426,6 +434,26 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
               checkedOccurrence: {
                 ...check.checkedOccurrence,
                 ownerId: spellTargetId,
+              },
+            };
+          }),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateAggregateCheck((check) => {
+            if (check.target.kind === "magicalEffect") return check;
+            return {
+              ...check,
+              checkedOccurrence: {
+                ...check.checkedOccurrence,
+                ownerId: spellTargetId,
+                effect: {
+                  kind: "spellLightEmitter",
+                  effectRef: allocatedOtherEmitter.effectRef,
+                },
               },
             };
           }),

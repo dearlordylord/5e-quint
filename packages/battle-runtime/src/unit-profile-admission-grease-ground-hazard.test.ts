@@ -16,6 +16,8 @@ import {
   characterSeed,
   startBattleSessionRight,
   statBlockCreatureInit,
+  Result,
+  Schema,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 import {
@@ -32,6 +34,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import {
   battleAreaId,
+  BattleSnapshotSchema,
   type AvailableBattleAct,
   type BattleRuntimeSession,
   type BattleState,
@@ -815,6 +818,58 @@ describe("QMBT14 deterministic Grease ground hazard admission", () => {
       throw new Error("Expected Grease occurrence.");
     }
     const { effectRef: selectedRef, ...template } = effect;
+    const overlappingState = battleStateWithAllocatedEffectForTest({
+      state: targetTurn.state,
+      ownerId: spellCasterId,
+      effect: template,
+    });
+    const overlappingEffect = requireCombatant(
+      overlappingState,
+      spellCasterId,
+    ).activeEffects.find(
+      (candidate) =>
+        candidate.kind === "greaseGroundHazard" &&
+        candidate.effectRef !== selectedRef,
+    );
+    if (overlappingEffect?.kind !== "greaseGroundHazard") {
+      throw new Error("Expected overlapping Grease occurrence.");
+    }
+    const overlappingAct = discoverBattleActCandidates(overlappingState).find(
+      (candidate) =>
+        candidate.subject.tag === "runtimeCommand" &&
+        candidate.subject.command === "greaseGroundHazardSave" &&
+        candidate.subject.effectRef === overlappingEffect.effectRef,
+    );
+    if (
+      overlappingAct?.subject.tag !== "runtimeCommand" ||
+      overlappingAct.subject.command !== "greaseGroundHazardSave"
+    ) {
+      throw new Error("Expected overlapping Grease save act.");
+    }
+    const overlappingNeedsSave = resolveBattleSubject({
+      state: overlappingState,
+      subject: overlappingAct.subject,
+      fills: [],
+    });
+    if (overlappingNeedsSave.tag !== "needsHoles") {
+      throw new Error("Expected overlapping Grease save hole.");
+    }
+    const encodedOverlapSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      overlappingNeedsSave.snapshot,
+    );
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)({
+          ...encodedOverlapSnapshot,
+          acts: [
+            {
+              subject: overlappingAct.subject,
+              initialHoles: selected.initialHoles,
+            },
+          ],
+        }),
+      ),
+    ).toBe(true);
     const withoutSelected: BattleState = {
       ...targetTurn.state,
       combatants: new Map(targetTurn.state.combatants).set(spellCasterId, {

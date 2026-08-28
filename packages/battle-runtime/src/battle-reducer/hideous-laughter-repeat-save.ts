@@ -97,6 +97,7 @@ export function hideousLaughterRepeatSavingThrowOutcomeHole(
   ].join("");
   return {
     kind: "savingThrowOutcome",
+    damageOccurrence: { kind: "untrackedDamage" },
     holeId: holeId(key),
     holeInstanceKey: holeInstanceKey(key),
     label: "Repeat WIS save",

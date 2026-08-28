@@ -1452,6 +1452,10 @@ function spellTurnEndDamageDownstreamHoles<
     const key = `battle:spell-turn-end-damage-downstream:${effect.effectRef}:${hole.holeId}`;
     return {
       ...hole,
+      damageOccurrence: {
+        kind: "spellTurnEndDamage" as const,
+        effectRef: effect.effectRef,
+      },
       holeId: holeId(key),
       holeInstanceKey: holeInstanceKey(key),
     };

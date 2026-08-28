@@ -1,5 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
+} from "./battle-runtime.test-support.ts";
 import {
   battleActDruidWildShapePresentation,
   battleActSpellPresentation,
@@ -796,10 +799,24 @@ describe("L12G deterministic Moonbeam admission", () => {
     if (targetTurn.tag !== "resolved") {
       throw new Error("Expected caster End Turn to resolve.");
     }
-    const saveSubject = moonbeamSaveSubject(targetTurn.state, "entersArea");
+    const selectedMoonbeam = requireCombatant(
+      targetTurn.state,
+      spellCasterId,
+    ).activeEffects.find((effect) => effect.kind === "moonbeam");
+    if (selectedMoonbeam?.kind !== "moonbeam") {
+      throw new Error("Expected the selected Moonbeam occurrence.");
+    }
+    const { effectRef: _selectedEffectRef, ...overlappingMoonbeamTemplate } =
+      selectedMoonbeam;
+    const overlappingState = battleStateWithAllocatedEffectForTest({
+      state: targetTurn.state,
+      ownerId: spellCasterId,
+      effect: overlappingMoonbeamTemplate,
+    });
+    const saveSubject = moonbeamSaveSubject(overlappingState, "entersArea");
 
     const needsSave = resolveBattleSubject({
-      state: targetTurn.state,
+      state: overlappingState,
       subject: saveSubject,
       fills: [],
     });
@@ -810,13 +827,13 @@ describe("L12G deterministic Moonbeam admission", () => {
       false,
     );
     const needsDamage = resolveBattleSubject({
-      state: targetTurn.state,
+      state: overlappingState,
       subject: saveSubject,
       fills: [failedSave],
     });
     const damage = requireResultHole(needsDamage, "rolledDice");
     const firstSave = resolveBattleSubject({
-      state: targetTurn.state,
+      state: overlappingState,
       subject: saveSubject,
       fills: [failedSave, damageRollFillWithGroups(damage, [[5, 8]])],
     });
@@ -831,6 +848,20 @@ describe("L12G deterministic Moonbeam admission", () => {
     expect(activeMoonbeam).toEqual(
       expect.objectContaining({ savedThisTurn: [spellTargetId] }),
     );
+    const moonbeamOccurrences = requireCombatant(
+      firstSave.state,
+      spellCasterId,
+    ).activeEffects.filter((effect) => effect.kind === "moonbeam");
+    expect(
+      moonbeamOccurrences.find(
+        (effect) => effect.effectRef === saveSubject.effectRef,
+      ),
+    ).toEqual(expect.objectContaining({ savedThisTurn: [spellTargetId] }));
+    expect(
+      moonbeamOccurrences.find(
+        (effect) => effect.effectRef !== saveSubject.effectRef,
+      ),
+    ).toEqual(expect.objectContaining({ savedThisTurn: [] }));
 
     const duplicateSave = resolveBattleSubject({
       state: firstSave.state,

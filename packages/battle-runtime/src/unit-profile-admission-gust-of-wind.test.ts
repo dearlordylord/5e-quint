@@ -520,13 +520,21 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       ownerId: spellCasterId,
       effect: unrelatedEffect,
     });
-    const directionAct = gustOfWindLineDirectionChangeAct(laterTurn);
+    const selectedGust = gustOfWindLineEffect(laterTurn);
+    const { effectRef: _selectedEffectRef, ...overlappingGustTemplate } =
+      selectedGust;
+    const overlappingState = battleStateWithAllocatedEffectForTest({
+      state: laterTurn,
+      ownerId: spellCasterId,
+      effect: overlappingGustTemplate,
+    });
+    const directionAct = gustOfWindLineDirectionChangeAct(overlappingState);
     const directionHole = requireHole(
       directionAct.initialHoles,
       "gustOfWindLineDirectionChoice",
     );
     const awaitingDirection = resolveBattleSubject({
-      state: laterTurn,
+      state: overlappingState,
       subject: directionAct.subject,
       fills: [],
     });
@@ -536,7 +544,7 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
     assertBattleSnapshotCodecRoundTripForTest(awaitingDirection.snapshot);
 
     const resolved = resolveBattleSubject({
-      state: laterTurn,
+      state: overlappingState,
       subject: directionAct.subject,
       fills: [gustOfWindLineDirectionChoiceFill(directionHole)],
     });
@@ -564,6 +572,24 @@ describe("L12G deterministic Gust of Wind Line admission", () => {
       requireCombatant(resolved.state, spellCasterId).activeEffects,
     ).toEqual(
       expect.arrayContaining([expect.objectContaining(unrelatedEffect)]),
+    );
+    const gustEffects = requireCombatant(
+      resolved.state,
+      spellCasterId,
+    ).activeEffects.filter((effect) => effect.kind === "gustOfWindLine");
+    expect(
+      gustEffects.find(
+        (effect) => effect.effectRef === directionAct.subject.effectRef,
+      ),
+    ).toEqual(
+      expect.objectContaining({ directionId: gustOfWindEastDirectionId }),
+    );
+    expect(
+      gustEffects.find(
+        (effect) => effect.effectRef !== directionAct.subject.effectRef,
+      ),
+    ).toEqual(
+      expect.objectContaining({ directionId: gustOfWindNorthDirectionId }),
     );
   });
 

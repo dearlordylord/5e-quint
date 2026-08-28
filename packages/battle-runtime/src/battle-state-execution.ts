@@ -5139,11 +5139,18 @@ export type BattleSleepRepeatSavingThrowOutcomeHole = {
   readonly targetFlatBonuses: readonly BattleSavingThrowFlatBonusProjection[];
 };
 export type BattleHideousLaughterRepeatTrigger = "endTurn" | "damage";
+export type BattleDamageOccurrenceSource =
+  | { readonly kind: "untrackedDamage" }
+  | {
+      readonly kind: "spellTurnEndDamage";
+      readonly effectRef: BattleEffectExecutionRef;
+    };
 export type BattleHideousLaughterRepeatSavingThrowOutcomeHole = {
   readonly holeInstanceKey: HoleInstanceKey;
   readonly holeId: BattleHoleId;
   readonly kind: "savingThrowOutcome";
   readonly label: string;
+  readonly damageOccurrence: BattleDamageOccurrenceSource;
   readonly hideousLaughterRepeatSave: {
     readonly targetId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
@@ -5966,6 +5973,7 @@ export type BattleConcentrationSavingThrowHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "concentrationSavingThrow";
   readonly label: string;
+  readonly damageOccurrence: BattleDamageOccurrenceSource;
   readonly combatantId: CombatantId;
   readonly dc: DifficultyClass;
   readonly damageAmount: DamageAmount;
@@ -6121,6 +6129,10 @@ export type BattleSpellcastingAbilityCheckHole = {
         readonly checkedOccurrence: {
           readonly ownerId: CombatantId;
           readonly effect: BattleOngoingSpellOccurrenceRef;
+          readonly target: Exclude<
+            BattleOngoingSpellTarget,
+            { readonly kind: "magicalEffect" }
+          >;
         };
       }
   );
@@ -6214,6 +6226,7 @@ export type BattleAttackDamageDispositionHole = {
   readonly holeId: BattleHoleId;
   readonly kind: "attackDamageDisposition";
   readonly label: string;
+  readonly damageOccurrence: BattleDamageOccurrenceSource;
   readonly attackerId: CombatantId;
   readonly targetId: CombatantId;
   readonly choices: readonly BattleAttackDamageDisposition[];
@@ -7307,10 +7320,20 @@ type BattleCreatureSnapshotCommon = {
   readonly maxHp: Hp;
   readonly tempHp: Hp;
   readonly nextEffectOrdinal: BattleEffectExecutionOrdinal;
-  readonly effectOccurrences: readonly {
-    readonly kind: "activeEffect" | "storedLightEmitter";
-    readonly effectRef: BattleEffectExecutionRef;
-  }[];
+  readonly effectOccurrences: readonly (
+    | {
+        readonly kind: "activeEffect";
+        readonly effectRef: BattleEffectExecutionRef;
+        readonly activeEffectKind: BattleActiveEffect["kind"];
+        readonly ongoingSpellObjectId: BattleObjectId | null;
+      }
+    | {
+        readonly kind: "storedLightEmitter";
+        readonly effectRef: BattleEffectExecutionRef;
+        readonly storedLightEmitterKind: BattleStoredLightEmitter["kind"];
+        readonly attachment: BattleLightEmitterAttachment;
+      }
+  )[];
   readonly armorClass: ArmorClass;
   readonly size: Size;
   readonly zeroHpLifecycle: BattleCreatureZeroHpLifecycleSnapshot;

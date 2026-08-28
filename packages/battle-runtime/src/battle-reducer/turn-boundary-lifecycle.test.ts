@@ -7,6 +7,7 @@ import {
 } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import {
+  assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleEffectExecutionRefForTest,
   battleId,
   battleProcedureExecutionRefForTest,
@@ -20,9 +21,12 @@ import {
   goblinId,
   KNOCKED_OUT_UNCONSCIOUS,
   savingThrowOutcomeFill,
+  Result,
+  Schema,
   startBattleRight,
   wizardId,
 } from "../battle-runtime.test-support.ts";
+import { BattleSnapshotSchema } from "../index.ts";
 import {
   acidArrowUnitId,
   orcRelentlessEnduranceUnitId,
@@ -639,6 +643,87 @@ describe("turn-boundary active-effect occurrence updates", () => {
       awaitingDisposition,
       "attackDamageDisposition",
     );
+    expect(checkpointDispositionHole.damageOccurrence).toEqual({
+      kind: "spellTurnEndDamage",
+      effectRef: checkpointEffectRef,
+    });
+    assertBattleSnapshotCodecAcceptsHolesForSubjectForTest({
+      snapshot: awaitingDisposition.snapshot,
+      subject: awaitingDisposition.subject,
+      holes: awaitingDisposition.holes,
+    });
+    const otherOwnerAllocation =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state: sameReferenceCloneState,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: spellCasterId,
+            effect: replacementTemplate,
+          },
+        ],
+      });
+    const otherOwnerOccurrence = otherOwnerAllocation.occurrences[0];
+    if (otherOwnerOccurrence?.kind !== "activeEffect") {
+      throw new Error("Expected another owner's live occurrence.");
+    }
+    const twoOwnerAwaitingDisposition = endTurn({
+      state: otherOwnerAllocation.state,
+      actorId: spellTargetId,
+      fills: [laterDamageFill],
+    });
+    if (twoOwnerAwaitingDisposition.tag !== "needsHoles") {
+      throw new Error("Expected the exact downstream disposition hole.");
+    }
+    const encodedDownstreamSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
+      twoOwnerAwaitingDisposition.snapshot,
+    );
+    const deferredDownstreamSnapshot = {
+      ...encodedDownstreamSnapshot,
+      acts: [
+        {
+          subject: twoOwnerAwaitingDisposition.subject,
+          initialHoles: twoOwnerAwaitingDisposition.holes,
+        },
+      ],
+    };
+    const mutateDownstreamOccurrence = (
+      mutation: "missing" | "forged" | "wrongOwner",
+    ) => ({
+      ...deferredDownstreamSnapshot,
+      acts: deferredDownstreamSnapshot.acts.map((candidate) => ({
+        ...candidate,
+        initialHoles: candidate.initialHoles.map((hole) => {
+          if (hole.kind !== "attackDamageDisposition") return hole;
+          if (mutation === "missing") {
+            const { damageOccurrence: _damageOccurrence, ...withoutSource } =
+              hole;
+            return withoutSource;
+          }
+          return {
+            ...hole,
+            damageOccurrence: {
+              kind: "spellTurnEndDamage" as const,
+              effectRef:
+                mutation === "forged"
+                  ? battleEffectExecutionRefForTest(
+                      "forged-turn-end-downstream",
+                    )
+                  : otherOwnerOccurrence.effect.effectRef,
+            },
+          };
+        }),
+      })),
+    });
+    for (const mutation of ["missing", "forged", "wrongOwner"] as const) {
+      expect(
+        Result.isFailure(
+          Schema.decodeUnknownResult(BattleSnapshotSchema)(
+            mutateDownstreamOccurrence(mutation),
+          ),
+        ),
+      ).toBe(true);
+    }
     const replacementDamageHole = requireResultHole(
       staleFillResult,
       "rolledDice",

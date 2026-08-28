@@ -193,6 +193,9 @@ export function combatantSnapshot(
       ...combatant.activeEffects.map((effect) => ({
         kind: "activeEffect" as const,
         effectRef: effect.effectRef,
+        activeEffectKind: effect.kind,
+        ongoingSpellObjectId:
+          effect.kind === "spellObjectContactDamage" ? effect.objectId : null,
       })),
       ...state.lightEmitters.flatMap((emitter) =>
         battleEffectExecutionRefBelongsToScope(
@@ -203,6 +206,11 @@ export function combatantSnapshot(
               {
                 kind: "storedLightEmitter" as const,
                 effectRef: emitter.effectRef,
+                storedLightEmitterKind: emitter.kind,
+                attachment:
+                  emitter.kind === "spellLightEmitter"
+                    ? emitter.attachment
+                    : { kind: "object" as const, objectId: emitter.objectId },
               },
             ]
           : [],

@@ -45,6 +45,7 @@ import {
   type SupportedSpellInvocation,
 } from "../../battle-state-execution.ts";
 import {
+  battleEffectExecutionRefBelongsToScope,
   type BattleProcedureExecutionRef,
   type CombatantId,
 } from "../../identity.ts";
@@ -624,11 +625,19 @@ function ongoingSpellEndAbilityCheckHole(
       }),
       combatant: (combatantTarget) => ({
         target: combatantTarget,
-        checkedOccurrence: { ownerId: occurrence.ownerId, effect },
+        checkedOccurrence: {
+          ownerId: occurrence.ownerId,
+          effect,
+          target: combatantTarget,
+        },
       }),
       object: (objectTarget) => ({
         target: objectTarget,
-        checkedOccurrence: { ownerId: occurrence.ownerId, effect },
+        checkedOccurrence: {
+          ownerId: occurrence.ownerId,
+          effect,
+          target: objectTarget,
+        },
       }),
     }),
   );
@@ -712,13 +721,20 @@ function matchingTrackedOngoingSpellOccurrences(
   const lightEmitters = state.lightEmitters.flatMap((emitter) =>
     isTrackedOngoingSpellLightEmitter(emitter) &&
     spellLightEmitterMatchesOngoingTarget(emitter, target)
-      ? [
-          {
-            kind: "lightEmitter" as const,
-            ownerId: emitter.sourceCombatantId,
-            emitter,
-          },
-        ]
+      ? [...state.combatants.values()].flatMap((combatant) =>
+          battleEffectExecutionRefBelongsToScope(
+            emitter.effectRef,
+            combatant.origin.execution.scopeRef,
+          )
+            ? [
+                {
+                  kind: "lightEmitter" as const,
+                  ownerId: combatant.combatantId,
+                  emitter,
+                },
+              ]
+            : [],
+        )
       : [],
   );
   const activeEffects = [...state.combatants.values()].flatMap((combatant) =>

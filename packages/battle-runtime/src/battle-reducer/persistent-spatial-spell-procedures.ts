@@ -1213,6 +1213,7 @@ function resolveGustOfWindLineDirectionChangeCommand(
     },
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
+    effectRef: effect.effectRef,
     areaId: effect.areaId,
     directionId: directionFill.value.directionId,
   });

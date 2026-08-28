@@ -2481,6 +2481,7 @@ export function replaceGustOfWindLineDirection(input: {
   readonly state: BattleState;
   readonly sourceCombatantId: CombatantId;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
+  readonly effectRef: BattleEffectExecutionRef;
   readonly areaId: BattleAreaId;
   readonly directionId: BattleLineDirectionId;
 }): BattleState {
@@ -2490,7 +2491,7 @@ export function replaceGustOfWindLineDirection(input: {
   }
   const activeEffects = source.activeEffects.map((effect) =>
     effect.kind === "gustOfWindLine" &&
-    activeEffectSourceMatches(effect, input) &&
+    effect.effectRef === input.effectRef &&
     effect.areaId === input.areaId
       ? { ...effect, directionId: input.directionId }
       : effect,
@@ -2623,7 +2624,7 @@ function moonbeamEffectMatches(
 ): current is Extract<BattleActiveEffect, { readonly kind: "moonbeam" }> {
   return (
     current.kind === "moonbeam" &&
-    activeEffectSourceMatches(current, effect) &&
+    current.effectRef === effect.effectRef &&
     current.areaId === effect.areaId
   );
 }
