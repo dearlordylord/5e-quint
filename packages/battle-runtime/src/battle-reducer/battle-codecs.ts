@@ -1879,6 +1879,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     glyphExplosiveRune: Schema.Struct({
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       sourceEffectId: BattleSpellEffectOccurrenceId,
       damage: Schema.Struct({
         expr: DiceExprSchema,
@@ -2572,6 +2573,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     glyphExplosiveRune: Schema.Struct({
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
+      effectRef: BattleEffectExecutionRef,
       sourceEffectId: BattleSpellEffectOccurrenceId,
       radiusFeet: Schema.Literal(20),
     }),
@@ -6830,7 +6832,10 @@ function serializedBattleHoleExecutionReferences(
               procedureSource(matched.dragonsBreath),
             ),
             Match.when({ glyphExplosiveRune: Match.any }, (matched) =>
-              procedureSource(matched.glyphExplosiveRune),
+              occurrenceSource(
+                matched.glyphExplosiveRune,
+                matched.glyphExplosiveRune.sourceCombatantId,
+              ),
             ),
             Match.exhaustive,
           ),
@@ -6878,7 +6883,10 @@ function serializedBattleHoleExecutionReferences(
         procedureSource(hole.dragonsBreath),
       ),
       Match.when({ glyphExplosiveRune: Match.any }, (hole) =>
-        procedureSource(hole.glyphExplosiveRune),
+        activeOccurrenceSource({
+          ...hole.glyphExplosiveRune,
+          targetId: hole.glyphExplosiveRune.sourceCombatantId,
+        }),
       ),
       Match.when({ spellDamageReduction: Match.any }, (hole) =>
         procedureSource(hole.spellDamageReduction),

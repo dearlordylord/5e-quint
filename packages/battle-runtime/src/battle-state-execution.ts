@@ -5038,6 +5038,7 @@ export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
   readonly glyphExplosiveRune: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceEffectId: BattleSpellEffectOccurrenceId;
     readonly damage: {
       readonly expr: DiceExpr;
@@ -5889,6 +5890,7 @@ export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
   readonly glyphExplosiveRune: {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceEffectId: BattleSpellEffectOccurrenceId;
     readonly radiusFeet: 20;
   };
