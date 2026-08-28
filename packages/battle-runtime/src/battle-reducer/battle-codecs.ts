@@ -4167,6 +4167,7 @@ type BattleFillEncoded =
         };
         readonly levitatedMovement?: {
           readonly kind: "levitatedMovement";
+          readonly effectRef: string;
           readonly sourceCombatantId: string;
           readonly sourceProcedureRef: string;
           readonly fixedObjectOrSurfaceWithinReach: true;
