@@ -8,7 +8,7 @@ module statBlockSpellcastingProcedureExamples {
   run test_admits_action_spellcasting_and_preserves_child_outcomes = {
     val facts = {
       section: Actions,
-      ability: 4,
+      ability: IntelligenceAbility,
       spellSaveDc: FixedSpellSaveDc({ value: 13 }),
       spellAttackBonus: FixedSpellAttackBonus({ value: 5 }),
       components: ListedComponents({
@@ -40,7 +40,7 @@ module statBlockSpellcastingProcedureExamples {
   run test_admits_bonus_action_spellcasting_without_identity = {
     val facts = {
       section: BonusActions,
-      ability: 5,
+      ability: CharismaAbility,
       spellSaveDc: NoSpellSaveDc,
       spellAttackBonus: NoSpellAttackBonus,
       components: NoComponents,
@@ -60,7 +60,7 @@ module statBlockSpellcastingProcedureExamples {
   run test_rejects_unsupported_sections_and_invalid_groups = {
     val unsupportedSection = {
       section: Reactions,
-      ability: 4,
+      ability: IntelligenceAbility,
       spellSaveDc: NoSpellSaveDc,
       spellAttackBonus: NoSpellAttackBonus,
       components: NoComponents,
@@ -70,7 +70,7 @@ module statBlockSpellcastingProcedureExamples {
     }
     val invalidGroup = {
       section: Actions,
-      ability: 4,
+      ability: IntelligenceAbility,
       spellSaveDc: NoSpellSaveDc,
       spellAttackBonus: NoSpellAttackBonus,
       components: NoComponents,

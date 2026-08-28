@@ -86,6 +86,7 @@ import {
 import { statBlockAttackProcedureSection } from "./battle-reducer/statblock.ts";
 import { statBlockAttackActionOptions } from "./stat-block-execution.ts";
 import { projectAuthoredStatBlock } from "./stat-block-authored-projection.ts";
+import { syntheticSpellcastingProcedureEntry } from "./stat-block-spellcasting-procedure.test-support.ts";
 
 const isolatedExecutionBattleId = battleId(
   "battle-stat-block-isolated-execution-admission",
@@ -1350,6 +1351,67 @@ describe("Stat Block execution references", () => {
           },
         ],
       }),
+    ).toThrow();
+  });
+
+  test("rejects spellcasting groups bound to a Legendary Action pool", () => {
+    const actorId = combatantId("execution-ref-spellcasting-legendary-pool");
+    const base = monsterResourceStatBlock();
+    const actions = requireProcedureActions(base);
+    const spellcasting = syntheticSpellcastingProcedureEntry();
+    const record: StatBlockRecord = {
+      ...base,
+      statBlock: {
+        ...base.statBlock,
+        actions: [...actions, spellcasting],
+      },
+    };
+    const admission = isolatedStatBlockAdmissions(actorId, [record])[0];
+    if (admission === undefined) {
+      throw new Error("Expected the spellcasting Stat Block admission.");
+    }
+    const snapshot = statBlockExecutionSnapshot(admission.execution);
+    const spellcastingBinding = snapshot.procedureBindings.find(
+      (binding) => binding.procedure.kind === "spellcasting",
+    );
+    const legendaryPool = snapshot.resourcePools.find(
+      (pool) => pool.kind === "legendaryActions",
+    );
+    if (
+      spellcastingBinding?.procedure.kind !== "spellcasting" ||
+      legendaryPool === undefined
+    ) {
+      throw new Error(
+        "Expected spellcasting and Legendary Action execution bindings.",
+      );
+    }
+    const limitedGroup = spellcastingBinding.procedure.groups.find(
+      (group) => group.kind === "limited",
+    );
+    if (limitedGroup === undefined) {
+      throw new Error("Expected a limited spellcasting group.");
+    }
+    const malformedProcedure = {
+      ...spellcastingBinding.procedure,
+      groups: spellcastingBinding.procedure.groups.map((group) =>
+        group === limitedGroup
+          ? {
+              ...group,
+              resourcePoolRefs: [legendaryPool.resourcePoolRef],
+            }
+          : group,
+      ),
+    };
+    const malformed = {
+      ...snapshot,
+      procedureBindings: snapshot.procedureBindings.map((binding) =>
+        binding.procedureRef === spellcastingBinding.procedureRef
+          ? { ...binding, procedure: malformedProcedure }
+          : binding,
+      ),
+    };
+    expect(() =>
+      Schema.decodeUnknownSync(StatBlockExecutionSnapshotSchema)(malformed),
     ).toThrow();
   });
 

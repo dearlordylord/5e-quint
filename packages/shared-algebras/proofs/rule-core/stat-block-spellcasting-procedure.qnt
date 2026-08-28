@@ -20,6 +20,14 @@ module statBlockSpellcastingProcedure {
     | Unrestricted
     | Restricted
 
+  type StatBlockSpellcastingAbility =
+    | StrengthAbility
+    | DexterityAbility
+    | ConstitutionAbility
+    | IntelligenceAbility
+    | WisdomAbility
+    | CharismaAbility
+
   type StatBlockSpellcastingOptionalSaveDc =
     | NoSpellSaveDc
     | FixedSpellSaveDc({ value: int })
@@ -49,7 +57,7 @@ module statBlockSpellcastingProcedure {
 
   type StatBlockSpellcastingProcedureFacts = {
     section: StatBlockSpellcastingSection,
-    ability: int,
+    ability: StatBlockSpellcastingAbility,
     spellSaveDc: StatBlockSpellcastingOptionalSaveDc,
     spellAttackBonus: StatBlockSpellcastingOptionalAttackBonus,
     components: StatBlockSpellcastingOptionalComponents,

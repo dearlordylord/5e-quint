@@ -16,7 +16,7 @@ module ruleCoreStatBlockSpellcastingProcedureMbt {
     section: StatBlockSpellcastingSection
   ): StatBlockSpellcastingProcedureFacts = {
     section: section,
-    ability: 4,
+    ability: IntelligenceAbility,
     spellSaveDc: FixedSpellSaveDc({ value: 13 }),
     spellAttackBonus: FixedSpellAttackBonus({ value: 5 }),
     components: ListedComponents({

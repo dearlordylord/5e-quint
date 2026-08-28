@@ -5876,6 +5876,7 @@ function statBlockProcedurePoolShapeIsValid(
   if (binding.procedure.kind === "spellcasting") {
     return (
       binding.resourcePoolRefs.length === 0 &&
+      legendaryPoolCount === 0 &&
       binding.procedure.groups.every((group) =>
         group.kind === "at_will"
           ? group.resourcePoolRefs.length === 0
