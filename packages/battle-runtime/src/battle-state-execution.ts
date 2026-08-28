@@ -6090,7 +6090,7 @@ export type BattleSpellcastingAbilityCheckHole = {
     readonly casterId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly target: BattleOngoingSpellTarget;
-    readonly effect: BattleOngoingSpellEffectRef;
+    readonly effect: BattleAntimagicFieldOngoingSpellEffectRef;
     readonly contestedSpellLevel: BattleSpellEffectLevel;
   };
   readonly requiresTableSpatialFact?: boolean;

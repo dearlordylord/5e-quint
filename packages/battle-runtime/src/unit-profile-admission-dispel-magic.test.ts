@@ -1127,10 +1127,14 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     });
     const encodedSnapshot =
       Schema.encodeSync(BattleSnapshotSchema)(focusedSnapshot);
+    const deferredSnapshot = {
+      ...encodedSnapshot,
+      acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
+    };
     expect(
       Result.isFailure(
         Schema.decodeUnknownResult(BattleSnapshotSchema)({
-          ...encodedSnapshot,
+          ...deferredSnapshot,
           combatants: encodedSnapshot.combatants.map((combatant) =>
             combatant.combatantId === spellCasterId
               ? {
@@ -1141,7 +1145,6 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
                 }
               : combatant,
           ),
-          acts: [{ subject: act.subject, initialHoles: needsCheck.holes }],
         }),
       ),
     ).toBe(true);
@@ -1156,6 +1159,88 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
         }),
       }),
     );
+    const forgedTargetRef = battleEffectExecutionRefForTest(
+      "forged-spiritual-weapon-ability-check-target",
+    );
+    const mutateDeferredCheck = (
+      mutate: (
+        hole: Extract<
+          BattleHole,
+          { readonly kind: "spellcastingAbilityCheck" }
+        >,
+      ) => unknown,
+    ) => ({
+      ...deferredSnapshot,
+      acts: deferredSnapshot.acts.map((candidate) => ({
+        ...candidate,
+        initialHoles: candidate.initialHoles.map((hole) =>
+          hole.kind === "spellcastingAbilityCheck" ? mutate(hole) : hole,
+        ),
+      })),
+    });
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateDeferredCheck((hole) => ({
+            ...hole,
+            spellcastingAbilityCheck: {
+              ...hole.spellcastingAbilityCheck,
+              target: {
+                kind: "magicalEffect",
+                effect: { ...target.effect, effectRef: forgedTargetRef },
+              },
+            },
+          })),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateDeferredCheck((hole) => ({
+            ...hole,
+            spellcastingAbilityCheck: {
+              ...hole.spellcastingAbilityCheck,
+              target: {
+                kind: "magicalEffect",
+                effect: {
+                  kind: "spellLightEmitter",
+                  effectRef: effect.effectRef,
+                },
+              },
+            },
+          })),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateDeferredCheck((hole) => ({
+            ...hole,
+            spellcastingAbilityCheck: {
+              ...hole.spellcastingAbilityCheck,
+              effect: {
+                kind: "antimagicFieldAura",
+                areaId: battleAreaId("forged-ability-check-aura"),
+                sourceCombatantId: spellCasterId,
+              },
+            },
+          })),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateDeferredCheck((hole) => {
+            const { effect: _effect, ...spellcastingAbilityCheck } =
+              hole.spellcastingAbilityCheck;
+            return { ...hole, spellcastingAbilityCheck };
+          }),
+        ),
+      ),
+    ).toBe(true);
 
     const failed = resolveBattleSubject({
       state: state.state,

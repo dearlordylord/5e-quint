@@ -2693,7 +2693,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
       casterId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       target: BattleOngoingSpellTargetSchema,
-      effect: BattleOngoingSpellEffectRefSchema,
+      effect: BattleAntimagicFieldOngoingSpellEffectRefSchema,
       contestedSpellLevel: BattleSpellEffectLevel,
     }),
     ...D20TestNaturalOneRerollHoleOptionsSchema,
@@ -6501,32 +6501,42 @@ type EncodedBattleActExecutionCandidate =
   typeof BattleActExecutionCandidateSchema.Type;
 type EncodedBattleSubject = typeof BattleSubjectSchema.Type;
 type EncodedBattleHole = typeof BattleHolePayloadUnionSchema.Type;
+type SerializedEffectOccurrenceKind =
+  EncodedBattleCreatureSnapshot["effectOccurrences"][number]["kind"];
 
 type SerializedExecutionReferenceOwnership =
   | {
+      readonly kind: "subjectProcedure";
       readonly ref: BattleProcedureExecutionRef;
       readonly ownerId: CombatantId | undefined;
-      readonly subjectProcedure: true;
     }
   | {
+      readonly kind: "execution";
       readonly ref: string;
       readonly ownerId: CombatantId | undefined;
-      readonly subjectProcedure: false;
-      readonly effectOccurrenceKind:
-        | "activeEffect"
-        | "storedLightEmitter"
-        | undefined;
+    }
+  | {
+      readonly kind: "effectOccurrence";
+      readonly ref: BattleEffectExecutionRef;
+      readonly ownerId: undefined;
+      readonly effectOccurrenceKind: SerializedEffectOccurrenceKind;
     };
 
 function serializedExecutionReference(
   ref: string,
   ownerId: CombatantId | undefined,
-  effectOccurrenceKind?: "activeEffect" | "storedLightEmitter",
-): Extract<SerializedExecutionReferenceOwnership, { subjectProcedure: false }> {
+): Extract<SerializedExecutionReferenceOwnership, { kind: "execution" }> {
+  return { kind: "execution", ref, ownerId };
+}
+
+function serializedEffectOccurrenceReference(
+  ref: BattleEffectExecutionRef,
+  effectOccurrenceKind: SerializedEffectOccurrenceKind,
+): SerializedExecutionReferenceOwnership {
   return {
+    kind: "effectOccurrence",
     ref,
-    ownerId,
-    subjectProcedure: false,
+    ownerId: undefined,
     effectOccurrenceKind,
   };
 }
@@ -6534,9 +6544,11 @@ function serializedExecutionReference(
 function serializedSubjectProcedureReference(
   ref: BattleProcedureExecutionRef,
   ownerId: CombatantId | undefined,
-): Extract<SerializedExecutionReferenceOwnership, { subjectProcedure: true }> {
-  const subjectProcedure = true;
-  return { ref, ownerId, subjectProcedure };
+): Extract<
+  SerializedExecutionReferenceOwnership,
+  { kind: "subjectProcedure" }
+> {
+  return { kind: "subjectProcedure", ref, ownerId };
 }
 
 const noSerializedExecutionReferences =
@@ -6555,11 +6567,13 @@ function serializedBattleHoleExecutionReferences(
     ownerId: CombatantId,
   ): SerializedExecutionReferenceOwnership =>
     serializedExecutionReference(ref, ownerId);
-  const bound = (
-    ref: string,
-    effectOccurrenceKind?: "activeEffect" | "storedLightEmitter",
+  const bound = (ref: string): SerializedExecutionReferenceOwnership =>
+    serializedExecutionReference(ref, undefined);
+  const boundOccurrence = (
+    ref: BattleEffectExecutionRef,
+    effectOccurrenceKind: SerializedEffectOccurrenceKind,
   ): SerializedExecutionReferenceOwnership =>
-    serializedExecutionReference(ref, undefined, effectOccurrenceKind);
+    serializedEffectOccurrenceReference(ref, effectOccurrenceKind);
   const attackOptionReferences = (
     attack: Extract<
       EncodedBattleHole,
@@ -6605,7 +6619,7 @@ function serializedBattleHoleExecutionReferences(
       readonly effectRef: BattleEffectExecutionRef;
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
-      bound(owner.effectRef, "activeEffect"),
+      boundOccurrence(owner.effectRef, "activeEffect"),
       ...bonuses,
     ];
     return Match.value(value).pipe(
@@ -6728,7 +6742,7 @@ function serializedBattleHoleExecutionReferences(
       readonly effectRef: BattleEffectExecutionRef;
     }): readonly SerializedExecutionReferenceOwnership[] => [
       source(owner.sourceProcedureRef, owner.sourceCombatantId),
-      bound(owner.effectRef, "activeEffect"),
+      boundOccurrence(owner.effectRef, "activeEffect"),
     ];
     return Match.value(value).pipe(
       Match.when({ sourceProcedureRef: Match.any }, (hole) => [
@@ -6737,7 +6751,7 @@ function serializedBattleHoleExecutionReferences(
           Match.when({ spellMarkedDamageRiders: Match.any }, (spellDamage) =>
             (spellDamage.spellMarkedDamageRiders ?? []).flatMap((rider) => [
               owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-              bound(rider.effectRef),
+              boundOccurrence(rider.effectRef, "activeEffect"),
             ]),
           ),
           Match.orElse(() => []),
@@ -6772,11 +6786,11 @@ function serializedBattleHoleExecutionReferences(
       ),
       Match.when({ insectPlagueAreaHazard: Match.any }, (hole) => [
         ...procedureSource(hole.insectPlagueAreaHazard),
-        bound(hole.insectPlagueAreaHazard.effectRef),
+        boundOccurrence(hole.insectPlagueAreaHazard.effectRef, "activeEffect"),
       ]),
       Match.when({ cloudkillAreaHazard: Match.any }, (hole) => [
         ...procedureSource(hole.cloudkillAreaHazard),
-        bound(hole.cloudkillAreaHazard.effectRef),
+        boundOccurrence(hole.cloudkillAreaHazard.effectRef, "activeEffect"),
       ]),
       Match.when({ attack: Match.any }, (hole) => [
         ...attackOptionReferences(hole.attack),
@@ -6785,11 +6799,11 @@ function serializedBattleHoleExecutionReferences(
         ),
         ...(hole.spellWeaponDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-          bound(rider.effectRef),
+          boundOccurrence(rider.effectRef, "activeEffect"),
         ]),
         ...(hole.spellMarkedDamageRiders ?? []).flatMap((rider) => [
           owned(rider.sourceProcedureRef, rider.sourceCombatantId),
-          bound(rider.effectRef),
+          boundOccurrence(rider.effectRef, "activeEffect"),
         ]),
         ...(hole.cunningStrikeOptions ?? []).flatMap((option) => [
           bound(option.procedureRef),
@@ -6880,7 +6894,7 @@ function serializedBattleHoleExecutionReferences(
           choice.kind === "magicalEffect" &&
           choice.effect.kind !== "antimagicFieldAura"
             ? [
-                bound(
+                boundOccurrence(
                   choice.effect.effectRef,
                   choice.effect.kind === "spellActiveEffect"
                     ? "activeEffect"
@@ -6958,12 +6972,12 @@ function serializedBattleHoleExecutionReferences(
       ],
       cloudkillMovement: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
-        bound(value.effectRef),
+        boundOccurrence(value.effectRef, "activeEffect"),
       ],
       startTurnOccurrenceOrder: () => [],
       temporaryHitPointChoice: (value) => [
         source(value.sourceProcedureRef, value.sourceCombatantId),
-        bound(value.effectRef, "activeEffect"),
+        boundOccurrence(value.effectRef, "activeEffect"),
       ],
       statBlockRechargeRoll: (value) =>
         value.rechargeTargets.map((ref) => owned(ref, value.combatantId)),
@@ -6972,17 +6986,12 @@ function serializedBattleHoleExecutionReferences(
           value.spellcastingAbilityCheck.sourceProcedureRef,
           value.spellcastingAbilityCheck.casterId,
         ),
-        ...(value.spellcastingAbilityCheck.effect.kind === "antimagicFieldAura"
-          ? []
-          : [
-              bound(
-                value.spellcastingAbilityCheck.effect.effectRef,
-                value.spellcastingAbilityCheck.effect.kind ===
-                  "spellActiveEffect"
-                  ? "activeEffect"
-                  : "storedLightEmitter",
-              ),
-            ]),
+        boundOccurrence(
+          value.spellcastingAbilityCheck.effect.effectRef,
+          value.spellcastingAbilityCheck.effect.kind === "spellActiveEffect"
+            ? "activeEffect"
+            : "storedLightEmitter",
+        ),
       ],
       sanctuaryInterdictionOutcome: (value) => [
         owned(value.sourceProcedureRef, value.sourceCombatantId),
@@ -7312,6 +7321,30 @@ function serializedObscurementZoneOwnsSource(
   );
 }
 
+function serializedSpellcastingAbilityCheckTargetMatchesEffect(
+  hole: EncodedBattleHole,
+): boolean {
+  if (
+    hole.kind !== "spellcastingAbilityCheck" ||
+    hole.spellcastingAbilityCheck.target.kind !== "magicalEffect"
+  ) {
+    return true;
+  }
+  const expected = hole.spellcastingAbilityCheck.effect;
+  return Match.value(hole.spellcastingAbilityCheck.target.effect).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      spellLightEmitter: (target) =>
+        expected.kind === "spellLightEmitter" &&
+        target.effectRef === expected.effectRef,
+      spellActiveEffect: (target) =>
+        expected.kind === "spellActiveEffect" &&
+        target.activeEffectKind === expected.activeEffectKind &&
+        target.effectRef === expected.effectRef,
+      antimagicFieldAura: () => false,
+    }),
+  );
+}
+
 function serializedBattleHoleOwnsBoundExecutionReferences(input: {
   readonly hole: EncodedBattleHole;
   readonly combatants: readonly EncodedBattleCreatureSnapshot[];
@@ -7321,11 +7354,13 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
     | undefined;
 }): boolean {
   const { hole, combatants, boundExecutionRefs, expectedProcedureRefs } = input;
+  if (!serializedSpellcastingAbilityCheckTargetMatchesEffect(hole)) {
+    return false;
+  }
   return serializedBattleHoleExecutionReferences(hole).every((reference) => {
     if (!boundExecutionRefs.has(reference.ref)) return false;
     if (
-      !reference.subjectProcedure &&
-      reference.effectOccurrenceKind !== undefined &&
+      reference.kind === "effectOccurrence" &&
       !combatants.some((combatant) =>
         combatant.effectOccurrences.some(
           (occurrence) =>
@@ -7337,7 +7372,7 @@ function serializedBattleHoleOwnsBoundExecutionReferences(input: {
       return false;
     }
     if (
-      reference.subjectProcedure &&
+      reference.kind === "subjectProcedure" &&
       expectedProcedureRefs !== undefined &&
       expectedProcedureRefs.size > 0 &&
       !expectedProcedureRefs.has(reference.ref)

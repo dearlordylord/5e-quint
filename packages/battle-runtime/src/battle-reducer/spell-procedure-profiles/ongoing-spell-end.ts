@@ -33,6 +33,7 @@ import {
   type BattleExecutableSpellInvocation,
   type BattleActiveEffect,
   type BattleCreatureState,
+  type BattleAntimagicFieldOngoingSpellEffectRef,
   type BattleOngoingSpellEffectRef,
   type BattleOngoingSpellTarget,
   type BattleOngoingSpellTargetChoiceHole,
@@ -52,6 +53,8 @@ import { needsHolesResult } from "../needs-holes-result.ts";
 import { invalidResult, resolutionFromStateResult } from "../result-helpers.ts";
 import {
   isTrackedOngoingSpellLightEmitter,
+  antimagicFieldOngoingSpellEffectRefForActiveEffect,
+  antimagicFieldOngoingSpellEffectRefForEmitter,
   ongoingSpellEffectRefEquals,
   ongoingSpellEffectRefForAntimagicFieldAura,
   ongoingSpellEffectRefForActiveEffect,
@@ -813,10 +816,10 @@ function isTrackedDispellableOngoingSpellActiveEffect(
 
 function ongoingSpellOccurrenceRef(
   occurrence: BattleTrackedOngoingSpellOccurrence,
-): BattleOngoingSpellEffectRef {
+): BattleAntimagicFieldOngoingSpellEffectRef {
   return occurrence.kind === "lightEmitter"
-    ? ongoingSpellEffectRefForEmitter(occurrence.emitter)
-    : ongoingSpellEffectRefForActiveEffect(occurrence.effect);
+    ? antimagicFieldOngoingSpellEffectRefForEmitter(occurrence.emitter)
+    : antimagicFieldOngoingSpellEffectRefForActiveEffect(occurrence.effect);
 }
 
 function ongoingSpellOccurrenceSourceSpellLevel(

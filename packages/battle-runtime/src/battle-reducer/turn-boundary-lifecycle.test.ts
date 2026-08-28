@@ -598,6 +598,9 @@ describe("turn-boundary active-effect occurrence updates", () => {
         },
       ],
     });
+    if (staleFillResult.tag !== "needsHoles") {
+      throw new Error("Expected the replacement occurrence's exact roll hole.");
+    }
     expect(replacementEffect.effect.effectRef).not.toBe(checkpointEffectRef);
     expect(staleFillResult.state.combatants.get(spellTargetId)?.hp).toBe(
       target.hp,
