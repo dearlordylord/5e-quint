@@ -120,7 +120,6 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     ) {
       throw new Error("Expected Command Approach act.");
     }
-    const approachEffectRef = approachAct.subject.effectRef;
     const movement = requireHole(approachAct.initialHoles, "movement");
     const opportunityAttack = resolveBattleSubject({
       state: targetTurn.state,
@@ -243,6 +242,7 @@ describe("QMBT14 deterministic Command movement option admission", () => {
     ) {
       throw new Error("Expected Command Approach act.");
     }
+    const approachEffectRef = approachAct.subject.effectRef;
     const movement = requireHole(approachAct.initialHoles, "movement");
     const movementFill = commandApproachMovementFill(movement, {
       movementCostFeet: 10,
