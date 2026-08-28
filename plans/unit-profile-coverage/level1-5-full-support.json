@@ -6881,8 +6881,8 @@
     },
     "rulesKernelCoveredProfileJoin": {
       "denominator": 117,
-      "numerator": 103,
-      "percent": "88%"
+      "numerator": 104,
+      "percent": "88.9%"
     },
     "rulesKernelProfileJoin": {
       "denominator": 117,
@@ -6891,8 +6891,8 @@
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 163,
-      "numerator": 136,
-      "percent": "83.4%"
+      "numerator": 137,
+      "percent": "84%"
     },
     "strictFinalSupport": {
       "denominator": 283,
@@ -11572,8 +11572,8 @@
     "metrics": {
       "rulesKernelSupportedUnitCoverage": {
         "denominator": 163,
-        "numerator": 136,
-        "percent": "83.4%"
+        "numerator": 137,
+        "percent": "84%"
       }
     },
     "units": [
@@ -15737,10 +15737,10 @@
         "unitId": "sleep"
       },
       {
-        "joinStatus": "mapped-open",
+        "joinStatus": "covered",
         "profiles": [
           {
-            "joinStatus": "mapped-open",
+            "joinStatus": "covered",
             "obligations": [
               {
                 "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
@@ -15752,7 +15752,7 @@
             "profileId": "spell.invocation-slow-active-penalties",
             "profileKind": "spell-invocation",
             "qntOwners": [
-              "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+              "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
             ]
           }
         ],

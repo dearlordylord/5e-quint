@@ -10,6 +10,7 @@ import {
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt stat-block.multiattack
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.MULTIATTACK
 import { isDeepStrictEqual } from "node:util";
+import * as Match from "effect/Match";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -465,12 +466,26 @@ function projectRuleCoreStatBlockMultiattackState(input: {
     ),
     bonusActionAvailable:
       input.state.currentTurnResources.currentHasBonusAction,
-    pendingDispatchProcedureRefs: dispatches.map((resource) =>
-      resource.attackProcedureRef === primaryAttackRef
-        ? 0
-        : resource.attackProcedureRef === secondaryAttackRef
-          ? 1
-          : unknownSyntheticProcedureRef(resource.attackProcedureRef),
+    pendingDispatchProcedureRefs: dispatches.flatMap((resource) =>
+      Match.value(resource.dispatch).pipe(
+        Match.when({ kind: "listedOccurrence" }, ({ attackProcedureRef }) => [
+          attackProcedureRef === primaryAttackRef
+            ? 0
+            : attackProcedureRef === secondaryAttackRef
+              ? 1
+              : unknownSyntheticProcedureRef(attackProcedureRef),
+        ]),
+        Match.when({ kind: "oneListedChoice" }, ({ attackProcedureRefs }) =>
+          attackProcedureRefs.map((attackProcedureRef) =>
+            attackProcedureRef === primaryAttackRef
+              ? 0
+              : attackProcedureRef === secondaryAttackRef
+                ? 1
+                : unknownSyntheticProcedureRef(attackProcedureRef),
+          ),
+        ),
+        Match.exhaustive,
+      ),
     ),
     movementSpentFeet: Number(actor.movement.spentFeet),
     movementRemainingFeet: Number(actor.movement.remainingFeet),

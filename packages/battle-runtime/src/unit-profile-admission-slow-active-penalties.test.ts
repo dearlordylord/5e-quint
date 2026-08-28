@@ -478,10 +478,18 @@ describe("Task 12 deterministic Slow active-penalties admission", () => {
       );
     }
 
-    expect(
+    const [multiattackChoiceResource] =
       resolved.state.currentTurnResources.actionResources.filter(
         (resource) => resource.source === "statBlockMultiattack",
-      ),
+      );
+    expect(multiattackChoiceResource).toMatchObject({
+      dispatch: { kind: "oneListedChoice" },
+    });
+    expect(
+      multiattackChoiceResource?.source === "statBlockMultiattack" &&
+        multiattackChoiceResource.dispatch.kind === "oneListedChoice"
+        ? multiattackChoiceResource.dispatch.attackProcedureRefs
+        : [],
     ).toHaveLength(3);
     expect(canSpendAction(resolved.state.currentTurnResources, "attack")).toBe(
       false,

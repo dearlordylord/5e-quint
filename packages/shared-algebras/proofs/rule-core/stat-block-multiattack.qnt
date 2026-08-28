@@ -1,7 +1,9 @@
 // -*- mode: Bluespec; -*-
 // RAW-COVERAGE: qnt-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: qnt-owner stat-block.multiattack
+// UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.MULTIATTACK
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 module statBlockMultiattack {
   type StatBlockProcedureRef = int
@@ -80,6 +82,18 @@ module statBlockMultiattack {
       | StatBlockMultiattackActionSpent => List()
       | StatBlockMultiattackTurnEnded => List()
       | StatBlockMultiattackDispatching(active) => active.pendingProcedureRefs
+    }
+
+  pure def statBlockMultiattackDispatchResourceCount(
+    state: StatBlockMultiattackState
+  ): int =
+    match state {
+      | StatBlockMultiattackReadyToAct => 0
+      | StatBlockMultiattackActionSpent => 0
+      | StatBlockMultiattackTurnEnded => 0
+      | StatBlockMultiattackDispatching(active) =>
+          if (active.allowance == OneListedDispatch) 1
+          else active.pendingProcedureRefs.length()
     }
 
   pure def removeFirstStatBlockProcedureRef(

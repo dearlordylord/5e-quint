@@ -164,7 +164,6 @@ import {
   spendStatBlockAttackResources,
   statBlockAttackProcedureSection,
   statBlockMultiattackDispatchResourceDemandForActor,
-  statBlockMultiattackTurnResourcesAfterResolvedDispatch,
   updateStatBlockActorResources,
 } from "./statblock.ts";
 import {
@@ -237,7 +236,6 @@ import {
 } from "./battle-runtime-protocol.ts";
 import {
   actorHasClassFeatureExtraAttackActionResource,
-  isStatBlockBattleCreatureState,
   spendTurnAction,
 } from "./battle-discovery.ts";
 import {
@@ -1026,22 +1024,48 @@ export function resolveMultiattack(
       "Attack is no longer available for the current actor.",
     );
   }
+  const multiattackDispatchResources = Match.value(dispatchResourceDemand).pipe(
+    Match.when({ kind: "allListedDispatches" }, ({ procedureRefs }) =>
+      procedureRefs.map(
+        (attackProcedureRef): StatBlockMultiattackActionResource => ({
+          kind: "action",
+          source: "statBlockMultiattack",
+          sourceOwnerId: input.subject.actorId,
+          dispatch: { kind: "listedOccurrence", attackProcedureRef },
+          restriction: {
+            kind: "exclude",
+            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
+          },
+        }),
+      ),
+    ),
+    Match.when(
+      { kind: "oneListedDispatch" },
+      ({ procedureRefs }): readonly StatBlockMultiattackActionResource[] => [
+        {
+          kind: "action",
+          source: "statBlockMultiattack",
+          sourceOwnerId: input.subject.actorId,
+          dispatch: {
+            kind: "oneListedChoice",
+            attackProcedureRefs: procedureRefs,
+          },
+          restriction: {
+            kind: "exclude",
+            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
+          },
+        },
+      ],
+    ),
+    Match.exhaustive,
+  );
   const nextStateWithPendingDispatches = {
     ...input.state,
     currentTurnResources: {
       ...spent.right,
       actionResources: [
         ...spent.right.actionResources,
-        ...dispatchResourceDemand.procedureRefs.map((dispatch) => ({
-          kind: "action" as const,
-          source: "statBlockMultiattack" as const,
-          sourceOwnerId: input.subject.actorId,
-          attackProcedureRef: dispatch,
-          restriction: {
-            kind: "exclude" as const,
-            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
-          },
-        })),
+        ...multiattackDispatchResources,
       ],
     },
   };
@@ -2544,16 +2568,10 @@ function spendAttackTurnResources(
           attack.procedureRef,
         ),
     );
-    const actor = state.combatants.get(actorId);
     return Either.isLeft(spent)
       ? Either.left("Attack is no longer available for the current actor.")
       : Either.right({
-          spentTurnResources: isStatBlockBattleCreatureState(actor)
-            ? statBlockMultiattackTurnResourcesAfterResolvedDispatch(
-                actor,
-                spent.right,
-              )
-            : spent.right,
+          spentTurnResources: spent.right,
           spentResource: null,
         });
   }

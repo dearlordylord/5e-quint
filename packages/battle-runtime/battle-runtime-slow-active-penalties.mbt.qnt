@@ -358,7 +358,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
       false,
       0,
       false,
-      statBlockMultiattackPendingProcedureRefs(slowedStatBlockMultiattackActivatedState).length(),
+      statBlockMultiattackDispatchResourceCount(slowedStatBlockMultiattackActivatedState),
       false,
       30,
       10,

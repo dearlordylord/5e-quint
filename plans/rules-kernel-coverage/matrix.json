@@ -277,7 +277,7 @@
       ],
       "profiles": ["spell.invocation-slow-active-penalties"],
       "qntOwners": [
-        "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
       "reason": "The promoted Slow runtime consumes caller-supplied affected-creature area witnesses, save outcomes, retained active Slow effects, shared action-economy state, Attack action resource state, and canonical spell component facts. Automatic Cube geometry, line of effect, point-of-origin inclusion, and area membership derivation remain caller/table facts.",
       "runtime": "battle",
@@ -8454,7 +8454,7 @@
     },
     {
       "evidence": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt is the focused Slow active-penalties literal projection witness for failed-save active penalties, target-end repeat saves, and cleanup. It is MBT-only parity evidence, not qnt-proof verification evidence.",
-      "obligationIds": ["BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE"],
+      "obligationIds": [],
       "ownerPath": "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt",
       "role": "mbt-fixture"
     },
@@ -9610,8 +9610,11 @@
       "role": "semantic-core"
     },
     {
-      "evidence": "Focused Multiattack Attack-action spend and pending-dispatch semantics.",
-      "obligationIds": ["BATTLE.STAT_BLOCK.MULTIATTACK"],
+      "evidence": "Focused Multiattack Attack-action spend, activation-owned dispatch allowance, pending-dispatch, and Slow one-listed-choice semantics.",
+      "obligationIds": [
+        "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+        "BATTLE.STAT_BLOCK.MULTIATTACK"
+      ],
       "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt",
       "role": "semantic-core"
     },
@@ -16452,6 +16455,33 @@
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-inductive.qnt",
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack-examples.qnt",
         "packages/battle-runtime/battle-runtime-stat-block-multiattack-bridge-examples.qnt"
+      ],
+      "semanticCore": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
+      ],
+      "status": "generation-subset-clean"
+    },
+    {
+      "blockedBy": [],
+      "generatorSubset": [
+        "variant",
+        "record",
+        "pure-def",
+        "constant-def",
+        "int",
+        "bool",
+        "if-expression",
+        "let-binding",
+        "comparison",
+        "boolean-connective",
+        "all-block",
+        "pattern-match",
+        "fold",
+        "list"
+      ],
+      "obligationId": "BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE",
+      "proofOnly": [
+        "packages/battle-runtime/battle-runtime-slow-active-penalties.mbt.qnt"
       ],
       "semanticCore": [
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"

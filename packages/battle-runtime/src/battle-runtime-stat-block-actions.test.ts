@@ -1520,7 +1520,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("Stat Block Multiattack spends the Attack action and grants named dispatch attacks", () => {
+  test("unrestricted Multiattack keeps every activation-owned occurrence when Slow is later applied", () => {
     const goblinTurn = requireResolved(
       endTurn({
         state: startBattleRight({
@@ -1552,7 +1552,10 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
-        attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        dispatch: {
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        },
         restriction: {
           kind: "exclude",
           actions: expect.arrayContaining(["dash", "magic", "utilize"]),
@@ -1562,7 +1565,10 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
-        attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        dispatch: {
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        },
         restriction: {
           kind: "exclude",
           actions: expect.arrayContaining(["dash", "magic", "utilize"]),
@@ -1572,7 +1578,10 @@ describe("battle runtime: Stat Block actions", () => {
         kind: "action",
         source: "statBlockMultiattack",
         sourceOwnerId: goblinId,
-        attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
+        dispatch: {
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
+        },
         restriction: {
           kind: "exclude",
           actions: expect.arrayContaining(["dash", "magic", "utilize"]),
@@ -1662,12 +1671,28 @@ describe("battle runtime: Stat Block actions", () => {
         fills: [],
       }),
     ).toMatchObject({ tag: "invalid", reason: "staleSubject" });
-    const shortbow = discoverStatBlockActs(multiattackState).find(
+    const multiattackActor = multiattackState.combatants.get(goblinId);
+    if (multiattackActor === undefined) {
+      throw new Error("Expected the Multiattack actor.");
+    }
+    const multiattackStateAfterSlowApplied: BattleState = {
+      ...multiattackState,
+      combatants: new Map(multiattackState.combatants).set(goblinId, {
+        ...multiattackActor,
+        activeEffects: [
+          ...multiattackActor.activeEffects,
+          slowActivePenaltiesEffectForTest(),
+        ],
+      }),
+    };
+    const shortbow = discoverStatBlockActs(
+      multiattackStateAfterSlowApplied,
+    ).find(
       (act) =>
         act.subject.tag === "action" &&
         act.subject.action === "attack" &&
         act.subject.procedureRef ===
-          procedureRefForAttack(multiattackState, 2) &&
+          procedureRefForAttack(multiattackStateAfterSlowApplied, 2) &&
         act.subject.statBlockDamageNotation === undefined,
     );
     if (shortbow === undefined) throw new Error("Expected Shortbow act.");
@@ -1679,14 +1704,14 @@ describe("battle runtime: Stat Block actions", () => {
     );
     const targeted = requireNeedsHoles(
       resolveBattleSubject({
-        state: multiattackState,
+        state: multiattackStateAfterSlowApplied,
         subject: shortbowSubject,
         fills: [targetChoice],
       }),
     );
     const afterDispatch = requireResolved(
       resolveBattleSubject({
-        state: multiattackState,
+        state: multiattackStateAfterSlowApplied,
         subject: shortbowSubject,
         fills: [
           targetChoice,
@@ -1701,11 +1726,17 @@ describe("battle runtime: Stat Block actions", () => {
     expect(afterDispatch.currentTurnResources.actionResources).toEqual([
       expect.objectContaining({
         source: "statBlockMultiattack",
-        attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        dispatch: expect.objectContaining({
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        }),
       }),
       expect.objectContaining({
         source: "statBlockMultiattack",
-        attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        dispatch: expect.objectContaining({
+          kind: "listedOccurrence",
+          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+        }),
       }),
     ]);
     expect(
@@ -2111,7 +2142,7 @@ describe("battle runtime: Stat Block actions", () => {
     });
   });
 
-  test("slowed Stat Block Multiattack offers every listed dispatch and resolves one", () => {
+  test("slowed Multiattack keeps its activation-owned one-choice cap when Slow is removed", () => {
     const base = monsterResourceStatBlock();
     const actions = base.statBlock.actions;
     const resources = base.statBlock.resources;
@@ -2212,23 +2243,39 @@ describe("battle runtime: Stat Block actions", () => {
       afterMultiattack.currentTurnResources.actionResources.filter(
         (resource) => resource.source === "statBlockMultiattack",
       ),
-    ).toHaveLength(2);
+    ).toEqual([
+      expect.objectContaining({
+        dispatch: {
+          kind: "oneListedChoice",
+          attackProcedureRefs: [
+            procedureRefForAttack(afterMultiattack, 1),
+            procedureRefForAttack(afterMultiattack, 2),
+          ],
+        },
+      }),
+    ]);
     expect(afterGoblin.origin.execution.resourcePools).toContainEqual(
       expect.objectContaining({ kind: "daily", usesRemaining: 1 }),
     );
-    const effectiveDispatches =
-      afterMultiattack.currentTurnResources.actionResources.flatMap(
-        (resource) =>
-          resource.source === "statBlockMultiattack"
-            ? [resource.attackProcedureRef]
-            : [],
-      );
-    const effectiveDispatch = effectiveDispatches[1];
-    if (effectiveDispatch === undefined) {
-      throw new Error("Expected a non-first slowed Multiattack dispatch.");
+    const afterMultiattackActor = afterMultiattack.combatants.get(goblinId);
+    if (afterMultiattackActor === undefined) {
+      throw new Error("Expected the slowed Multiattack actor.");
     }
+    const afterMultiattackWithoutSlow: BattleState = {
+      ...afterMultiattack,
+      combatants: new Map(afterMultiattack.combatants).set(goblinId, {
+        ...afterMultiattackActor,
+        activeEffects: afterMultiattackActor.activeEffects.filter(
+          (effect) => effect.kind !== "slowActivePenalties",
+        ),
+      }),
+    };
+    const effectiveDispatch = procedureRefForAttack(
+      afterMultiattackWithoutSlow,
+      2,
+    );
     const afterDispatch = resolveMultiattackDispatchMiss(
-      afterMultiattack,
+      afterMultiattackWithoutSlow,
       effectiveDispatch,
     );
     const afterDispatchGoblin = afterDispatch.combatants.get(goblinId);
@@ -2681,10 +2728,14 @@ describe("battle runtime: Stat Block actions", () => {
     expect(after.currentTurnResources.actionResources).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+          dispatch: expect.objectContaining({
+            attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
+          }),
         }),
         expect.objectContaining({
-          attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
+          dispatch: expect.objectContaining({
+            attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
+          }),
         }),
       ]),
     );

@@ -288,7 +288,7 @@ describe("Slow active-penalties MBT parity", () => {
       turnActionOrBonusChoice: "action",
       targetTurnCanSpendAction: false,
       targetTurnCanSpendBonusAction: false,
-      statBlockMultiattackResourceCount: 3,
+      statBlockMultiattackResourceCount: 1,
       lastResult: "multiattackActivated",
     });
     expect(slowActivePenaltiesProjection(multiattackDispatched)).toMatchObject({

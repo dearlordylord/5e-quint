@@ -136,7 +136,7 @@ const encodedSnapshotFromState = (
   state: Parameters<typeof snapshotBattle>[0],
 ) => Schema.encodeSync(BattleSnapshotSchema)(snapshotBattle(state));
 
-function expectSnapshotDecodeLeft(snapshot: EncodedSnapshot): void {
+function expectSnapshotDecodeLeft(snapshot: unknown): void {
   const decoded = Schema.decodeUnknownEither(BattleSnapshotSchema)(snapshot);
   expect(Either.isLeft(decoded)).toBe(true);
 }
@@ -933,6 +933,56 @@ describe("battle codec act ownership boundaries", () => {
       wizardId,
     );
     expectSnapshotDecodeLeft(malformed);
+  });
+  test("rejects an empty Stat Block Multiattack one-listed choice", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("codec-multiattack-empty-choice"),
+      combatants: [
+        characterSeed({ combatantId: wizardId, initiative: 20 }),
+        statBlockCreatureInit({
+          combatantId: skeletonId,
+          statBlock: monsterMultiattackStatBlock(),
+          initiative: 10,
+        }),
+      ],
+    });
+    const turn = requireResolved(
+      endTurn({ state: session.state, actorId: wizardId }),
+    ).state;
+    const multiattack = snapshotBattle(turn).acts.find(
+      (act) =>
+        act.subject.tag === "action" &&
+        act.subject.action === "multiattack" &&
+        act.subject.actorId === skeletonId,
+    );
+    if (multiattack === undefined) {
+      throw new Error("Expected a Stat Block Multiattack act.");
+    }
+    const activated = requireResolved(
+      resolveBattleSubject({
+        state: turn,
+        subject: multiattack.subject,
+        fills: [],
+      }),
+    ).state;
+    const encoded = encodedSnapshotFromState(activated);
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? {
+                ...resource,
+                dispatch: {
+                  kind: "oneListedChoice",
+                  attackProcedureRefs: [],
+                },
+              }
+            : resource,
+        ),
+      },
+    });
   });
   test("rejects a character off-hand attack owned by a stat block", () => {
     const session = startBattleSessionRight({

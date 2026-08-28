@@ -19,7 +19,6 @@ import type {
 import {
   type BattleCreatureState,
   type BattleState,
-  type BattleTurnResources,
   type StatBlockBattleCreatureState,
 } from "../battle-state-execution.ts";
 import {
@@ -35,7 +34,6 @@ import {
   spendActiveDruidWildShapeProcedureResources,
 } from "./druid-wild-shape.ts";
 import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
-import { isStatBlockMultiattackActionResource } from "./action-resource-kinds.ts";
 
 export function statBlockMultiattackDispatchResourceDemandForActor(
   actor: StatBlockBattleCreatureState,
@@ -47,20 +45,6 @@ export function statBlockMultiattackDispatchResourceDemandForActor(
         ? "oneListedDispatch"
         : "allListedDispatches",
     procedureRefs: binding.procedure.dispatchProcedureRefs,
-  };
-}
-
-export function statBlockMultiattackTurnResourcesAfterResolvedDispatch(
-  actor: StatBlockBattleCreatureState,
-  turnResources: BattleTurnResources,
-): BattleTurnResources {
-  if (slowActivePenaltiesEffects(actor).length === 0) return turnResources;
-  return {
-    ...turnResources,
-    actionResources: turnResources.actionResources.filter(
-      (resource) =>
-        !isStatBlockMultiattackActionResource(resource, actor.combatantId),
-    ),
   };
 }
 

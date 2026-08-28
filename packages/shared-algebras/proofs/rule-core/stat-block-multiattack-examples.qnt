@@ -17,6 +17,7 @@ module statBlockMultiattackExamples {
     val thirdDispatch = resolveStatBlockMultiattackDispatch(secondDispatch, 0)
     all {
       assert(statBlockMultiattackPendingProcedureRefs(activated) == List(0, 0, 1)),
+      assert(statBlockMultiattackDispatchResourceCount(activated) == 3),
       assert(statBlockMultiattackPendingProcedureRefs(firstDispatch) == List(0, 0)),
       assert(statBlockMultiattackPendingProcedureRefs(secondDispatch) == List(0)),
       assert(multiattackDispatchSubjectPermitted(activated, StatBlockMovementSubject)),
@@ -37,6 +38,7 @@ module statBlockMultiattackExamples {
     val chosenNonFirstDispatch = resolveStatBlockMultiattackDispatch(activated, 1)
     all {
       assert(statBlockMultiattackPendingProcedureRefs(activated) == List(0, 0, 1)),
+      assert(statBlockMultiattackDispatchResourceCount(activated) == 1),
       assert(not(statBlockMultiattackContinuationOpen(chosenNonFirstDispatch))),
       assert(chosenNonFirstDispatch == StatBlockMultiattackActionSpent),
     }

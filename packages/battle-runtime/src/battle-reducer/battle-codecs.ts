@@ -5401,7 +5401,18 @@ export const RuntimeActionResourceSchema = Schema.Union(
     kind: Schema.Literal("action"),
     source: Schema.Literal("statBlockMultiattack"),
     sourceOwnerId: Schema.String,
-    attackProcedureRef: BattleStatBlockProcedureExecutionRef,
+    dispatch: Schema.Union(
+      Schema.Struct({
+        kind: Schema.Literal("listedOccurrence"),
+        attackProcedureRef: BattleStatBlockProcedureExecutionRef,
+      }),
+      Schema.Struct({
+        kind: Schema.Literal("oneListedChoice"),
+        attackProcedureRefs: Schema.NonEmptyArray(
+          BattleStatBlockProcedureExecutionRef,
+        ),
+      }),
+    ),
     restriction: BattleActionRestrictionSchema,
   }),
   Schema.Struct({

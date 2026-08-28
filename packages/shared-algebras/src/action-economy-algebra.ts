@@ -42,7 +42,18 @@ export type RuntimeActionResource =
       readonly kind: "action";
       readonly source: "statBlockMultiattack";
       readonly sourceOwnerId: CreatureId;
-      readonly attackProcedureRef: BattleStatBlockProcedureExecutionRef;
+      readonly dispatch:
+        | {
+            readonly kind: "listedOccurrence";
+            readonly attackProcedureRef: BattleStatBlockProcedureExecutionRef;
+          }
+        | {
+            readonly kind: "oneListedChoice";
+            readonly attackProcedureRefs: readonly [
+              BattleStatBlockProcedureExecutionRef,
+              ...BattleStatBlockProcedureExecutionRef[],
+            ];
+          };
       readonly restriction: ActionRestriction;
     }
   | {
