@@ -3146,7 +3146,22 @@ function resolveSpellTurnStartDamageOccurrence(input: {
       };
     }
   }
-  const mainConcentrationHole = concentrationHoles.find(
+  const rawConcentrationHoles = damageLifecycleConcentrationSavingThrowHoles({
+    state: input.state,
+    target,
+    damageAmount,
+  });
+  const rawConcentrationFills = rawConcentrationHoles.flatMap((rawHole) => {
+    const exactHole = concentrationHoles.find(
+      (hole) => hole.combatantId === rawHole.combatantId,
+    );
+    const fill =
+      exactHole === undefined
+        ? undefined
+        : concentrationSavingThrowFillFor(exactConcentrationFills, exactHole);
+    return fill === undefined ? [] : [{ ...fill, holeId: rawHole.holeId }];
+  });
+  const mainConcentrationHole = rawConcentrationHoles.find(
     (hole) => hole.combatantId === input.sourceTurn.actorId,
   );
   const damaged = applySpellTurnStartDamage(
@@ -3157,10 +3172,10 @@ function resolveSpellTurnStartDamageOccurrence(input: {
     mainConcentrationHole === undefined
       ? undefined
       : concentrationSavingThrowFillFor(
-          exactConcentrationFills,
+          rawConcentrationFills,
           mainConcentrationHole,
         ),
-    exactConcentrationFills,
+    rawConcentrationFills,
     damageDispositionForTarget(
       dispositionHoles,
       exactDispositionFills,
