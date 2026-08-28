@@ -1,0 +1,207 @@
+{
+  "challengeRating": 11,
+  "id": "stat_block_horned_devil",
+  "kind": "statBlock",
+  "name": "Horned Devil",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:280-312"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 18,
+      "con": 21,
+      "dex": 17,
+      "int": 12,
+      "str": 22,
+      "wis": 16
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 18
+      }
+    },
+    "actions": [
+      {
+        "description": "The devil makes three attacks, using Searing Fork or Hurl Flame in any combination. It can replace one attack with a use of Infernal Tail.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 10
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Searing Fork",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 6
+                },
+                "kind": "fixed",
+                "static": 15
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Ranged Attack Roll: +8, range 150 ft. Hit: 26 (5d8 + 4) Fire damage. If the target is a flammable object that isn't being worn or carried, it starts burning.",
+        "kind": "textOnly",
+        "name": "Hurl Flame",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Dexterity Saving Throw: DC 17, one creature the devil can see within 10 feet. Failure: 10 (1d8 + 6) Necrotic damage, and the target receives an infernal wound if it doesn't have one. While wounded, the target loses 10 (3d6) Hit Points at the start of each of its turns. The wound closes after 1 minute, after a spell restores Hit Points to the target, or after the target or a creature within 5 feet of it takes an action to stanch the wound, doing so by succeeding on a DC 17 Wisdom (Medicine) check.",
+        "kind": "textOnly",
+        "name": "Infernal Tail",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Infernal"
+        ]
+      },
+      "telepathy": {
+        "rangeFeet": 120
+      }
+    },
+    "creatureType": "fiend",
+    "creatureTypeTags": [
+      "devil"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 199
+    },
+    "immunities": {
+      "conditions": [
+        "poisoned"
+      ],
+      "damageTypes": [
+        "fire",
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 7,
+      "score": 17
+    },
+    "passivePerception": 13,
+    "resistances": {
+      "damageTypes": [
+        "cold"
+      ],
+      "kind": "fixed"
+    },
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 10
+      },
+      {
+        "ability": "dex",
+        "modifier": 7
+      },
+      {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
+        "ability": "int",
+        "modifier": 1
+      },
+      {
+        "ability": "wis",
+        "modifier": 7
+      },
+      {
+        "ability": "cha",
+        "modifier": 8
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "qualifier": "unimpeded_by_magical_darkness",
+        "rangeFeet": 150
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 60
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "If the devil dies outside the Nine Hells, its body disappears in sulfurous smoke, and it gains a new body instantly, reviving with all its Hit Points somewhere in the Nine Hells.",
+        "name": "Diabolical Restoration"
+      },
+      {
+        "description": "The devil has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}

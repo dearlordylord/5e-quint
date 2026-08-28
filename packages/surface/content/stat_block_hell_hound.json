@@ -1,0 +1,223 @@
+{
+  "challengeRating": 3,
+  "id": "stat_block_hell_hound",
+  "kind": "statBlock",
+  "name": "Hell Hound",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:65-93"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 6,
+      "con": 14,
+      "dex": 12,
+      "int": 6,
+      "str": 17,
+      "wis": 13
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bite",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "piercing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 3
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "cone",
+            "lengthFeet": 15
+          },
+          "dc": {
+            "dc": 12,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Fire Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 5,
+                "dieSize": 6
+              },
+              "kind": "fixed",
+              "static": 17
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Infernal"
+        ]
+      }
+    },
+    "creatureType": "fiend",
+    "hp": {
+      "kind": "literal",
+      "value": 58
+    },
+    "immunities": {
+      "damageTypes": [
+        "fire"
+      ]
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 15,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": -2
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -2
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 50
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The hound has Advantage on an attack roll against a creature if at least one of the hound's allies is within 5 feet of the creature and the ally doesn't have the Incapacitated condition.",
+        "name": "Pack Tactics"
+      }
+    ]
+  }
+}

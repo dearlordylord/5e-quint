@@ -1,0 +1,233 @@
+{
+  "challengeRating": 16,
+  "id": "stat_block_iron_golem",
+  "kind": "statBlock",
+  "name": "Iron Golem",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:493-526"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 1,
+      "con": 20,
+      "dex": 9,
+      "int": 3,
+      "str": 24,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 20
+      }
+    },
+    "actions": [
+      {
+        "description": "The golem makes two attacks, using Bladed Arm or Fiery Bolt in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 12
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Bladed Arm",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 8,
+                  "flat": 7
+                },
+                "kind": "fixed",
+                "static": 20
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 10
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Ranged Attack Roll: +10, range 120 ft. Hit: 36 (8d8) Fire damage.",
+        "kind": "textOnly",
+        "name": "Fiery Bolt",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "con",
+          "area": {
+            "kind": "cone",
+            "lengthFeet": 60
+          },
+          "dc": {
+            "dc": 18,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Poison Breath",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 10,
+                "dieSize": 10
+              },
+              "kind": "fixed",
+              "static": 55
+            },
+            "damageType": "poison",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "understood_but_cannot_speak",
+      "languages": {
+        "additionalLanguages": 2,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "construct",
+    "hp": {
+      "kind": "literal",
+      "value": 252
+    },
+    "immunities": {
+      "conditions": [
+        "charmed",
+        "exhaustion",
+        "frightened",
+        "paralyzed",
+        "petrified",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "fire",
+        "poison",
+        "psychic"
+      ]
+    },
+    "initiative": {
+      "modifier": 9,
+      "score": 19
+    },
+    "passivePerception": 10,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 6
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 7
+      },
+      {
+        "ability": "dex",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": -5
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "large",
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "Whenever the golem is subjected to Fire damage, it regains a number of Hit Points equal to the Fire damage dealt.",
+        "name": "Fire Absorption"
+      },
+      {
+        "description": "The golem can't shape-shift.",
+        "name": "Immutable Form"
+      },
+      {
+        "description": "The golem has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}

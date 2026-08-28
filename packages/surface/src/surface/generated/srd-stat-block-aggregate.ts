@@ -147,50 +147,71 @@ import statBlockPeer145 from "../../../content/stat_block_grimlock.json";
 import statBlockPeer146 from "../../../content/stat_block_guard.json";
 import statBlockPeer147 from "../../../content/stat_block_guard_captain.json";
 import statBlockPeer148 from "../../../content/stat_block_guardian_naga.json";
-import statBlockPeer149 from "../../../content/stat_block_hippopotamus.json";
-import statBlockPeer150 from "../../../content/stat_block_hunter_shark.json";
-import statBlockPeer151 from "../../../content/stat_block_hyena.json";
-import statBlockPeer152 from "../../../content/stat_block_jackal.json";
-import statBlockPeer153 from "../../../content/stat_block_killer_whale.json";
-import statBlockPeer154 from "../../../content/stat_block_lion.json";
-import statBlockPeer155 from "../../../content/stat_block_mammoth.json";
-import statBlockPeer156 from "../../../content/stat_block_mastiff.json";
-import statBlockPeer157 from "../../../content/stat_block_mule.json";
-import statBlockPeer158 from "../../../content/stat_block_panther.json";
-import statBlockPeer159 from "../../../content/stat_block_piranha.json";
-import statBlockPeer160 from "../../../content/stat_block_plesiosaurus.json";
-import statBlockPeer161 from "../../../content/stat_block_polar_bear.json";
-import statBlockPeer162 from "../../../content/stat_block_pony.json";
-import statBlockPeer163 from "../../../content/stat_block_pteranodon.json";
-import statBlockPeer164 from "../../../content/stat_block_reef_shark.json";
-import statBlockPeer165 from "../../../content/stat_block_rhinoceros.json";
-import statBlockPeer166 from "../../../content/stat_block_saber_toothed_tiger.json";
-import statBlockPeer167 from "../../../content/stat_block_scorpion.json";
-import statBlockPeer168 from "../../../content/stat_block_seahorse.json";
-import statBlockPeer169 from "../../../content/stat_block_shrieker_fungus.json";
-import statBlockPeer170 from "../../../content/stat_block_skeleton.json";
-import statBlockPeer171 from "../../../content/stat_block_sphinx_of_wonder.json";
-import statBlockPeer172 from "../../../content/stat_block_swarm_of_bats.json";
-import statBlockPeer173 from "../../../content/stat_block_swarm_of_crawling_claws.json";
-import statBlockPeer174 from "../../../content/stat_block_swarm_of_insects.json";
-import statBlockPeer175 from "../../../content/stat_block_swarm_of_piranhas.json";
-import statBlockPeer176 from "../../../content/stat_block_swarm_of_rats.json";
-import statBlockPeer177 from "../../../content/stat_block_swarm_of_ravens.json";
-import statBlockPeer178 from "../../../content/stat_block_swarm_of_venomous_snakes.json";
-import statBlockPeer179 from "../../../content/stat_block_tiger.json";
-import statBlockPeer180 from "../../../content/stat_block_triceratops.json";
-import statBlockPeer181 from "../../../content/stat_block_tyrannosaurus_rex.json";
-import statBlockPeer182 from "../../../content/stat_block_violet_fungus.json";
-import statBlockPeer183 from "../../../content/stat_block_vulture.json";
-import statBlockPeer184 from "../../../content/stat_block_warhorse.json";
-import statBlockPeer185 from "../../../content/stat_block_wild_shape_recommended_forms.json";
-import statBlockPeer186 from "../../../content/stat_block_young_black_dragon.json";
-import statBlockPeer187 from "../../../content/stat_block_young_blue_dragon.json";
-import statBlockPeer188 from "../../../content/stat_block_young_brass_dragon.json";
-import statBlockPeer189 from "../../../content/stat_block_young_bronze_dragon.json";
-import statBlockPeer190 from "../../../content/stat_block_young_copper_dragon.json";
-import statBlockPeer191 from "../../../content/stat_block_young_gold_dragon.json";
-import statBlockPeer192 from "../../../content/stat_block_young_green_dragon.json";
+import statBlockPeer149 from "../../../content/stat_block_half_dragon.json";
+import statBlockPeer150 from "../../../content/stat_block_harpy.json";
+import statBlockPeer151 from "../../../content/stat_block_hell_hound.json";
+import statBlockPeer152 from "../../../content/stat_block_hezrou.json";
+import statBlockPeer153 from "../../../content/stat_block_hill_giant.json";
+import statBlockPeer154 from "../../../content/stat_block_hippogriff.json";
+import statBlockPeer155 from "../../../content/stat_block_hippopotamus.json";
+import statBlockPeer156 from "../../../content/stat_block_hobgoblin_captain.json";
+import statBlockPeer157 from "../../../content/stat_block_hobgoblin_warrior.json";
+import statBlockPeer158 from "../../../content/stat_block_homunculus.json";
+import statBlockPeer159 from "../../../content/stat_block_horned_devil.json";
+import statBlockPeer160 from "../../../content/stat_block_hunter_shark.json";
+import statBlockPeer161 from "../../../content/stat_block_hydra.json";
+import statBlockPeer162 from "../../../content/stat_block_hyena.json";
+import statBlockPeer163 from "../../../content/stat_block_ice_devil.json";
+import statBlockPeer164 from "../../../content/stat_block_incubus.json";
+import statBlockPeer165 from "../../../content/stat_block_invisible_stalker.json";
+import statBlockPeer166 from "../../../content/stat_block_iron_golem.json";
+import statBlockPeer167 from "../../../content/stat_block_jackal.json";
+import statBlockPeer168 from "../../../content/stat_block_killer_whale.json";
+import statBlockPeer169 from "../../../content/stat_block_knight.json";
+import statBlockPeer170 from "../../../content/stat_block_kobold_warrior.json";
+import statBlockPeer171 from "../../../content/stat_block_kraken.json";
+import statBlockPeer172 from "../../../content/stat_block_lamia.json";
+import statBlockPeer173 from "../../../content/stat_block_lemure.json";
+import statBlockPeer174 from "../../../content/stat_block_lich.json";
+import statBlockPeer175 from "../../../content/stat_block_lion.json";
+import statBlockPeer176 from "../../../content/stat_block_mammoth.json";
+import statBlockPeer177 from "../../../content/stat_block_mastiff.json";
+import statBlockPeer178 from "../../../content/stat_block_mule.json";
+import statBlockPeer179 from "../../../content/stat_block_panther.json";
+import statBlockPeer180 from "../../../content/stat_block_piranha.json";
+import statBlockPeer181 from "../../../content/stat_block_plesiosaurus.json";
+import statBlockPeer182 from "../../../content/stat_block_polar_bear.json";
+import statBlockPeer183 from "../../../content/stat_block_pony.json";
+import statBlockPeer184 from "../../../content/stat_block_pteranodon.json";
+import statBlockPeer185 from "../../../content/stat_block_reef_shark.json";
+import statBlockPeer186 from "../../../content/stat_block_rhinoceros.json";
+import statBlockPeer187 from "../../../content/stat_block_saber_toothed_tiger.json";
+import statBlockPeer188 from "../../../content/stat_block_scorpion.json";
+import statBlockPeer189 from "../../../content/stat_block_seahorse.json";
+import statBlockPeer190 from "../../../content/stat_block_shrieker_fungus.json";
+import statBlockPeer191 from "../../../content/stat_block_skeleton.json";
+import statBlockPeer192 from "../../../content/stat_block_sphinx_of_wonder.json";
+import statBlockPeer193 from "../../../content/stat_block_swarm_of_bats.json";
+import statBlockPeer194 from "../../../content/stat_block_swarm_of_crawling_claws.json";
+import statBlockPeer195 from "../../../content/stat_block_swarm_of_insects.json";
+import statBlockPeer196 from "../../../content/stat_block_swarm_of_piranhas.json";
+import statBlockPeer197 from "../../../content/stat_block_swarm_of_rats.json";
+import statBlockPeer198 from "../../../content/stat_block_swarm_of_ravens.json";
+import statBlockPeer199 from "../../../content/stat_block_swarm_of_venomous_snakes.json";
+import statBlockPeer200 from "../../../content/stat_block_tiger.json";
+import statBlockPeer201 from "../../../content/stat_block_triceratops.json";
+import statBlockPeer202 from "../../../content/stat_block_tyrannosaurus_rex.json";
+import statBlockPeer203 from "../../../content/stat_block_violet_fungus.json";
+import statBlockPeer204 from "../../../content/stat_block_vulture.json";
+import statBlockPeer205 from "../../../content/stat_block_warhorse.json";
+import statBlockPeer206 from "../../../content/stat_block_wild_shape_recommended_forms.json";
+import statBlockPeer207 from "../../../content/stat_block_young_black_dragon.json";
+import statBlockPeer208 from "../../../content/stat_block_young_blue_dragon.json";
+import statBlockPeer209 from "../../../content/stat_block_young_brass_dragon.json";
+import statBlockPeer210 from "../../../content/stat_block_young_bronze_dragon.json";
+import statBlockPeer211 from "../../../content/stat_block_young_copper_dragon.json";
+import statBlockPeer212 from "../../../content/stat_block_young_gold_dragon.json";
+import statBlockPeer213 from "../../../content/stat_block_young_green_dragon.json";
 
 // Generated from canonical strict JSON peers in SRD RAW denominator order.
 // Regenerate with pnpm generate:surface-stat-block-aggregate.
@@ -249,47 +270,47 @@ export const srdStatBlockAggregateInputs = [
   statBlockPeer129,
   statBlockPeer134,
   statBlockPeer91[3],
-  statBlockPeer149,
-  statBlockPeer150,
-  statBlockPeer151,
-  statBlockPeer152,
-  statBlockPeer153,
-  statBlockPeer154,
-  statBlockPeer91[4],
   statBlockPeer155,
-  statBlockPeer156,
-  statBlockPeer157,
-  statBlockPeer91[5],
-  statBlockPeer91[6],
-  statBlockPeer158,
-  statBlockPeer159,
   statBlockPeer160,
-  statBlockPeer161,
   statBlockPeer162,
-  statBlockPeer163,
-  statBlockPeer91[7],
-  statBlockPeer91[8],
-  statBlockPeer164,
-  statBlockPeer165,
-  statBlockPeer185[0],
-  statBlockPeer166,
   statBlockPeer167,
   statBlockPeer168,
-  statBlockPeer91[9],
-  statBlockPeer172,
-  statBlockPeer174,
   statBlockPeer175,
+  statBlockPeer91[4],
   statBlockPeer176,
   statBlockPeer177,
   statBlockPeer178,
+  statBlockPeer91[5],
+  statBlockPeer91[6],
   statBlockPeer179,
   statBlockPeer180,
   statBlockPeer181,
-  statBlockPeer91[11],
+  statBlockPeer182,
   statBlockPeer183,
   statBlockPeer184,
+  statBlockPeer91[7],
+  statBlockPeer91[8],
+  statBlockPeer185,
+  statBlockPeer186,
+  statBlockPeer206[0],
+  statBlockPeer187,
+  statBlockPeer188,
+  statBlockPeer189,
+  statBlockPeer91[9],
+  statBlockPeer193,
+  statBlockPeer195,
+  statBlockPeer196,
+  statBlockPeer197,
+  statBlockPeer198,
+  statBlockPeer199,
+  statBlockPeer200,
+  statBlockPeer201,
+  statBlockPeer202,
+  statBlockPeer91[11],
+  statBlockPeer204,
+  statBlockPeer205,
   statBlockPeer91[10],
-  statBlockPeer185[1],
+  statBlockPeer206[1],
   statBlockPeer0,
   statBlockPeer8,
   statBlockPeer17,
@@ -310,22 +331,22 @@ export const srdStatBlockAggregateInputs = [
   statBlockPeer37,
   statBlockPeer38,
   statBlockPeer40,
-  statBlockPeer186,
+  statBlockPeer207,
   statBlockPeer1,
   statBlockPeer10,
   statBlockPeer41,
   statBlockPeer42,
   statBlockPeer44,
-  statBlockPeer187,
+  statBlockPeer208,
   statBlockPeer2,
   statBlockPeer11,
   statBlockPeer46,
   statBlockPeer47,
-  statBlockPeer188,
+  statBlockPeer209,
   statBlockPeer3,
   statBlockPeer12,
   statBlockPeer48,
-  statBlockPeer189,
+  statBlockPeer210,
   statBlockPeer4,
   statBlockPeer13,
   statBlockPeer50,
@@ -341,11 +362,11 @@ export const srdStatBlockAggregateInputs = [
   statBlockPeer61,
   statBlockPeer62,
   statBlockPeer64,
-  statBlockPeer190,
+  statBlockPeer211,
   statBlockPeer5,
   statBlockPeer14,
   statBlockPeer65,
-  statBlockPeer173,
+  statBlockPeer194,
   statBlockPeer68,
   statBlockPeer69,
   statBlockPeer70,
@@ -367,8 +388,8 @@ export const srdStatBlockAggregateInputs = [
   statBlockPeer93,
   statBlockPeer94,
   statBlockPeer96,
-  statBlockPeer169,
-  statBlockPeer182,
+  statBlockPeer190,
+  statBlockPeer203,
   statBlockPeer97,
   statBlockPeer98,
   statBlockPeer99,
@@ -382,13 +403,13 @@ export const srdStatBlockAggregateInputs = [
   statBlockPeer137,
   statBlockPeer135,
   statBlockPeer138,
-  statBlockPeer191,
+  statBlockPeer212,
   statBlockPeer6,
   statBlockPeer15,
   statBlockPeer139,
   statBlockPeer140,
   statBlockPeer141,
-  statBlockPeer192,
+  statBlockPeer213,
   statBlockPeer7,
   statBlockPeer16,
   statBlockPeer142,
@@ -398,10 +419,31 @@ export const srdStatBlockAggregateInputs = [
   statBlockPeer148,
   statBlockPeer146,
   statBlockPeer147,
+  statBlockPeer149,
+  statBlockPeer150,
+  statBlockPeer151,
+  statBlockPeer152,
+  statBlockPeer153,
+  statBlockPeer154,
+  statBlockPeer157,
+  statBlockPeer156,
+  statBlockPeer158,
+  statBlockPeer159,
+  statBlockPeer161,
+  statBlockPeer163,
   statBlockPeer91[12],
-  statBlockPeer91[13],
-  statBlockPeer91[14],
+  statBlockPeer164,
+  statBlockPeer165,
+  statBlockPeer166,
+  statBlockPeer169,
   statBlockPeer170,
   statBlockPeer171,
+  statBlockPeer172,
+  statBlockPeer173,
+  statBlockPeer174,
+  statBlockPeer91[13],
+  statBlockPeer91[14],
+  statBlockPeer191,
+  statBlockPeer192,
   statBlockPeer91[15],
 ] as const;
