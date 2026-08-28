@@ -35,8 +35,11 @@ import {
   ORACLE_HTTP_IDENTITY_PATH,
   ORACLE_HTTP_JSON_CONTENT_TYPE,
   ORACLE_HTTP_MAX_REQUEST_BYTES,
-  runOracleHttpService,
 } from "./oracle-http.ts";
+import {
+  listenOracleHttpServerInternal,
+  runOracleHttpServiceInternal,
+} from "./oracle-http-internal.ts";
 
 const temporaryRoot = mkdtempSync(join(tmpdir(), "opaque-oracle-http-"));
 const distribution = buildOracleDistribution({
@@ -83,12 +86,20 @@ async function openServer(
     readonly serverFactory?: HttpServerFactory;
   } = {},
 ) {
-  const result = await listenOracleHttpServer({
-    application: applicationToServe,
-    host: ORACLE_LOOPBACK_HOST,
-    port: portZeroValue,
-    ...options,
-  });
+  const result =
+    options.encodeBatchResponse === undefined &&
+    options.serverFactory === undefined
+      ? await listenOracleHttpServer({
+          application: applicationToServe,
+          host: ORACLE_LOOPBACK_HOST,
+          port: portZeroValue,
+        })
+      : await listenOracleHttpServerInternal({
+          application: applicationToServe,
+          host: ORACLE_LOOPBACK_HOST,
+          port: portZeroValue,
+          ...options,
+        });
   if (Either.isLeft(result)) {
     throw new Error(`Oracle HTTP test server failed: ${result.left.tag}`);
   }
@@ -177,7 +188,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     });
     const sigintListeners = process.listenerCount("SIGINT");
     const sigtermListeners = process.listenerCount("SIGTERM");
-    const service = runOracleHttpService({
+    const service = runOracleHttpServiceInternal({
       application,
       host: ORACLE_LOOPBACK_HOST,
       port: portZeroValue,
@@ -217,7 +228,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
     });
     const sigintListeners = process.listenerCount("SIGINT");
     const sigtermListeners = process.listenerCount("SIGTERM");
-    const service = runOracleHttpService({
+    const service = runOracleHttpServiceInternal({
       application,
       host: ORACLE_LOOPBACK_HOST,
       port: portZeroValue,
@@ -413,7 +424,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
       signalReady = resolve;
     });
     const signalListenerCount = process.listenerCount("SIGTERM");
-    const service = runOracleHttpService({
+    const service = runOracleHttpServiceInternal({
       application,
       host: ORACLE_LOOPBACK_HOST,
       port: portZeroValue,
@@ -439,7 +450,7 @@ describe("Opaque Oracle loopback HTTP adapter", () => {
   test("closes a server whose listening address is invalid before returning", async () => {
     let nodeServer: Server | undefined;
     let closeObserved = false;
-    const result = await listenOracleHttpServer({
+    const result = await listenOracleHttpServerInternal({
       application,
       host: ORACLE_LOOPBACK_HOST,
       port: portZeroValue,
