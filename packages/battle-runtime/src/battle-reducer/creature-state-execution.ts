@@ -168,34 +168,170 @@ function combatantCanStillHoldBoundWeaponItem(
   );
 }
 
+export type BattleActiveEffectOccurrenceSpatialClass =
+  | "nonSpatial"
+  | "area"
+  | "line"
+  | "object"
+  | "anchored";
+
+export function battleActiveEffectOccurrenceSpatialClass(
+  kind: BattleActiveEffect["kind"],
+): BattleActiveEffectOccurrenceSpatialClass {
+  return Match.value(kind).pipe(
+    Match.whenOr(
+      "antimagicFieldOngoingSpellSuppression",
+      "cloudkillAreaHazard",
+      "flamingSphere",
+      "fogCloudObscurement",
+      "greaseGroundHazard",
+      "insectPlagueAreaHazard",
+      "magicalDarknessPointOrigin",
+      "moonbeam",
+      "sleetStormAreaHazard",
+      "spikeGrowthHazard",
+      "webRestraintHazard",
+      () => "area" as const,
+    ),
+    Match.when("gustOfWindLine", () => "line" as const),
+    Match.when("spellObjectContactDamage", () => "object" as const),
+    Match.when("glyphDurableOccurrence", () => "anchored" as const),
+    Match.whenOr(
+      "abilityCheckRollMode",
+      "abilityD20TestRollModeEndTurnSave",
+      "bardicInspirationDie",
+      "blurred",
+      "brutalStrikeHamstring",
+      "commandPending",
+      "conditionImmunity",
+      "conditionSavingThrowRollMode",
+      "creatureTypeProtection",
+      "d20RollModifier",
+      "damageResistance",
+      "dancingLights",
+      "dragonsBreath",
+      "druidWildShapeForm",
+      "faerieFireOutline",
+      "featherFallMitigation",
+      "findFamiliarSharedSenses",
+      "heldLight",
+      "hideousLaughter",
+      "hitPointMaximumIncrease",
+      "hitPointRegainPrevented",
+      "hypnoticPatternControl",
+      "invisibleBenefitDenied",
+      "jumpMovementReplacement",
+      "mirrorImageDuplicates",
+      "nextAttackRollAgainstSelf",
+      "nextAttackRollBySelf",
+      "opportunityAttackDenied",
+      "paladinSacredWeapon",
+      "possession",
+      "sanctuaryWard",
+      "savingThrowRollMode",
+      "seeInvisibleAndEthereal",
+      "selfAttackRollAndAbilityCheckRollMode",
+      "selfSpeedZero",
+      "selfTransformation",
+      "shiningSmiteIllumination",
+      "sleepPendingRepeatSave",
+      "sleepUnconscious",
+      "slowActivePenalties",
+      "sourceDamageRollPenalty",
+      "specialSpeedGrant",
+      "speedDelta",
+      "speedHalved",
+      "speedRatio",
+      "spellArmorClassBonus",
+      "spellArmorClassFloor",
+      "spellBaseArmorClass",
+      "spellConcentrationDuration",
+      "spellCondition",
+      "spellConditionCountedEndTurnSave",
+      "spellConditionEndTurnSave",
+      "spellConditionRepeatSave",
+      "spellCreatedHeldObject",
+      "spellCreatureSizeChange",
+      "spellDamageReduction",
+      "spellDashBonusAction",
+      "spellEndTargetState",
+      "spellGrantedActionResource",
+      "spellLevitatedCreature",
+      "spellMagicWeaponEnhancement",
+      "spellMarkedDamageRider",
+      "spellShapeShiftedForm",
+      "spellSpeedZero",
+      "spellTurnEndDamage",
+      "spellTurnStartDamageAndSave",
+      "spellWeaponAttackOverride",
+      "spellWeaponDamageRider",
+      "spiritualWeapon",
+      "targetActionEndedSpellCondition",
+      "thaumaturgyBoomingVoice",
+      "turnStartTemporaryHitPoints",
+      "unitFeatureCondition",
+      "unitFeatureConditionEndTurnSave",
+      "unitFeatureSpeedDelta",
+      "wardingBond",
+      () => "nonSpatial" as const,
+    ),
+    Match.exhaustive,
+  );
+}
+
 function activeEffectOccurrenceLocation(
   effect: BattleActiveEffect,
 ): BattleActiveEffectOccurrenceLocation {
-  if (effect.kind === "spellObjectContactDamage") {
-    return { kind: "object", objectId: effect.objectId };
-  }
-  if (effect.kind === "gustOfWindLine") {
-    return {
-      kind: "line",
-      areaId: effect.areaId,
-      directionId: effect.directionId,
-    };
-  }
-  if (effect.kind === "glyphDurableOccurrence") {
-    return Match.value(effect.anchor).pipe(
-      Match.discriminatorsExhaustive("kind")({
-        surface: ({ areaId }) => ({ kind: "area" as const, areaId }),
-        closeableObject: ({ objectId }) => ({
-          kind: "object" as const,
-          objectId,
+  return Match.value(
+    battleActiveEffectOccurrenceSpatialClass(effect.kind),
+  ).pipe(
+    Match.when("object", () => {
+      if (effect.kind !== "spellObjectContactDamage") {
+        throw new Error(
+          "Object occurrence classification must bind an object-contact effect.",
+        );
+      }
+      return { kind: "object" as const, objectId: effect.objectId };
+    }),
+    Match.when("line", () => {
+      if (effect.kind !== "gustOfWindLine") {
+        throw new Error(
+          "Line occurrence classification must bind a Gust of Wind effect.",
+        );
+      }
+      return {
+        kind: "line" as const,
+        areaId: effect.areaId,
+        directionId: effect.directionId,
+      };
+    }),
+    Match.when("anchored", () => {
+      if (effect.kind !== "glyphDurableOccurrence") {
+        throw new Error(
+          "Anchored occurrence classification must bind a Glyph effect.",
+        );
+      }
+      return Match.value(effect.anchor).pipe(
+        Match.discriminatorsExhaustive("kind")({
+          surface: ({ areaId }) => ({ kind: "area" as const, areaId }),
+          closeableObject: ({ objectId }) => ({
+            kind: "object" as const,
+            objectId,
+          }),
         }),
-      }),
-    );
-  }
-  if ("areaId" in effect) {
-    return { kind: "area", areaId: effect.areaId };
-  }
-  return { kind: "nonSpatial" };
+      );
+    }),
+    Match.when("area", () => {
+      if (!("areaId" in effect)) {
+        throw new Error(
+          "Area occurrence classification must bind an area effect.",
+        );
+      }
+      return { kind: "area" as const, areaId: effect.areaId };
+    }),
+    Match.when("nonSpatial", () => ({ kind: "nonSpatial" as const })),
+    Match.exhaustive,
+  );
 }
 
 function activeEffectBoundHeldWeaponItemId(

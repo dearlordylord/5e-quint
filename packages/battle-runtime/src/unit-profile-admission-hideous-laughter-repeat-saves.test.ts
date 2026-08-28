@@ -172,7 +172,13 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
         sourceCombatantId: ensnaringSourceId,
         condition: "restrained",
         conditionHadNonSpellSource: false,
-        escape: null,
+        escape: {
+          kind: "abilityCheck",
+          ability: "str",
+          skill: "athletics",
+          allowedActor: "targetOrCreatureWithinReach",
+          successEnds: "condition",
+        },
         turnStartDamage: {
           expr: { dice: 1, dieSize: 6 },
           damageType: "piercing",

@@ -50,10 +50,13 @@ import {
   battleTablePositionId,
 } from "./identity.ts";
 import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
+import { battleActiveEffectOccurrenceSpatialClass } from "./battle-reducer/creature-state-execution.ts";
 
 type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
 type EncodedAct = EncodedSnapshot["acts"][number];
+type EncodedOccurrenceLocation =
+  EncodedSnapshot["combatants"][number]["activeEffectOccurrences"][number]["location"];
 type CodecCase = {
   readonly name: string;
   readonly expected: "Right" | "Left";
@@ -1208,6 +1211,63 @@ function damageProtocolHoleWithEffectRef(
 }
 
 describe("battle codec execution-reference boundaries", () => {
+  test("canonical occurrence spatial classes agree with structural snapshot projection", () => {
+    for (const occurrence of fixture.snapshot.combatants.flatMap(
+      (combatant) => combatant.activeEffectOccurrences,
+    )) {
+      const spatialClass = battleActiveEffectOccurrenceSpatialClass(
+        occurrence.activeEffectKind,
+      );
+      expect(
+        spatialClass === "anchored"
+          ? occurrence.location.kind === "area" ||
+              occurrence.location.kind === "object"
+          : occurrence.location.kind === spatialClass,
+      ).toBe(true);
+    }
+  });
+
+  test.each([
+    ["greaseGroundHazard", { kind: "nonSpatial" }],
+    [
+      "gustOfWindLine",
+      { kind: "area", areaId: battleAreaId("area:codec-wrong-class") },
+    ],
+    ["glyphDurableOccurrence", { kind: "nonSpatial" }],
+    [
+      "spellLevitatedCreature",
+      { kind: "area", areaId: battleAreaId("area:codec-wrong-class") },
+    ],
+  ] as const)(
+    "rejects %s when its structural occurrence uses another spatial class",
+    (activeEffectKind, location) => {
+      let replacementCount = 0;
+      const snapshot: EncodedSnapshot = {
+        ...fixture.snapshot,
+        combatants: fixture.snapshot.combatants.map((combatant) => ({
+          ...combatant,
+          activeEffectOccurrences: combatant.activeEffectOccurrences.map(
+            (occurrence) => {
+              if (
+                occurrence.activeEffectKind !== activeEffectKind ||
+                replacementCount > 0
+              ) {
+                return occurrence;
+              }
+              replacementCount += 1;
+              return {
+                ...occurrence,
+                location: location as EncodedOccurrenceLocation,
+              };
+            },
+          ),
+        })),
+      };
+      expect(replacementCount).toBe(1);
+      expectSnapshotDecodeLeft(snapshot);
+    },
+  );
+
   test.each(cases)("$expected $name", ({ expected, hole: replacement }) => {
     const decoded = Schema.decodeUnknownResult(BattleSnapshotSchema)(
       replaceActHole(fixture.snapshot, fixture.sourceProcedureRef, replacement),

@@ -56,6 +56,7 @@ import {
 } from "../unit-feature-support.ts";
 import { Match, Schema } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts-codec.ts";
+import { battleActiveEffectOccurrenceSpatialClass } from "./creature-state-execution.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
   UnitSupportProcedureExecutionSchema,
@@ -6045,36 +6046,24 @@ function battleCreatureSnapshotCommonInvariantsHold(
 function serializedActiveEffectOccurrenceLocationMatchesKind(
   occurrence: BattleCreatureSnapshotInvariantInput["activeEffectOccurrences"][number],
 ): boolean {
-  if (occurrence.activeEffectKind === "gustOfWindLine") {
-    return occurrence.location.kind === "line";
-  }
-  if (occurrence.activeEffectKind === "spellObjectContactDamage") {
-    return occurrence.location.kind === "object";
-  }
-  if (occurrence.activeEffectKind === "glyphDurableOccurrence") {
-    return (
-      occurrence.location.kind === "area" ||
-      occurrence.location.kind === "object"
-    );
-  }
-  const areaEffectKinds = [
-    "greaseGroundHazard",
-    "webRestraintHazard",
-    "sleetStormAreaHazard",
-    "insectPlagueAreaHazard",
-    "cloudkillAreaHazard",
-    "flamingSphere",
-    "spikeGrowthHazard",
-    "moonbeam",
-    "fogCloudObscurement",
-    "magicalDarknessPointOrigin",
-    "antimagicFieldOngoingSpellSuppression",
-  ] as const;
-  return areaEffectKinds.some(
-    (activeEffectKind) => activeEffectKind === occurrence.activeEffectKind,
-  )
-    ? occurrence.location.kind === "area"
-    : occurrence.location.kind === "nonSpatial";
+  return Match.value(
+    battleActiveEffectOccurrenceSpatialClass(occurrence.activeEffectKind),
+  ).pipe(
+    Match.when(
+      "anchored",
+      () =>
+        occurrence.location.kind === "area" ||
+        occurrence.location.kind === "object",
+    ),
+    Match.whenOr(
+      "area",
+      "line",
+      "nonSpatial",
+      "object",
+      (spatialClass) => occurrence.location.kind === spatialClass,
+    ),
+    Match.exhaustive,
+  );
 }
 
 const battleCreatureSnapshotInvariantAnnotations = {

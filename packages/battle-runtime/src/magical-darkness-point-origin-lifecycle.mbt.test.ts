@@ -265,18 +265,27 @@ function initialRuntimeState(): DarknessRuntimeState {
         sourceSpellLevel: 0,
         sourceProcedureRef: lightAct.subject.procedureRef,
         objectId: "focused-darkness-overlapping-level-two-object",
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(600),
+        },
       },
       {
         sourceEffectId: OVERLAPPING_HIGH_LEVEL_LIGHT_ID,
         sourceSpellLevel: 3,
         sourceProcedureRef: heightenedContinualFlameAct.subject.procedureRef,
         objectId: "focused-darkness-overlapping-level-three-object",
+        expiresAt: { kind: "untilDispelled" as const },
       },
       {
         sourceEffectId: NON_OVERLAPPING_LOW_LEVEL_LIGHT_ID,
         sourceSpellLevel: 0,
         sourceProcedureRef: lightAct.subject.procedureRef,
         objectId: "focused-darkness-non-overlapping-level-two-object",
+        expiresAt: {
+          kind: "duration" as const,
+          durationTicks: elapsedTimeTicks(600),
+        },
       },
     ].map((emitter) => ({
       kind: "storedLightEmitter" as const,
@@ -468,6 +477,7 @@ function trackedObjectSpellLightEmitter(input: {
   readonly sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
   readonly sourceSpellLevel: number;
   readonly objectId: string;
+  readonly expiresAt: BattleStoredLightEmitterTemplate["expiresAt"];
 }): BattleStoredLightEmitterTemplate {
   const sourceSpellLevel = parseBattleSpellEffectLevel(input.sourceSpellLevel);
   if (sourceSpellLevel === null) {
@@ -491,10 +501,7 @@ function trackedObjectSpellLightEmitter(input: {
       dimAdditionalFeet: movementFeet(20),
     },
     opaqueCoverInteraction: { kind: "blocksEmission" },
-    expiresAt: {
-      kind: "duration",
-      durationTicks: elapsedTimeTicks(600),
-    },
+    expiresAt: input.expiresAt,
   };
 }
 
