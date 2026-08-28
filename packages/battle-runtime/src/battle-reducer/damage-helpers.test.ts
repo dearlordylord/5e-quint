@@ -228,23 +228,40 @@ describe("damage reduction helper boundaries", () => {
       throw new Error("Expected the first target's available reduction.");
     }
     const secondTargetId = combatantId("second-reduction-target");
+    const secondSession = spellBattle({
+      spellSlots: [],
+      extraTargetIds: [secondTargetId],
+    });
+    const secondTargetBeforeAllocation = requireCombatant(
+      secondSession.state,
+      secondTargetId,
+    );
+    const secondAllocation = allocateBattleEffectExecutionRefForCreature({
+      owner: secondTargetBeforeAllocation,
+    });
+    const secondEffect = {
+      ...eligibleEffect,
+      effectRef: secondAllocation.effectRef,
+      sourceProcedureRef: battleProcedureExecutionRefForTest(
+        "first-target-sourced-reduction",
+      ),
+      sourceCombatantId: first.target.combatantId,
+      expiresAt: {
+        kind: "concentration" as const,
+        combatantId: first.target.combatantId,
+      },
+    };
     const secondTarget = {
-      ...first.target,
-      combatantId: secondTargetId,
+      ...secondAllocation.owner,
       activeEffects: [
-        {
-          ...eligibleEffect,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            "first-target-sourced-reduction",
-          ),
-          sourceCombatantId: first.target.combatantId,
-          expiresAt: {
-            kind: "concentration" as const,
-            combatantId: first.target.combatantId,
-          },
-        },
+        ...secondTargetBeforeAllocation.activeEffects,
+        secondEffect,
       ],
     };
+    expect(Number(secondTarget.nextEffectOrdinal)).toBe(
+      Number(secondTargetBeforeAllocation.nextEffectOrdinal) + 1,
+    );
+    expect(secondEffect.effectRef).not.toBe(eligibleEffect.effectRef);
     const secondRequest = applyAvailableSpellDamageReduction(
       secondTarget,
       first.damageByType,
@@ -254,6 +271,12 @@ describe("damage reduction helper boundaries", () => {
       throw new Error("Expected the second target's reduction roll hole.");
     }
     const secondHole = requireHole(secondRequest.holes, "rolledDice");
+    if (!("spellDamageReduction" in secondHole)) {
+      throw new Error("Expected the second target's reduction protocol.");
+    }
+    expect(secondHole.spellDamageReduction.effectRef).toBe(
+      secondEffect.effectRef,
+    );
     const firstRoll = damageRollFillWithGroups(first.hole, [[3]]);
     const secondRoll = damageRollFillWithGroups(secondHole, [[2]]);
 

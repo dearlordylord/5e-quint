@@ -1,12 +1,8 @@
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import { movementFeet } from "@dnd/shared/types";
 
-import {
-  battleEffectExecutionRefForTest,
-  battleProcedureExecutionRefForTest,
-} from "./battle-runtime.test-support.ts";
+import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import type {
-  BattleActiveEffect,
   BattleAntimagicFieldAuraMembership,
   BattleAreaId,
   CombatantId,
@@ -56,20 +52,5 @@ export function antimagicFieldAuraEffectTemplateForTest(input: {
       combatantId: input.aura.sourceCombatantId,
       durationTicks: elapsedTimeTicks(600),
     },
-  };
-}
-
-export function antimagicFieldAuraEffectForTest(input: {
-  readonly areaId: BattleAreaId;
-  readonly aura: TestAntimagicFieldAuraMembership;
-}): Extract<
-  BattleActiveEffect,
-  { readonly kind: "antimagicFieldOngoingSpellSuppression" }
-> {
-  return {
-    ...antimagicFieldAuraEffectTemplateForTest(input),
-    effectRef: battleEffectExecutionRefForTest(
-      `antimagic-field-aura:${input.aura.sourceCombatantId}:${input.areaId}`,
-    ),
   };
 }

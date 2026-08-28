@@ -3,9 +3,10 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraEffectTemplateForTest,
   antimagicFieldAuraMembershipForTest,
 } from "./antimagic-field.test-support.ts";
+import { battleStateWithAllocatedEffectForTest } from "./battle-runtime.test-support.ts";
 import {
   ANTIMAGIC_FIELD_TRANSIT_BLOCKING_MESSAGE,
   antimagicFieldTransitInvalidReason,
@@ -174,22 +175,22 @@ function activeAntimagicTransitState(actorInsideAura: boolean): BattleState {
     originIncluded: true,
     nonOriginCombatantIds: actorInsideAura ? [spellCasterId] : [],
   });
-  const combatants = new Map(state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: antimagicFieldAreaId,
-        aura,
-      }),
-    ],
+  const withAura = battleStateWithAllocatedEffectForTest({
+    state,
+    ownerId: aura.sourceCombatantId,
+    effect: antimagicFieldAuraEffectTemplateForTest({
+      areaId: antimagicFieldAreaId,
+      aura,
+    }),
   });
-  return { ...state, combatants };
+  expect(
+    Number(withAura.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
+  return withAura;
 }
 
 function antimagicTransitWitness(input: {
