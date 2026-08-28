@@ -34,9 +34,7 @@ import type {
   CombatantId,
 } from "./index.ts";
 import { endTurn } from "./index.ts";
-import type {
-  BattleInsectPlagueAreaHazardTrigger,
-} from "./battle-state-execution.ts";
+import type { BattleInsectPlagueAreaHazardTrigger } from "./battle-state-execution.ts";
 import type { BattleEffectExecutionRef } from "./identity.ts";
 import {
   damageRollFillWithGroups,
@@ -67,6 +65,7 @@ type InsectPlagueEffect = Extract<
 
 type InsectPlagueMbtProjection = {
   readonly actionAvailable: boolean;
+  readonly targetTurn: boolean;
   readonly areaActive: boolean;
   readonly areaOccurrenceOrdinal: number;
   readonly areaDamageDice: number;
@@ -173,6 +172,30 @@ describe("Insect Plague area-hazard MBT parity", () => {
       difficultTerrain: false,
       nextOccurrenceOrdinal: cast.occurrenceOrdinal + 1,
     });
+  });
+
+  it("shares one production trigger ledger across entry and end of turn", () => {
+    const cast = castInsectPlague(initialRuntimeState(5));
+    const targetTurn = beginLaterTurn(cast);
+    const entered = resolveInsectPlagueSave(targetTurn, {
+      savingThrowSucceeded: false,
+      rolledDamage: 20,
+      trigger: "entersArea",
+    });
+    const duplicateEnd = resolveInsectPlagueSave(entered, {
+      savingThrowSucceeded: false,
+      rolledDamage: 20,
+      trigger: "endsTurnInArea",
+    });
+
+    expect(insectPlagueRuntimeProjection(entered)).toMatchObject({
+      areaActive: true,
+      savedThisTurn: true,
+      targetHitPoints: 480,
+    });
+    expect(insectPlagueRuntimeProjection(duplicateEnd)).toEqual(
+      insectPlagueRuntimeProjection(entered),
+    );
   });
 
   it("projects Lightly Obscured and Difficult Terrain from the active Sphere", () => {
@@ -320,14 +343,18 @@ function resolveInsectPlagueSave(
     input.trigger,
   );
   if (saveAct.subject.areaMembershipTrigger.effectRef !== effect.effectRef) {
-    throw new Error("Insect Plague save subject lost its exact effect occurrence.");
+    throw new Error(
+      "Insect Plague save subject lost its exact effect occurrence.",
+    );
   }
   const saveHole = requireHole(saveAct.initialHoles, "savingThrowOutcome");
   if (
     !("insectPlagueAreaHazard" in saveHole) ||
     saveHole.insectPlagueAreaHazard.effectRef !== effect.effectRef
   ) {
-    throw new Error("Insect Plague save hole lost its exact effect occurrence.");
+    throw new Error(
+      "Insect Plague save hole lost its exact effect occurrence.",
+    );
   }
   const saveFill = singleTargetSavingThrowOutcomeFill(
     saveHole,
@@ -347,7 +374,9 @@ function resolveInsectPlagueSave(
     !("insectPlagueAreaHazard" in damageHole) ||
     damageHole.insectPlagueAreaHazard.effectRef !== effect.effectRef
   ) {
-    throw new Error("Insect Plague damage hole lost its exact effect occurrence.");
+    throw new Error(
+      "Insect Plague damage hole lost its exact effect occurrence.",
+    );
   }
   const damageFill = damageRollFillWithGroups(damageHole, [
     diceResults(effect.damage.expr.dice, input.rolledDamage),
@@ -449,6 +478,7 @@ function insectPlagueRuntimeProjection(
     caster.concentration?.sourceProcedureRef === effect.sourceProcedureRef;
   return {
     actionAvailable: canSpendAction(battle.currentTurnResources, "magic"),
+    targetTurn: state.turnActorId === spellTargetId,
     areaActive,
     areaOccurrenceOrdinal: effect === undefined ? 0 : state.occurrenceOrdinal,
     areaDamageDice: effect === undefined ? 0 : effect.damage.expr.dice,
@@ -461,14 +491,14 @@ function insectPlagueRuntimeProjection(
       effect !== undefined &&
       effect.appearanceOccurrence.actorId === state.turnActorId &&
       effect.appearanceOccurrence.round === battle.initiative.round,
-    savedThisTurn:
-      effect?.savedThisTurn.includes(spellTargetId) === true,
+    savedThisTurn: effect?.savedThisTurn.includes(spellTargetId) === true,
     nextOccurrenceOrdinal: Number(caster.nextEffectOrdinal),
     slotLevel: state.slotLevel,
     slotsRemaining: Number(slot.count) - Number(slot.expended),
-    slotSpellCastThisTurn: battle.currentTurnResources.spellSlotUsesThisTurn.some(
-      (use) => use.kind === "committed" && use.combatantId === spellCasterId,
-    ),
+    slotSpellCastThisTurn:
+      battle.currentTurnResources.spellSlotUsesThisTurn.some(
+        (use) => use.kind === "committed" && use.combatantId === spellCasterId,
+      ),
     targetHitPoints: Number(target.hp),
     targetDead:
       target.zeroHpLifecycle.policy === "usesDeathSavingThrows"
@@ -481,7 +511,9 @@ function insectPlagueRuntimeProjection(
   };
 }
 
-function insectPlagueEffects(state: BattleState): readonly InsectPlagueEffect[] {
+function insectPlagueEffects(
+  state: BattleState,
+): readonly InsectPlagueEffect[] {
   return [...state.combatants.values()].flatMap((combatant) =>
     combatant.activeEffects.filter(
       (effect): effect is InsectPlagueEffect =>
@@ -502,7 +534,10 @@ function assertExactEffectRef(
   state: InsectPlagueRuntimeState,
   effect: InsectPlagueEffect,
 ): void {
-  if (state.exactEffectRef === null || effect.effectRef !== state.exactEffectRef) {
+  if (
+    state.exactEffectRef === null ||
+    effect.effectRef !== state.exactEffectRef
+  ) {
     throw new Error("Insect Plague active occurrence identity changed.");
   }
 }
@@ -544,7 +579,11 @@ function normalizeInsectPlagueQuintState(
     Record<string, unknown>
   >;
   return {
-    actionAvailable: booleanValue(state["qActionAvailable"], "qActionAvailable"),
+    actionAvailable: booleanValue(
+      state["qActionAvailable"],
+      "qActionAvailable",
+    ),
+    targetTurn: booleanValue(state["qTargetTurn"], "qTargetTurn"),
     areaActive: booleanValue(state["qAreaActive"], "qAreaActive"),
     areaOccurrenceOrdinal: numberFromQuintInt(
       state["qAreaOccurrenceOrdinal"],
@@ -605,12 +644,12 @@ function normalizeInsectPlagueQuintState(
 }
 
 function compareInsectPlagueStates(
-  runtime: InsectPlagueMbtProjection,
   quint: InsectPlagueMbtProjection,
+  runtime: InsectPlagueMbtProjection,
 ): boolean {
   if (JSON.stringify(runtime) !== JSON.stringify(quint)) {
     throw new Error(
-      `Insect Plague projection mismatch. Runtime: ${JSON.stringify(runtime)} Quint: ${JSON.stringify(quint)}`,
+      `Insect Plague projection mismatch. Quint: ${JSON.stringify(quint)} Runtime: ${JSON.stringify(runtime)}`,
     );
   }
   return true;

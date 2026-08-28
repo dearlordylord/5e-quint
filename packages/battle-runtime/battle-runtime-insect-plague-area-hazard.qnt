@@ -47,6 +47,7 @@ module battleRuntimeInsectPlagueAreaHazard {
 
   type InsectPlagueAreaHazardState = {
     actionAvailable: bool,
+    targetTurn: bool,
     area: InsectPlagueArea,
     nextOccurrenceOrdinal: int,
     slotLedger: SpellSlotLedger,
@@ -69,7 +70,7 @@ module battleRuntimeInsectPlagueAreaHazard {
       | InsectPlagueEndsTurnInArea => CreatureEndsTurnInArea
     }
 
-  pure def insectPlagueTriggerMatchesOccurrence(
+  pure def insectPlagueTriggerIsAvailable(
     area: {
       occurrenceOrdinal: int,
       damageDice: int,
@@ -78,15 +79,23 @@ module battleRuntimeInsectPlagueAreaHazard {
       appearanceOccurrenceOpen: bool,
       savedThisTurn: bool,
     },
+    targetTurn: bool,
     trigger: InsectPlagueSaveTrigger,
   ): bool =
-    trigger != InsectPlagueAppearsInArea or area.appearanceOccurrenceOpen
+    if (trigger == InsectPlagueAppearsInArea)
+      area.appearanceOccurrenceOpen
+    else
+      targetTurn
 
   pure def resolveInsectPlagueCast(
     state: InsectPlagueAreaHazardState,
     slotLevel: int,
   ): InsectPlagueAreaHazardState =
-    if (not(state.actionAvailable) or slotLevel < insectPlagueMinimumSlotLevel)
+    if (
+      state.targetTurn or
+      not(state.actionAvailable) or
+      slotLevel < insectPlagueMinimumSlotLevel
+    )
       state
     else {
       val slotState = {
@@ -129,7 +138,7 @@ module battleRuntimeInsectPlagueAreaHazard {
       | InsectPlagueAreaAbsent => state
       | InsectPlagueAreaActive(area) =>
           if (
-            not(insectPlagueTriggerMatchesOccurrence(area, trigger)) or
+            not(insectPlagueTriggerIsAvailable(area, state.targetTurn, trigger)) or
             not(areaEffectTriggerCanResolve(
               true,
               true,
@@ -154,16 +163,31 @@ module battleRuntimeInsectPlagueAreaHazard {
     state: InsectPlagueAreaHazardState,
   ): InsectPlagueAreaHazardState =
     match state.area {
-      | InsectPlagueAreaAbsent => { ...state, actionAvailable: true, slotSpellCastThisTurn: false }
-      | InsectPlagueAreaActive(area) => {
+      | InsectPlagueAreaAbsent => {
           ...state,
           actionAvailable: true,
-          area: InsectPlagueAreaActive({
-            ...area,
-            appearanceOccurrenceOpen: false,
-            savedThisTurn: false,
-          }),
+          targetTurn: not(state.targetTurn),
           slotSpellCastThisTurn: false,
+        }
+      | InsectPlagueAreaActive(area) => {
+          val nextDurationTicks =
+            if (state.targetTurn) area.durationTicks - 1 else area.durationTicks
+          {
+            ...state,
+            actionAvailable: true,
+            targetTurn: not(state.targetTurn),
+            area:
+              if (nextDurationTicks <= 0)
+                InsectPlagueAreaAbsent
+              else
+                InsectPlagueAreaActive({
+                  ...area,
+                  durationTicks: nextDurationTicks,
+                  appearanceOccurrenceOpen: false,
+                  savedThisTurn: false,
+                }),
+            slotSpellCastThisTurn: false,
+          }
         }
     }
 

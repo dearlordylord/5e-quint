@@ -5,6 +5,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
   import hitPointDamage.* from "../shared-algebras/proofs/rule-core/hit-point-damage"
 
   var qActionAvailable: bool
+  var qTargetTurn: bool
   var qAreaActive: bool
   var qAreaOccurrenceOrdinal: int
   var qAreaDamageDice: int
@@ -25,6 +26,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
 
   pure def insectPlagueMbtState(
     actionAvailable: bool,
+    targetTurn: bool,
     areaActive: bool,
     areaOccurrenceOrdinal: int,
     areaDamageDice: int,
@@ -41,6 +43,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
     targetUnconscious: bool,
   ): InsectPlagueAreaHazardState = {
     actionAvailable: actionAvailable,
+    targetTurn: targetTurn,
     area:
       if (areaActive)
         InsectPlagueAreaActive({
@@ -69,6 +72,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
   pure def currentInsectPlagueMbtState: InsectPlagueAreaHazardState =
     insectPlagueMbtState(
       qActionAvailable,
+      qTargetTurn,
       qAreaActive,
       qAreaOccurrenceOrdinal,
       qAreaDamageDice,
@@ -87,6 +91,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
 
   action recordNextState(nextState: InsectPlagueAreaHazardState): bool = all {
     qActionAvailable' = nextState.actionAvailable,
+    qTargetTurn' = nextState.targetTurn,
     qAreaActive' = insectPlagueAreaActive(nextState),
     qAreaOccurrenceOrdinal' = match nextState.area {
       | InsectPlagueAreaAbsent => 0
@@ -128,6 +133,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
     nondet slotLevel = insectPlagueMinimumSlotLevel.to(7).oneOf()
     all {
       qActionAvailable' = true,
+      qTargetTurn' = false,
       qAreaActive' = false,
       qAreaOccurrenceOrdinal' = 0,
       qAreaDamageDice' = 0,
@@ -150,6 +156,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
 
   action doCastInsectPlague = all {
     not(qAreaActive),
+    not(qTargetTurn),
     qActionAvailable,
     qSlotsRemaining > 0,
     not(qSlotSpellCastThisTurn),
@@ -166,6 +173,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
     ).oneOf()
     all {
       qAreaActive,
+      trigger == InsectPlagueAppearsInArea or qTargetTurn,
       recordNextState(resolveInsectPlagueSave(
         currentInsectPlagueMbtState,
         trigger,
@@ -182,6 +190,7 @@ module battleRuntimeInsectPlagueAreaHazardMbt {
 
   action doEndInsectPlagueConcentration = all {
     qAreaActive,
+    not(qTargetTurn),
     recordNextState(resolveInsectPlagueConcentrationCleanup(currentInsectPlagueMbtState)),
   }
 

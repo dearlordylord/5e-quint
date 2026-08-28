@@ -6,6 +6,7 @@ module battleRuntimeInsectPlagueAreaHazardTests {
 
   pure def initialInsectPlagueState(slotLevel: int): InsectPlagueAreaHazardState = {
     actionAvailable: true,
+    targetTurn: false,
     area: InsectPlagueAreaAbsent,
     nextOccurrenceOrdinal: 0,
     slotLedger: { slotLevel: slotLevel, slotsRemaining: 1 },
@@ -57,7 +58,7 @@ module battleRuntimeInsectPlagueAreaHazardTests {
 
   run test_insect_plague_upcast_failed_save_applies_the_selected_roll = {
     val cast = resolveInsectPlagueCast(initialInsectPlagueState(7), 7)
-    val resolved = resolveInsectPlagueSave(cast, InsectPlagueEndsTurnInArea, false, 49)
+    val resolved = resolveInsectPlagueSave(cast, InsectPlagueAppearsInArea, false, 49)
     all {
       assert(resolved.targetVitals.hitPoints == 51),
       assert(match resolved.area {
@@ -79,5 +80,19 @@ module battleRuntimeInsectPlagueAreaHazardTests {
       assert(not(insectPlagueAreaLightlyObscured(cleaned))),
       assert(not(insectPlagueAreaDifficultTerrain(cleaned))),
     }
+  }
+
+  run test_insect_plague_duration_expires_at_the_next_round_boundary = {
+    val cast = resolveInsectPlagueCast(initialInsectPlagueState(5), 5)
+    val targetTurn = beginInsectPlagueLaterTurn(cast)
+    val finalTick = match targetTurn.area {
+      | InsectPlagueAreaAbsent => targetTurn
+      | InsectPlagueAreaActive(area) => {
+          ...targetTurn,
+          area: InsectPlagueAreaActive({ ...area, durationTicks: 1 }),
+        }
+    }
+    val expired = beginInsectPlagueLaterTurn(finalTick)
+    assert(not(insectPlagueAreaActive(expired)))
   }
 }
