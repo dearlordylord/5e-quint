@@ -20,6 +20,7 @@ import {
   resolveBattleRuntimeSubject,
 } from "./battle-session-execution.ts";
 import { battleReplayStackDepth } from "./identity.ts";
+import { BattleCheckpointFrontierEnvelopeSchema } from "./index.ts";
 import {
   BattlePresentedCheckpointFrontierEnvelopeSchema,
   battlePresentedCheckpointFrontierEnvelope,
@@ -128,6 +129,16 @@ describe("battle snapshot frontier presentation", () => {
     expect(battleFrontierHoles(resolution.envelope)).toEqual(
       resolution.envelope.frontier,
     );
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      resolution.envelope,
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
 
     const presented = presentBattleCheckpointFrontierEnvelope(
       session,

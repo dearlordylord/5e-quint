@@ -5,8 +5,10 @@ import { describe, expect, test } from "vitest";
 import { Schema } from "effect";
 import { classLevel } from "@dnd/shared/types";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
+  battleCheckpointFrontierEnvelope,
 } from "./index.ts";
 import {
   Either,
@@ -56,6 +58,16 @@ describe("battle runtime: Barbarian Retaliation", () => {
     if (retaliationChoice === undefined) {
       throw new Error("Expected a Retaliation codec fixture.");
     }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingRetaliation.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
     expect(() =>
       Schema.decodeUnknownSync(BattleInterruptProcedureChoiceSchema)(
         retaliationChoice,

@@ -7,11 +7,13 @@ import {
   BattleHoleSchema,
   BattleCheckpointFrontierEnvelopeSchema,
   BattleSnapshotSchema,
+  attackExecutionSelectionForSubjectForTest,
   attackTargetDistanceSpatialFact,
   battleId,
   characterAttackSubjectForTest,
   characterSeed,
   combatantId,
+  criticalRange19UnitRefs,
   discoverBattleActs,
   endTurn,
   fighterId,
@@ -20,6 +22,7 @@ import {
   goblinId,
   interruptDecisionFill,
   movementFeet,
+  movementFill,
   monsterMultiattackStatBlock,
   readyDeclarationFillForTest,
   requireHole,
@@ -42,7 +45,10 @@ import {
   wizardId,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
-import { BattleInterruptDecisionFrontierSchema } from "./battle-reducer/battle-codecs.ts";
+import {
+  BattleInterruptDecisionFrontierSchema,
+  BattleObjectDamageOutcomeSchema,
+} from "./battle-reducer/battle-codecs.ts";
 import { ATTACK_TARGET_HOLE_ID } from "./battle-reducer/battle-runtime-protocol.ts";
 import type { BattleSubject } from "./battle-subjects.ts";
 import {
@@ -647,6 +653,21 @@ const cases: readonly CodecCase[] = [
   ),
 ];
 
+describe("battle object damage codec boundaries", () => {
+  test("round-trips a table-resolved object damage outcome", () => {
+    const outcome = {
+      kind: "tableResolved",
+      objectId: battleObjectId("codec-table-resolved-object"),
+      components: [{ damageType: "fire", rolledDamage: 6 }],
+      rolledDamage: 6,
+    };
+
+    expect(
+      Schema.decodeUnknownSync(BattleObjectDamageOutcomeSchema)(outcome),
+    ).toEqual(outcome);
+  });
+});
+
 describe("battle codec execution-reference boundaries", () => {
   test.each(cases)("$expected $name", ({ expected, hole: replacement }) => {
     const decoded = Schema.decodeUnknownEither(
@@ -738,7 +759,11 @@ describe("battle codec act ownership boundaries", () => {
           statBlock: codecStaticDartStatBlock(),
           initiative: 20,
         }),
-        characterSeed({ combatantId: fighterId, initiative: 10 }),
+        characterSeed({
+          combatantId: fighterId,
+          initiative: 10,
+          characterUnitRefs: criticalRange19UnitRefs(),
+        }),
       ],
     }).state;
     const readySubject = {
@@ -908,6 +933,89 @@ describe("battle codec act ownership boundaries", () => {
       },
       initialHoles: [],
     };
+    const statBlockReactionModifierChoice: EncodedInterruptChoice = {
+      kind: "reactionRollOrDamageReduction",
+      reactorId: goblinId,
+      choice: {
+        kind: "attackDamageReduction",
+        procedureRef: encodedReadiedAttack.subject.procedureRef,
+        reduction: { kind: "halfDamage" },
+      },
+      initialHoles: [],
+    };
+    const fighter = pendingEnvelope.checkpoint.combatants.find(
+      (combatant) => combatant.combatantId === fighterId,
+    );
+    if (fighter?.origin.kind !== "character") {
+      throw new Error("Expected the encoded fighter character origin.");
+    }
+    const fighterAttackProcedureRef =
+      fighter.origin.attackExecution.attackProcedureRef ??
+      fighter.origin.attackExecution.unarmedStrikeProcedureRef;
+    const fighterAttackReactionModifierChoice: EncodedInterruptChoice = {
+      kind: "reactionRollOrDamageReduction",
+      reactorId: fighterId,
+      choice: {
+        kind: "attackDamageReduction",
+        procedureRef: fighterAttackProcedureRef,
+        reduction: { kind: "halfDamage" },
+      },
+      initialHoles: [],
+    };
+    const stringSupportBinding =
+      fighter.origin.execution.procedureBindings.find(
+        (binding) =>
+          binding.procedure.kind === "unitSupportProfile" &&
+          typeof binding.procedure.execution === "string",
+      );
+    if (stringSupportBinding?.procedure.kind !== "unitSupportProfile") {
+      throw new Error("Expected the encoded string support binding.");
+    }
+    const unrelatedStringSupportReactionChoice: EncodedInterruptChoice = {
+      kind: "reactionRollOrDamageReduction",
+      reactorId: fighterId,
+      choice: {
+        kind: "attackDamageReduction",
+        procedureRef: stringSupportBinding.procedureRef,
+        reduction: { kind: "halfDamage" },
+      },
+      initialHoles: [],
+    };
+    expectEnvelopeDecodeLeft({
+      checkpoint: pendingEnvelope.checkpoint,
+      frontier: {
+        kind: "acts",
+        acts: [
+          {
+            subject: {
+              tag: "monkFocusFlurryOfBlowsStrike",
+              actorId: fighterId,
+              focusProcedureRef: stringSupportBinding.procedureRef,
+              procedureRef:
+                fighter.origin.attackExecution.unarmedStrikeProcedureRef,
+            },
+            initialHoles: [],
+          },
+        ],
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      checkpoint: pendingEnvelope.checkpoint,
+      frontier: {
+        kind: "acts",
+        acts: [
+          {
+            subject: {
+              tag: "monkFocusFlurryOfBlowsStrike",
+              actorId: goblinId,
+              focusProcedureRef: encodedReadiedAttack.subject.procedureRef,
+              procedureRef: encodedReadiedAttack.subject.procedureRef,
+            },
+            initialHoles: [],
+          },
+        ],
+      },
+    });
     const malformedInterruptKindCases: readonly EncodedInterruptChoice[] = [
       {
         kind: "castAttackHitBonusActionSpell",
@@ -979,16 +1087,7 @@ describe("battle codec act ownership boundaries", () => {
         },
         initialHoles: [],
       },
-      {
-        kind: "reactionRollOrDamageReduction",
-        reactorId: goblinId,
-        choice: {
-          kind: "attackDamageReduction",
-          procedureRef: encodedReadiedAttack.subject.procedureRef,
-          reduction: { kind: "halfDamage" },
-        },
-        initialHoles: [],
-      },
+      statBlockReactionModifierChoice,
     ];
     for (const malformedChoice of malformedInterruptKindCases) {
       const decoded = Schema.decodeUnknownEither(
@@ -1012,6 +1111,88 @@ describe("battle codec act ownership boundaries", () => {
           trigger: "afterDamage",
         },
         choices: [statBlockRetaliationChoice],
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...pendingEnvelope.frontier,
+        trigger: "attackHit",
+        decisionHole: {
+          ...pendingEnvelope.frontier.decisionHole,
+          trigger: "attackHit",
+        },
+        choices: [statBlockReactionModifierChoice],
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...pendingEnvelope.frontier,
+        trigger: "attackHit",
+        decisionHole: {
+          ...pendingEnvelope.frontier.decisionHole,
+          trigger: "attackHit",
+        },
+        choices: [fighterAttackReactionModifierChoice],
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...pendingEnvelope.frontier,
+        trigger: "attackHit",
+        decisionHole: {
+          ...pendingEnvelope.frontier.decisionHole,
+          trigger: "attackHit",
+        },
+        choices: [unrelatedStringSupportReactionChoice],
+      },
+    });
+    const opportunityFrontier = {
+      ...pendingEnvelope.frontier,
+      trigger: "opportunityAttack" as const,
+      decisionHole: {
+        ...pendingEnvelope.frontier.decisionHole,
+        trigger: "opportunityAttack" as const,
+      },
+    };
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...opportunityFrontier,
+        choices: [
+          {
+            kind: "opportunityAttack",
+            reactorId: combatantId("codec-missing-opportunity-reactor"),
+            subject: {
+              ...encodedReadiedAttack.subject,
+              command: "opportunityAttack",
+              reactorId: combatantId("codec-missing-opportunity-reactor"),
+              distanceFeet: 5,
+            },
+            initialHoles: [],
+          },
+        ],
+      },
+    });
+    expectEnvelopeDecodeLeft({
+      ...pendingEnvelope,
+      frontier: {
+        ...opportunityFrontier,
+        choices: [
+          {
+            kind: "opportunityAttack",
+            reactorId: goblinId,
+            subject: {
+              ...encodedReadiedAttack.subject,
+              command: "opportunityAttack",
+              procedureRef: fighterAttackProcedureRef,
+              distanceFeet: 5,
+            },
+            initialHoles: [],
+          },
+        ],
       },
     });
     const replaceTarget = (
@@ -1164,6 +1345,57 @@ describe("battle codec act ownership boundaries", () => {
         }),
       }),
     ).toMatchObject({ tag: "resolved" });
+  });
+  test("round-trips a runtime-produced character Opportunity Attack frontier", () => {
+    const state = fighterVsGoblinBattle();
+    const fighterAttack = characterAttackSubjectForTest(
+      state,
+      fighterId,
+      "Longsword",
+    );
+    const goblinTurn = requireResolved(
+      endTurn({ state, actorId: fighterId }),
+    ).state;
+    const moveSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "move" as const,
+    };
+    const movement = requireHole(
+      resolveBattleSubject({
+        state: goblinTurn,
+        subject: moveSubject,
+        fills: [],
+      }),
+      "movement",
+    );
+    const awaitingOpportunity = resolveBattleSubject({
+      state: goblinTurn,
+      subject: moveSubject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: fighterId,
+              distanceFeet: movementFeet(5),
+              ...attackExecutionSelectionForSubjectForTest(fighterAttack),
+            },
+          ],
+        }),
+      ],
+    });
+    if (awaitingOpportunity.tag !== "needsHoles") {
+      throw new Error("Expected a character Opportunity Attack frontier.");
+    }
+    const encoded = encodedEnvelopeFromState(awaitingOpportunity.state);
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
   });
   test("rejects an action spell act with an unknown owner", () => {
     const malformed = replaceActOwner(

@@ -3,10 +3,13 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-SPELL-SHINING-SMITE shining_smite
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-after-hit-damage-illumination
 import { Schema } from "effect";
+import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import {
+  BattleCheckpointFrontierEnvelopeSchema,
   BattleInterruptProcedureChoiceSchema,
   BattleSnapshotSchema,
+  battleCheckpointFrontierEnvelope,
 } from "./index.ts";
 import {
   characterSpellInvocationRefForProcedureRefForTest,
@@ -136,6 +139,16 @@ describe("L12G-SPELL-SHINING-SMITE deterministic Shining Smite admission", () =>
     ) {
       throw new Error("Expected Shining Smite after-hit choice.");
     }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
     expect(
       characterSpellInvocationRefForProcedureRefForTest(
         battleRuntimeSessionForTest({

@@ -26,6 +26,7 @@ import {
 } from "./battle-session-execution.ts";
 import {
   attackRollFill,
+  attackExecutionSelectionForSubjectForTest,
   battleId,
   battleProcedureExecutionRefForTest,
   characterBattleFeatureInitForTest,
@@ -37,6 +38,7 @@ import {
   goblinId,
   discoverBattleActs,
   findHole,
+  movementFill,
   requireCharacterUnitProcedureRefForTest,
   savingThrowOutcomeFill,
   startBattleSessionRight,
@@ -736,6 +738,60 @@ describe("Table-authored per-test D20 circumstances", () => {
     if (ended.tag === "resolved") {
       expect(battleRuntimeSessionFollows(ended.session, session)).toBe(true);
     }
+  });
+
+  test("keeps an Opportunity Attack interrupt frontier free of Table D20 requests", () => {
+    const session = startBattleSessionRight({
+      battleId: battleId("synthetic-table-opportunity-frontier"),
+      combatants: [
+        characterSeed({ initiative: 20 }),
+        statBlockCreatureInit({ initiative: 10 }),
+      ],
+    });
+    const fighterAttack = fighterAttackSubject(session.state);
+    const goblinTurn = endBattleRuntimeTurn({
+      session,
+      actorId: fighterId,
+    });
+    if (goblinTurn.tag !== "resolved") {
+      throw new Error("Expected the fighter's turn to end.");
+    }
+    const moveSubject = {
+      tag: "runtimeCommand" as const,
+      actorId: goblinId,
+      command: "move" as const,
+    };
+    const move = resolveBattleRuntimeSubject({
+      session: goblinTurn.session,
+      subject: moveSubject,
+      fills: [],
+    });
+    if (move.tag !== "needsHoles" || move.envelope.frontier.kind !== "holes") {
+      throw new Error("Expected the goblin's movement frontier.");
+    }
+    const result = resolveBattleRuntimeSubjectWithTableD20TestCircumstances({
+      session: goblinTurn.session,
+      subject: moveSubject,
+      fills: [
+        movementFill(findHole(move.envelope.frontier.holes, "movement"), {
+          movementCostFeet: 5,
+          provokedOpportunityAttacks: [
+            {
+              reactorId: fighterId,
+              distanceFeet: movementFeet(5),
+              ...attackExecutionSelectionForSubjectForTest(fighterAttack),
+            },
+          ],
+        }),
+      ],
+      d20TestResolutionId: d20TestResolutionId("opportunity-frontier"),
+      tableD20TestCircumstanceDecisions: [],
+    });
+
+    expect(result.tag).toBe("needsHoles");
+    if (result.tag !== "needsHoles") return;
+    expect(result.envelope.frontier.kind).toBe("interruptDecision");
+    expect(result.d20TestCircumstanceRequests).toEqual([]);
   });
 
   test("keeps no-roll concentration saves out of Table circumstance requests", () => {

@@ -1,4 +1,6 @@
 import { describe, expect, test } from "vitest";
+import { Schema } from "effect";
+import * as Either from "effect/Either";
 
 import {
   attackRollFill,
@@ -26,11 +28,13 @@ import {
   unitLibrary,
   wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
-import type {
-  AvailableBattleAct,
-  BattleFill,
-  BattleInterruptProcedureChoice,
-  BattleSubject,
+import {
+  BattleCheckpointFrontierEnvelopeSchema,
+  battleCheckpointFrontierEnvelope,
+  type AvailableBattleAct,
+  type BattleFill,
+  type BattleInterruptProcedureChoice,
+  type BattleSubject,
 } from "./index.ts";
 
 const damagerId = combatantId("attack-reaction-damager");
@@ -142,6 +146,16 @@ describe("battle runtime: attack reaction coverage", () => {
     if (choice === undefined) {
       throw new Error("Expected Hellish Rebuke reaction choice.");
     }
+    const encoded = Schema.encodeSync(BattleCheckpointFrontierEnvelopeSchema)(
+      battleCheckpointFrontierEnvelope(awaitingReaction.state),
+    );
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleCheckpointFrontierEnvelopeSchema)(
+          encoded,
+        ),
+      ),
+    ).toBe(true);
     const saveHole = findHole(choice.initialHoles, "savingThrowOutcome");
     const damageHole = findHole(choice.initialHoles, "rolledDice");
     const reactionFills = [
