@@ -83,6 +83,13 @@ function statBlockProjectionFailureContent(
       ({ reason, issues }) => ({ reason, issues }),
     ),
     Match.when({ reason: "nonLiteralSize" }, ({ reason }) => ({ reason })),
+    Match.when({ reason: "unsupportedFormRestrictedSpeed" }, ({ reason }) => ({
+      reason,
+    })),
+    Match.when(
+      { reason: "unsupportedQualifiedConditionImmunity" },
+      ({ reason }) => ({ reason }),
+    ),
     Match.when({ reason: "invalidResourceLimit" }, ({ reason, issues }) => ({
       reason,
       issues,

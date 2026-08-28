@@ -11,6 +11,7 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { Hp } from "@dnd/shared/types";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import dragonsBreathInput from "../../surface/content/dragons_breath.json";
 import {
   dragonsBreathUnitId,
@@ -1035,7 +1036,9 @@ function fireImmuneHumanoidStatBlock() {
     ...base,
     statBlock: {
       ...base.statBlock,
-      immunities: { damageTypes: ["fire"] as const },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["fire"],
+      }),
     },
   };
 }

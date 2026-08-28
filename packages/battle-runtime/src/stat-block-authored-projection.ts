@@ -47,6 +47,8 @@ import type {
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
+  | "unsupportedFormRestrictedSpeed"
+  | "unsupportedQualifiedConditionImmunity"
   | "unsupportedLairConditionalLegendaryActionUses";
 
 export type BattleStatBlockInvalidResourceDeclaration = {
@@ -110,6 +112,16 @@ export function battleStatBlockProjectionFailureMessage(
       () => "battle initialization requires a concrete Size",
     ),
     Match.when(
+      "unsupportedFormRestrictedSpeed",
+      () =>
+        "battle initialization does not own the active form needed to select a form-restricted Speed",
+    ),
+    Match.when(
+      "unsupportedQualifiedConditionImmunity",
+      () =>
+        "battle initialization cannot apply a qualified condition Immunity without its qualifying state",
+    ),
+    Match.when(
       "unsupportedLairConditionalLegendaryActionUses",
       () =>
         "battle initialization does not own the lair context needed to select Legendary Action uses",
@@ -141,6 +153,15 @@ export function projectAuthoredStatBlock(
   const source = record.statBlock;
   const size = literalSize(source.size);
   if (size === null) return Either.left(failure("nonLiteralSize"));
+  if (source.speeds.some((speed) => "availability" in speed)) {
+    return Either.left(failure("unsupportedFormRestrictedSpeed"));
+  }
+  if (
+    source.immunities !== undefined &&
+    "qualifiedConditions" in source.immunities
+  ) {
+    return Either.left(failure("unsupportedQualifiedConditionImmunity"));
+  }
   const speeds = source.speeds.map(runtimeSpeed);
   const legendaryActionUses = authoredLegendaryActionUses(
     source.legendaryActions?.uses,

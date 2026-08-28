@@ -1,6 +1,9 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
 import { statBlockId } from "@dnd/shared/game-facts";
-import { decodeStatBlockRecordSync } from "@dnd/surface/surface/schema";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  decodeStatBlockRecordSync,
+} from "@dnd/surface/surface/schema";
 import { srdStatBlockCollection } from "@dnd/surface/surface/stat-block-catalog";
 import { srdUnitCollection } from "@dnd/surface/surface/unit-catalog";
 import { Schema } from "effect";
@@ -63,7 +66,9 @@ describe("MCP Stat Block summaries", () => {
           },
         ],
         creatureType: "beast",
-        immunities: { conditions: ["poisoned"] },
+        immunities: decodeCreatureImmunityDeclarationSync({
+          conditions: ["poisoned"],
+        }),
         resistances: {
           kind: "choose_one_from",
           options: ["cold", "fire"],

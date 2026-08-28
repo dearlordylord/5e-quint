@@ -233,7 +233,11 @@ in  { challengeRating = 12
         , { skill = "perception", modifier = +6 }
         ]
       , immunities =
-        { conditions = Some [ "charmed" ], damageTypes = Some [ "psychic" ] }
+        { conditions = None (List Text)
+        , damageTypes = Some [ "psychic" ]
+        , qualifiedConditions = Some
+          [ { condition = "charmed", qualifier = "with *Mind Blank*" } ]
+        }
       , size = { kind = "alternatives", options = [ "medium", "small" ] }
       , speeds =
         [ { kind = "walk"

@@ -1,5 +1,5 @@
 import { armorClass } from "@dnd/shared-algebras/armor-class-algebra";
-import type { Condition } from "@dnd/shared/game-facts";
+import type { Condition, SurfaceCondition } from "@dnd/shared/game-facts";
 import { Hp, PositiveInteger } from "@dnd/shared/types";
 import { Brand } from "effect";
 import * as Either from "effect/Either";
@@ -61,8 +61,13 @@ export function statBlockInitialConditionImmunityIssue(
   source: BattleStatBlockCombatantSource,
   conditions: readonly Condition[],
 ): StatBlockInitialConditionAdmissionIssue | null {
+  const authoredImmunities = source.statBlock.immunities;
+  const fixedConditionImmunities: readonly SurfaceCondition[] =
+    authoredImmunities !== undefined && "conditions" in authoredImmunities
+      ? authoredImmunities.conditions
+      : [];
   const immuneInitialCondition = conditions.find((condition) =>
-    source.statBlock.immunities?.conditions?.includes(condition),
+    fixedConditionImmunities.includes(condition),
   );
   return immuneInitialCondition === undefined
     ? null
@@ -125,8 +130,16 @@ export function admitBattleStatBlockCombatantSource(input: {
             statBlock.statBlock.vulnerabilities?.damageTypes ?? [],
           resistances: statBlock.statBlock.resistances?.damageTypes ?? [],
           immunities: {
-            damageTypes: statBlock.statBlock.immunities?.damageTypes ?? [],
-            conditions: statBlock.statBlock.immunities?.conditions ?? [],
+            damageTypes:
+              statBlock.statBlock.immunities !== undefined &&
+              "damageTypes" in statBlock.statBlock.immunities
+                ? statBlock.statBlock.immunities.damageTypes
+                : [],
+            conditions:
+              statBlock.statBlock.immunities !== undefined &&
+              "conditions" in statBlock.statBlock.immunities
+                ? statBlock.statBlock.immunities.conditions
+                : [],
           },
           specialSenses: statBlock.statBlock.senses ?? [],
           initiativeModifier: statBlock.statBlock.initiativeModifier,

@@ -464,10 +464,10 @@ describe("SRD Surface publication schema", () => {
       "stat blocks property",
     );
     expect(requireRecord(units.items, "units items").$ref).toBe(
-      "#/$defs/PublishedSrdUnitPublicationEncoded",
+      "#/$defs/PublishedSrdUnitPublication",
     );
     expect(requireRecord(statBlocks.items, "stat blocks items").$ref).toBe(
-      "#/$defs/PublishedSrdStatBlockPublicationEncoded",
+      "#/$defs/PublishedSrdStatBlockPublication",
     );
     expect(
       JSON.stringify(SrdSurfaceJsonSchema.$defs).includes('"srd-5.2.1"'),

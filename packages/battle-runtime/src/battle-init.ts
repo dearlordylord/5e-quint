@@ -157,6 +157,8 @@ export type BattleDruidWildShapeKnownFormIssue =
       readonly statBlockId: StatBlockId;
       readonly reason:
         | "nonLiteralSize"
+        | "unsupportedFormRestrictedSpeed"
+        | "unsupportedQualifiedConditionImmunity"
         | "unsupportedLairConditionalLegendaryActionUses"
         | "missingWalkSpeed";
     }
@@ -196,6 +198,10 @@ const WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES = {
   nonLiteralSize: "Druid Wild Shape battle forms require literal Size.",
   unsupportedLairConditionalLegendaryActionUses:
     "Druid Wild Shape battle forms cannot select lair-conditional Legendary Action uses without lair context.",
+  unsupportedFormRestrictedSpeed:
+    "Druid Wild Shape battle forms require an active form before selecting form-restricted Speeds.",
+  unsupportedQualifiedConditionImmunity:
+    "Druid Wild Shape battle forms cannot apply a qualified condition Immunity without its qualifying state.",
   invalidResourceLimit:
     "Druid Wild Shape battle forms require valid Stat Block resource limits.",
 } as const satisfies Record<
@@ -340,6 +346,25 @@ function wildShapeProjectionDisposition(
         },
       }),
     ),
+    Match.when({ reason: "unsupportedFormRestrictedSpeed" }, ({ reason }) => ({
+      kind: "issue" as const,
+      issue: {
+        tag: "battleDruidWildShapeKnownFormIssue" as const,
+        statBlockId,
+        reason,
+      },
+    })),
+    Match.when(
+      { reason: "unsupportedQualifiedConditionImmunity" },
+      ({ reason }) => ({
+        kind: "issue" as const,
+        issue: {
+          tag: "battleDruidWildShapeKnownFormIssue" as const,
+          statBlockId,
+          reason,
+        },
+      }),
+    ),
     Match.when(
       { reason: "invalidResourceLimit" },
       ({ issues: resourceIssues }) => ({
@@ -390,6 +415,16 @@ export function wildShapeKnownFormsIssueMessage(
           { reason: "unsupportedLairConditionalLegendaryActionUses" },
           () =>
             WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedLairConditionalLegendaryActionUses,
+        ),
+        Match.when(
+          { reason: "unsupportedFormRestrictedSpeed" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedFormRestrictedSpeed,
+        ),
+        Match.when(
+          { reason: "unsupportedQualifiedConditionImmunity" },
+          () =>
+            WILD_SHAPE_KNOWN_FORM_PROJECTION_FAILURE_MESSAGES.unsupportedQualifiedConditionImmunity,
         ),
         Match.when(
           { reason: "missingWalkSpeed" },

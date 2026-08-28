@@ -1,4 +1,5 @@
 import { describe, expect, test } from "vitest";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
 import type {
   AvailableBattleAct,
@@ -121,7 +122,9 @@ describe("triggered Reaction spell interrupt boundaries", () => {
       ...baseAttacker,
       statBlock: {
         ...baseAttacker.statBlock,
-        immunities: { damageTypes: ["fire"] as const },
+        immunities: decodeCreatureImmunityDeclarationSync({
+          damageTypes: ["fire"],
+        }),
       },
     };
     const session = startBattleSessionRight({
