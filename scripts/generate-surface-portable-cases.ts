@@ -687,6 +687,10 @@ function buildDocument(repositoryRoot: string): PortableCaseDocument {
     firstStatBlock.provenance,
     "first stat block provenance",
   );
+  const firstStatBlockFacts = requireObject(
+    firstStatBlock.statBlock,
+    "first stat block facts",
+  );
   const cases: readonly PortableCase[] = [
     makeCase(independentExpectations, "valid published aggregate", {
       input: publication,
@@ -707,6 +711,25 @@ function buildDocument(repositoryRoot: string): PortableCaseDocument {
     makeCase(independentExpectations, "refinement violation", {
       input: withRecord(compactPublication, "statBlocks", [
         { ...firstStatBlock, challengeRating: 99 },
+      ]),
+    }),
+    makeCase(independentExpectations, "condition immunity overlap", {
+      input: withRecord(compactPublication, "statBlocks", [
+        {
+          ...firstStatBlock,
+          statBlock: {
+            ...firstStatBlockFacts,
+            immunities: {
+              conditions: ["charmed"],
+              qualifiedConditions: [
+                {
+                  condition: "charmed",
+                  qualifier: "while the synthetic ward is active",
+                },
+              ],
+            },
+          },
+        },
       ]),
     }),
     makeCase(independentExpectations, "empty collections", {

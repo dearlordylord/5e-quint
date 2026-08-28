@@ -2,6 +2,7 @@ import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.
 import { ClassLevel } from "@dnd/shared/types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
+  decodeCreatureImmunityDeclarationSync,
   StatBlockProcedureEntrySchema,
   StatBlockProcedureResourceOrdinalSchema,
   StatBlockReactionSectionSchema,
@@ -121,14 +122,14 @@ describe("Stat Block projection boundary coverage", () => {
           ...source,
           statBlock: {
             ...source.statBlock,
-            immunities: {
+            immunities: decodeCreatureImmunityDeclarationSync({
               qualifiedConditions: [
                 {
                   condition: "charmed",
                   qualifier: "while the synthetic sigil glows",
                 },
               ],
-            },
+            }),
           },
         },
         message:
@@ -182,7 +183,9 @@ describe("Stat Block projection boundary coverage", () => {
         ...source,
         statBlock: {
           ...source.statBlock,
-          immunities: { conditions: ["prone"] },
+          immunities: decodeCreatureImmunityDeclarationSync({
+            conditions: ["prone"],
+          }),
         },
       },
       initiative: initiativeScore(10),

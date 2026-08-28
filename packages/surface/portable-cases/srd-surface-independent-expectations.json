@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "schemaSha256": "061ffa9108fe536e675ffe1dce49e7f8b05e456252428bc99a8572b8ba0755c6",
+  "schemaSha256": "c3ea126c2edfc89c7d599b727fc98ada17e828d6e8d2f3d0081594ad96f272c4",
   "dependencyContractSha256": "b51a948f39405d371e528850fab0ba81f800add9af4bea84440ddba616cc50ef",
   "cases": [
     {
@@ -39,6 +39,19 @@
     {
       "name": "refinement violation",
       "inputSha256": "a51464c23c540dbd7ae27ad202cd8c59d822517d2f935d317b85d6972e6fc16f",
+      "expected": {
+        "tag": "rejected",
+        "issues": [
+          {
+            "code": "schema",
+            "path": "$.statBlocks[0]"
+          }
+        ]
+      }
+    },
+    {
+      "name": "condition immunity overlap",
+      "inputSha256": "ca64593fa9ecdc6445027b8c3d4cac14671b66e54629a132dca06d49e39582ea",
       "expected": {
         "tag": "rejected",
         "issues": [

@@ -74,10 +74,17 @@ describe("independent portable Surface expectations", () => {
       contract,
     );
 
-    expect(expectations.size).toBe(30);
+    expect(expectations.size).toBe(31);
     expect(expectations.get("valid published aggregate")).toMatchObject({
       name: "valid published aggregate",
       expected: { tag: "accepted" },
+    });
+    expect(expectations.get("condition immunity overlap")).toMatchObject({
+      name: "condition immunity overlap",
+      expected: {
+        tag: "rejected",
+        issues: [{ code: "schema", path: "$.statBlocks[0]" }],
+      },
     });
   });
 

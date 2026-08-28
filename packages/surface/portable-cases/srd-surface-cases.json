@@ -92137,6 +92137,261 @@
     {
       "input": {
         "kind": "srd-5.2.1-surface-catalog",
+        "units": [
+          {
+            "id": "species_dragonborn",
+            "name": "Dragonborn",
+            "kind": "species",
+            "creatureType": "humanoid",
+            "species": "dragonborn",
+            "size": {
+              "kind": "fixed",
+              "size": "medium"
+            },
+            "speed": {
+              "walkFeet": 30
+            },
+            "traits": {
+              "breathWeapon": "species_dragonborn_breath_weapon",
+              "damageResistance": "species_dragonborn_damage_resistance",
+              "darkvision": "species_dragonborn_darkvision"
+            },
+            "draconicAncestry": {
+              "damageType": {
+                "kind": "choice_table",
+                "holeId": "species_dragonborn_draconic_ancestry_damage_type",
+                "label": "draconic ancestry",
+                "options": [
+                  {
+                    "id": "black",
+                    "displayName": "Black",
+                    "damageType": "acid"
+                  },
+                  {
+                    "id": "blue",
+                    "displayName": "Blue",
+                    "damageType": "lightning"
+                  },
+                  {
+                    "id": "brass",
+                    "displayName": "Brass",
+                    "damageType": "fire"
+                  },
+                  {
+                    "id": "bronze",
+                    "displayName": "Bronze",
+                    "damageType": "lightning"
+                  },
+                  {
+                    "id": "copper",
+                    "displayName": "Copper",
+                    "damageType": "acid"
+                  },
+                  {
+                    "id": "gold",
+                    "displayName": "Gold",
+                    "damageType": "fire"
+                  },
+                  {
+                    "id": "green",
+                    "displayName": "Green",
+                    "damageType": "poison"
+                  },
+                  {
+                    "id": "red",
+                    "displayName": "Red",
+                    "damageType": "fire"
+                  },
+                  {
+                    "id": "silver",
+                    "displayName": "Silver",
+                    "damageType": "cold"
+                  },
+                  {
+                    "id": "white",
+                    "displayName": "White",
+                    "damageType": "cold"
+                  }
+                ]
+              }
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Character-Creation.md:87-91; Character-Origins.md:99-127"
+            },
+            "rulesExcerpt": "### Choose a Species\n\nChoose a species for your character. The following species options are detailed in \"Character Origins\": Dragonborn, Dwarf, Elf, Gnome, Goliath, Halfling, Human, Orc, and Tiefling. Once you've chosen a species, write it on your character sheet. Then record your species' traits.\n\nYour character's size and Speed are determined by the character's species; record these in the appropriate places on your character sheet as well (you may write just the first letter of your size).\n\n#### Dragonborn\n\n**Creature Type:** Humanoid\n**Size:** Medium (about 5–7 feet tall)\n**Speed:** 30 feet\n\nAs a Dragonborn, you have these special traits.\n\n***Draconic Ancestry.*** Your lineage stems from a dragon progenitor. Choose the kind of dragon from the Draconic Ancestors table. Your choice affects your Breath Weapon and Damage Resistance traits as well as your appearance.\n\n##### Draconic Ancestors\n\n| Dragon | Damage Type | Dragon | Damage Type |\n|--------|-------------|--------|-------------|\n| Black  | Acid        | Gold   | Fire        |\n| Blue   | Lightning   | Green  | Poison      |\n| Brass  | Fire        | Red    | Fire        |\n| Bronze | Lightning   | Silver | Cold        |\n| Copper | Acid        | White  | Cold        |\n\n***Breath Weapon.*** When you take the Attack action on your turn, you can replace one of your attacks with an exhalation of magical energy in either a 15-foot Cone or a 30-foot Line that is 5 feet wide (choose the shape each time). Each creature in that area must make a Dexterity saving throw (DC 8 plus your Constitution modifier and Proficiency Bonus). On a failed save, a creature takes 1d10 damage of the type determined by your Draconic Ancestry trait. On a successful save, a creature takes half as much damage. This damage increases by 1d10 when you reach character levels 5 (2d10), 11 (3d10), and 17 (4d10).\n\nYou can use this Breath Weapon a number of times equal to your Proficiency Bonus, and you regain all expended uses when you finish a Long Rest.\n\n***Damage Resistance.*** You have Resistance to the damage type determined by your Draconic Ancestry trait.\n\n***Darkvision.*** You have Darkvision with a range of 60 feet.\n\n***Draconic Flight.*** When you reach character level 5, you can channel draconic magic to give yourself temporary flight. As a Bonus Action, you sprout spectral wings on your back that last for 10 minutes or until you retract the wings (no action required) or have the Incapacitated condition. During that time, you have a Fly Speed equal to your Speed. Your wings appear to be made of the same energy as your Breath Weapon. Once you use this trait, you can't use it again until you finish a Long Rest."
+          }
+        ],
+        "statBlocks": [
+          {
+            "id": "stat_block_allosaurus",
+            "kind": "statBlock",
+            "name": "Allosaurus",
+            "challengeRating": 2,
+            "statBlock": {
+              "creatureType": "beast",
+              "creatureTypeTags": [
+                "dinosaur"
+              ],
+              "alignment": "unaligned",
+              "ac": {
+                "value": {
+                  "kind": "literal",
+                  "value": 13
+                }
+              },
+              "hp": {
+                "kind": "literal",
+                "value": 51
+              },
+              "speeds": [
+                {
+                  "kind": "walk",
+                  "feet": {
+                    "kind": "literal",
+                    "value": 60
+                  }
+                }
+              ],
+              "abilityScores": {
+                "str": 19,
+                "dex": 13,
+                "con": 17,
+                "int": 2,
+                "wis": 12,
+                "cha": 5
+              },
+              "initiative": {
+                "modifier": 1,
+                "score": 11
+              },
+              "savingThrowModifiers": [
+                {
+                  "ability": "str",
+                  "modifier": 4
+                },
+                {
+                  "ability": "dex",
+                  "modifier": 1
+                },
+                {
+                  "ability": "con",
+                  "modifier": 3
+                },
+                {
+                  "ability": "int",
+                  "modifier": -4
+                },
+                {
+                  "ability": "wis",
+                  "modifier": 1
+                },
+                {
+                  "ability": "cha",
+                  "modifier": -3
+                }
+              ],
+              "skillModifiers": [
+                {
+                  "skill": "perception",
+                  "modifier": 5
+                }
+              ],
+              "passivePerception": 15,
+              "communication": {
+                "kind": "none"
+              },
+              "actions": [
+                {
+                  "kind": "executable",
+                  "procedureOrdinal": 1,
+                  "procedure": {
+                    "kind": "attack_roll",
+                    "attackAbility": "str",
+                    "attackBonus": {
+                      "kind": "literal",
+                      "value": 6
+                    },
+                    "reachFeet": 5,
+                    "onHit": [
+                      {
+                        "kind": "damage",
+                        "damageType": "piercing",
+                        "amount": {
+                          "kind": "fixed",
+                          "expr": {
+                            "dice": 2,
+                            "dieSize": 10,
+                            "flat": 4
+                          },
+                          "static": 15
+                        }
+                      }
+                    ],
+                    "attackType": "melee",
+                    "name": "Bite"
+                  },
+                  "resourceRefs": {
+                    "kind": "none"
+                  }
+                },
+                {
+                  "kind": "textOnly",
+                  "procedureOrdinal": 2,
+                  "name": "Claws",
+                  "description": "*Melee Attack Roll:* +6, reach 5 ft. *Hit:* 8 (1d8 + 4) Slashing damage. If the target is a Large or smaller creature and the allosaurus moved 30+ feet straight toward it immediately before the hit, the target has the Prone condition, and the allosaurus can make one Bite attack against it.",
+                  "reason": "unsupported_action_shape",
+                  "resourceRefs": {
+                    "kind": "none"
+                  }
+                }
+              ],
+              "size": "large",
+              "immunities": {
+                "conditions": [
+                  "charmed"
+                ],
+                "qualifiedConditions": [
+                  {
+                    "condition": "charmed",
+                    "qualifier": "while the synthetic ward is active"
+                  }
+                ]
+              }
+            },
+            "provenance": {
+              "kind": "srd-5.2.1",
+              "section": "Animals.md:3-25"
+            },
+            "rulesExcerpt": "## Allosaurus\n\n*Large Beast (Dinosaur), Unaligned*\n\n**AC** 13 **Initiative** +1 (11)\n**HP** 51 (6d10 + 18)\n**Speed** 60 ft.\n\n| | MOD | SAVE | | MOD | SAVE | | MOD | SAVE |\n|---|---|---|---|---|---|---|---|---|\n| STR 19 | +4 | +4 | DEX 13 | +1 | +1 | CON 17 | +3 | +3 |\n| INT 2 | −4 | −4 | WIS 12 | +1 | +1 | CHA 5 | −3 | −3 |\n\n**Skills** Perception +5\n**Senses** Passive Perception 15\n**Languages** None\n**CR** 2 (XP 450; PB +2)\n\n### Actions\n\n**Bite.** *Melee Attack Roll:* +6, reach 5 ft. *Hit:* 15 (2d10 + 4) Piercing damage.\n\n**Claws.** *Melee Attack Roll:* +6, reach 5 ft. *Hit:* 8 (1d8 + 4) Slashing damage. If the target is a Large or smaller creature and the allosaurus moved 30+ feet straight toward it immediately before the hit, the target has the Prone condition, and the allosaurus can make one Bite attack against it."
+          }
+        ]
+      },
+      "name": "condition immunity overlap",
+      "expected": {
+        "production": {
+          "tag": "rejected",
+          "issues": [
+            {
+              "code": "schema",
+              "path": "$.statBlocks[0]"
+            }
+          ]
+        },
+        "independent": {
+          "tag": "rejected",
+          "issues": [
+            {
+              "code": "schema",
+              "path": "$.statBlocks[0]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "input": {
+        "kind": "srd-5.2.1-surface-catalog",
         "units": [],
         "statBlocks": []
       },

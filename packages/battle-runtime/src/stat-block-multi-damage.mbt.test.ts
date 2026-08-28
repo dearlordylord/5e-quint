@@ -10,6 +10,7 @@ import {
 import { isDeepStrictEqual } from "node:util";
 
 import { Either } from "effect";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 import { battleStatBlockCombatantSource } from "./stat-block-combatant-admission.ts";
 import { describe, it } from "vitest";
 
@@ -481,7 +482,9 @@ function poisonImmuneTargetStatBlock(): StatBlockRecord {
     name: "Stat Block Poison-Immune Target",
     statBlock: {
       ...base.statBlock,
-      immunities: { damageTypes: ["poison"] },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["poison"],
+      }),
     },
   };
 }

@@ -2,6 +2,7 @@ import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.
 import { combatantId, initiativeScore } from "@dnd/battle-runtime";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
+  SrdStatBlockRecordSchema,
   StatBlockProcedureOrdinalSchema,
   StatBlockProcedureResourceOrdinalSchema,
 } from "@dnd/surface/surface/schema";
@@ -134,6 +135,109 @@ describe("MCP Stat Block battle combatant projection", () => {
         code: "STAT_BLOCK_BATTLE_INIT_INVALID",
         statBlockId: invalid.id,
         reason: "nonLiteralSize",
+      },
+    });
+  });
+
+  test("does not select a form-restricted Speed without active-form state", () => {
+    const baseRoot = createMcpPlaySessionRoot();
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    );
+    const invalid = Schema.decodeUnknownSync(SrdStatBlockRecordSchema)({
+      ...base,
+      id: "stat_block_synthetic_mcp_form_restricted_speed",
+      name: "Synthetic MCP Form-Restricted Speed",
+      statBlock: {
+        ...base.statBlock,
+        speeds: base.statBlock.speeds.map((speed, index) =>
+          index === 0
+            ? {
+                ...speed,
+                availability: {
+                  kind: "forms_only",
+                  forms: ["synthetic winged form"],
+                },
+              }
+            : speed,
+        ),
+      },
+    });
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: {
+        ...baseRoot.statBlockCatalog,
+        getStatBlock: (id: StatBlockRecord["id"]) =>
+          id === invalid.id
+            ? Option.some(invalid)
+            : baseRoot.statBlockCatalog.getStatBlock(id),
+      },
+    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+
+    const projected = projectStatBlockBattleCombatant({
+      root,
+      combatant: statBlockCombatant(invalid),
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(jsonContentPayload(projected.left)).toEqual({
+      error: "Stat Block projection failed.",
+      details: {
+        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+        statBlockId: invalid.id,
+        reason: "unsupportedFormRestrictedSpeed",
+      },
+    });
+  });
+
+  test("does not apply qualified condition Immunity without qualifying state", () => {
+    const baseRoot = createMcpPlaySessionRoot();
+    const base = assertStatBlockForTest(
+      baseRoot.statBlockCatalog,
+      statBlockId("stat_block_goblin_warrior"),
+    );
+    const invalid = Schema.decodeUnknownSync(SrdStatBlockRecordSchema)({
+      ...base,
+      id: "stat_block_synthetic_mcp_qualified_condition_immunity",
+      name: "Synthetic MCP Qualified Condition Immunity",
+      statBlock: {
+        ...base.statBlock,
+        immunities: {
+          qualifiedConditions: [
+            {
+              condition: "charmed",
+              qualifier: "while the synthetic ward is active",
+            },
+          ],
+        },
+      },
+    });
+    const root = {
+      ...baseRoot,
+      statBlockCatalog: {
+        ...baseRoot.statBlockCatalog,
+        getStatBlock: (id: StatBlockRecord["id"]) =>
+          id === invalid.id
+            ? Option.some(invalid)
+            : baseRoot.statBlockCatalog.getStatBlock(id),
+      },
+    } satisfies ReturnType<typeof createMcpPlaySessionRoot>;
+
+    const projected = projectStatBlockBattleCombatant({
+      root,
+      combatant: statBlockCombatant(invalid),
+    });
+
+    expect(Either.isLeft(projected)).toBe(true);
+    if (Either.isRight(projected)) return;
+    expect(jsonContentPayload(projected.left)).toEqual({
+      error: "Stat Block projection failed.",
+      details: {
+        code: "STAT_BLOCK_BATTLE_INIT_INVALID",
+        statBlockId: invalid.id,
+        reason: "unsupportedQualifiedConditionImmunity",
       },
     });
   });

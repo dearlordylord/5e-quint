@@ -488,6 +488,7 @@ import {
 } from "./schema-nonspell.ts";
 import { ProvenanceSchema, surfaceSchemaRole } from "./schema-base.ts";
 import {
+  CreatureImmunityListSchema,
   CreatureStatBlockSchema,
   SpellRecordSchema,
   StandaloneStatBlockSchema,
@@ -815,10 +816,9 @@ export const PublishedSrdSurfaceSchema = Schema.Struct({
   ),
 });
 
-export const SrdSurfaceJsonSchema = JSONSchema.make(
-  Schema.encodedSchema(PublishedSrdSurfaceSchema),
-  { target: "jsonSchema2020-12" },
-);
+export const SrdSurfaceJsonSchema = JSONSchema.make(PublishedSrdSurfaceSchema, {
+  target: "jsonSchema2020-12",
+});
 
 export type SrdSurface = Schema.Schema.Type<typeof SrdSurfaceSchema>;
 export type PublishedSrdSurface = Schema.Schema.Type<
@@ -847,6 +847,15 @@ export function decodeCreatureStatBlockSync(
 ): Schema.Schema.Type<typeof CreatureStatBlockSchema> {
   return Schema.decodeUnknownSync(
     CreatureStatBlockSchema,
+    STRICT_DECODE_OPTIONS,
+  )(raw);
+}
+
+export function decodeCreatureImmunityDeclarationSync(
+  raw: unknown,
+): Schema.Schema.Type<typeof CreatureImmunityListSchema> {
+  return Schema.decodeUnknownSync(
+    CreatureImmunityListSchema,
     STRICT_DECODE_OPTIONS,
   )(raw);
 }

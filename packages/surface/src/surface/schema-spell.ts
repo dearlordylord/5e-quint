@@ -4,8 +4,10 @@ import {
   ALIGNMENT_MORALITIES,
   ALIGNMENT_ORDERS,
   SPEED_TYPES,
+  SURFACE_CONDITIONS,
   StatBlockId,
   UnitId,
+  type SurfaceCondition,
   type SpeedType,
   type ClassName,
 } from "@dnd/shared/game-facts";
@@ -4879,6 +4881,52 @@ const QualifiedConditionImmunitySchema = strictStruct({
   qualifier: surfaceExactProse(Schema.NonEmptyTrimmedString),
 });
 
+const NoOverlappingConditionImmunityJsonSchema = {
+  allOf: SURFACE_CONDITIONS.map((condition) => ({
+    not: {
+      allOf: [
+        {
+          properties: {
+            conditions: { contains: { const: condition } },
+          },
+          required: ["conditions"],
+        },
+        {
+          properties: {
+            qualifiedConditions: {
+              contains: {
+                properties: { condition: { const: condition } },
+                required: ["condition"],
+              },
+            },
+          },
+          required: ["qualifiedConditions"],
+        },
+      ],
+    },
+  })),
+} as const;
+
+function hasNoOverlappingConditionImmunity(immunities: {
+  readonly damageTypes?: readonly string[];
+  readonly conditions?: readonly SurfaceCondition[];
+  readonly qualifiedConditions?: readonly {
+    readonly condition: SurfaceCondition;
+    readonly qualifier: string;
+  }[];
+}): boolean {
+  if (
+    immunities.conditions === undefined ||
+    immunities.qualifiedConditions === undefined
+  ) {
+    return true;
+  }
+  const fixedConditions = new Set(immunities.conditions);
+  return immunities.qualifiedConditions.every(
+    ({ condition }) => !fixedConditions.has(condition),
+  );
+}
+
 export const CreatureImmunityListSchema = Schema.Union(
   strictStruct({
     damageTypes: nonEmpty(DamageTypeSchema),
@@ -4897,6 +4945,21 @@ export const CreatureImmunityListSchema = Schema.Union(
   strictStruct({
     qualifiedConditions: nonEmpty(QualifiedConditionImmunitySchema),
   }),
+  strictStruct({
+    conditions: nonEmpty(ConditionSchema),
+    qualifiedConditions: nonEmpty(QualifiedConditionImmunitySchema),
+  }),
+  strictStruct({
+    damageTypes: nonEmpty(DamageTypeSchema),
+    conditions: nonEmpty(ConditionSchema),
+    qualifiedConditions: nonEmpty(QualifiedConditionImmunitySchema),
+  }),
+).pipe(
+  Schema.filter(hasNoOverlappingConditionImmunity, {
+    message: () => "A condition immunity cannot be both fixed and qualified.",
+    jsonSchema: NoOverlappingConditionImmunityJsonSchema,
+  }),
+  Schema.brand("CreatureImmunityDeclaration"),
 );
 
 export const CreatureSenseSchema = Schema.Struct({

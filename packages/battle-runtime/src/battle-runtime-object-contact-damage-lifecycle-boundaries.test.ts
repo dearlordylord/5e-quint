@@ -2,6 +2,7 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.HEAT_METAL_OBJECT_CONTACT_LIFECYCLE
 
 import { describe, expect, test } from "vitest";
+import { decodeCreatureImmunityDeclarationSync } from "@dnd/surface/surface/schema";
 
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
@@ -60,7 +61,9 @@ function fireImmuneHumanoidStatBlock() {
     ...base,
     statBlock: {
       ...base.statBlock,
-      immunities: { damageTypes: ["fire"] as const },
+      immunities: decodeCreatureImmunityDeclarationSync({
+        damageTypes: ["fire"],
+      }),
     },
   };
 }

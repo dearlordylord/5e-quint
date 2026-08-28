@@ -4,7 +4,10 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
+import {
+  decodeCreatureImmunityDeclarationSync,
+  StatBlockProcedureResourceOrdinalSchema,
+} from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import {
@@ -276,7 +279,9 @@ describe("Stat Block combatant admission capability", () => {
         ...source,
         statBlock: {
           ...source.statBlock,
-          immunities: { conditions: ["prone"] },
+          immunities: decodeCreatureImmunityDeclarationSync({
+            conditions: ["prone"],
+          }),
         },
       },
     });
@@ -334,7 +339,9 @@ describe("Stat Block combatant admission capability", () => {
         ...source,
         statBlock: {
           ...source.statBlock,
-          immunities: { conditions: ["prone"] },
+          immunities: decodeCreatureImmunityDeclarationSync({
+            conditions: ["prone"],
+          }),
         },
       },
     });

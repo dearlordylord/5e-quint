@@ -92,6 +92,21 @@ describe("committed SRD Surface publication", () => {
               },
             })),
           };
+          const validMixedImmunities = withFirstStatBlock((statBlock) => ({
+            ...statBlock,
+            statBlock: {
+              ...statBlock.statBlock,
+              immunities: {
+                damageTypes: ["fire"],
+                conditions: ["poisoned"],
+                qualifiedConditions: [{ condition: "charmed", qualifier: "from a synthetic source" }],
+              },
+            },
+          }));
+          if (!validate(validMixedImmunities)) {
+            console.error("distinct mixed immunities were rejected: " + JSON.stringify(validate.errors));
+            process.exit(1);
+          }
           for (const [name, invalid] of Object.entries(invalidCases)) {
             if (validate(invalid)) {
               console.error(name + " was accepted");
