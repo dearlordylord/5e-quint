@@ -7,12 +7,11 @@ import {
   battleProcedureExecutionRef,
   combatantId,
   discoverBattleActs,
+  sameBattleSubject,
   settleBattleRuntimeTransaction,
   snapshotBattle,
   type BattleInterruptProcedureChoice,
-  type BattlePendingTransactionView,
   type BattleRuntimeResolutionResult,
-  type BattleSubject,
 } from "@dnd/battle-runtime";
 import { NonNegativeInteger } from "@dnd/shared/types";
 import {
@@ -31,10 +30,6 @@ import {
   presentedInterruptChoices,
   unknownStatBlockContent,
 } from "./battle-tool-payloads.ts";
-import {
-  battlePendingFillAdmission,
-  battlePendingSubjectAdmission,
-} from "./battle-tools.ts";
 import { createMcpPlaySessionRoot } from "./composition-root.ts";
 import { handleToolCall as handleWireToolCall } from "./server.ts";
 import { battleToolWireArgs } from "../test-support/battle-tool-wire-args.ts";
@@ -45,6 +40,10 @@ function handleToolCall(
   args: unknown,
 ) {
   return handleWireToolCall(root, name, battleToolWireArgs(name, args));
+}
+
+function readToolPayload(response: ReturnType<typeof handleToolCall>) {
+  return JSON.parse(response.content[0]?.text ?? "null");
 }
 
 describe("battle tool payload boundaries", () => {
@@ -252,66 +251,80 @@ describe("battle tool payload boundaries", () => {
     );
   });
 
-  test("classifies Ready trigger overlays by MCP operation", () => {
-    const reportSubject = {
-      tag: "runtimeCommand",
-      actorId: combatantId("reporter"),
-      command: "reportReadyTrigger",
-      readiedActorId: combatantId("readied"),
-    } as const satisfies BattleSubject;
-    const distinctReportSubject = {
-      ...reportSubject,
-      readiedActorId: combatantId("other-readied"),
-    } as const satisfies BattleSubject;
-    const interruptHole = {
-      holeInstanceKey: holeInstanceKey("payload-interrupt:instance"),
-      holeId: holeId("payload-interrupt"),
-      kind: "interruptDecision",
-      label: "Interrupt decision",
-      trigger: "attackHit",
-      eligibleResponders: [combatantId("responder")],
-    } as const;
-    const ordinaryHole = {
-      holeInstanceKey: holeInstanceKey("payload-ordinary:instance"),
-      holeId: holeId("payload-ordinary"),
-      kind: "targetChoice",
-      label: "Target choice",
-      choices: [combatantId("target")],
-    } as const;
-    const interruptPending = {
-      subject: reportSubject,
-      fills: [],
-      holes: [interruptHole],
-    } satisfies BattlePendingTransactionView;
-    const ordinaryPending = {
-      subject: reportSubject,
-      fills: [],
-      holes: [ordinaryHole],
-    } satisfies BattlePendingTransactionView;
+  test("delegates transaction admission and maps typed runtime issues", () => {
+    const { root, session } = startedStatBlockBattle();
+    const pendingAct = discoverBattleActs(session).find(
+      (candidate) => candidate.initialHoles.length > 0,
+    );
+    if (pendingAct === undefined) {
+      throw new Error("Expected a test battle act with initial holes.");
+    }
 
+    const noPendingInterrupt = handleToolCall(root, "fill_battle_hole", {
+      subject: pendingAct.subject,
+      fill: {
+        kind: "interruptDecision",
+        holeId: "battle:synthetic-interrupt",
+        value: { kind: "decline", responderId: "goblin" },
+      },
+    });
+    expect(readToolPayload(noPendingInterrupt)).toMatchObject({
+      details: { code: "BATTLE_ACT_NOT_AVAILABLE" },
+    });
+
+    const pendingResult = settleBattleRuntimeTransaction({
+      session,
+      transaction: null,
+      operation: {
+        kind: "ordinarySubject",
+        subject: pendingAct.subject,
+        fills: [],
+      },
+      statBlockCatalog: root.statBlockCatalog,
+    });
+    if (pendingResult.tag !== "needsHoles") {
+      throw new Error("Expected the test battle act to need hole fills.");
+    }
     expect(
-      battlePendingSubjectAdmission(interruptPending, reportSubject),
-    ).toEqual({ tag: "sameSubject" });
-    expect(
-      battlePendingSubjectAdmission(interruptPending, distinctReportSubject),
-    ).toEqual({ tag: "readyTriggerOverlay" });
-    expect(
-      battlePendingFillAdmission(
-        interruptPending,
-        distinctReportSubject,
-        "interruptDecision",
-      ),
-    ).toEqual({ tag: "differentSubject" });
-    expect(
-      battlePendingFillAdmission(
-        interruptPending,
-        distinctReportSubject,
-        "targetChoice",
-      ),
-    ).toEqual({ tag: "readyTriggerOverlay" });
-    expect(
-      battlePendingSubjectAdmission(ordinaryPending, distinctReportSubject),
-    ).toEqual({ tag: "differentSubject" });
+      root.sessionStore.storeBattleTransactionResult(session, pendingResult),
+    ).toEqual(Either.right(undefined));
+
+    const interruptAgainstOrdinary = handleToolCall(root, "fill_battle_hole", {
+      subject: pendingAct.subject,
+      fill: {
+        kind: "interruptDecision",
+        holeId: "battle:synthetic-interrupt",
+        value: { kind: "decline", responderId: "goblin" },
+      },
+    });
+    expect(readToolPayload(interruptAgainstOrdinary)).toMatchObject({
+      details: { code: "BATTLE_FILLS_PENDING" },
+    });
+
+    const distinctAct = discoverBattleActs(session).find(
+      (candidate) => !sameBattleSubject(candidate.subject, pendingAct.subject),
+    );
+    if (distinctAct === undefined) {
+      throw new Error("Expected a distinct test battle act.");
+    }
+    const mismatchedFill = handleToolCall(root, "fill_battle_hole", {
+      subject: distinctAct.subject,
+      fill: {
+        kind: "targetChoice",
+        holeId: "battle:synthetic-mismatch",
+        value: "goblin",
+      },
+    });
+    expect(readToolPayload(mismatchedFill)).toMatchObject({
+      details: { code: "BATTLE_FILL_SUBJECT_MISMATCH" },
+    });
+
+    const mismatchedResolve = handleToolCall(root, "resolve_battle_act", {
+      subject: distinctAct.subject,
+    });
+    expect(readToolPayload(mismatchedResolve)).toMatchObject({
+      details: { code: "BATTLE_FILLS_PENDING" },
+    });
   });
 });
 

@@ -199,7 +199,9 @@ describe("Opaque Oracle corpus", () => {
     const serializedAgain = serializeOracleCorpus(corpus);
     expect(serialized).toEqual(serializedAgain);
     expect(serialized.toString("utf8").endsWith("\n")).toBe(true);
-    expect(serialized.toString("utf8")).toContain('"batch":{');
+    expect(serialized.toString("utf8")).toBe(
+      `${JSON.stringify(corpus, null, 2)}\n`,
+    );
 
     const document = decodeOracleCorpusDocument(corpus);
     expect(Either.isRight(document)).toBe(true);

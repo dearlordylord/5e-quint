@@ -39,6 +39,7 @@ import {
   snapshotBattle,
   interruptedProcedureSubject,
 } from "../interrupt-execution.ts";
+import { copyInterruptCheckpointIdentity } from "../interrupt-checkpoint-identity.ts";
 import { needsHolesResult } from "../needs-holes-result.ts";
 import { counterspellReactionSpellMatchesTrigger } from "../reaction-triggered-spells.ts";
 import { invalidResult } from "../result-helpers.ts";
@@ -348,22 +349,22 @@ function stateAfterCounteredSpellCast(
     return { tag: "invalid", message: metamagicSpend.left };
   }
   /* v8 ignore stop -- @preserve */
+  const counterspellFrame = {
+    ...spellCastCheckpoint,
+    offeredResponders: spellCastCheckpoint.eligibleResponders,
+    continuation: {
+      kind: "resolved" as const,
+      subject: interruptedProcedureSubject(spellCastCheckpoint.continuation),
+    },
+  } satisfies BattleInterruptCheckpoint;
+  copyInterruptCheckpointIdentity(spellCastCheckpoint, counterspellFrame);
   return {
     tag: "ok",
     state: {
       ...metamagicSpend.right,
       interruptStack: [
         ...state.interruptStack.slice(0, -1),
-        counterspellReactionInterruptFrame({
-          ...spellCastCheckpoint,
-          offeredResponders: spellCastCheckpoint.eligibleResponders,
-          continuation: {
-            kind: "resolved",
-            subject: interruptedProcedureSubject(
-              spellCastCheckpoint.continuation,
-            ),
-          },
-        }),
+        counterspellReactionInterruptFrame(counterspellFrame),
       ],
     },
   };

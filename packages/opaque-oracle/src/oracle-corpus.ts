@@ -23,7 +23,6 @@ import {
   oracleEvaluationSourceCases,
   type OracleEvaluationSourceIssue,
 } from "./oracle-evaluation-corpus-source.ts";
-import { serializeOraclePublicationArtifact } from "./oracle-publication.ts";
 
 const OracleCorpusShapeSchema = Schema.Struct({
   batch: OracleEvaluationBatchSchema,
@@ -102,17 +101,14 @@ export function buildOracleCorpus(
   input: OracleCorpusEvaluationInput,
 ): Either.Either<OracleCorpus, OracleCorpusIssues> {
   const batch = OracleEvaluationBatchSchema.make({ cases: input.cases });
-  let traces: readonly OracleTrace[];
-  try {
-    traces = evaluateOracleBatch({ batch, services: input.services });
-  } catch (error) {
-    return Either.left([
-      {
-        tag: "evaluationDefect",
-        message: safeErrorMessage(error),
-      },
-    ]);
+  const evaluatedTraces = evaluateCorpusTraces({
+    batch,
+    services: input.services,
+  });
+  if (Either.isLeft(evaluatedTraces)) {
+    return Either.left([evaluatedTraces.left]);
   }
+  const traces = evaluatedTraces.right;
   if (traces.length !== batch.cases.length) {
     return Either.left([
       {
@@ -179,13 +175,27 @@ export function decodeOracleCorpusJson(
     : decodeOracleCorpus(parsed.right);
 }
 
-/** Serialize a corpus using the same deterministic compact JSON bytes as publication. */
+/** Serialize the corpus as formatter-stable, deterministic JSON with a final newline. */
 export function serializeOracleCorpus(
   corpus: OracleCorpus | OracleCorpusDocument,
 ): Buffer {
-  return serializeOraclePublicationArtifact(
-    canonicalizeOracleCorpusInput(corpus),
+  return Buffer.from(
+    `${JSON.stringify(canonicalizeOracleCorpusInput(corpus), null, 2)}\n`,
+    "utf8",
   );
+}
+
+function evaluateCorpusTraces(
+  input: Parameters<typeof evaluateOracleBatch>[0],
+): Either.Either<readonly OracleTrace[], OracleCorpusIssue> {
+  try {
+    return Either.right(evaluateOracleBatch(input));
+  } catch (error) {
+    return Either.left({
+      tag: "evaluationDefect",
+      message: safeErrorMessage(error),
+    });
+  }
 }
 
 function canonicalizeOracleCorpusInput(input: unknown): unknown {

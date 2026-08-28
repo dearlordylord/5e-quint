@@ -9,10 +9,14 @@ import {
   settleBattleRuntimeTransaction,
   startBattle,
   type BattleFill,
+  type BattleCreatureInit,
   type BattleMechanicalFrontier,
+  type BattleRuntimeSession,
   type BattleSubject,
+  type CombatantId,
+  type InitiativeScore,
 } from "@dnd/battle-runtime";
-import { statBlockId } from "@dnd/shared/game-facts";
+import { statBlockId, type StatBlockId } from "@dnd/shared/game-facts";
 import { movementFeet, resourceCount } from "@dnd/shared/types";
 import { Either, Option, Schema } from "effect";
 
@@ -52,6 +56,40 @@ type CreationSource = {
   readonly fillBatches: readonly [CreationFill, ...CreationFill[]][];
   readonly firstFill: CreationFill;
 };
+
+export type OracleStatBlockBattlePlacement = {
+  readonly combatantId: CombatantId;
+  readonly statBlockId: StatBlockId;
+  readonly initiative: InitiativeScore;
+};
+
+export type OracleStatBlockBattleInput = Omit<OracleBattleInput, "roster"> & {
+  readonly roster: Extract<
+    OracleBattleInput["roster"],
+    { readonly tag: "statBlocks" }
+  >;
+};
+
+const CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS = [
+  {
+    combatantId: combatantId("corpus:stat-block-a"),
+    statBlockId: statBlockId("stat_block_skeleton"),
+    initiative: initiativeScore(10),
+  },
+  {
+    combatantId: combatantId("corpus:stat-block-b"),
+    statBlockId: statBlockId("stat_block_skeleton"),
+    initiative: initiativeScore(0),
+  },
+] as const satisfies readonly [
+  OracleStatBlockBattlePlacement,
+  ...OracleStatBlockBattlePlacement[],
+];
+
+export type OracleCreationFillBatches = readonly [
+  CreationFill,
+  ...CreationFill[],
+][];
 
 type MoveSubject = Extract<
   BattleSubject,
@@ -95,13 +133,26 @@ export function oracleEvaluationSourceCases(
 function buildSourceCases(
   services: OracleEvaluationServices,
 ): Either.Either<OracleCorpusCases, OracleEvaluationSourceIssue> {
-  const creation = completeCreationFillBatches(services);
-  if (Either.isLeft(creation)) return Either.left(creation.left);
+  const creationBatches = completeCreationFillBatches(services.unitLibrary);
+  if (Either.isLeft(creationBatches)) {
+    return Either.left(creationBatches.left);
+  }
+  const firstFill = creationBatches.right[0]?.[0];
+  if (firstFill === undefined) {
+    return Either.left({
+      tag: "sourceConstructionFailure",
+      message: "Source Character Creation produced no fill batches.",
+    });
+  }
+  const creation: CreationSource = {
+    fillBatches: creationBatches.right,
+    firstFill,
+  };
 
   const enteredCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
-    battle: statBlockBattle("corpus:skeleton", 0),
+    battle: singleStatBlockBattle(),
   });
   if (Either.isLeft(enteredCase)) return Either.left(enteredCase.left);
 
@@ -113,19 +164,19 @@ function buildSourceCases(
   if (Either.isLeft(exhaustedCase)) return Either.left(exhaustedCase.left);
 
   const mixedCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: mixedOriginBattle(),
   });
   if (Either.isLeft(mixedCase)) return Either.left(mixedCase.left);
 
   const wildShapeCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: {
       tag: "wildShapeKnownForms",
       statBlockIds: [statBlockId("stat_block_rat")],
     },
-    battle: statBlockBattle("corpus:skeleton", 0),
+    battle: singleStatBlockBattle(),
   });
   if (Either.isLeft(wildShapeCase)) return Either.left(wildShapeCase.left);
 
@@ -133,7 +184,7 @@ function buildSourceCases(
   if (Either.isLeft(sourceBattle)) return Either.left(sourceBattle.left);
 
   const moveHolesCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
       ...sourceBattle.right.battle,
@@ -149,7 +200,7 @@ function buildSourceCases(
   if (Either.isLeft(moveHolesCase)) return Either.left(moveHolesCase.left);
 
   const retryCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
       ...sourceBattle.right.battle,
@@ -173,7 +224,7 @@ function buildSourceCases(
   if (Either.isLeft(retryCase)) return Either.left(retryCase.left);
 
   const resolvedMovementCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
       ...sourceBattle.right.battle,
@@ -191,7 +242,7 @@ function buildSourceCases(
   }
 
   const interruptResolutionCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
       ...sourceBattle.right.battle,
@@ -211,10 +262,10 @@ function buildSourceCases(
 
   const inputSurplusCase = decodeSourceCase({
     creation: {
-      fillBatches: [...creation.right.fillBatches, [creation.right.firstFill]],
+      fillBatches: [...creation.fillBatches, [creation.firstFill]],
     },
     sheet: { tag: "ordinary" },
-    battle: statBlockBattle("corpus:skeleton", 0),
+    battle: singleStatBlockBattle(),
   });
   if (Either.isLeft(inputSurplusCase)) {
     return Either.left(inputSurplusCase.left);
@@ -233,14 +284,14 @@ function buildSourceCases(
       ],
     },
     sheet: { tag: "ordinary" },
-    battle: statBlockBattle("corpus:skeleton", 0),
+    battle: singleStatBlockBattle(),
   });
   if (Either.isLeft(fillRejectedCase)) {
     return Either.left(fillRejectedCase.left);
   }
 
   const emptyRosterCase = decodeSourceCase({
-    creation: { fillBatches: creation.right.fillBatches },
+    creation: { fillBatches: creation.fillBatches },
     sheet: { tag: "ordinary" },
     battle: {
       roster: { tag: "statBlocks", entries: [] },
@@ -267,26 +318,45 @@ function buildSourceCases(
   ]);
 }
 
-function statBlockBattle(
-  identity: string,
-  initiative: number,
-): OracleBattleInput {
+export function statBlockRosterEntryFor(
+  placement: OracleStatBlockBattlePlacement,
+): Extract<
+  OracleBattleInput["roster"],
+  { readonly tag: "statBlocks" }
+>["entries"][number] {
+  return {
+    combatantId: placement.combatantId,
+    statBlockId: placement.statBlockId,
+    initiative: placement.initiative,
+    ammunitionStocks: { arrow: 0 },
+    conditions: [],
+    tempHp: 0,
+  };
+}
+
+export function statBlockBattleFor(
+  placements: readonly [
+    OracleStatBlockBattlePlacement,
+    ...OracleStatBlockBattlePlacement[],
+  ],
+): OracleStatBlockBattleInput {
   return {
     roster: {
-      tag: "statBlocks" as const,
-      entries: [
-        {
-          combatantId: combatantId(identity),
-          statBlockId: statBlockId("stat_block_skeleton"),
-          initiative,
-          ammunitionStocks: { arrow: 0 },
-          conditions: [],
-          tempHp: 0,
-        },
-      ],
+      tag: "statBlocks",
+      entries: placements.map(statBlockRosterEntryFor),
     },
     attempts: [],
   };
+}
+
+function singleStatBlockBattle(): OracleStatBlockBattleInput {
+  return statBlockBattleFor([
+    {
+      combatantId: combatantId("corpus:stat-block-combatant"),
+      statBlockId: statBlockId("stat_block_skeleton"),
+      initiative: initiativeScore(0),
+    },
+  ]);
 }
 
 function mixedOriginBattle(): OracleBattleInput {
@@ -296,99 +366,122 @@ function mixedOriginBattle(): OracleBattleInput {
       precedingStatBlocks: [],
       characterSheet: {
         combatantId: combatantId("corpus:character"),
-        initiative: 1,
+        initiative: initiativeScore(1),
         ammunitionStocks: {},
       },
       followingStatBlocks: [
-        {
-          combatantId: combatantId("corpus:skeleton"),
+        statBlockRosterEntryFor({
+          combatantId: combatantId("corpus:stat-block-combatant"),
           statBlockId: statBlockId("stat_block_skeleton"),
-          initiative: 0,
-          ammunitionStocks: { arrow: 0 },
-          conditions: [],
-          tempHp: 0,
-        },
+          initiative: initiativeScore(0),
+        }),
       ],
     },
     attempts: [],
   };
 }
 
-function twoStatBlockBattle(): OracleBattleInput {
-  return {
-    roster: {
-      tag: "statBlocks",
-      entries: [
-        statBlockRosterEntry("corpus:skeleton-a", 10),
-        statBlockRosterEntry("corpus:skeleton-b", 0),
-      ],
-    },
-    attempts: [],
-  };
+function twoStatBlockBattle(): OracleStatBlockBattleInput {
+  return statBlockBattleFor(CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS);
 }
 
-function statBlockRosterEntry(
-  identity: string,
-  initiative: number,
-): Extract<
-  OracleBattleInput["roster"],
-  { readonly tag: "statBlocks" }
->["entries"][number] {
-  return {
-    combatantId: combatantId(identity),
-    statBlockId: statBlockId("stat_block_skeleton"),
-    initiative,
-    ammunitionStocks: { arrow: 0 },
-    conditions: [],
-    tempHp: 0,
-  };
+export function startStatBlockBattle(
+  services: OracleEvaluationServices,
+  placements: readonly [
+    OracleStatBlockBattlePlacement,
+    ...OracleStatBlockBattlePlacement[],
+  ],
+): Either.Either<BattleRuntimeSession, OracleEvaluationSourceIssue> {
+  const initialized: BattleCreatureInit[] = [];
+  for (const placement of placements) {
+    const statBlock = services.statBlockCatalog.getStatBlock(
+      placement.statBlockId,
+    );
+    if (Option.isNone(statBlock)) {
+      return Either.left({
+        tag: "sourceConstructionFailure",
+        message: `Source stat-block ${placement.statBlockId} was not found.`,
+      });
+    }
+    const creature = battleCreatureInitFromStatBlock({
+      combatantId: placement.combatantId,
+      statBlock: statBlock.value,
+      initiative: placement.initiative,
+      ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
+      conditions: [],
+    });
+    if (Either.isLeft(creature)) {
+      return Either.left({
+        tag: "sourceConstructionFailure",
+        message: `Source stat-block ${placement.statBlockId} could not be initialized for ${placement.combatantId}.`,
+      });
+    }
+    initialized.push(creature.right);
+  }
+
+  const started = startBattle({
+    battleId: ORACLE_BATTLE_ID,
+    combatants: initialized,
+  });
+  return Either.isLeft(started)
+    ? Either.left({
+        tag: "sourceConstructionFailure",
+        message: "Source stat-block battle could not be started.",
+      })
+    : Either.right(started.right);
+}
+
+export function discoverStatBlockAttackProcedureRef(
+  session: BattleRuntimeSession,
+  actorId: CombatantId,
+): Either.Either<
+  Schema.Schema.Type<typeof BattleStatBlockProcedureExecutionRef>,
+  OracleEvaluationSourceIssue
+> {
+  const ended = endBattleRuntimeTurn({ session, actorId });
+  if (ended.tag !== "resolved") {
+    return Either.left({
+      tag: "sourceConstructionFailure",
+      message: "Source stat-block turn could not end.",
+    });
+  }
+  const attackAct = discoverBattleActs(ended.session).find(
+    (act) =>
+      act.subject.tag === "action" &&
+      act.subject.action === "attack" &&
+      !("statBlockDamageNotation" in act.subject),
+  );
+  if (
+    attackAct?.subject.tag !== "action" ||
+    attackAct.subject.action !== "attack" ||
+    "statBlockDamageNotation" in attackAct.subject
+  ) {
+    return Either.left({
+      tag: "sourceConstructionFailure",
+      message: "Source reactor did not expose a typed attack procedure.",
+    });
+  }
+  const procedureRef = Schema.decodeUnknownEither(
+    BattleStatBlockProcedureExecutionRef,
+  )(attackAct.subject.procedureRef);
+  return Either.isLeft(procedureRef)
+    ? Either.left({
+        tag: "sourceConstructionFailure",
+        message: "Source attack procedure reference was not canonical.",
+      })
+    : Either.right(procedureRef.right);
 }
 
 function battleSourceFacts(
   services: OracleEvaluationServices,
 ): Either.Either<BattleSourceFacts, OracleEvaluationSourceIssue> {
-  const firstId = combatantId("corpus:skeleton-a");
-  const secondId = combatantId("corpus:skeleton-b");
-  const statBlock = services.statBlockCatalog.getStatBlock(
-    statBlockId("stat_block_skeleton"),
+  const firstId = CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS[0].combatantId;
+  const secondId = CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS[1].combatantId;
+  const started = startStatBlockBattle(
+    services,
+    CORPUS_BATTLE_STAT_BLOCK_PLACEMENTS,
   );
-  if (Option.isNone(statBlock)) {
-    return Either.left({
-      tag: "sourceConstructionFailure",
-      message: "Source Skeleton Stat Block was not found.",
-    });
-  }
-  const first = battleCreatureInitFromStatBlock({
-    combatantId: firstId,
-    statBlock: statBlock.value,
-    initiative: initiativeScore(10),
-    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
-    conditions: [],
-  });
-  const second = battleCreatureInitFromStatBlock({
-    combatantId: secondId,
-    statBlock: statBlock.value,
-    initiative: initiativeScore(0),
-    ammunitionStocks: [{ ammunition: "arrow", remaining: resourceCount(0) }],
-    conditions: [],
-  });
-  if (Either.isLeft(first) || Either.isLeft(second)) {
-    return Either.left({
-      tag: "sourceConstructionFailure",
-      message: "Source Skeleton combatants could not be initialized.",
-    });
-  }
-
-  const started = startBattle({
-    battleId: ORACLE_BATTLE_ID,
-    combatants: [first.right, second.right],
-  });
-  if (Either.isLeft(started)) {
-    return Either.left({
-      tag: "sourceConstructionFailure",
-      message: "Source Skeleton battle could not be started.",
-    });
-  }
+  if (Either.isLeft(started)) return Either.left(started.left);
 
   const moveAct = discoverBattleActs(started.right).find(
     (act) =>
@@ -401,7 +494,7 @@ function battleSourceFacts(
   ) {
     return Either.left({
       tag: "sourceConstructionFailure",
-      message: "Source Skeleton battle did not expose a Move act.",
+      message: "Source stat-block battle did not expose a Move act.",
     });
   }
 
@@ -435,40 +528,12 @@ function battleSourceFacts(
     });
   }
 
-  const endedFirstTurn = endBattleRuntimeTurn({
-    session: started.right,
-    actorId: firstId,
-  });
-  if (endedFirstTurn.tag !== "resolved") {
-    return Either.left({
-      tag: "sourceConstructionFailure",
-      message: "Source first Skeleton turn could not end.",
-    });
-  }
-  const attackAct = discoverBattleActs(endedFirstTurn.session).find(
-    (act) =>
-      act.subject.tag === "action" &&
-      act.subject.action === "attack" &&
-      !("statBlockDamageNotation" in act.subject),
+  const procedureRef = discoverStatBlockAttackProcedureRef(
+    started.right,
+    firstId,
   );
-  if (
-    attackAct?.subject.tag !== "action" ||
-    attackAct.subject.action !== "attack" ||
-    "statBlockDamageNotation" in attackAct.subject
-  ) {
-    return Either.left({
-      tag: "sourceConstructionFailure",
-      message: "Source reactor did not expose a typed attack procedure.",
-    });
-  }
-  const procedureRef = Schema.decodeUnknownEither(
-    BattleStatBlockProcedureExecutionRef,
-  )(attackAct.subject.procedureRef);
   if (Either.isLeft(procedureRef)) {
-    return Either.left({
-      tag: "sourceConstructionFailure",
-      message: "Source attack procedure reference was not canonical.",
-    });
+    return Either.left(procedureRef.left);
   }
 
   const movementWithoutOpportunityAttack: BattleFill = {
@@ -567,9 +632,9 @@ function decodeSourceCase(
     : Either.right(decoded.right);
 }
 
-function completeCreationFillBatches(
-  services: OracleEvaluationServices,
-): Either.Either<CreationSource, OracleEvaluationSourceIssue> {
+export function completeCreationFillBatches(
+  unitLibrary: OracleEvaluationServices["unitLibrary"],
+): Either.Either<OracleCreationFillBatches, OracleEvaluationSourceIssue> {
   let draft = createCharacterDraft({
     draftId: characterDraftId("opaque-oracle:corpus-draft"),
   });
@@ -592,18 +657,17 @@ function completeCreationFillBatches(
   for (let iteration = 0; iteration < 100; iteration += 1) {
     const hole = discoverCreationHoles({
       draft,
-      unitLibrary: services.unitLibrary,
+      unitLibrary,
     })[0];
     if (hole === undefined) {
-      const firstFill = batches[0]?.[0];
-      return firstFill === undefined
-        ? Either.left({
-            tag: "sourceConstructionFailure",
-            message: "Source Character Creation produced no fill batches.",
-          })
-        : Either.right({ fillBatches: batches, firstFill });
+      return Either.right(batches);
     }
-    const accepted = acceptedFillForHole(draft, hole, scores.right, services);
+    const accepted = acceptedFillForHole(
+      draft,
+      hole,
+      scores.right,
+      unitLibrary,
+    );
     if (Either.isLeft(accepted)) return Either.left(accepted.left);
     batches.push([accepted.right.fill]);
     draft = accepted.right.draft;
@@ -618,7 +682,7 @@ function acceptedFillForHole(
   draft: CharacterDraft,
   hole: CreationHole,
   scores: Extract<CreationFill, { kind: "abilityScores" }>["value"],
-  services: OracleEvaluationServices,
+  unitLibrary: OracleEvaluationServices["unitLibrary"],
 ): Either.Either<
   { readonly fill: CreationFill; readonly draft: CharacterDraft },
   OracleEvaluationSourceIssue
@@ -632,7 +696,7 @@ function acceptedFillForHole(
     };
     const result = fillCreationHoles({
       draft,
-      unitLibrary: services.unitLibrary,
+      unitLibrary,
       expectedRevision: draft.revision,
       fills: [fill],
     });
@@ -655,7 +719,7 @@ function acceptedFillForHole(
       };
       const result = fillCreationHoles({
         draft,
-        unitLibrary: services.unitLibrary,
+        unitLibrary,
         expectedRevision: draft.revision,
         fills: [fill],
       });

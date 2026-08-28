@@ -6,21 +6,25 @@ import {
   ORACLE_PUBLICATION_ARTIFACTS,
   ORACLE_PUBLICATION_MEMBERS,
 } from "../src/oracle-publication.ts";
-import { validateOraclePublicationSchemaBytes } from "./oracle-publication-validation.ts";
+import {
+  formatOraclePublicationValidation,
+  validateOraclePublicationSchemaBytes,
+} from "./oracle-publication-validation.ts";
+import { Either } from "effect";
+
+type PublicationDirectoryEntry = {
+  readonly name: string;
+  readonly isFile: () => boolean;
+};
 
 export function checkOraclePublicationSync(
   publicationDirectory = join(process.cwd(), "publication"),
 ): readonly string[] {
   const issues: string[] = [];
-  let entries: readonly {
-    readonly name: string;
-    readonly isFile: () => boolean;
-  }[];
-  try {
-    entries = readdirSync(publicationDirectory, { withFileTypes: true });
-  } catch (error) {
+  const entries = readPublicationDirectory(publicationDirectory);
+  if (Either.isLeft(entries)) {
     issues.push(
-      `publication directory cannot be read: ${error instanceof Error ? error.message : String(error)}`,
+      `publication directory cannot be read: ${safeErrorMessage(entries.left)}`,
     );
     return issues;
   }
@@ -30,7 +34,7 @@ export function checkOraclePublicationSync(
       (member) => ORACLE_PUBLICATION_ARTIFACTS[member].fileName,
     ),
   );
-  for (const entry of entries) {
+  for (const entry of entries.right) {
     if (!expectedNames.has(entry.name)) {
       issues.push(`orphan publication entry: ${entry.name}`);
     }
@@ -39,7 +43,7 @@ export function checkOraclePublicationSync(
   for (const member of ORACLE_PUBLICATION_MEMBERS) {
     const artifact = ORACLE_PUBLICATION_ARTIFACTS[member];
     const artifactPath = join(publicationDirectory, artifact.fileName);
-    const entry = entries.find(
+    const entry = entries.right.find(
       (candidate) => candidate.name === artifact.fileName,
     );
     if (entry === undefined) {
@@ -51,21 +55,47 @@ export function checkOraclePublicationSync(
       continue;
     }
 
-    let committedBytes: Buffer;
-    try {
-      committedBytes = readFileSync(artifactPath);
-    } catch (error) {
+    const committedBytes = readPublicationArtifact(artifactPath);
+    if (Either.isLeft(committedBytes)) {
       issues.push(
-        `publication artifact cannot be read (${artifact.fileName}): ${error instanceof Error ? error.message : String(error)}`,
+        `publication artifact cannot be read (${artifact.fileName}): ${safeErrorMessage(committedBytes.left)}`,
       );
       continue;
     }
     issues.push(
-      ...validateOraclePublicationSchemaBytes(member, committedBytes).issues,
+      ...formatOraclePublicationValidation(
+        validateOraclePublicationSchemaBytes(member, committedBytes.right),
+      ),
     );
   }
 
   return issues;
+}
+
+function readPublicationDirectory(
+  publicationDirectory: string,
+): Either.Either<readonly PublicationDirectoryEntry[], unknown> {
+  try {
+    return Either.right(
+      readdirSync(publicationDirectory, { withFileTypes: true }),
+    );
+  } catch (cause) {
+    return Either.left(cause);
+  }
+}
+
+function readPublicationArtifact(
+  artifactPath: string,
+): Either.Either<Buffer, unknown> {
+  try {
+    return Either.right(readFileSync(artifactPath));
+  } catch (cause) {
+    return Either.left(cause);
+  }
+}
+
+function safeErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function run(): void {

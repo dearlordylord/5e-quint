@@ -20,6 +20,7 @@ import {
 } from "./battle-snapshot.ts";
 import { releaseGlyphStoredSpell } from "./glyph-durable-occurrence.ts";
 import { interruptCheckpointFrame } from "./interrupt-execution.ts";
+import { copyInterruptCheckpointIdentity } from "./interrupt-checkpoint-identity.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
 import { admitBattleResolutionInput } from "./resolution-admission.ts";
 import { invalidResult } from "./result-helpers.ts";
@@ -422,28 +423,28 @@ function activeInterruptWithReplayContinuationAttackDamageChanges(
   ) {
     return state;
   }
+  const updatedFrame: ActiveInterruptCheckpoint = {
+    ...frame,
+    activeInterrupt: {
+      ...frame.activeInterrupt,
+      ...(continuation.attackDamageReductions === undefined
+        ? {}
+        : {
+            pendingAttackDamageReductions: continuation.attackDamageReductions,
+          }),
+      ...(continuation.attackDamageAdditions === undefined
+        ? {}
+        : {
+            pendingAttackDamageAdditions: continuation.attackDamageAdditions,
+          }),
+    },
+  };
+  copyInterruptCheckpointIdentity(frame, updatedFrame);
   return {
     ...state,
     interruptStack: [
       ...state.interruptStack.slice(0, -1),
-      interruptCheckpointFrame({
-        ...frame,
-        activeInterrupt: {
-          ...frame.activeInterrupt,
-          ...(continuation.attackDamageReductions === undefined
-            ? {}
-            : {
-                pendingAttackDamageReductions:
-                  continuation.attackDamageReductions,
-              }),
-          ...(continuation.attackDamageAdditions === undefined
-            ? {}
-            : {
-                pendingAttackDamageAdditions:
-                  continuation.attackDamageAdditions,
-              }),
-        },
-      }),
+      interruptCheckpointFrame(updatedFrame),
     ],
   };
 }

@@ -4,38 +4,50 @@ import { Command, Options } from "@effect/cli";
 import { FileSystem, Path, Terminal } from "@effect/platform";
 import type { PlatformError } from "@effect/platform/Error";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
-import { Effect, Either, Exit } from "effect";
+import type { ErrorObject, ValidateFunction } from "ajv";
+import { Effect, Either, Exit, Match } from "effect";
 
 import {
   buildOracleEvaluationCorpus,
   canonicalStructuralKey,
-  type OracleCorpusIssues,
   decodeOracleCorpusDocument,
   admitOracleCorpusDocument,
   evaluateOracleBatch,
   serializeOracleCorpus,
   type OracleCorpus,
+  type OracleCorpusIssue,
+  type OracleCorpusIssues,
   type OracleEvaluationServices,
   type OracleTrace,
 } from "../src/index.ts";
-import { parseJsonWithDuplicateDetection } from "../src/oracle-decode.ts";
+import {
+  parseJsonWithDuplicateDetection,
+  type OracleDecodeIssues,
+} from "../src/oracle-decode.ts";
 import {
   ORACLE_PUBLICATION_ARTIFACTS,
   ORACLE_PUBLICATION_MEMBERS,
   type OraclePublicationMember,
 } from "../src/oracle-publication.ts";
 import {
-  formatOraclePublicationValidationErrors,
+  type OraclePublicationSchemaIssues,
+  type OraclePublicationSchemaValidation,
   validateOraclePublicationSchemaBytes,
 } from "./oracle-publication-validation.ts";
 import {
   buildStatBlockCatalog,
   srdStatBlockCollection,
+  type StatBlockCatalog,
+  type StatBlockCatalogBuildIssue,
 } from "@dnd/surface/surface/stat-block-catalog";
 import {
   buildUnitCatalog,
   srdUnitCollection,
+  type UnitCatalog,
+  type UnitCatalogBuildIssue,
 } from "@dnd/surface/surface/unit-catalog";
+import type { ReadonlyNonEmptyArray } from "@dnd/shared/types";
+import { toReadonlyNonEmpty } from "./oracle-evaluation-cli-support.ts";
 
 /** Paths are relative to the package directory used by pnpm scripts. */
 export const DEFAULT_CORPUS_PATH = "corpus/oracle-evaluation-corpus.json";
@@ -44,15 +56,87 @@ export const DEFAULT_PUBLICATION_DIRECTORY = "publication";
 const CLI_NAME = "opaque-oracle-evaluation";
 const CLI_VERSION = "0.0.0";
 
+export type OracleCatalogIssue =
+  | {
+      readonly tag: "unitCatalogIssue";
+      readonly issue: UnitCatalogBuildIssue;
+    }
+  | {
+      readonly tag: "statBlockCatalogIssue";
+      readonly issue: StatBlockCatalogBuildIssue;
+    }
+  | {
+      readonly tag: "catalogBuildDefect";
+      readonly catalog: "unit" | "statBlock";
+      readonly cause: unknown;
+    };
+
+export type OracleSourceIssue =
+  | {
+      readonly tag: "sourceIssue";
+      readonly issue: OracleCorpusIssue;
+    }
+  | {
+      readonly tag: "sourceDefect";
+      readonly cause: unknown;
+    };
+
+export type OracleCorpusValidationIssue =
+  | {
+      readonly tag: "decode";
+      readonly stage: "json" | "document" | "semantic";
+      readonly issues: OracleDecodeIssues;
+    }
+  | {
+      readonly tag: "publicationSchemaRead";
+      readonly member: OraclePublicationMember;
+      readonly path: string;
+      readonly error: PlatformError;
+    }
+  | {
+      readonly tag: "publicationSchema";
+      readonly member: OraclePublicationMember;
+      readonly path: string;
+      readonly issues: OraclePublicationSchemaIssues;
+    }
+  | {
+      readonly tag: "publishedValue";
+      readonly member: OraclePublicationMember;
+      readonly path: string;
+      readonly errors: readonly ErrorObject[];
+    }
+  | {
+      readonly tag: "liveEvaluation";
+      readonly cause: unknown;
+    }
+  | {
+      readonly tag: "traceLengthMismatch";
+      readonly committed: number;
+      readonly live: number;
+    }
+  | {
+      readonly tag: "traceMismatch";
+      readonly position: number;
+      readonly committed: OracleTrace;
+      readonly live: OracleTrace;
+    }
+  | {
+      readonly tag: "canonicalArtifactMismatch";
+      readonly path: string;
+    }
+  | {
+      readonly tag: "sourceBuild";
+      readonly issues: ReadonlyNonEmptyArray<OracleSourceIssue>;
+    };
+
 export type OracleEvaluationCliError =
   | {
       readonly tag: "catalogBuildFailed";
-      readonly catalog: "unit" | "statBlock";
-      readonly issues: readonly string[];
+      readonly issues: ReadonlyNonEmptyArray<OracleCatalogIssue>;
     }
   | {
       readonly tag: "sourceBuildFailed";
-      readonly issues: readonly string[];
+      readonly issues: ReadonlyNonEmptyArray<OracleSourceIssue>;
     }
   | {
       readonly tag: "filesystemFailed";
@@ -64,15 +148,15 @@ export type OracleEvaluationCliError =
         | "rename"
         | "remove";
       readonly path: string;
-      readonly message: string;
+      readonly error: PlatformError;
     }
   | {
       readonly tag: "corpusValidationFailed";
-      readonly issues: readonly string[];
+      readonly issues: ReadonlyNonEmptyArray<OracleCorpusValidationIssue>;
     }
   | {
       readonly tag: "terminalFailed";
-      readonly message: string;
+      readonly error: PlatformError;
     };
 
 type OracleFilesystemError = Extract<
@@ -108,32 +192,67 @@ export function buildProductionOracleEvaluationServices(): Either.Either<
   OracleEvaluationServices,
   OracleEvaluationCliError
 > {
-  const units = buildUnitCatalog({ collections: [srdUnitCollection] });
-  if (units.tag !== "ok") {
-    return Either.left(
-      catalogBuildFailed(
-        "unit",
-        units.issues.map((issue) => JSON.stringify(issue)),
-      ),
-    );
+  const units = buildUnitCatalogSafely();
+  if (Either.isLeft(units)) {
+    return Either.left(catalogBuildFailed(units.left));
   }
-
-  const statBlocks = buildStatBlockCatalog({
-    collections: [srdStatBlockCollection],
-  });
-  if (statBlocks.tag !== "ok") {
-    return Either.left(
-      catalogBuildFailed(
-        "statBlock",
-        statBlocks.issues.map((issue) => JSON.stringify(issue)),
-      ),
-    );
+  const statBlocks = buildStatBlockCatalogSafely();
+  if (Either.isLeft(statBlocks)) {
+    return Either.left(catalogBuildFailed(statBlocks.left));
   }
-
   return Either.right({
-    unitLibrary: units.catalog,
-    statBlockCatalog: statBlocks.catalog,
+    unitLibrary: units.right,
+    statBlockCatalog: statBlocks.right,
   });
+}
+
+function buildUnitCatalogSafely(): Either.Either<
+  UnitCatalog,
+  ReadonlyNonEmptyArray<OracleCatalogIssue>
+> {
+  try {
+    const units = buildUnitCatalog({ collections: [srdUnitCollection] });
+    return Match.value(units).pipe(
+      Match.when({ tag: "invalid" }, ({ issues }) =>
+        Either.left(
+          toReadonlyNonEmpty(issues.map(unitCatalogIssue), () =>
+            catalogBuildDefect("unit", new Error("Missing catalog issues.")),
+          ),
+        ),
+      ),
+      Match.when({ tag: "ok" }, ({ catalog }) => Either.right(catalog)),
+      Match.exhaustive,
+    );
+  } catch (cause) {
+    return Either.left([catalogBuildDefect("unit", cause)]);
+  }
+}
+
+function buildStatBlockCatalogSafely(): Either.Either<
+  StatBlockCatalog,
+  ReadonlyNonEmptyArray<OracleCatalogIssue>
+> {
+  try {
+    const statBlocks = buildStatBlockCatalog({
+      collections: [srdStatBlockCollection],
+    });
+    return Match.value(statBlocks).pipe(
+      Match.when({ tag: "invalid" }, ({ issues }) =>
+        Either.left(
+          toReadonlyNonEmpty(issues.map(statBlockCatalogIssue), () =>
+            catalogBuildDefect(
+              "statBlock",
+              new Error("Missing catalog issues."),
+            ),
+          ),
+        ),
+      ),
+      Match.when({ tag: "ok" }, ({ catalog }) => Either.right(catalog)),
+      Match.exhaustive,
+    );
+  } catch (cause) {
+    return Either.left([catalogBuildDefect("statBlock", cause)]);
+  }
 }
 
 /** Run the Effect CLI with injected evaluator services and platform layers. */
@@ -277,26 +396,83 @@ function checkEffect(
     const canonical = yield* buildGeneratedCorpus(services, buildCorpus).pipe(
       Effect.either,
     );
-    const issues: string[] = [];
-    if (Either.isLeft(validation))
-      issues.push(...cliErrorIssues(validation.left));
-    if (Either.isLeft(canonical)) {
-      issues.push(...cliErrorIssues(canonical.left));
-    } else if (
-      !Buffer.from(text, "utf8").equals(serializeOracleCorpus(canonical.right))
-    ) {
-      issues.push(
-        `corpus is not the canonical generated artifact: ${paths.corpusPath}`,
-      );
+    const issues: OracleCorpusValidationIssue[] = [
+      ...(yield* validationIssuesOrFail(validation)),
+      ...(yield* canonicalIssuesOrFail(canonical)),
+    ];
+    if (Either.isRight(canonical)) {
+      if (
+        !Buffer.from(text, "utf8").equals(
+          serializeOracleCorpus(canonical.right),
+        )
+      ) {
+        issues.push({
+          tag: "canonicalArtifactMismatch",
+          path: paths.corpusPath,
+        });
+      }
     }
-    if (issues.length > 0) {
-      return yield* Effect.fail(corpusValidationFailed(issues));
+    const nonEmptyIssues = toReadonlyNonEmpty(issues);
+    if (nonEmptyIssues !== undefined) {
+      return yield* Effect.fail(corpusValidationFailed(nonEmptyIssues));
     }
     const terminal = yield* Terminal.Terminal;
     yield* terminal
       .display(`Opaque Oracle corpus is valid: ${paths.corpusPath}\n`)
       .pipe(Effect.mapError(terminalError));
   });
+}
+
+function validationIssuesOrFail(
+  validation: Either.Either<OracleCorpus, OracleEvaluationCliError>,
+): Effect.Effect<
+  readonly OracleCorpusValidationIssue[],
+  OracleEvaluationCliError
+> {
+  if (Either.isRight(validation)) return Effect.succeed([]);
+  return Match.value(validation.left).pipe(
+    Match.when({ tag: "corpusValidationFailed" }, ({ issues }) =>
+      Effect.succeed(issues),
+    ),
+    Match.when({ tag: "catalogBuildFailed" }, failValidation),
+    Match.when({ tag: "sourceBuildFailed" }, failValidation),
+    Match.when({ tag: "filesystemFailed" }, failValidation),
+    Match.when({ tag: "terminalFailed" }, failValidation),
+    Match.exhaustive,
+  );
+}
+
+function canonicalIssuesOrFail(
+  canonical: Either.Either<OracleCorpus, OracleEvaluationCliError>,
+): Effect.Effect<
+  readonly OracleCorpusValidationIssue[],
+  OracleEvaluationCliError
+> {
+  if (Either.isRight(canonical)) return Effect.succeed([]);
+  return Match.value(canonical.left).pipe(
+    Match.when({ tag: "sourceBuildFailed" }, ({ issues }) =>
+      Effect.succeed(
+        oneCorpusIssue({
+          tag: "sourceBuild",
+          issues,
+        }),
+      ),
+    ),
+    Match.when({ tag: "catalogBuildFailed" }, failValidation),
+    Match.when({ tag: "filesystemFailed" }, failValidation),
+    Match.when({ tag: "corpusValidationFailed" }, failValidation),
+    Match.when({ tag: "terminalFailed" }, failValidation),
+    Match.exhaustive,
+  );
+}
+
+function failValidation(
+  error: OracleEvaluationCliError,
+): Effect.Effect<
+  readonly OracleCorpusValidationIssue[],
+  OracleEvaluationCliError
+> {
+  return Effect.fail(error);
 }
 
 function writeEffect(
@@ -336,11 +512,16 @@ function buildGeneratedCorpus(
     const result = buildCorpus(services);
     return Either.isLeft(result)
       ? Effect.fail(
-          sourceBuildFailed(result.left.map((issue) => JSON.stringify(issue))),
+          sourceBuildFailed(
+            toReadonlyNonEmpty(result.left.map(sourceIssue), () => ({
+              tag: "sourceDefect",
+              cause: new Error("Source builder returned no diagnostic issues."),
+            })),
+          ),
         )
       : Effect.succeed(result.right);
-  } catch (error) {
-    return Effect.fail(sourceBuildFailed([safeErrorMessage(error)]));
+  } catch (cause) {
+    return Effect.fail(sourceBuildFailed([{ tag: "sourceDefect", cause }]));
   }
 }
 
@@ -359,6 +540,49 @@ function readCorpusText(
  * publication diagnostics; live evaluation is attempted only after semantic
  * admission succeeds.
  */
+type CorpusAssessment =
+  | {
+      readonly tag: "jsonRejected";
+      readonly issues: OracleDecodeIssues;
+    }
+  | {
+      readonly tag: "documentRejected";
+      readonly raw: unknown;
+      readonly issues: OracleDecodeIssues;
+    }
+  | {
+      readonly tag: "semanticRejected";
+      readonly raw: unknown;
+      readonly issues: OracleDecodeIssues;
+    }
+  | {
+      readonly tag: "admitted";
+      readonly raw: unknown;
+      readonly corpus: OracleCorpus;
+    };
+
+type PublicationSchemaRead =
+  | {
+      readonly tag: "readFailed";
+      readonly member: OraclePublicationMember;
+      readonly path: string;
+      readonly error: PlatformError;
+    }
+  | {
+      readonly tag: "read";
+      readonly member: OraclePublicationMember;
+      readonly path: string;
+      readonly validation: OraclePublicationSchemaValidation;
+    };
+
+type PublicationSchemaCollection = {
+  readonly validators: ReadonlyMap<
+    OraclePublicationMember,
+    ValidateFunction<unknown>
+  >;
+  readonly issues: readonly OracleCorpusValidationIssue[];
+};
+
 function validateCorpusText(
   text: string,
   services: OracleEvaluationServices,
@@ -369,73 +593,231 @@ function validateCorpusText(
   OracleEvaluationCliEnvironment
 > {
   return Effect.gen(function* () {
-    const issues: string[] = [];
-    const parsed = parseJsonWithDuplicateDetection(text);
-    let raw: unknown = undefined;
-    let admitted: OracleCorpus | undefined;
-
-    if (Either.isLeft(parsed)) {
-      issues.push(...formatDecodeIssues(parsed.left));
-    } else {
-      raw = parsed.right;
-      const document = decodeOracleCorpusDocument(raw);
-      if (Either.isLeft(document)) {
-        issues.push(...formatDecodeIssues(document.left));
-      } else {
-        const semantic = admitOracleCorpusDocument(document.right);
-        if (Either.isLeft(semantic)) {
-          issues.push(...formatDecodeIssues(semantic.left));
-        } else {
-          admitted = semantic.right;
-        }
-      }
-    }
-
+    const assessment = assessCorpusText(text);
     const fileSystem = yield* FileSystem.FileSystem;
-    const schemaValidators = new Map<
-      OraclePublicationMember,
-      ReturnType<typeof validateOraclePublicationSchemaBytes>
-    >();
-    for (const member of ORACLE_PUBLICATION_MEMBERS) {
-      const artifact = ORACLE_PUBLICATION_ARTIFACTS[member];
-      const path = yield* Path.Path;
-      const schemaPath = path.join(publicationDirectory, artifact.fileName);
-      const bytes = yield* fileSystem.readFile(schemaPath).pipe(Effect.either);
-      if (Either.isLeft(bytes)) {
-        issues.push(
-          `publication artifact cannot be read (${artifact.fileName}): ${safeErrorMessage(bytes.left)}`,
-        );
-        continue;
-      }
-      const validation = validateOraclePublicationSchemaBytes(
-        member,
-        bytes.right,
-      );
-      schemaValidators.set(member, validation);
-      issues.push(...validation.issues);
+    const schemas = yield* readPublicationSchemas(
+      fileSystem,
+      publicationDirectory,
+    );
+    const issues = [
+      ...assessmentIssues(assessment),
+      ...schemas.issues,
+      ...publishedValueIssues(assessment, schemas.validators),
+      ...liveEvaluationIssues(assessment, services),
+    ];
+    const nonEmptyIssues = toReadonlyNonEmpty(issues);
+    if (nonEmptyIssues !== undefined) {
+      return yield* Effect.fail(corpusValidationFailed(nonEmptyIssues));
     }
 
-    validatePublishedValues(raw, schemaValidators, issues);
-
-    if (admitted !== undefined) {
-      const live = evaluateLiveCorpus(admitted, services);
-      if (Either.isLeft(live)) {
-        issues.push(...live.left);
-      } else {
-        issues.push(...compareLiveTraces(admitted, live.right));
-      }
-    }
-
-    if (issues.length > 0) {
-      return yield* Effect.fail(corpusValidationFailed(issues));
-    }
-    if (admitted === undefined) {
-      return yield* Effect.fail(
-        corpusValidationFailed(["corpus did not produce an admitted value"]),
-      );
-    }
-    return admitted;
+    return yield* Match.value(assessment).pipe(
+      Match.when({ tag: "admitted" }, ({ corpus }) => Effect.succeed(corpus)),
+      Match.when({ tag: "jsonRejected" }, ({ issues }) =>
+        Effect.fail(
+          corpusValidationFailed([{ tag: "decode", stage: "json", issues }]),
+        ),
+      ),
+      Match.when({ tag: "documentRejected" }, ({ issues }) =>
+        Effect.fail(
+          corpusValidationFailed([
+            { tag: "decode", stage: "document", issues },
+          ]),
+        ),
+      ),
+      Match.when({ tag: "semanticRejected" }, ({ issues }) =>
+        Effect.fail(
+          corpusValidationFailed([
+            { tag: "decode", stage: "semantic", issues },
+          ]),
+        ),
+      ),
+      Match.exhaustive,
+    );
   });
+}
+
+function assessCorpusText(text: string): CorpusAssessment {
+  const parsed = parseJsonWithDuplicateDetection(text);
+  return Either.isLeft(parsed)
+    ? { tag: "jsonRejected", issues: parsed.left }
+    : assessCorpusDocument(parsed.right);
+}
+
+function assessCorpusDocument(raw: unknown): CorpusAssessment {
+  const document = decodeOracleCorpusDocument(raw);
+  return Either.isLeft(document)
+    ? { tag: "documentRejected", raw, issues: document.left }
+    : assessCorpusSemantics(raw, document.right);
+}
+
+function assessCorpusSemantics(
+  raw: unknown,
+  document: Parameters<typeof admitOracleCorpusDocument>[0],
+): CorpusAssessment {
+  const semantic = admitOracleCorpusDocument(document);
+  return Either.isLeft(semantic)
+    ? { tag: "semanticRejected", raw, issues: semantic.left }
+    : { tag: "admitted", raw, corpus: semantic.right };
+}
+
+function readPublicationSchemas(
+  fileSystem: FileSystem.FileSystem,
+  publicationDirectory: string,
+): Effect.Effect<PublicationSchemaCollection, never, Path.Path> {
+  return Effect.gen(function* () {
+    const reads = yield* Effect.forEach(
+      ORACLE_PUBLICATION_MEMBERS,
+      (member) =>
+        readPublicationSchema(fileSystem, publicationDirectory, member),
+      { concurrency: 1 },
+    );
+    const validatorEntries = reads.flatMap(publicationValidatorEntries);
+    return {
+      validators: new Map<OraclePublicationMember, ValidateFunction<unknown>>(
+        validatorEntries,
+      ),
+      issues: reads.flatMap(publicationSchemaIssues),
+    };
+  });
+}
+
+function readPublicationSchema(
+  fileSystem: FileSystem.FileSystem,
+  publicationDirectory: string,
+  member: OraclePublicationMember,
+): Effect.Effect<PublicationSchemaRead, never, Path.Path> {
+  return Effect.gen(function* () {
+    const path = yield* Path.Path;
+    const schemaPath = path.join(
+      publicationDirectory,
+      ORACLE_PUBLICATION_ARTIFACTS[member].fileName,
+    );
+    const bytes = yield* fileSystem.readFile(schemaPath).pipe(Effect.either);
+    return Either.isLeft(bytes)
+      ? publicationSchemaReadFailure(member, schemaPath, bytes.left)
+      : publicationSchemaReadSuccess(
+          member,
+          schemaPath,
+          validateOraclePublicationSchemaBytes(member, bytes.right),
+        );
+  });
+}
+
+function publicationSchemaReadFailure(
+  member: OraclePublicationMember,
+  path: string,
+  error: PlatformError,
+): PublicationSchemaRead {
+  return { tag: "readFailed", member, path, error };
+}
+
+function publicationSchemaReadSuccess(
+  member: OraclePublicationMember,
+  path: string,
+  validation: OraclePublicationSchemaValidation,
+): PublicationSchemaRead {
+  return { tag: "read", member, path, validation };
+}
+
+function publicationValidatorEntries(
+  read: PublicationSchemaRead,
+): readonly (readonly [OraclePublicationMember, ValidateFunction<unknown>])[] {
+  return Match.value(read).pipe(
+    Match.when({ tag: "readFailed" }, () => []),
+    Match.when({ tag: "read" }, ({ member, validation }) =>
+      validation.validate === undefined
+        ? []
+        : [publicationValidatorEntry(member, validation.validate)],
+    ),
+    Match.exhaustive,
+  );
+}
+
+function publicationValidatorEntry(
+  member: OraclePublicationMember,
+  validate: ValidateFunction<unknown>,
+): readonly [OraclePublicationMember, ValidateFunction<unknown>] {
+  return [member, validate];
+}
+
+function publicationSchemaIssues(
+  read: PublicationSchemaRead,
+): readonly OracleCorpusValidationIssue[] {
+  return Match.value(read).pipe(
+    Match.when({ tag: "readFailed" }, ({ member, path, error }) =>
+      oneCorpusIssue({ tag: "publicationSchemaRead", member, path, error }),
+    ),
+    Match.when({ tag: "read" }, ({ member, path, validation }) =>
+      Match.value(validation).pipe(
+        Match.when({ tag: "valid" }, () => []),
+        Match.when({ tag: "invalid" }, ({ issues }) =>
+          oneCorpusIssue({
+            tag: "publicationSchema",
+            member,
+            path,
+            issues,
+          }),
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function assessmentIssues(
+  assessment: CorpusAssessment,
+): readonly OracleCorpusValidationIssue[] {
+  return Match.value(assessment).pipe(
+    Match.when({ tag: "jsonRejected" }, ({ issues }) =>
+      oneCorpusIssue({ tag: "decode", stage: "json", issues }),
+    ),
+    Match.when({ tag: "documentRejected" }, ({ issues }) =>
+      oneCorpusIssue({ tag: "decode", stage: "document", issues }),
+    ),
+    Match.when({ tag: "semanticRejected" }, ({ issues }) =>
+      oneCorpusIssue({ tag: "decode", stage: "semantic", issues }),
+    ),
+    Match.when({ tag: "admitted" }, () => []),
+    Match.exhaustive,
+  );
+}
+
+function publishedValueIssues(
+  assessment: CorpusAssessment,
+  validators: ReadonlyMap<OraclePublicationMember, ValidateFunction<unknown>>,
+): readonly OracleCorpusValidationIssue[] {
+  return Match.value(assessment).pipe(
+    Match.when({ tag: "jsonRejected" }, () => []),
+    Match.when({ tag: "documentRejected" }, ({ raw }) =>
+      validatePublishedValues(raw, validators),
+    ),
+    Match.when({ tag: "semanticRejected" }, ({ raw }) =>
+      validatePublishedValues(raw, validators),
+    ),
+    Match.when({ tag: "admitted" }, ({ raw }) =>
+      validatePublishedValues(raw, validators),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function liveEvaluationIssues(
+  assessment: CorpusAssessment,
+  services: OracleEvaluationServices,
+): readonly OracleCorpusValidationIssue[] {
+  return Match.value(assessment).pipe(
+    Match.when({ tag: "admitted" }, ({ corpus }) => {
+      const live = evaluateLiveCorpus(corpus, services);
+      return Either.isLeft(live)
+        ? oneCorpusIssue({ tag: "liveEvaluation", cause: live.left })
+        : compareLiveTraces(corpus, live.right);
+    }),
+    Match.when({ tag: "jsonRejected" }, () => []),
+    Match.when({ tag: "documentRejected" }, () => []),
+    Match.when({ tag: "semanticRejected" }, () => []),
+    Match.exhaustive,
+  );
 }
 
 /**
@@ -456,56 +838,57 @@ export function validateOracleEvaluationCorpus(
 
 function validatePublishedValues(
   raw: unknown,
-  validators: ReadonlyMap<
-    OraclePublicationMember,
-    ReturnType<typeof validateOraclePublicationSchemaBytes>
-  >,
-  issues: string[],
-): void {
+  validators: ReadonlyMap<OraclePublicationMember, ValidateFunction<unknown>>,
+): readonly OracleCorpusValidationIssue[] {
+  const issues: OracleCorpusValidationIssue[] = [];
   const record = asRecord(raw);
   const batch = record?.batch;
   const traces = record?.traces;
-  const batchValidator = validators.get("evaluationBatch")?.validate;
+  const batchValidator = validators.get("evaluationBatch");
   if (batchValidator !== undefined && !batchValidator(batch)) {
-    issues.push(
-      ...formatOraclePublicationValidationErrors(batchValidator).map(
-        (issue) => `evaluationBatch.batch ${issue}`,
-      ),
-    );
+    issues.push({
+      tag: "publishedValue",
+      member: "evaluationBatch",
+      path: "/batch",
+      errors: [...(batchValidator.errors ?? [])],
+    });
   }
 
-  const caseValidator = validators.get("case")?.validate;
+  const caseValidator = validators.get("case");
   const cases = asRecord(batch)?.cases;
   if (caseValidator !== undefined && Array.isArray(cases)) {
     for (const [index, oracleCase] of cases.entries()) {
       if (!caseValidator(oracleCase)) {
-        issues.push(
-          ...formatOraclePublicationValidationErrors(caseValidator).map(
-            (issue) => `case[${index}] ${issue}`,
-          ),
-        );
+        issues.push({
+          tag: "publishedValue",
+          member: "case",
+          path: `/batch/cases/${index}`,
+          errors: [...(caseValidator.errors ?? [])],
+        });
       }
     }
   }
 
-  const traceValidator = validators.get("trace")?.validate;
+  const traceValidator = validators.get("trace");
   if (traceValidator !== undefined && Array.isArray(traces)) {
     for (const [index, trace] of traces.entries()) {
       if (!traceValidator(trace)) {
-        issues.push(
-          ...formatOraclePublicationValidationErrors(traceValidator).map(
-            (issue) => `trace[${index}] ${issue}`,
-          ),
-        );
+        issues.push({
+          tag: "publishedValue",
+          member: "trace",
+          path: `/traces/${index}`,
+          errors: [...(traceValidator.errors ?? [])],
+        });
       }
     }
   }
+  return issues;
 }
 
 function evaluateLiveCorpus(
   corpus: OracleCorpus,
   services: OracleEvaluationServices,
-): Either.Either<readonly OracleTrace[], readonly string[]> {
+): Either.Either<readonly OracleTrace[], unknown> {
   // Check evaluates the admitted committed batch, preserving corpus order and
   // identity. The source builder is used only by generate/write.
   return evaluateAdmittedBatch(corpus, services);
@@ -514,23 +897,25 @@ function evaluateLiveCorpus(
 function evaluateAdmittedBatch(
   corpus: OracleCorpus,
   services: OracleEvaluationServices,
-): Either.Either<readonly OracleTrace[], readonly string[]> {
+): Either.Either<readonly OracleTrace[], unknown> {
   try {
     return Either.right(evaluateOracleBatch({ batch: corpus.batch, services }));
-  } catch (error) {
-    return Either.left([`live evaluator failed: ${safeErrorMessage(error)}`]);
+  } catch (cause) {
+    return Either.left(cause);
   }
 }
 
 function compareLiveTraces(
   committed: OracleCorpus,
   live: readonly OracleTrace[],
-): readonly string[] {
-  const issues: string[] = [];
+): readonly OracleCorpusValidationIssue[] {
+  const issues: OracleCorpusValidationIssue[] = [];
   if (committed.traces.length !== live.length) {
-    issues.push(
-      `trace length mismatch: committed=${committed.traces.length} live=${live.length}`,
-    );
+    issues.push({
+      tag: "traceLengthMismatch",
+      committed: committed.traces.length,
+      live: live.length,
+    });
   }
   const count = Math.max(committed.traces.length, live.length);
   for (let index = 0; index < count; index += 1) {
@@ -540,7 +925,12 @@ function compareLiveTraces(
     const committedKey = canonicalStructuralKey(committedTrace);
     const liveKey = canonicalStructuralKey(liveTrace);
     if (committedKey !== liveKey) {
-      issues.push(`trace mismatch at position ${index}`);
+      issues.push({
+        tag: "traceMismatch",
+        position: index,
+        committed: committedTrace,
+        live: liveTrace,
+      });
     }
   }
   return issues;
@@ -614,29 +1004,6 @@ export function writeOracleEvaluationCorpusAtomically(
   return writeAtomically(fileSystem, targetPath, bytes);
 }
 
-function formatDecodeIssues(
-  issues: ReadonlyArray<{ readonly path: string; readonly code: string }>,
-): readonly string[] {
-  return issues.map((issue) => `${issue.path || "/"} ${issue.code}`);
-}
-
-function cliErrorIssues(error: OracleEvaluationCliError): readonly string[] {
-  switch (error.tag) {
-    case "catalogBuildFailed":
-      return [`${error.catalog} catalog build failed`, ...error.issues];
-    case "sourceBuildFailed":
-      return ["source corpus build failed", ...error.issues];
-    case "filesystemFailed":
-      return [
-        `filesystem ${error.operation} failed (${error.path}): ${error.message}`,
-      ];
-    case "corpusValidationFailed":
-      return error.issues;
-    case "terminalFailed":
-      return [`terminal display failed: ${error.message}`];
-  }
-}
-
 function asRecord(
   value: unknown,
 ): Readonly<Record<string, unknown>> | undefined {
@@ -656,25 +1023,24 @@ function fileSystemError(
     tag: "filesystemFailed",
     operation,
     path,
-    message: safeErrorMessage(error),
+    error,
   };
 }
 
 function sourceBuildFailed(
-  issues: readonly string[],
+  issues: ReadonlyNonEmptyArray<OracleSourceIssue>,
 ): Extract<OracleEvaluationCliError, { readonly tag: "sourceBuildFailed" }> {
   return { tag: "sourceBuildFailed", issues };
 }
 
 function catalogBuildFailed(
-  catalog: "unit" | "statBlock",
-  issues: readonly string[],
+  issues: ReadonlyNonEmptyArray<OracleCatalogIssue>,
 ): Extract<OracleEvaluationCliError, { readonly tag: "catalogBuildFailed" }> {
-  return { tag: "catalogBuildFailed", catalog, issues };
+  return { tag: "catalogBuildFailed", issues };
 }
 
 function corpusValidationFailed(
-  issues: readonly string[],
+  issues: ReadonlyNonEmptyArray<OracleCorpusValidationIssue>,
 ): Extract<
   OracleEvaluationCliError,
   { readonly tag: "corpusValidationFailed" }
@@ -685,11 +1051,34 @@ function corpusValidationFailed(
 function terminalError(
   error: PlatformError,
 ): Extract<OracleEvaluationCliError, { readonly tag: "terminalFailed" }> {
-  return { tag: "terminalFailed", message: safeErrorMessage(error) };
+  return { tag: "terminalFailed", error };
 }
 
-function safeErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : String(error);
+function sourceIssue(issue: OracleCorpusIssue): OracleSourceIssue {
+  return { tag: "sourceIssue", issue };
+}
+
+function unitCatalogIssue(issue: UnitCatalogBuildIssue): OracleCatalogIssue {
+  return { tag: "unitCatalogIssue", issue };
+}
+
+function statBlockCatalogIssue(
+  issue: StatBlockCatalogBuildIssue,
+): OracleCatalogIssue {
+  return { tag: "statBlockCatalogIssue", issue };
+}
+
+function catalogBuildDefect(
+  catalog: "unit" | "statBlock",
+  cause: unknown,
+): OracleCatalogIssue {
+  return { tag: "catalogBuildDefect", catalog, cause };
+}
+
+function oneCorpusIssue(
+  issue: OracleCorpusValidationIssue,
+): readonly OracleCorpusValidationIssue[] {
+  return [issue];
 }
 
 function runMain(): void {

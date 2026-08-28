@@ -8953,6 +8953,13 @@ describe("MCP server route", () => {
         }),
       ],
     });
+    expect(
+      readPayload(
+        handleToolCall(root, "resolve_battle_act", {
+          subject: goblinAttack,
+        }),
+      ),
+    ).toMatchObject({ details: { code: "BATTLE_FILLS_PENDING" } });
     const releaseChoices =
       afterAttackRoll.snapshot.pendingInterrupt.choices.filter(
         (choice: BattleInterruptProcedureChoice) =>

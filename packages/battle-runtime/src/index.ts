@@ -716,12 +716,15 @@ export {
 export {
   settleBattleRuntimeTransaction,
   settleBattleRuntimeResolution,
+  admitBattleRuntimeTransactionOperation,
   battlePendingTransactionView,
   battlePendingTransactionViewForSession,
   type BattlePendingTransaction,
   type BattlePendingTransactionSessionView,
   type BattlePendingTransactionView,
   type BattleRuntimeTransactionDefect,
+  type BattleRuntimeTransactionOperationAdmission,
+  type BattleRuntimeTransactionOperationAdmissionIssue,
   type BattleRuntimeTransactionOperation,
   type BattleRuntimeTransactionResult,
 } from "./battle-runtime-transaction.ts";

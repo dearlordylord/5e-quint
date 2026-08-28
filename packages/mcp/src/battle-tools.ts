@@ -1,16 +1,17 @@
 import {
+  admitBattleRuntimeTransactionOperation,
   battleInitiativePosition,
   battlePendingTransactionView,
   discoverBattleActs,
-  isBattleReadyTriggerReportSubject,
   openCreatureFallsRuntimeInterruptWindow,
   settleBattleRuntimeResolution,
   settleBattleRuntimeTransaction,
   sameBattleSubject,
-  type BattlePendingTransactionView,
   type BattleFill,
   type BattleRuntimeResolutionResult,
   type BattleRuntimeSession,
+  type BattleRuntimeTransactionOperation,
+  type BattleRuntimeTransactionOperationAdmissionIssue,
   type BattleRuntimeTransactionResult,
   type BattleSubject,
 } from "@dnd/battle-runtime";
@@ -53,40 +54,7 @@ export type BattleToolResult =
   | ReturnType<typeof schemaJsonContent>
   | ReturnType<typeof errorContent>;
 
-export type BattlePendingSubjectAdmission =
-  | { readonly tag: "sameSubject" }
-  | { readonly tag: "readyTriggerOverlay" }
-  | { readonly tag: "differentSubject" };
-
-export function battlePendingSubjectAdmission(
-  pending: BattlePendingTransactionView,
-  subject: BattleSubject,
-): BattlePendingSubjectAdmission {
-  if (sameBattleSubject(pending.subject, subject)) {
-    return { tag: "sameSubject" };
-  }
-  return isBattleReadyTriggerReportSubject(subject) &&
-    pending.holes.length > 0 &&
-    pending.holes.every((hole) => hole.kind === "interruptDecision")
-    ? { tag: "readyTriggerOverlay" }
-    : { tag: "differentSubject" };
-}
-
-/**
- * Apply the operation's ownership rule to a pending subject admission.
- * Interrupt decisions consume the transaction-owned subject, so a Ready
- * report overlay is valid only for an ordinary subject operation.
- */
-export function battlePendingFillAdmission(
-  pending: BattlePendingTransactionView,
-  subject: BattleSubject,
-  fillKind: BattleFill["kind"],
-): BattlePendingSubjectAdmission {
-  const admission = battlePendingSubjectAdmission(pending, subject);
-  return fillKind === "interruptDecision" && admission.tag !== "sameSubject"
-    ? { tag: "differentSubject" }
-    : admission;
-}
+type BattleTransactionOperationContext = "fill" | "resolve";
 
 export function handleBattleToolCall(
   root: McpPlaySessionRoot,
@@ -131,42 +99,18 @@ export function handleBattleToolCall(
 
       const subject = matched.args.subject;
       const previous = root.sessionStore.getPendingBattleTransaction();
-      const previousView =
-        previous === null ? null : battlePendingTransactionView(previous);
-      if (previousView === undefined) {
-        return errorContent("The stored battle transaction is invalid.", {
-          code: "BATTLE_TRANSACTION_DEFECT",
-          issue: { tag: "foreignTransaction" },
-        });
-      }
-      const pendingSubjectAdmission =
-        previousView === null
-          ? undefined
-          : battlePendingFillAdmission(
-              previousView,
-              subject,
-              matched.args.fill.kind,
-            );
-      if (
-        previous !== null &&
-        previousView !== null &&
-        isBattleReadyTriggerReportSubject(subject) &&
-        pendingSubjectAdmission?.tag === "sameSubject" &&
-        matched.args.fill.kind !== "interruptDecision"
-      ) {
-        return pendingBattleFillsContent(
-          previousView,
-          "The Ready trigger report is already pending.",
-        );
-      }
-      if (
-        previous !== null &&
-        previousView !== null &&
-        pendingSubjectAdmission?.tag === "differentSubject"
-      ) {
-        return errorContent("A different battle subject has pending fills.", {
-          code: "BATTLE_FILL_SUBJECT_MISMATCH",
-          pendingSubject: previousView.subject,
+      const operation = battleRuntimeTransactionOperationForFill({
+        subject,
+        fill: matched.args.fill,
+      });
+      const admission = admitBattleRuntimeTransactionOperation({
+        transaction: previous,
+        operation,
+      });
+      if (admission.tag === "rejected") {
+        return battleRuntimeTransactionAdmissionError({
+          context: "fill",
+          issue: admission.issue,
           requestedSubject: subject,
         });
       }
@@ -183,14 +127,7 @@ export function handleBattleToolCall(
       const transaction = settleBattleRuntimeTransaction({
         session: visibleSession.right,
         transaction: previous,
-        operation:
-          matched.args.fill.kind === "interruptDecision"
-            ? { kind: "interruptDecision", fill: matched.args.fill }
-            : {
-                kind: "ordinarySubject",
-                subject,
-                fills: [matched.args.fill],
-              },
+        operation: admission.operation,
         statBlockCatalog: root.statBlockCatalog,
       });
       return storedBattleTransactionContent(
@@ -203,23 +140,19 @@ export function handleBattleToolCall(
       const state = activeBattleForTool(root);
       if (Either.isLeft(state)) return state.left;
       const pending = root.sessionStore.getPendingBattleTransaction();
-      if (pending !== null) {
-        const pendingView = battlePendingTransactionView(pending);
-        if (pendingView === undefined) {
-          return errorContent("The stored battle transaction is invalid.", {
-            code: "BATTLE_TRANSACTION_DEFECT",
-            issue: { tag: "foreignTransaction" },
-          });
-        }
-        if (
-          battlePendingSubjectAdmission(pendingView, matched.args.subject)
-            .tag !== "readyTriggerOverlay"
-        ) {
-          return pendingBattleFillsContent(
-            pendingView,
-            "Cannot resolve another act with pending fills.",
-          );
-        }
+      const operation = battleRuntimeTransactionOperationForSubject(
+        matched.args.subject,
+      );
+      const admission = admitBattleRuntimeTransactionOperation({
+        transaction: pending,
+        operation,
+      });
+      if (admission.tag === "rejected") {
+        return battleRuntimeTransactionAdmissionError({
+          context: "resolve",
+          issue: admission.issue,
+          requestedSubject: matched.args.subject,
+        });
       }
       if (
         matched.args.subject.tag === "runtimeCommand" &&
@@ -236,11 +169,7 @@ export function handleBattleToolCall(
           settleBattleRuntimeResolution({
             session: state.right,
             transaction: pending,
-            operation: {
-              kind: "ordinarySubject",
-              subject: matched.args.subject,
-              fills: [],
-            },
+            operation: admission.operation,
             resolution: result,
             statBlockCatalog: root.statBlockCatalog,
           }),
@@ -267,11 +196,7 @@ export function handleBattleToolCall(
         settleBattleRuntimeTransaction({
           session: state.right,
           transaction: pending,
-          operation: {
-            kind: "ordinarySubject",
-            subject: matched.args.subject,
-            fills: [],
-          },
+          operation: admission.operation,
           statBlockCatalog: root.statBlockCatalog,
         }),
       );
@@ -333,6 +258,139 @@ export function handleBattleToolCall(
         session: mcpSessionSummary(root.sessionStore.snapshot()),
       });
     }),
+    Match.exhaustive,
+  );
+}
+
+function battleRuntimeTransactionOperationForFill(input: {
+  readonly subject: BattleSubject;
+  readonly fill: BattleFill;
+}): BattleRuntimeTransactionOperation {
+  return input.fill.kind === "interruptDecision"
+    ? { kind: "interruptDecision", fill: input.fill }
+    : {
+        kind: "ordinarySubject",
+        subject: input.subject,
+        fills: [input.fill],
+      };
+}
+
+function battleRuntimeTransactionOperationForSubject(
+  subject: BattleSubject,
+): BattleRuntimeTransactionOperation {
+  return {
+    kind: "ordinarySubject",
+    subject,
+    fills: [],
+  };
+}
+
+function battleRuntimeTransactionAdmissionError(input: {
+  readonly context: BattleTransactionOperationContext;
+  readonly issue: BattleRuntimeTransactionOperationAdmissionIssue;
+  readonly requestedSubject: BattleSubject;
+}): BattleToolResult {
+  return Match.value(input.issue).pipe(
+    Match.when({ tag: "foreignTransaction" }, (issue) =>
+      errorContent("The stored battle transaction is invalid.", {
+        code: "BATTLE_TRANSACTION_DEFECT",
+        issue,
+      }),
+    ),
+    Match.when({ tag: "interruptRequiresPendingTransaction" }, () =>
+      errorContent("Battle act is not currently available.", {
+        code: "BATTLE_ACT_NOT_AVAILABLE",
+        subject: input.requestedSubject,
+      }),
+    ),
+    Match.when({ tag: "interruptDecisionRequiresInterruptFrontier" }, (issue) =>
+      battleRuntimeTransactionPendingAdmissionError(
+        input.context,
+        issue.pendingSubject,
+        "The pending battle transaction requires ordinary hole fills.",
+        input.requestedSubject,
+      ),
+    ),
+    Match.when({ tag: "ordinarySubjectRequiresOrdinaryFrontier" }, (issue) =>
+      battleRuntimeTransactionPendingAdmissionError(
+        input.context,
+        issue.pendingSubject,
+        "The pending interrupt decision requires an interrupt-decision fill.",
+        issue.requestedSubject,
+      ),
+    ),
+    Match.when({ tag: "repeatedReadyTrigger" }, (issue) =>
+      battleRuntimeTransactionPendingAdmissionError(
+        input.context,
+        issue.pendingSubject,
+        "The Ready trigger report is already pending.",
+        input.requestedSubject,
+      ),
+    ),
+    Match.when(
+      { tag: "readyTriggerOverlayRequiresInterruptFrontier" },
+      (issue) =>
+        battleRuntimeTransactionSubjectAdmissionError(
+          input.context,
+          issue.pendingSubject,
+          issue.requestedSubject,
+        ),
+    ),
+    Match.when({ tag: "differentPendingSubject" }, (issue) =>
+      battleRuntimeTransactionSubjectAdmissionError(
+        input.context,
+        issue.pendingSubject,
+        issue.requestedSubject,
+      ),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function battleRuntimeTransactionPendingAdmissionError(
+  context: BattleTransactionOperationContext,
+  pendingSubject: BattleSubject,
+  fillMessage: string,
+  requestedSubject: BattleSubject,
+): BattleToolResult {
+  return Match.value(context).pipe(
+    Match.when("fill", () =>
+      errorContent(fillMessage, {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject,
+      }),
+    ),
+    Match.when("resolve", () =>
+      errorContent("Cannot resolve another act with pending fills.", {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject,
+        requestedSubject,
+      }),
+    ),
+    Match.exhaustive,
+  );
+}
+
+function battleRuntimeTransactionSubjectAdmissionError(
+  context: BattleTransactionOperationContext,
+  pendingSubject: BattleSubject,
+  requestedSubject: BattleSubject,
+): BattleToolResult {
+  return Match.value(context).pipe(
+    Match.when("fill", () =>
+      errorContent("A different battle subject has pending fills.", {
+        code: "BATTLE_FILL_SUBJECT_MISMATCH",
+        pendingSubject,
+        requestedSubject,
+      }),
+    ),
+    Match.when("resolve", () =>
+      errorContent("Cannot resolve another act with pending fills.", {
+        code: "BATTLE_FILLS_PENDING",
+        pendingSubject,
+        requestedSubject,
+      }),
+    ),
     Match.exhaustive,
   );
 }

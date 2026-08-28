@@ -6,7 +6,7 @@ presentation-free; a selected `CharacterBuildFact` may retain authored
 selection identity such as `authoredStartingItem.itemName` at that boundary.
 It covers Character Creation, fresh Character Sheet construction, mixed-origin
 Battle entry, ordered Act attempts, Runtime Hole fills, interrupt decisions,
-rejection/retry, and resolution.
+rejection/retry, and operation settlement back to Acts or awaiting input.
 
 `OracleCase` carries only varying creation decisions and the one fresh-sheet
 table fact that is not derivable from a finalized `CharacterBuild`:
@@ -34,12 +34,13 @@ stop, and ordered typed rejections. Each checkpoint carries a phase-appropriate
 initiative stack with `alreadyActed` and non-empty `stillToAct` entries; the
 current actor and combatant order are derived from that stack. Each Battle stop exposes exactly one
 non-empty Acts frontier, one mechanical ordinary-hole frontier with its
-accepted fills, one mechanical interrupt-decision frontier with its choices,
-or a terminal resolution outcome. Invalid Battle attempts retain the same
-projected checkpoint/frontier and the call-local evaluator continues with the
-next Case attempt, so a later retry can succeed. Input exhaustion and surplus
-are explicit workflow rejections; malformed or impossible owner projections
-escape as defects. `decodeOracleCase*` and `decodeOracleTrace*` reject unknown
+accepted fills, or one mechanical interrupt-decision frontier with its choices.
+Settling a Battle operation returns to Acts or awaiting input; Battle has no
+terminal resolution branch. Invalid Battle attempts retain the same projected
+checkpoint/frontier and the call-local evaluator continues with the next Case
+attempt, so a later retry can succeed. Input exhaustion and surplus are
+explicit workflow rejections; malformed or impossible owner projections escape
+as defects. `decodeOracleCase*` and `decodeOracleTrace*` reject unknown
 members, duplicate set members, duplicate JSON object keys, and inconsistent
 checkpoint/frontier references. Decoding runs in this order: the
 duplicate-aware raw JSON scan, structural Document decoding, semantic

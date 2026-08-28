@@ -187,7 +187,10 @@ describe("Opaque Oracle evaluation CLI", () => {
     expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
     expect(result.left).toMatchObject({
       issues: expect.arrayContaining([
-        expect.stringContaining("oracle-trace.schema.json"),
+        expect.objectContaining({
+          tag: "publicationSchemaRead",
+          member: "trace",
+        }),
       ]),
     });
   });
@@ -212,7 +215,13 @@ describe("Opaque Oracle evaluation CLI", () => {
     expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
     expect(result.left).toMatchObject({
       issues: expect.arrayContaining([
-        expect.stringContaining("publication artifact is out of sync"),
+        expect.objectContaining({
+          tag: "publicationSchema",
+          member: "trace",
+          issues: expect.arrayContaining([
+            expect.objectContaining({ tag: "artifactOutOfSync" }),
+          ]),
+        }),
       ]),
     });
   });
@@ -236,7 +245,10 @@ describe("Opaque Oracle evaluation CLI", () => {
     expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
     expect(result.left).toMatchObject({
       issues: expect.arrayContaining([
-        expect.stringMatching(/duplicate|JSON|json/i),
+        expect.objectContaining({
+          tag: "decode",
+          stage: "json",
+        }),
       ]),
     });
   });
@@ -270,7 +282,7 @@ describe("Opaque Oracle evaluation CLI", () => {
     expect(result.left).toMatchObject({ tag: "corpusValidationFailed" });
     expect(result.left).toMatchObject({
       issues: expect.arrayContaining([
-        expect.stringContaining("trace mismatch at position 0"),
+        expect.objectContaining({ tag: "traceMismatch", position: 0 }),
       ]),
     });
   });
@@ -291,7 +303,12 @@ describe("Opaque Oracle evaluation CLI", () => {
     if (Either.isRight(result)) return;
     expect(result.left).toMatchObject({ tag: "sourceBuildFailed" });
     expect(result.left).toMatchObject({
-      issues: ["fixture source failure"],
+      issues: [
+        expect.objectContaining({
+          tag: "sourceDefect",
+          cause: expect.objectContaining({ message: "fixture source failure" }),
+        }),
+      ],
     });
     expect(events).toEqual([]);
   });
@@ -525,11 +542,16 @@ function recordingFileSystem(
 
 function recordingTerminal(output: string[]): Terminal.Terminal {
   return {
+    columns: Effect.succeed(80),
+    rows: Effect.succeed(24),
+    isTTY: Effect.succeed(false),
+    readInput: Effect.never,
+    readLine: Effect.never,
     display: (text: string) => {
       output.push(text);
       return Effect.succeed(undefined);
     },
-  } as unknown as Terminal.Terminal;
+  };
 }
 
 function runWithPlatform<A, E>(
