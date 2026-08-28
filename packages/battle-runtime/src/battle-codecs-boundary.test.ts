@@ -333,6 +333,28 @@ function codecFixture() {
         },
       },
       {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "antimagicFieldOngoingSpellSuppression",
+          sourceProcedureRef: sourceBinding.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-antimagic-field"),
+          auraMembership: {
+            kind: "antimagicFieldAuraMembership",
+            originIncluded: false,
+            nonOriginCombatantIds: [],
+          },
+          radiusFeet: movementFeet(10),
+          suppressedOngoingSpellEffects: [],
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
         kind: "storedLightEmitter",
         ownerId: skeletonId,
         emitter: {
@@ -341,6 +363,22 @@ function codecFixture() {
           sourceCombatantId: wizardId,
           attachment: { kind: "combatant", combatantId: skeletonId },
           emission: { kind: "dim", radiusFeet: movementFeet(10) },
+          opaqueCoverInteraction: { kind: "blocksEmission" },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "storedLightEmitter",
+        ownerId: wizardId,
+        emitter: {
+          kind: "spellLightEmitter",
+          sourceProcedureRef: sourceBinding.procedureRef,
+          sourceCombatantId: wizardId,
+          attachment: { kind: "combatant", combatantId: wizardId },
+          emission: { kind: "dim", radiusFeet: movementFeet(15) },
           opaqueCoverInteraction: { kind: "blocksEmission" },
           expiresAt: {
             kind: "duration",
@@ -360,10 +398,23 @@ function codecFixture() {
     }
     return occurrence.effect.effectRef;
   };
-  const storedLightEmitter = allocated.occurrences.find(
-    (occurrence) => occurrence.kind === "storedLightEmitter",
+  const storedLightEmitterRef = (ownerId: typeof wizardId) => {
+    const occurrence = allocated.occurrences.find(
+      (candidate) =>
+        candidate.kind === "storedLightEmitter" &&
+        candidate.ownerId === ownerId,
+    );
+    if (occurrence?.kind !== "storedLightEmitter") {
+      throw new Error(`Expected a codec ${ownerId} stored light emitter.`);
+    }
+    return occurrence.emitter.effectRef;
+  };
+  const skeletonStoredLightEmitter = allocated.occurrences.find(
+    (occurrence) =>
+      occurrence.kind === "storedLightEmitter" &&
+      occurrence.ownerId === skeletonId,
   );
-  if (storedLightEmitter?.kind !== "storedLightEmitter") {
+  if (skeletonStoredLightEmitter?.kind !== "storedLightEmitter") {
     throw new Error("Expected a codec stored light emitter occurrence.");
   }
   return {
@@ -381,7 +432,11 @@ function codecFixture() {
     spikeGrowthEffectRef: activeEffectRef("spikeGrowthHazard"),
     gustOfWindEffectRef: activeEffectRef("gustOfWindLine"),
     levitateEffectRef: activeEffectRef("spellLevitatedCreature"),
-    storedLightEmitterRef: storedLightEmitter.emitter.effectRef,
+    antimagicFieldEffectRef: activeEffectRef(
+      "antimagicFieldOngoingSpellSuppression",
+    ),
+    storedLightEmitterRef: skeletonStoredLightEmitter.emitter.effectRef,
+    wizardStoredLightEmitterRef: storedLightEmitterRef(wizardId),
   };
 }
 
@@ -1132,6 +1187,81 @@ describe("battle codec execution-reference boundaries", () => {
         ),
       );
     }
+  });
+
+  test("binds an Antimagic Field target choice to the source-owned aura occurrence", () => {
+    const aura = {
+      kind: "antimagicFieldAura" as const,
+      effectRef: fixture.antimagicFieldEffectRef,
+      areaId: battleAreaId("area:codec-antimagic-field"),
+      sourceCombatantId: wizardId,
+    };
+    const targetHole = hole("ongoingSpellTargetChoice", {
+      kind: "ongoingSpellTargetChoice",
+      label: "Ongoing spell target",
+      requiresTableSpatialFact: true,
+      casterId: wizardId,
+      procedureRef: fixture.sourceProcedureRef,
+      rangeFeet: 120,
+      choices: [{ kind: "magicalEffect", effect: aura }],
+    });
+    const snapshot = replaceActHole(
+      fixture.snapshot,
+      fixture.sourceProcedureRef,
+      targetHole,
+    );
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(snapshot),
+      ),
+    ).toBe(true);
+    const { effectRef: _effectRef, ...auraWithoutEffectRef } = aura;
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleHoleSchema)({
+          ...baseHole("ongoingSpellTargetChoiceWithoutAuraOccurrence"),
+          kind: "ongoingSpellTargetChoice",
+          label: "Ongoing spell target",
+          requiresTableSpatialFact: true,
+          casterId: wizardId,
+          procedureRef: fixture.sourceProcedureRef,
+          rangeFeet: 120,
+          choices: [{ kind: "magicalEffect", effect: auraWithoutEffectRef }],
+        }),
+      ),
+    ).toBe(true);
+
+    for (const effectRef of [
+      fixture.levitateEffectRef,
+      fixture.wizardStoredLightEmitterRef,
+    ]) {
+      expectSnapshotDecodeLeft(
+        replaceActHole(
+          fixture.snapshot,
+          fixture.sourceProcedureRef,
+          encodeHole({
+            ...targetHole,
+            choices: [
+              {
+                kind: "magicalEffect",
+                effect: { ...aura, effectRef },
+              },
+            ],
+          }),
+        ),
+      );
+    }
+
+    expectSnapshotDecodeLeft({
+      ...snapshot,
+      combatants: snapshot.combatants.map((combatant) => ({
+        ...combatant,
+        effectOccurrences: combatant.effectOccurrences.filter(
+          (occurrence) =>
+            occurrence.effectRef !== fixture.antimagicFieldEffectRef,
+        ),
+      })),
+    });
   });
 });
 

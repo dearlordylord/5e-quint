@@ -574,13 +574,14 @@ function activeAntimagicFieldAuraMatchesTarget(
   state: BattleState,
   target: AntimagicFieldAuraOngoingSpellEffectRef,
 ): boolean {
-  return [...state.combatants.values()].some((combatant) =>
-    combatant.activeEffects.some(
-      (effect) =>
-        effect.kind === "antimagicFieldOngoingSpellSuppression" &&
-        effect.areaId === target.areaId &&
-        effect.sourceCombatantId === target.sourceCombatantId,
-    ),
+  const source = state.combatants.get(target.sourceCombatantId);
+  const effect = source?.activeEffects.find(
+    (candidate) => candidate.effectRef === target.effectRef,
+  );
+  return (
+    effect?.kind === "antimagicFieldOngoingSpellSuppression" &&
+    effect.areaId === target.areaId &&
+    effect.sourceCombatantId === target.sourceCombatantId
   );
 }
 
@@ -662,6 +663,7 @@ function ongoingSpellTargetChoices(
         pushUniqueOngoingSpellTarget(choices, {
           kind: "magicalEffect",
           effect: ongoingSpellEffectRefForAntimagicFieldAura({
+            effectRef: effect.effectRef,
             areaId: effect.areaId,
             sourceCombatantId: effect.sourceCombatantId,
           }),

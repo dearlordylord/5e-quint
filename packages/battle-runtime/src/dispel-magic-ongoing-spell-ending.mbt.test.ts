@@ -501,6 +501,7 @@ function targetAntimagicAura(
     kind: "magicalEffect" as const,
     effect: {
       kind: "antimagicFieldAura" as const,
+      effectRef: antimagicFieldAuraEffect().effectRef,
       areaId: antimagicFieldAreaId,
       sourceCombatantId: spellTargetId,
     },
@@ -605,6 +606,9 @@ function antimagicFieldAuraEffect(): Extract<
 function lowLevelObjectLightEmitter(): BattleTrackedOngoingSpellLightEmitter {
   return {
     kind: "spellLightEmitter",
+    effectRef: battleEffectExecutionRefForTest(
+      "dispel-magic-low-level-light-emitter",
+    ),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(continualFlameUnitId),
     ),

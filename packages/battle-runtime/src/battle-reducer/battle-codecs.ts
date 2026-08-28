@@ -1325,6 +1325,7 @@ const BattleOngoingSpellEffectRefSchema = Schema.Union([
   }),
   Schema.Struct({
     kind: Schema.Literal("antimagicFieldAura"),
+    effectRef: BattleEffectExecutionRef,
     areaId: BattleAreaId,
     sourceCombatantId: CombatantId,
   }),
@@ -3423,6 +3424,7 @@ type BattleFillEncoded =
                 }
               | {
                   readonly kind: "antimagicFieldAura";
+                  readonly effectRef: string;
                   readonly areaId: string;
                   readonly sourceCombatantId: string;
                 };
@@ -3456,6 +3458,7 @@ type BattleFillEncoded =
                   }
                 | {
                     readonly kind: "antimagicFieldAura";
+                    readonly effectRef: string;
                     readonly areaId: string;
                     readonly sourceCombatantId: string;
                   };
@@ -6904,17 +6907,24 @@ function serializedBattleHoleExecutionReferences(
       ongoingSpellTargetChoice: (value) => [
         owned(value.procedureRef, value.casterId),
         ...value.choices.flatMap((choice) =>
-          choice.kind === "magicalEffect" &&
-          choice.effect.kind !== "antimagicFieldAura"
-            ? [
-                bound(
-                  choice.effect.effectRef,
-                  choice.effect.kind === "spellActiveEffect"
-                    ? "activeEffect"
-                    : "storedLightEmitter",
-                ),
-              ]
-            : [],
+          choice.kind !== "magicalEffect"
+            ? []
+            : choice.effect.kind === "antimagicFieldAura"
+              ? [
+                  serializedExecutionReference(
+                    choice.effect.effectRef,
+                    choice.effect.sourceCombatantId,
+                    "activeEffect",
+                  ),
+                ]
+              : [
+                  bound(
+                    choice.effect.effectRef,
+                    choice.effect.kind === "spellActiveEffect"
+                      ? "activeEffect"
+                      : "storedLightEmitter",
+                  ),
+                ],
         ),
       ],
       objectContactTargets: (value) => [
@@ -6999,7 +7009,13 @@ function serializedBattleHoleExecutionReferences(
           value.spellcastingAbilityCheck.casterId,
         ),
         ...(value.spellcastingAbilityCheck.effect.kind === "antimagicFieldAura"
-          ? []
+          ? [
+              serializedExecutionReference(
+                value.spellcastingAbilityCheck.effect.effectRef,
+                value.spellcastingAbilityCheck.effect.sourceCombatantId,
+                "activeEffect",
+              ),
+            ]
           : [
               bound(
                 value.spellcastingAbilityCheck.effect.effectRef,

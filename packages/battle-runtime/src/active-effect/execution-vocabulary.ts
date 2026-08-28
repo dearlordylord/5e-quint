@@ -86,6 +86,7 @@ export type BattleOngoingSpellEffectRef =
     }
   | {
       readonly kind: "antimagicFieldAura";
+      readonly effectRef: BattleEffectExecutionRef;
       readonly areaId: BattleAreaId;
       readonly sourceCombatantId: CombatantId;
     };

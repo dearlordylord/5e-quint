@@ -1009,6 +1009,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       kind: "magicalEffect" as const,
       effect: {
         kind: "antimagicFieldAura" as const,
+        effectRef: aura.effectRef,
         areaId,
         sourceCombatantId: spellTargetId,
       },
@@ -1044,9 +1045,15 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
   });
 
-  test("magical-effect targeting rejects stale Antimagic Field aura identity", () => {
-    const activeAreaId = battleAreaId("dispel-active-antimagic-aura-target");
-    const staleAreaId = battleAreaId("dispel-stale-antimagic-aura-target");
+  test("magical-effect targeting rejects a stale recast Antimagic Field aura", () => {
+    const areaId = battleAreaId("dispel-recast-antimagic-aura-target");
+    const staleAura = antimagicFieldAuraEffect(areaId);
+    const activeAura = {
+      ...staleAura,
+      effectRef: battleEffectExecutionRefForTest(
+        "dispel-recast-antimagic-aura-active",
+      ),
+    };
     const state = stateWithCombatantActiveEffects({
       target: {
         concentration: {
@@ -1055,7 +1062,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [antimagicFieldAuraEffect(activeAreaId)],
+        activeEffects: [activeAura],
       },
     });
     const act = spellAct({
@@ -1067,7 +1074,8 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       kind: "magicalEffect" as const,
       effect: {
         kind: "antimagicFieldAura" as const,
-        areaId: staleAreaId,
+        effectRef: staleAura.effectRef,
+        areaId,
         sourceCombatantId: spellTargetId,
       },
     };
