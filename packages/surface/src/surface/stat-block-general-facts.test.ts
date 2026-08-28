@@ -499,6 +499,41 @@ describe("standalone Stat Block general facts", () => {
     }
   });
 
+  test("keeps form-restricted Speeds distinct from unrestricted Speeds", () => {
+    const formRestricted = {
+      kind: "fly",
+      feet: { kind: "literal", value: 40 },
+      hover: true,
+      availability: {
+        kind: "forms_only",
+        forms: ["mist", "winged hybrid"],
+      },
+    } as const;
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        speeds: [syntheticStandaloneStatBlock.speeds[0], formRestricted],
+      }).speeds[1],
+    ).toEqual(formRestricted);
+    for (const availability of [
+      { kind: "forms_only", forms: [] },
+      { kind: "unrestricted", forms: ["mist"] },
+    ] as const) {
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...syntheticStandaloneStatBlock,
+          speeds: [
+            {
+              kind: "fly",
+              feet: { kind: "literal", value: 40 },
+              availability,
+            },
+          ],
+        }),
+      ).toThrow();
+    }
+  });
+
   test("bounds authored ability scores and sense ranges while keeping projections reusable", () => {
     for (const value of [0, 31, 10.5] as const) {
       expect(() =>
@@ -618,6 +653,40 @@ describe("standalone Stat Block general facts", () => {
     ).toThrow();
     expect(() =>
       decode(CreatureImmunityListSchema, { conditions: [] }),
+    ).toThrow();
+    expect(() =>
+      decode(CreatureImmunityListSchema, { qualifiedConditions: [] }),
+    ).toThrow();
+  });
+
+  test("distinguishes fixed and qualified condition Immunities", () => {
+    const qualifiedOnly = {
+      qualifiedConditions: [
+        { condition: "charmed", qualifier: "while the synthetic sigil glows" },
+      ],
+    } as const;
+    const fixedAndQualified = {
+      conditions: ["poisoned"],
+      qualifiedConditions: [
+        { condition: "charmed", qualifier: "while the synthetic sigil glows" },
+      ],
+    } as const;
+    expect(decode(CreatureImmunityListSchema, qualifiedOnly)).toEqual(
+      qualifiedOnly,
+    );
+    expect(decode(CreatureImmunityListSchema, fixedAndQualified)).toEqual(
+      fixedAndQualified,
+    );
+    expect(() =>
+      decode(CreatureImmunityListSchema, {
+        conditions: ["charmed"],
+        qualifiedConditions: qualifiedOnly.qualifiedConditions,
+      }),
+    ).toThrow();
+    expect(() =>
+      decode(CreatureImmunityListSchema, {
+        qualifiedConditions: [{ condition: "charmed" }],
+      }),
     ).toThrow();
   });
 });

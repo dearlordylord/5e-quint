@@ -12,7 +12,7 @@ import {
   buildUnitCatalog,
   srdUnitCollection,
 } from "@dnd/surface/surface/unit-catalog";
-import type { UnitRecord } from "@dnd/surface/surface/types";
+import type { StatBlockRecord, UnitRecord } from "@dnd/surface/surface/types";
 import { Either, Option } from "effect";
 import { describe, expect, test } from "vitest";
 
@@ -380,6 +380,36 @@ describe("Druid Wild Shape boundaries", () => {
             authoredStatBlockId("stat_block_hawk"),
           ),
         ],
+      }),
+    ).toMatchObject({
+      _tag: "Left",
+      left: {
+        message:
+          "Wild Shape known forms cannot have a Fly Speed at this Druid level.",
+      },
+    });
+
+    const formRestrictedFly: StatBlockRecord = {
+      ...eligibleRecords[0],
+      statBlock: {
+        ...eligibleRecords[0].statBlock,
+        speeds: [
+          ...eligibleRecords[0].statBlock.speeds,
+          {
+            kind: "fly",
+            feet: { kind: "literal", value: 40 },
+            availability: {
+              kind: "forms_only",
+              forms: ["winged hybrid"],
+            },
+          },
+        ],
+      },
+    };
+    expect(
+      validateDruidWildShapeKnownFormRecords({
+        facts: wildShapeFacts,
+        knownForms: [formRestrictedFly, ...eligibleRecords.slice(1)],
       }),
     ).toMatchObject({
       _tag: "Left",

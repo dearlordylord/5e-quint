@@ -99,28 +99,33 @@ export const defineRawStatBlockFidelityLane = (config: {
   readonly sourcePath: RawFidelitySourcePath;
   readonly authoredSourcePrefix: string;
   readonly expectedRecordCount: number;
+  readonly retainedIdentityNames?: readonly string[];
 }): RawFidelityLane => {
   const { statBlockSource, equipmentSource, discovery } =
     loadRawFidelitySources(config.sourcePath);
+  const retainedIdentities = new Set(
+    (config.retainedIdentityNames ?? []).map(normalizeStatBlockIdentity),
+  );
+  const occurrences = discovery.occurrences.filter(
+    ({ name }) => !retainedIdentities.has(normalizeStatBlockIdentity(name)),
+  );
   const records = srdStatBlockCollection.statBlocks.filter((record) =>
     record.provenance.section.startsWith(config.authoredSourcePrefix),
   );
   const rawProjection = (): ReturnType<typeof projectRawStatBlocks> =>
     projectRawStatBlocks(
       statBlockSource,
-      discovery.occurrences,
+      occurrences,
       records,
       equipmentSource,
     );
 
   describe(`${config.label} independent RAW fidelity`, () => {
     test(`uses every parser-derived canonical ${config.label} source anchor exactly once`, () => {
-      const expectedSections = discovery.occurrences.map(
-        ({ anchor, name }) => ({
-          name: normalizeStatBlockIdentity(name),
-          section: anchor.section.replace(".references/srd-5.2.1/", ""),
-        }),
-      );
+      const expectedSections = occurrences.map(({ anchor, name }) => ({
+        name: normalizeStatBlockIdentity(name),
+        section: anchor.section.replace(".references/srd-5.2.1/", ""),
+      }));
       const installedSections = records.map((record) => ({
         name: normalizeStatBlockIdentity(record.name),
         section: record.provenance.section,
@@ -230,7 +235,7 @@ export const defineRawStatBlockFidelityLane = (config: {
   return {
     source: statBlockSource,
     equipmentSource,
-    occurrences: discovery.occurrences,
+    occurrences,
     records,
   };
 };

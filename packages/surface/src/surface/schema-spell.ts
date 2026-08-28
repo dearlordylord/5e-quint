@@ -4874,15 +4874,37 @@ export const CreatureVulnerabilityListSchema = Schema.Union(
   }),
 );
 
-export const CreatureImmunityListSchema = Schema.Union(
-  Schema.Struct({
-    damageTypes: nonEmpty(DamageTypeSchema),
-    conditions: optionalExact(nonEmpty(ConditionSchema)),
-  }),
-  Schema.Struct({
-    damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
-    conditions: nonEmpty(ConditionSchema),
-  }),
+const QualifiedConditionImmunitySchema = strictStruct({
+  condition: ConditionSchema,
+  qualifier: surfaceExactProse(Schema.NonEmptyTrimmedString),
+});
+
+export const CreatureImmunityListSchema = strictStruct({
+  damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
+  conditions: optionalExact(nonEmpty(ConditionSchema)),
+  qualifiedConditions: optionalExact(
+    nonEmpty(QualifiedConditionImmunitySchema),
+  ),
+}).pipe(
+  Schema.filter(
+    (immunities) => {
+      if (
+        immunities.damageTypes === undefined &&
+        immunities.conditions === undefined &&
+        immunities.qualifiedConditions === undefined
+      ) {
+        return false;
+      }
+      const fixedConditions = new Set(immunities.conditions ?? []);
+      return (immunities.qualifiedConditions ?? []).every(
+        ({ condition }) => !fixedConditions.has(condition),
+      );
+    },
+    {
+      message: () =>
+        "Immunities must contain at least one fact and cannot claim the same condition as both fixed and qualified.",
+    },
+  ),
 );
 
 export const CreatureSenseSchema = Schema.Struct({
@@ -6274,6 +6296,11 @@ const StandaloneCreatureSpeedFields = {
   feet: StandaloneStatBlockValueSchema,
 } as const;
 
+const StatBlockFormRestrictedSpeedAvailabilitySchema = strictStruct({
+  kind: Schema.Literal("forms_only"),
+  forms: nonEmpty(surfaceIdentity(Schema.NonEmptyTrimmedString, "label")),
+});
+
 /**
  * Hover is an authored qualifier of Fly, not a general speed property. The
  * union keeps that source fact unavailable on the other special speeds while
@@ -6288,6 +6315,17 @@ const StandaloneCreatureSpeedSchema = Schema.Union(
     kind: StandaloneFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
     hover: optionalExact(Schema.Literal(true)),
+  }),
+  strictStruct({
+    kind: StandaloneNonFlyCreatureSpeedKindSchema,
+    ...StandaloneCreatureSpeedFields,
+    availability: StatBlockFormRestrictedSpeedAvailabilitySchema,
+  }),
+  strictStruct({
+    kind: StandaloneFlyCreatureSpeedKindSchema,
+    ...StandaloneCreatureSpeedFields,
+    hover: optionalExact(Schema.Literal(true)),
+    availability: StatBlockFormRestrictedSpeedAvailabilitySchema,
   }),
 );
 

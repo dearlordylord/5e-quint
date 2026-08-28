@@ -251,6 +251,10 @@ type ScopedGeneralFacts = {
     readonly kind: string;
     readonly feet: number;
     readonly hover: boolean;
+    readonly availability?: {
+      readonly kind: "forms_only";
+      readonly forms: readonly string[];
+    };
   }[];
   readonly abilityScores: Readonly<Record<AbilityName, number>>;
   readonly initiative: { readonly modifier: number; readonly score: number };
@@ -268,6 +272,10 @@ type ScopedGeneralFacts = {
   readonly resistances: ResistanceProjection;
   readonly immunityDamageTypes: readonly string[];
   readonly immunityConditions: readonly string[];
+  readonly immunityQualifiedConditions: readonly {
+    readonly condition: string;
+    readonly qualifier: string;
+  }[];
   readonly senses: readonly {
     readonly kind: string;
     readonly rangeFeet: number;
@@ -467,13 +475,25 @@ const parseSpeeds = (
     .map((part) => {
       const speed = requireMatch(
         part,
-        /^(?:(Burrow|Climb|Fly|Swim) )?(\d+) ft\.(?: \((hover)\))?$/,
+        /^(?:(Burrow|Climb|Fly|Swim) )?(\d+) ft\.(?: \((hover|[A-Za-z]+(?: or [A-Za-z]+)* form only)\))?$/,
         `${context} Speed`,
       );
+      const qualifier = speed[3];
       return {
         kind: (speed[1] ?? "walk").toLowerCase(),
         feet: Number(speed[2]),
-        hover: speed[3] === "hover",
+        hover: qualifier === "hover",
+        ...(qualifier === undefined || qualifier === "hover"
+          ? {}
+          : {
+              availability: {
+                kind: "forms_only" as const,
+                forms: qualifier
+                  .replace(/ form only$/, "")
+                  .split(" or ")
+                  .map((form) => form.toLowerCase()),
+              },
+            }),
       };
     });
 
@@ -530,7 +550,7 @@ const parseAbilityMatrixGroup = (
   context: string,
 ): AbilityMatrixFact => {
   const [rawAbility, rawScore, rawModifier, rawSaveModifier] = cells;
-  const ability = rawAbility.toLowerCase();
+  const ability = rawAbility.replaceAll("*", "").toLowerCase();
   if (!isAbilityName(ability)) {
     throw new Error(`Unrecognized ${context} ability label: ${rawAbility}`);
   }
@@ -539,12 +559,12 @@ const parseAbilityMatrixGroup = (
     score: parseAbilityMatrixNumber(rawScore, /^\d+$/, `${context} score`),
     modifier: parseAbilityMatrixNumber(
       rawModifier,
-      /^[+−-]\d+$/,
+      /^[+−-]?\d+$/,
       `${context} modifier`,
     ),
     saveModifier: parseAbilityMatrixNumber(
       rawSaveModifier,
-      /^[+−-]\d+$/,
+      /^[+−-]?\d+$/,
       `${context} save modifier`,
     ),
   };
@@ -836,12 +856,19 @@ const parseResistances = (lines: readonly string[]): ResistanceProjection => {
 
 const parseImmunities = (
   lines: readonly string[],
-): Pick<ScopedGeneralFacts, "immunityDamageTypes" | "immunityConditions"> => {
+): Pick<
+  ScopedGeneralFacts,
+  "immunityDamageTypes" | "immunityConditions" | "immunityQualifiedConditions"
+> => {
   const line = lines.find((candidate) =>
     candidate.startsWith("**Immunities**"),
   );
   if (line === undefined) {
-    return { immunityDamageTypes: [], immunityConditions: [] };
+    return {
+      immunityDamageTypes: [],
+      immunityConditions: [],
+      immunityQualifiedConditions: [],
+    };
   }
   const [firstGroup = "", explicitConditions] = line
     .replace("**Immunities**", "")
@@ -850,23 +877,54 @@ const parseImmunities = (
   const parseList = (value: string): readonly string[] =>
     value === ""
       ? []
-      : sortedStrings(
-          value
-            .split(", ")
-            .map((item) =>
-              item.replace(/ \(with \*[^*]+\*\)$/, "").toLowerCase(),
-            ),
-        );
+      : sortedStrings(value.split(", ").map((item) => item.toLowerCase()));
+  const parseConditions = (value: string) => {
+    const conditions: string[] = [];
+    const qualifiedConditions: {
+      readonly condition: string;
+      readonly qualifier: string;
+    }[] = [];
+    for (const item of value === "" ? [] : value.split(", ")) {
+      const qualified = item.match(/^([A-Za-z]+) \((.+)\)$/);
+      if (qualified === null) {
+        conditions.push(item.toLowerCase());
+      } else {
+        qualifiedConditions.push({
+          condition: (qualified[1] ?? "").toLowerCase(),
+          qualifier: qualified[2] ?? "",
+        });
+      }
+    }
+    return {
+      conditions: sortedStrings(conditions),
+      qualifiedConditions: [...qualifiedConditions].sort((left, right) =>
+        left.condition.localeCompare(right.condition),
+      ),
+    };
+  };
   const conditionNames = new Set<string>(CONDITIONS);
+  const firstConditionValues = parseConditions(firstGroup);
   const firstValues = parseList(firstGroup);
   const firstGroupIsConditions =
     explicitConditions === undefined &&
-    firstValues.every((value) => conditionNames.has(value));
+    [
+      ...firstConditionValues.conditions,
+      ...firstConditionValues.qualifiedConditions.map(
+        ({ condition }) => condition,
+      ),
+    ].every((value) => conditionNames.has(value));
+  const explicitConditionValues = parseConditions(explicitConditions ?? "");
   return firstGroupIsConditions
-    ? { immunityDamageTypes: [], immunityConditions: firstValues }
+    ? {
+        immunityDamageTypes: [],
+        immunityConditions: firstConditionValues.conditions,
+        immunityQualifiedConditions: firstConditionValues.qualifiedConditions,
+      }
     : {
         immunityDamageTypes: firstValues,
-        immunityConditions: parseList(explicitConditions ?? ""),
+        immunityConditions: explicitConditionValues.conditions,
+        immunityQualifiedConditions:
+          explicitConditionValues.qualifiedConditions,
       };
 };
 
@@ -2276,6 +2334,9 @@ export const projectAuthoredStatBlocks = (
             kind: speed.kind,
             feet: speed.feet.value,
             hover: speed.kind === "fly" && speed.hover === true,
+            ...(!("availability" in speed)
+              ? {}
+              : { availability: speed.availability }),
           })),
           abilityScores: record.statBlock.abilityScores,
           initiative: record.statBlock.initiative,
@@ -2336,6 +2397,11 @@ export const projectAuthoredStatBlocks = (
           ),
           immunityConditions: sortedStrings(
             record.statBlock.immunities?.conditions ?? [],
+          ),
+          immunityQualifiedConditions: [
+            ...(record.statBlock.immunities?.qualifiedConditions ?? []),
+          ].sort((left, right) =>
+            left.condition.localeCompare(right.condition),
           ),
           senses: [...(record.statBlock.senses ?? [])]
             .map((sense) => ({

@@ -196,11 +196,14 @@
       "value": 170
     },
     "immunities": {
-      "conditions": [
-        "charmed"
-      ],
       "damageTypes": [
         "psychic"
+      ],
+      "qualifiedConditions": [
+        {
+          "condition": "charmed",
+          "qualifier": "with *Mind Blank*"
+        }
       ]
     },
     "initiative": {

@@ -94,6 +94,47 @@ describe("Stat Block projection boundary coverage", () => {
           "Stat Block authored projection failed: battle initialization requires a concrete Size.",
       },
       {
+        reason: "unsupportedFormRestrictedSpeed" as const,
+        record: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            speeds: [
+              source.statBlock.speeds[0],
+              {
+                kind: "fly",
+                feet: { kind: "literal", value: 40 },
+                availability: {
+                  kind: "forms_only",
+                  forms: ["winged hybrid"],
+                },
+              },
+            ],
+          },
+        },
+        message:
+          "Stat Block authored projection failed: battle initialization does not own the active form needed to select a form-restricted Speed.",
+      },
+      {
+        reason: "unsupportedQualifiedConditionImmunity" as const,
+        record: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            immunities: {
+              qualifiedConditions: [
+                {
+                  condition: "charmed",
+                  qualifier: "while the synthetic sigil glows",
+                },
+              ],
+            },
+          },
+        },
+        message:
+          "Stat Block authored projection failed: battle initialization cannot apply a qualified condition Immunity without its qualifying state.",
+      },
+      {
         reason: "unsupportedLairConditionalLegendaryActionUses" as const,
         record: {
           ...source,
