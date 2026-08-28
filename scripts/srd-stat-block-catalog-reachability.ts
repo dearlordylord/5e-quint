@@ -16,6 +16,11 @@ type PublishedSrdStatBlock = PublishedSrdSurface["statBlocks"][number];
 
 export type SrdStatBlockCatalogReachabilityIssue =
   | {
+      readonly kind: "duplicate-installed-entry";
+      readonly statBlockId: StatBlockId;
+      readonly occurrences: number;
+    }
+  | {
       readonly kind: "missing-list-entry";
       readonly statBlockId: StatBlockId;
     }
@@ -132,6 +137,16 @@ export function evaluateSrdStatBlockCatalogReachability(
   const presentationsById = indexByStatBlockId(presentationRows);
   const issues: SrdStatBlockCatalogReachabilityIssue[] = [];
 
+  for (const [statBlockId, occurrences] of installedById) {
+    if (occurrences.length > 1) {
+      issues.push({
+        kind: "duplicate-installed-entry",
+        statBlockId,
+        occurrences: occurrences.length,
+      });
+    }
+  }
+
   for (const [statBlockId, occurrences] of listedById) {
     if (!installedById.has(statBlockId)) {
       issues.push({ kind: "unexpected-list-entry", statBlockId });
@@ -162,7 +177,9 @@ export function evaluateSrdStatBlockCatalogReachability(
     }
   }
 
-  for (const installed of input.installedStatBlocks) {
+  for (const installedOccurrences of installedById.values()) {
+    const installed = installedOccurrences[0];
+    if (installed === undefined) continue;
     const listedOccurrences = listedById.get(installed.id) ?? [];
     if (listedOccurrences.length === 0) {
       issues.push({ kind: "missing-list-entry", statBlockId: installed.id });

@@ -110,6 +110,44 @@ describe("SRD Stat Block catalog reachability", () => {
     ]);
   });
 
+  it("rejects duplicate installed identities without duplicating downstream diagnostics", () => {
+    const first = srdStatBlockCollection.statBlocks[0];
+    const presentations = readSrdStatBlockPresentations(publicationFile);
+    if (first === undefined || presentations.tag !== "available") {
+      throw new Error(
+        "Duplicate-installed mutation requires a published record",
+      );
+    }
+    const presentation = presentations.statBlocks.find(
+      ({ id }) => id === first.id,
+    );
+    if (presentation === undefined) {
+      throw new Error("Duplicate-installed mutation requires its presentation");
+    }
+
+    expect(
+      evaluateSrdStatBlockCatalogReachability({
+        installedStatBlocks: [first, first],
+        catalog: {
+          listStatBlocks: () => [first],
+          getStatBlock: () => Option.some(first),
+        },
+        presentations: { tag: "available", statBlocks: [presentation] },
+      }),
+    ).toEqual({
+      installedCount: 2,
+      listedCount: 1,
+      presentationCount: 1,
+      issues: [
+        {
+          kind: "duplicate-installed-entry",
+          statBlockId: first.id,
+          occurrences: 2,
+        },
+      ],
+    });
+  });
+
   it("returns typed unreadable and malformed presentation artifact issues", () => {
     const directory = mkdtempSync(
       join(tmpdir(), "srd-stat-block-reachability-artifact-"),
