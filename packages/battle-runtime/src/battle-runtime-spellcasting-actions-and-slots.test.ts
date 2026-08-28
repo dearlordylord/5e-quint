@@ -52,14 +52,12 @@ import {
   battleId,
   battleProcedureExecutionRefForSpellHoleForTest,
   battleStateWithAllocatedEffectForTest,
-  battleStateWithAllocatedEffectOccurrencesForTest,
   battleStateWithAllSpellSlotsExpended,
   cantripSpellInvocationRef,
   characterSeed,
   damageRollFill,
   damageRollFillWithGroups,
   discoverBattleActs,
-  elapsedTimeTicks,
   endTurn,
   expendedLevelOneSlots,
   fighterId,
@@ -92,6 +90,7 @@ import {
   wizardSpellcasting,
   wizardVsSkeletonBattle,
 } from "./battle-runtime.test-support.ts";
+import { castRayOfEnfeeblementWithFailedSave } from "./ray-of-enfeeblement-failed-save.test-support.ts";
 
 describe("battle runtime: spellcasting actions and slots", () => {
   test("same spell from class and feat access keeps distinct source and payment acts", () => {
@@ -633,94 +632,24 @@ describe("battle runtime: spellcasting actions and slots", () => {
         }),
       ],
     });
-    const caster = baseSession.state.combatants.get(wizardId);
-    const penaltySource = baseSession.state.combatants.get(fighterId);
-    if (
-      caster === undefined ||
-      penaltySource?.origin.kind !== "character" ||
-      penaltySource.origin.spellcasting === undefined
-    ) {
-      throw new Error("Expected Wizard caster and penalty source.");
-    }
-    const penaltyProcedureRef = requireCharacterSpellProcedureRefForTest(
-      baseSession,
-      fighterId,
-      spellSlotInvocationRef(
-        "ray_of_enfeeblement",
-        2,
-        "abilityD20TestRollModeSaveGate",
-      ),
+    const skeletonTurn = requireResolved(
+      endTurn({ state: baseSession.state, actorId: wizardId }),
     );
-    const allocatedPenalty = battleStateWithAllocatedEffectOccurrencesForTest({
-      state: baseSession.state,
-      occurrences: [
-        {
-          kind: "activeEffect",
-          ownerId: wizardId,
-          effect: {
-            kind: "sourceDamageRollPenalty",
-            sourceProcedureRef: penaltyProcedureRef,
-            sourceCombatantId: fighterId,
-            amount: { dice: 1, dieSize: 8 },
-            expiresAt: {
-              kind: "concentration",
-              combatantId: fighterId,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        },
-        {
-          kind: "activeEffect",
-          ownerId: wizardId,
-          effect: {
-            kind: "abilityD20TestRollModeEndTurnSave",
-            sourceProcedureRef: penaltyProcedureRef,
-            sourceCombatantId: fighterId,
-            ability: "str",
-            mode: "disadvantage",
-            save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-            expiresAt: {
-              kind: "concentration",
-              combatantId: fighterId,
-              durationTicks: elapsedTimeTicks(10),
-            },
-          },
-        },
-      ],
-    });
-    const damagePenaltyOccurrence = allocatedPenalty.occurrences[0];
-    const abilityPenaltyOccurrence = allocatedPenalty.occurrences[1];
-    if (
-      damagePenaltyOccurrence?.kind !== "activeEffect" ||
-      damagePenaltyOccurrence.effect.kind !== "sourceDamageRollPenalty" ||
-      abilityPenaltyOccurrence?.kind !== "activeEffect" ||
-      abilityPenaltyOccurrence.effect.kind !==
-        "abilityD20TestRollModeEndTurnSave"
-    ) {
-      throw new Error("Expected the allocated Ray of Enfeeblement composite.");
-    }
-    const state: BattleState = {
-      ...allocatedPenalty.state,
-      combatants: new Map(allocatedPenalty.state.combatants).set(fighterId, {
-        ...penaltySource,
-        origin: {
-          ...penaltySource.origin,
-          spellcasting: {
-            ...penaltySource.origin.spellcasting,
-            spellSlots: penaltySource.origin.spellcasting.spellSlots.map(
-              (slot) =>
-                slot.spellLevel === 2
-                  ? { ...slot, expended: resourceCount(1) }
-                  : slot,
-            ),
-          },
-        },
-        concentration: {
-          sourceProcedureRef: penaltyProcedureRef,
-          effectKind: "spellEffect",
-        },
+    const penaltySourceTurn = requireResolved(
+      endTurn({ state: skeletonTurn.state, actorId: skeletonId }),
+    );
+    const ray = castRayOfEnfeeblementWithFailedSave({
+      session: battleRuntimeSessionForTest({
+        ...baseSession,
+        state: penaltySourceTurn.state,
       }),
-    };
+      casterId: fighterId,
+      targetId: wizardId,
+    });
+    const wizardTurn = requireResolved(
+      endTurn({ state: ray.session.state, actorId: fighterId }),
+    );
+    const state = wizardTurn.state;
     const session = battleRuntimeSessionForTest({
       ...baseSession,
       state,
@@ -752,17 +681,34 @@ describe("battle runtime: spellcasting actions and slots", () => {
       label: "Source damage roll penalty (1d8)",
       sourceDamageRollPenalty: {
         damageRollHoleId: `${damage.holeId}:allocation:0`,
-        effectRef: damagePenaltyOccurrence.effect.effectRef,
+        effectRef: ray.damagePenaltyEffect.effectRef,
       },
     });
     expect(
       state.combatants
         .get(wizardId)
         ?.activeEffects.some(
-          (effect) =>
-            effect.effectRef === abilityPenaltyOccurrence.effect.effectRef,
+          (effect) => effect.effectRef === ray.abilityPenaltyEffect.effectRef,
         ),
     ).toBe(true);
+    expect(state.combatants.get(wizardId)?.nextEffectOrdinal).toBe(
+      ray.targetCursorAfterCast,
+    );
+    const penaltySource = state.combatants.get(fighterId);
+    if (
+      penaltySource?.origin.kind !== "character" ||
+      penaltySource.origin.spellcasting === undefined
+    ) {
+      throw new Error("Expected the production Ray of Enfeeblement caster.");
+    }
+    expect(penaltySource.concentration?.sourceProcedureRef).toBe(
+      ray.procedureRef,
+    );
+    expect(
+      penaltySource.origin.spellcasting.spellSlots.find(
+        (slot) => slot.spellLevel === 2,
+      )?.expended,
+    ).toBe(resourceCount(1));
     const resolved = requireResolved(
       resolveBattleSubject({
         session,
@@ -775,6 +721,9 @@ describe("battle runtime: spellcasting actions and slots", () => {
       }),
     );
     expect(resolved.state.combatants.get(skeletonId)?.hp).toBe(8);
+    expect(resolved.state.combatants.get(wizardId)?.nextEffectOrdinal).toBe(
+      ray.targetCursorAfterCast,
+    );
   });
 
   test("admitted Action and Bonus Action spell subjects reject depleted spell resources", () => {
