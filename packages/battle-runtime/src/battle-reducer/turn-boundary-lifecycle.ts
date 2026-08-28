@@ -59,6 +59,7 @@ import type {
   BattleActiveEffectExpiration,
   BattleAttackDamageDispositionHole,
   BattleCreatureState,
+  BattleConcentrationSavingThrowHole,
   BattleCloudkillMovementHole,
   BattleStartTurnOccurrenceOrderHole,
   BattleFill,
@@ -249,7 +250,7 @@ type ResolvedTurnBoundaryFills = {
     BattleFill,
     { readonly kind: "attackDamageDisposition" }
   >[];
-  readonly deferSpellTurnStartDamage: boolean;
+  readonly spellTurnStartDamageEffectsBeforeCloudkillMovement: readonly SpellTurnStartDamageEffect[];
   readonly turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement: readonly BattleProcedureExecutionRef[];
   readonly deferStatBlockRecharge: boolean;
 };
@@ -293,10 +294,7 @@ type StartTurnOccurrenceOption =
 
 type StartTurnOccurrenceHandle =
   | { readonly kind: "deathSavingThrow" }
-  | {
-      readonly kind: "statBlockRecharge";
-      readonly hole: BattleStatBlockRechargeRollHole;
-    }
+  | { readonly kind: "statBlockRecharge" }
   | {
       readonly kind: "turnStartTemporaryHitPoints";
       readonly effect: Extract<
@@ -376,18 +374,10 @@ function startTurnOccurrenceOptionForHandle(
       ),
     ),
     Match.when({ kind: "spellConditionTurnStartDamage" }, ({ effect }) =>
-      startTurnOccurrenceOption(
-        "spellConditionTurnStartDamage",
-        { effectRef: effect.effectRef },
-        "Resolve start-turn spell damage",
-      ),
+      spellTurnStartDamageOccurrenceOption(effect),
     ),
     Match.when({ kind: "spellTurnStartDamageAndSave" }, ({ effect }) =>
-      startTurnOccurrenceOption(
-        "spellTurnStartDamageAndSave",
-        { sourceProcedureRef: effect.sourceProcedureRef },
-        "Resolve start-turn spell damage",
-      ),
+      spellTurnStartDamageOccurrenceOption(effect),
     ),
     Match.when({ kind: "cloudkillMovement" }, ({ effect }) =>
       cloudkillMovementOccurrenceOption(effect),
@@ -411,7 +401,7 @@ function startTurnOccurrenceOrderHole(
   };
 }
 
-function cloudkillMovementWasChosenBeforeStartTurnEffects(
+function spellTurnStartDamageEffectsAfterCloudkillMovementOccurrence(
   fills: readonly BattleFill[],
   sourceTurn: BattleCloudkillMovementSequenceResumeCheckpoint["sourceTurn"],
   occurrence: Pick<
@@ -419,34 +409,33 @@ function cloudkillMovementWasChosenBeforeStartTurnEffects(
     "areaId" | "sourceProcedureRef"
   >,
   state: BattleState,
-): boolean {
+): readonly SpellTurnStartDamageEffect[] {
   const key = `battle:start-turn-occurrence-order:${sourceTurn.actorId}:${Number(sourceTurn.round)}`;
   const fill = fills.find(
     (candidate) =>
       candidate.kind === "startTurnOccurrenceOrder" &&
       candidate.holeId === holeId(key),
   );
-  if (fill?.kind !== "startTurnOccurrenceOrder") return false;
+  if (fill?.kind !== "startTurnOccurrenceOrder") return [];
   const movementId = cloudkillMovementOccurrenceOption(occurrence).occurrenceId;
   const movementIndex = fill.value.occurrenceIds.indexOf(movementId);
   const actor = state.combatants.get(sourceTurn.actorId);
-  const damageOccurrenceIds = new Set(
-    spellTurnStartDamageEffects(actor).map(
-      (effect) =>
-        startTurnOccurrenceOption(
-          effect.kind === "spellCondition"
-            ? "spellConditionTurnStartDamage"
-            : "spellTurnStartDamageAndSave",
-          effect.kind === "spellCondition"
-            ? { effectRef: effect.effectRef }
-            : { sourceProcedureRef: effect.sourceProcedureRef },
-          "Resolve start-turn spell damage",
-        ).occurrenceId,
+  const occurrenceIdsAfterMovement = new Set(
+    fill.value.occurrenceIds.slice(movementIndex + 1),
+  );
+  return spellTurnStartDamageEffects(actor).filter((effect) =>
+    occurrenceIdsAfterMovement.has(
+      startTurnOccurrenceOption(
+        effect.kind === "spellCondition"
+          ? "spellConditionTurnStartDamage"
+          : "spellTurnStartDamageAndSave",
+        effect.kind === "spellCondition"
+          ? { effectRef: effect.effectRef }
+          : { sourceProcedureRef: effect.sourceProcedureRef },
+        "Resolve start-turn spell damage",
+      ).occurrenceId,
     ),
   );
-  return fill.value.occurrenceIds
-    .slice(movementIndex + 1)
-    .some((occurrenceId) => damageOccurrenceIds.has(occurrenceId));
 }
 
 function cloudkillMovementWasChosenBeforeOccurrence(
@@ -615,7 +604,8 @@ function completeCloudkillMovementSequenceResume(
   state: BattleState,
   fills: readonly BattleFill[],
   checkpoint: BattleCloudkillMovementSequenceResumeCheckpoint,
-): Extract<BattleResolutionResult, { readonly tag: "resolved" }> {
+  parent: ReplayParentContinuation,
+): BattleResolutionResult {
   const stateAfterTemporaryHitPoints = {
     ...state,
     combatants: applyStartOfTurnTemporaryHitPointEffects(
@@ -629,18 +619,96 @@ function completeCloudkillMovementSequenceResume(
       ),
     ),
   };
-  const completedState = cloudkillMovementWasChosenBeforeStartTurnEffects(
-    fills,
-    checkpoint.sourceTurn,
-    checkpoint.occurrence,
-    stateAfterTemporaryHitPoints,
-  )
-    ? applyDeferredStartTurnSpellDamage(
-        stateAfterTemporaryHitPoints,
-        checkpoint.sourceTurn.actorId,
-        fills,
-      )
-    : stateAfterTemporaryHitPoints;
+  const deferredDamageEffects =
+    spellTurnStartDamageEffectsAfterCloudkillMovementOccurrence(
+      fills,
+      checkpoint.sourceTurn,
+      checkpoint.occurrence,
+      stateAfterTemporaryHitPoints,
+    );
+  const damageHoles = deferredDamageEffects.map((effect) =>
+    spellTurnStartDamageRollHole(checkpoint.sourceTurn.actorId, effect),
+  );
+  const missingDamageHoles = damageHoles.filter(
+    (hole) => spellTurnStartDamageRollFor(fills, hole) === undefined,
+  );
+  if (missingDamageHoles.length > 0) {
+    return needsHolesResult(state, parent.subject, missingDamageHoles);
+  }
+  const damageRequests = deferredDamageEffects.flatMap((effect) => {
+    const hole = spellTurnStartDamageRollHole(
+      checkpoint.sourceTurn.actorId,
+      effect,
+    );
+    const roll = spellTurnStartDamageRollFor(fills, hole);
+    return roll === undefined ? [] : [{ effect, roll }];
+  });
+  const concentrationFills = fills.filter(
+    (
+      fill,
+    ): fill is Extract<
+      BattleFill,
+      { readonly kind: "concentrationSavingThrow" }
+    > => fill.kind === "concentrationSavingThrow",
+  );
+  const concentrationHoles = damageRequests.flatMap(({ effect, roll }) => {
+    const target = stateAfterTemporaryHitPoints.combatants.get(
+      checkpoint.sourceTurn.actorId,
+    );
+    return target === undefined
+      ? []
+      : spellTurnStartDamageConcentrationSavingThrowHoles({
+          state: stateAfterTemporaryHitPoints,
+          target,
+          effect,
+          damageAmount: spellTurnStartDamageAmount(
+            stateAfterTemporaryHitPoints,
+            target,
+            effect,
+            roll,
+          ),
+          sourceTurn: checkpoint.sourceTurn,
+        });
+  });
+  const missingConcentrationHoles = concentrationHoles.filter(
+    (hole) =>
+      concentrationSavingThrowFillFor(concentrationFills, hole) === undefined,
+  );
+  if (missingConcentrationHoles.length > 0) {
+    return needsHolesResult(state, parent.subject, missingConcentrationHoles);
+  }
+  const saveHoles = deferredDamageEffects.flatMap((effect) =>
+    effect.kind === "spellTurnStartDamageAndSave"
+      ? [
+          spellTurnStartSavingThrowOutcomeHole(
+            checkpoint.sourceTurn.actorId,
+            effect,
+          ),
+        ]
+      : [],
+  );
+  const savingThrowFills = fills.filter(
+    (
+      fill,
+    ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
+      fill.kind === "savingThrowOutcome",
+  );
+  const missingSaveHoles = saveHoles.filter(
+    (hole) =>
+      spellTurnStartSavingThrowOutcomeFor(savingThrowFills, hole) === undefined,
+  );
+  if (missingSaveHoles.length > 0) {
+    return needsHolesResult(state, parent.subject, missingSaveHoles);
+  }
+  const completedState =
+    deferredDamageEffects.length > 0
+      ? applyDeferredStartTurnSpellDamage(
+          stateAfterTemporaryHitPoints,
+          checkpoint.sourceTurn.actorId,
+          fills,
+          deferredDamageEffects,
+        )
+      : stateAfterTemporaryHitPoints;
   return {
     tag: "resolved",
     state: completedState,
@@ -716,6 +784,7 @@ function resolveCloudkillMovementSequenceResume(input: {
       resolution.state,
       resolution.fills,
       checkpoint,
+      input.parent,
     );
   }
   const boundaryMatch = matchCloudkillMovementBoundaries(
@@ -767,6 +836,7 @@ function resolveCloudkillMovementSequenceResume(input: {
       resolution.state,
       resolution.fills,
       checkpoint,
+      input.parent,
     );
   }
   const firstPendingRequest = pendingRequests[0];
@@ -797,6 +867,7 @@ function resolveCloudkillMovementSequenceResume(input: {
     resumed.state,
     resolution.fills,
     checkpoint,
+    input.parent,
   );
 }
 
@@ -817,7 +888,7 @@ function resolveEndTurn({
   turnBoundaryHideousLaughterDamageRepeatSaves,
   concentrationSavingThrows,
   damageDispositions,
-  deferSpellTurnStartDamage,
+  spellTurnStartDamageEffectsBeforeCloudkillMovement,
   turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement,
   deferStatBlockRecharge,
 }: ResolvedTurnBoundaryFills): Extract<
@@ -988,21 +1059,20 @@ function resolveEndTurn({
       nextActorId,
       turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement,
     );
-  const combatantsAfterSpellTurnStartDamage = deferSpellTurnStartDamage
-    ? combatantsAfterStartTurnEffects
-    : applyStartTurnSpellDamageFills(
-        {
-          ...state,
-          initiative,
-          combatants: combatantsAfterStartTurnEffects,
-        },
-        nextActorId,
-        spellTurnStartDamageRolls,
-        spellTurnStartSaves,
-        concentrationSavingThrows,
-        damageDispositions,
-        turnBoundaryHideousLaughterDamageRepeatSaves,
-      ).combatants;
+  const combatantsAfterSpellTurnStartDamage = applyStartTurnSpellDamageFills(
+    {
+      ...state,
+      initiative,
+      combatants: combatantsAfterStartTurnEffects,
+    },
+    nextActorId,
+    spellTurnStartDamageRolls,
+    spellTurnStartSaves,
+    concentrationSavingThrows,
+    damageDispositions,
+    turnBoundaryHideousLaughterDamageRepeatSaves,
+    spellTurnStartDamageEffectsBeforeCloudkillMovement,
+  ).combatants;
   const durationTick =
     Number(initiative.round) > Number(state.initiative.round)
       ? tickDurationEffects(combatantsAfterSpellTurnStartDamage, {
@@ -1213,6 +1283,47 @@ type SpellTurnStartDamageEffect =
       BattleActiveEffect,
       { readonly kind: "spellTurnStartDamageAndSave" }
     >;
+
+function spellTurnStartDamageOccurrenceOption(
+  effect: SpellTurnStartDamageEffect,
+): StartTurnOccurrenceOption {
+  return startTurnOccurrenceOption(
+    effect.kind === "spellCondition"
+      ? "spellConditionTurnStartDamage"
+      : "spellTurnStartDamageAndSave",
+    effect.kind === "spellCondition"
+      ? { effectRef: effect.effectRef }
+      : { sourceProcedureRef: effect.sourceProcedureRef },
+    "Resolve start-turn spell damage",
+  );
+}
+
+function spellTurnStartDamageConcentrationSavingThrowHoles(input: {
+  readonly state: BattleState;
+  readonly target: BattleCreatureState;
+  readonly effect: SpellTurnStartDamageEffect;
+  readonly damageAmount: number;
+  readonly sourceTurn: {
+    readonly actorId: CombatantId;
+    readonly round: RoundType;
+  };
+}): readonly BattleConcentrationSavingThrowHole[] {
+  const occurrenceId = spellTurnStartDamageOccurrenceOption(
+    input.effect,
+  ).occurrenceId;
+  return damageLifecycleConcentrationSavingThrowHoles({
+    state: input.state,
+    target: input.target,
+    damageAmount: input.damageAmount,
+  }).map((hole) => {
+    const key = `battle:spell-turn-start-damage-concentration:${input.sourceTurn.actorId}:${Number(input.sourceTurn.round)}:${occurrenceId}:${hole.combatantId}`;
+    return {
+      ...hole,
+      holeId: holeId(key),
+      holeInstanceKey: holeInstanceKey(key),
+    };
+  });
+}
 
 function spellTurnEndDamageEffects(
   combatant: BattleCreatureState | undefined,
@@ -2583,9 +2694,10 @@ function applyStartTurnSpellDamageFills(
     BattleFill,
     { readonly kind: "savingThrowOutcome" }
   >[],
+  effects: readonly SpellTurnStartDamageEffect[] = spellTurnStartDamageEffects(
+    state.combatants.get(actorId),
+  ),
 ): BattleState {
-  const actor = state.combatants.get(actorId);
-  const effects = spellTurnStartDamageEffects(actor);
   return effects.reduce((nextState, effect) => {
     const hole = spellTurnStartDamageRollHole(actorId, effect);
     const roll = spellTurnStartDamageRollFor(rolls, hole);
@@ -2599,16 +2711,20 @@ function applyStartTurnSpellDamageFills(
       effect,
       roll,
     );
-    const concentrationHole = concentrationSavingThrowHole(
-      target,
-      damageAmount,
-    );
     const concentrationLifecycleHoles =
-      damageLifecycleConcentrationSavingThrowHoles({
+      spellTurnStartDamageConcentrationSavingThrowHoles({
         state: nextState,
         target,
+        effect,
         damageAmount,
+        sourceTurn: {
+          actorId,
+          round: nextState.initiative.round,
+        },
       });
+    const concentrationHole = concentrationLifecycleHoles.find(
+      (candidate) => candidate.combatantId === actorId,
+    );
     const concentrationLifecycleFills = fillsMatchingHoleIds(
       concentrationSavingThrows,
       concentrationLifecycleHoles,
@@ -2628,7 +2744,7 @@ function applyStartTurnSpellDamageFills(
       target,
       effect,
       roll,
-      concentrationHole === null
+      concentrationHole === undefined
         ? undefined
         : concentrationSavingThrowFillFor(
             concentrationLifecycleFills,
@@ -2658,6 +2774,7 @@ function applyDeferredStartTurnSpellDamage(
   state: BattleState,
   actorId: CombatantId,
   fills: readonly BattleFill[],
+  effects?: readonly SpellTurnStartDamageEffect[],
 ): BattleState {
   return applyStartTurnSpellDamageFills(
     state,
@@ -2694,6 +2811,7 @@ function applyDeferredStartTurnSpellDamage(
       ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
         fill.kind === "savingThrowOutcome",
     ),
+    effects,
   );
 }
 
@@ -3454,9 +3572,7 @@ function resolveEndTurnCommandForParent(
   );
   const startTurnOccurrenceHandles: readonly StartTurnOccurrenceHandle[] = [
     ...(needsDeathSavingThrow ? [{ kind: "deathSavingThrow" as const }] : []),
-    ...(rechargeHole === null
-      ? []
-      : [{ kind: "statBlockRecharge" as const, hole: rechargeHole }]),
+    ...(rechargeHole === null ? [] : [{ kind: "statBlockRecharge" as const }]),
     ...(nextActor?.activeEffects.flatMap((effect) =>
       effect.kind === "turnStartTemporaryHitPoints"
         ? [
@@ -3593,37 +3709,80 @@ function resolveEndTurnCommandForParent(
     orderedStartTurnOccurrenceHandles.findIndex(
       (handle) => handle.kind === "cloudkillMovement",
     );
-  const cloudkillMovementBeforeStartTurnEffects =
-    firstCloudkillMovementIndex !== -1 &&
-    orderedStartTurnOccurrenceHandles.some(
-      (handle, index) =>
-        index > firstCloudkillMovementIndex &&
-        (handle.kind === "spellConditionTurnStartDamage" ||
-          handle.kind === "spellTurnStartDamageAndSave"),
+  const occurrenceHandlesBeforeCloudkillMovement =
+    orderedStartTurnOccurrenceHandles.slice(
+      0,
+      firstCloudkillMovementIndex === -1
+        ? orderedStartTurnOccurrenceHandles.length
+        : firstCloudkillMovementIndex,
     );
-  const turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement =
-    orderedStartTurnOccurrenceHandles
-      .slice(
-        0,
-        firstCloudkillMovementIndex === -1
-          ? orderedStartTurnOccurrenceHandles.length
-          : firstCloudkillMovementIndex,
+  const occurrenceHandlesAfterCloudkillMovement =
+    firstCloudkillMovementIndex === -1
+      ? []
+      : orderedStartTurnOccurrenceHandles.slice(
+          firstCloudkillMovementIndex + 1,
+        );
+  const spellTurnStartDamageEffectsFromHandles = (
+    handles: readonly StartTurnOccurrenceHandle[],
+  ): readonly SpellTurnStartDamageEffect[] =>
+    handles.flatMap((handle) =>
+      handle.kind === "spellConditionTurnStartDamage" ||
+      handle.kind === "spellTurnStartDamageAndSave"
+        ? [handle.effect]
+        : [],
+    );
+  const spellTurnStartDamageEffectsBeforeCloudkillMovement =
+    spellTurnStartDamageEffectsFromHandles(
+      occurrenceHandlesBeforeCloudkillMovement,
+    );
+  const spellTurnStartDamageEffectsAfterCloudkillMovement =
+    spellTurnStartDamageEffectsFromHandles(
+      occurrenceHandlesAfterCloudkillMovement,
+    );
+  const cloudkillMovementBeforeStartTurnEffects =
+    spellTurnStartDamageEffectsAfterCloudkillMovement.length > 0;
+  const startTurnDamageHoleIdsBeforeCloudkillMovement = new Set(
+    startTurnDamageRequests
+      .filter(({ effect }) =>
+        spellTurnStartDamageEffectsBeforeCloudkillMovement.includes(effect),
       )
-      .flatMap((handle) =>
-        handle.kind === "turnStartTemporaryHitPoints"
-          ? [handle.effect.sourceProcedureRef]
-          : [],
-      );
+      .map(({ hole }) => hole.holeId),
+  );
+  const startTurnSaveHoleIdsBeforeCloudkillMovement = new Set(
+    startTurnSaveRequests
+      .filter(({ effect }) =>
+        spellTurnStartDamageEffectsBeforeCloudkillMovement.includes(effect),
+      )
+      .map(({ hole }) => hole.holeId),
+  );
+  const startTurnDamageHoleIdsAfterCloudkillMovement = new Set(
+    startTurnDamageRequests
+      .filter(({ effect }) =>
+        spellTurnStartDamageEffectsAfterCloudkillMovement.includes(effect),
+      )
+      .map(({ hole }) => hole.holeId),
+  );
+  const startTurnSaveHoleIdsAfterCloudkillMovement = new Set(
+    startTurnSaveRequests
+      .filter(({ effect }) =>
+        spellTurnStartDamageEffectsAfterCloudkillMovement.includes(effect),
+      )
+      .map(({ hole }) => hole.holeId),
+  );
+  const turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement =
+    occurrenceHandlesBeforeCloudkillMovement.flatMap((handle) =>
+      handle.kind === "turnStartTemporaryHitPoints"
+        ? [handle.effect.sourceProcedureRef]
+        : [],
+    );
   const turnStartTemporaryHitPointProcedureRefsAfterCloudkillMovement =
     firstCloudkillMovementIndex === -1
       ? []
-      : orderedStartTurnOccurrenceHandles
-          .slice(firstCloudkillMovementIndex + 1)
-          .flatMap((handle) =>
-            handle.kind === "turnStartTemporaryHitPoints"
-              ? [handle.effect.sourceProcedureRef]
-              : [],
-          );
+      : occurrenceHandlesAfterCloudkillMovement.flatMap((handle) =>
+          handle.kind === "turnStartTemporaryHitPoints"
+            ? [handle.effect.sourceProcedureRef]
+            : [],
+        );
   const cloudkillMovementBeforeStatBlockRecharge =
     firstCloudkillMovementIndex !== -1 &&
     orderedStartTurnOccurrenceHandles.some(
@@ -3643,8 +3802,9 @@ function resolveEndTurnCommandForParent(
     ...(rechargeHole === null || cloudkillMovementBeforeStatBlockRecharge
       ? []
       : [rechargeHole]),
-    ...startTurnDamageHoles,
-    ...startTurnSaveHoles,
+    ...startTurnDamageHoles.filter((hole) =>
+      startTurnDamageHoleIdsBeforeCloudkillMovement.has(hole.holeId),
+    ),
   ];
   const missingInitialHoles = initialHoles.filter(
     (hole) => !input.fills.some((fill) => fill.holeId === hole.holeId),
@@ -3817,7 +3977,9 @@ function resolveEndTurnCommandForParent(
   const missingTurnBoundaryDamageHoles =
     firstMissingTurnBoundaryDamageHoleFrontier({
       endTurn: endTurnDamageRollCollection.missingHoles,
-      startTurn: startTurnDamageRollCollection.missingHoles,
+      startTurn: startTurnDamageRollCollection.missingHoles.filter((hole) =>
+        startTurnDamageHoleIdsBeforeCloudkillMovement.has(hole.holeId),
+      ),
     });
   if (missingTurnBoundaryDamageHoles.length > 0) {
     return needsHolesResult(
@@ -3853,12 +4015,10 @@ function resolveEndTurnCommandForParent(
   const startTurnSaves = startTurnSaveCollection.resolved.map(
     ({ fill }) => fill,
   );
-  const missingStartTurnSaveHoles = startTurnSaveCollection.missingHoles;
-  if (missingStartTurnSaveHoles.length > 0) {
-    return needsHolesResult(input.state, input.subject, [
-      ...missingStartTurnSaveHoles,
-    ]);
-  }
+  const missingStartTurnSaveHolesBeforeCloudkillMovement =
+    startTurnSaveCollection.missingHoles.filter((hole) =>
+      startTurnSaveHoleIdsBeforeCloudkillMovement.has(hole.holeId),
+    );
   const endTurnHideousLaughterDamageRepeatSaveChecks =
     endTurnDamageRollRequests.map((request) => {
       /* v8 ignore start -- @preserve -- Internal turn-boundary invariant: endTurnDamageRollRequests can contain an entry only when that effect was read from actor. */
@@ -4179,15 +4339,17 @@ function resolveEndTurnCommandForParent(
         return [];
       }
       /* v8 ignore stop -- @preserve */
-      return damageLifecycleConcentrationSavingThrowHoles({
+      return spellTurnStartDamageConcentrationSavingThrowHoles({
         state: input.state,
         target,
+        effect: request.effect,
         damageAmount: spellTurnStartDamageAmount(
           input.state,
           target,
           request.effect,
           request.roll,
         ),
+        sourceTurn: nextSourceTurn,
       });
     },
   );
@@ -4253,6 +4415,13 @@ function resolveEndTurnCommandForParent(
       input.state,
       input.subject,
       missingDamageDispositionHoles,
+    );
+  }
+  if (missingStartTurnSaveHolesBeforeCloudkillMovement.length > 0) {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      missingStartTurnSaveHolesBeforeCloudkillMovement,
     );
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
@@ -4378,7 +4547,7 @@ function resolveEndTurnCommandForParent(
       concentrationHoleIds.has(fill.holeId),
     ),
     damageDispositions: damageDispositionFills,
-    deferSpellTurnStartDamage: cloudkillMovementBeforeStartTurnEffects,
+    spellTurnStartDamageEffectsBeforeCloudkillMovement,
     turnStartTemporaryHitPointProcedureRefsBeforeCloudkillMovement,
     deferStatBlockRecharge: cloudkillMovementBeforeStatBlockRecharge,
   });
@@ -4452,6 +4621,35 @@ function resolveEndTurnCommandForParent(
     return movementAffectedResolution.result;
   }
 
+  if (
+    cloudkillMovementBeforeStartTurnEffects &&
+    startTurnDamageRollCollection.missingHoles.some((hole) =>
+      startTurnDamageHoleIdsAfterCloudkillMovement.has(hole.holeId),
+    )
+  ) {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      startTurnDamageRollCollection.missingHoles.filter((hole) =>
+        startTurnDamageHoleIdsAfterCloudkillMovement.has(hole.holeId),
+      ),
+    );
+  }
+  const missingStartTurnSaveHolesAfterCloudkillMovement =
+    startTurnSaveCollection.missingHoles.filter((hole) =>
+      startTurnSaveHoleIdsAfterCloudkillMovement.has(hole.holeId),
+    );
+  if (
+    cloudkillMovementBeforeStartTurnEffects &&
+    missingStartTurnSaveHolesAfterCloudkillMovement.length > 0
+  ) {
+    return needsHolesResult(
+      input.state,
+      input.subject,
+      missingStartTurnSaveHolesAfterCloudkillMovement,
+    );
+  }
+
   /* v8 ignore start -- @preserve -- Malformed resolution input: each save, damage, and Concentration fill must answer either a normal turn-boundary hole or a movement-triggered Cloudkill hole. */
   if (
     savingThrowOutcomeFills.some(
@@ -4492,6 +4690,7 @@ function resolveEndTurnCommandForParent(
           stateAfterDeferredTemporaryHitPoints,
           nextActorId,
           input.fills,
+          spellTurnStartDamageEffectsAfterCloudkillMovement,
         )
       : stateAfterDeferredTemporaryHitPoints;
   if (
