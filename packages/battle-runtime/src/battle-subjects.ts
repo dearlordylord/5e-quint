@@ -1017,7 +1017,8 @@ export const BattleSubjectSchema = Schema.Union([
     actorId: CombatantId,
     command: Schema.Literal("disperseCloudkill"),
     ...RejectRedundantSpellSourceFields,
-    areaId: BattleAreaId,
+    effectOwnerId: CombatantId,
+    effectRef: BattleEffectExecutionRef,
   }),
   Schema.Struct({
     tag: Schema.Literal("runtimeCommand"),
@@ -1492,6 +1493,16 @@ function battleRuntimeCommandBoundExecutionReferences(
   }): readonly BattleSubjectBoundExecutionReference[] => [
     { kind: "activeEffectOccurrence", effectRef: value.effectRef },
   ];
+  const ownedEffect = (value: {
+    readonly effectOwnerId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
+  }): readonly BattleSubjectBoundExecutionReference[] => [
+    {
+      kind: "activeEffect",
+      ownerId: value.effectOwnerId,
+      effectRef: value.effectRef,
+    },
+  ];
   return Match.value(subject).pipe(
     Match.discriminatorsExhaustive("command")({
       endTurn: noBoundExecutionReferences,
@@ -1516,7 +1527,7 @@ function battleRuntimeCommandBoundExecutionReferences(
         activeEffectOccurrence(value.areaMembershipTrigger),
       cloudkillAreaHazardSave: (value) =>
         activeEffectOccurrence(value.areaMembershipTrigger),
-      disperseCloudkill: noBoundExecutionReferences,
+      disperseCloudkill: ownedEffect,
       webRestrainedNoLongerInArea: activeEffectOccurrence,
       webAreaRemoved: activeEffectOccurrence,
       gustOfWindLineSave: activeEffectOccurrence,

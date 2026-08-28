@@ -118,7 +118,7 @@ describe("BattleSubject identity", () => {
           effectRef,
         },
       },
-      disperseCloudkill: { areaId },
+      disperseCloudkill: { effectOwnerId: actorId, effectRef },
       webRestrainedNoLongerInArea: { areaId, effectRef },
       webAreaRemoved: { areaId, effectRef },
       gustOfWindLineSave: {
