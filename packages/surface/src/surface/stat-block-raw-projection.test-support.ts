@@ -17,6 +17,23 @@ import {
 const ABILITY_NAMES = ["str", "dex", "con", "int", "wis", "cha"] as const;
 type AbilityName = (typeof ABILITY_NAMES)[number];
 const ATTACK_ABILITY_NAMES = ["str", "dex", "int", "wis", "cha"] as const;
+type NonEmptyStrings = readonly [string, ...string[]];
+
+type AbilityMatrixFact = {
+  readonly ability: AbilityName;
+  readonly score: number;
+  readonly modifier: number;
+  readonly saveModifier: number;
+};
+
+type AbilityMatrix = readonly [
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+  AbilityMatrixFact,
+];
 
 const PROCEDURE_SECTIONS = [
   "Actions",
@@ -229,10 +246,11 @@ type ScopedGeneralFacts = {
   readonly saveProficiencies: readonly AbilityName[];
   readonly skillModifiers: readonly NamedModifier[];
   readonly vulnerabilities:
-    | { readonly kind: "fixed"; readonly damageTypes: readonly string[] }
+    | { readonly kind: "none" }
+    | { readonly kind: "fixed"; readonly damageTypes: NonEmptyStrings }
     | {
         readonly kind: "qualified";
-        readonly damageTypes: readonly string[];
+        readonly damageTypes: NonEmptyStrings;
         readonly qualifier: string;
       };
   readonly resistances: readonly string[];
@@ -352,6 +370,21 @@ const sortedStrings = <Value extends string>(
 ): readonly Value[] =>
   [...values].sort((left, right) => left.localeCompare(right));
 
+const sortedNonEmptyStrings = (
+  values: readonly string[],
+  context: string,
+): NonEmptyStrings => {
+  const sorted = sortedStrings(values);
+  const [first, ...rest] = sorted;
+  if (first === undefined || first.length === 0) {
+    throw new Error(`Expected at least one nonempty ${context}`);
+  }
+  if (rest.some((value) => value.length === 0)) {
+    throw new Error(`Expected nonempty ${context}`);
+  }
+  return [first, ...rest];
+};
+
 const sortedModifiers = (
   values: readonly NamedModifier[],
 ): readonly NamedModifier[] =>
@@ -445,14 +478,154 @@ const parseAbilityRow = (
 
 const abilityRecord = (
   values: readonly number[],
-): Readonly<Record<AbilityName, number>> => ({
-  str: values[0] ?? 0,
-  dex: values[1] ?? 0,
-  con: values[2] ?? 0,
-  int: values[3] ?? 0,
-  wis: values[4] ?? 0,
-  cha: values[5] ?? 0,
-});
+): Readonly<Record<AbilityName, number>> => {
+  const [str, dex, con, int, wis, cha, extra] = values;
+  if (
+    str === undefined ||
+    dex === undefined ||
+    con === undefined ||
+    int === undefined ||
+    wis === undefined ||
+    cha === undefined ||
+    extra !== undefined ||
+    values.some((value) => !Number.isFinite(value))
+  ) {
+    throw new Error("Expected exactly six finite ability values");
+  }
+  return { str, dex, con, int, wis, cha };
+};
+
+const isAbilityName = (value: string): value is AbilityName =>
+  ABILITY_NAMES.some((ability) => ability === value);
+
+const parseAbilityMatrixNumber = (
+  value: string,
+  pattern: RegExp,
+  context: string,
+): number => {
+  if (!pattern.test(value)) {
+    throw new Error(`Invalid ${context}: ${value}`);
+  }
+  return signedNumber(value);
+};
+
+const parseAbilityMatrixGroup = (
+  cells: readonly [string, string, string, string],
+  context: string,
+): AbilityMatrixFact => {
+  const [rawAbility, rawScore, rawModifier, rawSaveModifier] = cells;
+  const ability = rawAbility.toLowerCase();
+  if (!isAbilityName(ability)) {
+    throw new Error(`Unrecognized ${context} ability label: ${rawAbility}`);
+  }
+  return {
+    ability,
+    score: parseAbilityMatrixNumber(rawScore, /^\d+$/, `${context} score`),
+    modifier: parseAbilityMatrixNumber(
+      rawModifier,
+      /^[+−-]\d+$/,
+      `${context} modifier`,
+    ),
+    saveModifier: parseAbilityMatrixNumber(
+      rawSaveModifier,
+      /^[+−-]\d+$/,
+      `${context} save modifier`,
+    ),
+  };
+};
+
+const parseAbilityMatrix = (
+  lines: readonly string[],
+  context: string,
+): AbilityMatrix | undefined => {
+  const rows = lines
+    .map((line) =>
+      line
+        .split("|")
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    )
+    .filter((cells) => {
+      const [firstCell, secondCell] = cells;
+      return (
+        (firstCell === "STR" || firstCell === "INT") &&
+        secondCell !== undefined &&
+        /^\d+$/.test(secondCell)
+      );
+    });
+  if (rows.length === 0) return undefined;
+  if (rows.length !== 2) {
+    throw new Error(`Expected exactly two ${context} ability matrix rows`);
+  }
+
+  const facts = rows.flatMap((cells, rowIndex) => {
+    if (cells.length !== 12 || cells.some((cell) => cell.length === 0)) {
+      throw new Error(
+        `Expected ${context} ability matrix row ${rowIndex + 1} to contain exactly twelve nonempty cells`,
+      );
+    }
+    const [
+      ability1,
+      score1,
+      modifier1,
+      saveModifier1,
+      ability2,
+      score2,
+      modifier2,
+      saveModifier2,
+      ability3,
+      score3,
+      modifier3,
+      saveModifier3,
+    ] = cells;
+    if (
+      ability1 === undefined ||
+      score1 === undefined ||
+      modifier1 === undefined ||
+      saveModifier1 === undefined ||
+      ability2 === undefined ||
+      score2 === undefined ||
+      modifier2 === undefined ||
+      saveModifier2 === undefined ||
+      ability3 === undefined ||
+      score3 === undefined ||
+      modifier3 === undefined ||
+      saveModifier3 === undefined
+    ) {
+      throw new Error(`Incomplete ${context} ability matrix row`);
+    }
+    return [
+      parseAbilityMatrixGroup(
+        [ability1, score1, modifier1, saveModifier1],
+        context,
+      ),
+      parseAbilityMatrixGroup(
+        [ability2, score2, modifier2, saveModifier2],
+        context,
+      ),
+      parseAbilityMatrixGroup(
+        [ability3, score3, modifier3, saveModifier3],
+        context,
+      ),
+    ];
+  });
+  const [str, dex, con, int, wis, cha, extra] = facts;
+  if (
+    str === undefined ||
+    dex === undefined ||
+    con === undefined ||
+    int === undefined ||
+    wis === undefined ||
+    cha === undefined ||
+    extra !== undefined ||
+    facts.some((fact, index) => fact.ability !== ABILITY_NAMES[index])
+  ) {
+    throw new Error(
+      `Expected ${context} ability matrix labels in STR, DEX, CON, INT, WIS, CHA order`,
+    );
+  }
+  return [str, dex, con, int, wis, cha];
+};
 
 const parseAbilityScores = (
   lines: readonly string[],
@@ -461,19 +634,9 @@ const parseAbilityScores = (
   if (lines.some((line) => line.startsWith("| **Score**"))) {
     return abilityRecord(parseAbilityRow(lines, "Score", context));
   }
-  const compactRows = lines.filter((line) =>
-    /^\| (?:STR|INT) \| \d+ \|/.test(line),
-  );
-  if (compactRows.length === 2) {
-    return abilityRecord(
-      compactRows.flatMap((line) => {
-        const cells = line
-          .split("|")
-          .slice(1, -1)
-          .map((cell) => cell.trim());
-        return [1, 5, 9].map((index) => Number(cells[index]));
-      }),
-    );
+  const abilityMatrix = parseAbilityMatrix(lines, context);
+  if (abilityMatrix !== undefined) {
+    return abilityRecord(abilityMatrix.map(({ score }) => score));
   }
   const scoreCells = lines
     .map((line) =>
@@ -502,35 +665,21 @@ const parseSavingThrowModifiers = (
   context: string,
 ): readonly NamedModifier[] => {
   if (lines.some((line) => line.startsWith("| **Save**"))) {
-    const saveValues = parseAbilityRow(lines, "Save", context);
+    const saveValues = abilityRecord(parseAbilityRow(lines, "Save", context));
     return sortedModifiers(
-      ABILITY_NAMES.map((ability, index) => ({
+      ABILITY_NAMES.map((ability) => ({
         name: ability,
-        modifier: saveValues[index] ?? 0,
+        modifier: saveValues[ability],
       })),
     );
   }
-  const compactRows = lines.filter((line) =>
-    /^\| (?:STR|INT) \| \d+ \|/.test(line),
-  );
-  if (compactRows.length === 2) {
+  const abilityMatrix = parseAbilityMatrix(lines, context);
+  if (abilityMatrix !== undefined) {
     return sortedModifiers(
-      compactRows
-        .flatMap((line) => {
-          const cells = line
-            .split("|")
-            .slice(1, -1)
-            .map((cell) => cell.trim());
-          return [
-            { name: cells[0] ?? "", modifier: cells[3] ?? "" },
-            { name: cells[4] ?? "", modifier: cells[7] ?? "" },
-            { name: cells[8] ?? "", modifier: cells[11] ?? "" },
-          ];
-        })
-        .map(({ name, modifier }) => ({
-          name: name.toLowerCase(),
-          modifier: signedNumber(modifier),
-        })),
+      abilityMatrix.map(({ ability, saveModifier }) => ({
+        name: ability,
+        modifier: saveModifier,
+      })),
     );
   }
   const combinedCells = lines
@@ -546,12 +695,24 @@ const parseSavingThrowModifiers = (
         cells.every((cell) => /^\d+ \([+−-]?\d+\) Save [+−-]?\d+$/.test(cell)),
     );
   if (combinedCells !== undefined) {
+    const saveValues = abilityRecord(
+      combinedCells.map((cell) => {
+        const match = requireMatch(
+          cell,
+          / Save ([+−-]?\d+)$/,
+          `${context} Save`,
+        );
+        const value = match[1];
+        if (value === undefined) {
+          throw new Error(`Missing ${context} Save modifier`);
+        }
+        return signedNumber(value);
+      }),
+    );
     return sortedModifiers(
-      combinedCells.map((cell, index) => ({
-        name: ABILITY_NAMES[index] ?? "str",
-        modifier: signedNumber(
-          requireMatch(cell, / Save ([+−-]?\d+)$/, `${context} Save`)[1] ?? "",
-        ),
+      ABILITY_NAMES.map((ability) => ({
+        name: ability,
+        modifier: saveValues[ability],
       })),
     );
   }
@@ -621,19 +782,23 @@ const parseVulnerabilities = (
   const line = lines.find((candidate) =>
     candidate.startsWith("**Vulnerabilities**"),
   );
-  if (line === undefined) return { kind: "fixed", damageTypes: [] };
+  if (line === undefined) return { kind: "none" };
   const value = line.replace("**Vulnerabilities**", "").trim();
   const qualified = value.match(/^([A-Z][a-z]+) damage (from .+)$/);
   return qualified === null
     ? {
         kind: "fixed",
-        damageTypes: sortedStrings(
+        damageTypes: sortedNonEmptyStrings(
           value.split(", ").map((item) => item.toLowerCase()),
+          "vulnerability damage type",
         ),
       }
     : {
         kind: "qualified",
-        damageTypes: [(qualified[1] ?? "").toLowerCase()],
+        damageTypes: sortedNonEmptyStrings(
+          [(qualified[1] ?? "").toLowerCase()],
+          "qualified vulnerability damage type",
+        ),
         qualifier: qualified[2] ?? "",
       };
 };
@@ -1935,20 +2100,24 @@ export const projectAuthoredStatBlocks = (
             ),
           ),
           vulnerabilities:
-            record.statBlock.vulnerabilities?.kind === "qualified"
-              ? {
-                  kind: "qualified" as const,
-                  damageTypes: sortedStrings(
-                    record.statBlock.vulnerabilities.damageTypes,
-                  ),
-                  qualifier: record.statBlock.vulnerabilities.qualifier,
-                }
-              : {
-                  kind: "fixed" as const,
-                  damageTypes: sortedStrings(
-                    record.statBlock.vulnerabilities?.damageTypes ?? [],
-                  ),
-                },
+            record.statBlock.vulnerabilities === undefined
+              ? { kind: "none" as const }
+              : record.statBlock.vulnerabilities.kind === "qualified"
+                ? {
+                    kind: "qualified" as const,
+                    damageTypes: sortedNonEmptyStrings(
+                      record.statBlock.vulnerabilities.damageTypes,
+                      `${record.name} qualified vulnerability damage type`,
+                    ),
+                    qualifier: record.statBlock.vulnerabilities.qualifier,
+                  }
+                : {
+                    kind: "fixed" as const,
+                    damageTypes: sortedNonEmptyStrings(
+                      record.statBlock.vulnerabilities.damageTypes,
+                      `${record.name} vulnerability damage type`,
+                    ),
+                  },
           resistances: sortedStrings(resistances?.damageTypes ?? []),
           immunityDamageTypes: sortedStrings(
             record.statBlock.immunities?.damageTypes ?? [],
