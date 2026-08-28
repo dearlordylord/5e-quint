@@ -7,8 +7,13 @@ import { describe, expect, test } from "vitest";
 
 import type {
   BattleActiveEffect,
+  BattleCreatureState,
   BattleState,
 } from "./battle-state-execution.ts";
+import {
+  allocateBattleEffectOccurrenceForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+} from "./effect-execution-ref.ts";
 import {
   battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
@@ -45,6 +50,23 @@ import {
   knockedOutOneHp,
 } from "./battle-reducer/creature-hit-point-state.ts";
 
+function allocateActiveEffectForTest<
+  Owner extends BattleCreatureState,
+  Effect extends BattleActiveEffectOccurrenceTemplate,
+>(owner: Owner, effect: Effect) {
+  const allocation = allocateBattleEffectOccurrenceForCreature({
+    owner,
+    effect,
+  });
+  return {
+    owner: {
+      ...allocation.owner,
+      activeEffects: [...allocation.owner.activeEffects, allocation.effect],
+    },
+    effect: allocation.effect,
+  };
+}
+
 describe("spell condition effect source ownership", () => {
   test("an Unconscious unit-feature effect also owns its derived Prone condition", () => {
     const target = fighterVsGoblinBattle().combatants.get(goblinId);
@@ -62,16 +84,18 @@ describe("spell condition effect source ownership", () => {
       earlyEnd: null,
       turnRestriction: null,
       expiresAt: { kind: "startOfTurn", combatantId: goblinId },
-    } as const satisfies BattleActiveEffect;
-    const withEffect = {
-      ...target,
-      conditions: applyCondition(target.conditions, "unconscious"),
-      activeEffects: [...target.activeEffects, unconsciousEffect],
-    };
+    } as const;
+    const withEffect = allocateActiveEffectForTest(
+      {
+        ...target,
+        conditions: applyCondition(target.conditions, "unconscious"),
+      },
+      unconsciousEffect,
+    ).owner;
 
     expect(conditionHasNonSpellSource(withEffect, "unconscious")).toBe(false);
     expect(conditionHasNonSpellSource(withEffect, "prone")).toBe(false);
-    const afterUnconsciousEnds = {
+    const afterUnconsciousEnds: BattleCreatureState = {
       ...withEffect,
       conditions: removeCondition(withEffect.conditions, "unconscious"),
       activeEffects: target.activeEffects,
@@ -108,7 +132,7 @@ describe("spell condition effect source ownership", () => {
         combatantId: fighterId,
         durationTicks: elapsedTimeTicks(1),
       },
-    } as const satisfies BattleActiveEffect;
+    } as const;
     const sharedSenseEffect = {
       kind: "findFamiliarSharedSenses",
       effectRef: battleEffectExecutionRefForTest(
@@ -229,7 +253,6 @@ describe("spell condition effect source ownership", () => {
     }
     const charmedSourceEffect = {
       kind: "spellCondition",
-      effectRef: battleEffectExecutionRefForTest("synthetic-charmed-source"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "synthetic-charmed-procedure",
       ),
@@ -242,7 +265,7 @@ describe("spell condition effect source ownership", () => {
         kind: "duration" as const,
         durationTicks: elapsedTimeTicks(1),
       },
-    } as const satisfies BattleActiveEffect;
+    } as const;
     const immunityEffect = {
       kind: "conditionImmunity",
       sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -252,12 +275,18 @@ describe("spell condition effect source ownership", () => {
       condition: "charmed",
       conditionHadNonSpellSource: true,
       expiresAt: { kind: "untilDispelled" as const },
-    } as const satisfies BattleActiveEffect;
-    const sourceTarget = {
-      ...target,
-      conditions: applyCondition(target.conditions, "charmed"),
-      activeEffects: [charmedSourceEffect, immunityEffect],
-    };
+    } as const;
+    const charmedAllocation = allocateActiveEffectForTest(
+      {
+        ...target,
+        conditions: applyCondition(target.conditions, "charmed"),
+      },
+      charmedSourceEffect,
+    );
+    const sourceTarget = allocateActiveEffectForTest(
+      charmedAllocation.owner,
+      immunityEffect,
+    ).owner;
     expect(
       conditionHadNonSpellSourceBeforeSpellEffect(sourceTarget, "charmed"),
     ).toBe(true);
@@ -408,15 +437,17 @@ describe("spell condition effect source ownership", () => {
         kind: "duration" as const,
         durationTicks: elapsedTimeTicks(1),
       },
-    } as const satisfies BattleActiveEffect;
-    const hypnotized = {
-      ...target,
-      conditions: applyCondition(
-        applyCondition(target.conditions, "charmed"),
-        "incapacitated",
-      ),
-      activeEffects: [hypnoticEffect],
-    };
+    } as const;
+    const hypnotized = allocateActiveEffectForTest(
+      {
+        ...target,
+        conditions: applyCondition(
+          applyCondition(target.conditions, "charmed"),
+          "incapacitated",
+        ),
+      },
+      hypnoticEffect,
+    ).owner;
     const hypnotizedState: BattleState = {
       ...state,
       combatants: new Map(state.combatants).set(goblinId, hypnotized),
@@ -448,15 +479,18 @@ describe("spell condition effect source ownership", () => {
         kind: "concentration" as const,
         combatantId: fighterId,
       },
-    } as const satisfies BattleActiveEffect;
-    const laughing = {
-      ...target,
-      conditions: applyCondition(
-        applyCondition(target.conditions, "prone"),
-        "incapacitated",
-      ),
-      activeEffects: [hideousLaughterEffect],
-    };
+    } as const;
+    const laughterAllocation = allocateActiveEffectForTest(
+      {
+        ...target,
+        conditions: applyCondition(
+          applyCondition(target.conditions, "prone"),
+          "incapacitated",
+        ),
+      },
+      hideousLaughterEffect,
+    );
+    const laughing = laughterAllocation.owner;
     const laughingState: BattleState = {
       ...state,
       combatants: new Map(state.combatants).set(goblinId, laughing),
@@ -465,7 +499,7 @@ describe("spell condition effect source ownership", () => {
       removeHideousLaughterEffectFromTarget(
         laughingState,
         goblinId,
-        hideousLaughterEffect,
+        laughterAllocation.effect,
       ).combatants.get(goblinId)?.activeEffects,
     ).toEqual([]);
     const knockedOutLaughing = {
@@ -484,7 +518,7 @@ describe("spell condition effect source ownership", () => {
           ),
         },
         goblinId,
-        hideousLaughterEffect,
+        laughterAllocation.effect,
       ).combatants.get(goblinId)?.activeEffects,
     ).toEqual([]);
   });
