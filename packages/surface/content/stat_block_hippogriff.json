@@ -1,0 +1,150 @@
+{
+  "challengeRating": 1,
+  "id": "stat_block_hippogriff",
+  "kind": "statBlock",
+  "name": "Hippogriff",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-H-L.md:162-187"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 8,
+      "con": 13,
+      "dex": 13,
+      "int": 2,
+      "str": 17,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 11
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 5
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 8,
+                  "flat": 3
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": "unaligned",
+    "communication": {
+      "kind": "none"
+    },
+    "creatureType": "monstrosity",
+    "hp": {
+      "kind": "literal",
+      "value": 26
+    },
+    "initiative": {
+      "modifier": 1,
+      "score": 11
+    },
+    "passivePerception": 15,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 1
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "int",
+        "modifier": -4
+      },
+      {
+        "ability": "wis",
+        "modifier": 1
+      },
+      {
+        "ability": "cha",
+        "modifier": -1
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 5,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 60
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The hippogriff doesn't provoke an Opportunity Attack when it flies out of an enemy's reach.",
+        "name": "Flyby"
+      }
+    ]
+  }
+}
