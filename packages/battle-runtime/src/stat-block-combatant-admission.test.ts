@@ -1,13 +1,10 @@
 import { Hp } from "@dnd/shared/types";
 import { initiativeEntries } from "@dnd/shared-algebras/initiative-algebra";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
-import { ParseResult, Schema } from "effect";
+import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
-import {
-  decodeStatBlockRecordEither,
-  StatBlockProcedureResourceOrdinalSchema,
-} from "@dnd/surface/surface/schema";
+import { StatBlockProcedureResourceOrdinalSchema } from "@dnd/surface/surface/schema";
 
 import { addBattleStatBlockCombatant } from "./battle-reducer/stat-block-combatant-execution.ts";
 import {
@@ -35,6 +32,7 @@ import {
   monsterResourceStatBlock,
   statBlockCreatureInit,
   statBlockRecord,
+  expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   projectedStatBlockRuntimeSource,
 } from "./battle-runtime.test-support.ts";
 // KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.INITIAL_CONDITION_IMMUNITY
@@ -240,28 +238,8 @@ describe("Stat Block combatant admission capability", () => {
 
   test("rejects nonliteral authored Stat Block initialization facts at the schema boundary", () => {
     const source = statBlockRecord();
-    const malformedArmorClass = decodeStatBlockRecordEither({
-      ...source,
-      statBlock: {
-        ...source.statBlock,
-        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
-      },
-    });
-    expect(Either.isLeft(malformedArmorClass)).toBe(true);
-    if (Either.isRight(malformedArmorClass)) {
-      throw new Error("Expected malformed Armor Class source to be rejected.");
-    }
-    expect(malformedArmorClass.left._tag).toBe("ParseError");
-    const armorClassParseIssues = ParseResult.ArrayFormatter.formatErrorSync(
-      malformedArmorClass.left,
-    );
-    expect(armorClassParseIssues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          _tag: "Unexpected",
-          path: ["statBlock", "ac", "value", "source"],
-        }),
-      ]),
+    expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+      source,
     );
   });
 

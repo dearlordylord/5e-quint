@@ -1,6 +1,6 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.MOVEMENT.FRONTIER_AND_RESOURCE_SPEND
 import fc from "fast-check";
-import { ParseResult, Schema } from "effect";
+import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { decodeStatBlockRecordEither } from "@dnd/surface/surface/schema";
@@ -169,6 +169,7 @@ import {
   savingThrowOutcomeFill,
   statBlockCreatureInit,
   statBlockRecord,
+  expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary,
   projectedStatBlockRuntimeSource,
   wizardId,
   wizardSpellcasting,
@@ -1645,28 +1646,8 @@ describe("battle boundary admission owners", () => {
         statBlock: { ...source.statBlock, hp: { kind: "literal", value: 0 } },
       }),
     ).toMatchObject({ _tag: "Left" });
-    const malformedArmorClass = decodeStatBlockRecordEither({
-      ...authoredSource,
-      statBlock: {
-        ...authoredSource.statBlock,
-        ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
-      },
-    });
-    expect(Either.isLeft(malformedArmorClass)).toBe(true);
-    if (Either.isRight(malformedArmorClass)) {
-      throw new Error("Expected malformed Armor Class source to be rejected.");
-    }
-    expect(malformedArmorClass.left._tag).toBe("ParseError");
-    const armorClassParseIssues = ParseResult.ArrayFormatter.formatErrorSync(
-      malformedArmorClass.left,
-    );
-    expect(armorClassParseIssues).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          _tag: "Unexpected",
-          path: ["statBlock", "ac", "value", "source"],
-        }),
-      ]),
+    expectCasterDerivedArmorClassSourceRejectedAtStatBlockDecodeBoundary(
+      authoredSource,
     );
     const malformedCreatureType = decodeStatBlockRecordEither({
       ...authoredSource,
