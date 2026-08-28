@@ -1,5 +1,5 @@
 import * as AST from "effect/SchemaAST";
-import { Either } from "effect";
+import { Either, Match, Schema } from "effect";
 
 import {
   readSurfaceSchemaRole,
@@ -14,46 +14,38 @@ import { StatBlockId, UnitId } from "@dnd/shared/game-facts";
 export type SurfaceUnitId = UnitRecord["id"];
 export type SurfaceStatBlockId = StatBlockRecord["id"];
 
-type SurfaceAuthoredRelationBase<
-  SourceKind extends "unit" | "statBlock",
-  SourceId extends SurfaceUnitId | SurfaceStatBlockId,
-  TargetKind extends "unit" | "statBlock",
-  TargetId extends SurfaceUnitId | SurfaceStatBlockId,
-> = {
-  readonly sourceKind: SourceKind;
-  readonly sourceRecordId: SourceId;
-  readonly sourceRecordName: string;
-  readonly fieldPath: string;
-  readonly relationKind: "reference" | "dependency";
-  readonly relation: Extract<
-    SurfaceSchemaFieldRole,
-    { readonly category: "reference" | "dependency" }
-  >["relation"];
-  readonly targetKind: TargetKind;
-  readonly targetRecordId: TargetId;
-};
+type SurfaceRelationRole = Extract<
+  SurfaceSchemaFieldRole,
+  { readonly category: "reference" | "dependency" }
+>;
+type SurfaceRecordKind = SurfaceRelationRole["targetKind"];
+type SurfaceRecordId<Kind extends SurfaceRecordKind> = Kind extends "unit"
+  ? SurfaceUnitId
+  : SurfaceStatBlockId;
 
-/** One role-owned authored edge with source/target record families coupled to their ids. */
-export type SurfaceAuthoredRelation =
-  | SurfaceAuthoredRelationBase<"unit", SurfaceUnitId, "unit", SurfaceUnitId>
-  | SurfaceAuthoredRelationBase<
-      "unit",
-      SurfaceUnitId,
-      "statBlock",
-      SurfaceStatBlockId
-    >
-  | SurfaceAuthoredRelationBase<
-      "statBlock",
-      SurfaceStatBlockId,
-      "unit",
-      SurfaceUnitId
-    >
-  | SurfaceAuthoredRelationBase<
-      "statBlock",
-      SurfaceStatBlockId,
-      "statBlock",
-      SurfaceStatBlockId
-    >;
+type SurfaceAuthoredRelationBase<
+  SourceKind extends SurfaceRecordKind,
+  Role extends SurfaceRelationRole,
+> = SourceKind extends SurfaceRecordKind
+  ? Role extends SurfaceRelationRole
+    ? {
+        readonly sourceKind: SourceKind;
+        readonly sourceRecordId: SurfaceRecordId<SourceKind>;
+        readonly sourceRecordName: string;
+        readonly fieldPath: string;
+        readonly relationKind: Role["category"];
+        readonly relation: Role["relation"];
+        readonly targetKind: Role["targetKind"];
+        readonly targetRecordId: SurfaceRecordId<Role["targetKind"]>;
+      }
+    : never
+  : never;
+
+/** One authored edge for each schema-owned role/source-family combination. */
+export type SurfaceAuthoredRelation = SurfaceAuthoredRelationBase<
+  SurfaceRecordKind,
+  SurfaceRelationRole
+>;
 
 export type SurfaceRelationTraversalIssue = {
   readonly tag: "surfaceRelationTraversalIssue";
@@ -70,6 +62,9 @@ export type SurfaceRelationTraversalIssues = readonly [
   SurfaceRelationTraversalIssue,
   ...SurfaceRelationTraversalIssue[],
 ];
+
+/** The parsed relation edges reused by closure and startup composition. */
+export type SurfaceAuthoredRelationGraph = readonly SurfaceAuthoredRelation[];
 
 type SurfaceRelationMissingRootIssue =
   | {
@@ -126,62 +121,233 @@ type SurfaceRecordRef =
 
 const relationTargetRef = (
   relation: SurfaceAuthoredRelation,
-): SurfaceRecordRef => {
-  if (relation.targetKind === "unit") {
-    return { kind: "unit", id: relation.targetRecordId };
-  }
-  return { kind: "statBlock", id: relation.targetRecordId };
-};
+): SurfaceRecordRef =>
+  Match.value(relation).pipe(
+    Match.when({ targetKind: "unit" }, (matched) => ({
+      kind: "unit" as const,
+      id: matched.targetRecordId,
+    })),
+    Match.when({ targetKind: "statBlock" }, (matched) => ({
+      kind: "statBlock" as const,
+      id: matched.targetRecordId,
+    })),
+    Match.exhaustive,
+  );
+
+const invalidRelationTargetIssue = (input: {
+  readonly role: SurfaceRelationRole;
+  readonly path: string;
+}): SurfaceRelationTraversalIssue => ({
+  tag: "surfaceRelationTraversalIssue",
+  code: "invalidRecord",
+  path: input.path,
+  message: `Surface ${input.role.category} ${input.role.targetKind} relation target at ${input.path} is not a valid non-empty trimmed id`,
+});
 
 const makeSurfaceAuthoredRelation = (input: {
   readonly record: SurfaceRecord;
-  readonly role: Extract<
-    SurfaceSchemaFieldRole,
-    { readonly category: "reference" | "dependency" }
-  >;
+  readonly role: SurfaceRelationRole;
   readonly fieldPath: string;
-  readonly targetRecordId: string;
-}): SurfaceAuthoredRelation => {
+  readonly issuePath: string;
+  readonly targetRecordId: unknown;
+}): Either.Either<SurfaceAuthoredRelation, SurfaceRelationTraversalIssue> => {
   const shared = {
     sourceRecordName: input.record.value.name,
     fieldPath: input.fieldPath,
-    relationKind: input.role.category,
-    relation: input.role.relation,
   } as const;
-  if (input.record.sourceKind === "unit") {
-    if (input.role.targetKind === "unit") {
-      return {
-        ...shared,
-        sourceKind: "unit",
-        sourceRecordId: input.record.value.id,
-        targetKind: "unit",
-        targetRecordId: UnitId.make(input.targetRecordId),
-      };
-    }
-    return {
-      ...shared,
-      sourceKind: "unit",
-      sourceRecordId: input.record.value.id,
-      targetKind: "statBlock",
-      targetRecordId: StatBlockId.make(input.targetRecordId),
-    };
-  }
-  if (input.role.targetKind === "unit") {
-    return {
-      ...shared,
-      sourceKind: "statBlock",
-      sourceRecordId: input.record.value.id,
-      targetKind: "unit",
-      targetRecordId: UnitId.make(input.targetRecordId),
-    };
-  }
-  return {
-    ...shared,
-    sourceKind: "statBlock",
-    sourceRecordId: input.record.value.id,
-    targetKind: "statBlock",
-    targetRecordId: StatBlockId.make(input.targetRecordId),
-  };
+  return Match.value(input.record).pipe(
+    Match.when({ sourceKind: "unit" }, ({ value }) =>
+      Match.value(input.role).pipe(
+        Match.when({ targetKind: "unit", category: "reference" }, (role) => {
+          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+            input.targetRecordId,
+          );
+          return Either.isLeft(targetRecordId)
+            ? Either.left(
+                invalidRelationTargetIssue({
+                  role,
+                  path: input.issuePath,
+                }),
+              )
+            : Either.right({
+                ...shared,
+                sourceKind: "unit" as const,
+                sourceRecordId: value.id,
+                relationKind: role.category,
+                relation: role.relation,
+                targetKind: "unit" as const,
+                targetRecordId: targetRecordId.right,
+              });
+        }),
+        Match.when({ targetKind: "unit", category: "dependency" }, (role) => {
+          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+            input.targetRecordId,
+          );
+          return Either.isLeft(targetRecordId)
+            ? Either.left(
+                invalidRelationTargetIssue({
+                  role,
+                  path: input.issuePath,
+                }),
+              )
+            : Either.right({
+                ...shared,
+                sourceKind: "unit" as const,
+                sourceRecordId: value.id,
+                relationKind: role.category,
+                relation: role.relation,
+                targetKind: "unit" as const,
+                targetRecordId: targetRecordId.right,
+              });
+        }),
+        Match.when(
+          { targetKind: "statBlock", category: "reference" },
+          (role) => {
+            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+              input.targetRecordId,
+            );
+            return Either.isLeft(targetRecordId)
+              ? Either.left(
+                  invalidRelationTargetIssue({
+                    role,
+                    path: input.issuePath,
+                  }),
+                )
+              : Either.right({
+                  ...shared,
+                  sourceKind: "unit" as const,
+                  sourceRecordId: value.id,
+                  relationKind: role.category,
+                  relation: role.relation,
+                  targetKind: "statBlock" as const,
+                  targetRecordId: targetRecordId.right,
+                });
+          },
+        ),
+        Match.when(
+          { targetKind: "statBlock", category: "dependency" },
+          (role) => {
+            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+              input.targetRecordId,
+            );
+            return Either.isLeft(targetRecordId)
+              ? Either.left(
+                  invalidRelationTargetIssue({
+                    role,
+                    path: input.issuePath,
+                  }),
+                )
+              : Either.right({
+                  ...shared,
+                  sourceKind: "unit" as const,
+                  sourceRecordId: value.id,
+                  relationKind: role.category,
+                  relation: role.relation,
+                  targetKind: "statBlock" as const,
+                  targetRecordId: targetRecordId.right,
+                });
+          },
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.when({ sourceKind: "statBlock" }, ({ value }) =>
+      Match.value(input.role).pipe(
+        Match.when({ targetKind: "unit", category: "reference" }, (role) => {
+          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+            input.targetRecordId,
+          );
+          return Either.isLeft(targetRecordId)
+            ? Either.left(
+                invalidRelationTargetIssue({
+                  role,
+                  path: input.issuePath,
+                }),
+              )
+            : Either.right({
+                ...shared,
+                sourceKind: "statBlock" as const,
+                sourceRecordId: value.id,
+                relationKind: role.category,
+                relation: role.relation,
+                targetKind: "unit" as const,
+                targetRecordId: targetRecordId.right,
+              });
+        }),
+        Match.when({ targetKind: "unit", category: "dependency" }, (role) => {
+          const targetRecordId = Schema.decodeUnknownEither(UnitId)(
+            input.targetRecordId,
+          );
+          return Either.isLeft(targetRecordId)
+            ? Either.left(
+                invalidRelationTargetIssue({
+                  role,
+                  path: input.issuePath,
+                }),
+              )
+            : Either.right({
+                ...shared,
+                sourceKind: "statBlock" as const,
+                sourceRecordId: value.id,
+                relationKind: role.category,
+                relation: role.relation,
+                targetKind: "unit" as const,
+                targetRecordId: targetRecordId.right,
+              });
+        }),
+        Match.when(
+          { targetKind: "statBlock", category: "reference" },
+          (role) => {
+            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+              input.targetRecordId,
+            );
+            return Either.isLeft(targetRecordId)
+              ? Either.left(
+                  invalidRelationTargetIssue({
+                    role,
+                    path: input.issuePath,
+                  }),
+                )
+              : Either.right({
+                  ...shared,
+                  sourceKind: "statBlock" as const,
+                  sourceRecordId: value.id,
+                  relationKind: role.category,
+                  relation: role.relation,
+                  targetKind: "statBlock" as const,
+                  targetRecordId: targetRecordId.right,
+                });
+          },
+        ),
+        Match.when(
+          { targetKind: "statBlock", category: "dependency" },
+          (role) => {
+            const targetRecordId = Schema.decodeUnknownEither(StatBlockId)(
+              input.targetRecordId,
+            );
+            return Either.isLeft(targetRecordId)
+              ? Either.left(
+                  invalidRelationTargetIssue({
+                    role,
+                    path: input.issuePath,
+                  }),
+                )
+              : Either.right({
+                  ...shared,
+                  sourceKind: "statBlock" as const,
+                  sourceRecordId: value.id,
+                  relationKind: role.category,
+                  relation: role.relation,
+                  targetKind: "statBlock" as const,
+                  targetRecordId: targetRecordId.right,
+                });
+          },
+        ),
+        Match.exhaustive,
+      ),
+    ),
+    Match.exhaustive,
+  );
 };
 
 type WalkTask = {
@@ -224,6 +390,14 @@ const structuralAst = (ast: AST.AST): AST.AST => {
     current = next;
   }
   return current;
+};
+
+const isStringLikeAst = (ast: AST.AST): boolean => {
+  const current = structuralAst(ast);
+  return (
+    current._tag === "StringKeyword" ||
+    (current._tag === "Literal" && typeof current.literal === "string")
+  );
 };
 
 const literalValues = (ast: AST.AST): readonly unknown[] => {
@@ -384,10 +558,7 @@ const astChildren = (
  */
 export function collectSurfaceAuthoredRelations(
   surface: Pick<SrdSurface, "units" | "statBlocks">,
-): Either.Either<
-  readonly SurfaceAuthoredRelation[],
-  SurfaceRelationTraversalIssues
-> {
+): Either.Either<SurfaceAuthoredRelationGraph, SurfaceRelationTraversalIssues> {
   const records: SurfaceRecord[] = [
     ...surface.units.map((value) => ({ sourceKind: "unit" as const, value })),
     ...surface.statBlocks.map((value) => ({
@@ -413,7 +584,7 @@ export function collectSurfaceAuthoredRelations(
 
     while (pending.length > 0) {
       const task = pending.pop();
-      if (task === undefined || task.current === undefined) continue;
+      if (task === undefined) continue;
       const ownRole = readSurfaceSchemaRole(task.ast);
       if (
         ownRole !== undefined &&
@@ -429,27 +600,33 @@ export function collectSurfaceAuthoredRelations(
         continue;
       }
       const role = ownRole ?? task.inheritedRole;
-      if (typeof task.current === "string") {
-        if (role?.category === "reference" || role?.category === "dependency") {
-          relations.push(
-            makeSurfaceAuthoredRelation({
-              record,
-              role,
-              fieldPath: task.path.replace(/^value\.?/, ""),
-              targetRecordId: task.current,
-            }),
-          );
-        } else if (
-          role === undefined &&
-          structuralAst(task.ast)._tag === "StringKeyword"
-        ) {
-          issues.push({
-            tag: "surfaceRelationTraversalIssue",
-            code: "unownedString",
-            path: task.path,
-            message: `Surface value string has no schema role at ${task.path}`,
-          });
+      if (
+        (role?.category === "reference" || role?.category === "dependency") &&
+        isStringLikeAst(task.ast)
+      ) {
+        const relationResult = makeSurfaceAuthoredRelation({
+          record,
+          role,
+          fieldPath: task.path.replace(/^value\.?/, ""),
+          issuePath: task.path,
+          targetRecordId: task.current,
+        });
+        if (Either.isLeft(relationResult)) {
+          issues.push(relationResult.left);
+        } else {
+          relations.push(relationResult.right);
         }
+      } else if (
+        typeof task.current === "string" &&
+        role === undefined &&
+        structuralAst(task.ast)._tag === "StringKeyword"
+      ) {
+        issues.push({
+          tag: "surfaceRelationTraversalIssue",
+          code: "unownedString",
+          path: task.path,
+          message: `Surface value string has no schema role at ${task.path}`,
+        });
       }
 
       if (isObjectValue(task.current)) {
@@ -512,9 +689,17 @@ const relationSelected = (
   relation: SurfaceAuthoredRelation,
   selection: SurfaceRelationSelection,
 ): boolean =>
-  relation.relationKind === "dependency"
-    ? (selection.includeDependency?.(relation) ?? true)
-    : (selection.includeReference?.(relation) ?? false);
+  Match.value(relation).pipe(
+    Match.when(
+      { relationKind: "dependency" },
+      (matched) => selection.includeDependency?.(matched) ?? true,
+    ),
+    Match.when(
+      { relationKind: "reference" },
+      (matched) => selection.includeReference?.(matched) ?? false,
+    ),
+    Match.exhaustive,
+  );
 
 /**
  * Retain whole canonical records reachable from roots. The selection policy
@@ -524,15 +709,11 @@ const relationSelected = (
  */
 export function closeSrdSurface(input: {
   readonly surface: SrdSurface;
+  readonly relationGraph: SurfaceAuthoredRelationGraph;
   readonly rootUnitIds: readonly SurfaceUnitId[];
   readonly rootStatBlockIds: readonly SurfaceStatBlockId[];
   readonly relationSelection?: SurfaceRelationSelection;
 }): Either.Either<SrdSurface, SurfaceRelationClosureIssues> {
-  const relationsResult = collectSurfaceAuthoredRelations(input.surface);
-  if (Either.isLeft(relationsResult)) {
-    return Either.left([...relationsResult.left]);
-  }
-
   const unitsById = new Map<SurfaceUnitId, UnitRecord>(
     input.surface.units.map((record) => [record.id, record]),
   );
@@ -580,7 +761,7 @@ export function closeSrdSurface(input: {
       readonly SurfaceAuthoredRelation[]
     >(),
   };
-  for (const relation of relationsResult.right) {
+  for (const relation of input.relationGraph) {
     if (relation.sourceKind === "unit") {
       const relations = relationsBySource.unit.get(relation.sourceRecordId);
       relationsBySource.unit.set(relation.sourceRecordId, [

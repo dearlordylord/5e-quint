@@ -229,13 +229,17 @@ export function buildOracleStartupCatalog(
   const rootStatBlockIds = canonicalSurface.statBlocks.map(
     (record) => record.id,
   );
-  const relations = collectSurfaceAuthoredRelations(canonicalSurface);
-  if (Either.isLeft(relations)) {
-    return Either.left([relationIssue("surfaceRelations", relations.left)]);
+  const relationGraphResult = collectSurfaceAuthoredRelations(canonicalSurface);
+  if (Either.isLeft(relationGraphResult)) {
+    return Either.left([
+      relationIssue("surfaceRelations", relationGraphResult.left),
+    ]);
   }
+  const relationGraph = relationGraphResult.right;
 
   const projection = closeSrdSurface({
     surface: canonicalSurface,
+    relationGraph,
     rootUnitIds,
     rootStatBlockIds,
     relationSelection: {
