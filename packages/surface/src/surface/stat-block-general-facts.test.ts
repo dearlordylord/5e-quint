@@ -674,9 +674,9 @@ describe("standalone Stat Block general facts", () => {
     expect(decode(CreatureImmunityListSchema, qualifiedOnly)).toEqual(
       qualifiedOnly,
     );
-    expect(decode(CreatureImmunityListSchema, fixedAndQualified)).toEqual(
-      fixedAndQualified,
-    );
+    expect(() =>
+      decode(CreatureImmunityListSchema, fixedAndQualified),
+    ).toThrow();
     expect(() =>
       decode(CreatureImmunityListSchema, {
         conditions: ["charmed"],

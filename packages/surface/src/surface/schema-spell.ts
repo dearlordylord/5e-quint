@@ -4879,32 +4879,24 @@ const QualifiedConditionImmunitySchema = strictStruct({
   qualifier: surfaceExactProse(Schema.NonEmptyTrimmedString),
 });
 
-export const CreatureImmunityListSchema = strictStruct({
-  damageTypes: optionalExact(nonEmpty(DamageTypeSchema)),
-  conditions: optionalExact(nonEmpty(ConditionSchema)),
-  qualifiedConditions: optionalExact(
-    nonEmpty(QualifiedConditionImmunitySchema),
-  ),
-}).pipe(
-  Schema.filter(
-    (immunities) => {
-      if (
-        immunities.damageTypes === undefined &&
-        immunities.conditions === undefined &&
-        immunities.qualifiedConditions === undefined
-      ) {
-        return false;
-      }
-      const fixedConditions = new Set(immunities.conditions ?? []);
-      return (immunities.qualifiedConditions ?? []).every(
-        ({ condition }) => !fixedConditions.has(condition),
-      );
-    },
-    {
-      message: () =>
-        "Immunities must contain at least one fact and cannot claim the same condition as both fixed and qualified.",
-    },
-  ),
+export const CreatureImmunityListSchema = Schema.Union(
+  strictStruct({
+    damageTypes: nonEmpty(DamageTypeSchema),
+  }),
+  strictStruct({
+    damageTypes: nonEmpty(DamageTypeSchema),
+    conditions: nonEmpty(ConditionSchema),
+  }),
+  strictStruct({
+    damageTypes: nonEmpty(DamageTypeSchema),
+    qualifiedConditions: nonEmpty(QualifiedConditionImmunitySchema),
+  }),
+  strictStruct({
+    conditions: nonEmpty(ConditionSchema),
+  }),
+  strictStruct({
+    qualifiedConditions: nonEmpty(QualifiedConditionImmunitySchema),
+  }),
 );
 
 export const CreatureSenseSchema = Schema.Struct({

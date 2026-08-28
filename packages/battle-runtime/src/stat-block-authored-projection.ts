@@ -156,7 +156,10 @@ export function projectAuthoredStatBlock(
   if (source.speeds.some((speed) => "availability" in speed)) {
     return Either.left(failure("unsupportedFormRestrictedSpeed"));
   }
-  if ((source.immunities?.qualifiedConditions?.length ?? 0) > 0) {
+  if (
+    source.immunities !== undefined &&
+    "qualifiedConditions" in source.immunities
+  ) {
     return Either.left(failure("unsupportedQualifiedConditionImmunity"));
   }
   const speeds = source.speeds.map(runtimeSpeed);

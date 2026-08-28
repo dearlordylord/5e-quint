@@ -2393,13 +2393,22 @@ export const projectAuthoredStatBlocks = (
                   Match.exhaustive,
                 ),
           immunityDamageTypes: sortedStrings(
-            record.statBlock.immunities?.damageTypes ?? [],
+            record.statBlock.immunities !== undefined &&
+              "damageTypes" in record.statBlock.immunities
+              ? record.statBlock.immunities.damageTypes
+              : [],
           ),
           immunityConditions: sortedStrings(
-            record.statBlock.immunities?.conditions ?? [],
+            record.statBlock.immunities !== undefined &&
+              "conditions" in record.statBlock.immunities
+              ? record.statBlock.immunities.conditions
+              : [],
           ),
           immunityQualifiedConditions: [
-            ...(record.statBlock.immunities?.qualifiedConditions ?? []),
+            ...(record.statBlock.immunities !== undefined &&
+            "qualifiedConditions" in record.statBlock.immunities
+              ? record.statBlock.immunities.qualifiedConditions
+              : []),
           ].sort((left, right) =>
             left.condition.localeCompare(right.condition),
           ),
