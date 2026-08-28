@@ -8,12 +8,11 @@ import {
   evaluateSurfaceStatBlockParityFinal,
   runSurfaceStatBlockParityFinal,
   surfaceStatBlockParityFinalOptions,
+  type SurfaceStatBlockParityFinalCheck,
   type SurfaceStatBlockParityFinalGateResult,
 } from "./check-surface-stat-block-parity-final.ts";
-import {
-  type PublicationIssue,
-  type SurfacePublicationCheckResult,
-} from "./check-surface-content-json-sync.ts";
+import { type PublicationIssue } from "./check-surface-content-json-sync.ts";
+import { SRD_STAT_BLOCK_AGGREGATE_RELATIVE_PATH } from "./srd-stat-block-aggregate.ts";
 import { srdStatBlockCollection } from "../packages/surface/src/surface/stat-block-catalog.ts";
 import {
   SRD_STAT_BLOCK_SCOPE,
@@ -41,14 +40,21 @@ function cleanParityReport(
 }
 
 function cleanPublicationCheck(
-  overrides: Partial<SurfacePublicationCheckResult> = {},
-): SurfacePublicationCheckResult {
+  overrides: Partial<SurfaceStatBlockParityFinalCheck> = {},
+): SurfaceStatBlockParityFinalCheck {
   return {
     issues: [],
     sourceCount: 0,
     peerCount: 0,
     peerObservations: [],
     statBlockParity: cleanParityReport(),
+    aggregateSync: { tag: "synchronized", recordCount: 0 },
+    catalogReachability: {
+      installedCount: 0,
+      listedCount: 0,
+      presentationCount: 0,
+      issues: [],
+    },
     ...overrides,
   };
 }
@@ -286,5 +292,61 @@ describe("Surface stat-block parity final gate", () => {
     expect(result.blockers).toEqual(["publication-issues"]);
     expect(result.check.issues).toEqual([publicationIssue]);
     expect(result.check.statBlockParity.issues).toEqual([]);
+  });
+
+  it("accumulates aggregate, publication, coverage, parity, and reachability blockers", () => {
+    const sourcePath = SRD_STAT_BLOCK_SOURCE_PATHS[0];
+    const result = rejectedResult(
+      evaluateSurfaceStatBlockParityFinal(
+        cleanPublicationCheck({
+          aggregateSync: {
+            tag: "unsynchronized",
+            issues: [
+              {
+                kind: "aggregate-out-of-sync",
+                file: SRD_STAT_BLOCK_AGGREGATE_RELATIVE_PATH,
+              },
+            ],
+          },
+          issues: [
+            {
+              kind: "missing-publication-artifact",
+              file: "synthetic-publication.json",
+            },
+          ],
+          statBlockParity: cleanParityReport({
+            sourceCoverage: {
+              tag: "incomplete",
+              availablePaths: SRD_STAT_BLOCK_SOURCE_PATHS.slice(1),
+              missingPaths: [sourcePath],
+              unreadablePaths: [],
+              incompletePaths: [],
+            },
+            issues: [
+              { kind: "unreadable-source", sourcePath, message: "synthetic" },
+            ],
+          }),
+          catalogReachability: {
+            installedCount: 1,
+            listedCount: 0,
+            presentationCount: 0,
+            issues: [
+              {
+                kind: "missing-list-entry",
+                statBlockId: srdStatBlockCollection.statBlocks[0]!.id,
+              },
+            ],
+          },
+        }),
+      ),
+    );
+
+    expect(result.blockers).toEqual([
+      "aggregate-sync-issues",
+      "publication-issues",
+      "incomplete-source-coverage",
+      "parity-issues",
+      "reachability-issues",
+    ]);
   });
 });

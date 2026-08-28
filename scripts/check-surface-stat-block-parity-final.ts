@@ -13,36 +13,62 @@ import {
   srdStatBlockSourceOccurrenceCount,
   type SrdStatBlockParityIssue,
 } from "./srd521-stat-block-parity.ts";
+import {
+  checkSrdStatBlockAggregateSync,
+  type SrdStatBlockAggregateSyncResult,
+} from "./check-srd-stat-block-aggregate.ts";
+import {
+  evaluateSrdStatBlockCatalogReachability,
+  readSrdStatBlockPresentations,
+  type SrdStatBlockCatalogReachabilityReport,
+} from "./srd-stat-block-catalog-reachability.ts";
+import {
+  srdStatBlockCatalog,
+  srdStatBlockCollection,
+} from "../packages/surface/src/surface/stat-block-catalog.ts";
 
 export const SURFACE_STAT_BLOCK_PARITY_FINAL_BLOCKERS = [
+  "aggregate-sync-issues",
   "publication-issues",
   "incomplete-source-coverage",
   "parity-issues",
+  "reachability-issues",
 ] as const;
 
 export type SurfaceStatBlockParityFinalBlocker =
   (typeof SURFACE_STAT_BLOCK_PARITY_FINAL_BLOCKERS)[number];
 
+export type SurfaceStatBlockParityFinalCheck = SurfacePublicationCheckResult & {
+  readonly aggregateSync: SrdStatBlockAggregateSyncResult;
+  readonly catalogReachability: SrdStatBlockCatalogReachabilityReport;
+};
+
 export type SurfaceStatBlockParityFinalGateResult =
   | {
       readonly tag: "accepted";
-      readonly check: SurfacePublicationCheckResult;
+      readonly check: SurfaceStatBlockParityFinalCheck;
     }
   | {
       readonly tag: "rejected";
-      readonly check: SurfacePublicationCheckResult;
+      readonly check: SurfaceStatBlockParityFinalCheck;
       readonly blockers: readonly SurfaceStatBlockParityFinalBlocker[];
     };
 
 export function evaluateSurfaceStatBlockParityFinal(
-  check: SurfacePublicationCheckResult,
+  check: SurfaceStatBlockParityFinalCheck,
 ): SurfaceStatBlockParityFinalGateResult {
   const blockers: SurfaceStatBlockParityFinalBlocker[] = [];
+  if (check.aggregateSync.tag === "unsynchronized") {
+    blockers.push("aggregate-sync-issues");
+  }
   if (check.issues.length > 0) blockers.push("publication-issues");
   if (check.statBlockParity.sourceCoverage.tag !== "complete") {
     blockers.push("incomplete-source-coverage");
   }
   if (check.statBlockParity.issues.length > 0) blockers.push("parity-issues");
+  if (check.catalogReachability.issues.length > 0) {
+    blockers.push("reachability-issues");
+  }
 
   return blockers.length === 0
     ? { tag: "accepted", check }
@@ -52,9 +78,21 @@ export function evaluateSurfaceStatBlockParityFinal(
 export function runSurfaceStatBlockParityFinal(
   options: PublicationCheckOptions,
 ): SurfaceStatBlockParityFinalGateResult {
-  return evaluateSurfaceStatBlockParityFinal(
-    runSurfacePublicationCheck(options),
-  );
+  const publication = runSurfacePublicationCheck(options);
+  const publicationDir =
+    options.publicationDir ??
+    join(options.repoRoot, "packages", "surface", "publication");
+  return evaluateSurfaceStatBlockParityFinal({
+    ...publication,
+    aggregateSync: checkSrdStatBlockAggregateSync(options.repoRoot),
+    catalogReachability: evaluateSrdStatBlockCatalogReachability({
+      installedStatBlocks: srdStatBlockCollection.statBlocks,
+      catalog: srdStatBlockCatalog,
+      presentations: readSrdStatBlockPresentations(
+        join(publicationDir, "srd-surface.json"),
+      ),
+    }),
+  });
 }
 
 /**
@@ -128,10 +166,21 @@ function reportRejectedGate(
   );
   console.error(`Blockers: ${result.blockers.join(", ")}.`);
   console.error(`Publication issues: ${check.issues.length}.`);
+  console.error(
+    `Aggregate sync: ${check.aggregateSync.tag}. Catalog reachability: installed=${check.catalogReachability.installedCount} listed=${check.catalogReachability.listedCount} presented=${check.catalogReachability.presentationCount} issues=${check.catalogReachability.issues.length}.`,
+  );
   console.error(`Source coverage: ${describeSourceCoverage(check)}.`);
   console.error(`Parity issue counts: ${issueCounts || "none"}.`);
   for (const issue of check.issues) {
     console.error(`- publication-issue: ${JSON.stringify(issue)}`);
+  }
+  if (check.aggregateSync.tag === "unsynchronized") {
+    for (const issue of check.aggregateSync.issues) {
+      console.error(`- aggregate-sync-issue: ${JSON.stringify(issue)}`);
+    }
+  }
+  for (const issue of check.catalogReachability.issues) {
+    console.error(`- reachability-issue: ${JSON.stringify(issue)}`);
   }
   for (const issue of report.issues) {
     if (issue.kind !== "missing") {

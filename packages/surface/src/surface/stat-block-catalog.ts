@@ -147,6 +147,20 @@ export function buildStatBlockCatalog(input: {
   };
 }
 
+const srdStatBlockCatalogResult = buildStatBlockCatalog({
+  collections: [srdStatBlockCollection],
+});
+
+/* v8 ignore start -- @preserve -- the canonical collection constructor rejects catalog conflicts before this composition boundary */
+if (srdStatBlockCatalogResult.tag === "invalid") {
+  throw new Error(
+    `Invalid canonical SRD Stat Block catalog: ${JSON.stringify(srdStatBlockCatalogResult.issues)}`,
+  );
+}
+/* v8 ignore stop -- @preserve */
+
+export const srdStatBlockCatalog = srdStatBlockCatalogResult.catalog;
+
 function collectStatBlockCatalogIssues(
   collections: readonly SrdStatBlockCollection[],
 ): {
