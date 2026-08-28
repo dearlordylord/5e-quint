@@ -72,20 +72,20 @@ in  { challengeRating = 5
                                   { spellId = "detect_magic"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest =
                                   [ T.spellRef
                                       { spellId = "etherealness"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "magic_missile"
                                       , count = None Natural
                                       , castAtLevel = Some 4
-                                      , restriction = None Text
+
                                       }
                                   ]
                                 : List T.SpellRef
@@ -101,14 +101,13 @@ in  { challengeRating = 5
                                       { spellId = "phantasmal_killer"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                 , rest =
-                                      [ T.spellRef
-                                          { spellId = "plane_shift"
+                                      [ T.restrictedSpellRef { spellId = "plane_shift"
                                           , count = None Natural
                                           , castAtLevel = None Natural
-                                          , restriction = Some "self only"
+                                          , restriction = { authoredExpression = "self only", deltas = { first = T.selfTargetLimit, rest = [] : List T.InvocationDelta } }
                                           }
                                       ]
                                     : List T.SpellRef

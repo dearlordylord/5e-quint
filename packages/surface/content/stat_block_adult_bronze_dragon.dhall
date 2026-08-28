@@ -14,19 +14,19 @@ in  { challengeRating = 15
             , T.textOnly { procedureOrdinal = 4, name = "Repulsion Breath", description = "Strength Saving Throw: DC 19, each creature in a 30-foot Cone. Failure: The target is pushed up to 60 feet straight away from the dragon and has the Prone condition.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 5, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = Some { kind = "fixed", dc = 17 }, spellAttackBonus = Some { kind = "literal", value = +10 }, components = T.noMaterialComponents, groups =
                   { first = T.atWill { spells =
-                      { first = T.spellRef { spellId = "detect_magic", count = None Natural, castAtLevel = None Natural, restriction = None Text }
+                      { first = T.spellRef { spellId = "detect_magic", count = None Natural, castAtLevel = None Natural }
                       , rest =
-                          [ T.spellRef { spellId = "guiding_bolt", count = None Natural, castAtLevel = Some 2, restriction = None Text }
-                          , T.spellRef { spellId = "shapechange", count = None Natural, castAtLevel = None Natural, restriction = Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell" }
-                          , T.spellRef { spellId = "speak_with_animals", count = None Natural, castAtLevel = None Natural, restriction = None Text }
-                          , T.spellRef { spellId = "thaumaturgy", count = None Natural, castAtLevel = None Natural, restriction = None Text }
+                          [ T.spellRef { spellId = "guiding_bolt", count = None Natural, castAtLevel = Some 2 }
+                          , T.restrictedSpellRef { spellId = "shapechange", count = None Natural, castAtLevel = None Natural, restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
+                          , T.spellRef { spellId = "speak_with_animals", count = None Natural, castAtLevel = None Natural }
+                          , T.spellRef { spellId = "thaumaturgy", count = None Natural, castAtLevel = None Natural }
                           ]
                       }
                     }
                   , rest =
                       [ T.limited { resourceOrdinals = { first = 2, rest = [] : List Natural }, spells =
-                            { first = T.spellRef { spellId = "detect_thoughts", count = None Natural, castAtLevel = None Natural, restriction = None Text }
-                            , rest = [ T.spellRef { spellId = "water_breathing", count = None Natural, castAtLevel = None Natural, restriction = None Text } ]
+                            { first = T.spellRef { spellId = "detect_thoughts", count = None Natural, castAtLevel = None Natural }
+                            , rest = [ T.spellRef { spellId = "water_breathing", count = None Natural, castAtLevel = None Natural } ]
                             }
                           }
                       ]

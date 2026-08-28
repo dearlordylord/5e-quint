@@ -5451,11 +5451,160 @@ const AuthoredMultiattackProcedureSchema = strictStruct({
   ),
 });
 
+const STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND = {
+  transformationFormCreatureTypeLimit:
+    "transformation_form_creature_type_limit",
+  temporaryHitPoints: "temporary_hit_points",
+  concentrationRequirement: "concentration_requirement",
+  effectTermination: "effect_termination",
+  createdSubstanceSubstitution: "created_substance_substitution",
+  durationOverride: "duration_override",
+  targetLimit: "target_limit",
+  movementTraceSuppression: "movement_trace_suppression",
+  appearanceOptions: "appearance_options",
+  armorClassAlreadyIncludesEffect: "armor_class_already_includes_effect",
+  applicationTiming: "application_timing",
+} as const;
+
+export const STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS = [
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.transformationFormCreatureTypeLimit,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.temporaryHitPoints,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.concentrationRequirement,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.effectTermination,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.createdSubstanceSubstitution,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.durationOverride,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.targetLimit,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.movementTraceSuppression,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.appearanceOptions,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.armorClassAlreadyIncludesEffect,
+  STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.applicationTiming,
+] as const satisfies ReadonlyNonEmptyArray<string>;
+
+const distinctValues = <A>(values: readonly A[]): boolean =>
+  new Set(values).size === values.length;
+
+const StatBlockSpellInvocationEffectTerminationTriggerSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal("invoker_turn_boundary_in_illumination"),
+    turnBoundary: Schema.Literal("start_or_end"),
+    illumination: Schema.Literal("bright_light"),
+  }),
+  strictStruct({
+    kind: Schema.Literal("same_invoker_recasts_spell"),
+  }),
+);
+
+export const StatBlockSpellInvocationDeltaSchema = Schema.Union(
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.transformationFormCreatureTypeLimit,
+    ),
+    creatureTypes: nonEmpty(CreatureTypeSchema).pipe(
+      Schema.filter(distinctValues, {
+        message: () =>
+          "A Stat Block spell invocation form limit must not repeat a creature type.",
+      }),
+    ),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.temporaryHitPoints,
+    ),
+    spellGrant: Schema.Literal("none"),
+    maintenanceRequirement: Schema.Literal("not_required"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.concentrationRequirement,
+    ),
+    requirement: Schema.Literal("not_required"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.effectTermination,
+    ),
+    triggers: nonEmpty(
+      StatBlockSpellInvocationEffectTerminationTriggerSchema,
+    ).pipe(
+      Schema.filter(
+        (triggers) => distinctValues(triggers.map(({ kind }) => kind)),
+        {
+          message: () =>
+            "A Stat Block spell invocation effect termination must not repeat a trigger kind.",
+        },
+      ),
+    ),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.createdSubstanceSubstitution,
+    ),
+    replaces: Schema.Literal("water"),
+    substitute: Schema.Literal("wine"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.durationOverride,
+    ),
+    duration: DurationValueSchema,
+  }),
+  strictStruct({
+    kind: Schema.Literal(STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.targetLimit),
+    target: Schema.Literal("self"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.movementTraceSuppression,
+    ),
+    subject: Schema.Literal("invoker"),
+    whileCondition: Schema.Literal("invisible"),
+    trace: Schema.Literal("none"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.appearanceOptions,
+    ),
+    sizes: nonEmpty(SizeSchema).pipe(
+      Schema.filter(distinctValues, {
+        message: () =>
+          "Stat Block spell invocation appearance options must not repeat a size.",
+      }),
+    ),
+    bodyPlan: Schema.Literal("biped"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.armorClassAlreadyIncludesEffect,
+    ),
+    projection: Schema.Literal("already_included"),
+  }),
+  strictStruct({
+    kind: Schema.Literal(
+      STAT_BLOCK_SPELL_INVOCATION_DELTA_KIND.applicationTiming,
+    ),
+    timing: Schema.Literal("before_combat"),
+  }),
+);
+
+export const StatBlockSpellInvocationDeltasSchema = nonEmpty(
+  StatBlockSpellInvocationDeltaSchema,
+).pipe(
+  Schema.filter((deltas) => distinctValues(deltas.map(({ kind }) => kind)), {
+    message: () =>
+      "A restricted Stat Block spell invocation must not repeat a delta kind.",
+  }),
+);
+
+export const StatBlockSpellInvocationRestrictionSchema = strictStruct({
+  authoredExpression: surfaceExactProse(Schema.NonEmptyTrimmedString),
+  deltas: StatBlockSpellInvocationDeltasSchema,
+});
+
 export const StatBlockSpellReferenceSchema = strictStruct({
   spellId: surfaceReference(Schema.NonEmptyTrimmedString, "spell-reference"),
   count: optionalExact(StatBlockProcedurePositiveIntegerSchema),
   castAtLevel: optionalExact(SpellLevelSchema),
-  restriction: optionalExact(surfaceExactProse(Schema.NonEmptyTrimmedString)),
+  restriction: optionalExact(StatBlockSpellInvocationRestrictionSchema),
 });
 
 export const StatBlockSpellcastingGroupSchema = Schema.Union(

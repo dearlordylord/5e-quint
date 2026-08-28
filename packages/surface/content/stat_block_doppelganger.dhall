@@ -12,7 +12,7 @@ in  { challengeRating = 3
             , T.textOnly { procedureOrdinal = 2, name = "Slam", description = "Melee Attack Roll: +6 (with Advantage during the first round of each combat), reach 5 ft. Hit: 11 (2d6 + 4) Bludgeoning damage.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 3, procedure = T.spellcasting { name = "Read Thoughts", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 12 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noComponents, groups = { first = T.atWill { spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:758-789 — Read Thoughts casts Detect Thoughts.
-                        T.spellRef { spellId = "detect_thoughts", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "detect_thoughts", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [] : List T.SpellRef
                       } }
                   , rest = [] : List T.Group } } }

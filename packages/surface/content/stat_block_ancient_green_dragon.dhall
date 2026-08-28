@@ -14,15 +14,15 @@ in  { challengeRating = 22
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 21 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups =
                   { first = T.atWill { spells =
                       { first = -- RAW: Monsters/Monsters-E-G.md:1183 — At Will: Detect Magic.
-                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-E-G.md:1183 — At Will: Mind Spike (level 5 version).
-                        T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 5), restriction = (None Text) }
+                        T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 5) }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 2, rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-E-G.md:1184 — 1/Day Each: Geas.
-                        T.spellRef { spellId = "geas", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "geas", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-E-G.md:1184 — 1/Day Each: Modify Memory.
-                        T.spellRef { spellId = "modify_memory", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "modify_memory", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }
             ]

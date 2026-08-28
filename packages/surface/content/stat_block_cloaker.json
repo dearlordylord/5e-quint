@@ -112,7 +112,21 @@
               },
               "spells": [
                 {
-                  "restriction": "The spell ends early if the cloaker starts or ends its turn in Bright Light",
+                  "restriction": {
+                    "authoredExpression": "The spell ends early if the cloaker starts or ends its turn in Bright Light",
+                    "deltas": [
+                      {
+                        "kind": "effect_termination",
+                        "triggers": [
+                          {
+                            "illumination": "bright_light",
+                            "kind": "invoker_turn_boundary_in_illumination",
+                            "turnBoundary": "start_or_end"
+                          }
+                        ]
+                      }
+                    ]
+                  },
                   "spellId": "mirror_image"
                 }
               ]

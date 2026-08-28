@@ -14,13 +14,13 @@ in  { challengeRating = 15
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups =
                   { first = T.atWill { spells =
                       { first = -- RAW: Monsters/Monsters-E-G.md:1133 — At Will: Detect Magic.
-                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-E-G.md:1133 — At Will: Mind Spike (level 3 version).
-                        T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 3), restriction = (None Text) }
+                        T.spellRef { spellId = "mind_spike", count = (None Natural), castAtLevel = (Some 3) }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 2, rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-E-G.md:1134 — 1/Day: Geas.
-                        T.spellRef { spellId = "geas", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "geas", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [] : List T.SpellRef } }
                   ] } } }
             ]

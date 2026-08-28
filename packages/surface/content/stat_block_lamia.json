@@ -70,7 +70,19 @@
               },
               "spells": [
                 {
-                  "restriction": "can appear as a Large or Medium biped",
+                  "restriction": {
+                    "authoredExpression": "can appear as a Large or Medium biped",
+                    "deltas": [
+                      {
+                        "bodyPlan": "biped",
+                        "kind": "appearance_options",
+                        "sizes": [
+                          "large",
+                          "medium"
+                        ]
+                      }
+                    ]
+                  },
                   "spellId": "disguise_self"
                 },
                 {

@@ -14,17 +14,17 @@ in  { challengeRating = 17
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 21 }), spellAttackBonus = (Some { kind = "literal", value = +13 }), components = T.noMaterialComponents, groups =
                   { first = T.atWill { spells =
                       { first = -- RAW: Monsters/Monsters-E-G.md:896 — At Will: Detect Magic.
-                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-E-G.md:896 — At Will: Guiding Bolt (level 2 version).
-                        T.spellRef { spellId = "guiding_bolt", count = (None Natural), castAtLevel = (Some 2), restriction = (None Text) }
+                        T.spellRef { spellId = "guiding_bolt", count = (None Natural), castAtLevel = (Some 2) }
                       , -- RAW: Monsters/Monsters-E-G.md:896 — At Will: Shapechange with the printed form and maintenance restrictions.
-                        T.spellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = (Some "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell") }
+                        T.restrictedSpellRef { spellId = "shapechange", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell", deltas = { first = T.beastOrHumanoidTransformationForms, rest = [ T.noTransformationTemporaryHitPoints, T.noConcentrationRequirement ] : List T.InvocationDelta } } }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 2, rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-E-G.md:897 — 1/Day Each: Flame Strike.
-                        T.spellRef { spellId = "flame_strike", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "flame_strike", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-E-G.md:897 — 1/Day Each: Zone of Truth.
-                        T.spellRef { spellId = "zone_of_truth", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "zone_of_truth", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }
             , T.textOnly { procedureOrdinal = 5, name = "Weakening Breath", description = "Strength Saving Throw: DC 21, each creature that isn't currently affected by this breath in a 60-foot Cone. Failure: The target has Disadvantage on Strength-based D20 Tests and subtracts 3 (1d6) from its damage rolls. It repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.", reason = "unsupported_action_shape" }

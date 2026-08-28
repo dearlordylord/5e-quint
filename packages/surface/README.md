@@ -42,6 +42,15 @@ ability modifier. The field remains optional because a source may omit a Saves
 section; a source that prints a six-ability Save table must retain all six
 entries rather than treating the table as a derived shorthand.
 
+A restricted Stat Block spell reference owns a
+`StatBlockSpellInvocationRestriction`: its exact `authoredExpression` remains at
+the authored/presentation boundary, while its non-empty `deltas` carry the
+closed semantic vocabulary. Delta payloads use domain values rather than prose,
+and one reference cannot repeat a delta kind. An absent restriction means an
+unrestricted reference; there is no second empty-list spelling. Consumers must
+select the reference at an identity-retaining boundary, then pass only its
+narrowed deltas to semantic admission or execution.
+
 ## Goal (read this first)
 
 This package is **where the taxonomy actually lives and evolves**. It is the

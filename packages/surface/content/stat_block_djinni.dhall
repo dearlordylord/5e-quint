@@ -14,29 +14,29 @@ in  { challengeRating = 11
             , T.textOnly { procedureOrdinal = 4, name = "Create Whirlwind", description = "The djinni conjures a whirlwind at a point it can see within 120 feet. The whirlwind fills a 20-foot-radius, 60-foot-high Cylinder centered on that point. The whirlwind lasts until the djinni's Concentration on it ends. The djinni can move the whirlwind up to 20 feet at the start of each of its turns. Whenever the whirlwind enters a creature's space or a creature enters the whirlwind, that creature is subjected to the following effect. Strength Saving Throw: DC 17 (a creature makes this save only once per turn, and the djinni is unaffected). Failure: While in the whirlwind, the target has the Restrained condition and moves with the whirlwind. At the start of each of its turns, the Restrained target takes 21 (6d6) Thunder damage. At the end of each of its turns, the target repeats the save, ending the effect on itself on a success.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 5, procedure = T.spellcasting { name = "Spellcasting", ability = "cha", spellSaveDc = (Some { kind = "fixed", dc = 17 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.atWill { spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:712-754 — At Will: Detect Evil and Good.
-                        T.spellRef { spellId = "detect_evil_and_good", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "detect_evil_and_good", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:712-754 — At Will: Detect Magic.
-                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "detect_magic", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 1 , rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:712-754 — 2/Day Each: Create Food and Water.
-                        T.spellRef { spellId = "create_food_and_water", count = (None Natural), castAtLevel = (None Natural), restriction = (Some "can create wine instead of water") }
+                        T.restrictedSpellRef { spellId = "create_food_and_water", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "can create wine instead of water", deltas = { first = T.wineInsteadOfWater, rest = [] : List T.InvocationDelta } } }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:712-754 — 2/Day Each: Tongues.
-                        T.spellRef { spellId = "tongues", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "tongues", count = (None Natural), castAtLevel = (None Natural) }
                       , -- RAW: Monsters/Monsters-C-D.md:712-754 — 2/Day Each: Wind Walk.
-                        T.spellRef { spellId = "wind_walk", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "wind_walk", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   , T.limited { resourceOrdinals = { first = 2 , rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Creation.
-                        T.spellRef { spellId = "creation", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "creation", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Gaseous Form.
-                        T.spellRef { spellId = "gaseous_form", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "gaseous_form", count = (None Natural), castAtLevel = (None Natural) }
                       , -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Invisibility.
-                        T.spellRef { spellId = "invisibility", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "invisibility", count = (None Natural), castAtLevel = (None Natural) }
                       , -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Major Image.
-                        T.spellRef { spellId = "major_image", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "major_image", count = (None Natural), castAtLevel = (None Natural) }
                       , -- RAW: Monsters/Monsters-C-D.md:712-754 — 1/Day Each: Plane Shift.
-                        T.spellRef { spellId = "plane_shift", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "plane_shift", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }
             ]

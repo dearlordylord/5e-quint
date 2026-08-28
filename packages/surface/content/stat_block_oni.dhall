@@ -82,26 +82,26 @@ in  { challengeRating = 7
                                   { spellId = "charm_person"
                                   , count = None Natural
                                   , castAtLevel = Some 2
-                                  , restriction = None Text
+
                                   }
                             , rest =
                                   [ T.spellRef
                                       { spellId = "darkness"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "gaseous_form"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "sleep"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   ]
                                 : List T.SpellRef
@@ -127,11 +127,10 @@ in  { challengeRating = 7
                         T.atWill
                           { spells =
                             { first =
-                                T.spellRef
-                                  { spellId = "invisibility"
+                                T.restrictedSpellRef { spellId = "invisibility"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = Some "on itself"
+                                  , restriction = { authoredExpression = "on itself", deltas = { first = T.selfTargetLimit, rest = [] : List T.InvocationDelta } }
                                   }
                             , rest = [] : List T.SpellRef
                             }

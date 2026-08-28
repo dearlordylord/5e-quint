@@ -101,7 +101,10 @@ const syntheticStandaloneStatBlock = {
             spells: [
               {
                 spellId: "unit_spell_synthetic_mending",
-                restriction: "on itself",
+                restriction: {
+                  authoredExpression: "restricted to the synthetic invoker",
+                  deltas: [{ kind: "target_limit", target: "self" }],
+                },
               },
             ],
           },
