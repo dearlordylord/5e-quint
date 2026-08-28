@@ -28,7 +28,7 @@ const decodeSrdStatBlockRecord = Schema.decodeUnknownSync(
 );
 
 describe("E–G independent RAW fidelity", () => {
-  test("rejects claiming one authored ability for a RAW-ambiguous attack", () => {
+  test("rejects an authored ability outside the unresolved RAW candidates", () => {
     const ghast = installedByName.get("Ghast");
     const bite = ghast?.statBlock.actions?.find(
       (entry) => entry.kind === "textOnly" && entry.name === "Bite",
@@ -50,7 +50,7 @@ describe("E–G independent RAW fidelity", () => {
                   kind: "attack_roll",
                   name: "Bite",
                   attackType: "melee",
-                  attackAbility: "str",
+                  attackAbility: "int",
                   attackBonus: { kind: "literal", value: 5 },
                   reachFeet: 5,
                   onHit: [
@@ -85,8 +85,44 @@ describe("E–G independent RAW fidelity", () => {
         INSTALLED.map((record) =>
           record === ghast ? ghastWithClaimedAbility : record,
         ),
+        EQUIPMENT_SOURCE,
       ),
-    ).toThrow(/ambiguous RAW-derived attack abilities/);
+    ).toThrow(/outside RAW-derived attack ability candidates str, dex/);
+  });
+
+  test("retains ambiguous RAW candidates without executable admission", () => {
+    const ghast = installedByName.get("Ghast");
+    const authoredBite = ghast?.statBlock.actions?.find(
+      (entry) => entry.kind === "textOnly" && entry.name === "Bite",
+    );
+    const rawGhast = projectRawStatBlocks(
+      SOURCE,
+      OCCURRENCES,
+      INSTALLED,
+      EQUIPMENT_SOURCE,
+    ).find((projection) => projection.name === "Ghast");
+    const rawBite = rawGhast?.procedures.find(
+      (procedure) => procedure.name === "Bite",
+    );
+
+    expect(authoredBite).toMatchObject({
+      kind: "textOnly",
+      reason: "unsupported_action_shape",
+    });
+    expect(rawGhast?.textOnlyProcedures).toContainEqual(
+      expect.objectContaining({
+        section: "Actions",
+        name: "Bite",
+        reason: "unsupported_action_shape",
+      }),
+    );
+    expect(rawBite).toMatchObject({
+      kind: "attack_roll",
+      attackAbilityEvidence: {
+        kind: "unresolved",
+        candidates: ["str", "dex"],
+      },
+    });
   });
 
   test("rejects executable demotion and declared-resource mutations", () => {
@@ -218,17 +254,21 @@ describe("E–G independent RAW fidelity", () => {
       record === goblinWarrior ? goblinWithMultiattackCount : record,
     );
 
-    expect(projectAuthoredStatBlocks(demotedSlam)).not.toEqual(expected);
-    expect(projectAuthoredStatBlocks(changedRechargeOwnership)).not.toEqual(
-      expected,
-    );
-    expect(projectAuthoredStatBlocks(extraUnreferencedResource)).not.toEqual(
-      expected,
-    );
-    expect(projectAuthoredStatBlocks(changedAmmunition)).not.toEqual(expected);
-    expect(projectAuthoredStatBlocks(addedMultiattackCount)).not.toEqual(
-      expected,
-    );
+    expect(
+      projectAuthoredStatBlocks(demotedSlam, EQUIPMENT_SOURCE),
+    ).not.toEqual(expected);
+    expect(
+      projectAuthoredStatBlocks(changedRechargeOwnership, EQUIPMENT_SOURCE),
+    ).not.toEqual(expected);
+    expect(
+      projectAuthoredStatBlocks(extraUnreferencedResource, EQUIPMENT_SOURCE),
+    ).not.toEqual(expected);
+    expect(
+      projectAuthoredStatBlocks(changedAmmunition, EQUIPMENT_SOURCE),
+    ).not.toEqual(expected);
+    expect(
+      projectAuthoredStatBlocks(addedMultiattackCount, EQUIPMENT_SOURCE),
+    ).not.toEqual(expected);
   });
 
   test("rejects omitted optional executable and spell facts", () => {
@@ -329,6 +369,7 @@ describe("E–G independent RAW fidelity", () => {
         INSTALLED.map((record) =>
           record === adultGoldDragon ? adultGoldWithSpellCount : record,
         ),
+        EQUIPMENT_SOURCE,
       ),
     ).not.toEqual(expected);
     expect(
@@ -336,6 +377,7 @@ describe("E–G independent RAW fidelity", () => {
         INSTALLED.map((record) =>
           record === goblinWarrior ? scimitarWithAbilityModifier : record,
         ),
+        EQUIPMENT_SOURCE,
       ),
     ).not.toEqual(expected);
   });
@@ -441,6 +483,7 @@ describe("E–G independent RAW fidelity", () => {
           INSTALLED.map((record) =>
             record === earthElemental ? mutation : record,
           ),
+          EQUIPMENT_SOURCE,
         ),
       ).not.toEqual(expected);
     }
@@ -449,6 +492,7 @@ describe("E–G independent RAW fidelity", () => {
         INSTALLED.map((record) =>
           record === guardCaptain ? guardWithPluralGear : record,
         ),
+        EQUIPMENT_SOURCE,
       ),
     ).not.toEqual(expected);
   });

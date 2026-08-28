@@ -2,18 +2,23 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
 
 import { srdStatBlockCollection } from "./stat-block-catalog.ts";
 import { projectAuthoredStatBlocks } from "./stat-block-raw-projection.test-support.ts";
+import { SrdStatBlockRecordSchema } from "./schema.ts";
 
 const animalRecords = srdStatBlockCollection.statBlocks.filter((record) =>
   record.provenance.section.startsWith("Animals.md:"),
 );
 const animalRecordsById = new Map(
   animalRecords.map((record) => [record.id, record]),
+);
+const decodeSrdStatBlockRecord = Schema.decodeUnknownSync(
+  SrdStatBlockRecordSchema,
 );
 
 type ProcedureSection = "actions" | "bonusActions" | "reactions";
@@ -67,7 +72,9 @@ describe("Animals Stat Block procedure fidelity", () => {
       "**Speed** 20 ft., Climb or Fly 20 ft. (GM's choice)",
     );
     const swarm = requireAnimal("stat_block_swarm_of_insects");
-    expect(projectAuthoredStatBlocks([swarm])[0]?.generalFacts.speeds).toEqual([
+    expect(
+      projectAuthoredStatBlocks([swarm], "")[0]?.generalFacts.speeds,
+    ).toEqual([
       { kind: "walk", feet: 20, hover: false },
       {
         kind: "gm_choice",
@@ -282,6 +289,48 @@ describe("Animals Stat Block procedure fidelity", () => {
       description: expect.stringContaining(
         "At Will: *Detect Evil and Good*, *Detect Magic*\n1/Day: *Clairvoyance*",
       ),
+    });
+  });
+
+  test("detects a declared resource mutation in structurally parsed prose", () => {
+    const giantOwl = requireAnimal("stat_block_giant_owl");
+    const dailyResource = giantOwl.statBlock.resources?.find(
+      (resource) => resource.limit.kind === "daily",
+    );
+    if (dailyResource?.limit.kind !== "daily") {
+      throw new Error("Giant Owl resource mutation requires the daily fixture");
+    }
+    const canonicalProjection = projectAuthoredStatBlocks([giantOwl], "");
+    const mutated = decodeSrdStatBlockRecord({
+      ...giantOwl,
+      statBlock: {
+        ...giantOwl.statBlock,
+        resources: giantOwl.statBlock.resources?.map((resource) =>
+          resource === dailyResource
+            ? { ...resource, limit: { ...dailyResource.limit, uses: 2 } }
+            : resource,
+        ),
+      },
+    });
+    const mutatedProjection = projectAuthoredStatBlocks([mutated], "");
+
+    expect(mutatedProjection).not.toEqual(canonicalProjection);
+    expect(mutatedProjection[0]?.resources).toContainEqual({
+      kind: "daily",
+      uses: 2,
+      ownership: "shared",
+    });
+    expect(
+      mutatedProjection[0]?.procedures.find(
+        (procedure) => procedure.name === "Spellcasting",
+      ),
+    ).toMatchObject({
+      kind: "spellcasting",
+      groups: expect.arrayContaining([
+        expect.objectContaining({
+          resourceLimits: [{ kind: "daily", uses: 2, ownership: "shared" }],
+        }),
+      ]),
     });
   });
 
