@@ -254,7 +254,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         expiresAt: {
           kind: "concentration",
           combatantId: wizardId,
-          durationTicks: elapsedTimeTicks(10),
+          durationTicks: elapsedTimeTicks(9),
         },
       },
     });
@@ -287,6 +287,10 @@ describe("battle runtime: Concentration and readied spells", () => {
       { combatantId: skeletonId },
     ]);
     expect(broken.combatants.get(skeletonId)?.activeEffects).toEqual([]);
+    expect(broken.combatants.get(skeletonId)?.conditions.prone).toBe(false);
+    expect(
+      broken.combatants.get(skeletonId)?.conditions.directIncapacitated,
+    ).toBe(false);
   });
 
   test("breaking ordinary concentration does not clear a non-owned readied spell entry", () => {
@@ -900,7 +904,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         expiresAt: {
           kind: "concentration",
           combatantId: secondWizardId,
-          durationTicks: elapsedTimeTicks(10),
+          durationTicks: elapsedTimeTicks(9),
         },
       },
     });
@@ -924,7 +928,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         expiresAt: {
           kind: "concentration",
           combatantId: fighterId,
-          durationTicks: elapsedTimeTicks(10),
+          durationTicks: elapsedTimeTicks(9),
         },
       },
     });
@@ -938,7 +942,7 @@ describe("battle runtime: Concentration and readied spells", () => {
         expiresAt: {
           kind: "concentration",
           combatantId: fighterId,
-          durationTicks: elapsedTimeTicks(10),
+          durationTicks: elapsedTimeTicks(9),
         },
       },
     });
@@ -1101,6 +1105,12 @@ describe("battle runtime: Concentration and readied spells", () => {
       released.state.combatants
         .get(goblinId)
         ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+    ).toBe(false);
+    expect(released.state.combatants.get(goblinId)?.conditions.prone).toBe(
+      false,
+    );
+    expect(
+      released.state.combatants.get(goblinId)?.conditions.directIncapacitated,
     ).toBe(false);
     expect(released.state.combatants.get(wizardId)?.concentration).toBeNull();
   });

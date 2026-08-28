@@ -28,7 +28,10 @@ import {
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { spellId } from "./identity.ts";
 import { defaultArmorClassState } from "@dnd/shared-algebras/armor-class-algebra";
-import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
+import {
+  elapsedTimeTicks,
+  type ElapsedTimeTicks,
+} from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   DieRollResult,
   Hp,
@@ -69,6 +72,7 @@ import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-re
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-hit-point-state.ts";
 
 const spellCasterId = combatantId("chromatic-orb-caster");
+const wardingBondCasterId = combatantId("chromatic-orb-warding-bond-caster");
 const firstTargetId = combatantId("chromatic-orb-first-target");
 const secondTargetId = combatantId("chromatic-orb-second-target");
 const thirdTargetId = combatantId("chromatic-orb-third-target");
@@ -115,6 +119,33 @@ const syntheticZeroHitPointReplacement = decodeUnitRecordSync({
   },
   species: "synthetic_fixture_species",
 });
+const syntheticWardingBondPreparedFeature = {
+  acquiredAtLevel: 1,
+  className: "wizard",
+  id: parseSharedUnitId("wizard_synthetic_warding_bond_access"),
+  kind: "class_feature",
+  name: "Synthetic Warding Bond Access",
+  provenance: {
+    kind: "synthetic-test",
+    section: "chromatic orb shared-damage fixture",
+  },
+  mechanics: {
+    family: "passive",
+    grants: [
+      {
+        kind: "grant_spell_access",
+        mode: "prepared",
+        spellId: spellRecord("warding_bond").id,
+      },
+      {
+        kind: "grant_spell_free_casts",
+        spellId: spellRecord("warding_bond").id,
+        count: 1,
+        resetCadence: "long_rest",
+      },
+    ],
+  },
+} as const satisfies UnitRecord;
 
 type ActionSpellAct = AvailableBattleAct & {
   readonly subject: Extract<BattleSubject, { readonly tag: "actionSpell" }>;
@@ -589,6 +620,18 @@ describe("Chromatic Orb chained spell attack", () => {
     expect(
       resolved.state.combatants.get(firstTargetId)?.concentration,
     ).toBeNull();
+    expect(
+      resolved.state.combatants
+        .get(secondTargetId)
+        ?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+    ).toBe(false);
+    expect(
+      resolved.state.combatants.get(secondTargetId)?.conditions.prone,
+    ).toBe(false);
+    expect(
+      resolved.state.combatants.get(secondTargetId)?.conditions
+        .directIncapacitated,
+    ).toBe(false);
   });
 
   test("requests an active source damage penalty roll before applying chained damage", () => {
@@ -653,7 +696,7 @@ describe("Chromatic Orb chained spell attack", () => {
     );
 
     expect(concentrationHole).toMatchObject({
-      combatantId: spellCasterId,
+      combatantId: wardingBondCasterId,
       damageAmount: 3,
     });
 
@@ -661,11 +704,25 @@ describe("Chromatic Orb chained spell attack", () => {
       concentrationHole,
       true,
     );
-    const resolved = resolveResolved(state, damage.subject, [
+    const awaitingHideousLaughter = resolveNeedsHoles(state, damage.subject, [
       ...damage.fills,
       concentrationFill,
     ]);
-    const caster = resolved.state.combatants.get(spellCasterId);
+    const hideousLaughterHole = requireHideousLaughterRepeatSaveHole(
+      requireHole(awaitingHideousLaughter.holes, "savingThrowOutcome"),
+    );
+    expect(hideousLaughterHole.hideousLaughterRepeatSave).toMatchObject({
+      targetId: wardingBondCasterId,
+      trigger: "damage",
+    });
+    const resolved = resolveResolved(state, damage.subject, [
+      ...damage.fills,
+      concentrationFill,
+      savingThrowOutcomeFill(hideousLaughterHole, [
+        { targetId: wardingBondCasterId, succeeded: true },
+      ]),
+    ]);
+    const caster = resolved.state.combatants.get(wardingBondCasterId);
 
     expect(resolved.state.combatants.get(firstTargetId)?.hp).toBe(9);
     expect(caster?.hp).toBe(9);
@@ -673,6 +730,14 @@ describe("Chromatic Orb chained spell attack", () => {
       sourceProcedureRef: expect.any(String),
       effectKind: "spellEffect",
     });
+    expect(
+      caster?.activeEffects.some((effect) => effect.kind === "hideousLaughter"),
+    ).toBe(false);
+    expect(caster?.conditions.prone).toBe(false);
+    expect(caster?.conditions.directIncapacitated).toBe(false);
+    expect(
+      resolved.state.combatants.get(secondTargetId)?.concentration,
+    ).toBeNull();
   });
 
   test("damage that drops a character to 0 HP uses the zero-HP disposition", () => {
@@ -886,20 +951,30 @@ function priorCastSpellcasting(
   };
 }
 
-function laterRoundStateWithExpendedSpellLevels(
-  state: BattleState,
-  expendedSpellLevels: readonly {
+function stateAfterPriorSpellCasts(input: {
+  readonly state: BattleState;
+  readonly round: Round;
+  readonly expendedSpellLevels: readonly {
     readonly combatantId: CombatantId;
     readonly spellLevel: 1 | 2;
-  }[],
-): BattleState {
-  const combatants = expendedSpellLevels.reduce((current, expended) => {
+  }[];
+}): BattleState {
+  const combatants = input.expendedSpellLevels.reduce((current, expended) => {
     const combatant = current.get(expended.combatantId);
     if (
       combatant?.origin.kind !== "character" ||
       combatant.origin.spellcasting === undefined
     ) {
       throw new Error("Expected admitted prior-cast spellcaster.");
+    }
+    if (
+      !combatant.origin.spellcasting.spellSlots.some(
+        (slot) => slot.spellLevel === expended.spellLevel,
+      )
+    ) {
+      throw new Error(
+        `Expected ${expended.combatantId} to own a level-${expended.spellLevel} Spell Slot.`,
+      );
     }
     return new Map(current).set(expended.combatantId, {
       ...combatant,
@@ -915,10 +990,10 @@ function laterRoundStateWithExpendedSpellLevels(
         },
       },
     });
-  }, state.combatants);
+  }, input.state.combatants);
   return {
-    ...state,
-    initiative: { ...state.initiative, round: Round(2) },
+    ...input.state,
+    initiative: { ...input.state.initiative, round: input.round },
     combatants,
   };
 }
@@ -964,23 +1039,12 @@ function chromaticOrbSession(input: {
           proficiencyBonus: proficiencyBonus(2),
           canCastSpells: true,
           cantrips: [],
-          preparedSpells: [
-            input.spell ?? chromaticOrb,
-            ...(input.priorCastHistory === "wardingBondLifecycle"
-              ? [spellRecord("warding_bond"), spellRecord("ray_of_enfeeblement")]
-              : []),
-          ],
+          preparedSpells: [input.spell ?? chromaticOrb],
           featurePreparedSpells: [],
           spellAccesses: [],
           spellbookRitualSpellAccesses: [],
           invocationSpellAccesses: [],
-          spellSlots:
-            input.priorCastHistory === "wardingBondLifecycle"
-              ? [
-                  { spellLevel: 1, count: 1 },
-                  { spellLevel: 2, count: 2 },
-                ]
-              : [{ spellLevel: input.spellLevel, count: 1 }],
+          spellSlots: [{ spellLevel: input.spellLevel, count: 1 }],
         },
         ...(input.casterNaturalOneRerollUnit === undefined ||
         casterNaturalOneRerollSupport === undefined
@@ -999,6 +1063,41 @@ function chromaticOrbSession(input: {
               ],
             }),
       }),
+      ...(input.priorCastHistory === "wardingBondLifecycle"
+        ? [
+            characterCreature({
+              combatantId: wardingBondCasterId,
+              displayName: "Warding Bond caster",
+              initiative: 15,
+              resources: [
+                {
+                  unit: syntheticWardingBondPreparedFeature,
+                  spellAccessFreeCast: {
+                    spellId: spellRecord("warding_bond").id,
+                    count: 1,
+                  },
+                  usesRemaining: 1,
+                },
+              ],
+              characterUnitRefs: [
+                {
+                  unit: syntheticWardingBondPreparedFeature,
+                  supportProfiles: [],
+                },
+              ],
+              spellcasting: {
+                ...priorCastSpellcasting(spellRecord("ray_of_enfeeblement"), 2),
+                featurePreparedSpells: [
+                  {
+                    sourceUnitId: syntheticWardingBondPreparedFeature.id,
+                    spell: spellRecord("warding_bond"),
+                  },
+                ],
+                spellSlots: [{ spellLevel: 2, count: 2 }],
+              },
+            }),
+          ]
+        : []),
       characterCreature({
         combatantId: firstTargetId,
         displayName: "First target",
@@ -1036,6 +1135,14 @@ function chromaticOrbSession(input: {
             combatantId: secondTargetId,
             displayName: "Second target",
             initiative: 9,
+            ...(input.priorCastHistory === "wardingBondLifecycle"
+              ? {
+                  spellcasting: priorCastSpellcasting(
+                    spellRecord("hideous_laughter"),
+                    1,
+                  ),
+                }
+              : {}),
           }),
       characterCreature({
         combatantId: thirdTargetId,
@@ -1225,9 +1332,13 @@ function withTargetConcentration(): BattleState {
     spellLevel: 1,
     priorCastHistory: "targetConcentration",
   });
-  const state = laterRoundStateWithExpendedSpellLevels(session.state, [
-    { combatantId: firstTargetId, spellLevel: 1 },
-  ]);
+  const state = stateAfterPriorSpellCasts({
+    state: session.state,
+    round: Round(2),
+    expendedSpellLevels: [
+      { combatantId: firstTargetId, spellLevel: 1 },
+    ],
+  });
   const target = state.combatants.get(firstTargetId);
   const laughterTarget = state.combatants.get(secondTargetId);
   if (target === undefined || laughterTarget === undefined) {
@@ -1251,7 +1362,7 @@ function withTargetConcentration(): BattleState {
       expiresAt: {
         kind: "concentration",
         combatantId: firstTargetId,
-        durationTicks: elapsedTimeTicks(10),
+        durationTicks: elapsedTimeTicks(9),
       },
     },
   });
@@ -1275,72 +1386,109 @@ function withTargetConcentration(): BattleState {
   };
 }
 
-function withSourceDamageRollPenalty(): BattleState {
-  const session = chromaticOrbSession({
-    spellLevel: 1,
-    priorCastHistory: "sourceDamagePenalty",
-  });
-  const state = laterRoundStateWithExpendedSpellLevels(session.state, [
-    { combatantId: firstTargetId, spellLevel: 2 },
-  ]);
-  const caster = state.combatants.get(spellCasterId);
-  const source = state.combatants.get(firstTargetId);
-  if (caster === undefined || source === undefined) {
-    throw new Error("Expected spell caster and prior Ray source.");
-  }
+function stateWithRayOfEnfeeblementEffects(input: {
+  readonly session: BattleRuntimeSession;
+  readonly state: BattleState;
+  readonly sourceId: CombatantId;
+  readonly targetId: CombatantId;
+  readonly remainingDurationTicks: ElapsedTimeTicks;
+}): {
+  readonly state: BattleState;
+  readonly sourceProcedureRef: ReturnType<
+    typeof requireCharacterSpellProcedureRefForTest
+  >;
+} {
   const sourceProcedureRef = requireCharacterSpellProcedureRefForTest(
-    session,
-    firstTargetId,
+    input.session,
+    input.sourceId,
     spellSlotInvocationRef(
       "ray_of_enfeeblement",
       2,
       "abilityD20TestRollModeSaveGate",
     ),
   );
-  const sourceD20TestRollMode = allocateBattleEffectOccurrenceForCreature({
-    owner: caster,
+  const invocation = characterSpellInvocationForProcedureRefForTest(
+    input.session,
+    input.sourceId,
+    sourceProcedureRef,
+  );
+  if (invocation.procedure !== "abilityD20TestRollModeSaveGate") {
+    throw new Error("Expected the admitted Ray of Enfeeblement procedure.");
+  }
+  const target = input.state.combatants.get(input.targetId);
+  if (target === undefined) {
+    throw new Error("Expected the Ray of Enfeeblement target.");
+  }
+  const rollMode = allocateBattleEffectOccurrenceForCreature({
+    owner: target,
     effect: {
-      kind: "abilityD20TestRollModeEndTurnSave",
+      ...invocation.failedSaveEffect,
       sourceProcedureRef,
-      sourceCombatantId: firstTargetId,
-      ability: "str",
-      mode: "disadvantage",
-      save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
-        kind: "concentration",
-        combatantId: firstTargetId,
-        durationTicks: elapsedTimeTicks(10),
+        ...invocation.failedSaveEffect.expiresAt,
+        durationTicks: input.remainingDurationTicks,
       },
     },
   });
-  const sourceDamageRollPenalty = allocateBattleEffectOccurrenceForCreature({
-    owner: sourceD20TestRollMode.owner,
+  const damagePenalty = allocateBattleEffectOccurrenceForCreature({
+    owner: rollMode.owner,
     effect: {
-      kind: "sourceDamageRollPenalty",
+      ...invocation.failedSaveDamagePenaltyEffect,
       sourceProcedureRef,
-      sourceCombatantId: firstTargetId,
-      amount: { dice: 1, dieSize: 8 },
       expiresAt: {
-        kind: "concentration",
-        combatantId: firstTargetId,
-        durationTicks: elapsedTimeTicks(10),
+        ...invocation.failedSaveDamagePenaltyEffect.expiresAt,
+        durationTicks: input.remainingDurationTicks,
       },
     },
   });
   return {
-    ...state,
-    combatants: new Map(state.combatants)
+    sourceProcedureRef,
+    state: {
+      ...input.state,
+      combatants: new Map(input.state.combatants).set(input.targetId, {
+        ...damagePenalty.owner,
+        activeEffects: [
+          ...target.activeEffects,
+          rollMode.effect,
+          damagePenalty.effect,
+        ],
+      }),
+    },
+  };
+}
+
+function withSourceDamageRollPenalty(): BattleState {
+  const session = chromaticOrbSession({
+    spellLevel: 1,
+    priorCastHistory: "sourceDamagePenalty",
+  });
+  const state = stateAfterPriorSpellCasts({
+    state: session.state,
+    round: Round(2),
+    expendedSpellLevels: [
+      { combatantId: firstTargetId, spellLevel: 2 },
+    ],
+  });
+  const source = state.combatants.get(firstTargetId);
+  if (source === undefined) {
+    throw new Error("Expected spell caster and prior Ray source.");
+  }
+  const ray = stateWithRayOfEnfeeblementEffects({
+    session,
+    state,
+    sourceId: firstTargetId,
+    targetId: spellCasterId,
+    remainingDurationTicks: elapsedTimeTicks(9),
+  });
+  return {
+    ...ray.state,
+    combatants: new Map(ray.state.combatants)
       .set(firstTargetId, {
         ...source,
-        concentration: { sourceProcedureRef, effectKind: "spellEffect" },
-      })
-      .set(spellCasterId, {
-        ...sourceDamageRollPenalty.owner,
-        activeEffects: [
-          ...caster.activeEffects,
-          sourceD20TestRollMode.effect,
-          sourceDamageRollPenalty.effect,
-        ],
+        concentration: {
+          sourceProcedureRef: ray.sourceProcedureRef,
+          effectKind: "spellEffect",
+        },
       }),
   };
 }
@@ -1350,22 +1498,27 @@ function withWardingBondSharedCasterLifecycle(): BattleState {
     spellLevel: 1,
     priorCastHistory: "wardingBondLifecycle",
   });
-  const state = laterRoundStateWithExpendedSpellLevels(session.state, [
-    { combatantId: spellCasterId, spellLevel: 2 },
-  ]);
-  const caster = state.combatants.get(spellCasterId);
+  const state = stateAfterPriorSpellCasts({
+    state: session.state,
+    round: Round(3),
+    expendedSpellLevels: [
+      { combatantId: wardingBondCasterId, spellLevel: 2 },
+      { combatantId: secondTargetId, spellLevel: 1 },
+    ],
+  });
+  const caster = state.combatants.get(wardingBondCasterId);
   const target = state.combatants.get(firstTargetId);
-  const rayTarget = state.combatants.get(thirdTargetId);
+  const laughterCaster = state.combatants.get(secondTargetId);
   if (
     caster === undefined ||
     target === undefined ||
-    rayTarget === undefined
+    laughterCaster === undefined
   ) {
     throw new Error("Expected prior-cast lifecycle combatants.");
   }
   const wardingBondProcedureRef = requireCharacterSpellProcedureRefForTest(
     session,
-    spellCasterId,
+    wardingBondCasterId,
     spellSlotInvocationRef("warding_bond", 2, "wardingBond"),
   );
   const wardingBondEffect = allocateBattleEffectOccurrenceForCreature({
@@ -1373,59 +1526,57 @@ function withWardingBondSharedCasterLifecycle(): BattleState {
     effect: {
       kind: "wardingBond",
       sourceProcedureRef: wardingBondProcedureRef,
-      sourceCombatantId: spellCasterId,
+      sourceCombatantId: wardingBondCasterId,
       expiresAt: {
         kind: "duration",
-        durationTicks: elapsedTimeTicks(600),
+        durationTicks: elapsedTimeTicks(598),
       },
     },
   });
-  const rayProcedureRef = requireCharacterSpellProcedureRefForTest(
+  const ray = stateWithRayOfEnfeeblementEffects({
     session,
-    spellCasterId,
-    spellSlotInvocationRef(
-      "ray_of_enfeeblement",
-      2,
-      "abilityD20TestRollModeSaveGate",
-    ),
-  );
-  const rayD20TestRollMode = allocateBattleEffectOccurrenceForCreature({
-    owner: rayTarget,
-    effect: {
-      kind: "abilityD20TestRollModeEndTurnSave",
-      sourceProcedureRef: rayProcedureRef,
-      sourceCombatantId: spellCasterId,
-      ability: "str",
-      mode: "disadvantage",
-      save: { ability: "con", dc: { kind: "caster_spell_save_dc" } },
-      expiresAt: {
-        kind: "concentration",
-        combatantId: spellCasterId,
-        durationTicks: elapsedTimeTicks(10),
-      },
-    },
+    state,
+    sourceId: wardingBondCasterId,
+    targetId: thirdTargetId,
+    remainingDurationTicks: elapsedTimeTicks(9),
   });
-  const rayDamagePenalty = allocateBattleEffectOccurrenceForCreature({
-    owner: rayD20TestRollMode.owner,
+  const hideousLaughterProcedureRef =
+    requireCharacterSpellProcedureRefForTest(
+      session,
+      secondTargetId,
+      spellSlotInvocationRef("hideous_laughter", 1, "hideousLaughter"),
+    );
+  const hideousLaughter = allocateBattleEffectOccurrenceForCreature({
+    owner: caster,
     effect: {
-      kind: "sourceDamageRollPenalty",
-      sourceProcedureRef: rayProcedureRef,
-      sourceCombatantId: spellCasterId,
-      amount: { dice: 1, dieSize: 8 },
+      kind: "hideousLaughter",
+      sourceProcedureRef: hideousLaughterProcedureRef,
+      sourceCombatantId: secondTargetId,
+      conditionHadNonSpellProneSource: false,
+      conditionHadNonSpellIncapacitatedSource: false,
+      repeatSaveRollMode: null,
+      save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
       expiresAt: {
         kind: "concentration",
-        combatantId: spellCasterId,
-        durationTicks: elapsedTimeTicks(10),
+        combatantId: secondTargetId,
+        durationTicks: elapsedTimeTicks(8),
       },
     },
   });
   return {
-    ...state,
-    combatants: new Map(state.combatants)
-      .set(spellCasterId, {
-        ...caster,
+    ...ray.state,
+    combatants: new Map(ray.state.combatants)
+      .set(wardingBondCasterId, {
+        ...battleCreatureStateWithKnockOutPreservedConditions(
+          hideousLaughter.owner,
+          applyCondition(
+            applyCondition(caster.conditions, "prone"),
+            "incapacitated",
+          ),
+        ),
+        activeEffects: [...caster.activeEffects, hideousLaughter.effect],
         concentration: {
-          sourceProcedureRef: rayProcedureRef,
+          sourceProcedureRef: ray.sourceProcedureRef,
           effectKind: "spellEffect",
         },
       })
@@ -1433,13 +1584,12 @@ function withWardingBondSharedCasterLifecycle(): BattleState {
         ...wardingBondEffect.owner,
         activeEffects: [...target.activeEffects, wardingBondEffect.effect],
       })
-      .set(thirdTargetId, {
-        ...rayDamagePenalty.owner,
-        activeEffects: [
-          ...rayTarget.activeEffects,
-          rayD20TestRollMode.effect,
-          rayDamagePenalty.effect,
-        ],
+      .set(secondTargetId, {
+        ...laughterCaster,
+        concentration: {
+          sourceProcedureRef: hideousLaughterProcedureRef,
+          effectKind: "spellEffect",
+        },
       }),
   };
 }
@@ -1454,6 +1604,15 @@ function requireHole<K extends BattleHole["kind"]>(
   );
   if (hole === undefined) {
     throw new Error(`Expected ${kind} hole.`);
+  }
+  return hole;
+}
+
+function requireHideousLaughterRepeatSaveHole(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+): Extract<BattleHole, { readonly hideousLaughterRepeatSave: unknown }> {
+  if (!("hideousLaughterRepeatSave" in hole)) {
+    throw new Error("Expected Hideous Laughter repeat save hole.");
   }
   return hole;
 }
@@ -1552,6 +1711,20 @@ function concentrationSavingThrowFill(
   };
 }
 
+function savingThrowOutcomeFill(
+  hole: Extract<BattleHole, { readonly kind: "savingThrowOutcome" }>,
+  outcomes: readonly {
+    readonly targetId: CombatantId;
+    readonly succeeded: boolean;
+  }[],
+): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {
+  return {
+    kind: "savingThrowOutcome",
+    holeId: hole.holeId,
+    value: { outcomes },
+  };
+}
+
 function poisonImmuneSkeletonCreature(input: {
   readonly combatantId: CombatantId;
   readonly displayName: string;
@@ -1585,6 +1758,10 @@ function characterCreature(input: {
     { readonly kind: "character" }
   >["spellcasting"];
   readonly hp?: number;
+  readonly resources?: Extract<
+    BattleCreatureInit["creatureInit"],
+    { readonly kind: "character" }
+  >["resources"];
   readonly unitFeatures?: Extract<
     BattleCreatureInit["creatureInit"],
     { readonly kind: "character" }
@@ -1628,9 +1805,17 @@ function characterCreature(input: {
       maxHp: hp,
       tempHp: Hp(0),
       selectedLoadout: {},
-      ...(input.zeroHitPointReplacementUnit === undefined
+      ...(input.resources === undefined &&
+      input.zeroHitPointReplacementUnit === undefined
         ? {}
-        : { resources: [{ unit: input.zeroHitPointReplacementUnit }] }),
+        : {
+            resources: [
+              ...(input.resources ?? []),
+              ...(input.zeroHitPointReplacementUnit === undefined
+                ? []
+                : [{ unit: input.zeroHitPointReplacementUnit }]),
+            ],
+          }),
       attack: null,
       unarmedStrike: {
         kind: "unarmedStrike",

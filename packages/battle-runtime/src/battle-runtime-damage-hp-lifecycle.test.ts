@@ -1,4 +1,7 @@
-import { applyCondition } from "@dnd/shared-algebras/conditions-algebra";
+import {
+  applyCondition,
+  hasCondition,
+} from "@dnd/shared-algebras/conditions-algebra";
 import { damageAmount, DieRollResult, Hp, Round } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
@@ -49,6 +52,8 @@ import {
 } from "./battle-reducer/creature-hit-point-state.ts";
 import { allocateBattleEffectOccurrenceForCreature } from "./effect-execution-ref.ts";
 
+const aidCasterId = combatantId("damage-hp-aid-caster");
+
 function admittedPriorCastDamageEffectSession() {
   const session = startBattleSessionRight({
     battleId: battleId("battle-damage-hp-admitted-effects"),
@@ -61,29 +66,44 @@ function admittedPriorCastDamageEffectSession() {
         spellcasting: wizardSpellcasting({
           cantrips: [spellRecord("chill_touch")],
           preparedSpells: [
-            spellRecord("aid"),
             spellRecord("charm_person"),
             spellRecord("hideous_laughter"),
           ],
-          spellSlots: [
-            { spellLevel: 1, count: 2 },
-            { spellLevel: 2, count: 2 },
-          ],
+          spellSlots: [{ spellLevel: 1, count: 2 }],
         }),
+      }),
+      characterSeed({
+        combatantId: aidCasterId,
+        displayName: "Aid caster",
+        initiative: 15,
+        attack: null,
+        classLevels: [{ className: "cleric", level: 3 }],
+        spellcasting: {
+          ...wizardSpellcasting({
+            cantrips: [],
+            preparedSpells: [spellRecord("aid")],
+            spellSlots: [{ spellLevel: 2, count: 2 }],
+          }),
+          spellcastingSource: {
+            tag: "classSpellcasting",
+            className: "cleric",
+            abilityModifier: 3,
+          },
+        },
       }),
       statBlockCreatureInit({ combatantId: goblinId, initiative: 10 }),
     ],
   });
   const expendedState = battleStateWithAllSpellSlotsExpended(
-    session.state,
-    fighterId,
+    battleStateWithAllSpellSlotsExpended(session.state, fighterId),
+    aidCasterId,
   );
   return battleRuntimeSessionForTest({
     state: {
       ...expendedState,
       initiative: {
         ...expendedState.initiative,
-        round: Round(4),
+        round: Round(5),
       },
     },
     context: session.context,
@@ -104,14 +124,16 @@ describe("damage and hit point lifecycle helpers", () => {
         kind: "hitPointMaximumIncrease",
         sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
           session,
-          fighterId,
+          aidCasterId,
           spellSlotInvocationRef("aid", 2, "scalarBuff"),
         ),
-        sourceCombatantId: fighterId,
+        sourceCombatantId: aidCasterId,
         amount: 5,
         expiresAt: {
           kind: "duration",
-          durationTicks: requireElapsedHours(8),
+          durationTicks: elapsedTimeTicks(
+            Number(requireElapsedHours(8)) - 4,
+          ),
         },
       },
     });
@@ -136,9 +158,14 @@ describe("damage and hit point lifecycle helpers", () => {
         effect: {
           kind: "hitPointMaximumIncrease",
           sourceProcedureRef: hpMaximumEffect.sourceProcedureRef,
-          sourceCombatantId: fighterId,
+          sourceCombatantId: aidCasterId,
           amount: 5,
-          expiresAt: hpMaximumEffect.expiresAt,
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(
+              Number(requireElapsedHours(8)) - 3,
+            ),
+          },
         },
       });
     expect(repeatedSameStrengthAllocation.effect.effectRef).not.toBe(
@@ -567,7 +594,7 @@ describe("damage and hit point lifecycle helpers", () => {
     });
     expect(releasedKnockout.positiveHpUnconscious).toBeNull();
     const escapeEffect = allocateBattleEffectOccurrenceForCreature({
-      owner: knockout,
+      owner: target,
       effect: {
         kind: "spellCondition",
         sourceProcedureRef: requireCharacterSpellProcedureRefForTest(
@@ -586,30 +613,32 @@ describe("damage and hit point lifecycle helpers", () => {
         turnStartDamage: null,
         expiresAt: {
           kind: "duration",
-          durationTicks: requireElapsedHours(1),
+          durationTicks: elapsedTimeTicks(
+            Number(requireElapsedHours(1)) - 4,
+          ),
         },
       },
     });
-    const knockedOutWithEscape = {
-      ...battleCreatureStateWithKnockOutPreservedConditions(
-        escapeEffect.owner,
-        applyCondition(knockout.conditions, "charmed"),
-      ),
+    const targetWithEscape = {
+      ...escapeEffect.owner,
+      conditions: applyCondition(target.conditions, "charmed"),
       activeEffects: [escapeEffect.effect],
     };
     const escaped = removeSpellConditionEffectsFromTargetDamagedByCasterOrAlly(
       {
         ...state,
-        combatants: new Map(state.combatants).set(
-          goblinId,
-          knockedOutWithEscape,
-        ),
+        combatants: new Map(state.combatants).set(goblinId, targetWithEscape),
       },
       fighterId,
       goblinId,
       [],
     );
     expect(escaped.combatants.get(goblinId)?.activeEffects).toEqual([]);
+    const escapedTarget = escaped.combatants.get(goblinId);
+    if (escapedTarget === undefined) {
+      throw new Error("Expected the Charm target after damage cleanup.");
+    }
+    expect(hasCondition(escapedTarget.conditions, "charmed")).toBe(false);
 
     const zeroGoblin = applyHpDamage(target, Number(target.hp), {
       deathFailuresAtZeroHp: 1,
@@ -626,7 +655,7 @@ describe("damage and hit point lifecycle helpers", () => {
     );
     const concentrationEscapeEffect =
       allocateBattleEffectOccurrenceForCreature({
-        owner: knockout,
+        owner: target,
         effect: {
           kind: "hideousLaughter",
           sourceProcedureRef: concentrationProcedureRef,
@@ -638,7 +667,7 @@ describe("damage and hit point lifecycle helpers", () => {
           expiresAt: {
             kind: "concentration",
             combatantId: fighterId,
-            durationTicks: elapsedTimeTicks(10),
+            durationTicks: elapsedTimeTicks(7),
           },
         },
       });
@@ -656,7 +685,7 @@ describe("damage and hit point lifecycle helpers", () => {
           ...battleCreatureStateWithKnockOutPreservedConditions(
             concentrationEscapeEffect.owner,
             applyCondition(
-              applyCondition(knockout.conditions, "prone"),
+              applyCondition(target.conditions, "prone"),
               "incapacitated",
             ),
           ),
@@ -670,6 +699,10 @@ describe("damage and hit point lifecycle helpers", () => {
     );
     expect(broken.value.get(fighterId)?.concentration).toBeNull();
     expect(broken.value.get(goblinId)?.activeEffects).toEqual([]);
-    expect(broken.value.get(goblinId)?.positiveHpUnconscious).not.toBeNull();
+    expect(broken.value.get(goblinId)?.conditions.prone).toBe(false);
+    expect(
+      broken.value.get(goblinId)?.conditions.directIncapacitated,
+    ).toBe(false);
+    expect(broken.value.get(goblinId)?.positiveHpUnconscious).toBeNull();
   });
 });
