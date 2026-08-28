@@ -135,9 +135,7 @@ function collectParseIssue(
           code: isUnknownVariant(issue) ? "unknownVariant" : "wrongType",
         });
       },
-      Forbidden: () => {
-        output.push({ path: "", code: "wrongType" });
-      },
+      Forbidden: () => undefined,
     }),
   );
 }
