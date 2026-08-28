@@ -1426,7 +1426,7 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     });
   });
 
-  test("Concentration Saving Throws consume natural-1 reroll decisions", () => {
+  test("low-level injected readied-spell concentration: saving throws consume natural-1 reroll decisions", () => {
     const { unit, unitRef } = halflingLuckSelection();
     const baseSession = startBattleSessionRight({
       battleId: battleId("halfling-luck-concentration-save"),
@@ -1468,6 +1468,8 @@ describe("L3-FOLLOWUP-HALFLING-LUCK-RUNTIME deterministic profile slice", () => 
     if (targetCombatant === undefined) {
       throw new Error("Expected concentrating target.");
     }
+    // This fixture injects the exact concentration state needed to exercise the
+    // save/reroll interaction; it does not claim a readied-spell admission history.
     const state = {
       ...base,
       combatants: new Map(base.combatants).set(skeletonId, {

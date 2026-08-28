@@ -410,9 +410,11 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
   });
 });
 
-describe("SRDINV53 deterministic Jump movement replacement admission", () => {
-  test("using one of two mechanically identical Jump occurrences consumes only its exact occurrence", () => {
+describe("SRDINV53 Jump movement replacement interactions", () => {
+  test("low-level injected occurrence identity: using one of two mechanically identical Jump effects consumes only its exact occurrence", () => {
     const session = spellBattle({ preparedSpells: [] });
+    // Two coherent occurrences are injected to isolate exact-ref selection;
+    // this identity test does not claim either effect was admitted by casting.
     const sourceProcedureRef = battleProcedureExecutionRefForTest(
       "two-jump-occurrences",
     );

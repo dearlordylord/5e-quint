@@ -507,7 +507,9 @@ describe("battle runtime: Eldritch Blast", () => {
     ).toMatchObject({ usedThisTurn: true });
   });
 
-  test("Eldritch Blast zero-HP damage routes spell-effect concentration teardown before the next beam", () => {
+  test("low-level injected spell-effect identity: Eldritch Blast zero-HP damage tears down concentration before the next beam", () => {
+    // This reducer interaction fixture injects a coherent concentrating effect;
+    // it does not represent that effect as having been admitted by a spell cast.
     const concentratingProcedureRef = battleProcedureExecutionRefForTest(
       "synthetic_concentrating_armor",
     );

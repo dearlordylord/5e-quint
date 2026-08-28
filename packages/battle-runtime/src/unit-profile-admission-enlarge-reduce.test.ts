@@ -1183,7 +1183,7 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
     ).toBe(11);
   });
 
-  test("Reduce damage floor applies before target resistance", () => {
+  test("low-level injected damage interactions: Reduce damage floor applies before target resistance", () => {
     const spell = spellRecord(enlargeReduceUnitId);
     const session = spellBattle({
       preparedSpells: [spell],
@@ -1210,7 +1210,12 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       throw new Error("Expected Reduce self cast to resolve.");
     }
 
-    const withRider = withSyntheticHitRider(reduced.state, false);
+    // Reduce is admitted above; the rider and resistance are deliberately
+    // injected to isolate damage-modifier ordering rather than spell admission.
+    const withRider = withLowLevelInjectedDamageInteractions(
+      reduced.state,
+      false,
+    );
     expect(
       resolveAttackHitHp(
         battleRuntimeSessionForTest({
@@ -1225,7 +1230,10 @@ describe("L12G deterministic Enlarge/Reduce creature admission", () => {
       ),
     ).toBe(11);
 
-    const resisted = withSyntheticHitRider(reduced.state, true);
+    const resisted = withLowLevelInjectedDamageInteractions(
+      reduced.state,
+      true,
+    );
     expect(
       resolveAttackHitHp(
         battleRuntimeSessionForTest({
@@ -1591,7 +1599,7 @@ function resolveAttackHitHp(
   return requireCombatant(resolved.state, spellTargetId).hp;
 }
 
-function withSyntheticHitRider(
+function withLowLevelInjectedDamageInteractions(
   state: BattleState,
   targetResistsDamage: boolean,
 ): BattleState {
