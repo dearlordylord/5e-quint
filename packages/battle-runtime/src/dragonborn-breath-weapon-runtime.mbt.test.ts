@@ -1,6 +1,5 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { requireCharacterUnitProcedureRefForTest } from "./battle-runtime.test-support.ts";
-// RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // KERNEL-COVERAGE: parity-witness BATTLE.FEATURE.PROCEDURE_PROFILE_SEMANTICS
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.attack-action-area-save-damage-replacement
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt unit-feature.attack-action-area-save-damage-replacement

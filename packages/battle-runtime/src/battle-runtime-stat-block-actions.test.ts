@@ -1,3 +1,4 @@
+// RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
   NonNegativeInteger,
@@ -9,8 +10,8 @@ import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import fc from "fast-check";
 import { Schema } from "effect";
 import * as Either from "effect/Either";
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ACTION_LIFECYCLE BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.attack-procedure stat-block.multiattack stat-block.resource-lifecycle
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L12G-FOLLOWUP-DRUID-WILD-SHAPE-STAT-BLOCK-SIZE-GATED-CONDITION-RIDERS druid_wild_shape
 import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";

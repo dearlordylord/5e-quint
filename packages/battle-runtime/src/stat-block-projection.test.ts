@@ -1,6 +1,6 @@
 import { assertStatBlockForTest } from "@dnd/surface/surface/stat-block-catalog.test-support";
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ACTION_LIFECYCLE BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.action-lifecycle stat-block.bonus-action-lifecycle stat-block.legendary-action-lifecycle stat-block.attack-procedure stat-block.multiattack stat-block.resource-lifecycle
 import * as Either from "effect/Either";
 import { Schema } from "effect";
 import { describe, expect, test } from "vitest";

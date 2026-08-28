@@ -1,7 +1,7 @@
 // The mutual import cycle with statblock.ts is tolerated
 // because all imported bindings are function values used only at call time.
 // UNIT-PROFILE-COVERAGE: runtime-owner unit-feature.hunters-prey
-// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: runtime-owner BATTLE.STAT_BLOCK.ATTACK_PROCEDURE BATTLE.STAT_BLOCK.MULTIATTACK
 
 import { Match } from "effect";
 import { optionalProperty } from "../optional-property.ts";

@@ -21,6 +21,7 @@ Durable decisions that apply across all phases:
 
   The combined library is a view, not an authored collection. Mixed provenance
   or mixed distribution policy is invalid at collection boundaries.
+
 - **Classic non-SRD policy**: `classic2024NonSrdMechanicsUnitCollection`
   contains public, renamed, mechanics-only authored `UnitRecord`s for Classic
   mechanics not already covered by SRD. It intentionally preserves recognizable
@@ -74,9 +75,7 @@ the tracer proves the shape belongs in a package or script boundary:
 Logical shapes:
 
 ```typescript
-type UnitCollectionId =
-  | "srd-5.2.1"
-  | "classic-2024-non-srd-mechanics";
+type UnitCollectionId = "srd-5.2.1" | "classic-2024-non-srd-mechanics";
 
 type UnitCollectionPolicy =
   | {
@@ -142,7 +141,11 @@ type MechanicsProfile = {
   readonly qntOwners: ReadonlyArray<string>;
   readonly runtimeOwners: ReadonlyArray<string>;
   readonly verificationOwners: ReadonlyArray<{
-    readonly kind: "qnt-proof" | "focused-mbt" | "runtime-test" | "catalog-test";
+    readonly kind:
+      | "qnt-proof"
+      | "focused-mbt"
+      | "runtime-test"
+      | "catalog-test";
     readonly ownerPath: string;
   }>;
 };
@@ -320,10 +323,11 @@ remainder as unsupported/widening.
 - [ ] QCORE8 reaction/continuation-related Unit pressure maps to profile ids.
 - [ ] QCORE9 feature procedure Units map to profile ids.
 - [ ] QCORE10 spell procedure Units map to profile ids.
-- [ ] QCORE11 stat-block control pressure remains separate from `UnitRecord`
-      claims where the authored source is `StatBlockRecord`.
-- [ ] The report shows profile coverage by QCORE task without duplicating task
-      status from `ACTIVE_PLAN.md`.
+- [ ] Stat-block procedure pressure remains separate from `UnitRecord` claims
+      where the authored source is `StatBlockRecord`, and is partitioned by
+      procedure family rather than a catch-all control profile.
+- [ ] The report shows profile coverage by stable GitHub task id without
+      duplicating tracker execution status in generated planning artifacts.
 
 ---
 

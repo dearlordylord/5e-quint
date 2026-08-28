@@ -17,7 +17,6 @@ const paths = {
   taskClaims: path.join(rawCoverageDir, "task-claims.jsonl"),
   matrix: path.join(rawCoverageDir, "matrix.json"),
   report: path.join(rawCoverageDir, "REPORT.md"),
-  activePlan: path.join(root, "plans/ACTIVE_PLAN.md"),
 };
 
 const domainClassifications = new Set([
@@ -44,6 +43,7 @@ const skippedClaimScanDirs = new Set([
   "node_modules",
   "test-results",
 ]);
+const nonRulesCorpusFiles = new Set(["ATTRIBUTION.md"]);
 
 function fail(message) {
   throw new Error(message);
@@ -94,7 +94,13 @@ function markdownFiles(dirPath) {
     .flatMap((entry) => {
       const entryPath = path.join(dirPath, entry.name);
       if (entry.isDirectory()) return markdownFiles(entryPath);
-      if (entry.isFile() && entry.name.endsWith(".md")) return [entryPath];
+      if (
+        entry.isFile() &&
+        entry.name.endsWith(".md") &&
+        !nonRulesCorpusFiles.has(entry.name)
+      ) {
+        return [entryPath];
+      }
       return [];
     })
     .sort();
@@ -421,17 +427,6 @@ function validateRawCoverageOwnerClaims(requirements, scanRoot = root) {
   }
 }
 
-function activePlanTaskStatuses() {
-  const raw = fs.readFileSync(paths.activePlan, "utf8");
-  const statuses = new Map();
-  const regex = /### Task \d+ - ([A-Z0-9]+) - [^\n]+\n\nStatus: `([^`]+)`/g;
-  let match;
-  while ((match = regex.exec(raw)) !== null) {
-    statuses.set(match[1], match[2]);
-  }
-  return statuses;
-}
-
 function buildMatrix() {
   const sections = readSections();
   const annotations = readJsonl(paths.annotations);
@@ -455,7 +450,6 @@ function buildMatrix() {
   const rawReviewsBySectionId = new Map(
     rawReviews.map((review) => [review.sectionId, review]),
   );
-  const taskStatuses = activePlanTaskStatuses();
 
   for (const section of sections) {
     if (!section.spanIdPrefix)
@@ -591,11 +585,6 @@ function buildMatrix() {
   validateRawCoverageOwnerClaims(requirements);
 
   for (const taskClaim of taskClaims) {
-    if (!taskStatuses.has(taskClaim.taskId)) {
-      fail(
-        `Task claim references unknown ACTIVE_PLAN task ${taskClaim.taskId}.`,
-      );
-    }
     for (const requirementId of taskClaim.requirementIds) {
       if (!requirementsById.has(requirementId)) {
         fail(
@@ -675,9 +664,9 @@ function buildMatrix() {
       verdict: review.verdict,
       sourcesChecked: review.sourcesChecked,
     })),
-    activePlanTasks: taskClaims.map((taskClaim) => ({
+    taskClaims: taskClaims.map((taskClaim) => ({
       taskId: taskClaim.taskId,
-      status: taskStatuses.get(taskClaim.taskId),
+      coverageMetric: taskClaim.coverageMetric,
       requirementIds: taskClaim.requirementIds,
     })),
     requirements: requirements.map((requirement) => ({
@@ -694,7 +683,7 @@ function buildMatrix() {
         (owner) =>
           owner.kind === "focused-mbt" || owner.kind === "runtime-test",
       ),
-      activePlanTasks: taskClaims
+      taskClaims: taskClaims
         .filter((taskClaim) =>
           taskClaim.requirementIds.includes(requirement.id),
         )
@@ -766,18 +755,18 @@ function renderReport(matrix) {
         `| ${review.sectionId} | ${review.reviewer} | ${review.verdict} | ${review.sourcesChecked.join(", ")} |`,
     ),
     "",
-    "## Active Plan Tasks",
+    "## Tracker Task Claims",
     "",
-    "| Task | Status | Requirements |",
+    "| Task | Coverage metric | Requirements |",
     "| --- | --- | --- |",
-    ...matrix.activePlanTasks.map(
+    ...matrix.taskClaims.map(
       (task) =>
-        `| ${task.taskId} | ${task.status} | ${task.requirementIds.join(", ")} |`,
+        `| ${task.taskId} | ${task.coverageMetric} | ${task.requirementIds.join(", ")} |`,
     ),
     "",
     "## Requirement Rows",
     "",
-    "| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime parity | Active tasks |",
+    "| Requirement | Kind | QNT modeled | QNT proved | Runtime mapped | Runtime parity | Task claims |",
     "| --- | --- | --- | --- | --- | --- | --- |",
     ...matrix.requirements.map(
       (requirement) =>
@@ -785,7 +774,7 @@ function renderReport(matrix) {
           requirement.qntProved ? "yes" : "no"
         } | ${requirement.runtimeMapped ? "yes" : "no"} | ${
           requirement.runtimeParityCovered ? "yes" : "no"
-        } | ${requirement.activePlanTasks.join(", ")} |`,
+        } | ${requirement.taskClaims.join(", ")} |`,
     ),
     "",
     "## Out Of Promoted Scope",

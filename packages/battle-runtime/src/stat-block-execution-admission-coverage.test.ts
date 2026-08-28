@@ -1,5 +1,3 @@
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
-// UNIT-PROFILE-COVERAGE: verification-owner:runtime-test stat-block.attack-control
 import * as Either from "effect/Either";
 import { Hp } from "@dnd/shared/types";
 import { describe, expect, test } from "vitest";

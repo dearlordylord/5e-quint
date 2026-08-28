@@ -3,7 +3,6 @@ import {
   statBlockId,
   unitId as parseSharedUnitId,
 } from "@dnd/shared/game-facts";
-// RAW-COVERAGE: runtime-owner RAW-QCORE9-UNIT-FEATURE-PROFILES-001
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.magic-action-area-save-damage-healing
 import { describe, expect, test } from "vitest";
 

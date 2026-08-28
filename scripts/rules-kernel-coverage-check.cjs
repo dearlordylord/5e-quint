@@ -501,7 +501,9 @@ const ralphFollowUpTaskIdPattern =
 
 function validFollowUpTaskId(taskId) {
   return (
-    /^RKBC-[A-Z0-9-]+$/.test(taskId) || ralphFollowUpTaskIdPattern.test(taskId)
+    /^GH-[1-9][0-9]*$/.test(taskId) ||
+    /^RKBC-[A-Z0-9-]+$/.test(taskId) ||
+    ralphFollowUpTaskIdPattern.test(taskId)
   );
 }
 

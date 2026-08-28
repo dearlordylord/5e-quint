@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 
-// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_CONTROL
+// KERNEL-COVERAGE: parity-witness BATTLE.STAT_BLOCK.ATTACK_PROCEDURE
 
 module battleRuntimeStatBlockMultiDamageMbt {
   import battleRuntimeWitnessProtocol.* from "./battle-runtime-witness-protocol"

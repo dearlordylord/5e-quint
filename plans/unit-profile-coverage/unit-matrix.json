@@ -72,24 +72,24 @@
       "percent": "100%"
     },
     "qntProfileModelingCoverage": {
-      "denominator": 150,
-      "numerator": 148,
-      "percent": "98.7%"
+      "denominator": 164,
+      "numerator": 153,
+      "percent": "93.3%"
     },
     "qntProofCoverage": {
-      "denominator": 150,
-      "numerator": 142,
-      "percent": "94.7%"
+      "denominator": 164,
+      "numerator": 147,
+      "percent": "89.6%"
     },
     "rulesKernelCoveredProfileCoverage": {
-      "denominator": 189,
-      "numerator": 163,
-      "percent": "86.2%"
+      "denominator": 203,
+      "numerator": 168,
+      "percent": "82.8%"
     },
     "rulesKernelProfileJoinCoverage": {
-      "denominator": 189,
-      "numerator": 187,
-      "percent": "98.9%"
+      "denominator": 203,
+      "numerator": 201,
+      "percent": "99%"
     },
     "rulesKernelSupportedUnitCoverage": {
       "denominator": 205,
@@ -97,14 +97,14 @@
       "percent": "84.4%"
     },
     "runtimeMappingCoverage": {
-      "denominator": 150,
-      "numerator": 150,
-      "percent": "100%"
+      "denominator": 164,
+      "numerator": 155,
+      "percent": "94.5%"
     },
     "runtimeParityCoverage": {
-      "denominator": 150,
-      "numerator": 150,
-      "percent": "100%"
+      "denominator": 164,
+      "numerator": 155,
+      "percent": "94.5%"
     },
     "selectedIdentityReplayCoverage": {
       "denominator": 199,
@@ -3276,7 +3276,7 @@
       ]
     },
     {
-      "id": "stat-block.attack-control",
+      "id": "stat-block.action-lifecycle",
       "profileKind": "stat-block-control",
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
@@ -3289,7 +3289,7 @@
         "QCORE11",
         "QMBT6"
       ],
-      "title": "Stat Block action, multiattack, limited-use, recharge, and reaction controls",
+      "title": "Stat Block Action lifecycle",
       "verificationOwners": [
         {
           "kind": "qnt-proof",
@@ -3308,6 +3308,293 @@
           "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
         }
       ]
+    },
+    {
+      "id": "stat-block.bonus-action-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-state-execution.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "QCORE11",
+        "QMBT6"
+      ],
+      "title": "Stat Block Bonus Action lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.legendary-action-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-state-execution.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "QCORE11",
+        "QMBT6"
+      ],
+      "title": "Stat Block Legendary Action lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.attack-procedure",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-state-execution.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "QCORE11",
+        "QMBT6"
+      ],
+      "title": "Stat Block attack and damage procedure",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.multiattack",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-state-execution.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "QCORE11",
+        "QMBT6"
+      ],
+      "title": "Stat Block Multiattack control and dispatch",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.resource-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [
+        "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+      ],
+      "runtimeOwners": [
+        "packages/battle-runtime/src/battle-state-execution.ts"
+      ],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "QCORE11",
+        "QMBT6"
+      ],
+      "title": "Stat Block limited-use and recharge resource lifecycle",
+      "verificationOwners": [
+        {
+          "kind": "qnt-proof",
+          "ownerPath": "packages/shared-algebras/proofs/rule-core/stat-block-controls-inductive.qnt"
+        },
+        {
+          "kind": "focused-mbt",
+          "ownerPath": "packages/battle-runtime/src/rule-core-stat-block-controls.mbt.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/battle-runtime-stat-block-actions.test.ts"
+        },
+        {
+          "kind": "runtime-test",
+          "ownerPath": "packages/battle-runtime/src/stat-block-projection.test.ts"
+        }
+      ]
+    },
+    {
+      "id": "stat-block.spell-invocation.unrestricted",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-418"
+      ],
+      "title": "Unrestricted Stat Block spell invocation",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.spellcasting.procedure",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-419"
+      ],
+      "title": "Stat Block spellcasting procedure",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.spellcasting.limited-group",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-420"
+      ],
+      "title": "Limited-use Stat Block spellcasting group",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.save-procedure",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-421"
+      ],
+      "title": "Stat Block save-gated procedure",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.spellcasting.at-will-group",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-422"
+      ],
+      "title": "At-will Stat Block spellcasting group",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.reaction-lifecycle",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-423"
+      ],
+      "title": "Stat Block reaction trigger and resource lifecycle",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.spell-invocation.restricted",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-424"
+      ],
+      "title": "Restricted Stat Block spell invocation",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.attack-additional-effect",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-425"
+      ],
+      "title": "Typed Stat Block attack additional-effect continuation",
+      "verificationOwners": []
+    },
+    {
+      "id": "stat-block.standard-action-option",
+      "profileKind": "stat-block-control",
+      "qntOwners": [],
+      "qntOwnershipStatus": "needs-qnt-owner",
+      "runtimeOwners": [],
+      "sourceBoundary": "StatBlockRecord",
+      "taskRefs": [
+        "GH-426"
+      ],
+      "title": "Stat Block standard action-option delegation",
+      "verificationOwners": []
     },
     {
       "id": "character-sheet.armor-class-base-formula",
@@ -7377,14 +7664,14 @@
     "denominatorRule": "profile records with rules-kernel profile kinds and either QNT owners or explicit profile-obligation mappings; profile-local-semantic-core mappings require every mapped obligation to have a semantic-core QNT owner also named by the profile",
     "metrics": {
       "rulesKernelCoveredProfileCoverage": {
-        "denominator": 189,
-        "numerator": 163,
-        "percent": "86.2%"
+        "denominator": 203,
+        "numerator": 168,
+        "percent": "82.8%"
       },
       "rulesKernelProfileJoinCoverage": {
-        "denominator": 189,
-        "numerator": 187,
-        "percent": "98.9%"
+        "denominator": 203,
+        "numerator": 201,
+        "percent": "99%"
       }
     },
     "profileKinds": [
@@ -9036,17 +9323,250 @@
         "joinStatus": "covered",
         "obligations": [
           {
-            "obligationId": "BATTLE.STAT_BLOCK.ATTACK_CONTROL",
+            "obligationId": "BATTLE.STAT_BLOCK.ACTION_LIFECYCLE",
             "runtime": "battle",
             "status": "covered",
-            "title": "Battle Stat Block action, Multiattack, limited-use, recharge, reaction, legendary action, attack damage, and target Size Prone-rider controls"
+            "title": "Battle Stat Block Action lifecycle"
           }
         ],
-        "profileId": "stat-block.attack-control",
+        "profileId": "stat-block.action-lifecycle",
         "profileKind": "stat-block-control",
         "qntOwners": [
           "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
         ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.BONUS_ACTION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block Bonus Action lifecycle"
+          }
+        ],
+        "profileId": "stat-block.bonus-action-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.LEGENDARY_ACTION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block Legendary Action windows and resources"
+          }
+        ],
+        "profileId": "stat-block.legendary-action-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.ATTACK_PROCEDURE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block attack, damage, and typed hit-rider procedure"
+          }
+        ],
+        "profileId": "stat-block.attack-procedure",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.MULTIATTACK",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block Multiattack control and dispatch"
+          }
+        ],
+        "profileId": "stat-block.multiattack",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        ]
+      },
+      {
+        "joinStatus": "covered",
+        "obligations": [
+          {
+            "obligationId": "BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE",
+            "runtime": "battle",
+            "status": "covered",
+            "title": "Battle Stat Block limited-use and recharge resource lifecycle"
+          }
+        ],
+        "profileId": "stat-block.resource-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": [
+          "packages/shared-algebras/proofs/rule-core/stat-block-controls.qnt"
+        ]
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-418"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_UNRESTRICTED",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Unrestricted Stat Block spell invocation"
+          }
+        ],
+        "profileId": "stat-block.spell-invocation.unrestricted",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-419"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_PROCEDURE",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Stat Block spellcasting procedure"
+          }
+        ],
+        "profileId": "stat-block.spellcasting.procedure",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-420"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_LIMITED_GROUP",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Limited-use Stat Block spellcasting group lifecycle"
+          }
+        ],
+        "profileId": "stat-block.spellcasting.limited-group",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-421"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SAVE_PROCEDURE",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Stat Block saving throw procedure"
+          }
+        ],
+        "profileId": "stat-block.save-procedure",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-422"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELLCASTING_AT_WILL_GROUP",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "At-will Stat Block spellcasting group lifecycle"
+          }
+        ],
+        "profileId": "stat-block.spellcasting.at-will-group",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-423"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.REACTION_LIFECYCLE",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Stat Block Reaction trigger and resource lifecycle"
+          }
+        ],
+        "profileId": "stat-block.reaction-lifecycle",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-424"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.SPELL_INVOCATION_RESTRICTED",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Restricted Stat Block spell invocation"
+          }
+        ],
+        "profileId": "stat-block.spell-invocation.restricted",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-425"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.ATTACK_ADDITIONAL_EFFECT",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Typed Stat Block attack additional-effect continuation"
+          }
+        ],
+        "profileId": "stat-block.attack-additional-effect",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
+      },
+      {
+        "joinStatus": "mapped-open",
+        "obligations": [
+          {
+            "followUpTaskIds": [
+              "GH-426"
+            ],
+            "obligationId": "BATTLE.STAT_BLOCK.STANDARD_ACTION_OPTION",
+            "runtime": "battle",
+            "status": "needs-qnt-owner",
+            "title": "Stat Block standard action-option delegation"
+          }
+        ],
+        "profileId": "stat-block.standard-action-option",
+        "profileKind": "stat-block-control",
+        "qntOwners": []
       },
       {
         "joinStatus": "covered",
@@ -16505,14 +17025,6 @@
       "taskId": "QCORE10"
     },
     {
-      "claimKind": "qnt-proof",
-      "note": "Stat Block control pressure stays separate from UnitRecord claims.",
-      "profileIds": [
-        "stat-block.attack-control"
-      ],
-      "taskId": "QCORE11"
-    },
-    {
       "claimKind": "completed-runtime-parity",
       "note": "Movement and grapple parity has no current UnitRecord profile row.",
       "profileIds": [],
@@ -16553,14 +17065,6 @@
         "spell.readied-action-time-spell"
       ],
       "taskId": "QMBT5"
-    },
-    {
-      "claimKind": "completed-runtime-parity",
-      "note": "Focused stat-block control runtime parity.",
-      "profileIds": [
-        "stat-block.attack-control"
-      ],
-      "taskId": "QMBT6"
     },
     {
       "claimKind": "completed-runtime-parity",
@@ -20769,6 +21273,104 @@
         "battle.spell-access-magic-initiate-casting"
       ],
       "taskId": "ISSUE-278-MAGIC-INITIATE-SPELL-ACCESS"
+    },
+    {
+      "claimKind": "qnt-proof",
+      "note": "Precise Stat Block procedure families with existing rule-core proof ownership.",
+      "profileIds": [
+        "stat-block.action-lifecycle",
+        "stat-block.bonus-action-lifecycle",
+        "stat-block.legendary-action-lifecycle",
+        "stat-block.attack-procedure",
+        "stat-block.multiattack",
+        "stat-block.resource-lifecycle"
+      ],
+      "taskId": "QCORE11"
+    },
+    {
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Stat Block procedure parity for currently executable families.",
+      "profileIds": [
+        "stat-block.action-lifecycle",
+        "stat-block.bonus-action-lifecycle",
+        "stat-block.legendary-action-lifecycle",
+        "stat-block.attack-procedure",
+        "stat-block.multiattack",
+        "stat-block.resource-lifecycle"
+      ],
+      "taskId": "QMBT6"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spell-invocation.unrestricted"
+      ],
+      "taskId": "GH-418"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spellcasting.procedure"
+      ],
+      "taskId": "GH-419"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spellcasting.limited-group"
+      ],
+      "taskId": "GH-420"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.save-procedure"
+      ],
+      "taskId": "GH-421"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spellcasting.at-will-group"
+      ],
+      "taskId": "GH-422"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.reaction-lifecycle"
+      ],
+      "taskId": "GH-423"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.spell-invocation.restricted"
+      ],
+      "taskId": "GH-424"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.attack-additional-effect"
+      ],
+      "taskId": "GH-425"
+    },
+    {
+      "claimKind": "missing-runtime-owner",
+      "note": "Bounded #114 Rule Capability Increment from checked #350 pressure.",
+      "profileIds": [
+        "stat-block.standard-action-option"
+      ],
+      "taskId": "GH-426"
     }
   ],
   "unitGroupDenominatorAudit": {
