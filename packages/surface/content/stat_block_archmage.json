@@ -1,0 +1,323 @@
+{
+  "challengeRating": 12,
+  "id": "stat_block_archmage",
+  "kind": "statBlock",
+  "name": "Archmage",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:46-90"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 12,
+      "dex": 14,
+      "int": 20,
+      "str": 10,
+      "wis": 15
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "description": "The archmage makes four Arcane Burst attacks.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee or Ranged Attack Roll: +9, reach 5 ft. or range 150 ft. Hit: 27 (4d10 + 5) Force damage.",
+        "kind": "textOnly",
+        "name": "Arcane Burst",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "int",
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "spellId": "detect_thoughts"
+                },
+                {
+                  "spellId": "disguise_self"
+                },
+                {
+                  "spellId": "invisibility"
+                },
+                {
+                  "spellId": "light"
+                },
+                {
+                  "restriction": "included in AC",
+                  "spellId": "mage_armor"
+                },
+                {
+                  "spellId": "mage_hand"
+                },
+                {
+                  "spellId": "prestidigitation"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  1
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "fly"
+                },
+                {
+                  "castAtLevel": 7,
+                  "spellId": "lightning_bolt"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "castAtLevel": 9,
+                  "spellId": "cone_of_cold"
+                },
+                {
+                  "restriction": "cast before combat",
+                  "spellId": "mind_blank"
+                },
+                {
+                  "spellId": "scrying"
+                },
+                {
+                  "spellId": "teleport"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellSaveDc": {
+            "dc": 17,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "int",
+          "groups": [
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  3
+                ]
+              },
+              "spells": [
+                {
+                  "spellId": "misty_step"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Misty Step (3/Day)"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "additionalLanguages": 5,
+        "kind": "named_plus_other_languages",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "creatureTypeTags": [
+      "wizard"
+    ],
+    "gear": [
+      {
+        "item": "Wand"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 170
+    },
+    "immunities": {
+      "conditions": [
+        "charmed"
+      ],
+      "damageTypes": [
+        "psychic"
+      ]
+    },
+    "initiative": {
+      "modifier": 7,
+      "score": 17
+    },
+    "passivePerception": 16,
+    "reactions": [
+      {
+        "description": "The archmage casts Counterspell or Shield in response to the spell's trigger, using the same spellcasting ability as Spellcasting.",
+        "kind": "textOnly",
+        "name": "Protective Magic (3/Day)",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            4
+          ]
+        }
+      }
+    ],
+    "resources": [
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 2
+        },
+        "ordinal": 1,
+        "ownership": "each"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 3
+        },
+        "ordinal": 3,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 3
+        },
+        "ordinal": 4,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": 3
+      },
+      {
+        "ability": "con",
+        "modifier": 1
+      },
+      {
+        "ability": "dex",
+        "modifier": 2
+      },
+      {
+        "ability": "int",
+        "modifier": 9
+      },
+      {
+        "ability": "str",
+        "modifier": 0
+      },
+      {
+        "ability": "wis",
+        "modifier": 6
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 13,
+        "skill": "arcana"
+      },
+      {
+        "modifier": 9,
+        "skill": "history"
+      },
+      {
+        "modifier": 6,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The archmage has Advantage on saving throws against spells and other magical effects.",
+        "name": "Magic Resistance"
+      }
+    ]
+  }
+}

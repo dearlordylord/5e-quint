@@ -1,0 +1,171 @@
+{
+  "challengeRating": 3,
+  "id": "stat_block_minotaur_of_baphomet",
+  "kind": "statBlock",
+  "name": "Minotaur of Baphomet",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-M-O.md:471-495"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 9,
+      "con": 16,
+      "dex": 11,
+      "int": 6,
+      "str": 18,
+      "wis": 16
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 14
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Abyssal Glaive",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 12,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 10
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 3,
+                  "dieSize": 6
+                },
+                "kind": "fixed",
+                "static": 10
+              },
+              "damageType": "necrotic",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee Attack Roll: +6, reach 5 ft. Hit: 18 (4d6 + 4) Piercing damage. If the target is a Large or smaller creature and the minotaur moved 10+ feet straight toward it immediately before the hit, the target takes an extra 10 (3d6) Piercing damage and has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Gore (Recharge 5–6)",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Abyssal"
+        ]
+      }
+    },
+    "creatureType": "monstrosity",
+    "hp": {
+      "kind": "literal",
+      "value": 85
+    },
+    "initiative": {
+      "modifier": 0,
+      "score": 10
+    },
+    "passivePerception": 17,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "cha",
+        "modifier": -1
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      },
+      {
+        "ability": "dex",
+        "modifier": 0
+      },
+      {
+        "ability": "int",
+        "modifier": -2
+      },
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "large",
+    "skillModifiers": [
+      {
+        "modifier": 7,
+        "skill": "perception"
+      },
+      {
+        "modifier": 7,
+        "skill": "survival"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

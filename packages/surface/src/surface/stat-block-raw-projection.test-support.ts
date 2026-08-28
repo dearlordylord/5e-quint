@@ -301,7 +301,11 @@ const normalizedIdentifier = (value: string): string =>
   value.toLowerCase().replaceAll(" ", "_");
 
 const normalizedProcedureName = (value: string): string =>
-  value.replace(/ \((?:Recharge \d(?:–\d)?|\d+\/Day)\)$/, "");
+  value.replace(
+    / \((?:Recharge \d(?:–\d)?|\d+\/Day)(?:; (.+))?\)$/,
+    (_, qualifier: string | undefined) =>
+      qualifier === undefined ? "" : ` (${qualifier})`,
+  );
 
 const statBlockIdFromRawName = (name: string): string =>
   `stat_block_${name
@@ -631,7 +635,13 @@ const parseImmunities = (
   const parseList = (value: string): readonly string[] =>
     value === ""
       ? []
-      : sortedStrings(value.split(", ").map((item) => item.toLowerCase()));
+      : sortedStrings(
+          value
+            .split(", ")
+            .map((item) =>
+              item.replace(/ \(with \*[^*]+\*\)$/, "").toLowerCase(),
+            ),
+        );
   const conditionNames = new Set<string>(CONDITIONS);
   const firstValues = parseList(firstGroup);
   const firstGroupIsConditions =
@@ -711,21 +721,34 @@ const parseGear = (lines: readonly string[]): ScopedGeneralFacts["gear"] => {
     .sort((left, right) => left.item.localeCompare(right.item));
 };
 
+const NUMBER_WORDS = [
+  ["one", 1],
+  ["two", 2],
+  ["three", 3],
+  ["four", 4],
+  ["five", 5],
+] as const;
+
 const parseLanguageSet = (value: string): LanguageSetProjection => {
   if (value === "All") return { kind: "all" };
-  const additional = value.match(/^(.+) plus (one|two) other languages?$/);
-  return additional === null
-    ? {
-        kind: "named",
-        languages: value
-          .split(", ")
-          .map((language) => language.replace(/^and /, "")),
-      }
-    : {
-        kind: "named_plus_other_languages",
-        languages: [additional[1] ?? ""],
-        additionalLanguages: additional[2] === "two" ? 2 : 1,
-      };
+  const additional = value.match(
+    /^(.+) plus (one|two|three|four|five) other languages?$/,
+  );
+  const languages = (additional?.[1] ?? value)
+    .split(/, (?![^()]*\))/)
+    .map((language) => language.replace(/^and /, ""));
+  if (additional === null) return { kind: "named", languages };
+  const additionalLanguageCount = NUMBER_WORDS.find(
+    ([word]) => word === additional[2],
+  )?.[1];
+  if (additionalLanguageCount === undefined) {
+    throw new Error(`Unsupported additional language count ${additional[2]}`);
+  }
+  return {
+    kind: "named_plus_other_languages",
+    languages,
+    additionalLanguages: additionalLanguageCount,
+  };
 };
 
 const parseCommunication = (
@@ -760,6 +783,23 @@ const parseCommunication = (
       kind: "spoken_and_understood",
       languages: parseLanguageSet(spoken),
       ...telepathy,
+    };
+  }
+  if (qualifier?.startsWith("telepathy ") === true) {
+    const telepathy = requireMatch(
+      qualifier,
+      /^telepathy (\d+) ft\.(?: \(doesn't allow the receiving creature to respond telepathically\))?$/,
+      `${context} telepathy`,
+    );
+    return {
+      kind: "spoken_and_understood",
+      languages: parseLanguageSet(spoken),
+      telepathy: {
+        rangeFeet: Number(telepathy[1]),
+        ...(qualifier.includes("doesn't allow")
+          ? { response: "receiving_creature_cannot_respond" as const }
+          : {}),
+      },
     };
   }
   if (qualifier?.startsWith("understands ") === true) {
@@ -942,7 +982,7 @@ const parseRawResourceLimits = (
       },
     ];
   }
-  const daily = name.match(/\((\d+)\/Day\)$/);
+  const daily = name.match(/\((\d+)\/Day(?:; .+)?\)$/);
   return daily === null
     ? []
     : [
@@ -1112,12 +1152,6 @@ const parseSimpleSave = (entry: RawEntry): ProcedureProjection | undefined => {
   };
 };
 
-const NUMBER_WORDS = [
-  ["one", 1],
-  ["two", 2],
-  ["three", 3],
-] as const;
-
 const parseSimpleMultiattack = (
   entry: RawEntry,
 ): ProcedureProjection | undefined => {
@@ -1186,16 +1220,36 @@ const parseSpellcasting = (
     /^The .+ casts one of the following spells,(?: (requiring no (Somatic or )?Material components) and)? using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability \(spell save DC (\d+)(?:, ([+−-]\d+) to hit with spell attacks)?\): /,
     `${entry.name} header`,
   );
-  const atWill = requireMatch(
-    entry.description,
-    /At Will: (.+?)(?= (?:- )?\d+\/Day(?: Each)?:|$)/,
-    `${entry.name} At Will`,
-  );
-  const limited = Array.from(
+  const groups = Array.from(
     entry.description.matchAll(
-      /(\d+)\/Day( Each)?: (.+?)(?= (?:- )?\d+\/Day(?: Each)?:|$)/g,
+      /(?:- )?(?:At Will|(\d+)\/Day( Each)?): (.+?)(?= (?:- )?(?:At Will|\d+\/Day(?: Each)?):|$)/g,
     ),
+    (
+      group,
+    ): Extract<
+      ProcedureProjection,
+      { readonly kind: "spellcasting" }
+    >["groups"][number] => {
+      const uses = group[1];
+      const spells = splitOutsideParentheses(group[3] ?? "").map(parseSpell);
+      return uses === undefined
+        ? { kind: "at_will", spells, resourceLimits: [] }
+        : {
+            kind: "limited",
+            spells,
+            resourceLimits: [
+              {
+                kind: "daily",
+                uses: Number(uses),
+                ownership: group[2] === undefined ? "shared" : "each",
+              },
+            ],
+          };
+    },
   );
+  if (groups.length === 0) {
+    throw new Error(`Missing ${entry.name} spell groups`);
+  }
   return {
     section: entry.section,
     name: normalizedProcedureName(entry.name),
@@ -1214,26 +1268,66 @@ const parseSpellcasting = (
             s: header[2] === undefined,
             m: false,
           },
-    groups: [
-      {
-        kind: "at_will",
-        spells: splitOutsideParentheses(atWill[1] ?? "").map(parseSpell),
-        resourceLimits: [],
-      },
-      ...limited.map((tier) => ({
-        kind: "limited" as const,
-        spells: splitOutsideParentheses(tier[3] ?? "").map(parseSpell),
-        resourceLimits: [
-          {
-            kind: "daily" as const,
-            uses: Number(tier[1]),
-            ownership:
-              tier[2] === undefined ? ("shared" as const) : ("each" as const),
-          },
-        ],
-      })),
-    ],
+    groups,
     resourceLimits: parseRawResourceLimits(entry.name),
+  };
+};
+
+const parseDirectSpellcasting = (
+  entry: RawEntry,
+  inheritedAbility: AbilityName | undefined,
+): ProcedureProjection | undefined => {
+  if (entry.section === "Traits") return undefined;
+  const explicitAbility = entry.description.match(
+    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself)?, requiring no spell components and using (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability(?: \(spell save DC (\d+)\))?\.$/,
+  );
+  const sameAbility = entry.description.match(
+    /^The .+ casts (?:the )?(.+?)(?: spell)?( on itself)?,( requiring no spell components and)? using the same spellcasting ability as Spellcasting\.$/,
+  );
+  if (explicitAbility === null && sameAbility === null) return undefined;
+  const inherited = sameAbility === null ? undefined : inheritedAbility;
+  if (sameAbility !== null && inherited === undefined) return undefined;
+  const match = explicitAbility ?? sameAbility;
+  if (match === null) return undefined;
+  if (explicitAbility !== null && match[2] !== undefined) return undefined;
+  if (
+    (match[1] ?? "").includes(" or ") ||
+    (match[1] ?? "").includes(" in response")
+  ) {
+    return undefined;
+  }
+  const spell = parseSpell(match[1] ?? "");
+  const selfOnly =
+    match[2] === undefined ? spell : { ...spell, restriction: "on itself" };
+  const explicit = explicitAbility !== null;
+  const ability = explicit
+    ? parsedAbility(match[3] ?? "", entry.name)
+    : inherited;
+  if (ability === undefined) return undefined;
+  const limits = parseRawResourceLimits(entry.name);
+  if (limits.some((limit) => limit.kind === "recharge")) return undefined;
+  const group: Extract<
+    ProcedureProjection,
+    { readonly kind: "spellcasting" }
+  >["groups"][number] = {
+    kind: limits.length === 0 ? "at_will" : "limited",
+    spells: [selfOnly],
+    resourceLimits: limits,
+  };
+  return {
+    section: entry.section,
+    name: normalizedProcedureName(entry.name),
+    kind: "spellcasting",
+    ability,
+    ...(explicit && match[4] !== undefined
+      ? { spellSaveDc: Number(match[4]) }
+      : {}),
+    components:
+      explicit || sameAbility?.[3] !== undefined
+        ? { kind: "fixed", v: false, s: false, m: false }
+        : { kind: "spell_definition" },
+    groups: [group],
+    resourceLimits: [],
   };
 };
 
@@ -1264,7 +1358,10 @@ const rawTextOnlyReason = (
 ): "unsupported_action_shape" | "unsupported_procedure_family" =>
   /^The .+ casts .+ on itself, requiring no spell components and using (?:Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) as the spellcasting ability\.$/.test(
     description,
-  ) || /^The .+ shape-shifts to resemble /.test(description)
+  ) ||
+  /^The .+ shape-shifts to resemble .+ Its game statistics are the same in each form, except for its Speed\./.test(
+    description,
+  )
     ? "unsupported_procedure_family"
     : "unsupported_action_shape";
 
@@ -1272,10 +1369,12 @@ const parseRawProcedure = (
   entry: RawEntry,
   generalFacts: ScopedGeneralFacts,
   ammunitionByWeapon: ReadonlyMap<string, string>,
+  spellcastingAbility: AbilityName | undefined,
 ): ProcedureProjection | undefined => {
   if (entry.section === "Traits") return undefined;
   return (
     parseSpellcasting(entry) ??
+    parseDirectSpellcasting(entry, spellcastingAbility) ??
     parseSimpleAttack(entry, generalFacts, ammunitionByWeapon) ??
     parseSimpleSave(entry) ??
     parseSimpleMultiattack(entry) ??
@@ -1351,6 +1450,19 @@ const rawRecordLines = (
 ): readonly string[] =>
   sourceLines.slice(occurrence.anchor.lineStart - 1, occurrence.anchor.lineEnd);
 
+const uniqueSpellcastingAbility = (
+  entries: readonly RawEntry[],
+): AbilityName | undefined => {
+  const abilities = entries.flatMap((entry) => {
+    const procedure = parseSpellcasting(entry);
+    return procedure?.kind === "spellcasting" ? [procedure.ability] : [];
+  });
+  if (abilities.length > 1) {
+    throw new Error("A RAW Stat Block has multiple Spellcasting abilities");
+  }
+  return abilities[0];
+};
+
 export const projectRawStatBlocks = (
   source: string,
   occurrences: readonly SrdStatBlockSourceOccurrence[],
@@ -1370,11 +1482,13 @@ export const projectRawStatBlocks = (
       const lines = rawRecordLines(sourceLines, occurrence);
       const entries = parseRawEntries(lines);
       const generalFacts = parseRawGeneralFacts(occurrence.name, lines);
+      const spellcastingAbility = uniqueSpellcastingAbility(entries);
       const parsedProcedures = entries.flatMap((entry) => {
         const procedure = parseRawProcedure(
           entry,
           generalFacts,
           ammunitionByWeapon,
+          spellcastingAbility,
         );
         return procedure === undefined ? [] : [procedure];
       });
