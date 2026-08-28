@@ -340,6 +340,13 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
 
   test("active Sleet Storm projects Difficult Terrain and Heavily Obscured Cylinder facts", () => {
     const { act, targetTurn } = castSleetStorm();
+    const hazard = requireCombatant(
+      targetTurn,
+      spellCasterId,
+    ).activeEffects.find((effect) => effect.kind === "sleetStormAreaHazard");
+    if (hazard === undefined) {
+      throw new Error("Expected active Sleet Storm hazard.");
+    }
     const moveSubject: BattleSubject = {
       tag: "runtimeCommand",
       actorId: spellTargetId,
@@ -358,8 +365,9 @@ describe("Task 11 deterministic Sleet Storm area-hazard admission", () => {
       sources: [
         {
           kind: "sleetStormHazard" as const,
+          effectRef: hazard.effectRef,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: act.subject.procedureRef,
+          sourceProcedureRef: hazard.sourceProcedureRef,
           areaId: sleetStormAreaId,
         },
       ],

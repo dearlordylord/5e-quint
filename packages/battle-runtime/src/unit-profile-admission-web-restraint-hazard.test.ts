@@ -248,6 +248,7 @@ describe("L12G deterministic Web restraint-hazard admission", () => {
       sources: [
         {
           kind: "webAreaHazard" as const,
+          effectRef: activeWeb.effectRef,
           sourceCombatantId: spellCasterId,
           sourceProcedureRef: activeWeb.sourceProcedureRef,
           areaId: webAreaId,

@@ -1,6 +1,8 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
-import { battleActSpellPresentation } from "./battle-act-composition.ts";
+import {
+  battleActsWithReducerRouteEvents,
+  battleActSpellPresentation,
+} from "./battle-act-composition.ts";
 import {
   resolveBattleSubject,
   requireCharacterSpellProcedureRefForTest,
@@ -27,6 +29,7 @@ import {
   battleReducerStartRouteEvent,
   discoverBattleActCandidates,
   endTurn,
+  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleReducerRouteEvent,
@@ -282,12 +285,13 @@ function replaySpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEven
     throw new Error("Expected Spike Growth caster End Turn to resolve.");
   }
   const move = moveAct(targetTurn.state);
+  const spikeGrowthEffect = requireSpikeGrowthHazardEffect(targetTurn.state);
   route.push(...routeEventsOfSubject(move, "Spike Growth movement discovery"));
   const movement = requireHole(move.initialHoles, "movement");
   const needsDamage = resolveBattleSubject({
     state: targetTurn.state,
     subject: move.subject,
-    fills: [spikeGrowthMovementFill(movement)],
+    fills: [spikeGrowthMovementFill(movement, spikeGrowthEffect)],
   });
   route.push(...routeEventsOfSubject(needsDamage, "Spike Growth movement"));
   if (needsDamage.tag !== "needsHoles") {
@@ -298,7 +302,7 @@ function replaySpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEven
     state: targetTurn.state,
     subject: move.subject,
     fills: [
-      spikeGrowthMovementFill(movement),
+      spikeGrowthMovementFill(movement, spikeGrowthEffect),
       damageRollFillWithGroups(damage, [[3, 4]]),
     ],
   });
@@ -428,7 +432,10 @@ function moveAct(state: BattleState): BattleActDiscoveryCandidate & {
     { readonly tag: "runtimeCommand"; readonly command: "move" }
   >;
 } {
-  const act = discoverBattleActCandidates(state).find(
+  const act = battleActsWithReducerRouteEvents(
+    state,
+    discoverBattleActCandidates(state),
+  ).find(
     (
       candidate,
     ): candidate is BattleActDiscoveryCandidate & {
@@ -438,7 +445,8 @@ function moveAct(state: BattleState): BattleActDiscoveryCandidate & {
       >;
     } =>
       candidate.subject.tag === "runtimeCommand" &&
-      candidate.subject.command === "move",
+      candidate.subject.command === "move" &&
+      candidate.subject.actorId === spellTargetId,
   );
   if (act === undefined) {
     throw new Error("Expected Move act.");
@@ -448,6 +456,7 @@ function moveAct(state: BattleState): BattleActDiscoveryCandidate & {
 
 function spikeGrowthMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
+  effect: Extract<BattleActiveEffect, { readonly kind: "spikeGrowthHazard" }>,
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return movementFill(hole, {
     movementCostFeet: 15,
@@ -457,10 +466,9 @@ function spikeGrowthMovementFill(
       sources: [
         {
           kind: "spikeGrowthHazard",
+          effectRef: effect.effectRef,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef: battleProcedureExecutionRefForTest(
-            String(spikeGrowthUnitId),
-          ),
+          sourceProcedureRef: effect.sourceProcedureRef,
           areaId: spikeGrowthAreaId,
           damageDistanceFeet: movementFeet(5),
         },
@@ -469,6 +477,18 @@ function spikeGrowthMovementFill(
       difficultTerrainDistanceFeet: movementFeet(5),
     },
   });
+}
+
+function requireSpikeGrowthHazardEffect(
+  state: BattleState,
+): Extract<BattleActiveEffect, { readonly kind: "spikeGrowthHazard" }> {
+  const effect = state.combatants
+    .get(spellCasterId)
+    ?.activeEffects.find((candidate) => candidate.kind === "spikeGrowthHazard");
+  if (effect === undefined) {
+    throw new Error("Expected active Spike Growth hazard.");
+  }
+  return effect;
 }
 
 function expectedSpikeGrowthMovementHazardRoute(): readonly BattleReducerRouteEvent[] {

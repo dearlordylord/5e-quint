@@ -444,6 +444,7 @@ function moveWithDifficultTerrain(state: WebRuntimeState): WebRuntimeState {
             sources: [
               {
                 kind: "webAreaHazard",
+                effectRef: hazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: webAreaId,
