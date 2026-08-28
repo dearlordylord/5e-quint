@@ -31,7 +31,7 @@ import {
   testDaggerAttack,
   testShortswordAttack,
   attackRollFill,
-  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   battleProcedureExecutionRefForTest,
   skeletonId,
   statBlockCreatureInit,
@@ -45,7 +45,6 @@ import {
   battleAreaId,
   battleLineDirectionId,
   battleObjectId,
-  battleSpellEffectOccurrenceId,
 } from "./identity.ts";
 
 type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
@@ -63,10 +62,18 @@ const baseHole = (name: string) => ({
   holeInstanceKey: holeId(name),
   label: `Codec ${name}`,
 });
-const encodeHole = (input: unknown): EncodedHole =>
-  Schema.encodeSync(BattleHoleSchema)(
-    Schema.decodeUnknownSync(BattleHoleSchema)(input),
-  );
+const encodeHole = (input: unknown): EncodedHole => {
+  try {
+    return Schema.encodeSync(BattleHoleSchema)(
+      Schema.decodeUnknownSync(BattleHoleSchema)(input),
+    );
+  } catch (cause) {
+    throw new Error(
+      `Failed to encode ${typeof input === "object" && input !== null && "holeId" in input ? String(input.holeId) : "unknown hole"}.`,
+      { cause },
+    );
+  }
+};
 const hole = (name: string, input: object): EncodedHole =>
   encodeHole({ ...baseHole(name), ...input });
 
@@ -150,10 +157,12 @@ function codecFixture() {
       skeletonCreatureInit({ initiative: 10 }),
     ],
   });
-  const snapshot = Schema.encodeSync(BattleSnapshotSchema)(
+  const initialSnapshot = Schema.encodeSync(BattleSnapshotSchema)(
     snapshotBattle(session.state),
   );
-  const wizard = snapshot.combatants.find((c) => c.combatantId === wizardId);
+  const wizard = initialSnapshot.combatants.find(
+    (c) => c.combatantId === wizardId,
+  );
   if (wizard?.origin.kind !== "character")
     throw new Error("Expected character spell fixture.");
   const characterContext = session.context.characters.get(wizardId);
@@ -176,10 +185,47 @@ function codecFixture() {
   );
   if (sourceBinding === undefined)
     throw new Error("Expected the save-gated source to be bound.");
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: session.state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "nextAttackRollBySelf",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          mode: "advantage",
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "nextAttackRollBySelf",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          mode: "advantage",
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+    ],
+  });
+  const sourceOccurrence = allocated.occurrences[0];
+  const targetOccurrence = allocated.occurrences[1];
+  if (
+    sourceOccurrence?.kind !== "activeEffect" ||
+    targetOccurrence?.kind !== "activeEffect"
+  )
+    throw new Error("Expected two allocated active-effect occurrences.");
   return {
-    snapshot,
-    sourceProcedureRef: sourceBinding.procedureRef,
-    effectRef: battleEffectExecutionRefForTest("codec-marked-rider"),
+    snapshot: Schema.encodeSync(BattleSnapshotSchema)(
+      snapshotBattle(allocated.state),
+    ),
+    sourceProcedureRef: source.procedureRef,
+    effectRef: sourceOccurrence.effect.effectRef,
+    targetEffectRef: targetOccurrence.effect.effectRef,
   };
 }
 
@@ -202,6 +248,9 @@ const saving = (
   hole(name, {
     kind: "savingThrowOutcome",
     [variant]: value,
+    ...(variant === "hideousLaughterRepeatSave"
+      ? { damageOccurrence: { kind: "untrackedDamage" } }
+      : {}),
     ability,
     dc: { kind: "caster_spell_save_dc" },
     areaChoices: [],
@@ -290,6 +339,7 @@ const savingThrowCases: readonly CodecCase[] = [
     "spellTurnStartSave",
     saving("spellTurnStartSave", "spellTurnStartSave", "wis", {
       ...source,
+      effectRef: fixture.targetEffectRef,
       save: { ...save("wis"), successEnds: "spell" },
     }),
   ),
@@ -323,6 +373,7 @@ const savingThrowCases: readonly CodecCase[] = [
       variant,
       saving(variant, variant, "dex", {
         ...source,
+        effectRef: fixture.effectRef,
         areaId: battleAreaId(`area:${variant}`),
         trigger: "entersArea",
         save: save("dex"),
@@ -335,6 +386,7 @@ const savingThrowCases: readonly CodecCase[] = [
         variant,
         saving(variant, variant, "con", {
           ...source,
+          effectRef: fixture.effectRef,
           areaId: battleAreaId(`area:${variant}`),
           trigger: "entersArea",
           save: save("con"),
@@ -348,7 +400,7 @@ const savingThrowCases: readonly CodecCase[] = [
       glyphExplosiveRune: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
-        sourceEffectId: battleSpellEffectOccurrenceId("effect:codec:glyph"),
+        effectRef: fixture.effectRef,
         radiusFeet: 20,
       },
       ability: "dex",
@@ -377,6 +429,7 @@ const savingThrowCases: readonly CodecCase[] = [
       targetId: skeletonId,
       sourceCombatantId: wizardId,
       sourceProcedureRef: fixture.sourceProcedureRef,
+      effectRef: fixture.effectRef,
       areaId: battleAreaId("area:codec-gust-save"),
       directionId: battleLineDirectionId("direction:codec-gust-save"),
       trigger: "endsTurnInLine",
@@ -423,7 +476,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       glyphExplosiveRune: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
-        sourceEffectId: battleSpellEffectOccurrenceId("effect:codec:glyph"),
+        effectRef: fixture.effectRef,
         damage: { expr: { dice: 1, dieSize: 6 } },
       },
     }),
@@ -470,6 +523,7 @@ const rolledDiceCases: readonly CodecCase[] = [
     rolled("spellTurnStartDamage", {
       spellTurnStartDamage: {
         ...source,
+        effectRef: fixture.targetEffectRef,
         trigger: { kind: "condition", condition: "poisoned" },
         damage,
       },
@@ -477,7 +531,13 @@ const rolledDiceCases: readonly CodecCase[] = [
   ),
   right(
     "spellTurnEndDamage",
-    rolled("spellTurnEndDamage", { spellTurnEndDamage: { ...source, damage } }),
+    rolled("spellTurnEndDamage", {
+      spellTurnEndDamage: {
+        ...source,
+        effectRef: fixture.targetEffectRef,
+        damage,
+      },
+    }),
   ),
   right(
     "movableZone",
@@ -485,6 +545,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       movableZone: {
         ...source,
+        effectRef: fixture.targetEffectRef,
         areaId: battleAreaId("area:movableZone"),
         trigger: "endsTurnWithinFiveFeetOfSphere",
         save: save("dex"),
@@ -509,6 +570,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       insectPlagueAreaHazard: {
         ...source,
+        effectRef: fixture.effectRef,
         areaId: battleAreaId("area:insectPlagueAreaHazard"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
@@ -521,6 +583,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       cloudkillAreaHazard: {
         ...source,
+        effectRef: fixture.effectRef,
         areaId: battleAreaId("area:cloudkillAreaHazard"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
@@ -571,6 +634,7 @@ const sourceOwningHoleCases: readonly EncodedHole[] = [
     kind: "gustOfWindLineDirectionChoice",
     sourceCombatantId: wizardId,
     sourceProcedureRef: invalidSource,
+    effectRef: fixture.effectRef,
     areaId: battleAreaId("area:codec-gust-of-wind"),
     directionId: battleLineDirectionId("direction:codec-north"),
     requiresTableSpatialFact: true,
@@ -580,6 +644,7 @@ const sourceOwningHoleCases: readonly EncodedHole[] = [
     movableZone: {
       sourceCombatantId: wizardId,
       sourceProcedureRef: invalidSource,
+      effectRef: fixture.effectRef,
       areaId: battleAreaId("area:codec-movable-zone"),
       maxMoveFeet: 30,
     },
@@ -597,6 +662,7 @@ const cases: readonly CodecCase[] = [
       spellTurnStartSave: {
         ...source,
         sourceProcedureRef: invalidSource,
+        effectRef: fixture.effectRef,
         save: { ...save("wis"), successEnds: "spell" },
       },
       ability: "wis",

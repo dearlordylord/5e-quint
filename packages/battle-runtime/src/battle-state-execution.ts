@@ -5039,7 +5039,6 @@ export type BattleGlyphExplosiveRuneDamageRollHole = Extract<
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly effectRef: BattleEffectExecutionRef;
-    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
     readonly damage: {
       readonly expr: DiceExpr;
     };
@@ -5891,7 +5890,6 @@ export type BattleGlyphExplosiveRuneSavingThrowOutcomeHole = {
     readonly sourceCombatantId: CombatantId;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly effectRef: BattleEffectExecutionRef;
-    readonly sourceEffectId: BattleSpellEffectOccurrenceId;
     readonly radiusFeet: 20;
   };
   readonly ability: Extract<Ability, "dex">;
@@ -6131,10 +6129,7 @@ export type BattleSpellcastingAbilityCheckHole = {
         readonly checkedOccurrence: {
           readonly ownerId: CombatantId;
           readonly effect: BattleOngoingSpellOccurrenceRef;
-          readonly target: Exclude<
-            BattleOngoingSpellTarget,
-            { readonly kind: "magicalEffect" }
-          >;
+          readonly target?: never;
         };
       }
   );

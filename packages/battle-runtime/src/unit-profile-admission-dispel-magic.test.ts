@@ -433,6 +433,22 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
               ...check,
               checkedOccurrence: {
                 ...check.checkedOccurrence,
+                target: check.target,
+              },
+            };
+          }),
+        ),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          mutateAggregateCheck((check) => {
+            if (check.target.kind === "magicalEffect") return check;
+            return {
+              ...check,
+              checkedOccurrence: {
+                ...check.checkedOccurrence,
                 ownerId: spellTargetId,
               },
             };
@@ -497,6 +513,30 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             effectOccurrences: combatant.effectOccurrences.map((occurrence) =>
               occurrence.effectRef === allocatedEmitter.effectRef
                 ? { ...occurrence, kind: "activeEffect" as const }
+                : occurrence,
+            ),
+          })),
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      Result.isFailure(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)({
+          ...deferredCheckSnapshot,
+          combatants: deferredCheckSnapshot.combatants.map((combatant) => ({
+            ...combatant,
+            effectOccurrences: combatant.effectOccurrences.map((occurrence) =>
+              occurrence.effectRef === allocatedEmitter.effectRef &&
+              occurrence.kind === "storedLightEmitter"
+                ? {
+                    ...occurrence,
+                    attachment: {
+                      kind: "object" as const,
+                      objectId: battleObjectId(
+                        "contradictory-emitter-census-object",
+                      ),
+                    },
+                  }
                 : occurrence,
             ),
           })),

@@ -628,7 +628,6 @@ function ongoingSpellEndAbilityCheckHole(
         checkedOccurrence: {
           ownerId: occurrence.ownerId,
           effect,
-          target: combatantTarget,
         },
       }),
       object: (objectTarget) => ({
@@ -636,7 +635,6 @@ function ongoingSpellEndAbilityCheckHole(
         checkedOccurrence: {
           ownerId: occurrence.ownerId,
           effect,
-          target: objectTarget,
         },
       }),
     }),

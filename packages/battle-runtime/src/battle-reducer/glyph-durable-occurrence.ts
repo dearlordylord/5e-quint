@@ -798,7 +798,6 @@ export function glyphExplosiveRuneDamageRollHole(input: {
       sourceCombatantId: input.effect.sourceCombatantId,
       sourceProcedureRef: input.effect.sourceProcedureRef,
       effectRef: input.effect.effectRef,
-      sourceEffectId: input.effect.sourceEffectId,
       damage: { expr },
     },
   };
@@ -828,7 +827,6 @@ export function glyphExplosiveRuneSavingThrowOutcomeHole(input: {
       sourceCombatantId: input.effect.sourceCombatantId,
       sourceProcedureRef: input.effect.sourceProcedureRef,
       effectRef: input.effect.effectRef,
-      sourceEffectId: input.effect.sourceEffectId,
       radiusFeet: GLYPH_EXPLOSIVE_RUNE_RADIUS_FEET,
     },
     ability: "dex",

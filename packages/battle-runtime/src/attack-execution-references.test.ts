@@ -257,11 +257,75 @@ describe("character attack execution references", () => {
           : emitter,
       ),
     };
+    const unknownActiveEffectKind = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== goblinId
+          ? combatant
+          : {
+              ...combatant,
+              effectOccurrences: combatant.effectOccurrences.map(
+                (occurrence) =>
+                  occurrence.kind === "activeEffect"
+                    ? { ...occurrence, activeEffectKind: "notAnActiveEffect" }
+                    : occurrence,
+              ),
+            },
+      ),
+    };
+    const contradictoryActiveEffectMetadata = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== goblinId
+          ? combatant
+          : {
+              ...combatant,
+              effectOccurrences: combatant.effectOccurrences.map(
+                (occurrence) =>
+                  occurrence.kind === "activeEffect"
+                    ? {
+                        ...occurrence,
+                        ongoingSpellObjectId: battleObjectId(
+                          "contradictory-active-effect-object",
+                        ),
+                      }
+                    : occurrence,
+              ),
+            },
+      ),
+    };
+    const contradictoryStoredEmitterMetadata = {
+      ...encoded,
+      combatants: encoded.combatants.map((combatant) =>
+        combatant.combatantId !== goblinId
+          ? combatant
+          : {
+              ...combatant,
+              effectOccurrences: combatant.effectOccurrences.map(
+                (occurrence) =>
+                  occurrence.kind === "storedLightEmitter"
+                    ? {
+                        ...occurrence,
+                        attachment: {
+                          kind: "object" as const,
+                          objectId: battleObjectId(
+                            "contradictory-emitter-object",
+                          ),
+                        },
+                      }
+                    : occurrence,
+              ),
+            },
+      ),
+    };
     for (const invalid of [
       withoutCensus,
       duplicateAcrossKinds,
       wrongOwner,
       future,
+      unknownActiveEffectKind,
+      contradictoryActiveEffectMetadata,
+      contradictoryStoredEmitterMetadata,
       injectedProjectionRef,
     ]) {
       expect(

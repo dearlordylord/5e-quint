@@ -3779,7 +3779,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       glyphExplosiveRune: {
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: glyphProcedureRef,
-        sourceEffectId: glyphSourceEffectId,
+        effectRef: effect.effectRef,
         radiusFeet: 20,
       },
       targetIds: [spellTargetId, thunderwaveSecondTargetId],
@@ -4049,7 +4049,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       glyphExplosiveRune: {
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: glyphProcedureRef,
-        sourceEffectId: glyphSourceEffectId,
+        effectRef: effect.effectRef,
         radiusFeet: 20,
       },
     });
@@ -4081,7 +4081,7 @@ describe("SRD Glyph of Warding durable occurrence admission", () => {
       glyphExplosiveRune: {
         sourceCombatantId: spellCasterId,
         sourceProcedureRef: glyphProcedureRef,
-        sourceEffectId: glyphSourceEffectId,
+        effectRef: effect.effectRef,
         damage: {
           expr: {
             dice: 5,

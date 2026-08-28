@@ -33,6 +33,7 @@ import {
 } from "@dnd/shared/types";
 import { BattleCreatureDisplayNameSchema } from "../battle-creature-display-name.ts";
 import { BattleRoundSchema } from "../active-effect/round-codec.ts";
+import { BATTLE_ACTIVE_EFFECT_KINDS } from "../active-effect/types.ts";
 import type { Ability, DamageType, Skill } from "@dnd/surface/surface/types";
 import {
   CreatureAttackRollMechanicsSchema,
@@ -1880,7 +1881,6 @@ const BattleHolePayloadUnionSchema = Schema.Union([
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       effectRef: BattleEffectExecutionRef,
-      sourceEffectId: BattleSpellEffectOccurrenceId,
       damage: Schema.Struct({
         expr: DiceExprSchema,
       }),
@@ -2574,7 +2574,6 @@ const BattleHolePayloadUnionSchema = Schema.Union([
       sourceCombatantId: CombatantId,
       sourceProcedureRef: BattleProcedureExecutionRef,
       effectRef: BattleEffectExecutionRef,
-      sourceEffectId: BattleSpellEffectOccurrenceId,
       radiusFeet: Schema.Literal(20),
     }),
     ability: Schema.Literal("dex"),
@@ -2738,10 +2737,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
         checkedOccurrence: Schema.Struct({
           ownerId: CombatantId,
           effect: BattleOngoingSpellOccurrenceRefSchema,
-          target: Schema.Union([
-            BattleOngoingSpellCombatantTargetSchema,
-            BattleOngoingSpellObjectTargetSchema,
-          ]),
+          target: Schema.optionalKey(Schema.Never),
         }),
         contestedSpellLevel: BattleSpellEffectLevel,
       }),
@@ -5871,7 +5867,7 @@ const BattleCreatureSnapshotCommonFields = {
       Schema.Struct({
         kind: Schema.Literal("activeEffect"),
         effectRef: BattleEffectExecutionRef,
-        activeEffectKind: Schema.String,
+        activeEffectKind: Schema.Literals(BATTLE_ACTIVE_EFFECT_KINDS),
         ongoingSpellObjectId: Schema.Union([BattleObjectId, Schema.Null]),
       }),
       Schema.Struct({
@@ -6017,13 +6013,20 @@ function battleCreatureSnapshotCommonInvariantsHold(
   ) {
     return false;
   }
-  return snapshot.effectOccurrences.every(({ effectRef }) =>
-    battleEffectExecutionRefOrdinalIsBefore(
-      effectRef,
+  return snapshot.effectOccurrences.every((occurrence) => {
+    if (
+      occurrence.kind === "activeEffect" &&
+      (occurrence.activeEffectKind === "spellObjectContactDamage") !==
+        (occurrence.ongoingSpellObjectId !== null)
+    ) {
+      return false;
+    }
+    return battleEffectExecutionRefOrdinalIsBefore(
+      occurrence.effectRef,
       snapshot.origin.execution.scopeRef,
       snapshot.nextEffectOrdinal,
-    ),
-  );
+    );
+  });
 }
 
 const battleCreatureSnapshotInvariantAnnotations = {
@@ -7494,6 +7497,59 @@ function serializedLightEmitterOwnsSource(
   );
 }
 
+function serializedLightEmitterAttachmentKey(
+  attachment: Schema.Schema.Type<typeof BattleLightEmitterAttachmentSchema>,
+): string {
+  return Match.value(attachment).pipe(
+    Match.discriminatorsExhaustive("kind")({
+      combatant: ({ combatantId }) => `combatant:${combatantId}`,
+      object: ({ objectId }) => `object:${objectId}`,
+      dancingLight: ({ lightId, positionId, form }) =>
+        `dancingLight:${lightId}:${positionId}:${form}`,
+    }),
+  );
+}
+
+function incrementCount(counts: Map<string, number>, key: string): void {
+  counts.set(key, (counts.get(key) ?? 0) + 1);
+}
+
+function serializedStoredLightEmitterCensusMatchesProjection(snapshot: {
+  readonly combatants: readonly EncodedBattleCreatureSnapshot[];
+  readonly lightEmitters: readonly Schema.Schema.Type<
+    typeof BattleLightEmitterSchema
+  >[];
+}): boolean {
+  const censusCounts = new Map<string, number>();
+  for (const occurrence of snapshot.combatants.flatMap(
+    ({ effectOccurrences }) => effectOccurrences,
+  )) {
+    if (occurrence.kind !== "storedLightEmitter") continue;
+    incrementCount(
+      censusCounts,
+      `${occurrence.storedLightEmitterKind}:${serializedLightEmitterAttachmentKey(occurrence.attachment)}`,
+    );
+  }
+
+  const projectionCounts = new Map<string, number>();
+  for (const emitter of snapshot.lightEmitters) {
+    const key = Match.value(emitter).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        spellLightEmitter: ({ attachment }) =>
+          `spellLightEmitter:${serializedLightEmitterAttachmentKey(attachment)}`,
+        objectInvisibleRevealLightEmitter: ({ objectId }) =>
+          `objectInvisibleRevealLightEmitter:object:${objectId}`,
+        unitFeatureLightEmitter: () => null,
+      }),
+    );
+    if (key !== null) incrementCount(projectionCounts, key);
+  }
+
+  return [...censusCounts].every(
+    ([key, count]) => (projectionCounts.get(key) ?? 0) >= count,
+  );
+}
+
 function serializedObscurementZoneOwnsSource(
   zone: Schema.Schema.Type<typeof BattleObscurementZoneSchema>,
   combatants: readonly EncodedBattleCreatureSnapshot[],
@@ -7528,17 +7584,6 @@ function serializedSpellcastingAbilityCheckTargetMatchesOccurrence(
   }
   const { target, checkedOccurrence } = hole.spellcastingAbilityCheck;
   if (checkedOccurrence === undefined) return false;
-  const targetMatches = Match.value(target).pipe(
-    Match.discriminatorsExhaustive("kind")({
-      combatant: ({ combatantId }) =>
-        checkedOccurrence.target.kind === "combatant" &&
-        checkedOccurrence.target.combatantId === combatantId,
-      object: ({ objectId }) =>
-        checkedOccurrence.target.kind === "object" &&
-        checkedOccurrence.target.objectId === objectId,
-    }),
-  );
-  if (!targetMatches) return false;
   const owner = combatants.find(
     (combatant) => combatant.combatantId === checkedOccurrence.ownerId,
   );
@@ -8434,6 +8479,7 @@ function battleSnapshotInvariantsHold(
       serializedReadiedResponseIsBound(snapshot.combatants, readied),
     ) &&
     battleSnapshotPendingInterruptIsValid(snapshot, boundExecutionRefs) &&
+    serializedStoredLightEmitterCensusMatchesProjection(snapshot) &&
     snapshot.lightEmitters.every((emitter) =>
       serializedLightEmitterOwnsSource(emitter, snapshot.combatants),
     ) &&
