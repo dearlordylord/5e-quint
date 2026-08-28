@@ -334,6 +334,19 @@ module spellSlowActivePenaltiesCore {
       SlowTurnUnrestricted
     else SlowTurnRestrictedBonusActionUsed
 
+  // Reconcile only the restriction imposed by Slow after any occurrence
+  // transition. SlowTurnUnrestricted means that Slow no longer gates either
+  // turn resource; ordinary Action and Bonus Action spending remains owned by
+  // the runtime action economy and is not reconstructed here.
+  pure def reconcileSlowTargetTurnAfterOccurrenceTransition(
+    state: SlowOccurrenceState,
+    targetRef: SlowEntityRef,
+    turn: SlowTargetTurnState
+  ): SlowTargetTurnState =
+    if (slowTargetAffected(state, targetRef))
+      turn
+    else SlowTurnUnrestricted
+
   pure def legalSlowTargetTurnState(state: SlowTargetTurnState): bool =
     match state {
       | SlowTurnUnrestricted => true

@@ -40,10 +40,15 @@ import {
   activeEffectArmorClass,
   combatantCanTakeReactions,
 } from "./battle-reducer/creature-state.ts";
+import {
+  applyBattleHitPointDamage,
+  concentrationSavingThrowHole,
+} from "./battle-reducer/damage-apply.ts";
 import { effectiveWalkSpeed } from "./battle-reducer/movement-speed.ts";
 import { savingThrowFlatBonusProjections } from "./battle-reducer/spells-damage-fills.ts";
 import { SLOW_ACTIVE_PENALTIES_SOMATIC_FAILURE_PERCENT } from "./battle-reducer/domain-constants.ts";
-import { slowActionOrBonusActionTurnResources } from "./battle-reducer/slow-active-penalties-runtime.ts";
+import { slowActionOrBonusActionTurnResources } from "./battle-reducer/slow-active-penalties-turn-restriction.ts";
+import { tickBattleStateDurationEffects } from "./battle-reducer/turn-boundary-lifecycle.ts";
 import { statBlockMultiattackBindings } from "./stat-block-execution-state.ts";
 import {
   discoverBattleActs,
@@ -85,6 +90,7 @@ import {
 } from "./unit-profile-admission-spell-fill.test-support.ts";
 import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
+  concentrationSavingThrowFill,
   resolveBattleSubject,
   monsterMultiattackStatBlock,
 } from "./battle-runtime.test-support.ts";
@@ -97,6 +103,9 @@ type LastResult =
   | "saved"
   | "failedAgain"
   | "spentAction"
+  | "spentBonusAction"
+  | "concentrationEndedAfterAction"
+  | "durationExpiredAfterBonusAction"
   | "attackedOnce"
   | "needsSomaticFailure"
   | "somaticSpellFailed"
@@ -120,6 +129,9 @@ const SCENARIO_OUTCOME_BY_TAG = {
   Saved: "saved",
   FailedAgain: "failedAgain",
   SpentAction: "spentAction",
+  SpentBonusAction: "spentBonusAction",
+  ConcentrationEndedAfterAction: "concentrationEndedAfterAction",
+  DurationExpiredAfterBonusAction: "durationExpiredAfterBonusAction",
   AttackedOnce: "attackedOnce",
   NeedsSomaticFailure: "needsSomaticFailure",
   SomaticSpellFailed: "somaticSpellFailed",
@@ -203,6 +215,9 @@ const driverSchema = {
   doFillEndTurnSaveSuccess: {},
   doFillEndTurnSaveFailure: {},
   doSpendTargetAction: {},
+  doSpendTargetBonusAction: {},
+  doEndSlowConcentrationAfterAction: {},
+  doExpireSlowDurationAfterBonusAction: {},
   doMakeTargetAttack: {},
   doRequestSomaticFailure: {},
   doFillSomaticSpellFailure: {},
@@ -246,6 +261,15 @@ function createSlowActivePenaltiesDriver() {
       },
       doSpendTargetAction: () => {
         state = spendTargetAction(state);
+      },
+      doSpendTargetBonusAction: () => {
+        state = spendTargetBonusAction(state);
+      },
+      doEndSlowConcentrationAfterAction: () => {
+        state = endSlowConcentrationAfterAction(state);
+      },
+      doExpireSlowDurationAfterBonusAction: () => {
+        state = expireSlowDurationAfterBonusAction(state);
       },
       doMakeTargetAttack: () => {
         state = makeTargetAttack(state);
@@ -378,6 +402,47 @@ describe("Slow active-penalties MBT parity", () => {
     });
   });
 
+  it("releases only Slow's mid-turn Action-or-Bonus-Action gate on cleanup", () => {
+    const targetTurnAfterActionCast = endCasterTurn(
+      castSlowFailedSave(initialRuntimeState()),
+    );
+    const actionSpent = spendTargetAction(targetTurnAfterActionCast);
+    const concentrationEnded = endSlowConcentrationAfterAction(actionSpent);
+    expect(slowActivePenaltiesProjection(actionSpent)).toMatchObject({
+      turnActionOrBonusChoice: "action",
+      targetTurnCanSpendAction: false,
+      targetTurnCanSpendBonusAction: false,
+    });
+    expect(slowActivePenaltiesProjection(concentrationEnded)).toMatchObject({
+      turnActionOrBonusChoice: "notRestricted",
+      targetTurnCanSpendAction: false,
+      targetTurnCanSpendBonusAction: true,
+      targetSlowed: false,
+      casterConcentrating: false,
+      lastResult: "concentrationEndedAfterAction",
+    });
+
+    const targetTurnAfterBonusCast = endCasterTurn(
+      castSlowFailedSave(initialRuntimeState()),
+    );
+    const bonusActionSpent = spendTargetBonusAction(targetTurnAfterBonusCast);
+    const durationExpired =
+      expireSlowDurationAfterBonusAction(bonusActionSpent);
+    expect(slowActivePenaltiesProjection(bonusActionSpent)).toMatchObject({
+      turnActionOrBonusChoice: "bonusAction",
+      targetTurnCanSpendAction: false,
+      targetTurnCanSpendBonusAction: false,
+    });
+    expect(slowActivePenaltiesProjection(durationExpired)).toMatchObject({
+      turnActionOrBonusChoice: "notRestricted",
+      targetTurnCanSpendAction: true,
+      targetTurnCanSpendBonusAction: false,
+      targetSlowed: false,
+      casterConcentrating: false,
+      lastResult: "durationExpiredAfterBonusAction",
+    });
+  });
+
   it(
     "matches the focused Slow active-penalties slice against bounded MBT traces",
     async () => {
@@ -405,7 +470,13 @@ function initialRuntimeState(): SlowActivePenaltiesRuntimeState {
       preparedSpells: [spellRecord(slowUnitId)],
       spellSlots: [{ spellLevel: 3, count: 1 }],
       targetAttack: zeroAbilityWeaponAttack("weapon_club"),
-      targetUnitRefs: [extraAttackBattleUnitRef()],
+      targetUnitRefs: [
+        extraAttackBattleUnitRef(),
+        adrenalineRushBattleUnitRef(),
+      ],
+      targetResources: [
+        { unit: unitLibrary.requireUnit(orcAdrenalineRushUnitId) },
+      ],
       targetPreparedSpells: [spellRecord(expeditiousRetreatUnitId)],
     }),
     currentTurnRole: "caster",
@@ -967,6 +1038,102 @@ function spendTargetAction(
     currentTurnRole: "target",
     holes: [],
     lastResult: "spentAction",
+  };
+}
+
+function spendTargetBonusAction(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "targetTurn") {
+    return state;
+  }
+  const bonusAction = discoverBattleActs(state.battle).find(
+    (candidate) =>
+      candidate.subject.tag === "bonusActionStandardAction" &&
+      candidate.subject.actorId === spellTargetId &&
+      candidate.subject.action === "dash",
+  );
+  if (
+    bonusAction?.subject.tag !== "bonusActionStandardAction" ||
+    bonusAction.subject.action !== "dash"
+  ) {
+    throw new Error("Expected slowed target Bonus Action Dash.");
+  }
+  const resolved = resolveBattleSubject({
+    state: state.battle.state,
+    subject: bonusAction.subject,
+    fills: [],
+  });
+  expect(resolved).toMatchObject({ tag: "resolved" });
+  if (resolved.tag !== "resolved") {
+    throw new Error("Expected slowed target Bonus Action to resolve.");
+  }
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: resolved.state,
+    }),
+    currentTurnRole: "target",
+    holes: [],
+    lastResult: "spentBonusAction",
+  };
+}
+
+function endSlowConcentrationAfterAction(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "spentAction") {
+    return state;
+  }
+  const caster = requireCombatant(state.battle.state, spellCasterId);
+  const concentrationHole = concentrationSavingThrowHole(caster, 1);
+  if (concentrationHole === null) {
+    throw new Error("Expected damage to request a Concentration save.");
+  }
+  const concentrationFill = concentrationSavingThrowFill(concentrationHole, {
+    succeeded: false,
+    withoutRoll: true,
+  });
+  if (concentrationFill.kind !== "concentrationSavingThrow") {
+    throw new Error("Expected a Concentration saving throw fill.");
+  }
+  const concentrationEnded = applyBattleHitPointDamage({
+    state: state.battle.state,
+    target: caster,
+    damageAmount: 1,
+    deathFailuresAtZeroHp: 1,
+    concentrationSavingThrow: concentrationFill,
+  });
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: concentrationEnded,
+    }),
+    currentTurnRole: "target",
+    holes: [],
+    lastResult: "concentrationEndedAfterAction",
+  };
+}
+
+function expireSlowDurationAfterBonusAction(
+  state: SlowActivePenaltiesRuntimeState,
+): SlowActivePenaltiesRuntimeState {
+  if (state.lastResult !== "spentBonusAction") {
+    return state;
+  }
+  const expiringState = stateWithSlowDurationTicks(
+    state.battle.state,
+    elapsedTimeTicks(1),
+  );
+  const expiredState = tickBattleStateDurationEffects(expiringState).value;
+  return {
+    battle: battleRuntimeSessionForTest({
+      ...state.battle,
+      state: expiredState,
+    }),
+    currentTurnRole: "target",
+    holes: [],
+    lastResult: "durationExpiredAfterBonusAction",
   };
 }
 

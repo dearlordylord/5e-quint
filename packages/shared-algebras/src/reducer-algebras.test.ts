@@ -19,6 +19,7 @@ import {
   canSpendBonusAction,
   canSpendMovement,
   canSpendUnarmedStrikeActionResource,
+  disableActionOrBonusActionExclusion,
   enableActionOrBonusActionExclusion,
   enableMovementActionBonusActionExclusion,
   grantSpellEffectActionResource,
@@ -178,7 +179,7 @@ describe("action-economy-algebra", () => {
     expect(Either.isRight(spentAction)).toBe(true);
     if (Either.isLeft(spentAction)) return;
     expect(spentAction.right.actionResources).toEqual([]);
-    expect(spentAction.right.currentHasBonusAction).toBe(false);
+    expect(spentAction.right.currentHasBonusAction).toBe(true);
     expect(spentAction.right.actionOrBonusActionExclusion).toEqual({
       kind: "restricted",
       choice: "action",
@@ -191,7 +192,9 @@ describe("action-economy-algebra", () => {
     });
     expect(Either.isRight(spentBonusAction)).toBe(true);
     if (Either.isLeft(spentBonusAction)) return;
-    expect(spentBonusAction.right.actionResources).toEqual([]);
+    expect(spentBonusAction.right.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
     expect(spentBonusAction.right.currentHasBonusAction).toBe(false);
     expect(spentBonusAction.right.actionOrBonusActionExclusion).toEqual({
       kind: "restricted",
@@ -207,6 +210,18 @@ describe("action-economy-algebra", () => {
         attackOnlyRestriction,
       ),
     ).toEqual(Either.left("no action resource available"));
+
+    const unrestrictedAfterAction = disableActionOrBonusActionExclusion(
+      spentAction.right,
+    );
+    expect(canSpendAction(unrestrictedAfterAction, "attack")).toBe(false);
+    expect(canSpendBonusAction(unrestrictedAfterAction)).toBe(true);
+
+    const unrestrictedAfterBonusAction = disableActionOrBonusActionExclusion(
+      spentBonusAction.right,
+    );
+    expect(canSpendAction(unrestrictedAfterBonusAction, "attack")).toBe(true);
+    expect(canSpendBonusAction(unrestrictedAfterBonusAction)).toBe(false);
   });
 
   it("reconciles prior Action spending when the Action or Bonus Action restriction starts mid-turn", () => {
@@ -221,7 +236,7 @@ describe("action-economy-algebra", () => {
     const restricted = enableActionOrBonusActionExclusion(actionSpent.right);
 
     expect(restricted.actionResources).toEqual([]);
-    expect(restricted.currentHasBonusAction).toBe(false);
+    expect(restricted.currentHasBonusAction).toBe(true);
     expect(restricted.actionOrBonusActionExclusion).toEqual({
       kind: "restricted",
       choice: "action",
@@ -243,7 +258,9 @@ describe("action-economy-algebra", () => {
       bonusActionSpent.right,
     );
 
-    expect(restricted.actionResources).toEqual([]);
+    expect(restricted.actionResources).toEqual([
+      { kind: "action", source: "turn" },
+    ]);
     expect(restricted.currentHasBonusAction).toBe(false);
     expect(restricted.actionOrBonusActionExclusion).toEqual({
       kind: "restricted",

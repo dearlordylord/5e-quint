@@ -1,18 +1,15 @@
-// Runtime consumption of Slow active-effect penalties that are admitted from
-// typed Surface facts by the Slow spell procedure profile.
+// Runtime resolution of Slow's effective-Somatic spell-failure consequence,
+// admitted from typed Surface facts by the Slow spell procedure profile.
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
 
 import { optionalProperty } from "../optional-property.ts";
-import { enableActionOrBonusActionExclusion } from "@dnd/shared-algebras/action-economy-algebra";
 import type {
   ActionSpellBattleResolutionInput,
-  BattleCreatureState,
   BattleExecutableSpellInvocation,
   BattleFill,
   BattleResolutionResult,
   BattleState,
-  BattleTurnResources,
   BonusActionDashSpellBattleResolutionInput,
   BonusActionSpellBattleResolutionInput,
 } from "../battle-state-execution.ts";
@@ -22,7 +19,6 @@ import { needsHolesResult } from "./needs-holes-result.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { spendSpellCastResources } from "./spells-resolve-resources.ts";
 import { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
-import { slowActivePenaltiesEffects } from "./slow-active-penalties-effects.ts";
 import type { SpellMetamagicApplicationFact } from "./metamagic-support.ts";
 export { slowSomaticSpellFailureOutcomeHole } from "./slow-active-penalties-facts.ts";
 
@@ -42,21 +38,6 @@ type SlowSomaticSpellFailureResolution =
       readonly fills: readonly BattleFillAfterSlowSomaticSpellFailureOutcome[];
     }
   | BattleResolutionResult;
-
-export function combatantHasSlowActivePenalties(
-  combatant: BattleCreatureState | undefined,
-): boolean {
-  return slowActivePenaltiesEffects(combatant).length > 0;
-}
-
-export function slowActionOrBonusActionTurnResources(
-  resources: BattleTurnResources,
-  actor: BattleCreatureState | undefined,
-): BattleTurnResources {
-  return combatantHasSlowActivePenalties(actor)
-    ? enableActionOrBonusActionExclusion(resources)
-    : resources;
-}
 
 export function resolveSlowSomaticSpellFailure(input: {
   readonly state: BattleState;

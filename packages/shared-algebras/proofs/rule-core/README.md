@@ -552,7 +552,12 @@ duration-expired signals. QCORE8 remains the canonical generic Concentration
 lifecycle and owns why Concentration ended; the elapsed-time scheduler remains
 the owner of duration advancement. Slow owns only its affected-target cleanup
 and the command to end source Concentration when its last target or duration is
-removed.
+removed. Every occurrence transition reconciles the affected target's
+Slow-specific turn restriction: once that target is no longer affected, the
+gate becomes unrestricted. This does not restore or otherwise model an Action
+or Bonus Action; the runtime action economy remains the canonical owner of
+which generic resource was spent and retains an unspent resource while Slow
+temporarily suppresses it.
 
 `spell-slow-stat-block-multiattack-core.qnt` composes that typed active Slow
 state with `stat-block-multiattack.qnt`. It derives `OneListedDispatch` at the

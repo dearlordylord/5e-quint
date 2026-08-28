@@ -7,7 +7,9 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   // This focused replay projects production state from the reusable semantic
   // cores. It is intentionally still a bounded battle fixture, not a semantic
-  // owner in its own right.
+  // owner in its own right. Generic Action and Bonus Action availability is a
+  // literal projection input checked against production; the Slow core
+  // contributes only its temporary legality gate.
   type Hole =
     | NoHole
     | EndTurnSave
@@ -21,6 +23,9 @@ module battleRuntimeSlowActivePenaltiesMbt {
     | Saved
     | FailedAgain
     | SpentAction
+    | SpentBonusAction
+    | ConcentrationEndedAfterAction
+    | DurationExpiredAfterBonusAction
     | AttackedOnce
     | NeedsSomaticFailure
     | SomaticSpellFailed
@@ -36,6 +41,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
     | OneTargetSaved
     | ConcentrationEnded
     | DurationExpired
+
+  type GenericActionAvailabilityProjection = {
+    actionAvailable: bool,
+    bonusActionAvailable: bool,
+  }
 
   type SlowActivePenaltiesWitnessState = {
     currentTurnRole: str,
@@ -140,6 +150,7 @@ module battleRuntimeSlowActivePenaltiesMbt {
 
   pure def qTurnCanMakeAttack(turn: SlowTargetTurnState): bool =
     match turn {
+      | SlowTurnUnrestricted => true
       | SlowTurnRestrictedUnused => true
       | SlowTurnRestrictedActionUsed(data) => all {
           data.actionKind == SlowAttackAction,
@@ -183,10 +194,11 @@ module battleRuntimeSlowActivePenaltiesMbt {
       }
     )
 
-  action recordSlowState(
+  action recordSlowStateWithGenericActionAvailability(
     currentTurnRole: str,
     occurrence: SlowOccurrenceState,
     turn: SlowTargetTurnState,
+    genericAvailability: GenericActionAvailabilityProjection,
     somatic: SlowSomaticResolutionState,
     multiattack: SlowStatBlockMultiattackState,
     scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
@@ -196,14 +208,22 @@ module battleRuntimeSlowActivePenaltiesMbt {
       currentTurnRole: currentTurnRole,
       turnActionOrBonusChoice: qTurnChoice(turn),
       targetTurnCanSpendAction:
-        currentTurnRole != "caster" and slowTurnCanSpendAction(turn),
+        currentTurnRole != "caster" and
+          genericAvailability.actionAvailable and
+          slowTurnCanSpendAction(turn),
       targetTurnCanSpendBonusAction:
-        currentTurnRole != "caster" and slowTurnCanSpendBonusAction(turn),
+        currentTurnRole != "caster" and
+          genericAvailability.bonusActionAvailable and
+          slowTurnCanSpendBonusAction(turn),
       targetCanMakeAttack:
-        currentTurnRole == "target" and qTurnCanMakeAttack(turn),
+        currentTurnRole == "target" and
+          genericAvailability.actionAvailable and
+          qTurnCanMakeAttack(turn),
       extraAttackResourceCount: 0,
       casterTurnCanSpendBonusAction:
-        currentTurnRole == "caster" and slowTurnCanSpendBonusAction(turn),
+        currentTurnRole == "caster" and
+          genericAvailability.bonusActionAvailable and
+          slowTurnCanSpendBonusAction(turn),
       targetSlowed: slowTargetAffected(occurrence, 1),
       secondTargetSlowed: slowTargetAffected(occurrence, 2),
       multiattackTargetSlowed: slowTargetAffected(occurrence, 3),
@@ -238,6 +258,26 @@ module battleRuntimeSlowActivePenaltiesMbt {
       protocol: protocol,
     },
   }
+
+  action recordSlowState(
+    currentTurnRole: str,
+    occurrence: SlowOccurrenceState,
+    turn: SlowTargetTurnState,
+    somatic: SlowSomaticResolutionState,
+    multiattack: SlowStatBlockMultiattackState,
+    scenarioOutcome: SlowActivePenaltiesScenarioOutcome,
+    protocol: WitnessProtocol[Hole],
+  ): bool =
+    recordSlowStateWithGenericActionAvailability(
+      currentTurnRole,
+      occurrence,
+      turn,
+      { actionAvailable: true, bonusActionAvailable: true },
+      somatic,
+      multiattack,
+      scenarioOutcome,
+      protocol
+    )
 
   action init = recordSlowState(
     "caster",
@@ -348,6 +388,82 @@ module battleRuntimeSlowActivePenaltiesMbt {
         SlowSomaticCheckBypassed,
         initialSlowStatBlockMultiattackState,
         SpentAction,
+        witnessResolved(NoHole)
+      ),
+    }
+  }
+
+  action doSpendTargetBonusAction = {
+    val spent = applySlowTurnBonusAction(
+      beginSlowTargetTurn(qSingleTargetSlow, 1)
+    )
+    all {
+      qState.scenarioOutcome == TargetTurn,
+      recordSlowStateWithGenericActionAvailability(
+        "target",
+        qSingleTargetSlow,
+        spent,
+        { actionAvailable: true, bonusActionAvailable: false },
+        SlowSomaticCheckBypassed,
+        initialSlowStatBlockMultiattackState,
+        SpentBonusAction,
+        witnessResolved(NoHole)
+      ),
+    }
+  }
+
+  action doEndSlowConcentrationAfterAction = {
+    val spent = applySlowTurnAction(
+      beginSlowTargetTurn(qSingleTargetSlow, 1),
+      SlowOtherAction
+    )
+    val cleaned = applySlowOccurrenceCleanupSignal(
+      qSingleTargetSlow,
+      SlowSourceConcentrationEnded({ source: qSlowSource })
+    )
+    val reconciled = reconcileSlowTargetTurnAfterOccurrenceTransition(
+      cleaned.occurrence,
+      1,
+      spent
+    )
+    all {
+      qState.scenarioOutcome == SpentAction,
+      recordSlowStateWithGenericActionAvailability(
+        "target",
+        cleaned.occurrence,
+        reconciled,
+        { actionAvailable: false, bonusActionAvailable: true },
+        SlowSomaticCheckBypassed,
+        initialSlowStatBlockMultiattackState,
+        ConcentrationEndedAfterAction,
+        witnessResolved(NoHole)
+      ),
+    }
+  }
+
+  action doExpireSlowDurationAfterBonusAction = {
+    val spent = applySlowTurnBonusAction(
+      beginSlowTargetTurn(qSingleTargetSlow, 1)
+    )
+    val cleaned = applySlowOccurrenceCleanupSignal(
+      qSingleTargetSlow,
+      SlowDurationExpired({ source: qSlowSource })
+    )
+    val reconciled = reconcileSlowTargetTurnAfterOccurrenceTransition(
+      cleaned.occurrence,
+      1,
+      spent
+    )
+    all {
+      qState.scenarioOutcome == SpentBonusAction,
+      recordSlowStateWithGenericActionAvailability(
+        "target",
+        cleaned.occurrence,
+        reconciled,
+        { actionAvailable: true, bonusActionAvailable: false },
+        SlowSomaticCheckBypassed,
+        initialSlowStatBlockMultiattackState,
+        DurationExpiredAfterBonusAction,
         witnessResolved(NoHole)
       ),
     }
@@ -617,7 +733,8 @@ module battleRuntimeSlowActivePenaltiesMbt {
     qState.scenarioOutcome.in(Set(
       Saved,
       FailedAgain,
-      SpentAction,
+      ConcentrationEndedAfterAction,
+      DurationExpiredAfterBonusAction,
       AttackedOnce,
       SomaticSpellFailed,
       SelfFailedSave,
@@ -637,6 +754,9 @@ module battleRuntimeSlowActivePenaltiesMbt {
     doFillEndTurnSaveSuccess,
     doFillEndTurnSaveFailure,
     doSpendTargetAction,
+    doSpendTargetBonusAction,
+    doEndSlowConcentrationAfterAction,
+    doExpireSlowDurationAfterBonusAction,
     doMakeTargetAttack,
     doRequestSomaticFailure,
     doFillSomaticSpellFailure,

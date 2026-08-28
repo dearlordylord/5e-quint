@@ -23,7 +23,11 @@ module spellSlowActivePenaltiesInductive {
     | SlowProofRepeatSaveRemovedOneTarget
     | SlowProofRepeatSaveRemovedLastTarget
     | SlowProofConcentrationEnded
+    | SlowProofConcentrationEndedAfterAction
+    | SlowProofConcentrationEndedAfterBonusAction
     | SlowProofDurationExpired
+    | SlowProofDurationExpiredAfterAction
+    | SlowProofDurationExpiredAfterBonusAction
     | SlowProofActivatedMultiattackWhileSlowed
     | SlowProofActivatedMultiattackWhileUnslowed
     | SlowProofRejectedMismatchedMultiattackSource
@@ -139,7 +143,11 @@ module spellSlowActivePenaltiesInductive {
     SlowProofRepeatSaveRemovedOneTarget,
     SlowProofRepeatSaveRemovedLastTarget,
     SlowProofConcentrationEnded,
+    SlowProofConcentrationEndedAfterAction,
+    SlowProofConcentrationEndedAfterBonusAction,
     SlowProofDurationExpired,
+    SlowProofDurationExpiredAfterAction,
+    SlowProofDurationExpiredAfterBonusAction,
     SlowProofActivatedMultiattackWhileSlowed,
     SlowProofActivatedMultiattackWhileUnslowed,
     SlowProofRejectedMismatchedMultiattackSource,
@@ -155,12 +163,37 @@ module spellSlowActivePenaltiesInductive {
   var qActorWasSlowedAtMultiattackActivation: bool
   var qEvent: SlowProofEvent
 
+  pure def qConcentrationCleanupEvent(
+    turn: SlowTargetTurnState
+  ): SlowProofEvent =
+    match turn {
+      | SlowTurnRestrictedActionUsed(_) =>
+          SlowProofConcentrationEndedAfterAction
+      | SlowTurnRestrictedBonusActionUsed =>
+          SlowProofConcentrationEndedAfterBonusAction
+      | _ => SlowProofConcentrationEnded
+    }
+
+  pure def qDurationCleanupEvent(
+    turn: SlowTargetTurnState
+  ): SlowProofEvent =
+    match turn {
+      | SlowTurnRestrictedActionUsed(_) => SlowProofDurationExpiredAfterAction
+      | SlowTurnRestrictedBonusActionUsed =>
+          SlowProofDurationExpiredAfterBonusAction
+      | _ => SlowProofDurationExpired
+    }
+
   action recordOccurrenceTransition(
     result: SlowOccurrenceTransition,
     event: SlowProofEvent
   ): bool = all {
     qOccurrence' = result.occurrence,
-    qTurn' = qTurn,
+    qTurn' = reconcileSlowTargetTurnAfterOccurrenceTransition(
+      result.occurrence,
+      1,
+      qTurn
+    ),
     qSomatic' = qSomatic,
     qMultiattack' = qMultiattack,
     qConcentrationCommand' = result.concentrationCommand,
@@ -348,7 +381,7 @@ module spellSlowActivePenaltiesInductive {
         qOccurrence,
         SlowSourceConcentrationEnded({ source: qSlowSource })
       ),
-      SlowProofConcentrationEnded
+      qConcentrationCleanupEvent(qTurn)
     ),
   }
 
@@ -359,7 +392,7 @@ module spellSlowActivePenaltiesInductive {
         qOccurrence,
         SlowDurationExpired({ source: qSlowSource })
       ),
-      SlowProofDurationExpired
+      qDurationCleanupEvent(qTurn)
     ),
   }
 
@@ -457,6 +490,8 @@ module spellSlowActivePenaltiesInductive {
     legalSlowTargetTurnState(qTurn),
     legalSlowStatBlockMultiattackState(qMultiattack),
     slowTurnDoesNotSpendBothActionAndBonusAction(qTurn),
+    not(slowTargetAffected(qOccurrence, 1)) implies
+      qTurn == SlowTurnUnrestricted,
     slowTurnAttackCount(qTurn) >= 0,
     slowTurnAttackCount(qTurn) <= 1,
     slowEffectiveSpeed(qOccurrence, 1, 30) ==
@@ -494,15 +529,34 @@ module spellSlowActivePenaltiesInductive {
     (qEvent == SlowProofRepeatSaveRemovedLastTarget) implies all {
       qOccurrence == SlowOccurrenceAbsent,
       qConcentrationCommand == SlowSourceConcentrationEndRequired,
+      qTurn == SlowTurnUnrestricted,
     },
-    (qEvent == SlowProofConcentrationEnded) implies all {
+    qEvent.in(Set(
+      SlowProofConcentrationEnded,
+      SlowProofConcentrationEndedAfterAction,
+      SlowProofConcentrationEndedAfterBonusAction
+    )) implies all {
       qOccurrence == SlowOccurrenceAbsent,
       qConcentrationCommand == SlowSourceConcentrationUnchanged,
+      qTurn == SlowTurnUnrestricted,
     },
-    (qEvent == SlowProofDurationExpired) implies all {
+    qEvent.in(Set(
+      SlowProofDurationExpired,
+      SlowProofDurationExpiredAfterAction,
+      SlowProofDurationExpiredAfterBonusAction
+    )) implies all {
       qOccurrence == SlowOccurrenceAbsent,
       qConcentrationCommand == SlowSourceConcentrationEndRequired,
+      qTurn == SlowTurnUnrestricted,
     },
+    (qEvent == SlowProofConcentrationEndedAfterAction) implies
+      slowTurnCanSpendBonusAction(qTurn),
+    (qEvent == SlowProofConcentrationEndedAfterBonusAction) implies
+      slowTurnCanSpendAction(qTurn),
+    (qEvent == SlowProofDurationExpiredAfterAction) implies
+      slowTurnCanSpendBonusAction(qTurn),
+    (qEvent == SlowProofDurationExpiredAfterBonusAction) implies
+      slowTurnCanSpendAction(qTurn),
     match qMultiattack {
       | SlowStatBlockMultiattackReady => true
       | SlowStatBlockMultiattackActivated(active) => all {
@@ -565,7 +619,15 @@ module spellSlowActivePenaltiesInductive {
   val witnessPerTargetCleanup = qEvent == SlowProofRepeatSaveRemovedOneTarget
   val witnessLastTargetCleanup = qEvent == SlowProofRepeatSaveRemovedLastTarget
   val witnessConcentrationCleanup = qEvent == SlowProofConcentrationEnded
+  val witnessConcentrationCleanupAfterAction =
+    qEvent == SlowProofConcentrationEndedAfterAction
+  val witnessConcentrationCleanupAfterBonusAction =
+    qEvent == SlowProofConcentrationEndedAfterBonusAction
   val witnessDurationCleanup = qEvent == SlowProofDurationExpired
+  val witnessDurationCleanupAfterAction =
+    qEvent == SlowProofDurationExpiredAfterAction
+  val witnessDurationCleanupAfterBonusAction =
+    qEvent == SlowProofDurationExpiredAfterBonusAction
   val witnessSlowedMultiattack =
     qEvent == SlowProofActivatedMultiattackWhileSlowed
   val witnessUnslowedMultiattack =

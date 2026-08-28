@@ -279,7 +279,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/spell-slow-active-penalties-core.qnt"
       ],
-      "reason": "The identity-independent semantic core owns the admitted Slow occurrence from failed initial saves through active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties; the target-turn at-most-one Action-or-Bonus-Action restriction including prior-resource reconciliation; the Attack-action cap; effective-Somatic 25 percent failure and resource/effect consequences; per-target repeat saves; and exact-occurrence cleanup. It consumes typed concentration-ended and duration-expired signals without duplicating generic Concentration break reasons or scheduler state. The focused QNT-connected production replay observes every decisive branch, including two-target partial and last-target cleanup, concentration and duration cleanup, prior Action and Bonus Action reconciliation, and effective versus bypassed Somatic casting.",
+      "reason": "The identity-independent semantic core owns the admitted Slow occurrence from failed initial saves through active Speed, Armor Class, Dexterity Saving Throw, and Reaction penalties; the target-turn at-most-one Action-or-Bonus-Action restriction including prior-resource reconciliation; the Attack-action cap; effective-Somatic 25 percent failure and resource/effect consequences; per-target repeat saves; and exact-occurrence cleanup. It consumes typed concentration-ended and duration-expired signals without duplicating generic Concentration break reasons or scheduler state. Cleanup removes only the Slow-specific turn gate, while the canonical action economy preserves the independently spent Action or Bonus Action and exposes an unspent counterpart. Inductive witnesses cover both prior-resource variants for each cleanup signal; the focused QNT-connected production replay observes concentration cleanup after an Action and duration cleanup after a Bonus Action, alongside two-target partial and last-target cleanup, prior Action and Bonus Action reconciliation, and effective versus bypassed Somatic casting.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/battle-runtime/src/battle-state-execution.ts",
@@ -297,6 +297,7 @@
         "packages/battle-runtime/src/battle-reducer/movement-speed.ts",
         "packages/battle-runtime/src/battle-reducer/slow-active-penalties-effects.ts",
         "packages/battle-runtime/src/battle-reducer/slow-active-penalties-runtime.ts",
+        "packages/battle-runtime/src/battle-reducer/slow-active-penalties-turn-restriction.ts",
         "packages/battle-runtime/src/battle-reducer/spell-procedure-profiles/slow-active-penalties.ts",
         "packages/battle-runtime/src/battle-reducer/spell-turn-resources.ts",
         "packages/battle-runtime/src/battle-reducer/spells-damage-fills.ts",

@@ -171,6 +171,89 @@ module spellSlowActivePenaltiesExamples {
     }
   }
 
+  run test_cleanup_releases_only_the_slow_turn_restriction = {
+    val actionSpent = applySlowTurnAction(
+      beginSlowTargetTurn(exampleActiveSlow, 1),
+      SlowOtherAction
+    )
+    val bonusActionSpent = applySlowTurnBonusAction(
+      beginSlowTargetTurn(exampleActiveSlow, 1)
+    )
+    val concentrationEnded = applySlowOccurrenceCleanupSignal(
+      exampleActiveSlow,
+      SlowSourceConcentrationEnded({ source: exampleSlowSource })
+    )
+    val durationExpired = applySlowOccurrenceCleanupSignal(
+      exampleActiveSlow,
+      SlowDurationExpired({ source: exampleSlowSource })
+    )
+    val concentrationAfterAction =
+      reconcileSlowTargetTurnAfterOccurrenceTransition(
+        concentrationEnded.occurrence,
+        1,
+        actionSpent
+      )
+    val concentrationAfterBonusAction =
+      reconcileSlowTargetTurnAfterOccurrenceTransition(
+        concentrationEnded.occurrence,
+        1,
+        bonusActionSpent
+      )
+    val durationAfterAction =
+      reconcileSlowTargetTurnAfterOccurrenceTransition(
+        durationExpired.occurrence,
+        1,
+        actionSpent
+      )
+    val durationAfterBonusAction =
+      reconcileSlowTargetTurnAfterOccurrenceTransition(
+        durationExpired.occurrence,
+        1,
+        bonusActionSpent
+      )
+    all {
+      assert(concentrationAfterAction == SlowTurnUnrestricted),
+      assert(slowTurnCanSpendBonusAction(concentrationAfterAction)),
+      assert(concentrationAfterBonusAction == SlowTurnUnrestricted),
+      assert(slowTurnCanSpendAction(concentrationAfterBonusAction)),
+      assert(durationAfterAction == SlowTurnUnrestricted),
+      assert(slowTurnCanSpendBonusAction(durationAfterAction)),
+      assert(durationAfterBonusAction == SlowTurnUnrestricted),
+      assert(slowTurnCanSpendAction(durationAfterBonusAction)),
+    }
+  }
+
+  // A successful repeat save is resolved at End Turn. Reconciliation still
+  // removes the ended Slow restriction, but this example makes no claim that
+  // the target can spend another resource after its turn has ended.
+  run test_last_target_repeat_save_reconciles_the_ended_restriction = {
+    val oneTargetSlow = applySlowInitialFailedSaves(
+      initialSlowOccurrenceState,
+      exampleSlowSource,
+      Set(1)
+    ).occurrence
+    val actionSpent = applySlowTurnAction(
+      beginSlowTargetTurn(oneTargetSlow, 1),
+      SlowOtherAction
+    )
+    val request = requestSlowRepeatSave(oneTargetSlow, 1)
+    val saved = applySlowRepeatSaveOutcome(
+      oneTargetSlow,
+      request,
+      SlowSaveSucceeded
+    )
+    val reconciled = reconcileSlowTargetTurnAfterOccurrenceTransition(
+      saved.occurrence,
+      1,
+      actionSpent
+    )
+    all {
+      assert(saved.occurrence == SlowOccurrenceAbsent),
+      assert(saved.concentrationCommand == SlowSourceConcentrationEndRequired),
+      assert(reconciled == SlowTurnUnrestricted),
+    }
+  }
+
   run test_slow_derives_one_source_bound_listed_multiattack_dispatch = {
     val binding = { sourceOwnerRef: 1, multiattackProcedureExecutionRef: 4 }
     val otherBinding = { sourceOwnerRef: 1, multiattackProcedureExecutionRef: 5 }

@@ -134,6 +134,8 @@ export type ActionOrBonusActionExclusion =
   | { readonly kind: "notRestricted" }
   | {
       readonly kind: "restricted";
+      // Records only the exclusion branch chosen while the gate is active.
+      // Generic Action and Bonus Action resources retain their own spend state.
       readonly choice: ActionOrBonusActionExclusionChoice;
     };
 export type MovementActionBonusActionExclusionChoice =
@@ -419,8 +421,6 @@ function markActionSpentForActionOrBonusActionExclusion<
     ? state
     : {
         ...state,
-        actionResources: [],
-        currentHasBonusAction: false,
         actionOrBonusActionExclusion: {
           kind: "restricted",
           choice: "action",
@@ -435,8 +435,6 @@ function markBonusActionSpentForActionOrBonusActionExclusion<
     ? state
     : {
         ...state,
-        actionResources: [],
-        currentHasBonusAction: false,
         actionOrBonusActionExclusion: {
           kind: "restricted",
           choice: "bonusAction",
@@ -528,6 +526,17 @@ export function enableActionOrBonusActionExclusion<
       choice: "notChosen",
     },
   };
+}
+
+export function disableActionOrBonusActionExclusion<
+  T extends ActionEconomyState,
+>(state: T): T {
+  return state.actionOrBonusActionExclusion.kind === "notRestricted"
+    ? state
+    : {
+        ...state,
+        actionOrBonusActionExclusion: { kind: "notRestricted" },
+      };
 }
 
 export function enableMovementActionBonusActionExclusion<
