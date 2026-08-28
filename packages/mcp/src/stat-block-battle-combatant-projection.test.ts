@@ -103,12 +103,13 @@ describe("MCP Stat Block battle combatant projection", () => {
       baseRoot.statBlockCatalog,
       statBlockId("stat_block_goblin_warrior"),
     );
+    const { swarm: _swarm, ...nonSwarmStatBlock } = base.statBlock;
     const invalid = {
       ...base,
       id: statBlockId("stat_block_synthetic_mcp_scalar_projection_failure"),
       name: "Synthetic MCP Scalar Projection Failure",
       statBlock: {
-        ...base.statBlock,
+        ...nonSwarmStatBlock,
         size: { kind: "alternatives", options: ["small", "medium"] },
       },
     } satisfies StatBlockRecord;

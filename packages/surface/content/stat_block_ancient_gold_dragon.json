@@ -1,0 +1,371 @@
+{
+  "challengeRating": 24,
+  "id": "stat_block_ancient_gold_dragon",
+  "kind": "statBlock",
+  "name": "Ancient Gold Dragon",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:913-961"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 28,
+      "con": 29,
+      "dex": 14,
+      "int": 18,
+      "str": 30,
+      "wis": 17
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 22
+      }
+    },
+    "actions": [
+      {
+        "description": "The dragon makes three Rend attacks. It can replace one attack with a use of (A) Spellcasting to cast Guiding Bolt (level 4 version) or (B) Weakening Breath.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 17
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8,
+                  "flat": 10
+                },
+                "kind": "fixed",
+                "static": 19
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "fire",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 15
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "cone",
+            "lengthFeet": 90
+          },
+          "dc": {
+            "dc": 24,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Fire Breath (Recharge 5–6)",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 13,
+                "dieSize": 10
+              },
+              "kind": "fixed",
+              "static": 71
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "cha",
+          "components": {
+            "m": false,
+            "s": true,
+            "v": true
+          },
+          "groups": [
+            {
+              "kind": "at_will",
+              "resourceRefs": {
+                "kind": "none"
+              },
+              "spells": [
+                {
+                  "spellId": "detect_magic"
+                },
+                {
+                  "castAtLevel": 4,
+                  "spellId": "guiding_bolt"
+                },
+                {
+                  "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                  "spellId": "shapechange"
+                }
+              ]
+            },
+            {
+              "kind": "limited",
+              "resourceRefs": {
+                "kind": "some",
+                "ordinals": [
+                  2
+                ]
+              },
+              "spells": [
+                {
+                  "castAtLevel": 6,
+                  "spellId": "flame_strike"
+                },
+                {
+                  "spellId": "word_of_recall"
+                },
+                {
+                  "spellId": "zone_of_truth"
+                }
+              ]
+            }
+          ],
+          "kind": "spellcasting",
+          "name": "Spellcasting",
+          "spellAttackBonus": {
+            "kind": "literal",
+            "value": 16
+          },
+          "spellSaveDc": {
+            "dc": 24,
+            "kind": "fixed"
+          }
+        },
+        "procedureOrdinal": 4,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Strength Saving Throw: DC 24, each creature that isn't currently affected by this breath in a 90-foot Cone. Failure: The target has Disadvantage on Strength-based D20 Tests and subtracts 5 (1d10) from its damage rolls. It repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",
+        "kind": "textOnly",
+        "name": "Weakening Breath",
+        "procedureOrdinal": 5,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common",
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "metallic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 546
+    },
+    "immunities": {
+      "damageTypes": [
+        "fire"
+      ]
+    },
+    "initiative": {
+      "modifier": 16,
+      "score": 26
+    },
+    "legendaryActions": {
+      "entries": [
+        {
+          "description": "Charisma Saving Throw: DC 24, one creature the dragon can see within 120 feet. Failure: 24 (7d6) Force damage, and the target has the Incapacitated condition and is transported to a harmless demiplane until the start of the dragon's next turn, at which point it reappears in an unoccupied space of the dragon's choice within 120 feet of the dragon. Failure or Success: The dragon can't take this action again until the start of its next turn.",
+          "kind": "textOnly",
+          "name": "Banish",
+          "procedureOrdinal": 1,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon uses Spellcasting to cast Guiding Bolt (level 4 version).",
+          "kind": "textOnly",
+          "name": "Guiding Light",
+          "procedureOrdinal": 2,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        },
+        {
+          "description": "The dragon moves up to half its Speed, and it makes one Rend attack.",
+          "kind": "textOnly",
+          "name": "Pounce",
+          "procedureOrdinal": 3,
+          "reason": "unsupported_action_shape",
+          "resourceRefs": {
+            "kind": "none"
+          }
+        }
+      ],
+      "uses": {
+        "additionalUsesInLair": 1,
+        "kind": "lair_bonus",
+        "usesOutsideLair": 3
+      }
+    },
+    "passivePerception": 27,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      },
+      {
+        "limit": {
+          "kind": "daily",
+          "uses": 1
+        },
+        "ordinal": 2,
+        "ownership": "each"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 10
+      },
+      {
+        "ability": "dex",
+        "modifier": 9
+      },
+      {
+        "ability": "con",
+        "modifier": 9
+      },
+      {
+        "ability": "wis",
+        "modifier": 10
+      },
+      {
+        "ability": "cha",
+        "modifier": 9
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 60
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 120
+      }
+    ],
+    "size": "gargantuan",
+    "skillModifiers": [
+      {
+        "modifier": 10,
+        "skill": "insight"
+      },
+      {
+        "modifier": 17,
+        "skill": "perception"
+      },
+      {
+        "modifier": 16,
+        "skill": "persuasion"
+      },
+      {
+        "modifier": 9,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 80
+        },
+        "kind": "fly"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The dragon can breathe air and water.",
+        "name": "Amphibious"
+      },
+      {
+        "description": "If the dragon fails a saving throw, it can choose to succeed instead.",
+        "name": "Legendary Resistance (4/Day, or 5/Day in Lair)"
+      }
+    ]
+  }
+}

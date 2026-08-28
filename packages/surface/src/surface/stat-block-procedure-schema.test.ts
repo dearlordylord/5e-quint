@@ -151,6 +151,24 @@ const syntheticStandaloneStatBlock = {
 } as const;
 
 describe("standalone Stat Block procedure sections", () => {
+  test("keeps spellcasting resources on groups while non-spell procedures may own refs", () => {
+    const spellcastingEntry = syntheticStandaloneStatBlock.actions[3];
+    expect(decode(StatBlockProcedureEntrySchema, spellcastingEntry)).toEqual(
+      spellcastingEntry,
+    );
+    expect(() =>
+      decode(StatBlockProcedureEntrySchema, {
+        ...spellcastingEntry,
+        resourceRefs: { kind: "some", ordinals: [2] },
+      }),
+    ).toThrow();
+
+    const attackEntry = syntheticStandaloneStatBlock.actions[1];
+    expect(decode(StatBlockProcedureEntrySchema, attackEntry)).toEqual(
+      attackEntry,
+    );
+  });
+
   test("models fixed and additive in-lair Legendary Action uses without correlated totals", () => {
     const fixed = { kind: "fixed", uses: 3 } as const;
     const lairBonus = {

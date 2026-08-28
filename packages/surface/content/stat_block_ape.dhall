@@ -48,7 +48,7 @@ in  { challengeRating = 0.5
         , S.resourceExecutable
             { procedureOrdinal = 3
             , procedure =
-                S.rangedAttack
+                S.NonSpellProcedure.rangedAttack
                   { name = "Rock"
                   , attackAbility = "str"
                   , attackBonus = +5
@@ -65,7 +65,7 @@ in  { challengeRating = 0.5
                           }
                     , rest = [] : List S.Effect
                     }
-                  }
+                }
             , resourceOrdinals = { first = 1, rest = [] : List Natural }
             }
         ]

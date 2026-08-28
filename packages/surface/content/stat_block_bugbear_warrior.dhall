@@ -16,7 +16,7 @@ in  { challengeRating = 1
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Common", "Goblin" ] } }
         , creatureType = "fey"
         , creatureTypeTags = [ "goblinoid" ]
-        , gear = [ { item = "Hide Armor", quantity = None Natural }, { item = "Light Hammers", quantity = Some 3 } ]
+        , gear = [ { item = "Hide Armor", quantity = None Natural }, { item = "Light Hammer", quantity = Some 3 } ]
         , hp = { kind = "literal", value = 33 }
         , initiative = { modifier = +2, score = 12 }
         , passivePerception = 10

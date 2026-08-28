@@ -180,10 +180,7 @@
         },
         "procedureOrdinal": 4,
         "resourceRefs": {
-          "kind": "some",
-          "ordinals": [
-            2
-          ]
+          "kind": "none"
         }
       }
     ],

@@ -10,7 +10,7 @@ in { challengeRating = 2
   , ac.value = { kind = "literal", value = 14 }
   , actions =
     [ T.textOnly { procedureOrdinal = 1, name = "Bite", description = "Melee Attack Roll: +5 (with Advantage if the target is Grappled by the ankheg), reach 5 ft. Hit: 10 (2d6 + 3) Slashing damage plus 3 (1d6) Acid damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13).", reason = "unsupported_action_shape" }
-    , T.resourceExecutable { procedureOrdinal = 2, procedure = T.saveArea { name = "Acid Spray", ability = "dex", dc = 12, area = T.line { lengthFeet = 30, widthFeet = 5 }, onFail = T.damage { damageType = "acid", dice = 4, dieSize = 6, flat = None Integer, static = 14 }, onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
+    , T.resourceExecutable { procedureOrdinal = 2, procedure = T.NonSpellProcedure.saveArea { name = "Acid Spray", ability = "dex", dc = 12, area = T.line { lengthFeet = 30, widthFeet = 5 }, onFail = T.damage { damageType = "acid", dice = 4, dieSize = 6, flat = None Integer, static = 14 }, onSuccess = { kind = "half_damage" } }, resourceOrdinals = { first = 1, rest = [] : List Natural } }
     ]
   , traits =
     [ T.trait { name = "Tunneler", description = "The ankheg can burrow through solid rock at half its Burrow Speed and leaves a 10-foot-diameter tunnel in its wake.", effectKind = None Text }
@@ -41,7 +41,7 @@ in { challengeRating = 2
   , resources =
     [ { limit = { kind = "recharge", minimumRoll = 6 }
       , ordinal = 1
-      , ownership = "each"
+      , ownership = "shared"
       }
     ]
   }

@@ -63,7 +63,7 @@ in { challengeRating = 5
   , resources =
     [ { limit = { kind = "recharge", minimumRoll = 4 }
       , ordinal = 1
-      , ownership = "each"
+      , ownership = "shared"
       }
     ]
   }

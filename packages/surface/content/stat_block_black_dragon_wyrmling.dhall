@@ -8,9 +8,9 @@ in  { challengeRating = 2
         { abilityScores = { str = 15, dex = 14, con = 13, int = 10, wis = 11, cha = 13 }
         , ac = { value = { kind = "literal", value = 17 } }
         , actions =
-            [ T.executable { procedureOrdinal = 1, procedure = (T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 }, rest = [  ] : List T.Dispatch } }) }
-            , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +4, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 6, flat = (Some +2), static = 5 }, rest = [ T.damage { damageType = "acid", dice = 1, dieSize = 4, flat = (None Integer), static = 2 } ] : List T.Effect } }) }
-            , T.resourceExecutable { procedureOrdinal = 3, procedure = (T.saveArea { name = "Acid Breath", ability = "dex", dc = 11, area = (T.line { lengthFeet = 20, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 5, dieSize = 8, flat = (None Integer), static = 22 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
+            [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The dragon makes two Rend attacks.", reason = "unsupported_action_shape" }
+            , T.textOnly { procedureOrdinal = 2, name = "Rend", description = "Melee Attack Roll: +4, reach 5 ft. Hit: 5 (1d6 + 2) Slashing damage plus 2 (1d4) Acid damage.", reason = "unsupported_action_shape" }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea ({ name = "Acid Breath", ability = "dex", dc = 11, area = (T.line { lengthFeet = 20, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 5, dieSize = 8, flat = (None Integer), static = 22 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
             ]
         , traits = [ T.trait { name = "Amphibious", description = "The dragon can breathe air and water.", effectKind = None Text } ]
         , alignment = { order = "chaotic", morality = "evil" }

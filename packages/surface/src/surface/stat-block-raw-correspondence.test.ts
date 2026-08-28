@@ -169,8 +169,7 @@ const sizeCondition = (
 
 const executable = (
   procedureOrdinal: number,
-  procedure: EncodedProcedure,
-  refs: EncodedResourceRefs = noResourceRefs,
+  procedure: Exclude<EncodedProcedure, { readonly kind: "spellcasting" }>,
 ): Extract<
   Schema.Schema.Type<typeof StatBlockProcedureEntrySchema>,
   { readonly kind: "executable" }
@@ -179,7 +178,7 @@ const executable = (
     kind: "executable",
     procedureOrdinal,
     procedure,
-    resourceRefs: refs,
+    resourceRefs: noResourceRefs,
   });
   if (entry.kind === "executable") return entry;
   throw new Error("The executable correspondence entry decoded as textOnly.");
