@@ -3,7 +3,23 @@
     "plans/rules-kernel-coverage/obligations.jsonl",
     "plans/rules-kernel-coverage/qnt-owner-roles.jsonl"
   ],
-  "sourceHead": "62961f94f8b8389534fd42eb6c7809a6a0161f02",
+  "provenance": {
+    "registryCommit": "62961f94f8b8389534fd42eb6c7809a6a0161f02",
+    "generator": {
+      "path": "scripts/gh381-registry-path-manifest.cjs",
+      "sha256": "d48ee1ce403362f49f7f03c55f0be276dd5337740cea5f3512367c167d3ad9d5"
+    },
+    "inputs": [
+      {
+        "path": "plans/rules-kernel-coverage/obligations.jsonl",
+        "sha256": "80aecae1829a4952267faa97605998b0ae2103f16e902cdb199f7819ae828732"
+      },
+      {
+        "path": "plans/rules-kernel-coverage/qnt-owner-roles.jsonl",
+        "sha256": "57afb27331e9739b4941011c6fc2a0d08beda1336fd2682cf09787b2c5ca1f40"
+      }
+    ]
+  },
   "issue": 381,
   "selectionRule": "All BATTLE.SPELL active-effect-lifecycle and reaction-continuation obligations, plus the explicit granted-action, suppression, reaction/interruption, concentration-teardown, and turn-boundary cross-boundary rows listed in crossBoundaryIds.",
   "crossBoundaryIds": [

@@ -1,13 +1,14 @@
 #!/usr/bin/env node
 
-const assert = require("node:assert/strict");
 const childProcess = require("node:child_process");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 
 const root = process.cwd();
 const obligationsPath = "plans/rules-kernel-coverage/obligations.jsonl";
 const rolesPath = "plans/rules-kernel-coverage/qnt-owner-roles.jsonl";
+const generatorPath = "scripts/gh381-registry-path-manifest.cjs";
 const outputPath = "docs/migrations/effect-4/gh381-registry-path-manifest.json";
 
 const crossBoundaryIds = [
@@ -93,12 +94,103 @@ const relatedButNotSelectedObligations = [
   },
 ];
 
-function readJsonl(repoPath) {
+function readJsonl(rootPath, repoPath) {
   return fs
-    .readFileSync(path.join(root, repoPath), "utf8")
+    .readFileSync(path.join(rootPath, repoPath), "utf8")
     .split("\n")
     .filter((line) => line.trim() !== "")
     .map((line) => JSON.parse(line));
+}
+
+function normalizeRepositoryPath(rootPath, candidate, label) {
+  if (typeof candidate !== "string" || candidate.trim() === "") {
+    throw new Error(`${label} must be a nonempty repository-relative path.`);
+  }
+  if (candidate.startsWith("-")) {
+    throw new Error(`${label} must not be option-like: ${candidate}`);
+  }
+  if (path.posix.isAbsolute(candidate) || path.win32.isAbsolute(candidate)) {
+    throw new Error(`${label} must be repository-relative: ${candidate}`);
+  }
+  const slashPath = candidate.replaceAll("\\", "/");
+  if (slashPath.split("/").includes("..")) {
+    throw new Error(`${label} must not contain parent traversal: ${candidate}`);
+  }
+  const normalized = path.posix.normalize(slashPath);
+  if (normalized === "." || normalized.startsWith("../")) {
+    throw new Error(`${label} must name a file below the repository root.`);
+  }
+  const canonicalRoot = fs.realpathSync(rootPath);
+  const absolute = path.resolve(canonicalRoot, normalized);
+  const relative = path.relative(canonicalRoot, absolute);
+  if (
+    relative === "" ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(
+      `${label} resolves outside the repository root: ${candidate}`,
+    );
+  }
+  if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) {
+    throw new Error(
+      `${label} must resolve to an existing regular file: ${normalized}`,
+    );
+  }
+  const canonicalFile = fs.realpathSync(absolute);
+  const canonicalRelative = path.relative(canonicalRoot, canonicalFile);
+  if (
+    canonicalRelative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(canonicalRelative)
+  ) {
+    throw new Error(
+      `${label} resolves through a link outside the repository root.`,
+    );
+  }
+  return normalized;
+}
+
+function sha256File(rootPath, repoPath) {
+  return crypto
+    .createHash("sha256")
+    .update(fs.readFileSync(path.join(rootPath, repoPath)))
+    .digest("hex");
+}
+
+function normalizeProvenance(rootPath, provenance) {
+  if (!/^[0-9a-f]{40}(?:[0-9a-f]{24})?$/.test(provenance.registryCommit)) {
+    throw new Error("provenance.registryCommit must be a Git object id.");
+  }
+  const normalizeHashedPath = (entry, label) => {
+    const repoPath = normalizeRepositoryPath(rootPath, entry.path, label);
+    if (!/^[0-9a-f]{64}$/.test(entry.sha256)) {
+      throw new Error(`${label} must include a lowercase SHA-256 digest.`);
+    }
+    const actual = sha256File(rootPath, repoPath);
+    if (entry.sha256 !== actual) {
+      throw new Error(`${label} SHA-256 does not match ${repoPath}.`);
+    }
+    return { path: repoPath, sha256: entry.sha256 };
+  };
+  const generator = normalizeHashedPath(
+    provenance.generator,
+    "generator provenance",
+  );
+  if (generator.path !== generatorPath) {
+    throw new Error(`generator provenance must identify ${generatorPath}.`);
+  }
+  const inputs = provenance.inputs.map((entry) =>
+    normalizeHashedPath(entry, "registry input provenance"),
+  );
+  if (
+    JSON.stringify(inputs.map((entry) => entry.path)) !==
+    JSON.stringify([obligationsPath, rolesPath])
+  ) {
+    throw new Error(
+      "registry input provenance must identify obligations.jsonl and qnt-owner-roles.jsonl in canonical order.",
+    );
+  }
+  return { registryCommit: provenance.registryCommit, generator, inputs };
 }
 
 function uniqueSorted(values) {
@@ -127,29 +219,51 @@ function requireKnownIds(obligations, ids, label) {
   }
 }
 
-function registryHead() {
+function registryCommit(rootPath) {
   const registryPaths = [obligationsPath, rolesPath];
   const hasRegistryDiff = (args) =>
     childProcess.spawnSync("git", [...args, "--", ...registryPaths], {
-      cwd: root,
+      cwd: rootPath,
     }).status !== 0;
   if (
     hasRegistryDiff(["diff", "--quiet"]) ||
     hasRegistryDiff(["diff", "--cached", "--quiet"])
   ) {
     throw new Error(
-      "Commit authored rules-kernel registry changes before generating the #381 manifest sourceHead.",
+      "Commit authored rules-kernel registry changes before generating #381 registry provenance.",
     );
   }
   return childProcess
     .execFileSync("git", ["log", "-1", "--format=%H", "--", ...registryPaths], {
-      cwd: root,
+      cwd: rootPath,
       encoding: "utf8",
     })
     .trim();
 }
 
-function buildManifest({ obligations, roles, sourceHead }) {
+function buildProvenance(rootPath) {
+  const inputPaths = [obligationsPath, rolesPath].map((repoPath) =>
+    normalizeRepositoryPath(rootPath, repoPath, "provenance input"),
+  );
+  const normalizedGeneratorPath = normalizeRepositoryPath(
+    rootPath,
+    generatorPath,
+    "generator provenance path",
+  );
+  return {
+    registryCommit: registryCommit(rootPath),
+    generator: {
+      path: normalizedGeneratorPath,
+      sha256: sha256File(rootPath, normalizedGeneratorPath),
+    },
+    inputs: inputPaths.map((repoPath) => ({
+      path: repoPath,
+      sha256: sha256File(rootPath, repoPath),
+    })),
+  };
+}
+
+function buildManifest({ obligations, provenance, roles, rootPath }) {
   requireKnownIds(obligations, crossBoundaryIds, "crossBoundaryIds");
   requireKnownIds(
     obligations,
@@ -163,7 +277,33 @@ function buildManifest({ obligations, roles, sourceHead }) {
     "relatedButNotSelectedObligations",
   );
 
-  const selected = selectedObligations(obligations);
+  const normalizePath = (candidate, label) =>
+    normalizeRepositoryPath(rootPath, candidate, label);
+  const normalizedProvenance = normalizeProvenance(rootPath, provenance);
+  const selected = selectedObligations(obligations).map((row) => ({
+    ...row,
+    qntOwners: (row.qntOwners ?? []).map((ownerPath) =>
+      normalizePath(ownerPath, `${row.id} qntOwner`),
+    ),
+    runtimeOwners: (row.runtimeOwners ?? []).map((ownerPath) =>
+      normalizePath(ownerPath, `${row.id} runtimeOwner`),
+    ),
+    parityWitnesses: (row.parityWitnesses ?? []).map((witness) => ({
+      ...witness,
+      ownerPath: normalizePath(
+        witness.ownerPath,
+        `${row.id} parity witness owner`,
+      ),
+      ...(witness.qntSpecPath === undefined
+        ? {}
+        : {
+            qntSpecPath: normalizePath(
+              witness.qntSpecPath,
+              `${row.id} parity witness QNT spec`,
+            ),
+          }),
+    })),
+  }));
   const selectedIds = selected.map((row) => row.id);
   const activeEffects = selected
     .filter((row) => row.kind === "active-effect-lifecycle")
@@ -172,7 +312,14 @@ function buildManifest({ obligations, roles, sourceHead }) {
     const wanted = new Set(ids);
     return selectedIds.filter((id) => wanted.has(id));
   };
-  const qntRoleByPath = new Map(roles.map((row) => [row.ownerPath, row.role]));
+  const qntRoleByPath = new Map();
+  for (const row of roles) {
+    const ownerPath = normalizePath(row.ownerPath, "QNT owner role path");
+    if (qntRoleByPath.has(ownerPath)) {
+      throw new Error(`Duplicate QNT owner role path: ${ownerPath}.`);
+    }
+    qntRoleByPath.set(ownerPath, row.role);
+  }
   const qntOwnerPaths = uniqueSorted(
     selected.flatMap((row) => row.qntOwners ?? []),
   );
@@ -237,8 +384,10 @@ function buildManifest({ obligations, roles, sourceHead }) {
   ]);
 
   return {
-    generatedFrom: [obligationsPath, rolesPath],
-    sourceHead,
+    generatedFrom: [obligationsPath, rolesPath].map((repoPath) =>
+      normalizePath(repoPath, "generatedFrom path"),
+    ),
+    provenance: normalizedProvenance,
     issue: 381,
     selectionRule:
       "All BATTLE.SPELL active-effect-lifecycle and reaction-continuation obligations, plus the explicit granted-action, suppression, reaction/interruption, concentration-teardown, and turn-boundary cross-boundary rows listed in crossBoundaryIds.",
@@ -295,16 +444,22 @@ function buildManifest({ obligations, roles, sourceHead }) {
     deferredScriptPaths: [
       "scripts/raw-swarm/sdk-player/scenario-session.ts",
       "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts",
-    ],
+    ].map((repoPath) => normalizePath(repoPath, "deferred script path")),
     deferredLaterIssuePaths: [
       {
-        path: "scripts/raw-swarm/sdk-player/scenario-session.ts",
+        path: normalizePath(
+          "scripts/raw-swarm/sdk-player/scenario-session.ts",
+          "deferred later-issue path",
+        ),
         issue: 385,
         reason:
           "Raw Swarm/SDK-player Effect migration owns this direct-SDK call chain.",
       },
       {
-        path: "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts",
+        path: normalizePath(
+          "scripts/raw-swarm/sdk-player/scenario-setup-runtime.test.ts",
+          "deferred later-issue path",
+        ),
         issue: 385,
         reason:
           "Downstream script consumer evidence is migrated with the scenario-session call chain.",
@@ -333,57 +488,56 @@ function buildManifest({ obligations, roles, sourceHead }) {
   };
 }
 
-function selfTest() {
-  const sample = [
-    {
-      id: "BATTLE.SPELL.SAMPLE",
-      kind: "active-effect-lifecycle",
-      runtimeOwners: ["sample.ts"],
-      qntOwners: ["sample.qnt"],
-      parityWitnesses: [
-        {
-          ownerPath: "sample.test.ts",
-          qntSpecPath: "sample.mbt.qnt",
-        },
-      ],
-    },
-    { id: crossBoundaryIds[0], kind: "state-transition" },
-  ];
-  assert.deepEqual(
-    selectedObligations(sample).map((row) => row.id),
-    ["BATTLE.SPELL.SAMPLE", crossBoundaryIds[0]],
-  );
-  assert.deepEqual(uniqueSorted(["b", "a", "b"]), ["a", "b"]);
-  console.log("#381 registry path manifest self-test OK.");
+function synchronizeManifest({ output, rendered, write }) {
+  if (write) {
+    fs.writeFileSync(output, rendered);
+    return "written";
+  }
+  return fs.existsSync(output) && fs.readFileSync(output, "utf8") === rendered
+    ? "current"
+    : "stale";
 }
 
-if (process.argv.includes("--self-test")) {
-  selfTest();
-  process.exit(0);
+function main() {
+  const provenance = buildProvenance(root);
+  const manifest = buildManifest({
+    obligations: readJsonl(root, obligationsPath),
+    provenance,
+    roles: readJsonl(root, rolesPath),
+    rootPath: root,
+  });
+  const rendered = `${JSON.stringify(manifest, null, 2)}\n`;
+  const status = synchronizeManifest({
+    output: path.join(root, outputPath),
+    rendered,
+    write: process.argv.includes("--write"),
+  });
+  if (status === "written") {
+    console.log(`Wrote ${outputPath}.`);
+  } else if (status === "stale") {
+    console.error(
+      `${outputPath} is stale. Run pnpm gh381-registry-path-manifest:write.`,
+    );
+    process.exitCode = 1;
+  } else {
+    console.log(
+      `#381 registry path manifest OK: ${manifest.obligationIds.length} obligations.`,
+    );
+  }
 }
 
-const manifest = buildManifest({
-  obligations: readJsonl(obligationsPath),
-  roles: readJsonl(rolesPath),
-  sourceHead: registryHead(),
-});
-const rendered = `${JSON.stringify(manifest, null, 2)}\n`;
-const output = path.join(root, outputPath);
-if (process.argv.includes("--write")) {
-  fs.writeFileSync(output, rendered);
-  console.log(`Wrote ${outputPath}.`);
-} else if (
-  !fs.existsSync(output) ||
-  fs.readFileSync(output, "utf8") !== rendered
-) {
-  console.error(
-    `${outputPath} is stale. Run pnpm gh381-registry-path-manifest:write.`,
-  );
-  process.exitCode = 1;
-} else {
-  console.log(
-    `#381 registry path manifest OK: ${manifest.obligationIds.length} obligations.`,
-  );
-}
+if (require.main === module) main();
 
-module.exports = { buildManifest, selectedObligations, uniqueSorted };
+module.exports = {
+  buildManifest,
+  buildProvenance,
+  crossBoundaryIds,
+  directMigratedAdapterIds,
+  normalizeRepositoryPath,
+  relatedButNotSelectedObligations,
+  registryCommit,
+  selectedObligations,
+  spatialHazardIds,
+  synchronizeManifest,
+  uniqueSorted,
+};

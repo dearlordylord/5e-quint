@@ -17063,8 +17063,8 @@
       "taskId": "L19E-03-L5-ACTIVE-AREA-HAZARD"
     },
     {
-      "claimKind": "accepted-follow-up-split",
-      "note": "Cloudkill profile and rules-kernel vocabulary are registered for the in-progress active area hazard owner, but this is not completed runtime parity and does not close the Cloudkill strict support blocker. Promotion still requires focused runtime tests, unit evidence rows, a supported or subset-supported unit claim, and rules-kernel parity evidence for cast admission, active cloud lifecycle, Heavily Obscured projection, table-triggered Constitution save-for-half Poison damage, once-per-turn ledger, strong-wind cleanup, and explicit table/spatial boundaries for cloud movement, terrain descent, wind derivation, and area membership.",
+      "claimKind": "completed-runtime-parity",
+      "note": "Focused Cloudkill runtime tests and connected MBT now cover cast admission, active cloud lifecycle, Heavily Obscured projection, Constitution save-for-half Poison damage, the shared once-per-turn trigger ledger, the fixed 10-foot source-start movement transaction, strong-wind cleanup, and Concentration/duration cleanup. Table/spatial owners retain automatic geometry, the cloud destination and direction away from the caster, terrain descent, affected-creature membership and resolution order, and wind-predicate derivation.",
       "profileIds": [
         "spell.invocation-cloudkill-area-hazard"
       ],

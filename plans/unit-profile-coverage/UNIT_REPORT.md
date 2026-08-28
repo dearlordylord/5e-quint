@@ -1805,7 +1805,7 @@ These profile-subset rows have no selected-identity replay witness, but the decl
 | L19D-02-BRUTAL-STRIKE-FORCEFUL-BLOW | completed-runtime-parity | `unit-feature.brutal-strike` |
 | L19D-03-BRUTAL-STRIKE-HAMSTRING | completed-runtime-parity | `unit-feature.brutal-strike` |
 | L19E-03-L5-ACTIVE-AREA-HAZARD | completed-runtime-parity | `spell.invocation-insect-plague-area-hazard` |
-| L19E-03-L5-ACTIVE-AREA-HAZARD | accepted-follow-up-split | `spell.invocation-cloudkill-area-hazard` |
+| L19E-03-L5-ACTIVE-AREA-HAZARD | completed-runtime-parity | `spell.invocation-cloudkill-area-hazard` |
 | L19D-06-PALADIN-ABJURE-FOES | completed-runtime-parity | `unit-feature.magic-action-save-gated-condition` |
 | SRDINV68A | completed-runtime-parity | `spell.invocation-sleep-repeat-save-lifecycle` |
 | SRDINV68B | completed-runtime-parity | `spell.invocation-sleep-repeat-save-lifecycle` |
