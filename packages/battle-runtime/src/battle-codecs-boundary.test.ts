@@ -46,7 +46,10 @@ import {
   battleAreaId,
   battleLineDirectionId,
   battleObjectId,
+  battleSpellEffectOccurrenceId,
+  battleTablePositionId,
 } from "./identity.ts";
+import { parseBattleSpellEffectLevel } from "./procedure-execution/spell-effect-level.ts";
 
 type EncodedHole = Schema.Codec.Encoded<typeof BattleHoleSchema>;
 type EncodedSnapshot = Schema.Codec.Encoded<typeof BattleSnapshotSchema>;
@@ -174,6 +177,10 @@ function expectSnapshotDecodeLeft(snapshot: EncodedSnapshot): void {
 }
 
 function codecFixture() {
+  const glyphSpellLevel = parseBattleSpellEffectLevel(3);
+  if (glyphSpellLevel === null) {
+    throw new Error("Expected the codec Glyph spell level to be valid.");
+  }
   const session = startBattleSessionRight({
     battleId: battleId("battle-codec-boundary"),
     combatants: [
@@ -256,6 +263,146 @@ function codecFixture() {
             damageType: "cold",
           },
           expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "spellTurnStartDamageAndSave",
+          source: "turnBoundaryEffectLifecycle",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+          save: {
+            ability: "wis",
+            dc: { kind: "caster_spell_save_dc" },
+            successEnds: "spell",
+          },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "hideousLaughter",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          conditionHadNonSpellProneSource: false,
+          conditionHadNonSpellIncapacitatedSource: false,
+          repeatSaveRollMode: null,
+          save: { ability: "wis", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "greaseGroundHazard",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-grease"),
+          heightenedSpellTargetDisadvantage: null,
+          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+          expiresAt: {
+            kind: "duration",
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "sleetStormAreaHazard",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-sleet-storm"),
+          radiusFeet: movementFeet(40),
+          heightFeet: movementFeet(20),
+          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+          savedThisTurn: [],
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "glyphDurableOccurrence",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          sourceEffectId: battleSpellEffectOccurrenceId("effect:codec-glyph"),
+          sourceSpellLevel: glyphSpellLevel,
+          release: { kind: "explosiveRune", damageType: "cold" },
+          anchor: {
+            kind: "surface",
+            areaId: battleAreaId("area:codec-glyph-anchor"),
+          },
+          coveredAreaId: battleAreaId("area:codec-glyph-covered"),
+          castLocationId: battleTablePositionId("position:codec-glyph"),
+          maxCoveredDiameterFeet: movementFeet(10),
+          notice: {
+            ability: "wis",
+            skill: "perception",
+            dc: { kind: "caster_spell_save_dc" },
+            owner: "table_witnessed_glyph_notice",
+          },
+          trigger: {
+            occurrence: "table_witnessed_trigger_occurrence",
+            activationFilter: "creature_type",
+            nonTriggerExclusion: "password_or_other_condition",
+            onTriggered: "spell_ends",
+          },
+          movementInvalidation: {
+            movedSubject: "inscribed_surface_or_object",
+            distanceFrom: "cast_location",
+            moreThanFeet: movementFeet(10),
+            outcome: "glyph_breaks_spell_ends_without_triggering",
+          },
+          expiresAt: { kind: "untilDispelled" },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: wizardId,
+        effect: {
+          kind: "flamingSphere",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          areaId: battleAreaId("area:codec-flaming-sphere"),
+          save: { ability: "dex", dc: { kind: "caster_spell_save_dc" } },
+          damage: { expr: { dice: 2, dieSize: 6 }, damageType: "fire" },
+          ramMaxMoveFeet: movementFeet(30),
+          expiresAt: {
+            kind: "concentration",
+            combatantId: wizardId,
+            durationTicks: elapsedTimeTicks(10),
+          },
+        },
+      },
+      {
+        kind: "activeEffect",
+        ownerId: skeletonId,
+        effect: {
+          kind: "spellTurnEndDamage",
+          sourceProcedureRef: source.procedureRef,
+          sourceCombatantId: wizardId,
+          damage: { expr: { dice: 1, dieSize: 6 }, damageType: "cold" },
+          expiresAt: { kind: "endOfTurn", combatantId: skeletonId },
         },
       },
       {
@@ -529,6 +676,13 @@ function codecFixture() {
       "sourceDamageRollPenalty",
     ),
     markedDamageRiderEffectRef: activeEffectRef("spellMarkedDamageRider"),
+    spellTurnStartEffectRef: activeEffectRef("spellTurnStartDamageAndSave"),
+    hideousLaughterEffectRef: activeEffectRef("hideousLaughter"),
+    greaseEffectRef: activeEffectRef("greaseGroundHazard"),
+    sleetStormEffectRef: activeEffectRef("sleetStormAreaHazard"),
+    glyphEffectRef: activeEffectRef("glyphDurableOccurrence"),
+    flamingSphereEffectRef: activeEffectRef("flamingSphere"),
+    spellTurnEndEffectRef: activeEffectRef("spellTurnEndDamage"),
     insectPlagueEffectRef: activeEffectRef("insectPlagueAreaHazard"),
     cloudkillEffectRef: activeEffectRef("cloudkillAreaHazard"),
     spikeGrowthEffectRef: activeEffectRef("spikeGrowthHazard"),
@@ -653,7 +807,7 @@ const savingThrowCases: readonly CodecCase[] = [
     "spellTurnStartSave",
     saving("spellTurnStartSave", "spellTurnStartSave", "wis", {
       ...source,
-      effectRef: fixture.targetEffectRef,
+      effectRef: fixture.spellTurnStartEffectRef,
       save: { ...save("wis"), successEnds: "spell" },
     }),
   ),
@@ -661,6 +815,7 @@ const savingThrowCases: readonly CodecCase[] = [
     "hideousLaughterRepeatSave",
     saving("hideousLaughterRepeatSave", "hideousLaughterRepeatSave", "wis", {
       ...source,
+      effectRef: fixture.hideousLaughterEffectRef,
       trigger: "endTurn",
       save: save("wis"),
     }),
@@ -682,13 +837,22 @@ const savingThrowCases: readonly CodecCase[] = [
       { ...source, relevantEffect: "frightened", save: save("wis") },
     ),
   ),
-  ...(["greaseGroundHazard", "sleetStormAreaHazard"] as const).map((variant) =>
+  ...(
+    [
+      ["greaseGroundHazard", fixture.greaseEffectRef, "area:codec-grease"],
+      [
+        "sleetStormAreaHazard",
+        fixture.sleetStormEffectRef,
+        "area:codec-sleet-storm",
+      ],
+    ] as const
+  ).map(([variant, effectRef, areaId]) =>
     right(
       variant,
       saving(variant, variant, "dex", {
         ...source,
-        effectRef: fixture.effectRef,
-        areaId: battleAreaId(`area:${variant}`),
+        effectRef,
+        areaId: battleAreaId(areaId),
         trigger: "entersArea",
         save: save("dex"),
       }),
@@ -705,7 +869,11 @@ const savingThrowCases: readonly CodecCase[] = [
       saving(variant, variant, "con", {
         ...source,
         effectRef,
-        areaId: battleAreaId(`area:${variant}`),
+        areaId: battleAreaId(
+          variant === "insectPlagueAreaHazard"
+            ? "area:codec-insect-plague"
+            : "area:codec-cloudkill",
+        ),
         trigger: "entersArea",
         save: save("con"),
       }),
@@ -718,7 +886,7 @@ const savingThrowCases: readonly CodecCase[] = [
       glyphExplosiveRune: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
-        effectRef: fixture.effectRef,
+        effectRef: fixture.glyphEffectRef,
         radiusFeet: 20,
       },
       ability: "dex",
@@ -747,9 +915,9 @@ const savingThrowCases: readonly CodecCase[] = [
       targetId: skeletonId,
       sourceCombatantId: wizardId,
       sourceProcedureRef: fixture.sourceProcedureRef,
-      effectRef: fixture.effectRef,
-      areaId: battleAreaId("area:codec-gust-save"),
-      directionId: battleLineDirectionId("direction:codec-gust-save"),
+      effectRef: fixture.gustOfWindEffectRef,
+      areaId: battleAreaId("area:codec-gust"),
+      directionId: battleLineDirectionId("direction:codec-gust"),
       trigger: "endsTurnInLine",
       save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
       pushDistanceFeet: 15,
@@ -794,7 +962,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       glyphExplosiveRune: {
         sourceCombatantId: wizardId,
         sourceProcedureRef: fixture.sourceProcedureRef,
-        effectRef: fixture.effectRef,
+        effectRef: fixture.glyphEffectRef,
         damage: { expr: { dice: 1, dieSize: 6 } },
       },
     }),
@@ -843,7 +1011,7 @@ const rolledDiceCases: readonly CodecCase[] = [
     rolled("spellTurnStartDamage", {
       spellTurnStartDamage: {
         ...source,
-        effectRef: fixture.targetEffectRef,
+        effectRef: fixture.spellTurnStartEffectRef,
         trigger: { kind: "condition", condition: "poisoned" },
         damage,
       },
@@ -854,7 +1022,7 @@ const rolledDiceCases: readonly CodecCase[] = [
     rolled("spellTurnEndDamage", {
       spellTurnEndDamage: {
         ...source,
-        effectRef: fixture.targetEffectRef,
+        effectRef: fixture.spellTurnEndEffectRef,
         damage,
       },
     }),
@@ -865,8 +1033,8 @@ const rolledDiceCases: readonly CodecCase[] = [
       critical: false,
       movableZone: {
         ...source,
-        effectRef: fixture.targetEffectRef,
-        areaId: battleAreaId("area:movableZone"),
+        effectRef: fixture.flamingSphereEffectRef,
+        areaId: battleAreaId("area:codec-flaming-sphere"),
         trigger: "endsTurnWithinFiveFeetOfSphere",
         save: save("dex"),
       },
@@ -879,7 +1047,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       spikeGrowthMovement: {
         ...source,
         effectRef: fixture.spikeGrowthEffectRef,
-        areaId: battleAreaId("area:spikeGrowthMovement"),
+        areaId: battleAreaId("area:codec-spike-growth"),
         distanceFeet: 10,
         damage: { expr: { dice: 1, dieSize: 4 }, damageType: "piercing" },
       },
@@ -892,7 +1060,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       insectPlagueAreaHazard: {
         ...source,
         effectRef: fixture.insectPlagueEffectRef,
-        areaId: battleAreaId("area:insectPlagueAreaHazard"),
+        areaId: battleAreaId("area:codec-insect-plague"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "piercing" },
       },
@@ -905,7 +1073,7 @@ const rolledDiceCases: readonly CodecCase[] = [
       cloudkillAreaHazard: {
         ...source,
         effectRef: fixture.cloudkillEffectRef,
-        areaId: battleAreaId("area:cloudkillAreaHazard"),
+        areaId: battleAreaId("area:codec-cloudkill"),
         trigger: "entersArea",
         damage: { expr: { dice: 1, dieSize: 6 }, damageType: "poison" },
       },
@@ -992,6 +1160,20 @@ const cases: readonly CodecCase[] = [
       targetRollModes: [],
       targetFlatBonuses: [],
     }),
+  ),
+  left(
+    "hideousLaughterRepeatSaveWrongOwner",
+    saving(
+      "hideousLaughterRepeatSaveWrongOwner",
+      "hideousLaughterRepeatSave",
+      "wis",
+      {
+        ...source,
+        effectRef: fixture.effectRef,
+        trigger: "damage",
+        save: save("wis"),
+      },
+    ),
   ),
   ...sourceOwningHoleCases.map((replacement) =>
     left(`${replacement.kind}UnboundSource`, replacement),
@@ -1082,6 +1264,73 @@ describe("battle codec execution-reference boundaries", () => {
             entry,
             fixture.markedDamageRiderEffectRef,
           ),
+        ),
+      );
+    },
+  );
+
+  test.each([
+    [
+      "spellDamageReduction",
+      rolledDiceCases[2],
+      fixture.sourceDamageRollPenaltyEffectRef,
+    ],
+    [
+      "sourceDamageRollPenalty",
+      rolledDiceCases[3],
+      fixture.spellDamageReductionEffectRef,
+    ],
+  ] as const)(
+    "rejects %s when the same owner has the referenced occurrence under another subtype",
+    (_, entry, effectRef) => {
+      if (entry === undefined) {
+        throw new Error("Expected the damage protocol codec case.");
+      }
+      expectSnapshotDecodeLeft(
+        replaceActHole(
+          fixture.snapshot,
+          fixture.sourceProcedureRef,
+          damageProtocolHoleWithEffectRef(entry, effectRef),
+        ),
+      );
+    },
+  );
+
+  test.each([
+    [
+      "area",
+      battleAreaId("area:codec-wrong-gust"),
+      battleLineDirectionId("direction:codec-gust"),
+    ],
+    [
+      "direction",
+      battleAreaId("area:codec-gust"),
+      battleLineDirectionId("direction:codec-wrong-gust"),
+    ],
+  ] as const)(
+    "rejects a Gust occurrence ref with the wrong %s geometry",
+    (_, areaId, directionId) => {
+      const replacement = saving(
+        "gustOfWindLineSaveWrongGeometry",
+        "gustOfWindLine",
+        "str",
+        {
+          targetId: skeletonId,
+          sourceCombatantId: wizardId,
+          sourceProcedureRef: fixture.sourceProcedureRef,
+          effectRef: fixture.gustOfWindEffectRef,
+          areaId,
+          directionId,
+          trigger: "endsTurnInLine",
+          save: { ability: "str", dc: { kind: "caster_spell_save_dc" } },
+          pushDistanceFeet: 15,
+        },
+      );
+      expectSnapshotDecodeLeft(
+        replaceActHole(
+          fixture.snapshot,
+          fixture.sourceProcedureRef,
+          replacement,
         ),
       );
     },
@@ -1392,6 +1641,25 @@ describe("battle codec execution-reference boundaries", () => {
         ),
       })),
     });
+  });
+
+  test("rejects a Hideous Laughter repeat-save hole without its occurrence ref", () => {
+    const decoded = Schema.decodeUnknownResult(BattleHoleSchema)({
+      ...baseHole("hideousLaughterRepeatSaveMissingEffectRef"),
+      kind: "savingThrowOutcome",
+      damageOccurrence: { kind: "untrackedDamage" },
+      hideousLaughterRepeatSave: {
+        ...source,
+        trigger: "damage",
+        save: save("wis"),
+      },
+      ability: "wis",
+      dc: { kind: "caster_spell_save_dc" },
+      areaChoices: [],
+      targetRollModes: [],
+      targetFlatBonuses: [],
+    });
+    expect(Result.isFailure(decoded)).toBe(true);
   });
 });
 

@@ -27,6 +27,7 @@ import {
   fireballUnitId,
   flameStrikeUnitId,
   guidingBoltUnitId,
+  hideousLaughterUnitId,
   inflictWoundsUnitId,
   lightningBoltUnitId,
   magicMissileUnitId,
@@ -2220,16 +2221,22 @@ describe("QMBT14 deterministic damage Spell Unit admission", () => {
   test("save-gated damage replays a missing Hideous Laughter damage repeat save", () => {
     const spell = spellRecord(fireballUnitId);
     const baseSession = spellBattle({
-      preparedSpells: [spell],
-      spellSlots: [{ spellLevel: 3, count: 1 }],
+      preparedSpells: [spell, spellRecord(hideousLaughterUnitId)],
+      spellSlots: [
+        { spellLevel: 1, count: 1 },
+        { spellLevel: 3, count: 1 },
+      ],
       casterClassLevels: [{ className: "wizard", level: 5 }],
       targetHp: 50,
       targetMaxHp: 50,
     });
     const baseCaster = requireCombatant(baseSession.state, spellCasterId);
-    const hideousLaughterProcedureRef = battleProcedureExecutionRefForTest(
-      "synthetic-save-gated-damage-hideous-laughter",
-    );
+    const hideousLaughterProcedureRef =
+      requireCharacterSpellProcedureRefForTest(
+        baseSession,
+        spellCasterId,
+        spellSlotInvocationRef(hideousLaughterUnitId, 1, "hideousLaughter"),
+      );
     const hideousLaughter = {
       kind: "hideousLaughter" as const,
       sourceProcedureRef: hideousLaughterProcedureRef,

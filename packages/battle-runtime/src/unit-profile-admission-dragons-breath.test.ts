@@ -57,6 +57,7 @@ import {
 import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   requireCharacterUnitProcedureRefForTest,
   requireCharacterSpellProcedureRefForTest,
   testCharacterD20Statistics,
@@ -1073,18 +1074,19 @@ function stateWithExhalingTargetActionEarlyEndCondition(
       combatantId: spellTargetId,
       durationTicks: elapsedTimeTicks(10),
     },
-  } satisfies Extract<
-    BattleActiveEffect,
-    { readonly kind: "targetActionEndedSpellCondition" }
-  >;
-  return {
+  } as const;
+  const conditionedState: BattleState = {
     ...state,
     combatants: new Map(state.combatants).set(spellTargetId, {
       ...target,
       conditions: { ...target.conditions, invisible: true },
-      activeEffects: [...target.activeEffects, effect],
     }),
   };
+  return battleStateWithAllocatedEffectForTest({
+    state: conditionedState,
+    ownerId: spellTargetId,
+    effect,
+  });
 }
 
 function stateWithWardingBondSharedCasterConcentration(

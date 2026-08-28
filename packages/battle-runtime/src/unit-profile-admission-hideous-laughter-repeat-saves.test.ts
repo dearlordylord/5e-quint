@@ -29,6 +29,7 @@ import {
 } from "./unit-profile-admission-creature-fixture.test-support.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
 import { battleStateInitIssueMessage } from "./battle-reducer/domain-helpers.ts";
+import { removeHideousLaughterEffectFromTarget } from "./battle-reducer/spell-condition-effects-helpers.ts";
 import {
   savingThrowOutcomeFill,
   spellAct,
@@ -168,6 +169,7 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
       expect.objectContaining({
         hideousLaughterRepeatSave: expect.objectContaining({
           targetId: spellTargetId,
+          effectRef: laughterAllocation.effect.effectRef,
           trigger: "damage",
         }),
         targetRollModes: [{ targetId: spellTargetId, rollMode: "advantage" }],
@@ -464,6 +466,62 @@ describe("QMBT14 deterministic Hideous Laughter repeat-save lifecycle admission"
     );
     expect(String(secondRepeatSave.holeId)).not.toBe(
       String(firstRepeatSave.holeId),
+    );
+
+    const removedState = removeHideousLaughterEffectFromTarget(
+      state,
+      spellTargetId,
+      allocation.effect,
+    );
+    const removedTarget = requireCombatant(removedState, spellTargetId);
+    const replacementTarget =
+      battleCreatureStateWithKnockOutPreservedConditions(
+        removedTarget,
+        applyCondition(
+          applyCondition(removedTarget.conditions, "prone"),
+          "incapacitated",
+        ),
+      );
+    const replacementAllocation = allocateBattleEffectOccurrenceForCreature({
+      owner: replacementTarget,
+      effect: hideousLaughterEffectTemplate(),
+    });
+    const replacementState: BattleState = {
+      ...removedState,
+      combatants: new Map(removedState.combatants)
+        .set(spellCasterId, requireCombatant(state, spellCasterId))
+        .set(spellTargetId, {
+          ...replacementAllocation.owner,
+          activeEffects: [
+            ...replacementAllocation.owner.activeEffects,
+            replacementAllocation.effect,
+          ],
+        }),
+    };
+    const staleFillResult = resolveBattleSubject({
+      state: replacementState,
+      subject: act.subject,
+      fills: [
+        ...afterSecondDamageFills,
+        savingThrowOutcomeFill(secondRepeatSave, [
+          { targetId: spellTargetId, succeeded: true },
+        ]),
+      ],
+    });
+    expect(staleFillResult.tag).toBe("needsHoles");
+    if (staleFillResult.tag !== "needsHoles") {
+      throw new Error(
+        "Expected the replaced occurrence to request a fresh save.",
+      );
+    }
+    const replacementRepeatSave = staleFillResult.holes.find(
+      (hole) => "hideousLaughterRepeatSave" in hole,
+    );
+    expect(replacementRepeatSave?.hideousLaughterRepeatSave).toMatchObject({
+      effectRef: replacementAllocation.effect.effectRef,
+    });
+    expect(replacementAllocation.effect.effectRef).not.toBe(
+      allocation.effect.effectRef,
     );
 
     const resolved = resolveBattleSubject({

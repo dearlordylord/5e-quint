@@ -39,14 +39,17 @@ import type {
   BattleHole,
   BattleRuntimeSession,
   BattleSpellSavingThrowOutcomeHole,
+  CombatantId,
 } from "./unit-profile-admission.test-support.ts";
 import { battleCreatureStateWithKnockOutPreservedConditions } from "./battle-reducer/creature-state.ts";
 import { spellBattle } from "./unit-profile-admission-spell-battle.test-support.ts";
+import { spellRecord } from "./unit-profile-admission-spell-record.test-support.ts";
 import {
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
+  wizardSpellcasting,
 } from "./battle-runtime.test-support.ts";
 
 describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
@@ -165,24 +168,28 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
 
   test("RAW-valid creature-type protection does not cover a Humanoid Hypnotic Pattern caster", () => {
     const spell = hypnoticPatternSpellRecord();
-    const protectionSourceId = combatantId(
-      "synthetic-hypnotic-protection-source",
-    );
-    const protectionProcedureRef = battleProcedureExecutionRefForTest(
-      String(protectionFromEvilAndGoodUnitId),
+    const protectedTargetId = combatantId(
+      "synthetic-hypnotic-protected-target",
     );
     const baseState = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
-      extraTargetIds: [protectionSourceId],
+      targetPreparedSpells: [spellRecord(protectionFromEvilAndGoodUnitId)],
+      extraTargetIds: [protectedTargetId],
     });
-    const protectionSource = requireCombatant(
-      baseState.state,
-      protectionSourceId,
+    const protectionProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseState,
+      spellTargetId,
+      spellSlotInvocationRef(
+        protectionFromEvilAndGoodUnitId,
+        1,
+        "creatureTypeProtection",
+      ),
     );
+    const protectionSource = requireCombatant(baseState.state, spellTargetId);
     const concentratingState = {
       ...baseState.state,
-      combatants: new Map(baseState.state.combatants).set(protectionSourceId, {
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...protectionSource,
         concentration: {
           sourceProcedureRef: protectionProcedureRef,
@@ -194,29 +201,29 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       ...baseState,
       state: battleStateWithAllocatedEffectForTest({
         state: concentratingState,
-        ownerId: spellTargetId,
+        ownerId: protectedTargetId,
         effect: {
           kind: "creatureTypeProtection",
           sourceProcedureRef: protectionProcedureRef,
-          sourceCombatantId: protectionSourceId,
+          sourceCombatantId: spellTargetId,
           attackRollMode: "disadvantage",
           protectedAgainstCreatureTypes: ["undead"],
           preventedConditions: ["charmed"],
           preventsPossession: true,
           expiresAt: {
             kind: "concentration",
-            combatantId: protectionSourceId,
+            combatantId: spellTargetId,
           },
         },
       }),
     });
 
-    const cast = castFailedHypnoticPattern(state);
+    const cast = castFailedHypnoticPattern(state, protectedTargetId);
     const caster = requireCombatant(cast.state, spellCasterId);
     if (caster.origin.kind !== "character") {
       throw new Error("Expected spell caster test fixture to be a character.");
     }
-    const target = requireCombatant(cast.state, spellTargetId);
+    const target = requireCombatant(cast.state, protectedTargetId);
 
     expect(cast.state.currentTurnResources.actionResources).toEqual([]);
     expect(caster.origin.spellcasting?.spellSlots).toEqual([
@@ -243,19 +250,29 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
 
   test("failed saves blocked by Charmed condition immunity spend the slot without control or concentration", () => {
     const spell = hypnoticPatternSpellRecord();
-    const immunitySourceId = combatantId("synthetic-hypnotic-immunity-source");
-    const immunityProcedureRef = battleProcedureExecutionRefForTest(
-      String(calmEmotionsUnitId),
-    );
+    const immuneTargetId = combatantId("synthetic-hypnotic-immune-target");
     const baseState = spellBattle({
       preparedSpells: [spell],
       spellSlots: [{ spellLevel: 3, count: 1 }],
-      extraTargetIds: [immunitySourceId],
+      targetSpellcasting: wizardSpellcasting({
+        preparedSpells: [spellRecord(calmEmotionsUnitId)],
+        spellSlots: [{ spellLevel: 2, count: 1 }],
+      }),
+      extraTargetIds: [immuneTargetId],
     });
-    const immunitySource = requireCombatant(baseState.state, immunitySourceId);
+    const immunityProcedureRef = requireCharacterSpellProcedureRefForTest(
+      baseState,
+      spellTargetId,
+      spellSlotInvocationRef(
+        calmEmotionsUnitId,
+        2,
+        "saveGatedConditionImmunity",
+      ),
+    );
+    const immunitySource = requireCombatant(baseState.state, spellTargetId);
     const concentratingState = {
       ...baseState.state,
-      combatants: new Map(baseState.state.combatants).set(immunitySourceId, {
+      combatants: new Map(baseState.state.combatants).set(spellTargetId, {
         ...immunitySource,
         concentration: {
           sourceProcedureRef: immunityProcedureRef,
@@ -267,27 +284,27 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       ...baseState,
       state: battleStateWithAllocatedEffectForTest({
         state: concentratingState,
-        ownerId: spellTargetId,
+        ownerId: immuneTargetId,
         effect: {
           kind: "conditionImmunity",
           sourceProcedureRef: immunityProcedureRef,
-          sourceCombatantId: immunitySourceId,
+          sourceCombatantId: spellTargetId,
           condition: "charmed",
           conditionHadNonSpellSource: false,
           expiresAt: {
             kind: "concentration",
-            combatantId: immunitySourceId,
+            combatantId: spellTargetId,
           },
         },
       }),
     });
 
-    const cast = castFailedHypnoticPattern(state);
+    const cast = castFailedHypnoticPattern(state, immuneTargetId);
     const caster = requireCombatant(cast.state, spellCasterId);
     if (caster.origin.kind !== "character") {
       throw new Error("Expected spell caster test fixture to be a character.");
     }
-    const target = requireCombatant(cast.state, spellTargetId);
+    const target = requireCombatant(cast.state, immuneTargetId);
 
     expect(cast.state.currentTurnResources.actionResources).toEqual([]);
     expect(caster.origin.spellcasting?.spellSlots).toEqual([
@@ -460,6 +477,13 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       },
     });
     const firstCast = castFailedHypnoticPattern(state);
+    const firstControlled = requireCombatant(firstCast.state, spellTargetId);
+    const firstControl = firstControlled.activeEffects.find(
+      (effect) => effect.kind === "hypnoticPatternControl",
+    );
+    if (firstControl === undefined) {
+      throw new Error("Expected the first Hypnotic Pattern occurrence.");
+    }
     const casterTurnEnded = endTurn({
       state: firstCast.state,
       actorId: spellCasterId,
@@ -482,13 +506,28 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
       }),
     );
     const controlled = requireCombatant(recast.state, spellTargetId);
+    const recastControls = controlled.activeEffects.filter(
+      (effect) => effect.kind === "hypnoticPatternControl",
+    );
+    expect(recastControls).toHaveLength(1);
     expect(controlled.activeEffects).toEqual([
       expect.objectContaining({
         kind: "hypnoticPatternControl",
+        effectRef: expect.any(String),
         conditionHadNonSpellCharmedSource: true,
         conditionHadNonSpellIncapacitatedSource: true,
       }),
     ]);
+    const replacementControl = recastControls[0];
+    expect(replacementControl?.effectRef).not.toBe(firstControl.effectRef);
+    expect(
+      controlled.activeEffects.some(
+        (effect) => effect.effectRef === firstControl.effectRef,
+      ),
+    ).toBe(false);
+    expect(Number(controlled.nextEffectOrdinal)).toBe(
+      Number(firstControlled.nextEffectOrdinal) + 1,
+    );
 
     const damaged = applyBattleHitPointDamage({
       state: recast.state,
@@ -637,7 +676,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
     });
   });
 
-  test("Hypnotic Pattern recast replaces only its own control effect", () => {
+  test("Hypnotic Pattern cast preserves an unrelated control occurrence by exact ref", () => {
     const base = spellBattle({
       preparedSpells: [hypnoticPatternSpellRecord()],
       spellSlots: [{ spellLevel: 3, count: 1 }],
@@ -705,6 +744,7 @@ describe("QMBT14 deterministic Hypnotic Pattern control admission", () => {
 
 function castFailedHypnoticPattern(
   session: BattleRuntimeSession,
+  targetId: CombatantId = spellTargetId,
 ): BattleRuntimeSession {
   const act = spellAct({
     session,
@@ -717,7 +757,7 @@ function castFailedHypnoticPattern(
     subject: act.subject,
     fills: [
       hypnoticPatternSavingThrowOutcomeFill(savingThrow, [
-        { targetId: spellTargetId, succeeded: false },
+        { targetId, succeeded: false },
       ]),
     ],
   });
@@ -732,7 +772,7 @@ function castFailedHypnoticPattern(
 function hypnoticPatternSavingThrowOutcomeFill(
   hole: BattleSpellSavingThrowOutcomeHole,
   outcomes: readonly {
-    readonly targetId: typeof spellTargetId;
+    readonly targetId: CombatantId;
     readonly succeeded: boolean;
   }[],
 ): Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> {

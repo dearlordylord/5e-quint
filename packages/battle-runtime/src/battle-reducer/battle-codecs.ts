@@ -2162,6 +2162,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     damageOccurrence: BattleDamageOccurrenceSourceSchema,
     hideousLaughterRepeatSave: Schema.Struct({
       targetId: CombatantId,
+      effectRef: BattleEffectExecutionRef,
       sourceProcedureRef: BattleProcedureExecutionRef,
       sourceCombatantId: CombatantId,
       trigger: Schema.Literals(["endTurn", "damage"]),
@@ -6906,7 +6907,11 @@ function serializedBattleHoleExecutionReferences(
               ),
             ),
             Match.when({ hideousLaughterRepeatSave: Match.any }, (matched) => [
-              ...procedureSource(matched.hideousLaughterRepeatSave),
+              ...occurrenceSource(
+                matched.hideousLaughterRepeatSave,
+                matched.hideousLaughterRepeatSave.targetId,
+                activeEffect("hideousLaughter"),
+              ),
               ...damageOccurrenceReferences(
                 matched.damageOccurrence,
                 matched.hideousLaughterRepeatSave.targetId,
@@ -7132,9 +7137,10 @@ function serializedBattleHoleExecutionReferences(
           activeEffect("spellTurnEndDamage"),
         ),
       ),
-      Match.when({ movableZone: Match.any }, (hole) =>
-        activeOccurrenceSource(
-          hole.movableZone,
+      Match.when({ movableZone: Match.any }, (hole) => [
+        ...procedureSource(hole.movableZone),
+        boundOccurrence(
+          hole.movableZone.effectRef,
           hole.movableZone.trigger === "endsTurnWithinFiveFeetOfSphere" ||
             hole.movableZone.trigger === "rammedBySphere"
             ? activeEffect("flamingSphere", {
@@ -7145,8 +7151,9 @@ function serializedBattleHoleExecutionReferences(
                 kind: "area",
                 areaId: hole.movableZone.areaId,
               }),
+          hole.movableZone.sourceCombatantId,
         ),
-      ),
+      ]),
       Match.when({ spikeGrowthMovement: Match.any }, (hole) => [
         ...procedureSource(hole.spikeGrowthMovement),
         boundOccurrence(

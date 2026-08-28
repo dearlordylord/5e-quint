@@ -2,7 +2,6 @@ import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-suppo
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection SRDINV60A protection_from_evil_and_good
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.creature-type-protection-and-charm
 import {
-  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   battleStateWithAllocatedEffectOccurrencesForTest,
 } from "./battle-runtime.test-support.ts";
@@ -50,8 +49,6 @@ import {
 } from "./unit-profile-admission.test-support.ts";
 import type {
   BattleSelectedSpellInvocation,
-  BattleActiveEffect,
-  BattleCreatureState,
   BattleState,
   SupportedSpellInvocation,
 } from "./battle-state-execution.ts";
@@ -742,9 +739,8 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       throw new Error("Expected to advance to the protected target turn.");
     }
     const protectedTarget = requireCombatant(targetTurn.state, spellTargetId);
-    const charmedEffect = {
+    const charmedEffectTemplate = {
       kind: "spellCondition",
-      effectRef: battleEffectExecutionRefForTest("protected-charm"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(charmPersonUnitId),
       ),
@@ -754,10 +750,9 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       escape: { kind: "targetDamagedByCasterOrAlly" },
       turnStartDamage: null,
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
-    } as const satisfies BattleActiveEffect;
-    const repeatCharmedEffect = {
+    } as const;
+    const repeatCharmedEffectTemplate = {
       kind: "spellConditionRepeatSave",
-      effectRef: battleEffectExecutionRefForTest("protected-repeat-charm"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-repeat-charm-effect"),
       ),
@@ -766,57 +761,84 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
       conditionHadNonSpellSource: false,
       save: { ability: "wis", dc: { kind: "fixed", dc: difficultyClass(13) } },
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
-    } as const satisfies BattleActiveEffect;
-    const repeatFrightenedEffect = {
-      ...repeatCharmedEffect,
-      effectRef: battleEffectExecutionRefForTest("protected-repeat-fear"),
+    } as const;
+    const repeatFrightenedEffectTemplate = {
+      ...repeatCharmedEffectTemplate,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-fear-effect"),
       ),
       condition: "frightened",
-    } as const satisfies BattleActiveEffect;
-    const possessionEffect = {
+    } as const;
+    const possessionEffectTemplate = {
       kind: "possession",
-      effectRef: battleEffectExecutionRefForTest("protected-possession"),
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-possession-effect"),
       ),
       sourceCombatantId: feySourceId,
       save: { ability: "cha", dc: { kind: "fixed", dc: difficultyClass(14) } },
       expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(600) },
-    } as const satisfies BattleActiveEffect;
-    const humanoidCharmEffect = {
-      ...repeatCharmedEffect,
-      effectRef: battleEffectExecutionRefForTest("humanoid-repeat-charm"),
+    } as const;
+    const humanoidCharmEffectTemplate = {
+      ...repeatCharmedEffectTemplate,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("unit-profile-humanoid-charm-effect"),
       ),
       sourceCombatantId: humanoidSourceId,
-    } as const satisfies BattleActiveEffect;
-    const targetWithRelevantEffects: BattleCreatureState = {
-      ...battleCreatureStateWithKnockOutPreservedConditions(
-        protectedTarget,
-        applyCondition(
-          applyCondition(protectedTarget.conditions, "charmed"),
-          "frightened",
-        ),
-      ),
-      activeEffects: [
-        ...protectedTarget.activeEffects,
-        charmedEffect,
-        repeatCharmedEffect,
-        repeatFrightenedEffect,
-        possessionEffect,
-        humanoidCharmEffect,
-      ],
-    };
-    const activeEffectState: BattleState = {
+    } as const;
+    const conditionedState: BattleState = {
       ...targetTurn.state,
       combatants: new Map(targetTurn.state.combatants).set(
         spellTargetId,
-        targetWithRelevantEffects,
+        battleCreatureStateWithKnockOutPreservedConditions(
+          protectedTarget,
+          applyCondition(
+            applyCondition(protectedTarget.conditions, "charmed"),
+            "frightened",
+          ),
+        ),
       ),
     };
+    const allocation = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: conditionedState,
+      occurrences: [
+        charmedEffectTemplate,
+        repeatCharmedEffectTemplate,
+        repeatFrightenedEffectTemplate,
+        possessionEffectTemplate,
+        humanoidCharmEffectTemplate,
+      ].map((effect) => ({
+        kind: "activeEffect" as const,
+        ownerId: spellTargetId,
+        effect,
+      })),
+    });
+    const [
+      charmedOccurrence,
+      repeatCharmedOccurrence,
+      repeatFrightenedOccurrence,
+      possessionOccurrence,
+      humanoidCharmOccurrence,
+    ] = allocation.occurrences;
+    if (
+      charmedOccurrence?.kind !== "activeEffect" ||
+      charmedOccurrence.effect.kind !== "spellCondition" ||
+      repeatCharmedOccurrence?.kind !== "activeEffect" ||
+      repeatCharmedOccurrence.effect.kind !== "spellConditionRepeatSave" ||
+      repeatFrightenedOccurrence?.kind !== "activeEffect" ||
+      repeatFrightenedOccurrence.effect.kind !== "spellConditionRepeatSave" ||
+      possessionOccurrence?.kind !== "activeEffect" ||
+      possessionOccurrence.effect.kind !== "possession" ||
+      humanoidCharmOccurrence?.kind !== "activeEffect" ||
+      humanoidCharmOccurrence.effect.kind !== "spellConditionRepeatSave"
+    ) {
+      throw new Error("Expected allocated protection-relevant occurrences.");
+    }
+    const charmedEffect = charmedOccurrence.effect;
+    const repeatCharmedEffect = repeatCharmedOccurrence.effect;
+    const repeatFrightenedEffect = repeatFrightenedOccurrence.effect;
+    const possessionEffect = possessionOccurrence.effect;
+    const humanoidCharmEffect = humanoidCharmOccurrence.effect;
+    const activeEffectState = allocation.state;
     const discoveredRelevantSaveSubjects = discoverBattleActCandidates(
       activeEffectState,
     )
@@ -1010,7 +1032,7 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         },
       }),
     };
-    const state = battleStateWithAllocatedEffectOccurrencesForTest({
+    const allocation = battleStateWithAllocatedEffectOccurrencesForTest({
       state: concentratingState,
       occurrences: [
         {
@@ -1048,7 +1070,18 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
           },
         },
       ],
-    }).state;
+    });
+    const [priorOccurrence, unrelatedOccurrence] = allocation.occurrences;
+    if (
+      priorOccurrence?.kind !== "activeEffect" ||
+      priorOccurrence.effect.kind !== "creatureTypeProtection" ||
+      unrelatedOccurrence?.kind !== "activeEffect" ||
+      unrelatedOccurrence.effect.kind !== "creatureTypeProtection"
+    ) {
+      throw new Error("Expected allocated creature-protection occurrences.");
+    }
+    const state = allocation.state;
+    const targetBeforeRecast = requireCombatant(state, spellTargetId);
     const resolved = resolveBattleSubject({
       state,
       subject: act.subject,
@@ -1067,10 +1100,8 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
         "Expected Protection from Evil and Good recast to resolve.",
       );
     }
-    const effects = requireCombatant(
-      resolved.state,
-      spellTargetId,
-    ).activeEffects;
+    const targetAfterRecast = requireCombatant(resolved.state, spellTargetId);
+    const effects = targetAfterRecast.activeEffects;
     expect(effects).toHaveLength(2);
     expect(effects).toEqual(
       expect.arrayContaining([
@@ -1092,6 +1123,21 @@ describe("SRDINV30C deterministic Protection from Evil and Good admission", () =
           ],
         }),
       ]),
+    );
+    expect(effects).toContainEqual(unrelatedOccurrence.effect);
+    expect(
+      effects.some(
+        (effect) => effect.effectRef === priorOccurrence.effect.effectRef,
+      ),
+    ).toBe(false);
+    const replacement = effects.find(
+      (effect) =>
+        effect.kind === "creatureTypeProtection" &&
+        effect.sourceProcedureRef === act.subject.procedureRef,
+    );
+    expect(replacement?.effectRef).not.toBe(priorOccurrence.effect.effectRef);
+    expect(Number(targetAfterRecast.nextEffectOrdinal)).toBe(
+      Number(targetBeforeRecast.nextEffectOrdinal) + 1,
     );
   });
 });

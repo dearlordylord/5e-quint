@@ -1,5 +1,8 @@
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test unit-feature.druid-wild-shape-known-form
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
+import {
+  battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
+} from "./battle-runtime.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared/elapsed-time";
 import { Result } from "effect";
 import { expect, test } from "vitest";
@@ -14,8 +17,8 @@ import {
   shapeShiftedRuntimeState,
   trueFormRuntimeState,
   type BattleActiveEffect,
-  type SpellShapeShiftedFormActiveEffect,
 } from "./index.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { projectShapeShiftRuntimeReversion } from "./battle-reducer/shape-shifting.ts";
 import {
   battleId,
@@ -36,7 +39,7 @@ import {
 const spellShapeCasterId = combatantId("synthetic-shape-spell-caster");
 const spellShapeTargetId = combatantId("synthetic-shape-spell-target");
 const syntheticDruidWildShapeEffect: Extract<
-  BattleActiveEffect,
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "druidWildShapeForm" }
 > = {
   kind: "druidWildShapeForm",
@@ -53,7 +56,7 @@ const syntheticDruidWildShapeEffect: Extract<
   equipmentDisposition: [],
   expiresAt: { kind: "duration", durationTicks: elapsedTimeTicks(10) },
 };
-const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
+const syntheticSpellShapeShiftEffect = {
   kind: "spellShapeShiftedForm",
   sourceCombatantId: spellShapeCasterId,
   sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -65,8 +68,8 @@ const syntheticSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
     creatureSize: "large",
   },
   expiresAt: { kind: "concentration", combatantId: spellShapeCasterId },
-};
-const replacementSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
+} as const satisfies BattleActiveEffectOccurrenceTemplate;
+const replacementSpellShapeShiftEffect = {
   ...syntheticSpellShapeShiftEffect,
   sourceEffectId: battleSpellEffectOccurrenceId(
     "replacement-synthetic-shape-spell-effect",
@@ -75,7 +78,7 @@ const replacementSpellShapeShiftEffect: SpellShapeShiftedFormActiveEffect = {
     kind: "runtimeCreatureForm",
     creatureSize: "medium",
   },
-};
+} as const satisfies BattleActiveEffectOccurrenceTemplate;
 
 test("shape-shift runtime state admits true form and class-feature restoration owners", () => {
   const trueForm = trueFormRuntimeState();
@@ -88,11 +91,12 @@ test("shape-shift runtime state admits true form and class-feature restoration o
     shapeShift: trueForm,
   });
 
+  const allocatedDruidEffect = allocatedSyntheticDruidWildShapeEffect();
   const shifted = shapeShiftedRuntimeState({
     source: {
       kind: "classFeature",
-      sourceCombatantId: syntheticDruidWildShapeEffect.sourceCombatantId,
-      sourceProcedureRef: syntheticDruidWildShapeEffect.sourceProcedureRef,
+      sourceCombatantId: allocatedDruidEffect.sourceCombatantId,
+      sourceProcedureRef: allocatedDruidEffect.sourceProcedureRef,
     },
     replacementForm: {
       kind: "runtimeCreatureForm",
@@ -100,7 +104,7 @@ test("shape-shift runtime state admits true form and class-feature restoration o
     },
     reversionOwner: {
       kind: "druidWildShapeActiveEffect",
-      effect: syntheticDruidWildShapeEffect,
+      effect: allocatedDruidEffect,
     },
   });
   expect(shifted).toMatchObject({
@@ -122,11 +126,22 @@ test("spell-effect shape-shift runtime state derives replacement and true-form f
   if (target === undefined) {
     throw new Error("Expected synthetic shape-shift target.");
   }
+  const spellShapeEffect = target.activeEffects.find(
+    (effect) =>
+      effect.kind === "spellShapeShiftedForm" &&
+      effect.sourceEffectId === syntheticSpellShapeShiftEffect.sourceEffectId,
+  );
+  if (
+    spellShapeEffect === undefined ||
+    spellShapeEffect.kind !== "spellShapeShiftedForm"
+  ) {
+    throw new Error("Expected allocated spell shape-shift effect.");
+  }
 
   expect(battleShapeShiftedRuntimeState(target)).toEqual(
     spellShapeShiftedRuntimeState({
       targetCombatantId: spellShapeTargetId,
-      effect: syntheticSpellShapeShiftEffect,
+      effect: spellShapeEffect,
     }),
   );
 });
@@ -137,10 +152,29 @@ test("active-effect boundary admits only one active shape-shift owner", () => {
   if (target === undefined) {
     throw new Error("Expected synthetic shape-shift target.");
   }
+  const replacementAllocation =
+    battleStateWithAllocatedEffectOccurrencesForTest({
+      state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellShapeTargetId,
+          effect: replacementSpellShapeShiftEffect,
+        },
+      ],
+    });
+  const replacementOccurrence = replacementAllocation.occurrences[0];
+  if (
+    replacementOccurrence?.kind !== "activeEffect" ||
+    replacementOccurrence.effect.kind !== "spellShapeShiftedForm"
+  ) {
+    throw new Error("Expected allocated replacement shape-shift effect.");
+  }
+  const replacementEffect = replacementOccurrence.effect;
 
   const nextTarget = battleCreatureWithSpellActiveEffects(target, [
     ...target.activeEffects,
-    replacementSpellShapeShiftEffect,
+    replacementEffect,
   ]);
 
   expect(
@@ -149,11 +183,11 @@ test("active-effect boundary admits only one active shape-shift owner", () => {
         effect.kind === "druidWildShapeForm" ||
         effect.kind === "spellShapeShiftedForm",
     ),
-  ).toEqual([replacementSpellShapeShiftEffect]);
+  ).toEqual([replacementEffect]);
   expect(battleShapeShiftedRuntimeState(nextTarget)).toEqual(
     spellShapeShiftedRuntimeState({
       targetCombatantId: spellShapeTargetId,
-      effect: replacementSpellShapeShiftEffect,
+      effect: replacementEffect,
     }),
   );
 });
@@ -242,8 +276,39 @@ test("shape-shift reversion clears the whole owner slot from pre-boundary mixed-
   );
 });
 
+function allocatedSyntheticDruidWildShapeEffect(): Extract<
+  BattleActiveEffect,
+  { readonly kind: "druidWildShapeForm" }
+> {
+  const ownerId = syntheticDruidWildShapeEffect.sourceCombatantId;
+  const state = startBattleRight({
+    battleId: battleId("synthetic-shape-battle"),
+    combatants: [
+      statBlockCreatureInit({ combatantId: ownerId, initiative: 10 }),
+    ],
+  });
+  const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: [
+      {
+        kind: "activeEffect",
+        ownerId,
+        effect: syntheticDruidWildShapeEffect,
+      },
+    ],
+  });
+  const occurrence = allocated.occurrences[0];
+  if (
+    occurrence?.kind !== "activeEffect" ||
+    occurrence.effect.kind !== "druidWildShapeForm"
+  ) {
+    throw new Error("Expected allocated Druid Wild Shape occurrence.");
+  }
+  return occurrence.effect;
+}
+
 function spellShapeShiftBattle(
-  activeShapeShiftOwners: readonly BattleActiveEffect[] = [
+  activeShapeShiftOwners: readonly BattleActiveEffectOccurrenceTemplate[] = [
     syntheticSpellShapeShiftEffect,
   ],
 ) {
@@ -260,14 +325,12 @@ function spellShapeShiftBattle(
       }),
     ],
   });
-  const target = state.combatants.get(spellShapeTargetId);
-  if (target === undefined) {
-    throw new Error("Expected synthetic shape-shift target.");
-  }
-  const combatants = new Map(state.combatants);
-  combatants.set(spellShapeTargetId, {
-    ...target,
-    activeEffects: [...target.activeEffects, ...activeShapeShiftOwners],
-  });
-  return { ...state, combatants };
+  return battleStateWithAllocatedEffectOccurrencesForTest({
+    state,
+    occurrences: activeShapeShiftOwners.map((effect) => ({
+      kind: "activeEffect" as const,
+      ownerId: spellShapeTargetId,
+      effect,
+    })),
+  }).state;
 }

@@ -5161,6 +5161,7 @@ export type BattleHideousLaughterRepeatSavingThrowOutcomeHole = {
   readonly damageOccurrence: BattleDamageOccurrenceSource;
   readonly hideousLaughterRepeatSave: {
     readonly targetId: CombatantId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
     readonly sourceCombatantId: CombatantId;
     readonly trigger: BattleHideousLaughterRepeatTrigger;
