@@ -537,6 +537,36 @@ and Readied Spell Response hold/release while tracking only scalar outputs plus
 ordinary and Mage Armor Spell Effect fixtures and one readied spell held-effect
 fixture.
 
+## Slow semantic lifecycle and Stat Block composition
+
+`spell-slow-active-penalties-core.qnt` owns the identity-independent Slow
+occurrence lifecycle after initial failed saves: Speed, Armor Class, Dexterity
+Saving Throw, and Reaction projections; the at-most-one Action-or-Bonus-Action
+turn restriction, including reconciliation when either resource was already
+spent; the Attack-action one-attack cap; effective-Somatic 25 percent failure;
+per-target repeat saves; and exact-source occurrence cleanup.
+
+The source reference is a per-execution occurrence reference, not an authored
+spell or procedure identity. The core consumes typed concentration-ended and
+duration-expired signals. QCORE8 remains the canonical generic Concentration
+lifecycle and owns why Concentration ended; the elapsed-time scheduler remains
+the owner of duration advancement. Slow owns only its affected-target cleanup
+and the command to end source Concentration when its last target or duration is
+removed.
+
+`spell-slow-stat-block-multiattack-core.qnt` composes that typed active Slow
+state with `stat-block-multiattack.qnt`. It derives `OneListedDispatch` at the
+atomic Multiattack activation boundary and preserves the activation-owned
+source, full ordered dispatch list, duplicate occurrences, and continuation.
+The open dispatch continuation is an implementation decomposition of one
+Attack action; the composition intentionally has no mid-Action Slow-state
+rewrite.
+
+`spell-slow-active-penalties-examples.qnt` contains focused executable cases,
+and `spell-slow-active-penalties-inductive.qnt` owns the bounded state machine,
+invariant, and branch witnesses. Runtime parity is connected through the
+focused Slow MBT lane in `packages/battle-runtime`.
+
 ## Stat Block procedure families
 
 Stat Block execution is modeled by five independent, projection-shaped rule

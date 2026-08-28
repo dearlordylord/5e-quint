@@ -45,6 +45,108 @@ module spellSlowActivePenaltiesInductive {
     dispatchProfile: { dispatchProcedureRefs: List(0, 0, 1) },
   }
 
+  pure def qOccurrenceDomain: Set[SlowOccurrenceState] = Set(
+    SlowOccurrenceAbsent,
+    SlowOccurrenceActive({
+      source: qSlowSource,
+      affectedTargets: Set(1),
+    }),
+    SlowOccurrenceActive({
+      source: qSlowSource,
+      affectedTargets: Set(2),
+    }),
+    SlowOccurrenceActive({
+      source: qSlowSource,
+      affectedTargets: Set(1, 2),
+    })
+  )
+
+  pure def qTurnDomain: Set[SlowTargetTurnState] = Set(
+    SlowTurnUnrestricted,
+    SlowTurnRestrictedUnused,
+    SlowTurnRestrictedActionUsed({
+      actionKind: SlowAttackAction,
+      attackCount: 0,
+    }),
+    SlowTurnRestrictedActionUsed({
+      actionKind: SlowAttackAction,
+      attackCount: 1,
+    }),
+    SlowTurnRestrictedActionUsed({
+      actionKind: SlowOtherAction,
+      attackCount: 0,
+    }),
+    SlowTurnRestrictedBonusActionUsed
+  )
+
+  pure def qSomaticDomain: Set[SlowSomaticResolutionState] = Set(
+    SlowSomaticCheckBypassed,
+    SlowSomaticFailureOutcomeRequired({ failurePercent: 25 }),
+    SlowSomaticSpellContinues,
+    SlowSomaticSpellFailedAfterResourceSpend
+  )
+
+  pure def qActivatedMultiattack(
+    dispatchState: StatBlockMultiattackState
+  ): SlowStatBlockMultiattackState = SlowStatBlockMultiattackActivated({
+    binding: qMultiattackBinding,
+    dispatchState: dispatchState,
+  })
+
+  pure def qDispatchingMultiattack(
+    pendingProcedureRefs: List[StatBlockProcedureRef],
+    allowance: StatBlockMultiattackDispatchAllowance
+  ): SlowStatBlockMultiattackState = qActivatedMultiattack(
+    StatBlockMultiattackDispatching({
+      pendingProcedureRefs: pendingProcedureRefs,
+      allowance: allowance,
+    })
+  )
+
+  pure def qMultiattackDomain: Set[SlowStatBlockMultiattackState] = Set(
+    SlowStatBlockMultiattackReady,
+    qDispatchingMultiattack(List(0, 0, 1), OneListedDispatch),
+    qDispatchingMultiattack(List(0, 0, 1), AllListedDispatches),
+    qDispatchingMultiattack(List(0, 1), AllListedDispatches),
+    qDispatchingMultiattack(List(0, 0), AllListedDispatches),
+    qDispatchingMultiattack(List(1), AllListedDispatches),
+    qDispatchingMultiattack(List(0), AllListedDispatches),
+    qActivatedMultiattack(StatBlockMultiattackActionSpent),
+    qActivatedMultiattack(StatBlockMultiattackTurnEnded)
+  )
+
+  pure def qConcentrationCommandDomain:
+    Set[SlowSourceConcentrationCommand] = Set(
+      SlowSourceConcentrationUnchanged,
+      SlowSourceConcentrationStartRequired,
+      SlowSourceConcentrationEndRequired
+    )
+
+  pure def qEventDomain: Set[SlowProofEvent] = Set(
+    SlowProofInit,
+    SlowProofAppliedOneTarget,
+    SlowProofAppliedTwoTargets,
+    SlowProofBeganRestrictedTurn,
+    SlowProofReconciledPriorAction,
+    SlowProofReconciledPriorBonusAction,
+    SlowProofSpentAction,
+    SlowProofSpentBonusAction,
+    SlowProofMadeAttack,
+    SlowProofRequestedSomaticOutcome,
+    SlowProofFailedSomaticCast,
+    SlowProofContinuedSomaticCast,
+    SlowProofRepeatSaveFailed,
+    SlowProofRepeatSaveRemovedOneTarget,
+    SlowProofRepeatSaveRemovedLastTarget,
+    SlowProofConcentrationEnded,
+    SlowProofDurationExpired,
+    SlowProofActivatedMultiattackWhileSlowed,
+    SlowProofActivatedMultiattackWhileUnslowed,
+    SlowProofRejectedMismatchedMultiattackSource,
+    SlowProofDispatchedMultiattack,
+    SlowProofEndedMultiattackTurn
+  )
+
   var qOccurrence: SlowOccurrenceState
   var qTurn: SlowTargetTurnState
   var qSomatic: SlowSomaticResolutionState
@@ -344,14 +446,16 @@ module spellSlowActivePenaltiesInductive {
   }
 
   val invariant = all {
+    qOccurrence.in(qOccurrenceDomain),
+    qTurn.in(qTurnDomain),
+    qSomatic.in(qSomaticDomain),
+    qMultiattack.in(qMultiattackDomain),
+    qConcentrationCommand.in(qConcentrationCommandDomain),
+    qActorWasSlowedAtMultiattackActivation.in(Set(true, false)),
+    qEvent.in(qEventDomain),
     legalSlowOccurrenceState(qOccurrence),
     legalSlowTargetTurnState(qTurn),
     legalSlowStatBlockMultiattackState(qMultiattack),
-    qConcentrationCommand.in(Set(
-      SlowSourceConcentrationUnchanged,
-      SlowSourceConcentrationStartRequired,
-      SlowSourceConcentrationEndRequired
-    )),
     slowTurnDoesNotSpendBothActionAndBonusAction(qTurn),
     slowTurnAttackCount(qTurn) >= 0,
     slowTurnAttackCount(qTurn) <= 1,

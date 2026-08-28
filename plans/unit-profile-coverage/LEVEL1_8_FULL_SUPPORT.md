@@ -22,8 +22,8 @@ Strict level-9 final support blockers: 0.
 | Strict level-9 final support | 353/353 (100%) |
 | SRD authored product readiness | 119/119 (100%) |
 | Rules-kernel profile join | 119/119 (100%) |
-| Rules-kernel covered profile join | 105/119 (88.2%) |
-| Supported Unit rules-kernel chain | 139/167 (83.2%) |
+| Rules-kernel covered profile join | 106/119 (89.1%) |
+| Supported Unit rules-kernel chain | 140/167 (83.8%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -158,7 +158,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `ranger_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
-| `slow` | mapped-open | `spell.invocation-slow-active-penalties` (mapped-open: `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` (needs-qnt-owner), `BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP` (needs-qnt-owner)) | `GH-441` |
 | `sorcerer_draconic_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (covered)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (covered)) | _plan-update-required_ |
 | `warlock_fiend_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |

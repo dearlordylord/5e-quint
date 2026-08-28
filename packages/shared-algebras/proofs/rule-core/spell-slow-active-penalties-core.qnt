@@ -1,6 +1,6 @@
 // -*- mode: Bluespec; -*-
 // UNIT-PROFILE-COVERAGE: qnt-owner spell.invocation-slow-active-penalties
-// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE
+// KERNEL-COVERAGE: qnt-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP
 
 module spellSlowActivePenaltiesCore {
   // RAW anchors:

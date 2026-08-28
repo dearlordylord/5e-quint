@@ -22,8 +22,8 @@ Strict level-9 final support blockers: 0.
 | Strict level-9 final support | 399/399 (100%) |
 | SRD authored product readiness | 128/128 (100%) |
 | Rules-kernel profile join | 123/123 (100%) |
-| Rules-kernel covered profile join | 109/123 (88.6%) |
-| Supported Unit rules-kernel chain | 147/177 (83.1%) |
+| Rules-kernel covered profile join | 110/123 (89.4%) |
+| Supported Unit rules-kernel chain | 148/177 (83.6%) |
 
 These metrics are lower-layer accounting views. They are not, by themselves, a valid full-support claim.
 
@@ -159,7 +159,6 @@ This gate checks authored records and retained Unit references that must resolve
 | `ranger_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_expertise` | mapped-open | `character-creation.skill-expertise-choice` (mapped-open: `CREATION.SKILL_EXPERTISE.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
 | `rogue_weapon_mastery` | mapped-open | `character-creation.weapon-mastery-choice` (mapped-open: `CREATION.WEAPON_MASTERY.CHOICE_FINALIZATION` (covered)) | _plan-update-required_ |
-| `slow` | mapped-open | `spell.invocation-slow-active-penalties` (mapped-open: `BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE` (needs-qnt-owner), `BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP` (needs-qnt-owner)) | `GH-441` |
 | `sorcerer_draconic_spells` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `warlock_contact_patron` | mapped-open | `character-sheet.class-feature-prepared-spell-access` (mapped-open: `SHEET.SPELL_ACCESS.CLASS_FEATURE_PREPARED_PROJECTION` (covered)) | _plan-update-required_ |
 | `warlock_eldritch_invocations` | mapped-open | `character-creation.eldritch-invocation-choice` (mapped-open: `CREATION.ELDRITCH_INVOCATION.CHOICE_LIFECYCLE` (covered)); `character-creation.warlock-pact-magic-advancement` (mapped-open: `CREATION.SPELL_ACCESS.PACT_MAGIC_PROGRESSION` (covered)) | _plan-update-required_ |
