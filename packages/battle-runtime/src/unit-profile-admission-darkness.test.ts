@@ -25,7 +25,6 @@ import {
   type BattleMagicalDarknessZone,
   type BattleObscurementZone,
   type BattleSpellAreaOriginAnchor,
-  type BattleTrackedOngoingSpellLightEmitter,
 } from "./index.ts";
 import {
   battleAreaId,
@@ -247,7 +246,7 @@ describe("battle runtime: Darkness", () => {
     const overlappingLevelThreeEffectId = battleSpellEffectOccurrenceId(
       "darkness-overlap-level-three-light",
     );
-    const untrackedLevelTwo = trackedObjectSpellLightEmitter({
+    const nonoverlappingLevelTwo = trackedObjectSpellLightEmitter({
       sourceEffectId: battleSpellEffectOccurrenceId(
         "darkness-untracked-level-two-light",
       ),
@@ -255,9 +254,9 @@ describe("battle runtime: Darkness", () => {
       objectId: "darkness-untracked-level-two-object",
     });
     const baseSession = darknessBattle("battle-darkness-light-overlap");
-    const state = {
-      ...baseSession.state,
-      lightEmitters: [
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: baseSession.state,
+      occurrences: [
         trackedObjectSpellLightEmitter({
           sourceEffectId: overlappingLevelTwoEffectId,
           sourceSpellLevel: 2,
@@ -268,9 +267,23 @@ describe("battle runtime: Darkness", () => {
           sourceSpellLevel: 3,
           objectId: "darkness-overlap-level-three-object",
         }),
-        untrackedLevelTwo,
-      ],
-    };
+        nonoverlappingLevelTwo,
+      ].map((emitter) => ({
+        kind: "storedLightEmitter" as const,
+        ownerId: wizardId,
+        emitter,
+      })),
+    });
+    const [overlappingLevelTwo, overlappingLevelThree, nonoverlapping] =
+      allocated.occurrences;
+    if (
+      overlappingLevelTwo?.kind !== "storedLightEmitter" ||
+      overlappingLevelThree?.kind !== "storedLightEmitter" ||
+      nonoverlapping?.kind !== "storedLightEmitter"
+    ) {
+      throw new Error("Expected the allocated spell-light occurrences.");
+    }
+    const state = allocated.state;
     const subject = findAct(
       battleRuntimeSessionForTest({ ...baseSession, state }),
       magicSubject(darknessUnitId),
@@ -288,9 +301,7 @@ describe("battle runtime: Darkness", () => {
           magicalDarknessAreaFill(area, battleAreaId("darkness-overlap-area"), [
             {
               kind: "spellCreatedLightOverlapsArea",
-              effectRef: battleEffectExecutionRefForTest(
-                String(overlappingLevelTwoEffectId),
-              ),
+              effectRef: overlappingLevelTwo.emitter.effectRef,
             },
           ]),
         ],
@@ -301,7 +312,7 @@ describe("battle runtime: Darkness", () => {
       expect.objectContaining({
         sourceEffectId: overlappingLevelThreeEffectId,
       }),
-      untrackedLevelTwo,
+      nonoverlapping.emitter,
     ]);
   });
 
@@ -351,16 +362,27 @@ describe("battle runtime: Darkness", () => {
     const overLevelEffectId = battleSpellEffectOccurrenceId(
       "darkness-over-level-light",
     );
-    const overLevelState: BattleState = {
-      ...overLevelSession.state,
-      lightEmitters: [
-        trackedObjectSpellLightEmitter({
-          sourceEffectId: overLevelEffectId,
-          sourceSpellLevel: 3,
-          objectId: "darkness-over-level-object",
-        }),
-      ],
-    };
+    const overLevelAllocated = battleStateWithAllocatedEffectOccurrencesForTest(
+      {
+        state: overLevelSession.state,
+        occurrences: [
+          {
+            kind: "storedLightEmitter",
+            ownerId: wizardId,
+            emitter: trackedObjectSpellLightEmitter({
+              sourceEffectId: overLevelEffectId,
+              sourceSpellLevel: 3,
+              objectId: "darkness-over-level-object",
+            }),
+          },
+        ],
+      },
+    );
+    const overLevelOccurrence = overLevelAllocated.occurrences[0];
+    if (overLevelOccurrence?.kind !== "storedLightEmitter") {
+      throw new Error("Expected the allocated over-level light occurrence.");
+    }
+    const overLevelState = overLevelAllocated.state;
     const overLevelSubject = findAct(
       battleRuntimeSessionForTest({
         ...overLevelSession,
@@ -387,9 +409,7 @@ describe("battle runtime: Darkness", () => {
             [
               {
                 kind: "spellCreatedLightOverlapsArea",
-                effectRef: battleEffectExecutionRefForTest(
-                  String(overLevelEffectId),
-                ),
+                effectRef: overLevelOccurrence.emitter.effectRef,
               },
             ],
           ),
@@ -541,14 +561,13 @@ function trackedObjectSpellLightEmitter(input: {
   readonly sourceEffectId: ReturnType<typeof battleSpellEffectOccurrenceId>;
   readonly sourceSpellLevel: number;
   readonly objectId: string;
-}): BattleTrackedOngoingSpellLightEmitter {
+}) {
   const sourceSpellLevel = parseBattleSpellEffectLevel(input.sourceSpellLevel);
   if (sourceSpellLevel === null) {
     throw new Error(`Invalid spell effect level ${input.sourceSpellLevel}.`);
   }
   return {
     kind: "spellLightEmitter",
-    effectRef: battleEffectExecutionRefForTest(String(input.sourceEffectId)),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String("synthetic_spell_light"),
     ),
@@ -566,7 +585,7 @@ function trackedObjectSpellLightEmitter(input: {
     },
     opaqueCoverInteraction: { kind: "blocksEmission" },
     expiresAt: { kind: "untilDispelled" },
-  };
+  } as const;
 }
 
 function requireMagicalDarknessZone(

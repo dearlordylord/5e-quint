@@ -50,10 +50,7 @@ import {
   endTurn,
   resolveBattleSubject,
 } from "../unit-profile-admission.test-support.ts";
-import type {
-  BattleActiveEffect,
-  BattleState,
-} from "../battle-state-execution.ts";
+import type { BattleState } from "../battle-state-execution.ts";
 import {
   afterActiveEffectOccurrenceUpdate,
   isEndTurnFillKind,
@@ -77,12 +74,8 @@ describe("turn-boundary active-effect occurrence updates", () => {
       sourceProcedureRef,
       effectKind: "spellEffect" as const,
     };
-    const ownedEffect: Extract<
-      BattleActiveEffect,
-      { readonly kind: "nextAttackRollBySelf" }
-    > = {
+    const ownedEffectTemplate = {
       kind: "nextAttackRollBySelf",
-      effectRef: battleEffectExecutionRefForTest("owned-occurrence"),
       sourceProcedureRef,
       sourceCombatantId: fighterId,
       mode: "advantage",
@@ -90,10 +83,33 @@ describe("turn-boundary active-effect occurrence updates", () => {
         kind: "duration",
         durationTicks: elapsedTimeTicks(1),
       },
+    } as const;
+    const stateWithConcentration: BattleState = {
+      ...state,
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...source,
+        concentration,
+      }),
     };
-    const combatants = new Map(state.combatants)
-      .set(fighterId, { ...source, concentration })
-      .set(goblinId, { ...target, activeEffects: [ownedEffect] });
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: stateWithConcentration,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: ownedEffectTemplate,
+        },
+      ],
+    });
+    const allocatedOccurrence = allocated.occurrences[0];
+    if (
+      allocatedOccurrence?.kind !== "activeEffect" ||
+      allocatedOccurrence.effect.kind !== "nextAttackRollBySelf"
+    ) {
+      throw new Error("Expected the owned active-effect occurrence.");
+    }
+    const ownedEffect = allocatedOccurrence.effect;
+    const combatants = allocated.state.combatants;
     const staleOccurrence = {
       ...ownedEffect,
       effectRef: battleEffectExecutionRefForTest("stale-occurrence"),
@@ -127,12 +143,8 @@ describe("turn-boundary active-effect occurrence updates", () => {
     if (target === undefined) {
       throw new Error("Expected the goblin combatant.");
     }
-    const effectRef = battleEffectExecutionRefForTest(
-      "same-reference-occurrence",
-    );
-    const ownedEffect = {
+    const ownedEffectTemplate = {
       kind: "nextAttackRollBySelf" as const,
-      effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         "same-reference-occurrence",
       ),
@@ -142,11 +154,26 @@ describe("turn-boundary active-effect occurrence updates", () => {
         kind: "duration" as const,
         durationTicks: elapsedTimeTicks(1),
       },
-    } satisfies BattleActiveEffect;
-    const combatants = new Map(state.combatants).set(goblinId, {
-      ...target,
-      activeEffects: [ownedEffect],
+    } as const;
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: ownedEffectTemplate,
+        },
+      ],
     });
+    const allocatedOccurrence = allocated.occurrences[0];
+    if (
+      allocatedOccurrence?.kind !== "activeEffect" ||
+      allocatedOccurrence.effect.kind !== "nextAttackRollBySelf"
+    ) {
+      throw new Error("Expected the cloned active-effect occurrence.");
+    }
+    const ownedEffect = allocatedOccurrence.effect;
+    const combatants = allocated.state.combatants;
     const clonedOccurrence = { ...ownedEffect };
 
     const update = updateCombatantWithActiveEffectOccurrence(
@@ -409,9 +436,8 @@ describe("turn-boundary active-effect occurrence updates", () => {
     const sourceProcedureRef = battleProcedureExecutionRefForTest(
       "sleep-repeat-source",
     );
-    const pendingSleep = {
+    const pendingSleepTemplate = {
       kind: "sleepPendingRepeatSave" as const,
-      effectRef: battleEffectExecutionRefForTest("pending-sleep-transition"),
       sourceProcedureRef,
       sourceCombatantId: fighterId,
       conditionHadNonSpellSource: false,
@@ -428,19 +454,32 @@ describe("turn-boundary active-effect occurrence updates", () => {
         kind: "concentration" as const,
         combatantId: fighterId,
       },
-    } as const satisfies BattleActiveEffect;
-    const sleepingState: BattleState = {
+    } as const;
+    const concentratingState: BattleState = {
       ...state,
-      combatants: new Map(state.combatants)
-        .set(fighterId, {
-          ...fighter,
-          concentration: { sourceProcedureRef, effectKind: "spellEffect" },
-        })
-        .set(goblinId, {
-          ...goblin,
-          activeEffects: [pendingSleep],
-        }),
+      combatants: new Map(state.combatants).set(fighterId, {
+        ...fighter,
+        concentration: { sourceProcedureRef, effectKind: "spellEffect" },
+      }),
     };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: concentratingState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: goblinId,
+          effect: pendingSleepTemplate,
+        },
+      ],
+    });
+    const pendingSleepOccurrence = allocated.occurrences[0];
+    if (
+      pendingSleepOccurrence?.kind !== "activeEffect" ||
+      pendingSleepOccurrence.effect.kind !== "sleepPendingRepeatSave"
+    ) {
+      throw new Error("Expected the allocated pending Sleep occurrence.");
+    }
+    const sleepingState = allocated.state;
     const subject = {
       tag: "runtimeCommand" as const,
       actorId: goblinId,
@@ -486,7 +525,7 @@ describe("turn-boundary active-effect occurrence updates", () => {
     expect(failed.state.combatants.get(goblinId)?.activeEffects).toEqual([
       expect.objectContaining({
         kind: "sleepUnconscious",
-        effectRef: pendingSleep.effectRef,
+        effectRef: pendingSleepOccurrence.effect.effectRef,
       }),
     ]);
   });
