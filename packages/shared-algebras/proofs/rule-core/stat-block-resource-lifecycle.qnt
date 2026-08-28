@@ -4,13 +4,23 @@
 // KERNEL-COVERAGE: qnt-owner BATTLE.STAT_BLOCK.RESOURCE_LIFECYCLE
 
 module statBlockResourceLifecycle {
+  type StatBlockRechargeMinimumRoll = int
+
+  type StatBlockRechargeD6Result =
+    | RechargeD6One
+    | RechargeD6Two
+    | RechargeD6Three
+    | RechargeD6Four
+    | RechargeD6Five
+    | RechargeD6Six
+
   type StatBlockDailyUseResource = {
     usesRemaining: int,
     maximumUses: int,
   }
 
   type StatBlockRechargeResource = {
-    minimumRoll: int,
+    minimumRoll: StatBlockRechargeMinimumRoll,
     available: bool,
   }
 
@@ -47,8 +57,7 @@ module statBlockResourceLifecycle {
   }
 
   pure def legalStatBlockRechargeResource(resource: StatBlockRechargeResource): bool = all {
-    resource.minimumRoll >= 1,
-    resource.minimumRoll <= 6,
+    resource.minimumRoll.in(2.to(6)),
     resource.available.in(Set(true, false)),
   }
 
@@ -89,12 +98,25 @@ module statBlockResourceLifecycle {
 
   pure def processStatBlockRechargeRoll(
     recharge: StatBlockRechargeResource,
-    roll: int
-  ): StatBlockRechargeResource =
+    result: StatBlockRechargeD6Result
+  ): StatBlockRechargeResource = {
+    val roll = statBlockRechargeD6ResultValue(result)
     if (recharge.available) recharge
-    else if (roll >= recharge.minimumRoll and roll <= 6)
+    else if (roll >= recharge.minimumRoll)
       recharge.with("available", true)
     else recharge
+  }
+
+  pure def statBlockRechargeD6ResultValue(
+    result: StatBlockRechargeD6Result
+  ): int = match result {
+    | RechargeD6One => 1
+    | RechargeD6Two => 2
+    | RechargeD6Three => 3
+    | RechargeD6Four => 4
+    | RechargeD6Five => 5
+    | RechargeD6Six => 6
+  }
 
   pure def refreshStatBlockResourceAfterShortRest(
     resource: StatBlockLimitedUseResource

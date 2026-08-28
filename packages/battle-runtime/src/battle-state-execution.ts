@@ -162,6 +162,7 @@ import {
   movementFeet,
   type Condition,
   type CoverType,
+  type D6RollResult,
   type DamageDieSize,
   type ReadonlyNonEmptyArray,
   type ResourceCount,
@@ -5849,7 +5850,7 @@ export type BattleStatBlockRechargeRollHole = {
 };
 export type BattleStatBlockRechargeRollResult = {
   readonly target: BattleResourcePoolExecutionRef;
-  readonly roll: DieRollResult;
+  readonly roll: D6RollResult;
 };
 export type BattleConcentrationSavingThrowHole = {
   readonly holeInstanceKey: HoleInstanceKey;

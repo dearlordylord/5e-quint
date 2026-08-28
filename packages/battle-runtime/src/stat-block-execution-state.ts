@@ -5,7 +5,7 @@ import { optionalProperty } from "./optional-property.ts";
 import {
   PositiveInteger,
   resourceCount,
-  type DieRollResult,
+  type D6RollResult,
   type Integer as IntegerType,
   type NonNegativeInteger as NonNegativeIntegerType,
   type PositiveInteger as PositiveIntegerType,
@@ -19,6 +19,7 @@ import * as Match from "effect/Match";
 import type {
   ChallengeRating,
   CreatureLimitedUse,
+  CreatureRechargeMinimumRoll,
   CreatureSense,
   CreatureImmunityList,
   CreatureSavingThrowModifier,
@@ -261,20 +262,12 @@ export type BattleStatBlockRuntimeResource = {
     | { readonly kind: "daily"; readonly uses: PositiveIntegerType }
     | {
         readonly kind: "recharge";
-        readonly minimumRoll: StatBlockRechargeMinimumRoll;
+        readonly minimumRoll: CreatureRechargeMinimumRoll;
       }
     | { readonly kind: "recharge_after_rest" };
 };
 
-export const STAT_BLOCK_RECHARGE_MINIMUM_ROLLS = [
-  2, 3, 4, 5, 6,
-] as const satisfies ReadonlyArray<number>;
-export type StatBlockRechargeMinimumRoll =
-  (typeof STAT_BLOCK_RECHARGE_MINIMUM_ROLLS)[number];
-
-export type StatBlockRuntimeResourceParseFailure =
-  | "invalidDailyUses"
-  | "invalidRechargeMinimumRoll";
+export type StatBlockRuntimeResourceParseFailure = "invalidDailyUses";
 
 /**
  * Resolve one authored resource declaration into the source-free runtime
@@ -299,18 +292,12 @@ export function parseStatBlockRuntimeResource(
     });
   }
   if (resource.limit.kind === "recharge") {
-    const minimumRoll = statBlockRechargeMinimumRoll(
-      resource.limit.minimumRoll,
-    );
-    if (minimumRoll === null) {
-      return Either.left("invalidRechargeMinimumRoll");
-    }
     return Either.right({
       ordinal: resource.ordinal,
       ownership: resource.ownership,
       limit: {
         kind: "recharge",
-        minimumRoll,
+        minimumRoll: resource.limit.minimumRoll,
       },
     });
   }
@@ -319,17 +306,6 @@ export function parseStatBlockRuntimeResource(
     ownership: resource.ownership,
     limit: { kind: "recharge_after_rest" },
   });
-}
-
-function statBlockRechargeMinimumRoll(
-  value: number,
-): StatBlockRechargeMinimumRoll | null {
-  return (
-    STAT_BLOCK_RECHARGE_MINIMUM_ROLLS.find(
-      (minimumRoll): minimumRoll is StatBlockRechargeMinimumRoll =>
-        minimumRoll === value,
-    ) ?? null
-  );
 }
 
 export type BattleStatBlockRuntimeMultiattackDispatch = {
@@ -734,7 +710,7 @@ export function applyStatBlockRechargeRolls(
   execution: StatBlockExecutionState,
   rolls: readonly {
     readonly target: BattleResourcePoolExecutionRef;
-    readonly roll: DieRollResult;
+    readonly roll: D6RollResult;
   }[],
 ): StatBlockExecutionState {
   const rollsByTarget = new Map(rolls.map((roll) => [roll.target, roll.roll]));

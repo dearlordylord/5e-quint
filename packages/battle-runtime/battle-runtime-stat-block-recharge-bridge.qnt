@@ -6,8 +6,8 @@ module battleRuntimeStatBlockRechargeBridge {
 
   pure def battleRuntimeRechargeAvailableAfterRoll(
     available: bool,
-    minimumRoll: int,
-    roll: int
+    minimumRoll: StatBlockRechargeMinimumRoll,
+    roll: StatBlockRechargeD6Result
   ): bool = {
     val recharge = { minimumRoll: minimumRoll, available: available }
     processStatBlockRechargeRoll(recharge, roll).available

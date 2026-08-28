@@ -59,7 +59,10 @@ import {
 } from "../unit-feature-support.ts";
 import { Match, Schema } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts.ts";
-import { statBlockMultiattackContinuationActionResourcesAreValid } from "./action-resource-kinds.ts";
+import {
+  actionResourceCollectionOwnershipActivityAndUniquenessAreValid,
+  statBlockMultiattackContinuationActionResourcesAreValid,
+} from "./action-resource-kinds.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
   UnitSupportProcedureExecutionSchema,
@@ -2798,6 +2801,14 @@ const BattleDieRollResultSchema = Schema.Number.pipe(
   Schema.brand("DieRollResult"),
 );
 
+const BattleD6RollResultSchema = Schema.Number.pipe(
+  Schema.int(),
+  Schema.between(1, 6),
+  Schema.brand("PositiveInteger"),
+  Schema.brand("DieRollResult"),
+  Schema.brand("D6RollResult"),
+);
+
 const BattleD20DieRollResultSchema = Schema.Number.pipe(
   Schema.int(),
   Schema.between(1, 20),
@@ -5032,7 +5043,7 @@ export const BattleFillSchema: Schema.Schema<
       value: Schema.Array(
         Schema.Struct({
           target: BattleResourcePoolExecutionRef,
-          roll: BattleDieRollResultSchema,
+          roll: BattleD6RollResultSchema,
         }),
       ),
     }),
@@ -8320,7 +8331,7 @@ function battleSnapshotInvariantsHold(
       cursorByCombatant,
       retiredAllocationByCombatant,
     }) &&
-    battleSnapshotActionResourceContinuationsAreValid(snapshot) &&
+    battleSnapshotActionResourcesAreValid(snapshot) &&
     battleSnapshotActsOwnReferences(snapshot, boundExecutionRefs) &&
     snapshot.readiedResponses.spells.every((readied) =>
       serializedReadiedSpellOwnsInvocation(snapshot.combatants, readied),
@@ -8340,23 +8351,32 @@ function battleSnapshotInvariantsHold(
   );
 }
 
-function battleSnapshotActionResourceContinuationsAreValid(
+function battleSnapshotActionResourcesAreValid(
   snapshot: BattleSnapshotInvariantInput,
 ): boolean {
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === snapshot.currentActorId,
+  );
+  if (
+    actor === undefined ||
+    !actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
+      snapshot.turn.actionResources,
+      snapshot.currentActorId,
+      actor.activeEffectRefs,
+    )
+  ) {
+    return false;
+  }
   const hasMultiattackContinuation = snapshot.turn.actionResources.some(
     (resource) => resource.source === "statBlockMultiattack",
   );
   if (!hasMultiattackContinuation) return true;
-  const actor = snapshot.combatants.find(
-    (combatant) => combatant.combatantId === snapshot.currentActorId,
-  );
   return (
     actor?.origin.kind === "statBlock" &&
     statBlockMultiattackContinuationActionResourcesAreValid(
       snapshot.turn.actionResources,
       snapshot.currentActorId,
       actor.origin.execution,
-      actor.activeEffectRefs,
     )
   );
 }

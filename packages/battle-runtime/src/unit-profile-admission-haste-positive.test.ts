@@ -5,6 +5,7 @@ import {
 } from "./battle-runtime.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
 import { BattleSnapshotSchema } from "./index.ts";
+import { battleActiveEffectExecutionRef } from "./identity.ts";
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C17-HASTE-POSITIVE-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: selected-identity-replay L5-C18-HASTE-LETHARGY-RUNTIME haste
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L5-C17-HASTE-POSITIVE-RUNTIME haste
@@ -214,6 +215,96 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     });
     expect(targetTurn.tag).toBe("resolved");
     if (targetTurn.tag !== "resolved") return;
+    const ordinaryTurn = Schema.encodeSync(BattleSnapshotSchema)(
+      targetTurn.snapshot,
+    );
+    const ordinaryHasteResource = ordinaryTurn.turn.actionResources.find(
+      (resource) => resource.source === "spellEffect",
+    );
+    expect(ordinaryHasteResource).toBeDefined();
+    if (ordinaryHasteResource === undefined) return;
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(ordinaryTurn),
+      ),
+    ).toBe(true);
+    const inactiveHaste = {
+      ...ordinaryTurn,
+      combatants: ordinaryTurn.combatants.map((combatant) =>
+        combatant.combatantId === spellTargetId
+          ? {
+              ...combatant,
+              activeEffectRefs: combatant.activeEffectRefs.filter(
+                (effectRef) =>
+                  effectRef !== ordinaryHasteResource.sourceEffectRef,
+              ),
+            }
+          : combatant,
+      ),
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(inactiveHaste),
+      ),
+    ).toBe(true);
+    const foreignOwner = ordinaryTurn.combatants.find(
+      (combatant) => combatant.combatantId === spellCasterId,
+    );
+    expect(foreignOwner?.origin.kind).toBe("character");
+    if (foreignOwner?.origin.kind !== "character") return;
+    const foreignEffectOrdinal = Number(foreignOwner.nextActiveEffectOrdinal);
+    const foreignEffectRef = battleActiveEffectExecutionRef(
+      JSON.stringify({
+        kind: "activeEffectOccurrence",
+        ownerScopeRef: foreignOwner.origin.execution.scopeRef,
+        ordinal: foreignEffectOrdinal,
+      }),
+    );
+    const foreignHaste = {
+      ...ordinaryTurn,
+      combatants: ordinaryTurn.combatants.map((combatant) =>
+        combatant.combatantId === spellCasterId
+          ? {
+              ...combatant,
+              nextActiveEffectOrdinal: foreignEffectOrdinal + 1,
+              activeEffectRefs: [
+                ...combatant.activeEffectRefs,
+                foreignEffectRef,
+              ],
+            }
+          : combatant,
+      ),
+      turn: {
+        ...ordinaryTurn.turn,
+        actionResources: ordinaryTurn.turn.actionResources.map((resource) =>
+          resource.source === "spellEffect"
+            ? { ...resource, sourceEffectRef: foreignEffectRef }
+            : resource,
+        ),
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(foreignHaste),
+      ),
+    ).toBe(true);
+    const duplicatedOrdinaryHaste = {
+      ...ordinaryTurn,
+      turn: {
+        ...ordinaryTurn.turn,
+        actionResources: [
+          ...ordinaryTurn.turn.actionResources,
+          ordinaryHasteResource,
+        ],
+      },
+    };
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleSnapshotSchema)(
+          duplicatedOrdinaryHaste,
+        ),
+      ),
+    ).toBe(true);
     const multiattack = targetTurn.snapshot.acts.find(
       (candidate) =>
         candidate.subject.tag === "action" &&
@@ -282,25 +373,6 @@ describe("L5-C17/L5-C18 Haste runtime profile", () => {
     expect(
       Either.isLeft(
         Schema.decodeUnknownEither(BattleSnapshotSchema)(forgedSpellOwner),
-      ),
-    ).toBe(true);
-    const hasteResource = encoded.turn.actionResources.find(
-      (resource) => resource.source === "spellEffect",
-    );
-    expect(hasteResource).toBeDefined();
-    if (hasteResource === undefined) return;
-    const duplicatedHasteResource = {
-      ...encoded,
-      turn: {
-        ...encoded.turn,
-        actionResources: [...encoded.turn.actionResources, hasteResource],
-      },
-    };
-    expect(
-      Either.isLeft(
-        Schema.decodeUnknownEither(BattleSnapshotSchema)(
-          duplicatedHasteResource,
-        ),
       ),
     ).toBe(true);
   });

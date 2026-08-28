@@ -2,6 +2,7 @@ import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
 import { HASTE_ACTION_RESOURCE_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
+import { D6_ROLL_RESULTS, NonNegativeInteger } from "@dnd/shared/types";
 import {
   statBlockId as parseSharedStatBlockId,
   unitId as parseSharedUnitId,
@@ -50,6 +51,7 @@ import {
   battleAreaId,
   battleLineDirectionId,
   battleObjectId,
+  battleResourcePoolExecutionRef,
   battleSpellEffectOccurrenceId,
 } from "./identity.ts";
 
@@ -201,6 +203,22 @@ function encodedActivatedMultiattackSnapshot(): EncodedSnapshot {
         fills: [],
       }),
     ).state,
+  );
+}
+
+function codecRechargeResourcePoolRef() {
+  const snapshot = Schema.decodeUnknownSync(BattleSnapshotSchema)(
+    encodedActivatedMultiattackSnapshot(),
+  );
+  const actor = snapshot.combatants.find(
+    (combatant) => combatant.combatantId === skeletonId,
+  );
+  if (actor?.origin.kind !== "statBlock") {
+    throw new Error("Expected the codec Recharge fixture actor.");
+  }
+  return battleResourcePoolExecutionRef(
+    actor.origin.execution.scopeRef,
+    NonNegativeInteger(0),
   );
 }
 
@@ -716,6 +734,34 @@ describe("battle codec execution-reference boundaries", () => {
       replaceActHole(fixture.snapshot, fixture.sourceProcedureRef, replacement),
     );
     expect(Either.isRight(decoded)).toBe(expected === "Right");
+  });
+});
+
+describe("battle codec Stat Block Recharge d6 boundaries", () => {
+  const target = codecRechargeResourcePoolRef();
+
+  test.each(D6_ROLL_RESULTS)("accepts the d6 result %i", (roll) => {
+    expect(
+      Either.isRight(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "statBlockRechargeRoll",
+          holeId: holeId(`recharge-d6-${roll}`),
+          value: [{ target, roll }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  test.each([0, 7] as const)("rejects the non-d6 result %i", (roll) => {
+    expect(
+      Either.isLeft(
+        Schema.decodeUnknownEither(BattleFillSchema)({
+          kind: "statBlockRechargeRoll",
+          holeId: holeId(`recharge-not-d6-${roll}`),
+          value: [{ target, roll }],
+        }),
+      ),
+    ).toBe(true);
   });
 });
 

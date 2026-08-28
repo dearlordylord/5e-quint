@@ -1,6 +1,7 @@
 // RAW-COVERAGE: verification-owner:runtime-test RAW-STAT-BLOCK-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-BONUS-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-LEGENDARY-ACTION-LIFECYCLE-001 RAW-STAT-BLOCK-ATTACK-PROCEDURE-001 RAW-STAT-BLOCK-DAMAGE-PROCEDURE-001 RAW-STAT-BLOCK-MULTIATTACK-001 RAW-STAT-BLOCK-LIMITED-USAGE-001
 import { statBlockId as parseSharedStatBlockId } from "@dnd/shared/game-facts";
 import {
+  D6RollResult,
   NonNegativeInteger,
   resourceCount,
   type ReadonlyNonEmptyArray,
@@ -43,7 +44,6 @@ import {
   characterSeed,
   damageRollFill,
   damageRollFillWithGroups,
-  DieRollResult,
   difficultyClass,
   discoverBattleActs,
   distantFighterId,
@@ -2915,7 +2915,7 @@ describe("battle runtime: Stat Block actions", () => {
             value: [
               {
                 target: cinderBreathPoolRef,
-                roll: DieRollResult(5),
+                roll: D6RollResult(5),
               },
             ],
           },
@@ -3053,7 +3053,7 @@ describe("battle runtime: Stat Block actions", () => {
     expect(statBlockRechargeRollFillMatchesHole([], null)).toBe(true);
     expect(
       statBlockRechargeRollFillMatchesHole(
-        [{ target: cinderBreathPoolRef, roll: DieRollResult(1) }],
+        [{ target: cinderBreathPoolRef, roll: D6RollResult(1) }],
         null,
       ),
     ).toBe(false);
@@ -3061,17 +3061,8 @@ describe("battle runtime: Stat Block actions", () => {
     expect(
       statBlockRechargeRollFillMatchesHole(
         [
-          { target: cinderBreathPoolRef, roll: DieRollResult(7) },
-          { target: ashCloudPoolRef, roll: DieRollResult(6) },
-        ],
-        rechargeHole,
-      ),
-    ).toBe(false);
-    expect(
-      statBlockRechargeRollFillMatchesHole(
-        [
-          { target: cinderBreathPoolRef, roll: DieRollResult(1) },
-          { target: cinderBreathPoolRef, roll: DieRollResult(6) },
+          { target: cinderBreathPoolRef, roll: D6RollResult(1) },
+          { target: cinderBreathPoolRef, roll: D6RollResult(6) },
         ],
         rechargeHole,
       ),
@@ -3085,9 +3076,9 @@ describe("battle runtime: Stat Block actions", () => {
           const results = [
             {
               target: cinderBreathPoolRef,
-              roll: DieRollResult(cinderRoll),
+              roll: D6RollResult(cinderRoll),
             },
-            { target: ashCloudPoolRef, roll: DieRollResult(ashRoll) },
+            { target: ashCloudPoolRef, roll: D6RollResult(ashRoll) },
           ] as const;
           expect(
             statBlockRechargeRollFillMatchesHole(
@@ -3114,11 +3105,11 @@ describe("battle runtime: Stat Block actions", () => {
             value: [
               {
                 target: cinderBreathPoolRef,
-                roll: DieRollResult(4),
+                roll: D6RollResult(4),
               },
               {
                 target: ashCloudPoolRef,
-                roll: DieRollResult(6),
+                roll: D6RollResult(6),
               },
             ],
           },

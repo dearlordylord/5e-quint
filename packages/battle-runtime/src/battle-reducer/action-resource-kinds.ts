@@ -118,7 +118,6 @@ export function statBlockMultiattackContinuationActionResourcesAreValid(
   actionResources: readonly RuntimeActionResource[],
   actorId: CombatantId,
   execution: StatBlockExecutionSnapshot,
-  activeEffectRefs: readonly BattleActiveEffectExecutionRef[],
 ): boolean {
   const continuationResources = actionResources.filter(
     (resource): resource is StatBlockMultiattackActionResource =>
@@ -134,22 +133,47 @@ export function statBlockMultiattackContinuationActionResourcesAreValid(
   ) {
     return false;
   }
-  const spellEffectRefs = actionResources.flatMap((resource) =>
-    resource.source === "spellEffect" ? [resource.sourceEffectRef] : [],
-  );
-  if (new Set(spellEffectRefs).size !== spellEffectRefs.length) {
-    return false;
-  }
   return actionResources.every((resource) =>
     Match.value(resource).pipe(
       Match.discriminatorsExhaustive("source")({
         turn: () => false,
         unit: () => false,
-        spellEffect: (spellEffectResource) =>
-          activeEffectRefs.includes(spellEffectResource.sourceEffectRef),
+        spellEffect: () => true,
         statBlockMultiattack: () => true,
         classFeatureExtraAttack: () => false,
         monkFocusFlurryOfBlows: () => false,
+      }),
+    ),
+  );
+}
+
+export function actionResourceCollectionOwnershipActivityAndUniquenessAreValid(
+  actionResources: readonly RuntimeActionResource[],
+  actorId: CombatantId,
+  activeEffectRefs: readonly BattleActiveEffectExecutionRef[],
+): boolean {
+  const spellEffectRefs = actionResources.flatMap((resource) =>
+    resource.source === "spellEffect" ? [resource.sourceEffectRef] : [],
+  );
+  if (
+    actionResources.filter((resource) => resource.source === "turn").length >
+      1 ||
+    new Set(spellEffectRefs).size !== spellEffectRefs.length
+  ) {
+    return false;
+  }
+  return actionResources.every((resource) =>
+    Match.value(resource).pipe(
+      Match.discriminatorsExhaustive("source")({
+        turn: () => true,
+        unit: ({ sourceOwnerId }) => sourceOwnerId === actorId,
+        spellEffect: ({ sourceEffectRef }) =>
+          activeEffectRefs.includes(sourceEffectRef),
+        statBlockMultiattack: ({ sourceOwnerId }) => sourceOwnerId === actorId,
+        classFeatureExtraAttack: ({ sourceOwnerId }) =>
+          sourceOwnerId === actorId,
+        monkFocusFlurryOfBlows: ({ sourceOwnerId }) =>
+          sourceOwnerId === actorId,
       }),
     ),
   );

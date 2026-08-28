@@ -37,6 +37,7 @@ export {
   CommandTargetNextTurnOptionsSchema,
   ComponentsSchema,
   CreatureActionsSchema,
+  CREATURE_RECHARGE_MINIMUM_ROLLS,
   CreatureLegendaryActionsSchema,
   CreatureLimitedUseSchema,
   CreatureRechargeMinimumRollSchema,

@@ -12,9 +12,9 @@ module statBlockResourceLifecycleExamples {
     )
     val failedRoll = processStatBlockRechargeRoll(
       initialStatBlockRechargeResource.with("available", false),
-      4
+      RechargeD6Four
     )
-    val successfulRoll = processStatBlockRechargeRoll(failedRoll, 5)
+    val successfulRoll = processStatBlockRechargeRoll(failedRoll, RechargeD6Five)
     val restRecharge = spendStatBlockLimitedUse(
       StatBlockRechargeAfterRestUse(initialStatBlockRechargeAfterRestResource)
     )
@@ -35,6 +35,18 @@ module statBlockResourceLifecycleExamples {
       assert(restRecharge.spent),
       assert(shortRested == StatBlockRechargeAfterRestUse({ available: true })),
       assert(longRested == StatBlockDailyUse({ usesRemaining: 1, maximumUses: 1 })),
+    }
+  }
+
+  run test_recharge_threshold_five_covers_every_d6_result = {
+    val unavailable = initialStatBlockRechargeResource.with("available", false)
+    all {
+      assert(not(processStatBlockRechargeRoll(unavailable, RechargeD6One).available)),
+      assert(not(processStatBlockRechargeRoll(unavailable, RechargeD6Two).available)),
+      assert(not(processStatBlockRechargeRoll(unavailable, RechargeD6Three).available)),
+      assert(not(processStatBlockRechargeRoll(unavailable, RechargeD6Four).available)),
+      assert(processStatBlockRechargeRoll(unavailable, RechargeD6Five).available),
+      assert(processStatBlockRechargeRoll(unavailable, RechargeD6Six).available),
     }
   }
 }

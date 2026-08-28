@@ -64,7 +64,14 @@ module statBlockResourceLifecycleInductive {
   }
   action doUse = all { recordState(spendStatBlockLimitedUse(qState).resource) }
   action doRechargeRoll = {
-    nondet roll = Set(1, 4, 5, 6).oneOf()
+    nondet roll = Set(
+      RechargeD6One,
+      RechargeD6Two,
+      RechargeD6Three,
+      RechargeD6Four,
+      RechargeD6Five,
+      RechargeD6Six
+    ).oneOf()
     val result = processStatBlockRechargeRoll(qRecharge, roll)
     all {
       qKind == ProofRecharge,
@@ -83,7 +90,7 @@ module statBlockResourceLifecycleInductive {
     qKind.in(Set(ProofDaily, ProofRecharge, ProofRechargeAfterRest)),
     qDailyUsesMaximum.in(1.to(6)),
     qDailyUsesRemaining.in(0.to(qDailyUsesMaximum)),
-    qRechargeMinimumRoll.in(1.to(6)),
+    qRechargeMinimumRoll.in(2.to(6)),
     qRechargeAvailable.in(Set(true, false)),
     qRechargeAfterRestAvailable.in(Set(true, false)),
     legalStatBlockLimitedUseResource(qState),
