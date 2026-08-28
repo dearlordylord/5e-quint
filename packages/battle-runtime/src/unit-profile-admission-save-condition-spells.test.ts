@@ -87,6 +87,7 @@ import {
   assertBattleSnapshotCodecAcceptsHolesForSubjectForTest,
   battleStateWithAllSpellSlotsExpended,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   requireCharacterSpellProcedureRefForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
@@ -581,14 +582,20 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
       ),
       effectKind: "spellEffect" as const,
     };
-    const state = {
+    const concentratingState: BattleState = {
       ...baseState,
       combatants: new Map(baseState.combatants).set(spellTargetId, {
         ...target,
         concentration: targetConcentration,
-        activeEffects: [
-          ...target.activeEffects,
-          {
+      }),
+    };
+    const state = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: concentratingState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: {
             kind: "turnStartTemporaryHitPoints" as const,
             sourceProcedureRef: battleProcedureExecutionRefForTest(
               String(heroismUnitId),
@@ -600,9 +607,9 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
               combatantId: spellTargetId,
             },
           },
-        ],
-      }),
-    };
+        },
+      ],
+    }).state;
     const session = battleRuntimeSessionForTest({
       state,
       context: baseSession.context,
@@ -1589,7 +1596,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     });
     const baseState = baseSession.state;
     const target = requireCombatant(baseState, spellTargetId);
-    const paralyzedEffect = {
+    const paralyzedEffectTemplate = {
       kind: "spellConditionEndTurnSave" as const,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(holdPersonUnitId),
@@ -1607,7 +1614,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         durationTicks: elapsedTimeTicks(10),
       },
     };
-    const poisonedEffect = {
+    const poisonedEffectTemplate = {
       kind: "spellConditionEndTurnSave" as const,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("synthetic_poison_spell"),
@@ -1628,24 +1635,41 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       {
         ...target,
-        activeEffects: [
-          ...target.activeEffects,
-          paralyzedEffect,
-          poisonedEffect,
-        ],
       },
       applyCondition(
         applyCondition(target.conditions, "paralyzed"),
         "poisoned",
       ),
     );
-    const state = {
+    const conditionedState: BattleState = {
       ...baseState,
       combatants: new Map(baseState.combatants).set(
         spellTargetId,
         affectedTarget,
       ),
     };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: conditionedState,
+      occurrences: [paralyzedEffectTemplate, poisonedEffectTemplate].map(
+        (effect) => ({
+          kind: "activeEffect" as const,
+          ownerId: spellTargetId,
+          effect,
+        }),
+      ),
+    });
+    const [paralyzedOccurrence, poisonedOccurrence] = allocated.occurrences;
+    if (
+      paralyzedOccurrence?.kind !== "activeEffect" ||
+      paralyzedOccurrence.effect.kind !== "spellConditionEndTurnSave" ||
+      poisonedOccurrence?.kind !== "activeEffect" ||
+      poisonedOccurrence.effect.kind !== "spellConditionEndTurnSave"
+    ) {
+      throw new Error("Expected the allocated condition occurrences.");
+    }
+    const paralyzedEffect = paralyzedOccurrence.effect;
+    const poisonedEffect = poisonedOccurrence.effect;
+    const state = allocated.state;
     const session = battleRuntimeSessionForTest({ ...baseSession, state });
     const act = bonusSpellAct({
       session,
@@ -1736,7 +1760,7 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const baseState = baseSession.state;
     const caster = requireCombatant(baseState, spellCasterId);
     const target = requireCombatant(baseState, spellTargetId);
-    const paralyzedEffect = {
+    const paralyzedEffectTemplate = {
       kind: "spellConditionEndTurnSave" as const,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String(holdPersonUnitId),
@@ -1758,11 +1782,10 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
     const affectedTarget = battleCreatureStateWithKnockOutPreservedConditions(
       {
         ...target,
-        activeEffects: [...target.activeEffects, paralyzedEffect],
       },
       applyCondition(target.conditions, "paralyzed"),
     );
-    const state = {
+    const concentratingState: BattleState = {
       ...baseState,
       combatants: new Map(baseState.combatants)
         .set(spellCasterId, {
@@ -1776,6 +1799,25 @@ describe("QMBT14 deterministic save-condition Spell Unit admission", () => {
         })
         .set(spellTargetId, affectedTarget),
     };
+    const allocated = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: concentratingState,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: paralyzedEffectTemplate,
+        },
+      ],
+    });
+    const paralyzedOccurrence = allocated.occurrences[0];
+    if (
+      paralyzedOccurrence?.kind !== "activeEffect" ||
+      paralyzedOccurrence.effect.kind !== "spellConditionEndTurnSave"
+    ) {
+      throw new Error("Expected the allocated Paralyzed occurrence.");
+    }
+    const paralyzedEffect = paralyzedOccurrence.effect;
+    const state = allocated.state;
     const session = battleRuntimeSessionForTest({
       state,
       context: baseSession.context,
