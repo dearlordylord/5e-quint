@@ -1,6 +1,7 @@
 import { Schema } from "effect";
 import * as Either from "effect/Either";
 import { describe, expect, test } from "vitest";
+import { HASTE_ACTION_RESOURCE_RESTRICTION } from "@dnd/shared-algebras/action-economy-algebra";
 import {
   statBlockId as parseSharedStatBlockId,
   unitId as parseSharedUnitId,
@@ -1027,6 +1028,53 @@ describe("battle codec act ownership boundaries", () => {
             ? { ...resource, sourceOwnerId: wizardId }
             : resource,
         ),
+      },
+    });
+  });
+  test("rejects an ordinary turn Action restored during a Stat Block Multiattack continuation", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [
+          ...encoded.turn.actionResources,
+          { kind: "action", source: "turn" },
+        ],
+      },
+    });
+  });
+  test("rejects a forged restriction on a Stat Block Multiattack continuation", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: encoded.turn.actionResources.map((resource) =>
+          resource.source === "statBlockMultiattack"
+            ? { ...resource, restriction: { kind: "none" } }
+            : resource,
+        ),
+      },
+    });
+  });
+  test("rejects an unbound spell-effect Action during a Stat Block Multiattack continuation", () => {
+    const encoded = encodedActivatedMultiattackSnapshot();
+    expectSnapshotDecodeLeft({
+      ...encoded,
+      turn: {
+        ...encoded.turn,
+        actionResources: [
+          ...encoded.turn.actionResources,
+          {
+            kind: "action",
+            source: "spellEffect",
+            sourceEffectRef: battleActiveEffectExecutionRefForTest(
+              "forged-multiattack-continuation",
+            ),
+            restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
+          },
+        ],
       },
     });
   });

@@ -1558,10 +1558,6 @@ describe("battle runtime: Stat Block actions", () => {
           kind: "listedOccurrence",
           attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
         },
-        restriction: {
-          kind: "exclude",
-          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
-        },
       },
       {
         kind: "action",
@@ -1572,10 +1568,6 @@ describe("battle runtime: Stat Block actions", () => {
           kind: "listedOccurrence",
           attackProcedureRef: procedureRefForAttack(goblinTurn, 1),
         },
-        restriction: {
-          kind: "exclude",
-          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
-        },
       },
       {
         kind: "action",
@@ -1585,10 +1577,6 @@ describe("battle runtime: Stat Block actions", () => {
         dispatch: {
           kind: "listedOccurrence",
           attackProcedureRef: procedureRefForAttack(goblinTurn, 2),
-        },
-        restriction: {
-          kind: "exclude",
-          actions: expect.arrayContaining(["dash", "magic", "utilize"]),
         },
       },
     ]);

@@ -1,4 +1,5 @@
 // Runtime codecs for battle reducer public payloads.
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // KERNEL-COVERAGE: runtime-owner BATTLE.ATTACK.PRONE_TARGET_ROLL_MODE
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-warding-bond-linked-effect
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-spell-created-held-object
@@ -21,6 +22,7 @@
 
 import { ATTACK_ROLL_MODES } from "@dnd/shared-algebras/runtime-hole-algebra";
 import { ArmorClassSchema as BattleArmorClassSchema } from "@dnd/shared-algebras/armor-class-algebra";
+import { HasteActionResourceRestrictionSchema } from "@dnd/shared-algebras/action-economy-algebra";
 import { RETAINED_COMPANION_PROTOCOL_TAGS } from "@dnd/shared-algebras/companion-protocol-algebra";
 import {
   AmmunitionKindSchema,
@@ -57,7 +59,7 @@ import {
 } from "../unit-feature-support.ts";
 import { Match, Schema } from "effect";
 import { SpellExecutionFactsSchema } from "./spell-execution-facts.ts";
-import { statBlockMultiattackContinuationResourcesAreValid } from "./action-resource-kinds.ts";
+import { statBlockMultiattackContinuationActionResourcesAreValid } from "./action-resource-kinds.ts";
 import {
   UnitFeatureProcedureExecutionSchema,
   UnitSupportProcedureExecutionSchema,
@@ -5387,7 +5389,7 @@ export const RuntimeActionResourceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("unit"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: CreatureId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
     restriction: BattleActionRestrictionSchema,
@@ -5395,10 +5397,10 @@ export const RuntimeActionResourceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("spellEffect"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: Schema.optionalWith(Schema.Never, { exact: true }),
     sourceEffectRef: BattleActiveEffectExecutionRef,
     sourceProcedureRef: Schema.optionalWith(Schema.Never, { exact: true }),
-    restriction: BattleActionRestrictionSchema,
+    restriction: HasteActionResourceRestrictionSchema,
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),
@@ -5417,12 +5419,12 @@ export const RuntimeActionResourceSchema = Schema.Union(
         ),
       }),
     ),
-    restriction: BattleActionRestrictionSchema,
+    restriction: Schema.optionalWith(Schema.Never, { exact: true }),
   }),
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("classFeatureExtraAttack"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: CreatureId,
     sourceProcedureRef: BattleProcedureExecutionRef,
     sourceUnitId: Schema.optionalWith(Schema.Never, { exact: true }),
     restriction: BattleActionRestrictionSchema,
@@ -5430,7 +5432,7 @@ export const RuntimeActionResourceSchema = Schema.Union(
   Schema.Struct({
     kind: Schema.Literal("action"),
     source: Schema.Literal("monkFocusFlurryOfBlows"),
-    sourceOwnerId: Schema.String,
+    sourceOwnerId: CreatureId,
     sourceProcedureRef: BattleProcedureExecutionRef,
   }),
 );
@@ -8341,19 +8343,20 @@ function battleSnapshotInvariantsHold(
 function battleSnapshotActionResourceContinuationsAreValid(
   snapshot: BattleSnapshotInvariantInput,
 ): boolean {
-  const continuationResources = snapshot.turn.actionResources.filter(
+  const hasMultiattackContinuation = snapshot.turn.actionResources.some(
     (resource) => resource.source === "statBlockMultiattack",
   );
-  if (continuationResources.length === 0) return true;
+  if (!hasMultiattackContinuation) return true;
   const actor = snapshot.combatants.find(
     (combatant) => combatant.combatantId === snapshot.currentActorId,
   );
   return (
     actor?.origin.kind === "statBlock" &&
-    statBlockMultiattackContinuationResourcesAreValid(
-      continuationResources,
+    statBlockMultiattackContinuationActionResourcesAreValid(
+      snapshot.turn.actionResources,
       snapshot.currentActorId,
       actor.origin.execution,
+      actor.activeEffectRefs,
     )
   );
 }

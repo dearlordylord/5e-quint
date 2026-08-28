@@ -250,7 +250,6 @@ function createRuleCoreStatBlockMultiattackDriver() {
         recordResult(result);
         if (result.tag === "resolved") {
           assertNoPendingDispatchesAfterEndTurn(result.state);
-          state = statBlockMultiattackBattle();
         }
       },
       step: () => {},

@@ -23,6 +23,7 @@ import {
   enableMovementActionBonusActionExclusion,
   grantSpellEffectActionResource,
   grantUnitActionResource,
+  HASTE_ACTION_RESOURCE_RESTRICTION,
   isSupportedSurfaceCastingTimeKind,
   markMovementSpentForMovementActionBonusActionExclusion,
   resetTurnActionEconomy,
@@ -78,17 +79,6 @@ const attackOnlyRestriction: ActionRestriction = {
   kind: "exclude",
   actions: ["magic"],
 };
-const oneAttackDashDisengageHideUtilizeRestriction: ActionRestriction = {
-  kind: "allow_only",
-  actions: [
-    { action: "attack", attackLimit: { kind: "attack_count", count: 1 } },
-    { action: "dash" },
-    { action: "disengage" },
-    { action: "hide" },
-    { action: "utilize" },
-  ],
-};
-
 describe("action-economy-algebra", () => {
   it("parses supported Surface activation resource costs", () => {
     expect(isSupportedSurfaceCastingTimeKind("action")).toBe(true);
@@ -311,9 +301,8 @@ describe("action-economy-algebra", () => {
   it("spends spell-effect allow-only action resources only on admitted actions", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
-      sourceOwnerId,
       spellEffectRef,
-      oneAttackDashDisengageHideUtilizeRestriction,
+      HASTE_ACTION_RESOURCE_RESTRICTION,
     );
     expect(Either.isRight(granted)).toBe(true);
     if (Either.isLeft(granted)) return;
@@ -332,35 +321,11 @@ describe("action-economy-algebra", () => {
     );
   });
 
-  it("does not treat allow-only non-attack resources as additional Attack resources", () => {
+  it("rejects duplicate spell-effect action resources by effect ref", () => {
     const granted = grantSpellEffectActionResource(
       resetTurnActionEconomy(emptyActionEconomyState()),
-      sourceOwnerId,
       spellEffectRef,
-      {
-        kind: "allow_only",
-        actions: [{ action: "dash" }],
-      },
-    );
-    expect(Either.isRight(granted)).toBe(true);
-    if (Either.isLeft(granted)) return;
-
-    const spellEffectResource = granted.right.actionResources.find(
-      (resource) => resource.source === "spellEffect",
-    );
-    expect(spellEffectResource).toBeDefined();
-    if (spellEffectResource === undefined) return;
-    expect(actionResourceAllowsAdditionalAttacks(spellEffectResource)).toBe(
-      false,
-    );
-  });
-
-  it("rejects duplicate spell-effect action resources by owner and spell id", () => {
-    const granted = grantSpellEffectActionResource(
-      resetTurnActionEconomy(emptyActionEconomyState()),
-      sourceOwnerId,
-      spellEffectRef,
-      oneAttackDashDisengageHideUtilizeRestriction,
+      HASTE_ACTION_RESOURCE_RESTRICTION,
     );
     expect(Either.isRight(granted)).toBe(true);
     if (Either.isLeft(granted)) return;
@@ -368,9 +333,8 @@ describe("action-economy-algebra", () => {
     expect(
       grantSpellEffectActionResource(
         granted.right,
-        sourceOwnerId,
         spellEffectRef,
-        oneAttackDashDisengageHideUtilizeRestriction,
+        HASTE_ACTION_RESOURCE_RESTRICTION,
       ),
     ).toEqual(Either.left("spell-effect action resource already granted"));
   });

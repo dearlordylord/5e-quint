@@ -1,3 +1,4 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 import {
@@ -9,7 +10,11 @@ import {
 import * as Either from "effect/Either";
 import * as Match from "effect/Match";
 import * as Option from "effect/Option";
-import type { BattleProcedureExecutionRef, CombatantId } from "../identity.ts";
+import type {
+  BattleActiveEffectExecutionRef,
+  BattleProcedureExecutionRef,
+  CombatantId,
+} from "../identity.ts";
 import {
   statBlockProcedureBinding,
   type StatBlockExecutionSnapshot,
@@ -109,12 +114,52 @@ export function hasStatBlockMultiattackContinuationResource(
   );
 }
 
-export function statBlockMultiattackContinuationResourcesAreValid(
+export function statBlockMultiattackContinuationActionResourcesAreValid(
+  actionResources: readonly RuntimeActionResource[],
+  actorId: CombatantId,
+  execution: StatBlockExecutionSnapshot,
+  activeEffectRefs: readonly BattleActiveEffectExecutionRef[],
+): boolean {
+  const continuationResources = actionResources.filter(
+    (resource): resource is StatBlockMultiattackActionResource =>
+      resource.source === "statBlockMultiattack",
+  );
+  if (continuationResources.length === 0) return true;
+  if (
+    !statBlockMultiattackContinuationDispatchesAreValid(
+      continuationResources,
+      actorId,
+      execution,
+    )
+  ) {
+    return false;
+  }
+  const spellEffectRefs = actionResources.flatMap((resource) =>
+    resource.source === "spellEffect" ? [resource.sourceEffectRef] : [],
+  );
+  if (new Set(spellEffectRefs).size !== spellEffectRefs.length) {
+    return false;
+  }
+  return actionResources.every((resource) =>
+    Match.value(resource).pipe(
+      Match.discriminatorsExhaustive("source")({
+        turn: () => false,
+        unit: () => false,
+        spellEffect: (spellEffectResource) =>
+          activeEffectRefs.includes(spellEffectResource.sourceEffectRef),
+        statBlockMultiattack: () => true,
+        classFeatureExtraAttack: () => false,
+        monkFocusFlurryOfBlows: () => false,
+      }),
+    ),
+  );
+}
+
+function statBlockMultiattackContinuationDispatchesAreValid(
   continuationResources: readonly StatBlockMultiattackActionResource[],
   actorId: CombatantId,
   execution: StatBlockExecutionSnapshot,
 ): boolean {
-  if (continuationResources.length === 0) return true;
   const boundResources = continuationResources.map((resource) =>
     bindStatBlockMultiattackActionResource(resource, actorId, execution),
   );

@@ -1000,7 +1000,6 @@ describe("level 5 SDK tracer bullets", () => {
         expect.objectContaining({
           kind: "action",
           source: "spellEffect",
-          sourceOwnerId: hasteCase.casterId,
           restriction: {
             kind: "allow_only",
             actions: [

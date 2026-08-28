@@ -14,10 +14,13 @@ import {
   elapsedTimeTicksFromTimeSpanDuration,
   ElapsedTimeTicksSchema,
 } from "@dnd/shared-algebras/elapsed-time-algebra";
-import type { StandardActionKind } from "@dnd/shared/game-facts";
+import {
+  HASTE_ACTION_RESOURCE_RESTRICTION,
+  HasteActionResourceRestrictionSchema,
+  isHasteActionResourceRestriction,
+} from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import type {
-  ActionRestriction,
   AreaDirectEffectAtom,
   EffectAtom,
 } from "@dnd/surface/surface/types";
@@ -61,35 +64,10 @@ import {
   spellProcedureExecutionSchema,
 } from "./profile.ts";
 
-const HASTE_POSITIVE_ACTIONS = [
-  "attack",
-  "dash",
-  "disengage",
-  "hide",
-  "utilize",
-] as const satisfies ReadonlyArray<StandardActionKind>;
-
 const HastePositiveExpirationSchema = Schema.Struct({
   kind: Schema.Literal("concentration"),
   combatantId: CombatantId,
   durationTicks: ElapsedTimeTicksSchema,
-});
-
-const HastePositiveActionRestrictionSchema = Schema.Struct({
-  kind: Schema.Literal("allow_only"),
-  actions: Schema.Tuple(
-    Schema.Struct({
-      action: Schema.Literal("attack"),
-      attackLimit: Schema.Struct({
-        kind: Schema.Literal("attack_count"),
-        count: Schema.Literal(1),
-      }),
-    }),
-    Schema.Struct({ action: Schema.Literal("dash") }),
-    Schema.Struct({ action: Schema.Literal("disengage") }),
-    Schema.Struct({ action: Schema.Literal("hide") }),
-    Schema.Struct({ action: Schema.Literal("utilize") }),
-  ),
 });
 
 function admitHastePositive(
@@ -194,7 +172,7 @@ function hastePositiveSpellProjection(
     savingThrowAdvantage.attackRollTarget !== undefined ||
     savingThrowAdvantage.count !== undefined ||
     savingThrowAdvantage.expiresOn !== undefined ||
-    !isHastePositiveActionRestriction(extraAction?.restriction) ||
+    !isHasteActionResourceRestriction(extraAction?.restriction) ||
     spellEndLethargy?.condition !== "incapacitated" ||
     spellEndLethargy.duration !== "end_of_target_next_turn" ||
     spellEndLethargy.speed.kind !== "set_speed" ||
@@ -240,19 +218,7 @@ function hastePositiveSpellProjection(
       grantedActionResource: {
         kind: "spellGrantedActionResource",
         sourceCombatantId: actorId,
-        restriction: {
-          kind: "allow_only",
-          actions: [
-            {
-              action: "attack",
-              attackLimit: { kind: "attack_count", count: 1 },
-            },
-            { action: "dash" },
-            { action: "disengage" },
-            { action: "hide" },
-            { action: "utilize" },
-          ],
-        },
+        restriction: HASTE_ACTION_RESOURCE_RESTRICTION,
         expiresAt,
       },
       spellEndTargetState: {
@@ -291,25 +257,6 @@ function ordinaryEffectAtoms(
     ordinaryEffects.push(effect);
   }
   return ordinaryEffects;
-}
-
-function isHastePositiveActionRestriction(
-  restriction: ActionRestriction | undefined,
-): restriction is Extract<ActionRestriction, { readonly kind: "allow_only" }> {
-  if (restriction?.kind !== "allow_only") {
-    return false;
-  }
-  const attack = restriction.actions.find(
-    (action) => action.action === "attack",
-  );
-  return (
-    sameStringSet(
-      restriction.actions.map((action) => action.action),
-      HASTE_POSITIVE_ACTIONS,
-    ) &&
-    attack?.attackLimit.kind === "attack_count" &&
-    attack.attackLimit.count === 1
-  );
 }
 
 function discoverHastePositiveCastAct(
@@ -525,7 +472,7 @@ const HastePositiveInvocationSchema = spellProcedureExecutionSchema(
       grantedActionResource: Schema.Struct({
         kind: Schema.Literal("spellGrantedActionResource"),
         sourceCombatantId: CombatantId,
-        restriction: HastePositiveActionRestrictionSchema,
+        restriction: HasteActionResourceRestrictionSchema,
         expiresAt: HastePositiveExpirationSchema,
       }),
       spellEndTargetState: Schema.Struct({

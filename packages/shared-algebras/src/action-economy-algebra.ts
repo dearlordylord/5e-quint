@@ -1,8 +1,9 @@
+// RAW-COVERAGE: runtime-owner RAW-STAT-BLOCK-MULTIATTACK-001
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-slow-active-penalties stat-block.multiattack
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.SLOW_ACTIVE_PENALTIES_LIFECYCLE BATTLE.SPELL.SLOW_MULTIATTACK_ATTACK_CAP BATTLE.STAT_BLOCK.MULTIATTACK
 // UNIT-PROFILE-COVERAGE: runtime-owner spell.invocation-haste-positive
 // KERNEL-COVERAGE: runtime-owner BATTLE.SPELL.HASTE_POSITIVE_EFFECTS
-import { Either, Match } from "effect";
+import { Either, Match, Schema } from "effect";
 import type {
   ActionRestriction,
   ActionRestrictionAllowedAction,
@@ -22,6 +23,61 @@ const STANDARD_ACTION_KIND_SET: ReadonlySet<string> = new Set(
   STANDARD_ACTION_KINDS,
 );
 
+export const HasteActionResourceRestrictionSchema = Schema.Struct({
+  kind: Schema.Literal("allow_only"),
+  actions: Schema.Tuple(
+    Schema.Struct({
+      action: Schema.Literal("attack"),
+      attackLimit: Schema.Struct({
+        kind: Schema.Literal("attack_count"),
+        count: Schema.Literal(1),
+      }),
+    }),
+    Schema.Struct({ action: Schema.Literal("dash") }),
+    Schema.Struct({ action: Schema.Literal("disengage") }),
+    Schema.Struct({ action: Schema.Literal("hide") }),
+    Schema.Struct({ action: Schema.Literal("utilize") }),
+  ),
+});
+export type HasteActionResourceRestriction = Schema.Schema.Type<
+  typeof HasteActionResourceRestrictionSchema
+>;
+export const HASTE_ACTION_RESOURCE_RESTRICTION = {
+  kind: "allow_only",
+  actions: [
+    {
+      action: "attack",
+      attackLimit: { kind: "attack_count", count: 1 },
+    },
+    { action: "dash" },
+    { action: "disengage" },
+    { action: "hide" },
+    { action: "utilize" },
+  ],
+} as const satisfies HasteActionResourceRestriction;
+
+export function isHasteActionResourceRestriction(
+  restriction: ActionRestriction | undefined,
+): boolean {
+  if (restriction?.kind !== "allow_only") return false;
+  const expectedActionKinds = HASTE_ACTION_RESOURCE_RESTRICTION.actions.map(
+    (allowed) => allowed.action,
+  );
+  const actualActionKinds = new Set(
+    restriction.actions.map((allowed) => allowed.action),
+  );
+  const attack = restriction.actions.find(
+    (allowed) => allowed.action === "attack",
+  );
+  return (
+    restriction.actions.length === expectedActionKinds.length &&
+    actualActionKinds.size === expectedActionKinds.length &&
+    expectedActionKinds.every((action) => actualActionKinds.has(action)) &&
+    attack?.attackLimit.kind === "attack_count" &&
+    attack.attackLimit.count === 1
+  );
+}
+
 export type RuntimeActionResource =
   | { readonly kind: "action"; readonly source: "turn" }
   | {
@@ -34,9 +90,8 @@ export type RuntimeActionResource =
   | {
       readonly kind: "action";
       readonly source: "spellEffect";
-      readonly sourceOwnerId: CreatureId;
       readonly sourceEffectRef: BattleActiveEffectExecutionRef;
-      readonly restriction: ActionRestriction;
+      readonly restriction: HasteActionResourceRestriction;
     }
   | {
       readonly kind: "action";
@@ -55,7 +110,6 @@ export type RuntimeActionResource =
               ...BattleStatBlockProcedureExecutionRef[],
             ];
           };
-      readonly restriction: ActionRestriction;
     }
   | {
       readonly kind: "action";
@@ -235,15 +289,17 @@ export function actionRestrictionAllowsAdditionalAttacks(
 export function actionResourceAllowsAdditionalAttacks(
   resource: RuntimeActionResource,
 ): boolean {
-  if (
-    resource.source === "classFeatureExtraAttack" ||
-    resource.source === "monkFocusFlurryOfBlows"
-  ) {
-    return false;
-  }
-  return (
-    resource.source === "turn" ||
-    actionRestrictionAllowsAdditionalAttacks(resource.restriction)
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("source")({
+      turn: () => true,
+      unit: ({ restriction }) =>
+        actionRestrictionAllowsAdditionalAttacks(restriction),
+      spellEffect: ({ restriction }) =>
+        actionRestrictionAllowsAdditionalAttacks(restriction),
+      statBlockMultiattack: () => false,
+      classFeatureExtraAttack: () => false,
+      monkFocusFlurryOfBlows: () => false,
+    }),
   );
 }
 
@@ -251,12 +307,17 @@ export function actionResourceAllows(
   resource: RuntimeActionResource,
   action: StandardActionKind,
 ): boolean {
-  if (resource.source === "monkFocusFlurryOfBlows") {
-    return false;
-  }
-  return (
-    resource.source === "turn" ||
-    actionRestrictionAllows(resource.restriction, action)
+  return Match.value(resource).pipe(
+    Match.discriminatorsExhaustive("source")({
+      turn: () => true,
+      unit: ({ restriction }) => actionRestrictionAllows(restriction, action),
+      spellEffect: ({ restriction }) =>
+        actionRestrictionAllows(restriction, action),
+      statBlockMultiattack: () => action === "attack",
+      classFeatureExtraAttack: ({ restriction }) =>
+        actionRestrictionAllows(restriction, action),
+      monkFocusFlurryOfBlows: () => false,
+    }),
   );
 }
 
@@ -680,13 +741,11 @@ export function hasUnitActionResource(
 
 export function hasSpellEffectActionResource(
   state: ActionEconomyState,
-  sourceOwnerId: CreatureId,
   sourceEffectRef: BattleActiveEffectExecutionRef,
 ): boolean {
   return state.actionResources.some(
     (resource) =>
       resource.source === "spellEffect" &&
-      resource.sourceOwnerId === sourceOwnerId &&
       resource.sourceEffectRef === sourceEffectRef,
   );
 }
@@ -724,11 +783,10 @@ export function grantUnitActionResource<T extends ActionEconomyState>(
 
 export function grantSpellEffectActionResource<T extends ActionEconomyState>(
   state: T,
-  sourceOwnerId: CreatureId,
   sourceEffectRef: BattleActiveEffectExecutionRef,
-  restriction: ActionRestriction,
+  restriction: HasteActionResourceRestriction,
 ): Either.Either<T, ActionEconomySpendError> {
-  if (hasSpellEffectActionResource(state, sourceOwnerId, sourceEffectRef)) {
+  if (hasSpellEffectActionResource(state, sourceEffectRef)) {
     return Either.left("spell-effect action resource already granted");
   }
 
@@ -739,7 +797,6 @@ export function grantSpellEffectActionResource<T extends ActionEconomyState>(
       {
         kind: "action",
         source: "spellEffect",
-        sourceOwnerId,
         sourceEffectRef,
         restriction,
       },

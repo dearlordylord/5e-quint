@@ -2958,7 +2958,7 @@
       "qntOwners": [
         "packages/shared-algebras/proofs/rule-core/stat-block-multiattack.qnt"
       ],
-      "reason": "The executable projection admits Multiattack dispatch only to typed Action-section attack procedure references, preserves multiplicity, and permits any pending attack order without name dispatch. Its continuation resource carries the exact source Multiattack procedure; the canonical matcher, eligibility, discovery, dispatch, and snapshot codec boundaries reject foreign, unlisted, and multiplicity-invalid continuation states. Ability and replacement dispatch remains an explicit bounded gap.",
+      "reason": "The executable projection admits Multiattack dispatch only to typed Action-section attack procedure references, preserves multiplicity, and permits any pending attack order without name dispatch. Its continuation resource carries the exact source Multiattack procedure and derives its Attack-only restriction from that resource kind. The canonical matcher, eligibility, discovery, dispatch, and snapshot codec boundaries reject foreign, unlisted, multiplicity-invalid, restored-turn-Action, incompatible-source, and forged-restriction continuation states while preserving a bound Haste Action. Ability and replacement dispatch remains an explicit bounded gap.",
       "runtime": "battle",
       "runtimeOwners": [
         "packages/shared-algebras/src/action-economy-algebra.ts",

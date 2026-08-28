@@ -1033,10 +1033,6 @@ export function resolveMultiattack(
           sourceOwnerId: input.subject.actorId,
           sourceProcedureRef: multiattackBinding.procedureRef,
           dispatch: { kind: "listedOccurrence", attackProcedureRef },
-          restriction: {
-            kind: "exclude",
-            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
-          },
         }),
       ),
     ),
@@ -1051,10 +1047,6 @@ export function resolveMultiattack(
           dispatch: {
             kind: "oneListedChoice",
             attackProcedureRefs: procedureRefs,
-          },
-          restriction: {
-            kind: "exclude",
-            actions: ATTACK_ONLY_ACTION_RESOURCE_EXCLUDED_ACTIONS,
           },
         },
       ],
