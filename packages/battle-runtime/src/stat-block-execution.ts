@@ -544,7 +544,7 @@ export function statBlockPresentationAllocation(
   if (
     !procedureBindingSnapshotsEqual(
       statBlockProcedureBindingSnapshots(allocated.execution),
-      statBlockProcedureBindingSnapshots(admission.execution),
+      authoredStatBlockProcedureBindingSnapshots(admission.execution),
     )
   ) {
     throw new Error(
@@ -648,10 +648,21 @@ export function restoreStatBlockExecutionAdmissions<
       statBlock: restoration.statBlock,
       execution: allocated.execution,
     });
+    const authoredBindings = snapshot.procedureBindings.filter(
+      (binding) => binding.procedure.kind !== "effectOccurrenceSource",
+    );
+    const effectOccurrenceSourceBindings = snapshot.procedureBindings.filter(
+      (binding) => binding.procedure.kind === "effectOccurrenceSource",
+    );
     if (
       !procedureBindingSnapshotsEqual(
-        snapshot.procedureBindings,
+        authoredBindings,
         statBlockProcedureBindingSnapshots(expected.execution),
+      ) ||
+      !effectOccurrenceSourceBindingsAreCanonical(
+        snapshot.scopeRef,
+        expected.execution.procedureBindings.length,
+        effectOccurrenceSourceBindings,
       )
     ) {
       issues.push(
@@ -682,7 +693,10 @@ export function restoreStatBlockExecutionAdmissions<
         statBlock: restoration.statBlock,
         execution: admittedStatBlockExecutionState({
           scopeRef: snapshot.scopeRef,
-          procedureBindings: expected.execution.procedureBindings,
+          procedureBindings: [
+            ...expected.execution.procedureBindings,
+            ...effectOccurrenceSourceBindings,
+          ],
           resourcePools: restoredResourcePools,
         }),
       }),
@@ -765,6 +779,31 @@ function procedureBindingSnapshotsEqual(
       }
       return persistedValuesEqual(binding.procedure, expectedBinding.procedure);
     })
+  );
+}
+
+function authoredStatBlockProcedureBindingSnapshots(
+  execution: StatBlockExecutionState,
+): readonly StatBlockProcedureBindingSnapshot[] {
+  return execution.procedureBindings.filter(
+    (binding) => binding.procedure.kind !== "effectOccurrenceSource",
+  );
+}
+
+function effectOccurrenceSourceBindingsAreCanonical(
+  scopeRef: BattleStatBlockExecutionScopeRef,
+  firstOrdinal: number,
+  bindings: readonly StatBlockProcedureBindingSnapshot[],
+): boolean {
+  return bindings.every(
+    (binding, index) =>
+      binding.procedure.kind === "effectOccurrenceSource" &&
+      binding.resourcePoolRefs.length === 0 &&
+      binding.procedureRef ===
+        battleStatBlockProcedureExecutionRef(
+          scopeRef,
+          NonNegativeInteger(firstOrdinal + index),
+        ),
   );
 }
 

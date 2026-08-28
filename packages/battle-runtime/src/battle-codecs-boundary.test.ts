@@ -33,6 +33,7 @@ import {
   testShortswordAttack,
   attackRollFill,
   battleStateWithAllocatedEffectOccurrencesForTest,
+  battleEffectExecutionRefForTest,
   battleProcedureExecutionRefForTest,
   skeletonId,
   statBlockCreatureInit,
@@ -841,7 +842,14 @@ const savingThrowCases: readonly CodecCase[] = [
       "protectionRelevantEffectSave",
       "protectionRelevantEffectSave",
       "wis",
-      { ...source, relevantEffect: "frightened", save: save("wis") },
+      {
+        ...source,
+        effectRef: battleEffectExecutionRefForTest(
+          "codec-protection-relevant-effect-save",
+        ),
+        relevantEffect: "frightened",
+        save: save("wis"),
+      },
     ),
   ),
   ...(

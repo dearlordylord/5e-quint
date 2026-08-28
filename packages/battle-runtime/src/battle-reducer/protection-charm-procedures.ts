@@ -57,13 +57,22 @@ export function resolveProtectionRelevantEffectSaveCommand(
       "Protection relevant-effect identity no longer matches the selected active effect.",
     );
   }
-  const saveFill = input.fills.find(
+  const attemptedSaveFill = input.fills.find(
     (
       fill,
     ): fill is Extract<BattleFill, { readonly kind: "savingThrowOutcome" }> =>
-      fill.kind === "savingThrowOutcome" && fill.holeId === hole.holeId,
+      fill.kind === "savingThrowOutcome",
   );
+  const saveFill =
+    attemptedSaveFill?.holeId === hole.holeId ? attemptedSaveFill : undefined;
   if (saveFill === undefined) {
+    if (attemptedSaveFill !== undefined) {
+      return invalidResult(
+        input.state,
+        "invalidFill",
+        "Protection relevant-effect save fill does not match the selected effect occurrence.",
+      );
+    }
     return needsHolesResult(input.state, input.subject, [hole]);
   }
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */

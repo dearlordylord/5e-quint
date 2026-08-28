@@ -2557,6 +2557,7 @@ const BattleHolePayloadUnionSchema = Schema.Union([
     label: Schema.String,
     protectionRelevantEffectSave: Schema.Struct({
       ...BattleProcedureSourceSchema,
+      effectRef: BattleEffectExecutionRef,
       relevantEffect: Schema.Literals(["charmed", "frightened", "possession"]),
       save: SpellConditionRepeatSaveSchema,
     }),
@@ -5648,6 +5649,11 @@ const StatBlockProcedureSchema = Schema.Union([
       Schema.Literals(SUPPORTED_STAT_BLOCK_BONUS_ACTION_STANDARD_ACTIONS),
     ),
   }),
+  Schema.Struct({
+    kind: Schema.Literal("effectOccurrenceSource"),
+    effectRef: BattleEffectExecutionRef,
+    effectKind: Schema.Literals(EFFECT_OCCURRENCE_SOURCE_KINDS),
+  }),
 ]);
 
 const StatBlockProcedureBindingSnapshotSchema = Schema.Struct({
@@ -5758,13 +5764,15 @@ function statBlockExecutionSnapshotGraphIsValid(snapshot: {
       ).length;
       const limitedUsePoolCount = pools.length - legendaryPoolCount;
       const procedurePoolShapeIsValid =
-        binding.procedure.kind === "multiattack"
+        binding.procedure.kind === "effectOccurrenceSource"
           ? pools.length === 0
-          : binding.procedure.kind === "bonusActionOption" ||
-              (binding.procedure.kind === "attack" &&
-                binding.procedure.section === "actions")
-            ? pools.length <= 1 && legendaryPoolCount === 0
-            : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
+          : binding.procedure.kind === "multiattack"
+            ? pools.length === 0
+            : binding.procedure.kind === "bonusActionOption" ||
+                (binding.procedure.kind === "attack" &&
+                  binding.procedure.section === "actions")
+              ? pools.length <= 1 && legendaryPoolCount === 0
+              : legendaryPoolCount <= 1 && limitedUsePoolCount <= 1;
       const legendaryPoolOwnershipIsValid =
         binding.procedure.kind !== "attack" ||
         binding.procedure.section !== "legendaryActions" ||
@@ -8142,9 +8150,12 @@ function serializedStatBlockProcedureKind(
     (candidate) => candidate.combatantId === combatantId,
   );
   if (combatant?.origin.kind !== "statBlock") return undefined;
-  return combatant.origin.execution.procedureBindings.find(
+  const procedure = combatant.origin.execution.procedureBindings.find(
     (binding) => binding.procedureRef === procedureRef,
-  )?.procedure.kind;
+  )?.procedure;
+  return procedure?.kind === "effectOccurrenceSource"
+    ? undefined
+    : procedure?.kind;
 }
 
 function serializedBattleActOwnsBoundProcedure(
@@ -9011,19 +9022,17 @@ function serializedEffectOccurrenceSourceBindingsMatch(
       ),
     ),
   );
-  return combatants.every(
-    (combatant) =>
-      combatant.origin.kind !== "character" ||
-      combatant.origin.execution.procedureBindings.every((binding) => {
-        if (binding.procedure.kind !== "effectOccurrenceSource") return true;
-        const activeEffectKind = activeEffectKindByRef.get(
-          binding.procedure.effectRef,
-        );
-        return (
-          activeEffectKind === undefined ||
-          activeEffectKind === binding.procedure.effectKind
-        );
-      }),
+  return combatants.every((combatant) =>
+    combatant.origin.execution.procedureBindings.every((binding) => {
+      if (binding.procedure.kind !== "effectOccurrenceSource") return true;
+      const activeEffectKind = activeEffectKindByRef.get(
+        binding.procedure.effectRef,
+      );
+      return (
+        activeEffectKind === undefined ||
+        activeEffectKind === binding.procedure.effectKind
+      );
+    }),
   );
 }
 
