@@ -67,7 +67,7 @@ describe("BattlePage presentation failure", () => {
     expect(screen.getByRole("alert").textContent).toContain("missingCurrentActor")
   })
 
-  it("renders interrupt choice projection issues with their reactor context", async () => {
+  it("renders interrupt choice projection issues with their responder context", async () => {
     const actual = await vi.importActual<typeof BattleRuntime>("@dnd/battle-runtime")
     const checkpointFrontier = WIZARD_BATTLE_DEMO_STEPS.map((step) =>
       actual.battlePresentedCheckpointFrontierEnvelope(step.session)
@@ -75,9 +75,7 @@ describe("BattlePage presentation failure", () => {
       (candidate) =>
         Either.isRight(candidate) &&
         candidate.right.frontier.kind === "interruptDecision" &&
-        candidate.right.frontier.choices.some(
-          (presentedChoice) => presentedChoice.choice.kind !== "reactionRollOrDamageReduction"
-        )
+        candidate.right.frontier.choices.some((presentedChoice) => presentedChoice.choice.kind === "nestedProcedure")
     )
     if (checkpointFrontier === undefined) {
       throw new Error("Expected the battle demo to expose a subject-bearing interrupt decision.")
@@ -86,24 +84,25 @@ describe("BattlePage presentation failure", () => {
       throw new Error("Expected the counterspell demo step to expose an interrupt decision.")
     }
     const presentedChoice = checkpointFrontier.right.frontier.choices.find(
-      (candidate) => candidate.choice.kind !== "reactionRollOrDamageReduction"
+      (candidate) => candidate.choice.kind === "nestedProcedure"
     )
-    if (presentedChoice === undefined || presentedChoice.choice.kind === "reactionRollOrDamageReduction") {
+    const choice = presentedChoice?.choice
+    if (choice === undefined || choice.kind !== "nestedProcedure") {
       throw new Error("Expected the counterspell interrupt to carry a presented battle subject.")
     }
     const issue = {
       tag: "battleInterruptChoicePresentationIssue",
       reason: "missingSubjectPresentation",
-      reactorId: presentedChoice.choice.reactorId,
-      choiceKind: presentedChoice.choice.kind,
-      subject: presentedChoice.choice.subject
-    } as const
+      responderId: actual.interruptChoiceResponderId(choice),
+      choiceKind: choice.kind,
+      subject: choice.subject
+    } satisfies BattleRuntime.BattleInterruptChoicePresentationIssue
     vi.mocked(battlePresentedCheckpointFrontierEnvelope).mockReturnValueOnce(Either.left([issue]))
 
     render(<BattlePage steps={WIZARD_BATTLE_DEMO_STEPS} meta={WIZARD_BATTLE_DEMO_META} />)
 
     expect(screen.getByRole("alert").textContent).toBe(
-      `Battle interrupt choice presentation is unavailable for reactor ${issue.reactorId}: missingSubjectPresentation.`
+      `Battle interrupt choice presentation is unavailable for responder ${issue.responderId}: missingSubjectPresentation.`
     )
   })
 })
