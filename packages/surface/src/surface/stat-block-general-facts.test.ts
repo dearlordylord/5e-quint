@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { JSONSchema, Schema } from "effect";
 import { describe, expect, test } from "vitest";
 
 import { statBlockId } from "@dnd/shared/game-facts";
@@ -10,6 +10,7 @@ import {
   CreatureStatBlockProjectionSchema,
   StatBlockCommunicationSchema,
   StatBlockInitiativeSchema,
+  StatBlockGmSpeedChoiceSchema,
   StatBlockLanguageSetSchema,
   StatBlockTelepathySchema,
   StandaloneCreatureSenseSchema,
@@ -532,6 +533,48 @@ describe("standalone Stat Block general facts", () => {
         }),
       ).toThrow();
     }
+  });
+
+  test("preserves an ordered GM choice of at least two typed Speed alternatives", () => {
+    const gmChoice = {
+      kind: "gm_choice",
+      alternatives: [
+        { kind: "climb", feet: { kind: "literal", value: 20 } },
+        { kind: "fly", feet: { kind: "literal", value: 20 } },
+      ],
+    } as const;
+    expect(
+      decode(StandaloneStatBlockSchema, {
+        ...syntheticStandaloneStatBlock,
+        speeds: [syntheticStandaloneStatBlock.speeds[0], gmChoice],
+      }).speeds[1],
+    ).toEqual(gmChoice);
+
+    for (const alternatives of [
+      [],
+      [gmChoice.alternatives[0]],
+      [gmChoice.alternatives[0], gmChoice.alternatives[0]],
+      [
+        {
+          ...gmChoice.alternatives[0],
+          availability: { kind: "forms_only", forms: ["winged"] },
+        },
+      ],
+      [{ kind: "teleport", feet: { kind: "literal", value: 20 } }],
+    ] as const) {
+      expect(() =>
+        decode(StandaloneStatBlockSchema, {
+          ...syntheticStandaloneStatBlock,
+          speeds: [{ kind: "gm_choice", alternatives }],
+        }),
+      ).toThrow();
+    }
+
+    expect(JSONSchema.make(StatBlockGmSpeedChoiceSchema)).toMatchObject({
+      properties: {
+        alternatives: { minItems: 2, uniqueItems: true },
+      },
+    });
   });
 
   test("bounds authored ability scores and sense ranges while keeping projections reusable", () => {

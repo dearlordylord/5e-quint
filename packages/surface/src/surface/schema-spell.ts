@@ -6361,7 +6361,7 @@ const StatBlockFormRestrictedSpeedAvailabilitySchema = strictStruct({
  * union keeps that source fact unavailable on the other special speeds while
  * leaving the reusable runtime projection shape unchanged.
  */
-const StandaloneCreatureSpeedSchema = Schema.Union(
+const StandaloneUnrestrictedCreatureSpeedSchema = Schema.Union(
   strictStruct({
     kind: StandaloneNonFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
@@ -6371,6 +6371,9 @@ const StandaloneCreatureSpeedSchema = Schema.Union(
     ...StandaloneCreatureSpeedFields,
     hover: optionalExact(Schema.Literal(true)),
   }),
+);
+
+const StandaloneFormRestrictedCreatureSpeedSchema = Schema.Union(
   strictStruct({
     kind: StandaloneNonFlyCreatureSpeedKindSchema,
     ...StandaloneCreatureSpeedFields,
@@ -6382,6 +6385,67 @@ const StandaloneCreatureSpeedSchema = Schema.Union(
     hover: optionalExact(Schema.Literal(true)),
     availability: StatBlockFormRestrictedSpeedAvailabilitySchema,
   }),
+);
+
+export const StandaloneCreatureSpeedSchema = Schema.Union(
+  StandaloneUnrestrictedCreatureSpeedSchema,
+  StandaloneFormRestrictedCreatureSpeedSchema,
+);
+
+/**
+ * A GM Speed choice owns alternatives that are otherwise unrestricted Speed
+ * facts. Form-restricted availability remains a separate authored state and
+ * therefore cannot be nested into the choice.
+ */
+const StatBlockGmSpeedChoiceAlternativeSchema =
+  StandaloneUnrestrictedCreatureSpeedSchema;
+
+type StatBlockGmSpeedChoiceAlternative =
+  typeof StatBlockGmSpeedChoiceAlternativeSchema.Type;
+type StatBlockGmSpeedChoiceAlternatives = readonly [
+  StatBlockGmSpeedChoiceAlternative,
+  StatBlockGmSpeedChoiceAlternative,
+  ...StatBlockGmSpeedChoiceAlternative[],
+];
+
+const StatBlockGmSpeedChoiceAlternativesSchema = Schema.Array(
+  StatBlockGmSpeedChoiceAlternativeSchema,
+).pipe(
+  Schema.filter(
+    (alternatives): alternatives is StatBlockGmSpeedChoiceAlternatives =>
+      alternatives.length >= 2,
+    {
+      message: () =>
+        "A GM Speed choice must contain at least two authored alternatives.",
+      jsonSchema: { minItems: 2 },
+    },
+  ),
+  Schema.filter(
+    (alternatives) =>
+      new Set(
+        alternatives.map((alternative) =>
+          alternative.kind === "fly"
+            ? `${alternative.kind}:${String(alternative.feet.value)}:${alternative.hover === true ? "hover" : "ordinary"}`
+            : `${alternative.kind}:${String(alternative.feet.value)}`,
+        ),
+      ).size === alternatives.length,
+    {
+      message: () =>
+        "A GM Speed choice must contain distinct authored alternatives.",
+      jsonSchema: { uniqueItems: true },
+    },
+  ),
+  Schema.brand("StatBlockGmSpeedChoiceAlternatives"),
+);
+
+export const StatBlockGmSpeedChoiceSchema = strictStruct({
+  kind: Schema.Literal("gm_choice"),
+  alternatives: StatBlockGmSpeedChoiceAlternativesSchema,
+}).pipe(Schema.brand("StatBlockGmSpeedChoice"));
+
+export const StandaloneStatBlockSpeedEntrySchema = Schema.Union(
+  StandaloneCreatureSpeedSchema,
+  StatBlockGmSpeedChoiceSchema,
 );
 
 export const StatBlockArmorClassSchema = Schema.Struct({
@@ -6553,7 +6617,7 @@ const StandaloneStatBlockSharedSchema = Schema.Struct({
   alignment: StatBlockAlignmentSchema,
   ac: StatBlockArmorClassSchema,
   hp: StandaloneStatBlockValueSchema,
-  speeds: nonEmpty(StandaloneCreatureSpeedSchema),
+  speeds: nonEmpty(StandaloneStatBlockSpeedEntrySchema),
   abilityScores: StandaloneStatBlockAbilityScoresSchema,
   initiative: StatBlockInitiativeSchema,
   /**

@@ -3,6 +3,7 @@ import { ClassLevel } from "@dnd/shared/types";
 import { statBlockId } from "@dnd/shared/game-facts";
 import {
   decodeCreatureImmunityDeclarationSync,
+  StatBlockGmSpeedChoiceSchema,
   StatBlockProcedureEntrySchema,
   StatBlockProcedureResourceOrdinalSchema,
   StatBlockReactionSectionSchema,
@@ -62,10 +63,10 @@ function requiredProjectionFailure(record: StatBlockRecord) {
   return result.left;
 }
 
-function druidWildShapeKnownFormProfile() {
+function druidWildShapeKnownFormProfile(level = 2) {
   const profile = parseSupportedUnitFeatureProfile(
     unitLibrary.requireUnit("druid_wild_shape"),
-    [{ className: "druid", level: ClassLevel.make(2) }],
+    [{ className: "druid", level: ClassLevel.make(level) }],
   );
   if (profile?.kind !== "druidWildShapeKnownForm") {
     throw new Error("Expected the Druid Wild Shape support profile.");
@@ -80,6 +81,15 @@ describe("Stat Block projection boundary coverage", () => {
     if (firstAction === undefined) {
       throw new Error("Expected the Stat Block fixture to have an action.");
     }
+    const gmSpeedChoice = Schema.decodeUnknownSync(
+      StatBlockGmSpeedChoiceSchema,
+    )({
+      kind: "gm_choice",
+      alternatives: [
+        { kind: "climb", feet: { kind: "literal", value: 20 } },
+        { kind: "fly", feet: { kind: "literal", value: 20 } },
+      ],
+    });
 
     const projectionCases = [
       {
@@ -93,6 +103,18 @@ describe("Stat Block projection boundary coverage", () => {
         },
         message:
           "Stat Block authored projection failed: battle initialization requires a concrete Size.",
+      },
+      {
+        reason: "unresolvedGmSpeedChoice" as const,
+        record: {
+          ...source,
+          statBlock: {
+            ...source.statBlock,
+            speeds: [source.statBlock.speeds[0], gmSpeedChoice],
+          },
+        },
+        message:
+          "Stat Block authored projection failed: battle initialization requires the GM's Table Decision selecting one authored Speed alternative.",
       },
       {
         reason: "unsupportedFormRestrictedSpeed" as const,
@@ -197,6 +219,35 @@ describe("Stat Block projection boundary coverage", () => {
     expect(authoredStatBlockBattleInitIssueMessage(battleInit.left)).toBe(
       "Stat Block combatant is immune to initial prone condition.",
     );
+  });
+
+  test("rejects an unresolved GM Speed choice independently of authored identity", () => {
+    const source = statBlockRecord();
+    const gmSpeedChoice = Schema.decodeUnknownSync(
+      StatBlockGmSpeedChoiceSchema,
+    )({
+      kind: "gm_choice",
+      alternatives: [
+        { kind: "climb", feet: { kind: "literal", value: 20 } },
+        { kind: "fly", feet: { kind: "literal", value: 20 } },
+      ],
+    });
+
+    for (const [id, name] of [
+      ["stat_block_synthetic_mire_swarm", "Synthetic Mire Swarm"],
+      ["stat_block_synthetic_cloud_swarm", "Synthetic Cloud Swarm"],
+    ] as const) {
+      const failure = requiredProjectionFailure({
+        ...source,
+        id: statBlockId(id),
+        name,
+        statBlock: {
+          ...source.statBlock,
+          speeds: [source.statBlock.speeds[0], gmSpeedChoice],
+        },
+      });
+      expect(failure.reason).toBe("unresolvedGmSpeedChoice");
+    }
   });
 
   test("preserves source/target condition expiry while rejecting it from execution", () => {
@@ -787,6 +838,69 @@ describe("Stat Block projection boundary coverage", () => {
     if (Either.isLeft(ineligible)) {
       expect(wildShapeKnownFormsIssueMessage(ineligible.left.issues)).toBe(
         "Druid Wild Shape battle forms cannot have a Fly Speed at this Druid level.",
+      );
+    }
+
+    const gmFlyAlternativeForm: StatBlockRecord = {
+      ...source,
+      id: statBlockId("synthetic_gm_fly_alternative_form"),
+      name: "Synthetic GM Fly Alternative Form",
+      provenance: {
+        kind: "synthetic-test",
+        section: "stat-block-projection-boundary-coverage",
+      },
+      statBlock: {
+        ...source.statBlock,
+        speeds: [
+          ...source.statBlock.speeds,
+          Schema.decodeUnknownSync(StatBlockGmSpeedChoiceSchema)({
+            kind: "gm_choice",
+            alternatives: [
+              { kind: "climb", feet: { kind: "literal", value: 30 } },
+              { kind: "fly", feet: { kind: "literal", value: 30 } },
+            ],
+          }),
+        ],
+      },
+    };
+    expect(
+      battleAvailableDruidWildShapeKnownForms({
+        profile,
+        forms: [gmFlyAlternativeForm],
+      }),
+    ).toEqual(
+      Either.left({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: gmFlyAlternativeForm.id,
+            reason: "ineligible",
+            eligibilityIssue: "flySpeed",
+          },
+        ],
+      }),
+    );
+
+    const unresolved = battleAvailableDruidWildShapeKnownForms({
+      profile: druidWildShapeKnownFormProfile(8),
+      forms: [gmFlyAlternativeForm],
+    });
+    expect(unresolved).toEqual(
+      Either.left({
+        tag: "battleDruidWildShapeKnownFormsIssue",
+        issues: [
+          {
+            tag: "battleDruidWildShapeKnownFormIssue",
+            statBlockId: gmFlyAlternativeForm.id,
+            reason: "unresolvedGmSpeedChoice",
+          },
+        ],
+      }),
+    );
+    if (Either.isLeft(unresolved)) {
+      expect(wildShapeKnownFormsIssueMessage(unresolved.left.issues)).toBe(
+        "Druid Wild Shape battle forms require the GM's Table Decision selecting one authored Speed alternative.",
       );
     }
   });

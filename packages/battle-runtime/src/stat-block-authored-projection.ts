@@ -13,7 +13,9 @@ import type {
   StatBlockProcedureOrdinal,
   StatBlockProcedureResourceOrdinal,
   StatBlockRecord,
+  StandaloneCreatureSpeed,
   StandaloneStatBlock,
+  StandaloneStatBlockSpeedEntry,
 } from "@dnd/surface/surface/types";
 import {
   creatureAttackRollMechanicsAreSupported,
@@ -47,6 +49,7 @@ import type {
 
 type BattleStatBlockProjectionScalarFailureReason =
   | "nonLiteralSize"
+  | "unresolvedGmSpeedChoice"
   | "unsupportedFormRestrictedSpeed"
   | "unsupportedQualifiedConditionImmunity"
   | "unsupportedLairConditionalLegendaryActionUses";
@@ -112,6 +115,11 @@ export function battleStatBlockProjectionFailureMessage(
       () => "battle initialization requires a concrete Size",
     ),
     Match.when(
+      "unresolvedGmSpeedChoice",
+      () =>
+        "battle initialization requires the GM's Table Decision selecting one authored Speed alternative",
+    ),
+    Match.when(
       "unsupportedFormRestrictedSpeed",
       () =>
         "battle initialization does not own the active form needed to select a form-restricted Speed",
@@ -153,7 +161,11 @@ export function projectAuthoredStatBlock(
   const source = record.statBlock;
   const size = literalSize(source.size);
   if (size === null) return Either.left(failure("nonLiteralSize"));
-  if (source.speeds.some((speed) => "availability" in speed)) {
+  const concreteSpeeds = source.speeds.filter(isStandaloneCreatureSpeed);
+  if (concreteSpeeds.length !== source.speeds.length) {
+    return Either.left(failure("unresolvedGmSpeedChoice"));
+  }
+  if (concreteSpeeds.some((speed) => "availability" in speed)) {
     return Either.left(failure("unsupportedFormRestrictedSpeed"));
   }
   if (
@@ -162,7 +174,7 @@ export function projectAuthoredStatBlock(
   ) {
     return Either.left(failure("unsupportedQualifiedConditionImmunity"));
   }
-  const speeds = source.speeds.map(runtimeSpeed);
+  const speeds = concreteSpeeds.map(runtimeSpeed);
   const legendaryActionUses = authoredLegendaryActionUses(
     source.legendaryActions?.uses,
   );
@@ -748,13 +760,27 @@ function traitModes(source: StandaloneStatBlock): {
 }
 
 function runtimeSpeed(
-  speed: StandaloneStatBlock["speeds"][number],
+  speed: StandaloneCreatureSpeed,
 ): BattleStatBlockRuntimeSpeed {
   return {
     kind: speed.kind,
     feet: speed.feet,
     ...(speed.kind === "fly" && speed.hover === true ? { hover: true } : {}),
   };
+}
+
+function isStandaloneCreatureSpeed(
+  speed: StandaloneStatBlockSpeedEntry,
+): speed is StandaloneCreatureSpeed {
+  return Match.value(speed).pipe(
+    Match.when({ kind: "gm_choice" }, () => false),
+    Match.when({ kind: "walk" }, () => true),
+    Match.when({ kind: "burrow" }, () => true),
+    Match.when({ kind: "climb" }, () => true),
+    Match.when({ kind: "fly" }, () => true),
+    Match.when({ kind: "swim" }, () => true),
+    Match.exhaustive,
+  );
 }
 
 function runtimeSense(

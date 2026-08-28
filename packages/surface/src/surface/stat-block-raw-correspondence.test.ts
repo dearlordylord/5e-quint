@@ -74,6 +74,10 @@ type EncodedStandaloneStatBlock = Schema.Schema.Encoded<
 type EncodedStandaloneSpeed = Schema.Schema.Type<
   typeof StandaloneStatBlockSchema
 >["speeds"][number];
+type EncodedStandaloneConcreteSpeed = Exclude<
+  EncodedStandaloneSpeed,
+  { readonly kind: "gm_choice" }
+>;
 type EncodedStandaloneSense = Schema.Schema.Type<
   typeof StandaloneCreatureSenseSchema
 >;
@@ -297,9 +301,9 @@ const blindsight = (
 });
 
 const speed = (
-  kind: EncodedStandaloneSpeed["kind"],
+  kind: EncodedStandaloneConcreteSpeed["kind"],
   feet: number,
-): EncodedStandaloneSpeed =>
+): EncodedStandaloneConcreteSpeed =>
   Match.value(kind).pipe(
     Match.when("walk", () => ({ kind: "walk", feet: literal(feet) }) as const),
     Match.when("fly", () => ({ kind: "fly", feet: literal(feet) }) as const),
