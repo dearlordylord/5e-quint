@@ -1,4 +1,5 @@
 // -*- mode: Bluespec; -*-
+// UNIT-PROFILE-COVERAGE: verification-owner:qnt-proof spell.invocation-insect-plague-area-hazard
 
 module battleRuntimeInsectPlagueAreaHazardTests {
   import battleRuntimeInsectPlagueAreaHazard.* from "./battle-runtime-insect-plague-area-hazard"

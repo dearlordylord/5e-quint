@@ -907,17 +907,17 @@ conditions.
 
 ### Static manifest and API audits
 
-The manifest integrity command joined the committed manifest with
-`obligations.jsonl` and `qnt-owner-roles.jsonl`, checked the selection rule,
-resolved every owner, and checked every listed path with `fs.existsSync`.
-Result: 58/58 IDs match the registry selection; no duplicate or missing ID;
-289 non-deferred audit paths exist; source/pure paths = 203; parity/non-authority
-paths = 86; referenced MBT spec paths = 44. QNT ownership accounting is 125
-resolved paths: 111 `semantic-core`, 4 `bridge`, 3 `mbt-fixture`, and 7
-`proof-only`. The two selected rows with no owner are explicitly recorded as
-unregistered gaps: `BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE` and
-`BATTLE.SPELL.CLOUDKILL_AREA_HAZARD_LIFECYCLE`. No bridge, fixture, or
-proof-only path is labeled semantic authority.
+The original static manifest audit recorded a historical pre-registration
+snapshot: 58 selected IDs, 203 source/pure paths, 86 parity/non-authority paths,
+44 referenced MBT specs, and 125 resolved QNT paths (111 `semantic-core`, 4
+`bridge`, 3 `mbt-fixture`, and 7 `proof-only`), with Insect Plague and
+Cloudkill still unregistered. Those counts and gaps are superseded rather than
+current evidence. The authoritative current accounting is the checked-in,
+deterministically generated
+[`gh381-registry-path-manifest.json`](./gh381-registry-path-manifest.json),
+whose provenance hashes identify the registry inputs and generator revision
+and whose check requires normalized, existing repository files. No bridge,
+fixture, or proof-only path is labeled semantic authority.
 
 The exact dependency-free API audit expanded the manifest's
 `sourceOrPurePaths` and `parityOrFixturePaths`, excluding its two #385 deferred

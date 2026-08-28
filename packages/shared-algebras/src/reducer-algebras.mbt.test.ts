@@ -1,7 +1,5 @@
 import * as path from "node:path";
 
-// KERNEL-COVERAGE: parity-witness BATTLE.DAMAGE.DEATH_SAVING_THROW_LIFECYCLE
-
 import {
   defineDriver,
   ITFBigInt,

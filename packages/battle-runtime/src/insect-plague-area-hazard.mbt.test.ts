@@ -1,4 +1,5 @@
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
+// UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-insect-plague-area-hazard
 //
 // RAW trace:
 // - .references/srd-5.2.1/Spells/Descriptions-E-L.md#Insect-Plague

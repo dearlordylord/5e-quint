@@ -41034,7 +41034,7 @@
         "battleReadinessClosure": {
           "kind": "profile-subset-remaining-mechanics-closed",
           "owner": "shared table/spatial area geometry, pathfinding, and environment owner",
-          "reason": "The promoted owner consumes explicit area identity, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination, descent through terrain, or wind dispersal from map geometry.",
+          "reason": "The promoted owner consumes explicit area identity, ordered affected-creature facts for its fixed 10-foot movement frontier, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination or direction, descent through terrain, or wind dispersal from map geometry.",
           "source": "deferred-mechanics",
           "state": "recorded"
         },
@@ -54201,7 +54201,7 @@
         "battleReadinessClosure": {
           "kind": "profile-subset-remaining-mechanics-closed",
           "owner": "shared table/spatial area geometry, pathfinding, and environment owner",
-          "reason": "The promoted owner consumes explicit area identity, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination, descent through terrain, or wind dispersal from map geometry.",
+          "reason": "The promoted owner consumes explicit area identity, ordered affected-creature facts for its fixed 10-foot movement frontier, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination or direction, descent through terrain, or wind dispersal from map geometry.",
           "source": "deferred-mechanics",
           "state": "recorded"
         },
@@ -61648,7 +61648,7 @@
         "battleReadinessClosure": {
           "kind": "profile-subset-remaining-mechanics-closed",
           "owner": "shared table/spatial area geometry, pathfinding, and environment owner",
-          "reason": "The promoted owner consumes explicit area identity, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination, descent through terrain, or wind dispersal from map geometry.",
+          "reason": "The promoted owner consumes explicit area identity, ordered affected-creature facts for its fixed 10-foot movement frontier, area-membership trigger facts, and strong-wind cleanup commands. It does not infer position, path crossing, Sphere membership, cloud destination or direction, descent through terrain, or wind dispersal from map geometry.",
           "source": "deferred-mechanics",
           "state": "recorded"
         },
