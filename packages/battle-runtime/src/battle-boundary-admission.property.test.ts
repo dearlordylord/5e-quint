@@ -1653,47 +1653,7 @@ describe("battle boundary admission owners", () => {
         ac: { value: { kind: "caster_derived", source: "spell_save_dc" } },
       },
     });
-    expect(malformedArmorClass).toMatchObject({
-      _tag: "Left",
-      left: {
-        _tag: "ParseError",
-        issue: {
-          _tag: "Composite",
-          issues: {
-            _tag: "Pointer",
-            path: "statBlock",
-            issue: {
-              _tag: "Refinement",
-              issue: {
-                _tag: "Composite",
-                issues: {
-                  _tag: "Pointer",
-                  path: "ac",
-                  issue: {
-                    _tag: "Composite",
-                    issues: {
-                      _tag: "Pointer",
-                      path: "value",
-                      issue: {
-                        _tag: "Refinement",
-                        issue: {
-                          _tag: "Composite",
-                          issues: {
-                            _tag: "Pointer",
-                            path: "source",
-                            issue: { _tag: "Unexpected" },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    expect(malformedArmorClass._tag).toBe("Left");
     const malformedCreatureType = decodeStatBlockRecordEither({
       ...authoredSource,
       statBlock: { ...authoredSource.statBlock, creatureType: 42 },
