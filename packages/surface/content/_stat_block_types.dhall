@@ -422,9 +422,28 @@ let executable : Executable -> Entry =
         , resourceRefs = noneRefs
         }
 
+let NonSpellProcedure : Type =
+      < actionOption : ActionOption
+      | meleeAttack : MeleeAttack
+      | multiattack : Multiattack
+      | rangedAttack : RangedAttack
+      | saveArea : SaveArea
+      >
+
+let nonSpellProcedure : NonSpellProcedure -> Procedure =
+      λ(procedure : NonSpellProcedure) ->
+        merge
+          { actionOption
+          , meleeAttack
+          , multiattack
+          , rangedAttack
+          , saveArea
+          }
+          procedure
+
 let ResourceExecutable : Type =
       { procedureOrdinal : Natural
-      , procedure : Procedure
+      , procedure : NonSpellProcedure
       , resourceOrdinals : NonEmpty Natural
       }
 
@@ -433,7 +452,7 @@ let resourceExecutable : ResourceExecutable -> Entry =
         { description = None Text
         , kind = "executable"
         , name = None Text
-        , procedure = Some input.procedure
+        , procedure = Some (nonSpellProcedure input.procedure)
         , procedureOrdinal = input.procedureOrdinal
         , reason = None Text
         , resourceRefs = someRefs input.resourceOrdinals
@@ -512,6 +531,7 @@ in  { Effect
     , daily
     , damage
     , executable
+    , NonSpellProcedure
     , resourceExecutable
     , limited
     , line

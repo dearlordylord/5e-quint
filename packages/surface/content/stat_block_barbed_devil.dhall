@@ -10,7 +10,7 @@ in  { challengeRating = 5
         , actions =
             [ T.textOnly { procedureOrdinal = 1, name = "Multiattack", description = "The devil makes one Claws attack and one Tail attack, or it makes two Hurl Flame attacks.", reason = "unsupported_action_shape" }
             , T.textOnly { procedureOrdinal = 2, name = "Claws", description = "Melee Attack Roll: +6, reach 5 ft. Hit: 10 (2d6 + 3) Piercing damage. If the target is a Large or smaller creature, it has the Grappled condition (escape DC 13) from both claws.", reason = "unsupported_action_shape" }
-            , T.executable { procedureOrdinal = 3, procedure = (T.meleeAttack { name = "Tail", attackAbility = "str", attackBonus = +6, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 10, flat = (Some +3), static = 14 }, rest = [  ] : List T.Effect } }) }
+            , T.textOnly { procedureOrdinal = 3, name = "Tail", description = "Melee Attack Roll: +6, reach 10 ft. Hit: 14 (2d10 + 3) Slashing damage.", reason = "unsupported_action_shape" }
             , T.textOnly { procedureOrdinal = 4, name = "Hurl Flame", description = "Ranged Attack Roll: +5, range 150 ft. Hit: 17 (5d6) Fire damage. If the target is a flammable object that isn't being worn or carried, it starts burning.", reason = "unsupported_action_shape" }
             ]
         , traits =

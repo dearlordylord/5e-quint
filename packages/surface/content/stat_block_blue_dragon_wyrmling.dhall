@@ -10,7 +10,7 @@ in  { challengeRating = 3
         , actions =
             [ T.executable { procedureOrdinal = 1, procedure = (T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +2 }, procedureOrdinal = 2 }, rest = [  ] : List T.Dispatch } }) }
             , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +5, reachFeet = 5, onHit = { first = T.damage { damageType = "slashing", dice = 1, dieSize = 10, flat = (Some +3), static = 8 }, rest = [ T.damage { damageType = "lightning", dice = 1, dieSize = 6, flat = (None Integer), static = 3 } ] : List T.Effect } }) }
-            , T.resourceExecutable { procedureOrdinal = 3, procedure = (T.saveArea { name = "Lightning Breath", ability = "dex", dc = 12, area = (T.line { lengthFeet = 30, widthFeet = 5 }), onFail = (T.damage { damageType = "lightning", dice = 6, dieSize = 6, flat = (None Integer), static = 21 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea ({ name = "Lightning Breath", ability = "dex", dc = 12, area = (T.line { lengthFeet = 30, widthFeet = 5 }), onFail = (T.damage { damageType = "lightning", dice = 6, dieSize = 6, flat = (None Integer), static = 21 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
             ]
         , alignment = { order = "lawful", morality = "evil" }
         , communication = { kind = "spoken_and_understood", languages = { kind = "named", languages = [ "Draconic" ] } }

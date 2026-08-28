@@ -5403,20 +5403,31 @@ const AuthoredSpellcastingProcedureSchema = strictStruct({
   groups: nonEmpty(StatBlockSpellcastingGroupSchema),
 });
 
-export const AuthoredExecutableProcedureSchema = Schema.Union(
+const AuthoredNonSpellcastingExecutableProcedureSchema = Schema.Union(
   AuthoredMultiattackProcedureSchema,
   AuthoredAttackRollProcedureSchema,
   AuthoredSaveGateProcedureSchema,
   AuthoredSupportProcedureSchema,
   AuthoredActionOptionProcedureSchema,
+);
+
+export const AuthoredExecutableProcedureSchema = Schema.Union(
+  AuthoredNonSpellcastingExecutableProcedureSchema,
   AuthoredSpellcastingProcedureSchema,
 );
 
-const StatBlockExecutableProcedureEntryFields = {
+const StatBlockNonSpellcastingExecutableProcedureEntryFields = {
   kind: Schema.Literal("executable"),
   procedureOrdinal: StatBlockProcedureOrdinalSchema,
-  procedure: AuthoredExecutableProcedureSchema,
+  procedure: AuthoredNonSpellcastingExecutableProcedureSchema,
   resourceRefs: StatBlockProcedureResourceRefsSchema,
+} as const;
+
+const StatBlockSpellcastingExecutableProcedureEntryFields = {
+  kind: Schema.Literal("executable"),
+  procedureOrdinal: StatBlockProcedureOrdinalSchema,
+  procedure: AuthoredSpellcastingProcedureSchema,
+  resourceRefs: StatBlockProcedureNoResourceRefsSchema,
 } as const;
 
 const StatBlockTextOnlyProcedureEntryFields = {
@@ -5429,7 +5440,8 @@ const StatBlockTextOnlyProcedureEntryFields = {
 } as const;
 
 export const StatBlockProcedureEntrySchema = Schema.Union(
-  strictStruct(StatBlockExecutableProcedureEntryFields),
+  strictStruct(StatBlockNonSpellcastingExecutableProcedureEntryFields),
+  strictStruct(StatBlockSpellcastingExecutableProcedureEntryFields),
   strictStruct(StatBlockTextOnlyProcedureEntryFields),
 );
 
@@ -5520,7 +5532,11 @@ export const AuthoredStatBlockReactionTriggerSchema: Schema.suspend<
 
 const StatBlockReactionProcedureEntrySchema = Schema.Union(
   strictStruct({
-    ...StatBlockExecutableProcedureEntryFields,
+    ...StatBlockNonSpellcastingExecutableProcedureEntryFields,
+    trigger: AuthoredStatBlockReactionTriggerSchema,
+  }),
+  strictStruct({
+    ...StatBlockSpellcastingExecutableProcedureEntryFields,
     trigger: AuthoredStatBlockReactionTriggerSchema,
   }),
   strictStruct(StatBlockTextOnlyProcedureEntryFields),

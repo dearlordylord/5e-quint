@@ -1,0 +1,159 @@
+{
+  "challengeRating": 2,
+  "id": "stat_block_gargoyle",
+  "kind": "statBlock",
+  "name": "Gargoyle",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:382-409"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 7,
+      "con": 16,
+      "dex": 11,
+      "int": 6,
+      "str": 15,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 4
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Claw",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 4,
+                  "flat": 2
+                },
+                "kind": "fixed",
+                "static": 7
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "chaotic"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Primordial (Terran)"
+        ]
+      }
+    },
+    "creatureType": "elemental",
+    "hp": {
+      "kind": "literal",
+      "value": 67
+    },
+    "immunities": {
+      "conditions": [
+        "exhaustion",
+        "petrified",
+        "poisoned"
+      ],
+      "damageTypes": [
+        "poison"
+      ]
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 10,
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 2
+      },
+      {
+        "ability": "con",
+        "modifier": 3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 4,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 60
+        },
+        "kind": "fly"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The gargoyle doesn't provoke an Opportunity Attack when it flies out of an enemy's reach.",
+        "name": "Flyby"
+      }
+    ]
+  }
+}

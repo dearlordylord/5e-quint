@@ -10,7 +10,7 @@ in  { challengeRating = 7
         , actions =
             [ T.executable { procedureOrdinal = 1, procedure = (T.multiattack { name = "Multiattack", dispatches = { first = { count = { kind = "literal", value = +3 }, procedureOrdinal = 2 }, rest = [  ] : List T.Dispatch } }) }
             , T.executable { procedureOrdinal = 2, procedure = (T.meleeAttack { name = "Rend", attackAbility = "str", attackBonus = +7, reachFeet = 10, onHit = { first = T.damage { damageType = "slashing", dice = 2, dieSize = 4, flat = (Some +4), static = 9 }, rest = [ T.damage { damageType = "acid", dice = 1, dieSize = 6, flat = (None Integer), static = 3 } ] : List T.Effect } }) }
-            , T.resourceExecutable { procedureOrdinal = 3, procedure = (T.saveArea { name = "Acid Breath", ability = "dex", dc = 14, area = (T.line { lengthFeet = 30, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 14, dieSize = 6, flat = (None Integer), static = 49 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
+            , T.resourceExecutable { procedureOrdinal = 3, procedure = T.NonSpellProcedure.saveArea ({ name = "Acid Breath", ability = "dex", dc = 14, area = (T.line { lengthFeet = 30, widthFeet = 5 }), onFail = (T.damage { damageType = "acid", dice = 14, dieSize = 6, flat = (None Integer), static = 49 }), onSuccess = { kind = "half_damage" } }), resourceOrdinals = { first = 1, rest = [  ] : List Natural } }
             ]
         , traits = [ T.trait { name = "Amphibious", description = "The dragon can breathe air and water.", effectKind = None Text } ]
         , alignment = { order = "chaotic", morality = "evil" }

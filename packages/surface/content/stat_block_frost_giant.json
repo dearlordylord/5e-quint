@@ -1,0 +1,184 @@
+{
+  "challengeRating": 8,
+  "id": "stat_block_frost_giant",
+  "kind": "statBlock",
+  "name": "Frost Giant",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:299-328"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 12,
+      "con": 21,
+      "dex": 9,
+      "int": 9,
+      "str": 23,
+      "wis": 10
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 15
+      }
+    },
+    "actions": [
+      {
+        "description": "The giant makes two attacks, using Frost Axe or Great Bow in any combination.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 9
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Frost Axe",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 12,
+                  "flat": 6
+                },
+                "kind": "fixed",
+                "static": 19
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            },
+            {
+              "amount": {
+                "expr": {
+                  "dice": 2,
+                  "dieSize": 8
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "cold",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 10
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Ranged Attack Roll: +9, range 150/600 ft. Hit: 17 (2d10 + 6) Piercing damage plus 7 (2d6) Cold damage, and the target's Speed decreases by 10 feet until the end of its next turn.",
+        "kind": "textOnly",
+        "name": "Great Bow",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "evil",
+      "order": "neutral"
+    },
+    "bonusActions": [
+      {
+        "description": "The giant or one creature of its choice that can see or hear it gains 16 (2d10 + 5) Temporary Hit Points and has Advantage on attack rolls until the start of the giant's next turn.",
+        "kind": "textOnly",
+        "name": "War Cry (Recharge 5–6)",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      }
+    ],
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Giant"
+        ]
+      }
+    },
+    "creatureType": "giant",
+    "hp": {
+      "kind": "literal",
+      "value": 149
+    },
+    "immunities": {
+      "damageTypes": [
+        "cold"
+      ]
+    },
+    "initiative": {
+      "modifier": 2,
+      "score": 12
+    },
+    "passivePerception": 13,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 6
+      },
+      {
+        "ability": "con",
+        "modifier": 5
+      },
+      {
+        "ability": "wis",
+        "modifier": 0
+      },
+      {
+        "ability": "cha",
+        "modifier": 4
+      }
+    ],
+    "size": "huge",
+    "skillModifiers": [
+      {
+        "modifier": 9,
+        "skill": "athletics"
+      },
+      {
+        "modifier": 3,
+        "skill": "perception"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 40
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}

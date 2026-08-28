@@ -1,0 +1,238 @@
+{
+  "challengeRating": 3,
+  "id": "stat_block_gold_dragon_wyrmling",
+  "kind": "statBlock",
+  "name": "Gold Dragon Wyrmling",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:791-822"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 16,
+      "con": 17,
+      "dex": 14,
+      "int": 14,
+      "str": 19,
+      "wis": 11
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 17
+      }
+    },
+    "actions": [
+      {
+        "kind": "executable",
+        "procedure": {
+          "dispatches": [
+            {
+              "count": {
+                "kind": "literal",
+                "value": 2
+              },
+              "procedureOrdinal": 2
+            }
+          ],
+          "kind": "multiattack",
+          "name": "Multiattack"
+        },
+        "procedureOrdinal": 1,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "attackAbility": "str",
+          "attackBonus": {
+            "kind": "literal",
+            "value": 6
+          },
+          "attackType": "melee",
+          "kind": "attack_roll",
+          "name": "Rend",
+          "onHit": [
+            {
+              "amount": {
+                "expr": {
+                  "dice": 1,
+                  "dieSize": 10,
+                  "flat": 4
+                },
+                "kind": "fixed",
+                "static": 9
+              },
+              "damageType": "slashing",
+              "kind": "damage"
+            }
+          ],
+          "reachFeet": 5
+        },
+        "procedureOrdinal": 2,
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "kind": "executable",
+        "procedure": {
+          "ability": "dex",
+          "area": {
+            "kind": "cone",
+            "lengthFeet": 15
+          },
+          "dc": {
+            "dc": 13,
+            "kind": "fixed"
+          },
+          "kind": "save",
+          "name": "Fire Breath (Recharge 5–6)",
+          "onFail": {
+            "amount": {
+              "expr": {
+                "dice": 4,
+                "dieSize": 10
+              },
+              "kind": "fixed",
+              "static": 22
+            },
+            "damageType": "fire",
+            "kind": "damage"
+          },
+          "onSuccess": {
+            "kind": "half_damage"
+          }
+        },
+        "procedureOrdinal": 3,
+        "resourceRefs": {
+          "kind": "some",
+          "ordinals": [
+            1
+          ]
+        }
+      },
+      {
+        "description": "Strength Saving Throw: DC 13, each creature that isn't currently affected by this breath in a 15-foot Cone. Failure: The target has Disadvantage on Strength-based D20 Tests and subtracts 2 (1d4) from its damage rolls. It repeats the save at the end of each of its turns, ending the effect on itself on a success. After 1 minute, it succeeds automatically.",
+        "kind": "textOnly",
+        "name": "Weakening Breath",
+        "procedureOrdinal": 4,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "good",
+      "order": "lawful"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Draconic"
+        ]
+      }
+    },
+    "creatureType": "dragon",
+    "creatureTypeTags": [
+      "metallic"
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 60
+    },
+    "immunities": {
+      "damageTypes": [
+        "fire"
+      ]
+    },
+    "initiative": {
+      "modifier": 4,
+      "score": 14
+    },
+    "passivePerception": 14,
+    "resources": [
+      {
+        "limit": {
+          "kind": "recharge",
+          "minimumRoll": 5
+        },
+        "ordinal": 1,
+        "ownership": "shared"
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 4
+      },
+      {
+        "ability": "dex",
+        "modifier": 4
+      },
+      {
+        "ability": "wis",
+        "modifier": 2
+      },
+      {
+        "ability": "cha",
+        "modifier": 3
+      }
+    ],
+    "senses": [
+      {
+        "kind": "blindsight",
+        "rangeFeet": 10
+      },
+      {
+        "kind": "darkvision",
+        "rangeFeet": 60
+      }
+    ],
+    "size": "medium",
+    "skillModifiers": [
+      {
+        "modifier": 4,
+        "skill": "perception"
+      },
+      {
+        "modifier": 4,
+        "skill": "stealth"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 60
+        },
+        "kind": "fly"
+      },
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "swim"
+      }
+    ],
+    "traits": [
+      {
+        "description": "The dragon can breathe air and water.",
+        "name": "Amphibious"
+      }
+    ]
+  }
+}

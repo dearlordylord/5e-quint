@@ -1,0 +1,145 @@
+{
+  "challengeRating": 5,
+  "id": "stat_block_gladiator",
+  "kind": "statBlock",
+  "name": "Gladiator",
+  "provenance": {
+    "kind": "srd-5.2.1",
+    "section": "Monsters/Monsters-E-G.md:627-656"
+  },
+  "statBlock": {
+    "abilityScores": {
+      "cha": 15,
+      "con": 16,
+      "dex": 15,
+      "int": 10,
+      "str": 18,
+      "wis": 12
+    },
+    "ac": {
+      "value": {
+        "kind": "literal",
+        "value": 16
+      }
+    },
+    "actions": [
+      {
+        "description": "The gladiator makes three Spear attacks. It can replace one attack with a use of Shield Bash.",
+        "kind": "textOnly",
+        "name": "Multiattack",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Melee or Ranged Attack Roll: +7, reach 5 ft. or range 20/60 ft. Hit: 11 (2d6 + 4) Piercing damage.",
+        "kind": "textOnly",
+        "name": "Spear",
+        "procedureOrdinal": 2,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      },
+      {
+        "description": "Strength Saving Throw: DC 15, one creature within 5 feet that the gladiator can see. Failure: 9 (2d4 + 4) Bludgeoning damage. If the target is a Medium or smaller creature, it has the Prone condition.",
+        "kind": "textOnly",
+        "name": "Shield Bash",
+        "procedureOrdinal": 3,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "alignment": {
+      "morality": "neutral",
+      "order": "neutral"
+    },
+    "communication": {
+      "kind": "spoken_and_understood",
+      "languages": {
+        "kind": "named",
+        "languages": [
+          "Common"
+        ]
+      }
+    },
+    "creatureType": "humanoid",
+    "gear": [
+      {
+        "item": "Shield"
+      },
+      {
+        "item": "Spear",
+        "quantity": 3
+      },
+      {
+        "item": "Studded Leather Armor"
+      }
+    ],
+    "hp": {
+      "kind": "literal",
+      "value": 112
+    },
+    "initiative": {
+      "modifier": 5,
+      "score": 15
+    },
+    "passivePerception": 11,
+    "reactions": [
+      {
+        "description": "Trigger: The gladiator is hit by a melee attack roll while holding a weapon. Response: The gladiator adds 3 to its AC against that attack, possibly causing it to miss.",
+        "kind": "textOnly",
+        "name": "Parry",
+        "procedureOrdinal": 1,
+        "reason": "unsupported_action_shape",
+        "resourceRefs": {
+          "kind": "none"
+        }
+      }
+    ],
+    "savingThrowModifiers": [
+      {
+        "ability": "str",
+        "modifier": 7
+      },
+      {
+        "ability": "dex",
+        "modifier": 5
+      },
+      {
+        "ability": "con",
+        "modifier": 6
+      }
+    ],
+    "size": {
+      "kind": "alternatives",
+      "options": [
+        "medium",
+        "small"
+      ]
+    },
+    "skillModifiers": [
+      {
+        "modifier": 10,
+        "skill": "athletics"
+      },
+      {
+        "modifier": 5,
+        "skill": "performance"
+      }
+    ],
+    "speeds": [
+      {
+        "feet": {
+          "kind": "literal",
+          "value": 30
+        },
+        "kind": "walk"
+      }
+    ]
+  }
+}
