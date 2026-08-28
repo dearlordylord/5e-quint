@@ -345,7 +345,7 @@ function discoverMovementDamage(
   if (hazard === undefined) {
     throw new Error("Expected active Spike Growth hazard.");
   }
-  const fill = spikeGrowthMovementFill(movement, hazard.sourceProcedureRef);
+  const fill = spikeGrowthMovementFill(movement, hazard);
   const result = resolveBattleSubject({
     state: state.battle,
     subject,
@@ -416,7 +416,7 @@ function breakSpikeGrowthConcentration(
 
 function spikeGrowthMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
-  sourceProcedureRef: SpikeGrowthHazardEffect["sourceProcedureRef"],
+  hazard: SpikeGrowthHazardEffect,
 ): Extract<BattleFill, { readonly kind: "movement" }> {
   return movementFill(hole, {
     movementCostFeet,
@@ -426,8 +426,9 @@ function spikeGrowthMovementFill(
       sources: [
         {
           kind: "spikeGrowthHazard",
+          effectRef: hazard.effectRef,
           sourceCombatantId: spellCasterId,
-          sourceProcedureRef,
+          sourceProcedureRef: hazard.sourceProcedureRef,
           areaId: spikeGrowthAreaId,
           damageDistanceFeet: movementFeet(damageDistanceFeet),
         },

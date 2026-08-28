@@ -71,6 +71,7 @@ export function resolveLevitateAltitudeControlCommand(
   const hole = levitateAltitudeChangeHole({
     actorId: input.subject.actorId,
     targetId: input.subject.targetId,
+    effectRef: effect.effectRef,
     maxDistanceFeet: effect.maxAltitudeChangeFeet,
   });
   const fill = input.fills[0];
@@ -116,6 +117,7 @@ export function resolveLevitateAltitudeControlCommand(
   if (
     !levitatedTargetWithinSpellRangeFactPresent({
       facts: fill.spatialFacts,
+      effectRef: effect.effectRef,
       sourceCombatantId: effect.sourceCombatantId,
       sourceProcedureRef: effect.sourceProcedureRef,
       targetId: input.subject.targetId,
@@ -139,6 +141,7 @@ export function resolveLevitateAltitudeControlCommand(
   const nextState = updateLevitatedCreatureAltitude({
     state: spentState,
     targetId: input.subject.targetId,
+    effectRef: effect.effectRef,
     sourceCombatantId: effect.sourceCombatantId,
     sourceProcedureRef: effect.sourceProcedureRef,
     change: fill.value,

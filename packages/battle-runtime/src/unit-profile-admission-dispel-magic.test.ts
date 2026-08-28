@@ -11,7 +11,7 @@ import {
   requireCharacterSpellProcedureRefForTest,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraEffectTemplateForTest,
   antimagicFieldAuraMembershipForTest,
 } from "./antimagic-field.test-support.ts";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
@@ -25,7 +25,10 @@ import { Schema } from "effect";
 import * as Result from "effect/Result";
 import { describe, expect, test } from "vitest";
 import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-level.ts";
-import { allocateBattleEffectExecutionRefForCreature } from "./effect-execution-ref.ts";
+import {
+  allocateBattleEffectExecutionRefForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+} from "./effect-execution-ref.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import type {
   BattleActiveEffect,
@@ -762,7 +765,6 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
             objectId,
             sourceSpellLevel: 2,
             sourceCombatantId: spellTargetId,
-            effectId: `${spellTargetId}:${heatMetalUnitId}:${objectId}`,
           }),
         ],
       },
@@ -957,16 +959,14 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
 
   test("magical-effect targeting removes only the selected tracked active effect when multiple owners share the same object", () => {
     const objectId = battleObjectId("dispel-shared-magical-effect-object");
-    const selectedEffect = heatMetalObjectContactDamageEffect({
+    const selectedEffectTemplate = heatMetalObjectContactDamageEffect({
       objectId,
       sourceSpellLevel: 2,
-      effectId: `${spellCasterId}:${heatMetalUnitId}:${objectId}`,
     });
-    const retainedEffect = heatMetalObjectContactDamageEffect({
+    const retainedEffectTemplate = heatMetalObjectContactDamageEffect({
       objectId,
       sourceSpellLevel: 2,
       sourceCombatantId: spellTargetId,
-      effectId: `${spellTargetId}:${heatMetalUnitId}:${objectId}`,
     });
     const state = stateWithCombatantActiveEffects({
       caster: {
@@ -976,7 +976,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [selectedEffect],
+        activeEffects: [selectedEffectTemplate],
       },
       target: {
         concentration: {
@@ -985,9 +985,27 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [retainedEffect],
+        activeEffects: [retainedEffectTemplate],
       },
     });
+    const selectedEffect = requireCombatant(
+      state.state,
+      spellCasterId,
+    ).activeEffects.find(
+      (effect) => effect.kind === "spellObjectContactDamage",
+    );
+    const retainedEffect = requireCombatant(
+      state.state,
+      spellTargetId,
+    ).activeEffects.find(
+      (effect) => effect.kind === "spellObjectContactDamage",
+    );
+    if (
+      selectedEffect?.kind !== "spellObjectContactDamage" ||
+      retainedEffect?.kind !== "spellObjectContactDamage"
+    ) {
+      throw new Error("Expected allocated Heat Metal occurrences.");
+    }
     const act = spellAct({
       session: state,
       spellId: dispelMagicUnitId,
@@ -1143,7 +1161,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
 
   test("magical-effect targeting leaves an Antimagic Field aura active", () => {
     const areaId = battleAreaId("dispel-antimagic-field-aura-target");
-    const aura = antimagicFieldAuraEffect(areaId);
+    const auraTemplate = antimagicFieldAuraEffect(areaId);
     const state = stateWithCombatantActiveEffects({
       target: {
         concentration: {
@@ -1152,9 +1170,20 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [aura],
+        activeEffects: [auraTemplate],
       },
     });
+    const aura = requireCombatant(
+      state.state,
+      spellTargetId,
+    ).activeEffects.find(
+      (effect) =>
+        effect.kind === "antimagicFieldOngoingSpellSuppression" &&
+        effect.areaId === areaId,
+    );
+    if (aura?.kind !== "antimagicFieldOngoingSpellSuppression") {
+      throw new Error("Expected an allocated Antimagic Field aura.");
+    }
     const act = spellAct({
       session: state,
       spellId: dispelMagicUnitId,
@@ -1164,6 +1193,7 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       kind: "magicalEffect" as const,
       effect: {
         kind: "antimagicFieldAura" as const,
+        effectRef: aura.effectRef,
         areaId,
         sourceCombatantId: spellTargetId,
       },
@@ -1199,10 +1229,10 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
     );
   });
 
-  test("magical-effect targeting rejects stale Antimagic Field aura identity", () => {
-    const activeAreaId = battleAreaId("dispel-active-antimagic-aura-target");
-    const staleAreaId = battleAreaId("dispel-stale-antimagic-aura-target");
-    const state = stateWithCombatantActiveEffects({
+  test("magical-effect targeting rejects a stale recast Antimagic Field aura", () => {
+    const areaId = battleAreaId("dispel-recast-antimagic-aura-target");
+    const auraTemplate = antimagicFieldAuraEffect(areaId);
+    const base = stateWithCombatantActiveEffects({
       target: {
         concentration: {
           sourceProcedureRef: battleProcedureExecutionRefForTest(
@@ -1210,7 +1240,48 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
           ),
           effectKind: "spellEffect",
         },
-        activeEffects: [antimagicFieldAuraEffect(activeAreaId)],
+        activeEffects: [],
+      },
+    });
+    const targetBeforeRecast = requireCombatant(base.state, spellTargetId);
+    const withBothAuras = battleStateWithAllocatedEffectOccurrencesForTest({
+      state: base.state,
+      occurrences: [
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: auraTemplate,
+        },
+        {
+          kind: "activeEffect",
+          ownerId: spellTargetId,
+          effect: auraTemplate,
+        },
+      ],
+    }).state;
+    const targetWithBothAuras = requireCombatant(withBothAuras, spellTargetId);
+    const [staleAura, activeAura] = targetWithBothAuras.activeEffects.filter(
+      (effect) => effect.kind === "antimagicFieldOngoingSpellSuppression",
+    );
+    if (
+      staleAura?.kind !== "antimagicFieldOngoingSpellSuppression" ||
+      activeAura?.kind !== "antimagicFieldOngoingSpellSuppression"
+    ) {
+      throw new Error("Expected two allocated Antimagic Field auras.");
+    }
+    expect(Number(targetWithBothAuras.nextEffectOrdinal)).toBe(
+      Number(targetBeforeRecast.nextEffectOrdinal) + 2,
+    );
+    const state = battleRuntimeSessionForTest({
+      ...base,
+      state: {
+        ...withBothAuras,
+        combatants: new Map(withBothAuras.combatants).set(spellTargetId, {
+          ...targetWithBothAuras,
+          activeEffects: targetWithBothAuras.activeEffects.filter(
+            (effect) => effect.effectRef !== staleAura.effectRef,
+          ),
+        }),
       },
     });
     const act = spellAct({
@@ -1222,10 +1293,32 @@ describe("SRD Dispel Magic ongoing spell ending admission", () => {
       kind: "magicalEffect" as const,
       effect: {
         kind: "antimagicFieldAura" as const,
-        areaId: staleAreaId,
+        effectRef: staleAura.effectRef,
+        areaId,
         sourceCombatantId: spellTargetId,
       },
     };
+    const activeTarget = {
+      kind: "magicalEffect" as const,
+      effect: {
+        kind: "antimagicFieldAura" as const,
+        effectRef: activeAura.effectRef,
+        areaId,
+        sourceCombatantId: spellTargetId,
+      },
+    };
+
+    expect(
+      requireHole(act.initialHoles, "ongoingSpellTargetChoice").choices,
+    ).toContainEqual(activeTarget);
+    const snapshot = snapshotBattle(state.state);
+    expect(
+      Result.isSuccess(
+        Schema.decodeUnknownResult(BattleSnapshotSchema)(
+          Schema.encodeSync(BattleSnapshotSchema)(snapshot),
+        ),
+      ),
+    ).toBe(true);
 
     expect(
       resolveBattleSubject({
@@ -1646,7 +1739,6 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
   const effect = {
     ...spiritualWeaponEffect({
       sourceSpellLevel,
-      sourceEffectId: `${spellCasterId}:${spiritualWeaponUnitId}:${sourceSpellLevel}:tracked-force`,
     }),
     effectRef: effectAllocation.effectRef,
     sourceProcedureRef: boundProcedureRef,
@@ -1671,7 +1763,7 @@ function stateWithBoundSpiritualWeaponEffect(sourceSpellLevel: 2 | 4): {
 }
 
 function stateWithActiveEffects(
-  activeEffects: readonly BattleActiveEffect[],
+  activeEffects: readonly BattleActiveEffectOccurrenceTemplate[],
   input: {
     readonly concentration?: {
       readonly sourceProcedureRef: ReturnType<
@@ -1693,22 +1785,29 @@ function stateWithActiveEffects(
   if (caster === undefined) {
     throw new Error("Expected spell caster combatant.");
   }
+  const concentrationState = {
+    ...session.state,
+    combatants: new Map(session.state.combatants).set(spellCasterId, {
+      ...caster,
+      concentration: input.concentration ?? null,
+    }),
+  };
   return battleRuntimeSessionForTest({
     ...session,
-    state: {
-      ...session.state,
-      combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
-        concentration: input.concentration ?? null,
-        activeEffects: [...caster.activeEffects, ...activeEffects],
-      }),
-    },
+    state: battleStateWithAllocatedEffectOccurrencesForTest({
+      state: concentrationState,
+      occurrences: activeEffects.map((effect) => ({
+        kind: "activeEffect" as const,
+        ownerId: spellCasterId,
+        effect,
+      })),
+    }).state,
   });
 }
 
 function stateWithCombatantActiveEffects(input: {
   readonly caster?: {
-    readonly activeEffects: readonly BattleActiveEffect[];
+    readonly activeEffects: readonly BattleActiveEffectOccurrenceTemplate[];
     readonly concentration?: {
       readonly sourceProcedureRef: ReturnType<
         typeof battleProcedureExecutionRefForTest
@@ -1717,7 +1816,7 @@ function stateWithCombatantActiveEffects(input: {
     } | null;
   };
   readonly target?: {
-    readonly activeEffects: readonly BattleActiveEffect[];
+    readonly activeEffects: readonly BattleActiveEffectOccurrenceTemplate[];
     readonly concentration?: {
       readonly sourceProcedureRef: ReturnType<
         typeof battleProcedureExecutionRefForTest
@@ -1736,7 +1835,6 @@ function stateWithCombatantActiveEffects(input: {
     combatants.set(spellCasterId, {
       ...caster,
       concentration: input.caster.concentration ?? null,
-      activeEffects: [...caster.activeEffects, ...input.caster.activeEffects],
     });
   }
   if (input.target !== undefined) {
@@ -1747,12 +1845,26 @@ function stateWithCombatantActiveEffects(input: {
     combatants.set(spellTargetId, {
       ...target,
       concentration: input.target.concentration ?? null,
-      activeEffects: [...target.activeEffects, ...input.target.activeEffects],
     });
   }
+  const state = battleStateWithAllocatedEffectOccurrencesForTest({
+    state: { ...session.state, combatants },
+    occurrences: [
+      ...(input.caster?.activeEffects.map((effect) => ({
+        kind: "activeEffect" as const,
+        ownerId: spellCasterId,
+        effect,
+      })) ?? []),
+      ...(input.target?.activeEffects.map((effect) => ({
+        kind: "activeEffect" as const,
+        ownerId: spellTargetId,
+        effect,
+      })) ?? []),
+    ],
+  }).state;
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, combatants },
+    state,
   });
 }
 
@@ -1791,15 +1903,13 @@ function heatMetalObjectContactDamageEffect(input: {
   readonly objectId: ReturnType<typeof battleObjectId>;
   readonly sourceSpellLevel: number;
   readonly sourceCombatantId?: typeof spellCasterId | typeof spellTargetId;
-  readonly effectId?: string;
-}): Extract<BattleActiveEffect, { readonly kind: "spellObjectContactDamage" }> {
+}): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spellObjectContactDamage" }
+> {
   const sourceCombatantId = input.sourceCombatantId ?? spellCasterId;
   return {
     kind: "spellObjectContactDamage",
-    effectRef: battleEffectExecutionRefForTest(
-      input.effectId ??
-        `${sourceCombatantId}:${heatMetalUnitId}:${input.objectId}`,
-    ),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(heatMetalUnitId),
     ),
@@ -1822,11 +1932,12 @@ function heatMetalObjectContactDamageEffect(input: {
 
 function spiritualWeaponEffect(input: {
   readonly sourceSpellLevel: number;
-  readonly sourceEffectId: string;
-}): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
+}): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spiritualWeapon" }
+> {
   return {
     kind: "spiritualWeapon",
-    effectRef: battleEffectExecutionRefForTest(input.sourceEffectId),
     sourceProcedureRef: battleProcedureExecutionRefForTest(
       String(spiritualWeaponUnitId),
     ),
@@ -1855,10 +1966,10 @@ function spiritualWeaponEffect(input: {
 function antimagicFieldAuraEffect(
   areaId: ReturnType<typeof battleAreaId>,
 ): Extract<
-  BattleActiveEffect,
+  BattleActiveEffectOccurrenceTemplate,
   { readonly kind: "antimagicFieldOngoingSpellSuppression" }
 > {
-  return antimagicFieldAuraEffectForTest({
+  return antimagicFieldAuraEffectTemplateForTest({
     areaId,
     aura: antimagicFieldAuraMembershipForTest({
       sourceCombatantId: spellTargetId,

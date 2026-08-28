@@ -1,9 +1,6 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import { battleActSpellPresentation } from "./battle-act-composition.ts";
-import type {
-  BattleProcedureExecutionRef,
-  BattleRuntimeSession,
-} from "./index.ts";
+import type { BattleActiveEffect, BattleRuntimeSession } from "./index.ts";
 // UNIT-IDENTITY-EVIDENCE: deterministic-admission-projection L19E-03-INSECT-PLAGUE-AREA-HAZARD insect_plague
 // UNIT-PROFILE-COVERAGE: verification-owner:runtime-test spell.invocation-insect-plague-area-hazard
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.INSECT_PLAGUE_AREA_HAZARD_LIFECYCLE
@@ -93,15 +90,19 @@ function insectPlagueSpellRecord(): SpellRecord {
 }
 
 function insectPlagueDifficultTerrainFact(
-  sourceProcedureRef: BattleProcedureExecutionRef,
+  effect: Extract<
+    BattleActiveEffect,
+    { readonly kind: "insectPlagueAreaHazard" }
+  >,
 ) {
   return {
     kind: "areaDifficultTerrain" as const,
     sources: [
       {
         kind: "insectPlagueHazard" as const,
+        effectRef: effect.effectRef,
         sourceCombatantId: spellCasterId,
-        sourceProcedureRef,
+        sourceProcedureRef: effect.sourceProcedureRef,
         areaId: insectPlagueAreaId,
       },
     ],
@@ -294,6 +295,13 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
       );
     }
     const moveHole = requireResultHole(moveRequest, "movement");
+    const hazard = requireCombatant(
+      targetTurn,
+      spellCasterId,
+    ).activeEffects.find((effect) => effect.kind === "insectPlagueAreaHazard");
+    if (hazard === undefined) {
+      throw new Error("Expected active Insect Plague hazard.");
+    }
     const moved = resolveBattleSubject({
       state: targetTurn,
       subject: moveSubject,
@@ -301,9 +309,7 @@ describe("L19E deterministic Insect Plague area-hazard admission", () => {
         movementFill(moveHole, {
           movementCostFeet: 15,
           provokedOpportunityAttacks: [],
-          areaDifficultTerrain: insectPlagueDifficultTerrainFact(
-            act.subject.procedureRef,
-          ),
+          areaDifficultTerrain: insectPlagueDifficultTerrainFact(hazard),
         }),
       ],
     });

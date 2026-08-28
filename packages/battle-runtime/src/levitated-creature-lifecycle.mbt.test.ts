@@ -1,5 +1,4 @@
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
-import { battleProcedureExecutionRefForTest } from "./battle-runtime.test-support.ts";
 import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 // UNIT-PROFILE-COVERAGE: verification-owner:focused-mbt spell.invocation-levitated-creature
 // KERNEL-COVERAGE: parity-witness BATTLE.SPELL.LEVITATED_CREATURE_LIFECYCLE
@@ -62,6 +61,7 @@ import {
   breakBattleConcentration,
   discoverBattleActCandidates,
   endTurn,
+  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleResolutionResult,
@@ -569,6 +569,7 @@ function moveTargetWithWitnessUp5Feet(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
   const movement = requireHole(state.holes, "movement");
+  const effect = requireLevitateCreatureEffect(state.battle.state);
   const resolved = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
@@ -579,10 +580,9 @@ function moveTargetWithWitnessUp5Feet(
           provokedOpportunityAttacks: [],
           levitatedMovement: {
             kind: "levitatedMovement",
+            effectRef: effect.effectRef,
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(levitateUnitId),
-            ),
+            sourceProcedureRef: effect.sourceProcedureRef,
             fixedObjectOrSurfaceWithinReach: true,
             altitudeChange: {
               direction: "up",
@@ -639,6 +639,7 @@ function controlAltitudeDown10Feet(
   state: LevitateCreatureRuntimeState,
 ): LevitateCreatureRuntimeState {
   const hole = requireHole(state.holes, "levitateAltitudeChange");
+  const effect = requireLevitateCreatureEffect(state.battle.state);
   const resolved = requireResolved(
     resolveBattleSubject({
       state: state.battle.state,
@@ -647,10 +648,9 @@ function controlAltitudeDown10Feet(
         levitateAltitudeChangeFill(hole, "down", 10, [
           {
             kind: "levitatedTargetWithinSpellRange",
+            effectRef: effect.effectRef,
             sourceCombatantId: spellCasterId,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String(levitateUnitId),
-            ),
+            sourceProcedureRef: effect.sourceProcedureRef,
             targetId: spellTargetId,
             rangeFeet: movementFeet(60),
           },
@@ -668,6 +668,18 @@ function controlAltitudeDown10Feet(
     holes: [],
     lastResult: "casterControlled",
   };
+}
+
+function requireLevitateCreatureEffect(
+  state: BattleState,
+): Extract<BattleActiveEffect, { readonly kind: "spellLevitatedCreature" }> {
+  const effect = requireCombatant(state, spellTargetId).activeEffects.find(
+    (candidate) => candidate.kind === "spellLevitatedCreature",
+  );
+  if (effect === undefined) {
+    throw new Error("Expected active Levitate creature effect.");
+  }
+  return effect;
 }
 
 function breakLevitateConcentration(

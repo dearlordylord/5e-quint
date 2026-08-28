@@ -5,6 +5,7 @@ import { resolveBattleSubject } from "./battle-runtime.test-support.ts";
 import { canSpendAction } from "@dnd/shared-algebras/action-economy-algebra";
 import { movementFeet } from "@dnd/shared/types";
 import { describe, expect, it } from "vitest";
+import type { BattleEffectExecutionRef } from "./identity.ts";
 
 import {
   MBT_TEST_TIMEOUT_MS,
@@ -450,6 +451,7 @@ function moveCloserThroughLine(state: GustRuntimeState): GustRuntimeState {
           movementCostFeet: gustMovementCostFeet,
           provokedOpportunityAttacks: [],
           gustOfWindLineMovement: gustOfWindLineMovementFact({
+            effectRef: effect.effectRef,
             sourceProcedureRef: effect.sourceProcedureRef,
             directionId,
             totalDistanceFeet: gustMovementTotalFeet,
@@ -587,6 +589,7 @@ function lineDirection(effect: GustOfWindLineEffect): GustLineDirection {
 }
 
 function gustOfWindLineMovementFact(input: {
+  readonly effectRef: BattleEffectExecutionRef;
   readonly sourceProcedureRef: BattleProcedureExecutionRef;
   readonly directionId: BattleLineDirectionId;
   readonly totalDistanceFeet: number;
@@ -597,6 +600,7 @@ function gustOfWindLineMovementFact(input: {
 >["value"]["gustOfWindLineMovement"] {
   return {
     kind: "gustOfWindLineMovement",
+    effectRef: input.effectRef,
     sourceCombatantId: spellCasterId,
     sourceProcedureRef: input.sourceProcedureRef,
     areaId: gustOfWindAreaId,

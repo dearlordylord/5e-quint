@@ -30,6 +30,7 @@ import {
 import { statBlockExecutionSnapshot } from "../stat-block-execution-state.ts";
 import {
   type BattleActiveEffect,
+  type BattleActiveEffectOccurrenceLocation,
   type BattleCharacterResourceSnapshot,
   type BattleCreatureOriginSnapshot,
   type BattleCreatureSnapshot,
@@ -167,6 +168,36 @@ function combatantCanStillHoldBoundWeaponItem(
   );
 }
 
+function activeEffectOccurrenceLocation(
+  effect: BattleActiveEffect,
+): BattleActiveEffectOccurrenceLocation {
+  if (effect.kind === "spellObjectContactDamage") {
+    return { kind: "object", objectId: effect.objectId };
+  }
+  if (effect.kind === "gustOfWindLine") {
+    return {
+      kind: "line",
+      areaId: effect.areaId,
+      directionId: effect.directionId,
+    };
+  }
+  if (effect.kind === "glyphDurableOccurrence") {
+    return Match.value(effect.anchor).pipe(
+      Match.discriminatorsExhaustive("kind")({
+        surface: ({ areaId }) => ({ kind: "area" as const, areaId }),
+        closeableObject: ({ objectId }) => ({
+          kind: "object" as const,
+          objectId,
+        }),
+      }),
+    );
+  }
+  if ("areaId" in effect) {
+    return { kind: "area", areaId: effect.areaId };
+  }
+  return { kind: "nonSpatial" };
+}
+
 function activeEffectBoundHeldWeaponItemId(
   effect: BattleActiveEffect,
 ): BattleObjectId | null {
@@ -192,8 +223,7 @@ export function combatantSnapshot(
       kind: "activeEffect" as const,
       effectRef: effect.effectRef,
       activeEffectKind: effect.kind,
-      ongoingSpellObjectId:
-        effect.kind === "spellObjectContactDamage" ? effect.objectId : null,
+      location: activeEffectOccurrenceLocation(effect),
     })),
     armorClass: currentArmorClass(activeEffectArmorClass(state, combatant)),
     size: combatantEffectiveSize(combatant),

@@ -44,7 +44,9 @@ import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-l
 import type {
   BattleOngoingSpellTarget,
   BattleOngoingSpellTargetWithinRangeFact,
+  BattleStoredLightEmitterTemplate,
 } from "./battle-state-execution.ts";
+import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
 import { battleSpellEffectOccurrenceId } from "./identity.ts";
 import {
   antimagicFieldUnitId,
@@ -71,9 +73,6 @@ import {
   type BattleProcedureExecutionRef,
   type CharacterBattleCreatureState,
 } from "./index.ts";
-import type { BattleStoredLightEmitterTemplate } from "./battle-state-execution.ts";
-import type { BattleActiveEffectOccurrenceTemplate } from "./effect-execution-ref.ts";
-
 type LastResult =
   | "init"
   | "needsHigherLevelCheck"
@@ -507,10 +506,20 @@ function targetAntimagicAura(
     spellId: dispelMagicUnitId,
     slotLevel: BASE_DISPEL_SLOT_LEVEL,
   });
+  const aura = requireCombatant(
+    state.battle.state,
+    spellTargetId,
+  ).activeEffects.find(
+    (effect) => effect.kind === "antimagicFieldOngoingSpellSuppression",
+  );
+  if (aura?.kind !== "antimagicFieldOngoingSpellSuppression") {
+    throw new Error("Expected an allocated Antimagic Field aura.");
+  }
   const target = {
     kind: "magicalEffect" as const,
     effect: {
       kind: "antimagicFieldAura" as const,
+      effectRef: aura.effectRef,
       areaId: antimagicFieldAreaId,
       sourceCombatantId: spellTargetId,
     },

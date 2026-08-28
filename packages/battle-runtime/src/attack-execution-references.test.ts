@@ -272,9 +272,12 @@ describe("character attack execution references", () => {
                   occurrence.kind === "activeEffect"
                     ? {
                         ...occurrence,
-                        ongoingSpellObjectId: battleObjectId(
-                          "contradictory-active-effect-object",
-                        ),
+                        location: {
+                          kind: "object",
+                          objectId: battleObjectId(
+                            "contradictory-active-effect-object",
+                          ),
+                        },
                       }
                     : occurrence,
               ),

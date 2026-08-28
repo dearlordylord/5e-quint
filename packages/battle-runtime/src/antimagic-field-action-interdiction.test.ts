@@ -1,11 +1,11 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
-  battleEffectExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraEffectTemplateForTest,
   antimagicFieldAuraMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
@@ -28,6 +28,10 @@ import { parseBattleSpellEffectLevel } from "./battle-reducer/spells-effective-l
 import { removeBattleCombatants } from "./battle-reducer/api-lifecycle.ts";
 import { isCharacterBattleCreatureState } from "./battle-reducer/creature-state.ts";
 import { characterExecutionWithSpiritualWeaponRepeatAttack } from "./character-execution-admission.ts";
+import {
+  allocateBattleEffectExecutionRefForCreature,
+  type BattleActiveEffectOccurrenceTemplate,
+} from "./effect-execution-ref.ts";
 import {
   battleProcedureExecutionRef,
   type BattleProcedureExecutionRef,
@@ -67,7 +71,6 @@ import {
   discoverBattleActs,
   endTurn,
   startBattle,
-  type BattleActiveEffect,
   type BattleFill,
   type BattleHole,
   type BattleRuntimeSession,
@@ -399,7 +402,16 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
   ) {
     throw new Error("Expected Spiritual Weapon source procedure binding.");
   }
-  const activeEffect = spiritualWeaponActiveEffect(sourceBinding.procedureRef);
+  const effectAllocation = allocateBattleEffectExecutionRefForCreature({
+    owner: caster,
+  });
+  const activeEffect = {
+    ...spiritualWeaponActiveEffectTemplate(sourceBinding.procedureRef),
+    effectRef: effectAllocation.effectRef,
+  };
+  expect(Number(effectAllocation.owner.nextEffectOrdinal)).toBe(
+    Number(caster.nextEffectOrdinal) + 1,
+  );
   const execution = characterExecutionWithSpiritualWeaponRepeatAttack(
     caster.origin.execution,
     {
@@ -413,7 +425,7 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
     state: {
       ...session.state,
       combatants: new Map(session.state.combatants).set(spellCasterId, {
-        ...caster,
+        ...effectAllocation.owner,
         activeEffects: [...caster.activeEffects, activeEffect],
         origin: { ...caster.origin, execution },
       }),
@@ -421,18 +433,18 @@ function spiritualWeaponRepeatBattle(): BattleRuntimeSession {
   });
 }
 
-function spiritualWeaponActiveEffect(
+function spiritualWeaponActiveEffectTemplate(
   sourceProcedureRef: BattleProcedureExecutionRef,
-): Extract<BattleActiveEffect, { readonly kind: "spiritualWeapon" }> {
+): Extract<
+  BattleActiveEffectOccurrenceTemplate,
+  { readonly kind: "spiritualWeapon" }
+> {
   const sourceSpellLevel = parseBattleSpellEffectLevel(2);
   if (sourceSpellLevel === null) {
     throw new Error("Expected valid Spiritual Weapon spell effect level.");
   }
   return {
     kind: "spiritualWeapon",
-    effectRef: battleEffectExecutionRefForTest(
-      "antimagic-action-spiritual-weapon",
-    ),
     sourceProcedureRef,
     sourceCombatantId: spellCasterId,
     sourceSpellLevel,
@@ -552,24 +564,24 @@ function activeAntimagicAuraSession(
   session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
 ): BattleRuntimeSession {
-  const combatants = new Map(session.state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = session.state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: antimagicFieldAreaId,
-        aura,
-      }),
-    ],
+  const state = battleStateWithAllocatedEffectForTest({
+    state: session.state,
+    ownerId: aura.sourceCombatantId,
+    effect: antimagicFieldAuraEffectTemplateForTest({
+      areaId: antimagicFieldAreaId,
+      aura,
+    }),
   });
+  expect(
+    Number(state.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, combatants },
+    state,
   });
 }
 

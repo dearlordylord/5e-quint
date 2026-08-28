@@ -78,6 +78,7 @@ export function applyBattleMovement(
     : updateLevitatedCreatureAltitude({
         state: movedState,
         targetId: movement.moverId,
+        effectRef: levitatedMovement.effectRef,
         sourceCombatantId: levitatedMovement.sourceCombatantId,
         sourceProcedureRef: levitatedMovement.sourceProcedureRef,
         change: levitatedMovement.altitudeChange,

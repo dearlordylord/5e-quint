@@ -493,6 +493,7 @@ function moveWithDifficultTerrain(
             sources: [
               {
                 kind: "sleetStormHazard",
+                effectRef: hazard.effectRef,
                 sourceCombatantId: spellCasterId,
                 sourceProcedureRef: hazard.sourceProcedureRef,
                 areaId: sleetStormAreaId,

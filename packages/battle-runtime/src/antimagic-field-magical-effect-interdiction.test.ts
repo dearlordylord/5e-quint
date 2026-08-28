@@ -1,11 +1,12 @@
 import { unitId as parseSharedUnitId } from "@dnd/shared/game-facts";
 import { battleRuntimeSessionForTest } from "./battle-runtime-session.test-support.ts";
 import {
+  battleStateWithAllocatedEffectForTest,
   characterBattleFeatureInitForTest,
   resolveBattleSubject,
 } from "./battle-runtime.test-support.ts";
 import {
-  antimagicFieldAuraEffectForTest,
+  antimagicFieldAuraEffectTemplateForTest,
   antimagicFieldAuraMembershipForTest,
   type TestAntimagicFieldAuraMembership,
 } from "./antimagic-field.test-support.ts";
@@ -353,24 +354,24 @@ function activeAntimagicAuraSession(
   session: BattleRuntimeSession,
   aura: TestAntimagicFieldAuraMembership,
 ): BattleRuntimeSession {
-  const combatants = new Map(session.state.combatants);
-  const source = combatants.get(aura.sourceCombatantId);
-  if (source === undefined) {
+  const sourceBefore = session.state.combatants.get(aura.sourceCombatantId);
+  if (sourceBefore === undefined) {
     throw new Error("Antimagic Field test source must be in the battle.");
   }
-  combatants.set(aura.sourceCombatantId, {
-    ...source,
-    activeEffects: [
-      ...source.activeEffects,
-      antimagicFieldAuraEffectForTest({
-        areaId: antimagicFieldAreaId,
-        aura,
-      }),
-    ],
+  const state = battleStateWithAllocatedEffectForTest({
+    state: session.state,
+    ownerId: aura.sourceCombatantId,
+    effect: antimagicFieldAuraEffectTemplateForTest({
+      areaId: antimagicFieldAreaId,
+      aura,
+    }),
   });
+  expect(
+    Number(state.combatants.get(aura.sourceCombatantId)?.nextEffectOrdinal),
+  ).toBe(Number(sourceBefore.nextEffectOrdinal) + 1);
   return battleRuntimeSessionForTest({
     ...session,
-    state: { ...session.state, combatants },
+    state,
   });
 }
 

@@ -1512,8 +1512,10 @@ function battleRuntimeCommandBoundExecutionReferences(
       webRestraintSave: activeEffectOccurrence,
       sleetStormAreaHazardSave: (value) =>
         activeEffectOccurrence(value.areaMembershipTrigger),
-      insectPlagueAreaHazardSave: noBoundExecutionReferences,
-      cloudkillAreaHazardSave: noBoundExecutionReferences,
+      insectPlagueAreaHazardSave: (value) =>
+        activeEffectOccurrence(value.areaMembershipTrigger),
+      cloudkillAreaHazardSave: (value) =>
+        activeEffectOccurrence(value.areaMembershipTrigger),
       disperseCloudkill: noBoundExecutionReferences,
       webRestrainedNoLongerInArea: activeEffectOccurrence,
       webAreaRemoved: activeEffectOccurrence,

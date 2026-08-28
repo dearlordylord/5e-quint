@@ -96,7 +96,6 @@ import {
 } from "./movement-speed.ts";
 import { standFromProneCostFeet } from "./stand-from-prone-policy.ts";
 import { needsHolesResult } from "./needs-holes-result.ts";
-import type { GustOfWindLineEffect } from "./persistent-spatial-spell-discovery.ts";
 import { invalidResult } from "./result-helpers.ts";
 import { applyPreparedSlotSpellDamage } from "./spells-damage-fills.ts";
 import { concentrationSavingThrowFillFor } from "./spells-resolve-fill-helpers.ts";
@@ -424,8 +423,8 @@ function markJumpMovementReplacementUsed(
   /* v8 ignore stop -- @preserve */
   const activeEffects = actor.activeEffects.map((effect) =>
     effect.kind === "jumpMovementReplacement" &&
-    effect.sourceCombatantId === consumedEffect.sourceCombatantId &&
-    effect.sourceProcedureRef === consumedEffect.sourceProcedureRef
+    spellActiveEffectExecutionRef(effect) ===
+      spellActiveEffectExecutionRef(consumedEffect)
       ? { ...effect, usedThisTurn: true }
       : effect,
   );
@@ -814,13 +813,15 @@ function spikeGrowthHazardEffectFor(
   >,
 ): SpikeGrowthHazardEffect | undefined {
   const combatant = state.combatants.get(source.sourceCombatantId);
-  return combatant?.activeEffects.find(
-    (effect): effect is SpikeGrowthHazardEffect =>
-      effect.kind === "spikeGrowthHazard" &&
-      effect.sourceCombatantId === source.sourceCombatantId &&
-      effect.sourceProcedureRef === source.sourceProcedureRef &&
-      effect.areaId === source.areaId,
+  const effect = combatant?.activeEffects.find(
+    (candidate) => candidate.effectRef === source.effectRef,
   );
+  return effect?.kind === "spikeGrowthHazard" &&
+    effect.sourceCombatantId === source.sourceCombatantId &&
+    effect.sourceProcedureRef === source.sourceProcedureRef &&
+    effect.areaId === source.areaId
+    ? effect
+    : undefined;
 }
 
 function scaledSpikeGrowthDamage(
@@ -878,7 +879,7 @@ function spikeGrowthMovementDamageRollHole(
   targetId: CombatantId,
   request: SpikeGrowthMovementDamageRequest,
 ): BattleSpikeGrowthMovementDamageRollHole {
-  const key = `battle:spike-growth-movement-damage:${targetId}:${request.effect.sourceCombatantId}:${request.effect.sourceProcedureRef}:${request.effect.areaId}:${request.distanceFeet}`;
+  const key = `battle:spike-growth-movement-damage:${targetId}:${request.effect.effectRef}:${request.distanceFeet}`;
   return {
     kind: "rolledDice",
     holeId: holeId(key),
@@ -886,6 +887,7 @@ function spikeGrowthMovementDamageRollHole(
     label: "Movement damage",
     spikeGrowthMovement: {
       targetId,
+      effectRef: request.effect.effectRef,
       sourceProcedureRef: request.effect.sourceProcedureRef,
       sourceCombatantId: request.effect.sourceCombatantId,
       areaId: request.effect.areaId,
@@ -1166,61 +1168,49 @@ function activeAreaDifficultTerrainSourceMatches(
   source: BattleAreaDifficultTerrainSource,
 ): boolean {
   const sourceCombatant = state.combatants.get(source.sourceCombatantId);
+  const effect = sourceCombatant?.activeEffects.find(
+    (candidate) => candidate.effectRef === source.effectRef,
+  );
   return Match.value(source).pipe(
     byAreaDifficultTerrainSourceKind(
       "greaseGroundHazard",
       (terrainSource) =>
-        sourceCombatant?.activeEffects.some(
-          (effect) =>
-            effect.kind === "greaseGroundHazard" &&
-            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-            effect.areaId === terrainSource.areaId,
-        ) === true,
+        effect?.kind === "greaseGroundHazard" &&
+        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
+        effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
       "webAreaHazard",
       (terrainSource) =>
-        sourceCombatant?.activeEffects.some(
-          (effect) =>
-            effect.kind === "webRestraintHazard" &&
-            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-            effect.areaId === terrainSource.areaId,
-        ) === true,
+        effect?.kind === "webRestraintHazard" &&
+        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
+        effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
       "sleetStormHazard",
       (terrainSource) =>
-        sourceCombatant?.activeEffects.some(
-          (effect) =>
-            effect.kind === "sleetStormAreaHazard" &&
-            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-            effect.areaId === terrainSource.areaId,
-        ) === true,
+        effect?.kind === "sleetStormAreaHazard" &&
+        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
+        effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
       "insectPlagueHazard",
       (terrainSource) =>
-        sourceCombatant?.activeEffects.some(
-          (effect) =>
-            effect.kind === "insectPlagueAreaHazard" &&
-            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-            effect.areaId === terrainSource.areaId,
-        ) === true,
+        effect?.kind === "insectPlagueAreaHazard" &&
+        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
+        effect.areaId === terrainSource.areaId,
     ),
     byAreaDifficultTerrainSourceKind(
       "spikeGrowthHazard",
       (terrainSource) =>
-        sourceCombatant?.activeEffects.some(
-          (effect) =>
-            effect.kind === "spikeGrowthHazard" &&
-            effect.sourceCombatantId === terrainSource.sourceCombatantId &&
-            effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
-            effect.areaId === terrainSource.areaId,
-        ) === true,
+        effect?.kind === "spikeGrowthHazard" &&
+        effect.sourceCombatantId === terrainSource.sourceCombatantId &&
+        effect.sourceProcedureRef === terrainSource.sourceProcedureRef &&
+        effect.areaId === terrainSource.areaId,
     ),
     Match.exhaustive,
   );
@@ -1229,7 +1219,7 @@ function activeAreaDifficultTerrainSourceMatches(
 function areaDifficultTerrainSourceKey(
   source: BattleAreaDifficultTerrainSource,
 ): string {
-  return `${source.kind}\u0000${source.sourceCombatantId}\u0000${source.sourceProcedureRef}\u0000${source.areaId}`;
+  return `${source.kind}\u0000${source.effectRef}`;
 }
 
 function validateAreaDifficultTerrainMovementFact(
@@ -1414,15 +1404,16 @@ function validateGustOfWindLineMovementFact(
   /* v8 ignore stop -- @preserve */
   const source = state.combatants.get(fact.sourceCombatantId);
   const effect = source?.activeEffects.find(
-    (candidate): candidate is GustOfWindLineEffect =>
-      candidate.kind === "gustOfWindLine" &&
-      candidate.sourceCombatantId === fact.sourceCombatantId &&
-      candidate.sourceProcedureRef === fact.sourceProcedureRef &&
-      candidate.areaId === fact.areaId &&
-      candidate.directionId === fact.directionId,
+    (candidate) => candidate.effectRef === fact.effectRef,
   );
   /* v8 ignore start -- @preserve -- Malformed resolution input: this guard exists only to reject a fill that contradicts the admitted subject's discovered hole contract. */
-  if (effect === undefined) {
+  if (
+    effect?.kind !== "gustOfWindLine" ||
+    effect.sourceCombatantId !== fact.sourceCombatantId ||
+    effect.sourceProcedureRef !== fact.sourceProcedureRef ||
+    effect.areaId !== fact.areaId ||
+    effect.directionId !== fact.directionId
+  ) {
     return {
       tag: "invalid",
       message:

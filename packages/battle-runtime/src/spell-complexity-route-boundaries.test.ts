@@ -45,6 +45,7 @@ import {
   attackRollFill,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectOccurrencesForTest,
   characterSeed,
   damageRollFillWithGroups,
   fighterId,
@@ -646,12 +647,38 @@ describe("battle replay and spell route frontiers", () => {
       message: "Hideous Laughter damage repeat save was filled twice.",
     });
 
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "spell-complexity-source-penalty",
+    );
+    const allocatedSourcePenalty =
+      battleStateWithAllocatedEffectOccurrencesForTest({
+        state,
+        occurrences: [
+          {
+            kind: "activeEffect",
+            ownerId: fighterId,
+            effect: {
+              kind: "sourceDamageRollPenalty",
+              sourceProcedureRef,
+              sourceCombatantId: fighterId,
+              amount: { dice: 1, dieSize: 8 },
+              expiresAt: { kind: "concentration", combatantId: fighterId },
+            },
+          },
+        ],
+      });
+    const sourcePenaltyOccurrence = allocatedSourcePenalty.occurrences[0];
+    if (
+      sourcePenaltyOccurrence?.kind !== "activeEffect" ||
+      sourcePenaltyOccurrence.effect.kind !== "sourceDamageRollPenalty"
+    ) {
+      throw new Error("Expected allocated source damage roll penalty.");
+    }
     const sourcePenaltyHole = sourceDamageRollPenaltyRollHole({
-      sourceProcedureRef: battleProcedureExecutionRefForTest(
-        "spell-complexity-source-penalty",
-      ),
+      effectRef: sourcePenaltyOccurrence.effect.effectRef,
+      sourceProcedureRef,
       sourceCombatantId: fighterId,
-      affectedCombatantId: foreignCombatantId,
+      affectedCombatantId: fighterId,
       damageRollHoleId: holeId("battle:spell-complexity:damage"),
       amount: { dice: 1, dieSize: 8 },
     });

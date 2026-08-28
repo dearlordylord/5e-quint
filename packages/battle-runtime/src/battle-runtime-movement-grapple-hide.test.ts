@@ -1703,6 +1703,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
       sources: [
         {
           kind: "greaseGroundHazard" as const,
+          effectRef: greaseEffect.effectRef,
           sourceCombatantId: wizardId,
           sourceProcedureRef: greaseEffect.sourceProcedureRef,
           areaId,
@@ -1770,6 +1771,12 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
   test("Grease Difficult Terrain movement facts expire with the Grease ground hazard", () => {
     const areaId = battleAreaId("test-expiring-grease-area");
     const greased = castGroundHazardForMovementTest(areaId);
+    const greaseEffect = greased.combatants
+      .get(wizardId)
+      ?.activeEffects.find((effect) => effect.kind === "greaseGroundHazard");
+    if (greaseEffect === undefined || greaseEffect.areaId !== areaId) {
+      throw new Error("Expected the admitted Grease ground hazard.");
+    }
     let expired = greased;
     for (let i = 0; i < 20; i += 1) {
       expired = requireResolved(
@@ -1812,6 +1819,7 @@ describe("battle runtime: movement, Grapple, and Hide", () => {
               sources: [
                 {
                   kind: "greaseGroundHazard",
+                  effectRef: greaseEffect.effectRef,
                   sourceCombatantId: wizardId,
                   sourceProcedureRef: expect.any(String),
                   areaId,

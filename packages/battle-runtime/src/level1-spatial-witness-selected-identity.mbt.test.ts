@@ -96,6 +96,7 @@ import {
   type BattleTargetSpatialFact,
   type CombatantId,
 } from "./index.ts";
+import type { BattleEffectExecutionRef } from "./identity.ts";
 import type { BattleActDiscoveryCandidate } from "./battle-state-execution.ts";
 import { testCharacterD20Statistics } from "./battle-runtime-test-d20-statistics.ts";
 import { mbtSpecPath } from "./battle-runtime-mbt-driver-kit.test-support.ts";
@@ -1498,6 +1499,7 @@ function replayAreaHazardSaveRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        effectRef: greaseGroundHazardEffect(cast.state).effectRef,
         sourceProcedureRef: greaseGroundHazardEffect(cast.state)
           .sourceProcedureRef,
       }),
@@ -1575,6 +1577,7 @@ function replayAreaHazardMovementRoute(): readonly BattleReducerRouteEvent[] {
       greaseMovementFill(requireHole(movementAct.initialHoles, "movement"), {
         areaId: greaseAreaId,
         movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+        effectRef: greaseGroundHazardEffect(cast.state).effectRef,
         sourceProcedureRef: greaseGroundHazardEffect(cast.state)
           .sourceProcedureRef,
       }),
@@ -2267,6 +2270,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: staleGreaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            effectRef: greaseGroundHazardEffect(cast.state).effectRef,
             sourceProcedureRef: greaseGroundHazardEffect(cast.state)
               .sourceProcedureRef,
           }),
@@ -2280,6 +2284,7 @@ function createLevel1SpatialWitnessSelectedIdentityRuntime() {
           greaseMovementFill(movement, {
             areaId: greaseAreaId,
             movementCostFeet: greaseDifficultTerrainMovementCostFeet,
+            effectRef: greaseGroundHazardEffect(cast.state).effectRef,
             sourceProcedureRef: greaseGroundHazardEffect(cast.state)
               .sourceProcedureRef,
           }),
@@ -3929,6 +3934,7 @@ function greaseMovementFill(
   hole: Extract<BattleHole, { readonly kind: "movement" }>,
   input: {
     readonly areaId: BattleAreaId;
+    readonly effectRef: BattleEffectExecutionRef;
     readonly movementCostFeet: MovementFeet;
     readonly sourceProcedureRef: BattleProcedureExecutionRef;
   },
@@ -3945,6 +3951,7 @@ function greaseMovementFill(
         sources: [
           {
             kind: "greaseGroundHazard",
+            effectRef: input.effectRef,
             sourceCombatantId: casterId,
             sourceProcedureRef: input.sourceProcedureRef,
             areaId: input.areaId,

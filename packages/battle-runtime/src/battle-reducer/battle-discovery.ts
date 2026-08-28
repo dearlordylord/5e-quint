@@ -869,6 +869,7 @@ function levitateAltitudeControlActs(
         levitateAltitudeChangeHole({
           actorId,
           targetId,
+          effectRef: effect.effectRef,
           maxDistanceFeet: effect.maxAltitudeChangeFeet,
         }),
       ],

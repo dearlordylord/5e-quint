@@ -15,6 +15,7 @@ import {
   attackRollFill,
   battleId,
   battleProcedureExecutionRefForTest,
+  battleStateWithAllocatedEffectForTest,
   characterSeed,
   combatantId,
   concentrationSavingThrowFill,
@@ -74,27 +75,22 @@ describe("battle runtime: Ice Knife", () => {
     if (wizard === undefined) {
       throw new Error("Expected Wizard.");
     }
-    const state = {
-      ...baseState,
-      combatants: new Map(baseState.combatants).set(wizardId, {
-        ...wizard,
-        activeEffects: [
-          ...wizard.activeEffects,
-          {
-            kind: "sourceDamageRollPenalty" as const,
-            sourceProcedureRef: battleProcedureExecutionRefForTest(
-              String("ray_of_enfeeblement"),
-            ),
-            sourceCombatantId: primaryTargetId,
-            amount: { dice: 1 as const, dieSize: 8 as const },
-            expiresAt: {
-              kind: "concentration" as const,
-              combatantId: primaryTargetId,
-            },
-          },
-        ],
-      }),
-    };
+    const state = battleStateWithAllocatedEffectForTest({
+      state: baseState,
+      ownerId: wizardId,
+      effect: {
+        kind: "sourceDamageRollPenalty",
+        sourceProcedureRef: battleProcedureExecutionRefForTest(
+          String("ray_of_enfeeblement"),
+        ),
+        sourceCombatantId: primaryTargetId,
+        amount: { dice: 1, dieSize: 8 },
+        expiresAt: {
+          kind: "concentration",
+          combatantId: primaryTargetId,
+        },
+      },
+    });
     const subject: BattleSubject = {
       tag: "actionSpell",
       actorId: wizardId,
@@ -150,7 +146,11 @@ describe("battle runtime: Ice Knife", () => {
       "sourceDamageRollPenalty.damageRollHoleId",
       attackDamage.holeId,
     );
+    if (!("sourceDamageRollPenalty" in penalty)) {
+      throw new Error("Expected Ray of Enfeeblement damage penalty hole.");
+    }
     const stalePenalty = sourceDamageRollPenaltyRollHole({
+      effectRef: penalty.sourceDamageRollPenalty.effectRef,
       sourceProcedureRef: battleProcedureExecutionRefForTest(
         String("ray_of_enfeeblement"),
       ),

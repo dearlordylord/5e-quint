@@ -412,6 +412,83 @@ describe("SRDINV49 deterministic Expeditious Retreat admission", () => {
 });
 
 describe("SRDINV53 deterministic Jump movement replacement admission", () => {
+  test("using one of two mechanically identical Jump occurrences consumes only its exact occurrence", () => {
+    const session = spellBattle({ preparedSpells: [] });
+    const sourceProcedureRef = battleProcedureExecutionRefForTest(
+      "two-jump-occurrences",
+    );
+    const jumpEffect = {
+      kind: "jumpMovementReplacement" as const,
+      sourceProcedureRef,
+      sourceCombatantId: spellCasterId,
+      movementCostFeet: movementFeet(10),
+      maxJumpDistanceFeet: movementFeet(30),
+      usedThisTurn: false,
+      expiresAt: {
+        kind: "duration" as const,
+        durationTicks: elapsedTimeTicks(10),
+      },
+    };
+    const firstState = battleStateWithAllocatedEffectForTest({
+      state: session.state,
+      ownerId: spellCasterId,
+      effect: jumpEffect,
+    });
+    const state = battleStateWithAllocatedEffectForTest({
+      state: firstState,
+      ownerId: spellCasterId,
+      effect: jumpEffect,
+    });
+    const jumpOccurrences = requireCombatant(
+      state,
+      spellCasterId,
+    ).activeEffects.filter(
+      (effect) => effect.kind === "jumpMovementReplacement",
+    );
+    expect(jumpOccurrences).toHaveLength(2);
+    const selectedAct = jumpMovementReplacementAct(state);
+    const movement = requireHole(selectedAct.initialHoles, "movement");
+
+    const resolved = resolveBattleSubject({
+      state,
+      subject: selectedAct.subject,
+      fills: [
+        movementFill(movement, {
+          movementCostFeet: 10,
+          provokedOpportunityAttacks: [],
+          jumpMovementReplacement: {
+            kind: "jumpMovementReplacement",
+            distanceFeet: movementFeet(30),
+            landing: {
+              kind: "legalLanding",
+              difficultTerrainAcrobatics: "notRequired",
+            },
+          },
+        }),
+      ],
+    });
+    expect(resolved).toMatchObject({ tag: "resolved" });
+    if (resolved.tag !== "resolved") {
+      throw new Error("Expected the selected Jump occurrence to resolve.");
+    }
+    const resolvedOccurrences = requireCombatant(
+      resolved.state,
+      spellCasterId,
+    ).activeEffects.filter(
+      (effect) => effect.kind === "jumpMovementReplacement",
+    );
+    expect(
+      resolvedOccurrences.find(
+        (effect) => effect.effectRef === selectedAct.subject.effectRef,
+      ),
+    ).toMatchObject({ usedThisTurn: true });
+    expect(
+      resolvedOccurrences.find(
+        (effect) => effect.effectRef !== selectedAct.subject.effectRef,
+      ),
+    ).toMatchObject({ usedThisTurn: false });
+  });
+
   test("jump casts as a touched willing target-list Bonus Action spell with slot-scaled targets", () => {
     const spell = spellRecord(jumpUnitId);
     const extraTargetId = combatantId("unit-profile-jump-target-2");
