@@ -15,12 +15,12 @@ in  { challengeRating = 6
         , bonusActions =
             [ T.executable { procedureOrdinal = 1, procedure = T.spellcasting { name = "Magic of the Spider Queen (Recharge 5–6)", ability = "wis", spellSaveDc = (Some { kind = "fixed", dc = 14 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noMaterialComponents, groups = { first = T.limited { resourceOrdinals = { first = 1, rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen, Recharge 5–6: Darkness, Faerie Fire, or Web.
-                        T.spellRef { spellId = "darkness", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "darkness", count = (None Natural), castAtLevel = (None Natural) }
                       , rest =
                         [ -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen can cast Faerie Fire.
-                          T.spellRef { spellId = "faerie_fire", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                          T.spellRef { spellId = "faerie_fire", count = (None Natural), castAtLevel = (None Natural) }
                         , -- RAW: Monsters/Monsters-C-D.md:854-890 — Magic of the Spider Queen can cast Web.
-                          T.spellRef { spellId = "web", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                          T.spellRef { spellId = "web", count = (None Natural), castAtLevel = (None Natural) }
                         ]
                       } }
                   , rest = [] : List T.Group } } }

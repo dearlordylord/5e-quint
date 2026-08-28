@@ -168,7 +168,15 @@
               },
               "spells": [
                 {
-                  "restriction": "on itself",
+                  "restriction": {
+                    "authoredExpression": "on itself",
+                    "deltas": [
+                      {
+                        "kind": "target_limit",
+                        "target": "self"
+                      }
+                    ]
+                  },
                   "spellId": "invisibility"
                 }
               ]

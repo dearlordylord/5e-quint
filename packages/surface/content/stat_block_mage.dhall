@@ -42,32 +42,31 @@ in  { challengeRating = 6
                                   { spellId = "detect_magic"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest =
                                   [ T.spellRef
                                       { spellId = "light"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
-                                  , T.spellRef
-                                      { spellId = "mage_armor"
+                                  , T.restrictedSpellRef { spellId = "mage_armor"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = Some "included in AC"
+                                      , restriction = { authoredExpression = "included in AC", deltas = { first = T.spellEffectAlreadyIncludedInArmorClass, rest = [] : List T.InvocationDelta } }
                                       }
                                   , T.spellRef
                                       { spellId = "mage_hand"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   , T.spellRef
                                       { spellId = "prestidigitation"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   ]
                                 : List T.SpellRef
@@ -83,14 +82,14 @@ in  { challengeRating = 6
                                       { spellId = "fireball"
                                       , count = None Natural
                                       , castAtLevel = Some 4
-                                      , restriction = None Text
+
                                       }
                                 , rest =
                                       [ T.spellRef
                                           { spellId = "invisibility"
                                           , count = None Natural
                                           , castAtLevel = None Natural
-                                          , restriction = None Text
+
                                           }
                                       ]
                                     : List T.SpellRef
@@ -105,14 +104,14 @@ in  { challengeRating = 6
                                       { spellId = "cone_of_cold"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                 , rest =
                                       [ T.spellRef
                                           { spellId = "fly"
                                           , count = None Natural
                                           , castAtLevel = None Natural
-                                          , restriction = None Text
+
                                           }
                                       ]
                                     : List T.SpellRef
@@ -145,7 +144,7 @@ in  { challengeRating = 6
                                   { spellId = "misty_step"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest = [] : List T.SpellRef
                             }

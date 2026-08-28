@@ -717,6 +717,17 @@ export type StatBlockReactionSection = Schema.Schema.Type<
 export type StatBlockSpellReference = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockSpellReferenceSchema
 >;
+export type StatBlockSpellInvocationDeltaKind =
+  (typeof SurfaceSchema.STAT_BLOCK_SPELL_INVOCATION_DELTA_KINDS)[number];
+export type StatBlockSpellInvocationDelta = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellInvocationDeltaSchema
+>;
+export type StatBlockSpellInvocationDeltas = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellInvocationDeltasSchema
+>;
+export type StatBlockSpellInvocationRestriction = Schema.Schema.Type<
+  typeof SurfaceSchema.StatBlockSpellInvocationRestrictionSchema
+>;
 export type StatBlockSpellcastingGroup = Schema.Schema.Type<
   typeof SurfaceSchema.StatBlockSpellcastingGroupSchema
 >;

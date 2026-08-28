@@ -57,14 +57,14 @@ in  { challengeRating = 15
                                   { spellId = "dispel_magic"
                                   , count = None Natural
                                   , castAtLevel = None Natural
-                                  , restriction = None Text
+
                                   }
                             , rest =
                                   [ T.spellRef
                                       { spellId = "thaumaturgy"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                   ]
                                 : List T.SpellRef
@@ -80,20 +80,20 @@ in  { challengeRating = 15
                                       { spellId = "animate_dead"
                                       , count = None Natural
                                       , castAtLevel = None Natural
-                                      , restriction = None Text
+
                                       }
                                 , rest =
                                       [ T.spellRef
                                           { spellId = "harm"
                                           , count = None Natural
                                           , castAtLevel = None Natural
-                                          , restriction = None Text
+
                                           }
                                       , T.spellRef
                                           { spellId = "insect_plague"
                                           , count = None Natural
                                           , castAtLevel = Some 7
-                                          , restriction = None Text
+
                                           }
                                       ]
                                     : List T.SpellRef

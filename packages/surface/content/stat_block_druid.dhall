@@ -13,23 +13,23 @@ in  { challengeRating = 2
             , T.executable { procedureOrdinal = 3, procedure = T.rangedAttack { name = "Verdant Wisp", attackAbility = "wis", attackBonus = +5, rangeFeet = { normal = 90, long = 90 }, ammunition = (None Text), onHit = { first = T.damage { damageType = "radiant", dice = 3, dieSize = 6, flat = (None Integer), static = 10 }, rest = [] : List T.Effect } } }
             , T.executable { procedureOrdinal = 4, procedure = T.spellcasting { name = "Spellcasting", ability = "wis", spellSaveDc = (Some { kind = "fixed", dc = 13 }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.spellDefinitionComponents, groups = { first = T.atWill { spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:894-925 — At Will: Druidcraft.
-                        T.spellRef { spellId = "druidcraft", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "druidcraft", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:894-925 — At Will: Speak with Animals.
-                        T.spellRef { spellId = "speak_with_animals", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "speak_with_animals", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   , rest = [ T.limited { resourceOrdinals = { first = 1 , rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:894-925 — 2/Day Each: Entangle.
-                        T.spellRef { spellId = "entangle", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "entangle", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:894-925 — 2/Day Each: Thunderwave.
-                        T.spellRef { spellId = "thunderwave", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "thunderwave", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   , T.limited { resourceOrdinals = { first = 2 , rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:894-925 — 1/Day Each: Animal Messenger.
-                        T.spellRef { spellId = "animal_messenger", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "animal_messenger", count = (None Natural), castAtLevel = (None Natural) }
                       , rest = [ -- RAW: Monsters/Monsters-C-D.md:894-925 — 1/Day Each: Longstrider.
-                        T.spellRef { spellId = "longstrider", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "longstrider", count = (None Natural), castAtLevel = (None Natural) }
                       , -- RAW: Monsters/Monsters-C-D.md:894-925 — 1/Day Each: Moonbeam.
-                        T.spellRef { spellId = "moonbeam", count = (None Natural), castAtLevel = (None Natural), restriction = (None Text) }
+                        T.spellRef { spellId = "moonbeam", count = (None Natural), castAtLevel = (None Natural) }
                       ] } }
                   ] } } }
             ]

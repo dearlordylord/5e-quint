@@ -122,7 +122,26 @@
                   "spellId": "animal_friendship"
                 },
                 {
-                  "restriction": "lasts 24 hours; ends early if the dryad casts the spell again",
+                  "restriction": {
+                    "authoredExpression": "lasts 24 hours; ends early if the dryad casts the spell again",
+                    "deltas": [
+                      {
+                        "duration": {
+                          "amount": 24,
+                          "unit": "hour"
+                        },
+                        "kind": "duration_override"
+                      },
+                      {
+                        "kind": "effect_termination",
+                        "triggers": [
+                          {
+                            "kind": "same_invoker_recasts_spell"
+                          }
+                        ]
+                      }
+                    ]
+                  },
                   "spellId": "charm_monster"
                 },
                 {

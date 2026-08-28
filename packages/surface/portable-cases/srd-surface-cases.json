@@ -49852,7 +49852,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -50223,7 +50243,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -51082,7 +51122,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -51457,7 +51517,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -53248,7 +53328,21 @@
                         "spells": [
                           {
                             "spellId": "mirror_image",
-                            "restriction": "The spell ends early if the cloaker starts or ends its turn in Bright Light"
+                            "restriction": {
+                              "authoredExpression": "The spell ends early if the cloaker starts or ends its turn in Bright Light",
+                              "deltas": [
+                                {
+                                  "kind": "effect_termination",
+                                  "triggers": [
+                                    {
+                                      "kind": "invoker_turn_boundary_in_illumination",
+                                      "turnBoundary": "start_or_end",
+                                      "illumination": "bright_light"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
                           }
                         ]
                       }
@@ -54561,7 +54655,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -54925,7 +55039,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -55217,7 +55351,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -56383,7 +56537,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -56732,7 +56906,16 @@
                         "spells": [
                           {
                             "spellId": "create_food_and_water",
-                            "restriction": "can create wine instead of water"
+                            "restriction": {
+                              "authoredExpression": "can create wine instead of water",
+                              "deltas": [
+                                {
+                                  "kind": "created_substance_substitution",
+                                  "replaces": "water",
+                                  "substitute": "wine"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "tongues"
@@ -58137,7 +58320,26 @@
                           },
                           {
                             "spellId": "charm_monster",
-                            "restriction": "lasts 24 hours; ends early if the dryad casts the spell again"
+                            "restriction": {
+                              "authoredExpression": "lasts 24 hours; ends early if the dryad casts the spell again",
+                              "deltas": [
+                                {
+                                  "kind": "duration_override",
+                                  "duration": {
+                                    "unit": "hour",
+                                    "amount": 24
+                                  }
+                                },
+                                {
+                                  "kind": "effect_termination",
+                                  "triggers": [
+                                    {
+                                      "kind": "same_invoker_recasts_spell"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "druidcraft"
@@ -62796,7 +62998,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -63164,7 +63386,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -64859,11 +65101,36 @@
                           },
                           {
                             "spellId": "disguise_self",
-                            "restriction": "24-hour duration"
+                            "restriction": {
+                              "authoredExpression": "24-hour duration",
+                              "deltas": [
+                                {
+                                  "kind": "duration_override",
+                                  "duration": {
+                                    "unit": "hour",
+                                    "amount": 24
+                                  }
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "invisibility",
-                            "restriction": "self only, and the hag leaves no tracks while Invisible"
+                            "restriction": {
+                              "authoredExpression": "self only, and the hag leaves no tracks while Invisible",
+                              "deltas": [
+                                {
+                                  "kind": "target_limit",
+                                  "target": "self"
+                                },
+                                {
+                                  "kind": "movement_trace_suppression",
+                                  "subject": "invoker",
+                                  "whileCondition": "invisible",
+                                  "trace": "none"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "minor_illusion"
@@ -69413,7 +69680,19 @@
                         "spells": [
                           {
                             "spellId": "disguise_self",
-                            "restriction": "can appear as a Large or Medium biped"
+                            "restriction": {
+                              "authoredExpression": "can appear as a Large or Medium biped",
+                              "deltas": [
+                                {
+                                  "kind": "appearance_options",
+                                  "sizes": [
+                                    "large",
+                                    "medium"
+                                  ],
+                                  "bodyPlan": "biped"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "minor_illusion"
@@ -70121,7 +70400,15 @@
                           },
                           {
                             "spellId": "mage_armor",
-                            "restriction": "included in AC"
+                            "restriction": {
+                              "authoredExpression": "included in AC",
+                              "deltas": [
+                                {
+                                  "kind": "armor_class_already_includes_effect",
+                                  "projection": "already_included"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "mage_hand"
@@ -70434,7 +70721,15 @@
                           },
                           {
                             "spellId": "mage_armor",
-                            "restriction": "included in AC"
+                            "restriction": {
+                              "authoredExpression": "included in AC",
+                              "deltas": [
+                                {
+                                  "kind": "armor_class_already_includes_effect",
+                                  "projection": "already_included"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "mage_hand"
@@ -70477,7 +70772,15 @@
                           },
                           {
                             "spellId": "mind_blank",
-                            "restriction": "cast before combat"
+                            "restriction": {
+                              "authoredExpression": "cast before combat",
+                              "deltas": [
+                                {
+                                  "kind": "application_timing",
+                                  "timing": "before_combat"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "scrying"
@@ -73524,7 +73827,15 @@
                           },
                           {
                             "spellId": "plane_shift",
-                            "restriction": "self only"
+                            "restriction": {
+                              "authoredExpression": "self only",
+                              "deltas": [
+                                {
+                                  "kind": "target_limit",
+                                  "target": "self"
+                                }
+                              ]
+                            }
                           }
                         ]
                       }
@@ -74434,7 +74745,15 @@
                         "spells": [
                           {
                             "spellId": "invisibility",
-                            "restriction": "on itself"
+                            "restriction": {
+                              "authoredExpression": "on itself",
+                              "deltas": [
+                                {
+                                  "kind": "target_limit",
+                                  "target": "self"
+                                }
+                              ]
+                            }
                           }
                         ]
                       }
@@ -81003,7 +81322,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -81364,7 +81703,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -126722,7 +127081,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -127093,7 +127472,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -127952,7 +128351,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -128327,7 +128746,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "speak_with_animals"
@@ -130118,7 +130557,21 @@
                         "spells": [
                           {
                             "spellId": "mirror_image",
-                            "restriction": "The spell ends early if the cloaker starts or ends its turn in Bright Light"
+                            "restriction": {
+                              "authoredExpression": "The spell ends early if the cloaker starts or ends its turn in Bright Light",
+                              "deltas": [
+                                {
+                                  "kind": "effect_termination",
+                                  "triggers": [
+                                    {
+                                      "kind": "invoker_turn_boundary_in_illumination",
+                                      "turnBoundary": "start_or_end",
+                                      "illumination": "bright_light"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
                           }
                         ]
                       }
@@ -131431,7 +131884,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -131795,7 +132268,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -132087,7 +132580,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -133253,7 +133766,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -133602,7 +134135,16 @@
                         "spells": [
                           {
                             "spellId": "create_food_and_water",
-                            "restriction": "can create wine instead of water"
+                            "restriction": {
+                              "authoredExpression": "can create wine instead of water",
+                              "deltas": [
+                                {
+                                  "kind": "created_substance_substitution",
+                                  "replaces": "water",
+                                  "substitute": "wine"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "tongues"
@@ -135007,7 +135549,26 @@
                           },
                           {
                             "spellId": "charm_monster",
-                            "restriction": "lasts 24 hours; ends early if the dryad casts the spell again"
+                            "restriction": {
+                              "authoredExpression": "lasts 24 hours; ends early if the dryad casts the spell again",
+                              "deltas": [
+                                {
+                                  "kind": "duration_override",
+                                  "duration": {
+                                    "unit": "hour",
+                                    "amount": 24
+                                  }
+                                },
+                                {
+                                  "kind": "effect_termination",
+                                  "triggers": [
+                                    {
+                                      "kind": "same_invoker_recasts_spell"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "druidcraft"
@@ -139666,7 +140227,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -140034,7 +140615,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -141729,11 +142330,36 @@
                           },
                           {
                             "spellId": "disguise_self",
-                            "restriction": "24-hour duration"
+                            "restriction": {
+                              "authoredExpression": "24-hour duration",
+                              "deltas": [
+                                {
+                                  "kind": "duration_override",
+                                  "duration": {
+                                    "unit": "hour",
+                                    "amount": 24
+                                  }
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "invisibility",
-                            "restriction": "self only, and the hag leaves no tracks while Invisible"
+                            "restriction": {
+                              "authoredExpression": "self only, and the hag leaves no tracks while Invisible",
+                              "deltas": [
+                                {
+                                  "kind": "target_limit",
+                                  "target": "self"
+                                },
+                                {
+                                  "kind": "movement_trace_suppression",
+                                  "subject": "invoker",
+                                  "whileCondition": "invisible",
+                                  "trace": "none"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "minor_illusion"
@@ -146283,7 +146909,19 @@
                         "spells": [
                           {
                             "spellId": "disguise_self",
-                            "restriction": "can appear as a Large or Medium biped"
+                            "restriction": {
+                              "authoredExpression": "can appear as a Large or Medium biped",
+                              "deltas": [
+                                {
+                                  "kind": "appearance_options",
+                                  "sizes": [
+                                    "large",
+                                    "medium"
+                                  ],
+                                  "bodyPlan": "biped"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "minor_illusion"
@@ -146991,7 +147629,15 @@
                           },
                           {
                             "spellId": "mage_armor",
-                            "restriction": "included in AC"
+                            "restriction": {
+                              "authoredExpression": "included in AC",
+                              "deltas": [
+                                {
+                                  "kind": "armor_class_already_includes_effect",
+                                  "projection": "already_included"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "mage_hand"
@@ -147304,7 +147950,15 @@
                           },
                           {
                             "spellId": "mage_armor",
-                            "restriction": "included in AC"
+                            "restriction": {
+                              "authoredExpression": "included in AC",
+                              "deltas": [
+                                {
+                                  "kind": "armor_class_already_includes_effect",
+                                  "projection": "already_included"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "mage_hand"
@@ -147347,7 +148001,15 @@
                           },
                           {
                             "spellId": "mind_blank",
-                            "restriction": "cast before combat"
+                            "restriction": {
+                              "authoredExpression": "cast before combat",
+                              "deltas": [
+                                {
+                                  "kind": "application_timing",
+                                  "timing": "before_combat"
+                                }
+                              ]
+                            }
                           },
                           {
                             "spellId": "scrying"
@@ -150394,7 +151056,15 @@
                           },
                           {
                             "spellId": "plane_shift",
-                            "restriction": "self only"
+                            "restriction": {
+                              "authoredExpression": "self only",
+                              "deltas": [
+                                {
+                                  "kind": "target_limit",
+                                  "target": "self"
+                                }
+                              ]
+                            }
                           }
                         ]
                       }
@@ -151304,7 +151974,15 @@
                         "spells": [
                           {
                             "spellId": "invisibility",
-                            "restriction": "on itself"
+                            "restriction": {
+                              "authoredExpression": "on itself",
+                              "deltas": [
+                                {
+                                  "kind": "target_limit",
+                                  "target": "self"
+                                }
+                              ]
+                            }
                           }
                         ]
                       }
@@ -157873,7 +158551,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },
@@ -158234,7 +158932,27 @@
                           },
                           {
                             "spellId": "shapechange",
-                            "restriction": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell"
+                            "restriction": {
+                              "authoredExpression": "Beast or Humanoid form only, no Temporary Hit Points gained from the spell, and no Concentration or Temporary Hit Points required to maintain the spell",
+                              "deltas": [
+                                {
+                                  "kind": "transformation_form_creature_type_limit",
+                                  "creatureTypes": [
+                                    "beast",
+                                    "humanoid"
+                                  ]
+                                },
+                                {
+                                  "kind": "temporary_hit_points",
+                                  "spellGrant": "none",
+                                  "maintenanceRequirement": "not_required"
+                                },
+                                {
+                                  "kind": "concentration_requirement",
+                                  "requirement": "not_required"
+                                }
+                              ]
+                            }
                           }
                         ]
                       },

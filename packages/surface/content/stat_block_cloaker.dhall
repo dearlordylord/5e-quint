@@ -16,7 +16,7 @@ in  { challengeRating = 8
             [ T.textOnly { procedureOrdinal = 1, name = "Moan", description = "Wisdom Saving Throw: DC 13, each creature in a 60-foot Emanation originating from the cloaker. Failure: The target has the Frightened condition until the end of the cloaker's next turn. Success: The target is immune to this cloaker's Moan for the next 24 hours.", reason = "unsupported_action_shape" }
             , T.executable { procedureOrdinal = 2, procedure = T.spellcasting { name = "Phantasms", ability = "wis", spellSaveDc = (None { kind : Text, dc : Natural }), spellAttackBonus = (None { kind : Text, value : Integer }), components = T.noComponents, groups = { first = T.limited { resourceOrdinals = { first = 1, rest = [] : List Natural }, spells =
                       { first = -- RAW: Monsters/Monsters-C-D.md:187-224 — Phantasms, Recharge after a Short or Long Rest: Mirror Image; ends early in Bright Light.
-                        T.spellRef { spellId = "mirror_image", count = (None Natural), castAtLevel = (None Natural), restriction = (Some "The spell ends early if the cloaker starts or ends its turn in Bright Light") }
+                        T.restrictedSpellRef { spellId = "mirror_image", count = (None Natural), castAtLevel = (None Natural), restriction = { authoredExpression = "The spell ends early if the cloaker starts or ends its turn in Bright Light", deltas = { first = T.endsAtTurnBoundaryInBrightLight, rest = [] : List T.InvocationDelta } } }
                       , rest = [] : List T.SpellRef
                       } }
                   , rest = [] : List T.Group } } }

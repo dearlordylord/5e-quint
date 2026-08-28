@@ -2468,7 +2468,7 @@ const projectExecutableProcedure = (
             : { castAtLevel: spell.castAtLevel }),
           ...(spell.restriction === undefined
             ? {}
-            : { restriction: spell.restriction }),
+            : { restriction: spell.restriction.authoredExpression }),
         })),
         resourceLimits: projectResourceLimits(record, group.resourceRefs),
       })),

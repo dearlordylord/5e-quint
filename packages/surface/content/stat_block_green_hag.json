@@ -108,11 +108,36 @@
                   "spellId": "dancing_lights"
                 },
                 {
-                  "restriction": "24-hour duration",
+                  "restriction": {
+                    "authoredExpression": "24-hour duration",
+                    "deltas": [
+                      {
+                        "duration": {
+                          "amount": 24,
+                          "unit": "hour"
+                        },
+                        "kind": "duration_override"
+                      }
+                    ]
+                  },
                   "spellId": "disguise_self"
                 },
                 {
-                  "restriction": "self only, and the hag leaves no tracks while Invisible",
+                  "restriction": {
+                    "authoredExpression": "self only, and the hag leaves no tracks while Invisible",
+                    "deltas": [
+                      {
+                        "kind": "target_limit",
+                        "target": "self"
+                      },
+                      {
+                        "kind": "movement_trace_suppression",
+                        "subject": "invoker",
+                        "trace": "none",
+                        "whileCondition": "invisible"
+                      }
+                    ]
+                  },
                   "spellId": "invisibility"
                 },
                 {
