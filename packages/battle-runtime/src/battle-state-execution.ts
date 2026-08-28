@@ -738,6 +738,7 @@ export type BattleAttackDamageInterruptionFrame = {
 };
 export type BattleStartTurnOccurrenceSequenceCheckpoint = {
   readonly kind: "startTurnOccurrenceSequence";
+  readonly sequence: { readonly kind: "single" } | { readonly kind: "ordered" };
   readonly sourceTurn: {
     readonly actorId: CombatantId;
     readonly round: RoundType;
@@ -6337,7 +6338,7 @@ export type BattleCloudkillMovementFill = {
   readonly kind: "cloudkillMovement";
   readonly holeId: BattleHoleId;
   readonly value: {
-    readonly affectedCombatantIds: readonly CombatantId[];
+    readonly affectedCombatantIdsInResolutionOrder: readonly CombatantId[];
   };
 };
 export type BattleStartTurnOccurrenceOrderFill = {

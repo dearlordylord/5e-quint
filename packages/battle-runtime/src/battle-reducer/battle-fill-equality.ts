@@ -98,10 +98,9 @@ export function battleContinuationFillEquals(
       cloudkillMovement: (left) =>
         b.kind === "cloudkillMovement" &&
         left.holeId === b.holeId &&
-        sameMultisetBy(
-          left.value.affectedCombatantIds,
-          b.value.affectedCombatantIds,
-          (leftId, rightId) => leftId === rightId,
+        arrayValuesEqual(
+          left.value.affectedCombatantIdsInResolutionOrder,
+          b.value.affectedCombatantIdsInResolutionOrder,
         ),
       startTurnOccurrenceOrder: (left) =>
         b.kind === "startTurnOccurrenceOrder" &&

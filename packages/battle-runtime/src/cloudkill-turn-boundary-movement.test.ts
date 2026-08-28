@@ -352,13 +352,13 @@ function withCommandDrop(
 
 function cloudkillMovementFill(
   hole: BattleCloudkillMovementHole,
-  affectedCombatantIds: readonly CombatantId[],
+  affectedCombatantIdsInResolutionOrder: readonly CombatantId[],
 ) {
   return {
     kind: "cloudkillMovement" as const,
     holeId: hole.holeId,
     value: {
-      affectedCombatantIds,
+      affectedCombatantIdsInResolutionOrder,
     },
   };
 }
@@ -1952,6 +1952,37 @@ describe("Cloudkill source-turn movement", () => {
     if (concentrationFrontier.tag !== "needsHoles") {
       throw new Error("Expected movement Concentration frontier.");
     }
+    const stateWithoutRetainedOrder = {
+      ...concentrationFrontier.state,
+      interruptStack: concentrationFrontier.state.interruptStack.map((entry) =>
+        entry.kind === "replayContinuation" &&
+        entry.continuation.kind === "replay"
+          ? {
+              ...entry,
+              continuation: {
+                ...entry.continuation,
+                fills: entry.continuation.fills.filter(
+                  (fill) => fill.kind !== "startTurnOccurrenceOrder",
+                ),
+              },
+            }
+          : entry,
+      ),
+    };
+    const missingRetainedOrder = resolveBattleSubject({
+      state: stateWithoutRetainedOrder,
+      subject: concentrationFrontier.subject,
+      fills: [
+        firstMovementFill,
+        saveFill,
+        damageFill,
+        concentrationFill,
+      ],
+    });
+    expect(missingRetainedOrder).toMatchObject({
+      tag: "invalid",
+      reason: "staleSubject",
+    });
     const secondMovementFrontier = resolveBattleSubject({
       state: concentrationFrontier.state,
       subject: concentrationFrontier.subject,
@@ -2111,11 +2142,11 @@ describe("Cloudkill source-turn movement", () => {
       "savingThrowOutcome",
     );
     expect(firstSaveHole).toMatchObject({
-      cloudkillAreaHazard: { targetId: spellCasterId },
+      cloudkillAreaHazard: { targetId: cloudkillSecondaryTargetId },
     });
     const firstSaveFill = singleTargetSavingThrowOutcomeFill(
       firstSaveHole,
-      spellCasterId,
+      cloudkillSecondaryTargetId,
       false,
     );
     const firstInterrupted = endTurn({
@@ -2144,22 +2175,10 @@ describe("Cloudkill source-turn movement", () => {
     if (firstDeclined.tag !== "needsHoles") {
       throw new Error("Expected the first target's damage frontier.");
     }
-    const concentrationFrontier = resolveBattleSubject({
+    const secondSaveFrontier = resolveBattleSubject({
       state: firstDeclined.state,
       subject: firstDeclined.subject,
       fills: [movementFill, firstSaveFill, firstDamageFill],
-    });
-    const concentrationFill = concentrationSavingThrowFill(
-      requireResultHole(concentrationFrontier, "concentrationSavingThrow"),
-      true,
-    );
-    if (concentrationFrontier.tag !== "needsHoles") {
-      throw new Error("Expected the source Concentration save frontier.");
-    }
-    const secondSaveFrontier = resolveBattleSubject({
-      state: concentrationFrontier.state,
-      subject: concentrationFrontier.subject,
-      fills: [movementFill, firstSaveFill, firstDamageFill, concentrationFill],
     });
     const secondSaveHole = requireResultHole(
       secondSaveFrontier,
@@ -2167,7 +2186,7 @@ describe("Cloudkill source-turn movement", () => {
     );
     const secondSaveFill = singleTargetSavingThrowOutcomeFill(
       secondSaveHole,
-      cloudkillSecondaryTargetId,
+      spellCasterId,
       false,
     );
     if (secondSaveFrontier.tag !== "needsHoles") {
@@ -2180,7 +2199,6 @@ describe("Cloudkill source-turn movement", () => {
         movementFill,
         firstSaveFill,
         firstDamageFill,
-        concentrationFill,
         secondSaveFill,
       ],
     });
@@ -3304,17 +3322,17 @@ describe("Cloudkill source-turn movement", () => {
     fc.assert(
       fc.property(
         fc.record({
-          affectedCombatantIds: fc.shuffledSubarray([
+          affectedCombatantIdsInResolutionOrder: fc.shuffledSubarray([
             spellCasterId,
             spellTargetId,
           ]),
         }),
-        ({ affectedCombatantIds }) => {
+        ({ affectedCombatantIdsInResolutionOrder }) => {
           const fill = {
             kind: "cloudkillMovement" as const,
             holeId: movementHole.holeId,
             value: {
-              affectedCombatantIds,
+              affectedCombatantIdsInResolutionOrder,
             },
           };
           expect(

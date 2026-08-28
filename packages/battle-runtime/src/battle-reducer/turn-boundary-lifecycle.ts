@@ -35,7 +35,6 @@ import { hasCondition } from "@dnd/shared-algebras/conditions-algebra";
 import { elapsedTimeTicks } from "@dnd/shared-algebras/elapsed-time-algebra";
 import {
   currentActing,
-  initiativeOrder,
   nextInitiative,
 } from "@dnd/shared-algebras/initiative-algebra";
 import { rolledDiceTotal } from "@dnd/shared-algebras/runtime-dice-algebra";
@@ -425,7 +424,7 @@ function startTurnOccurrenceOrderHole(
   sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
   occurrences: BattleStartTurnOccurrenceOrderHole["occurrences"],
 ): BattleStartTurnOccurrenceOrderHole {
-  const key = `battle:start-turn-occurrence-order:${sourceTurn.actorId}:${Number(sourceTurn.round)}`;
+  const key = startTurnOccurrenceOrderHoleKey(sourceTurn);
   return {
     kind: "startTurnOccurrenceOrder",
     holeId: holeId(key),
@@ -434,6 +433,12 @@ function startTurnOccurrenceOrderHole(
     actorId: sourceTurn.actorId,
     occurrences,
   };
+}
+
+function startTurnOccurrenceOrderHoleKey(
+  sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"],
+): string {
+  return `battle:start-turn-occurrence-order:${sourceTurn.actorId}:${Number(sourceTurn.round)}`;
 }
 
 type CloudkillMovementFill = Extract<
@@ -457,14 +462,14 @@ function cloudkillMovementAffectedCombatantIssue(
   if (
     fills.some(
       (fill) =>
-        new Set(fill.value.affectedCombatantIds).size !==
-        fill.value.affectedCombatantIds.length,
+        new Set(fill.value.affectedCombatantIdsInResolutionOrder).size !==
+        fill.value.affectedCombatantIdsInResolutionOrder.length,
     )
   ) {
     return "duplicate";
   }
   return fills.some((fill) =>
-    fill.value.affectedCombatantIds.some(
+    fill.value.affectedCombatantIdsInResolutionOrder.some(
       (combatantId) => !state.combatants.has(combatantId),
     ),
   )
@@ -496,18 +501,15 @@ function cloudkillMovementSaveSubject(
 }
 
 function cloudkillMovementSaveDamageRequests(
-  state: BattleState,
   requests: readonly CloudkillMovementBoundaryRequest[],
 ): readonly CloudkillMovementSaveDamageRequest[] {
-  const combatantOrder = initiativeOrder(state.initiative);
   return requests.flatMap(({ effect, fill }) => {
-    const affectedCombatantIds = new Set(fill.value.affectedCombatantIds);
-    return combatantOrder
-      .filter((targetId) => affectedCombatantIds.has(targetId))
-      .map((targetId) => ({
+    return fill.value.affectedCombatantIdsInResolutionOrder.map(
+      (targetId) => ({
         effect,
         subject: cloudkillMovementSaveSubject(targetId, effect),
-      }));
+      }),
+    );
   });
 }
 
@@ -543,10 +545,7 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   readonly parent: ReplayParentContinuation;
 }): BattleResolutionResult {
   const { checkpoint } = input;
-  const orderHole = startTurnOccurrenceOrderHole(checkpoint.sourceTurn, [
-    cloudkillMovementOccurrenceOption(checkpoint.child),
-    cloudkillMovementOccurrenceOption(checkpoint.child),
-  ]);
+  const orderHoleId = holeId(startTurnOccurrenceOrderHoleKey(checkpoint.sourceTurn));
   const orderFills = input.fills.filter(
     (
       fill,
@@ -555,9 +554,16 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
       { readonly kind: "startTurnOccurrenceOrder" }
     > =>
       fill.kind === "startTurnOccurrenceOrder" &&
-      fill.holeId === orderHole.holeId,
+      fill.holeId === orderHoleId,
   );
   if (orderFills.length === 0) {
+    if (checkpoint.sequence.kind === "ordered") {
+      return invalidResult(
+        input.state,
+        "staleSubject",
+        "Ordered start-turn occurrence continuation lost its retained order.",
+      );
+    }
     return {
       tag: "resolved",
       state: input.state,
@@ -585,21 +591,22 @@ function resolveStartTurnOccurrenceSuffixAfterMovement(input: {
   }
   const suffix = resolveOrderedStartTurnOccurrences({
     state: input.state,
-    rootResultState: input.state,
-    preservePrefixInResults: true,
     subject: input.parent.subject,
     sourceTurn: checkpoint.sourceTurn,
     occurrenceIds: orderFills[0]!.value.occurrenceIds.slice(currentIndex + 1),
-    offeredHandles: [],
-    previouslyAcceptedMovementFillHoleIds: [
-      cloudkillStartTurnMovementHole(checkpoint.sourceTurn, {
-        sourceCombatantId: checkpoint.sourceTurn.actorId,
-        sourceProcedureRef: checkpoint.child.sourceProcedureRef,
-        areaId: checkpoint.child.areaId,
-      }).holeId,
-    ],
+    context: {
+      kind: "replay",
+      previouslyAcceptedMovementFillHoleIds: [
+        cloudkillStartTurnMovementHole(checkpoint.sourceTurn, {
+          sourceCombatantId: checkpoint.sourceTurn.actorId,
+          sourceProcedureRef: checkpoint.child.sourceProcedureRef,
+          areaId: checkpoint.child.areaId,
+        }).holeId,
+      ],
+    },
     fills: input.fills,
     parent: input.parent,
+    sequence: checkpoint.sequence,
   });
   if (suffix.tag === "result") return suffix.result;
   return {
@@ -673,7 +680,7 @@ function resolveCloudkillMovementSequenceResume(input: {
         : "Cloudkill movement affected combatants must exist in the battle.",
     );
   }
-  const requests = cloudkillMovementSaveDamageRequests(resolution.state, [
+  const requests = cloudkillMovementSaveDamageRequests([
     {
       ...checkpointBoundary,
       fill: checkpointMovementFills[0]!,
@@ -722,7 +729,7 @@ function resolveCloudkillMovementSequenceResume(input: {
     sourceTurn: checkpoint.sourceTurn,
     continuation: checkpointRequestPending
       ? { kind: "advancedPrefixAtCheckpoint", checkpoint }
-      : { kind: "advancedPrefixAfterCheckpoint" },
+      : { kind: "advancedPrefixAfterCheckpoint", checkpoint },
   });
   if (resumed.tag === "result") {
     return resumed.result;
@@ -3031,19 +3038,30 @@ type OrderedStartTurnOccurrenceSequenceResult =
 
 function resolveOrderedStartTurnOccurrences(input: {
   readonly state: BattleState;
-  readonly rootResultState: BattleState;
-  readonly preservePrefixInResults: boolean;
   readonly subject: BattleSubject;
   readonly sourceTurn: BattleStartTurnOccurrenceSequenceCheckpoint["sourceTurn"];
   readonly occurrenceIds: readonly StartTurnOccurrenceOption["occurrenceId"][];
-  readonly offeredHandles: readonly StartTurnOccurrenceHandle[];
-  readonly previouslyAcceptedMovementFillHoleIds: readonly BattleHoleId[];
   readonly fills: readonly BattleFill[];
   readonly parent: ReplayParentContinuation;
+  readonly sequence: BattleStartTurnOccurrenceSequenceCheckpoint["sequence"];
+  readonly context:
+    | {
+        readonly kind: "root";
+        readonly resultState: BattleState;
+        readonly offeredHandles: readonly StartTurnOccurrenceHandle[];
+      }
+    | {
+        readonly kind: "replay";
+        readonly previouslyAcceptedMovementFillHoleIds: readonly BattleHoleId[];
+      };
 }): OrderedStartTurnOccurrenceSequenceResult {
   const acceptedHoleIds = new Set<BattleHoleId>();
   const matchedMovementFillHoleIds = new Set<BattleHoleId>();
-  for (const id of input.previouslyAcceptedMovementFillHoleIds) {
+  const previouslyAcceptedMovementFillHoleIds =
+    input.context.kind === "replay"
+      ? input.context.previouslyAcceptedMovementFillHoleIds
+      : [];
+  for (const id of previouslyAcceptedMovementFillHoleIds) {
     matchedMovementFillHoleIds.add(id);
     acceptedHoleIds.add(id);
   }
@@ -3055,15 +3073,17 @@ function resolveOrderedStartTurnOccurrences(input: {
   );
   let prefixState = input.state;
   const resultState = (): BattleState =>
-    input.preservePrefixInResults ? prefixState : input.rootResultState;
+    input.context.kind === "replay" ? prefixState : input.context.resultState;
 
   for (const occurrenceId of input.occurrenceIds) {
     const handle =
-      input.offeredHandles.find(
+      (input.context.kind === "root"
+        ? input.context.offeredHandles.find(
         (candidate) =>
           startTurnOccurrenceOptionForHandle(candidate).occurrenceId ===
           occurrenceId,
-      ) ??
+          )
+        : undefined) ??
       startTurnOccurrenceHandlesForState(
         prefixState,
         input.sourceTurn.actorId,
@@ -3281,11 +3301,11 @@ function resolveOrderedStartTurnOccurrences(input: {
     const resolution = resolveCloudkillMovementSaveDamageSequence({
       advancedState: prefixState,
       parent: input.parent,
-      requests: cloudkillMovementSaveDamageRequests(prefixState, [
+      requests: cloudkillMovementSaveDamageRequests([
         { effect, hole, fill },
       ]),
       sourceTurn: input.sourceTurn,
-      continuation: { kind: "turnBoundaryReplay" },
+      continuation: { kind: "turnBoundaryReplay", sequence: input.sequence },
     });
     if (resolution.tag === "result") return resolution;
     prefixState = resolution.state;
@@ -4752,17 +4772,22 @@ function resolveEndTurnCommandForParent(
   });
 const orderedOccurrenceResolution = resolveOrderedStartTurnOccurrences({
     state: advancedTurn.state,
-    rootResultState: input.state,
-    preservePrefixInResults: false,
     subject: input.subject,
     sourceTurn: nextSourceTurn,
     occurrenceIds: orderedStartTurnOccurrenceHandles.map(
       (handle) => startTurnOccurrenceOptionForHandle(handle).occurrenceId,
     ),
-    offeredHandles: orderedStartTurnOccurrenceHandles,
-    previouslyAcceptedMovementFillHoleIds: [],
+    context: {
+      kind: "root",
+      resultState: input.state,
+      offeredHandles: orderedStartTurnOccurrenceHandles,
+    },
     fills: input.fills,
     parent,
+    sequence:
+      orderedStartTurnOccurrenceHandles.length >= 2
+        ? { kind: "ordered" }
+        : { kind: "single" },
   });
   if (orderedOccurrenceResolution.tag === "result") {
     return orderedOccurrenceResolution.result;
